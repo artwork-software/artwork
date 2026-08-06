@@ -1,7 +1,7 @@
 <template>
-    <div class="mb-5 px-5 py-3 text-left">
-        <h3 class="font-lexend font-bold">{{ $t(props.title) }}</h3>
-        <p class="text-sm xsLight mt-0.5">
+    <div class="px-4 py-3 text-left border-b border-border-subtle">
+        <h3 class="font-lexend font-semibold text-lg text-text">{{ $t(props.title) }}</h3>
+        <p v-if="props.description" class="text-xs text-text-muted mt-0.5">
             {{ $t(props.description) }}
         </p>
     </div>

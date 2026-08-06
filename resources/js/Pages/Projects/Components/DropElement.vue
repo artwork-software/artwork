@@ -169,8 +169,8 @@ export default defineComponent({
 </script>
 
 <template>
-    <div class="flex items-center gap-2 p-1 hover:bg-gray-50/40 rounded cursor-pointer" @dragover="onDragOver" @drop="onDrop">
-        <span class="h-4 w-4 rounded-full block bg-gray-500"></span>
+    <div class="flex items-center gap-2 p-1 hover:bg-surface-sunken/40 rounded cursor-pointer" @dragover="onDragOver" @drop="onDrop">
+        <span class="h-4 w-4 rounded-full block bg-text-subtle"></span>
         <span class="text-xs">Unbesetzt</span>
         <span v-if="master">
             <svg xmlns="http://www.w3.org/2000/svg" width="13.2" height="10.8" viewBox="0 0 13.2 10.8">

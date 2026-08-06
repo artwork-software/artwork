@@ -1,18 +1,18 @@
 <template>
-    <div class="bg-white rounded-lg border border-gray-200 overflow-hidden">
+    <div class="bg-white rounded-lg border border-border-subtle overflow-hidden">
         <!-- Group Header -->
         <button
             @click="expanded = !expanded"
-            class="w-full flex items-center justify-between px-6 py-4 bg-gray-50 hover:bg-gray-100 transition-colors"
+            class="w-full flex items-center justify-between px-6 py-4 bg-surface-sunken hover:bg-surface-sunken transition-colors"
         >
             <div class="flex items-center gap-3">
-                <PropertyIcon v-if="group.icon" :name="group.icon" class="h-5 w-5 text-gray-500" />
-                <h3 class="text-sm font-semibold text-gray-900">{{ $t(group.name) }}</h3>
-                <span v-if="group.is_confidential" class="inline-flex items-center rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800">
+                <PropertyIcon v-if="group.icon" :name="group.icon" class="h-5 w-5 text-text-subtle" />
+                <h3 class="text-sm font-semibold text-text">{{ $t(group.name) }}</h3>
+                <span v-if="group.is_confidential" class="inline-flex items-center rounded-full bg-warning-surface px-2 py-0.5 text-xs font-medium text-warning">
                     {{ $t('Confidential') }}
                 </span>
             </div>
-            <component :is="expanded ? IconChevronUp : IconChevronDown" class="h-5 w-5 text-gray-400" />
+            <component :is="expanded ? IconChevronUp : IconChevronDown" class="h-5 w-5 text-text-subtle" />
         </button>
 
         <!-- Group Content -->
@@ -31,8 +31,8 @@
                     </template>
                     <template v-else>
                         <div>
-                            <dt class="flex items-center text-sm font-medium text-gray-500">
-                                <span>{{ $t(property.name) }}<span v-if="property.pivot?.is_required" class="text-red-500 ml-0.5">*</span></span>
+                            <dt class="flex items-center text-sm font-medium text-text-subtle">
+                                <span>{{ $t(property.name) }}<span v-if="property.pivot?.is_required" class="text-danger ml-0.5">*</span></span>
                                 <!-- tooltip_text ist Nutzerdaten-Text aus den CRM-Settings — bewusst ohne $t -->
                                 <ToolTipComponent
                                     v-if="property.tooltip_text"
@@ -43,17 +43,17 @@
                                     icon-size="h-4 w-4"
                                 />
                             </dt>
-                            <dd class="mt-1 text-sm text-gray-900">
+                            <dd class="mt-1 text-sm text-text">
                                 <template v-if="property.type === 'checkbox'">
-                                    <component :is="getPropertyValue(property.id) === '1' ? IconCheck : IconX" class="h-5 w-5" :class="getPropertyValue(property.id) === '1' ? 'text-green-500' : 'text-gray-400'" />
+                                    <component :is="getPropertyValue(property.id) === '1' ? IconCheck : IconX" class="h-5 w-5" :class="getPropertyValue(property.id) === '1' ? 'text-success' : 'text-text-subtle'" />
                                 </template>
                                 <template v-else-if="property.type === 'link' && getPropertyValue(property.id)">
-                                    <a :href="getPropertyValue(property.id)" target="_blank" class="text-indigo-600 hover:text-indigo-500">
+                                    <a :href="getPropertyValue(property.id)" target="_blank" class="text-accent-600 hover:text-accent-600">
                                         {{ getPropertyValue(property.id) }}
                                     </a>
                                 </template>
                                 <template v-else-if="property.type === 'upload' && getPropertyValue(property.id)">
-                                    <a :href="'/storage/' + getPropertyValue(property.id)" target="_blank" download class="inline-flex items-center gap-1.5 text-blue-700 hover:underline">
+                                    <a :href="'/storage/' + getPropertyValue(property.id)" target="_blank" download class="inline-flex items-center gap-1.5 text-accent-700 hover:underline">
                                         <component :is="IconFile" class="h-4 w-4" />
                                         {{ getPropertyValue(property.id).split('/').pop() }}
                                     </a>

@@ -1,9 +1,9 @@
 <template>
 
-    <div :class="[table.is_template ? '' : 'bg-light-background-gray', hideProjectHeader ? '' : 'pt-6']"
+    <div :class="[table.is_template ? '' : 'bg-surface-canvas', hideProjectHeader ? '' : 'pt-6']"
          class="mx-1 pr-10 relative">
         <div class="flex justify-between ">
-            <div v-if="table.is_template" class="flex justify-start mb-6 headline2">
+            <div v-if="table.is_template" class="flex justify-start mb-6 font-lexend font-semibold text-[clamp(18px,2.5vw,20px)]/[25px] text-text">
                 {{ table.name }}
                 <BaseMenu class="ml-4" v-if="$can('edit budget templates')" white-menu-background>
                     <BaseMenuItem
@@ -40,7 +40,7 @@
                 </BaseMenu>
             </div>
         </div>
-        <div class="w-full sticky z-40 flex flex-row-reverse gap-x-4 py-4 items-center bg-light-background-gray" :style="{ top: 'calc(var(--project-header-height, 126px))' }">
+        <div class="w-full sticky z-40 flex flex-row-reverse gap-x-4 py-4 items-center bg-surface-canvas" :style="{ top: 'calc(var(--project-header-height, 126px))' }">
             <BaseUIButton v-if="this.$can('edit budget templates') || !table.is_template" @click="openAddColumnModal()"
                 label="New column"
                 use-translation
@@ -77,7 +77,7 @@
                     size="md"
                     :icon="IconEyeX"
                 />
-                <span class="pl-1" :class="[userExcludeCommentedBudgetItems ? 'xsDark' : 'xsLight', 'text-sm']">
+                <span class="pl-1" :class="[userExcludeCommentedBudgetItems ? 'text-sm/5 font-semibold text-text' : 'text-sm/5 font-bold text-text-subtle', 'text-sm']">
                         {{ $t('Excluded items hidden') }}
                     </span>
             </div>
@@ -112,7 +112,7 @@
                                     <div v-if="column.subName" class="flex items-center justify-end">
                                         <div class="flex items-center mr-2" v-if="column.is_locked">
                                             <div>
-                                                <PropertyIcon name="IconLock" class="h-4 w-4 text-primary" stroke-width="2"/>
+                                                <PropertyIcon name="IconLock" class="h-4 w-4 text-text" stroke-width="2"/>
                                             </div>
                                             <div class="-ml-0.5">
                                                 <UserPopoverTooltip :user="column.locked_by"
@@ -135,7 +135,7 @@
                                         </div>
 
                                         <span v-if="columnCalculatedNames ? columnCalculatedNames[column.id] : false"
-                                              class="ml-1 truncate columnSubName text-white">
+                                              class="ml-1 truncate text-[10px]/[19px] font-semibold uppercase tracking-wider text-text-subtle text-white">
                                             ({{ columnCalculatedNames[column.id] }})
                                         </span>
                                     </div>
@@ -159,19 +159,18 @@
                                             >
                                                 <ListboxOptions
                                                     :static="column.showColorMenu"
-                                                    class="absolute z-30 mt-12 w-56 overflow-hidden rounded-xl border border-gray-200
-                                                           bg-white shadow-lg ring-1 ring-black/5 focus:outline-none"
+                                                    class="absolute z-30 mt-12 w-56 overflow-hidden rounded-xl border border-border-subtle bg-white shadow-lg ring-1 ring-black/5 focus:outline-none"
                                                 >
                                                     <!-- Header -->
-                                                    <div class="px-3 py-2 border-b border-gray-100">
+                                                    <div class="px-3 py-2 border-b border-border-subtle">
                                                         <div class="flex items-center justify-between">
-                                                            <span class="text-xs font-medium text-gray-500">
+                                                            <span class="text-xs font-medium text-text-subtle">
                                                                 {{ $t("Choose color") }}
                                                             </span>
 
                                                             <!-- kleiner Close-Icon-Click (kein Button-Element) -->
                                                             <span
-                                                                class="inline-flex cursor-pointer rounded-md p-1 text-gray-500 hover:bg-gray-100"
+                                                                class="inline-flex cursor-pointer rounded-md p-1 text-text-subtle hover:bg-surface-sunken"
                                                                 @click="column.showColorMenu = false"
                                                                 aria-label="Close"
                                                                 role="button"
@@ -184,11 +183,11 @@
                                                         <!-- aktuelle Auswahl -->
                                                         <div class="mt-2 flex items-center gap-2">
                                                             <span
-                                                                class="h-5 w-5 rounded-full ring-1 ring-gray-200"
+                                                                class="h-5 w-5 rounded-full ring-1 ring-border-subtle"
                                                                 :class="column.color"
                                                                 aria-hidden="true"
                                                             />
-                                                            <span class="text-xs text-gray-600">
+                                                            <span class="text-xs text-text-muted">
                                                                 {{ $t("Current") }}
                                                             </span>
                                                         </div>
@@ -205,12 +204,10 @@
                                                             >
                                                                 <!-- kein Button: nur span -->
                                                                 <button
-                                                                    class="relative h-7 w-7 min-w-7 min-h-7 cursor-pointer rounded-full ring-1 ring-gray-200 transition
-                                                                           focus:outline-none"
-                                                                    :class="[
-                                                                        color,
-                                                                        active ? 'scale-[1.03] ring-2 ring-primary/40' : '',
-                                                                        selected ? 'ring-2 ring-emerald-500/50' : ''
+                                                                    class="relative h-7 w-7 min-w-7 min-h-7 cursor-pointer rounded-full ring-1 ring-border-subtle transition focus:outline-none"
+                                                                    :class="[ color,
+                                                                        active ? 'scale-[1.03] ring-2 ring-surface-inverse/40' : '',
+                                                                        selected ? 'ring-2 ring-success' : ''
                                                                     ]"
                                                                     role="button"
                                                                     tabindex="0"
@@ -221,7 +218,7 @@
                                                                     <PropertyIcon
                                                                         v-if="selected"
                                                                         name="IconCheck"
-                                                                        class="absolute -right-1 -top-1 h-4 w-4 text-emerald-600 bg-white rounded-full p-[2px] shadow"
+                                                                        class="absolute -right-1 -top-1 h-4 w-4 text-success bg-white rounded-full p-[2px] shadow"
                                                                         aria-hidden="true"
                                                                     />
                                                                 </button>
@@ -230,8 +227,7 @@
 
                                                         <!-- Reset (ebenfalls kein Button) -->
                                                         <span
-                                                            class="mt-3 inline-flex w-full cursor-pointer items-center justify-center rounded-lg border border-gray-200
-                                                                   bg-white px-3 py-2 text-xs text-gray-700 hover:bg-gray-50"
+                                                            class="mt-3 inline-flex w-full cursor-pointer items-center justify-center rounded-lg border border-border-subtle bg-white px-3 py-2 text-xs text-text-muted hover:bg-surface-sunken"
                                                             role="button"
                                                             tabindex="0"
                                                             @click="
@@ -254,7 +250,7 @@
                                 <div v-else>
                                     <input
                                         :class="index === 0 ? 'w-48' : index === 1 ? 'w-48' : index === 2 ? 'w-72' : 'w-48'"
-                                        class="xsDark h-5 pr-1 mr-1 flex rounded-md border border-gray-300 px-1 focus:border-artwork-buttons-create focus:ring-1 focus:ring-artwork-buttons-create focus:outline-none"
+                                        class="text-sm/5 font-semibold text-text h-5 pr-1 mr-1 flex rounded-md border border-border px-1 focus:border-accent-600 focus:ring-1 focus:ring-accent-600 focus:outline-none"
                                         type="text"
                                         v-model="column.name"
                                         @keyup.enter="$event.target.blur()"
@@ -359,19 +355,19 @@
                              @remove-sage-not-assigned-data="this.showRemoveSageNotAssignedDataConfirmationModal"
         />
         <div class="w-full flex mb-6">
-            <div class="flex flex-wrap w-full bg-secondary-hover border-2 border-gray-300">
+            <div class="flex flex-wrap w-full bg-surface border-2 border-border">
                 <div class="w-full flex">
-                    <div class="bg-secondary-hover ml-5 w-full" v-if="costsOpened">
+                    <div class="bg-surface ml-5 w-full" v-if="costsOpened">
                         <div :class="table.columns?.length > 5 ? 'mr-5' : 'w-[97%]'" class="flex justify-between my-10">
-                            <div class="headline4  flex">
+                            <div class="font-lexend font-semibold text-[clamp(18px,2.5vw,20px)]/[25px] text-text flex">
                                 {{ $t('Expenses') }}
                                 <button class="w-6" @click="costsOpened = !costsOpened">
                                     <PropertyIcon name="IconChevronUp" stroke-width="1.5" v-if="costsOpened"
-                                                   class="h-6 w-6 text-primary my-auto"/>
-                                    <PropertyIcon name="IconChevronDown" stroke-width="1.5" v-else class="h-6 w-6 text-primary my-auto"/>
+                                                   class="h-6 w-6 text-text my-auto"/>
+                                    <PropertyIcon name="IconChevronDown" stroke-width="1.5" v-else class="h-6 w-6 text-text my-auto"/>
                                 </button>
                             </div>
-                            <BaseMenu dots-color="text-artwork-context-dark" white-menu-background v-if="hasBudgetAccess()">
+                            <BaseMenu dots-color="text-text-muted" white-menu-background v-if="hasBudgetAccess()">
                                 <BaseMenuItem
                                     v-show="tableIsEmpty && !table.is_template"
                                     :title="$t('Import template')"
@@ -423,11 +419,11 @@
                         </div>
                         <div @click="addMainPosition('BUDGET_TYPE_COST', positionDefault)"
                              v-if="this.$can('edit budget templates') || !table.is_template"
-                             class="group w-[97%] bg-secondaryHover cursor-pointer h-1 flex justify-center border-dashed hover:border-t-2 hover:border-artwork-buttons-create">
-                            <div class="group-hover:block hidden uppercase text-artwork-buttons-create text-sm -mt-8">
+                             class="group w-[97%]  cursor-pointer h-1 flex justify-center border-dashed hover:border-t-2 hover:border-accent-600">
+                            <div class="group-hover:block hidden uppercase text-accent-600 text-sm -mt-8">
                                 {{ $t('Main position') }}
                                 <PropertyIcon name="IconCirclePlus"
-                                    class="h-6 w-6 ml-12 text-secondaryHover bg-artwork-buttons-create rounded-full" />
+                                    class="h-6 w-6 ml-12  bg-accent-600 rounded-full" />
                             </div>
                         </div>
                         <draggable
@@ -442,7 +438,7 @@
                                 <div class="mb-1">
                                     <div class="relative">
                                         <div v-if="canReorderPositions"
-                                             class="main-position-drag-handle absolute left-[-20px] top-4 z-10 cursor-grab text-secondary hover:text-primaryText">
+                                             class="main-position-drag-handle absolute left-[-20px] top-4 z-10 cursor-grab text-text-subtle hover:text-primaryText">
                                             <PropertyIcon name="IconGripVertical" class="h-5 w-5" aria-hidden="true" />
                                         </div>
                                         <MainPositionComponent @openVerifiedModal="openVerifiedModal"
@@ -467,7 +463,7 @@
                         </draggable>
                         <table class="w-[97%] mb-6">
                             <tbody class="">
-                            <tr class="bg-secondaryHover xsDark flex h-10 w-full text-right">
+                            <tr class=" text-sm/5 font-semibold text-text flex h-10 w-full text-right">
                                 <td class="w-48"></td>
                                 <td class="w-48"></td>
                                 <td class="w-72 my-2">{{ $t('SUM') }}</td>
@@ -476,7 +472,7 @@
                                     :key="column.id"
                                     v-show="!(column.commented && this.$page.props.auth.user.commented_budget_items_setting?.exclude === 1)">
                                     <div class="w-48 my-2 p-1 flex group relative justify-end items-center"
-                                         :class="(summaryTotals.costSums[column.id] ?? 0) < 0 ? 'text-red-500' : ''">
+                                         :class="(summaryTotals.costSums[column.id] ?? 0) < 0 ? 'text-danger' : ''">
                                         <img @click="openBudgetSumDetailModal('COST', column, 'comment')"
                                              v-if="table.costSumDetails?.[column.id]?.hasComments && table.costSumDetails?.[column.id]?.hasMoneySource"
                                              src="/Svgs/IconSvgs/icon_linked_and_adjustments.svg"
@@ -503,12 +499,12 @@
                                              class="hidden group-hover:block absolute right-0 z-50 -mr-6"
                                              @click="openBudgetSumDetailModal('COST', column)">
                                             <PropertyIcon name="IconCirclePlus"
-                                                class="h-6 w-6 flex-shrink-0 cursor-pointer text-white bg-artwork-buttons-create rounded-full "/>
+                                                class="h-6 w-6 flex-shrink-0 cursor-pointer text-white bg-accent-600 rounded-full "/>
                                         </div>
                                     </div>
                                 </td>
                             </tr>
-                            <tr class="bg-secondaryHover xsLight flex h-10 w-full text-right">
+                            <tr class=" text-sm/5 font-bold text-text-subtle flex h-10 w-full text-right">
                                 <td class="w-48"></td>
                                 <td class="w-48"></td>
                                 <td class="w-72 my-2">{{ $t('SUM excluded items') }}</td>
@@ -533,13 +529,13 @@
                             </tbody>
                         </table>
                     </div>
-                    <div class="ml-5 w-full bg-secondaryHover" v-else>
-                        <div class="headline4 my-10 flex">
+                    <div class="ml-5 w-full " v-else>
+                        <div class="font-lexend font-semibold text-[clamp(18px,2.5vw,20px)]/[25px] text-text my-10 flex">
                             {{ $t('Expenses') }}
                             <button class="w-6" @click="costsOpened = !costsOpened">
                                 <PropertyIcon name="IconChevronUp" stroke-width="1.5" v-if="costsOpened"
-                                                   class="h-6 w-6 text-primary my-auto"/>
-                                <PropertyIcon name="IconChevronDown" stroke-width="1.5" v-else class="h-6 w-6 text-primary my-auto"/>
+                                                   class="h-6 w-6 text-text my-auto"/>
+                                <PropertyIcon name="IconChevronDown" stroke-width="1.5" v-else class="h-6 w-6 text-text my-auto"/>
                             </button>
                         </div>
                     </div>
@@ -547,13 +543,13 @@
                 <!-- Divider -->
                 <div class="border-t-2 border-b-2 h-1.5 w-full ml-5 mr-12"/>
                 <div class="w-full flex">
-                    <div class="ml-5 w-full bg-secondaryHover" v-if="earningsOpened">
-                        <div class="headline4 my-10 flex">
+                    <div class="ml-5 w-full " v-if="earningsOpened">
+                        <div class="font-lexend font-semibold text-[clamp(18px,2.5vw,20px)]/[25px] text-text my-10 flex">
                             {{ $t('Revenue') }}
                             <button class="w-6" @click="earningsOpened = !earningsOpened">
                                 <PropertyIcon name="IconChevronUp" stroke-width="1.5" v-if="earningsOpened"
-                                               class="h-6 w-6 text-primary my-auto"/>
-                                <PropertyIcon name="IconChevronDown" stroke-width="1.5" v-else class="h-6 w-6 text-primary my-auto"/>
+                                               class="h-6 w-6 text-text my-auto"/>
+                                <PropertyIcon name="IconChevronDown" stroke-width="1.5" v-else class="h-6 w-6 text-text my-auto"/>
                             </button>
                         </div>
         <draggable
@@ -568,7 +564,7 @@
                                 <div class="mb-1">
                                     <div class="relative">
                                         <div v-if="canReorderPositions"
-                                             class="main-position-drag-handle absolute left-[-20px] top-4 z-10 cursor-grab text-secondary hover:text-primaryText">
+                                             class="main-position-drag-handle absolute left-[-20px] top-4 z-10 cursor-grab text-text-subtle hover:text-primaryText">
                                             <PropertyIcon name="IconGripVertical" class="h-5 w-5" aria-hidden="true" />
                                         </div>
                                         <MainPositionComponent @openVerifiedModal="openVerifiedModal"
@@ -593,7 +589,7 @@
                         </draggable>
                         <table class="w-[97%] mb-6">
                             <tbody class="">
-                            <tr class="bg-secondaryHover xsDark flex h-10 w-full text-right">
+                            <tr class=" text-sm/5 font-semibold text-text flex h-10 w-full text-right">
                                 <td class="w-48"></td>
                                 <td class="w-48"></td>
                                 <td class="w-72 my-2">{{ $t('SUM') }}</td>
@@ -602,7 +598,7 @@
                                     :key="column.id"
                                     v-show="!(column.commented && this.$page.props.auth.user.commented_budget_items_setting?.exclude === 1)">
                                     <div class="w-48 my-2 p-1 flex group relative justify-end items-center"
-                                         :class="(summaryTotals.earningSums[column.id] ?? 0) < 0 ? 'text-red-500' : ''">
+                                         :class="(summaryTotals.earningSums[column.id] ?? 0) < 0 ? 'text-danger' : ''">
                                         <img @click="openBudgetSumDetailModal('EARNING', column, 'comment')"
                                              v-if="table.earningSumDetails?.[column.id]?.hasComments && table.earningSumDetails?.[column.id]?.hasMoneySource"
                                              src="/Svgs/IconSvgs/icon_linked_and_adjustments.svg"
@@ -629,13 +625,13 @@
                                              class="hidden group-hover:block absolute right-0 z-50 -mr-6"
                                              @click="openBudgetSumDetailModal('EARNING', column)">
                                             <PropertyIcon name="IconCirclePlus"
-                                                class="h-6 w-6 flex-shrink-0 cursor-pointer text-white bg-artwork-buttons-create rounded-full "/>
+                                                class="h-6 w-6 flex-shrink-0 cursor-pointer text-white bg-accent-600 rounded-full "/>
                                         </div>
                                     </div>
                                 </td>
 
                             </tr>
-                            <tr class="bg-secondaryHover xsLight flex h-10 w-full text-right">
+                            <tr class=" text-sm/5 font-bold text-text-subtle flex h-10 w-full text-right">
                                 <td class="w-48"></td>
                                 <td class="w-48"></td>
                                 <td class="w-72 my-2">{{ $t('SUM excluded items') }}</td>
@@ -661,15 +657,15 @@
                         </table>
                     </div>
                     <!-- View if not opened Event -->
-                    <div class="ml-5 w-full bg-secondaryHover" v-else>
-                        <div class="headline4 my-10 flex">
+                    <div class="ml-5 w-full " v-else>
+                        <div class="font-lexend font-semibold text-[clamp(18px,2.5vw,20px)]/[25px] text-text my-10 flex">
                             {{ $t('Revenue') }}
                             <button class="w-6"
                                     @click="earningsOpened = !earningsOpened">
                                 <PropertyIcon name="IconChevronUp" stroke-width="1.5" v-if="earningsOpened"
-                                               class="h-6 w-6 text-primary my-auto"/>
+                                               class="h-6 w-6 text-text my-auto"/>
                                 <PropertyIcon name="IconChevronDown" stroke-width="1.5" v-else
-                                                 class="h-6 w-6 text-primary my-auto"/>
+                                                 class="h-6 w-6 text-text my-auto"/>
                             </button>
                         </div>
                     </div>
@@ -678,7 +674,7 @@
                 <div class="border-t-2 border-b-2 h-1.5 w-full ml-5 mr-12"/>
                 <table class="w-[97%] mt-4 mb-2 ml-5">
                     <tbody>
-                    <tr class="bg-secondaryHover items-center xsDark flex h-10 w-full text-right">
+                    <tr class=" items-center text-sm/5 font-semibold text-text flex h-10 w-full text-right">
                         <td class="w-48"></td>
                         <td class="w-48"></td>
                         <td class="w-72 my-2">{{ $t('Revenue') }} - {{ $t('Expenses') }}</td>
@@ -687,7 +683,7 @@
                             :key="column.id"
                             v-show="!(column.commented && this.$page.props.auth.user.commented_budget_items_setting?.exclude === 1)">
                             <div class="w-48 my-2 p-1 flex justify-end items-center"
-                                 :class="differenceForColumn(column) < 0 ? 'text-red-500' : ''">
+                                 :class="differenceForColumn(column) < 0 ? 'text-danger' : ''">
                                 <span>{{ toCurrencyString(differenceForColumn(column)) }}</span>
                             </div>
                         </td>
@@ -699,16 +695,16 @@
     </div>
     <ArtworkBaseModal @close="closeSuccessModal" v-if="showSuccessModal" :title="successHeading" :description="successDescription">
         <div class="mx-4">
-            <div class="headline1 my-2">
+            <div class="font-lexend font-black text-[clamp(24px,3vw,30px)]/[34px] text-text my-2">
                 {{ successHeading }}
             </div>
-            <div class="successText">
+            <div class="text-sm/5 text-success">
                 {{ successDescription }}
             </div>
             <div class="mt-6 flex justify-center">
-                <ArtworkBaseModalButton variant="success" @click="closeSuccessModal">
+                <BaseUIButton variant="primary" hide-icon @click="closeSuccessModal">
                     <PropertyIcon name="IconCheck" stroke-width="1.5" class="h-5 w-5"/>
-                </ArtworkBaseModalButton>
+                </BaseUIButton>
             </div>
         </div>
     </ArtworkBaseModal>
@@ -723,9 +719,9 @@
     <ArtworkBaseModal @close="closeBudgetAccessModal" v-if="showBudgetAccessModal" :title="$t('Grant budget access')" :description="$t('The user you have requested for verification does not yet have budget access to your project. With the verification request, you grant him/her this right. Are you sure you want to give her/him this right?')">
         <div class="mx-4">
             <div class="mt-6 flex justify-center">
-                <ArtworkBaseModalButton variant="primary" @click="submitVerifiedModalWithBudgetAccess">
+                <BaseUIButton variant="primary" hide-icon @click="submitVerifiedModalWithBudgetAccess">
                     {{ $t('Issue requests & budget access') }}
-                </ArtworkBaseModalButton>
+                </BaseUIButton>
             </div>
         </div>
     </ArtworkBaseModal>
@@ -847,7 +843,6 @@ import SwitchDualLabel from "@/Artwork/Toggles/SwitchDualLabel.vue";
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
-import ArtworkBaseModalButton from "@/Artwork/Buttons/ArtworkBaseModalButton.vue";
 import axios from "axios";
 import BaseMenuItem from "@/Components/Menu/BaseMenuItem.vue";
 import VerifiedRequestModal from "@/Layouts/Components/VerifiedRequestModal.vue";
@@ -861,7 +856,6 @@ export default {
         BaseMenuItem,
         PropertyIcon,
         ArtworkBaseModal,
-        ArtworkBaseModalButton,
         BaseUIButton,
         SwitchIconTooltip,
         SwitchDualLabel,

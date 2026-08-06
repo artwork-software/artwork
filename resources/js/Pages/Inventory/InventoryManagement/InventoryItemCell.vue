@@ -18,13 +18,13 @@
             <template v-else-if="isUploadColumn()">
                 <div class="flex items-center justify-between gap-4">
                     <div @click="getDownloadLink">
-                        <div class="text-blue-400 underline-offset-2 underline cursor-pointer flex items-center gap-1">
+                        <div class="text-accent-500 underline-offset-2 underline cursor-pointer flex items-center gap-1">
                             <div class="truncate max-w-52">{{ cell.cell_value }}</div>
                              {{ $t('View') }}
                         </div>
                     </div>
                     <div>
-                        <div class="text-red-500 underline-offset-2 underline cursor-pointer"
+                        <div class="text-danger underline-offset-2 underline cursor-pointer"
                              @click="isDeleteModalOpen = true">
                             {{ $t('Delete') }}
                         </div>
@@ -55,7 +55,7 @@
                     @change="uploadFileToColumn()"
                 />
                 <div>
-                    <div class="text-red-500" v-if="uploadFeedback">
+                    <div class="text-danger" v-if="uploadFeedback">
                         {{ uploadFeedback }}
                     </div>
                 </div>
@@ -164,7 +164,7 @@ const emits = defineEmits(['isEditingCellValue']),
         ].join(' ');
     },
     getBackgroundClsForInput = () => {
-        return props.cell.column.background_color !== 'bg-secondary' ?
+        return props.cell.column.background_color !== 'bg-text-subtle' ?
             props.cell.column.background_color :
             'bg-white';
     },

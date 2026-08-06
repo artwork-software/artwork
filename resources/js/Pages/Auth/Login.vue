@@ -12,18 +12,18 @@
                     <!-- Branding + Titel -->
                     <div class="flex items-center gap-4 mb-8">
                         <img :src="$page.props.big_logo" class="h-10 w-auto" alt="Artwork Logo" />
-                        <h1 class="font-lexend text-2xl font-bold text-zinc-900 tracking-tight">
+                        <h1 class="font-lexend text-2xl font-bold text-text tracking-tight">
                             {{ $t('Login') }}
                         </h1>
                     </div>
 
                     <!-- Status (z. B. „Passwort zurückgesetzt“) -->
-                    <p v-if="status" class="mb-4 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm text-emerald-700">
+                    <p v-if="status" class="mb-4 rounded-xl border border-success-border bg-success-surface px-4 py-2 text-sm text-success">
                         {{ status }}
                     </p>
 
                     <!-- Card -->
-                    <div class="rounded-2xl border border-zinc-200 bg-white shadow-sm">
+                    <div class="rounded-2xl border border-border-subtle bg-white shadow-sm">
                         <form class="p-6 space-y-6" @submit.prevent="submit">
                             <div class="space-y-4">
                                 <BaseInput
@@ -40,7 +40,7 @@
                                         <button
                                             type="button"
                                             @click="showPassword = !showPassword"
-                                            class="text-xs font-medium text-blue-600 hover:text-blue-700 focus:outline-none focus:underline"
+                                            class="text-xs font-medium text-accent-600 hover:text-accent-700 focus:outline-none focus:underline"
                                         >
                                             {{ showPassword ? $t('Hide password') : $t('Show password') }}
                                         </button>
@@ -73,7 +73,7 @@
                                 <Link
                                     v-if="canResetPassword"
                                     :href="route('password.request')"
-                                    class="text-xs text-blue-600 hover:text-blue-700 hover:font-semibold"
+                                    class="text-xs text-accent-600 hover:text-accent-700 hover:font-semibold"
                                 >
                                     {{ $t('Forgot your password?') }}
                                 </Link>
@@ -96,11 +96,11 @@
                     <!-- SSO / OIDC Login -->
                     <div v-if="identityProviderSources && identityProviderSources.length" class="mt-6">
                         <div class="relative flex items-center">
-                            <div class="flex-grow border-t border-zinc-200"></div>
-                            <span class="mx-3 text-xs uppercase tracking-wide text-zinc-400">
+                            <div class="flex-grow border-t border-border-subtle"></div>
+                            <span class="mx-3 text-xs uppercase tracking-wide text-text-subtle">
                                 {{ $t('or') }}
                             </span>
-                            <div class="flex-grow border-t border-zinc-200"></div>
+                            <div class="flex-grow border-t border-border-subtle"></div>
                         </div>
 
                         <div class="mt-4 space-y-3">
@@ -108,7 +108,7 @@
                                 v-for="source in identityProviderSources"
                                 :key="source.id"
                                 :href="route('auth.oidc.redirect', { externalUserSource: source.id })"
-                                class="flex w-full items-center justify-center gap-2 rounded-xl border border-zinc-200 bg-white px-4 py-2.5 text-sm font-medium text-zinc-700 shadow-sm transition hover:bg-zinc-50 hover:text-blue-700"
+                                class="flex w-full items-center justify-center gap-2 rounded-xl border border-border-subtle bg-white px-4 py-2.5 text-sm font-medium text-text-muted shadow-sm transition hover:bg-surface-sunken hover:text-accent-700"
                             >
                                 {{ $t('Sign in with :name', { name: source.name }) }}
                             </a>
@@ -116,22 +116,22 @@
                     </div>
 
                     <!-- Footer Links -->
-                    <div class="mt-6 flex flex-wrap items-center gap-x-3 gap-y-2 text-sm text-zinc-600">
+                    <div class="mt-6 flex flex-wrap items-center gap-x-3 gap-y-2 text-sm text-text-muted">
                         <template v-if="$page.props.impressumLink">
-                            <a :href="$page.props.impressumLink" target="_blank" class="hover:text-blue-700 hover:underline">
+                            <a :href="$page.props.impressumLink" target="_blank" class="hover:text-accent-700 hover:underline">
                                 {{ $t('Imprint') }}
                             </a>
-                            <span class="text-zinc-300">|</span>
+                            <span class="text-text-subtle">|</span>
                         </template>
 
                         <template v-if="$page.props.privacyLink">
-                            <a :href="$page.props.privacyLink" target="_blank" class="hover:text-blue-700 hover:underline">
+                            <a :href="$page.props.privacyLink" target="_blank" class="hover:text-accent-700 hover:underline">
                                 {{ $t('Privacy Policy') }}
                             </a>
-                            <span class="text-zinc-300">|</span>
+                            <span class="text-text-subtle">|</span>
                         </template>
 
-                        <a href="https://artwork.software/" target="_blank" class="hover:text-blue-700 hover:underline">
+                        <a href="https://artwork.software/" target="_blank" class="hover:text-accent-700 hover:underline">
                             {{ $t('About the tool') }}
                         </a>
                     </div>

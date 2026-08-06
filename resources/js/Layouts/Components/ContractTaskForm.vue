@@ -31,19 +31,19 @@
         <div class="col-span-full">
             <UserSearch v-model="task_user_query" :label="$t('Who is responsible for this task?')" @userSelected="addUserToTaskUserArray"/>
         </div>
-        <div class="flex mt-1 justify-center text-sm text-error col-span-full">
+        <div class="flex mt-1 justify-center text-sm text-danger col-span-full">
             {{this.errorText}}
         </div>
         <div v-if="taskUsers.length > 0" class="col-span-full">
-            <div v-for="(user,index) in taskUsers" class="flex mr-5 rounded-full items-center font-bold text-primary">
+            <div v-for="(user,index) in taskUsers" class="flex mr-5 rounded-full items-center font-bold text-text">
                 <div class="flex items-center">
                     <img class="flex h-11 w-11 rounded-full object-cover" :src="user.profile_photo_url" alt=""/>
-                    <span class="flex ml-4 sDark">
+                    <span class="flex ml-4 text-base/5 font-semibold text-text">
                         {{ user.first_name }} {{ user.last_name }}
                     </span>
                     <button type="button" @click="deleteUserFromTaskUserArray(index)">
                         <span class="sr-only">{{ $t('Remove user from task')}}</span>
-                        <IconX stroke-width="1.5" class="ml-2 h-4 w-4 p-0.5 hover:text-error rounded-full text-primary border-0 "/>
+                        <IconX stroke-width="1.5" class="ml-2 h-4 w-4 p-0.5 hover:text-danger rounded-full text-text border-0 "/>
                     </button>
                 </div>
             </div>
@@ -62,7 +62,7 @@
 </template>
 
 <script>
-import {XIcon} from "@heroicons/vue/outline";
+import {IconX} from "@tabler/icons-vue";
 import Permissions from "@/Mixins/Permissions.vue";
 import IconLib from "@/Mixins/IconLib.vue";
 import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
@@ -84,7 +84,7 @@ export default {
         TimeInputComponent,
         DateInputComponent,
         TextInputComponent,
-        XIcon
+        IconX
     },
     props: {
         show: Boolean,

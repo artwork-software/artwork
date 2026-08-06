@@ -15,9 +15,9 @@
                             :id="method.id"
                             name="user-type"
                             type="radio"
-                            class="h-4 w-4 border-gray-300 text-artwork-buttons-create focus:ring-artwork-buttons-create"
+                            class="h-4 w-4 border-border text-accent-600 focus:ring-accent-600"
                         />
-                        <label :for="method.id" class="ml-3 block text-sm font-medium leading-6 text-gray-900">
+                        <label :for="method.id" class="ml-3 block text-sm font-medium leading-6 text-text">
                             {{ method.title }}
                         </label>
                     </div>

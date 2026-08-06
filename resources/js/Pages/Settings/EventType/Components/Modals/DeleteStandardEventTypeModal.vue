@@ -1,16 +1,16 @@
 <template>
     <BaseModal @closed="$emit('closed')">
         <div class="mx-4">
-            <div class="headline1">
+            <div class="font-lexend font-black text-[clamp(24px,3vw,30px)]/[34px] text-text">
                 {{$t('Delete event type')}}
             </div>
-            <div class="errorText">
+            <div class="text-sm/5 text-danger">
                 {{$t('The event type {eventType} cannot be deleted because it is the standard event type.', {eventType: eventType.name})}}
             </div>
             <div class="flex justify-between mt-6">
                 <div class="flex my-auto">
                     <span @click="$emit('closed')"
-                          class="text-secondary subpixel-antialiased cursor-pointer">{{$t('Ok')}}</span>
+                          class="text-text-subtle subpixel-antialiased cursor-pointer">{{$t('Ok')}}</span>
                 </div>
             </div>
         </div>

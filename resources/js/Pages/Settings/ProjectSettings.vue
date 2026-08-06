@@ -43,7 +43,7 @@
                     @openEditModal="openEditSectorModal"
                 />
 
-                <div class="card white p-5">
+                <div class="rounded-lg bg-surface border border-border-subtle w-full shadow-raised p-5">
                     <div class="">
                         <BasePageTitle :title="$t('Project Status')" :description="$t('Define project statuses to indicate the progress of a project. Users can then adjust their notifications based on these statuses.')" />
                     </div>
@@ -68,10 +68,10 @@
                         </div>
                     </div>
 
-                    <button class="ui-button-add" @click="openAddStateModal">
+                    <BaseUIButton variant="primary" hide-icon @click="openAddStateModal">
                         <component :is="IconCirclePlus" stroke-width="1" class="size-5" />
                         {{ $t('Add Status') }}
-                    </button>
+                    </BaseUIButton>
                 </div>
 
                 <ProjectSettingsItem
@@ -118,21 +118,21 @@
                 leave-from-class="opacity-100"
                 leave-to-class="transform opacity-0"
             >
-                <div class="my-3 text-xs bg-green-600 px-3 py-1.5 text-white rounded-lg" v-show="showSaveSuccess">
+                <div class="my-3 text-xs bg-success px-3 py-1.5 text-white rounded-lg" v-show="showSaveSuccess">
                     {{ $t('Saved. The changes have been successfully applied.') }}
                 </div>
             </transition>
 
-            <div class="grid gird-cols-1 md:grid-cols-3 gap-6 my-4 card white p-5">
+            <div class="grid gird-cols-1 md:grid-cols-3 gap-6 my-4 rounded-lg bg-surface border border-border-subtle w-full shadow-raised p-5">
                 <div class="relative flex items-start">
                     <div class="flex h-6 items-center">
                         <input @change="updateCreateSettings" v-model="createSettingsForm.attributes" id="attributes" aria-describedby="attributes-description" name="attributes" type="checkbox" class="input-checklist" />
                     </div>
                     <div class="ml-3 text-sm leading-6">
-                        <label for="attributes" class="font-medium text-gray-900">
+                        <label for="attributes" class="font-medium text-text">
                             {{ $t('Project Attributes') }}
                         </label>
-                        <p id="attributes-description" class="text-gray-500 text-xs">
+                        <p id="attributes-description" class="text-text-subtle text-xs">
                             {{ $t('Should it be possible to add project attributes when creating a project?') }}
                         </p>
                     </div>
@@ -142,10 +142,10 @@
                         <input @change="updateCreateSettings" v-model="createSettingsForm.state" id="state" aria-describedby="state-description" name="state" type="checkbox" class="input-checklist" />
                     </div>
                     <div class="ml-3 text-sm leading-6">
-                        <label for="state" class="font-medium text-gray-900">
+                        <label for="state" class="font-medium text-text">
                             {{ $t('Project status') }}
                         </label>
-                        <p id="state-description" class="text-gray-500 text-xs">
+                        <p id="state-description" class="text-text-subtle text-xs">
                             {{ $t('Should it be possible to add a project status when creating a project?') }}
                         </p>
                     </div>
@@ -155,10 +155,10 @@
                         <input @change="updateCreateSettings" v-model="createSettingsForm.managers" id="managers" aria-describedby="managers-description" name="managers" type="checkbox" class="input-checklist" />
                     </div>
                     <div class="ml-3 text-sm leading-6">
-                        <label for="managers" class="font-medium text-gray-900">
+                        <label for="managers" class="font-medium text-text">
                             {{ $t('Project management') }}
                         </label>
-                        <p id="managers-description" class="text-gray-500 text-xs">
+                        <p id="managers-description" class="text-text-subtle text-xs">
                             {{ $t('Should it be possible to add the project management when creating a project?') }}
                         </p>
                     </div>
@@ -168,10 +168,10 @@
                         <input @change="updateCreateSettings" v-model="createSettingsForm.cost_center" id="cost_center" aria-describedby="cost_center-description" name="cost_center" type="checkbox" class="input-checklist" />
                     </div>
                     <div class="ml-3 text-sm leading-6">
-                        <label for="cost_center" class="font-medium text-gray-900">
+                        <label for="cost_center" class="font-medium text-text">
                             {{ $t('Cost bearer') }}
                         </label>
-                        <p id="cost_center-description" class="text-gray-500 text-xs">
+                        <p id="cost_center-description" class="text-text-subtle text-xs">
                            {{ $t('Do you want to add the cost unit of the project when creating it?') }}
                         </p>
                     </div>
@@ -182,7 +182,7 @@
                     </div>
                     <div class="ml-3 text-sm leading-6">
                         <div class="flex items-center gap-1.5">
-                            <label for="budget_deadline" class="font-medium text-gray-900">
+                            <label for="budget_deadline" class="font-medium text-text">
                                 {{ $t('Budget deadline') }}
                             </label>
                             <ToolTipComponent
@@ -192,7 +192,7 @@
                                 icon-size="h-4 w-4"
                             />
                         </div>
-                        <p id="budget_deadline-description" class="text-gray-500 text-xs">
+                        <p id="budget_deadline-description" class="text-text-subtle text-xs">
                             {{ $t('Would you like to enter the project budget deadline when you create a project?') }}
                         </p>
                     </div>
@@ -202,10 +202,10 @@
                         <input @change="updateCreateSettings" v-model="createSettingsForm.show_artists" id="show_artists" aria-describedby="show_artists-description" name="show_artists" type="checkbox" class="input-checklist"/>
                     </div>
                     <div class="ml-3 text-sm leading-6">
-                        <label for="budget_deadline" class="font-medium text-gray-900">
+                        <label for="budget_deadline" class="font-medium text-text">
                             {{ $t('Artists') }}
                         </label>
-                        <p id="budget_deadline-description" class="text-gray-500 text-xs">
+                        <p id="budget_deadline-description" class="text-text-subtle text-xs">
                             {{ $t('Would you like to add artists on project creation?') }}
                         </p>
                     </div>
@@ -215,10 +215,10 @@
                         <input @change="updateCreateSettings" v-model="createSettingsForm.crm_contacts_in_team" id="crm_contacts_in_team" aria-describedby="crm_contacts_in_team-description" name="crm_contacts_in_team" type="checkbox" class="input-checklist"/>
                     </div>
                     <div class="ml-3 text-sm leading-6">
-                        <label for="crm_contacts_in_team" class="font-medium text-gray-900">
+                        <label for="crm_contacts_in_team" class="font-medium text-text">
                             {{ $t('CRM contacts in project team') }}
                         </label>
-                        <p id="crm_contacts_in_team-description" class="text-gray-500 text-xs">
+                        <p id="crm_contacts_in_team-description" class="text-text-subtle text-xs">
                             {{ $t('Should it also be possible to link CRM contacts in the project team? This lets you show which external contacts are relevant for a project and assign them project roles.') }}
                         </p>
                     </div>
@@ -293,9 +293,7 @@
 
 <script>
 import ProjectSettingsHeader from '@/Pages/Settings/Components/ProjectSettingsHeader.vue';
-import {DotsVerticalIcon, PencilAltIcon, TrashIcon, XIcon} from "@heroicons/vue/outline"
-import {CheckIcon, ChevronDownIcon, PlusSmIcon, XCircleIcon} from "@heroicons/vue/solid"
-import {IconInfoCircle, IconCirclePlus} from '@tabler/icons-vue';
+import {IconCheck, IconChevronDown, IconCirclePlus, IconCircleX, IconDotsVertical, IconEdit, IconInfoCircle, IconPlus, IconTrash, IconX} from "@tabler/icons-vue";
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
 import SvgCollection from "@/Layouts/Components/SvgCollection.vue";
 import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
@@ -307,36 +305,36 @@ import ProjectStateTagComponent from "@/Layouts/Components/ProjectStateTagCompon
 import Permissions from "@/Mixins/Permissions.vue";
 import TinyPageHeadline from "@/Components/Headlines/TinyPageHeadline.vue";
 import {useForm} from "@inertiajs/vue3";
-import BaseCardButton from "@/Artwork/Buttons/BaseCardButton.vue";
 import BasePageTitle from "@/Artwork/Titles/BasePageTitle.vue";
 import SettingsGuideBanner from "@/Artwork/Guide/SettingsGuideBanner.vue";
+import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 
 export default {
     mixins: [Permissions],
     components: {
+        BaseUIButton,
         SettingsGuideBanner,
         BasePageTitle,
         ProjectSettingsHeader,
-        BaseCardButton,
         TinyPageHeadline,
         ProjectStateModal,
         ProjectStateTagComponent,
         ProjectSettingsDeleteModal,
         ProjectSettingsItem,
-        XCircleIcon,
-        PlusSmIcon,
+        IconCircleX,
+        IconPlus,
         SvgCollection,
-        CheckIcon,
+        IconCheck,
         Menu,
         MenuButton,
         MenuItem,
         MenuItems,
         JetDialogModal,
-        ChevronDownIcon,
-        DotsVerticalIcon,
-        TrashIcon,
-        PencilAltIcon,
-        XIcon,
+        IconChevronDown,
+        IconDotsVertical,
+        IconTrash,
+        IconEdit,
+        IconX,
         ToolTipComponent,
         IconInfoCircle,
     },

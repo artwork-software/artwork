@@ -1,19 +1,19 @@
 <template>
     <div>
-        <h3 class="text-[11px] font-semibold uppercase tracking-wide text-secondary mb-2">{{ $t('Contact persons') }}</h3>
+        <h3 class="text-[11px] font-semibold uppercase tracking-wide text-text-subtle mb-2">{{ $t('Contact persons') }}</h3>
         <div v-if="project.shift_contact?.length > 0" class="space-y-1">
-            <div v-for="(user, index) in project.shift_contact" :key="index" class="group block shrink-0 bg-white w-fit pr-3 rounded-full border border-gray-100">
+            <div v-for="(user, index) in project.shift_contact" :key="index" class="group block shrink-0 bg-white w-fit pr-3 rounded-full border border-border-subtle">
                 <div class="flex items-center">
                     <div>
                         <img class="inline-block size-9 rounded-full object-cover" :src="user.profile_photo_url" alt="" />
                     </div>
                     <div class="mx-2">
-                        <p class="xsDark">{{ user.full_name }}</p>
+                        <p class="text-sm/5 font-semibold text-text">{{ user.full_name }}</p>
                     </div>
                 </div>
             </div>
         </div>
-        <div v-else class="text-sm text-secondary">
+        <div v-else class="text-sm text-text-subtle">
             {{ $t('No entries') }}
         </div>
     </div>

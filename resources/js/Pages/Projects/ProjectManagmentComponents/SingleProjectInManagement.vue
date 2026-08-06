@@ -5,25 +5,15 @@
                 :key="project.id"
                 @mousedown.middle="openProjectInNewTab(project)"
                 @mousedown="openProjectInNewTabWithCmdOrSTRG($event, project)"
-                class="group relative cursor-pointer"
+                class="group relative cursor-pointer min-h-[44px] hover:bg-surface-hover transition-colors duration-150 ease-out"
                 @contextmenu.prevent="openMenu(project.id, $event)"
             >
-                <!-- Pinned -->
-                <div
-                    class="absolute left-2 -top-2"
-                    v-if="fullProject?.pinned_by_users && fullProject?.pinned_by_users.includes($page.props.auth.user.id)"
-                >
-                    <div class="rounded-full p-0.5 bg-white border border-zinc-200 shadow-sm">
-                        <component :is="IconPinned" class="h-5 w-5 text-artwork-buttons-create" />
-                    </div>
-                </div>
-
                 <!-- Row grid -->
                 <div class="grid items-center" :style="`grid-template-columns: ${gridTemplateColumns}`">
                     <div
                         v-for="component in components"
                         :key="component.name"
-                        class="px-3 py-3 min-h-11 max-h-16 flex items-center"
+                        class="px-3 py-1.5 min-h-11 max-h-16 flex items-center"
                         :class="component.type === 'ActionsComponent' ? 'justify-end' : 'justify-start'"
                         @click="openProject(component, project)"
                     >
@@ -35,7 +25,7 @@
                             :checked="selected"
                             @click.stop
                             @change="$emit('toggle-selection', project.id)"
-                            class="mr-3 h-4 w-4 shrink-0 rounded border-gray-300 text-artwork-buttons-hover focus:ring-artwork-buttons-hover cursor-pointer"
+                            class="mr-3 h-4 w-4 shrink-0 rounded border-border text-accent-700 focus:ring-accent-700 cursor-pointer"
                             :aria-label="$t('Select project')"
                         />
 
@@ -49,12 +39,34 @@
                             :menu-position="menuPosition"
                         />
 
-                        <!-- Actions hover menu -->
+                        <!-- Gepinnt-Badge (statt Overlay-Pin); Pin/Unpin weiterhin über Hover-Aktionen & Kontextmenü -->
+                        <BaseChip
+                            v-if="component.type === 'ProjectTitleComponent' && isPinnedByCurrentUser"
+                            variant="accent"
+                            class="ml-2 shrink-0"
+                        >
+                            <component :is="IconPin" class="size-3" />
+                            {{ $t('Pinned') }}
+                        </BaseChip>
+
+                        <!-- Projektgruppen: Ordner-Icon + Zähler-Chip am Gruppennamen -->
+                        <BaseChip
+                            v-if="component.type === 'ProjectTitleComponent' && project?.is_group"
+                            variant="neutral"
+                            :count="groupProjectCount"
+                            class="ml-2 shrink-0"
+                        >
+                            <component :is="IconFolder" class="size-3" />
+                            {{ $t('Group') }}
+                        </BaseChip>
+
+                        <!-- Actions hover menu: bei Hover/Fokus sichtbar, Platz bleibt reserviert -->
                         <BaseMenu
                             v-show="showActionComponent && component.type === 'ActionsComponent'"
                             v-if="checkPermission(project, 'edit') || checkPermission(project, 'delete') || role('artwork admin') || can('delete projects') || can('write projects')"
                             has-no-offset
                             white-menu-background
+                            classes="invisible group-hover:visible group-focus-within:visible"
                         >
                             <BaseMenuItem white-menu-background as-link :link="route('projects.tab', { project: project.id, projectTab: project?.firstTabId })" title="Open" :icon="IconFolderOpen" />
                             <BaseMenuItem white-menu-background title="Edit basic data" @click="openEditProjectModal()" v-if="role('artwork admin') || can('write projects') || checkPermission(project, 'edit')" />
@@ -101,15 +113,15 @@
         <!-- Delete Modal -->
         <BaseModal @closed="closeDeleteProjectModal" v-if="deletingProject">
             <div class="mx-4">
-                <div class="text-2xl sm:text-3xl font-black text-zinc-900 dark:text-zinc-50 my-2">
+                <div class="text-2xl sm:text-3xl font-black text-text my-2">
                     {{ $t('Delete project') }}
                 </div>
-                <div class="text-sm text-rose-600 dark:text-rose-400">
+                <div class="text-sm text-danger ">
                     {{ $t('Are you sure you want to delete the project?', [project.name]) }}
                 </div>
                 <div class="flex flex-col sm:flex-row gap-4 justify-between mt-6">
                     <button
-                        class="bg-emerald-600 hover:bg-emerald-700 text-white rounded-full focus:outline-none inline-flex items-center px-8 py-3 text-sm font-semibold uppercase shadow-sm"
+                        class="bg-success hover:bg-success text-white rounded-full focus:outline-none inline-flex items-center px-8 py-3 text-sm font-semibold uppercase shadow-sm"
                         @click="deleteProject"
                     >
                         {{ $t('Delete') }}
@@ -117,7 +129,7 @@
                     <button
                         type="button"
                         @click="closeDeleteProjectModal()"
-                        class="text-sm text-zinc-600 dark:text-zinc-300 hover:underline underline-offset-4"
+                        class="text-sm text-text-muted dark:text-text-subtle hover:underline underline-offset-4"
                     >
                         {{ $t('No, not really') }}
                     </button>
@@ -155,7 +167,8 @@ import BuilderDropDown from "@/Pages/Projects/BuilderComponents/BuilderDropDown.
 import BuilderLink from "@/Pages/Projects/BuilderComponents/BuilderLinkComponent.vue";
 import ProjectCreateModal from "@/Layouts/Components/ProjectCreateModal.vue";
 import BaseModal from "@/Components/Modals/BaseModal.vue";
-import { IconCopy, IconFolderOpen, IconPin, IconPinned, IconPinnedOff, IconTrash } from "@tabler/icons-vue";
+import BaseChip from "@/Artwork/Chips/BaseChip.vue";
+import { IconCopy, IconFolder, IconFolderOpen, IconPin, IconPinnedOff, IconTrash } from "@tabler/icons-vue";
 
 const props = defineProps({
     project: { type: Object, required: true },
@@ -177,6 +190,19 @@ const emit = defineEmits(['toggle-selection']);
 const canDelete = computed(() =>
     role('artwork admin') || can('delete projects') || checkPermission(props.project, 'delete')
 );
+
+const isPinnedByCurrentUser = computed(() =>
+    Boolean(props.fullProject?.pinned_by_users?.includes?.(usePage().props.auth.user.id))
+);
+
+// Zähler nur anzeigen, wenn die Gruppen-Projekte im Payload vorhanden sind (BaseChip blendet count bei undefined aus)
+const groupProjectCount = computed(() => {
+    const count = props.project?.projects_of_group_count
+        ?? props.fullProject?.projects_of_group_count
+        ?? props.project?.groupProjects?.length
+        ?? props.fullProject?.groupProjects?.length;
+    return typeof count === 'number' && count > 0 ? count : undefined;
+});
 
 const menuVisible = ref(false);
 const menuPosition = ref({ x: 0, y: 0 });

@@ -10,7 +10,7 @@
                 <div class="flex items-center mb-3 mt-4">
                     <input type="checkbox" v-model="projectRightForm.gema"
                            class="input-checklist"/>
-                    <div class="text-md ml-2" :class="[projectRightForm.gema ? 'text-primary' : 'text-secondary']">
+                    <div class="text-md ml-2" :class="[projectRightForm.gema ? 'text-text' : 'text-text-subtle']">
                         {{ $t('GEMA')}}
                     </div>
                 </div>

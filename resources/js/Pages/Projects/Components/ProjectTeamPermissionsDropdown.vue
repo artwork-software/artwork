@@ -2,7 +2,7 @@
     <div ref="dropdown" class="relative flex-shrink-0">
         <button
             type="button"
-            class="inline-flex items-center gap-2 rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm font-medium text-primary transition hover:border-zinc-300 hover:bg-zinc-50"
+            class="inline-flex items-center gap-2 rounded-lg border border-border-subtle bg-white px-3 py-2 text-sm font-medium text-text transition hover:border-border hover:bg-surface-sunken"
             aria-haspopup="menu"
             :aria-expanded="open"
             @click="open = !open"
@@ -11,11 +11,11 @@
             <span v-else>{{ $t('Permissions') }} &amp; {{ $t('Project Roles') }}</span>
             <span
                 v-if="activeAssignmentCount > 0"
-                class="inline-flex min-w-5 items-center justify-center rounded-full bg-artwork-buttons-create/10 px-1.5 py-0.5 text-xs font-semibold text-primary"
+                class="inline-flex min-w-5 items-center justify-center rounded-full bg-accent-600/10 px-1.5 py-0.5 text-xs font-semibold text-text"
             >
                 {{ activeAssignmentCount }}
             </span>
-            <ChevronDownIcon class="h-4 w-4" aria-hidden="true" />
+            <IconChevronDown class="h-4 w-4" aria-hidden="true" />
         </button>
 
         <div v-show="open" class="fixed inset-0 z-40" @click="open = false" />
@@ -41,58 +41,58 @@
             >
                 <div class="grid w-full text-left" :class="rolesOnly ? 'grid-cols-1' : 'grid-cols-2'">
                     <div v-if="!rolesOnly" class="p-4 pr-3">
-                        <div class="text-xs font-semibold uppercase tracking-wide text-zinc-500">
+                        <div class="text-xs font-semibold uppercase tracking-wide text-text-subtle">
                             {{ $t('Permissions') }}
                         </div>
 
                         <div class="mt-2 space-y-2">
-                            <label class="flex cursor-pointer items-center gap-3 rounded-lg px-2 py-1.5 hover:bg-zinc-50">
+                            <label class="flex cursor-pointer items-center gap-3 rounded-lg px-2 py-1.5 hover:bg-surface-sunken">
                                 <input
                                     :checked="user.pivot_can_write"
                                     type="checkbox"
-                                    class="h-5 w-5 cursor-pointer rounded border-2 border-gray-300 text-success ring-offset-0 focus:ring-0 focus:shadow-none"
+                                    class="h-5 w-5 cursor-pointer rounded border-2 border-border text-success ring-offset-0 focus:ring-0 focus:shadow-none"
                                     @change="updatePermission('pivot_can_write', $event)"
                                 />
-                                <span class="text-sm text-secondary">{{ $t('Write permission') }}</span>
+                                <span class="text-sm text-text-subtle">{{ $t('Write permission') }}</span>
                             </label>
 
-                            <label class="flex cursor-pointer items-center gap-3 rounded-lg px-2 py-1.5 hover:bg-zinc-50">
+                            <label class="flex cursor-pointer items-center gap-3 rounded-lg px-2 py-1.5 hover:bg-surface-sunken">
                                 <input
                                     :checked="user.pivot_access_budget"
                                     type="checkbox"
-                                    class="h-5 w-5 cursor-pointer rounded border-2 border-gray-300 text-success ring-offset-0 focus:ring-0 focus:shadow-none"
+                                    class="h-5 w-5 cursor-pointer rounded border-2 border-border text-success ring-offset-0 focus:ring-0 focus:shadow-none"
                                     @change="updatePermission('pivot_access_budget', $event)"
                                 />
-                                <span class="text-sm text-secondary">{{ $t('Budget access') }}</span>
+                                <span class="text-sm text-text-subtle">{{ $t('Budget access') }}</span>
                             </label>
 
-                            <label class="flex cursor-pointer items-center gap-3 rounded-lg px-2 py-1.5 hover:bg-zinc-50">
+                            <label class="flex cursor-pointer items-center gap-3 rounded-lg px-2 py-1.5 hover:bg-surface-sunken">
                                 <input
                                     :checked="user.pivot_delete_permission"
                                     type="checkbox"
-                                    class="h-5 w-5 cursor-pointer rounded border-2 border-gray-300 text-success ring-offset-0 focus:ring-0 focus:shadow-none"
+                                    class="h-5 w-5 cursor-pointer rounded border-2 border-border text-success ring-offset-0 focus:ring-0 focus:shadow-none"
                                     @change="updatePermission('pivot_delete_permission', $event)"
                                 />
-                                <span class="text-sm text-secondary">{{ $t('Permission to delete') }}</span>
+                                <span class="text-sm text-text-subtle">{{ $t('Permission to delete') }}</span>
                             </label>
 
                             <label
                                 v-if="user.project_management"
-                                class="flex cursor-pointer items-center gap-3 rounded-lg px-2 py-1.5 hover:bg-zinc-50"
+                                class="flex cursor-pointer items-center gap-3 rounded-lg px-2 py-1.5 hover:bg-surface-sunken"
                             >
                                 <input
                                     :checked="user.pivot_is_manager"
                                     type="checkbox"
-                                    class="h-5 w-5 cursor-pointer rounded border-2 border-gray-300 text-success ring-offset-0 focus:ring-0 focus:shadow-none"
+                                    class="h-5 w-5 cursor-pointer rounded border-2 border-border text-success ring-offset-0 focus:ring-0 focus:shadow-none"
                                     @change="updatePermission('pivot_is_manager', $event)"
                                 />
-                                <span class="text-sm text-secondary">{{ $t('Project management') }}</span>
+                                <span class="text-sm text-text-subtle">{{ $t('Project management') }}</span>
                             </label>
                         </div>
                     </div>
 
-                    <div class="p-4" :class="rolesOnly ? '' : 'border-l border-zinc-100 pl-5'">
-                        <div class="text-xs font-semibold uppercase tracking-wide text-zinc-500">
+                    <div class="p-4" :class="rolesOnly ? '' : 'border-l border-border-subtle pl-5'">
+                        <div class="text-xs font-semibold uppercase tracking-wide text-text-subtle">
                             {{ $t('Project Roles') }}
                         </div>
 
@@ -100,29 +100,29 @@
                             <label
                                 v-for="role in projectRoles"
                                 :key="`role-${user.id}-${role.id}`"
-                                class="flex cursor-pointer items-center gap-3 rounded-lg px-2 py-1.5 hover:bg-zinc-50"
+                                class="flex cursor-pointer items-center gap-3 rounded-lg px-2 py-1.5 hover:bg-surface-sunken"
                             >
                                 <input
                                     :id="`role-${user.id}-${role.id}`"
                                     :name="role.name"
                                     type="checkbox"
-                                    class="h-5 w-5 cursor-pointer rounded border-2 border-gray-300 text-success ring-offset-0 focus:ring-0 focus:shadow-none"
+                                    class="h-5 w-5 cursor-pointer rounded border-2 border-border text-success ring-offset-0 focus:ring-0 focus:shadow-none"
                                     :checked="user.pivot_roles?.includes(role.id)"
                                     @change="$emit('toggle-role', role)"
                                 />
-                                <span class="text-sm text-secondary">{{ role.name }}</span>
+                                <span class="text-sm text-text-subtle">{{ role.name }}</span>
                             </label>
                         </div>
 
                         <template v-else>
                             <Link
                                 v-if="canManageProjectRoles"
-                                class="linkText mt-2 inline-block text-sm font-medium text-primary"
+                                class="text-xs/[18px] text-accent-600 mt-2 inline-block text-sm font-medium text-text"
                                 :href="route('project-roles.index')"
                             >
                                 {{ $t('No project roles created yet') }}
                             </Link>
-                            <span v-else class="mt-2 inline-block text-xs text-secondary">
+                            <span v-else class="mt-2 inline-block text-xs text-text-subtle">
                                 {{ $t('No project roles created yet') }}
                             </span>
                         </template>
@@ -134,9 +134,9 @@
 </template>
 
 <script setup>
+import {IconChevronDown} from "@tabler/icons-vue";
 import {computed, nextTick, onMounted, onUnmounted, ref, watch} from 'vue'
 import {Link} from '@inertiajs/vue3'
-import {ChevronDownIcon} from '@heroicons/vue/solid'
 
 const props = defineProps({
     user: {type: Object, required: true},

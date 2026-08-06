@@ -39,12 +39,12 @@
                     <div class="my-4 flow-root">
                         <div class="-mx-4 -my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
                             <div class="inline-block min-w-full py-2 align-middle sm:px-6 lg:px-8">
-                                <table class="min-w-full divide-y divide-gray-300">
+                                <table class="min-w-full divide-y divide-border">
                                     <thead>
-                                    <tr class="divide-x divide-gray-200">
-                                        <th scope="col" class="py-3.5 pr-4 pl-4 text-left text-sm font-semibold text-gray-900 sm:pl-0">Name</th>
-                                        <th scope="col" class="px-4 py-3.5 text-left text-sm font-semibold text-gray-900">{{ $t('Type') }}</th>
-                                        <th scope="col" class="py-3.5 pr-4 pl-4 text-left text-sm font-semibold text-gray-900 sm:pr-0">{{ $t('Default Value') }}</th>
+                                    <tr class="divide-x divide-border-subtle">
+                                        <th scope="col" class="py-3.5 pr-4 pl-4 text-left text-sm font-semibold text-text sm:pl-0">Name</th>
+                                        <th scope="col" class="px-4 py-3.5 text-left text-sm font-semibold text-text">{{ $t('Type') }}</th>
+                                        <th scope="col" class="py-3.5 pr-4 pl-4 text-left text-sm font-semibold text-text sm:pr-0">{{ $t('Default Value') }}</th>
                                     </tr>
                                     </thead>
                                     <draggable
@@ -53,30 +53,30 @@
                                         item-key="id"
                                         handle=".drag-handle"
                                         ghost-class="opacity-50"
-                                        class="divide-y divide-gray-200 bg-white"
+                                        class="divide-y divide-border-subtle bg-white"
                                     >
                                         <template #item="{ element: property, index }">
-                                            <tr :key="property.id" class="divide-x divide-gray-200">
-                                                <td class="py-4 pr-4 pl-4 text-sm font-medium whitespace-nowrap text-gray-900 sm:pl-0 first-letter:capitalize">
+                                            <tr :key="property.id" class="divide-x divide-border-subtle">
+                                                <td class="py-4 pr-4 pl-4 text-sm font-medium whitespace-nowrap text-text sm:pl-0 first-letter:capitalize">
                                                     <div class="flex items-center justify-between">
                                                         <div class="flex items-center gap-2">
-                                                            <span class="drag-handle inline-flex p-1 rounded hover:bg-gray-100 cursor-grab">
+                                                            <span class="drag-handle inline-flex p-1 rounded hover:bg-surface-sunken cursor-grab">
                                                                 <component :is="IconGripVertical" class="size-4" aria-hidden="true" />
                                                             </span>
                                                             {{ property?.name }}
                                                         </div>
-                                                        <button type="button" @click="removePropertyFromCategory(property)" class="text-red-600 hover:text-red-900">
+                                                        <button type="button" @click="removePropertyFromCategory(property)" class="text-danger hover:text-danger">
                                                             <component :is="IconTrash" class="h-5 w-5" aria-hidden="true" />
                                                         </button>
                                                     </div>
                                                 </td>
-                                                <td class="p-4 text-sm whitespace-nowrap text-gray-500 capitalize xsLight cursor-default">
+                                                <td class="p-4 text-sm whitespace-nowrap text-text-subtle capitalize text-sm/5 font-bold text-text-subtle cursor-default">
                                                     {{ $t(capitalizeFirstLetter(property?.type)) }}
                                                 </td>
-                                                <td class="text-sm whitespace-nowrap text-gray-500 sm:pr-0">
+                                                <td class="text-sm whitespace-nowrap text-text-subtle sm:pr-0">
                                                     <input v-if="property.type !== 'file' && property.type !== 'checkbox' && property.type !== 'room' && property.type !== 'manufacturer' && property.type !== 'selection'"
                                                            :type="property.type" v-model="property.defaultValue"
-                                                           class="block w-full rounded-md bg-white border-none text-xs px-3 py-1.5 text-gray-900 outline-0 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-0 ring-0 focus:ring-0"
+                                                           class="block w-full rounded-md bg-white border-none text-xs px-3 py-1.5 text-text outline-0 -outline-offset-1 outline-border placeholder:text-text-subtle focus:outline-0 ring-0 focus:ring-0"
                                                            :placeholder="$t('Default Value')"
                                                     />
 
@@ -89,12 +89,12 @@
                                                           @update:modelValue="roomQuery = ''">
                                                         <div class="relative">
                                                             <ComboboxInput
-                                                                class="block w-full ring-0 border-none focus:ring-0 rounded-md bg-white py-1.5 pr-12 pl-3 text-xs text-gray-900 placeholder:text-gray-400"
+                                                                class="block w-full ring-0 border-none focus:ring-0 rounded-md bg-white py-1.5 pr-12 pl-3 text-xs text-text placeholder:text-text-subtle"
                                                                 @change="roomQuery = $event.target.value" @blur="roomQuery = ''"
                                                                 :display-value="(person) => property.defaultValue ? props.rooms?.find((room) => room.id === parseInt(property.defaultValue) )?.name : ''"/>
                                                             <ComboboxButton
                                                                 class="absolute inset-y-0 right-0 flex items-center rounded-r-md px-2 focus:outline-hidden">
-                                                                <component :is="IconSelector" class="size-5 text-gray-400"
+                                                                <component :is="IconSelector" class="size-5 text-text-subtle"
                                                                            aria-hidden="true"/>
                                                             </ComboboxButton>
 
@@ -103,13 +103,13 @@
                                                                 <ComboboxOption v-for="room in filteredRooms" :key="room.id"
                                                                                 :value="room.id" as="template"
                                                                                 v-slot="{ active, selected }">
-                                                                    <li :class="['relative cursor-default py-2 pr-9 pl-3 select-none', active ? 'bg-indigo-600 text-white outline-hidden' : 'text-gray-900']">
+                                                                    <li :class="['relative cursor-default py-2 pr-9 pl-3 select-none', active ? 'bg-accent-600 text-white outline-hidden' : 'text-text']">
                                                                             <span
                                                                                 :class="['block truncate', selected && 'font-semibold']">
                                                                               {{ room.name }}
                                                                             </span>
                                                                         <span v-if="selected"
-                                                                              :class="['absolute inset-y-0 right-0 flex items-center pr-4', active ? 'text-white' : 'text-indigo-600']">
+                                                                              :class="['absolute inset-y-0 right-0 flex items-center pr-4', active ? 'text-white' : 'text-accent-600']">
                                                                               <component :is="IconCheck" class="size-5"
                                                                                          aria-hidden="true"/>
                                                                             </span>
@@ -123,13 +123,13 @@
                                                           v-model="property.defaultValue" @update:modelValue="manufacturerQuery = ''">
                                                         <div class="relative">
                                                             <ComboboxInput
-                                                                class="block w-full ring-0 border-none focus:ring-0 rounded-md bg-white py-1.5 pr-12 pl-3 text-xs text-gray-900 placeholder:text-gray-400"
+                                                                class="block w-full ring-0 border-none focus:ring-0 rounded-md bg-white py-1.5 pr-12 pl-3 text-xs text-text placeholder:text-text-subtle"
                                                                 @change="manufacturerQuery = $event.target.value"
                                                                 @blur="manufacturerQuery = ''"
                                                                 :display-value="(person) => property.defaultValue ? props.manufacturers?.find((manufacturer) => manufacturer.id === parseInt(property.defaultValue) )?.name : ''"/>
                                                             <ComboboxButton
                                                                 class="absolute inset-y-0 right-0 flex items-center rounded-r-md px-2 focus:outline-hidden">
-                                                                <component :is="IconSelector" class="size-5 text-gray-400"
+                                                                <component :is="IconSelector" class="size-5 text-text-subtle"
                                                                            aria-hidden="true"/>
                                                             </ComboboxButton>
 
@@ -138,13 +138,13 @@
                                                                 <ComboboxOption v-for="manufacturer in filteredManufacturers"
                                                                                 :key="manufacturer.id" :value="manufacturer.id" as="template"
                                                                                 v-slot="{ active, selected }">
-                                                                    <li :class="['relative cursor-default py-2 pr-9 pl-3 select-none', active ? 'bg-indigo-600 text-white outline-hidden' : 'text-gray-900']">
+                                                                    <li :class="['relative cursor-default py-2 pr-9 pl-3 select-none', active ? 'bg-accent-600 text-white outline-hidden' : 'text-text']">
                                                                             <span
                                                                                 :class="['block truncate', selected && 'font-semibold']">
                                                                               {{ manufacturer.name }}
                                                                             </span>
                                                                         <span v-if="selected"
-                                                                              :class="['absolute inset-y-0 right-0 flex items-center pr-4', active ? 'text-white' : 'text-indigo-600']">
+                                                                              :class="['absolute inset-y-0 right-0 flex items-center pr-4', active ? 'text-white' : 'text-accent-600']">
                                                                               <component :is="IconCheck" class="size-5"
                                                                                          aria-hidden="true"/>
                                                                             </span>
@@ -168,11 +168,11 @@
                                         </template>
                                     </draggable>
                                     <tbody>
-                                        <tr class="divide-x divide-gray-200">
-                                            <td colspan="3" class="py-4 pr-4 pl-4 text-sm font-medium whitespace-nowrap text-gray-900 sm:pl-0 first-letter:capitalize">
+                                        <tr class="divide-x divide-border-subtle">
+                                            <td colspan="3" class="py-4 pr-4 pl-4 text-sm font-medium whitespace-nowrap text-text sm:pl-0 first-letter:capitalize">
                                                 <PropertiesMenu white-menu-background has-no-offset>
                                                     <template v-slot:button>
-                                                        <div class="flex items-center gap-x-2 text-gray-400 font-lexend font-bold cursor-pointer hover:text-gray-600 duration-200 ease-in-out">
+                                                        <div class="flex items-center gap-x-2 text-text-subtle font-lexend font-bold cursor-pointer hover:text-text-muted duration-200 ease-in-out">
                                                             <component :is="IconLibraryPlus" class="h-5 w-5" aria-hidden="true" />
                                                             <span>
                                                                 {{ $t('Add property') }}
@@ -182,15 +182,15 @@
                                                     <template v-slot:menu>
                                                         <div v-if="filteredPropertiesByCategory.length > 0">
                                                             <div v-for="property in filteredPropertiesByCategory">
-                                                                <div @click="addPropertyToCategory(property)" class="px-4 py-3 cursor-pointer hover:bg-gray-50 rounded-lg duration-200 ease-in-out">
-                                                                    <div class="xsDark">
+                                                                <div @click="addPropertyToCategory(property)" class="px-4 py-3 cursor-pointer hover:bg-surface-sunken rounded-lg duration-200 ease-in-out">
+                                                                    <div class="text-sm/5 font-semibold text-text">
                                                                         {{ property.name }}
                                                                     </div>
                                                                 </div>
                                                             </div>
                                                         </div>
                                                         <div v-else class="p-4">
-                                                            <div class="bg-red-50 text-red-500 border border-red-100 p-4 text-xs rounded-lg">
+                                                            <div class="bg-danger-surface text-danger border border-danger-border p-4 text-xs rounded-lg">
                                                                 <!-- all properties are already added -->
                                                                 {{ $t('All properties are already added to the category.') }}
                                                             </div>
@@ -212,7 +212,7 @@
                             :title="$t('Sub-Categories')"
                             :description="$t('Add sub-categories to the category.')"
                         />
-                        <div class="flex items-center gap-x-2 text-gray-400 text-sm font-lexend font-bold cursor-pointer hover:text-gray-600 duration-200 ease-in-out" @click="addEmptySubCategory">
+                        <div class="flex items-center gap-x-2 text-text-subtle text-sm font-lexend font-bold cursor-pointer hover:text-text-muted duration-200 ease-in-out" @click="addEmptySubCategory">
                             <component :is="IconCategoryPlus" class="size-4" aria-hidden="true" />
                             <span>
                                 {{ $t('Add sub-category') }}
@@ -223,21 +223,21 @@
                     <div class="my-4">
                         <div class="w-full">
                             <Disclosure v-for="(subCategory, index) in subCategories" v-slot="{ open }" as="div" class="mt-1">
-                                <DisclosureButton class="flex w-full justify-between bg-gray-50 px-2 py-3 rounded-lg text-left text-sm font-medium  hover:bg-gray-200 focus:outline-none focus-visible:ring focus-visible:ring-purple-500/75">
+                                <DisclosureButton class="flex w-full justify-between bg-surface-sunken px-2 py-3 rounded-lg text-left text-sm font-medium hover:bg-border-subtle focus:outline-none focus-visible:ring focus-visible:ring-accent-600">
                                     <div class="flex items-center gap-x-2 justify-between w-full pr-5">
                                         <span v-if="subCategory.name">{{ subCategory.name }}</span>
                                         <span v-else>{{ $t('Sub-Category without name. Please add a name')}}</span>
 
                                         <div>
-                                            <component :is="IconTrash" class="h-5 w-5 text-red-600 hover:text-red-900 cursor-pointer" @click.stop="askRemoveSubCategory(subCategory)" />
+                                            <component :is="IconTrash" class="h-5 w-5 text-danger hover:text-danger cursor-pointer" @click.stop="askRemoveSubCategory(subCategory)" />
                                         </div>
                                     </div>
                                     <component :is="IconChevronUp"
                                         :class="open ? 'rotate-180 transform' : ''"
-                                        class="h-5 w-5 text-artwork-buttons-context"
+                                        class="h-5 w-5 text-text-muted"
                                     />
                                 </DisclosureButton>
-                                <DisclosurePanel class="px-4 pb-2 pt-4 text-sm text-gray-500">
+                                <DisclosurePanel class="px-4 pb-2 pt-4 text-sm text-text-subtle">
                                     <div class="grid grid-cols-1 gap-4 mb-8">
                                         <div>
                                             <div>
@@ -258,12 +258,12 @@
                                         <div class="my-4 flow-root">
                                             <div class="-mx-4 -my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
                                                 <div class="inline-block min-w-full py-2 align-middle sm:px-6 lg:px-8">
-                                                    <table class="min-w-full divide-y divide-gray-300">
+                                                    <table class="min-w-full divide-y divide-border">
                                                         <thead>
-                                                        <tr class="divide-x divide-gray-200">
-                                                            <th scope="col" class="py-3.5 pr-4 pl-4 text-left text-sm font-semibold text-gray-900 sm:pl-0">Name</th>
-                                                            <th scope="col" class="px-4 py-3.5 text-left text-sm font-semibold text-gray-900">{{ $t('Type') }}</th>
-                                                            <th scope="col" class="py-3.5 pr-4 pl-4 text-left text-sm font-semibold text-gray-900 sm:pr-0">{{ $t('Default Value') }}</th>
+                                                        <tr class="divide-x divide-border-subtle">
+                                                            <th scope="col" class="py-3.5 pr-4 pl-4 text-left text-sm font-semibold text-text sm:pl-0">Name</th>
+                                                            <th scope="col" class="px-4 py-3.5 text-left text-sm font-semibold text-text">{{ $t('Type') }}</th>
+                                                            <th scope="col" class="py-3.5 pr-4 pl-4 text-left text-sm font-semibold text-text sm:pr-0">{{ $t('Default Value') }}</th>
                                                         </tr>
                                                         </thead>
                                                         <draggable
@@ -272,30 +272,30 @@
                                                             item-key="id"
                                                             handle=".drag-handle"
                                                             ghost-class="opacity-50"
-                                                            class="divide-y divide-gray-200 bg-white"
+                                                            class="divide-y divide-border-subtle bg-white"
                                                         >
                                                             <template #item="{ element: property, index }">
-                                                                <tr :key="property.id" class="divide-x divide-gray-200">
-                                                                    <td class="py-4 pr-4 pl-4 text-sm font-medium whitespace-nowrap text-gray-900 sm:pl-0 first-letter:capitalize">
+                                                                <tr :key="property.id" class="divide-x divide-border-subtle">
+                                                                    <td class="py-4 pr-4 pl-4 text-sm font-medium whitespace-nowrap text-text sm:pl-0 first-letter:capitalize">
                                                                         <div class="flex items-center justify-between">
                                                                             <div class="flex items-center gap-2">
-                                                                                <span class="drag-handle inline-flex p-1 rounded hover:bg-gray-100 cursor-grab">
+                                                                                <span class="drag-handle inline-flex p-1 rounded hover:bg-surface-sunken cursor-grab">
                                                                                     <component :is="IconGripVertical" class="size-4" aria-hidden="true" />
                                                                                 </span>
                                                                                 {{ property?.name }}
                                                                             </div>
-                                                                            <button type="button" @click="removePropertyFromSubCategory(property, subCategory)" class="text-red-600 hover:text-red-900">
+                                                                            <button type="button" @click="removePropertyFromSubCategory(property, subCategory)" class="text-danger hover:text-danger">
                                                                                 <component :is="IconTrash" class="h-5 w-5" aria-hidden="true" />
                                                                             </button>
                                                                         </div>
                                                                     </td>
-                                                                    <td class="p-4 text-sm whitespace-nowrap text-gray-500 capitalize xsLight cursor-default">
+                                                                    <td class="p-4 text-sm whitespace-nowrap text-text-subtle capitalize text-sm/5 font-bold text-text-subtle cursor-default">
                                                                         {{ $t(capitalizeFirstLetter(property?.type)) }}
                                                                     </td>
-                                                                    <td class="text-sm whitespace-nowrap text-gray-500 sm:pr-0">
+                                                                    <td class="text-sm whitespace-nowrap text-text-subtle sm:pr-0">
                                                                         <input v-if="property.type !== 'file' && property.type !== 'checkbox' && property.type !== 'room' && property.type !== 'manufacturer' && property.type !== 'selection'"
                                                                                :type="property.type" v-model="property.defaultValue"
-                                                                               class="block w-full rounded-md bg-white border-none text-xs px-3 py-1.5 text-gray-900 outline-0 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-0 ring-0 focus:ring-0"
+                                                                               class="block w-full rounded-md bg-white border-none text-xs px-3 py-1.5 text-text outline-0 -outline-offset-1 outline-border placeholder:text-text-subtle focus:outline-0 ring-0 focus:ring-0"
                                                                                :placeholder="$t('Default Value')"
                                                                         />
 
@@ -308,12 +308,12 @@
                                                                               @update:modelValue="roomQuery = ''">
                                                                             <div class="relative">
                                                                                 <ComboboxInput
-                                                                                    class="block w-full ring-0 border-none focus:ring-0 rounded-md bg-white py-1.5 pr-12 pl-3 text-xs text-gray-900 placeholder:text-gray-400"
+                                                                                    class="block w-full ring-0 border-none focus:ring-0 rounded-md bg-white py-1.5 pr-12 pl-3 text-xs text-text placeholder:text-text-subtle"
                                                                                     @change="roomQuery = $event.target.value" @blur="roomQuery = ''"
                                                                                     :display-value="(person) => property.defaultValue ? props.rooms?.find((room) => room.id === parseInt(property.defaultValue) )?.name : ''"/>
                                                                                 <ComboboxButton
                                                                                     class="absolute inset-y-0 right-0 flex items-center rounded-r-md px-2 focus:outline-hidden">
-                                                                                    <component :is="IconSelector" class="size-5 text-gray-400"
+                                                                                    <component :is="IconSelector" class="size-5 text-text-subtle"
                                                                                                aria-hidden="true"/>
                                                                                 </ComboboxButton>
 
@@ -322,13 +322,13 @@
                                                                                     <ComboboxOption v-for="room in filteredRooms" :key="room.id"
                                                                                                     :value="room.id" as="template"
                                                                                                     v-slot="{ active, selected }">
-                                                                                        <li :class="['relative cursor-default py-2 pr-9 pl-3 select-none', active ? 'bg-indigo-600 text-white outline-hidden' : 'text-gray-900']">
+                                                                                        <li :class="['relative cursor-default py-2 pr-9 pl-3 select-none', active ? 'bg-accent-600 text-white outline-hidden' : 'text-text']">
                                                                                                 <span
                                                                                                     :class="['block truncate', selected && 'font-semibold']">
                                                                                                   {{ room.name }}
                                                                                                 </span>
                                                                                             <span v-if="selected"
-                                                                                                  :class="['absolute inset-y-0 right-0 flex items-center pr-4', active ? 'text-white' : 'text-indigo-600']">
+                                                                                                  :class="['absolute inset-y-0 right-0 flex items-center pr-4', active ? 'text-white' : 'text-accent-600']">
                                                                                                   <component :is="IconCheck" class="size-5"
                                                                                                              aria-hidden="true"/>
                                                                                                 </span>
@@ -342,13 +342,13 @@
                                                                               v-model="property.defaultValue" @update:modelValue="manufacturerQuery = ''">
                                                                             <div class="relative">
                                                                                 <ComboboxInput
-                                                                                    class="block w-full ring-0 border-none focus:ring-0 rounded-md bg-white py-1.5 pr-12 pl-3 text-xs text-gray-900 placeholder:text-gray-400"
+                                                                                    class="block w-full ring-0 border-none focus:ring-0 rounded-md bg-white py-1.5 pr-12 pl-3 text-xs text-text placeholder:text-text-subtle"
                                                                                     @change="manufacturerQuery = $event.target.value"
                                                                                     @blur="manufacturerQuery = ''"
                                                                                     :display-value="(person) => property.defaultValue ? props.manufacturers?.find((manufacturer) => manufacturer.id === parseInt(property.defaultValue) )?.name : ''"/>
                                                                                 <ComboboxButton
                                                                                     class="absolute inset-y-0 right-0 flex items-center rounded-r-md px-2 focus:outline-hidden">
-                                                                                    <component :is="IconSelector" class="size-5 text-gray-400"
+                                                                                    <component :is="IconSelector" class="size-5 text-text-subtle"
                                                                                                aria-hidden="true"/>
                                                                                 </ComboboxButton>
 
@@ -357,13 +357,13 @@
                                                                                     <ComboboxOption v-for="manufacturer in filteredManufacturers"
                                                                                                     :key="manufacturer.id" :value="manufacturer.id" as="template"
                                                                                                     v-slot="{ active, selected }">
-                                                                                        <li :class="['relative cursor-default py-2 pr-9 pl-3 select-none', active ? 'bg-indigo-600 text-white outline-hidden' : 'text-gray-900']">
+                                                                                        <li :class="['relative cursor-default py-2 pr-9 pl-3 select-none', active ? 'bg-accent-600 text-white outline-hidden' : 'text-text']">
                                                                                                 <span
                                                                                                     :class="['block truncate', selected && 'font-semibold']">
                                                                                                   {{ manufacturer.name }}
                                                                                                 </span>
                                                                                             <span v-if="selected"
-                                                                                                  :class="['absolute inset-y-0 right-0 flex items-center pr-4', active ? 'text-white' : 'text-indigo-600']">
+                                                                                                  :class="['absolute inset-y-0 right-0 flex items-center pr-4', active ? 'text-white' : 'text-accent-600']">
                                                                                                   <component :is="IconCheck" class="size-5"
                                                                                                              aria-hidden="true"/>
                                                                                                 </span>
@@ -387,11 +387,11 @@
                                                             </template>
                                                         </draggable>
                                                         <tbody>
-                                                        <tr class="divide-x divide-gray-200">
-                                                            <td colspan="3" class="py-4 pr-4 pl-4 text-sm font-medium whitespace-nowrap text-gray-900 sm:pl-0 first-letter:capitalize">
+                                                        <tr class="divide-x divide-border-subtle">
+                                                            <td colspan="3" class="py-4 pr-4 pl-4 text-sm font-medium whitespace-nowrap text-text sm:pl-0 first-letter:capitalize">
                                                                 <PropertiesMenu white-menu-background has-no-offset>
                                                                     <template v-slot:button>
-                                                                        <div class="flex items-center gap-x-2 text-gray-400 font-lexend font-bold cursor-pointer hover:text-gray-600 duration-200 ease-in-out">
+                                                                        <div class="flex items-center gap-x-2 text-text-subtle font-lexend font-bold cursor-pointer hover:text-text-muted duration-200 ease-in-out">
                                                                             <component :is="IconLibraryPlus" class="h-5 w-5" aria-hidden="true" />
                                                                             <span>
                                                                                         {{ $t('Add property') }}
@@ -401,15 +401,15 @@
                                                                     <template v-slot:menu>
                                                                         <div v-if="getFilteredPropertiesForSubCategory(subCategory).length > 0">
                                                                             <div v-for="property in getFilteredPropertiesForSubCategory(subCategory)">
-                                                                                <div @click="addPropertyToSubCategory(property, subCategory)" class="px-4 py-3 cursor-pointer hover:bg-gray-50 rounded-lg duration-200 ease-in-out">
-                                                                                    <div class="xsDark">
+                                                                                <div @click="addPropertyToSubCategory(property, subCategory)" class="px-4 py-3 cursor-pointer hover:bg-surface-sunken rounded-lg duration-200 ease-in-out">
+                                                                                    <div class="text-sm/5 font-semibold text-text">
                                                                                         {{ property.name }}
                                                                                     </div>
                                                                                 </div>
                                                                             </div>
                                                                         </div>
                                                                         <div v-else class="p-4">
-                                                                            <div class="bg-red-50 text-red-500 border border-red-100 p-4 text-xs rounded-lg">
+                                                                            <div class="bg-danger-surface text-danger border border-danger-border p-4 text-xs rounded-lg">
                                                                                 <!-- all properties are already added -->
                                                                                 {{ $t('All properties are already added to the sub-category.') }}
                                                                             </div>
@@ -432,7 +432,7 @@
                 </div>
 
                 <div class="flex items-center justify-center my-3">
-                    <FormButton type="submit" :text="category ? $t('Update') : $t('Create')" :disabled="categoryForm.processing || checkIfAllSubCategoriesHasName" :class="categoryForm.processing ? 'bg-gray-200 hover:bg-gray-300' : ''" />
+                    <FormButton type="submit" :text="category ? $t('Update') : $t('Create')" :disabled="categoryForm.processing || checkIfAllSubCategoriesHasName" :class="categoryForm.processing ? 'bg-border-subtle hover:bg-border' : ''" />
                 </div>
             </form>
         </div>

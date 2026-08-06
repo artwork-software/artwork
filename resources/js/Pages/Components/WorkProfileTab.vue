@@ -1,12 +1,12 @@
 <template>
     <div class="space-y-8">
         <!-- Work profile -->
-        <section class="rounded-3xl border border-zinc-200 bg-white shadow-sm">
+        <section class="rounded-3xl border border-border-subtle bg-white shadow-sm">
             <div class="px-6 py-5 sm:px-8 sm:py-7">
-                <h2 class="text-lg font-semibold text-zinc-900">
+                <h2 class="text-lg font-semibold text-text">
                     {{ $t('Work profile') }}
                 </h2>
-                <p class="mt-1 text-sm text-zinc-600">
+                <p class="mt-1 text-sm text-text-muted">
                     {{ $t("Edit the user's work profile here.")}}
                 </p>
 
@@ -33,9 +33,9 @@
         </section>
 
         <!-- Freelancer settings -->
-        <section class="rounded-3xl border border-zinc-200 bg-white shadow-sm">
+        <section class="rounded-3xl border border-border-subtle bg-white shadow-sm">
             <div class="px-6 py-5 sm:px-8 sm:py-7">
-                <h3 class="text-lg font-semibold text-zinc-900">
+                <h3 class="text-lg font-semibold text-text">
                     {{ $t('Freelancer Settings') }}
                 </h3>
 
@@ -52,31 +52,31 @@
         </section>
 
         <!-- Default project roles -->
-        <section v-if="userType === 'user'" class="rounded-3xl border border-zinc-200 bg-white shadow-sm">
+        <section v-if="userType === 'user'" class="rounded-3xl border border-border-subtle bg-white shadow-sm">
             <div class="px-6 py-5 sm:px-8 sm:py-7">
-                <h3 class="text-lg font-semibold text-zinc-900">
+                <h3 class="text-lg font-semibold text-text">
                     {{ $t('Default project roles') }}
                 </h3>
-                <p class="mt-1 text-sm text-zinc-600">
+                <p class="mt-1 text-sm text-text-muted">
                     {{ $t('These project roles are automatically assigned when the user is added to a project team.') }}
                 </p>
 
                 <div v-if="projectRoles.length > 0" class="mt-4">
                     <Listbox as="div" class="relative" v-model="defaultProjectRoleIdsModel" multiple>
                         <ListboxButton
-                            class="flex w-80 items-center justify-between rounded-xl border border-zinc-300 bg-white px-3 py-2 text-left text-sm text-zinc-900 hover:bg-zinc-50 focus:outline-none focus:ring-2 focus:ring-blue-600"
+                            class="flex w-80 items-center justify-between rounded-xl border border-border bg-white px-3 py-2 text-left text-sm text-text hover:bg-surface-sunken focus:outline-none focus:ring-2 focus:ring-accent-600"
                         >
                             <span class="block truncate">
                                 <template v-if="defaultProjectRoleIds.length">
                                     {{ $t('{count} selected', { count: defaultProjectRoleIds.length }) }}
                                 </template>
-                                <span v-else class="text-zinc-500">{{ $t('Select project roles') }}</span>
+                                <span v-else class="text-text-subtle">{{ $t('Select project roles') }}</span>
                             </span>
-                            <ChevronDownIcon class="h-5 w-5 text-zinc-400" aria-hidden="true" />
+                            <IconChevronDown class="h-5 w-5 text-text-subtle" aria-hidden="true" />
                         </ListboxButton>
 
                         <ListboxOptions
-                            class="absolute z-10 mt-2 max-h-64 w-80 overflow-auto rounded-xl border border-zinc-200 bg-white p-1 text-sm shadow-lg focus:outline-none"
+                            class="absolute z-10 mt-2 max-h-64 w-80 overflow-auto rounded-xl border border-border-subtle bg-white p-1 text-sm shadow-lg focus:outline-none"
                         >
                             <ListboxOption
                                 v-for="role in projectRoles"
@@ -85,11 +85,11 @@
                                 :value="role.id"
                                 v-slot="{ selected }"
                             >
-                                <li class="flex cursor-pointer items-center justify-between rounded-lg px-2 py-2 hover:bg-zinc-50">
+                                <li class="flex cursor-pointer items-center justify-between rounded-lg px-2 py-2 hover:bg-surface-sunken">
                                     <span :class="selected ? 'font-medium' : 'font-normal'">
                                         {{ role.name }}
                                     </span>
-                                    <CheckIcon v-if="selected" class="h-5 w-5 text-blue-600" aria-hidden="true" />
+                                    <IconCheck v-if="selected" class="h-5 w-5 text-accent-600" aria-hidden="true" />
                                 </li>
                             </ListboxOption>
                         </ListboxOptions>
@@ -99,26 +99,26 @@
                         <div
                             v-for="role in selectedDefaultProjectRoles"
                             :key="role.id"
-                            class="group inline-flex items-center gap-2 rounded-full border border-zinc-200 bg-zinc-50 pl-3 pr-2 py-1"
+                            class="group inline-flex items-center gap-2 rounded-full border border-border-subtle bg-surface-sunken pl-3 pr-2 py-1"
                         >
-                            <span class="text-sm text-zinc-800">{{ role.name }}</span>
-                            <button type="button" @click="removeDefaultProjectRole(role.id)" class="rounded-full p-1 hover:bg-zinc-100">
-                                <XIcon class="h-4 w-4 text-zinc-400 hover:text-red-600" />
+                            <span class="text-sm text-text">{{ role.name }}</span>
+                            <button type="button" @click="removeDefaultProjectRole(role.id)" class="rounded-full p-1 hover:bg-surface-sunken">
+                                <IconX class="h-4 w-4 text-text-subtle hover:text-danger" />
                             </button>
                         </div>
                     </div>
                 </div>
 
-                <p v-else class="mt-4 text-sm text-zinc-400">
+                <p v-else class="mt-4 text-sm text-text-subtle">
                     {{ $t('No project roles created yet') }}
                 </p>
             </div>
         </section>
 
         <!-- Crafts -->
-        <section class="rounded-3xl border border-zinc-200 bg-white shadow-sm">
+        <section class="rounded-3xl border border-border-subtle bg-white shadow-sm">
             <div class="px-6 py-5 sm:px-8 sm:py-7">
-                <h3 class="text-lg font-semibold text-zinc-900">
+                <h3 class="text-lg font-semibold text-text">
                     {{ $t('Crafts') }}
                 </h3>
 
@@ -136,7 +136,7 @@
 
                 <!-- shift qualifications -->
                 <div class="mt-6">
-                    <h4 class="text-sm font-medium text-zinc-900">
+                    <h4 class="text-sm font-medium text-text">
                         {{ $t('Global qualifications')}}
                     </h4>
                     <div class="mt-3 space-y-3">
@@ -144,10 +144,10 @@
                             v-for="sq in usePage().props.globalQualifications"
                             :key="sq.id"
                             as="div"
-                            class="flex items-center justify-between rounded-2xl border border-zinc-200 bg-white px-3 py-2"
+                            class="flex items-center justify-between rounded-2xl border border-border-subtle bg-white px-3 py-2"
                         >
-                            <div class="text-sm text-zinc-800">
-                                <PropertyIcon :name="sq.icon" class="inline-block h-5 w-5 mr-2 text-zinc-400" />
+                            <div class="text-sm text-text">
+                                <PropertyIcon :name="sq.icon" class="inline-block h-5 w-5 mr-2 text-text-subtle" />
                                 {{ $t('Can be used as {shiftQualificationName}', { shiftQualificationName: sq.name }) }}
                             </div>
 
@@ -164,14 +164,14 @@
 
                 <!-- Shift planner for (visible crafts the user can plan) -->
                 <div v-if="userType === 'user'" class="mt-6">
-                    <h4 class="mb-3 text-sm font-medium text-zinc-900">
+                    <h4 class="mb-3 text-sm font-medium text-text">
                         {{ $t('Shift planner for')}}
                     </h4>
                     <div class="flex flex-wrap gap-2">
                         <div
                             v-for="(craft, index) in user.accessibleCrafts"
                             :key="craft.id || index"
-                            class="group inline-flex items-center gap-2 rounded-full border border-zinc-200 bg-zinc-50 pr-3"
+                            class="group inline-flex items-center gap-2 rounded-full border border-border-subtle bg-surface-sunken pr-3"
                         >
               <span
                   class="ml-1 block size-8 rounded-full border-2"
@@ -180,7 +180,7 @@
                   borderColor: craft.color
                 }"
               />
-                            <span class="text-sm text-zinc-800">
+                            <span class="text-sm text-text">
                 {{ craft.name }}
               </span>
                         </div>
@@ -188,11 +188,11 @@
                 </div>
 
                 <div v-if="craftSettingsForm.canBeAssignedToShifts" class="mt-8">
-                    <h4 class="text-sm font-medium text-zinc-900">
+                    <h4 class="text-sm font-medium text-text">
                         {{ $t('Can be used in the following crafts') }}
                     </h4>
 
-                    <label for="selectedCraftsToAdd" class="mt-2 block text-xs text-zinc-500">
+                    <label for="selectedCraftsToAdd" class="mt-2 block text-xs text-text-subtle">
                         {{ $t('Assign new crafts') }}
                     </label>
 
@@ -200,24 +200,24 @@
                         <!-- Multi-select Listbox -->
                         <Listbox as="div" id="selectedCraftsToAdd" class="relative" v-model="selectedCraftsToAssign" multiple>
                             <ListboxButton
-                                class="flex w-80 items-center justify-between rounded-xl border border-zinc-300 bg-white px-3 py-2 text-left text-sm text-zinc-900 hover:bg-zinc-50 focus:outline-none focus:ring-2 focus:ring-blue-600"
+                                class="flex w-80 items-center justify-between rounded-xl border border-border bg-white px-3 py-2 text-left text-sm text-text hover:bg-surface-sunken focus:outline-none focus:ring-2 focus:ring-accent-600"
                             >
                 <span class="block truncate">
                   <template v-if="selectedCraftsToAssign.length">
                     {{ $t('{count} selected', { count: selectedCraftsToAssign.length }) }}
                   </template>
-                  <span v-else class="text-zinc-500">{{ $t('Select crafts') }}</span>
+                  <span v-else class="text-text-subtle">{{ $t('Select crafts') }}</span>
                 </span>
-                                <ChevronDownIcon class="h-5 w-5 text-zinc-400" aria-hidden="true" />
+                                <IconChevronDown class="h-5 w-5 text-text-subtle" aria-hidden="true" />
                             </ListboxButton>
 
                             <ListboxOptions
-                                class="absolute z-10 mt-2 max-h-64 w-80 overflow-auto rounded-xl border border-zinc-200 bg-white p-1 text-sm shadow-lg focus:outline-none"
+                                class="absolute z-10 mt-2 max-h-64 w-80 overflow-auto rounded-xl border border-border-subtle bg-white p-1 text-sm shadow-lg focus:outline-none"
                             >
                                 <!-- 1) Empty state -->
                                 <template v-if="filteredAssignableCrafts.length === 0">
                                     <div
-                                        class="cursor-default rounded-lg px-2 py-2 text-zinc-400"
+                                        class="cursor-default rounded-lg px-2 py-2 text-text-subtle"
                                         aria-disabled="true"
                                     >
                                         {{ $t('No crafts match your search.') }}
@@ -228,7 +228,7 @@
                                 <template v-else>
                                     <!-- Sticky header: select all / clear -->
                                     <div
-                                        class="sticky top-0 z-10 mb-1 flex items-center justify-between rounded-lg bg-zinc-50 px-2 py-1 text-xs"
+                                        class="sticky top-0 z-10 mb-1 flex items-center justify-between rounded-lg bg-surface-sunken px-2 py-1 text-xs"
                                     >
                                         <button type="button" class="underline" @click="selectAllFiltered">
                                             {{ $t('Select all') }}
@@ -251,10 +251,10 @@
                       <span :class="selected ? 'font-medium' : 'font-normal'">
                         {{ assignableCraft.name }}
                       </span>
-                                            <CheckIcon
+                                            <IconCheck
                                                 v-if="selected"
                                                 class="h-5 w-5"
-                                                :class="active ? 'text-white' : 'text-blue-600'"
+                                                :class="active ? 'text-white' : 'text-accent-600'"
                                                 aria-hidden="true"
                                             />
                                         </div>
@@ -276,15 +276,15 @@
                         <div
                             v-for="(craft, index) in user.assignedCrafts"
                             :key="craft.id || index"
-                            class="group inline-flex items-center gap-2 rounded-full border border-zinc-200 bg-zinc-50 pr-2"
+                            class="group inline-flex items-center gap-2 rounded-full border border-border-subtle bg-surface-sunken pr-2"
                         >
               <span
                   class="ml-1 block size-8 rounded-full border"
                   :style="{ backgroundColor: backgroundColorWithOpacityOld(craft.color, 75), borderColor: craft.color }"
               />
-                            <span class="text-sm text-zinc-800">{{ craft.name }}</span>
-                            <button type="button" @click="removeCraft(craft.id)" class="rounded-full p-1 hover:bg-zinc-100">
-                                <XIcon class="h-4 w-4 text-zinc-400 hover:text-red-600" />
+                            <span class="text-sm text-text">{{ craft.name }}</span>
+                            <button type="button" @click="removeCraft(craft.id)" class="rounded-full p-1 hover:bg-surface-sunken">
+                                <IconX class="h-4 w-4 text-text-subtle hover:text-danger" />
                             </button>
                         </div>
                     </div>
@@ -293,12 +293,12 @@
                 <!-- Craft-Qualifikationen (Redesign mit Globalzähler, Per-Craft-Zähler & schöneren Switches) -->
                 <div v-if="user.assignedCrafts && user.assignedCrafts.length" class="mt-8">
                     <div class="flex items-baseline justify-between">
-                        <h4 class="text-sm font-semibold text-zinc-900">
+                        <h4 class="text-sm font-semibold text-text">
                             {{ $t('Craft functions') }}
                         </h4>
 
                         <!-- Global: checked / total -->
-                        <span class="inline-flex items-center gap-1 rounded-full border border-zinc-200 bg-zinc-50 px-2.5 py-1 text-xs text-zinc-700">
+                        <span class="inline-flex items-center gap-1 rounded-full border border-border-subtle bg-surface-sunken px-2.5 py-1 text-xs text-text-muted">
               {{ totalChecked }} / {{ totalQualifications }} {{ $t('assigned') }}
             </span>
                     </div>
@@ -308,7 +308,7 @@
                         <div
                             v-for="craft in user.assignedCrafts"
                             :key="craft.id"
-                            class="group rounded-2xl border border-zinc-200/80 bg-white shadow-sm hover:shadow-md transition-shadow"
+                            class="group rounded-2xl border border-border-subtle/80 bg-white shadow-sm hover:shadow-md transition-shadow"
                         >
                             <!-- Card Header -->
                             <div class="px-4 pt-3">
@@ -318,19 +318,19 @@
                         class="block size-6 rounded-full border"
                         :style="{ backgroundColor: backgroundColorWithOpacityOld(craft.color, 75), borderColor: craft.color }"
                     />
-                                        <span class="font-semibold text-zinc-800 tracking-tight">{{ craft.name }}</span>
+                                        <span class="font-semibold text-text tracking-tight">{{ craft.name }}</span>
                                     </div>
 
                                     <!-- per Craft: checked / total -->
-                                    <span class="inline-flex items-center gap-1 rounded-full border border-zinc-200 bg-zinc-50 px-2 py-0.5 text-[11px] text-zinc-700">
+                                    <span class="inline-flex items-center gap-1 rounded-full border border-border-subtle bg-surface-sunken px-2 py-0.5 text-[11px] text-text-muted">
                     {{ checkedForCraft(craft.id) }} / {{ craft.qualifications?.length || 0 }}
                   </span>
                                 </div>
 
                                 <!-- feine Progressbar je Craft -->
-                                <div class="mt-3 mb-2 h-1.5 w-full rounded-full bg-zinc-100 overflow-hidden">
+                                <div class="mt-3 mb-2 h-1.5 w-full rounded-full bg-surface-sunken overflow-hidden">
                                     <div
-                                        class="h-full rounded-full bg-gradient-to-r from-blue-500 to-indigo-500 transition-[width]"
+                                        class="h-full rounded-full bg-gradient-to-r from-accent-600 to-accent-600 transition-[width]"
                                         :style="{ width: craftProgress(craft) + '%' }"
                                     />
                                 </div>
@@ -343,10 +343,10 @@
                                         v-for="q in craft.qualifications"
                                         :key="q.id"
                                         as="div"
-                                        class="flex items-center justify-between rounded-xl border border-zinc-200/80 bg-zinc-50/60 px-3 py-2 hover:bg-zinc-50 hover:border-zinc-300 transition-colors"
+                                        class="flex items-center justify-between rounded-xl border border-border-subtle/80 bg-surface-sunken/60 px-3 py-2 hover:bg-surface-sunken hover:border-border transition-colors"
                                     >
-                                        <div class="min-w-0 flex items-center gap-2 text-sm text-zinc-800">
-                                            <PropertyIcon :name="q.icon" class="h-4 w-4 text-zinc-400" />
+                                        <div class="min-w-0 flex items-center gap-2 text-sm text-text">
+                                            <PropertyIcon :name="q.icon" class="h-4 w-4 text-text-subtle" />
                                             <span class="truncate">{{ q.name }}</span>
                                         </div>
 
@@ -361,7 +361,7 @@
                                     </SwitchGroup>
                                 </div>
 
-                                <div v-else class="text-xs text-zinc-400 px-1 py-2">
+                                <div v-else class="text-xs text-text-subtle px-1 py-2">
                                     {{ $t('No functions for this craft') }}
                                 </div>
                             </div>
@@ -381,15 +381,13 @@ import {
     Listbox, ListboxButton, ListboxOption, ListboxOptions,
     Switch, SwitchGroup, SwitchLabel
 } from '@headlessui/vue'
-import { CheckIcon } from '@heroicons/vue/solid'
-import { ChevronDownIcon, XIcon } from '@heroicons/vue/outline'
 
 import BaseInput from '@/Artwork/Inputs/BaseInput.vue'
 import BaseTextarea from '@/Artwork/Inputs/BaseTextarea.vue'
 import AddButtonSmall from '@/Layouts/Components/General/Buttons/AddButtonSmall.vue'
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
-import {IconCheck, IconLayoutGrid, IconLayoutList, IconX} from "@tabler/icons-vue";
+import {IconCheck, IconChevronDown, IconLayoutGrid, IconLayoutList, IconX} from "@tabler/icons-vue";
 import SwitchIconTooltip from "@/Artwork/Toggles/SwitchIconTooltip.vue";
 
 const props = defineProps({

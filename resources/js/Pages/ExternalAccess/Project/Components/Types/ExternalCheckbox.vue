@@ -1,19 +1,19 @@
 <template>
-    <div class="rounded-2xl border border-zinc-200 bg-white p-5">
-        <label :for="inputId" class="inline-flex items-center gap-3 text-sm font-medium text-zinc-700">
+    <div class="rounded-2xl border border-border-subtle bg-white p-5">
+        <label :for="inputId" class="inline-flex items-center gap-3 text-sm font-medium text-text-muted">
             <input
                 :id="inputId"
                 v-model="checked"
                 type="checkbox"
                 :disabled="!editable"
-                class="rounded border-zinc-300 disabled:opacity-60"
+                class="rounded border-border disabled:text-text-subtle disabled:cursor-not-allowed"
                 @change="saveChange"
             />
             <span>{{ label }}</span>
         </label>
 
-        <p v-if="status === 'saved'" class="mt-1 text-xs text-emerald-600">{{ $t('Saved') }}</p>
-        <p v-if="status === 'error'" class="mt-1 text-xs text-red-600">{{ $t('Could not save. Try again.') }}</p>
+        <p v-if="status === 'saved'" class="mt-1 text-xs text-success">{{ $t('Saved') }}</p>
+        <p v-if="status === 'error'" class="mt-1 text-xs text-danger">{{ $t('Could not save. Try again.') }}</p>
     </div>
 </template>
 

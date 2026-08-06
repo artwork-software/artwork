@@ -10,7 +10,7 @@
             <!-- Basics (wie EventComponent) -->
             <section class="ui-card">
                 <header class="ui-card-header">
-                    <span class="ui-dot bg-indigo-400"></span>
+                    <span class="ui-dot bg-accent-500"></span>
                     <h3 class="ui-card-title">{{ $t('Basics') }}</h3>
                 </header>
 
@@ -57,13 +57,13 @@
             <!-- Zeit (Datum kommt aus den Zellen) -->
             <section class="ui-card">
                 <header class="ui-card-header">
-                    <span class="ui-dot bg-sky-400"></span>
+                    <span class="ui-dot bg-info"></span>
                     <h3 class="ui-card-title">{{ $t('Time') }}</h3>
                 </header>
 
                 <label class="inline-flex items-center gap-2">
                     <input type="checkbox" v-model="allDayEvent" class="ui-checkbox" />
-                    <span class="text-[13px] text-zinc-700">{{ $t('Full day') }}</span>
+                    <span class="text-[13px] text-text-muted">{{ $t('Full day') }}</span>
                 </label>
 
                 <div v-if="!allDayEvent" class="ui-grid-2 mt-2">
@@ -92,7 +92,7 @@
                         v-for="m in quickDurations"
                         :key="m"
                         type="button"
-                        class="px-2.5 py-1.5 text-xs rounded-md border border-zinc-200 bg-white hover:bg-zinc-50"
+                        class="px-2.5 py-1.5 text-xs rounded-md border border-border-subtle bg-white hover:bg-surface-sunken"
                         @click="applyQuickDuration(m)"
                     >
                         {{ m }} {{ $t('min') }}
@@ -100,7 +100,7 @@
                     <button
                         v-if="defaultDurationMin > 0 && !quickDurations.includes(defaultDurationMin)"
                         type="button"
-                        class="px-2.5 py-1.5 text-xs rounded-md border border-indigo-200 bg-indigo-50 hover:bg-indigo-100 text-indigo-700"
+                        class="px-2.5 py-1.5 text-xs rounded-md border border-accent-200 bg-accent-50 hover:bg-accent-100 text-accent-700"
                         @click="applyQuickDuration(defaultDurationMin)"
                     >
                         Standard: {{ defaultDurationMin }} {{ $t('min') }}
@@ -113,7 +113,7 @@
             <!-- Zellen-Übersicht (ersetzt Raum- und Datumseingabe) -->
             <section class="ui-card">
                 <header class="ui-card-header">
-                    <span class="ui-dot bg-rose-400"></span>
+                    <span class="ui-dot bg-danger"></span>
                     <h3 class="ui-card-title">{{ $t('Selected cells') }}</h3>
                 </header>
 
@@ -123,15 +123,15 @@
                     <div
                         v-for="[day, roomNames] in cellsByDay"
                         :key="day"
-                        class="flex flex-wrap items-center gap-1.5 rounded-md border border-zinc-200 bg-zinc-50 px-2.5 py-2"
+                        class="flex flex-wrap items-center gap-1.5 rounded-md border border-border-subtle bg-surface-sunken px-2.5 py-2"
                     >
-                        <span class="text-[13px] font-medium text-zinc-900 whitespace-nowrap">
+                        <span class="text-[13px] font-medium text-text whitespace-nowrap">
                             {{ formatDayLabel(day) }}
                         </span>
                         <span
                             v-for="(roomName, roomIdx) in roomNames"
                             :key="roomIdx"
-                            class="inline-flex items-center rounded-full border border-zinc-200 bg-white px-2.5 py-0.5 text-[12.5px] text-zinc-800"
+                            class="inline-flex items-center rounded-full border border-border-subtle bg-white px-2.5 py-0.5 text-[12.5px] text-text"
                         >
                             {{ roomName }}
                         </span>
@@ -142,7 +142,7 @@
             <!-- Projekt (wie EventComponent, nur bestehende Projekte) -->
             <section class="ui-card">
                 <header class="ui-card-header">
-                    <span class="ui-dot bg-emerald-400"></span>
+                    <span class="ui-dot bg-success"></span>
                     <h3 class="ui-card-title">{{ $t('Project') }}</h3>
                 </header>
 
@@ -152,14 +152,14 @@
 
                 <label for="multiCellShowProjectInfo" class="flex items-center gap-2 mt-1 cursor-pointer">
                     <input id="multiCellShowProjectInfo" type="checkbox" v-model="showProjectInfo" class="ui-checkbox" />
-                    <span class="text-[13px] text-zinc-700">{{ $t('Enable project assignment') }}</span>
+                    <span class="text-[13px] text-text-muted">{{ $t('Enable project assignment') }}</span>
                 </label>
 
                 <div v-if="showProjectInfo" class="mt-2 space-y-2">
                     <template v-if="selectedProject?.id">
                         <div class="ui-project-chip">
                             <div class="min-w-0">
-                                <span class="truncate xsDark text-zinc-800">{{ selectedProject?.name }}</span>
+                                <span class="truncate text-sm/5 font-semibold text-text text-text">{{ selectedProject?.name }}</span>
                             </div>
                             <div class="flex items-center gap-1.5 shrink-0">
                                 <button type="button" class="ui-icon-btn" @click="selectedProject = null" :aria-label="$t('Remove project')">
@@ -181,7 +181,7 @@
             <!-- Beschreibung -->
             <section class="ui-card">
                 <header class="ui-card-header">
-                    <span class="ui-dot bg-violet-400"></span>
+                    <span class="ui-dot bg-special-violet"></span>
                     <h3 class="ui-card-title">{{ $t('Description') }}</h3>
                 </header>
 
@@ -198,9 +198,9 @@
             <!-- Sticky Action Bar -->
             <div class="ui-footer">
                 <div class="flex items-center justify-end gap-2">
-                    <button type="button" class="ui-btn-secondary" @click="$emit('closed', false)">
+                    <BaseUIButton type="button" hide-icon @click="$emit('closed', false)">
                         {{ $t('Cancel') }}
-                    </button>
+                    </BaseUIButton>
                     <FormButton
                         :disabled="submitting"
                         @click="submit"
@@ -222,6 +222,7 @@ import ArtworkBaseListbox from "@/Artwork/Listbox/ArtworkBaseListbox.vue";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 import BaseTextarea from "@/Artwork/Inputs/BaseTextarea.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
+import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 import ProjectSearch from "@/Components/SearchBars/ProjectSearch.vue";
 import LastedProjects from "@/Artwork/LastedProjects.vue";
 import { IconCircleX } from "@tabler/icons-vue";

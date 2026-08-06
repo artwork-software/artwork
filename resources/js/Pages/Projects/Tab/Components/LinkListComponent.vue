@@ -12,7 +12,8 @@
 
                 <component
                     :is="IconEdit"
-                    class="inline size-4 ml-2 cursor-pointer text-gray-400 hover:text-gray-600"
+                    class="inline size-4 ml-2 cursor-pointer"
+                    :class="inSidebar ? 'text-white/70 hover:text-white' : 'text-text-subtle hover:text-text-muted'"
                     v-if="canEditComponent"
                     @click="toggleEdit"
                 />
@@ -22,11 +23,11 @@
             <div class="mt-2 w-96" v-if="showEditor">
                 <div class="space-y-3">
                     <!-- Template Actions -->
-                    <div class="flex items-center justify-between pb-2 border-b" :class="inSidebar ? 'border-zinc-600' : 'border-gray-200'">
+                    <div class="flex items-center justify-between pb-2 border-b" :class="inSidebar ? 'border-white/10' : 'border-border-subtle'">
                         <button
                             type="button"
                             class="text-xs underline underline-offset-2 flex items-center gap-1"
-                            :class="inSidebar ? 'text-zinc-200 hover:text-white' : 'text-indigo-600 hover:text-indigo-700'"
+                            :class="inSidebar ? 'text-white/70 hover:text-white' : 'text-accent-600 hover:text-accent-700'"
                             @click="openTemplateModal"
                         >
                             <component :is="IconTemplate" class="size-4" />
@@ -35,7 +36,7 @@
                         <button
                             type="button"
                             class="text-xs underline underline-offset-2 flex items-center gap-1"
-                            :class="inSidebar ? 'text-zinc-200 hover:text-white' : 'text-indigo-600 hover:text-indigo-700'"
+                            :class="inSidebar ? 'text-white/70 hover:text-white' : 'text-accent-600 hover:text-accent-700'"
                             @click="openSaveTemplateModal"
                             :disabled="links.length === 0"
                         >
@@ -56,13 +57,13 @@
                             <div
                                 :key="element.id"
                                 class="rounded-lg border p-3 mb-3"
-                                :class="inSidebar ? 'border-zinc-600 bg-artwork-navigation-background/40' : 'border-gray-200 bg-white'"
+                                :class="inSidebar ? 'border-white/10 bg-surface-inverse/40' : 'border-border-subtle bg-white'"
                             >
                                 <div class="flex items-center gap-2 mb-2">
                                     <div class="drag-handle cursor-grab" :class="dragging ? 'cursor-grabbing' : ''">
-                                        <component :is="IconGripVertical" class="size-4 text-gray-400" />
+                                        <component :is="IconGripVertical" class="size-4" :class="inSidebar ? 'text-white/70' : 'text-text-subtle'" />
                                     </div>
-                                    <span class="text-xs text-gray-500">{{ index + 1 }}</span>
+                                    <span class="text-xs" :class="inSidebar ? 'text-white/70' : 'text-text-subtle'">{{ index + 1 }}</span>
                                 </div>
                                 <div class="grid grid-cols-1 gap-3">
                                     <BaseInput
@@ -73,7 +74,7 @@
                                         :label="index === 0 ? (projectData.data.placeholder_label || $t('Display')) : ''"
                                         :placeholder="index > 0 ? (projectData.data.placeholder_label || $t('Display')) : ''"
                                         without-translation
-                                        :input-classes="inSidebar ? '!bg-artwork-navigation-background !border-zinc-600 !text-white' : ''"
+                                        :input-classes="inSidebar ? '!bg-surface-inverse !border-white/20 !text-text-inverse' : ''"
                                     />
 
                                     <BaseInput
@@ -84,7 +85,7 @@
                                         :label="index === 0 ? (projectData.data.placeholder_url || 'Link') : ''"
                                         :placeholder="index > 0 ? (projectData.data.placeholder_url || 'Link') : ''"
                                         without-translation
-                                        :input-classes="inSidebar ? '!bg-artwork-navigation-background !border-zinc-600 !text-white' : ''"
+                                        :input-classes="inSidebar ? '!bg-surface-inverse !border-white/20 !text-text-inverse' : ''"
                                     />
                                 </div>
 
@@ -93,8 +94,8 @@
                                         type="button"
                                         class="text-xs underline underline-offset-2"
                                         :class="[
-                                            inSidebar ? 'text-zinc-200 hover:text-red-300' : 'text-gray-500 hover:text-red-600',
-                                            links.length === 1 ? 'opacity-40 cursor-not-allowed' : ''
+                                            inSidebar ? 'text-white/70 hover:text-danger-border' : 'text-text-subtle hover:text-danger',
+                                            links.length === 1 ? (inSidebar ? '!text-white/30 cursor-not-allowed' : '!text-border-strong cursor-not-allowed') : ''
                                         ]"
                                         @click="removeRow(index)"
                                         :disabled="links.length === 1"
@@ -112,8 +113,8 @@
                             type="button"
                             class="text-xs underline underline-offset-2 flex items-center gap-1"
                             :class="[
-                                inSidebar ? 'text-zinc-200 hover:text-white' : 'text-indigo-600 hover:text-indigo-700',
-                                isMaxReached ? 'opacity-40 cursor-not-allowed' : ''
+                                inSidebar ? 'text-white/70 hover:text-white' : 'text-accent-600 hover:text-accent-700',
+                                isMaxReached ? (inSidebar ? '!text-white/30 cursor-not-allowed' : '!text-border-strong cursor-not-allowed') : ''
                             ]"
                             @click="addRow"
                             :disabled="isMaxReached"
@@ -130,7 +131,7 @@
                         />
                     </div>
 
-                    <div v-if="error" class="text-xs" :class="inSidebar ? 'text-red-300' : 'text-red-600'">
+                    <div v-if="error" class="text-xs" :class="inSidebar ? 'text-danger-border' : 'text-danger'">
                         {{ error }}
                     </div>
                 </div>
@@ -147,7 +148,7 @@
                             target="_blank"
                             rel="noopener noreferrer nofollow"
                             class="block hover:underline cursor-pointer"
-                            :class="inSidebar ? 'text-blue-300 hover:text-blue-200' : 'text-blue-600'"
+                            :class="inSidebar ? 'text-accent-200 hover:text-accent-100' : 'text-accent-600'"
                         >
                             {{ l.label && l.label.length > 0 ? l.label : l.url }}
                         </a>
@@ -155,14 +156,14 @@
                         <span
                             v-else
                             class="block"
-                            :class="inSidebar ? 'text-zinc-300' : 'text-gray-700'"
+                            :class="inSidebar ? 'text-white/70' : 'text-text-muted'"
                         >
                             {{ l.label }}
                         </span>
                     </template>
                 </div>
 
-                <div v-else class="text-sm" :class="inSidebar ? 'text-zinc-300' : 'text-gray-400'">
+                <div v-else class="text-sm" :class="inSidebar ? 'text-white/70' : 'text-text-subtle'">
                     —
                 </div>
             </div>
@@ -185,30 +186,30 @@
                 <div
                     v-for="template in templates"
                     :key="template.id"
-                    class="flex items-center justify-between p-3 rounded-lg border border-gray-200 hover:bg-gray-50"
+                    class="flex items-center justify-between p-3 rounded-lg border border-border-subtle hover:bg-surface-sunken"
                 >
                     <div class="flex-1">
                         <p class="font-medium text-sm">{{ template.name }}</p>
-                        <p class="text-xs text-gray-500">{{ template.entries.length }} {{ $t('entries') }}</p>
+                        <p class="text-xs text-text-subtle">{{ template.entries.length }} {{ $t('entries') }}</p>
                     </div>
                     <div class="flex items-center gap-2">
                         <button
                             type="button"
-                            class="text-xs px-2 py-1 rounded bg-indigo-100 text-indigo-700 hover:bg-indigo-200"
+                            class="text-xs px-2 py-1 rounded bg-accent-100 text-accent-700 hover:bg-accent-200"
                             @click="applyTemplate(template)"
                         >
                             {{ $t('Apply') }}
                         </button>
                         <button
                             type="button"
-                            class="text-xs px-2 py-1 rounded bg-gray-100 text-gray-700 hover:bg-gray-200"
+                            class="text-xs px-2 py-1 rounded bg-surface-sunken text-text-muted hover:bg-border-subtle"
                             @click="editTemplate(template)"
                         >
                             <component :is="IconEdit" class="size-3" />
                         </button>
                         <button
                             type="button"
-                            class="text-xs px-2 py-1 rounded bg-red-100 text-red-700 hover:bg-red-200"
+                            class="text-xs px-2 py-1 rounded bg-danger-surface text-danger hover:bg-danger-border"
                             @click="deleteTemplate(template)"
                         >
                             <component :is="IconTrash" class="size-3" />
@@ -216,7 +217,7 @@
                     </div>
                 </div>
             </div>
-            <div v-else class="text-center py-8 text-gray-500">
+            <div v-else class="text-center py-8 text-text-subtle">
                 {{ $t('No templates available') }}
             </div>
         </div>
@@ -237,20 +238,20 @@
                 v-model="newTemplateName"
                 :label="$t('Template Name')"
             />
-            <p class="text-xs text-gray-500">
+            <p class="text-xs text-text-subtle">
                 {{ $t('Only display texts will be saved, not the actual links.') }}
             </p>
             <div class="flex justify-end gap-2">
                 <button
                     type="button"
-                    class="px-4 py-2 text-sm rounded border border-gray-300 hover:bg-gray-50"
+                    class="px-4 py-2 text-sm rounded border border-border hover:bg-surface-sunken"
                     @click="showSaveTemplateModal = false"
                 >
                     {{ $t('Cancel') }}
                 </button>
                 <button
                     type="button"
-                    class="px-4 py-2 text-sm rounded bg-indigo-600 text-white hover:bg-indigo-700"
+                    class="px-4 py-2 text-sm rounded bg-accent-600 text-white hover:bg-accent-700"
                     @click="saveAsTemplate"
                     :disabled="!newTemplateName.trim()"
                 >
@@ -284,9 +285,9 @@
                     handle=".edit-drag-handle"
                 >
                     <template #item="{ element, index }">
-                        <div class="flex items-center gap-2 p-2 rounded border border-gray-200">
+                        <div class="flex items-center gap-2 p-2 rounded border border-border-subtle">
                             <div class="edit-drag-handle cursor-grab">
-                                <component :is="IconGripVertical" class="size-4 text-gray-400" />
+                                <component :is="IconGripVertical" class="size-4 text-text-subtle" />
                             </div>
                             <BaseInput
                                 :id="`edit-entry-${index}`"
@@ -297,7 +298,7 @@
                             />
                             <button
                                 type="button"
-                                class="text-red-500 hover:text-red-700"
+                                class="text-danger hover:text-danger/80"
                                 @click="removeEditEntry(index)"
                                 :disabled="editingTemplate.entries.length === 1"
                             >
@@ -310,7 +311,7 @@
 
             <button
                 type="button"
-                class="text-xs underline underline-offset-2 flex items-center gap-1 text-indigo-600 hover:text-indigo-700"
+                class="text-xs underline underline-offset-2 flex items-center gap-1 text-accent-600 hover:text-accent-700"
                 @click="addEditEntry"
             >
                 <component :is="IconCirclePlus" class="size-4" />
@@ -320,14 +321,14 @@
             <div class="flex justify-end gap-2 pt-4 border-t">
                 <button
                     type="button"
-                    class="px-4 py-2 text-sm rounded border border-gray-300 hover:bg-gray-50"
+                    class="px-4 py-2 text-sm rounded border border-border hover:bg-surface-sunken"
                     @click="showEditTemplateModal = false"
                 >
                     {{ $t('Cancel') }}
                 </button>
                 <button
                     type="button"
-                    class="px-4 py-2 text-sm rounded bg-indigo-600 text-white hover:bg-indigo-700"
+                    class="px-4 py-2 text-sm rounded bg-accent-600 text-white hover:bg-accent-700"
                     @click="updateTemplate"
                     :disabled="!editingTemplate.name.trim() || editingTemplate.entries.length === 0"
                 >

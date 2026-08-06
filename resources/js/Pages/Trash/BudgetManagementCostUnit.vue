@@ -5,19 +5,19 @@
         @delete-all="showConfirmDeleteAll = true"
     />
     <div v-for="trashedCostUnit in trashedCostUnits.data" :key="trashedCostUnit.id"
-         class="flex w-full bg-white my-2 border border-gray-200">
-        <button class="bg-artwork-buttons-create hover:bg-artwork-buttons-hover flex" @click="trashedCostUnit.hidden = !trashedCostUnit.hidden">
-            <ChevronUpIcon v-if="trashedCostUnit.hidden === true"
+         class="flex w-full bg-white my-2 border border-border-subtle">
+        <button class="bg-accent-600 hover:bg-accent-700 flex" @click="trashedCostUnit.hidden = !trashedCostUnit.hidden">
+            <IconChevronUp v-if="trashedCostUnit.hidden === true"
                            class="h-6 w-6 text-white my-auto"
             />
-            <ChevronDownIcon v-else
+            <IconChevronDown v-else
                              class="h-6 w-6 text-white my-auto"
             />
         </button>
         <div class="flex mt-8 w-full ml-4 flex-wrap p-4">
             <div class="flex justify-between w-full">
                 <div class="my-auto">
-                    <span class="text-2xl leading-6 font-bold font-lexend text-gray-900">
+                    <span class="text-2xl leading-6 font-bold font-lexend text-text">
                     {{ trashedCostUnit.cost_unit_number }}
                     </span>
                 </div>
@@ -25,8 +25,8 @@
                     <Menu as="div" class="my-auto relative">
                         <div class="flex">
                             <MenuButton
-                                class="flex bg-tagBg p-0.5 rounded-full">
-                                <DotsVerticalIcon
+                                class="flex  p-0.5 rounded-full">
+                                <IconDotsVertical
                                     class=" flex-shrink-0 h-6 w-6 text-menuartwork-buttons-create my-auto"
                                     aria-hidden="true"/>
                             </MenuButton>
@@ -39,7 +39,7 @@
                             leave-from-class="transform opacity-100 scale-100"
                             leave-to-class="transform opacity-0 scale-95">
                             <MenuItems
-                                class="origin-top-right absolute right-0 w-56 shadow-lg bg-zinc-800 ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 focus:outline-none">
+                                class="origin-top-right absolute right-0 w-56 shadow-lg bg-surface-inverse ring-1 ring-black ring-opacity-5 divide-y divide-white/10">
                                 <div class="py-1">
                                     <MenuItem v-slot="{ active }">
                                         <Link method="patch"
@@ -49,11 +49,11 @@
                                                       budgetManagementCostUnit: trashedCostUnit.id
                                                   }
                                               )"
-                                              :class="[active ? 'bg-primaryHover text-white' :
-                                                'text-secondary',
+                                              :class="[active ? ' text-white' :
+                                                'text-text-subtle',
                                                 'group flex items-center px-4 py-2 w-full text-sm subpixel-antialiased']">
-                                            <RefreshIcon
-                                                class="mr-3 h-5 w-5 text-primaryText group-hover:text-artwork-buttons-hover"
+                                            <IconRefresh
+                                                class="mr-3 h-5 w-5 text-primaryText group-hover:text-accent-700"
                                                 aria-hidden="true"/>
                                             {{ $t('Restore') }}
                                         </Link>
@@ -66,11 +66,11 @@
                                                       budgetManagementCostUnit: trashedCostUnit.id
                                                   }
                                               )"
-                                              :class="[active ? 'bg-primaryHover text-white' :
-                                                'text-secondary',
+                                              :class="[active ? ' text-white' :
+                                                'text-text-subtle',
                                                 'group flex items-center px-4 py-2 w-full text-sm subpixel-antialiased']">
-                                            <TrashIcon
-                                                class="mr-3 h-5 w-5 text-primaryText group-hover:text-artwork-buttons-hover"
+                                            <IconTrash
+                                                class="mr-3 h-5 w-5 text-primaryText group-hover:text-accent-700"
                                                 aria-hidden="true"/>
                                             {{ $t('Delete permanently') }}
                                         </Link>
@@ -104,10 +104,9 @@
 </template>
 
 <script>
+import {IconChevronDown, IconChevronUp, IconDotsVertical, IconRefresh, IconSearch, IconTrash, IconX} from "@tabler/icons-vue";
 import AppLayout from "@/Layouts/AppLayout.vue";
 import TrashLayout from "@/Layouts/TrashLayout.vue";
-import {ChevronUpIcon, ChevronDownIcon, DotsVerticalIcon, RefreshIcon, SearchIcon} from "@heroicons/vue/solid";
-import {TrashIcon, XIcon} from "@heroicons/vue/outline";
 import {Menu, MenuButton,MenuItems,MenuItem } from "@headlessui/vue";
 import { Link } from "@inertiajs/vue3";
 import Input from "@/Layouts/Components/InputComponent.vue";
@@ -124,17 +123,17 @@ export default {
         TrashSearchAndActions,
         ConfirmDeleteModal,
         Input,
-        XIcon,
-        SearchIcon,
-        ChevronDownIcon,
-        ChevronUpIcon,
+        IconX,
+        IconSearch,
+        IconChevronDown,
+        IconChevronUp,
         Menu,
         MenuButton,
-        DotsVerticalIcon,
+        IconDotsVertical,
         MenuItems,
         MenuItem,
-        RefreshIcon,
-        TrashIcon,
+        IconRefresh,
+        IconTrash,
         Link
     },
     data() {

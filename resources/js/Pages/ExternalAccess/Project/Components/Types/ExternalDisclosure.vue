@@ -1,16 +1,16 @@
 <template>
-    <div class="rounded-2xl border border-zinc-200 bg-white">
+    <div class="rounded-2xl border border-border-subtle bg-white">
         <button
             type="button"
             class="flex w-full items-center justify-between px-5 py-4 text-left"
             @click="open = !open"
         >
-            <span class="text-sm font-semibold text-zinc-800">{{ label }}</span>
-            <span class="text-zinc-400">{{ open ? '−' : '+' }}</span>
+            <span class="text-sm font-semibold text-text">{{ label }}</span>
+            <span class="text-text-subtle">{{ open ? '−' : '+' }}</span>
         </button>
 
-        <div v-show="open" class="border-t border-zinc-100 px-5 py-4">
-            <div v-if="children.length === 0" class="text-xs text-zinc-400">
+        <div v-show="open" class="border-t border-border-subtle px-5 py-4">
+            <div v-if="children.length === 0" class="text-xs text-text-subtle">
                 {{ $t('No content') }}
             </div>
             <div v-else class="space-y-4">

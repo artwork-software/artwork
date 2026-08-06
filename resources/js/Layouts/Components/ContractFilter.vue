@@ -6,7 +6,7 @@
                 <label class="text-xs">{{$t('Reset')}}</label>
             </button>
         </div>
-        <div class="mx-auto w-full max-w-md rounded-2xl bg-primary border-none mt-2">
+        <div class="mx-auto w-full max-w-md rounded-2xl bg-surface-inverse border-none mt-2">
             <BaseFilterDisclosure :title="$t('Additional costs')">
                 <BaseFilterCheckboxList
                     :list="additionalCosts"
@@ -16,7 +16,7 @@
                 />
             </BaseFilterDisclosure>
 
-            <hr class="border-gray-500 rounded-full mt-2 mb-2">
+            <hr class="border-border-strong rounded-full mt-2 mb-2">
             <BaseFilterDisclosure :title="$t('Legal form')">
                 <BaseFilterCheckboxList
                     :list="companyTypes"
@@ -25,7 +25,7 @@
                     @changeFilterItems="updateFilter" />
             </BaseFilterDisclosure>
 
-            <hr class="border-gray-500 rounded-full mt-2 mb-2">
+            <hr class="border-border-strong rounded-full mt-2 mb-2">
             <BaseFilterDisclosure :title="$t('Contract type')">
                 <BaseFilterCheckboxList
                     :list="contractTypes"
@@ -38,11 +38,9 @@
 </template>
 
 <script>
+import {IconX} from "@tabler/icons-vue";
 
 import BaseFilter from "@/Layouts/Components/BaseFilter.vue";
-import {
-    XIcon
-} from '@heroicons/vue/outline';
 import BaseFilterDisclosure from "@/Layouts/Components/BaseFilterDisclosure.vue";
 import BaseFilterCheckboxList from "@/Layouts/Components/BaseFilterCheckboxList.vue";
 import Permissions from "@/Mixins/Permissions.vue";
@@ -50,7 +48,7 @@ import IconLib from "@/Mixins/IconLib.vue";
 export default {
     name: "ContractFilter",
     mixins: [Permissions, IconLib],
-    components: {BaseFilterCheckboxList, BaseFilterDisclosure, BaseFilter, XIcon},
+    components: {BaseFilterCheckboxList, BaseFilterDisclosure, BaseFilter, IconX},
     methods: {
         resetContractFilter() {
             this.filter.costsFilter = []

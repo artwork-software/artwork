@@ -8,7 +8,7 @@
             <ToolbarHeader
                 :icon="IconBuildingFactory2"
                 title="Manufacturers"
-                icon-bg-class="bg-yellow-600/10 text-yellow-700"
+                band
                 v-model="searchManufacturerInput"
                 :description="manufacturers?.data?.length ? `${manufacturers?.data?.length} ${$t('Manufacturer')}` : ''"
                 :search-enabled="true"
@@ -17,10 +17,10 @@
             >
                 <template #actions>
 
-                    <button class="ui-button-add" @click="showAddEditManufacturerModal = true">
+                    <BaseUIButton variant="primary" on-band hide-icon @click="showAddEditManufacturerModal = true">
                         <component :is="IconCirclePlus" stroke-width="1" class="size-5" />
                         {{ $t('Create Manufacturer') }}
-                    </button>
+                    </BaseUIButton>
                 </template>
             </ToolbarHeader>
         </template>
@@ -47,8 +47,8 @@
                             <img :src="row.profile_photo_url" alt="" class="size-11 rounded-full object-cover" />
                         </div>
                         <div class="ml-4">
-                            <div class="font-medium text-gray-900">{{ row.name }}</div>
-                            <div class="mt-1 text-gray-500">{{ row.email }}</div>
+                            <div class="font-medium text-text">{{ row.name }}</div>
+                            <div class="mt-1 text-text-subtle">{{ row.email }}</div>
                         </div>
                     </div>
                 </template>
@@ -100,6 +100,7 @@ const props = defineProps({
 
 import BaseTable, { type TableColumn } from '@/Artwork/Table/BaseTable.vue'
 import ToolbarHeader from "@/Artwork/Toolbar/ToolbarHeader.vue";
+import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 import {IconCirclePlus, IconBuildingFactory2, IconEdit, IconTrash} from "@tabler/icons-vue";
 import BaseMenu from "@/Components/Menu/BaseMenu.vue";
 import BaseMenuItem from "@/Components/Menu/BaseMenuItem.vue";

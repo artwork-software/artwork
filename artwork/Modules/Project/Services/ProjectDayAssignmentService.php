@@ -178,6 +178,111 @@ class ProjectDayAssignmentService
     }
 
     /**
+     * Personenvorschläge für die projektzentrierte Zuordnung im Schichten-Tab:
+     * schichtfähige Personen aller drei Typen (Namenssuche per SQL-LIKE, kein
+     * Scout — analog Projektsuche), Projektteam-Mitglieder zuerst und mit Flag,
+     * bestehende Zuordnungen/Wünsche im Projekt als Zusammenfassung annotiert.
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    public function getWorkerOptionsForProject(Project $project, ?string $search = null, int $limit = 30): array
+    {
+        $search = trim((string) $search);
+        $like = '%' . str_replace(['%', '_'], ['\\%', '\\_'], $search) . '%';
+
+        $users = User::query()
+            ->canWorkShifts()
+            ->when($search !== '', static function ($query) use ($like): void {
+                $query->where(static function ($query) use ($like): void {
+                    $query->where('first_name', 'like', $like)
+                        ->orWhere('last_name', 'like', $like)
+                        ->orWhere(DB::raw("CONCAT(first_name, ' ', last_name)"), 'like', $like);
+                });
+            })
+            ->orderBy('first_name')
+            ->orderBy('last_name')
+            ->limit($limit)
+            ->get(['id', 'first_name', 'last_name', 'position', 'profile_photo_path']);
+
+        $freelancers = Freelancer::query()
+            ->canWorkShifts()
+            ->when($search !== '', static function ($query) use ($like): void {
+                $query->where(static function ($query) use ($like): void {
+                    $query->where('first_name', 'like', $like)
+                        ->orWhere('last_name', 'like', $like)
+                        ->orWhere(DB::raw("CONCAT(first_name, ' ', last_name)"), 'like', $like);
+                });
+            })
+            ->orderBy('first_name')
+            ->orderBy('last_name')
+            ->limit($limit)
+            ->get(['id', 'first_name', 'last_name', 'profile_image']);
+
+        $serviceProviders = ServiceProvider::query()
+            ->canWorkShifts()
+            ->when($search !== '', static function ($query) use ($like): void {
+                $query->where('provider_name', 'like', $like);
+            })
+            ->orderBy('provider_name')
+            ->limit($limit)
+            ->get(['id', 'provider_name', 'profile_image']);
+
+        $teamUserIds = $project->users()->pluck('users.id')->flip();
+
+        // Bestehende Zuordnungen im Projekt je Person zusammenfassen
+        $existingByWorker = ProjectDayAssignment::query()
+            ->where('project_id', $project->id)
+            ->get(['employable_type', 'employable_id', 'type', 'is_full_period'])
+            ->groupBy(static fn (ProjectDayAssignment $row) => $row->employable_type . '#' . $row->employable_id);
+
+        $summarize = static function (string $employableType, int $employableId) use ($existingByWorker): array {
+            $rows = $existingByWorker->get($employableType . '#' . $employableId, collect());
+
+            return [
+                'binding_days' => $rows->where('type', ProjectDayAssignmentType::BINDING->value)->count(),
+                'has_full_period' => $rows
+                    ->where('type', ProjectDayAssignmentType::BINDING->value)
+                    ->contains(static fn (ProjectDayAssignment $row) => (bool) $row->is_full_period),
+                'wish_days' => $rows->where('type', ProjectDayAssignmentType::WISH->value)->count(),
+            ];
+        };
+
+        $options = $users->map(static fn (User $user) => [
+            'id' => $user->id,
+            'type' => 0,
+            'name' => $user->getFullNameAttribute(),
+            'position' => $user->position,
+            'profile_photo_url' => $user->profile_photo_url,
+            'in_project_team' => $teamUserIds->has($user->id),
+        ] + $summarize(User::class, $user->id))
+            ->concat($freelancers->map(static fn (Freelancer $freelancer) => [
+                'id' => $freelancer->id,
+                'type' => 1,
+                'name' => $freelancer->getNameAttribute(),
+                'position' => null,
+                'profile_photo_url' => $freelancer->profile_photo_url,
+                'in_project_team' => false,
+            ] + $summarize(Freelancer::class, $freelancer->id)))
+            ->concat($serviceProviders->map(static fn (ServiceProvider $serviceProvider) => [
+                'id' => $serviceProvider->id,
+                'type' => 2,
+                'name' => $serviceProvider->provider_name,
+                'position' => null,
+                'profile_photo_url' => $serviceProvider->profile_photo_url,
+                'in_project_team' => false,
+            ] + $summarize(ServiceProvider::class, $serviceProvider->id)));
+
+        return $options
+            ->sortBy([
+                ['in_project_team', 'desc'],
+                ['name', 'asc'],
+            ])
+            ->take($limit)
+            ->values()
+            ->all();
+    }
+
+    /**
      * Legt Zuordnungen/Wünsche als Tageszeilen an (eine group_id pro Vorgang).
      * Tage mit bereits aktiver identischer Zuordnung oder — bei verbindlichen
      * Einträgen — bereits bestehender Schicht desselben Projekts werden übersprungen;

@@ -3,25 +3,24 @@
         @dragleave="dropOver = false"
         @dragover="onDragOver"
         @drop="onDrop"
-        :class="[
-            'flex items-center h-4 min-h-4 rounded transition',
+        :class="[ 'flex items-center h-4 min-h-4 rounded transition',
             isDragging ? 'border-2 border-dashed' : '',
             isDragging && invalidDropReason
-                ? 'border-red-200 bg-red-50/40 opacity-70 cursor-not-allowed'
+                ? 'border-danger-border bg-danger-surface/40 opacity-70 cursor-not-allowed'
                 : (isDragging && dropOver
-                    ? 'border-emerald-400 bg-emerald-50/60 ring-2 ring-emerald-400/30 cursor-pointer'
-                    : (isDragging ? 'border-zinc-300 bg-zinc-50/40 cursor-pointer' : 'cursor-pointer'))
+                    ? 'border-success-border bg-success-surface/60 ring-2 ring-success-border/30 cursor-pointer'
+                    : (isDragging ? 'border-border bg-surface-sunken/40 cursor-pointer' : 'cursor-pointer'))
         ]"
         :aria-hidden="!isDragging"
         :aria-dropeffect="isDragging && !invalidDropReason ? 'copy' : undefined"
     >
         <div v-if="isDragging && invalidDropReason" class="h-full w-full flex items-center justify-center gap-2 text-[11px] pointer-events-none">
-            <span class="font-medium text-red-600">{{ $t(invalidDropReason) }}</span>
+            <span class="font-medium text-danger">{{ $t(invalidDropReason) }}</span>
         </div>
-        <div v-else-if="isDragging" class="h-full w-full flex items-center justify-center gap-2 text-[11px] text-zinc-600 pointer-events-none">
-            <span class="font-medium" :class="dropOver ? 'text-emerald-700' : ''">{{ $t('Drop into folder') }}</span>
+        <div v-else-if="isDragging" class="h-full w-full flex items-center justify-center gap-2 text-[11px] text-text-muted pointer-events-none">
+            <span class="font-medium" :class="dropOver ? 'text-success' : ''">{{ $t('Drop into folder') }}</span>
         </div>
-        <span v-else-if="dropOver" class="text-xs text-gray-300 w-full flex items-center justify-center pointer-events-none">
+        <span v-else-if="dropOver" class="text-xs text-text-subtle w-full flex items-center justify-center pointer-events-none">
             {{ $t('Release to add') }}
         </span>
     </div>

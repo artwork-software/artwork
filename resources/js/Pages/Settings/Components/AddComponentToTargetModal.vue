@@ -124,19 +124,19 @@ function addToSidebarTab(sidebarTab) {
         @close="emit('close')"
     >
         <!-- Welche Komponente wird hinzugefügt -->
-        <div class="flex items-center gap-3 rounded-xl border border-zinc-200/80 bg-zinc-50/70 px-3 py-2.5 mb-4">
-            <div class="grid place-items-center size-9 rounded-lg border border-zinc-200/80 bg-white shrink-0">
+        <div class="flex items-center gap-3 rounded-xl border border-border-subtle/80 bg-surface-sunken/70 px-3 py-2.5 mb-4">
+            <div class="grid place-items-center size-9 rounded-lg border border-border-subtle/80 bg-white shrink-0">
                 <ComponentIcons :type="component.type" />
             </div>
             <div class="min-w-0">
-                <div class="text-sm font-semibold text-zinc-900 truncate">
+                <div class="text-sm font-semibold text-text truncate">
                     {{ component.special ? $t(component.name) : component.name }}
                 </div>
-                <div class="text-[11px] text-zinc-500 flex items-center gap-2">
+                <div class="text-[11px] text-text-subtle flex items-center gap-2">
                     <span>{{ $t(component.type) }}</span>
                     <span
                         v-if="needsScope"
-                        class="inline-flex items-center rounded-full border border-amber-200 bg-amber-50 px-1.5 py-0.5 text-[10px] text-amber-700"
+                        class="inline-flex items-center rounded-full border border-warning-border bg-warning-surface px-1.5 py-0.5 text-[10px] text-warning"
                     >
                         {{ $t('Requires configuration') }}
                     </span>
@@ -148,17 +148,17 @@ function addToSidebarTab(sidebarTab) {
             <div
                 v-for="tab in tabs"
                 :key="tab.id"
-                class="rounded-xl border border-zinc-200/80 bg-white/70"
+                class="rounded-xl border border-border-subtle/80 bg-white/70"
             >
                 <!-- Tab selbst -->
                 <button
                     type="button"
-                    class="w-full flex items-center justify-between gap-2 px-3 py-2.5 hover:bg-emerald-50/60 rounded-t-xl transition text-left"
+                    class="w-full flex items-center justify-between gap-2 px-3 py-2.5 hover:bg-success-surface/60 rounded-t-xl transition text-left"
                     :class="foldersOfTab(tab).length === 0 && (tab.sidebar_tabs ?? []).length === 0 ? 'rounded-b-xl' : ''"
                     @click="addToTab(tab)"
                 >
-                    <span class="text-sm font-medium text-zinc-900 truncate">{{ tab.name }}</span>
-                    <span class="inline-flex items-center gap-1 text-[11px] text-emerald-700 shrink-0">
+                    <span class="text-sm font-medium text-text truncate">{{ tab.name }}</span>
+                    <span class="inline-flex items-center gap-1 text-[11px] text-success shrink-0">
                         <IconCirclePlus class="size-4" />
                         {{ $t('Add to this tab') }}
                     </span>
@@ -168,21 +168,21 @@ function addToSidebarTab(sidebarTab) {
                 <div
                     v-for="folderElement in foldersOfTab(tab)"
                     :key="'folder-' + folderElement.id"
-                    class="border-t border-dashed border-zinc-200"
+                    class="border-t border-dashed border-border-subtle"
                 >
                     <button
                         type="button"
                         class="w-full flex items-center justify-between gap-2 pl-8 pr-3 py-2 text-left transition"
-                        :class="folderDisabledReason ? 'opacity-40 cursor-not-allowed' : 'hover:bg-emerald-50/60'"
+                        :class="folderDisabledReason ? 'text-text-subtle cursor-not-allowed' : 'hover:bg-success-surface/60'"
                         :title="folderDisabledReason ? $t(folderDisabledReason) : undefined"
                         :disabled="!!folderDisabledReason"
                         @click="addToFolder(tab, folderElement)"
                     >
                         <span class="flex items-center gap-1.5 min-w-0">
-                            <IconFolder class="size-4 text-zinc-500 shrink-0" />
-                            <span class="text-sm text-zinc-800 truncate">{{ folderLabel(folderElement) }}</span>
+                            <IconFolder class="size-4 text-text-subtle shrink-0" />
+                            <span class="text-sm text-text truncate">{{ folderLabel(folderElement) }}</span>
                         </span>
-                        <span v-if="!folderDisabledReason" class="inline-flex items-center gap-1 text-[11px] text-emerald-700 shrink-0">
+                        <span v-if="!folderDisabledReason" class="inline-flex items-center gap-1 text-[11px] text-success shrink-0">
                             <IconCirclePlus class="size-4" />
                             {{ $t('Add to folder') }}
                         </span>
@@ -193,21 +193,21 @@ function addToSidebarTab(sidebarTab) {
                 <div
                     v-for="sidebarTab in (tab.sidebar_tabs ?? [])"
                     :key="'sidebar-' + sidebarTab.id"
-                    class="border-t border-dashed border-zinc-200"
+                    class="border-t border-dashed border-border-subtle"
                 >
                     <button
                         type="button"
                         class="w-full flex items-center justify-between gap-2 pl-8 pr-3 py-2 text-left transition"
-                        :class="sidebarDisabledReason ? 'opacity-40 cursor-not-allowed' : 'hover:bg-emerald-50/60'"
+                        :class="sidebarDisabledReason ? 'text-text-subtle cursor-not-allowed' : 'hover:bg-success-surface/60'"
                         :title="sidebarDisabledReason ? $t(sidebarDisabledReason) : undefined"
                         :disabled="!!sidebarDisabledReason"
                         @click="addToSidebarTab(sidebarTab)"
                     >
                         <span class="flex items-center gap-1.5 min-w-0">
-                            <IconLayoutSidebarRight class="size-4 text-zinc-500 shrink-0" />
-                            <span class="text-sm text-zinc-800 truncate">{{ $t('Sidebar') }}: {{ sidebarTab.name }}</span>
+                            <IconLayoutSidebarRight class="size-4 text-text-subtle shrink-0" />
+                            <span class="text-sm text-text truncate">{{ $t('Sidebar') }}: {{ sidebarTab.name }}</span>
                         </span>
-                        <span v-if="!sidebarDisabledReason" class="inline-flex items-center gap-1 text-[11px] text-emerald-700 shrink-0">
+                        <span v-if="!sidebarDisabledReason" class="inline-flex items-center gap-1 text-[11px] text-success shrink-0">
                             <IconCirclePlus class="size-4" />
                             {{ $t('Add to sidebar') }}
                         </span>

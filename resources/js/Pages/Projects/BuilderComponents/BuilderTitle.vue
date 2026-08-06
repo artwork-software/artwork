@@ -1,5 +1,5 @@
 <template>
-    <div class="xxsLight print:xsDark">
+    <div class="text-xs/[18px] text-text-subtle print:text-sm/5 font-semibold text-text">
         <p class="line-clamp-3" v-html="project['Title'][component.id]?.title"></p>
     </div>
 </template>

@@ -13,11 +13,11 @@
                 is-small
                 id="searchInput"/>
 
-            <div v-if="selectedContractId" class="rounded-md bg-blue-50/60 border border-blue-200 px-3 py-2 text-xs text-blue-800">
+            <div v-if="selectedContractId" class="rounded-md bg-accent-50/60 border border-accent-200 px-3 py-2 text-xs text-accent-700">
                 {{ $t('Selecting a different contract replaces the current values for this user.') }}
             </div>
 
-            <div v-if="filteredContracts.length === 0" class="py-8 text-center text-sm text-gray-500">
+            <div v-if="filteredContracts.length === 0" class="py-8 text-center text-sm text-text-subtle">
                 {{ $t('No contracts found.') }}
             </div>
 
@@ -27,54 +27,54 @@
                     @click="$emit('selectContract', contract)"
                     class="group cursor-pointer rounded-lg border p-4 transition duration-150 ease-in-out"
                     :class="contract.id === selectedContractId
-                        ? 'border-blue-300 bg-blue-50/50'
-                        : 'border-gray-200 hover:border-blue-300 hover:bg-gray-50'">
+                        ? 'border-accent-200 bg-accent-50/50'
+                        : 'border-border-subtle hover:border-accent-200 hover:bg-surface-sunken'">
 
                     <div class="flex items-start justify-between gap-4">
                         <div class="min-w-0">
-                            <p class="text-sm font-semibold text-gray-900 font-lexend flex items-center gap-2">
+                            <p class="text-sm font-semibold text-text font-lexend flex items-center gap-2">
                                 {{ contract.name }}
                                 <span v-if="contract.id === selectedContractId"
-                                      class="inline-flex items-center gap-1 rounded-full bg-blue-100 px-2 py-0.5 text-[11px] font-medium text-blue-700">
+                                      class="inline-flex items-center gap-1 rounded-full bg-accent-100 px-2 py-0.5 text-[11px] font-medium text-accent-700">
                                     <component :is="IconCheck" class="size-3" stroke-width="2" />
                                     {{ $t('Currently selected') }}
                                 </span>
                             </p>
-                            <p v-if="contract.description" class="text-xs text-gray-500 mt-0.5">
+                            <p v-if="contract.description" class="text-xs text-text-subtle mt-0.5">
                                 {{ contract.description }}
                             </p>
                         </div>
                         <span class="shrink-0 text-xs font-medium transition"
                               :class="contract.id === selectedContractId
-                                ? 'text-blue-400'
-                                : 'text-blue-600 opacity-0 group-hover:opacity-100'">
+                                ? 'text-accent-500'
+                                : 'text-accent-600 opacity-0 group-hover:opacity-100'">
                             {{ contract.id === selectedContractId ? '' : $t('Select') }} &rarr;
                         </span>
                     </div>
 
                     <dl class="mt-3 grid grid-cols-2 sm:grid-cols-4 gap-x-4 gap-y-2">
                         <div>
-                            <dt class="text-[11px] text-gray-500">{{ $t('Free Full Days Per Week') }}</dt>
-                            <dd class="text-sm font-medium text-gray-900">{{ contract.free_full_days_per_week }}</dd>
+                            <dt class="text-[11px] text-text-subtle">{{ $t('Free Full Days Per Week') }}</dt>
+                            <dd class="text-sm font-medium text-text">{{ contract.free_full_days_per_week }}</dd>
                         </div>
                         <div>
-                            <dt class="text-[11px] text-gray-500">{{ $t('Free Half Days Per Week') }}</dt>
-                            <dd class="text-sm font-medium text-gray-900">{{ contract.free_half_days_per_week }}</dd>
+                            <dt class="text-[11px] text-text-subtle">{{ $t('Free Half Days Per Week') }}</dt>
+                            <dd class="text-sm font-medium text-text">{{ contract.free_half_days_per_week }}</dd>
                         </div>
                         <div>
-                            <dt class="text-[11px] text-gray-500">{{ $t('Compensation Period (in days)') }}</dt>
-                            <dd class="text-sm font-medium text-gray-900">{{ contract.compensation_period }}</dd>
+                            <dt class="text-[11px] text-text-subtle">{{ $t('Compensation Period (in days)') }}</dt>
+                            <dd class="text-sm font-medium text-text">{{ contract.compensation_period }}</dd>
                         </div>
                         <div>
-                            <dt class="text-[11px] text-gray-500">{{ $t('Special Day Rule Active') }}</dt>
-                            <dd class="text-sm font-medium text-gray-900">{{ contract.special_day_rule_active ? $t('Yes') : $t('No') }}</dd>
+                            <dt class="text-[11px] text-text-subtle">{{ $t('Special Day Rule Active') }}</dt>
+                            <dd class="text-sm font-medium text-text">{{ contract.special_day_rule_active ? $t('Yes') : $t('No') }}</dd>
                         </div>
                     </dl>
 
                     <!-- Season-related info data + overtime as compact badges -->
                     <div v-if="contractBadges(contract).length > 0" class="mt-3 flex flex-wrap gap-1.5">
                         <span v-for="badge in contractBadges(contract)" :key="badge"
-                              class="inline-flex items-center rounded-full bg-gray-100 group-hover:bg-white px-2 py-0.5 text-[11px] text-gray-700 border border-gray-200">
+                              class="inline-flex items-center rounded-full bg-surface-sunken group-hover:bg-white px-2 py-0.5 text-[11px] text-text-muted border border-border-subtle">
                             {{ badge }}
                         </span>
                     </div>

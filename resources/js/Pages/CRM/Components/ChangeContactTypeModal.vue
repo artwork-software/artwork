@@ -16,25 +16,25 @@
                 :use-translations="true"
             />
 
-            <div v-if="selectedType && lostValues.length" class="rounded-md bg-red-50 border border-red-200 p-4">
-                <p class="text-sm font-medium text-red-800">
+            <div v-if="selectedType && lostValues.length" class="rounded-md bg-danger-surface border border-danger-border p-4">
+                <p class="text-sm font-medium text-danger">
                     {{ $t('The following values are not part of the new contact type and will be permanently deleted:') }}
                 </p>
                 <ul class="mt-2 space-y-0.5">
-                    <li v-for="entry in lostValues" :key="entry.id" class="text-sm text-red-700">
+                    <li v-for="entry in lostValues" :key="entry.id" class="text-sm text-danger">
                         <span class="font-medium">{{ entry.name }}:</span> {{ entry.value }}
                     </li>
                 </ul>
             </div>
-            <div v-else-if="selectedType" class="rounded-md bg-green-50 border border-green-200 p-4">
-                <p class="text-sm text-green-800">{{ $t('All current values are also available in the new contact type.') }}</p>
+            <div v-else-if="selectedType" class="rounded-md bg-success-surface border border-success-border p-4">
+                <p class="text-sm text-success">{{ $t('All current values are also available in the new contact type.') }}</p>
             </div>
 
             <div class="flex justify-end gap-3 mt-6">
-                <button class="ui-button-cancel" @click="$emit('close')">{{ $t('Cancel') }}</button>
-                <button class="ui-button-add" :disabled="!selectedType || processing" @click="submit">
+                <BaseUIButton variant="secondary" hide-icon @click="$emit('close')">{{ $t('Cancel') }}</BaseUIButton>
+                <BaseUIButton variant="primary" hide-icon :disabled="!selectedType || processing" @click="submit">
                     {{ $t('Change type') }}
-                </button>
+                </BaseUIButton>
             </div>
         </div>
     </ArtworkBaseModal>
@@ -45,6 +45,7 @@ import { ref, computed } from 'vue'
 import { router } from '@inertiajs/vue3'
 import ArtworkBaseModal from '@/Artwork/Modals/ArtworkBaseModal.vue'
 import ArtworkBaseListbox from '@/Artwork/Listbox/ArtworkBaseListbox.vue'
+import BaseUIButton from '@/Artwork/Buttons/BaseUIButton.vue'
 import { useTranslation } from '@/Composeables/Translation.js'
 
 const $t = useTranslation()

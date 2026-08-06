@@ -29,20 +29,20 @@
 
             <!-- Results -->
             <div class="max-h-64 overflow-y-auto">
-                <div v-if="loading" class="py-4 text-center text-sm text-gray-500">
+                <div v-if="loading" class="py-4 text-center text-sm text-text-subtle">
                     {{ $t('Searching...') }}
                 </div>
 
-                <div v-else-if="results.length === 0 && hasSearched" class="py-4 text-center text-sm text-gray-500">
+                <div v-else-if="results.length === 0 && hasSearched" class="py-4 text-center text-sm text-text-subtle">
                     {{ $t('No contacts found.') }}
                 </div>
 
-                <div v-else class="divide-y divide-gray-100">
+                <div v-else class="divide-y divide-border-subtle">
                     <button
                         v-for="contact in results"
                         :key="contact.id"
                         @click="selectContact(contact)"
-                        class="w-full flex items-center gap-3 px-3 py-3 hover:bg-gray-50 transition-colors text-left"
+                        class="w-full flex items-center gap-3 px-3 py-3 hover:bg-surface-sunken transition-colors text-left"
                     >
                         <img
                             v-if="contact.profile_photo_url"
@@ -50,16 +50,16 @@
                             alt=""
                             class="h-10 w-10 rounded-full object-cover flex-shrink-0"
                         />
-                        <div v-else class="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center flex-shrink-0">
-                            <component :is="IconUser" class="h-5 w-5 text-gray-500" />
+                        <div v-else class="h-10 w-10 rounded-full bg-border-subtle flex items-center justify-center flex-shrink-0">
+                            <component :is="IconUser" class="h-5 w-5 text-text-subtle" />
                         </div>
                         <div class="min-w-0 flex-1">
-                            <div class="text-sm font-medium text-gray-900 truncate">{{ contact.display_name }}</div>
+                            <div class="text-sm font-medium text-text truncate">{{ contact.display_name }}</div>
                             <div v-if="contact.contact_type" class="mt-0.5">
                                 <span
                                     class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium"
                                     :style="contact.contact_type.color ? { backgroundColor: contact.contact_type.color + '20', color: contact.contact_type.color } : {}"
-                                    :class="!contact.contact_type.color ? 'bg-gray-100 text-gray-700' : ''"
+                                    :class="!contact.contact_type.color ? 'bg-surface-sunken text-text-muted' : ''"
                                 >
                                     {{ contact.contact_type.name }}
                                 </span>

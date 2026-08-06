@@ -1,49 +1,42 @@
 <template>
     <div class="w-full flex flex-col relative">
+        <label v-if="label" class="mb-1 block font-lexend text-xs font-medium text-[#3F424A]">
+            {{ label }}
+        </label>
         <Listbox as="div"
                  v-model="this.value"
                  @update:model-value="this.$emit('update:modelValue', this.value);"
                  by="id">
             <div class="relative">
                 <ListboxButton
-                    class="menu-button-no-padding relative">
-                    <div v-if="this.modelValue" class="truncate">
-                        <div class="top-2 left-4 absolute text-gray-500 text-xs">
-                            {{ label }}
-                        </div>
-                        <div class="pt-6 pb-2">
-                            {{ this.modelValue[this.selectedPropertyToDisplay] }}
-                        </div>
+                    class="relative w-full flex items-center justify-between gap-1 text-left rounded-md border border-border bg-surface px-3 min-h-8 py-1 text-sm text-text focus:border-accent-600">
+                    <div v-if="this.modelValue" class="truncate pr-6">
+                        {{ this.modelValue[this.selectedPropertyToDisplay] }}
                     </div>
-                    <div v-else class="truncate text-secondary">
-                        <div class="top-2 left-4 absolute text-gray-500 text-xs">
-                            {{ label }}
-                        </div>
-                        <div class="pt-6 pb-2">
-                            {{ this.default ?? $t('Please select...') + '*' }}
-                        </div>
+                    <div v-else class="truncate pr-6 text-text-muted">
+                        {{ this.default ?? $t('Please select...') + '*' }}
                     </div>
                     <span class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
-                        <PropertyIcon name="IconChevronDown" class="h-5 w-5 text-primary"
+                        <PropertyIcon name="IconChevronDown" class="size-4 text-text-muted"
                                          aria-hidden="true"/>
                     </span>
                 </ListboxButton>
                 <transition leave-active-class="transition ease-in duration-100" leave-from-class="opacity-100"
                             leave-to-class="opacity-0">
                     <ListboxOptions
-                        class="absolute z-50 text-xs subpixel-antialiased cursor-pointer mt-1 max-h-28 w-full overflow-auto rounded-md bg-white py-1 shadow-lg ring-1 ring-gray-300 ring-opacity-5 focus:outline-none">
+                        class="absolute z-50 text-xs subpixel-antialiased cursor-pointer mt-1 max-h-28 w-full overflow-auto rounded-lg bg-surface py-1 border border-border-subtle shadow-overlay">
                         <ListboxOption v-for="(option, index) in this.options"
                                        as="template"
                                        :key="'listbox-option-' + this.id + '-' + index"
                                        :value="option"
                                        v-slot="{ active, selected }">
-                            <li :class="[active ? 'bg-artwork-buttons-create text-white' : 'text-gray-900', 'relative select-none py-2 pl-3 pr-9']">
+                            <li :class="[active ? 'bg-accent-50 text-accent-700' : 'text-text', 'relative select-none py-1.5 pl-3 pr-9 min-h-8']">
                                 <span :class="[selected ? 'font-semibold' : 'font-normal', 'block truncate']">
                                     {{ this.getterForOptionsToDisplay(option) }}
                                 </span>
                                 <span v-if="selected"
-                                      :class="[active ? 'text-white' : 'text-artwork-buttons-create', 'absolute inset-y-0 right-0 flex items-center pr-4']">
-                                    <PropertyIcon name="IconCheck" class="h-5 w-5" aria-hidden="true"/>
+                                      :class="[active ? 'text-accent-700' : 'text-accent-600', 'absolute inset-y-0 right-0 flex items-center pr-4']">
+                                    <PropertyIcon name="IconCheck" class="size-4" aria-hidden="true"/>
                                 </span>
                             </li>
                         </ListboxOption>
@@ -57,7 +50,6 @@
 <script>
 
 import {defineComponent} from "vue";
-import PlaceholderLabel from "@/Components/Inputs/Labels/PlaceholderLabel.vue";
 import {Listbox, ListboxButton, ListboxOption, ListboxOptions} from "@headlessui/vue";
 import IconLib from "@/Mixins/IconLib.vue";
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
@@ -68,8 +60,7 @@ export default defineComponent({
         Listbox,
         ListboxOption,
         ListboxOptions,
-        ListboxButton,
-        PlaceholderLabel
+        ListboxButton
     },
     mixins: [
         IconLib

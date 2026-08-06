@@ -2,13 +2,13 @@
     <AppLayout :title="$t('Import contacts')">
         <div class="mt-5 mx-auto container pb-20">
             <ToolbarHeader
+                band
                 :icon="IconUpload"
                 :title="$t('Import contacts')"
-                icon-bg-class="bg-indigo-600/10 text-indigo-700"
                 :search-enabled="false"
             >
                 <template #actions>
-                    <Link :href="route('crm.index')" class="ui-button">
+                    <Link :href="route('crm.index')" class="inline-flex items-center gap-1.5 h-[30px] px-3 rounded-md bg-white/8 hover:bg-white/16 text-text-inverse text-[13px] font-medium">
                         {{ $t('Back to CRM') }}
                     </Link>
                 </template>
@@ -20,8 +20,8 @@
             />
 
             <!-- Error -->
-            <div v-if="error" class="mb-6 rounded-md bg-red-50 p-4">
-                <p class="text-sm font-medium text-red-800">{{ error }}</p>
+            <div v-if="error" class="mb-6 rounded-md bg-danger-surface p-4">
+                <p class="text-sm font-medium text-danger">{{ error }}</p>
             </div>
 
             <div class="grid gap-8 lg:grid-cols-[minmax(0,1fr)_380px]">
@@ -49,7 +49,7 @@
                                         <span>{{ selectedType ? $t(selectedType.name) : $t('Select contact type') }}</span>
                                     </div>
                                     <span class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
-                                        <IconChevronDown class="h-5 w-5 text-gray-400" aria-hidden="true" />
+                                        <IconChevronDown class="h-5 w-5 text-text-subtle" aria-hidden="true" />
                                     </span>
                                 </ListboxButton>
 
@@ -71,10 +71,10 @@
                                             <li
                                                 :class="[
                                                     active
-                                                        ? 'bg-indigo-600 text-white'
+                                                        ? 'bg-accent-600 text-white'
                                                         : isSelected
-                                                            ? '!bg-artwork-action-buttons/10'
-                                                            : 'text-gray-900',
+                                                            ? '!bg-accent-600/10'
+                                                            : 'text-text',
                                                     'relative cursor-default select-none py-2 pl-3 pr-9'
                                                 ]"
                                             >
@@ -91,7 +91,7 @@
                                                 </div>
                                                 <span
                                                     v-if="isSelected"
-                                                    :class="[active ? 'text-white' : 'text-indigo-600', 'absolute inset-y-0 right-0 flex items-center pr-4']"
+                                                    :class="[active ? 'text-white' : 'text-accent-600', 'absolute inset-y-0 right-0 flex items-center pr-4']"
                                                 >
                                                     <IconCheck class="h-5 w-5" aria-hidden="true" />
                                                 </span>
@@ -101,22 +101,22 @@
                                 </transition>
                             </div>
                         </Listbox>
-                        <p v-if="form.errors.crm_contact_type_id" class="mt-1 text-sm text-red-600">
+                        <p v-if="form.errors.crm_contact_type_id" class="mt-1 text-sm text-danger">
                             {{ form.errors.crm_contact_type_id }}
                         </p>
                     </div>
 
                     <!-- Missing contact type hint -->
-                    <div class="rounded-lg border border-gray-200 bg-gray-50 p-4">
-                        <p class="text-sm text-gray-600">
+                    <div class="rounded-lg border border-border-subtle bg-surface-sunken p-4">
+                        <p class="text-sm text-text-muted">
                             {{ $t('Contact type missing or incomplete? You can create a new contact type right here — including its property groups.') }}
                         </p>
                         <div class="mt-2 flex items-center gap-4">
-                            <button type="button" class="text-sm font-medium text-indigo-600 hover:text-indigo-500 flex items-center gap-1" @click="showTypeModal = true">
+                            <button type="button" class="text-sm font-medium text-accent-600 hover:text-accent-600 flex items-center gap-1" @click="showTypeModal = true">
                                 <component :is="IconCirclePlus" class="h-4 w-4" />
                                 {{ $t('New contact type') }}
                             </button>
-                            <Link :href="route('crm.settings.index')" class="text-sm font-medium text-indigo-600 hover:text-indigo-500 flex items-center gap-1">
+                            <Link :href="route('crm.settings.index')" class="text-sm font-medium text-accent-600 hover:text-accent-600 flex items-center gap-1">
                                 <component :is="IconSettings" class="h-4 w-4" />
                                 {{ $t('Open CRM settings') }}
                             </Link>
@@ -125,22 +125,22 @@
 
                     <!-- File Upload -->
                     <div>
-                        <label class="block text-sm font-medium text-gray-700">
+                        <label class="block text-sm font-medium text-text-muted">
                             {{ $t('Upload file') }}
                         </label>
                         <div
                             class="mt-1 flex justify-center rounded-lg border-2 border-dashed px-6 py-10 transition-colors"
-                            :class="isDragging ? 'border-indigo-500 bg-indigo-50' : 'border-gray-300'"
+                            :class="isDragging ? 'border-accent-600 bg-accent-50' : 'border-border'"
                             @dragover.prevent="isDragging = true"
                             @dragleave.prevent="isDragging = false"
                             @drop.prevent="onDrop"
                         >
                             <div class="text-center">
-                                <component :is="IconFileSpreadsheet" class="mx-auto h-12 w-12 text-gray-400" />
-                                <div class="mt-4 flex text-sm leading-6 text-gray-600">
+                                <component :is="IconFileSpreadsheet" class="mx-auto h-12 w-12 text-text-subtle" />
+                                <div class="mt-4 flex text-sm leading-6 text-text-muted">
                                     <label
                                         for="file-upload"
-                                        class="relative cursor-pointer rounded-md font-semibold text-indigo-600 hover:text-indigo-500"
+                                        class="relative cursor-pointer rounded-md font-semibold text-accent-600 hover:text-accent-600"
                                     >
                                         <span>{{ $t('Choose file') }}</span>
                                         <input
@@ -153,25 +153,27 @@
                                     </label>
                                     <p class="pl-1">{{ $t('or drag and drop') }}</p>
                                 </div>
-                                <p class="text-xs leading-5 text-gray-500">
+                                <p class="text-xs leading-5 text-text-subtle">
                                     {{ $t('Supported formats: CSV, XLSX, XLS') }} (max. 10 MB)
                                 </p>
-                                <p v-if="form.file" class="mt-3 text-sm font-medium text-indigo-600">
+                                <p v-if="form.file" class="mt-3 text-sm font-medium text-accent-600">
                                     {{ form.file.name }}
                                 </p>
                             </div>
                         </div>
-                        <p v-if="form.errors.file" class="mt-1 text-sm text-red-600">
+                        <p v-if="form.errors.file" class="mt-1 text-sm text-danger">
                             {{ form.errors.file }}
                         </p>
                     </div>
 
                     <!-- Submit -->
                     <div class="flex justify-end">
-                        <button
+                        <BaseUIButton
                             type="submit"
+                            variant="primary"
+                            hide-icon
                             :disabled="!canSubmit || form.processing"
-                            class="ui-button-add disabled:opacity-50 disabled:cursor-not-allowed"
+                            class="disabled:bg-surface-canvas disabled:border-border-subtle disabled:text-text-subtle disabled:cursor-not-allowed"
                         >
                             <span v-if="form.processing" class="flex items-center gap-2">
                                 <svg class="animate-spin h-4 w-4" viewBox="0 0 24 24">
@@ -181,20 +183,20 @@
                                 {{ $t('Uploading') }}...
                             </span>
                             <span v-else>{{ form.use_type_column ? $t('Next: Map type values') : $t('Next: Map columns') }}</span>
-                        </button>
+                        </BaseUIButton>
                     </div>
                 </form>
 
                 <!-- How the import works -->
-                <aside class="rounded-2xl border border-indigo-100 bg-indigo-50/50 p-5 h-fit">
+                <aside class="rounded-2xl border border-accent-200 bg-accent-50/50 p-5 h-fit">
                     <div class="flex items-center gap-2 mb-3">
-                        <component :is="IconInfoCircle" class="h-5 w-5 text-indigo-600" />
-                        <h3 class="text-sm font-semibold text-gray-900">{{ $t('How the import works') }}</h3>
+                        <component :is="IconInfoCircle" class="h-5 w-5 text-accent-600" />
+                        <h3 class="text-sm font-semibold text-text">{{ $t('How the import works') }}</h3>
                     </div>
                     <ol class="space-y-3">
                         <li v-for="(hint, index) in importHints" :key="index" class="flex gap-2.5">
-                            <span class="flex items-center justify-center size-5 rounded-full bg-indigo-600 text-white text-[11px] font-bold shrink-0 mt-0.5">{{ index + 1 }}</span>
-                            <p class="text-xs text-gray-600 leading-5">{{ $t(hint) }}</p>
+                            <span class="flex items-center justify-center size-5 rounded-full bg-accent-600 text-white text-[11px] font-bold shrink-0 mt-0.5">{{ index + 1 }}</span>
+                            <p class="text-xs text-text-muted leading-5">{{ $t(hint) }}</p>
                         </li>
                     </ol>
                 </aside>
@@ -217,6 +219,7 @@ import { useForm, Link } from '@inertiajs/vue3'
 import { useTranslation } from '@/Composeables/Translation.js'
 import AppLayout from '@/Layouts/AppLayout.vue'
 import ToolbarHeader from '@/Artwork/Toolbar/ToolbarHeader.vue'
+import BaseUIButton from '@/Artwork/Buttons/BaseUIButton.vue'
 import PropertyIcon from '@/Artwork/Icon/PropertyIcon.vue'
 import ArtworkBaseToggle from '@/Artwork/Toggles/ArtworkBaseToggle.vue'
 import ImportStepper from '@/Pages/CRM/Import/Components/ImportStepper.vue'

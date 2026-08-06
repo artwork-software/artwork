@@ -6,7 +6,7 @@
     <div class="artwork relative">
         <div v-if="pushNotifications.length > 0" class="absolute top-16 right-5">
             <div v-for="pushNotification in pushNotifications" :id="pushNotification.id"
-                 class="my-2 z-50 flex relative w-full max-w-xs rounded-lg shadow bg-lightBackgroundGray"
+                 class="my-2 z-50 flex relative w-full max-w-xs rounded-lg border border-border-subtle bg-surface shadow-overlay"
                  role="alert">
                 <div class="flex p-4">
                     <div class="inline-flex flex-shrink-0 justify-center items-center rounded-lg">
@@ -15,10 +15,10 @@
                         <img alt="Notification" v-if="pushNotification.type === 'error'" class="h-9 w-9"
                              src="/Svgs/IconSvgs/icon_push_notification_red.svg"/>
                     </div>
-                    <div class="ml-4 xsDark">{{ pushNotification.message }}</div>
+                    <div class="ml-4 text-sm font-semibold text-text">{{ pushNotification.message }}</div>
                 </div>
                 <button type="button" class="-mt-4 mr-2">
-                    <PropertyIcon name="IconX" class="-mt-4 h-5 w-5 text-secondary hover:text-error relative"
+                    <PropertyIcon name="IconX" class="-mt-4 h-5 w-5 text-text-subtle hover:text-danger relative"
                            @click="closePushNotification(pushNotification.id)"/>
                 </button>
             </div>

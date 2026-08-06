@@ -5,28 +5,28 @@
                 <!-- Greetings Div -->
                 <div class="mr-2 w-4/6">
                     <div class=" mt-10">
-                        <h2 class="headline1 flex mb-4">{{$t('Notifications')}}</h2>
+                        <h2 class="font-lexend font-black text-[clamp(24px,3vw,30px)]/[34px] text-text flex mb-4">{{$t('Notifications')}}</h2>
                     </div>
                 </div>
             </div>
             <div class=" mt-8">
-                <div class="mb-4 border-gray-200 dark:border-gray-700">
+                <div class="mb-4 border-border-subtle ">
                     <ul class="flex flex-wrap -mb-px text-sm font-medium text-center">
                         <li class="mr-2" role="presentation">
                             <button
-                                :class="[openTab === 'notifications' ? 'border-artwork-buttons-create text-artwork-buttons-create' : 'border-transparent text-secondary hover:text-gray-600 hover:border-gray-300', 'py-4 px-2 border-b-2 font-semibold uppercase']"
+                                :class="[openTab === 'notifications' ? 'border-accent-600 text-accent-600' : 'border-transparent text-text-subtle hover:text-text-muted hover:border-border', 'py-4 px-2 border-b-2 font-semibold uppercase']"
                                 @click="openTab = 'notifications'">{{$t('Notifications')}}
                             </button>
                         </li>
                         <li class="mr-2" role="presentation">
                             <button
-                                :class="[openTab === 'mailSettings' ? 'border-artwork-buttons-create text-artwork-buttons-create' : 'border-transparent text-secondary hover:text-gray-600 hover:border-gray-300', 'py-4 px-2 border-b-2 font-semibold uppercase']"
+                                :class="[openTab === 'mailSettings' ? 'border-accent-600 text-accent-600' : 'border-transparent text-text-subtle hover:text-text-muted hover:border-border', 'py-4 px-2 border-b-2 font-semibold uppercase']"
                                 @click="openTab = 'mailSettings'">{{$t('E-mail settings')}}
                             </button>
                         </li>
                         <li class="mr-2" role="presentation">
                             <button
-                                :class="[openTab === 'pushSettings' ? 'border-artwork-buttons-create text-artwork-buttons-create' : 'border-transparent text-secondary hover:text-gray-600 hover:border-gray-300', 'py-4 px-2 border-b-2 font-semibold uppercase']"
+                                :class="[openTab === 'pushSettings' ? 'border-accent-600 text-accent-600' : 'border-transparent text-text-subtle hover:text-text-muted hover:border-border', 'py-4 px-2 border-b-2 font-semibold uppercase']"
                                 @click="openTab = 'pushSettings'">{{ $t('Push settings')}}
                             </button>
                         </li>
@@ -165,14 +165,14 @@
                         </div>
                         <div  class="col-span-4 pr-8">
                             <div v-if="globalNotification.image_url || globalNotification.title">
-                                <div class="bg-backgroundGray rounded-xl">
+                                <div class=" rounded-xl">
                                     <img v-if="globalNotification.image_url" alt="Benachrichtigungs-Bild" class="max-h-96 rounded-t-xl"
                                          :src="globalNotification.image_url"/>
                                     <div class="px-4 py-4">
-                                        <div class="headline2 mt-2 mb-2">
+                                        <div class="font-lexend font-semibold text-[clamp(18px,2.5vw,20px)]/[25px] text-text mt-2 mb-2">
                                             {{ globalNotification.title }}
                                         </div>
-                                        <div class="xsLight">
+                                        <div class="text-sm/5 font-bold text-text-subtle">
                                             {{ globalNotification.description }}
                                         </div>
                                     </div>
@@ -186,14 +186,14 @@
                         </div>
                     </div>
                     <div v-if="openTab === 'mailSettings'">
-                        <p class="text-sm text-gray-500 dark:text-gray-400 mb-20">
+                        <p class="text-sm text-text-subtle dark:text-text-subtle mb-20">
                             <NotificationFrequencySettings :group-types="groupTypes"
                                                            :notification-frequencies="notificationFrequencies"
                                                            :notificationSettings="notificationSettings"/>
                         </p>
                     </div>
                     <div v-if="openTab === 'pushSettings'">
-                        <p class="text-sm text-gray-500 dark:text-gray-400 mb-20">
+                        <p class="text-sm text-text-subtle dark:text-text-subtle mb-20">
                             <NotificationPushSettings :group-types="groupTypes"
                                                       :notificationSettings="notificationSettings"/>
                         </p>
@@ -206,18 +206,9 @@
 </template>
 
 <script>
+import {IconCheck, IconChevronDown, IconChevronRight, IconChevronUp, IconCircleX, IconDotsVertical, IconEdit, IconInfoCircle, IconPlus, IconSearch, IconTrash, IconX} from "@tabler/icons-vue";
 import {defineComponent} from 'vue'
 import AppLayout from '@/Layouts/AppLayout.vue'
-import {
-  ChevronDownIcon,
-  DotsVerticalIcon,
-  InformationCircleIcon,
-  PencilAltIcon,
-  SearchIcon,
-  TrashIcon,
-  XIcon
-} from '@heroicons/vue/outline'
-import {CheckIcon, ChevronRightIcon, ChevronUpIcon, PlusSmIcon, XCircleIcon} from '@heroicons/vue/solid'
 
 import {
   Listbox,
@@ -266,15 +257,15 @@ export default defineComponent({
         SvgCollection,
         Button,
         AppLayout,
-        DotsVerticalIcon,
-        PlusSmIcon,
-        SearchIcon,
+        IconDotsVertical,
+        IconPlus,
+        IconSearch,
         Listbox,
         ListboxButton,
         ListboxLabel,
         ListboxOption,
         ListboxOptions,
-        CheckIcon,
+        IconCheck,
         Menu,
         MenuButton,
         MenuItem,
@@ -284,17 +275,17 @@ export default defineComponent({
         JetInput,
         JetInputError,
         JetSecondaryButton,
-        InformationCircleIcon,
-        ChevronDownIcon,
-        ChevronUpIcon,
+        IconInfoCircle,
+        IconChevronDown,
+        IconChevronUp,
         Checkbox,
-        XIcon,
-        PencilAltIcon,
-        TrashIcon,
-        XCircleIcon,
+        IconX,
+        IconEdit,
+        IconTrash,
+        IconCircleX,
         Link,
         InputComponent,
-        ChevronRightIcon,
+        IconChevronRight,
         NotificationUserIcon,
         AnswerEventRequestComponent,
     },

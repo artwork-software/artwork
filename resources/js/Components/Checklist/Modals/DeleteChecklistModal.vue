@@ -1,20 +1,20 @@
 <template>
     <BaseModal @closed="$emit('closed')" v-if="true" modal-image="/Svgs/Overlays/illu_warning.svg">
         <div class="mx-4">
-            <div class="font-black font-lexend text-primary text-3xl my-2">
+            <div class="font-black font-lexend text-text text-3xl my-2">
                 {{ $t('Delete checklist') }}
             </div>
-            <div class="text-error subpixel-antialiased">
+            <div class="text-danger subpixel-antialiased">
                 {{ $t('Are you sure you want to delete the checklist?', [checklistToDelete.name]) }}
             </div>
             <div class="flex justify-between mt-6">
-                <button class="bg-artwork-buttons-create hover:bg-artwork-buttons-hover rounded-full focus:outline-none my-auto inline-flex items-center px-14 py-3 border border-transparent
+                <button class="bg-accent-600 hover:bg-accent-700 rounded-full focus:outline-none my-auto inline-flex items-center px-14 py-3 border border-transparent
                             text-base font-bold uppercase shadow-sm text-white"
                         @click="$emit('deleteChecklist')">
                     {{ $t('Delete') }}
                 </button>
                 <div class="flex my-auto">
-                        <span @click="$emit('closed')" class="xsLight cursor-pointer">
+                        <span @click="$emit('closed')" class="text-sm/5 font-bold text-text-subtle cursor-pointer">
                             {{ $t('No, not really') }}
                         </span>
                 </div>

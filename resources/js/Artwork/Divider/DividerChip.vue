@@ -24,6 +24,8 @@ const props = defineProps({
     /**
      * Modernisierte Varianten:
      * - neutral (Default), brand, success, warning, danger
+     * Legacy-Farbwerte (emerald, amber, rose, blue) bleiben gültig und
+     * werden intern auf die semantischen Varianten gemappt.
      */
     variant:     { type: String, default: 'neutral' },
 
@@ -52,41 +54,57 @@ const sizeMap = {
     lg: 'px-5 py-2.5 text-base'
 }
 
+/** Legacy-Prop-Werte (Farbnamen) → semantische Varianten */
+const variantAliases = {
+    emerald: 'success',
+    green: 'success',
+    amber: 'warning',
+    yellow: 'warning',
+    rose: 'danger',
+    red: 'danger',
+    blue: 'brand',
+    zinc: 'neutral',
+    gray: 'neutral',
+}
+
 const variantMap = {
     neutral: {
-        pill: 'bg-white text-zinc-700 ring-1 ring-zinc-200 shadow-sm',
-        line: 'bg-zinc-300'
+        pill: 'bg-surface text-text-muted ring-1 ring-border shadow-raised',
+        line: 'bg-border'
     },
     brand: {
-        pill: 'bg-blue-50 text-blue-700 ring-1 ring-blue-200',
-        line: 'bg-zinc-300'
+        pill: 'bg-accent-50 text-accent-700 ring-1 ring-accent-200',
+        line: 'bg-border'
     },
     success: {
-        pill: 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200',
-        line: 'from-transparent via-zinc-300 to-transparent'
+        pill: 'bg-success-surface text-success ring-1 ring-success-border',
+        line: 'from-transparent via-border to-transparent'
     },
     warning: {
-        pill: 'bg-amber-50 text-amber-800 ring-1 ring-amber-200',
-        line: 'from-transparent via-zinc-300 to-transparent'
+        pill: 'bg-warning-surface text-warning ring-1 ring-warning-border',
+        line: 'from-transparent via-border to-transparent'
     },
     danger: {
-        pill: 'bg-rose-50 text-rose-700 ring-1 ring-rose-200',
-        line: 'from-transparent via-zinc-300 to-transparent'
+        pill: 'bg-danger-surface text-danger ring-1 ring-danger-border',
+        line: 'from-transparent via-border to-transparent'
     }
 }
+
+const resolvedVariant = computed(() => {
+    const name = variantAliases[props.variant] ?? props.variant
+    return variantMap[name] ?? variantMap.neutral
+})
 
 const pillBase = 'rounded-full font-medium whitespace-nowrap max-w-full truncate'
 const pillClassComputed = computed(() => {
     if (props.pillClass) return props.pillClass
     const size = sizeMap[props.size] ?? sizeMap.md
-    const variant = variantMap[props.variant] ?? variantMap.neutral
-    return `${pillBase} ${size} ${variant.pill}`
+    return `${pillBase} ${size} ${resolvedVariant.value.pill}`
 })
 
-const lineGradient = computed(() => {
-    const variant = variantMap[props.variant] ?? variantMap.neutral
-    return `h-px flex-1 bg-gradient-to-r ${variant.line}`
-})
+const lineGradient = computed(() =>
+    `h-px flex-1 bg-gradient-to-r ${resolvedVariant.value.line}`
+)
 
 const containerClass = computed(() =>
     `relative flex items-center gap-3 select-none`

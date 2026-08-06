@@ -7,7 +7,7 @@
 <template>
     <div>
         <div v-if="activeChips.length" class="flex flex-wrap items-center gap-2">
-            <span class="text-[11px] uppercase tracking-wide text-gray-400">{{ $t('Active filters') }}</span>
+            <span class="text-[11px] uppercase tracking-wide text-text-subtle">{{ $t('Active filters') }}</span>
 
             <div
                 v-for="chip in activeChips"
@@ -25,7 +25,7 @@
 
             <button
                 type="button"
-                class="text-xs text-gray-500 underline underline-offset-2 hover:text-artwork-messages-error transition-colors"
+                class="text-xs text-text-subtle underline underline-offset-2 hover:text-danger transition-colors"
                 @click="onResetAll"
             >
                 {{ $t('Reset all filters') }}
@@ -96,7 +96,7 @@ const searchChip = computed(() => {
     return {
         key: 'search',
         label: scope ? $t('Search in {0}: "{1}"', [scope, term]) : $t('Search: "{0}"', [term]),
-        class: 'bg-gray-100 text-gray-700 border-gray-200',
+        class: 'bg-surface-sunken text-text-muted border-border-subtle',
         style: null,
         icon: IconSearch,
         onRemove: () => emit('clear-search'),
@@ -131,7 +131,7 @@ const presetChip = computed(() => {
     return {
         key: 'preset',
         label: `${$t('Preset')}: ${activePresetName.value}`,
-        class: 'bg-white text-gray-700 border-gray-300',
+        class: 'bg-white text-text-muted border-border',
         style: null,
         icon: IconBookmark,
         onRemove: clearPreset,
@@ -153,7 +153,7 @@ const propertyChips = computed(() =>
         return {
             key: `p-${f.property_id}`,
             label,
-            class: 'bg-blue-50 text-blue-700 border-blue-100',
+            class: 'bg-accent-50 text-accent-700 border-accent-200',
             style: null,
             icon: null,
             onRemove: () => removePropertyFilter(f.property_id),

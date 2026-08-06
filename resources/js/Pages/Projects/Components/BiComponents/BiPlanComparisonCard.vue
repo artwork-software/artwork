@@ -1,14 +1,14 @@
 <template>
-    <div class="mb-6 rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
+    <div class="mb-6 rounded-xl border border-border-subtle bg-white p-4 shadow-sm">
         <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
-            <h4 class="text-sm font-semibold text-gray-900">{{ $t('Plan vs. actual') }}</h4>
-            <div class="flex rounded-lg border border-gray-200 p-0.5 print:hidden">
+            <h4 class="text-sm font-semibold text-text">{{ $t('Plan vs. actual') }}</h4>
+            <div class="flex rounded-lg border border-border-subtle p-0.5 print:hidden">
                 <button
                     v-for="option in metricOptions"
                     :key="option.key"
                     type="button"
                     class="rounded-md px-2.5 py-1 text-xs font-medium transition"
-                    :class="chartMetric === option.key ? 'bg-indigo-600 text-white' : 'text-gray-600 hover:bg-gray-100'"
+                    :class="chartMetric === option.key ? 'bg-accent-600 text-white' : 'text-text-muted hover:bg-surface-sunken'"
                     @click="chartMetric = option.key"
                 >
                     {{ $t(option.label) }}
@@ -20,7 +20,7 @@
         <div class="overflow-x-auto">
             <table class="min-w-full text-sm">
                 <thead>
-                    <tr class="text-left text-xs text-gray-500">
+                    <tr class="text-left text-xs text-text-subtle">
                         <th class="py-1.5 pr-3 font-medium">{{ $t('Key figure') }}</th>
                         <th class="py-1.5 px-3 font-medium">{{ $t('Plan') }}</th>
                         <th class="py-1.5 px-3 font-medium">{{ $t('Actual') }}</th>
@@ -28,11 +28,11 @@
                         <th class="py-1.5 px-3 font-medium">{{ $t('Attainment') }}</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-gray-100">
+                <tbody class="divide-y divide-border-subtle">
                     <tr v-for="row in comparisonRows" :key="row.key">
-                        <td class="py-2 pr-3 text-gray-700">{{ $t(row.label) }}</td>
-                        <td class="py-2 px-3 text-gray-900 font-medium">{{ row.plan ?? '–' }}</td>
-                        <td class="py-2 px-3 text-gray-900 font-medium">{{ row.actual ?? '–' }}</td>
+                        <td class="py-2 pr-3 text-text-muted">{{ $t(row.label) }}</td>
+                        <td class="py-2 px-3 text-text font-medium">{{ row.plan ?? '–' }}</td>
+                        <td class="py-2 px-3 text-text font-medium">{{ row.actual ?? '–' }}</td>
                         <td class="py-2 px-3" :class="row.diffClass">{{ row.diff ?? '–' }}</td>
                         <td class="py-2 px-3">
                             <span
@@ -42,7 +42,7 @@
                             >
                                 {{ row.attainment }}
                             </span>
-                            <span v-else class="text-gray-300">–</span>
+                            <span v-else class="text-text-subtle">–</span>
                         </td>
                     </tr>
                 </tbody>
@@ -52,7 +52,7 @@
         <!-- Verlauf: kumuliertes Ist gegen die Plan-Linie -->
         <div v-if="chartData" class="mt-4 print:hidden">
             <BiChart type="bar" :data="chartData" :options="chartOptions" height="240px" />
-            <p class="mt-1 text-[11px] text-gray-400">
+            <p class="mt-1 text-[11px] text-text-subtle">
                 {{ planIsPerEvent
                     ? $t('Plan line cumulated from per-event plan values.')
                     : $t('Plan line = straight line towards the plan total.') }}
@@ -101,15 +101,15 @@ const formatValue = (key, value) => {
 };
 
 const attainmentClass = (value, inverted = false) => {
-    if (value === null || value === undefined) return 'bg-gray-100 text-gray-500';
+    if (value === null || value === undefined) return 'bg-surface-sunken text-text-subtle';
     if (inverted) {
-        if (value <= 100) return 'bg-emerald-100 text-emerald-700';
-        if (value <= 120) return 'bg-amber-100 text-amber-700';
-        return 'bg-rose-100 text-rose-700';
+        if (value <= 100) return 'bg-success-surface text-success';
+        if (value <= 120) return 'bg-warning-surface text-warning';
+        return 'bg-danger-surface text-danger';
     }
-    if (value >= 100) return 'bg-emerald-100 text-emerald-700';
-    if (value >= 80) return 'bg-amber-100 text-amber-700';
-    return 'bg-rose-100 text-rose-700';
+    if (value >= 100) return 'bg-success-surface text-success';
+    if (value >= 80) return 'bg-warning-surface text-warning';
+    return 'bg-danger-surface text-danger';
 };
 
 const comparisonRows = computed(() => tableMetricOptions.map((option) => {
@@ -126,8 +126,8 @@ const comparisonRows = computed(() => tableMetricOptions.map((option) => {
             ? `${diff > 0 ? '+' : ''}${formatValue(option.key, diff)}`
             : null,
         diffClass: diff === null || diff === undefined
-            ? 'text-gray-300'
-            : (diffIsPositive ? 'text-emerald-600' : 'text-rose-600'),
+            ? 'text-text-subtle'
+            : (diffIsPositive ? 'text-success' : 'text-danger'),
         attainment: entry.attainment !== null && entry.attainment !== undefined
             ? `${percentFmt.format(entry.attainment)} %`
             : null,

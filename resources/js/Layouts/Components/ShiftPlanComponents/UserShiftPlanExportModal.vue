@@ -32,7 +32,7 @@
                 :enable-search="false"
             />
 
-            <p class="text-xs text-zinc-500">
+            <p class="text-xs text-text-subtle">
                 {{ $t('The export is always created in landscape format (Outlook-style month calendar).') }}
             </p>
 
@@ -40,7 +40,7 @@
             <div class="flex items-center justify-end gap-x-3 pt-2">
                 <button
                     type="button"
-                    class="text-sm text-zinc-600 hover:text-zinc-900"
+                    class="text-sm text-text-muted hover:text-text"
                     @click="$emit('close')"
                 >
                     {{ $t('Cancel') }}

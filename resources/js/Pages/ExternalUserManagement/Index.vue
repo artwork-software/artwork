@@ -1,7 +1,7 @@
 <template>
     <ToolSettingsHeader :title="$t('Externe Nutzerverwaltung')">
         <div v-if="this.$page.props.flash.success"
-             class="w-full font-bold text-sm border-1 border-green-600 rounded bg-green-600 p-2 text-white mb-3">
+             class="w-full font-bold text-sm border-1 border-success rounded bg-success p-2 text-white mb-3">
             {{ this.$page.props.flash.success }}
         </div>
 
@@ -11,7 +11,7 @@
 
         <div class="mt-10">
             <div class="flex justify-between items-center mb-6">
-                <h2 class="text-lg font-semibold text-gray-900">{{ $t('External User Sources') }}</h2>
+                <h2 class="text-lg font-semibold text-text">{{ $t('External User Sources') }}</h2>
                 <BaseUIButton
                     :label="$t('Add Source')"
                     is-add-button
@@ -24,13 +24,13 @@
                 <div
                     v-for="source in sources"
                     :key="source.id"
-                    class="bg-white border border-gray-200 rounded-lg p-6 shadow-sm"
+                    class="bg-white border border-border-subtle rounded-lg p-6 shadow-sm"
                 >
                     <div class="flex justify-between items-start mb-4">
                         <div>
-                            <h3 class="text-lg font-medium text-gray-900">{{ source.name }}</h3>
-                            <div class="mt-2 flex items-center gap-4 text-sm text-gray-500">
-                                <span :class="source.active ? 'text-green-600' : 'text-gray-400'">
+                            <h3 class="text-lg font-medium text-text">{{ source.name }}</h3>
+                            <div class="mt-2 flex items-center gap-4 text-sm text-text-subtle">
+                                <span :class="source.active ? 'text-success' : 'text-text-subtle'">
                                     {{ source.active ? $t('Active') : $t('Inactive') }}
                                 </span>
                                 <span>{{ source.type === 'ldap' ? 'LDAP' : 'OIDC' }}</span>
@@ -43,7 +43,7 @@
                                 v-if="source.type === 'ldap'"
                                 @click="syncSource(source)"
                                 :disabled="syncingSource === source.id || !source.active"
-                                class="px-3 py-1.5 text-sm bg-green-50 text-green-700 rounded hover:bg-green-100 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5"
+                                class="px-3 py-1.5 text-sm bg-success-surface text-success rounded hover:bg-success-surface disabled:bg-surface-canvas disabled:border-border-subtle disabled:text-text-subtle disabled:cursor-not-allowed flex items-center gap-1.5"
                                 :title="!source.active ? $t('Activate this source before syncing') : $t('Sync now')"
                             >
                                 <component :is="IconRefresh" class="h-4 w-4" :class="{ 'animate-spin': syncingSource === source.id }" />
@@ -53,14 +53,14 @@
                             <button
                                 @click="testConnection(source)"
                                 :disabled="testingConnection === source.id"
-                                class="px-3 py-1.5 text-sm bg-blue-50 text-blue-700 rounded hover:bg-blue-100 disabled:opacity-50"
+                                class="px-3 py-1.5 text-sm bg-accent-50 text-accent-700 rounded hover:bg-accent-100 disabled:text-text-subtle disabled:cursor-not-allowed"
                             >
                                 <span v-if="testingConnection === source.id">{{ $t('Testing...') }}</span>
                                 <span v-else>{{ $t('Test Connection') }}</span>
                             </button>
                             <button
                                 @click="editSource(source)"
-                                class="px-3 py-1.5 text-sm bg-gray-50 text-gray-700 rounded hover:bg-gray-100 flex items-center gap-1.5"
+                                class="px-3 py-1.5 text-sm bg-surface-sunken text-text-muted rounded hover:bg-surface-sunken flex items-center gap-1.5"
                                 :title="$t('Edit')"
                             >
                                 <component :is="IconEdit" class="h-4 w-4" />
@@ -68,7 +68,7 @@
                             </button>
                             <button
                                 @click="showDeleteModal = source.id"
-                                class="px-3 py-1.5 text-sm bg-red-50 text-red-700 rounded hover:bg-red-100 flex items-center gap-1.5"
+                                class="px-3 py-1.5 text-sm bg-danger-surface text-danger rounded hover:bg-danger-surface flex items-center gap-1.5"
                                 :title="$t('Delete')"
                             >
                                 <component :is="IconTrash" class="h-4 w-4" />
@@ -79,17 +79,17 @@
 
                     <!-- Connection Test Result -->
                     <div v-if="connectionTestResult[source.id]" class="mb-4 p-3 rounded"
-                         :class="connectionTestResult[source.id].success ? 'bg-green-50 text-green-800' : 'bg-red-50 text-red-800'">
+                         :class="connectionTestResult[source.id].success ? 'bg-success-surface text-success' : 'bg-danger-surface text-danger'">
                         {{ connectionTestResult[source.id].message }}
                     </div>
 
                     <!-- Sync Result -->
                     <div v-if="syncResult[source.id]" class="mb-4 p-3 rounded"
                          :class="syncResult[source.id].success === false
-                             ? 'bg-red-50 text-red-800'
+                             ? 'bg-danger-surface text-danger'
                              : syncResult[source.id].complete
-                                 ? 'bg-green-50 text-green-800'
-                                 : 'bg-blue-50 text-blue-800'">
+                                 ? 'bg-success-surface text-success'
+                                 : 'bg-accent-50 text-accent-700'">
                         <div>{{ syncResult[source.id].message }}</div>
                         <div v-if="syncResult[source.id].result" class="mt-1 text-xs">
                             {{ $t('Processed') }}: {{ syncResult[source.id].result.total }} ·
@@ -100,7 +100,7 @@
 
                     <!-- Group Mappings -->
                     <div v-if="source.group_mappings && source.group_mappings.length > 0" class="mt-4">
-                        <h4 class="text-sm font-medium text-gray-700 mb-2">{{ $t('Group Mappings') }}</h4>
+                        <h4 class="text-sm font-medium text-text-muted mb-2">{{ $t('Group Mappings') }}</h4>
                         <SettingsGuideBanner
                             class="mb-2"
                             variant="static"
@@ -113,10 +113,10 @@
                             <div
                                 v-for="mapping in source.group_mappings"
                                 :key="mapping.id"
-                                class="text-sm text-gray-600 bg-gray-50 p-2 rounded"
+                                class="text-sm text-text-muted bg-surface-sunken p-2 rounded"
                             >
                                 <span class="font-medium">{{ mapping.ad_group_name }}</span>
-                                <span v-if="mapping.include_nested_groups" class="ml-2 text-xs text-gray-500">
+                                <span v-if="mapping.include_nested_groups" class="ml-2 text-xs text-text-subtle">
                                     ({{ $t('including nested groups') }})
                                 </span>
                             </div>
@@ -125,8 +125,8 @@
                 </div>
             </div>
 
-            <div v-else class="text-center py-12 bg-gray-50 rounded-lg">
-                <p class="text-gray-500">{{ $t('No external user sources configured yet.') }}</p>
+            <div v-else class="text-center py-12 bg-surface-sunken rounded-lg">
+                <p class="text-text-subtle">{{ $t('No external user sources configured yet.') }}</p>
             </div>
         </div>
 

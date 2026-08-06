@@ -9,7 +9,7 @@
                                 <img class="inline-block h-16 w-16 rounded-full object-cover" :src="serviceProvider.profile_photo_url" alt="" />
                             </div>
                             <div class="ml-3">
-                                <h3 class="headline1">
+                                <h3 class="font-lexend font-black text-[clamp(24px,3vw,30px)]/[34px] text-text">
                                     {{ serviceProvider.provider_name }}
                                 </h3>
                             </div>
@@ -19,8 +19,8 @@
                 <div class="my-10">
                     <div class="hidden sm:block">
                         <div class="">
-                            <nav class="-mb-px flex space-x-8 uppercase xxsDark" aria-label="Tabs">
-                                <div v-for="tab in tabs" v-show="tab.has_permission" :key="tab.name" @click="changeTab(tab.id)" :class="[tab.current ? 'border-artwork-buttons-create text-indigo-600 font-bold' : 'border-transparent', 'whitespace-nowrap border-b-2 py-2 px-1 cursor-pointer']" :aria-current="tab.current ? 'page' : undefined">{{ tab.name }}</div>
+                            <nav class="-mb-px flex space-x-8 uppercase text-xs/[15px] text-text" aria-label="Tabs">
+                                <div v-for="tab in tabs" v-show="tab.has_permission" :key="tab.name" @click="changeTab(tab.id)" :class="[tab.current ? 'border-accent-600 text-accent-600 font-bold' : 'border-transparent', 'whitespace-nowrap border-b-2 py-2 px-1 cursor-pointer']" :aria-current="tab.current ? 'page' : undefined">{{ tab.name }}</div>
                             </nav>
                         </div>
                     </div>
@@ -73,7 +73,7 @@
                         </div>
                         <div class="col-span-7">
                             <div>
-                                <BaseInput v-model="providerData.provider_name" @focusout="saveProvider" :disabled="checkCanEdit" :readonly="checkCanEdit" name="first_name" id="first_name" :class="checkCanEdit ? 'bg-gray-200' : ''" :label="$t('Company name')" />
+                                <BaseInput v-model="providerData.provider_name" @focusout="saveProvider" :disabled="checkCanEdit" :readonly="checkCanEdit" name="first_name" id="first_name" :class="checkCanEdit ? 'bg-border-subtle' : ''" :label="$t('Company name')" />
                             </div>
                         </div>
                     </div>
@@ -84,22 +84,22 @@
 
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-5">
                         <div class="col-span-1">
-                            <BaseInput type="email" v-model="providerData.street" @focusout="saveProvider" :disabled="checkCanEdit" :readonly="checkCanEdit" name="street" id="street" :class="checkCanEdit ? 'bg-gray-200' : ''" :label="$t('Street')" />
+                            <BaseInput type="email" v-model="providerData.street" @focusout="saveProvider" :disabled="checkCanEdit" :readonly="checkCanEdit" name="street" id="street" :class="checkCanEdit ? 'bg-border-subtle' : ''" :label="$t('Street')" />
                         </div>
                         <div class="col-span-1">
-                            <BaseInput type="email" v-model="providerData.zip_code" @focusout="saveProvider" :disabled="checkCanEdit" :readonly="checkCanEdit" name="zip_code" id="zip_code" :class="checkCanEdit ? 'bg-gray-200' : ''" :label="$t('Zip code')" />
+                            <BaseInput type="email" v-model="providerData.zip_code" @focusout="saveProvider" :disabled="checkCanEdit" :readonly="checkCanEdit" name="zip_code" id="zip_code" :class="checkCanEdit ? 'bg-border-subtle' : ''" :label="$t('Zip code')" />
                         </div>
                         <div class="col-span-1">
-                            <BaseInput type="email" v-model="providerData.location" @focusout="saveProvider" :disabled="checkCanEdit" :readonly="checkCanEdit" name="location" id="location" :class="checkCanEdit ? 'bg-gray-200' : ''" :label="$t('Location')" />
+                            <BaseInput type="email" v-model="providerData.location" @focusout="saveProvider" :disabled="checkCanEdit" :readonly="checkCanEdit" name="location" id="location" :class="checkCanEdit ? 'bg-border-subtle' : ''" :label="$t('Location')" />
                         </div>
                         <div class="col-span-1">
-                            <BaseInput type="email" v-model="providerData.email" @focusout="saveProvider" :disabled="checkCanEdit" :readonly="checkCanEdit" name="email" id="email" :class="checkCanEdit ? 'bg-gray-200' : ''" :label="$t('Email')" />
+                            <BaseInput type="email" v-model="providerData.email" @focusout="saveProvider" :disabled="checkCanEdit" :readonly="checkCanEdit" name="email" id="email" :class="checkCanEdit ? 'bg-border-subtle' : ''" :label="$t('Email')" />
                         </div>
                         <div class="col-span-1">
-                            <BaseInput type="email" v-model="providerData.phone_number" @focusout="saveProvider" :disabled="checkCanEdit" :readonly="checkCanEdit" name="phone_number" id="phone_number" :class="checkCanEdit ? 'bg-gray-200' : ''" :label="$t('Phone number')" />
+                            <BaseInput type="email" v-model="providerData.phone_number" @focusout="saveProvider" :disabled="checkCanEdit" :readonly="checkCanEdit" name="phone_number" id="phone_number" :class="checkCanEdit ? 'bg-border-subtle' : ''" :label="$t('Phone number')" />
                         </div>
                         <div class="col-span-full">
-                            <BaseTextarea rows="4" v-model="providerData.note" @focusout="saveProvider" :disabled="checkCanEdit" :readonly="checkCanEdit" name="note" id="note" :label="$t('Note')" :class="checkCanEdit ? 'bg-gray-200' : ''" />
+                            <BaseTextarea rows="4" v-model="providerData.note" @focusout="saveProvider" :disabled="checkCanEdit" :readonly="checkCanEdit" name="note" id="note" :label="$t('Note')" :class="checkCanEdit ? 'bg-border-subtle' : ''" />
                         </div>
                     </div>
 
@@ -107,15 +107,15 @@
                         <div>
                             <div class="flex items-center justify-between mb-5">
                                 <PageTitle :title="$t('Contacts')" :description="$t('You can view and edit all Service Provider contacts here')" />
-                                <ArtworkBaseButton size="sm" variant="primary" type="button" @click="showCreateOrUpdateContactModal = true">
+                                <BaseUIButton size="sm" variant="primary" type="button" hide-icon @click="showCreateOrUpdateContactModal = true">
                                     {{ $t('Add Contact') }}
-                                </ArtworkBaseButton>
+                                </BaseUIButton>
                             </div>
 
 
                             <div v-if="serviceProvider.contacts.length > 0">
                                 <ul role="list" class="grid grid-cols-1 gap-x-6 gap-y-8 lg:grid-cols-3 xl:gap-x-8">
-                                    <li v-for="contact in serviceProvider.contacts" :key="contact.id" class="overflow-hidden rounded-xl border border-gray-200 shadow-glass">
+                                    <li v-for="contact in serviceProvider.contacts" :key="contact.id" class="overflow-hidden rounded-xl border border-border-subtle shadow-overlay">
                                         <ArtworkSingleContact :contact="contact" />
                                     </li>
                                 </ul>
@@ -152,9 +152,9 @@
 
 
 <script>
+import {IconCirclePlus, IconDotsVertical, IconEdit, IconTrash} from "@tabler/icons-vue";
 import {defineComponent} from 'vue'
 import AppLayout from "@/Layouts/AppLayout.vue";
-import {DotsVerticalIcon, PencilAltIcon, PlusCircleIcon, TrashIcon} from "@heroicons/vue/outline";
 import {
     Listbox,
     ListboxButton,
@@ -180,7 +180,7 @@ import TextareaComponent from "@/Components/Inputs/TextareaComponent.vue";
 import VisualFeedback from "@/Components/Feedback/VisualFeedback.vue";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 import BaseTextarea from "@/Artwork/Inputs/BaseTextarea.vue";
-import ArtworkBaseButton from "@/Artwork/Buttons/ArtworkBaseButton.vue";
+import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 import BaseAlertComponent from "@/Components/Alerts/BaseAlertComponent.vue";
 import PageTitle from "@/Artwork/Titles/PageTitle.vue";
 import ArtworkSingleContact from "@/Artwork/Contact/ArtworkSingleContact.vue";
@@ -191,7 +191,7 @@ export default defineComponent({
     mixins: [Permissions],
     components: {
         GeneralCreateOrUpdateContactModal,
-        ArtworkSingleContact, PageTitle, BaseAlertComponent, ArtworkBaseButton,
+        ArtworkSingleContact, PageTitle, BaseAlertComponent, BaseUIButton,
         BaseTextarea,
         BaseInput,
         VisualFeedback,
@@ -206,15 +206,15 @@ export default defineComponent({
         UserShiftPlan,
         UserTermsTab,
         SingleContact,
-        PencilAltIcon,
-        DotsVerticalIcon,
-        TrashIcon,
+        IconEdit,
+        IconDotsVertical,
+        IconTrash,
         AppLayout,
         Menu,
         MenuButton,
         MenuItems,
         MenuItem,
-        PlusCircleIcon
+        IconCirclePlus
     },
     props: [
         'serviceProvider',

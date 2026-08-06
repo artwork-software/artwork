@@ -54,9 +54,9 @@
 </template>
 
 <script>
+import {IconCheck, IconChevronDown, IconChevronUp, IconCircleX, IconDotsVertical, IconEdit, IconTrash, IconX} from "@tabler/icons-vue";
 
 import JetDialogModal from "@/Jetstream/DialogModal.vue";
-import {ChevronDownIcon, DotsVerticalIcon, PencilAltIcon, XCircleIcon, XIcon} from '@heroicons/vue/outline';
 import {
     Listbox,
     ListboxButton,
@@ -67,7 +67,6 @@ import {
     MenuItem,
     MenuItems
 } from "@headlessui/vue";
-import {CheckIcon, ChevronUpIcon, TrashIcon} from "@heroicons/vue/solid";
 import SvgCollection from "@/Layouts/Components/SvgCollection.vue";
 import Input from "@/Jetstream/Input.vue";
 import ConfirmationComponent from "@/Layouts/Components/ConfirmationComponent.vue";
@@ -101,23 +100,23 @@ export default {
         FormButton,
         Input,
         JetDialogModal,
-        XIcon,
-        XCircleIcon,
+        IconX,
+        IconCircleX,
         Listbox,
         ListboxButton,
         ListboxOption,
         ListboxOptions,
-        ChevronDownIcon,
-        ChevronUpIcon,
+        IconChevronDown,
+        IconChevronUp,
         SvgCollection,
-        CheckIcon,
+        IconCheck,
         Menu,
         MenuButton,
         MenuItem,
         MenuItems,
-        PencilAltIcon,
-        TrashIcon,
-        DotsVerticalIcon,
+        IconEdit,
+        IconTrash,
+        IconDotsVertical,
         ConfirmationComponent,
         TagComponent,
         InputComponent,

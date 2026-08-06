@@ -13,12 +13,12 @@
                 :label="$t('Day remark')"
                 :rows="4"
             />
-            <div class="flex items-center justify-between text-xs text-gray-500">
+            <div class="flex items-center justify-between text-xs text-text-subtle">
                 <span v-if="remark?.updated_by">
                     {{ $t('Last edited by {0} on {1}', [remark.updated_by, remark.updated_at]) }}
                 </span>
                 <span v-else></span>
-                <span :class="{ 'text-red-500 font-semibold': remarkText.length >= maxLength }">
+                <span :class="{ 'text-danger font-semibold': remarkText.length >= maxLength }">
                     {{ remarkText.length }}/{{ maxLength }}
                 </span>
             </div>

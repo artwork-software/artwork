@@ -5,16 +5,16 @@
             <ToolbarHeader
                 :icon="IconLamp2"
                 title="Accommodations"
-                icon-bg-class="bg-emerald-600/10 text-emerald-700"
+                band
                 :description="accommodations?.length ? `${accommodations?.length} ${$t('Accommodations')}` : ''"
                 :search-enabled="false"
             >
                 <template #actions>
 
-                    <button class="ui-button-add" @click="showCreateOrUpdateModal = true">
+                    <BaseUIButton variant="primary" on-band hide-icon @click="showCreateOrUpdateModal = true">
                         <component :is="IconCirclePlus" stroke-width="1" class="size-5" />
                         {{ $t('Create new Accommodation') }}
-                    </button>
+                    </BaseUIButton>
                 </template>
             </ToolbarHeader>
         </template>
@@ -37,8 +37,8 @@
                             <img :src="row.profile_photo_url" alt="" class="size-11 rounded-full object-cover" />
                         </div>
                         <div class="ml-4">
-                            <div class="font-medium text-gray-900">{{ row.name }}</div>
-                            <div class="mt-1 text-gray-500">{{ row.email }}</div>
+                            <div class="font-medium text-text">{{ row.name }}</div>
+                            <div class="mt-1 text-text-subtle">{{ row.email }}</div>
                         </div>
                     </Link>
                 </template>
@@ -46,8 +46,8 @@
                 <!-- Title + Department -->
                 <template #cell-address="{ row }">
                     <div>
-                        <div class="text-xs font-medium text-gray-900">{{ row.street }}</div>
-                        <div class="text-xs font-medium text-gray-900" v-if="row.zip_code && row.location">{{ row.zip_code }}, {{ row.location }}</div>
+                        <div class="text-xs font-medium text-text">{{ row.street }}</div>
+                        <div class="text-xs font-medium text-text" v-if="row.zip_code && row.location">{{ row.zip_code }}, {{ row.location }}</div>
                     </div>
                 </template>
 
@@ -101,6 +101,7 @@ import BaseMenu from "@/Components/Menu/BaseMenu.vue";
 import BaseMenuItem from "@/Components/Menu/BaseMenuItem.vue";
 import {Link, router} from "@inertiajs/vue3";
 import ArtworkBaseDeleteModal from "@/Artwork/Modals/ArtworkBaseDeleteModal.vue";
+import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 
 // Predefined room types from TypOfRoom enum - only these should be translated
 const predefinedRoomTypes = [
@@ -137,12 +138,6 @@ const UpdateOrCreateAccommodation = defineAsyncComponent({
 
 const SingleAccommodation = defineAsyncComponent({
     loader: () => import('@/Pages/Accommodation/Components/SingleAccommodation.vue'),
-    delay: 200,
-    timeout: 3000,
-})
-
-const ArtworkBaseButton = defineAsyncComponent({
-    loader: () => import('@/Artwork/Buttons/ArtworkBaseButton.vue'),
     delay: 200,
     timeout: 3000,
 })

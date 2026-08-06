@@ -1,10 +1,10 @@
 <template>
     <BaseModal @closed="closeModal" v-if="show" modal-image="/Svgs/Overlays/illu_new_contract_module.svg">
             <div class="mx-4">
-                <div class="headline1 my-2">
+                <div class="font-lexend font-black text-[clamp(24px,3vw,30px)]/[34px] text-text my-2">
                     {{ $t('Upload contract module')}}
                 </div>
-                <div class="text-secondary text-sm my-6">
+                <div class="text-text-subtle text-sm my-6">
                     {{ $t('Upload contract modules. Any user with authorization to view contracts can then download and use them for contract design.')}}
                 </div>
                 <div class="mb-3">
@@ -22,8 +22,8 @@
                         />
                         <div @click="selectNewFiles" @dragover.prevent
                              @drop.stop.prevent="uploadDraggedDocuments($event)" class="mb-4 w-full flex rounded-lg justify-center items-center
-                        border-artwork-buttons-create border-dotted border-2 h-32 bg-colorOfAction p-2 cursor-pointer">
-                            <p class="text-artwork-buttons-create font-bold text-center">
+                        border-accent-600 border-dotted border-2 h-32  p-2 cursor-pointer">
+                            <p class="text-accent-600 font-bold text-center">
                                 {{ $t('Drag document here to upload or click in the field') }}
                             </p>
                         </div>
@@ -45,7 +45,7 @@
                                 {{ file.name }}
                             </div>
                             <div>
-                                <PropertyIcon name="IconCircleX" class="size-5 text-error cursor-pointer hover:text-artwork-buttons-hover transition-colors duration-300 ease-in-out" @click="files.splice(files.indexOf(file), 1)"/>
+                                <PropertyIcon name="IconCircleX" class="size-5 text-danger cursor-pointer hover:text-accent-700 transition-colors duration-300 ease-in-out" @click="files.splice(files.indexOf(file), 1)"/>
                             </div>
                         </div>
                     </div>
@@ -64,7 +64,6 @@
 <script>
 import JetDialogModal from '@/Jetstream/DialogModal.vue'
 import JetInputError from '@/Jetstream/InputError.vue'
-import {XIcon} from "@heroicons/vue/outline";
 import Permissions from "@/Mixins/Permissions.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import IconLib from "@/Mixins/IconLib.vue";
@@ -73,7 +72,7 @@ import TextareaComponent from "@/Components/Inputs/TextareaComponent.vue";
 import MultiAlertComponent from "@/Components/Alerts/MultiAlertComponent.vue";
 import {useForm} from "@inertiajs/vue3";
 import BaseTextarea from "@/Artwork/Inputs/BaseTextarea.vue";
-import {IconCircleX} from "@tabler/icons-vue";
+import {IconCircleX, IconX} from "@tabler/icons-vue";
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 
 export default {
@@ -92,7 +91,7 @@ export default {
         FormButton,
         JetDialogModal,
         JetInputError,
-        XIcon
+        IconX
     },
     data() {
         return {

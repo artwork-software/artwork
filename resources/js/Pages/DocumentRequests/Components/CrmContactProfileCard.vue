@@ -1,7 +1,7 @@
 <template>
-    <div v-if="contactData" class="bg-white rounded-lg border border-gray-200 overflow-hidden">
+    <div v-if="contactData" class="bg-white rounded-lg border border-border-subtle overflow-hidden">
         <!-- Header -->
-        <div class="flex items-center justify-between px-4 py-3 bg-gray-50 border-b border-gray-200">
+        <div class="flex items-center justify-between px-4 py-3 bg-surface-sunken border-b border-border-subtle">
             <div class="flex items-center gap-3">
                 <img
                     v-if="contactData.contact.profile_photo_url"
@@ -9,27 +9,27 @@
                     alt=""
                     class="h-10 w-10 rounded-full object-cover"
                 />
-                <div v-else class="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center">
-                    <component :is="IconUser" class="h-5 w-5 text-gray-500" />
+                <div v-else class="h-10 w-10 rounded-full bg-border-subtle flex items-center justify-center">
+                    <component :is="IconUser" class="h-5 w-5 text-text-subtle" />
                 </div>
                 <div>
-                    <div class="text-sm font-semibold text-gray-900">{{ contactData.contact.display_name }}</div>
+                    <div class="text-sm font-semibold text-text">{{ contactData.contact.display_name }}</div>
                     <span
                         v-if="contactData.contact.contact_type"
-                        class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium bg-gray-100 text-gray-700"
+                        class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium bg-surface-sunken text-text-muted"
                     >
                         {{ contactData.contact.contact_type.name }}
                     </span>
                 </div>
             </div>
             <div class="flex items-center gap-2">
-                <a :href="route('crm.contacts.show', contactData.contact.id)" class="text-xs text-blue-600 hover:text-blue-800 hover:underline">
+                <a :href="route('crm.contacts.show', contactData.contact.id)" class="text-xs text-accent-600 hover:text-accent-700 hover:underline">
                     {{ $t('View in CRM') }}
                 </a>
                 <button
                     v-if="!readonly"
                     @click="$emit('unlink')"
-                    class="p-1 text-gray-400 hover:text-red-500 transition-colors"
+                    class="p-1 text-text-subtle hover:text-danger transition-colors"
                     :title="$t('Unlink CRM contact')"
                 >
                     <component :is="IconX" class="h-4 w-4" />
@@ -49,7 +49,7 @@
         </div>
     </div>
 
-    <div v-else-if="loadingData" class="py-4 text-center text-sm text-gray-500">
+    <div v-else-if="loadingData" class="py-4 text-center text-sm text-text-subtle">
         {{ $t('Loading...') }}
     </div>
 </template>

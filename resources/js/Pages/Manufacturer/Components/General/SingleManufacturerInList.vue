@@ -3,19 +3,19 @@
         <!-- Left: Info -->
         <div class="min-w-0">
             <div class="flex items-start justify-between gap-x-10">
-                <p class="truncate text-base font-semibold text-zinc-900">
+                <p class="truncate text-base font-semibold text-text">
                     {{ manufacturer.name }}
                 </p>
             </div>
 
-            <div class="mt-1 space-y-1 text-xs text-zinc-500">
+            <div class="mt-1 space-y-1 text-xs text-text-subtle">
                 <p class="truncate">{{ manufacturer.address }}</p>
                 <p class="truncate">{{ manufacturer.contact_person }}</p>
                 <p class="truncate">{{ manufacturer.phone }}</p>
                 <p class="truncate">{{ manufacturer.email }}</p>
                 <p class="truncate">
                     {{ $t('Customer Number') }}:
-                    <span class="font-medium text-zinc-700">{{ manufacturer.customer_number }}</span>
+                    <span class="font-medium text-text-muted">{{ manufacturer.customer_number }}</span>
                 </p>
             </div>
         </div>
@@ -28,7 +28,7 @@
                 target="_blank"
                 rel="noopener"
                 class="inline-flex items-center rounded-md px-2.5 py-1.5 text-xs font-medium
-               text-blue-600 ring-1 ring-inset ring-blue-200 hover:bg-blue-50 transition"
+               text-accent-600 ring-1 ring-inset ring-accent-200 hover:bg-accent-50 transition"
             >
                 {{ $t('Manufacturer website') }}
             </a>

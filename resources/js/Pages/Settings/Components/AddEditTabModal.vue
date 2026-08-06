@@ -157,11 +157,11 @@ export default {
     >
         <div class="space-y-6">
             <!-- Name -->
-            <div class="rounded-2xl border border-zinc-200/80 bg-white/70 backdrop-blur p-4 shadow-sm">
+            <div class="rounded-2xl border border-border-subtle/80 bg-white/70 backdrop-blur p-4 shadow-sm">
                 <div class="flex items-start justify-between gap-4">
                     <div class="min-w-0">
-                        <div class="text-sm font-medium text-zinc-900">{{ $t('Tab name') }}</div>
-                        <div class="mt-0.5 text-xs text-zinc-500">
+                        <div class="text-sm font-medium text-text">{{ $t('Tab name') }}</div>
+                        <div class="mt-0.5 text-xs text-text-subtle">
                             {{ $t('This name is shown in the project navigation.') }}
                         </div>
                     </div>
@@ -169,18 +169,18 @@ export default {
 
                 <div class="mt-4">
                     <BaseInput type="text" v-model="tabForm.name" :label="$t('Name')" id="tab_name" />
-                    <div v-if="tabForm.errors?.name" class="text-xs text-red-600 mt-1">
+                    <div v-if="tabForm.errors?.name" class="text-xs text-danger mt-1">
                         {{ tabForm.errors.name }}
                     </div>
                 </div>
             </div>
 
             <!-- Visibility -->
-            <div class="rounded-2xl border border-zinc-200/80 bg-white/70 backdrop-blur p-4 shadow-sm">
+            <div class="rounded-2xl border border-border-subtle/80 bg-white/70 backdrop-blur p-4 shadow-sm">
                 <div class="flex items-start justify-between gap-4">
                     <div class="min-w-0">
-                        <div class="text-sm font-medium text-zinc-900">{{ $t('Visibility') }}</div>
-                        <div class="mt-0.5 text-xs text-zinc-500">
+                        <div class="text-sm font-medium text-text">{{ $t('Visibility') }}</div>
+                        <div class="mt-0.5 text-xs text-text-subtle">
                             {{ $t('Decide who can see this tab. Restricted tabs cannot be opened via direct URL.') }}
                         </div>
                     </div>
@@ -189,16 +189,16 @@ export default {
                         <input
                             type="checkbox"
                             v-model="tabForm.visible_for_all"
-                            class="h-4 w-4 rounded border-zinc-300"
+                            class="h-4 w-4 rounded border-border"
                         />
-                        <span class="text-sm text-zinc-800">{{ $t('Visible for all') }}</span>
+                        <span class="text-sm text-text">{{ $t('Visible for all') }}</span>
                     </label>
                 </div>
 
                 <!-- Restricted -->
                 <div v-if="!tabForm.visible_for_all" class="mt-4 space-y-4">
                     <!-- Search -->
-                    <div class="rounded-xl border border-zinc-200 bg-white/70 p-3">
+                    <div class="rounded-xl border border-border-subtle bg-white/70 p-3">
                         <BaseInput
                             type="text"
                             v-model="userAndTeamsQuery"
@@ -206,7 +206,7 @@ export default {
                             id="tab_visible_for"
                             :placeholder="$t('Search users or teams…')"
                         />
-                        <div class="text-xs text-zinc-500 mt-2">
+                        <div class="text-xs text-text-subtle mt-2">
                             {{ $t('Type to search users and teams, then click to add them.') }}
                         </div>
                     </div>
@@ -214,9 +214,9 @@ export default {
                     <!-- Search results -->
                     <div v-if="userAndTeamsQuery.trim()" class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <!-- Users -->
-                        <div class="rounded-xl border border-zinc-200 bg-white/70 overflow-hidden">
-                            <div class="px-3 py-2 border-b border-zinc-200/70 bg-zinc-50/60">
-                                <div class="text-xs font-medium text-zinc-700 uppercase tracking-wide">
+                        <div class="rounded-xl border border-border-subtle bg-white/70 overflow-hidden">
+                            <div class="px-3 py-2 border-b border-border-subtle bg-surface-sunken">
+                                <div class="text-xs font-medium text-text-muted uppercase tracking-wide">
                                     {{ $t('Users') }}
                                 </div>
                             </div>
@@ -229,13 +229,13 @@ export default {
                                     class="w-full text-left px-3 py-2 hover:bg-black/5 flex items-center justify-between"
                                     @click="addVisibleUser(u)"
                                 >
-                                    <span class="text-sm text-zinc-900 truncate">{{ displayUserName(u) }}</span>
-                                    <span class="text-xs text-zinc-500">+</span>
+                                    <span class="text-sm text-text truncate">{{ displayUserName(u) }}</span>
+                                    <span class="text-xs text-text-subtle">+</span>
                                 </button>
 
                                 <div
                                     v-if="!userAndTeamsSearchResult.users.length"
-                                    class="px-3 py-3 text-sm text-zinc-500"
+                                    class="px-3 py-3 text-sm text-text-subtle"
                                 >
                                     {{ $t('No users found.') }}
                                 </div>
@@ -243,9 +243,9 @@ export default {
                         </div>
 
                         <!-- Teams -->
-                        <div class="rounded-xl border border-zinc-200 bg-white/70 overflow-hidden">
-                            <div class="px-3 py-2 border-b border-zinc-200/70 bg-zinc-50/60">
-                                <div class="text-xs font-medium text-zinc-700 uppercase tracking-wide">
+                        <div class="rounded-xl border border-border-subtle bg-white/70 overflow-hidden">
+                            <div class="px-3 py-2 border-b border-border-subtle bg-surface-sunken">
+                                <div class="text-xs font-medium text-text-muted uppercase tracking-wide">
                                     {{ $t('Teams') }}
                                 </div>
                             </div>
@@ -258,13 +258,13 @@ export default {
                                     class="w-full text-left px-3 py-2 hover:bg-black/5 flex items-center justify-between"
                                     @click="addVisibleDepartment(d)"
                                 >
-                                    <span class="text-sm text-zinc-900 truncate">{{ d.name }}</span>
-                                    <span class="text-xs text-zinc-500">+</span>
+                                    <span class="text-sm text-text truncate">{{ d.name }}</span>
+                                    <span class="text-xs text-text-subtle">+</span>
                                 </button>
 
                                 <div
                                     v-if="!userAndTeamsSearchResult.departments.length"
-                                    class="px-3 py-3 text-sm text-zinc-500"
+                                    class="px-3 py-3 text-sm text-text-subtle"
                                 >
                                     {{ $t('No teams found.') }}
                                 </div>
@@ -273,18 +273,18 @@ export default {
                     </div>
 
                     <!-- Selected -->
-                    <div class="rounded-xl border border-zinc-200 bg-white/70 p-3">
+                    <div class="rounded-xl border border-border-subtle bg-white/70 p-3">
                         <div class="flex items-start justify-between gap-4">
                             <div>
-                                <div class="text-xs font-medium text-zinc-700 uppercase tracking-wide">
+                                <div class="text-xs font-medium text-text-muted uppercase tracking-wide">
                                     {{ $t('Selected access') }}
                                 </div>
-                                <div class="mt-0.5 text-xs text-zinc-500">
+                                <div class="mt-0.5 text-xs text-text-subtle">
                                     {{ $t('Only selected users and teams can see this tab.') }}
                                 </div>
                             </div>
 
-                            <div class="text-xs text-zinc-500">
+                            <div class="text-xs text-text-subtle">
                                 {{ selectedVisibleUsers.length + selectedVisibleDepartments.length }} {{ $t('items') }}
                             </div>
                         </div>
@@ -293,7 +293,7 @@ export default {
                             <span
                                 v-for="u in selectedVisibleUsers"
                                 :key="'su-' + u.id"
-                                class="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-zinc-200 bg-white/70 text-sm text-zinc-800"
+                                class="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-border-subtle bg-white/70 text-sm text-text"
                             >
                                 <span class="truncate max-w-[16rem]">{{ displayUserName(u) }}</span>
                                 <button
@@ -309,7 +309,7 @@ export default {
                             <span
                                 v-for="d in selectedVisibleDepartments"
                                 :key="'sd-' + d.id"
-                                class="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-zinc-200 bg-white/70 text-sm text-zinc-800"
+                                class="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-border-subtle bg-white/70 text-sm text-text"
                             >
                                 <span class="truncate max-w-[16rem]">{{ d.name }}</span>
                                 <button
@@ -324,7 +324,7 @@ export default {
 
                             <span
                                 v-if="!selectedVisibleUsers.length && !selectedVisibleDepartments.length"
-                                class="text-sm text-zinc-500"
+                                class="text-sm text-text-subtle"
                             >
                                 {{ $t('Nothing selected yet.') }}
                             </span>
@@ -332,22 +332,22 @@ export default {
 
                         <div
                             v-if="!selectedVisibleUsers.length && !selectedVisibleDepartments.length"
-                            class="mt-3 rounded-lg border border-amber-200 bg-amber-50/70 px-3 py-2 text-xs text-amber-800"
+                            class="mt-3 rounded-lg border border-warning-border bg-warning-surface/70 px-3 py-2 text-xs text-warning"
                         >
                             {{ $t('Warning: If nobody is selected, nobody will be able to see this tab.') }}
                         </div>
 
-                        <div v-if="tabForm.errors?.visible_user_ids" class="text-xs text-red-600 mt-2">
+                        <div v-if="tabForm.errors?.visible_user_ids" class="text-xs text-danger mt-2">
                             {{ tabForm.errors.visible_user_ids }}
                         </div>
-                        <div v-if="tabForm.errors?.visible_department_ids" class="text-xs text-red-600 mt-1">
+                        <div v-if="tabForm.errors?.visible_department_ids" class="text-xs text-danger mt-1">
                             {{ tabForm.errors.visible_department_ids }}
                         </div>
                     </div>
                 </div>
 
                 <!-- Visible for all helper -->
-                <div v-else class="mt-4 rounded-xl border border-emerald-200 bg-emerald-50/50 px-3 py-2 text-xs text-emerald-800">
+                <div v-else class="mt-4 rounded-xl border border-success-border bg-success-surface/50 px-3 py-2 text-xs text-success">
                     {{ $t('Everyone with access to the project can see this tab.') }}
                 </div>
             </div>

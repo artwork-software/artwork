@@ -133,7 +133,7 @@ const instructions = computed(() => ([
         <div class="flex flex-col gap-8 max-h-[calc(100vh-16rem)] overflow-auto pr-1">
             <!-- Accordion -->
             <section>
-                <h3 class="text-sm font-semibold text-gray-900 mb-3">
+                <h3 class="text-sm font-semibold text-text mb-3">
                     {{ $t('Step-by-step guides') }}
                 </h3>
 
@@ -142,22 +142,22 @@ const instructions = computed(() => ([
                         v-for="(instruction, idx) in instructions"
                         :key="idx"
                         as="div"
-                        class="rounded-lg border border-gray-200 bg-white shadow-sm"
+                        class="rounded-lg border border-border-subtle bg-white shadow-sm"
                     >
                         <DisclosureButton
                             class="flex w-full items-center justify-between gap-3 rounded-lg px-4 py-3 text-left"
                         >
-                              <span class="font-medium text-gray-900 truncate">
+                              <span class="font-medium text-text truncate">
                                 {{ $t(instruction.system) }}
                               </span>
-                            <PropertyIcon name="IconChevronDown" class="h-5 w-5 text-gray-500 transition-transform duration-200 ui-open:rotate-180"/>
+                            <PropertyIcon name="IconChevronDown" class="h-5 w-5 text-text-subtle transition-transform duration-200 ui-open:rotate-180"/>
                         </DisclosureButton>
 
                         <DisclosurePanel class="px-4 pb-4 pt-2 text-sm">
-                            <p class="text-gray-600 mb-3">
+                            <p class="text-text-muted mb-3">
                                 {{ $t(instruction.description) }}
                             </p>
-                            <ul class="list-disc list-inside space-y-1 text-gray-700">
+                            <ul class="list-disc list-inside space-y-1 text-text-muted">
                                 <li v-for="(step, sIdx) in instruction.steps" :key="sIdx">
                                     {{ $t(step) }}
                                 </li>
@@ -169,10 +169,10 @@ const instructions = computed(() => ([
 
             <!-- URL Kopieren -->
             <section>
-                <h3 class="text-sm font-semibold text-gray-900 mb-2">
+                <h3 class="text-sm font-semibold text-text mb-2">
                     {{ $t('Calendar URL') }}
                 </h3>
-                <p class="text-sm text-gray-600 mb-2">
+                <p class="text-sm text-text-muted mb-2">
                     {{ $t('Use the following URL to import the calendar into your calendar application and stay up to date:') }}
                 </p>
 
@@ -183,11 +183,11 @@ const instructions = computed(() => ([
                         @click="$event.target.select()"
                         id="calendar-url"
                         name="calendar-url"
-                        class="block w-full rounded-md border border-gray-200 bg-gray-50 px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-artwork-buttons-create focus:border-artwork-buttons-create"
+                        class="block w-full rounded-md border border-border-subtle bg-surface-sunken px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-accent-600 focus:border-accent-600"
                     />
                     <button
                         type="button"
-                        class="absolute right-1 top-1 bottom-1 my-auto inline-flex items-center gap-2 rounded-md bg-artwork-buttons-create px-3 py-1.5 text-sm font-medium text-white shadow-sm hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-artwork-buttons-create"
+                        class="absolute right-1 top-1 bottom-1 my-auto inline-flex items-center gap-2 rounded-md bg-accent-600 px-3 py-1.5 text-sm font-medium text-white shadow-sm hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-accent-600"
                         @click="copyAboUrlToClipboard"
                     >
                         <PropertyIcon name="IconCircleCheck" class="h-4 w-4" v-if="copyText" />
@@ -195,7 +195,7 @@ const instructions = computed(() => ([
                     </button>
                 </div>
 
-                <div class="mt-2 text-xs text-artwork-buttons-create flex items-center gap-1">
+                <div class="mt-2 text-xs text-accent-600 flex items-center gap-1">
                     <PropertyIcon name="IconInfoCircle" class="h-4 w-4" />
                     {{ $t('Click on “Copy” to copy the URL to your clipboard and paste it into the desired calendar application.') }}
                 </div>
@@ -204,17 +204,17 @@ const instructions = computed(() => ([
             <!-- Download + Close -->
             <section class="flex items-start justify-between gap-4">
                 <div class="max-w-xl">
-                    <p class="text-sm text-gray-600 mb-2">
+                    <p class="text-sm text-text-muted mb-2">
                         {{ $t('Download the ICS file to manually import the calendar directly into your application:') }}
                     </p>
                     <button
                         type="button"
-                        class="text-sm text-artwork-buttons-hover underline"
+                        class="text-sm text-accent-700 underline"
                         @click="downloadICSFile"
                     >
                         {{ $t('Download ICS file') }}
                     </button>
-                    <div class="mt-2 text-xs text-artwork-messages-error">
+                    <div class="mt-2 text-xs text-danger">
                         {{ $t('Attention - The ICS file is not updated automatically. You must re-import the file regularly to keep it up to date.') }}
                     </div>
                 </div>

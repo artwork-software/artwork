@@ -1,6 +1,6 @@
 <template>
-    <div class="xxsLight">
-        <div v-if="component.data?.label" class="text-sm font-bold text-gray-900 mb-0.5">{{ component.data.label }}</div>
+    <div class="text-xs/[18px] text-text-subtle">
+        <div v-if="component.data?.label" class="text-sm font-bold text-text mb-0.5">{{ component.data.label }}</div>
         <div>
             {{ project['Checkbox'][component.component_id]?.data?.checked ? $t('Yes') : $t('No') }}
         </div>

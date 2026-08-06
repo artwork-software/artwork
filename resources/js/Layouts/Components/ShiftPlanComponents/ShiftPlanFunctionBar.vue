@@ -1,5 +1,5 @@
 <template>
-    <div class="bg-white border-b border-zinc-200 shadow-sm py-2 sticky top-0 z-50 ">
+    <div class="bg-white border-b border-border-subtle shadow-sm py-2 sticky top-0 z-50 ">
         <div class="flex justify-between items-center mt-2 mb-2 px-5">
             <div class="inline-flex items-center">
                 <div v-if="!isCalendarUsingProjectTimePeriod" class="flex">
@@ -55,11 +55,11 @@
                                         leave-from-class="transition-leave-from"
                                         leave-to-class="transition-leave-to">
                                 <MenuItems
-                                    class="absolute right-0 z-50 mt-2 w-fit origin-top-right rounded-md bg-artwork-navigation-background shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
+                                    class="absolute right-0 z-50 mt-2 w-fit origin-top-right rounded-md bg-surface-inverse shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
                                     <div class="py-1">
                                         <MenuItem v-slot="{ active }">
                                             <div @click="changeUserSelectedGoTo('day')"
-                                                 :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-white', 'block px-4 py-2 text-sm']">
+                                                 :class="[active ? 'bg-text-inverse/10 text-accent-700' : 'text-white', 'block px-4 py-2 text-sm']">
                                                 <ToolTipComponent
                                                     direction="right"
                                                     :tooltip-text="$t('Jump around') + ' ' + $t('Day')"
@@ -69,7 +69,7 @@
                                         </MenuItem>
                                         <MenuItem v-slot="{ active }">
                                             <div @click="changeUserSelectedGoTo('week')"
-                                                 :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-white', 'block px-4 py-2 text-sm']">
+                                                 :class="[active ? 'bg-text-inverse/10 text-accent-700' : 'text-white', 'block px-4 py-2 text-sm']">
                                                 <ToolTipComponent
                                                     direction="right"
                                                     :tooltip-text="$t('Jump around') + ' ' + $t('Calendar week')"
@@ -79,7 +79,7 @@
                                         </MenuItem>
                                         <MenuItem v-slot="{ active }">
                                             <div @click="changeUserSelectedGoTo('month')"
-                                                 :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-white', 'block px-4 py-2 text-sm']">
+                                                 :class="[active ? 'bg-text-inverse/10 text-accent-700' : 'text-white', 'block px-4 py-2 text-sm']">
                                                 <ToolTipComponent
                                                     direction="right"
                                                     :tooltip-text="$t('Jump around') + ' ' + $t('Month')"
@@ -112,16 +112,16 @@
                         label="Search project or artist"
                     />
                     <div v-if="projectSearchResults.length > 0"
-                         class="absolute translate-y-1 bg-primary truncate sm:text-sm min-w-48 rounded-lg z-50">
+                         class="absolute translate-y-1 bg-surface-inverse truncate sm:text-sm min-w-48 rounded-lg z-50">
                         <div v-for="(project, index) in projectSearchResults"
                              :key="index"
                              @click="toggleProjectTimePeriodAndRedirect(project.id, true)"
-                             class="p-4 xsWhiteBold border-l-4 hover:border-l-success border-l-primary cursor-pointer flex flex-col">
+                             class="p-4 text-sm/5 font-bold text-white border-l-4 hover:border-l-success border-l-surface-inverse cursor-pointer flex flex-col">
                             <div>{{ project.name }}</div>
-                            <div v-if="project.first_event_date && project.last_event_date" class="text-secondary text-xs font-normal">
+                            <div v-if="project.first_event_date && project.last_event_date" class="text-text-subtle text-xs font-normal">
                                 {{ $t('Project period') }}: {{ project.first_event_date.split(' ')[0] }} - {{ project.last_event_date.split(' ')[0] }}
                             </div>
-                            <div v-if="project.artists" class="text-secondary text-xs font-normal">
+                            <div v-if="project.artists" class="text-text-subtle text-xs font-normal">
                                 {{ $t('Artist') }}: {{ project.artists }}
                             </div>
                         </div>
@@ -164,7 +164,7 @@
                          Zuweisen per Drag & Drop braucht 100 % (Klick öffnet weiterhin das Schicht-Modal) -->
                     <div
                         v-if="isCompactShiftZoom && !isDailyView"
-                        class="ui-button !bg-blue-50 !border-blue-200/80 !text-blue-700 text-xs !cursor-help"
+                        class="ui-button !bg-accent-50 !border-accent-200/80 !text-accent-700 text-xs !cursor-help"
                     >
                         <ToolTipWithTextComponent
                             direction="bottom"
@@ -191,7 +191,7 @@
                             leave-to-class="opacity-0 scale-95"
                         >
                             <MenuItems class="absolute right-0 z-50 mt-2 origin-top-right focus:outline-none">
-                                <div class="w-56 rounded-xl border border-gray-200 bg-white p-1.5 shadow-xl ring-1 ring-black/5">
+                                <div class="w-56 rounded-xl border border-border-subtle bg-white p-1.5 shadow-xl ring-1 ring-black/5">
                                     <BaseMenuItem
                                         v-for="step in shiftZoomSteps"
                                         :key="step"

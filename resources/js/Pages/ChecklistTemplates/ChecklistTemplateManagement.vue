@@ -17,7 +17,7 @@
         />
 
         <div class="my-10">
-            <div v-if="checklist_templates.length === 0" class="text-center text-secondary py-16">
+            <div v-if="checklist_templates.length === 0" class="text-center text-text-subtle py-16">
                 {{ $t('No checklist templates have been created yet.') }}
             </div>
             <SingleChecklistTemplateListView

@@ -29,7 +29,7 @@ const emits = defineEmits(['groupRequestsDragMove']),
     }),
     draggedOver = ref(false),
     dragOverClass = computed(() => {
-        return draggedOver.value ? 'bg-secondary' : '';
+        return draggedOver.value ? 'bg-text-subtle' : '';
     }),
     groupDragOver = (e) => {
         draggedOver.value = true;

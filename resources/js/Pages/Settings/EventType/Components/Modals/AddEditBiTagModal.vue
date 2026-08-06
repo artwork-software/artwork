@@ -7,7 +7,7 @@
             <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
                 <div class="col-span-1">
                     <div class="-mt-1">
-                        <div class="xsLight flex items-center justify-start">
+                        <div class="text-sm/5 font-bold text-text-subtle flex items-center justify-start">
                             {{ $t('Color') }}
                         </div>
                         <div class="mt-1 flex items-center justify-center">
@@ -21,7 +21,7 @@
                 <div class="col-span-full">
                     <BaseInput id="bi_tag_name" v-model="tagForm.name" type="text" :label="$t('Internal name') + '*'" required />
                 </div>
-                <div v-if="errorMessage" class="col-span-full errorText">
+                <div v-if="errorMessage" class="col-span-full text-sm/5 text-danger">
                     {{ errorMessage }}
                 </div>
             </div>

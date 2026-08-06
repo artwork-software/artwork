@@ -1,11 +1,15 @@
 <template>
-    <div class="rounded-xl p-4 mb-5 border cursor-default" :class="bgClass">
-        <div class="flex gap-x-3 items-center">
+    <div class="rounded-[8px] py-2.5 px-3 mb-5 border cursor-default" :class="bgClass">
+        <div class="flex gap-x-3" :class="title ? 'items-start' : 'items-center'">
             <div class="shrink-0">
                 <PropertyIcon :name="iconClass" class="size-5" :class="iconTextClass" aria-hidden="true" />
             </div>
-            <div class="">
-                <p class="text-xs" :class="textClass">
+            <div class="flex-1 min-w-0">
+                <p v-if="title" class="text-[13px] font-semibold" :class="textClass">
+                    <span v-if="useTranslation">{{ $t(title) }}</span>
+                    <span v-else>{{ title }}</span>
+                </p>
+                <p class="text-[13px]" :class="textClass">
                     <span v-if="useTranslation">
                         {{ $t(message) }}
                     </span>
@@ -13,6 +17,16 @@
                         {{ message }}
                     </span>
                 </p>
+            </div>
+            <div v-if="actionLabel" class="shrink-0 self-center">
+                <BaseUIButton
+                    variant="secondary"
+                    size="sm"
+                    hide-icon
+                    :label="actionLabel"
+                    :use-translation="useTranslation"
+                    @click="emit('action')"
+                />
             </div>
         </div>
     </div>
@@ -22,6 +36,7 @@
 
 import {computed} from "vue";
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
+import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 
 
 const props = defineProps({
@@ -42,7 +57,21 @@ const props = defineProps({
         default: false,
         required: false
     },
+    /** Optionale Titelzeile über der Message */
+    title: {
+        type: String,
+        required: false,
+        default: ''
+    },
+    /** Optionaler Action-Button rechts; Klick emittiert 'action' */
+    actionLabel: {
+        type: String,
+        required: false,
+        default: ''
+    },
 })
+
+const emit = defineEmits(['action'])
 
 class types {
     static success = 'success'
@@ -54,15 +83,15 @@ class types {
 const bgClass = computed(() => {
     switch (props.type) {
         case types.success:
-            return 'bg-green-50 border-green-200'
+            return 'bg-success-surface border-success-border'
         case types.error:
-            return 'bg-red-50 border-red-200'
+            return 'bg-danger-surface border-danger-border'
         case types.warning:
-            return 'bg-yellow-50 border-yellow-200'
+            return 'bg-warning-surface border-warning-border'
         case types.info:
-            return 'bg-blue-50 border-blue-200'
+            return 'bg-info-surface border-info-border'
         default:
-            return 'bg-gray-50 border-gray-200'
+            return 'bg-surface-sunken border-border'
     }
 })
 
@@ -84,30 +113,30 @@ const iconClass = computed(() => {
 const iconTextClass = computed(() => {
     switch (props.type) {
         case types.success:
-            return 'text-green-500'
+            return 'text-success'
         case types.error:
-            return 'text-red-500'
+            return 'text-danger'
         case types.warning:
-            return 'text-yellow-500'
+            return 'text-warning'
         case types.info:
-            return 'text-blue-500'
+            return 'text-info'
         default:
-            return 'text-gray-500'
+            return 'text-text-muted'
     }
 })
 
 const textClass = computed(() => {
     switch (props.type) {
         case types.success:
-            return 'text-green-500'
+            return 'text-success'
         case types.error:
-            return 'text-red-500'
+            return 'text-danger'
         case types.warning:
-            return 'text-yellow-500'
+            return 'text-warning'
         case types.info:
-            return 'text-blue-500'
+            return 'text-info'
         default:
-            return 'text-gray-500'
+            return 'text-text-muted'
     }
 })
 

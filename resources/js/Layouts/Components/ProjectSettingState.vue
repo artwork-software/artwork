@@ -1,7 +1,7 @@
 <template>
     <div class="mt-16 max-w-2xl">
-        <h2 class="headline2 my-2">{{ title }}</h2>
-        <div class="xsLight">
+        <h2 class="font-lexend font-semibold text-[clamp(18px,2.5vw,20px)]/[25px] text-text my-2">{{ title }}</h2>
+        <div class="text-sm/5 font-bold text-text-subtle">
             {{ description }}
         </div>
     </div>
@@ -13,27 +13,27 @@
                         <button class="w-8 h-8 flex justify-center items-center rounded-full"
                                 :class="selectedColor=== 'stateColorDefault' ? 'stateColorDefault border border-1' : selectedColor"
                                 @click="openColor = !openColor">
-                            <ChevronUpIcon v-if="openColor" class="h-3 w-3 my-auto"
-                                           :class="selectedColor === 'stateColorDefault' ? 'text-black' : 'text-white'"></ChevronUpIcon>
-                            <ChevronDownIcon v-else
+                            <IconChevronUp v-if="openColor" class="h-3 w-3 my-auto"
+                                           :class="selectedColor === 'stateColorDefault' ? 'text-black' : 'text-white'"></IconChevronUp>
+                            <IconChevronDown v-else
                                              class="h-3 w-3 text-white my-auto"
-                                             :class="selectedColor === 'stateColorDefault' ? 'text-black' : 'text-white'"></ChevronDownIcon>
+                                             :class="selectedColor === 'stateColorDefault' ? 'text-black' : 'text-white'"></IconChevronDown>
                         </button>
                     </ListboxButton>
 
                     <transition leave-active-class="transition ease-in duration-100"
                                 leave-from-class="opacity-100" leave-to-class="opacity-0">
                         <ListboxOptions
-                            class="absolute w-24 z-10 mt-12 bg-primary shadow-lg max-h-64 pr-2 pt-2 pb-2 text-base ring-1 ring-black ring-opacity-5 overflow-y-scroll focus:outline-none sm:text-sm">
+                            class="absolute w-24 z-10 mt-12 bg-surface-inverse shadow-lg max-h-64 pr-2 pt-2 pb-2 text-base ring-1 ring-black ring-opacity-5 overflow-y-scroll focus:outline-none sm:text-sm">
                             <ListboxOption as="template" class=""
                                            v-for="color in colors"
                                            :key="color"
                                            :value="color" v-slot="{ active, selected }">
-                                <li :class="[active ? ' text-white' : 'text-secondary', 'group hover:border-l-4 hover:border-l-success cursor-pointer flex justify-between items-center py-2 text-sm subpixel-antialiased']"
+                                <li :class="[active ? ' text-white' : 'text-text-subtle', 'group hover:border-l-4 hover:border-l-success cursor-pointer flex justify-between items-center py-2 text-sm subpixel-antialiased']"
                                     @click="">
                                     <div class="flex">
                                                                     <span
-                                                                        :class="[selected ? 'xsWhiteBold' : 'font-normal', 'block truncate']">
+                                                                        :class="[selected ? 'text-sm/5 font-bold text-white' : 'font-normal', 'block truncate']">
                                                                         <span
                                                                             class="block truncate items-center ml-3 flex rounded-full h-10 w-10"
                                                                             :class="color">
@@ -41,8 +41,8 @@
                                                                     </span>
                                     </div>
                                     <span
-                                        :class="[active ? ' text-white' : 'text-secondary', ' group flex justify-end items-center text-sm subpixel-antialiased']">
-                                                                    <CheckIcon v-if="selected"
+                                        :class="[active ? ' text-white' : 'text-text-subtle', ' group flex justify-end items-center text-sm subpixel-antialiased']">
+                                                                    <IconCheck v-if="selected"
                                                                                class="h-5 w-5 flex text-success"
                                                                                aria-hidden="true"/>
                                                                 </span>
@@ -54,18 +54,18 @@
             </div>
             <div class="w-full">
                 <input id="inputState" v-model="input" type="text" @keyup.enter="add"
-                       class="peer pl-0 h-12 w-full focus:border-t-transparent focus:border-primary focus:ring-0 border-l-0 border-t-0 border-r-0 border-b-2 border-gray-300 text-primary placeholder-secondary placeholder-transparent"
+                       class="peer pl-0 h-12 w-full focus:border-t-transparent focus:border-surface-inverse focus:ring-0 border-l-0 border-t-0 border-r-0 border-b-2 border-border text-text placeholder-text-subtle placeholder-transparent"
                        placeholder="placeholder"/>
                 <label for="input"
-                       class="absolute left-10 -top-5 text-gray-600 text-sm -top-3.5 transition-all subpixel-antialiased focus:outline-none text-secondary peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-2 peer-focus:-top-3.5 peer-focus:text-sm ">
+                       class="absolute left-10 -top-5 text-text-muted text-sm -top-3.5 transition-all subpixel-antialiased focus:outline-none text-text-subtle peer-placeholder-shown:text-base peer-placeholder-shown:text-text-subtle peer-placeholder-shown:top-2 peer-focus:-top-3.5 peer-focus:text-sm ">
                     {{ inputLabel }}
                 </label>
             </div>
             <div class="m-2 -ml-8 -mt-1">
                 <button
-                    :class="[input === '' ? 'bg-secondary': 'bg-artwork-buttons-create hover:bg-artwork-buttons-hover focus:outline-none', 'rounded-full mt-2 ml-1 items-center text-sm p-1 border border-transparent uppercase shadow-sm text-white']"
+                    :class="[input === '' ? 'bg-text-subtle': 'bg-accent-600 hover:bg-accent-700 focus:outline-none', 'rounded-full mt-2 ml-1 items-center text-sm p-1 border border-transparent uppercase shadow-sm text-white']"
                     @click="add" :disabled="!input">
-                    <CheckIcon class="h-5 w-5"></CheckIcon>
+                    <IconCheck class="h-5 w-5"></IconCheck>
                 </button>
             </div>
         </div>
@@ -74,7 +74,7 @@
                               class="rounded-full items-center font-medium px-3 mt-2 text-sm mr-1 mb-1 h-8 inline-flex" :class="item.color">
                             {{ item.name }}
                             <button type="button" @click="$emit('openDeleteModal', item)">
-                                <XIcon class="ml-1 h-4 w-4 hover:text-error "/>
+                                <IconX class="ml-1 h-4 w-4 hover:text-danger "/>
                             </button>
                         </span>
 
@@ -83,8 +83,7 @@
 </template>
 
 <script>
-import {XIcon} from "@heroicons/vue/outline"
-import {CheckIcon, ChevronDownIcon, ChevronUpIcon} from "@heroicons/vue/solid";
+import {IconCheck, IconChevronDown, IconChevronUp, IconX} from "@tabler/icons-vue";
 import {Listbox, ListboxButton, ListboxOption, ListboxOptions} from "@headlessui/vue";
 import Permissions from "@/Mixins/Permissions.vue";
 export default {
@@ -97,12 +96,12 @@ export default {
         inputLabel: String
     },
     components: {
-        XIcon, CheckIcon,Listbox,
+        IconX, IconCheck,Listbox,
         ListboxButton,
         ListboxOption,
         ListboxOptions,
-        ChevronDownIcon,
-        ChevronUpIcon,
+        IconChevronDown,
+        IconChevronUp,
     },
     data() {
         return {

@@ -1,7 +1,7 @@
 <template>
     <BaseModal v-if="show" @closed="close(false)">
         <div class="select-export-type-modal-container">
-            <h1 class="headline1">
+            <h1 class="font-lexend font-black text-[clamp(24px,3vw,30px)]/[34px] text-text">
                 {{ $t('Inventory export') }}
             </h1>
             <span>{{ $t('Please select the format in which the export is to be created.')}}</span>
@@ -23,7 +23,7 @@
             </div>
             <div class="button-container">
                 <button :disabled="type.length === 0" type="button"
-                        :class="[type.length === 0 ? 'cursor-not-allowed !bg-gray-600 !hover:bg-gray-800' : 'cursor-pointer', 'export-button']"
+                        :class="[type.length === 0 ? 'cursor-not-allowed !bg-border-strong !hover:bg-border-strong' : 'cursor-pointer', 'export-button']"
                         @click="close(true)">
                     <IconFileExport stroke-width="2" class="icon"/>
                     <p class="text-sm">{{ $t('Export') }}</p>

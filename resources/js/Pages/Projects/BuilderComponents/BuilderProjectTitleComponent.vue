@@ -1,5 +1,5 @@
 <template>
-    <div class="flex items-start font-lexend font-black tracking-wide text-sm text-primary min-w-0">
+    <div class="flex items-start font-lexend font-black tracking-wide text-sm text-text min-w-0">
         <!-- Avatar / Key Visual / Icon -->
         <div class="relative mr-2 shrink-0">
             <!-- Gruppen-Badge -->
@@ -61,7 +61,7 @@
         <!-- Titel -->
         <div
             v-tooltip.top="{ value: project.title, appendTo: 'body', class: 'aw-tooltip' }"
-            class="min-w-0 text-dark transition-colors duration-300 ease-in-out group-hover/project:text-artwork-buttons-create line-clamp-3"
+            class="min-w-0 text-dark transition-colors duration-300 ease-in-out group-hover/project:text-accent-600 line-clamp-3"
         >
             {{ project.title }}
         </div>
@@ -112,7 +112,7 @@ const avatarStyle = computed(() => ({
 const avatarWrapperClass = computed(() =>
     hasKeyVisual.value
         ? 'bg-transparent border border-transparent'
-        : 'bg-zinc-50 border border-zinc-100'
+        : 'bg-surface-sunken border border-border-subtle'
 );
 
 const avatarAriaLabel = computed(() => {

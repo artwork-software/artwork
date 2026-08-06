@@ -12,64 +12,64 @@
                 <div class="col-span-4">
                     <!-- Section 1: My room booking requests -->
                     <section v-if="myRoomRequests.length > 0" class="mb-10">
-                        <h2 class="text-lg font-lexend font-bold text-gray-900 mb-3">
+                        <h2 class="text-lg font-lexend font-bold text-text mb-3">
                             {{ $t('My room booking requests') }}
                         </h2>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <WhiteInnerCard v-for="req in myRoomRequests" :key="req.id">
+                            <BaseCard elevation="raised" class="w-full" v-for="req in myRoomRequests" :key="req.id">
                                 <div class="p-4">
                                     <div class="flex items-center gap-x-2">
                                         <div
                                             class="w-5 h-5 rounded-full flex-shrink-0"
                                             :style="{ backgroundColor: req.event_type?.hex_code }"
                                         />
-                                        <span class="font-lexend font-bold text-gray-900 truncate">
+                                        <span class="font-lexend font-bold text-text truncate">
                                             {{ req.event_type?.name }}
                                         </span>
                                     </div>
-                                    <p class="mt-1 text-xs text-gray-500 font-lexend">
+                                    <p class="mt-1 text-xs text-text-subtle font-lexend">
                                         {{ req.name }}
                                     </p>
-                                    <p class="mt-1 text-xs text-gray-500 font-lexend">
+                                    <p class="mt-1 text-xs text-text-subtle font-lexend">
                                         <span class="font-bold">{{ $t('Start') }}:</span>
                                         {{ req.start_time }}
                                         <span class="font-bold ml-2">{{ $t('End') }}:</span>
                                         {{ req.end_time }}
                                     </p>
-                                    <p v-if="req.room" class="mt-1 text-xs text-gray-500 font-lexend">
+                                    <p v-if="req.room" class="mt-1 text-xs text-text-subtle font-lexend">
                                         <span class="font-bold">{{ $t('Room') }}:</span>
                                         {{ req.room?.name }}
                                     </p>
-                                    <p v-if="isDeclined(req)" class="mt-1 text-xs text-gray-500 font-lexend">
+                                    <p v-if="isDeclined(req)" class="mt-1 text-xs text-text-subtle font-lexend">
                                         <span class="font-bold">{{ $t('Declined room') }}:</span>
                                         <span class="line-through">{{ req.declined_room_name }}</span>
                                     </p>
                                     <div class="mt-2 flex items-center justify-between">
                                         <span v-if="isDeclined(req)"
-                                              class="inline-flex items-center rounded-md bg-red-50 px-2 py-1 text-xs font-medium text-red-700 ring-1 ring-inset ring-red-600/10">
+                                              class="inline-flex items-center rounded-md bg-danger-surface px-2 py-1 text-xs font-medium text-danger ring-1 ring-inset ring-danger/10">
                                             {{ $t('declined') }}
                                         </span>
                                         <span v-else
-                                              class="inline-flex items-center rounded-md bg-yellow-50 px-2 py-1 text-xs font-medium text-yellow-800 ring-1 ring-inset ring-yellow-600/20">
+                                              class="inline-flex items-center rounded-md bg-warning-surface px-2 py-1 text-xs font-medium text-warning ring-1 ring-inset ring-warning/20">
                                             {{ $t('pending') }}
                                         </span>
                                         <button
                                             v-if="isDeclined(req)"
                                             @click="openEditModal(req)"
-                                            class="flex items-center gap-1 text-xs text-indigo-600 hover:text-indigo-800 cursor-pointer"
+                                            class="flex items-center gap-1 text-xs text-accent-600 hover:text-accent-700 cursor-pointer"
                                         >
                                             <IconPencil class="h-4 w-4" />
                                             {{ $t('Edit event') }}
                                         </button>
                                     </div>
                                 </div>
-                            </WhiteInnerCard>
+                            </BaseCard>
                         </div>
                     </section>
 
                     <!-- Section 2: My verification requests -->
                     <section>
-                        <h2 class="text-lg font-lexend font-bold text-gray-900 mb-3">
+                        <h2 class="text-lg font-lexend font-bold text-text mb-3">
                             {{ $t('My Verification Requests') }}
                         </h2>
                         <div v-if="myRequests.data.length > 0">
@@ -133,7 +133,6 @@ import BaseEventVerificationLayout from "@/Pages/EventVerification/BaseEventVeri
 import PageTitle from "@/Artwork/Titles/PageTitle.vue";
 import SinglePlannedEventInVerificationPage
     from "@/Pages/EventVerification/Components/SinglePlannedEventInVerificationPage.vue";
-import WhiteInnerCard from "@/Artwork/Cards/WhiteInnerCard.vue";
 import EventsWithoutRoomComponent from "@/Layouts/Components/EventsWithoutRoomComponent.vue";
 import {IconPencil} from "@tabler/icons-vue";
 import {usePermission} from "@/Composeables/Permission.js";

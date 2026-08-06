@@ -2,7 +2,7 @@
     <!-- Schicht-Karte im Kalender: Optik wie der obere Teil von SingleShiftInDailyShiftView,
          ohne Zuweisungen/Funktions-Verwaltung. Bearbeiten nur über das 3-Punkte-Menü. -->
     <div
-        class="w-full rounded-lg select-none border font-lexend"
+        class="w-full rounded-sm select-none border font-lexend"
         :style="{ backgroundColor: `${craftColor}${isFollowUpDay ? '30' : '50'}`, borderColor: isFollowUpDay ? '#d1d5db' : craftColor, zoom: contentZoom }"
     >
         <div class="flex flex-col w-full">
@@ -10,13 +10,13 @@
             <div class="flex items-center min-w-0 justify-between">
                 <div class="flex items-center min-w-0">
                     <div
-                        class="flex items-center gap-x-1.5 rounded-md whitespace-nowrap px-1.5 py-0.5 text-[10px]"
+                        class="flex items-center gap-x-1.5 rounded-sm whitespace-nowrap px-1.5 py-0.5 text-[11px] font-semibold"
                         :style="{ backgroundColor: `${craftColor}90` }"
                         v-tooltip.bottom="{ value: craftTitleFull, class: 'aw-tooltip' }"
                         :aria-label="craftTitleFull"
                     >
-                        <span class="text-xs font-semibold text-gray-800">{{ craftAbbreviation }}</span>
-                        <span><span v-if="dayRole === 'end' || dayRole === 'middle'" class="opacity-60">→ </span>{{ displayStartTime }} - {{ displayEndTime }}<span v-if="dayRole === 'start' || dayRole === 'middle'" class="opacity-60"> →</span></span>
+                        <span class="text-text">{{ craftAbbreviation }}</span>
+                        <span class="tabular-nums"><span v-if="dayRole === 'end' || dayRole === 'middle'" class="opacity-60">→ </span>{{ displayStartTime }} - {{ displayEndTime }}<span v-if="dayRole === 'start' || dayRole === 'middle'" class="opacity-60"> →</span></span>
                     </div>
                 </div>
                 <div v-if="!isFollowUpDay && canPlanShifts" class="flex items-center shrink-0 pr-1">
@@ -31,7 +31,7 @@
                 <Link
                     v-if="shift.projectId && projectShiftTabId"
                     :href="route('projects.tab', { project: shift.projectId, projectTab: projectShiftTabId })"
-                    class="block truncate text-xs font-medium text-gray-800 hover:underline underline-offset-2 cursor-pointer"
+                    class="block truncate text-xs font-medium text-text hover:underline underline-offset-2 cursor-pointer"
                     v-tooltip.bottom="{ value: shift.projectName, class: 'aw-tooltip' }"
                     @click.stop
                 >
@@ -39,7 +39,7 @@
                 </Link>
                 <span
                     v-else
-                    class="block truncate text-xs text-gray-700"
+                    class="block truncate text-xs text-text-muted"
                     v-tooltip.bottom="{ value: shift.projectName, class: 'aw-tooltip' }"
                 >
                     {{ shift.projectName }}
@@ -50,8 +50,8 @@
             <div class="flex justify-between flex-wrap items-center gap-1 ml-2">
                 <div class="flex gap-x-2">
                     <div v-for="qualification in shift.shifts_qualifications" :key="qualification.shift_qualification_id">
-                        <div class="text-gray-500 text-[10px] flex items-center gap-x-1">
-                            <div :class="{ 'text-amber-600 font-semibold': getAssignedCountForQualification(qualification.shift_qualification_id) > (qualification.value ?? 0) }">
+                        <div class="text-text-muted text-[11px] tabular-nums flex items-center gap-x-1">
+                            <div :class="{ 'text-warning font-semibold': getAssignedCountForQualification(qualification.shift_qualification_id) > (qualification.value ?? 0) }">
                                 {{ getAssignedCountForQualification(qualification.shift_qualification_id) }}/{{ qualification.value ? qualification.value : '0' }}
                             </div>
                             <ToolTipComponent
@@ -68,7 +68,7 @@
 
                 <div class="flex gap-x-2 pr-4">
                     <div v-for="gq in demandedGlobalQualifications" :key="'gq-' + gq.id">
-                        <div class="text-gray-500 text-[10px] flex items-center gap-x-1">
+                        <div class="text-text-muted text-[11px] tabular-nums flex items-center gap-x-1">
                             <div>
                                 {{ countAssignedForGlobalQualification(gq.id) }}/{{ getGlobalQuantity(gq) }}
                             </div>
@@ -88,7 +88,7 @@
             <!-- Zeile 3: Schichtbeschreibung -->
             <div v-if="shift.description" class="flex items-center gap-x-1 ml-2 mb-1 min-w-0">
                 <span
-                    class="text-[10px] text-gray-600 truncate"
+                    class="text-[10px] text-text-muted truncate"
                     v-tooltip.bottom="{ value: shift.description, class: 'aw-tooltip' }"
                 >
                     {{ shift.description }}

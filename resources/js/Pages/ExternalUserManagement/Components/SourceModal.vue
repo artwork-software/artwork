@@ -19,13 +19,13 @@
 
             <!-- Type -->
             <div>
-                <label for="type" class="block text-sm font-medium text-gray-900 mb-1">
+                <label for="type" class="block text-sm font-medium text-text mb-1">
                     {{ $t('Source Type') }}
                 </label>
                 <select
                     id="type"
                     v-model="form.type"
-                    class="block w-full rounded-lg border-gray-300 text-sm focus:border-blue-500 focus:ring-blue-500"
+                    class="block w-full rounded-lg border-border text-sm focus:border-accent-600 focus:ring-accent-600"
                 >
                     <option value="ldap">{{ $t('LDAP / Active Directory') }}</option>
                     <option value="identity_provider">{{ $t('Identity Provider (OIDC / SSO)') }}</option>
@@ -38,9 +38,9 @@
                     type="checkbox"
                     id="active"
                     v-model="form.active"
-                    class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                    class="h-4 w-4 text-accent-600 focus:ring-accent-600 border-border rounded"
                 />
-                <label for="active" class="ml-2 block text-sm text-gray-900">
+                <label for="active" class="ml-2 block text-sm text-text">
                     {{ $t('Active') }}
                 </label>
             </div>
@@ -57,7 +57,7 @@
                         placeholder="ldaps://ad.domain.tld oder ldap://ad.domain.tld"
                         required
                     />
-                    <p class="mt-1 text-xs text-gray-500">
+                    <p class="mt-1 text-xs text-text-subtle">
                         {{ $t('Example: ldaps://ad.domain.tld or ldap://ad.domain.tld') }}
                     </p>
                 </div>
@@ -72,7 +72,7 @@
                         :error="form.errors['config.port']"
                         placeholder="389"
                     />
-                    <p class="mt-1 text-xs text-gray-500">
+                    <p class="mt-1 text-xs text-text-subtle">
                         {{ $t('Default: 389 (LDAP) or 636 (LDAPS)') }}
                     </p>
                 </div>
@@ -87,7 +87,7 @@
                         placeholder="DC=domain,DC=tld"
                         required
                     />
-                    <p class="mt-1 text-xs text-gray-500">
+                    <p class="mt-1 text-xs text-text-subtle">
                         {{ $t('Example: DC=domain,DC=tld') }}
                     </p>
                 </div>
@@ -102,7 +102,7 @@
                         placeholder="CN=ServiceAccount,OU=ServiceAccounts,DC=domain,DC=tld"
                         required
                     />
-                    <p class="mt-1 text-xs text-gray-500">
+                    <p class="mt-1 text-xs text-text-subtle">
                         {{ $t('Distinguished Name of the service account for LDAP queries') }}
                     </p>
                 </div>
@@ -117,7 +117,7 @@
                         :error="form.errors['config.bind_password']"
                         required
                     />
-                    <p v-if="source" class="mt-1 text-xs text-amber-600">
+                    <p v-if="source" class="mt-1 text-xs text-warning">
                         {{ $t('For security reasons the stored password is never displayed – every edit of this connection requires re-entering it.') }}
                     </p>
                 </div>
@@ -129,9 +129,9 @@
                             type="checkbox"
                             id="use_ssl"
                             v-model="form.config.use_ssl"
-                            class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                            class="h-4 w-4 text-accent-600 focus:ring-accent-600 border-border rounded"
                         />
-                        <label for="use_ssl" class="ml-2 block text-sm text-gray-900">
+                        <label for="use_ssl" class="ml-2 block text-sm text-text">
                             {{ $t('Use SSL (LDAPS)') }}
                         </label>
                     </div>
@@ -141,13 +141,13 @@
                             type="checkbox"
                             id="use_tls"
                             v-model="form.config.use_tls"
-                            class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                            class="h-4 w-4 text-accent-600 focus:ring-accent-600 border-border rounded"
                         />
-                        <label for="use_tls" class="ml-2 block text-sm text-gray-900">
+                        <label for="use_tls" class="ml-2 block text-sm text-text">
                             {{ $t('Use StartTLS') }}
                         </label>
                     </div>
-                    <p class="text-xs text-amber-600">
+                    <p class="text-xs text-warning">
                         {{ $t('Recommended: the bind sends the password in clear text – use SSL (LDAPS) or StartTLS.') }}
                     </p>
                 </div>
@@ -162,7 +162,7 @@
                         rows="3"
                         placeholder="(objectClass=user)"
                     />
-                    <p class="mt-1 text-xs text-gray-500">
+                    <p class="mt-1 text-xs text-text-subtle">
                         {{ $t('LDAP filter to determine which users should be synchronized. Example: (objectClass=user) or (&(objectClass=user)(memberOf=CN=Artwork_Users,OU=Groups,DC=domain,DC=tld))') }}
                     </p>
                 </div>
@@ -176,25 +176,25 @@
                         :error="form.errors['config.identifier_attribute']"
                         placeholder="objectGUID"
                     />
-                    <p class="mt-1 text-xs text-gray-500">
+                    <p class="mt-1 text-xs text-text-subtle">
                         {{ $t('LDAP attribute used as unique identifier (default: objectGUID)') }}
                     </p>
                 </div>
 
                 <!-- Default Role -->
                 <div>
-                    <label for="ldap_default_role" class="block text-sm font-medium text-gray-900 mb-1">
+                    <label for="ldap_default_role" class="block text-sm font-medium text-text mb-1">
                         {{ $t('Default Role') }}
                     </label>
                     <select
                         id="ldap_default_role"
                         v-model="form.config.default_role_id"
-                        class="block w-full rounded-lg border-gray-300 text-sm focus:border-blue-500 focus:ring-blue-500"
+                        class="block w-full rounded-lg border-border text-sm focus:border-accent-600 focus:ring-accent-600"
                     >
                         <option :value="null">{{ $t('No default role') }}</option>
                         <option v-for="role in roles" :key="role.id" :value="role.id">{{ role.name }}</option>
                     </select>
-                    <p class="mt-1 text-xs text-gray-500">
+                    <p class="mt-1 text-xs text-text-subtle">
                         {{ $t('Role assigned to accounts newly provisioned through this connection.') }}
                     </p>
                 </div>
@@ -204,7 +204,7 @@
             <template v-else>
                 <!-- Provider preset selection -->
                 <div>
-                    <label class="block text-sm font-medium text-gray-900 mb-2">
+                    <label class="block text-sm font-medium text-text mb-2">
                         {{ $t('Provider') }}
                     </label>
                     <div class="grid grid-cols-3 gap-3">
@@ -215,8 +215,8 @@
                             @click="form.config.provider_preset = preset.value"
                             class="rounded-lg border px-3 py-3 text-sm font-medium transition"
                             :class="form.config.provider_preset === preset.value
-                                ? 'border-blue-500 bg-blue-50 text-blue-700 ring-1 ring-blue-500'
-                                : 'border-gray-300 text-gray-700 hover:bg-gray-50'"
+                                ? 'border-accent-600 bg-accent-50 text-accent-700 ring-1 ring-accent-600'
+                                : 'border-border text-text-muted hover:bg-surface-sunken'"
                         >
                             {{ preset.label }}
                         </button>
@@ -233,7 +233,7 @@
                         placeholder="00000000-0000-0000-0000-000000000000"
                         required
                     />
-                    <p class="mt-1 text-xs text-gray-500">
+                    <p class="mt-1 text-xs text-text-subtle">
                         {{ $t('Azure AD / Entra tenant ID – it is part of the authority URL.') }}
                     </p>
                 </div>
@@ -248,7 +248,7 @@
                         placeholder="https://idp.example.com/.well-known/openid-configuration"
                         required
                     />
-                    <p class="mt-1 text-xs text-gray-500">
+                    <p class="mt-1 text-xs text-text-subtle">
                         {{ $t('URL of the OpenID Connect discovery document (.well-known/openid-configuration)') }}
                     </p>
                 </div>
@@ -274,7 +274,7 @@
                         :error="form.errors['config.client_secret']"
                         required
                     />
-                    <p v-if="source" class="mt-1 text-xs text-amber-600">
+                    <p v-if="source" class="mt-1 text-xs text-warning">
                         {{ $t('For security reasons the stored client secret is never displayed – every edit of this connection requires re-entering it.') }}
                     </p>
                 </div>
@@ -289,7 +289,7 @@
                             v-model="scopesText"
                             placeholder="openid, profile, email"
                         />
-                        <p class="mt-1 text-xs text-gray-500">
+                        <p class="mt-1 text-xs text-text-subtle">
                             {{ $t('Comma-separated list of requested scopes (default: openid, profile, email)') }}
                         </p>
                     </div>
@@ -303,7 +303,7 @@
                             :error="form.errors['config.identifier_attribute']"
                             placeholder="sub"
                         />
-                        <p class="mt-1 text-xs text-gray-500">
+                        <p class="mt-1 text-xs text-text-subtle">
                             {{ $t('OIDC claim used as unique identifier (default: sub)') }}
                         </p>
                     </div>
@@ -317,7 +317,7 @@
                             :error="form.errors['config.groups_claim']"
                             placeholder="groups"
                         />
-                        <p class="mt-1 text-xs text-gray-500">
+                        <p class="mt-1 text-xs text-text-subtle">
                             {{ $t('OIDC claim containing the user\'s groups for role mapping (default: groups)') }}
                         </p>
                     </div>
@@ -332,42 +332,42 @@
                         :error="form.errors['config.allowed_domains']"
                         placeholder="example.com, partner.org"
                     />
-                    <p class="mt-1 text-xs text-gray-500">
+                    <p class="mt-1 text-xs text-text-subtle">
                         {{ $t('Enter the permitted user email domains, for example company.com — not the Artwork domain. Only identities with an email address from these domains may sign in.') }}
                     </p>
                 </div>
 
                 <!-- Default Role -->
                 <div>
-                    <label for="oidc_default_role" class="block text-sm font-medium text-gray-900 mb-1">
+                    <label for="oidc_default_role" class="block text-sm font-medium text-text mb-1">
                         {{ $t('Default Role') }}
                     </label>
                     <select
                         id="oidc_default_role"
                         v-model="form.config.default_role_id"
-                        class="block w-full rounded-lg border-gray-300 text-sm focus:border-blue-500 focus:ring-blue-500"
+                        class="block w-full rounded-lg border-border text-sm focus:border-accent-600 focus:ring-accent-600"
                     >
                         <option :value="null">{{ $t('No default role') }}</option>
                         <option v-for="role in roles" :key="role.id" :value="role.id">{{ role.name }}</option>
                     </select>
-                    <p class="mt-1 text-xs text-gray-500">
+                    <p class="mt-1 text-xs text-text-subtle">
                         {{ $t('Role assigned to accounts newly provisioned through this connection.') }}
                     </p>
                 </div>
 
                 <!-- Redirect URI hint -->
-                <div v-if="source" class="rounded bg-gray-50 border border-gray-200 p-3">
-                    <p class="text-xs font-medium text-gray-700">{{ $t('Redirect URI (register this exact URL in the allowlist at your IdP)') }}</p>
-                    <code class="mt-1 block break-all text-xs text-gray-600">{{ redirectUri }}</code>
+                <div v-if="source" class="rounded bg-surface-sunken border border-border-subtle p-3">
+                    <p class="text-xs font-medium text-text-muted">{{ $t('Redirect URI (register this exact URL in the allowlist at your IdP)') }}</p>
+                    <code class="mt-1 block break-all text-xs text-text-muted">{{ redirectUri }}</code>
                 </div>
-                <p v-else class="text-xs text-gray-500">
+                <p v-else class="text-xs text-text-subtle">
                     {{ $t('The redirect URI becomes available after saving the source.') }}
                 </p>
             </template>
 
             <!-- Connection Test Result -->
             <div v-if="testResult" class="p-3 rounded"
-                 :class="testResult.success ? 'bg-green-50 text-green-800' : 'bg-red-50 text-red-800'">
+                 :class="testResult.success ? 'bg-success-surface text-success' : 'bg-danger-surface text-danger'">
                 <p>{{ testResult.message }}</p>
 
                 <!-- First found users (LDAP preview) -->
@@ -388,9 +388,9 @@
             </div>
 
             <!-- Error Messages -->
-            <div v-if="form.hasErrors" class="bg-red-50 border border-red-200 rounded p-4">
-                <p class="text-sm font-medium text-red-800">{{ $t('Please correct the following errors:') }}</p>
-                <ul class="mt-2 list-disc list-inside text-sm text-red-700">
+            <div v-if="form.hasErrors" class="bg-danger-surface border border-danger-border rounded p-4">
+                <p class="text-sm font-medium text-danger">{{ $t('Please correct the following errors:') }}</p>
+                <ul class="mt-2 list-disc list-inside text-sm text-danger">
                     <li v-for="(error, key) in form.errors" :key="key">
                         {{ Array.isArray(error) ? error[0] : error }}
                     </li>
@@ -410,7 +410,7 @@
                         type="button"
                         @click="testConnection"
                         :disabled="testingConnection || !canTestConnection"
-                        class="px-4 py-2 text-sm bg-blue-50 text-blue-700 rounded hover:bg-blue-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                        class="px-4 py-2 text-sm bg-accent-50 text-accent-700 rounded hover:bg-accent-100 disabled:text-text-subtle disabled:cursor-not-allowed"
                     >
                         <span v-if="testingConnection">{{ $t('Testing...') }}</span>
                         <span v-else>{{ $t('Test Connection') }}</span>
@@ -418,7 +418,7 @@
                 </div>
                 <button
                     type="button"
-                    class="text-sm text-gray-500 hover:text-gray-700"
+                    class="text-sm text-text-subtle hover:text-text-muted"
                     @click="$emit('close')"
                 >
                     {{ $t('Cancel') }}

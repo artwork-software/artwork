@@ -9,7 +9,7 @@
         <div class="grid grid-cols-1 gap-4 lg:h-[74vh] lg:min-h-[30rem] lg:grid-cols-[280px_minmax(0,1fr)]">
             <!-- Linke Spalte: Datenauswahl (lädt vom Server) + Filter (nur clientseitig) -->
             <aside class="space-y-3 lg:min-h-0 lg:overflow-y-auto">
-                <div class="rounded-xl border border-gray-100 bg-white p-3.5 space-y-3">
+                <div class="rounded-xl border border-border-subtle bg-white p-3.5 space-y-3">
                     <ArtworkBaseListbox
                         v-model="selectedCraft"
                         :items="craftsWithAll"
@@ -25,7 +25,7 @@
 
                     <div class="space-y-2">
                         <div class="flex items-center gap-1">
-                            <span class="text-xs font-medium text-gray-700">{{ t('Shift start') }}</span>
+                            <span class="text-xs font-medium text-text-muted">{{ t('Shift start') }}</span>
                             <ToolTipComponent
                                 direction="right"
                                 :tooltip-text="t('This period refers to the start of the shifts to be displayed in the history, not when the change was made. Only shift entries of shifts starting in the specified period are shown in the history.')"
@@ -62,25 +62,25 @@
                             :icon="loadBtnIcon"
                             @click="fetchHistory(true)"
                             class="w-full justify-center"
-                            :class="paramsDirty ? 'ring-2 ring-amber-300' : ''"
+                            :class="paramsDirty ? 'ring-2 ring-warning-border' : ''"
                         >
                             {{ loading ? t('Loading...') : t('Load history') }}
                         </BaseUIButton>
 
-                        <p v-if="paramsDirty" class="text-[11px] text-amber-600">
+                        <p v-if="paramsDirty" class="text-[11px] text-warning">
                             {{ t('Selection changed – reload to update the results.') }}
                         </p>
                     </div>
 
-                    <div v-if="error" class="rounded-lg border border-rose-100 bg-rose-50 px-3 py-2 text-xs text-artwork-messages-error">
+                    <div v-if="error" class="rounded-lg border border-danger-border bg-danger-surface px-3 py-2 text-xs text-danger">
                         {{ error }}
                     </div>
                 </div>
 
-                <div class="rounded-xl border border-gray-100 bg-white p-3.5 space-y-3">
+                <div class="rounded-xl border border-border-subtle bg-white p-3.5 space-y-3">
                     <div class="flex items-center justify-between">
                         <div class="flex items-center gap-1">
-                            <span class="text-[10px] font-semibold uppercase tracking-wide text-gray-500">{{ t('Filters') }}</span>
+                            <span class="text-[10px] font-semibold uppercase tracking-wide text-text-subtle">{{ t('Filters') }}</span>
                             <ToolTipComponent
                                 direction="right"
                                 :tooltip-text="t('Filters narrow the loaded entries. Press Enter in search to reload all matching history entries.')"
@@ -90,7 +90,7 @@
                         </div>
                         <button
                             type="button"
-                            class="text-[11px] text-gray-500 underline underline-offset-2 transition-colors hover:text-gray-900 disabled:cursor-not-allowed disabled:opacity-50"
+                            class="text-[11px] text-text-subtle underline underline-offset-2 transition-colors hover:text-text disabled:cursor-not-allowed disabled:text-text-subtle"
                             :disabled="loading"
                             @click="resetFilters"
                         >
@@ -188,33 +188,33 @@
             <!-- Rechte Spalte: Ergebnisse – füllt die Modalhöhe, nur die Liste scrollt -->
             <section class="min-w-0 flex flex-col gap-4 lg:min-h-0">
                 <div class="grid grid-cols-3 gap-3 shrink-0">
-                    <div class="rounded-xl border border-gray-100 bg-white p-3">
-                        <div class="text-[10px] text-gray-500">{{ t('Shifts') }}</div>
-                        <div class="mt-1 text-lg text-gray-900">
+                    <div class="rounded-xl border border-border-subtle bg-white p-3">
+                        <div class="text-[10px] text-text-subtle">{{ t('Shifts') }}</div>
+                        <div class="mt-1 text-lg text-text">
                             <CountUp :value="shifts.length" />
                         </div>
                     </div>
 
-                    <div class="rounded-xl border border-gray-100 bg-white p-3">
-                        <div class="text-[10px] text-gray-500">{{ t('Entries') }}</div>
-                        <div class="mt-1 text-lg text-gray-900">
+                    <div class="rounded-xl border border-border-subtle bg-white p-3">
+                        <div class="text-[10px] text-text-subtle">{{ t('Entries') }}</div>
+                        <div class="mt-1 text-lg text-text">
                             <CountUp :value="meta.total" />
                         </div>
                     </div>
 
-                    <div class="rounded-xl border border-gray-100 bg-white p-3">
-                        <div class="text-[10px] text-gray-500">{{ t('Visible') }}</div>
-                        <div class="mt-1 text-lg text-gray-900">
+                    <div class="rounded-xl border border-border-subtle bg-white p-3">
+                        <div class="text-[10px] text-text-subtle">{{ t('Visible') }}</div>
+                        <div class="mt-1 text-lg text-text">
                             <CountUp :value="filteredLogs.length" />
                         </div>
                     </div>
                 </div>
 
                 <!-- Noch nichts geladen: erst der Klick auf "Verlauf laden" holt Daten -->
-                <div v-if="!hasLoaded && !loading" class="flex-1 flex flex-col items-center justify-center rounded-xl border border-dashed border-gray-200 bg-gray-50/60 px-6 py-10 text-center">
-                    <IconHistory class="h-8 w-8 text-gray-300" stroke-width="1.5" />
-                    <p class="mt-3 text-sm font-medium text-gray-900">{{ t('Nothing loaded yet') }}</p>
-                    <p class="mt-1 text-xs text-gray-500">{{ t('Choose a craft and period on the left, then load the shift history.') }}</p>
+                <div v-if="!hasLoaded && !loading" class="flex-1 flex flex-col items-center justify-center rounded-xl border border-dashed border-border bg-surface-sunken/60 px-6 py-10 text-center">
+                    <IconHistory class="h-8 w-8 text-text-subtle" stroke-width="1.5" />
+                    <p class="mt-3 text-sm font-medium text-text">{{ t('Nothing loaded yet') }}</p>
+                    <p class="mt-1 text-xs text-text-subtle">{{ t('Choose a craft and period on the left, then load the shift history.') }}</p>
                     <div class="mt-4 flex justify-center">
                         <BaseUIButton is-add-button icon="IconRefresh" @click="fetchHistory(true)">
                             {{ t('Load history') }}
@@ -222,16 +222,16 @@
                     </div>
                 </div>
 
-                <div v-else-if="loading && !rawLogs.length" class="flex-1 flex items-center justify-center rounded-xl border border-gray-100 bg-white px-6 py-10 text-sm text-gray-500">
+                <div v-else-if="loading && !rawLogs.length" class="flex-1 flex items-center justify-center rounded-xl border border-border-subtle bg-white px-6 py-10 text-sm text-text-subtle">
                     {{ t('Loading...') }}
                 </div>
 
-                <div v-else-if="!filteredLogs.length" class="flex-1 rounded-xl border border-gray-100 bg-white p-5 text-sm text-gray-600">
-                    <div class="font-medium text-gray-900">{{ t('No history entries available for this selection yet.') }}</div>
-                    <div class="mt-1 text-gray-600">{{ t('Try adjusting filters or expanding the date range.') }}</div>
+                <div v-else-if="!filteredLogs.length" class="flex-1 rounded-xl border border-border-subtle bg-white p-5 text-sm text-text-muted">
+                    <div class="font-medium text-text">{{ t('No history entries available for this selection yet.') }}</div>
+                    <div class="mt-1 text-text-muted">{{ t('Try adjusting filters or expanding the date range.') }}</div>
                 </div>
 
-                <div v-else class="flex-1 lg:min-h-0 rounded-xl border border-gray-100 bg-white">
+                <div v-else class="flex-1 lg:min-h-0 rounded-xl border border-border-subtle bg-white">
                     <div class="h-full px-5 py-5 overflow-y-auto pr-4 space-y-5">
                         <div v-for="group in groupedLogs" :key="group.dayKey" class="space-y-3">
                             <DividerChip :label="group.unknown ? t('Unknown date') : formatDate(group.dayLabel)" variant="brand" />
@@ -240,41 +240,41 @@
                                 <li
                                     v-for="entry in group.items"
                                     :key="entry.id"
-                                    class="rounded-xl border-2 border-zinc-900 bg-white overflow-hidden hover:shadow-md transition"
+                                    class="rounded-xl border-2 border-surface-inverse bg-white overflow-hidden hover:shadow-md transition"
                                 >
                                     <!-- Sammel-Eintrag (Festschreibung KW/Zeitraum): eigene Karte statt Schicht-Card -->
-                                    <div v-if="entry.commitSummary" class="bg-gray-50/70 px-4 py-2.5 border-b border-gray-100">
+                                    <div v-if="entry.commitSummary" class="bg-surface-sunken/70 px-4 py-2.5 border-b border-border-subtle">
                                         <div class="flex items-center justify-between mb-1.5">
-                                            <p class="text-[10px] font-semibold uppercase tracking-wide text-gray-500">
+                                            <p class="text-[10px] font-semibold uppercase tracking-wide text-text-subtle">
                                                 {{ t('Commitment') }}
                                             </p>
                                         </div>
                                         <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                                            <div class="rounded-lg bg-white px-2 py-1.5 border border-gray-100" :class="entry.commitSummary.week ? '' : 'col-span-2'">
-                                                <p class="text-[10px] text-gray-500 uppercase tracking-wide">{{ t('Period') }}</p>
-                                                <p class="text-[11px] font-medium text-gray-900">{{ entry.shiftDetails.dateLabel }}</p>
+                                            <div class="rounded-lg bg-white px-2 py-1.5 border border-border-subtle" :class="entry.commitSummary.week ? '' : 'col-span-2'">
+                                                <p class="text-[10px] text-text-subtle uppercase tracking-wide">{{ t('Period') }}</p>
+                                                <p class="text-[11px] font-medium text-text">{{ entry.shiftDetails.dateLabel }}</p>
                                             </div>
-                                            <div v-if="entry.commitSummary.week" class="rounded-lg bg-white px-2 py-1.5 border border-gray-100">
-                                                <p class="text-[10px] text-gray-500 uppercase tracking-wide">{{ t('Calendar week') }}</p>
-                                                <p class="text-[11px] font-medium text-gray-900">{{ entry.commitSummary.week }}{{ entry.commitSummary.year ? '/' + entry.commitSummary.year : '' }}</p>
+                                            <div v-if="entry.commitSummary.week" class="rounded-lg bg-white px-2 py-1.5 border border-border-subtle">
+                                                <p class="text-[10px] text-text-subtle uppercase tracking-wide">{{ t('Calendar week') }}</p>
+                                                <p class="text-[11px] font-medium text-text">{{ entry.commitSummary.week }}{{ entry.commitSummary.year ? '/' + entry.commitSummary.year : '' }}</p>
                                             </div>
-                                            <div class="rounded-lg bg-white px-2 py-1.5 border border-gray-100">
-                                                <p class="text-[10px] text-gray-500 uppercase tracking-wide">{{ t('Craft') }}</p>
-                                                <p class="text-[11px] font-medium text-gray-900 truncate">{{ entry.shiftDetails.craft }}</p>
+                                            <div class="rounded-lg bg-white px-2 py-1.5 border border-border-subtle">
+                                                <p class="text-[10px] text-text-subtle uppercase tracking-wide">{{ t('Craft') }}</p>
+                                                <p class="text-[11px] font-medium text-text truncate">{{ entry.shiftDetails.craft }}</p>
                                             </div>
-                                            <div class="rounded-lg bg-white px-2 py-1.5 border border-gray-100">
-                                                <p class="text-[10px] text-gray-500 uppercase tracking-wide">{{ t('Shifts') }}</p>
-                                                <p class="text-[11px] font-medium text-gray-900">{{ entry.commitSummary.count ?? '–' }}</p>
+                                            <div class="rounded-lg bg-white px-2 py-1.5 border border-border-subtle">
+                                                <p class="text-[10px] text-text-subtle uppercase tracking-wide">{{ t('Shifts') }}</p>
+                                                <p class="text-[11px] font-medium text-text">{{ entry.commitSummary.count ?? '–' }}</p>
                                             </div>
                                         </div>
                                     </div>
 
                                     <!-- Schicht-Card: die betroffenen Schichtdaten klar dargestellt -->
-                                    <div v-else class="bg-gray-50/70 px-4 py-2.5 border-b border-gray-100">
+                                    <div v-else class="bg-surface-sunken/70 px-4 py-2.5 border-b border-border-subtle">
                                         <div class="flex items-center justify-between mb-1.5">
-                                            <p class="text-[10px] font-semibold uppercase tracking-wide text-gray-500">
+                                            <p class="text-[10px] font-semibold uppercase tracking-wide text-text-subtle">
                                                 {{ t('Shift') }}
-                                                <span v-if="entry.shiftDetails.id" class="text-gray-400">#{{ entry.shiftDetails.id }}</span>
+                                                <span v-if="entry.shiftDetails.id" class="text-text-subtle">#{{ entry.shiftDetails.id }}</span>
                                             </p>
                                             <!-- Kategorie-Chips: gleiche Begriffe wie im Aktion-Filter, damit die
                                                  Zuordnung der Einträge zu den Filteroptionen sichtbar ist -->
@@ -287,13 +287,13 @@
                                                 </span>
                                                 <span
                                                     v-if="entry.context === 'post_commit'"
-                                                    class="inline-flex items-center rounded-full border border-orange-200 bg-orange-50 px-2 py-0.5 text-[10px] font-medium text-orange-700"
+                                                    class="inline-flex items-center rounded-full border border-warning-border bg-warning-surface px-2 py-0.5 text-[10px] font-medium text-warning"
                                                 >
                                                     {{ t('Post-commit') }}
                                                 </span>
                                                 <span
                                                     v-if="entry.shiftDetails.deleted"
-                                                    class="inline-flex items-center gap-1 rounded-full border border-rose-200 bg-rose-50 px-2 py-0.5 text-[10px] font-medium text-rose-600"
+                                                    class="inline-flex items-center gap-1 rounded-full border border-danger-border bg-danger-surface px-2 py-0.5 text-[10px] font-medium text-danger"
                                                 >
                                                     <IconTrash class="h-3 w-3" />
                                                     {{ t('Subsequently deleted') }}
@@ -302,25 +302,25 @@
                                         </div>
                                         <!-- Alle Schicht-Metadaten in EINER Zeile (inkl. Projekt) — spart Höhe -->
                                         <div class="grid grid-cols-2 sm:grid-cols-5 gap-2">
-                                            <div class="rounded-lg bg-white px-2 py-1.5 border border-gray-100">
-                                                <p class="text-[10px] text-gray-500 uppercase tracking-wide">{{ t('Date') }}</p>
-                                                <p class="text-[11px] font-medium text-gray-900 truncate">{{ entry.shiftDetails.dateLabel }}</p>
+                                            <div class="rounded-lg bg-white px-2 py-1.5 border border-border-subtle">
+                                                <p class="text-[10px] text-text-subtle uppercase tracking-wide">{{ t('Date') }}</p>
+                                                <p class="text-[11px] font-medium text-text truncate">{{ entry.shiftDetails.dateLabel }}</p>
                                             </div>
-                                            <div class="rounded-lg bg-white px-2 py-1.5 border border-gray-100">
-                                                <p class="text-[10px] text-gray-500 uppercase tracking-wide">{{ t('Time') }}</p>
-                                                <p class="text-[11px] font-medium text-gray-900 truncate">{{ entry.shiftDetails.timeLabel }}</p>
+                                            <div class="rounded-lg bg-white px-2 py-1.5 border border-border-subtle">
+                                                <p class="text-[10px] text-text-subtle uppercase tracking-wide">{{ t('Time') }}</p>
+                                                <p class="text-[11px] font-medium text-text truncate">{{ entry.shiftDetails.timeLabel }}</p>
                                             </div>
-                                            <div class="rounded-lg bg-white px-2 py-1.5 border border-gray-100">
-                                                <p class="text-[10px] text-gray-500 uppercase tracking-wide">{{ t('Craft') }}</p>
-                                                <p class="text-[11px] font-medium text-gray-900 truncate">{{ entry.shiftDetails.craft }}</p>
+                                            <div class="rounded-lg bg-white px-2 py-1.5 border border-border-subtle">
+                                                <p class="text-[10px] text-text-subtle uppercase tracking-wide">{{ t('Craft') }}</p>
+                                                <p class="text-[11px] font-medium text-text truncate">{{ entry.shiftDetails.craft }}</p>
                                             </div>
-                                            <div class="rounded-lg bg-white px-2 py-1.5 border border-gray-100">
-                                                <p class="text-[10px] text-gray-500 uppercase tracking-wide">{{ t('Room') }}</p>
-                                                <p class="text-[11px] font-medium text-gray-900 truncate">{{ entry.shiftDetails.room }}</p>
+                                            <div class="rounded-lg bg-white px-2 py-1.5 border border-border-subtle">
+                                                <p class="text-[10px] text-text-subtle uppercase tracking-wide">{{ t('Room') }}</p>
+                                                <p class="text-[11px] font-medium text-text truncate">{{ entry.shiftDetails.room }}</p>
                                             </div>
-                                            <div class="rounded-lg bg-white px-2 py-1.5 border border-gray-100" :title="entry.shiftDetails.project">
-                                                <p class="text-[10px] text-gray-500 uppercase tracking-wide">{{ t('Project') }}</p>
-                                                <p class="text-[11px] font-medium text-gray-900 truncate">{{ entry.shiftDetails.project }}</p>
+                                            <div class="rounded-lg bg-white px-2 py-1.5 border border-border-subtle" :title="entry.shiftDetails.project">
+                                                <p class="text-[10px] text-text-subtle uppercase tracking-wide">{{ t('Project') }}</p>
+                                                <p class="text-[11px] font-medium text-text truncate">{{ entry.shiftDetails.project }}</p>
                                             </div>
                                         </div>
                                     </div>
@@ -328,10 +328,10 @@
                                     <!-- Vorgang: was passiert ist + wer & wann — in EINER Zeile, spart Höhe -->
                                     <div class="px-4 py-2.5">
                                         <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                                            <p class="min-w-0 text-sm leading-5 text-gray-900 whitespace-pre-wrap">
+                                            <p class="min-w-0 text-sm leading-5 text-text whitespace-pre-wrap">
                                                 {{ entry.message }}
                                             </p>
-                                            <span class="shrink-0 self-end sm:self-auto inline-flex items-center gap-2 rounded-full bg-zinc-900 px-3 py-1 text-[11px] font-medium text-white">
+                                            <span class="shrink-0 self-end sm:self-auto inline-flex items-center gap-2 rounded-full bg-surface-inverse px-3 py-1 text-[11px] font-medium text-text-inverse">
                                                 <span class="inline-flex h-5 w-5 items-center justify-center rounded-full bg-white/20 text-[9px]">
                                                     {{ entry.causerInitials }}
                                                 </span>
@@ -341,31 +341,31 @@
 
                                         <!-- Änderung (Vorher/Nachher-Vergleich) -->
                                         <div v-if="entry.changes.length" class="mt-2.5">
-                                            <p class="text-[10px] font-semibold uppercase tracking-wide text-gray-500 mb-1">
+                                            <p class="text-[10px] font-semibold uppercase tracking-wide text-text-subtle mb-1">
                                                 {{ t('Modification') }}
                                             </p>
-                                            <div class="rounded-lg border border-gray-100 bg-gray-50/70 p-3">
+                                            <div class="rounded-lg border border-border-subtle bg-surface-sunken/70 p-3">
                                                 <table class="w-full border-collapse text-[11px]">
                                                     <thead>
-                                                    <tr class="text-gray-500 text-[10px]">
+                                                    <tr class="text-text-subtle text-[10px]">
                                                         <th class="text-left font-medium pb-2 pr-3">{{ t('Field') }}</th>
                                                         <th class="text-left font-medium pb-2 pr-3">{{ t('Before') }}</th>
                                                         <th class="text-left font-medium pb-2">{{ t('After') }}</th>
                                                     </tr>
                                                     </thead>
-                                                    <tbody class="divide-y divide-gray-100">
+                                                    <tbody class="divide-y divide-border-subtle">
                                                     <tr
                                                         v-for="change in entry.changes"
                                                         :key="change.fieldName + '-' + change.index"
                                                         class="align-top"
                                                     >
-                                                        <td class="py-2 pr-3 text-gray-700">
+                                                        <td class="py-2 pr-3 text-text-muted">
                                                             {{ fieldLabel(change.fieldName) }}
                                                         </td>
-                                                        <td class="py-2 pr-3 text-gray-500">
+                                                        <td class="py-2 pr-3 text-text-subtle">
                                                             {{ formatFieldValue(change.fieldName, change.oldValue) }}
                                                         </td>
-                                                        <td class="py-2 text-gray-900">
+                                                        <td class="py-2 text-text">
                                                             {{ formatFieldValue(change.fieldName, change.newValue) }}
                                                         </td>
                                                     </tr>
@@ -522,11 +522,11 @@ const onlyPostCommit = ref(false)
 type ActionCategory = 'staffing' | 'shift_data' | 'lifecycle' | 'commitment' | 'other'
 
 const ACTION_META: Record<ActionCategory, { label: string; description: string; chip: string }> = {
-    staffing: { label: 'Staffing', description: 'Person assigned to or removed from a shift.', chip: 'border-blue-200 bg-blue-50 text-blue-700' },
-    shift_data: { label: 'Shift details', description: 'Times, room, qualifications or similar changed.', chip: 'border-amber-200 bg-amber-50 text-amber-700' },
-    lifecycle: { label: 'Shift created/deleted', description: 'Shift created, deleted or restored.', chip: 'border-violet-200 bg-violet-50 text-violet-700' },
-    commitment: { label: 'Commitment & request', description: 'Shifts committed, commitment revoked or requested for approval.', chip: 'border-emerald-200 bg-emerald-50 text-emerald-700' },
-    other: { label: 'Other', description: 'Rare entries that do not fit any other category, e.g. older log entries.', chip: 'border-gray-200 bg-gray-50 text-gray-600' },
+    staffing: { label: 'Staffing', description: 'Person assigned to or removed from a shift.', chip: 'border-accent-200 bg-accent-50 text-accent-700' },
+    shift_data: { label: 'Shift details', description: 'Times, room, qualifications or similar changed.', chip: 'border-warning-border bg-warning-surface text-warning' },
+    lifecycle: { label: 'Shift created/deleted', description: 'Shift created, deleted or restored.', chip: 'border-border-strong bg-surface-sunken text-text' },
+    commitment: { label: 'Commitment & request', description: 'Shifts committed, commitment revoked or requested for approval.', chip: 'border-success-border bg-success-surface text-success' },
+    other: { label: 'Other', description: 'Rare entries that do not fit any other category, e.g. older log entries.', chip: 'border-border-subtle bg-surface-sunken text-text-muted' },
 }
 
 const categoryLabel = (category: ActionCategory) => t(ACTION_META[category].label)

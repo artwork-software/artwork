@@ -1,10 +1,10 @@
 <template>
     <div v-if="!project.is_group && project?.groups?.length > 0">
-        <div class="xsDark">
+        <div class="text-sm/5 font-semibold text-text">
             {{ $t('Belongs to') }}
         </div>
         <div v-if="project?.groups?.length > 0" class="flex items-center gap-4 mt-3">
-            <div v-for="(groupProject, index) in project?.groups" class="group block shrink-0 bg-artwork-buttons-create/80 w-fit rounded-full border border-artwork-buttons-create/90 hover:bg-artwork-buttons-create duration-200 ease-in-out">
+            <div v-for="(groupProject, index) in project?.groups" class="group block shrink-0 bg-accent-600/80 w-fit rounded-full border border-accent-600/90 hover:bg-accent-600 duration-200 ease-in-out">
                 <Link :disabled="checkPermission(groupProject)" :href="route('projects.tab', {project: groupProject?.id, projectTab: first_project_tab_id})" class="flex items-center text-white py-2 px-2">
                     <component :is="groupProject?.icon" class="size-5" />
                     <div class="mx-2">
@@ -17,8 +17,8 @@
 </template>
 
 <script setup>
+import {IconX} from "@tabler/icons-vue";
 
-import {XIcon} from "@heroicons/vue/outline";
 import Button from "@/Jetstream/Button.vue";
 import {Link, usePage} from "@inertiajs/vue3";
 import {usePermission} from "@/Composeables/Permission.js";

@@ -14,19 +14,19 @@
                                 <span v-if="selectedRoom === null">{{ $t('No room displacement')}}</span>
                                 <div v-else> {{ selectedRoom?.name }}</div>
                                 <div class="mr-3">
-                                    <ChevronDownIcon class="h-5 w-5 text-gray-400" aria-hidden="true"/>
+                                    <IconChevronDown class="h-5 w-5 text-text-subtle" aria-hidden="true"/>
                                 </div>
                             </ListboxButton>
-                            <ListboxOptions class="absolute w-full bg-artwork-navigation-background shadow-lg max-h-32 overflow-y-scroll rounded-md focus:outline-none z-10">
+                            <ListboxOptions class="absolute w-full bg-surface-inverse shadow-lg max-h-32 overflow-y-scroll rounded-md z-10">
                                 <ListboxOption as="template" class="p-2 text-sm"
                                                :value="null"
                                                v-slot="{ active, selected }">
-                                    <li :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'rounded-md cursor-pointer flex justify-between']">
-                                        <div :class="[selected ? 'xsWhiteBold' : '', 'truncate']">
+                                    <li :class="[active ? 'bg-text-inverse/10 text-accent-700' : 'text-text-subtle', 'rounded-md cursor-pointer flex justify-between']">
+                                        <div :class="[selected ? 'text-sm/5 font-bold text-white' : '', 'truncate']">
                                             {{ $t('No room displacement')}}
                                         </div>
                                         <div v-if="selected">
-                                            <CheckIcon v-if="selected" class="h-5 w-5 text-success" aria-hidden="true"/>
+                                            <IconCheck v-if="selected" class="h-5 w-5 text-success" aria-hidden="true"/>
                                         </div>
                                     </li>
                                 </ListboxOption>
@@ -35,12 +35,12 @@
                                                :key="room.id"
                                                :value="room"
                                                v-slot="{ active, selected }">
-                                    <li :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'rounded-md cursor-pointer flex justify-between']">
-                                        <div :class="[selected ? 'xsWhiteBold' : '', 'truncate']">
+                                    <li :class="[active ? 'bg-text-inverse/10 text-accent-700' : 'text-text-subtle', 'rounded-md cursor-pointer flex justify-between']">
+                                        <div :class="[selected ? 'text-sm/5 font-bold text-white' : '', 'truncate']">
                                             {{ room.name }}
                                         </div>
                                         <div v-if="selected">
-                                            <CheckIcon v-if="selected" class="h-5 w-5 text-success" aria-hidden="true"/>
+                                            <IconCheck v-if="selected" class="h-5 w-5 text-success" aria-hidden="true"/>
                                         </div>
                                     </li>
                                 </ListboxOption>
@@ -55,21 +55,21 @@
                                 <ListboxButton class="menu-button">
                                     <div> {{ selectedCalculationType.type }}</div>
                                     <div class="mr-3">
-                                        <ChevronDownIcon class="h-5 w-5 text-gray-400" aria-hidden="true"/>
+                                        <IconChevronDown class="h-5 w-5 text-text-subtle" aria-hidden="true"/>
                                     </div>
                                 </ListboxButton>
-                                <ListboxOptions class="absolute w-full bg-artwork-navigation-background shadow-lg max-h-32 overflow-y-scroll rounded-md focus:outline-none z-10">
+                                <ListboxOptions class="absolute w-full bg-surface-inverse shadow-lg max-h-32 overflow-y-scroll rounded-md z-10">
                                     <ListboxOption as="template" class="p-2 text-sm"
                                                    v-for="calculation in calculationTypes"
                                                    :key="calculation.id"
                                                    :value="calculation"
                                                    v-slot="{ active, selected }">
-                                        <li :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'rounded-md cursor-pointer flex justify-between']">
-                                            <div :class="[selected ? 'xsWhiteBold' : '', 'truncate']">
+                                        <li :class="[active ? 'bg-text-inverse/10 text-accent-700' : 'text-text-subtle', 'rounded-md cursor-pointer flex justify-between']">
+                                            <div :class="[selected ? 'text-sm/5 font-bold text-white' : '', 'truncate']">
                                                 {{ calculation.type }}
                                             </div>
                                             <div v-if="selected">
-                                                <CheckIcon v-if="selected" class="h-5 w-5 text-success" aria-hidden="true"/>
+                                                <IconCheck v-if="selected" class="h-5 w-5 text-success" aria-hidden="true"/>
                                             </div>
                                         </li>
                                     </ListboxOption>
@@ -90,21 +90,21 @@
                                 <ListboxButton class="menu-button">
                                     <div> {{ selectedTimeType.value }}</div>
                                     <div class="mr-3">
-                                        <ChevronDownIcon class="h-5 w-5 text-gray-400" aria-hidden="true"/>
+                                        <IconChevronDown class="h-5 w-5 text-text-subtle" aria-hidden="true"/>
                                     </div>
                                 </ListboxButton>
-                                <ListboxOptions class="absolute bg-artwork-navigation-background shadow-lg max-h-32 overflow-y-scroll rounded-md focus:outline-none z-10">
+                                <ListboxOptions class="absolute bg-surface-inverse shadow-lg max-h-32 overflow-y-scroll rounded-md z-10">
                                     <ListboxOption as="template" class="p-2 text-sm"
                                                    v-for="time in timeTypes"
                                                    :key="time.id"
                                                    :value="time"
                                                    v-slot="{ active, selected }">
-                                        <li :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'rounded-md cursor-pointer flex justify-between']">
-                                            <div :class="[selected ? 'xsWhiteBold' : '', 'truncate']">
+                                        <li :class="[active ? 'bg-text-inverse/10 text-accent-700' : 'text-text-subtle', 'rounded-md cursor-pointer flex justify-between']">
+                                            <div :class="[selected ? 'text-sm/5 font-bold text-white' : '', 'truncate']">
                                                 {{ time.value }}
                                             </div>
                                             <div v-if="selected">
-                                                <CheckIcon v-if="selected" class="h-5 w-5 text-success" aria-hidden="true"/>
+                                                <IconCheck v-if="selected" class="h-5 w-5 text-success" aria-hidden="true"/>
                                             </div>
                                         </li>
                                     </ListboxOption>
@@ -122,10 +122,9 @@
 </template>
 
 <script setup>
+import {IconCheck, IconChevronDown} from "@tabler/icons-vue";
 import { ref } from "vue";
 import { useI18n } from "vue-i18n";
-import { ChevronDownIcon } from "@heroicons/vue/outline";
-import { CheckIcon } from "@heroicons/vue/solid";
 import {
     Listbox,
     ListboxButton,

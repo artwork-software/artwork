@@ -1,7 +1,7 @@
 <template>
     <BaseModal v-if="show" @closed="close">
         <div class="add-column-modal-container">
-            <h1 class="headline1">
+            <h1 class="font-lexend font-black text-[clamp(24px,3vw,30px)]/[34px] text-text">
                 {{ $t('Create new column') }}
             </h1>
             <div class="new-column-form">
@@ -28,7 +28,7 @@
                                                 v-model="newColumnNewSelectOptionName"
                                                 :label="$t('New selection option')"
                                                 @keyup.enter="addNewColumnNewSelectOption()"/>
-                            <PlusCircleIcon v-if="newColumnNewSelectOptionName.length > 0"
+                            <IconCirclePlus v-if="newColumnNewSelectOptionName.length > 0"
                                       class="icon"
                                       @click="addNewColumnNewSelectOption()"/>
                         </div>
@@ -44,7 +44,7 @@
                                        :value="option"
                                        type="radio"/>
                                 <label :for="'radio-option-' + index">{{ $t('Default value') }}</label>
-                                <TrashIcon class="icon"
+                                <IconTrash class="icon"
                                            @click="removeNewColumnNewSelectOption(index)"/>
                             </div>
                         </div>
@@ -64,7 +64,7 @@
 </template>
 
 <script setup>
-import {PlusCircleIcon, TrashIcon} from "@heroicons/vue/outline";
+import {IconCirclePlus, IconTrash} from "@tabler/icons-vue";
 import {ref} from "vue";
 import {useForm} from "@inertiajs/vue3";
 import BaseModal from "@/Components/Modals/BaseModal.vue";

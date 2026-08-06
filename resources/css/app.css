@@ -1,96 +1,99 @@
 @import "tailwindcss";
+
+/* ============================================================
+   Design-Basis v2 »Bühnenlicht« — semantische Token-Ebene (design-basis.md §0/§1)
+   ============================================================ */
 @theme {
-    /* Farben */
-    --color-primary: #222;
-    --color-primary-hover: #372F60;
-    --color-success: #1FC687;
-    --color-error: #FD6D73;
-    --color-secondary: #A7A6B1;
-    --color-calendar-text: #333;
-    --color-secondary-hover: #FCFCFB;
-    --color-dark-input-bg: rgba(252,252,251,0.15);
-    --color-dark-input-text: #D8D7DE;
-    --color-help: #93929D;
-    --color-dark-gray: #616069;
-    --color-dark-gray-bg: rgba(255,255,255,0.15);
-    --color-background-gray: #F5F5F3;
-    --color-background-gray2: #e3e3e3;
-    --color-button-blue: #3017AD;
-    --color-button-hover: #2D1FDE;
-    --color-tag-bg: rgba(48,23,173,0.1);
-    --color-tag-bg-gray: rgba(94,92,102,1);
-    --color-tag-bg-green: rgba(48,217,0,0.1);
-    --color-tag: rgba(48,23,173,0.3);
-    --color-tag-text: rgba(48,23,173,1);
-    --color-tag-text-green: rgba(48,80,0,1);
-    --color-background-blue: #3017AD34;
-    --color-light-background-gray: #F4F4F3;
-    --color-lightBackgroundGray: #F4F4F3;
-    --color-checkbox-bg: #474459;
-    --color-silver-gray: #CECDD8;
-    --color-user-bg: #EDEDEC;
-    --color-action: #e4eef5;
-    --color-menu-button-blue: #3017AD;
-    --color-shift-text: #82818A;
-    --color-link-on-dark: #BDB6F0;
+    /* ---------- Flächen ---------- */
+    --color-surface-canvas:  #F2F3F5;   /* Seitenhintergrund (v2, kühl) */
+    --color-surface:         #FFFFFF;   /* Karten, Tabellen, Modal */
+    --color-surface-sunken:  #F4F5F6;   /* Modal-Footer, Zebra */
+    --color-surface-header:  #FBFBFC;   /* Tabellenkopf */
+    --color-surface-hover:   #EFF4F9;   /* Zeilen-Hover, akzentgetönt */
+    --color-surface-inverse: #222831;   /* Band: Navigation, Toolbar, Kalender-/Modalkopf */
 
-    /* Artwork Farben */
-    --color-artwork-navigation-background: #222831;
-    --color-artwork-navigation-color: #eee;
-    --color-artwork-success: #25cd0e;
-    --color-artwork-warning: #ecce00;
-    --color-artwork-error: #ef4444;
-    --color-artwork-info: #a7a6b1;
-    --color-artwork-buttons-context: #6f6f6f;
-    --color-artwork-buttons-create: #3073ae;
-    --color-artwork-buttons-default: #2a3d75;
-    --color-artwork-buttons-hover: #1c77d7;
-    --color-artwork-buttons-update: #2a3d75;
-    --color-artwork-context-light: #e8e8e8;
-    --color-artwork-context-dark: #6f6f6f;
-    --color-artwork-project-bg: #eee;
-    --color-icon-default-bg: rgba(48,115,174,0.1);
-    --color-icon-default-color: #3073ae;
-    --color-icon-darkgreen-bg: rgba(56,173,23,0.1);
-    --color-icon-darkgreen-color: #21ad17;
+    /* ---------- Rahmen ---------- */
+    --color-border-hairline: #EEEFF1;   /* Zeilentrenner */
+    --color-border-subtle:   #E3E5E9;   /* Karten, Segmented-Track */
+    --color-border:          #C9CDD3;   /* Eingaben, Buttons */
+    --color-border-strong:   #8B929C;   /* Datenraster, 3:1-Pflicht */
 
-    /* Schrift */
-    --font-size-header: 30px;
-    --font-family-sans: Inter, system-ui, sans-serif;
-    --font-family-nanum: "Nanum Pen Script";
-    --font-family-lexend: "Lexend";
-    --font-weight-header: 900;
-    --font-lexend: "Lexend", sans-serif;
+    /* ---------- Text (Kontrast auf --color-surface) ---------- */
+    --color-text:            #1C1F24;   /* 15,1:1 */
+    --color-text-muted:      #5F6169;   /*  6,3:1 */
+    --color-text-subtle:     #74767E;   /*  4,6:1 — Minimum für Text */
+    --color-text-inverse:    #F4F4F2;   /* auf dem Band */
+    --color-text-inverse-muted: #A9B1BC; /* Kontextzeilen auf dem Band, nie unter 11,5px */
 
-    /* Schatten */
-    --shadow-button-blue: 0 35px 60px -15px #2D1FDE;
-    --shadow-card: 0px 4px 25px #27233c47;
-    --shadow-artwork-card: 0 3px 10px rgba(0,0,0,0.2);
-    /*--shadow-glass: inset 0px 0.5px 0px hsla(0, 0%, 100%, 0.2),
-    inset 0px 0px 8px 2px hsla(0, 0%, 100%, 0.12),
-    0px 0.5px 2px rgba(0, 0, 0, 0.08),
-    0px 2px 16px -4px rgba(0, 0, 0, 0.1);*/
-    --shadow-glass: inset 0px 0.5px 0px 0px hsla(0, 0%, 100%, 0.2), inset 0px 0px 8px 2px hsla(0, 0%, 100%, 0.12), 0px 0.5px 2px 0px rgba(0, 0, 0, 0.08), 0px 2px 16px -4px rgba(0, 0, 0, 0.1);
-    --shadow-glass-small: inset 0px 0.5px 0px 0px hsla(0, 0%, 100%, 0.2),
-    inset 0px 0px 8px 2px hsla(0, 0%, 100%, 0.12),
-    0px 0.5px 2px 0px rgba(0, 0, 0, 0.08),
-    0px 2px 12px -4px rgba(0, 0, 0, 0.1);
-    --shadow-elevation-two: inset 0px 0.5px 0px hsla(0, 0%, 100%, 0.2),
-    inset 0px 0px 8px 2px hsla(0, 0%, 100%, 0.12),
-    0px 0.5px 2px rgba(0, 0, 0, 0.08),
-    0px 2px 16px -4px rgba(0, 0, 0, 0.1);
-    --shadow-button-glow-light: 0 0 6px 2px rgba(255, 255, 255, 0.6);
+    /* ---------- Akzent (abgeleitet aus Bestands-#3073ae) ---------- */
+    --color-accent-50:       #EEF4FA;
+    --color-accent-100:      #D9E7F4;
+    --color-accent-200:      #B7D0E8;
+    --color-accent-500:      #3073AE;   /* Flächen, Icons — NICHT für Text auf Weiß */
+    --color-accent-600:      #276293;   /* Primär, Links, Fokus — 4,6:1 */
+    --color-accent-700:      #1E4E77;   /* Hover / Aktiv */
+    --color-accent-900:      #14314A;
 
-    /* Flex / Z-Index / Blur */
-    --flex-tags: 1 1 30%;
+    /* ---------- Status ---------- */
+    --color-success:         #157F4F;  --color-success-surface: #E8F5EE;  --color-success-border: #A8D8BF;
+    --color-warning:         #8A5A00;  --color-warning-surface: #FCF3E1;  --color-warning-border: #E8CE92;
+    --color-danger:          #B3261E;  --color-danger-surface:  #FDEDEC;  --color-danger-border:  #F0B9B4;
+    --color-info:            #276293;  --color-info-surface:    #EEF4FA;  --color-info-border:    #B7D0E8;
+
+    /* ---------- Radien ---------- */
+    --radius-sm:   4px;   /* Kalenderkacheln, Zellen */
+    --radius-md:   6px;   /* alle Steuerelemente */
+    --radius-lg:  12px;   /* Karten, Modale, Listen-Container */
+    --radius-pill: 999px; /* Chips, Zähler */
+
+    /* ---------- Elevation ---------- */
+    --shadow-raised:  0 1px 2px rgba(28,31,36,.06), 0 1px 1px rgba(28,31,36,.04);
+    --shadow-overlay: 0 8px 24px -8px rgba(28,31,36,.18), 0 2px 6px rgba(28,31,36,.06);
+    --shadow-card:    0 1px 2px rgba(28,31,36,.06), 0 6px 16px -8px rgba(28,31,36,.10);
+
+    /* ---------- Steuerhöhen ---------- */
+    --control-h-sm: 28px;
+    --control-h-md: 32px;
+    --control-h-lg: 40px;
+
+    /* ---------- Zeilenhöhen ---------- */
+    --row-h:         40px;  /* Standard-Datenzeile */
+    --row-h-project: 44px;  /* Projektlisten (Badges + Avatare) */
+    --row-h-compact: 34px;  /* wählbares Kompakt-Profil */
+
+    /* ---------- Typografie ---------- */
+    --font-heading: Lexend, system-ui, sans-serif;
+    --font-body:    Inter, system-ui, sans-serif;
+    --font-sans:    Inter, system-ui, sans-serif;
+    --font-lexend:  Lexend, system-ui, sans-serif;
+
+    /* ---------- Gelernte Sonderfarben (feste Marker, AA auf Weiß) ----------
+       Für etablierte Spezialfälle: violet = Lifecycle/BI-Chips, pink =
+       "zuletzt angelegt"-Marker (Bulk), orange = Verifizierung/Nachträglich,
+       teal = Ausgleichstage/Sonder-Marker. Nutzergepflegte Farben (Terminarten,
+       Inventar-Status, Räume, Gewerke) kommen weiterhin dynamisch aus der DB. */
+    --color-special-violet:         #6D28D9;
+    --color-special-violet-surface: #F2EEFA;
+    --color-special-violet-border:  #D6C9F0;
+    --color-special-pink:           #B03578;
+    --color-special-pink-surface:   #F9ECF3;
+    --color-special-pink-border:    #EDC2DA;
+    --color-special-orange:         #B04A0A;
+    --color-special-orange-surface: #FAF0E6;
+    --color-special-orange-border:  #F0CBA4;
+    --color-special-teal:           #0F766E;
+    --color-special-teal-surface:   #E7F4F2;
+    --color-special-teal-border:    #A9D8D2;
+
+    /* ---------- Sonstiges (Bestand, weiter genutzt) ---------- */
     --z-100: 100;
-    --blur-27: 27px;
-    --blur-2xl: 40px;
+}
 
-    --bg:#f8fafc;
-    --surface:#ffffff;
-    --text:#0f172a;
-    --accent:#4f46e5;
+
+/* Fokus — verbindlich, nie überschreiben */
+:where(a, button, input, select, textarea, [tabindex]):focus-visible {
+    outline: 2px solid var(--color-accent-600);
+    outline-offset: 2px;
 }
 
 :root {
@@ -140,13 +143,6 @@
 }
 
 @font-face {
-    /* Deko-Handschrift-Font (ex-NanumPenScript), auf Latein subsettet: 3,4 MB TTF -> ~50 KB woff2 */
-    font-family: 'artwork Pen';
-    src: local('artworkPen'), url('../fonts/artworkPen.woff2') format('woff2');
-    font-display: swap;
-}
-
-@font-face {
     font-family: 'Lexend';
     src: local('Lexend-Regular'), url('../fonts/Lexend-Regular.woff2') format('woff2');
     font-display: swap;
@@ -185,222 +181,39 @@
 
     .base-menu-link {
         .base-menu-icon {
-            @apply text-secondary;
+            @apply text-text-subtle;
         }
     }
 
-    .stripes {
-        background-image: url('data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBzdGFuZGFsb25lPSJubyI/PjwhRE9DVFlQRSBzdmcgUFVCTElDICItLy9XM0MvL0RURCBTVkcgMS4xLy9FTiIgImh0dHA6Ly93d3cudzMub3JnL0dyYXBoaWNzL1NWRy8xLjEvRFREL3N2ZzExLmR0ZCI+PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiPjxkZWZzPjxwYXR0ZXJuIGlkPSJwYXR0ZXJuX0tudFciIHBhdHRlcm5Vbml0cz0idXNlclNwYWNlT25Vc2UiIHdpZHRoPSIxNyIgaGVpZ2h0PSIxNyIgcGF0dGVyblRyYW5zZm9ybT0icm90YXRlKDQ1KSI+PGxpbmUgeDE9IjAiIHk9IjAiIHgyPSIwIiB5Mj0iMTciIHN0cm9rZT0iI0YzRjRGNiIgc3Ryb2tlLXdpZHRoPSI2Ii8+PC9wYXR0ZXJuPjwvZGVmcz4gPHJlY3Qgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgZmlsbD0idXJsKCNwYXR0ZXJuX0tudFcpIiBvcGFjaXR5PSIxIi8+PC9zdmc+');
-    }
 
-    .headline1{
-        font: normal normal 900 30px/34px Lexend;
-        letter-spacing: -0.15px;
-        color: #27233C;
-        opacity: 1;
-    }
 
-    .headline2{
-        font: normal normal 600 20px/25px Lexend;
-        letter-spacing: 0.4px;
-        color: #27233C;
-        opacity: 1;
-    }
 
-    .headline3{
-        font: normal normal 600 18px/21px Lexend;
-        letter-spacing: 0.4px;
-        color: #27233C;
-        opacity: 1;
-    }
 
-    .headline3Light{
-        font: normal normal 18px/21px Inter;
-        letter-spacing: 0;
-        color: #A7A6B1;
-        opacity: 1;
-    }
 
-    .headline4{
-        font: normal normal 600 20px/25px Lexend;
-        letter-spacing: -0.1px;
-        color: #27233C;
-        opacity: 1;
-    }
 
-    .headline6Light{
-        font: normal normal 600 10px/19px Inter;
-        letter-spacing: 0.5px;
-        color: #A7A6B1;
-        text-transform: uppercase;
-        opacity: 1;
-    }
 
-    .xxsLight{
-        font: normal normal 12px/18px Inter;
-        letter-spacing: -0.18px;
-        color: #A7A6B1;
-        opacity: 1;
-    }
 
-    .xxsDark{
-        font: normal normal 12px/15px Inter;
-        letter-spacing: 0;
-        color: #27233C;
-        opacity: 1;
-    }
 
-    .xxsDarkBold{
-        font: normal normal 600 12px/15px Inter;
-        letter-spacing: 0;
-        color: #27233C;
-        opacity: 1;
-    }
 
-    .sLight{
-        font: normal normal 16px/19px Inter;
-        letter-spacing: 0.14px;
-        color: #A7A6B1;
-        opacity: 1;
-    }
 
-    .xsLighter{
-        font: normal normal 14px/20px Inter;
-        letter-spacing: 0.14px;
-        color: #CECDD8;
-        opacity: 1;
-    }
 
-    .xsWhiteBold{
-        font: normal normal bold 14px/20px Inter;
-        letter-spacing: -0.07px;
-        color: #FCFCFB;
-        opacity: 1;
-    }
 
-    .xWhiteBold{
-        font: normal normal bold 18px/20px Inter;
-        letter-spacing: -0.07px;
-        color: #A7A6B1;
-        opacity: 1;
-    }
 
-    .xsLight{
-        font: normal normal bold 14px/20px Inter;
-        letter-spacing: -0.07px;
-        color: #A7A6B1;
-        opacity: 1;
-    }
 
-    .xxsLightSidebar{
-        font: normal normal 600 10px/20px Inter;
-        letter-spacing: -0.07px;
-        color: #A7A6B1;
-        opacity: 1;
-    }
 
-    .xsDark{
-        font: normal normal 600 14px/20px Inter;
-        letter-spacing: -0.07px;
-        color: #27233C;
-        opacity: 1;
-    }
 
-    .componentLabel{
-        display: block;
-        font-size: 0.875rem;
-        line-height: 1.5rem;
-        font-weight: 700;
-        color: #111827;
-    }
 
-    .sDark{
-        font: normal normal 600 16px/20px Inter;
-        letter-spacing: 0;
-        color: #27233C;
-        opacity: 1;
-    }
 
-    .mDark{
-        font: normal normal 600 18px/21px Inter;
-        letter-spacing: 0;
-        color: #27233C;
-        opacity: 1;
-    }
 
-    .hind{
-        font: normal normal normal 18px/18px "artwork Pen";
-        letter-spacing: -0.54px;
-        color: #A7A6B1;
-        opacity: 1;
-    }
 
-    .errorText{
-        font: normal normal 14px/20px Inter;
-        letter-spacing: -0.07px;
-        color: #FD6D73;
-        opacity: 1;
-    }
 
-    .successText{
-        font: normal normal 14px/20px Inter;
-        letter-spacing: -0.07px;
-        color: #1FC687;
-        opacity: 1;
-    }
 
-    .inputMain{
-        border: 1px solid #CECDD8;
-        opacity: 1;
-    }
 
-    .eventTime{
-        font: normal normal 12px/18px Inter;
-    }
 
-    .eventHeader{
-        font: normal normal bold 12px/20px Inter;
-    }
 
-    .eventBorder{
-        border: 1px solid #D8D7DE;
-        opacity: 1;
-    }
 
-    .calendarRoomHeader{
-        font: normal normal 13px/18px Inter;
-        letter-spacing: -0.2px;
-    }
-    .calendarRoomHeaderBold{
-        font: normal normal bold 13px/18px Inter;
-        letter-spacing: -0.2px;
-    }
 
-    .eventText{
-        font: normal 600 10px/19px Inter;
-    }
 
-    .bigNumber{
-        font: normal normal 40px/48px Lexend;
-        color: #27233C;
-        opacity: 1;
-    }
-
-    .linkText{
-        text-align: left;
-        font: normal normal 12px/18px Inter;
-        letter-spacing: -0.18px;
-        color: #3017AD;
-        opacity: 1;
-    }
-
-    .columnSubName {
-        font: normal normal 600 10px/19px Inter;
-        letter-spacing: 0.5px;
-        color: #A7A6B1;
-        text-transform: uppercase;
-        opacity: 1;
-    }
 
     .stateColorDefault {
         background-color: #FCFCFBFF;
@@ -468,216 +281,8 @@
         color: #21485C;
     }
 
-    .checkBoxOnDark {
-        --tw-ring-offset-shadow: 0 0 transparent;
-        --tw-ring-offset-width: 0px;
-        --tw-ring-offset-color: #fff;
-        box-shadow: var(--tw-ring-offset-shadow, 0 0 transparent), 0 0 0 var(--tw-ring-offset-width, 0px) var(--tw-ring-offset-color, rgba(59, 130, 246, 0.5));
-        cursor: pointer;
-        --tw-ring-inset: var(--tw-empty, /*!*/ /*!*/);
-        outline: var(--tw-ring-inset) var(--tw-ring-offset-width) var(--tw-ring-color), 0 0 0 var(--tw-ring-offset-width, 0px) var(--tw-ring-color, rgba(59, 130, 246, 0.5));
-        height: 1.5rem;
-        width: 1.5rem;
-        color: #1FC687;
-        border-width: 2px;
-        border-color: #d2d6dc;
-    }
 
-    @media (max-width: 639px) {
-        .headline1 {
-            font: normal normal 900 24px/34px Lexend;
-        }
 
-        .headline2 {
-            font: normal normal 600 18px/25px Lexend;
-        }
-
-        .headline3 {
-            font: normal normal 600 16px/21px Lexend;
-        }
-
-        .headline3Light {
-            font: normal normal 16px/21px Inter;
-        }
-
-        .headline4 {
-            font: normal normal 600 18px/25px Lexend;
-        }
-
-        .xxsLight{
-            font: normal normal 10px/18px Inter;
-        }
-
-        .xxsDark{
-            font: normal normal 10px/15px Inter;
-        }
-
-        .xxsDarkBold{
-            font: normal normal 600 10px/15px Inter;
-        }
-
-        .sLight{
-            font: normal normal 14px/19px Inter;
-        }
-
-        .xsLighter{
-            font: normal normal 12px/20px Inter;
-        }
-
-        .xsWhiteBold{
-            font: normal normal bold 12px/20px Inter;
-        }
-
-        .xWhiteBold{
-            font: normal normal bold 16px/20px Inter;
-        }
-
-        .xsLight{
-            font: normal normal bold 12px/20px Inter;
-        }
-
-        .xsDark{
-            font: normal normal 600 12px/20px Inter;
-        }
-
-        .sDark{
-            font: normal normal 600 14px/20px Inter;
-        }
-
-        .mDark{
-            font: normal normal 600 16px/21px Inter;
-        }
-
-        .hind{
-            font: normal normal normal 16px/18px "artwork Pen";
-        }
-
-        .errorText{
-            font: normal normal 12px/20px Inter;
-        }
-
-        .successText{
-            font: normal normal 12px/20px Inter;
-        }
-
-        .eventTime{
-            font: normal normal 10px/18px Inter;
-        }
-
-        .eventHeader{
-            font: normal normal bold 10px/20px Inter;
-        }
-
-        .calendarRoomHeader{
-            font: normal normal 10px/18px Inter;
-        }
-
-        .bigNumber{
-            font: normal normal 30px/48px Lexend;
-        }
-
-        .linkText{
-            font: normal normal 10px/18px Inter;
-        }
-    }
-
-    @media (min-width: 640px) and (max-width: 767px) {
-        .headline1 {
-            font: normal normal 900 28px/34px Lexend;
-        }
-
-        .headline2 {
-            font: normal normal 600 20px/25px Lexend;
-        }
-
-        .headline3 {
-            font: normal normal 600 18px/21px Lexend;
-        }
-
-        .headline3Light {
-            font: normal normal 18px/21px Inter;
-        }
-
-        .headline4 {
-            font: normal normal 600 20px/25px Lexend;
-        }
-
-        .xxsLight{
-            font: normal normal 12px/18px Inter;
-        }
-
-        .xxsDark{
-            font: normal normal 12px/15px Inter;
-        }
-
-        .xxsDarkBold{
-            font: normal normal 600 12px/15px Inter;
-        }
-
-        .sLight{
-            font: normal normal 16px/19px Inter;
-        }
-
-        .xsLighter{
-            font: normal normal 14px/20px Inter;
-        }
-
-        .xsWhiteBold{
-            font: normal normal bold 14px/20px Inter;
-        }
-
-        .xWhiteBold{
-            font: normal normal bold 18px/20px Inter;
-        }
-
-        .xsLight{
-            font: normal normal bold 14px/20px Inter;
-        }
-
-        .xsDark{
-            font: normal normal 600 14px/20px Inter;
-        }
-
-        .sDark{
-            font: normal normal 600 16px/20px Inter;
-        }
-
-        .mDark{
-            font: normal normal 600 18px/21px Inter;
-        }
-
-        .hind{
-            font: normal normal normal 18px/18px "artwork Pen";
-        }
-
-        .errorText{
-            font: normal normal 14px/20px Inter;
-        }
-
-        .successText{
-            font: normal normal 14px/20px Inter;
-        }
-
-        .eventTime{
-            font: normal normal 12px/18px Inter;
-        }
-
-        .eventHeader{
-            font: normal normal bold 12px/20px Inter;
-        }
-
-        .calendarRoomHeader{
-            font: normal normal 13px/18px Inter;
-        }
-
-        .bigNumber{
-            font: normal normal 40px/48px Lexend;
-        }
-
-        .linkText{
-            font: normal normal 12px/18px Inter;
-        }
-    }
 
     .transition-enter-active {
         @apply transition ease-out duration-100;
@@ -723,17 +328,9 @@
         @apply inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-medium ring-1 ring-inset
         bg-white/10 ring-white/20;
     }
-    .chip-strong {
-        @apply bg-white/15 ring-white/30;
-    }
 
-    .new-button {
-        @apply inline-flex items-center gap-2 rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-sm font-medium text-zinc-700 hover:bg-zinc-50 active:translate-y-px cursor-pointer;
-    }
+    /* Alias auf BaseUIButton variant="secondary" (Design-Basis v1) */
 
-    .new-button-small {
-        @apply inline-flex items-center gap-2 rounded-lg border border-zinc-200 bg-white px-2 py-1 text-xs font-medium text-zinc-700 hover:bg-zinc-50 active:translate-y-px cursor-pointer;
-    }
 
     .artwork-container {
         @apply mx-auto container px-4 sm:px-6 md:px-6 lg:px-8 xl:px-8 2xl:px-8 mt-5 pb-20;
@@ -741,18 +338,6 @@
 
     .background-color {
         @apply bg-white;
-
-        &.soft-green {
-            @apply bg-gradient-to-br from-[#fcfefd] to-[#f6fbf8];
-        }
-
-        &.soft-red {
-            @apply bg-gradient-to-br from-[#fefcfc] to-[#fbf3f3];
-        }
-
-        &.soft-yellow {
-            @apply bg-gradient-to-br from-[#fffef9] to-[#fefcf2];
-        }
     }
 
     /* Layout Helpers */
@@ -765,22 +350,12 @@
     .ui-card-header { @apply flex items-center gap-2 mb-2; }
     .ui-card-title { @apply text-[13.5px] font-semibold text-zinc-900; }
     .ui-dot { @apply inline-block size-2.5 rounded-full; }
-    .ui-button { @apply select-none bg-white inline-flex items-center gap-x-2 justify-center rounded-xl border border-zinc-200/80 px-2.5 py-2.5 cursor-pointer hover:bg-zinc-50  duration-200 ease-in-out transition disabled:bg-gray-50 disabled:text-gray-500 disabled:border-gray-300 disabled:cursor-not-allowed text-sm;}
-    .ui-button-small { @apply select-none inline-flex items-center gap-x-2 justify-center rounded-md border border-zinc-200/80 px-2.5 bg-white py-0.5 cursor-pointer hover:bg-zinc-50  duration-200 ease-in-out transition disabled:bg-gray-50 disabled:text-gray-500 disabled:border-gray-300 disabled:cursor-not-allowed text-xs;}
-    .ui-button-add { @apply select-none inline-flex items-center gap-x-2 justify-center rounded-xl bg-blue-50 text-blue-500 border border-blue-200/80 px-4 py-2.5 cursor-pointer hover:bg-blue-100 duration-200 ease-in-out transition text-sm disabled:bg-gray-50 disabled:text-gray-500 disabled:border-gray-300 disabled:cursor-not-allowed;}
-    .ui-button-delete { @apply select-none  inline-flex items-center gap-x-2 justify-center rounded-xl bg-red-50 text-red-500 border border-red-200/80 px-4 py-2.5 cursor-pointer hover:bg-red-100 duration-200 ease-in-out transition text-sm disabled:bg-gray-50 disabled:text-gray-500 disabled:border-gray-300 disabled:cursor-not-allowed;}
-    .ui-button-add-small { @apply select-none inline-flex items-center gap-x-2 justify-center rounded-md bg-blue-50 text-blue-500 border border-blue-200/80 px-4 py-0.5 cursor-pointer hover:bg-blue-100 duration-200 ease-in-out transition text-xs disabled:bg-gray-50 disabled:text-gray-500 disabled:border-gray-300 disabled:cursor-not-allowed;}
-    .ui-button-delete-small { @apply select-none inline-flex items-center gap-x-2 justify-center rounded-md bg-red-50 text-red-500 border border-red-200/80 px-4 py-0.5 cursor-pointer hover:bg-red-100 duration-200 ease-in-out transition text-xs disabled:bg-gray-50 disabled:text-gray-500 disabled:border-gray-300 disabled:cursor-not-allowed;}
-    /* Listbox Trigger (kompakt) */
-    .ui-lb-trigger { @apply flex w-full items-center justify-between rounded-md border border-zinc-200 bg-white px-3 py-2 h-10 shadow-sm; }
-    .ui-lb-trigger-text { @apply min-w-0; }
-    .ui-lb-label { @apply text-[11px] text-zinc-500 leading-none mb-0.5; }
-    .ui-lb-value { @apply flex items-center gap-2 text-[13px] text-zinc-900 min-w-0; }
-    .ui-lb-icon { @apply size-4 text-zinc-400; }
+    /* Aliasse auf die BaseUIButton-Varianten (Design-Basis v1) — Templates nutzen sie noch direkt */
+    .ui-button { @apply select-none inline-flex items-center gap-x-1.5 justify-center rounded-md border border-border bg-surface min-h-8 px-3 text-[13px] font-medium text-text cursor-pointer hover:bg-surface-sunken transition-[background-color,border-color] duration-150 ease-out disabled:bg-surface-canvas disabled:text-text-subtle disabled:border-border-subtle disabled:cursor-not-allowed;}
+    .ui-button-small { @apply select-none inline-flex items-center gap-x-1.5 justify-center rounded-md border border-border bg-surface min-h-7 px-2.5 text-xs font-medium text-text cursor-pointer hover:bg-surface-sunken transition-[background-color,border-color] duration-150 ease-out disabled:bg-surface-canvas disabled:text-text-subtle disabled:border-border-subtle disabled:cursor-not-allowed;}
+    .ui-button-add { @apply select-none inline-flex items-center gap-x-1.5 justify-center rounded-md bg-accent-600 text-white border border-accent-600 min-h-8 px-3 text-[13px] font-medium cursor-pointer hover:bg-accent-700 hover:border-accent-700 transition-[background-color,border-color] duration-150 ease-out disabled:bg-surface-canvas disabled:text-text-subtle disabled:border-border-subtle disabled:cursor-not-allowed;}
+    .ui-button-delete { @apply select-none inline-flex items-center gap-x-1.5 justify-center rounded-md bg-surface text-danger border border-danger-border min-h-8 px-3 text-[13px] font-medium cursor-pointer hover:bg-danger-surface transition-[background-color,border-color] duration-150 ease-out disabled:bg-surface-canvas disabled:text-text-subtle disabled:border-border-subtle disabled:cursor-not-allowed;}
 
-    .dashboard-chip {
-        @apply flex items-center justify-center gap-2 rounded-xl border px-2.5 py-2 text-xs hover:bg-gray-50;
-    }
 
     /* Inputs kompakt */
     .ui-input :deep(input),
@@ -808,14 +383,8 @@
     }
 
     /* Buttons */
-    .ui-link-btn {
-        @apply text-[12.5px] text-indigo-600 hover:text-indigo-700 underline-offset-2 hover:underline;
-    }
     .ui-icon-btn {
-        @apply inline-flex items-center justify-center rounded-md border border-transparent text-zinc-400 hover:text-rose-600;
-    }
-    .ui-btn-primary {
-        @apply inline-flex items-center justify-center rounded-md bg-indigo-600 px-3 py-2 text-[13px] font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500;
+        @apply inline-flex items-center justify-center rounded-md border border-transparent text-text-subtle hover:text-danger;
     }
 
     /* Transition */
@@ -823,22 +392,16 @@
     .fade-enter-from, .fade-leave-to { opacity: 0; transform: translateY(-2px); }
 
     /* Buttons */
-    .ui-btn-secondary {
-        @apply inline-flex items-center justify-center rounded-md border border-zinc-200 bg-white px-3 py-2 text-[13px] text-zinc-700 shadow-sm hover:bg-zinc-50 focus:outline-none focus:ring-2 focus:ring-indigo-500;
-    }
 
     /* Sticky Footer innerhalb des Modals */
+    /* Sticky-Modal-Footer (v2): surface-sunken, Hairline-Oberkante, kein Blur */
     .ui-footer {
-        @apply sticky bottom-0 left-0 w-full bg-white/85 backdrop-blur supports-[backdrop-filter]:bg-white/70 border-t border-zinc-200 pt-2 pb-2 mt-2;
+        @apply sticky bottom-0 left-0 w-full bg-surface-sunken border-t border-border-subtle pt-2 pb-2 mt-2;
     }
 
     .ui-lb-btn { /* placeholder, falls extern benötigt */ }
 
 
-    /* --- Cards / Sections --- */
-    .card-event-container {
-        @apply rounded-xl border border-zinc-200/70 bg-white/90 shadow-sm p-4 space-y-3;
-    }
     .card-header {
         @apply flex items-center gap-2 -mt-1;
     }
@@ -853,18 +416,7 @@
     .hint { @apply text-[12px] text-zinc-500; }
     .err  { @apply text-[12px] text-rose-600; }
 
-    /* --- Consistent field grids --- */
-    .form-grid-2 { @apply grid grid-cols-1 md:grid-cols-2 gap-3; }
-    .form-grid-3 { @apply grid grid-cols-1 md:grid-cols-3 gap-3; }
 
-    /* --- Listbox button (compact) --- */
-    .lbb {
-        @apply grid grid-cols-[1fr_auto] items-center h-11 px-3 py-2  text-left;
-    }
-    .lbb-text { @apply truncate pr-6; }
-    .lbb-label { @apply text-[11px] text-zinc-500; }
-    .lbb-value { @apply mt-0.5 flex items-center gap-2 text-sm text-zinc-900; }
-    .lbb-icon { @apply size-5 text-zinc-400 sm:size-4; }
 
     /* --- Listbox default classes via props (keine globalen Änderungen nötig) --- */
 
@@ -882,110 +434,16 @@
         }
     }
 
-    .text-color {
-        color: #27233C;
 
-        &.light {
-            color: #A7A6B1;
-        }
-
-        &.success {
-            @apply text-green-500;
-        }
-
-        &.danger {
-            @apply text-red-500;
-        }
-
-        &.warning {
-            @apply text-yellow-500;
-        }
-    }
-
-    .headline {
-        &.h1 {
-            font: normal normal 900 30px/34px Lexend;
-            letter-spacing: -0.15px;
-            opacity: 1;
-        }
-
-        &.h2 {
-            font: normal normal 900 24px/28px Lexend;
-            letter-spacing: -0.15px;
-            opacity: 1;
-        }
-
-        &.h3 {
-            font: normal normal 900 20px/24px Lexend;
-            letter-spacing: -0.15px;
-            opacity: 1;
-        }
-
-        &.h4 {
-            font: normal normal 900 16px/20px Lexend;
-            letter-spacing: -0.15px;
-            opacity: 1;
-        }
-
-        &.h5 {
-            font: normal normal 900 14px/18px Lexend;
-            letter-spacing: -0.15px;
-            opacity: 1;
-        }
-    }
-
-    .sub-line {
-        &.light {
-            font: normal normal bold 14px/20px Inter;
-            letter-spacing: -0.07px;
-            opacity: 1;
-            @apply mt-1;
-        }
-    }
 
     .aw-checklist-input {
-        @apply col-start-1 row-start-1 appearance-none rounded-sm border border-gray-300 bg-white checked:border-blue-600 checked:bg-blue-600 indeterminate:border-blue-600 indeterminate:bg-blue-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 disabled:border-gray-300 disabled:bg-gray-100 disabled:checked:bg-gray-100 dark:border-white/10 dark:bg-white/5 dark:checked:border-blue-500 dark:checked:bg-blue-500 dark:indeterminate:border-blue-500 dark:indeterminate:bg-blue-500 dark:focus-visible:outline-blue-500 dark:disabled:border-white/5 dark:disabled:bg-white/10 dark:disabled:checked:bg-white/10 forced-colors:appearance-auto
+        @apply col-start-1 row-start-1 size-4 appearance-none rounded-sm border border-border bg-surface checked:border-accent-600 checked:bg-accent-600 indeterminate:border-accent-600 indeterminate:bg-accent-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-600 disabled:border-border-subtle disabled:bg-surface-sunken disabled:checked:bg-surface-sunken forced-colors:appearance-auto
     }
 
     .aw-input-svg {
         @apply pointer-events-none col-start-1 row-start-1 size-3.5 self-center justify-self-center stroke-white group-has-disabled:stroke-gray-950/25 dark:group-has-disabled:stroke-white/25;
     }
 
-    .card {
-        @apply rounded-lg;
-        &.glassy {
-            @apply flex h-fit rounded-lg grow flex-col bg-gradient-to-bl  from-white/40 to-[#4A70A910] text-left backdrop-blur-sm  border border-gray-100 ring-2 ring-white/30 ring-inset shadow-glass;
-        }
-
-        &.glassy-shiftplan {
-            @apply flex h-fit rounded-lg grow flex-col bg-gradient-to-bl  from-white/40 to-sky-100/30 text-left backdrop-blur-sm border border-white/50 active:bg-artwork-navigation-background shadow-glass;
-        }
-
-        &.white {
-            @apply bg-white rounded-lg border border-gray-100 w-full shadow-glass;
-        }
-    }
-
-    .button {
-        @apply relative;
-        &.glassy {
-            box-shadow: var(--shadow-glass-small);
-            @apply flex h-fit w-fit items-center rounded-lg p-1.5 bg-gradient-to-bl  from-white/40 to-sky-100/30 text-left backdrop-blur-sm border border-gray-100 cursor-pointer;
-        }
-        span {
-            box-shadow: var(--shadow-glass-small);
-            @apply bg-white rounded-xl border border-gray-100 w-fit p-1.5 relative z-30;
-
-            svg {
-                @apply text-gray-500;
-            }
-        }
-
-        p {
-            @apply text-gray-500 text-xs font-lexend font-semibold relative z-20;
-        }
-
-    }
 }
 
 .timeline-container {
@@ -997,27 +455,19 @@
 
         .timeline-date-input,
         .timeline-time-input {
-            @apply h-10 placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border w-full border-gray-300;
+            @apply h-8 placeholder:subpixel-antialiased rounded-md w-full border-border focus:border-accent-600;
         }
     }
 
     .timeline-error-text {
-        @apply text-error text-xs;
+        @apply text-danger text-xs;
     }
 
     .timeline-textarea {
-        @apply block w-full placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border border-gray-300;
+        @apply block w-full placeholder:subpixel-antialiased rounded-md border-border focus:border-accent-600;
     }
 }
 
-.delete-icon {
-    @apply hidden h-5 w-5 hover:text-error cursor-pointer;
-}
-
-
-.text-hover {
-    @apply cursor-pointer transition-all ease-in-out duration-300 hover:bg-white hover:rounded-full p-0.5
-}
 
 .base-menu-link {
     @apply cursor-pointer flex items-center px-4 py-2 text-sm subpixel-antialiased;
@@ -1027,80 +477,69 @@
     }
 }
 
-.btn {
-    @apply rounded-lg;
-
-    &:hover {
-        @apply bg-gray-200;
-    }
-}
-
 .input {
-    @apply rounded-md px-2.5 w-full text-sm border border-gray-300 focus:ring-0 text-primary placeholder-gray-500 placeholder-transparent transition-all duration-150 ease-in-out;
+    @apply rounded-md px-2.5 w-full text-sm border border-border bg-surface text-text placeholder-text-subtle placeholder-transparent transition-[border-color,background-color] duration-150 ease-out;
 
     &:disabled {
-        @apply bg-gray-100 text-gray-600;
+        @apply bg-surface-sunken text-text-subtle cursor-not-allowed;
     }
 
 }
 
 .input-label {
-    @apply cursor-text px-1 absolute left-0 -top-6 peer-placeholder-shown:text-xs transition-all subpixel-antialiased focus:outline-none peer-placeholder-shown:text-secondary peer-placeholder-shown:left-2 pointer-events-none;
+    @apply cursor-text px-1 absolute left-0 -top-6 peer-placeholder-shown:text-xs transition-all subpixel-antialiased peer-placeholder-shown:text-text-subtle peer-placeholder-shown:left-2 pointer-events-none;
 }
 
 .input-checklist {
-    color: var(--color-artwork-success);
-    @apply border border-gray-300 rounded-lg p-2.5 text-sm text-left focus:ring-0 focus:outline-none focus-visible:ring-0 shadow-sm;
+    color: var(--color-success);
+    @apply border border-border rounded-md p-2.5 text-sm text-left;
 }
 
 .input-checklist-small {
-    color: var(--color-artwork-success);
-    @apply border border-gray-300 rounded-md p-0.5 text-sm text-left focus:ring-0 focus:outline-none focus-visible:ring-0;
+    color: var(--color-success);
+    @apply border border-border rounded-md p-0.5 text-sm text-left;
 }
 
 .input-checklist-dark {
-    color: var(--color-artwork-success);
-    @apply rounded-lg p-2 text-sm text-left focus:ring-0 focus:outline-none focus-visible:ring-0;
+    color: var(--color-success);
+    @apply rounded-md p-2 text-sm text-left;
 }
 
 .menu-button {
-    @apply w-full flex items-center justify-between shadow-sm border border-gray-200 rounded-md px-4 py-4 text-sm placeholder-transparent focus:outline-none focus:ring-1;
+    @apply w-full flex items-center justify-between border border-border bg-surface rounded-md px-3 min-h-8 py-1 text-sm placeholder-transparent;
 
     span {
-        @apply text-left float-left text-sm placeholder-transparent text-gray-500;
+        @apply text-left float-left text-sm placeholder-transparent text-text-muted;
     }
 }
 
 .menu-button-no-padding {
-    @apply w-full flex items-center justify-between shadow-sm border border-gray-200 rounded-md px-4 text-sm placeholder-transparent focus:outline-none focus:ring-1 focus:ring-artwork-buttons-create;
+    @apply w-full flex items-center justify-between border border-border bg-surface rounded-md px-3 min-h-8 text-sm placeholder-transparent;
 
     span {
-        @apply text-left float-left text-sm placeholder-transparent text-gray-500;
+        @apply text-left float-left text-sm placeholder-transparent text-text-muted;
     }
 }
 
 .menu-button-no-flex {
-    @apply w-full block shadow-sm border border-gray-200 rounded-md px-4 py-4 text-sm placeholder-transparent focus:outline-none focus:ring-1;
+    @apply w-full block border border-border bg-surface rounded-md px-3 min-h-8 py-1 text-sm placeholder-transparent;
 
     span {
-        @apply text-left float-left text-sm placeholder-transparent text-gray-500;
+        @apply text-left float-left text-sm placeholder-transparent text-text-muted;
     }
 }
 
 
 .btn-icon {
-    @apply grid place-items-center size-9 rounded-xl border border-zinc-200/80 bg-white hover:bg-zinc-50 transition-colors;
-}
-.btn-subtle {
-    @apply inline-flex items-center gap-1.5 rounded-lg border border-zinc-200/80 bg-white px-2.5 py-1.5 text-xs font-medium text-zinc-700 hover:bg-zinc-50 transition-colors;
+    @apply grid place-items-center size-8 rounded-md border border-border bg-surface text-text hover:bg-surface-sunken transition-colors;
 }
 
 /* Inputs */
 .form-input {
-    @apply w-full rounded-xl border border-zinc-200/80 bg-white py-2 pr-3 text-sm text-zinc-900 placeholder:text-zinc-400 outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-400;
+    @apply w-full rounded-md border border-border bg-surface py-2 pr-3 text-sm text-text placeholder:text-text-subtle focus:border-accent-600;
 }
 .form-textarea {
-    @apply rounded-xl border border-zinc-200/80 bg-white py-2.5 pr-3 pl-3 text-sm text-zinc-900 placeholder:text-zinc-400 outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-400;
+    @apply rounded-md border border-border bg-surface py-2.5 pr-3 pl-3 text-sm text-text placeholder:text-text-subtle focus:border-accent-600;
 }
 
 /* Position Picker spots */
@@ -1183,22 +622,6 @@
     }
 }
 
-.btn-group-hover {
-    @apply transition-colors duration-300 ease-in-out
-}
-
-.btn-hover {
-    @apply transition-colors duration-300 ease-in-out
-}
-
-.btn-border-hover {
-    @apply transition-colors duration-300 ease-in-out
-}
-
-.btn-group-border-hover {
-    @apply transition-colors duration-300 ease-in-out
-}
-
 
 .checklist-card {
     @apply w-72 min-w-72 rounded-lg;
@@ -1255,15 +678,6 @@
     @apply !font-lexend !px-4 !py-4
 }
 
-.kpi {
-    @apply rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-3 text-right;
-}
-.kpi-label {
-    @apply text-[11px] font-medium text-zinc-500;
-}
-.kpi-value {
-    @apply text-xl font-semibold text-zinc-900;
-}
 .badge {
     @apply inline-flex items-center gap-1.5 rounded-full bg-white px-2.5 py-0.5 text-[11px] text-zinc-700 ring-1 ring-zinc-200;
 }

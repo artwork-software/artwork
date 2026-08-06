@@ -2,16 +2,16 @@
     <app-layout :title="$t('Compensation days overview')">
         <div class="artwork-container">
             <ToolbarHeader
+                band
                 :icon="IconCalendarOff"
                 :title="$t('Compensation days overview')"
-                icon-bg-class="bg-teal-600/10 text-teal-700"
                 :description="$t('Overview of all compensation days across all users.')"
                 :search-enabled="false"
             />
 
             <!-- Craft filter -->
             <div class="mt-6 flex items-center gap-3">
-                <label class="text-xs font-medium text-zinc-500">{{ $t('Craft') }}:</label>
+                <label class="text-xs font-medium text-text-subtle">{{ $t('Craft') }}:</label>
                 <SearchableSelect
                     v-model="selectedCraft"
                     :options="crafts"
@@ -25,29 +25,29 @@
 
             <!-- Summary cards -->
             <div class="grid grid-cols-3 gap-4 mt-4">
-                <div class="rounded-xl border border-blue-200 bg-blue-50/50 px-5 py-4">
-                    <div class="text-xs font-medium text-blue-600 uppercase tracking-wide">{{ $t('Total open') }}</div>
-                    <div class="mt-1 text-2xl font-bold text-blue-900">{{ stats.open }}</div>
-                    <div class="text-xs text-blue-500 mt-0.5">{{ stats.open_value }} {{ $t('Days') }}</div>
+                <div class="rounded-xl border border-accent-200 bg-accent-50/50 px-5 py-4">
+                    <div class="text-xs font-medium text-accent-600 uppercase tracking-wide">{{ $t('Total open') }}</div>
+                    <div class="mt-1 text-2xl font-bold text-accent-700">{{ stats.open }}</div>
+                    <div class="text-xs text-accent-600 mt-0.5">{{ stats.open_value }} {{ $t('Days') }}</div>
                 </div>
-                <div class="rounded-xl border border-emerald-200 bg-emerald-50/50 px-5 py-4">
-                    <div class="text-xs font-medium text-emerald-600 uppercase tracking-wide">{{ $t('Total granted') }}</div>
-                    <div class="mt-1 text-2xl font-bold text-emerald-900">{{ stats.granted }}</div>
-                    <div class="text-xs text-emerald-500 mt-0.5">{{ stats.granted_value }} {{ $t('Days') }}</div>
+                <div class="rounded-xl border border-success-border bg-success-surface/50 px-5 py-4">
+                    <div class="text-xs font-medium text-success uppercase tracking-wide">{{ $t('Total granted') }}</div>
+                    <div class="mt-1 text-2xl font-bold text-success">{{ stats.granted }}</div>
+                    <div class="text-xs text-success mt-0.5">{{ stats.granted_value }} {{ $t('Days') }}</div>
                 </div>
-                <div class="rounded-xl border border-red-200 bg-red-50/50 px-5 py-4">
-                    <div class="text-xs font-medium text-red-600 uppercase tracking-wide">{{ $t('Total overdue') }}</div>
-                    <div class="mt-1 text-2xl font-bold text-red-900">{{ stats.overdue }}</div>
-                    <div class="text-xs text-red-500 mt-0.5">{{ stats.overdue_value }} {{ $t('Days') }}</div>
+                <div class="rounded-xl border border-danger-border bg-danger-surface/50 px-5 py-4">
+                    <div class="text-xs font-medium text-danger uppercase tracking-wide">{{ $t('Total overdue') }}</div>
+                    <div class="mt-1 text-2xl font-bold text-danger">{{ stats.overdue }}</div>
+                    <div class="text-xs text-danger mt-0.5">{{ stats.overdue_value }} {{ $t('Days') }}</div>
                 </div>
             </div>
 
             <!-- Overdue table -->
             <section v-if="overdueCompensations.length" class="mt-8">
-                <h3 class="text-sm font-semibold text-zinc-700 mb-3 flex items-center gap-2">
-                    <span class="inline-block h-2 w-2 rounded-full bg-red-500"></span>
+                <h3 class="text-sm font-semibold text-text-muted mb-3 flex items-center gap-2">
+                    <span class="inline-block h-2 w-2 rounded-full bg-danger"></span>
                     {{ $t('Overdue compensation days') }}
-                    <span class="text-xs font-normal text-zinc-400">({{ overdueCompensations.length }})</span>
+                    <span class="text-xs font-normal text-text-subtle">({{ overdueCompensations.length }})</span>
                 </h3>
                 <CompensationTable
                     :items="overdueCompensations"
@@ -62,10 +62,10 @@
 
             <!-- Open table -->
             <section class="mt-8">
-                <h3 class="text-sm font-semibold text-zinc-700 mb-3 flex items-center gap-2">
-                    <span class="inline-block h-2 w-2 rounded-full bg-blue-500"></span>
+                <h3 class="text-sm font-semibold text-text-muted mb-3 flex items-center gap-2">
+                    <span class="inline-block h-2 w-2 rounded-full bg-accent-600"></span>
                     {{ $t('Open compensation days') }}
-                    <span class="text-xs font-normal text-zinc-400">({{ openCompensations.length }})</span>
+                    <span class="text-xs font-normal text-text-subtle">({{ openCompensations.length }})</span>
                 </h3>
                 <CompensationTable
                     v-if="openCompensations.length"
@@ -76,15 +76,15 @@
                     @grant="openGrantModal"
                     @delete="openDeleteModal"
                 />
-                <div v-else class="text-xs text-zinc-500 italic py-3">{{ $t('No open compensation days.') }}</div>
+                <div v-else class="text-xs text-text-subtle italic py-3">{{ $t('No open compensation days.') }}</div>
             </section>
 
             <!-- Granted table -->
             <section class="mt-8">
-                <h3 class="text-sm font-semibold text-zinc-700 mb-3 flex items-center gap-2">
-                    <span class="inline-block h-2 w-2 rounded-full bg-emerald-500"></span>
+                <h3 class="text-sm font-semibold text-text-muted mb-3 flex items-center gap-2">
+                    <span class="inline-block h-2 w-2 rounded-full bg-success"></span>
                     {{ $t('Granted compensation days') }}
-                    <span class="text-xs font-normal text-zinc-400">({{ grantedCompensations.length }})</span>
+                    <span class="text-xs font-normal text-text-subtle">({{ grantedCompensations.length }})</span>
                 </h3>
                 <CompensationTable
                     v-if="grantedCompensations.length"
@@ -96,30 +96,30 @@
                     @revoke="revokeCompensationDay"
                     @delete="openDeleteModal"
                 />
-                <div v-else class="text-xs text-zinc-500 italic py-3">{{ $t('No granted compensation days.') }}</div>
+                <div v-else class="text-xs text-text-subtle italic py-3">{{ $t('No granted compensation days.') }}</div>
             </section>
 
             <!-- Recent activity (paginated) -->
             <section v-if="recentActivity.data.length" class="mt-8">
-                <h3 class="text-sm font-semibold text-zinc-700 mb-3 flex items-center gap-2">
-                    <span class="inline-block h-2 w-2 rounded-full bg-zinc-400"></span>
+                <h3 class="text-sm font-semibold text-text-muted mb-3 flex items-center gap-2">
+                    <span class="inline-block h-2 w-2 rounded-full bg-border-strong"></span>
                     {{ $t('Recent activity') }}
-                    <span class="text-xs font-normal text-zinc-400">({{ recentActivity.total }})</span>
+                    <span class="text-xs font-normal text-text-subtle">({{ recentActivity.total }})</span>
                 </h3>
-                <div class="overflow-hidden rounded-lg border border-zinc-200">
+                <div class="overflow-hidden rounded-lg border border-border-subtle">
                     <table class="min-w-full text-xs">
-                        <thead class="bg-zinc-50">
+                        <thead class="bg-surface-sunken">
                             <tr>
-                                <th class="px-3 py-2 text-left font-medium text-zinc-500">{{ $t('Date') }}</th>
-                                <th class="px-3 py-2 text-left font-medium text-zinc-500">{{ $t('User') }}</th>
-                                <th class="px-3 py-2 text-left font-medium text-zinc-500">{{ $t('Action') }}</th>
-                                <th class="px-3 py-2 text-left font-medium text-zinc-500">{{ $t('Details') }}</th>
+                                <th class="px-3 py-2 text-left font-medium text-text-subtle">{{ $t('Date') }}</th>
+                                <th class="px-3 py-2 text-left font-medium text-text-subtle">{{ $t('User') }}</th>
+                                <th class="px-3 py-2 text-left font-medium text-text-subtle">{{ $t('Action') }}</th>
+                                <th class="px-3 py-2 text-left font-medium text-text-subtle">{{ $t('Details') }}</th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-zinc-100">
-                            <tr v-for="activity in recentActivity.data" :key="activity.id" class="hover:bg-zinc-50/50">
-                                <td class="px-3 py-2 text-zinc-500 whitespace-nowrap">{{ formatDateTime(activity.created_at) }}</td>
-                                <td class="px-3 py-2 text-zinc-700 whitespace-nowrap">
+                        <tbody class="divide-y divide-border-subtle">
+                            <tr v-for="activity in recentActivity.data" :key="activity.id" class="hover:bg-surface-sunken">
+                                <td class="px-3 py-2 text-text-subtle whitespace-nowrap">{{ formatDateTime(activity.created_at) }}</td>
+                                <td class="px-3 py-2 text-text-muted whitespace-nowrap">
                                     <template v-if="activity.causer">
                                         {{ activity.causer.first_name }} {{ activity.causer.last_name }}
                                     </template>
@@ -133,7 +133,7 @@
                                         {{ activityLabel(activity) }}
                                     </span>
                                 </td>
-                                <td class="px-3 py-2 text-zinc-600 max-w-[400px]">
+                                <td class="px-3 py-2 text-text-muted max-w-[400px]">
                                     <template v-if="activity.properties?.delete_reason">
                                         {{ activity.properties.delete_reason }}
                                     </template>
@@ -148,7 +148,7 @@
 
                 <!-- Pagination -->
                 <div v-if="recentActivity.last_page > 1" class="mt-3 flex items-center justify-between">
-                    <div class="text-[11px] text-zinc-400">
+                    <div class="text-[11px] text-text-subtle">
                         {{ $t('Page') }} {{ recentActivity.current_page }} / {{ recentActivity.last_page }}
                     </div>
                     <div class="flex items-center gap-1.5">
@@ -156,11 +156,10 @@
                             v-for="link in paginationLinks"
                             :key="link.label"
                             class="rounded px-2.5 py-1 text-[11px] font-medium transition-colors"
-                            :class="link.active
-                                ? 'bg-artwork-buttons-hover text-white'
+                            :class="link.active ? 'bg-accent-700 text-white'
                                 : link.url
-                                    ? 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200'
-                                    : 'bg-zinc-50 text-zinc-300 cursor-not-allowed'"
+                                    ? 'bg-surface-sunken text-text-muted hover:bg-border-subtle'
+                                    : 'bg-surface-sunken text-text-subtle cursor-not-allowed'"
                             :disabled="!link.url"
                             @click="goToPage(link.url)"
                             v-html="link.label"
@@ -256,10 +255,10 @@ function formatDateTime(dt) {
 }
 
 function activityBadgeClass(event) {
-    if (event === 'deleted_with_reason' || event === 'deleted') return 'bg-red-100 text-red-700';
-    if (event === 'updated') return 'bg-blue-100 text-blue-700';
-    if (event === 'created') return 'bg-green-100 text-green-700';
-    return 'bg-zinc-100 text-zinc-700';
+    if (event === 'deleted_with_reason' || event === 'deleted') return 'bg-danger-surface text-danger';
+    if (event === 'updated') return 'bg-accent-100 text-accent-700';
+    if (event === 'created') return 'bg-success-surface text-success';
+    return 'bg-surface-sunken text-text-muted';
 }
 
 function activityLabel(activity) {

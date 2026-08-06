@@ -5,21 +5,21 @@
         :description="$t('Deleted columns can be restored here, including their values and comments.')"
     >
         <div class="mx-4 mb-6">
-            <div v-if="isLoading" class="text-secondary text-sm py-4">
+            <div v-if="isLoading" class="text-text-subtle text-sm py-4">
                 {{ $t('Loading data...') }}
             </div>
-            <div v-else-if="trashedColumns.length === 0" class="text-secondary text-sm py-4">
+            <div v-else-if="trashedColumns.length === 0" class="text-text-subtle text-sm py-4">
                 {{ $t('No deleted columns available.') }}
             </div>
-            <ul v-else class="divide-y divide-gray-200">
+            <ul v-else class="divide-y divide-border-subtle">
                 <li
                     v-for="column in trashedColumns"
                     :key="column.id"
                     class="flex items-center justify-between py-3"
                 >
                     <div>
-                        <div class="xsDark">{{ column.name }}</div>
-                        <div class="text-xs text-secondary">
+                        <div class="text-sm/5 font-semibold text-text">{{ column.name }}</div>
+                        <div class="text-xs text-text-subtle">
                             {{ $t('Deleted at') }}: {{ formatDeletedAt(column.deleted_at) }}
                         </div>
                     </div>

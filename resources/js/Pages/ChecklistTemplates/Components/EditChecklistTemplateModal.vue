@@ -14,8 +14,8 @@
                 />
 
                 <!-- Users -->
-                <div class="bg-gray-50 rounded-xl p-5">
-                    <h3 class="headline4">{{ $t('Checklist users') }}</h3>
+                <div class="bg-surface-sunken rounded-xl p-5">
+                    <h3 class="font-lexend font-semibold text-[clamp(18px,2.5vw,20px)]/[25px] text-text">{{ $t('Checklist users') }}</h3>
                     <AlertComponent
                         class="mt-3"
                         type="info"
@@ -25,7 +25,7 @@
                     <div class="mt-4">
                         <UserSearch @user-selected="addUser" />
                     </div>
-                    <div v-if="form.users.length === 0" class="mt-4 text-secondary text-sm">
+                    <div v-if="form.users.length === 0" class="mt-4 text-text-subtle text-sm">
                         {{ $t('No users added yet') }}
                     </div>
                     <div v-else class="mt-4 grid grid-cols-1 gap-3">
@@ -36,11 +36,11 @@
                         >
                             <div class="flex items-center gap-x-3">
                                 <img class="h-9 w-9 rounded-full object-cover" :src="user.profile_photo_url" alt="" />
-                                <span class="sDark">{{ user.first_name }} {{ user.last_name }}</span>
+                                <span class="text-base/5 font-semibold text-text">{{ user.first_name }} {{ user.last_name }}</span>
                             </div>
                             <button type="button" @click="removeUser(user)">
                                 <span class="sr-only">{{ $t('Remove user from checklist template') }}</span>
-                                <XIcon class="h-4 w-4 p-0.5 rounded-full bg-artwork-buttons-create text-white hover:bg-artwork-buttons-hover" />
+                                <IconX class="h-4 w-4 p-0.5 rounded-full bg-accent-600 text-white hover:bg-accent-700" />
                             </button>
                         </div>
                     </div>
@@ -61,8 +61,8 @@
 </template>
 
 <script setup>
+import {IconX} from "@tabler/icons-vue";
 import { useForm } from '@inertiajs/vue3'
-import { XIcon } from '@heroicons/vue/outline'
 import ArtworkBaseModal from '@/Artwork/Modals/ArtworkBaseModal.vue'
 import BaseInput from '@/Artwork/Inputs/BaseInput.vue'
 import BaseUIButton from '@/Artwork/Buttons/BaseUIButton.vue'

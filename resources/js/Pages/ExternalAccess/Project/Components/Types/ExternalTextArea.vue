@@ -1,6 +1,6 @@
 <template>
-    <div class="rounded-2xl border border-zinc-200 bg-white p-5">
-        <label :for="inputId" class="block text-sm font-medium text-zinc-700 mb-1">
+    <div class="rounded-2xl border border-border-subtle bg-white p-5">
+        <label :for="inputId" class="block text-sm font-medium text-text-muted mb-1">
             {{ label }}
         </label>
 
@@ -10,12 +10,12 @@
             rows="4"
             :placeholder="schema.placeholder"
             :disabled="!editable"
-            class="block w-full rounded-lg border-zinc-300 text-sm disabled:bg-zinc-50 disabled:text-zinc-500"
+            class="block w-full rounded-lg border-border text-sm disabled:bg-surface-sunken disabled:text-text-subtle"
             @blur="saveIfChanged"
         />
 
-        <p v-if="status === 'saved'" class="mt-1 text-xs text-emerald-600">{{ $t('Saved') }}</p>
-        <p v-if="status === 'error'" class="mt-1 text-xs text-red-600">{{ $t('Could not save. Try again.') }}</p>
+        <p v-if="status === 'saved'" class="mt-1 text-xs text-success">{{ $t('Saved') }}</p>
+        <p v-if="status === 'error'" class="mt-1 text-xs text-danger">{{ $t('Could not save. Try again.') }}</p>
     </div>
 </template>
 

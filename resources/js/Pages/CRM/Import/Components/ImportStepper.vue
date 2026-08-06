@@ -14,7 +14,7 @@
                     <component v-if="stateOf(index) === 'done'" :is="IconCheck" class="size-4" />
                     <template v-else>{{ index + 1 }}</template>
                 </span>
-                <span class="text-sm" :class="stateOf(index) === 'active' ? 'font-medium text-gray-900' : 'text-gray-500'">
+                <span class="text-sm" :class="stateOf(index) === 'active' ? 'font-medium text-text' : 'text-text-subtle'">
                     {{ $t(step) }}
                 </span>
             </template>
@@ -38,15 +38,15 @@ const stateOf = (index) => {
 
 const circleClass = (index) => {
     const state = stateOf(index)
-    if (state === 'done') return 'bg-green-600 text-white'
-    if (state === 'active') return 'bg-indigo-600 text-white'
-    return 'bg-gray-200 text-gray-500'
+    if (state === 'done') return 'bg-success text-white'
+    if (state === 'active') return 'bg-accent-600 text-white'
+    return 'bg-border-subtle text-text-subtle'
 }
 
 // Divider before step `index`: colored by how far the progress has come
 const dividerClass = (index) => {
-    if (index + 1 < props.currentStep) return 'bg-green-300'
-    if (index + 1 === props.currentStep) return 'bg-indigo-300'
-    return 'bg-gray-300'
+    if (index + 1 < props.currentStep) return 'bg-success'
+    if (index + 1 === props.currentStep) return 'bg-accent-200'
+    return 'bg-border'
 }
 </script>

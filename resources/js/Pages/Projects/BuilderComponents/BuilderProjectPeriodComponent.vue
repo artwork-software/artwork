@@ -5,7 +5,7 @@
                 {{ project.project_period.first_event_date }} – {{ project.project_period.last_event_date }}
             </span>
         </div>
-        <div v-else class="text-sm text-secondary">
+        <div v-else class="text-sm text-text-subtle">
             {{ $t('No entries') }}
         </div>
     </div>

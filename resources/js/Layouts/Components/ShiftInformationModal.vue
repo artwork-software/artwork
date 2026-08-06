@@ -14,9 +14,9 @@
 </template>
 
 <script>
+import {IconDownload, IconX} from "@tabler/icons-vue";
 import JetDialogModal from '@/Jetstream/DialogModal.vue'
 import JetInputError from '@/Jetstream/InputError.vue'
-import {XIcon, DownloadIcon} from "@heroicons/vue/outline";
 import Permissions from "@/Mixins/Permissions.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import BaseModal from "@/Components/Modals/BaseModal.vue";
@@ -39,8 +39,8 @@ export default {
         FormButton,
         JetDialogModal,
         JetInputError,
-        XIcon,
-        DownloadIcon
+        IconX,
+        IconDownload
     },
     emits: ['closeModal'],
     data() {

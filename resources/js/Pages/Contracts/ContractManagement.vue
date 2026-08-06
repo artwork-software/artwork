@@ -2,40 +2,44 @@
     <app-layout :title="$t('Contracts')">
         <div class="artwork-container">
             <ToolbarHeader
+                band
                 :icon="IconFileText"
                 :title="$t('Contracts')"
-                icon-bg-class="bg-emerald-600/10 text-emerald-700"
                 :description="filteredContracts.length ? `${filteredContracts.length} ${$t('Contracts')}` : ''"
             >
                 <template #actions>
-                    <ToolTipComponent
-                        direction="bottom"
-                        :tooltip-text="$t('Filter')"
-                        :icon="IconFilter"
-                        icon-size="h-5 w-5"
-                        @click="openContractFilterModal"
-                        classesButton="ui-button"
-                    >
-                        <template #badge v-if="activeFilterCount > 0">
-                            <span class="absolute top-3 inline-flex items-center justify-center px-2 py-0.5 text-xs font-medium bg-blue-100 text-blue-800 rounded-full">
-                                {{ activeFilterCount }}
-                            </span>
-                        </template>
-                    </ToolTipComponent>
+                    <div class="relative inline-flex">
+                        <ToolTipComponent
+                            direction="bottom"
+                            :tooltip-text="$t('Filter')"
+                            :icon="IconFilter"
+                            icon-size="h-5 w-5"
+                            white-icon
+                            @click="openContractFilterModal"
+                            classesButton="select-none size-[30px] min-h-0 p-0 inline-flex items-center justify-center rounded-md bg-white/8 hover:bg-white/16 cursor-pointer transition-[background-color] duration-150 ease-out"
+                        />
+                        <span
+                            v-if="activeFilterCount > 0"
+                            class="absolute -top-1 -right-1 flex items-center justify-center size-4 rounded-full bg-accent-600 text-white text-[10px] font-bold pointer-events-none"
+                        >
+                            {{ activeFilterCount }}
+                        </span>
+                    </div>
 
                     <ToolTipComponent
                         direction="bottom"
                         :tooltip-text="$t('Export')"
                         :icon="IconFileSpreadsheet"
                         icon-size="h-5 w-5"
+                        white-icon
                         @click="openContractExportModal"
-                        classesButton="ui-button"
+                        classesButton="select-none size-[30px] min-h-0 p-0 inline-flex items-center justify-center rounded-md bg-white/8 hover:bg-white/16 cursor-pointer transition-[background-color] duration-150 ease-out"
                     />
 
-                    <button class="ui-button-add" @click="openContractUploadModal">
+                    <BaseUIButton variant="primary" on-band hide-icon @click="openContractUploadModal">
                         <component :is="IconCirclePlus" stroke-width="1" class="size-5" />
                         {{ $t('New contract') }}
-                    </button>
+                    </BaseUIButton>
                 </template>
             </ToolbarHeader>
 
@@ -68,15 +72,15 @@
             >
                 <!-- Contract Partner -->
                 <template #cell-partner="{ row }">
-                    <div class="font-medium text-gray-900">{{ row.partner || '-' }}</div>
+                    <div class="font-medium text-text">{{ row.partner || '-' }}</div>
                 </template>
 
                 <!-- Project -->
                 <template #cell-project="{ row }">
-                    <a v-if="row.project" :href="route('projects.tab', {project: row.project.id, projectTab: first_project_tab_id})" class="text-blue-600 hover:text-blue-800">
+                    <a v-if="row.project" :href="route('projects.tab', {project: row.project.id, projectTab: first_project_tab_id})" class="text-accent-600 hover:text-accent-700">
                         {{ row.project.name }}
                     </a>
-                    <span v-else class="text-gray-400">-</span>
+                    <span v-else class="text-text-subtle">-</span>
                 </template>
 
                 <!-- Access Users & Departments -->
@@ -94,7 +98,7 @@
                             <div
                                 v-for="department in row.accessibleDepartments?.slice(0, Math.max(0, 3 - (row.accessibleUsers?.length || 0)))"
                                 :key="'dept-' + department.id"
-                                class="size-8 rounded-full ring-2 ring-white bg-gray-100 flex items-center justify-center"
+                                class="size-8 rounded-full ring-2 ring-white bg-surface-sunken flex items-center justify-center"
                                 v-tooltip.top="{ value: department.name, appendTo: 'body', class: 'aw-tooltip' }"
                             >
                                 <TeamIconCollection :iconName="department.svg_name" class="size-6" />
@@ -106,17 +110,17 @@
                             :show-menu-button-text="true"
                             :menu-button-text="'+' + ((row.accessibleUsers?.length || 0) + (row.accessibleDepartments?.length || 0) - 3)"
                             classes="ml-2 cursor-pointer"
-                            classes-button="text-xs text-gray-500 hover:text-gray-700 cursor-pointer"
+                            classes-button="text-xs text-text-subtle hover:text-text-muted cursor-pointer"
                             white-menu-background
                         >
                             <div class="p-2 min-w-48">
-                                <div v-for="user in row.accessibleUsers" :key="'menu-user-' + user.id" class="flex items-center py-1.5 px-2 hover:bg-gray-50 rounded">
+                                <div v-for="user in row.accessibleUsers" :key="'menu-user-' + user.id" class="flex items-center py-1.5 px-2 hover:bg-surface-sunken rounded">
                                     <img :src="user.profile_photo_url" :alt="user.first_name + ' ' + user.last_name" class="size-6 rounded-full object-cover mr-2" />
-                                    <span class="text-sm text-gray-700">{{ user.first_name }} {{ user.last_name }}</span>
+                                    <span class="text-sm text-text-muted">{{ user.first_name }} {{ user.last_name }}</span>
                                 </div>
-                                <div v-for="department in row.accessibleDepartments" :key="'menu-dept-' + department.id" class="flex items-center py-1.5 px-2 hover:bg-gray-50 rounded">
+                                <div v-for="department in row.accessibleDepartments" :key="'menu-dept-' + department.id" class="flex items-center py-1.5 px-2 hover:bg-surface-sunken rounded">
                                     <TeamIconCollection :iconName="department.svg_name" class="size-6 mr-2" />
-                                    <span class="text-sm text-gray-700">{{ department.name }}</span>
+                                    <span class="text-sm text-text-muted">{{ department.name }}</span>
                                 </div>
                             </div>
                         </BaseMenu>
@@ -125,7 +129,7 @@
 
                 <!-- File Name (Download) -->
                 <template #cell-filename="{ row }">
-                    <a :href="route('contracts.download', row.id)" class="text-blue-600 hover:text-blue-800 flex items-center">
+                    <a :href="route('contracts.download', row.id)" class="text-accent-600 hover:text-accent-700 flex items-center">
                         <IconDownload class="size-4 mr-2" />
                         {{ row.name }}
                     </a>
@@ -209,6 +213,7 @@ import ContractEditModal from "@/Layouts/Components/ContractEditModal.vue"
 import ContractFilterModal from "@/Pages/Contracts/Components/ContractFilterModal.vue"
 import ContractExportModal from "@/Pages/Contracts/Components/ContractExportModal.vue"
 import ToolbarHeader from "@/Artwork/Toolbar/ToolbarHeader.vue"
+import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue"
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue"
 import BaseTable from '@/Artwork/Table/BaseTable.vue'
 import BaseMenu from '@/Components/Menu/BaseMenu.vue'
@@ -227,6 +232,7 @@ export default {
         BaseMenu,
         BaseTable,
         ToolbarHeader,
+        BaseUIButton,
         ContractEditModal,
         ContractDeleteModal,
         ContractUploadModal,

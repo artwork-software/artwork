@@ -1,37 +1,37 @@
 <template>
-    <div class="mt-10 border-t border-gray-200 pt-8">
+    <div class="mt-10 border-t border-border-subtle pt-8">
         <div class="sm:flex sm:items-center mb-4">
             <div class="sm:flex-auto">
-                <h2 class="text-lg font-semibold text-gray-900">{{ $t('BI Tags') }}</h2>
-                <p class="text-sm text-gray-500">{{ $t('Define tags for BI counting of event types.') }}</p>
+                <h2 class="text-lg font-semibold text-text">{{ $t('BI Tags') }}</h2>
+                <p class="text-sm text-text-subtle">{{ $t('Define tags for BI counting of event types.') }}</p>
             </div>
             <div class="mt-3 sm:mt-0 sm:ml-4">
-                <button class="ui-button-add" @click="openAddTagModal">
+                <BaseUIButton variant="primary" hide-icon @click="openAddTagModal">
                     <component :is="IconCirclePlus" stroke-width="1" class="size-5" />
                     {{ $t('New BI tag') }}
-                </button>
+                </BaseUIButton>
             </div>
         </div>
 
         <!-- Explanation of what BI tags are used for -->
-        <div class="mb-6 rounded-lg border border-indigo-100 bg-indigo-50/60 px-4 py-3">
+        <div class="mb-6 rounded-lg border border-accent-200 bg-accent-50/60 px-4 py-3">
             <div class="flex gap-3">
-                <component :is="IconInfoCircle" class="size-5 shrink-0 text-indigo-500 mt-0.5" stroke-width="1.5" />
-                <div class="text-sm text-indigo-900 space-y-1">
+                <component :is="IconInfoCircle" class="size-5 shrink-0 text-accent-600 mt-0.5" stroke-width="1.5" />
+                <div class="text-sm text-accent-700 space-y-1">
                     <p>{{ $t('BI tags group event types for the BI module. For each tag, the number of event days per project is counted and shown in the BI dashboard and in BI exports (one column per tag).') }}</p>
-                    <p class="text-indigo-700">{{ $t('The tags "Vorstellung" and "Veranstaltungstag" additionally control the key figures performances and event days. If they have no event types assigned, all events of a project are counted there as a fallback.') }}</p>
+                    <p class="text-accent-700">{{ $t('The tags "Vorstellung" and "Veranstaltungstag" additionally control the key figures performances and event days. If they have no event types assigned, all events of a project are counted there as a fallback.') }}</p>
                 </div>
             </div>
         </div>
 
         <!-- Warning: tags without linked event types -->
-        <div v-if="tagsWithoutEventTypes.length > 0" class="mb-6 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+        <div v-if="tagsWithoutEventTypes.length > 0" class="mb-6 rounded-lg border border-warning-border bg-warning-surface px-4 py-3 text-sm text-warning">
             {{ $t('The following tags are not linked to any event type yet, so they will not be counted in the dashboard and exports:') }}
             <button
                 v-for="tag in tagsWithoutEventTypes"
                 :key="tag.id"
                 type="button"
-                class="ml-1.5 inline-flex items-center gap-1 rounded-full border border-amber-300 bg-white px-2.5 py-0.5 text-xs font-medium text-amber-800 hover:bg-amber-100"
+                class="ml-1.5 inline-flex items-center gap-1 rounded-full border border-warning-border bg-white px-2.5 py-0.5 text-xs font-medium text-warning hover:bg-warning-surface"
                 @click="openAssignModal(tag)"
             >
                 <span v-if="tag.color" class="w-2 h-2 rounded-full" :style="{ backgroundColor: tag.color }" />
@@ -42,15 +42,15 @@
 
         <!-- Tags list -->
         <div class="space-y-3" v-if="tags.length > 0">
-            <div v-for="tag in tags" :key="tag.id" class="border border-gray-200 rounded-lg p-4">
+            <div v-for="tag in tags" :key="tag.id" class="border border-border-subtle rounded-lg p-4">
                 <div class="flex items-center justify-between gap-3">
                     <div class="flex items-center gap-3 min-w-0">
                         <span class="w-4 h-4 rounded-full shrink-0" :style="{ backgroundColor: tag.color ?? '#d1d5db' }" />
                         <span class="font-medium text-sm truncate">{{ tag.name_de }}</span>
-                        <span class="text-xs text-gray-400 shrink-0">({{ tag.name }})</span>
+                        <span class="text-xs text-text-subtle shrink-0">({{ tag.name }})</span>
                         <span
                             v-if="kpiLabel(tag)"
-                            class="hidden sm:inline-flex items-center rounded-full bg-indigo-100 px-2.5 py-0.5 text-xs font-medium text-indigo-700 shrink-0"
+                            class="hidden sm:inline-flex items-center rounded-full bg-accent-100 px-2.5 py-0.5 text-xs font-medium text-accent-700 shrink-0"
                         >
                             {{ $t('Controls the key figure {kpi}', { kpi: kpiLabel(tag) }) }}
                         </span>
@@ -69,25 +69,25 @@
                     <span
                         v-for="eventType in tag.event_types ?? []"
                         :key="eventType.id"
-                        class="group inline-flex items-center gap-1.5 rounded-full border border-gray-200 bg-gray-50 pl-2 pr-1 py-0.5 text-xs text-gray-700"
+                        class="group inline-flex items-center gap-1.5 rounded-full border border-border-subtle bg-surface-sunken pl-2 pr-1 py-0.5 text-xs text-text-muted"
                     >
                         <span class="w-2.5 h-2.5 rounded-full shrink-0" :style="{ backgroundColor: eventType.hex_code }" />
                         {{ eventType.name }}
                         <button
                             type="button"
-                            class="rounded-full p-0.5 text-gray-400 hover:bg-gray-200 hover:text-gray-700"
+                            class="rounded-full p-0.5 text-text-subtle hover:bg-border-subtle hover:text-text-muted"
                             :title="$t('Remove')"
                             @click="removeEventType(tag, eventType)"
                         >
                             <component :is="IconX" class="size-3" stroke-width="1.5" />
                         </button>
                     </span>
-                    <span v-if="!(tag.event_types?.length)" class="text-xs text-gray-400 italic">
+                    <span v-if="!(tag.event_types?.length)" class="text-xs text-text-subtle italic">
                         {{ $t('No event types assigned yet') }}
                     </span>
                     <button
                         type="button"
-                        class="inline-flex items-center gap-1 rounded-full border border-dashed border-gray-300 px-2 py-0.5 text-xs text-gray-500 hover:border-gray-400 hover:text-gray-700"
+                        class="inline-flex items-center gap-1 rounded-full border border-dashed border-border px-2 py-0.5 text-xs text-text-subtle hover:border-border-strong hover:text-text-muted"
                         @click="openAssignModal(tag)"
                     >
                         <component :is="IconCirclePlus" class="size-3.5" stroke-width="1.5" />
@@ -96,15 +96,15 @@
                 </div>
             </div>
         </div>
-        <p v-else class="text-sm text-gray-400">{{ $t('No BI tags defined yet.') }}</p>
+        <p v-else class="text-sm text-text-subtle">{{ $t('No BI tags defined yet.') }}</p>
 
         <!-- Event types not covered by any tag -->
-        <div v-if="tags.length > 0 && unassignedEventTypes.length > 0" class="mt-4 flex flex-wrap items-center gap-1.5 text-xs text-gray-400">
+        <div v-if="tags.length > 0 && unassignedEventTypes.length > 0" class="mt-4 flex flex-wrap items-center gap-1.5 text-xs text-text-subtle">
             <span>{{ $t('Event types without a BI tag') }}:</span>
             <span
                 v-for="eventType in unassignedEventTypes"
                 :key="eventType.id"
-                class="inline-flex items-center gap-1.5 rounded-full border border-gray-200 px-2 py-0.5"
+                class="inline-flex items-center gap-1.5 rounded-full border border-border-subtle px-2 py-0.5"
             >
                 <span class="w-2 h-2 rounded-full shrink-0" :style="{ backgroundColor: eventType.hex_code }" />
                 {{ eventType.name }}
@@ -135,6 +135,7 @@
 import { ref, computed, onMounted } from 'vue';
 import { IconCirclePlus, IconEdit, IconInfoCircle, IconLink, IconTrash, IconX } from '@tabler/icons-vue';
 import BaseMenu from '@/Components/Menu/BaseMenu.vue';
+import BaseUIButton from '@/Artwork/Buttons/BaseUIButton.vue';
 import BaseMenuItem from '@/Components/Menu/BaseMenuItem.vue';
 import AddEditBiTagModal from '@/Pages/Settings/EventType/Components/Modals/AddEditBiTagModal.vue';
 import AssignBiTagEventTypesModal from '@/Pages/Settings/EventType/Components/Modals/AssignBiTagEventTypesModal.vue';

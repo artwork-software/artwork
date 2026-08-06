@@ -4,10 +4,10 @@
         :description="$t('Edit and create categories for your inventory.')"
     >
         <template #actions>
-            <button class="ui-button-add" @click="showAddEditCategoryModal = true">
+            <BaseUIButton variant="primary" hide-icon @click="showAddEditCategoryModal = true">
                 <component :is="IconCirclePlus" stroke-width="1" class="size-5" />
                 {{ $t('Create Category') }}
-            </button>
+            </BaseUIButton>
         </template>
 
         <SettingsGuideBanner
@@ -19,7 +19,7 @@
                 'Caution: deleting a category also irrevocably deletes all articles in it.',
             ]"
         />
-        <div class="mb-10 card white p-5">
+        <div class="mb-10 rounded-lg bg-surface border border-border-subtle w-full shadow-raised p-5">
 
             <div class="my-8 flow-root">
                 <div class="-mx-4 -my-2 sm:-mx-6 lg:-mx-8">
@@ -27,16 +27,16 @@
                         <div class="table-container ">
                             <div class="overflow-x-auto w-full">
                                 <div class="inline-flex w-full max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg xl:max-w-xl 2xl:max-w-full">
-                                    <table class="min-w-0 w-full divide-y divide-gray-300 flex-grow overflow-hidden">
+                                    <table class="min-w-0 w-full divide-y divide-border flex-grow overflow-hidden">
                                         <thead>
-                                        <tr class="divide-x divide-gray-200">
-                                            <th scope="col" class="py-3.5 pr-4 pl-4 text-left text-sm font-semibold text-gray-900 sm:pl-0">Name</th>
-                                            <th scope="col" class="px-4 py-3.5 text-left text-sm font-semibold text-gray-900">{{ $t('Sub-Categories') }}</th>
-                                            <th scope="col" class="px-4 py-3.5 text-left text-sm font-semibold text-gray-900">{{ $t('Properties') }}</th>
+                                        <tr class="divide-x divide-border-subtle">
+                                            <th scope="col" class="py-3.5 pr-4 pl-4 text-left text-sm font-semibold text-text sm:pl-0">Name</th>
+                                            <th scope="col" class="px-4 py-3.5 text-left text-sm font-semibold text-text">{{ $t('Sub-Categories') }}</th>
+                                            <th scope="col" class="px-4 py-3.5 text-left text-sm font-semibold text-text">{{ $t('Properties') }}</th>
                                         </tr>
                                         </thead>
-                                        <tbody class="divide-y divide-gray-200 bg-white">
-                                        <tr v-for="category in categories.data" :key="category?.id" class="divide-x divide-gray-200">
+                                        <tbody class="divide-y divide-border-subtle bg-white">
+                                        <tr v-for="category in categories.data" :key="category?.id" class="divide-x divide-border-subtle">
                                             <SingleCategoryInSettings :category="category" :properties="properties" :rooms="rooms" :manufacturers="manufacturers" :show-actions="false" />
                                         </tr>
                                         </tbody>
@@ -44,13 +44,13 @@
 
                                     <!-- Fixed Actions Column -->
                                     <div class="fixed-actions-column">
-                                        <table class="h-full divide-y divide-gray-300">
+                                        <table class="h-full divide-y divide-border">
                                             <thead>
                                             <tr>
-                                                <th scope="col" class="py-3.5 pr-4 pl-4 text-left text-sm font-semibold text-gray-900 sm:pr-0 bg-white">{{ $t('Actions') }}</th>
+                                                <th scope="col" class="py-3.5 pr-4 pl-4 text-left text-sm font-semibold text-text sm:pr-0 bg-white">{{ $t('Actions') }}</th>
                                             </tr>
                                             </thead>
-                                            <tbody class="divide-y divide-gray-200 bg-white">
+                                            <tbody class="divide-y divide-border-subtle bg-white">
                                             <tr v-for="category in categories.data" :key="category?.id">
                                                 <SingleCategoryInSettings :category="category" :properties="properties" :rooms="rooms" :manufacturers="manufacturers" :show-only-actions="true" />
                                             </tr>
@@ -85,6 +85,7 @@
 <script setup>
 
 import InventorySettingsHeader from "@/Pages/InventorySetting/Components/InventorySettingsHeader.vue";
+import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 import SettingsGuideBanner from "@/Artwork/Guide/SettingsGuideBanner.vue";
 import AddEditCategoryModal from "@/Pages/InventorySetting/Components/AddEditCategoryModal.vue";
 import {ref} from "vue";

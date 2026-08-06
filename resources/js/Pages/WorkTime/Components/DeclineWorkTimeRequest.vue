@@ -24,7 +24,6 @@
 
 import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
 import BaseTextarea from "@/Artwork/Inputs/BaseTextarea.vue";
-import ArtworkBaseModalButton from "@/Artwork/Buttons/ArtworkBaseModalButton.vue";
 import {router, useForm} from "@inertiajs/vue3";
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 

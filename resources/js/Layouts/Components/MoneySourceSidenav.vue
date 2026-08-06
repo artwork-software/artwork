@@ -1,12 +1,12 @@
 <template>
     <div class="w-full mt-6">
         <!-- Section: Zugriff / Verantwortliche -->
-        <section class="rounded-2xl border border-zinc-700 shadow-sm p-4">
+        <section class="rounded-2xl border border-white/10 shadow-sm p-4">
             <header class="flex items-center justify-between">
                 <h3 class="text-sm font-semibold text-white">{{ $t('Freigaben') }}</h3>
                 <button
                     v-if="canManage"
-                    class="inline-flex items-center justify-center size-7 rounded-full bg-gray-700 text-white hover:bg-gray-900 transition"
+                    class="inline-flex items-center justify-center size-7 rounded-full bg-white/10 text-white hover:bg-white/20 transition"
                     @click="openEditUsersModal"
                     type="button"
                 >
@@ -28,7 +28,7 @@
                             :id="u.id"
                         />
                     </template>
-                    <p v-if="!competentUsers.length" class="text-xs text-zinc-300">{{ $t('Keine Verantwortlichen zugewiesen') }}</p>
+                    <p v-if="!competentUsers.length" class="text-xs text-white/70">{{ $t('Keine Verantwortlichen zugewiesen') }}</p>
                 </div>
             </div>
 
@@ -45,13 +45,13 @@
                             :id="u.id + '-write'"
                         />
                     </template>
-                    <p v-if="!writeUsers.length" class="text-xs text-zinc-300">{{ $t('Niemand mit Schreibzugriff') }}</p>
+                    <p v-if="!writeUsers.length" class="text-xs text-white/70">{{ $t('Niemand mit Schreibzugriff') }}</p>
                 </div>
             </div>
         </section>
 
         <!-- Section: Kategorien -->
-        <section class="mt-5 rounded-2xl border border-zinc-700  shadow-sm">
+        <section class="mt-5 rounded-2xl border border-white/10  shadow-sm">
             <header class="flex items-center justify-between px-4 py-3">
                 <button class="flex items-center gap-2 text-sm font-semibold text-white" @click="showMoneySourceCategories = !showMoneySourceCategories" type="button">
                     {{ $t('Quellen-Kategorien') }}
@@ -59,7 +59,7 @@
                 </button>
                 <button
                     v-if="canManage"
-                    class="inline-flex items-center justify-center size-7 rounded-full bg-gray-700 text-white hover:bg-gray-900 transition"
+                    class="inline-flex items-center justify-center size-7 rounded-full bg-white/10 text-white hover:bg-white/20 transition"
                     @click="openMoneySourceCategoriesModal"
                     type="button"
                 >
@@ -77,12 +77,12 @@
                         hide-x="true"
                     />
                 </div>
-                <p v-else class="text-xs text-zinc-300">{{ $t('Keine Kategorien vergeben') }}</p>
+                <p v-else class="text-xs text-white/70">{{ $t('Keine Kategorien vergeben') }}</p>
             </div>
         </section>
 
         <!-- Section: Finanzierte Projekte -->
-        <section class="mt-5 rounded-2xl border border-zinc-700  shadow-sm">
+        <section class="mt-5 rounded-2xl border border-white/10  shadow-sm">
             <header class="flex items-center justify-between px-4 py-3">
                 <button class="flex items-center gap-2 text-sm font-semibold text-white" @click="showLinkedProjects = !showLinkedProjects" type="button">
                     {{ $t('Finanzierte Projekte') }}
@@ -90,7 +90,7 @@
                 </button>
                 <button
                     v-if="canManage"
-                    class="inline-flex items-center justify-center size-7 rounded-full bg-gray-700 text-white hover:bg-gray-900 transition"
+                    class="inline-flex items-center justify-center size-7 rounded-full bg-white/10 text-white hover:bg-white/20 transition"
                     @click="openLinkProjectsModal"
                     type="button"
                 >
@@ -102,35 +102,35 @@
                 <div
                     v-for="proj in linkedProjects"
                     :key="proj.id"
-                    class="rounded-xl border border-zinc-700  px-3 py-2 flex items-center justify-between gap-3"
+                    class="rounded-xl border border-white/10  px-3 py-2 flex items-center justify-between gap-3"
                 >
                     <div class="min-w-0">
                         <Link
                             v-if="proj.id"
                             :href="route('projects.tab', { project: proj.id, projectTab: first_project_budget_tab_id })"
-                            class="text-sm text-blue-300 hover:text-blue-400 truncate inline-flex items-center gap-1"
+                            class="text-sm text-accent-200 hover:text-accent-100 truncate inline-flex items-center gap-1"
                         >
                             <svg class="size-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-width="1.5" d="M4 7h16M4 12h10M4 17h16"/></svg>
                             {{ proj.name }}
                         </Link>
                         <span v-else class="text-sm text-white">{{ proj.name }}</span>
-                        <p class="text-[11px] text-zinc-300">
+                        <p class="text-[11px] text-white/70">
                             {{ $t('verwendet') }}
                         </p>
                     </div>
-                    <div class="shrink-0 text-sm font-medium text-zinc-300">
+                    <div class="shrink-0 text-sm font-medium text-white/70">
                         {{ formatCurrency(positionSumsPerProject?.[proj.id] || 0) }}
                     </div>
                 </div>
 
-                <p v-if="!linkedProjects?.length" class="text-xs text-zinc-300">
+                <p v-if="!linkedProjects?.length" class="text-xs text-white/70">
                     {{ $t('Keine verknüpften Projekte') }}
                 </p>
             </div>
         </section>
 
         <!-- Section: Dokumente -->
-        <section class="mt-5 rounded-2xl border border-zinc-700  shadow-sm">
+        <section class="mt-5 rounded-2xl border border-white/10  shadow-sm">
             <header class="flex items-center gap-2 px-4 py-3">
                 <button class="flex items-center gap-2 text-sm font-semibold text-white" @click="showMoneySourceFiles = !showMoneySourceFiles" type="button">
                     {{ $t('Dokumente') }}
@@ -138,7 +138,7 @@
                 </button>
                 <button
                     v-if="canManage"
-                    class="ml-auto inline-flex items-center justify-center size-7 rounded-full bg-gray-800 text-white hover:bg-gray-900 transition"
+                    class="ml-auto inline-flex items-center justify-center size-7 rounded-full bg-white/10 text-white hover:bg-white/20 transition"
                     @click="openFileUploadModal"
                     type="button"
                     :title="$t('Datei hochladen')"
@@ -152,11 +152,11 @@
                     <div
                         v-for="file in moneySourceFiles.data"
                         :key="file.id || file.name"
-                        class="group flex items-center gap-2 rounded-xl border border-gray-100 bg-white px-3 py-2 hover:bg-gray-50"
+                        class="group flex items-center gap-2 rounded-xl border border-border-subtle bg-white px-3 py-2 hover:bg-surface-sunken"
                     >
                         <button
                             v-if="canManage"
-                            class="text-gray-700 hover:text-gray-900"
+                            class="text-text-muted hover:text-text"
                             type="button"
                             @click="downloadMoneySourceFile(file)"
                         >
@@ -165,17 +165,17 @@
 
                         <button
                             v-if="canManage"
-                            class="flex-1 text-left text-sm text-gray-700 hover:text-gray-900 truncate"
+                            class="flex-1 text-left text-sm text-text-muted hover:text-text truncate"
                             type="button"
                             @click="openFileEditModal(file)"
                         >
                             {{ file.name }}
                         </button>
-                        <span v-else class="flex-1 text-sm text-gray-700 truncate">{{ file.name }}</span>
+                        <span v-else class="flex-1 text-sm text-text-muted truncate">{{ file.name }}</span>
 
                         <button
                             v-if="canManage"
-                            class="ml-auto text-red-600 hover:text-red-700"
+                            class="ml-auto text-danger"
                             type="button"
                             @click="openFileDeleteModal(file)"
                         >
@@ -183,17 +183,17 @@
                         </button>
                     </div>
                 </div>
-                <p v-else class="text-xs text-zinc-300">{{ $t('Keine Dokumente vorhanden') }}</p>
+                <p v-else class="text-xs text-white/70">{{ $t('Keine Dokumente vorhanden') }}</p>
             </div>
         </section>
 
         <!-- Section: Aufgaben -->
-        <section class="mt-5 rounded-2xl border border-zinc-700 shadow-sm p-4">
+        <section class="mt-5 rounded-2xl border border-white/10 shadow-sm p-4">
             <header class="flex items-center justify-between">
                 <h3 class="text-sm font-semibold text-white">{{ $t('Aufgaben') }}</h3>
                 <button
                     v-if="canManage"
-                    class="inline-flex items-center justify-center size-7 rounded-full bg-gray-700 text-white hover:bg-gray-900 transition"
+                    class="inline-flex items-center justify-center size-7 rounded-full bg-white/10 text-white hover:bg-white/20 transition"
                     @click="openAddMoneySourceTask"
                     type="button"
                 >
@@ -205,7 +205,7 @@
                 <li
                     v-for="task in tasks"
                     :key="task.id"
-                    class="rounded-xl border border-zinc-700  px-3 py-2"
+                    class="rounded-xl border border-white/10  px-3 py-2"
                 >
                     <div class="flex items-start gap-3">
                         <div class="pt-0.5" v-if="canManage">
@@ -213,17 +213,17 @@
                                 type="checkbox"
                                 :checked="task.done"
                                 @change="updateTask(task)"
-                                class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                                class="rounded border-border text-accent-600 focus:ring-accent-600"
                             />
                         </div>
                         <div class="min-w-0">
                             <div class="flex items-center gap-2">
-                                <p class="text-sm font-medium leading-tight truncate" :class="task.done ? 'line-through text-gray-400' : ''">
+                                <p class="text-sm font-medium leading-tight truncate" :class="task.done ? 'line-through text-white/70' : ''">
                                     {{ task.name }}
                                 </p>
                                 <span
                                     class="text-[11px]"
-                                    :class="isOverdue(task.deadline) && !task.done ? 'text-red-600' : 'text-gray-500'"
+                                    :class="isOverdue(task.deadline) && !task.done ? 'text-danger-border' : 'text-white/70'"
                                 >
                   {{ $t('bis') }} {{ formatDate(task.deadline) }}
                 </span>
@@ -241,7 +241,7 @@
                                     </template>
                                 </div>
                             </div>
-                            <p v-if="task.description" class="text-xs text-zinc-300 mt-1">
+                            <p v-if="task.description" class="text-xs text-white/70 mt-1">
                                 {{ task.description }}
                             </p>
                         </div>
@@ -249,7 +249,7 @@
                 </li>
             </ul>
 
-            <p v-if="!tasks?.length" class="text-xs text-zinc-300 mt-3">
+            <p v-if="!tasks?.length" class="text-xs text-white/70 mt-3">
                 {{ $t('Keine Aufgaben vorhanden') }}
             </p>
         </section>

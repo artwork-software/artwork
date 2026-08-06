@@ -2,14 +2,14 @@
     <BaseModal @closed="$emit('close')">
         <div>
             <div class="mb-5">
-                <h2 class="headline2 my-2">{{ holidayToEdit.name }} {{ $t('edit')}}</h2>
-                <p class="xsLight max-w-3xl">
+                <h2 class="font-lexend font-semibold text-[clamp(18px,2.5vw,20px)]/[25px] text-text my-2">{{ holidayToEdit.name }} {{ $t('edit')}}</h2>
+                <p class="text-sm/5 font-bold text-text-subtle max-w-3xl">
                     {{ $t('Edit the holiday by filling in the fields. You can rename the holiday, change the date and adjust the federal states and color.') }}
                 </p>
             </div>
             <div class="my-5">
-                <h3 class="headline3">{{ $t('Select states & color') }}</h3>
-                <p class="xsLight w-full my-2">
+                <h3 class="font-lexend font-semibold text-[clamp(16px,2vw,18px)]/[21px] text-text">{{ $t('Select states & color') }}</h3>
+                <p class="text-sm/5 font-bold text-text-subtle w-full my-2">
                     <!-- text für selbst angelegte Feiertage und deren bundesländer -->
                     {{ $t('Select the federal states that should apply to this public holiday. You can select as many federal states as you like. You can then specify a color in which the public holiday should be displayed in your calendar. You do not have to select a federal state if the public holiday applies throughout Germany.') }}
                 </p>
@@ -17,7 +17,7 @@
                     <Listbox as="div" class="relative w-full" v-model="customHolidayForm.selectedSubdivisions" multiple>
                         <ListboxButton class="menu-button">
                             <div class="flex items-center justify-between w-full">
-                                <div class="xsLight">
+                                <div class="text-sm/5 font-bold text-text-subtle">
                                     {{ $t('Select federal states') }}
                                 </div>
                                 <div>
@@ -28,10 +28,10 @@
                         <transition leave-active-class="transition ease-in duration-100" leave-from-class="opacity-100" leave-to-class="opacity-0">
                             <ListboxOptions class="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm">
                                 <ListboxOption as="template" v-for="subdivision in subDivisions" :key="subdivision.id" :value="subdivision" v-slot="{ active, selected }">
-                                    <li :class="[active ? 'bg-indigo-600 text-white' : 'text-gray-900', 'relative cursor-default select-none py-2 pl-3 pr-9']">
+                                    <li :class="[active ? 'bg-accent-600 text-white' : 'text-text', 'relative cursor-default select-none py-2 pl-3 pr-9']">
                                         <span :class="[selected ? 'font-semibold' : 'font-normal', 'block truncate']">{{ subdivision.name }}</span>
 
-                                        <span v-if="selected" :class="[active ? 'text-white' : 'text-indigo-600', 'absolute inset-y-0 right-0 flex items-center pr-4']">
+                                        <span v-if="selected" :class="[active ? 'text-white' : 'text-accent-600', 'absolute inset-y-0 right-0 flex items-center pr-4']">
                                             <component :is="IconCheck" class="h-5 w-5" aria-hidden="true" />
                                         </span>
                                     </li>
@@ -45,7 +45,7 @@
                 <div class="w-full">
                     <div class="flex items-center flex-wrap gap-2 mt-4 w-full">
                         <div v-for="selectedSubdivision in customHolidayForm.selectedSubdivisions" :key="selectedSubdivision.id" class="break-keep">
-                            <div class="px-2 py-1 bg-tagBg rounded-full min-w-fit text-tagText text-xs cursor-pointer hover:bg-red-600/20 hover:border-red-500/40 hover:text-red-600 transition-colors duration-300 ease-in-out border border-tagBg"
+                            <div class="px-2 py-1  rounded-full min-w-fit  text-xs cursor-pointer hover:bg-danger/20 hover:border-danger/40 hover:text-danger transition-colors duration-300 ease-in-out border "
                                  @click="removeSubDivisionFormCustomHoliday(selectedSubdivision.id)">
                                 {{ selectedSubdivision.name }}
                             </div>
@@ -60,7 +60,7 @@
                 </div>
                 <div>
                     <BaseInput type="date" id="start" v-model="customHolidayForm.date" label="Start-Time*" />
-                    <div class="text-red-500 text-xs mt-1" v-show="showErrorMessageDate">
+                    <div class="text-danger text-xs mt-1" v-show="showErrorMessageDate">
                         {{ $t('Please select a date') }}
                     </div>
                 </div>
@@ -69,13 +69,13 @@
                 </div>
                 <div class="col-span-2">
                     <SwitchGroup as="div" class="flex items-center cursor-pointer">
-                        <SwitchLabel as="span" class="mr-3 text-sm" :class="customHolidayForm.yearly ? 'font-bold' : 'text-gray-400'">
+                        <SwitchLabel as="span" class="mr-3 text-sm" :class="customHolidayForm.yearly ? 'font-bold' : 'text-text-subtle'">
                             {{ $t('Repeat the holiday annually') }}
                         </SwitchLabel>
-                        <Switch v-model="customHolidayForm.yearly" :class="[customHolidayForm.yearly ? 'bg-artwork-buttons-create' : 'bg-artwork-buttons-create', 'relative inline-flex h-3 w-6 flex-shrink-0 rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none']">
-                            <span aria-hidden="true" :class="[!customHolidayForm.yearly  ? 'translate-x-3' : 'translate-x-0', 'pointer-events-none inline-block h-2 w-2 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']" />
+                        <Switch v-model="customHolidayForm.yearly" :class="[customHolidayForm.yearly ? 'bg-accent-600' : 'bg-accent-600', 'relative inline-flex h-3 w-6 flex-shrink-0 rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none']">
+                            <span aria-hidden="true" :class="[!customHolidayForm.yearly ? 'translate-x-3' : 'translate-x-0', 'pointer-events-none inline-block h-2 w-2 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']" />
                         </Switch>
-                        <SwitchLabel as="span" class="ml-3 text-sm" :class="!customHolidayForm.yearly? 'font-bold' : 'text-gray-400'">
+                        <SwitchLabel as="span" class="ml-3 text-sm" :class="!customHolidayForm.yearly? 'font-bold' : 'text-text-subtle'">
                             {{ $t('One-off public holiday') }}
                         </SwitchLabel>
                     </SwitchGroup>

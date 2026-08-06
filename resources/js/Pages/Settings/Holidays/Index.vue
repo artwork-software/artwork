@@ -12,8 +12,8 @@
             />
 
             <!-- Länderwahl -->
-            <fieldset class="my-4 bg-white rounded-2xl border border-gray-200/70 shadow-sm p-5">
-                <label class="block text-sm/6 font-semibold text-gray-900 dark:text-white mb-2">
+            <fieldset class="my-4 bg-white rounded-2xl border border-border-subtle/70 shadow-sm p-5">
+                <label class="block text-sm/6 font-semibold text-text dark:text-white mb-2">
                     {{ $t('Choose a country') }}
                 </label>
 
@@ -27,7 +27,7 @@
                             :id="`country-${c.id}`"
                             type="radio"
                             name="country"
-                            class="h-4 w-4 border-gray-300 text-blue-600 focus:ring-2 focus:ring-blue-600"
+                            class="h-4 w-4 border-border text-accent-600 focus:ring-2 focus:ring-accent-600"
                             v-model="selectedCountryId"
                             :value="c.id"
                             :aria-label="c.name"
@@ -37,7 +37,7 @@
                             class="inline-flex items-center gap-2 cursor-pointer select-none"
                         >
                             <img :src="c.image" :alt="c.name" class="size-12 rounded-full" />
-                            <span class="text-sm text-gray-900 dark:text-white">{{ c.name }}</span>
+                            <span class="text-sm text-text dark:text-white">{{ c.name }}</span>
                         </label>
                     </div>
                 </div>
@@ -49,7 +49,7 @@
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
 
                     <!-- API Import Card -->
-                    <div class="bg-white rounded-2xl border border-gray-200/70 shadow-sm">
+                    <div class="bg-white rounded-2xl border border-border-subtle/70 shadow-sm">
                         <div class="p-6 sm:p-8">
                             <BasePageTitle
                                 :title="$t('Public holidays & school vacations via interface')"
@@ -66,7 +66,7 @@
                             >
                                 <div
                                     v-show="showAPIHolidaySaved"
-                                    class="mt-4 text-xs bg-green-600 px-3 py-1.5 text-white rounded-lg w-full sm:w-2/3"
+                                    class="mt-4 text-xs bg-success px-3 py-1.5 text-white rounded-lg w-full sm:w-2/3"
                                     aria-live="polite"
                                 >
                                     {{ $t('Saved. The changes have been successfully applied.') }}
@@ -95,7 +95,7 @@
                                             leave-to-class="opacity-0"
                                         >
                                             <ListboxOptions
-                                                class="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg border border-gray-200 ring-opacity-5 focus:outline-none sm:text-sm"
+                                                class="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg border border-border-subtle ring-opacity-5 focus:outline-none sm:text-sm"
                                             >
                                                 <ListboxOption
                                                     as="template"
@@ -104,7 +104,7 @@
                                                 >
                                                     <li
                                                         @click="addSubDivisionToForm(subdivision)"
-                                                        class="relative cursor-pointer select-none py-2 pl-3 pr-9 hover:bg-gray-50"
+                                                        class="relative cursor-pointer select-none py-2 pl-3 pr-9 hover:bg-surface-sunken"
                                                     >
                                                         <span class="block truncate">{{ subdivision.name }}</span>
                                                     </li>
@@ -128,7 +128,7 @@
                                             class="break-keep"
                                         >
                                             <div
-                                                class="px-2 py-1 bg-tagBg rounded-full min-w-fit text-tagText text-xs cursor-pointer border border-tagBg hover:bg-red-600/20 hover:border-red-500/40 hover:text-red-600 transition-colors"
+                                                class="px-2 py-1  rounded-full min-w-fit  text-xs cursor-pointer border  hover:bg-danger/20 hover:border-danger/40 hover:text-danger transition-colors"
                                                 @click="removeSubDivisionFormForm(selectedSubdivision.id)"
                                             >
                                                 {{ selectedSubdivision.name }}
@@ -165,7 +165,7 @@
                             <div class="mt-8 flex items-center justify-between">
                                 <div v-if="holidayForm.isDirty">
                                     <p>
-                                        <span class="text-xs text-red-500">
+                                        <span class="text-xs text-danger">
                                             {{ $t('Changes have been made. Please save!') }}
                                         </span>
                                     </p>
@@ -189,7 +189,7 @@
                     </div>
 
                     <!-- Manuell erstellen Card -->
-                    <div class="bg-white rounded-2xl border border-gray-200/70 shadow-sm">
+                    <div class="bg-white rounded-2xl border border-border-subtle/70 shadow-sm">
                         <div class="p-6 sm:p-8">
                             <div class="mb-2">
                                 <BasePageTitle
@@ -208,7 +208,7 @@
                             >
                                 <div
                                     v-show="showCustomHolidaySaved"
-                                    class="mt-4 text-xs bg-green-600 px-3 py-1.5 text-white rounded-lg"
+                                    class="mt-4 text-xs bg-success px-3 py-1.5 text-white rounded-lg"
                                     aria-live="polite"
                                 >
                                     {{ $t('Saved. The changes have been successfully applied.') }}
@@ -238,7 +238,7 @@
                                             leave-to-class="opacity-0"
                                         >
                                             <ListboxOptions
-                                                class="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg border border-gray-200 ring-opacity-5 focus:outline-none sm:text-sm"
+                                                class="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg border border-border-subtle ring-opacity-5 focus:outline-none sm:text-sm"
                                             >
                                                 <ListboxOption
                                                     as="template"
@@ -248,14 +248,12 @@
                                                     v-slot="{ active, selected }"
                                                 >
                                                     <li
-                                                        :class="[
-                                                            active ? 'bg-indigo-600 text-white' : 'text-gray-900',
+                                                        :class="[ active ? 'bg-accent-600 text-white' : 'text-text',
                                                             'relative cursor-pointer select-none py-2 pl-3 pr-9'
                                                         ]"
                                                     >
                                                         <span
-                                                            :class="[
-                                                                selected ? 'font-semibold' : 'font-normal',
+                                                            :class="[ selected ? 'font-semibold' : 'font-normal',
                                                                 'block truncate'
                                                             ]"
                                                         >
@@ -263,8 +261,7 @@
                                                         </span>
                                                         <span
                                                             v-if="selected"
-                                                            :class="[
-                                                                active ? 'text-white' : 'text-indigo-600',
+                                                            :class="[ active ? 'text-white' : 'text-accent-600',
                                                                 'absolute inset-y-0 right-0 flex items-center pr-4'
                                                             ]"
                                                         >
@@ -291,7 +288,7 @@
                                             class="break-keep"
                                         >
                                             <div
-                                                class="px-2 py-1 bg-tagBg rounded-full min-w-fit text-tagText text-xs cursor-pointer border border-tagBg hover:bg-red-600/20 hover:border-red-500/40 hover:text-red-600 transition-colors"
+                                                class="px-2 py-1  rounded-full min-w-fit  text-xs cursor-pointer border  hover:bg-danger/20 hover:border-danger/40 hover:text-danger transition-colors"
                                                 @click="removeSubDivisionFormCustomHoliday(selectedSubdivision.id)"
                                             >
                                                 {{ selectedSubdivision.name }}
@@ -305,14 +302,14 @@
                             <div class="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div class="md:col-span-2">
                                     <BaseInput id="title" v-model="customHolidayForm.name" label="Name" />
-                                    <div class="text-red-500 text-xs mt-1" v-show="customHolidayForm.errors.name">
+                                    <div class="text-danger text-xs mt-1" v-show="customHolidayForm.errors.name">
                                         {{ customHolidayForm.errors.name }}
                                     </div>
                                 </div>
 
                                 <div>
                                     <BaseInput type="date" id="start" v-model="customHolidayForm.date" label="Start-Time*" />
-                                    <div class="text-red-500 text-xs mt-1" v-show="customHolidayForm.errors.date">
+                                    <div class="text-danger text-xs mt-1" v-show="customHolidayForm.errors.date">
                                         {{ customHolidayForm.errors.date }}
                                     </div>
                                 </div>
@@ -325,21 +322,19 @@
                                         <SwitchLabel
                                             as="span"
                                             class="mr-3 text-sm"
-                                            :class="customHolidayForm.yearly ? 'font-bold' : 'text-gray-400'"
+                                            :class="customHolidayForm.yearly ? 'font-bold' : 'text-text-subtle'"
                                         >
                                             {{ $t('Repeat the holiday annually') }}
                                         </SwitchLabel>
                                         <Switch
                                             v-model="customHolidayForm.yearly"
-                                            :class="[
-                                                customHolidayForm.yearly ? 'bg-artwork-buttons-create' : 'bg-artwork-buttons-create',
+                                            :class="[ customHolidayForm.yearly ? 'bg-accent-600' : 'bg-accent-600',
                                                 'relative inline-flex h-3 w-6 flex-shrink-0 rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none'
                                             ]"
                                         >
                                             <span
                                                 aria-hidden="true"
-                                                :class="[
-                                                    !customHolidayForm.yearly ? 'translate-x-3' : 'translate-x-0',
+                                                :class="[ !customHolidayForm.yearly ? 'translate-x-3' : 'translate-x-0',
                                                     'pointer-events-none inline-block h-2 w-2 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out'
                                                 ]"
                                             />
@@ -347,7 +342,7 @@
                                         <SwitchLabel
                                             as="span"
                                             class="ml-3 text-sm"
-                                            :class="!customHolidayForm.yearly ? 'font-bold' : 'text-gray-400'"
+                                            :class="!customHolidayForm.yearly ? 'font-bold' : 'text-text-subtle'"
                                         >
                                             {{ $t('One-off public holiday') }}
                                         </SwitchLabel>
@@ -394,7 +389,7 @@
 
             <!-- Tabelle / Liste -->
             <section class="mt-10">
-                <div class="bg-white rounded-2xl border border-gray-200/70 shadow-sm">
+                <div class="bg-white rounded-2xl border border-border-subtle/70 shadow-sm">
                     <div class="p-4 sm:p-6 lg:p-8">
                         <SettingsGuideBanner
                             class="mb-4"
@@ -416,7 +411,7 @@
                             >
                                 <div
                                     v-show="showHolidayUpdatedSuccess"
-                                    class="text-xs bg-green-600 px-3 py-1.5 text-white rounded-lg w-full sm:w-1/2 lg:w-1/3"
+                                    class="text-xs bg-success px-3 py-1.5 text-white rounded-lg w-full sm:w-1/2 lg:w-1/3"
                                     aria-live="polite"
                                 >
                                     {{ $t('Saved. The changes have been successfully applied.') }}
@@ -424,7 +419,7 @@
                             </transition>
 
                             <div v-if="Object.keys(changedHolidays).length > 0" class="flex items-center gap-2">
-                                <span class="text-sm text-red-500">
+                                <span class="text-sm text-danger">
                                     {{ $t('You have unsaved changes') }}
                                 </span>
                                 <AddButtonBig :text="$t('Save Changes')" class="w-fit" @click="saveChanges" />
@@ -432,28 +427,28 @@
                         </div>
 
                         <div class="mt-4 overflow-x-auto">
-                            <table class="min-w-full divide-y divide-gray-200">
-                                <thead class="bg-gray-50">
+                            <table class="min-w-full divide-y divide-border-subtle">
+                                <thead class="bg-surface-sunken">
                                 <tr class="text-left">
-                                    <th scope="col" class="py-3.5 pl-4 pr-3 text-sm font-semibold text-gray-900 sm:pl-6">
+                                    <th scope="col" class="py-3.5 pl-4 pr-3 text-sm font-semibold text-text sm:pl-6">
                                         {{ $t('Name') }}
                                     </th>
-                                    <th scope="col" class="px-3 py-3.5 text-sm font-semibold text-gray-900 capitalize">
+                                    <th scope="col" class="px-3 py-3.5 text-sm font-semibold text-text capitalize">
                                         {{ $t('from') }}
                                     </th>
-                                    <th scope="col" class="px-3 py-3.5 text-sm font-semibold text-gray-900 capitalize">
+                                    <th scope="col" class="px-3 py-3.5 text-sm font-semibold text-text capitalize">
                                         {{ $t('until')}}
                                     </th>
-                                    <th scope="col" class="px-3 py-3.5 text-sm font-semibold text-gray-900">
+                                    <th scope="col" class="px-3 py-3.5 text-sm font-semibold text-text">
                                         {{ $t('Federal states') }}
                                     </th>
-                                    <th scope="col" class="px-3 py-3.5 text-sm font-semibold text-gray-900">
+                                    <th scope="col" class="px-3 py-3.5 text-sm font-semibold text-text">
                                         {{ $t('About interface') }}
                                     </th>
-                                    <th scope="col" class="px-3 py-3.5 text-sm font-semibold text-gray-900">
+                                    <th scope="col" class="px-3 py-3.5 text-sm font-semibold text-text">
                                         {{ $t('Repeat annually')}}
                                     </th>
-                                    <th scope="col" class="px-3 py-3.5 text-sm font-semibold text-gray-900">
+                                    <th scope="col" class="px-3 py-3.5 text-sm font-semibold text-text">
                                             <span class="inline-flex items-center">
                                                 {{ $t('Special Day')}}
                                                 <ToolTipComponent
@@ -467,18 +462,18 @@
                                     <th scope="col" class="py-3.5 pl-3 pr-4 sm:pr-6"></th>
                                 </tr>
                                 </thead>
-                                <tbody class="divide-y divide-gray-100 bg-white">
-                                <tr v-for="holiday in holidays.data" :key="holiday.id" class="hover:bg-gray-50">
-                                    <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6">
+                                <tbody class="divide-y divide-border-subtle bg-white">
+                                <tr v-for="holiday in holidays.data" :key="holiday.id" class="hover:bg-surface-sunken">
+                                    <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-text sm:pl-6">
                                         {{ holiday.name }}
                                     </td>
-                                    <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-700">
+                                    <td class="whitespace-nowrap px-3 py-4 text-sm text-text-muted">
                                         {{ holiday.casted_date.date }}
                                     </td>
-                                    <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-700">
+                                    <td class="whitespace-nowrap px-3 py-4 text-sm text-text-muted">
                                         {{ holiday.casted_date.end_date }}
                                     </td>
-                                    <td class="px-3 py-4 text-sm text-gray-700">
+                                    <td class="px-3 py-4 text-sm text-text-muted">
                                         <div v-if="holiday.subdivisions.length > 0" class="max-w-xl">
                                             {{ holiday.subdivisions.map((person) => person.name).join(', ') }}
                                         </div>
@@ -486,10 +481,10 @@
                                             {{ $t('Germany-wide')}}
                                         </div>
                                     </td>
-                                    <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-700">
+                                    <td class="whitespace-nowrap px-3 py-4 text-sm text-text-muted">
                                         {{ holiday.from_api ? $t('Yes') : $t('No') }}
                                     </td>
-                                    <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-700">
+                                    <td class="whitespace-nowrap px-3 py-4 text-sm text-text-muted">
                                         {{ holiday.yearly ? $t('Yes') : $t('No') }}
                                     </td>
                                     <td class="whitespace-nowrap px-3 py-4 text-sm">
@@ -508,7 +503,7 @@
                                                 :icon="IconEdit"
                                                 :tooltip-text="$t('Edit')"
                                                 icon-size="h-5 w-5"
-                                                class="cursor-pointer text-gray-500 hover:text-artwork-buttons-hover transition-colors"
+                                                class="cursor-pointer text-text-subtle hover:text-accent-700 transition-colors"
                                                 aria-hidden="true"
                                             />
                                             <ToolTipComponent
@@ -517,7 +512,7 @@
                                                 :icon="IconTrash"
                                                 :tooltip-text="$t('Delete')"
                                                 icon-size="h-5 w-5"
-                                                class="cursor-pointer text-gray-500 hover:text-red-600 transition-colors"
+                                                class="cursor-pointer text-text-subtle hover:text-danger transition-colors"
                                                 aria-hidden="true"
                                             />
                                         </div>

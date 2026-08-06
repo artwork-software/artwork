@@ -12,7 +12,7 @@
             leave-from-class="translate-y-0 opacity-100"
             leave-to-class="translate-y-1 opacity-0">
             <PopoverPanel class="absolute left-1/2 z-10 mt-1 w-fit  -translate-x-1/2 transform px-4 sm:px-0">
-                <div class="rounded-lg shadow-lg ring-1 ring-black/5 bg-white py-3 px-5 xxsDark">
+                <div class="rounded-lg shadow-lg ring-1 ring-black/5 bg-white py-3 px-5 text-xs/[15px] text-text">
                     {{ component?.note }}
                 </div>
             </PopoverPanel>

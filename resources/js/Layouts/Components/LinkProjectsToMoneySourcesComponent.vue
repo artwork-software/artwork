@@ -12,8 +12,8 @@
                                         leave-from-class="opacity-100"
                                         leave-to-class="opacity-0">
                                 <div v-if="project_search_results.length > 0 && project_query.length > 0"
-                                     class="absolute w-full top-16 z-10 max-h-60 bg-primary shadow-lg rounded-lg text-base ring-1 ring-black ring-opacity-5 overflow-auto focus:outline-none sm:text-sm">
-                                    <div class="border-gray-200">
+                                     class="absolute w-full top-16 z-10 max-h-60 bg-surface-inverse shadow-lg rounded-lg text-base ring-1 ring-black ring-opacity-5 overflow-auto focus:outline-none sm:text-sm">
+                                    <div class="border-border-subtle">
                                         <div v-for="(project, index) in project_search_results" :key="index"
                                              class="flex items-center cursor-pointer">
                                             <div class="flex-1 text-sm py-4">
@@ -34,11 +34,11 @@
                         @select="addProjectToArray"
                     />
 
-                    <div class="sDark mt-4" v-if="this.linkedProjectsArray.length > 0">
+                    <div class="text-base/5 font-semibold text-text mt-4" v-if="this.linkedProjectsArray.length > 0">
                         {{$t('Linked projects')}}:
                     </div>
-                    <div class="mb-4 divide-gray-200 divide-y divide-dashed mt-2">
-                        <div v-for="project in linkedProjectsArray" class="xsDark py-3">
+                    <div class="mb-4 divide-border-subtle divide-y divide-dashed mt-2">
+                        <div v-for="project in linkedProjectsArray" class="text-sm/5 font-semibold text-text py-3">
                             <div class="flex items-center justify-between">
                                 <div class="flex items-center">
                                     <span class="flex">
@@ -47,7 +47,7 @@
                                 </div>
                                 <button type="button" @click="deleteProjectFromArray(project)">
                                     <span class="sr-only">{{$t('Remove user from team')}}</span>
-                                    <IconCircleX stroke-width="1.5" class="ml-3 text-artwork-buttons-create h-5 w-5 hover:text-error "/>
+                                    <IconCircleX stroke-width="1.5" class="ml-3 text-accent-600 h-5 w-5 hover:text-danger "/>
                                 </button>
                             </div>
                         </div>
@@ -63,9 +63,8 @@
 </template>
 
 <script>
+import {IconCheck, IconChevronDown, IconCirclePlus, IconCircleX, IconX} from "@tabler/icons-vue";
 import JetDialogModal from "@/Jetstream/DialogModal.vue";
-import {CheckIcon, ChevronDownIcon, PlusCircleIcon, XIcon} from '@heroicons/vue/outline';
-import {XCircleIcon} from "@heroicons/vue/solid";
 import Permissions from "@/Mixins/Permissions.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import IconLib from "@/Mixins/IconLib.vue";
@@ -89,11 +88,11 @@ export default {
         BaseModal,
         FormButton,
         JetDialogModal,
-        XIcon,
-        CheckIcon,
-        ChevronDownIcon,
-        PlusCircleIcon,
-        XCircleIcon
+        IconX,
+        IconCheck,
+        IconChevronDown,
+        IconCirclePlus,
+        IconCircleX
     },
 
     data() {

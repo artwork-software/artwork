@@ -2,39 +2,39 @@
     <AppLayout :title="$t('Map columns')">
         <div class="mt-5 mx-auto container pb-20">
             <ToolbarHeader
+                band
                 :icon="IconTableColumn"
                 :title="$t('Map columns')"
-                icon-bg-class="bg-indigo-600/10 text-indigo-700"
                 :description="$t('{count} rows to import', { count: totalRows })"
             >
                 <template #actions>
-                    <button class="ui-button" @click="cancel">
+                    <BaseUIButton hide-icon on-band @click="cancel">
                         {{ $t('Cancel') }}
-                    </button>
+                    </BaseUIButton>
                 </template>
             </ToolbarHeader>
 
             <ImportStepper :steps="['Upload file', 'Map columns']" :current-step="2" />
 
             <!-- Where do the artwork fields come from? -->
-            <div class="mb-4 rounded-md bg-indigo-50 border border-indigo-100 p-4">
-                <p class="text-sm text-indigo-900">
+            <div class="mb-4 rounded-md bg-accent-50 border border-accent-200 p-4">
+                <p class="text-sm text-accent-700">
                     {{ $t('The selectable artwork fields are the properties of the property groups assigned to the contact type "{type}".', { type: $t(contactType.name) }) }}
                     {{ $t('If a field is missing here, first assign the matching property group to the contact type in the') }}
-                    <a :href="route('crm.settings.index')" target="_blank" class="font-medium underline hover:text-indigo-700">{{ $t('CRM Settings') }}</a>
+                    <a :href="route('crm.settings.index')" target="_blank" class="font-medium underline hover:text-accent-700">{{ $t('CRM Settings') }}</a>
                     {{ $t('and then restart the import.') }}
                 </p>
             </div>
 
             <!-- Warnings -->
-            <div v-if="!hasDisplayNameMapping && !hasNameFallback" class="mb-4 rounded-md bg-yellow-50 border border-yellow-200 p-4">
-                <p class="text-sm font-medium text-yellow-800">{{ $t('Name is required for import. Please map a column to "Name" or map at least first name or last name.') }}</p>
+            <div v-if="!hasDisplayNameMapping && !hasNameFallback" class="mb-4 rounded-md bg-warning-surface border border-warning-border p-4">
+                <p class="text-sm font-medium text-warning">{{ $t('Name is required for import. Please map a column to "Name" or map at least first name or last name.') }}</p>
             </div>
-            <div v-else-if="!hasDisplayNameMapping && hasNameFallback" class="mb-4 rounded-md bg-blue-50 border border-blue-200 p-4">
-                <p class="text-sm text-blue-800">{{ $t('Name will be generated automatically from first name and/or last name.') }}</p>
+            <div v-else-if="!hasDisplayNameMapping && hasNameFallback" class="mb-4 rounded-md bg-accent-50 border border-accent-200 p-4">
+                <p class="text-sm text-accent-700">{{ $t('Name will be generated automatically from first name and/or last name.') }}</p>
             </div>
-            <div v-if="unmappedRequiredProperties.length > 0" class="mb-4 rounded-md bg-blue-50 border border-blue-200 p-4">
-                <p class="text-sm text-blue-800">
+            <div v-if="unmappedRequiredProperties.length > 0" class="mb-4 rounded-md bg-accent-50 border border-accent-200 p-4">
+                <p class="text-sm text-accent-700">
                     {{ $t('The following required fields are not mapped:') }}
                     <span class="font-medium">{{ unmappedRequiredProperties.map(p => p.name).join(', ') }}</span>.
                     {{ $t('Contacts will be created without these values.') }}
@@ -43,26 +43,26 @@
 
             <!-- Mapping Table -->
             <div class="overflow-x-auto">
-                <table class="min-w-full divide-y divide-gray-200">
-                    <thead class="bg-gray-50">
+                <table class="min-w-full divide-y divide-border-subtle">
+                    <thead class="bg-surface-sunken">
                         <tr>
-                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            <th class="px-4 py-3 text-left text-xs font-medium text-text-subtle uppercase tracking-wider">
                                 {{ $t('Column') }}
                             </th>
-                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            <th class="px-4 py-3 text-left text-xs font-medium text-text-subtle uppercase tracking-wider">
                                 {{ $t('Preview') }}
                             </th>
-                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            <th class="px-4 py-3 text-left text-xs font-medium text-text-subtle uppercase tracking-wider">
                                 {{ $t('Map to') }}
                             </th>
                         </tr>
                     </thead>
-                    <tbody class="bg-white divide-y divide-gray-200">
+                    <tbody class="bg-white divide-y divide-border-subtle">
                         <tr v-for="(header, colIndex) in headers" :key="colIndex">
-                            <td class="px-4 py-3 text-sm font-medium text-gray-900 whitespace-nowrap">
+                            <td class="px-4 py-3 text-sm font-medium text-text whitespace-nowrap">
                                 {{ header }}
                             </td>
-                            <td class="px-4 py-3 text-sm text-gray-500">
+                            <td class="px-4 py-3 text-sm text-text-subtle">
                                 <div class="flex flex-col gap-0.5">
                                     <span
                                         v-for="(row, ri) in preview.slice(0, 3)"
@@ -80,7 +80,7 @@
                                         <ListboxButton class="menu-button bg-white">
                                             <div class="flex items-center gap-2 truncate">
                                                 <template v-if="columnMapping[colIndex] === 'display_name'">
-                                                    <span class="inline-flex items-center justify-center size-5 rounded bg-indigo-100 text-indigo-700">
+                                                    <span class="inline-flex items-center justify-center size-5 rounded bg-accent-100 text-accent-700">
                                                         <IconUser class="size-3.5" />
                                                     </span>
                                                     <span>Name (display_name)</span>
@@ -88,18 +88,18 @@
                                                 <template v-else-if="columnMapping[colIndex]?.startsWith('prop_')">
                                                     <span
                                                         class="inline-flex items-center justify-center size-5 rounded"
-                                                        :class="getPropertyOption(columnMapping[colIndex])?.required ? 'bg-amber-100 text-amber-700' : 'bg-gray-100 text-gray-500'"
+                                                        :class="getPropertyOption(columnMapping[colIndex])?.required ? 'bg-warning-surface text-warning' : 'bg-surface-sunken text-text-subtle'"
                                                     >
                                                         <component :is="getPropertyTypeIcon(getPropertyOption(columnMapping[colIndex])?.propertyType)" class="size-3.5" />
                                                     </span>
                                                     <span>{{ getPropertyOption(columnMapping[colIndex])?.label }}</span>
                                                 </template>
                                                 <template v-else>
-                                                    <span class="text-gray-400">{{ $t('Skip') }}</span>
+                                                    <span class="text-text-subtle">{{ $t('Skip') }}</span>
                                                 </template>
                                             </div>
                                             <span class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
-                                                <IconChevronDown class="h-5 w-5 text-gray-400" aria-hidden="true" />
+                                                <IconChevronDown class="h-5 w-5 text-text-subtle" aria-hidden="true" />
                                             </span>
                                         </ListboxButton>
 
@@ -113,28 +113,28 @@
                                             >
                                                 <!-- Skip -->
                                                 <ListboxOption as="template" value="" v-slot="{ active, selected: isSelected }">
-                                                    <li :class="[active ? 'bg-indigo-600 text-white' : isSelected ? '!bg-artwork-action-buttons/10' : 'text-gray-900', 'relative cursor-default select-none py-2 pl-3 pr-9']">
-                                                        <span :class="[isSelected ? 'font-semibold' : 'font-normal', 'block truncate text-gray-400']">{{ $t('Skip') }}</span>
+                                                    <li :class="[active ? 'bg-accent-600 text-white' : isSelected ? '!bg-accent-600/10' : 'text-text', 'relative cursor-default select-none py-2 pl-3 pr-9']">
+                                                        <span :class="[isSelected ? 'font-semibold' : 'font-normal', 'block truncate text-text-subtle']">{{ $t('Skip') }}</span>
                                                     </li>
                                                 </ListboxOption>
 
                                                 <!-- Name -->
                                                 <ListboxOption as="template" value="display_name" :disabled="isOptionTaken('display_name', colIndex)" v-slot="{ active, selected: isSelected, disabled: isDisabled }">
-                                                    <li :class="[isDisabled ? 'text-gray-300 cursor-not-allowed' : active ? 'bg-indigo-600 text-white' : isSelected ? '!bg-artwork-action-buttons/10' : 'text-gray-900', 'relative cursor-default select-none py-2 pl-3 pr-9']">
+                                                    <li :class="[isDisabled ? 'text-text-subtle cursor-not-allowed' : active ? 'bg-accent-600 text-white' : isSelected ? '!bg-accent-600/10' : 'text-text', 'relative cursor-default select-none py-2 pl-3 pr-9']">
                                                         <div class="flex items-center gap-2">
-                                                            <span class="inline-flex items-center justify-center size-5 rounded" :class="active && !isDisabled ? 'bg-indigo-500 text-white' : 'bg-indigo-100 text-indigo-700'">
+                                                            <span class="inline-flex items-center justify-center size-5 rounded" :class="active && !isDisabled ? 'bg-accent-600 text-white' : 'bg-accent-100 text-accent-700'">
                                                                 <IconUser class="size-3.5" />
                                                             </span>
                                                             <span :class="[isSelected ? 'font-semibold' : 'font-normal', 'block truncate']">Name (display_name)</span>
                                                         </div>
-                                                        <span v-if="isSelected" :class="[active ? 'text-white' : 'text-indigo-600', 'absolute inset-y-0 right-0 flex items-center pr-4']">
+                                                        <span v-if="isSelected" :class="[active ? 'text-white' : 'text-accent-600', 'absolute inset-y-0 right-0 flex items-center pr-4']">
                                                             <IconCheck class="h-5 w-5" aria-hidden="true" />
                                                         </span>
                                                     </li>
                                                 </ListboxOption>
 
                                                 <!-- Separator -->
-                                                <li class="border-t border-gray-100 my-1"></li>
+                                                <li class="border-t border-border-subtle my-1"></li>
 
                                                 <!-- Properties -->
                                                 <ListboxOption
@@ -145,20 +145,20 @@
                                                     :disabled="isOptionTaken(opt.value, colIndex)"
                                                     v-slot="{ active, selected: isSelected, disabled: isDisabled }"
                                                 >
-                                                    <li :class="[isDisabled ? 'text-gray-300 cursor-not-allowed' : active ? 'bg-indigo-600 text-white' : isSelected ? '!bg-artwork-action-buttons/10' : 'text-gray-900', 'relative cursor-default select-none py-2 pl-3 pr-9']">
+                                                    <li :class="[isDisabled ? 'text-text-subtle cursor-not-allowed' : active ? 'bg-accent-600 text-white' : isSelected ? '!bg-accent-600/10' : 'text-text', 'relative cursor-default select-none py-2 pl-3 pr-9']">
                                                         <div class="flex items-center gap-2">
                                                             <span
                                                                 class="inline-flex items-center justify-center size-5 rounded"
-                                                                :class="isDisabled ? 'bg-gray-50 text-gray-300' : active ? 'bg-indigo-500 text-white' : opt.required ? 'bg-amber-100 text-amber-700' : 'bg-gray-100 text-gray-500'"
+                                                                :class="isDisabled ? 'bg-surface-sunken text-text-subtle' : active ? 'bg-accent-600 text-white' : opt.required ? 'bg-warning-surface text-warning' : 'bg-surface-sunken text-text-subtle'"
                                                             >
                                                                 <component :is="getPropertyTypeIcon(opt.propertyType)" class="size-3.5" />
                                                             </span>
                                                             <span :class="[isSelected ? 'font-semibold' : 'font-normal', 'block truncate']">{{ opt.label }}</span>
-                                                            <span v-if="opt.required && !isDisabled" class="text-xs font-medium ml-auto" :class="active ? 'text-indigo-200' : 'text-amber-500'">
+                                                            <span v-if="opt.required && !isDisabled" class="text-xs font-medium ml-auto" :class="active ? 'text-accent-200' : 'text-warning'">
                                                                 {{ $t('Required') }}
                                                             </span>
                                                         </div>
-                                                        <span v-if="isSelected" :class="[active ? 'text-white' : 'text-indigo-600', 'absolute inset-y-0 right-0 flex items-center pr-4']">
+                                                        <span v-if="isSelected" :class="[active ? 'text-white' : 'text-accent-600', 'absolute inset-y-0 right-0 flex items-center pr-4']">
                                                             <IconCheck class="h-5 w-5" aria-hidden="true" />
                                                         </span>
                                                     </li>
@@ -174,7 +174,7 @@
             </div>
 
             <!-- Duplicate detection -->
-            <div class="mt-6 rounded-lg border border-gray-200 bg-gray-50 p-4 max-w-2xl">
+            <div class="mt-6 rounded-lg border border-border-subtle bg-surface-sunken p-4 max-w-2xl">
                 <ArtworkBaseToggle
                     v-model="dupeEnabled"
                     :label="$t('Detect existing contacts')"
@@ -194,11 +194,11 @@
                         <span class="componentLabel">{{ $t('When a match is found') }}</span>
                         <div class="mt-2 space-y-2">
                             <label class="flex items-center gap-2 text-sm cursor-pointer">
-                                <input type="radio" value="skip" v-model="dupeAction" class="text-indigo-600 border-gray-300" />
+                                <input type="radio" value="skip" v-model="dupeAction" class="text-accent-600 border-border" />
                                 {{ $t('Skip row') }}
                             </label>
                             <label class="flex items-center gap-2 text-sm cursor-pointer">
-                                <input type="radio" value="update" v-model="dupeAction" class="text-indigo-600 border-gray-300" />
+                                <input type="radio" value="update" v-model="dupeAction" class="text-accent-600 border-border" />
                                 {{ $t('Update existing contact with the values from the file') }}
                             </label>
                         </div>
@@ -208,12 +208,14 @@
 
             <!-- Submit -->
             <div class="mt-8 flex justify-end gap-3">
-                <button class="ui-button" @click="cancel">
+                <BaseUIButton hide-icon @click="cancel">
                     {{ $t('Cancel') }}
-                </button>
-                <button
+                </BaseUIButton>
+                <BaseUIButton
                     :disabled="!canSubmit || form.processing"
-                    class="ui-button-add disabled:opacity-50 disabled:cursor-not-allowed"
+                    variant="primary"
+                    hide-icon
+                    class="disabled:bg-surface-canvas disabled:border-border-subtle disabled:text-text-subtle disabled:cursor-not-allowed"
                     @click="submit"
                 >
                     <span v-if="form.processing" class="flex items-center gap-2">
@@ -224,7 +226,7 @@
                         {{ $t('Importing') }}...
                     </span>
                     <span v-else>{{ $t('Start import') }}</span>
-                </button>
+                </BaseUIButton>
             </div>
         </div>
     </AppLayout>
@@ -235,6 +237,7 @@ import { ref, computed, watch, onMounted } from 'vue'
 import { useForm, router } from '@inertiajs/vue3'
 import { useTranslation } from '@/Composeables/Translation.js'
 import AppLayout from '@/Layouts/AppLayout.vue'
+import BaseUIButton from '@/Artwork/Buttons/BaseUIButton.vue'
 import ToolbarHeader from '@/Artwork/Toolbar/ToolbarHeader.vue'
 import ImportStepper from '@/Pages/CRM/Import/Components/ImportStepper.vue'
 import ArtworkBaseToggle from '@/Artwork/Toggles/ArtworkBaseToggle.vue'

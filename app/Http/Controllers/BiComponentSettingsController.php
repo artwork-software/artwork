@@ -133,7 +133,9 @@ class BiComponentSettingsController extends Controller
 
     private function clearCaches(): void
     {
-        Cache::forget('settings_components_not_special');
+        // BI-Felder erscheinen in der Tab-Palette; der Einstellungs-Cache wird der Vollständigkeit halber mit geleert
+        Cache::forget('settings_components_not_special_tab_palette');
+        Cache::forget('settings_components_not_special_component_settings');
         Cache::forget('settings_components_special');
         Cache::forget('print_layout_components_not_special');
         Cache::forget('print_layout_components_special');

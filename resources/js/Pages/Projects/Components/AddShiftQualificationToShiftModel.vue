@@ -19,7 +19,7 @@
             </h3>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div v-for="qualification in shiftQualifications" :key="qualification.id">
-                    <button @click="addQualificationToShift(qualification.id)" class="text-center bg-artwork-buttons-create text-white hover:bg-artwork-buttons-hover transition-colors duration-300 ease-in-out w-full rounded-md px-3 py-2">
+                    <button @click="addQualificationToShift(qualification.id)" class="text-center bg-accent-600 text-white hover:bg-accent-700 transition-colors duration-300 ease-in-out w-full rounded-md px-3 py-2">
                         <span class="flex items-center justify-center">
                             {{ qualification.name }}
                         </span>

@@ -1,17 +1,17 @@
 <template>
     <BaseModal @closed="emitClose" v-if="true" modal-image="/Svgs/Overlays/illu_checklist_team_assign.svg">
             <div class="mx-3">
-                <div class="font-bold font-lexend text-primary text-2xl my-2">
+                <div class="font-bold font-lexend text-text text-2xl my-2">
                     {{ $t('Assign users') }}
                 </div>
-                <div class="text-secondary tracking-tight leading-6 sub">
+                <div class="text-text-subtle tracking-tight leading-6 sub">
                     {{ $t('Enter the name of the user to whom you want to assign the checklist.') }}
                 </div>
                 <div class="mt-10">
                     <UserSearch :only-team="checklist?.private" :team-member="project?.users?.map((user) => user.id)" @user-selected="addUserToChecklist"/>
                 </div>
                 <div v-for="(user,index) in selectedUsers"
-                     class="mt-4 font-bold text-primary flex"
+                     class="mt-4 font-bold text-text flex"
                      :key="index">
                     <div class="flex items-center">
                         <img class="h-5 w-5 mr-2 object-cover rounded-full"
@@ -21,7 +21,7 @@
                     </div>
                     <button type="button" @click="removeUser(user)">
                         <span class="sr-only">{{ $t('Remove user from checklist') }}</span>
-                        <XCircleIcon class="ml-2 mt-1 h-5 w-5 hover:text-error text-white bg-artwork-navigation-background rounded-full"/>
+                        <IconCircleX class="ml-2 mt-1 h-5 w-5 hover:text-danger text-white bg-surface-inverse rounded-full"/>
                     </button>
                 </div>
                 <FormButton
@@ -29,13 +29,13 @@
                     :text="$t('Assign')"
                     class="mt-8"
                 />
-                <!-- <p v-if="error" class="text-red-800 text-xs">{{ error }}</p> -->
+                <!-- <p v-if="error" class="text-danger text-xs">{{ error }}</p> -->
             </div>
     </BaseModal>
 </template>
 
 <script>
-import {XCircleIcon, XIcon} from '@heroicons/vue/outline';
+import {IconCircleX, IconX} from "@tabler/icons-vue";
 import TeamIconCollection from "@/Layouts/Components/TeamIconCollection.vue";
 import JetDialogModal from "@/Jetstream/DialogModal.vue";
 import Permissions from "@/Mixins/Permissions.vue";
@@ -50,8 +50,8 @@ export default {
         UserSearch,
         BaseModal,
         FormButton,
-        XIcon,
-        XCircleIcon,
+        IconX,
+        IconCircleX,
         TeamIconCollection,
         JetDialogModal,
     },

@@ -14,8 +14,8 @@
             <template v-if="eventsAtAGlanceRef && eventsAtAGlanceRef.length > 0">
                 <div v-for="roomData in eventsAtAGlanceRef" :key="roomData.roomId">
                     <div :class="isSearchingForProject ? '' : 'sticky' + (isCalendarViewRoute ? ' top-[4.5rem] mt-7' : '')"
-                         class="w-52 py-3 border-r-4 border-secondaryHover bg-userBg z-40">
-                        <div class="flex calendarRoomHeader font-semibold items-center ml-4">
+                         class="w-52 py-3 border-r-4   z-40">
+                        <div class="flex text-[13px]/[18px] font-semibold items-center ml-4">
                             {{ roomData.roomName }}
                         </div>
                     </div>
@@ -42,7 +42,7 @@
                 </div>
             </template>
             <div v-else>
-                <div class="pl-6 pb-12 mt-10 xsDark">
+                <div class="pl-6 pb-12 mt-10 text-sm/5 font-semibold text-text">
                     {{ $t('No events for this project') }}
                 </div>
             </div>
@@ -75,11 +75,11 @@
     />
 
     <div v-show="multiEdit"
-         class="-ml-7 -mb-2 absolute z-50 w-full bg-white/70 bottom-0 h-20 shadow border-t border-gray-100 flex items-center justify-center gap-4">
+         class="-ml-7 -mb-2 absolute z-50 w-full bg-white/70 bottom-0 h-20 shadow border-t border-border-subtle flex items-center justify-center gap-4">
         <FormButton :text="$t('Move events')"
                     @click="openMultiEditModal"/>
         <FormButton @click="openDeleteSelectedEventsModal = true"
-                    class="!border-2 !border-artwork-buttons-create bg-transparent !text-artwork-buttons-create hover:!text-white hover:!bg-artwork-buttons-hover !hover:border-transparent resize-none"
+                    class="!border-2 !border-accent-600 bg-transparent !text-accent-600 hover:!text-white hover:!bg-accent-700 !hover:border-transparent resize-none"
                     :text="$t('Delete events')"/>
     </div>
 

@@ -2,7 +2,7 @@
     <ToolSettingsHeader :title="$t('Branding')">
         <form @submit.prevent="changeLogos">
             <div v-if="this.$page.props.flash.success"
-                 class="w-full font-bold text-sm border-1 border-green-600 rounded bg-green-600 p-2 text-white mb-3">
+                 class="w-full font-bold text-sm border-1 border-success rounded bg-success p-2 text-white mb-3">
                 {{ this.$page.props.flash.success }}
             </div>
             <SettingsGuideBanner
@@ -16,12 +16,12 @@
                 footnote="Which file types are allowed and how large the files may be is defined in the File settings tab."
             />
             <jet-input-error :message="uploadDocumentFeedback"/>
-            <label class="block mt-6 mb-4 xsDark">
+            <label class="block mt-6 mb-4 text-sm/5 font-semibold text-text">
                 {{ $t('Big Logo (Upload by click or drag & drop)') }}
             </label>
             <div class="grid grid-cols-6 gap-x-12 items-center">
                 <div
-                    class="flex col-span-2 justify-center border-2 w-80 cursor-pointer border-gray-300 bg-stone-50 border-dashed rounded-md p-2"
+                    class="flex col-span-2 justify-center border-2 w-80 cursor-pointer border-border bg-surface-sunken border-dashed rounded-md p-2"
                     @click="selectNewBigLogo"
                     @dragover.prevent
                     @drop.stop.prevent="uploadDraggedBigLogo($event)">
@@ -29,7 +29,7 @@
                     <input type="file" class="hidden"
                            ref="bigLogo"
                            @change="updateBigLogoPreview">
-                    <div class="flex my-auto h-40 items-center xsLight"
+                    <div class="flex my-auto h-40 items-center text-sm/5 font-bold text-text-subtle"
                          v-if="$page.props.big_logo === null && bigLogoPreview === null">
                         {{ $t('Drag your large artwork logo here') }}
                     </div>
@@ -39,26 +39,26 @@
                 </div>
                 <div v-if="this.$page.props.show_hints" class="col-span-4 items-center flex">
                     <SvgCollection svgName="arrowLeft" class="ml-2 -mt-4"/>
-                    <span class="ml-2 my-auto hind">
+                    <span class="ml-2 my-auto ">
                         {{ $t('Upload your logo in .svg, .png, .gif, or .jpg format. The logo will be used on the login page and throughout email communications.') }}
                     </span>
                 </div>
             </div>
-            <div v-if="form.errors?.bigLogo" class="mt-1 text-xs text-red-500">
+            <div v-if="form.errors?.bigLogo" class="mt-1 text-xs text-danger">
                 {{ $t(form.errors?.bigLogo) }}
             </div>
-            <label class="block mt-12 mb-4 xsDark">
+            <label class="block mt-12 mb-4 text-sm/5 font-semibold text-text">
                 {{ $t('Small Logo (Upload by click or drag & drop)') }}
             </label>
             <div class="grid grid-cols-6 gap-x-12 items-center">
                 <div
-                    class="flex col-span-2 justify-center border-2 bg-stone-50 w-80 border-gray-300 cursor-pointer border-dashed rounded-md p-2"
+                    class="flex col-span-2 justify-center border-2 bg-surface-sunken w-80 border-border cursor-pointer border-dashed rounded-md p-2"
                     @click="selectNewSmallLogo"
                     @dragover.prevent
                     @drop.stop.prevent="uploadDraggedSmallLogo($event)">
                     <img v-show="smallLogoPreview" :src="smallLogoPreview" alt="Logo" class="rounded-md h-auto w-auto object-cover">
                     <input type="file" class="hidden" ref="smallLogo" @change="updateSmallLogoPreview">
-                    <div class="xsLight flex my-auto h-40 items-center"
+                    <div class="text-sm/5 font-bold text-text-subtle flex my-auto h-40 items-center"
                          v-if="$page.props.small_logo === null && smallLogoPreview === null">
                         {{ $t('Drag your small artwork logo here') }}
                     </div>
@@ -69,26 +69,26 @@
 
                 <div v-if="this.$page.props.show_hints" class="col-span-4 items-center flex">
                     <SvgCollection svgName="arrowLeft" class="ml-2 -mt-4"/>
-                    <span class="hind ml-2 my-auto">
+                    <span class="ml-2 my-auto">
                         {{ $t('Upload your logo in .svg, .png, .gif, or .jpg format. The logo will be used in the header of your artwork.') }}
                     </span>
                 </div>
 
             </div>
-            <div v-if="form.errors?.smallLogo" class="mt-1 text-xs text-red-500">
+            <div v-if="form.errors?.smallLogo" class="mt-1 text-xs text-danger">
                 {{ $t(form.errors?.smallLogo) }}
             </div>
-            <label class="block mt-12 mb-4 xsDark">
+            <label class="block mt-12 mb-4 text-sm/5 font-semibold text-text">
                 {{ $t('Login Illustration (Upload by click or drag & drop)') }}
             </label>
             <div class="grid grid-cols-6 gap-x-12 items-center">
                 <div
-                    class="flex col-span-2 w-full justify-center border-2 bg-stone-50 border-gray-300 cursor-pointer border-dashed rounded-md p-2"
+                    class="flex col-span-2 w-full justify-center border-2 bg-surface-sunken border-border cursor-pointer border-dashed rounded-md p-2"
                     @click="selectNewBanner"
                     @dragover.prevent
                     @drop.stop.prevent="uploadDraggedBanner($event)">
                     <div v-show="!bannerPreview" class="space-y-1 text-center">
-                        <div class="xsLight flex my-auto h-40 items-center"
+                        <div class="text-sm/5 font-bold text-text-subtle flex my-auto h-40 items-center"
                              v-if="$page.props.banner === null && bannerPreview === null">
                             {{ $t('Drag your login illustration here') }}
                             <input id="banner-upload"
@@ -116,12 +116,12 @@
                 </div>
                 <div v-if="this.$page.props.show_hints" class="col-span-4 items-center flex">
                     <SvgCollection svgName="arrowLeft" class="ml-2 -mt-4"/>
-                    <span class="ml-2 my-auto hind">
+                    <span class="ml-2 my-auto ">
                         {{ $t('Upload your illustration in .svg, .png, .gif, or .jpg format. The illustration will be used on the login page.') }}
                     </span>
                 </div>
             </div>
-            <div v-if="form.errors?.banner" class="mt-1 text-xs text-red-500">
+            <div v-if="form.errors?.banner" class="mt-1 text-xs text-danger">
                 {{ $t(form.errors?.banner) }}
             </div>
         </form>

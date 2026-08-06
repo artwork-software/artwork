@@ -1,7 +1,7 @@
 <template>
     <div @click="openProjectHistoryModal(notification.history)"
-         class="xxsLight cursor-pointer items-center flex text-artwork-buttons-create">
-        <ChevronRightIcon class="h-5 w-4 -mr-0.5"/>
+         class="text-xs/[18px] text-text-subtle cursor-pointer items-center flex text-accent-600">
+        <IconChevronRight class="h-5 w-4 -mr-0.5"/>
         Verlauf ansehen
     </div>
 
@@ -13,7 +13,7 @@
 </template>
 
 <script>
-import {ChevronRightIcon} from "@heroicons/vue/solid";
+import {IconChevronRight} from "@tabler/icons-vue";
 import ProjectHistoryComponent from "@/Layouts/Components/MoneySourceHistoryComponent.vue";
 import ProjectHistoryWithoutBudgetComponent from "@/Layouts/Components/ProjectHistoryWithoutBudgetComponent.vue";
 import Permissions from "@/Mixins/Permissions.vue";
@@ -25,7 +25,7 @@ export default {
     components:{
         ProjectHistoryWithoutBudgetComponent,
         ProjectHistoryComponent,
-        ChevronRightIcon,
+        IconChevronRight,
     },
     data(){
         return {

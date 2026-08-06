@@ -25,18 +25,18 @@
         <!-- Loading Skeleton -->
         <div v-if="isLoadingBaskets">
             <div v-for="i in 5" :key="i" class="mb-4">
-                <div class="mx-auto w-full rounded-md border border-gray-200 p-4">
+                <div class="mx-auto w-full rounded-md border border-border-subtle p-4">
                     <div class="flex items-center animate-pulse space-x-4 w-full">
-                        <div class="size-12 min-w-12 rounded-lg bg-gray-200"></div>
+                        <div class="size-12 min-w-12 rounded-lg bg-border-subtle"></div>
                         <div class="flex items-center justify-between w-full">
                             <div>
-                                <div class="h-4 w-48 rounded bg-gray-200 mb-2"></div>
-                                <div class="h-4 w-32 rounded bg-gray-200"></div>
+                                <div class="h-4 w-48 rounded bg-border-subtle mb-2"></div>
+                                <div class="h-4 w-32 rounded bg-border-subtle"></div>
                             </div>
                             <div class="flex items-center justify-end space-x-4">
-                                <div class="h-8 w-20 rounded bg-gray-200"></div>
-                                <div class="h-8 w-12 rounded bg-gray-200"></div>
-                                <div class="h-8 w-20 rounded bg-gray-200"></div>
+                                <div class="h-8 w-20 rounded bg-border-subtle"></div>
+                                <div class="h-8 w-12 rounded bg-border-subtle"></div>
+                                <div class="h-8 w-20 rounded bg-border-subtle"></div>
                             </div>
                         </div>
                     </div>
@@ -45,7 +45,7 @@
         </div>
 
         <!-- Leerer Zustand -->
-        <div v-else-if="!articlesFlat.length" class="text-sm text-gray-500 py-6 text-center">
+        <div v-else-if="!articlesFlat.length" class="text-sm text-text-subtle py-6 text-center">
             {{ $t ? $t('No articles found') : 'No articles found' }}
         </div>
 
@@ -56,7 +56,7 @@
                 :key="article.basketArticleId"
                 class="mb-4"
             >
-                <div class="mx-auto w-full rounded-md border border-gray-200 p-4 flex items-center justify-between">
+                <div class="mx-auto w-full rounded-md border border-border-subtle p-4 flex items-center justify-between">
                     <div class="flex items-center gap-4">
                         <img
                             :src="getMainImageInImage(article).image"
@@ -68,7 +68,7 @@
                             <div class="font-semibold text-lg">
                                 {{ article.name }}
                             </div>
-                            <div class="text-sm text-gray-500">
+                            <div class="text-sm text-text-subtle">
                                 {{ article.description || ($t ? $t('No description') : 'No description') }}
                             </div>
                         </div>
@@ -76,14 +76,15 @@
 
                     <div class="flex items-center justify-end space-x-4">
                         <!-- button - -->
-                        <button
-                            class="ui-button-delete"
+                        <BaseUIButton
+                            variant="danger"
+                            hide-icon
                             :disabled="article.quantity <= 0 || isSaving(article.basketArticleId)"
                             @click="changeQuantity(article.basketArticleId, 'decrease')"
                             :aria-disabled="String(article.quantity <= 0 || isSaving(article.basketArticleId))"
                         >
                             –
-                        </button>
+                        </BaseUIButton>
 
                         <!-- quantity -->
                         <BaseInput
@@ -97,14 +98,15 @@
                         />
 
                         <!-- button + -->
-                        <button
-                            class="ui-button-add"
+                        <BaseUIButton
+                            variant="primary"
+                            hide-icon
                             :disabled="isSaving(article.basketArticleId)"
                             @click="changeQuantity(article.basketArticleId, 'increase')"
                             :aria-disabled="String(isSaving(article.basketArticleId))"
                         >
                             +
-                        </button>
+                        </BaseUIButton>
                         <BaseUIButton
                             class="ui-button-delete"
                             :disabled="isSaving(article.basketArticleId)"

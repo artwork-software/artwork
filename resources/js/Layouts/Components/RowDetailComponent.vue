@@ -4,17 +4,17 @@
                 <!--   Heading   -->
                 <div>
                     <h1 class="my-1 flex">
-                        <div class="flex-grow headline1">
+                        <div class="flex-grow font-lexend font-black text-[clamp(24px,3vw,30px)]/[34px] text-text">
                             {{ $t('Details')}}
                         </div>
                     </h1>
                     <div class="mb-4">
                         <div class="hidden sm:block">
-                            <div class="border-gray-200">
+                            <div class="border-border-subtle">
                                 <nav class="-mb-px uppercase text-xs tracking-wide pt-4 flex space-x-8"
                                      aria-label="Tabs">
                                     <a @click="changeTab(tab)" v-for="tab in tabs" href="#" :key="tab.name"
-                                       :class="[tab.current ? 'border-artwork-buttons-create text-artwork-buttons-create' : 'border-transparent text-secondary hover:text-gray-600 hover:border-gray-300', 'whitespace-nowrap py-4 px-1 border-b-2 font-medium font-semibold']"
+                                       :class="[tab.current ? 'border-accent-600 text-accent-600' : 'border-transparent text-text-subtle hover:text-text-muted hover:border-border', 'whitespace-nowrap py-4 px-1 border-b-2 font-medium font-semibold']"
                                        :aria-current="tab.current ? 'page' : undefined">
                                         {{ tab.name }}
                                     </a>
@@ -27,7 +27,7 @@
                          <textarea
                              placeholder="Was gibt es zu diesem Posten zu beachten?"
                              v-model="commentForm.description" rows="4"
-                             class="resize-none focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 inputMain pt-3 mb-8 placeholder-secondary  w-full"/>
+                             class="resize-none focus:outline-none focus:ring-0 focus:border-text-subtle focus:border-1 border border-border pt-3 mb-8 placeholder-text-subtle  w-full"/>
                         <div>
 
                             <div class="my-6" v-for="comment in this.row.comments"
@@ -37,18 +37,18 @@
                                     <div class="flex items-center">
                                         <UserPopoverTooltip :id="comment.id" :user="comment.user" :height="8"
                                                         :width="8"></UserPopoverTooltip>
-                                        <div class="ml-2 text-secondary"
-                                             :class="commentHovered === comment.id ? 'text-primary':'text-secondary'">
+                                        <div class="ml-2 text-text-subtle"
+                                             :class="commentHovered === comment.id ? 'text-text':'text-text-subtle'">
                                             {{ formatDate(comment.created_at) }}
                                         </div>
                                     </div>
                                     <button v-show="commentHovered === comment.id" type="button"
                                             @click="deleteCommentFromRow(comment)">
                                         <span class="sr-only">Kommentar von Zeile entfernen</span>
-                                        <XCircleIcon class="ml-2 h-7 w-7 hover:text-error"/>
+                                        <IconCircleX class="ml-2 h-7 w-7 hover:text-danger"/>
                                     </button>
                                 </div>
-                                <div class="mt-2 mr-14 subpixel-antialiased text-primary font-semibold">
+                                <div class="mt-2 mr-14 subpixel-antialiased text-text font-semibold">
                                     {{ comment.description }}
                                 </div>
                             </div>
@@ -60,13 +60,13 @@
                         </div>
                     </div>
                     <div v-if="isExcludeTab">
-                        <h2 class="xsLight mb-2 mt-4">
+                        <h2 class="text-sm/5 font-bold text-text-subtle mb-2 mt-4">
                             {{$t('Excluded items are not included in the project budget. For example, you can list internal personnel, virtual costs such as internal services, etc. without these having an impact on the project budget.')}}
                         </h2>
                         <div class="flex items-center justify-start my-6">
                             <input v-model="isExcluded" type="checkbox"
-                                   class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
-                            <p :class="[isExcluded ? 'xsDark' : 'xsLight']"
+                                   class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-border"/>
+                            <p :class="[isExcluded ? 'text-sm/5 font-semibold text-text' : 'text-sm/5 font-bold text-text-subtle']"
                                class="ml-4 my-auto text-sm"> {{$t('Exclude')}}</p>
                         </div>
                         <div class="flex justify-center">
@@ -81,13 +81,12 @@
 </template>
 
 <script>
+import {IconCheck, IconChevronDown, IconCirclePlus, IconCircleX, IconX} from "@tabler/icons-vue";
 
 import {Listbox, ListboxButton, ListboxOption, ListboxOptions, RadioGroup, RadioGroupOption} from "@headlessui/vue";
 
 import JetDialogModal from "@/Jetstream/DialogModal.vue";
-import {CheckIcon, ChevronDownIcon, PlusCircleIcon, XIcon} from '@heroicons/vue/outline';
 import UserTooltip from "@/Layouts/Components/UserTooltip.vue";
-import {XCircleIcon} from "@heroicons/vue/solid";
 import {useForm} from "@inertiajs/vue3";
 import NewUserToolTip from "@/Layouts/Components/NewUserToolTip.vue";
 import Permissions from "@/Mixins/Permissions.vue";
@@ -112,11 +111,11 @@ export default {
         RadioGroupOption,
         RadioGroup,
         JetDialogModal,
-        XIcon,
-        CheckIcon,
-        ChevronDownIcon,
-        PlusCircleIcon,
-        XCircleIcon
+        IconX,
+        IconCheck,
+        IconChevronDown,
+        IconCirclePlus,
+        IconCircleX
     },
 
     data() {

@@ -1,24 +1,24 @@
 <template>
     <ExternalGuestLayout :title="$t('Login')">
         <div class="space-y-6">
-            <h1 class="font-lexend text-2xl font-bold text-zinc-900 tracking-tight">
+            <h1 class="font-lexend text-2xl font-bold text-text tracking-tight">
                 {{ $t('Login') }}
             </h1>
 
-            <p class="text-sm text-zinc-600">
+            <p class="text-sm text-text-muted">
                 {{ $t('Enter your email and we will send you a login link.') }}
             </p>
 
             <p
                 v-if="page.props.flash?.status"
-                class="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm text-emerald-700"
+                class="rounded-xl border border-success-border bg-success-surface px-4 py-2 text-sm text-success"
             >
                 {{ page.props.flash.status }}
             </p>
 
             <p
                 v-if="isExpired"
-                class="rounded-xl border border-amber-200 bg-amber-50 px-4 py-2 text-sm text-amber-700"
+                class="rounded-xl border border-warning-border bg-warning-surface px-4 py-2 text-sm text-warning"
             >
                 {{ $t('Your session has expired. Please request a new login link.') }}
             </p>

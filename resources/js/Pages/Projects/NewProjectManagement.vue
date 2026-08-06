@@ -1,11 +1,11 @@
 <template>
     <AppLayout title="Projektübersicht">
         <div class="container mx-auto pt-6 relative">
-            <!-- Headbar (neu) -->
+            <!-- Headbar (neu): dunkles Band (CI »Bühnenlicht«) -->
             <ToolbarHeader
+                band
                 :icon="IconGeometry"
                 :title="$t('Projects')"
-                icon-bg-class="bg-blue-600/10 text-blue-700"
                 :description="projects.total + ' ' + $t('projects in total')"
                 v-model="project_search"
                 :search-enabled="true"
@@ -14,86 +14,85 @@
                 :search-tooltip="$t('Search')"
             >
                 <template #actions>
-                    <!-- Filter -->
-                    <BaseFilter :only-icon="true" :left="false" white-background dots-size="size-6" :use-full-button="true" :has-active-filters="hasActiveFilters">
+                    <BaseFilter :only-icon="true" :left="false" white-background band dots-size="size-6" :use-full-button="true" :has-active-filters="hasActiveFilters">
                         <div class="w-full px-2 py-4">
                             <div class="flex items-center justify-between mb-2">
-                                <div class="text-sm font-medium text-zinc-700 ">{{ $t('Filters') }}</div>
-                                <button type="button" class="text-xs text-zinc-500 hover:text-zinc-700   transition" @click="resetFilter">
+                                <div class="text-sm font-medium text-text-muted ">{{ $t('Filters') }}</div>
+                                <button type="button" class="text-xs text-text-subtle hover:text-text-muted transition" @click="resetFilter">
                                     {{ $t('Deselect all') }}
                                 </button>
                             </div>
 
                             <div class="space-y-3">
                                 <!-- Filter nach Art -->
-                                <div class="text-xs font-semibold text-zinc-500 uppercase tracking-wide">{{ $t('Filter by type') }}</div>
+                                <div class="text-xs font-semibold text-text-subtle uppercase tracking-wide">{{ $t('Filter by type') }}</div>
                                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                                    <label class="flex items-center gap-3 rounded-xl border border-zinc-200 px-3 py-2">
-                                        <input v-model="showProjectGroups" type="checkbox" class="size-4 accent-emerald-600" />
-                                        <span class="text-sm text-zinc-700 ">{{ $t('Project groups') }}</span>
+                                    <label class="flex items-center gap-3 rounded-xl border border-border-subtle px-3 py-2">
+                                        <input v-model="showProjectGroups" type="checkbox" class="size-4 accent-success" />
+                                        <span class="text-sm text-text-muted ">{{ $t('Project groups') }}</span>
                                     </label>
-                                    <label class="flex items-center gap-3 rounded-xl border border-zinc-200 px-3 py-2">
-                                        <input v-model="showProjects" type="checkbox" class="size-4 accent-emerald-600" />
-                                        <span class="text-sm text-zinc-700 ">{{ $t('Projects') }}</span>
+                                    <label class="flex items-center gap-3 rounded-xl border border-border-subtle px-3 py-2">
+                                        <input v-model="showProjects" type="checkbox" class="size-4 accent-success" />
+                                        <span class="text-sm text-text-muted ">{{ $t('Projects') }}</span>
                                     </label>
                                 </div>
 
                                 <!-- Filter nach Zeit -->
-                                <div class="text-xs font-semibold text-zinc-500 uppercase tracking-wide pt-1">{{ $t('Filter by time') }}</div>
+                                <div class="text-xs font-semibold text-text-subtle uppercase tracking-wide pt-1">{{ $t('Filter by time') }}</div>
                                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                                    <label class="flex items-center gap-3 rounded-xl border border-zinc-200 px-3 py-2">
-                                        <input v-model="showFutureProjects" type="checkbox" class="size-4 accent-emerald-600" />
-                                        <span class="text-sm text-zinc-700 ">{{ $t('Show future projects') }}</span>
+                                    <label class="flex items-center gap-3 rounded-xl border border-border-subtle px-3 py-2">
+                                        <input v-model="showFutureProjects" type="checkbox" class="size-4 accent-success" />
+                                        <span class="text-sm text-text-muted ">{{ $t('Show future projects') }}</span>
                                     </label>
-                                    <label class="flex items-center gap-3 rounded-xl border border-zinc-200 px-3 py-2">
-                                        <input v-model="showExpiredProjects" type="checkbox" class="size-4 accent-emerald-600" />
-                                        <span class="text-sm text-zinc-700 ">{{ $t('Show expired projects') }}</span>
+                                    <label class="flex items-center gap-3 rounded-xl border border-border-subtle px-3 py-2">
+                                        <input v-model="showExpiredProjects" type="checkbox" class="size-4 accent-success" />
+                                        <span class="text-sm text-text-muted ">{{ $t('Show expired projects') }}</span>
                                     </label>
                                 </div>
 
                                 <!-- Sonstige Filter -->
-                                <div class="text-xs font-semibold text-zinc-500 uppercase tracking-wide pt-1">{{ $t('Other filters') }}</div>
+                                <div class="text-xs font-semibold text-text-subtle uppercase tracking-wide pt-1">{{ $t('Other filters') }}</div>
                                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                                    <label class="flex items-center gap-3 rounded-xl border border-zinc-200 px-3 py-2">
-                                        <input v-model="hideProjectsWithoutEvents" type="checkbox" class="size-4 accent-emerald-600" />
-                                        <span class="text-sm text-zinc-700 ">{{ $t('Hide projects without events') }}</span>
+                                    <label class="flex items-center gap-3 rounded-xl border border-border-subtle px-3 py-2">
+                                        <input v-model="hideProjectsWithoutEvents" type="checkbox" class="size-4 accent-success" />
+                                        <span class="text-sm text-text-muted ">{{ $t('Hide projects without events') }}</span>
                                     </label>
-                                    <label class="flex items-center gap-3 rounded-xl border border-zinc-200 px-3 py-2">
-                                        <input v-model="showOnlyProjectsWithoutGroup" type="checkbox" class="size-4 accent-emerald-600" />
-                                        <span class="text-sm text-zinc-700 ">{{ $t('Show only projects without group') }}</span>
+                                    <label class="flex items-center gap-3 rounded-xl border border-border-subtle px-3 py-2">
+                                        <input v-model="showOnlyProjectsWithoutGroup" type="checkbox" class="size-4 accent-success" />
+                                        <span class="text-sm text-text-muted ">{{ $t('Show only projects without group') }}</span>
                                     </label>
-                                    <label class="flex items-center gap-3 rounded-xl border border-zinc-200 px-3 py-2 sm:col-span-2">
-                                        <input v-model="showOnlyMyProjects" type="checkbox" class="size-4 accent-emerald-600" />
-                                        <span class="text-sm text-zinc-700 ">{{ $t('Only projects where you are in the project team') }}</span>
+                                    <label class="flex items-center gap-3 rounded-xl border border-border-subtle px-3 py-2 sm:col-span-2">
+                                        <input v-model="showOnlyMyProjects" type="checkbox" class="size-4 accent-success" />
+                                        <span class="text-sm text-text-muted ">{{ $t('Only projects where you are in the project team') }}</span>
                                     </label>
-                                    <label class="flex items-center gap-3 rounded-xl border border-zinc-200 px-3 py-2 sm:col-span-2">
-                                        <input v-model="showOnlyWithBiData" type="checkbox" class="size-4 accent-emerald-600" />
-                                        <span class="text-sm text-zinc-700 ">{{ $t('Only productions with BI data') }}</span>
+                                    <label class="flex items-center gap-3 rounded-xl border border-border-subtle px-3 py-2 sm:col-span-2">
+                                        <input v-model="showOnlyWithBiData" type="checkbox" class="size-4 accent-success" />
+                                        <span class="text-sm text-text-muted ">{{ $t('Only productions with BI data') }}</span>
                                     </label>
                                 </div>
 
                                 <!-- States -->
-                                <div class="border-t border-zinc-200  pt-2">
+                                <div class="border-t border-border-subtle pt-2">
                                     <button
                                         type="button"
-                                        class="w-full flex items-center justify-between text-sm text-zinc-700 "
+                                        class="w-full flex items-center justify-between text-sm text-text-muted "
                                         @click="showProjectStateFilter = !showProjectStateFilter"
                                     >
                                         <span>{{ $t('Project status') }}</span>
-                                        <IconChevronDown v-if="!showProjectStateFilter" class="h-5 w-5 text-zinc-500" />
-                                        <IconChevronUp v-else class="h-5 w-5 text-zinc-500" />
+                                        <IconChevronDown v-if="!showProjectStateFilter" class="h-5 w-5 text-text-subtle" />
+                                        <IconChevronUp v-else class="h-5 w-5 text-text-subtle" />
                                     </button>
                                     <div v-if="showProjectStateFilter" class="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-2">
-                                        <label v-for="state in computedStates" :key="state.id" class="flex items-center gap-3 rounded-xl border border-zinc-200  px-3 py-2">
-                                            <input v-model="state.clicked" type="checkbox" class="size-4 accent-emerald-600" />
-                                            <span class="text-sm text-zinc-700  truncate">{{ state.name }}</span>
+                                        <label v-for="state in computedStates" :key="state.id" class="flex items-center gap-3 rounded-xl border border-border-subtle px-3 py-2">
+                                            <input v-model="state.clicked" type="checkbox" class="size-4 accent-success" />
+                                            <span class="text-sm text-text-muted truncate">{{ state.name }}</span>
                                         </label>
                                     </div>
                                 </div>
 
                                 <div class="flex items-center justify-end">
                                     <button
-                                        class="text-xs font-semibold text-artwork-buttons-create hover:text-artwork-buttons-hover cursor-pointer transition"
+                                        class="text-xs font-semibold text-accent-600 hover:text-accent-700 cursor-pointer transition"
                                         @click="applyFiltersAndSort()"
                                         type="button"
                                     >
@@ -104,19 +103,18 @@
                         </div>
                     </BaseFilter>
 
-                    <!-- Sort --><div class="flex items-center mr-6">
-                    <BaseMenu show-sort-icon dots-size="size-6" menu-width="w-72" classes-button="ui-button">
+                    <!-- Sort --><div class="flex items-center">
+                    <BaseMenu show-sort-icon white-icon dots-size="size-6" menu-width="w-72" :classes-button="bandIconButtonClasses">
                         <div class="flex items-center justify-between">
-                            <div class="text-sm font-medium text-zinc-700 ">{{ $t('Sort by') }}</div>
-                            <button type="button" class="text-xs text-zinc-500 hover:text-zinc-700  transition" @click="resetSort()">
+                            <div class="text-sm font-medium text-text-muted ">{{ $t('Sort by') }}</div>
+                            <button type="button" class="text-xs text-text-subtle hover:text-text-muted transition" @click="resetSort()">
                                 {{ $t('Reset') }}
                             </button>
                         </div>
                         <MenuItem v-for="projectSortEnumName in projectSortEnumNames" :key="projectSortEnumName" v-slot="{ active }">
                             <div
                                 @click="sortBy = projectSortEnumName; applyFiltersAndSort()"
-                                :class="[
-                                        active ? 'bg-blue-50 text-artwork-buttons-create ' : 'text-zinc-600 ',
+                                :class="[ active ? 'bg-accent-50 text-accent-600 ' : 'text-text-muted ',
                                         'cursor-pointer group flex items-center justify-between px-4 py-2 text-sm rounded-md'
                                       ]"
                             >
@@ -128,7 +126,7 @@
                 </div>
                     <!-- Export -->
                     <button type="button" @click="openExportModal">
-                        <ToolTipComponent :icon="IconFileExport" icon-size="size-6" :tooltip-text="$t('Export project list')" direction="bottom" classes-button="ui-button" />
+                        <ToolTipComponent :icon="IconFileExport" icon-size="size-6" white-icon :tooltip-text="$t('Export project list')" direction="bottom" :classes-button="bandIconButtonClasses" />
                     </button>
 
                     <!-- Bulk selection mode toggle -->
@@ -136,22 +134,23 @@
                         <ToolTipComponent
                             :icon="IconChecklist"
                             icon-size="size-6"
+                            white-icon
                             :tooltip-text="selectionMode ? $t('Exit selection mode') : $t('Select multiple projects')"
                             direction="bottom"
-                            :classes-button="selectionMode ? 'ui-button text-artwork-buttons-create' : 'ui-button'"
+                            :classes-button="selectionMode ? bandIconButtonActiveClasses : bandIconButtonClasses"
                         />
                     </button>
 
-                    <BaseUIButton label="New project" use-translation is-add-button @click="openCreateProjectModal"  v-if="can('create and edit own project') || role('artwork admin')" />
+                    <BaseUIButton label="New project" use-translation is-add-button on-band @click="openCreateProjectModal"  v-if="can('create and edit own project') || role('artwork admin')" />
                 </template>
             </ToolbarHeader>
 
             <!-- Last visited -->
             <div class="my-5 flex items-center justify-between">
                 <div class="flex items-center gap-2 pb-2" v-if="lastProject?.id">
-                    <div class="text-sm text-zinc-600 ">{{ $t('Last visited project') }}:</div>
+                    <div class="text-sm text-text-muted ">{{ $t('Last visited project') }}:</div>
                     <a
-                        class="text-artwork-buttons-create text-sm font-semibold inline-flex items-center gap-1"
+                        class="text-accent-600 text-sm font-semibold inline-flex items-center gap-1"
                         :href="route('projects.tab', { project: lastProject.id, projectTab: first_project_tab_id })"
                     >
                         <component :is="IconGeometry" class="size-4" />
@@ -164,9 +163,9 @@
             <div class="overflow-x-auto">
                 <div class="min-w-fit">
                     <div class="">
-                        <div class="border-b border-zinc-200 backdrop-blur px-3 py-2">
+                        <div class="border-b border-border bg-surface-header px-3 py-1">
                             <div
-                                class="grid items-center text-sm font-semibold text-gray-900 tracking-wide"
+                                class="grid items-center font-lexend font-semibold text-[11px] uppercase tracking-[0.08em] text-accent-600"
                                 :style="`grid-template-columns: ${gridTemplateColumns}`"
                             >
                                 <div
@@ -185,18 +184,18 @@
                         <div
                             v-for="n in skeletonCount"
                             :key="'sk-'+n"
-                            class="rounded-xl border border-zinc-200 bg-white/70 backdrop-blur overflow-hidden"
+                            class="rounded-xl border border-border-subtle bg-white/70 backdrop-blur overflow-hidden"
                         >
                             <div class="grid items-center" :style="`grid-template-columns: ${gridTemplateColumns}`">
                                 <div v-for="i in skeletonCols" :key="i" class="px-3 py-3">
-                                    <div class="h-4 w-[70%] rounded bg-zinc-200/70 animate-pulse"></div>
+                                    <div class="h-4 w-[70%] rounded bg-border-subtle/70 animate-pulse"></div>
                                 </div>
                             </div>
                         </div>
                     </div>
 
                     <!-- Pinned -->
-                    <div v-else-if="pinnedProjects?.length" class="divide-y divide-gray-200">
+                    <div v-else-if="pinnedProjects?.length" class="divide-y divide-border-hairline">
                         <SingleProjectInManagement
                             v-for="project in pinnedProjects"
                             :key="project.id"
@@ -218,7 +217,7 @@
                     </div>
 
                     <!-- List -->
-                    <div v-if="!isLoading" class="divide-y divide-gray-200">
+                    <div v-if="!isLoading" class="divide-y divide-border-hairline">
                         <SingleProjectInManagement
                             v-for="project in projectComponents"
                             :key="project.id"
@@ -310,34 +309,31 @@
             :configuration="getExportModalConfiguration()"
         />
 
-        <!-- Selection-mode action bar (move selected projects to trash) -->
+        <!-- Selection-mode action bar (move selected projects to trash) — Band-Stil am unteren Rand -->
         <div v-if="selectionMode"
-             class="fixed inset-x-0 bottom-0 z-30 border-t border-gray-200 bg-white/95 backdrop-blur py-3 pr-6 pl-20 shadow-[0_-2px_10px_rgba(0,0,0,0.06)] print:hidden">
-            <div class="mx-auto flex max-w-screen-2xl items-center justify-between gap-4">
-                <label class="flex items-center gap-2 cursor-pointer text-sm text-zinc-600">
+             class="fixed inset-x-0 bottom-4 z-30 pr-6 pl-20 print:hidden pointer-events-none">
+            <div class="pointer-events-auto mx-auto flex max-w-screen-2xl items-center justify-between gap-4 rounded-lg bg-surface-inverse text-text-inverse shadow-overlay px-6 py-3">
+                <label class="flex items-center gap-2 cursor-pointer text-sm text-text-inverse">
                     <input
                         type="checkbox"
                         :checked="allOnPageSelected"
                         @change="toggleSelectAllOnPage"
-                        class="h-4 w-4 rounded border-gray-300 text-artwork-buttons-hover focus:ring-artwork-buttons-hover cursor-pointer"
+                        class="h-4 w-4 rounded border-white/40 bg-white/10 text-accent-500 focus:ring-accent-500 focus:ring-offset-surface-inverse cursor-pointer"
                     />
                     {{ $t('Select all on this page') }}
-                    <span class="ml-2 text-zinc-500">· {{ $t('{0} selected', [selectedProjectIds.length]) }}</span>
+                    <span class="ml-2 text-text-inverse-muted">· {{ $t('{0} selected', [selectedProjectIds.length]) }}</span>
                 </label>
-                <div class="flex items-center gap-x-4">
-                    <button type="button" class="text-sm text-zinc-600 hover:text-zinc-900" @click="toggleSelectionMode">
-                        {{ $t('Cancel') }}
-                    </button>
-                    <button
-                        type="button"
-                        class="inline-flex items-center gap-x-1.5 rounded-full px-5 py-2 text-sm font-bold text-white"
-                        :class="selectedProjectIds.length === 0 ? 'bg-gray-300 cursor-not-allowed' : 'bg-artwork-buttons-create hover:bg-artwork-buttons-hover'"
+                <div class="flex items-center gap-x-3">
+                    <BaseUIButton variant="ghost" on-band hide-icon label="Cancel" use-translation @click="toggleSelectionMode" />
+                    <BaseUIButton
+                        variant="primary"
+                        on-band
+                        :icon="IconTrash"
+                        label="Put in the trash"
+                        use-translation
                         :disabled="selectedProjectIds.length === 0"
                         @click="openBulkDeleteModal"
-                    >
-                        <component :is="IconTrash" class="h-4 w-4" />
-                        {{ $t('Put in the trash') }}
-                    </button>
+                    />
                 </div>
             </div>
         </div>
@@ -345,15 +341,15 @@
         <!-- Bulk delete confirmation -->
         <BaseModal @closed="closeBulkDeleteModal" v-if="bulkDeleting">
             <div class="mx-4">
-                <div class="text-2xl sm:text-3xl font-black text-zinc-900 my-2">
+                <div class="text-2xl sm:text-3xl font-black text-text my-2">
                     {{ $t('Delete selected projects') }}
                 </div>
-                <div class="text-sm text-rose-600">
+                <div class="text-sm text-danger">
                     {{ $t('Are you sure you want to move the {0} selected projects to the trash?', [selectedProjectIds.length]) }}
                 </div>
                 <div class="flex flex-col sm:flex-row gap-4 justify-between mt-6">
                     <button
-                        class="bg-emerald-600 hover:bg-emerald-700 text-white rounded-full focus:outline-none inline-flex items-center px-8 py-3 text-sm font-semibold uppercase shadow-sm"
+                        class="bg-success hover:bg-success text-white rounded-full focus:outline-none inline-flex items-center px-8 py-3 text-sm font-semibold uppercase shadow-sm"
                         @click="bulkDeleteProjects"
                     >
                         {{ $t('Delete') }}
@@ -361,7 +357,7 @@
                     <button
                         type="button"
                         @click="closeBulkDeleteModal()"
-                        class="text-sm text-zinc-600 hover:underline underline-offset-4"
+                        class="text-sm text-text-muted hover:underline underline-offset-4"
                     >
                         {{ $t('No, not really') }}
                     </button>
@@ -404,7 +400,6 @@ import debounce from "lodash.debounce";
 import SingleProjectInManagement from "@/Pages/Projects/ProjectManagmentComponents/SingleProjectInManagement.vue";
 import { useExportTabEnums } from "@/Layouts/Components/Export/Enums/ExportTabEnum.js";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
-import GlassyIconButton from "@/Artwork/Buttons/GlassyIconButton.vue";
 import BaseMenu from "@/Components/Menu/BaseMenu.vue";
 import ToolbarHeader from "@/Artwork/Toolbar/ToolbarHeader.vue";
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
@@ -435,6 +430,14 @@ const props = defineProps({
     lastProject: { type: Object, required: true },
     entitiesPerPage: { type: Number, required: true },
 });
+
+// Icon-Buttons auf dem dunklen Toolbar-Band (CI »Bühnenlicht«)
+const bandIconButtonClasses =
+    'size-[30px] inline-flex items-center justify-center rounded-md bg-white/8 hover:bg-white/16 text-text-inverse ' +
+    'transition-[background-color] duration-150 ease-out cursor-pointer';
+const bandIconButtonActiveClasses =
+    'size-[30px] inline-flex items-center justify-center rounded-md bg-accent-500 hover:bg-accent-600 text-text-inverse ' +
+    'transition-[background-color] duration-150 ease-out cursor-pointer';
 
 const project_search = ref(route().params.query);
 const showProjectHistoryTab = ref(true);

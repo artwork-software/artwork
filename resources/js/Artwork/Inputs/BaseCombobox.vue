@@ -31,7 +31,7 @@
                 />
                 <ComboboxButton :class="buttonClass">
                     <slot name="button-icon">
-                        <IconSelector class="size-5 text-gray-400" aria-hidden="true" />
+                        <IconSelector class="size-4 text-text-subtle" :stroke-width="1.5" aria-hidden="true" />
                     </slot>
                 </ComboboxButton>
             </div>
@@ -55,8 +55,8 @@
               </span>
                             <span v-if="selected"
                                   :class="['absolute inset-y-0 right-0 flex items-center pr-4',
-                             active ? 'text-white' : 'text-indigo-600']">
-                <IconCheck class="size-5" aria-hidden="true" />
+                             active ? 'text-accent-700' : 'text-accent-600']">
+                <IconCheck class="size-4" :stroke-width="1.5" aria-hidden="true" />
               </span>
                         </slot>
                     </li>
@@ -64,10 +64,10 @@
             </ComboboxOptions>
 
             <!-- FLOATING: Loading / Empty -->
-            <div v-else-if="loading" :class="floatOptionsClass + ' text-gray-500'">
+            <div v-else-if="loading" :class="floatOptionsClass + ' px-3 py-2 text-text-muted'">
                 <slot name="loading">Loading…</slot>
             </div>
-            <div v-else :class="floatOptionsClass + ' text-gray-500'">
+            <div v-else :class="floatOptionsClass + ' px-3 py-2 text-text-muted'">
                 <slot name="empty">{{ emptyText }}</slot>
             </div>
         </Float>
@@ -132,39 +132,39 @@ const props = defineProps({
     loading: { type: Boolean, default: false },
 
     /** Klassen – auf deine Styles abgestimmt, überschreibbar */
-    labelClass: { type: String, default: 'xsDark' },
+    labelClass: { type: String, default: 'mb-1 block font-lexend text-xs font-medium text-[#3F424A]' },
     wrapperClass: {
         type: String,
         default:
-            'relative px-3 py-4 text-sm block w-full font-lexend bg-white shadow-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-artwork-buttons-create focus:border-artwork-buttons-create',
+            'relative flex items-center w-full min-h-8 px-3 text-sm bg-surface border border-border rounded-md focus-within:border-accent-600 transition-[border-color] duration-150 ease-in-out',
     },
     inputClass: {
         type: String,
         default:
-            'w-full pl-1 !ring-0 focus:outline-hidden rounded-md bg-white text-xs text-gray-900 placeholder:text-gray-400 border-none focus-visible:ring-0',
+            'w-full pl-1 rounded-md bg-surface text-sm text-text placeholder:text-text-subtle border-none',
     },
     buttonClass: {
         type: String,
         default:
-            'absolute inset-y-0 right-0 flex items-center rounded-r-md px-2 focus:outline-hidden',
+            'absolute inset-y-0 right-0 flex items-center rounded-r-md px-2',
     },
     optionsClass: {
         type: String,
         default:
-            'absolute z-50 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-xs ring-1 shadow-lg ring-black/5 focus:outline-hidden sm:text-sm',
+            'absolute z-50 mt-1 max-h-60 w-full overflow-auto rounded-lg bg-surface py-1 text-sm border border-border-subtle shadow-overlay',
     },
     optionBaseClass: {
         type: String,
-        default: 'relative cursor-default py-2 pr-9 pl-3 select-none',
+        default: 'relative cursor-default min-h-8 py-1.5 pr-9 pl-3 select-none',
     },
 
-    activeClass: { type: String, default: 'bg-indigo-600 text-white outline-hidden' },
-    inactiveClass: { type: String, default: 'text-gray-900' },
+    activeClass: { type: String, default: 'bg-accent-50 text-accent-700' },
+    inactiveClass: { type: String, default: 'text-text' },
 })
 
 const floatOptionsClass = [
     // KEIN 'absolute' mehr hier!
-    'z-50 max-h-60 overflow-auto rounded-md bg-white py-1 text-xs shadow-lg ring-1 ring-black/5 sm:text-sm',
+    'z-50 max-h-60 overflow-auto rounded-lg bg-surface py-1 text-sm border border-border-subtle shadow-overlay',
 ].join(' ')
 
 const emit = defineEmits<{

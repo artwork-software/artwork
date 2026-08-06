@@ -1,28 +1,28 @@
 <template>
     <div>
-        <h2 class="headline2">{{ $t('Sage interface') }}</h2>
+        <h2 class="font-lexend font-semibold text-[clamp(18px,2.5vw,20px)]/[25px] text-text">{{ $t('Sage interface') }}</h2>
         <div class="grid grid-cols-12">
-            <div class="xsLight mt-4 col-span-9">
+            <div class="text-sm/5 font-bold text-text-subtle mt-4 col-span-9">
                 {{
                     $t('Would you like to have the bookings from Sage automatically imported into the respective project budgets? Then simply enter your API key here and say when the daily API query should take place.')
                 }}
             </div>
             <div class="flex items-center justify-end col-span-3">
                 <div class="flex items-center mr-2">
-                    <span class="ml-1 my-auto hind">{{ $t('Execute data retrieval from Sage again') }}&nbsp;</span>
-                    <component :is="IconArrowCurveRight" class="h-6 w-6 ml-1 mr-1 rotate-90 hind" stroke-width="1.7"/>
+                    <span class="ml-1 my-auto ">{{ $t('Execute data retrieval from Sage again') }}&nbsp;</span>
+                    <component :is="IconArrowCurveRight" class="h-6 w-6 ml-1 mr-1 rotate-90 " stroke-width="1.7"/>
                 </div>
                 <div class="flex flex-row gap-1">
-                    <RefreshIcon :class="[
+                    <IconRefresh :class="[
                         !sageInterfaceIsConfigured() || importProcessing
-                            ? 'bg-gray-600 cursor-not-allowed'
-                            : 'bg-artwork-buttons-create cursor-pointer',
+                            ? 'bg-text-subtle cursor-not-allowed'
+                            : 'bg-accent-600 cursor-pointer',
                         'w-10 h-10 rounded-full text-white p-2'
                     ]" @click="initializeSageImport()" />
-                    <TrashIcon :class="[
+                    <IconTrash :class="[
                         !sageInterfaceIsConfigured() || importProcessing
-                            ? 'bg-gray-600 cursor-not-allowed'
-                            : 'bg-artwork-buttons-create cursor-pointer',
+                            ? 'bg-text-subtle cursor-not-allowed'
+                            : 'bg-accent-600 cursor-pointer',
                         'w-10 h-10 rounded-full text-white p-2'
                     ]" @click="deleteSageData()" />
                 </div>
@@ -31,27 +31,27 @@
 
         <div class="w-1/2 mt-4 grid grid-cols-1 gap-4">
             <BaseInput v-model="sageForm.host" :label="$t('Host')" id="host"/>
-            <div class="text-red-500 text-xs mt-1" v-if="showHostErrorText">
+            <div class="text-danger text-xs mt-1" v-if="showHostErrorText">
                 {{ $t('The host must be specified.') }}
             </div>
             <BaseInput v-model="sageForm.endpoint" id="endpoint" :label="$t('Endpoint')"/>
-            <div class="text-red-500 text-xs mt-1" v-if="showEndpointErrorText">
+            <div class="text-danger text-xs mt-1" v-if="showEndpointErrorText">
                 {{ $t('The end point must be specified.') }}
             </div>
             <BaseInput v-model="sageForm.user" id="user" :label="$t('User')"/>
-            <div class="text-red-500 text-xs mt-1" v-if="showUserErrorText">
+            <div class="text-danger text-xs mt-1" v-if="showUserErrorText">
                 {{ $t('The user must be specified.') }}
             </div>
             <BaseInput type="password" v-model="sageForm.password" :label="$t('Password')" id="password"/>
-            <div class="errorText" v-if="showPasswordErrorText">
+            <div class="text-sm/5 text-danger" v-if="showPasswordErrorText">
                 {{ $t('The password must be entered.') }}
             </div>
 
-            <div class="grid grid-cols-1 gap-4 xsLight">
+            <div class="grid grid-cols-1 gap-4 text-sm/5 font-bold text-text-subtle">
                 <div class="flex items-center justify-end w-full h-full">
                     <div class="group relative">
-                        <InformationCircleIcon class="w-5 h-5 mr-1"/>
-                        <div class="hidden group-hover:flex absolute z-10 top-5 left-5 w-96 h-auto bg-gray-600 text-white p-2">
+                        <IconInfoCircle class="w-5 h-5 mr-1"/>
+                        <div class="hidden group-hover:flex absolute z-10 top-5 left-5 w-96 h-auto bg-text-subtle text-white p-2">
                             {{
                                 $t('Is automatically adjusted to the last posting date of the data already imported after the data has been imported.')
                             }}
@@ -79,16 +79,16 @@
 
         <div class="flex flex-col space-y-4">
             <hr class="mt-5"/>
-            <h2 class="headline2">{{ $t('Import a specific booking date') }}</h2>
-            <div class="xsLight col-span-9">
+            <h2 class="font-lexend font-semibold text-[clamp(18px,2.5vw,20px)]/[25px] text-text">{{ $t('Import a specific booking date') }}</h2>
+            <div class="text-sm/5 font-bold text-text-subtle col-span-9">
                 {{ $t('Import specific bookings by KTR (cost center), date range, or both. Existing data is overwritten with new data.') }}
             </div>
-            <div v-if="!sageInterfaceIsConfigured()" class="errorText">
+            <div v-if="!sageInterfaceIsConfigured()" class="text-sm/5 text-danger">
                 {{ $t('Please configure the Sage interface first.') }}
             </div>
             <div class="flex flex-row items-center space-x-4 flex-wrap gap-y-2">
                 <div class="flex flex-row items-center gap-x-2">
-                    <span class="xsLight">{{ $t('KTR') }}</span>
+                    <span class="text-sm/5 font-bold text-text-subtle">{{ $t('KTR') }}</span>
                     <div class="w-48">
                         <BaseInput type="text" :label="$t('KTR')" id="specificDayImportKtr"
                                    v-model="specificDayImportKtr"
@@ -98,7 +98,7 @@
                     </div>
                 </div>
                 <div class="flex flex-row items-center gap-x-2">
-                    <span class="xsLight">{{ $t('From') }}</span>
+                    <span class="text-sm/5 font-bold text-text-subtle">{{ $t('From') }}</span>
                     <div class="w-48">
                         <BaseInput type="date" label="tt.mm.yyyy" id="specificDayImportDateFrom"
                                    v-model="specificDayImportDateFrom"
@@ -107,7 +107,7 @@
                     </div>
                 </div>
                 <div class="flex flex-row items-center gap-x-2">
-                    <span class="xsLight">{{ $t('Until') }}</span>
+                    <span class="text-sm/5 font-bold text-text-subtle">{{ $t('Until') }}</span>
                     <div class="w-48">
                         <BaseInput type="date" label="tt.mm.yyyy" id="specificDayImportDateTo"
                                    v-model="specificDayImportDateTo"
@@ -115,13 +115,13 @@
                                    :class="[!sageInterfaceIsConfigured() ? 'cursor-not-allowed' : 'cursor-pointer']"/>
                     </div>
                 </div>
-                <RefreshIcon :class="[
+                <IconRefresh :class="[
                     !sageInterfaceIsConfigured() ||
                     importProcessing ||
                     ((specificDayImportDateFrom === null || specificDayImportDateFrom === '') &&
                     (!specificDayImportKtr || specificDayImportKtr.trim() === ''))
-                        ? 'bg-gray-600 cursor-not-allowed'
-                        : 'bg-artwork-buttons-create cursor-pointer',
+                        ? 'bg-text-subtle cursor-not-allowed'
+                        : 'bg-accent-600 cursor-pointer',
                     'w-10 h-10 rounded-full text-white p-2'
                 ]" @click="initializeSageImportForSpecificDay()" />
             </div>
@@ -129,13 +129,13 @@
 
         <hr class="my-5"/>
 
-        <h2 class="headline2">{{ $t('Delete bookings') }}</h2>
-        <div class="xsLight col-span-9 mb-2">
+        <h2 class="font-lexend font-semibold text-[clamp(18px,2.5vw,20px)]/[25px] text-text">{{ $t('Delete bookings') }}</h2>
+        <div class="text-sm/5 font-bold text-text-subtle col-span-9 mb-2">
             {{ $t('Delete Sage booking data by KTR (cost center), date range, or both. Unassigned data is always deleted, optionally also assigned data can be removed.') }}
         </div>
         <div class="flex flex-row items-center space-x-4 flex-wrap gap-y-2">
             <div class="flex flex-row items-center gap-x-2">
-                <span class="xsLight">{{ $t('KTR') }}</span>
+                <span class="text-sm/5 font-bold text-text-subtle">{{ $t('KTR') }}</span>
                 <div class="w-48">
                     <BaseInput type="text" :label="$t('KTR')" id="deleteBookingDaysKtr"
                                v-model="deleteBookingDaysKtr"
@@ -144,7 +144,7 @@
                 </div>
             </div>
             <div class="flex flex-row items-center gap-x-2">
-                <span class="xsLight">{{ $t('From') }}</span>
+                <span class="text-sm/5 font-bold text-text-subtle">{{ $t('From') }}</span>
                 <div class="w-48">
                     <BaseInput type="date" label="tt.mm.yyyy" id="deleteBookingDaysDateFrom"
                                v-model="deleteBookingDaysDateFrom"
@@ -152,7 +152,7 @@
                 </div>
             </div>
             <div class="flex flex-row items-center gap-x-2">
-                <span class="xsLight">{{ $t('Until') }}</span>
+                <span class="text-sm/5 font-bold text-text-subtle">{{ $t('Until') }}</span>
                 <div class="w-48">
                     <BaseInput type="date" label="tt.mm.yyyy" id="deleteBookingDaysDateTo"
                                v-model="deleteBookingDaysDateTo"
@@ -160,15 +160,15 @@
                 </div>
             </div>
             <div class="flex flex-row items-center gap-x-2">
-                <label for="deleteAssignedData" class="xsLight">{{ $t('Also delete already assigned records') }}</label>
+                <label for="deleteAssignedData" class="text-sm/5 font-bold text-text-subtle">{{ $t('Also delete already assigned records') }}</label>
                 <input type="checkbox" id="deleteAssignedData" class="input-checklist" v-model="deleteAssignedData"/>
             </div>
-            <TrashIcon :class="[
+            <IconTrash :class="[
                 importProcessing ||
                 ((deleteBookingDaysDateFrom === null || deleteBookingDaysDateFrom === '') &&
                 (!deleteBookingDaysKtr || deleteBookingDaysKtr.trim() === ''))
-                    ? 'bg-gray-600 cursor-not-allowed'
-                    : 'bg-artwork-buttons-create cursor-pointer',
+                    ? 'bg-text-subtle cursor-not-allowed'
+                    : 'bg-accent-600 cursor-pointer',
                 'w-10 h-10 rounded-full text-white p-2'
             ]" @click="showDeleteBookingDaysConfirmation = true" />
         </div>
@@ -176,8 +176,8 @@
         <hr class="my-5"/>
 
         <div class="flex flex-col space-y-3">
-            <h2 class="headline2">{{ $t('Sage protocol') }}</h2>
-            <div class="xsLight col-span-9">
+            <h2 class="font-lexend font-semibold text-[clamp(18px,2.5vw,20px)]/[25px] text-text">{{ $t('Sage protocol') }}</h2>
+            <div class="text-sm/5 font-bold text-text-subtle col-span-9">
                 {{ $t('Log of imported and deleted Sage bookings') }}
             </div>
             <div>
@@ -188,7 +188,7 @@
         <hr class="my-5"/>
 
         <div class="flex flex-col">
-            <div class="headline2">
+            <div class="font-lexend font-semibold text-[clamp(18px,2.5vw,20px)]/[25px] text-text">
                 {{ $t('Column Order') }}
             </div>
             <div class="text-sm mb-5">
@@ -200,7 +200,7 @@
                        :list="tableColumnOrder" @start="dragging=true" @end="dragging=false"
                        @change="updateTableColumnOrders()">
                 <template #item="{element}" :key="element.id">
-                    <div class="text-sm flex flex-row gap-x-1 w-full p-4 group bg-artwork-project-background rounded-lg cursor-grab"
+                    <div class="text-sm flex flex-row gap-x-1 w-full p-4 group bg-surface-sunken rounded-lg cursor-grab"
                          :key="element.id"
                          :class="dragging ? 'cursor-grabbing' : 'cursor-grab'">
                         <IconDragDrop class="h-5 w-5 hidden group-hover:block"/>
@@ -238,8 +238,7 @@
 <script>
 import { defineComponent } from "vue";
 import { useForm, router } from "@inertiajs/vue3";
-import { InformationCircleIcon, RefreshIcon, TrashIcon } from "@heroicons/vue/solid";
-import {IconArrowCurveRight, IconDragDrop} from "@tabler/icons-vue";
+import {IconArrowCurveRight, IconDragDrop, IconInfoCircle, IconRefresh, IconTrash} from "@tabler/icons-vue";
 import draggable from "vuedraggable";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
@@ -256,9 +255,9 @@ export default defineComponent({
         SuccessModal,
         ErrorComponent,
         SageBookingLogModal,
-        InformationCircleIcon,
-        RefreshIcon,
-        TrashIcon,
+        IconInfoCircle,
+        IconRefresh,
+        IconTrash,
         IconDragDrop,
         draggable
     },

@@ -8,8 +8,8 @@
 </template>
 
 <script>
+import {IconX} from "@tabler/icons-vue";
 import Button from "@/Jetstream/Button.vue";
-import {XIcon} from "@heroicons/vue/outline";
 import {Link} from "@inertiajs/vue3";
 import UserTooltip from "@/Layouts/Components/UserTooltip.vue";
 import Permissions from "@/Mixins/Permissions.vue";
@@ -17,7 +17,7 @@ import Permissions from "@/Mixins/Permissions.vue";
 export default {
     mixins: [Permissions],
     name: "TagComponent",
-    components: {Button, XIcon, Link, UserTooltip},
+    components: {Button, IconX, Link, UserTooltip},
     props: ['user'],
 }
 </script>

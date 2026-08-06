@@ -1,9 +1,8 @@
 <script setup>
+import {IconCheck, IconChevronDown} from "@tabler/icons-vue";
 import {Listbox, ListboxButton, ListboxOption, ListboxOptions} from "@headlessui/vue";
 
-import {ChevronDownIcon} from "@heroicons/vue/outline";
 import Button from "@/Jetstream/Button.vue";
-import {CheckIcon} from "@heroicons/vue/solid";
 import {ref} from "vue";
 
 const props = defineProps({
@@ -32,23 +31,23 @@ const emit = defineEmits(['update:selectedProjectGroup'])
                     {{ currentGroup.name }}
                 </div>
             </div>
-            <ChevronDownIcon class="h-5 w-5 text-primary" aria-hidden="true"/>
+            <IconChevronDown class="h-5 w-5 text-text" aria-hidden="true"/>
         </ListboxButton>
-        <ListboxOptions class="absolute w-[88%] z-10 bg-artwork-navigation-background shadow-lg max-h-40 pr-2 pt-2 pb-2 text-base ring-1 ring-black ring-opacity-5 overflow-y-scroll focus:outline-none sm:text-sm">
+        <ListboxOptions class="absolute w-[88%] z-10 bg-surface-inverse shadow-lg max-h-40 pr-2 pt-2 pb-2 text-base ring-1 ring-black ring-opacity-5 overflow-y-scroll sm:text-sm">
             <ListboxOption v-if="projectGroups.length === 0"
-                           class="w-full text-secondary cursor-pointer p-2 flex justify-between"
+                           class="w-full text-text-subtle cursor-pointer p-2 flex justify-between"
                            :value="null">
                 {{ $t('No project group has been created yet') }}
             </ListboxOption>
             <ListboxOption v-for="projectGroup in projectGroups"
-                           class="text-secondary cursor-pointer p-2 flex justify-between "
+                           class="text-text-subtle cursor-pointer p-2 flex justify-between "
                            :key="projectGroup.id"
                            :value="projectGroup"
                            v-slot="{ active, selected }">
-                    <div :class="[selected ? 'xsWhiteBold' : 'xsLight', 'flex']">
+                    <div :class="[selected ? 'text-sm/5 font-bold text-white' : 'text-sm/5 font-bold text-text-subtle', 'flex']">
                         {{ projectGroup.name }}
                     </div>
-                <CheckIcon v-if="selected" class="h-5 w-5 text-success" aria-hidden="true"/>
+                <IconCheck v-if="selected" class="h-5 w-5 text-success" aria-hidden="true"/>
             </ListboxOption>
         </ListboxOptions>
     </Listbox>

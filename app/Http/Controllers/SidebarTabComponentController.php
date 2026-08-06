@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Log;
 class SidebarTabComponentController extends Controller
 {
     private const CACHE_KEY_TABS = 'settings_tabs_with_relations';
-    private const CACHE_KEY_COMPONENTS = 'settings_components_not_special';
+    private const CACHE_KEY_COMPONENTS = 'settings_components_not_special_tab_palette';
     private const CACHE_KEY_COMPONENTS_SPECIAL = 'settings_components_special';
 
     /**

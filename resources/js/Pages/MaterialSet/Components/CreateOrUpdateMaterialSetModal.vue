@@ -7,9 +7,9 @@
     >
         <form @submit.prevent="submit" class="space-y-6">
             <!-- Stammdaten -->
-            <section class="rounded-2xl bg-white/70 p-6 shadow-sm ring-1 ring-zinc-200 backdrop-blur">
-                <h3 class="text-base font-semibold text-zinc-900">{{ $t('Basic information') }}</h3>
-                <p class="mt-1 text-sm text-zinc-500">
+            <section class="rounded-2xl bg-white/70 p-6 shadow-sm ring-1 ring-border-subtle backdrop-blur">
+                <h3 class="text-base font-semibold text-text">{{ $t('Basic information') }}</h3>
+                <p class="mt-1 text-sm text-text-subtle">
                     {{ $t('Give your material set a clear name and optional description.') }}
                 </p>
 
@@ -31,9 +31,9 @@
 
             <section class="grid grid-cols-1 gap-6 lg:grid-cols-3">
                 <!-- Linke Spalte: Suche / Filter / Liste -->
-                <div class="rounded-2xl border border-zinc-200 bg-white shadow-sm lg:col-span-1">
+                <div class="rounded-2xl border border-border-subtle bg-white shadow-sm lg:col-span-1">
                     <!-- Sticky Tools -->
-                    <div class="sticky top-0 z-10 rounded-t-2xl border-b border-zinc-100 bg-white/90 px-5 py-3 backdrop-blur">
+                    <div class="sticky top-0 z-10 rounded-t-2xl border-b border-border-subtle bg-white/90 px-5 py-3 backdrop-blur">
                         <div class="flex w-full items-center gap-3">
                             <ArticleSearch
                                 id="articleSearchInModal"
@@ -48,10 +48,10 @@
                     <!-- Header -->
                     <div class="flex items-center justify-between px-5 py-3">
                         <h3 class="flex items-center gap-2 font-semibold">
-                            <span class="inline-block size-2 rounded-full bg-indigo-500"></span>
+                            <span class="inline-block size-2 rounded-full bg-accent-600"></span>
                             {{ $t('Found Articles') }}
                         </h3>
-                        <div v-if="articles?.length" class="text-sm text-zinc-500">
+                        <div v-if="articles?.length" class="text-sm text-text-subtle">
                             {{ articles.length }} {{ articles.length === 1 ? $t('article found') : $t('articles found') }}
                         </div>
                     </div>
@@ -60,12 +60,12 @@
                     <div ref="scrollContainer" class="max-h-[28rem] overflow-y-auto px-5 pb-5">
                         <!-- Skeletons -->
                         <div v-if="initialLoading" class="space-y-2">
-                            <div v-for="i in 6" :key="i" class="animate-pulse rounded-xl border border-zinc-200 bg-zinc-50/60 p-3">
+                            <div v-for="i in 6" :key="i" class="animate-pulse rounded-xl border border-border-subtle bg-surface-sunken/60 p-3">
                                 <div class="flex items-start gap-3">
-                                    <div class="h-12 w-12 rounded-lg bg-zinc-200" />
+                                    <div class="h-12 w-12 rounded-lg bg-border-subtle" />
                                     <div class="min-w-0 flex-1 space-y-2">
-                                        <div class="h-4 w-2/3 rounded bg-zinc-200" />
-                                        <div class="h-3 w-full rounded bg-zinc-100" />
+                                        <div class="h-4 w-2/3 rounded bg-border-subtle" />
+                                        <div class="h-3 w-full rounded bg-surface-sunken" />
                                     </div>
                                 </div>
                             </div>
@@ -75,11 +75,11 @@
                             <div
                                 v-for="article in articles"
                                 :key="article.id"
-                                class="mb-2 rounded-xl border border-zinc-200 bg-zinc-50/60 p-3 shadow-sm"
+                                class="mb-2 rounded-xl border border-border-subtle bg-surface-sunken/60 p-3 shadow-sm"
                             >
                                 <button
                                     type="button"
-                                    class="w-full text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 rounded-xl"
+                                    class="w-full text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-600 rounded-xl"
                                     @click="onArticleClick(article)"
                                     :aria-label="$t('Add to set') + ': ' + (article.name || '')"
                                 >
@@ -88,27 +88,27 @@
                                             v-if="article?.images?.[0]?.image"
                                             :src="imageSrc(article.images[0].image)"
                                             :alt="article.images[0].alt || ''"
-                                            class="h-12 w-12 rounded-lg border border-zinc-200 object-cover"
+                                            class="h-12 w-12 rounded-lg border border-border-subtle object-cover"
                                             @error="onImgError"
                                         />
                                         <div class="min-w-0 flex-1">
                                             <div class="flex items-start gap-2">
-                                                <div class="truncate font-medium text-zinc-900">
+                                                <div class="truncate font-medium text-text">
                                                     {{ article.name }}
                                                 </div>
                                                 <span
                                                     v-if="isSelected(article.id)"
-                                                    class="inline-flex shrink-0 items-center rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-medium text-emerald-700 ring-1 ring-inset ring-emerald-200"
+                                                    class="inline-flex shrink-0 items-center rounded-full bg-success-surface px-2 py-0.5 text-[11px] font-medium text-success ring-1 ring-inset ring-success-border"
                                                 >
                                                   {{ $t('in set') }} (×{{ qtyOf(article.id) }})
                                                 </span>
                                             </div>
 
-                                            <div v-if="article.description" class="text-xs text-zinc-500 line-clamp-2">
+                                            <div v-if="article.description" class="text-xs text-text-subtle line-clamp-2">
                                                 {{ article.description }}
                                             </div>
 
-                                            <div class="mt-2 flex flex-wrap items-center gap-2 text-[11px] text-zinc-500">
+                                            <div class="mt-2 flex flex-wrap items-center gap-2 text-[11px] text-text-subtle">
                                             <span>
                                               {{ $t('Category') }}: {{ article?.category?.name || '—' }}
                                               <span v-if="article?.sub_category"> • {{ $t('Subcategory') }}: {{ article.sub_category.name }}</span>
@@ -120,7 +120,7 @@
                                         <div v-if="isSelected(article.id)" class="self-start">
                                             <button
                                                 type="button"
-                                                class="rounded-lg px-2 py-1 text-sm font-medium text-indigo-700 ring-1 ring-inset ring-indigo-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
+                                                class="rounded-lg px-2 py-1 text-sm font-medium text-accent-700 ring-1 ring-inset ring-accent-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-600"
                                                 @click.stop="incrementFromList(article.id)"
                                                 :aria-label="$t('Increase quantity')"
                                             >
@@ -133,8 +133,8 @@
 
                             <!-- Infinite Scroll Sentinel -->
                             <div ref="sentinel" class="flex items-center justify-center py-3">
-                                <span v-if="loadingMore" class="inline-block h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent text-zinc-500" />
-                                <span v-else-if="!hasMoreArticles" class="text-xs text-zinc-400">{{ $t('No more items') }}</span>
+                                <span v-if="loadingMore" class="inline-block h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent text-text-subtle" />
+                                <span v-else-if="!hasMoreArticles" class="text-xs text-text-subtle">{{ $t('No more items') }}</span>
                             </div>
                         </div>
                     </div>
@@ -142,16 +142,16 @@
 
                 <!-- Rechte Spalte: Auswahl -->
                 <div class="space-y-6 lg:col-span-2">
-                    <div class="rounded-2xl border border-zinc-200 bg-white shadow-sm">
-                        <div class="rounded-t-2xl border-b border-zinc-100 px-5 py-4">
+                    <div class="rounded-2xl border border-border-subtle bg-white shadow-sm">
+                        <div class="rounded-t-2xl border-b border-border-subtle px-5 py-4">
                             <div class="flex flex-col gap-3 md:flex-row md:items-start md:justify-between md:gap-6">
                                 <!-- Titel + Beschreibung -->
                                 <div class="space-y-1">
-                                    <h3 class="flex items-center gap-2 text-base font-semibold text-zinc-900">
-                                        <span class="inline-block size-2 rounded-full bg-indigo-500 ring-2 ring-indigo-200/60"></span>
+                                    <h3 class="flex items-center gap-2 text-base font-semibold text-text">
+                                        <span class="inline-block size-2 rounded-full bg-accent-600 ring-2 ring-accent-200"></span>
                                         {{ $t('Selected Articles') }}
                                     </h3>
-                                    <p class="text-xs text-zinc-500">
+                                    <p class="text-xs text-text-subtle">
                                         {{ $t('Here you can see the items you have selected for the material issue. Adjust the quantity or remove items.') }}
                                     </p>
                                 </div>
@@ -160,7 +160,7 @@
                                 <div class="flex flex-wrap items-center gap-2">
                                     <!-- Items -->
                                     <span
-                                        class="inline-flex items-center gap-1.5 rounded-full bg-zinc-50 px-2.5 py-1 text-[11px] font-medium text-zinc-700 ring-1 ring-inset ring-zinc-200"
+                                        class="inline-flex items-center gap-1.5 rounded-full bg-surface-sunken px-2.5 py-1 text-[11px] font-medium text-text-muted ring-1 ring-inset ring-border-subtle"
                                     >
                                          <component :is="IconList" class="size-4" />
                                     <span class="whitespace-nowrap">{{ $t('Items') }}: {{ itemsCount }}</span>
@@ -168,7 +168,7 @@
 
                                     <!-- Total qty -->
                                     <span
-                                        class="inline-flex items-center gap-1.5 rounded-full bg-zinc-50 px-2.5 py-1 text-[11px] font-medium text-zinc-700 ring-1 ring-inset ring-zinc-200"
+                                        class="inline-flex items-center gap-1.5 rounded-full bg-surface-sunken px-2.5 py-1 text-[11px] font-medium text-text-muted ring-1 ring-inset ring-border-subtle"
                                     >
                                         <!-- Layers-Icon -->
                                         <component :is="IconStackForward" class="size-4" />
@@ -179,7 +179,7 @@
                                     <button
                                         v-if="materialSetForm.items.length"
                                         type="button"
-                                        class="inline-flex items-center gap-1 rounded-lg px-3 py-1.5 text-sm font-medium text-rose-700 ring-1 ring-inset ring-rose-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-500"
+                                        class="inline-flex items-center gap-1 rounded-lg px-3 py-1.5 text-sm font-medium text-danger ring-1 ring-inset ring-danger-border focus:outline-none focus-visible:ring-2 focus-visible:ring-danger"
                                         @click="clearAll"
                                     >
                                         <!-- Trash-Icon -->
@@ -194,7 +194,7 @@
                         <div class="mt-4">
                             <!-- Listendarstellung im Kartenstil -->
                             <div v-if="materialSetForm.items.length" class="p-5">
-                                <div class="divide-y divide-zinc-200/80">
+                                <div class="divide-y divide-border-subtle/80">
                                     <div
                                         v-for="(item, index) in materialSetForm.items"
                                         :key="item.id"
@@ -228,10 +228,10 @@
 
                                             <!-- Textbereich -->
                                             <div class="min-w-0">
-                                                <h4 class="flex items-center gap-1 text-sm font-semibold text-zinc-900">
+                                                <h4 class="flex items-center gap-1 text-sm font-semibold text-text">
                                                     {{ item.name }}
                                                     <!-- Optional: Detail-Icon, falls du später Details anzeigen willst
-                                                    <component is="IconListDetails" class="h-4 w-4 text-zinc-400 hover:text-zinc-600" @click="openItemDetail(item)" />
+                                                    <component is="IconListDetails" class="h-4 w-4 text-text-subtle hover:text-text-muted" @click="openItemDetail(item)" />
                                                     -->
                                                 </h4>
                                             </div>
@@ -254,7 +254,7 @@
 
                                             <button
                                                 type="button"
-                                                class="rounded-md p-2 text-zinc-400 hover:bg-zinc-100 hover:text-red-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-500"
+                                                class="rounded-md p-2 text-text-subtle hover:bg-surface-sunken hover:text-danger focus:outline-none focus-visible:ring-2 focus-visible:ring-danger"
                                                 @click="removeItem(item.id)"
                                                 :aria-label="$t('Remove')"
                                             >
@@ -314,7 +314,6 @@ import { useForm, usePage } from "@inertiajs/vue3";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 import ArticleSearch from "@/Components/SearchBars/ArticleSearch.vue";
 import BaseTextarea from "@/Artwork/Inputs/BaseTextarea.vue";
-import ArtworkBaseModalButton from "@/Artwork/Buttons/ArtworkBaseModalButton.vue";
 import InventoryFunctionBarFilter from "@/Artwork/Filter/InventoryFunctionBarFilter.vue";
 import { computed, onMounted, onBeforeUnmount, ref } from "vue";
 import axios from "axios";

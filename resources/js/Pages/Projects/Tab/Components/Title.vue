@@ -3,7 +3,7 @@
         <h1
             class="font-medium block subpixel-antialiased"
             :style="{ fontSize: data.data.title_size + 'px' }"
-            :class="inSidebar ? 'text-white' : ' text-gray-900' "
+            :class="inSidebar ? 'text-white' : ' text-text' "
         >
             {{ data.data.title }}
         </h1>

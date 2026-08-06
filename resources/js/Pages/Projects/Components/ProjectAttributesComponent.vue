@@ -3,7 +3,7 @@
         <div class="flex items-center gap-x-5">
             <span class="componentLabel" :class="{'!text-white': inSidebar}">{{ $t('Project properties') }}</span>
 
-            <PropertyIcon name="IconEdit" class=" w-5 h-5 rounded-full " :class="inSidebar ? 'text-white' : 'text-artwork-buttons-context'"
+            <PropertyIcon name="IconEdit" class=" w-5 h-5 rounded-full " :class="inSidebar ? 'text-white' : 'text-text-muted'"
                       @click="openProjectAttributeEditModal"
                       v-if="this.canEditComponent && projectMembersWriteAccess()"
             />

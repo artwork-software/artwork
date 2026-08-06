@@ -12,8 +12,8 @@
                                 'Room categories and room properties are global filter dimensions: they let you filter the room rows in the calendars.',
                             ]"
                         />
-                        <h2 class="headline2 w-full">{{ $t('Room properties') }}</h2>
-                        <div class="xsLight flex mt-4 w-full">
+                        <h2 class="font-lexend font-semibold text-[clamp(18px,2.5vw,20px)]/[25px] text-text w-full">{{ $t('Room properties') }}</h2>
+                        <div class="text-sm/5 font-bold text-text-subtle flex mt-4 w-full">
                             {{
                                 $t('Define room categories and properties. These can then be filtered in the calendars.')
                             }}
@@ -29,7 +29,7 @@
                                 'Deleting a category or property removes its assignments from all rooms.',
                             ]"
                         />
-                        <div v-if="showInvalidNameErrorText" class="text-red-600 text-sm mt-4">
+                        <div v-if="showInvalidNameErrorText" class="text-danger text-sm mt-4">
                             {{
                                 $t('You have entered an invalid name. No spaces are allowed at the beginning or end. It is also not permitted to enter only spaces.')
                             }}
@@ -40,14 +40,13 @@
                             <div class="space-y-3">
                                 <!-- Kopf: Titel + Counter -->
                                 <div class="flex items-center justify-between">
-      <span class="text-sm font-semibold text-zinc-800">
+      <span class="text-sm font-semibold text-text">
         {{ $t('Room categories') }}
       </span>
                                     <span
-                                        class="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] leading-none font-medium
-               border border-artwork-navigation-color/30
-               bg-gradient-to-br from-artwork-navigation-color/10 to-transparent
-               text-artwork-buttons-hover shadow-[inset_0_1px_0_rgba(255,255,255,0.45)] ring-1 ring-inset ring-white/40"
+                                        class="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] leading-none font-medium border border-text-inverse/30
+               bg-gradient-to-br from-text-inverse/10 to-transparent
+               text-accent-700 shadow-[inset_0_1px_0_rgba(255,255,255,0.45)] ring-1 ring-inset ring-white/40"
                                         :title="$t('Total')"
                                     >
                                     <span class="tabular-nums">{{ room_categories?.length || 0 }}</span>
@@ -67,8 +66,7 @@
                                     </div>
                                     <div class="flex items-center h-full ml-2">
                                         <button
-                                            :class="[roomCategoryInput === '' ? 'bg-secondary cursor-not-allowed' : 'bg-artwork-buttons-create hover:bg-artwork-buttons-hover focus:outline-none',
-                   'rounded-full ml-1 inline-flex items-center p-2 border border-transparent shadow-sm text-white transition']"
+                                            :class="[roomCategoryInput === '' ? 'bg-text-subtle cursor-not-allowed' : 'bg-accent-600 hover:bg-accent-700 focus:outline-none', 'rounded-full ml-1 inline-flex items-center p-2 border border-transparent shadow-sm text-white transition']"
                                             @click="addRoomCategory"
                                             :disabled="!roomCategoryInput"
                                             :aria-disabled="!roomCategoryInput"
@@ -84,17 +82,16 @@
       <span
           v-for="(category, index) in room_categories"
           :key="category.id ?? category.name ?? index"
-          class="inline-flex items-center gap-1.5 h-8 rounded-full px-3 text-sm font-medium
-               border border-artwork-navigation-color/25
-               bg-gradient-to-br from-white to-artwork-navigation-color/5
-               text-zinc-800 ring-1 ring-inset ring-white/40 shadow-sm"
+          class="inline-flex items-center gap-1.5 h-8 rounded-full px-3 text-sm font-medium border border-text-inverse/25
+               bg-gradient-to-br from-white to-text-inverse/5
+               text-text ring-1 ring-inset ring-white/40 shadow-sm"
       >
         <!-- kleiner Farbdot -->
-        <span class="inline-block h-2 w-2 rounded-full bg-artwork-buttons-hover/80"></span>
+        <span class="inline-block h-2 w-2 rounded-full bg-accent-700/80"></span>
         <span class="truncate max-w-[14rem]">{{ category.name }}</span>
         <button
             type="button"
-            class="ml-1 inline-flex h-6 w-6 items-center justify-center rounded-full text-zinc-500 hover:text-error hover:bg-zinc-100/70 transition"
+            class="ml-1 inline-flex h-6 w-6 items-center justify-center rounded-full text-text-subtle hover:text-danger hover:bg-surface-sunken/70 transition"
             @click="this.showRoomCategoryDeleteModal(category)"
             :title="$t('Remove')"
             aria-label="Remove category"
@@ -109,14 +106,13 @@
                             <div class="space-y-3">
                                 <!-- Kopf: Titel + Counter -->
                                 <div class="flex items-center justify-between">
-      <span class="text-sm font-semibold text-zinc-800">
+      <span class="text-sm font-semibold text-text">
         {{ $t('Room properties') }}
       </span>
                                     <span
-                                        class="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] leading-none font-medium
-               border border-indigo-300/60
-               bg-gradient-to-br from-indigo-100/80 to-white
-               text-indigo-800 shadow-[inset_0_1px_0_rgba(255,255,255,0.55)] ring-1 ring-inset ring-white/50"
+                                        class="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] leading-none font-medium border border-accent-200/60
+               bg-gradient-to-br from-accent-100/80 to-white
+               text-accent-700 shadow-[inset_0_1px_0_rgba(255,255,255,0.55)] ring-1 ring-inset ring-white/50"
                                         :title="$t('Total')"
                                     >
         <span class="tabular-nums">{{ room_attributes?.length || 0 }}</span>
@@ -136,8 +132,7 @@
                                     </div>
                                     <div class="flex items-center ml-2 h-full">
                                         <button
-                                            :class="[roomAttributeInput === '' ? 'bg-secondary cursor-not-allowed' : 'bg-artwork-buttons-create hover:bg-artwork-buttons-hover focus:outline-none',
-                   'rounded-full ml-1 inline-flex items-center p-2 border border-transparent shadow-sm text-white transition']"
+                                            :class="[roomAttributeInput === '' ? 'bg-text-subtle cursor-not-allowed' : 'bg-accent-600 hover:bg-accent-700 focus:outline-none', 'rounded-full ml-1 inline-flex items-center p-2 border border-transparent shadow-sm text-white transition']"
                                             @click="addRoomAttribute"
                                             :disabled="!roomAttributeInput"
                                             :aria-disabled="!roomAttributeInput"
@@ -153,16 +148,15 @@
       <span
           v-for="(attribute, index) in room_attributes"
           :key="attribute.id ?? attribute.name ?? index"
-          class="inline-flex items-center gap-1.5 h-8 rounded-full px-3 text-sm font-medium
-               border border-artwork-navigation-color/25
-               bg-gradient-to-br from-white to-artwork-navigation-color/5
-               text-zinc-800 ring-1 ring-inset ring-white/40 shadow-sm"
+          class="inline-flex items-center gap-1.5 h-8 rounded-full px-3 text-sm font-medium border border-text-inverse/25
+               bg-gradient-to-br from-white to-text-inverse/5
+               text-text ring-1 ring-inset ring-white/40 shadow-sm"
       >
-        <span class="inline-block h-2 w-2 rounded-full bg-indigo-500/80"></span>
+        <span class="inline-block h-2 w-2 rounded-full bg-accent-500/80"></span>
         <span class="truncate max-w-[14rem]">{{ attribute.name }}</span>
         <button
             type="button"
-            class="ml-1 inline-flex h-6 w-6 items-center justify-center rounded-full text-zinc-500 hover:text-error hover:bg-zinc-100/70 transition"
+            class="ml-1 inline-flex h-6 w-6 items-center justify-center rounded-full text-text-subtle hover:text-danger hover:bg-surface-sunken/70 transition"
             @click="this.showRoomAttributeDeleteModal(attribute)"
             :title="$t('Remove')"
             aria-label="Remove attribute"
@@ -176,7 +170,7 @@
                         </div>
 
                         <div class="flex w-full justify-between">
-                            <h2 class=" headline2">{{ $t('Areas ') }}</h2>
+                            <h2 class="font-lexend font-semibold text-[clamp(18px,2.5vw,20px)]/[25px] text-text">{{ $t('Areas ') }}</h2>
                         </div>
                         <div class="flex w-full justify-between mt-6">
                             <div class="flex">
@@ -187,10 +181,10 @@
                             <BaseFilter only-icon white-background :has-active-filters="hasActiveRoomFilters">
                                 <div class="p-3 space-y-5">
                                     <div class="flex items-center justify-between">
-                                        <span class="text-sm font-semibold text-gray-900">{{ $t('Filter rooms') }}</span>
+                                        <span class="text-sm font-semibold text-text">{{ $t('Filter rooms') }}</span>
                                         <button type="button"
                                                 v-if="hasActiveRoomFilters"
-                                                class="text-xs text-artwork-buttons-create hover:text-artwork-buttons-hover"
+                                                class="text-xs text-accent-600 hover:text-accent-700"
                                                 @click="resetRoomFilter">
                                             {{ $t('Reset filters') }}
                                         </button>
@@ -215,17 +209,18 @@
                     <div class="flex w-full flex-wrap mt-8">
                         <!-- Modernisierte Liste: Bereiche & Räume -->
                         <div v-if="hasActiveRoomFilters && filteredAreas.every(area => area.rooms.length === 0)"
-                             class="w-full my-4 rounded-xl border border-dashed border-zinc-200 bg-zinc-50/40 p-4 text-sm text-zinc-500">
+                             class="w-full my-4 rounded-xl border border-dashed border-border-subtle bg-surface-sunken/40 p-4 text-sm text-text-subtle">
                             {{ $t('No rooms found') }}
                         </div>
                         <div
                             v-for="area in filteredAreas"
                             :key="area.id"
-                            class="group relative my-4 w-full rounded-2xl border border-zinc-200 bg-white shadow-sm transition-shadow hover:shadow-md"
+                            class="group relative my-4 w-full rounded-2xl border border-border-subtle bg-white shadow-sm transition-shadow hover:shadow-md"
                         >
                             <div class="flex items-center justify-between gap-3 pl-5 pr-4 py-4">
-                                <button
-                                    class="ui-button-add"
+                                <BaseUIButton
+                                    variant="primary"
+                                    hide-icon
                                     @click="changeAreaStatus(area)"
                                     :aria-expanded="this.opened_areas.includes(area.id)"
                                     :aria-controls="`area-panel-${area.id}`"
@@ -243,26 +238,25 @@
                                     <span class="sr-only">
                                         {{ this.opened_areas.includes(area.id) ? $t('Collapse') : $t('Expand') }}
                                     </span>
-                                </button>
+                                </BaseUIButton>
 
                                 <div class="flex min-w-0 items-center gap-3">
-                                    <span class="inline-block h-3.5 w-3.5 shrink-0 rounded-full border border-zinc-300"
+                                    <span class="inline-block h-3.5 w-3.5 shrink-0 rounded-full border border-border"
                                           :style="{ backgroundColor: area.color ?? '#000000' }"
                                           :title="$t('Color')"></span>
-                                    <span class="headline2 truncate">{{ area.name }}</span>
+                                    <span class="font-lexend font-semibold text-[clamp(18px,2.5vw,20px)]/[25px] text-text truncate">{{ area.name }}</span>
 
                                     <!-- Zähler-Chips (schöner) -->
                                     <div class="flex items-center gap-2">
                                         <!-- Rooms -->
                                         <span
                                             :title="$t('Rooms')"
-                                            class="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] leading-none font-medium
-           border border-artwork-navigation-color/30
-           bg-gradient-to-br from-artwork-navigation-color/10 to-transparent
-           text-artwork-buttons-hover
+                                            class="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] leading-none font-medium border border-text-inverse/30
+           bg-gradient-to-br from-text-inverse/10 to-transparent
+           text-accent-700
            shadow-[inset_0_1px_0_rgba(255,255,255,0.45)]
            ring-1 ring-inset ring-white/40
-           transition hover:ring-artwork-navigation-color/30"
+           transition hover:ring-text-inverse/30"
                                             role="status"
                                             aria-live="polite"
                                         >
@@ -278,21 +272,20 @@
                                         <span
                                             v-if="area.rooms?.some(r => r.temporary)"
                                             :title="$t('Temporary rooms')"
-                                            class="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] leading-none font-medium
-                                               border border-amber-300/60
-                                               bg-gradient-to-br from-amber-100/90 to-amber-50
-                                               text-amber-800
+                                            class="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] leading-none font-medium border border-warning-border/60
+                                               bg-gradient-to-br from-warning-surface/90 to-warning-surface
+                                               text-warning
                                                shadow-[inset_0_1px_0_rgba(255,255,255,0.6)]
                                                ring-1 ring-inset ring-white/50
-                                               transition hover:ring-amber-300"
+                                               transition hover:ring-warning-border"
                                             role="status"
                                             aria-live="polite"
                                         >
                                         <!-- Pulsierender Status-Dot -->
                                         <span class="relative flex h-2 w-2">
                                           <span
-                                              class="absolute inline-flex h-full w-full animate-ping rounded-full bg-amber-500/40"></span>
-                                          <span class="relative inline-flex h-2 w-2 rounded-full bg-amber-500"></span>
+                                              class="absolute inline-flex h-full w-full animate-ping rounded-full bg-warning/40"></span>
+                                          <span class="relative inline-flex h-2 w-2 rounded-full bg-warning"></span>
                                         </span>
                                         <span class="tabular-nums">
                                           {{ area.rooms.filter(r => r.temporary).length }}
@@ -328,7 +321,7 @@
                                     <div class="flex items-center gap-3">
                                         <BaseUIButton @click="openAddRoomModal(area)" :label="$t('Add room')" is-add-button />
                                         <div v-if="this.$page.props.show_hints"
-                                             class="flex items-center text-secondary">
+                                             class="flex items-center text-text-subtle">
                                             <SvgCollection svgName="arrowLeft" class="ml-1 h-4 w-4 opacity-70"/>
                                             <span class="ml-1 text-sm">{{ $t('Create new rooms') }}</span>
                                         </div>
@@ -338,7 +331,7 @@
                                     <div class="mt-6">
                                         <div
                                             v-if="(area.rooms?.filter(r => !r.temporary).length || 0) === 0"
-                                            class="rounded-xl border border-dashed border-zinc-200 bg-zinc-50/40 p-4 text-sm text-zinc-500"
+                                            class="rounded-xl border border-dashed border-border-subtle bg-surface-sunken/40 p-4 text-sm text-text-subtle"
                                         >
                                             {{ $t('No rooms yet') }}.
                                         </div>
@@ -346,26 +339,25 @@
                                         <div v-else v-for="element in area.rooms">
                                                 <div v-show="!element.temporary" class="relative group mt-3">
                                                     <div
-                                                        class="relative rounded-2xl border border-zinc-200 bg-white/90 p-4 pl-5 shadow-sm ring-1 ring-transparent transition
-               hover:border-artwork-navigation-color/30 hover:shadow-md focus-within:ring-2 focus-within:ring-artwork-navigation-color/30"
+                                                        class="relative rounded-2xl border border-border-subtle bg-white/90 p-4 pl-5 shadow-sm ring-1 ring-transparent transition hover:border-text-inverse/30 hover:shadow-md focus-within:ring-2 focus-within:ring-text-inverse/30"
                                                     >
                                                         <div class="flex items-start justify-between gap-4">
                                                             <!-- Titel & Meta -->
                                                             <div class="min-w-0">
                                                                 <div class="flex items-center gap-2">
-                                                                    <span class="inline-block h-2.5 w-2.5 shrink-0 rounded-full border border-zinc-300"
+                                                                    <span class="inline-block h-2.5 w-2.5 shrink-0 rounded-full border border-border"
                                                                           :style="{ backgroundColor: element.color ?? area.color ?? '#000000' }"
                                                                           :title="element.color ? $t('Color') : $t('Inherit color from area')"></span>
                                                                     <Link
                                                                         :href="route('rooms.show', { room: element.id })"
-                                                                        class="xsDark block truncate hover:underline decoration-artwork-buttons-hover/50"
+                                                                        class="text-sm/5 font-semibold text-text block truncate hover:underline decoration-accent-700/50"
                                                                     >
                                                                         {{ element.name }}
                                                                     </Link>
                                                                 </div>
 
                                                                 <div
-                                                                    class="mt-1 flex flex-wrap items-center gap-2 text-[11px] leading-tight text-zinc-500">
+                                                                    class="mt-1 flex flex-wrap items-center gap-2 text-[11px] leading-tight text-text-subtle">
                                                                     <span class="inline-flex items-center gap-1">
                                                                         <PropertyIcon name="IconCalendar" class="h-3.5 w-3.5"
                                                                                       stroke-width="1.5"/>
@@ -387,7 +379,7 @@
                                                                 <!-- Quick Actions (edit / duplicate) -->
                                                                 <button
                                                                     type="button"
-                                                                    class="inline-flex items-center rounded-lg p-1.5 text-zinc-500 hover:bg-zinc-100 hover:text-zinc-800 focus-visible:visible focus:outline-none focus:ring-2 focus:ring-zinc-300"
+                                                                    class="inline-flex items-center rounded-lg p-1.5 text-text-subtle hover:bg-surface-sunken hover:text-text focus-visible:visible focus:outline-none focus:ring-2 focus:ring-border"
                                                                     @click="openEditRoomModal(element, area)"
                                                                     aria-label="Edit"
                                                                 >
@@ -395,7 +387,7 @@
                                                                 </button>
                                                                 <button
                                                                     type="button"
-                                                                    class="inline-flex items-center rounded-lg p-1.5 text-zinc-500 hover:bg-zinc-100 hover:text-zinc-800 focus-visible:visible focus:outline-none focus:ring-2 focus:ring-zinc-300"
+                                                                    class="inline-flex items-center rounded-lg p-1.5 text-text-subtle hover:bg-surface-sunken hover:text-text focus-visible:visible focus:outline-none focus:ring-2 focus:ring-border"
                                                                     @click="duplicateRoom(element)"
                                                                     aria-label="Duplicate"
                                                                 >
@@ -428,7 +420,7 @@
                                         class="mt-10"
                                     >
                                         <button
-                                            class="flex w-full items-center gap-2 rounded-lg px-2 py-1 text-left xxsDarkBold text-amber-700 hover:bg-amber-50"
+                                            class="flex w-full items-center gap-2 rounded-lg px-2 py-1 text-left text-xs/[15px] font-semibold text-text text-warning hover:bg-warning-surface"
                                             @click="switchVisibility(area.id)"
                                         >
                                             {{ $t('Temporary rooms') }}
@@ -451,7 +443,7 @@
                                                 >
                                                         <div class="relative group mt-3">
                                                             <div
-                                                                class="relative rounded-2xl border border-amber-200/80 bg-amber-50/70 p-4 pl-5 shadow-sm ring-1 ring-transparent transition hover:border-amber-300 hover:shadow-md focus-within:ring-2 focus-within:ring-amber-300/50"
+                                                                class="relative rounded-2xl border border-warning-border/80 bg-warning-surface/70 p-4 pl-5 shadow-sm ring-1 ring-transparent transition hover:border-warning-border hover:shadow-md focus-within:ring-2 focus-within:ring-warning-border/50"
                                                                 @mouseover="showMenu = element.id"
                                                                 @mouseout="showMenu = null"
                                                             >
@@ -463,20 +455,20 @@
 
                                                                             <Link
                                                                                 :href="route('rooms.show', { room: element.id })"
-                                                                                class="xsDark block truncate hover:underline decoration-amber-500/50"
+                                                                                class="text-sm/5 font-semibold text-text block truncate hover:underline decoration-warning"
                                                                             >
                                                                                 {{ element.name }}
                                                                             </Link>
                                                                             <!-- Temporary-Status -->
                                                                             <span
-                                                                                class="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] leading-none font-medium border border-amber-400/60 bg-amber-100/80 text-amber-800 ring-1 ring-inset ring-white/50"
+                                                                                class="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] leading-none font-medium border border-warning-border/60/60 bg-warning-surface/80 text-warning ring-1 ring-inset ring-white/50"
                                                                                 :title="$t('Temporary rooms')"
                                                                             >
                                                                             <span class="relative flex h-2 w-2">
                                                                               <span
-                                                                                  class="absolute inline-flex h-full w-full animate-ping rounded-full bg-amber-500/40"></span>
+                                                                                  class="absolute inline-flex h-full w-full animate-ping rounded-full bg-warning/40"></span>
                                                                               <span
-                                                                                  class="relative inline-flex h-2 w-2 rounded-full bg-amber-500"></span>
+                                                                                  class="relative inline-flex h-2 w-2 rounded-full bg-warning"></span>
                                                                             </span>
                                                                             {{ $t('Temporary') }}
                                                                           </span>
@@ -487,10 +479,9 @@
                                                                             class="mt-2 flex flex-wrap items-center gap-1.5">
                                                                             <!-- Zeitraum -->
                                                                             <span
-                                                                                class="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] leading-none font-medium
-                       border border-amber-300/60
-                       bg-gradient-to-br from-amber-100/90 to-amber-50
-                       text-amber-800 shadow-[inset_0_1px_0_rgba(255,255,255,0.6)] ring-1 ring-inset ring-white/40"
+                                                                                class="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] leading-none font-medium border border-warning-border
+                       bg-gradient-to-br from-warning-surface/90 to-warning-surface
+                       text-warning shadow-[inset_0_1px_0_rgba(255,255,255,0.6)] ring-1 ring-inset ring-white/40"
                                                                                 :title="$t('Date range')"
                                                                             >
                                                                             <PropertyIcon name="IconCalendar" class="h-3.5 w-3.5"
@@ -507,7 +498,7 @@
 
                                                                         <!-- Meta: erstellt am / von -->
                                                                         <div
-                                                                            class="mt-2 flex flex-wrap items-center gap-2 text-[11px] leading-tight text-amber-800/90">
+                                                                            class="mt-2 flex flex-wrap items-center gap-2 text-[11px] leading-tight text-warning/90">
                                                                           <span class="inline-flex items-center gap-1">
                                                                             <component :is="IconClock"
                                                                                        class="h-3.5 w-3.5"
@@ -530,7 +521,7 @@
                                                                         <!-- Quick Actions -->
                                                                         <button
                                                                             type="button"
-                                                                            class="inline-flex items-center rounded-lg p-1.5 text-amber-700 hover:bg-amber-100 hover:text-amber-900 focus-visible:visible focus:outline-none focus:ring-2 focus:ring-amber-300"
+                                                                            class="inline-flex items-center rounded-lg p-1.5 text-warning hover:bg-warning-surface hover:text-warning focus-visible:visible focus:outline-none focus:ring-2 focus:ring-warning-border"
                                                                             @click="openEditRoomModal(element, area)"
                                                                             aria-label="Edit"
                                                                         >
@@ -539,7 +530,7 @@
                                                                         </button>
                                                                         <button
                                                                             type="button"
-                                                                            class="inline-flex items-center rounded-lg p-1.5 text-amber-700 hover:bg-amber-100 hover:text-amber-900 focus-visible:visible focus:outline-none focus:ring-2 focus:ring-amber-300"
+                                                                            class="inline-flex items-center rounded-lg p-1.5 text-warning hover:bg-warning-surface hover:text-warning focus-visible:visible focus:outline-none focus:ring-2 focus:ring-warning-border"
                                                                             @click="duplicateRoom(element)"
                                                                             aria-label="Duplicate"
                                                                         >
@@ -617,8 +608,8 @@
                 </div>
 
                 <div class="mt-4">
-                    <div class="text-sm text-gray-900 mb-1">{{ $t('Color') }}</div>
-                    <div class="text-xs text-secondary mb-2">{{ $t('The color visually separates the rooms of this area in the calendar. Rooms inherit this color unless they have their own.') }}</div>
+                    <div class="text-sm text-text mb-1">{{ $t('Color') }}</div>
+                    <div class="text-xs text-text-subtle mb-2">{{ $t('The color visually separates the rooms of this area in the calendar. Rooms inherit this color unless they have their own.') }}</div>
                     <ColorPickerComponent @updateColor="(color) => editAreaForm.color = color" :color="editAreaForm.color"/>
                 </div>
 
@@ -654,7 +645,7 @@
                         id="description"
                     />
                 </div>
-                <div class="space-y-6 rounded-xl border border-zinc-200 bg-zinc-50/50 p-4">
+                <div class="space-y-6 rounded-xl border border-border-subtle bg-surface-sunken/50 p-4">
                     <RoomPropertyCheckboxGroup
                         :label="$t('Room categories')"
                         :items="room_categories"
@@ -686,12 +677,12 @@
                 />
                 <div class="flex items-center">
                     <input v-model="newRoomForm.temporary" type="checkbox" class="input-checklist"/>
-                    <p :class="[newRoomForm.temporary ? 'text-primary font-black' : 'text-secondary']"
+                    <p :class="[newRoomForm.temporary ? 'text-text font-black' : 'text-text-subtle']"
                        class="ml-4 text-sm">{{ $t('Temporary room') }}</p>
                     <div v-if="this.$page.props.show_hints" class="flex mt-1">
                         <SvgCollection svgName="arrowLeft" class="h-6 w-6 ml-2 mr-2"/>
                         <span
-                            class="ml-1 my-auto hind">{{
+                            class="ml-1 my-auto ">{{
                                 $t('Set up a temporary room - e.g. if part of a room is partitioned off. This is only displayed in the calendar during this period.')
                             }}</span>
                     </div>
@@ -713,12 +704,12 @@
                 </div>
                 <div class="flex items-center">
                     <input v-model="newRoomForm.everyone_can_book" type="checkbox" class="input-checklist"/>
-                    <p :class="[newRoomForm.everyone_can_book ? 'text-primary font-black' : 'text-secondary']"
+                    <p :class="[newRoomForm.everyone_can_book ? 'text-text font-black' : 'text-text-subtle']"
                        class="ml-4 my-auto text-sm">{{ $t('Can be booked by anyone') }}</p>
                     <div v-if="this.$page.props.show_hints" class="flex mt-1">
                         <SvgCollection svgName="arrowLeft" class="h-6 w-6 ml-2 mr-2"/>
                         <span
-                            class="ml-1 my-auto hind">{{
+                            class="ml-1 my-auto ">{{
                                 $t('Decides whether this room can be booked by everyone or only by the room admins.')
                             }}</span>
                     </div>
@@ -729,10 +720,10 @@
                            type="checkbox"
                            class="input-checklist"/>
                     <div>
-                        <p :class="[newRoomForm.relevant_for_disposition ? 'text-primary font-black' : 'text-secondary']"
+                        <p :class="[newRoomForm.relevant_for_disposition ? 'text-text font-black' : 'text-text-subtle']"
                            class="my-auto text-sm">{{ $t('Relevant for disposition') }}</p>
                         <span class="text-xs"
-                              :class="[newRoomForm.relevant_for_disposition ? 'text-primary font-black' : 'text-secondary']">{{
+                              :class="[newRoomForm.relevant_for_disposition ? 'text-text font-black' : 'text-text-subtle']">{{
                                 $t('Activate this field if the room is to be included in the calendars.')
                             }}</span>
                     </div>
@@ -777,12 +768,12 @@
                         :rows="4"
                     />
                 </div>
-                <div class="rounded-xl border border-zinc-200 bg-zinc-50/50 p-4">
-                    <div class="text-sm text-gray-900 mb-1">{{ $t('Color') }}</div>
+                <div class="rounded-xl border border-border-subtle bg-surface-sunken/50 p-4">
+                    <div class="text-sm text-text mb-1">{{ $t('Color') }}</div>
                     <div class="flex items-center mb-3">
                         <input v-model="editRoomInheritColor" id="inheritRoomColor" type="checkbox" class="input-checklist"/>
                         <label for="inheritRoomColor"
-                               :class="[editRoomInheritColor ? 'text-primary font-black' : 'text-secondary']"
+                               :class="[editRoomInheritColor ? 'text-text font-black' : 'text-text-subtle']"
                                class="ml-4 my-auto text-sm cursor-pointer">
                             {{ $t('Inherit color from area') }}
                         </label>
@@ -791,7 +782,7 @@
                         <ColorPickerComponent @updateColor="(color) => editRoomForm.color = color" :color="editRoomForm.color ?? editRoomAreaColor"/>
                     </div>
                 </div>
-                <div class="space-y-6 rounded-xl border border-zinc-200 bg-zinc-50/50 p-4">
+                <div class="space-y-6 rounded-xl border border-border-subtle bg-surface-sunken/50 p-4">
                     <RoomPropertyCheckboxGroup
                         :label="$t('Room categories')"
                         :items="room_categories"
@@ -825,12 +816,12 @@
                     <input v-model="editRoomForm.temporary"
                            type="checkbox"
                            class="input-checklist"/>
-                    <p :class="[editRoomForm.temporary ? 'text-primary font-black' : 'text-secondary']"
+                    <p :class="[editRoomForm.temporary ? 'text-text font-black' : 'text-text-subtle']"
                        class="ml-4 my-auto text-sm">{{ $t('Temporary room') }}</p>
                     <div v-if="this.$page.props.show_hints" class="flex mt-1">
                         <SvgCollection svgName="arrowLeft" class="h-6 w-6 ml-2 mr-2"/>
                         <span
-                            class="ml-1 my-auto hind">{{
+                            class="ml-1 my-auto ">{{
                                 $t('Set up a temporary room - e.g. if part of a room is partitioned off. This is only displayed in the calendar during this period.')
                             }}</span>
                     </div>
@@ -855,12 +846,12 @@
                     <input v-model="editRoomForm.everyone_can_book"
                            type="checkbox"
                            class="input-checklist"/>
-                    <p :class="[editRoomForm.everyone_can_book ? 'text-primary font-black' : 'text-secondary']"
+                    <p :class="[editRoomForm.everyone_can_book ? 'text-text font-black' : 'text-text-subtle']"
                        class="ml-4 my-auto text-sm">{{ $t('Can be booked by anyone') }}</p>
                     <div v-if="this.$page.props.show_hints" class="flex mt-1">
                         <SvgCollection svgName="arrowLeft" class="h-6 w-6 ml-2 mr-2"/>
                         <span
-                            class="ml-1 my-auto hind">{{
+                            class="ml-1 my-auto ">{{
                                 $t('Decides whether this room can be booked by everyone or only by the room admins.')
                             }}</span>
                     </div>
@@ -870,10 +861,10 @@
                            type="checkbox"
                            class="input-checklist"/>
                     <div>
-                        <p :class="[editRoomForm.relevant_for_disposition ? 'text-primary font-black' : 'text-secondary']"
+                        <p :class="[editRoomForm.relevant_for_disposition ? 'text-text font-black' : 'text-text-subtle']"
                            class="my-auto text-sm">{{ $t('Relevant for disposition') }}</p>
                         <span class="text-xs"
-                              :class="[editRoomForm.relevant_for_disposition ? 'text-primary font-black' : 'text-secondary']">{{
+                              :class="[editRoomForm.relevant_for_disposition ? 'text-text font-black' : 'text-text-subtle']">{{
                                 $t('Activate this field if the room is to be included in the calendars.')
                             }}</span>
                     </div>
@@ -944,17 +935,6 @@ import RoomSettingsHeader from '@/Pages/Areas/Components/RoomSettingsHeader.vue'
 import SvgCollection from "@/Layouts/Components/SvgCollection.vue";
 import Button from "@/Jetstream/Button.vue";
 import JetButton from "@/Jetstream/Button.vue";
-import {
-    DocumentTextIcon,
-    DotsVerticalIcon,
-    DuplicateIcon,
-    InformationCircleIcon,
-    PencilAltIcon,
-    SearchIcon,
-    TrashIcon,
-    XIcon
-} from "@heroicons/vue/outline";
-import {CheckIcon, PlusSmIcon, XCircleIcon} from "@heroicons/vue/solid";
 import {defineComponent} from 'vue'
 import JetDialogModal from "@/Jetstream/DialogModal.vue";
 import JetInput from "@/Jetstream/Input.vue";
@@ -978,8 +958,7 @@ import DateInputComponent from "@/Components/Inputs/DateInputComponent.vue";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 import BaseTextarea from "@/Artwork/Inputs/BaseTextarea.vue";
 import BaseMenuItem from "@/Components/Menu/BaseMenuItem.vue";
-import ArtworkBaseModalButton from "@/Artwork/Buttons/ArtworkBaseModalButton.vue";
-import {IconClock, IconCopy, IconEdit, IconLayoutGrid, IconRecycle, IconTrash} from "@tabler/icons-vue";
+import {IconCheck, IconCircleX, IconClock, IconCopy, IconDotsVertical, IconEdit, IconFileText, IconInfoCircle, IconLayoutGrid, IconPlus, IconRecycle, IconSearch, IconTrash, IconX} from "@tabler/icons-vue";
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
@@ -998,7 +977,6 @@ export default defineComponent({
         RoomPropertyCheckboxGroup,
         ArtworkBaseModal,
         BaseUIButton,
-        ArtworkBaseModalButton,
         BaseMenuItem,
         BaseTextarea,
         BaseInput,
@@ -1017,23 +995,23 @@ export default defineComponent({
         SvgCollection,
         Button,
         RoomSettingsHeader,
-        DotsVerticalIcon,
-        PlusSmIcon,
-        SearchIcon,
-        CheckIcon,
+        IconDotsVertical,
+        IconPlus,
+        IconSearch,
+        IconCheck,
         JetButton,
         JetDialogModal,
         JetInput,
         JetInputError,
         JetSecondaryButton,
-        InformationCircleIcon,
-        XIcon,
-        PencilAltIcon,
-        TrashIcon,
-        XCircleIcon,
+        IconInfoCircle,
+        IconX,
+        IconEdit,
+        IconTrash,
+        IconCircleX,
         Link,
-        DuplicateIcon,
-        DocumentTextIcon
+        IconCopy,
+        IconFileText
     },
     name: 'Area Management',
     props: ['areas', 'opened_areas', 'room_categories', 'room_attributes'],

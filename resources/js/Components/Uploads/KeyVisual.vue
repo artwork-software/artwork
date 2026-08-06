@@ -3,13 +3,13 @@
         <!-- Dropzone, wenn kein Key-Visual vorhanden -->
         <div
             v-if="!hasKeyVisual"
-            class="flex col-span-2 w-full justify-center border-2 bg-stone-50 border-gray-300 cursor-pointer border-dashed rounded-md p-2"
+            class="flex col-span-2 w-full justify-center border-2 bg-surface-sunken border-border cursor-pointer border-dashed rounded-md p-2"
             @dragover.prevent
             @drop.stop.prevent="uploadDraggedKeyVisual($event)"
             @click="selectNewKeyVisual"
         >
             <div class="space-y-1 text-center">
-                <div class="xsLight flex my-auto h-14 items-center">
+                <div class="text-sm/5 font-bold text-text-subtle flex my-auto h-14 items-center">
                     <span v-html="$t('Drag your key visual here')"></span>
                     <input
                         id="keyVisual-upload"
@@ -30,30 +30,33 @@
             <div
                 class="absolute w-full text-center items-center justify-center hidden group-hover:flex space-x-4"
             >
-                <button
+                <BaseUIButton
                     v-if="originalKeyVisualNotDefault"
                     @click="downloadKeyVisual"
                     type="button"
-                    class="ui-button bg-white hover:text-orange-500"
+                    hide-icon
+                    class="bg-white hover:text-special-orange"
                 >
                     <IconDownload class="h-5 w-5" aria-hidden="true" />
-                </button>
+                </BaseUIButton>
 
-                <button
+                <BaseUIButton
                     @click="selectNewKeyVisual"
                     type="button"
-                    class="ui-button bg-white hover:text-blue-500"
+                    hide-icon
+                    class="bg-white hover:text-accent-600"
                 >
                     <IconEdit class="h-5 w-5" aria-hidden="true" />
-                </button>
+                </BaseUIButton>
 
-                <button
+                <BaseUIButton
                     @click="deleteKeyVisual"
                     type="button"
-                    class="ui-button bg-white hover:text-red-500"
+                    hide-icon
+                    class="bg-white hover:text-danger"
                 >
                     <IconX class="h-5 w-5" aria-hidden="true" />
-                </button>
+                </BaseUIButton>
             </div>
 
             <!-- Bild -->
@@ -64,7 +67,7 @@
                         :src="currentPreviewSrc"
                         alt="Aktuelles Key-Visual"
                         @error="(e) => (e.target.src = page.props.big_logo)"
-                        class="rounded-md w-full max-h-96 object-contain bg-stone-50"
+                        class="rounded-md w-full max-h-96 object-contain bg-surface-sunken"
                     />
                     <input
                         id="keyVisual-upload"
@@ -87,6 +90,7 @@
 import { ref, computed, watch } from 'vue'
 import { useForm, usePage, router } from '@inertiajs/vue3'
 import JetInputError from '@/Jetstream/InputError.vue'
+import BaseUIButton from '@/Artwork/Buttons/BaseUIButton.vue'
 import { IconDownload, IconEdit, IconX } from '@tabler/icons-vue'
 
 const props = defineProps({

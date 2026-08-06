@@ -12,7 +12,7 @@
                 :icon="IconTrash"
                 :title="$t('Recycle bin')"
                 :description="$t('You can restore objects from your recycle bin or delete them permanently. Items are automatically deleted permanently after 30 days.')"
-                icon-bg-class="bg-blue-600/10 text-blue-700"
+                band
                 :search-enabled="false"
             >
                 <template #actions>
@@ -28,10 +28,10 @@
                         :key="tab.key"
                         type="button"
                         class="inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-sm transition
-                               focus:outline-none focus:ring-2 focus:ring-primary/30"
+                               focus:outline-none focus:ring-2 focus:ring-surface-inverse/30"
                         :class="tab.key === activeKey
-                            ? 'border-primary/30 bg-primary/10 text-primary'
-                            : 'border-gray-200 bg-white text-gray-700 hover:bg-gray-50'"
+                            ? 'border-surface-inverse/30 bg-surface-inverse/10 text-text'
+                            : 'border-border-subtle bg-white text-text-muted hover:bg-surface-sunken'"
                         @click="goTo(tab.href)"
                     >
                         <span class="truncate max-w-[220px]">{{ tab.name }}</span>

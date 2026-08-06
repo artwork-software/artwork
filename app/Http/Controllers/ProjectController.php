@@ -322,6 +322,9 @@ class ProjectController extends Controller
         $firstTabId = $this->projectTabService->getDefaultOrFirstProjectTab();
         $projectStates = ProjectState::all()->keyBy('id');
 
+        // Gruppen-Zähler für den Gruppen-Chip in der Projektübersicht (ein Query statt N+1)
+        $projects->loadCount('projectsOfGroup');
+
         $projectPeriods = $this->prepareProjectsForComponentMapping($projects, $components);
 
         $mapped = $projects->map(function ($project) use (
@@ -348,6 +351,7 @@ class ProjectController extends Controller
                         $projectData->title = $project->name;
                         $projectData->key_visual_path = $project->key_visual_path;
                         $projectData->is_group = $project->is_group;
+                        $projectData->projects_of_group_count = $project->is_group ? ($project->projects_of_group_count ?? 0) : null;
                         $projectData->color = $project->color;
                         $projectData->icon = $project->icon;
                         break;
@@ -369,6 +373,7 @@ class ProjectController extends Controller
                     case ProjectTabComponentEnum::PROJECT_GROUP->value:
                         $projectData->group = $project->groups;
                         $projectData->is_group = $project->is_group;
+                        $projectData->projects_of_group_count = $project->is_group ? ($project->projects_of_group_count ?? 0) : null;
                         break;
                     case ProjectTabComponentEnum::PROJECT_TEAM->value:
                         $projectData->team = $project->users;

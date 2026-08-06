@@ -1,60 +1,60 @@
 <template>
     <!-- sidebar: fixed card for side columns, never collapsible -->
-    <div v-if="variant === 'sidebar'" class="rounded-2xl border border-indigo-100 bg-indigo-50/50 p-5">
+    <div v-if="variant === 'sidebar'" class="rounded-2xl border border-accent-100 bg-accent-50/50 p-5">
         <div class="flex items-center gap-2 mb-3">
-            <PropertyIcon :name="icon" class="h-5 w-5 text-indigo-600 shrink-0" />
-            <span class="text-sm font-semibold text-gray-900">{{ $t(title) }}</span>
+            <PropertyIcon :name="icon" class="h-5 w-5 text-accent-600 shrink-0" />
+            <span class="text-sm font-semibold text-text">{{ $t(title) }}</span>
         </div>
         <div class="space-y-2">
-            <p v-for="(paragraph, index) in paragraphs" :key="index" class="text-xs text-gray-600">{{ $t(paragraph) }}</p>
+            <p v-for="(paragraph, index) in paragraphs" :key="index" class="text-xs text-text-muted">{{ $t(paragraph) }}</p>
         </div>
         <slot />
-        <p v-if="footnote" class="mt-3 text-xs text-gray-500">{{ $t(footnote) }}</p>
+        <p v-if="footnote" class="mt-3 text-xs text-text-subtle">{{ $t(footnote) }}</p>
     </div>
 
     <!-- static: non-collapsible box, for modals and short in-place notes -->
-    <div v-else-if="variant === 'static'" class="rounded-xl border border-indigo-100 bg-indigo-50/50 px-4 py-3">
+    <div v-else-if="variant === 'static'" class="rounded-xl border border-accent-100 bg-accent-50/50 px-4 py-3">
         <div class="flex gap-x-3">
-            <PropertyIcon :name="icon" class="h-5 w-5 text-indigo-600 shrink-0 mt-0.5" />
+            <PropertyIcon :name="icon" class="h-5 w-5 text-accent-600 shrink-0 mt-0.5" />
             <div class="min-w-0">
-                <p v-if="title" class="text-sm font-semibold text-gray-900 mb-1">{{ $t(title) }}</p>
+                <p v-if="title" class="text-sm font-semibold text-text mb-1">{{ $t(title) }}</p>
                 <div class="space-y-1.5">
-                    <p v-for="(paragraph, index) in paragraphs" :key="index" class="text-xs text-gray-600">{{ $t(paragraph) }}</p>
+                    <p v-for="(paragraph, index) in paragraphs" :key="index" class="text-xs text-text-muted">{{ $t(paragraph) }}</p>
                 </div>
                 <slot />
-                <p v-if="footnote" class="mt-2 text-xs text-gray-500">{{ $t(footnote) }}</p>
+                <p v-if="footnote" class="mt-2 text-xs text-text-subtle">{{ $t(footnote) }}</p>
             </div>
         </div>
     </div>
 
     <!-- banner (tab level) / inline (card level): collapsible, state remembered per browser -->
-    <div v-else class="rounded-2xl border border-indigo-100 bg-indigo-50/50" :class="variant === 'inline' ? 'rounded-xl' : ''">
+    <div v-else class="rounded-2xl border border-accent-100 bg-accent-50/50" :class="variant === 'inline' ? 'rounded-xl' : ''">
         <button
             type="button"
             class="w-full flex items-center gap-3 text-left"
             :class="variant === 'inline' ? 'px-4 py-2.5' : 'px-5 py-4'"
             @click="toggleCollapsed"
         >
-            <PropertyIcon :name="icon" class="text-indigo-600 shrink-0" :class="variant === 'inline' ? 'h-4 w-4' : 'h-5 w-5'" />
-            <span class="font-semibold text-gray-900" :class="variant === 'inline' ? 'text-xs' : 'text-sm'">{{ $t(title) }}</span>
+            <PropertyIcon :name="icon" class="text-accent-600 shrink-0" :class="variant === 'inline' ? 'h-4 w-4' : 'h-5 w-5'" />
+            <span class="font-semibold text-text" :class="variant === 'inline' ? 'text-xs' : 'text-sm'">{{ $t(title) }}</span>
             <PropertyIcon
                 name="IconChevronDown"
-                class="h-4 w-4 text-gray-400 ml-auto transition-transform shrink-0"
+                class="h-4 w-4 text-text-subtle ml-auto transition-transform shrink-0"
                 :class="collapsed ? '' : 'rotate-180'"
             />
         </button>
         <div v-if="!collapsed" :class="variant === 'inline' ? 'px-4 pb-3' : 'px-5 pb-5'">
             <div v-if="steps.length" class="grid gap-3" :class="stepGridClass">
-                <div v-for="(step, index) in steps" :key="index" class="rounded-xl bg-white border border-gray-100 p-4 flex flex-col">
+                <div v-for="(step, index) in steps" :key="index" class="rounded-xl bg-surface border border-border-subtle p-4 flex flex-col">
                     <div class="flex items-center gap-2 mb-2">
-                        <span class="flex items-center justify-center size-6 rounded-full bg-indigo-600 text-white text-xs font-bold shrink-0">{{ index + 1 }}</span>
-                        <span class="text-sm font-medium text-gray-900">{{ $t(step.title) }}</span>
+                        <span class="flex items-center justify-center size-6 rounded-full bg-accent-600 text-white text-xs font-bold shrink-0">{{ index + 1 }}</span>
+                        <span class="text-sm font-medium text-text">{{ $t(step.title) }}</span>
                     </div>
-                    <p class="text-xs text-gray-500 grow">{{ $t(step.text) }}</p>
+                    <p class="text-xs text-text-subtle grow">{{ $t(step.text) }}</p>
                     <button
                         v-if="step.action"
                         type="button"
-                        class="mt-3 text-xs font-medium text-indigo-600 hover:text-indigo-500 text-left flex items-center gap-1"
+                        class="mt-3 text-xs font-medium text-accent-600 hover:text-accent-700 text-left flex items-center gap-1"
                         @click="step.action()"
                     >
                         <PropertyIcon name="IconCirclePlus" class="h-3.5 w-3.5" />
@@ -63,7 +63,7 @@
                     <Link
                         v-else-if="step.href"
                         :href="step.href"
-                        class="mt-3 text-xs font-medium text-indigo-600 hover:text-indigo-500 flex items-center gap-1"
+                        class="mt-3 text-xs font-medium text-accent-600 hover:text-accent-700 flex items-center gap-1"
                     >
                         <PropertyIcon name="IconArrowRight" class="h-3.5 w-3.5" />
                         {{ $t(step.actionLabel) }}
@@ -71,10 +71,10 @@
                 </div>
             </div>
             <div v-if="paragraphs.length" class="space-y-1.5" :class="steps.length ? 'mt-3' : ''">
-                <p v-for="(paragraph, index) in paragraphs" :key="index" class="text-xs text-gray-600">{{ $t(paragraph) }}</p>
+                <p v-for="(paragraph, index) in paragraphs" :key="index" class="text-xs text-text-muted">{{ $t(paragraph) }}</p>
             </div>
             <slot />
-            <p v-if="footnote" class="mt-3 text-xs text-gray-500">{{ $t(footnote) }}</p>
+            <p v-if="footnote" class="mt-3 text-xs text-text-subtle">{{ $t(footnote) }}</p>
         </div>
     </div>
 </template>

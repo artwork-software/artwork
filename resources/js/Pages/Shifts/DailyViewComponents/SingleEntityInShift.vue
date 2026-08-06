@@ -16,10 +16,10 @@
                         leave-active-class="transition ease-in duration-75"
                         leave-from-class="transform opacity-100 scale-100"
                         leave-to-class="transform opacity-0 scale-95">
-                <PopoverPanel static class="z-50 w-96 focus:outline-none  card glassy">
+                <PopoverPanel static class="z-50 w-96  rounded-lg bg-surface border border-border-subtle shadow-raised">
                     <div class="px-4 py-2">
                         <div>
-                            <p class="text-xs text-gray-700 mb-2 font-lexend font-bold">
+                            <p class="text-xs text-text-muted mb-2 font-lexend font-bold">
                                 Schichtzeiten für {{ person.name || person.full_name }} anpassen
                             </p>
                         </div>
@@ -55,7 +55,7 @@
     <div ref="rowRef" class="flex w-full min-w-0 items-center gap-x-2 flex-nowrap">
         <!-- LINKS: Name (darf schrumpfen, nimmt aber nicht allen Platz ein) -->
         <div class="flex min-w-0 items-center gap-x-2">
-            <span v-if="person.pivot?.craft_abbreviation && person.pivot.craft_abbreviation !== craft?.abbreviation" class="shrink-0 text-[10px] text-gray-500">
+            <span v-if="person.pivot?.craft_abbreviation && person.pivot.craft_abbreviation !== craft?.abbreviation" class="shrink-0 text-[10px] text-text-subtle">
                 [{{ person.pivot.craft_abbreviation }}]
             </span>
 
@@ -73,7 +73,7 @@
                     class="fixed z-[9999] pointer-events-none"
                     :style="{ top: personNameTooltipPosition.top + 'px', left: personNameTooltipPosition.left + 'px' }"
                 >
-                    <div class="rounded-lg bg-artwork-navigation-background px-4 py-0.5 text-[14px] text-white whitespace-nowrap">
+                    <div class="rounded-lg bg-surface-inverse px-4 py-0.5 text-[14px] text-white whitespace-nowrap">
                         {{ person.name || person.full_name }}
                     </div>
                 </div>
@@ -108,10 +108,10 @@
 
                 <template v-else>
                     <div class="relative" @mouseenter="showGQTooltip = true" @mouseleave="showGQTooltip = false">
-                        <component :is="IconChevronDown" class="size-4 text-gray-600 hover:text-gray-800" />
+                        <component :is="IconChevronDown" class="size-4 text-text-muted hover:text-text" />
                         <div
                             v-show="showGQTooltip"
-                            class="gq-tooltip absolute z-50 top-full mt-1 right-0 bg-white border border-gray-200 rounded-md shadow-lg p-2"
+                            class="gq-tooltip absolute z-50 top-full mt-1 right-0 bg-white border border-border-subtle rounded-md shadow-lg p-2"
                         >
                             <div class="flex items-center gap-1">
                                 <ToolTipComponent
@@ -138,10 +138,10 @@
                             <component
                                 :is="IconNote"
                                 class="size-4 min-h-4 min-w-4 shrink-0 transition-all duration-150 ease-in-out cursor-pointer"
-                                :class="person.pivot?.short_description?.length > 0 ? 'text-black border-1 border-gray-100 w-5 h-5' : 'text-gray-500 hover:text-gray-700'"
+                                :class="person.pivot?.short_description?.length > 0 ? 'text-black border-1 border-border-subtle w-5 h-5' : 'text-text-subtle hover:text-text-muted'"
                                 v-tooltip.bottom="descriptionTooltip"
                             />
-                            <span v-if="!hasCollision" class="truncate min-w-0 hidden xl:block xsDark" v-tooltip.bottom="descriptionTooltip">
+                            <span v-if="!hasCollision" class="truncate min-w-0 hidden xl:block text-sm/5 font-semibold text-text" v-tooltip.bottom="descriptionTooltip">
                                 {{ person.pivot?.short_description }}
                             </span>
                         </PopoverButton>
@@ -152,10 +152,10 @@
                                     leave-active-class="transition ease-in duration-75"
                                     leave-from-class="transform opacity-100 scale-100"
                                     leave-to-class="transform opacity-0 scale-95">
-                            <PopoverPanel class="z-50 w-96 focus:outline-none card glassy">
+                            <PopoverPanel class="z-50 w-96 rounded-lg bg-surface border border-border-subtle shadow-raised">
                                 <div class="px-4 py-2">
                                     <div>
-                                        <p class="text-xs text-gray-700 mb-2 font-lexend font-bold">
+                                        <p class="text-xs text-text-muted mb-2 font-lexend font-bold">
                                             Schichtbeschreibung für {{ person.name || person.full_name }} anpassen
                                         </p>
                                     </div>
@@ -195,7 +195,6 @@
 
 <script setup>
 
-import GlassyIconButton from "@/Artwork/Buttons/GlassyIconButton.vue";
 import {
     Menu,
     MenuButton,

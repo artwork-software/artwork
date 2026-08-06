@@ -12,7 +12,7 @@
                 'Every change is saved immediately.',
             ]"
         />
-        <div class="card white p-5">
+        <div class="rounded-lg bg-surface border border-border-subtle w-full shadow-raised p-5">
             <div class="space-y-6">
                 <div>
                     <BaseCheckbox
@@ -25,8 +25,8 @@
             </div>
         </div>
 
-        <div class="card white p-5 mt-4">
-            <h3 class="font-lexend font-semibold text-primary mb-4">
+        <div class="rounded-lg bg-surface border border-border-subtle w-full shadow-raised p-5 mt-4">
+            <h3 class="font-lexend font-semibold text-text mb-4">
                 {{ $t('Inventory number display') }}
             </h3>
             <div class="space-y-6">
@@ -46,15 +46,15 @@
                         :placeholder="$t('e.g. INV-')"
                         @change="saveDisplaySettings"
                     />
-                    <p class="text-xs text-gray-500 mt-1">
+                    <p class="text-xs text-text-subtle mt-1">
                         {{ $t('A prefix displayed before all inventory numbers (e.g. INV-). Does not change stored data.') }}
                     </p>
                 </div>
             </div>
         </div>
 
-        <div class="card white p-5 mt-4">
-            <h3 class="font-lexend font-semibold text-primary mb-4">
+        <div class="rounded-lg bg-surface border border-border-subtle w-full shadow-raised p-5 mt-4">
+            <h3 class="font-lexend font-semibold text-text mb-4">
                 {{ $t('Article images') }}
             </h3>
             <div class="space-y-6">
@@ -68,10 +68,10 @@
                         :label="$t('Maximum size per article image (MB)')"
                         @change="saveImageMaxSize"
                     />
-                    <p class="text-xs text-gray-500 mt-1">
+                    <p class="text-xs text-text-subtle mt-1">
                         {{ $t('Images larger than this are rejected when uploading article images. Note: the server upload limits (e.g. nginx/PHP) must allow at least this size.') }}
                     </p>
-                    <p v-if="imageSizeForm.errors.inventory_article_image_max_size_mb" class="text-xs text-red-500 mt-1">
+                    <p v-if="imageSizeForm.errors.inventory_article_image_max_size_mb" class="text-xs text-danger mt-1">
                         {{ imageSizeForm.errors.inventory_article_image_max_size_mb }}
                     </p>
                 </div>

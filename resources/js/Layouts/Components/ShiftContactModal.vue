@@ -13,10 +13,10 @@
                         </div>
                         <div>
                             <div>
-                                <div class="xsDark">
+                                <div class="text-sm/5 font-semibold text-text">
                                     {{ user.first_name }} {{ user.last_name }}
                                 </div>
-                                <div class="xxsLight tracking-wider uppercase">
+                                <div class="text-xs/[18px] text-text-subtle tracking-wider uppercase">
                                     {{ $t('Project management') }}
                                 </div>
                             </div>
@@ -32,10 +32,10 @@
                             leave-from-class="opacity-100"
                             leave-to-class="opacity-0">
                     <div v-if="user_search_results.length > 0 && user_query.length > 0"
-                         class="absolute z-10 mt-1 w-full max-h-60 bg-primary shadow-lg
+                         class="absolute z-10 mt-1 w-full max-h-60 bg-surface-inverse shadow-lg
                                          text-base ring-1 ring-black ring-opacity-5
                                          overflow-auto focus:outline-none sm:text-sm">
-                        <div class="border-gray-200">
+                        <div class="border-border-subtle">
                             <div v-for="(user, index) in user_search_results" :key="index"
                                  class="flex items-center cursor-pointer">
                                 <div class="flex-1 text-sm py-4">
@@ -51,18 +51,18 @@
             </div>
             <div class="mt-4 w-full">
                 <span v-for="(user,index) in this.shift_contacts"
-                      class="flex mt-4 mr-1 rounded-full items-center font-bold text-primary">
+                      class="flex mt-4 mr-1 rounded-full items-center font-bold text-text">
                     <div class="flex items-center">
                         <img class="flex h-11 w-11 rounded-full object-cover"
                              :src="user.profile_photo_url"
                              alt=""/>
-                        <span class="flex ml-4 sDark">
+                        <span class="flex ml-4 text-base/5 font-semibold text-text">
                             {{ user.first_name }} {{ user.last_name }}
                         </span>
                     </div>
                     <button type="button" @click="deleteUserFromContactArray(user)">
                         <span class="sr-only">{{ $t('Remove user as contact person') }}</span>
-                        <XCircleIcon class="ml-2 mt-1 h-5 w-5 hover:text-error "/>
+                        <IconCircleX class="ml-2 mt-1 h-5 w-5 hover:text-danger "/>
                     </button>
                 </span>
             </div>
@@ -73,12 +73,11 @@
 </template>
 
 <script>
+import {IconCircleX, IconDownload, IconX} from "@tabler/icons-vue";
 import JetDialogModal from '@/Jetstream/DialogModal.vue'
 import JetInputError from '@/Jetstream/InputError.vue'
-import {XIcon, DownloadIcon} from "@heroicons/vue/outline";
 import Permissions from "@/Mixins/Permissions.vue";
 import UserTooltip from "@/Layouts/Components/UserTooltip.vue";
-import {XCircleIcon} from "@heroicons/vue/solid";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import BaseModal from "@/Components/Modals/BaseModal.vue";
 import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
@@ -100,12 +99,12 @@ export default {
         ArtworkBaseModal,
         BaseModal,
         FormButton,
-        XCircleIcon,
+        IconCircleX,
         UserTooltip,
         JetDialogModal,
         JetInputError,
-        XIcon,
-        DownloadIcon
+        IconX,
+        IconDownload
     },
     emits: ['closeModal'],
     data() {

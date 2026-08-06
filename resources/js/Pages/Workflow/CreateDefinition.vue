@@ -2,10 +2,10 @@
     <AppLayout title="Create Workflow Definition">
         <template #header>
             <div class="flex justify-between items-center">
-                <h2 class="font-semibold text-xl text-gray-800 leading-tight">
+                <h2 class="font-semibold text-xl text-text leading-tight">
                     {{ $t('Create Workflow Definition') }}
                 </h2>
-                <Link :href="route('workflow.index')" class="inline-flex items-center px-4 py-2 bg-gray-800 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-700 active:bg-gray-900 focus:outline-none focus:border-gray-900 focus:ring focus:ring-gray-300 disabled:opacity-25 transition">
+                <Link :href="route('workflow.index')" class="inline-flex items-center px-4 py-2 bg-surface-inverse border border-transparent rounded-md font-semibold text-xs text-text-inverse uppercase tracking-widest hover:bg-surface-inverse/90 active:bg-surface-inverse disabled:text-text-subtle disabled:cursor-not-allowed transition">
                     {{ $t('Back to Workflows') }}
                 </Link>
             </div>
@@ -17,70 +17,70 @@
                     <form @submit.prevent="submit">
                         <!-- Basic Information -->
                         <div class="mb-8">
-                            <h3 class="text-lg font-medium text-gray-900 mb-4">{{ $t('Basic Information') }}</h3>
+                            <h3 class="text-lg font-medium text-text mb-4">{{ $t('Basic Information') }}</h3>
 
                             <div class="grid grid-cols-1 gap-6">
                                 <!-- Name -->
                                 <div>
-                                    <label for="name" class="block text-sm font-medium text-gray-700">{{ $t('Name') }}</label>
+                                    <label for="name" class="block text-sm font-medium text-text-muted">{{ $t('Name') }}</label>
                                     <div class="mt-1">
                                         <input
                                             type="text"
                                             id="name"
                                             v-model="form.name"
-                                            class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
-                                            :class="{ 'border-red-500': form.errors.name }"
+                                            class="shadow-sm focus:ring-accent-600 focus:border-accent-600 block w-full sm:text-sm border-border rounded-md"
+                                            :class="{ 'border-danger': form.errors.name }"
                                         />
                                     </div>
-                                    <p v-if="form.errors.name" class="mt-2 text-sm text-red-600">{{ form.errors.name }}</p>
+                                    <p v-if="form.errors.name" class="mt-2 text-sm text-danger">{{ form.errors.name }}</p>
                                 </div>
 
                                 <!-- Type -->
                                 <div>
-                                    <label for="type" class="block text-sm font-medium text-gray-700">{{ $t('Type') }}</label>
+                                    <label for="type" class="block text-sm font-medium text-text-muted">{{ $t('Type') }}</label>
                                     <div class="mt-1">
                                         <input
                                             type="text"
                                             id="type"
                                             v-model="form.type"
-                                            class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
-                                            :class="{ 'border-red-500': form.errors.type }"
+                                            class="shadow-sm focus:ring-accent-600 focus:border-accent-600 block w-full sm:text-sm border-border rounded-md"
+                                            :class="{ 'border-danger': form.errors.type }"
                                         />
                                     </div>
-                                    <p v-if="form.errors.type" class="mt-2 text-sm text-red-600">{{ form.errors.type }}</p>
-                                    <p class="mt-2 text-sm text-gray-500">{{ $t('The type is used to identify the workflow (e.g., "approval", "review")') }}</p>
+                                    <p v-if="form.errors.type" class="mt-2 text-sm text-danger">{{ form.errors.type }}</p>
+                                    <p class="mt-2 text-sm text-text-subtle">{{ $t('The type is used to identify the workflow (e.g., "approval", "review")') }}</p>
                                 </div>
                             </div>
                         </div>
 
                         <!-- Workflow Configuration -->
                         <div class="mb-8">
-                            <h3 class="text-lg font-medium text-gray-900 mb-4">{{ $t('Workflow Configuration') }}</h3>
+                            <h3 class="text-lg font-medium text-text mb-4">{{ $t('Workflow Configuration') }}</h3>
 
                             <div class="mb-4">
-                                <p class="text-sm text-gray-500">{{ $t('Define the workflow configuration in JSON format. The configuration should include places, transitions, and an initial place.') }}</p>
+                                <p class="text-sm text-text-subtle">{{ $t('Define the workflow configuration in JSON format. The configuration should include places, transitions, and an initial place.') }}</p>
                             </div>
 
                             <div class="mb-4">
-                                <label for="config" class="block text-sm font-medium text-gray-700">{{ $t('Configuration (JSON)') }}</label>
+                                <label for="config" class="block text-sm font-medium text-text-muted">{{ $t('Configuration (JSON)') }}</label>
                                 <div class="mt-1">
                                     <textarea
                                         id="config"
                                         v-model="configJson"
                                         rows="15"
-                                        class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md font-mono"
-                                        :class="{ 'border-red-500': form.errors.config }"
+                                        class="shadow-sm focus:ring-accent-600 focus:border-accent-600 block w-full sm:text-sm border-border rounded-md font-mono"
+                                        :class="{ 'border-danger': form.errors.config }"
                                     ></textarea>
                                 </div>
-                                <p v-if="form.errors.config" class="mt-2 text-sm text-red-600">{{ form.errors.config }}</p>
-                                <p v-if="jsonError" class="mt-2 text-sm text-red-600">{{ jsonError }}</p>
+                                <p v-if="form.errors.config" class="mt-2 text-sm text-danger">{{ form.errors.config }}</p>
+                                <p v-if="jsonError" class="mt-2 text-sm text-danger">{{ jsonError }}</p>
                             </div>
 
                             <div class="mb-4">
                                 <button
                                     type="button"
                                     @click="useExampleConfig"
-                                    class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                                    class="inline-flex items-center px-4 py-2 border border-border shadow-sm text-sm font-medium rounded-md text-text-muted bg-white hover:bg-surface-sunken focus:ring-2 focus:ring-offset-2 focus:ring-accent-600"
                                 >
                                     {{ $t('Use Example Configuration') }}
                                 </button>
@@ -89,8 +89,8 @@
 
                         <!-- Workflow Visualization Preview -->
                         <div v-if="isValidJson && parsedConfig" class="mb-8">
-                            <h3 class="text-lg font-medium text-gray-900 mb-4">{{ $t('Workflow Visualization Preview') }}</h3>
-                            <div class="border border-gray-200 rounded-lg p-4 bg-gray-50">
+                            <h3 class="text-lg font-medium text-text mb-4">{{ $t('Workflow Visualization Preview') }}</h3>
+                            <div class="border border-border-subtle rounded-lg p-4 bg-surface-sunken">
                                 <workflow-diagram :config="parsedConfig" />
                             </div>
                         </div>
@@ -99,7 +99,7 @@
                         <div class="flex justify-end">
                             <button
                                 type="submit"
-                                class="inline-flex items-center px-4 py-2 bg-artwork-buttons-create border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-artwork-buttons-hover active:bg-artwork-buttons-hover focus:outline-none focus:border-gray-900 focus:ring focus:ring-gray-300 disabled:opacity-25 transition"
+                                class="inline-flex items-center px-4 py-2 bg-accent-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-accent-700 active:bg-accent-700 disabled:bg-surface-canvas disabled:border-border-subtle disabled:text-text-subtle disabled:cursor-not-allowed transition"
                                 :disabled="form.processing || !isValidJson"
                             >
                                 {{ $t('Create Workflow Definition') }}

@@ -6,7 +6,7 @@
         <div class="space-y-6 max-h-[55vh] overflow-y-auto pr-1">
             <!-- Kategorien -->
             <div>
-                <h3 class="text-sm font-semibold text-gray-900 mb-3">{{ $t('Category') }}</h3>
+                <h3 class="text-sm font-semibold text-text mb-3">{{ $t('Category') }}</h3>
                 <div v-if="categories?.length > 0" class="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2">
                     <label v-for="category in categories"
                            :key="category.id"
@@ -15,25 +15,25 @@
                             <input type="checkbox"
                                    v-model="projectCategoryIds"
                                    :value="category.id"
-                                   class="col-start-1 row-start-1 appearance-none rounded-sm border border-gray-300 bg-white checked:border-blue-600 checked:bg-blue-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 forced-colors:appearance-auto"/>
+                                   class="col-start-1 row-start-1 appearance-none rounded-sm border border-border bg-white checked:border-accent-600 checked:bg-accent-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-600 forced-colors:appearance-auto"/>
                             <svg class="pointer-events-none col-start-1 row-start-1 size-3.5 self-center justify-self-center stroke-white" viewBox="0 0 14 14" fill="none">
                                 <path class="opacity-0 group-has-checked:opacity-100" d="M3 8L6 11L11 3.5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                             </svg>
                         </div>
-                        <span class="flex items-center gap-2 text-sm text-gray-900 truncate">
+                        <span class="flex items-center gap-2 text-sm text-text truncate">
                             <span v-if="category.color"
-                                  class="size-2.5 rounded-full border border-gray-200 shrink-0"
+                                  class="size-2.5 rounded-full border border-border-subtle shrink-0"
                                   :style="{ backgroundColor: category.color }"/>
                             {{ category.name }}
                         </span>
                     </label>
                 </div>
-                <p v-else class="text-xs text-gray-500">{{ $t('No project categories created yet') }}</p>
+                <p v-else class="text-xs text-text-subtle">{{ $t('No project categories created yet') }}</p>
             </div>
 
             <!-- Genres -->
             <div>
-                <h3 class="text-sm font-semibold text-gray-900 mb-3">{{ $t('Genre') }}</h3>
+                <h3 class="text-sm font-semibold text-text mb-3">{{ $t('Genre') }}</h3>
                 <div v-if="genres?.length > 0" class="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2">
                     <label v-for="genre in genres"
                            :key="genre.id"
@@ -42,25 +42,25 @@
                             <input type="checkbox"
                                    v-model="projectGenreIds"
                                    :value="genre.id"
-                                   class="col-start-1 row-start-1 appearance-none rounded-sm border border-gray-300 bg-white checked:border-blue-600 checked:bg-blue-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 forced-colors:appearance-auto"/>
+                                   class="col-start-1 row-start-1 appearance-none rounded-sm border border-border bg-white checked:border-accent-600 checked:bg-accent-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-600 forced-colors:appearance-auto"/>
                             <svg class="pointer-events-none col-start-1 row-start-1 size-3.5 self-center justify-self-center stroke-white" viewBox="0 0 14 14" fill="none">
                                 <path class="opacity-0 group-has-checked:opacity-100" d="M3 8L6 11L11 3.5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                             </svg>
                         </div>
-                        <span class="flex items-center gap-2 text-sm text-gray-900 truncate">
+                        <span class="flex items-center gap-2 text-sm text-text truncate">
                             <span v-if="genre.color"
-                                  class="size-2.5 rounded-full border border-gray-200 shrink-0"
+                                  class="size-2.5 rounded-full border border-border-subtle shrink-0"
                                   :style="{ backgroundColor: genre.color }"/>
                             {{ genre.name }}
                         </span>
                     </label>
                 </div>
-                <p v-else class="text-xs text-gray-500">{{ $t('No genres created yet') }}</p>
+                <p v-else class="text-xs text-text-subtle">{{ $t('No genres created yet') }}</p>
             </div>
 
             <!-- Bereiche -->
             <div>
-                <h3 class="text-sm font-semibold text-gray-900 mb-3">{{ $t('Areas') }}</h3>
+                <h3 class="text-sm font-semibold text-text mb-3">{{ $t('Areas') }}</h3>
                 <div v-if="sectors?.length > 0" class="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2">
                     <label v-for="sector in sectors"
                            :key="sector.id"
@@ -69,20 +69,20 @@
                             <input type="checkbox"
                                    v-model="projectSectorIds"
                                    :value="sector.id"
-                                   class="col-start-1 row-start-1 appearance-none rounded-sm border border-gray-300 bg-white checked:border-blue-600 checked:bg-blue-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 forced-colors:appearance-auto"/>
+                                   class="col-start-1 row-start-1 appearance-none rounded-sm border border-border bg-white checked:border-accent-600 checked:bg-accent-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-600 forced-colors:appearance-auto"/>
                             <svg class="pointer-events-none col-start-1 row-start-1 size-3.5 self-center justify-self-center stroke-white" viewBox="0 0 14 14" fill="none">
                                 <path class="opacity-0 group-has-checked:opacity-100" d="M3 8L6 11L11 3.5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                             </svg>
                         </div>
-                        <span class="flex items-center gap-2 text-sm text-gray-900 truncate">
+                        <span class="flex items-center gap-2 text-sm text-text truncate">
                             <span v-if="sector.color"
-                                  class="size-2.5 rounded-full border border-gray-200 shrink-0"
+                                  class="size-2.5 rounded-full border border-border-subtle shrink-0"
                                   :style="{ backgroundColor: sector.color }"/>
                             {{ sector.name }}
                         </span>
                     </label>
                 </div>
-                <p v-else class="text-xs text-gray-500">{{ $t('No areas created yet') }}</p>
+                <p v-else class="text-xs text-text-subtle">{{ $t('No areas created yet') }}</p>
             </div>
         </div>
         <div class="justify-end flex w-full mt-6">

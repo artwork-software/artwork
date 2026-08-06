@@ -1,6 +1,6 @@
 <template>
     <div>
-        <h3 class="text-[11px] font-semibold uppercase tracking-wide text-secondary mb-2">{{ $t('Relevant dates for shift planning') }}</h3>
+        <h3 class="text-[11px] font-semibold uppercase tracking-wide text-text-subtle mb-2">{{ $t('Relevant dates for shift planning') }}</h3>
         <div v-if="project.shift_relevant_event_types?.length > 0" class="flex flex-wrap gap-1">
             <span v-for="eventType in project.shift_relevant_event_types" :key="eventType.id"
                 class="inline-flex items-center rounded-full px-3 py-1 text-xs text-white font-medium"
@@ -8,7 +8,7 @@
                 {{ eventType.name }}
             </span>
         </div>
-        <div v-else class="text-sm text-secondary">
+        <div v-else class="text-sm text-text-subtle">
             {{ $t('No entries') }}
         </div>
     </div>

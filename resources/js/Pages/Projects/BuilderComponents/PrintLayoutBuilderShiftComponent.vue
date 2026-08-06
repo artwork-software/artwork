@@ -5,8 +5,8 @@
         this flat list: one line per shift with date/time, craft, room, staffing
         and description.
     -->
-    <div class="text-xs text-gray-800">
-        <div v-if="shifts.length" class="divide-y divide-gray-200">
+    <div class="text-xs text-text">
+        <div v-if="shifts.length" class="divide-y divide-border-subtle">
             <div
                 v-for="shift in shifts"
                 :key="shift.id"
@@ -16,10 +16,10 @@
                 <span v-if="craftLabel(shift)" class="whitespace-nowrap">· {{ craftLabel(shift) }}</span>
                 <span v-if="shift.room?.name" class="whitespace-nowrap">· {{ shift.room.name }}</span>
                 <span class="whitespace-nowrap">· {{ assignedCount(shift) }}/{{ shift.max_users ?? 0 }} {{ $t('Employees') }}</span>
-                <span v-if="shift.description" class="text-gray-500 truncate print:whitespace-normal">· {{ shift.description }}</span>
+                <span v-if="shift.description" class="text-text-subtle truncate print:whitespace-normal">· {{ shift.description }}</span>
             </div>
         </div>
-        <div v-else class="text-secondary">
+        <div v-else class="text-text-subtle">
             {{ $t('No entries') }}
         </div>
     </div>

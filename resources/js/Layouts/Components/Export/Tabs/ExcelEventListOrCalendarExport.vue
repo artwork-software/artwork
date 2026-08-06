@@ -4,16 +4,16 @@
 
             <!-- Kopfbereich -->
             <section class="">
-                <h1 class="text-lg font-semibold text-zinc-900">
+                <h1 class="text-lg font-semibold text-text">
                     {{ $t(exportTabEnum) }}
                 </h1>
-                <p class="mt-1 text-sm text-zinc-600">
+                <p class="mt-1 text-sm text-text-muted">
                     {{ $t('All Events are exported by given settings') }}
                 </p>
             </section>
 
             <!-- Export-Typ (Zeitraum / Projekte) -->
-            <section class="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm space-y-4">
+            <section class="rounded-2xl border border-border-subtle bg-white p-6 shadow-sm space-y-4">
                 <ExportTypeSlider @on-update="(bool) => exportForm.desiresTimespanExport = bool" />
 
                 <!-- Projekte -->
@@ -51,47 +51,47 @@
                         v-model="conditionalDateEnd"
                         :label="$t('End date')"
                     />
-                    <p v-if="datesInvalid()" class="col-span-full text-xs text-red-600">
+                    <p v-if="datesInvalid()" class="col-span-full text-xs text-danger">
                         {{ $t('Start date must not be after the end date!') }}
                     </p>
                 </div>
             </section>
 
             <!-- Filter -->
-            <section class="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm space-y-4">
+            <section class="rounded-2xl border border-border-subtle bg-white p-6 shadow-sm space-y-4">
                 <div class="flex items-center justify-between">
-                    <h2 class="text-sm font-semibold text-zinc-900">{{ $t('Filter') }}</h2>
+                    <h2 class="text-sm font-semibold text-text">{{ $t('Filter') }}</h2>
                     <button
                         type="button"
-                        class="inline-flex items-center gap-1 text-sm text-zinc-600 hover:text-zinc-900"
+                        class="inline-flex items-center gap-1 text-sm text-text-muted hover:text-text"
                         @click="showFilters = !showFilters"
                     >
                         <span v-if="!showFilters">{{ $t('Show') }}</span>
                         <span v-else>{{ $t('Hide') }}</span>
-                        <ChevronDownIcon v-if="!showFilters" class="h-5 w-5" />
-                        <ChevronUpIcon v-else class="h-5 w-5" />
+                        <IconChevronDown v-if="!showFilters" class="h-5 w-5" />
+                        <IconChevronUp v-else class="h-5 w-5" />
                     </button>
                 </div>
 
                 <div v-if="showFilters">
                     <section class="">
-                        <div class="mb-4 pb-4 border-b-2 border-dashed border-gray-300">
+                        <div class="mb-4 pb-4 border-b-2 border-dashed border-border">
                             <div class="flex flex-wrap items-center gap-2 mt-3">
                                 <div
                                     v-for="(filter, index) in activeFilters"
                                     :key="`${filter.id}-${filter.value ?? ''}-${index}`"
-                                    class="group block cursor-pointer shrink-0 bg-blue-50 w-fit px-2 py-1.5 rounded-full border border-blue-200"
+                                    class="group block cursor-pointer shrink-0 bg-accent-50 w-fit px-2 py-1.5 rounded-full border border-accent-200"
                                 >
                                     <div class="flex items-center">
                                         <div class="mx-2">
-                                            <p class="text-blue-500 text-xs group-hover:text-blue-600">
+                                            <p class="text-accent-600 text-xs group-hover:text-accent-700">
                                                 <span v-if="filter.id === 'adjoiningNoAudience' || filter.id === 'adjoiningNotLoud'">{{ $t(filter?.name)}}</span>
                                                 <span v-else>{{ filter?.name }}</span>
                                             </p>
                                         </div>
                                         <div class="flex items-center">
                                             <button type="button" @click="removeActiveFilter(filter)">
-                                                <component :is="IconX" class="size-4 text-blue-500 hover:text-error" />
+                                                <component :is="IconX" class="size-4 text-accent-600 hover:text-danger" />
                                             </button>
                                         </div>
                                     </div>
@@ -101,25 +101,25 @@
 
                         <div class="space-y-1">
                             <div v-for="(filterMainCategory, mainKey) in filteredOptionsByCategories" :key="mainKey" class="py-1">
-                                <div class="text-white bg-gray-900 rounded-lg px-4 py-2 font-lexend shadow text-sm">
+                                <div class="text-text-inverse bg-surface-inverse rounded-lg px-4 py-2 font-lexend shadow text-sm">
                                     {{ $t(mainKey) }}
                                 </div>
 
                                 <div class="space-y-2 mt-2">
                                     <div v-for="(filterSubCategory, subKey) in filterMainCategory" :key="subKey">
-                                        <div class="card white px-4 ">
+                                        <div class="rounded-lg bg-surface border border-border-subtle w-full shadow-raised px-4 ">
                                             <div class="flex items-center select-none justify-between duration-200 ease-in-out cursor-pointer py-3" @click="toggleOpen(mainKey, subKey)">
-                                                <div class="text-sm text-gray-900">
+                                                <div class="text-sm text-text">
                                                     {{ $t(subKey) }}
                                                 </div>
                                                 <div class="flex items-center gap-5">
                                             <span
-                                                class="inline-flex items-center rounded-lg bg-green-50 px-2 py-1 text-xs/4 text-green-600 ring-1 ring-inset ring-green-500/10"
+                                                class="inline-flex items-center rounded-lg bg-success-surface px-2 py-1 text-xs/4 text-success ring-1 ring-inset ring-success-border"
                                                 :class="filterSubCategory.filter(filter => filter.checked).length > 0 ? 'visible' : 'invisible'"
                                             >
                                                 {{ filterSubCategory.filter(filter => filter.checked).length }} {{ $t('selected') }}
                                             </span>
-                                                    <component :is="IconChevronDown" class="w-4 h-4 text-gray-400" :class="isOpen(mainKey, subKey) ? 'rotate-180' : ''" />
+                                                    <component :is="IconChevronDown" class="w-4 h-4 text-text-subtle" :class="isOpen(mainKey, subKey) ? 'rotate-180' : ''" />
                                                 </div>
                                             </div>
 
@@ -135,9 +135,9 @@
                                                                         :aria-describedby="removeSpaceFromKey(filter.name) + '-description'"
                                                                         :name="removeSpaceFromKey(filter.name)"
                                                                         type="checkbox"
-                                                                        class="col-start-1 row-start-1 appearance-none rounded-sm border border-gray-300 bg-white checked:border-blue-600 checked:bg-blue-600 indeterminate:border-blue-600 indeterminate:bg-blue-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 disabled:border-gray-300 disabled:bg-gray-100 disabled:checked:bg-gray-100 forced-colors:appearance-auto"
+                                                                        class="col-start-1 row-start-1 appearance-none rounded-sm border border-border bg-white checked:border-accent-600 checked:bg-accent-600 indeterminate:border-accent-600 indeterminate:bg-accent-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-600 disabled:border-border disabled:bg-surface-sunken disabled:checked:bg-surface-sunken forced-colors:appearance-auto"
                                                                     />
-                                                                    <svg class="pointer-events-none col-start-1 row-start-1 size-3.5 self-center justify-self-center stroke-white group-has-disabled:stroke-gray-950/25" viewBox="0 0 14 14" fill="none">
+                                                                    <svg class="pointer-events-none col-start-1 row-start-1 size-3.5 self-center justify-self-center stroke-white group-has-disabled:stroke-border-strong" viewBox="0 0 14 14" fill="none">
                                                                         <path class="opacity-0 group-has-checked:opacity-100" d="M3 8L6 11L11 3.5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
                                                                         <path class="opacity-0 group-has-indeterminate:opacity-100" d="M3 7H11" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
                                                                     </svg>
@@ -147,7 +147,7 @@
                                                                 <div v-if="filter.icon" class="flex items-center gap-2">
                                                                     <component :is="filter.icon" class="size-4" stroke-width="1.5"/>
                                                                 </div>
-                                                                <label :for="removeSpaceFromKey(filter.name)" class="text-gray-900">
+                                                                <label :for="removeSpaceFromKey(filter.name)" class="text-text">
                                                                     {{ filter.name }}
                                                                 </label>
                                                             </div>
@@ -165,18 +165,18 @@
             </section>
 
             <!-- Spalten (nur Event-List-Export) -->
-            <section v-if="isExcelEventListExport()" class="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm space-y-4">
+            <section v-if="isExcelEventListExport()" class="rounded-2xl border border-border-subtle bg-white p-6 shadow-sm space-y-4">
                 <div class="flex items-center justify-between">
-                    <h2 class="text-sm font-semibold text-zinc-900">{{ $t('Columns') }}</h2>
+                    <h2 class="text-sm font-semibold text-text">{{ $t('Columns') }}</h2>
                     <button
                         type="button"
-                        class="inline-flex items-center gap-1 text-sm text-zinc-600 hover:text-zinc-900"
+                        class="inline-flex items-center gap-1 text-sm text-text-muted hover:text-text"
                         @click="showColumns = !showColumns"
                     >
                         <span v-if="!showColumns">{{ $t('Show') }}</span>
                         <span v-else>{{ $t('Hide') }}</span>
-                        <ChevronDownIcon v-if="!showColumns" class="h-5 w-5" />
-                        <ChevronUpIcon v-else class="h-5 w-5" />
+                        <IconChevronDown v-if="!showColumns" class="h-5 w-5" />
+                        <IconChevronUp v-else class="h-5 w-5" />
                     </button>
                 </div>
 
@@ -192,7 +192,7 @@
                             />
                             <label
                                 :for="`cb-${column}`"
-                                class="text-xs text-zinc-700 cursor-pointer hover:text-green-600"
+                                class="text-xs text-text-muted cursor-pointer hover:text-success"
                             >
                                 {{ $t(translationKey) }}
                             </label>
@@ -222,7 +222,6 @@ import ProjectSearch from "@/Components/SearchBars/ProjectSearch.vue";
 import DateInputComponent from "@/Components/Inputs/DateInputComponent.vue";
 import {useForm, usePage} from "@inertiajs/vue3";
 import BaseButton from "@/Layouts/Components/General/Buttons/BaseButton.vue";
-import {ChevronDownIcon, ChevronUpIcon, DocumentReportIcon} from "@heroicons/vue/outline";
 import {computed, ref, onMounted} from "vue";
 import TagComponent from "@/Layouts/Components/TagComponent.vue";
 import Input from "@/Jetstream/Input.vue";
@@ -231,7 +230,7 @@ import {useExportTabEnums} from "@/Layouts/Components/Export/Enums/ExportTabEnum
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 import LastedProjects from "@/Artwork/LastedProjects.vue";
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
-import {IconChevronDown, IconX} from "@tabler/icons-vue";
+import {IconChevronDown, IconChevronUp, IconFileReport, IconX} from "@tabler/icons-vue";
 
 // Local open/close state per subcategory to avoid mutating computed arrays
 const openState = ref({});

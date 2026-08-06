@@ -8,10 +8,10 @@
         <div class="p-4 space-y-4">
             <!-- Datum (nur Anzeige) -->
             <div>
-                <label class="block text-sm font-medium text-zinc-700 mb-1">
+                <label class="block text-sm font-medium text-text-muted mb-1">
                     {{ $t('Date') }}
                 </label>
-                <div class="text-sm text-zinc-900 bg-zinc-100 rounded-lg px-3 py-2">
+                <div class="text-sm text-text bg-surface-sunken rounded-lg px-3 py-2">
                     {{ formatDate(individualTime._day || individualTime.start_date) }}
                 </div>
             </div>
@@ -52,11 +52,11 @@
             />
         </div>
 
-        <div class="flex justify-end gap-3 p-4 border-t border-zinc-200">
+        <div class="flex justify-end gap-3 p-4 border-t border-border-subtle">
             <button
                 type="button"
                 @click="$emit('closed')"
-                class="px-4 py-2 text-sm font-medium text-zinc-700 bg-white border border-zinc-300 rounded-lg hover:bg-zinc-50"
+                class="px-4 py-2 text-sm font-medium text-text-muted bg-white border border-border rounded-lg hover:bg-surface-sunken"
             >
                 {{ $t('Cancel') }}
             </button>
@@ -64,7 +64,7 @@
                 type="button"
                 @click="save"
                 :disabled="saving"
-                class="px-4 py-2 text-sm font-medium text-white bg-artwork-buttons-create rounded-lg hover:bg-artwork-buttons-hover disabled:opacity-50"
+                class="px-4 py-2 text-sm font-medium text-white bg-accent-600 rounded-lg hover:bg-accent-700 disabled:bg-surface-canvas disabled:border-border-subtle disabled:text-text-subtle disabled:cursor-not-allowed"
             >
                 {{ saving ? $t('Saving...') : $t('Save') }}
             </button>

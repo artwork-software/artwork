@@ -9,13 +9,13 @@
         </div>
 
         <div v-if="multiEditForm.eventIds.length === 0">
-            <div class="rounded-md bg-red-50 p-4">
+            <div class="rounded-md bg-danger-surface p-4">
                 <div class="flex">
                     <div class="shrink-0">
-                        <component :is="IconMoodWrrr" class="size-5 text-red-400" aria-hidden="true"/>
+                        <component :is="IconMoodWrrr" class="size-5 text-danger" aria-hidden="true"/>
                     </div>
                     <div class="ml-3 flex-1 md:flex md:justify-between">
-                        <p class="text-sm text-red-700">
+                        <p class="text-sm text-danger">
                             {{ $t('No events selected') }}
                         </p>
                     </div>
@@ -24,8 +24,8 @@
         </div>
 
         <div v-if="validationErrors.length > 0" class="mb-4">
-            <div class="rounded-md bg-red-50 p-3">
-                <div class="text-sm text-red-700">
+            <div class="rounded-md bg-danger-surface p-3">
+                <div class="text-sm text-danger">
                     <div v-for="error in validationErrors" :key="error" class="mb-1 last:mb-0">
                         {{ $t(error) }}
                     </div>
@@ -36,7 +36,7 @@
         <form @submit.prevent="submit" v-if="multiEditForm.eventIds.length > 0">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div class="" v-if="usePage().props.event_status_module">
-                    <div class="xsDark mb-1">
+                    <div class="text-sm/5 font-semibold text-text mb-1">
                         {{ $t('Event Status') }}
                     </div>
                     <Listbox v-model="multiEditForm.selectedEventStatus"
@@ -49,22 +49,22 @@
                                     <div class="block w-5 h-5 rounded-full"
                                          :style="{'backgroundColor' : multiEditForm?.selectedEventStatus?.color }"/>
                                 </div>
-                                <div class="truncate w-full xsDark">
+                                <div class="truncate w-full text-sm/5 font-semibold text-text">
                                     {{ multiEditForm?.selectedEventStatus?.name ?? $t('No change') }}
                                 </div>
                             </div>
-                            <IconChevronDown stroke-width="1.5" class="h-5 w-5 text-primary print:hidden"
+                            <IconChevronDown stroke-width="1.5" class="h-5 w-5 text-text print:hidden"
                                              aria-hidden="true"/>
                         </ListboxButton>
                         <ListboxOptions
-                            class="w-full rounded-lg bg-primary max-h-56 overflow-y-auto text-sm absolute z-30">
+                            class="w-full rounded-lg bg-surface-inverse max-h-56 overflow-y-auto text-sm absolute z-30">
                             <ListboxOption
-                                class="hover:bg-indigo-800 text-secondary cursor-pointer p-2 flex justify-between"
+                                class="hover:bg-accent-700 hover:text-white text-text-subtle cursor-pointer p-2 flex justify-between"
                                 v-for="status in eventStatuses"
                                 :key="status.name"
                                 :value="status"
                                 v-slot="{ active, selected }">
-                                <div :class="[selected ? 'xsWhiteBold' : 'xsLight', 'flex']"
+                                <div :class="[selected ? 'text-sm/5 font-bold text-white' : 'text-sm/5 font-bold text-text-subtle', 'flex']"
                                      class="flex items-center gap-x-2">
                                     <div>
                                         <div class="block w-3 h-3 rounded-full"
@@ -79,7 +79,7 @@
                     </Listbox>
                 </div>
                 <div class="">
-                    <div class="xsDark mb-1">
+                    <div class="text-sm/5 font-semibold text-text mb-1">
                         {{ $t('Event type') }}
                     </div>
                     <Listbox v-model="multiEditForm.selectedEventType"
@@ -93,22 +93,22 @@
                                     <div class="block w-5 h-5 rounded-full"
                                          :style="{'backgroundColor' : multiEditForm?.selectedEventType?.hex_code }"/>
                                 </div>
-                                <div class="truncate xsDark">
+                                <div class="truncate text-sm/5 font-semibold text-text">
                                     {{ multiEditForm?.selectedEventType?.name ?? $t('No change') }}
                                 </div>
                             </div>
-                            <IconChevronDown stroke-width="1.5" class="h-5 w-5 text-primary print:hidden"
+                            <IconChevronDown stroke-width="1.5" class="h-5 w-5 text-text print:hidden"
                                              aria-hidden="true"/>
                         </ListboxButton>
                         <ListboxOptions
-                            class="w-full rounded-lg bg-primary max-h-56 overflow-y-auto text-sm absolute z-30">
+                            class="w-full rounded-lg bg-surface-inverse max-h-56 overflow-y-auto text-sm absolute z-30">
                             <ListboxOption
-                                class="hover:bg-indigo-800 text-secondary cursor-pointer p-2 flex justify-between"
+                                class="hover:bg-accent-700 hover:text-white text-text-subtle cursor-pointer p-2 flex justify-between"
                                 v-for="eventType in eventTypes"
                                 :key="eventType.name"
                                 :value="eventType"
                                 v-slot="{ active, selected }">
-                                <div :class="[selected ? 'xsWhiteBold' : 'xsLight', 'flex']"
+                                <div :class="[selected ? 'text-sm/5 font-bold text-white' : 'text-sm/5 font-bold text-text-subtle', 'flex']"
                                      class="flex items-center gap-x-2">
                                     <div>
                                         <div class="block w-3 h-3 rounded-full"
@@ -123,7 +123,7 @@
                     </Listbox>
                 </div>
                 <div>
-                    <div class="xsDark mb-1">
+                    <div class="text-sm/5 font-semibold text-text mb-1">
                         {{ $t('Room') }}
                     </div>
                     <Listbox id="room"
@@ -132,20 +132,20 @@
                              v-model="multiEditForm.selectedRoom"
                     >
                         <ListboxButton :class="['menu-button']" class=" print:border-0">
-                            <div class="flex-grow flex text-left xsDark">
+                            <div class="flex-grow flex text-left text-sm/5 font-semibold text-text">
                                 {{ multiEditForm.selectedRoom?.name ?? $t('No change') }}
                             </div>
-                            <IconChevronDown stroke-width="1.5" class="h-5 w-5 text-primary print:hidden"
+                            <IconChevronDown stroke-width="1.5" class="h-5 w-5 text-text print:hidden"
                                              aria-hidden="true"/>
                         </ListboxButton>
                         <ListboxOptions
-                            class="w-full rounded-lg bg-primary max-h-56 overflow-y-auto text-sm absolute z-30">
+                            class="w-full rounded-lg bg-surface-inverse max-h-56 overflow-y-auto text-sm absolute z-30">
                             <ListboxOption v-for="room in rooms"
-                                           class="hover:bg-indigo-800 text-secondary cursor-pointer p-2 flex justify-between"
+                                           class="hover:bg-accent-700 hover:text-white text-text-subtle cursor-pointer p-2 flex justify-between"
                                            :key="room.name"
                                            :value="room"
                                            v-slot="{ active, selected }">
-                                <div :class="[selected ? 'xsWhiteBold' : 'xsLight', 'flex']">
+                                <div :class="[selected ? 'text-sm/5 font-bold text-white' : 'text-sm/5 font-bold text-text-subtle', 'flex']">
                                     {{ room.name }}
                                 </div>
                                 <IconCheck stroke-width="1.5" v-if="selected" class="h-5 w-5 text-success"
@@ -200,7 +200,7 @@
             </div>
 
             <div class="flex items-center justify-between mt-5">
-                <FormButton class="bg-red-500 hover:bg-red-600" @click="$emit('close')" type="button"
+                <FormButton class="bg-danger hover:bg-danger" @click="$emit('close')" type="button"
                             :text="$t('Cancel')"/>
                 <FormButton type="submit" :text="$t('Save')" :disabled="multiEditForm.eventIds.length === 0"/>
             </div>

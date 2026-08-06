@@ -1,13 +1,13 @@
 <template>
     <div class="flex min-w-0 gap-x-4">
         <div class="min-w-0 flex-auto">
-            <p class="text-sm/6 font-semibold text-gray-900">
+            <p class="text-sm/6 font-semibold text-text">
                 {{ workTimePattern.name }}
             </p>
-            <p class="mt-1 flex text-xs/5 text-gray-500">
+            <p class="mt-1 flex text-xs/5 text-text-subtle">
                 {{ workTimePattern.description }}
             </p>
-            <p class="mt-1 flex text-xs/5 text-gray-500 divide-x divide-gray-200">
+            <p class="mt-1 flex text-xs/5 text-text-subtle divide-x divide-border-subtle">
                 <span class="pr-2"><b>{{ $t('Monday')}}</b>: {{ workTimePattern.monday }} Std.</span>
                 <span class="px-2"><b>{{ $t('Tuesday')}}</b>: {{ workTimePattern.tuesday }} Std.</span>
                 <span class="px-2"><b>{{ $t('Wednesday')}}</b>: {{ workTimePattern.wednesday }} Std.</span>

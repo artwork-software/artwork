@@ -25,12 +25,12 @@
                             :disabled="!emailInput"
                             @click="addEmailsFromInput"
                             class="rounded-full mt-1 inline-flex items-center p-2 text-white transition
-                     disabled:opacity-50 disabled:cursor-not-allowed
-                     bg-blue-600 hover:bg-blue-700 focus-visible:outline focus-visible:outline-2
-                     focus-visible:outline-offset-2 focus-visible:outline-blue-600"
+                     disabled:bg-border-strong disabled:cursor-not-allowed
+                     bg-accent-600 hover:bg-accent-700 focus-visible:outline focus-visible:outline-2
+                     focus-visible:outline-offset-2 focus-visible:outline-accent-600"
                             aria-label="Add email"
                         >
-                            <CheckIcon class="h-5 w-5" />
+                            <IconCheck class="h-5 w-5" />
                         </button>
                     </div>
                 </div>
@@ -38,35 +38,35 @@
                 <JetInputError :message="form.error" class="mt-2" />
 
                 <ul v-if="showInvalidEmailErrorText" class="mt-2">
-                    <li class="text-red-600 text-xs">
+                    <li class="text-danger text-xs">
                         {{ $t('This is not a valid e-mail address.') }}
                     </li>
                 </ul>
 
-                <p v-if="helpText" class="text-red-600 text-xs mt-2">{{ helpText }}</p>
+                <p v-if="helpText" class="text-danger text-xs mt-2">{{ helpText }}</p>
 
                 <!-- Chips -->
                 <div class="mt-3 flex flex-wrap gap-2">
           <span
               v-for="(email, i) in form.user_emails"
               :key="email + i"
-              class="inline-flex items-center gap-2 rounded-full border border-zinc-200 bg-zinc-50 px-3 py-1 text-sm text-zinc-800"
+              class="inline-flex items-center gap-2 rounded-full border border-border-subtle bg-surface-sunken px-3 py-1 text-sm text-text"
           >
             {{ email }}
             <button
                 type="button"
                 @click="removeEmail(i)"
-                class="rounded p-0.5 text-zinc-500 hover:text-red-600 hover:bg-red-50 transition"
+                class="rounded p-0.5 text-text-subtle hover:text-danger hover:bg-danger-surface transition"
                 :aria-label="$t('Remove email from invitation')"
             >
-              <XCircleIcon class="h-4 w-4" />
+              <IconCircleX class="h-4 w-4" />
             </button>
           </span>
                 </div>
 
                 <!-- Server errors -->
                 <ul class="mt-4">
-                    <li class="text-red-600 text-xs" v-for="(error, key) in errors" :key="key">{{ error }}</li>
+                    <li class="text-danger text-xs" v-for="(error, key) in errors" :key="key">{{ error }}</li>
                 </ul>
             </div>
 
@@ -78,7 +78,7 @@
                             <AddButtonSmall :text="$t('Assign to teams')" />
                         </DisclosureButton>
 
-                        <div v-if="page.props.show_hints && selectedDepartments.length === 0" class="flex items-center gap-1 text-zinc-500">
+                        <div v-if="page.props.show_hints && selectedDepartments.length === 0" class="flex items-center gap-1 text-text-subtle">
                             <SvgCollection svgName="arrowLeft" class="h-4 w-4" />
                             <span class="text-xs">{{ $t('Assign users directly to your teams') }}</span>
                         </div>
@@ -92,7 +92,7 @@
                             />
                             <div
                                 v-if="selectedDepartments.length > 4"
-                                class="h-9 w-9 rounded-full ring-2 ring-white bg-zinc-800 text-white text-xs flex items-center justify-center"
+                                class="h-9 w-9 rounded-full ring-2 ring-white bg-surface-inverse text-text-inverse text-xs flex items-center justify-center"
                             >
                                 +{{ selectedDepartments.length - 4 }}
                             </div>
@@ -108,25 +108,25 @@
                         leave-to-class="opacity-0 -translate-y-1"
                     >
                         <DisclosurePanel
-                            class="relative z-30 max-h-56 w-80 overflow-y-auto rounded-xl bg-white p-2 ring-1 ring-zinc-200 shadow-lg"
+                            class="relative z-30 max-h-56 w-80 overflow-y-auto rounded-xl bg-white p-2 ring-1 ring-border-subtle shadow-lg"
                         >
-                            <div v-if="deptLocal.length === 0" class="px-3 py-2 text-sm text-zinc-500">
+                            <div v-if="deptLocal.length === 0" class="px-3 py-2 text-sm text-text-subtle">
                                 {{ $t('No teams available for assignment') }}
                             </div>
 
                             <label
                                 v-for="team in deptLocal"
                                 :key="team.id"
-                                class="flex cursor-pointer items-center gap-3 rounded-lg px-3 py-2 text-sm transition hover:bg-zinc-50"
+                                class="flex cursor-pointer items-center gap-3 rounded-lg px-3 py-2 text-sm transition hover:bg-surface-sunken"
                             >
                                 <input
                                     type="checkbox"
-                                    class="h-4 w-4 rounded border-zinc-300 text-blue-600 focus:ring-blue-600"
+                                    class="h-4 w-4 rounded border-border text-accent-600 focus:ring-accent-600"
                                     v-model="team.checked"
                                     @change="onTeamToggle(team)"
                                 />
                                 <TeamIconCollection class="h-7 w-7 rounded-full ring-2 ring-white" :iconName="team.svg_name" />
-                                <span :class="team.checked ? 'text-zinc-900 font-medium' : 'text-zinc-600'">{{ team.name }}</span>
+                                <span :class="team.checked ? 'text-text font-medium' : 'text-text-muted'">{{ team.name }}</span>
                             </label>
                         </DisclosurePanel>
                     </transition>
@@ -135,24 +135,24 @@
 
             <!-- Roles -->
             <div class="mt-8">
-                <h3 class="mb-4 text-base font-semibold text-zinc-900">{{ $t('Define user permissions') }}</h3>
+                <h3 class="mb-4 text-base font-semibold text-text">{{ $t('Define user permissions') }}</h3>
 
                 <div class="space-y-2">
                     <div
                         v-for="role in rolesLocal"
                         :key="role.name"
-                        class="flex items-center justify-between rounded-lg border border-zinc-200 bg-white px-3 py-2"
+                        class="flex items-center justify-between rounded-lg border border-border-subtle bg-white px-3 py-2"
                     >
                         <label class="flex items-center gap-3 text-sm">
                             <input
                                 type="checkbox"
-                                class="h-4 w-4 rounded border-zinc-300 text-blue-600 focus:ring-blue-600"
+                                class="h-4 w-4 rounded border-border text-accent-600 focus:ring-accent-600"
                                 v-model="role.checked"
                                 @change="onRoleToggle(role)"
                                 :name="role.translation_key"
                                 :id="role.translation_key"
                             />
-                            <span class="text-zinc-900">{{ $t(role.translation_key) }}</span>
+                            <span class="text-text">{{ $t(role.translation_key) }}</span>
                         </label>
                         <ToolTipDefault top :tooltip-text="$t(role.tooltipKey)" />
                     </div>
@@ -162,12 +162,12 @@
             <!-- Presets -->
             <div v-if="!form.roles.includes('artwork admin')" class="mt-8">
                 <button
-                    class="mb-2 flex w-full items-center justify-between rounded-lg bg-white px-3 py-2 text-left text-sm font-medium text-zinc-700 ring-1 ring-zinc-200 hover:bg-zinc-50"
+                    class="mb-2 flex w-full items-center justify-between rounded-lg bg-white px-3 py-2 text-left text-sm font-medium text-text-muted ring-1 ring-border-subtle hover:bg-surface-sunken"
                     @click="showPresets = !showPresets"
                     type="button"
                 >
                     <span>{{ $t('Permission presets') }}</span>
-                    <component :is="showPresets ? ChevronUpIcon : ChevronDownIcon" class="h-4 w-4" />
+                    <component :is="showPresets ? IconChevronUp : IconChevronDown" class="h-4 w-4" />
                 </button>
 
                 <div v-if="showPresets" class="space-y-2">
@@ -175,21 +175,21 @@
                         v-if="presetsLocal.length > 0"
                         v-for="preset in presetsLocal"
                         :key="preset.id"
-                        class="flex items-center justify-between rounded-lg border border-zinc-200 bg-white px-3 py-2"
+                        class="flex items-center justify-between rounded-lg border border-border-subtle bg-white px-3 py-2"
                     >
                         <label class="flex items-center gap-3 text-sm">
                             <input
                                 type="checkbox"
-                                class="h-4 w-4 rounded border-zinc-300 text-blue-600 focus:ring-blue-600"
+                                class="h-4 w-4 rounded border-border text-accent-600 focus:ring-accent-600"
                                 v-model="preset.checked"
                                 @change="applyPreset(preset)"
                                 :id="`preset-${preset.id}`"
                                 :name="preset.name"
                             />
-                            <span class="text-zinc-900">{{ preset.name }}</span>
+                            <span class="text-text">{{ preset.name }}</span>
                         </label>
                     </div>
-                    <div v-else class="text-sm text-zinc-500">
+                    <div v-else class="text-sm text-text-subtle">
                         {{ $t('No permission presets have been created yet.') }}
                     </div>
                 </div>
@@ -198,12 +198,12 @@
             <!-- Permissions -->
             <div v-if="!form.roles.includes('artwork admin')" class="mt-8">
                 <button
-                    class="mb-2 flex w-full items-center justify-between rounded-lg bg-white px-3 py-2 text-left text-sm font-medium text-zinc-700 ring-1 ring-zinc-200 hover:bg-zinc-50"
+                    class="mb-2 flex w-full items-center justify-between rounded-lg bg-white px-3 py-2 text-left text-sm font-medium text-text-muted ring-1 ring-border-subtle hover:bg-surface-sunken"
                     @click="showUserPermissions = !showUserPermissions"
                     type="button"
                 >
                     <span>{{ $t('User permissions') }}</span>
-                    <component :is="showUserPermissions ? ChevronUpIcon : ChevronDownIcon" class="h-4 w-4" />
+                    <component :is="showUserPermissions ? IconChevronUp : IconChevronDown" class="h-4 w-4" />
                 </button>
 
                 <div v-if="showUserPermissions" class="space-y-6">
@@ -213,16 +213,16 @@
                             v-model="permQuery"
                             type="text"
                             :placeholder="$t('Search permissions…')"
-                            class="h-9 w-full rounded-lg border border-zinc-300 bg-white px-9 text-sm text-zinc-900 placeholder:text-zinc-400 outline-none ring-0 transition focus:border-zinc-400 focus:bg-zinc-50"
+                            class="h-9 w-full rounded-lg border border-border bg-white px-9 text-sm text-text placeholder:text-text-subtle transition focus:border-border-strong focus:bg-surface-sunken"
                         />
-                        <SearchIcon class="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-400" />
+                        <IconSearch class="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-text-subtle" />
                         <button
                             v-if="permQuery"
-                            class="absolute right-2 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-700"
+                            class="absolute right-2 top-1/2 -translate-y-1/2 text-text-subtle hover:text-text-muted"
                             @click="permQuery = ''"
                             aria-label="Clear permission search"
                         >
-                            <XIcon class="h-4 w-4" />
+                            <IconX class="h-4 w-4" />
                         </button>
                     </div>
 
@@ -230,12 +230,12 @@
                         v-for="(group, groupName) in filteredGroupedPermissions"
                         :key="groupName"
                         v-show="group.shown && group.permissions.length"
-                        class="rounded-xl border border-zinc-200 bg-white p-3"
+                        class="rounded-xl border border-border-subtle bg-white p-3"
                     >
                         <div class="mb-2 flex items-center justify-between">
-                            <h4 class="text-xs font-semibold uppercase tracking-wide text-zinc-600">{{ $t(groupName) }}</h4>
+                            <h4 class="text-xs font-semibold uppercase tracking-wide text-text-muted">{{ $t(groupName) }}</h4>
                             <button
-                                class="text-xs underline text-blue-600 hover:text-blue-700"
+                                class="text-xs underline text-accent-600 hover:text-accent-700"
                                 @click="toggleWholeGroup(group)"
                             >
                                 {{
@@ -246,7 +246,7 @@
                             </button>
                         </div>
 
-                        <div class="divide-y divide-dashed divide-zinc-200">
+                        <div class="divide-y divide-dashed divide-border-subtle">
                             <div
                                 v-for="perm in group.permissions"
                                 :key="perm.name"
@@ -255,13 +255,13 @@
                                 <label class="flex items-center gap-3 text-sm">
                                     <input
                                         type="checkbox"
-                                        class="h-4 w-4 rounded border-zinc-300 text-blue-600 focus:ring-blue-600"
+                                        class="h-4 w-4 rounded border-border text-accent-600 focus:ring-accent-600"
                                         v-model="perm.checked"
                                         @change="onPermissionToggle(perm)"
                                         :id="perm.translation_key"
                                         :name="perm.translation_key"
                                     />
-                                    <span :class="perm.checked ? 'text-zinc-900' : 'text-zinc-600'">
+                                    <span :class="perm.checked ? 'text-text' : 'text-text-muted'">
                     {{ $t(perm.translation_key) }}
                   </span>
                                 </label>
@@ -286,6 +286,7 @@
 </template>
 
 <script setup>
+import {IconCheck, IconChevronDown, IconChevronUp, IconCircleX, IconSearch, IconX} from "@tabler/icons-vue";
 import { ref, computed, reactive, getCurrentInstance } from 'vue'
 import { useForm, usePage } from '@inertiajs/vue3'
 import ArtworkBaseModal from '@/Artwork/Modals/ArtworkBaseModal.vue'
@@ -297,8 +298,6 @@ import TeamIconCollection from '@/Layouts/Components/TeamIconCollection.vue'
 import ToolTipDefault from '@/Components/ToolTips/ToolTipDefault.vue'
 import SvgCollection from '@/Layouts/Components/SvgCollection.vue'
 import { Disclosure, DisclosureButton, DisclosurePanel } from '@headlessui/vue'
-import { CheckIcon, ChevronDownIcon, ChevronUpIcon, XCircleIcon } from '@heroicons/vue/solid'
-import { XIcon, SearchIcon } from '@heroicons/vue/outline'
 
 /* Props */
 const props = defineProps({

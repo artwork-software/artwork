@@ -1,7 +1,7 @@
 <template>
-    <div class="mt-6 p-5 bg-lightBackgroundGray">
+    <div class="mt-6 p-5 bg-surface-canvas">
         <div
-            class="mx-5 mt-6 p-5 max-w-screen-xl bg-lightBackgroundGray">
+            class="mx-5 mt-6 p-5 max-w-screen-xl bg-surface-canvas">
             <div v-if="this.canEditComponent && ($role('artwork admin') || $can('write projects') || projectWriteIds?.includes(this.$page.props.auth.user.id) || projectManagerIds?.includes(this.$page.props.auth.user.id) || isMemberOfADepartment)" class="relative">
                 <TextareaComponent
                     :label="$t('What should the other project members know about the project?')"
@@ -12,17 +12,17 @@
                 />
                 <div class="absolute bottom-6 right-2 flex">
                     <div v-if="this.$page.props.show_hints" class="flex mt-1">
-                        <span class="hind text-secondary tracking-tight ml-1 my-auto text-xl">{{ $t('Publish information') }}</span>
+                        <span class="text-text-subtle tracking-tight ml-1 my-auto text-xl">{{ $t('Publish information') }}</span>
                         <SvgCollection svgName="smallArrowRight" class="ml-2 mt-1"/>
                     </div>
                     <button @click="addCommentToProject" :disabled="commentForm.text === ''">
                         <IconCircleCheckFilled class="h-8 w-8" :class="[commentForm.text === '' ?
-                                '!text-secondary' :
-                                '!text-primary hover:!text-primaryHover focus:outline-none',
-                            'mr-1 mb-1 rounded-full ml-1 text-sm border border-transparent uppercase shadow-sm text-secondaryHover']"></IconCircleCheckFilled>
+                                '!text-text-subtle' :
+                                '!text-text hover:! focus:outline-none',
+                            'mr-1 mb-1 rounded-full ml-1 text-sm border border-transparent uppercase shadow-sm ']"></IconCircleCheckFilled>
                     </button>
                 </div>
-                <div class="text-xs text-end mt-1 text-artwork-buttons-context">{{ commentForm.text?.length ?? 0 }} / 5000</div>
+                <div class="text-xs text-end mt-1 text-text-muted">{{ commentForm.text?.length ?? 0 }} / 5000</div>
             </div>
 
             <div>
@@ -34,8 +34,8 @@
                         <div class="">
                             <div class="flex items-center gap-x-2">
                                 <UserPopoverTooltip :user="comment.user" height="9" width="9" :id="comment.id"/>
-                                <div class="xsDark">
-                                    <div class="xxsLight">
+                                <div class="text-sm/5 font-semibold text-text">
+                                    <div class="text-xs/[18px] text-text-subtle">
                                         {{ comment.created_at }}
                                     </div>
                                     <div>
@@ -43,18 +43,18 @@
                                     </div>
                                 </div>
                             </div>
-                            <p class="mt-2 mr-14 subpixel-antialiased xsDark font-semibold" v-html="comment.text"></p>
+                            <p class="mt-2 mr-14 subpixel-antialiased text-sm/5 font-semibold text-text font-semibold" v-html="comment.text"></p>
                         </div>
                         <div class="invisible group-hover:visible">
                             <button v-if="$role('artwork admin') || $can('write projects') || projectWriteIds?.includes(this.$page.props.auth.user.id) || projectManagerIds?.includes(this.$page.props.auth.user.id) || isMemberOfADepartment || comment.user?.id === this.$page.props.auth.user.id" type="button"
                                     @click="deleteCommentFromProject(comment)">
                                 <span class="sr-only">{{ $t('Remove comment from project') }}</span>
-                                <IconCircleXFilled class="ml-2 h-7 w-7 hover:text-error"/>
+                                <IconCircleXFilled class="ml-2 h-7 w-7 hover:text-danger"/>
                             </button>
                         </div>
                     </div>
                 </div>
-                <div v-else class="xsDark mt-6">
+                <div v-else class="text-sm/5 font-semibold text-text mt-6">
                     {{ $t('No comments yet') }}
                 </div>
             </div>
@@ -64,10 +64,9 @@
 </template>
 
 <script>
+import {IconCheck, IconCircleX, IconEdit, IconFileText, IconX} from "@tabler/icons-vue";
 import JetInputError from "@/Jetstream/InputError.vue";
-import {DocumentTextIcon, PencilAltIcon, XIcon} from "@heroicons/vue/outline";
 import SvgCollection from "@/Layouts/Components/SvgCollection.vue";
-import {CheckIcon, XCircleIcon} from "@heroicons/vue/solid";
 import UserTooltip from "@/Layouts/Components/UserTooltip.vue";
 import Permissions from "@/Mixins/Permissions.vue";
 import {useForm} from "@inertiajs/vue3";
@@ -82,9 +81,9 @@ export default {
         Button,
         TextareaComponent,
         UserPopoverTooltip,
-        CheckIcon,
+        IconCheck,
         UserTooltip,
-        PencilAltIcon, XCircleIcon, DocumentTextIcon, SvgCollection, XIcon, JetInputError
+        IconEdit, IconCircleX, IconFileText, SvgCollection, IconX, JetInputError
     },
     mixins: [Permissions, IconLib],
     props: [

@@ -8,7 +8,7 @@
         <div class="space-y-5 text-sm">
             <!-- Rule selection -->
             <div>
-                <label class="block text-xs font-semibold tracking-wide text-zinc-500 uppercase mb-1.5">
+                <label class="block text-xs font-semibold tracking-wide text-text-subtle uppercase mb-1.5">
                     {{ $t('Rule') }}
                 </label>
                 <SearchableSelect
@@ -18,14 +18,14 @@
                     label-key="name"
                     :placeholder="$t('Select rule')"
                 />
-                <p v-if="form.errors.shift_rule_id" class="mt-1 text-xs text-red-500">
+                <p v-if="form.errors.shift_rule_id" class="mt-1 text-xs text-danger">
                     {{ form.errors.shift_rule_id }}
                 </p>
             </div>
 
             <!-- Date -->
             <div>
-                <label class="block text-xs font-semibold tracking-wide text-zinc-500 uppercase mb-1.5">
+                <label class="block text-xs font-semibold tracking-wide text-text-subtle uppercase mb-1.5">
                     {{ $t('Date') }}
                 </label>
                 <BaseInput
@@ -36,14 +36,14 @@
                     :show-label="false"
                     no-margin-top
                 />
-                <p v-if="form.errors.violation_date" class="mt-1 text-xs text-red-500">
+                <p v-if="form.errors.violation_date" class="mt-1 text-xs text-danger">
                     {{ form.errors.violation_date }}
                 </p>
             </div>
 
             <!-- Severity -->
             <div>
-                <label class="block text-xs font-semibold tracking-wide text-zinc-500 uppercase mb-1.5">
+                <label class="block text-xs font-semibold tracking-wide text-text-subtle uppercase mb-1.5">
                     {{ $t('Severity') }}
                 </label>
                 <div class="flex items-center gap-3">
@@ -52,10 +52,10 @@
                             type="radio"
                             v-model="form.severity"
                             value="warning"
-                            class="text-amber-500 focus:ring-amber-500"
+                            class="text-warning focus:ring-warning"
                         />
                         <span class="inline-flex items-center gap-1 text-xs">
-                            <span class="inline-block h-1.5 w-1.5 rounded-full bg-amber-500"></span>
+                            <span class="inline-block h-1.5 w-1.5 rounded-full bg-warning"></span>
                             {{ $t('Warning') }}
                         </span>
                     </label>
@@ -64,10 +64,10 @@
                             type="radio"
                             v-model="form.severity"
                             value="error"
-                            class="text-red-500 focus:ring-red-500"
+                            class="text-danger focus:ring-danger"
                         />
                         <span class="inline-flex items-center gap-1 text-xs">
-                            <span class="inline-block h-1.5 w-1.5 rounded-full bg-red-500"></span>
+                            <span class="inline-block h-1.5 w-1.5 rounded-full bg-danger"></span>
                             {{ $t('Error') }}
                         </span>
                     </label>
@@ -76,7 +76,7 @@
 
             <!-- Reason -->
             <div>
-                <label class="block text-xs font-semibold tracking-wide text-zinc-500 uppercase mb-1.5">
+                <label class="block text-xs font-semibold tracking-wide text-text-subtle uppercase mb-1.5">
                     {{ $t('Reason') }}
                 </label>
                 <BaseTextarea
@@ -89,7 +89,7 @@
             </div>
 
             <!-- Footer -->
-            <div class="flex justify-between pt-2 border-t border-zinc-100 mt-2">
+            <div class="flex justify-between pt-2 border-t border-border-subtle mt-2">
                 <BaseUIButton
                     :label="$t('Cancel')"
                     is-cancel-button

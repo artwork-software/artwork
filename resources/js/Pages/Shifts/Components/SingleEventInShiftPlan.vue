@@ -1,8 +1,8 @@
 <template>
     <div>
         <div>
-            <div class="text-secondary-hover rounded-lg flex flex-col"
-                 :class="[shiftPlanSettings.time_period_project_id === project?.id && shiftPlanSettings.use_project_time_period ? 'border-[3px] border-dashed !border-pink-500' : '']"
+            <div class="text-surface rounded-lg flex flex-col"
+                 :class="[shiftPlanSettings.time_period_project_id === project?.id && shiftPlanSettings.use_project_time_period ? 'border-[3px] border-dashed !border-special-pink' : '']"
                  :style="{backgroundColor: backgroundColorWithOpacity(eventType.hex_code, percentage), color: getTextColorBasedOnBackground(backgroundColorWithOpacity(eventType.hex_code, percentage)),
                  borderColor: eventType.hex_code}">
 
@@ -42,7 +42,7 @@
                             v-tooltip.bottom="{ value: project.status.name, class: 'aw-tooltip' }"
                         ></div>
                         <a :href="route('projects.tab', {project: project?.id, projectTab: firstProjectShiftTabId})"
-                           class="relative flex-1 min-w-0 hover:text-artwork-buttons-hover hover:underline underline-offset-2 transition ease-in-out duration-200">
+                           class="relative flex-1 min-w-0 hover:text-accent-700 hover:underline underline-offset-2 transition ease-in-out duration-200">
                             <span ref="projectNameSpan" :class="[expandDays ? 'break-words' : 'truncate', 'block w-full font-semibold text-xs']">
                                 {{ project?.name }}
                             </span>
@@ -53,7 +53,7 @@
                                 class="fixed z-[9999] pointer-events-none"
                                 :style="{ top: projectNameTooltipPosition.top + 'px', left: projectNameTooltipPosition.left + 'px' }"
                             >
-                                <div class="rounded-lg bg-artwork-navigation-background px-4 py-0.5 text-[14px] text-white whitespace-nowrap">
+                                <div class="rounded-lg bg-surface-inverse px-4 py-0.5 text-[14px] text-white whitespace-nowrap">
                                     {{ project?.name }}
                                 </div>
                             </div>
@@ -81,7 +81,7 @@
                                 @mouseleave="hideEventNameTooltip"
                             >
                                 <div v-if="project?.id">
-                                    <a :href="route('projects.tab', {project: project?.id, projectTab: firstProjectShiftTabId})" class="cursor-pointer hover:text-gray-500 transition-all duration-150 ease-in-out">
+                                    <a :href="route('projects.tab', {project: project?.id, projectTab: firstProjectShiftTabId})" class="cursor-pointer hover:text-text-muted transition-all duration-150 ease-in-out">
                                         <span ref="eventNameSpan" :class="[expandDays ? 'break-words' : 'truncate', 'block text-xs/4 font-semibold']">
                                             {{ eventType?.abbreviation }}: {{ event.eventName }}
                                         </span>
@@ -96,7 +96,7 @@
                                         class="fixed z-[9999] pointer-events-none"
                                         :style="{ top: eventNameTooltipPosition.top + 'px', left: eventNameTooltipPosition.left + 'px' }"
                                     >
-                                        <div class="rounded-lg bg-artwork-navigation-background px-4 py-0.5 text-[14px] text-white whitespace-nowrap">
+                                        <div class="rounded-lg bg-surface-inverse px-4 py-0.5 text-[14px] text-white whitespace-nowrap">
                                             {{ eventType?.abbreviation }}: {{ event?.eventName }}
                                         </div>
                                     </div>
@@ -182,7 +182,7 @@
                         <IconTimeline
                             class="size-4"
                             stroke-width="1.5"
-                            :class="event.hasTimelines ? '' : 'text-gray-400'"
+                            :class="event.hasTimelines ? '' : 'text-text-subtle'"
                             :style="event.hasTimelines ? {
                                 color: getTextColorBasedOnBackground(backgroundColorWithOpacity(eventType.hex_code, percentage))
                             } : {}"

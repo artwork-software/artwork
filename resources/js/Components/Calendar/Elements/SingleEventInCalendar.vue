@@ -24,6 +24,7 @@
             :is-planning="isPlanning"
             :is-in-daily-view="isInDailyView"
             :is-height-full="isHeightFull"
+            :cell-day="cellDay"
             @editEvent="e => emit('editEvent', e)"
             @editSubEvent="e => openAddSubEventModal"
             @openAddSubEventModal="openAddSubEventModal"
@@ -96,6 +97,8 @@ defineProps({
         required: false,
         default: false
     },
+    // "YYYY-MM-DD" der Tageszelle (für Starttag-Logik des Einlasses)
+    cellDay: { type: String, default: null },
 })
 
 const openAddSubEventModal = (mainEvent, mode, subEvent) => {

@@ -46,6 +46,7 @@ return [
             'end_date' => 'Datum bis',
             'start_time' => 'Uhrzeit von',
             'end_time' => 'Uhrzeit bis',
+            'admission_time' => 'Einlass',
             'event_type' => 'Termintyp',
             'event_name' => 'Terminname',
             'event_description' => 'Terminbeschreibung',

@@ -16,6 +16,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property boolean $options
  * @property boolean $project_management
  * @property boolean $show_event_creator
+ * @property boolean $show_event_admission
  * @property boolean $repeating_events
  * @property boolean $use_project_time_period
  * @property int $time_period_project_id
@@ -35,6 +36,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property boolean $show_planned_events
  * @property boolean $show_timeline
  * @property boolean $show_only_not_fully_staffed_shifts
+ * @property boolean $show_unrelated_events
+ * @property boolean $show_unrelated_shifts
  */
 class UserShiftPlanDailySettings extends Model
 {
@@ -53,6 +56,7 @@ class UserShiftPlanDailySettings extends Model
         'options',
         'project_management',
         'show_event_creator',
+        'show_event_admission',
         'repeating_events',
         'work_shifts',
         'description',
@@ -73,7 +77,9 @@ class UserShiftPlanDailySettings extends Model
         'show_shift_group_tag',
         'show_timeline',
         'show_only_not_fully_staffed_shifts',
-        'show_project_assignments'
+        'show_project_assignments',
+        'show_unrelated_events',
+        'show_unrelated_shifts'
     ];
 
     protected $casts = [
@@ -82,6 +88,7 @@ class UserShiftPlanDailySettings extends Model
         'options' => 'boolean',
         'project_management' => 'boolean',
         'show_event_creator' => 'boolean',
+        'show_event_admission' => 'boolean',
         'repeating_events' => 'boolean',
         'work_shifts' => 'boolean',
         'description' => 'boolean',
@@ -102,6 +109,8 @@ class UserShiftPlanDailySettings extends Model
         'show_timeline' => 'boolean',
         'show_only_not_fully_staffed_shifts' => 'boolean',
         'show_project_assignments' => 'boolean',
+        'show_unrelated_events' => 'boolean',
+        'show_unrelated_shifts' => 'boolean',
     ];
 
     public function user(): BelongsTo

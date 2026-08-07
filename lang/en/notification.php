@@ -85,6 +85,10 @@ return [
         'commit_request_approved' => 'Shift plan request :craft (week :week) was approved',
         'commit_request_rejected' => 'Shift plan request :craft (week :week) was rejected',
         'commit_request_comment' => 'Note from :user: :comment',
+        'confirmation_accepted' => ':workerName has accepted the shift :craftAbbreviation on :date',
+        'confirmation_declined' => ':workerName has declined the shift :craftAbbreviation on :date',
+        'confirmation_comment' => 'Comment: :comment',
+        'confirmation_by_proxy' => 'Recorded by :userName',
     ],
     'event' => [
         'with_adjoining_audience' => 'Event with audience in adjoining room',

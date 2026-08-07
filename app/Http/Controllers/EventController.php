@@ -1503,6 +1503,7 @@ class EventController extends Controller
             'description' => $sourceEvent?->description ?? $request->description,
             'start_time' => $startDate,
             'end_time' => $endDate,
+            'admission_time' => $sourceEvent?->admission_time ?? $request->admissionTime,
             'occupancy_option' => $sourceEvent?->occupancy_option ?? $request->isOption,
             'audience' => $sourceEvent?->audience ?? $request->audience,
             'is_loud' => $sourceEvent?->is_loud ?? $request->isLoud,
@@ -2081,6 +2082,7 @@ class EventController extends Controller
         $oldEventType          = $event->event_type_id;
         $oldEventStartDate     = $event->start_time;
         $oldEventEndDate       = $event->end_time;
+        $oldEventAdmissionTime = $event->admission_time;
         $oldEventPropertyIds   = $event->getAttribute('eventProperties')->map(
             fn (EventProperty $eventProperty) => $eventProperty->getAttribute('id')
         )->all();
@@ -2164,6 +2166,7 @@ class EventController extends Controller
         $this->checkEventNameChanges($event->id, $oldEventName, $newEventName);
         $this->checkEventTypeChanges($event->id, $oldEventType, $newEventType);
         $this->checkDateChanges($event->id, $oldEventStartDate, $newEventStartDate, $oldEventEndDate, $newEventEndDate);
+        $this->checkAdmissionTimeChanges($event->id, $oldEventAdmissionTime, $event->admission_time);
         $this->checkEventPropertyChanges($event->id, $oldEventPropertyIds, $newEventPropertyIds);
 
         $this->createEventScheduleNotification($event);
@@ -3535,6 +3538,22 @@ class EventController extends Controller
         }
     }
 
+    private function checkAdmissionTimeChanges($eventId, ?string $oldAdmissionTime, ?string $newAdmissionTime): void
+    {
+        // TIME-Spalte liefert "HH:mm:ss", Request "HH:mm" — auf HH:mm normalisieren
+        $normalize = static fn (?string $time): ?string => $time ? substr($time, 0, 5) : null;
+
+        if ($normalize($oldAdmissionTime) !== $normalize($newAdmissionTime)) {
+            $this->changeService->saveFromBuilder(
+                $this->changeService
+                    ->createBuilder()
+                    ->setModelClass(Event::class)
+                    ->setModelId($eventId)
+                    ->setTranslationKey('Admission time changed')
+            );
+        }
+    }
+
     private function checkEventTypeChanges($eventId, $oldType, $newType): void
     {
         if ($oldType !== $newType) {
@@ -4127,7 +4146,7 @@ class EventController extends Controller
     public function bulkProjectEventStore(
         EventBulkCreateRequest $request,
         Project $project
-    ): RedirectResponse {
+    ): JsonResponse {
         $this->authorize('view', $project);
 
         $events = $request->input('events', []);
@@ -4153,6 +4172,7 @@ class EventController extends Controller
             return $stored;
         });
 
+        $createdEventPayloads = [];
         foreach ($storedEvents as $storedEvent) {
             $freshEvent = $storedEvent->fresh();
             broadcast(new \Artwork\Modules\Event\Events\BulkEventChanged(
@@ -4160,9 +4180,12 @@ class EventController extends Controller
                 'created'
             ));
             broadcast(new EventCreated($freshEvent, $freshEvent->room_id));
+            $createdEventPayloads[] = \Artwork\Modules\Event\Events\BulkEventChanged::eventPayload($freshEvent);
         }
 
-        return Redirect::back();
+        // Erstellte Events zurückgeben: der auslösende Client aktualisiert seine Liste
+        // aus der Response und ist damit nicht auf den eigenen Broadcast angewiesen.
+        return new JsonResponse(['events' => $createdEventPayloads]);
     }
 
     public function updateSingleBulkEvent(
@@ -4188,16 +4211,19 @@ class EventController extends Controller
     public function createSingleBulkEvent(
         Request $request,
         Project $project
-    ): void {
+    ): JsonResponse {
         $this->authorize('view', $project);
 
-        $validated = $request->validate([
+        $request->validate([
             'event' => ['required', 'array'],
             'event.room.id' => ['required', 'integer', 'exists:rooms,id'],
             'event.type.id' => ['required', 'integer', 'exists:event_types,id'],
             'event.is_planning' => ['sometimes', 'boolean'],
         ]);
-        $data = $validated['event'];
+        // WICHTIG: input('event') statt validated('event') — bei verschachtelten Regeln
+        // entfernt Laravel alle nicht explizit validierten Keys aus dem Array. Dadurch
+        // gingen day/end_day/name/Zeiten verloren und createBulkEvent fiel auf "heute" zurück.
+        $data = $request->input('event');
         $room = Room::query()->findOrFail($data['room']['id']);
         $this->authorizeBulkEventCreation((bool) ($data['is_planning'] ?? false), $room);
 
@@ -4212,6 +4238,12 @@ class EventController extends Controller
             'created'
         ));
         broadcast(new EventCreated($freshEvent, $freshEvent->room_id));
+
+        // Erstelltes Event zurückgeben: der auslösende Client aktualisiert seine Liste
+        // aus der Response und ist damit nicht auf den eigenen Broadcast angewiesen.
+        return new JsonResponse([
+            'event' => \Artwork\Modules\Event\Events\BulkEventChanged::eventPayload($freshEvent),
+        ]);
     }
 
     public function updateDescription(Request $request, Event $event): void

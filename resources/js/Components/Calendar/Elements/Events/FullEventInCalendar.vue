@@ -318,6 +318,21 @@
                             </div>
                         </div>
 
+                        <!-- Einlass (Anzeigeeinstellung "Einlass", nur Starttag-Kachel, nicht bei kleinem Zoom) -->
+                        <div
+                            v-if="showAdmissionTime && !project && zoom_factor >= 0.8"
+                            class="mt-0.5 flex items-center gap-1.5 text-xs/5"
+                        >
+                            <component
+                                :is="IconDoorEnter"
+                                class="size-3.5 shrink-0"
+                                stroke-width="2"
+                                :style="{ color: eventTextColor }"
+                            />
+                            <span class="text-xs/[18px] subpixel-antialiased whitespace-nowrap" :style="{ color: eventTypeTextColor }">
+                                {{ $t('Admission') }} {{ event.admission_time }}
+                            </span>
+                        </div>
 
                         <!-- Projektleiter -->
                         <div
@@ -627,6 +642,16 @@
                                                 </div>
                                             </div>
 
+                                            <!-- Einlass (Anzeigeeinstellung "Einlass", nur Starttag) -->
+                                            <div v-if="showAdmissionTime" class="mt-0.5 flex items-center gap-1.5 text-xs/5">
+                                                <component
+                                                    :is="IconDoorEnter"
+                                                    class="size-3.5 shrink-0"
+                                                    stroke-width="2"
+                                                />
+                                                <span class="subpixel-antialiased">{{ $t('Admission') }} {{ event.admission_time }}</span>
+                                            </div>
+
                                             <!-- Projektleiter -->
                                             <div v-if="calSettings.project_management && event?.project?.leaders?.length > 0" class="mt-2 -ml-1.5">
                                                 <div class="ml-2 flex flex-wrap items-center gap-1">
@@ -864,6 +889,7 @@ import {
     IconCircleX,
     IconClock,
     IconDeviceFloppy,
+    IconDoorEnter,
     IconEdit,
     IconFileImport,
     IconInfoCircle,
@@ -971,6 +997,9 @@ const props = defineProps({
     isInDailyView: { type: Boolean, default: false },
     verifierForEventTypIds: { type: Array, default: [] },
     isPlanning: { type: Boolean, default: false },
+    // "YYYY-MM-DD" der Tageszelle, in der die Kachel gespiegelt wird —
+    // ohne Angabe gilt die Kachel als Starttag (z.B. Listen-Ansichten)
+    cellDay: { type: String, default: null },
 });
 
 // Bei aktivem contentZoom (>100 %) die Basisgrößen verwenden — die per Prop
@@ -1012,6 +1041,20 @@ const isSameDay = computed(() => {
     if (!props.event.start || !props.event.end) return false;
     return new Date(props.event.start).toDateString() === new Date(props.event.end).toDateString();
 });
+
+// Einlass bezieht sich auf den Starttag — bei mehrtägigen Terminen zeigen ihn
+// die Spiegelungen an Folgetagen nicht. Ohne cellDay (z.B. Listen) gilt Starttag.
+const isStartDayCell = computed(() => {
+    if (!props.cellDay || !props.event.start) return true;
+    return String(props.event.start).slice(0, 10) === props.cellDay;
+});
+
+const showAdmissionTime = computed(() =>
+    Boolean(pageProps.event_admission_module)
+    && calSettings.value.show_event_admission !== false
+    && Boolean(props.event.admission_time)
+    && isStartDayCell.value
+);
 
 const isHighlighted = computed(() => {
     const highlightEventId = pageProps.urlParameters.highlightEventId;
@@ -1299,6 +1342,7 @@ const totalHeight = computed(() => {
     if (calSettings.value.options) height += 0;
     if (calSettings.value.project_management) height += 17;
     if (calSettings.value.show_event_creator) height += 17;
+    if (pageProps.event_admission_module && calSettings.value.show_event_admission !== false) height += 17;
     if (calSettings.value.repeating_events) height += 20;
     return height;
 });
@@ -1309,6 +1353,12 @@ const heightSubtraction = (event) => {
         heightSubtraction += 17;
     }
     if (calSettings.value.show_event_creator && !event.created_by) {
+        heightSubtraction += 17;
+    }
+    if (
+        pageProps.event_admission_module && calSettings.value.show_event_admission !== false &&
+        (!event.admission_time || !isStartDayCell.value)
+    ) {
         heightSubtraction += 17;
     }
     if (calSettings.value.repeating_events && (!event.is_series || event.is_series === false)) {

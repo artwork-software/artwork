@@ -93,6 +93,8 @@ const props = defineProps({
   first_project_calendar_tab_id: { type: Number, required: true },
   crafts: { type: [Array, Object], default: () => [] },
   shiftQualifications: { type: [Array, Object], default: () => [] },
+  // Projekt-Schichten-Tab: aktuelle Projekt-ID, damit projektfremde Schichten gelabelt werden können
+  currentProjectId: { type: [Number, String], default: null },
   // Visual
   pxPerMin: { type: Number, default: 1.0 },
   gapThresholdMin: { type: Number, default: 90 },
@@ -530,6 +532,7 @@ const shiftItems = computed<Item[]>(() => {
                 first_project_calendar_tab_id: props.first_project_calendar_tab_id,
                 crafts: props.crafts,
                 dayRole,
+                currentProjectId: props.currentProjectId,
             },
         })
     }

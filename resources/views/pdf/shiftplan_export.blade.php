@@ -90,7 +90,8 @@
             text-align: left;
         }
         table.grid thead th.weekend { background: #3f3f46; }
-        table.grid thead th .date { font-weight: 400; opacity: 0.85; }
+        {{-- keine opacity: wkhtmltopdf rastert Text mit opacity < 1 (unscharf) --}}
+        table.grid thead th .date { font-weight: 400; color: #d4d4d8; }
 
         th.room-col, td.room-col {
             width: 90px;
@@ -162,7 +163,10 @@
             border: 1.5px solid #ec4899 !important;
             box-shadow: 0 0 0 1px #ec4899;
         }
-        .proj-dimmed { opacity: 0.35; }
+        {{-- keine opacity: wkhtmltopdf rastert Text mit opacity < 1 (unscharf) --}}
+        .proj-dimmed { background: #fafafa !important; border-left-color: #d4d4d8 !important; }
+        .proj-dimmed * { color: #a1a1aa !important; }
+        .proj-dimmed .sh-badge, .proj-dimmed .committed-dot { background: #e4e4e7 !important; }
         .legend {
             display: inline-block;
             margin-top: 2px;

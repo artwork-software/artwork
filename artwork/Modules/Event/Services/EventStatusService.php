@@ -50,6 +50,9 @@ readonly class EventStatusService
     {
         $settings = app(EventSettings::class);
         $settings->enable_status = $request->boolean('enable_status');
+        if ($request->has('enable_admission')) {
+            $settings->enable_admission = $request->boolean('enable_admission');
+        }
         $settings->save();
 
         if ($request->boolean('enable_status')) {

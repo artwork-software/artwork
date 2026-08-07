@@ -240,6 +240,7 @@ class HandleInertiaRequests extends Middleware
                     'error' => fn() => $request->session()->get('error'),
                 ],
                 'event_status_module' => $eventSettings->enable_status,
+                'event_admission_module' => $eventSettings->enable_admission,
                 'default_language' => config('app.fallback_locale'),
                 'selected_language' => app()->getLocale(),
                 'sageApiEnabled' => $sageApiEnabled,
@@ -260,6 +261,8 @@ class HandleInertiaRequests extends Middleware
                 'shiftCommitWorkflow'          => $shiftCommitWorkflowEnabled,
                 'allow_shift_overbooking'      => (bool) app(\App\Settings\ShiftSettings::class)
                     ->allow_shift_overbooking,
+                'shift_confirmation_enabled'   => (bool) app(\App\Settings\ShiftSettings::class)
+                    ->shift_confirmation_enabled,
                 'shift_settings_access'        => [
                     'granular_permissions_enabled' => (bool) app(\App\Settings\ShiftSettings::class)
                         ->granular_permissions_enabled,

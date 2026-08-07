@@ -18,6 +18,10 @@ class ShiftWorker extends MorphPivot
 {
     use SoftDeletes;
 
+    public const CONFIRMATION_ACCEPTED = 'accepted';
+
+    public const CONFIRMATION_DECLINED = 'declined';
+
     protected $table = 'shift_workers';
 
     protected $guarded = [];
@@ -28,6 +32,7 @@ class ShiftWorker extends MorphPivot
         'start_time' => TimeWithoutSeconds::class,
         'end_time' => TimeWithoutSeconds::class,
         'is_overbooked' => 'boolean',
+        'confirmation_at' => 'datetime',
     ];
 
     protected static function booted(): void
@@ -47,6 +52,11 @@ class ShiftWorker extends MorphPivot
     public function assignedBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'assigned_by_user_id');
+    }
+
+    public function confirmationBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'confirmation_by_user_id');
     }
 
     public function shiftQualification(): BelongsTo

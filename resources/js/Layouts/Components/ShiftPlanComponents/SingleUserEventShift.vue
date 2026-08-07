@@ -1,5 +1,10 @@
 <template>
-    <div class="rounded-xl border border-border-subtle bg-white shadow-sm overflow-hidden transition hover:shadow-md">
+    <div
+        class="rounded-xl border bg-white shadow-sm overflow-hidden transition hover:shadow-md"
+        :class="ownConfirmationInfo?.accepted
+            ? 'border-success ring-1 ring-success'
+            : (ownConfirmationInfo ? 'border-danger ring-1 ring-danger' : 'border-border-subtle')"
+    >
         <!-- Farb-Akzent / Headerzeile -->
         <div
             class="flex items-start justify-between gap-2 px-3 py-2"
@@ -82,6 +87,58 @@
                 </div>
             </div>
 
+            <!-- Zu-/Absage der Zuweisung (nur festgeschriebene Schichten); Status ist
+                 auch für Planer:innen sichtbar, die einen fremden Plan ansehen -->
+            <div v-if="showOwnConfirmationControls || ownConfirmationInfo" class="border-b border-border-subtle pb-2">
+                <div v-if="ownConfirmationInfo" class="flex items-center justify-between gap-2">
+                    <span
+                        class="inline-flex items-center gap-1.5 rounded-full px-2 py-1 text-xs font-semibold"
+                        :class="ownConfirmationInfo.accepted
+                            ? 'bg-success-surface text-success border border-success-border'
+                            : 'bg-danger-surface text-danger border border-danger-border'"
+                    >
+                        <PropertyIcon :name="ownConfirmationInfo.accepted ? 'IconCheck' : 'IconX'" class="h-3.5 w-3.5" stroke-width="2.5" />
+                        {{ ownConfirmationInfo.accepted
+                            ? $t('Accepted on {date}', { date: ownConfirmationInfo.date ?? '–' })
+                            : $t('Declined on {date}', { date: ownConfirmationInfo.date ?? '–' }) }}
+                    </span>
+                    <button
+                        v-if="showOwnConfirmationControls"
+                        type="button"
+                        class="text-xs text-text-subtle underline hover:text-text transition"
+                        @click="ownConfirmationInfo.accepted ? (showDeclineModal = true) : acceptShift()"
+                    >
+                        {{ ownConfirmationInfo.accepted ? $t('Decline shift') : $t('Accept shift') }}
+                    </button>
+                </div>
+                <div v-else class="flex items-center justify-between gap-2">
+                    <span class="text-xs font-semibold uppercase tracking-wide text-text-subtle">
+                        {{ $t('Confirm shift?') }}
+                    </span>
+                    <div class="flex items-center gap-1.5">
+                        <button
+                            type="button"
+                            class="inline-flex items-center gap-1 rounded-lg border border-success-border bg-success-surface px-2.5 py-1 text-xs font-semibold text-success hover:opacity-80 transition"
+                            @click="acceptShift"
+                        >
+                            <PropertyIcon name="IconCheck" class="h-4 w-4" stroke-width="2.5" />
+                            {{ $t('Accept shift') }}
+                        </button>
+                        <button
+                            type="button"
+                            class="inline-flex items-center gap-1 rounded-lg border border-danger-border bg-danger-surface px-2.5 py-1 text-xs font-semibold text-danger hover:opacity-80 transition"
+                            @click="showDeclineModal = true"
+                        >
+                            <PropertyIcon name="IconX" class="h-4 w-4" stroke-width="2.5" />
+                            {{ $t('Decline shift') }}
+                        </button>
+                    </div>
+                </div>
+                <div v-if="ownConfirmationInfo?.comment" class="mt-1 text-[11px] text-text-subtle">
+                    {{ $t('Comment') }}: {{ ownConfirmationInfo.comment }}
+                </div>
+            </div>
+
             <!-- Kolleg*innen -->
             <div class="border-b border-border-subtle pb-2">
                 <template v-if="hasColleaguesOnShift(shift)">
@@ -136,6 +193,13 @@
         </div>
     </div>
 
+    <!-- Ablehnen mit optionalem Kommentar -->
+    <ShiftConfirmationDeclineModal
+        v-if="showDeclineModal"
+        @close="showDeclineModal = false"
+        @submit="declineShift"
+    />
+
     <!-- Anfrage Arbeitszeitänderung -->
     <RequestWorkTimeChangeModal
         v-if="showRequestWorkTimeChangeModal"
@@ -161,6 +225,8 @@ import { useColorHelper } from '@/Composeables/UseColorHelper.js'
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 import { usePermission } from "@/Composeables/Permission.js";
 import {useShiftPlanLookups} from "@/Composeables/useShiftPlanLookups.js";
+import ShiftConfirmationDeclineModal from '@/Layouts/Components/ShiftPlanComponents/ShiftConfirmationDeclineModal.vue'
+import { useShiftWorkerConfirmation } from '@/Composeables/useShiftWorkerConfirmation.js'
 
 const { backgroundColorWithOpacity, getHighContrastPercent, getTextColorBasedOnBackground } = useColorHelper()
 const percentage = computed(() => getHighContrastPercent(
@@ -182,6 +248,38 @@ const resolvedCraft = computed(() => props.shift?.craft ?? resolveCraft(props.sh
 
 const showRequestWorkTimeChangeModal = ref(false)
 const hasIndivTime = ref(false)
+const showDeclineModal = ref(false)
+
+const { isEnabled: confirmationEnabled, respond: respondToShift, getConfirmationInfo } = useShiftWorkerConfirmation()
+
+const ownWorker = computed(() => (props.shift.workers || []).find(
+    w => w.type === props.type && w.id === props.userToEditId
+) ?? null)
+
+// Buttons nur im EIGENEN Einsatzplan (die Komponente rendert auch fremde Pläne
+// für Planer:innen) und nur an festgeschriebenen Schichten.
+const showOwnConfirmationControls = computed(() =>
+    confirmationEnabled()
+    && props.shift.is_committed
+    && props.type === 'user'
+    && props.userToEditId === usePage().props.auth.user.id
+    && !!ownWorker.value?.pivot?.id
+)
+
+// Auch read-only sichtbar (Planer:in schaut fremden Plan an); getConfirmationInfo
+// prüft bereits Feature-Setting + vorhandenen Status.
+const ownConfirmationInfo = computed(() =>
+    props.shift.is_committed ? getConfirmationInfo(ownWorker.value) : null
+)
+
+const acceptShift = () => {
+    respondToShift(ownWorker.value.pivot.id, 'accepted')
+}
+
+const declineShift = (comment) => {
+    showDeclineModal.value = false
+    respondToShift(ownWorker.value.pivot.id, 'declined', comment)
+}
 
 const canAccessProject = computed(() => {
     if (hasAdminRole()) return true

@@ -41,6 +41,15 @@
                     @change="onToggleShowDescriptionInBulk"
                 />
 
+                <SwitchIconTooltip
+                    v-if="hasCreateEventsPermission && canEditComponent"
+                    v-model="shiftPeriodOnStartDateChange"
+                    :tooltip-text="shiftPeriodTooltipText"
+                    :icon="IconArrowsMoveHorizontal"
+                    size="md"
+                    @change="onToggleShiftPeriodOnStartDateChange"
+                />
+
                 <div class="flex items-center gap-x-2">
                     <PlanningSwitch
                         :planning="isPlanningEvent"
@@ -399,6 +408,7 @@
 import BulkSingleEvent from "@/Pages/Projects/Components/BulkComponents/BulkSingleEvent.vue";
 import BaseButton from "@/Layouts/Components/General/Buttons/BaseButton.vue";
 import {
+    IconArrowsMoveHorizontal,
     IconCalendarMonth,
     IconCheck,
     IconCirclePlus,
@@ -558,7 +568,79 @@ const onToggleShowDescriptionInBulk = () => {
     );
 };
 
+// Bearbeitungsverhalten (kein Anzeige-Setting): Startdatum ändern → Zeitraum
+// mitverschieben (true) oder Enddatum fixiert lassen (false, Standard).
+// Am User persistiert; EventComponent liest dasselbe Setting.
+const shiftPeriodOnStartDateChange = ref(usePage().props.auth.user.shift_period_on_start_date_change ?? false);
+provide('shiftPeriodOnStartDateChange', shiftPeriodOnStartDateChange);
+
+const shiftPeriodTooltipText = computed(() => shiftPeriodOnStartDateChange.value
+    ? $t('When the start date is changed, the whole period shifts along (duration is kept). Click to keep the end date fixed instead.')
+    : $t('The end date stays fixed when the start date is changed. Click to shift the whole period along instead.'));
+
+const onToggleShiftPeriodOnStartDateChange = () => {
+    router.patch(
+        route('user.update.shift_period_on_start_date_change', {user: usePage().props.auth.user.id}),
+        {shift_period_on_start_date_change: shiftPeriodOnStartDateChange.value},
+        {preserveScroll: true, preserveState: true}
+    );
+};
+
 // --- Helpers
+// Server-Payload (Shape von BulkEventChanged::eventPayload) → Bulk-Zeile.
+// type/status/room werden über die Props aufgelöst, damit die Listboxen dieselben
+// Objektinstanzen sehen wie alle anderen Zeilen.
+const mapPayloadToBulkRow = (payload) => ({
+    id: payload.id,
+    project_id: payload.project_id,
+    type: props.eventTypes.find(t => t.id === (payload.type?.id ?? payload.event_type_id)) ?? payload.type ?? null,
+    status: props.eventStatuses.find(s => s.id === (payload.status?.id ?? payload.event_status_id)) ?? payload.status ?? null,
+    name: payload.name ?? '',
+    room: props.rooms.find(r => r.id === (payload.room?.id ?? payload.room_id)) ?? payload.room ?? null,
+    day: payload.day,
+    end_day: payload.end_day || payload.day,
+    start_time: payload.start_time || '',
+    end_time: payload.end_time || '',
+    admission_time: payload.admission_time?.slice(0, 5) || null,
+    copy: false,
+    copyCount: 1,
+    copyType: copyTypes.value[0],
+    index: events.value.length + 1,
+    description: payload.description ?? '',
+    isNew: false,
+    is_planning: payload.is_planning ?? false,
+    is_series: payload.is_series || false,
+    series_id: payload.series_id || null,
+    eventProperties: payload.eventProperties || payload.event_properties || [],
+    created_at: payload.created_at,
+    updated_at: payload.updated_at,
+});
+
+// Eigene Creates sofort aus der Server-Response in die Liste übernehmen —
+// der eigene Client wartet nie auf seinen eigenen Broadcast (der bleibt für
+// andere eingeloggte Nutzer zuständig und mergt später idempotent per id).
+const upsertEventRowFromResponse = (payload, {markNew = false} = {}) => {
+    if (!payload?.id) return;
+    const idx = events.value.findIndex(e => e.id === payload.id);
+    if (idx !== -1) {
+        events.value[idx] = {...events.value[idx], ...mapPayloadToBulkRow(payload)};
+        return;
+    }
+    const row = mapPayloadToBulkRow(payload);
+    if (markNew) {
+        events.value.forEach(e => {
+            e.isNew = false;
+        });
+        row.isNew = true;
+    }
+    events.value.push(row);
+};
+
+const removeEventRowsByIds = (ids) => {
+    const idSet = new Set(Array.isArray(ids) ? ids : [ids]);
+    events.value = events.value.filter(e => !idSet.has(e.id));
+};
+
 const toISO = (d) => d.toISOString().split('T')[0];
 const formatFullDate = (iso) => new Date(iso).toLocaleDateString('de-DE', {
     weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
@@ -842,6 +924,7 @@ const addEmptyEvent = () => {
         end_day: toISO(newDate),
         start_time: '',
         end_time: '',
+        admission_time: null,
         copy: false,
         copyCount: 1,
         copyType: copyTypes.value[0],
@@ -856,37 +939,39 @@ const addEmptyEvent = () => {
         return;
     }
 
-    // Persist, wenn nicht im Modal
-    /*router.post(route('event.store.bulk.single', {project: props.project}), { event: base }, {
-        preserveState: false,
-        preserveScroll: true,
-        onFinish: () => { isLoading.value = false; },
-    });*/
-
+    // Persist, wenn nicht im Modal — Response direkt in die Liste übernehmen,
+    // damit der neue Termin ohne Refresh sichtbar ist (Broadcast nur für andere Nutzer).
     axios.post(route('event.store.bulk.single', {project: props.project}), {event: base})
-        .finally(() => {
-            //isLoading.value = false;
-        });
+        .then(({data}) => upsertEventRowFromResponse(data?.event, {markNew: true}))
+        .catch((e) => console.error('bulk:create-failed', e));
 };
 
-const addEmptyEventForGroup = (group) => {
+const addEmptyEventForGroup = (groupRow) => {
     events.value.forEach(e => {
         e.isNew = false;
     });
 
+    // Gruppe zum Klickzeitpunkt frisch aus dem aktuellen State auflösen — das im
+    // virtualisierten Row-Objekt mitgegebene group kann veraltet sein (recycelte Zeilen).
+    const group = eventGroups.value.find(g => g.key === groupRow?.key) ?? groupRow;
+
     let newDate = new Date();
     let baseEvent = null;
 
-    if (group.events.length > 0) {
+    const groupEvents = group?.events ?? [];
+    if (groupEvents.length > 0) {
         // Find the last event in this group (last in the array)
-        const lastEventInGroup = group.events[group.events.length - 1];
+        const lastEventInGroup = groupEvents[groupEvents.length - 1];
         baseEvent = lastEventInGroup;
-        newDate = new Date(lastEventInGroup.day);
 
-        // When sorting by day, create event on the same day, otherwise add +1 day
-        const sortId = usePage().props.auth.user?.bulk_sort_id;
-        if (sortId !== 3) {
-            newDate.setDate(newDate.getDate() + 1);
+        const parsed = lastEventInGroup?.day ? new Date(lastEventInGroup.day) : null;
+        if (parsed && !Number.isNaN(parsed.getTime())) {
+            newDate = parsed;
+            // When sorting by day, create event on the same day, otherwise add +1 day
+            const sortId = usePage().props.auth.user?.bulk_sort_id;
+            if (sortId !== 3) {
+                newDate.setDate(newDate.getDate() + 1);
+            }
         }
     }
 
@@ -901,6 +986,7 @@ const addEmptyEventForGroup = (group) => {
         end_day: toISO(newDate),
         start_time: baseEvent?.start_time || '',
         end_time: baseEvent?.end_time || '',
+        admission_time: baseEvent?.admission_time || null,
         copy: false,
         copyCount: 1,
         copyType: copyTypes.value[0],
@@ -914,28 +1000,20 @@ const addEmptyEventForGroup = (group) => {
         return;
     }
 
-    // Persist, wenn nicht im Modal
+    // Persist, wenn nicht im Modal — Response direkt in die Liste übernehmen,
+    // damit der neue Termin ohne Refresh sichtbar ist (Broadcast nur für andere Nutzer).
     axios.post(route('event.store.bulk.single', {project: props.project}), {event: base})
-        .finally(() => {
-            //isLoading.value = false;
-        });
+        .then(({data}) => upsertEventRowFromResponse(data?.event, {markNew: true}))
+        .catch((e) => console.error('bulk:create-failed', e));
 };
 
 const deleteCurrentEvent = (event) => {
     if (event.id) {
-        /*router.delete(route('event.bulk.delete', {event: event.id}), {
-            preserveScroll: true,
-            preserveState: true,
-            onFinish: () => {
-                isLoading.value = false;
-            },
-        });*/
-
-        // new in axios
+        // Nach erfolgreichem Löschen sofort lokal entfernen — nicht auf den
+        // eigenen Broadcast warten (der bleibt für andere Nutzer zuständig).
         axios.delete(route('event.bulk.delete', {event: event.id}))
-            .finally(() => {
-                //isLoading.value = false;
-            });
+            .then(() => removeEventRowsByIds(event.id))
+            .catch((e) => console.error('bulk:delete-failed', event.id, e));
     }
 };
 
@@ -975,6 +1053,7 @@ const createCopyByEventWithData = (event) => {
             end_day: toISO(endCursor),
             start_time: event.start_time,
             end_time: event.end_time,
+            admission_time: event.admission_time || null,
             copy: false,
             copyCount: 1,
             copyType: copyTypes.value[0],
@@ -999,18 +1078,21 @@ const createCopyByEventWithData = (event) => {
     }
 
     if (createdEvents.length > 0 && !props.isInModal) {
-        /*router.post(route('events.bulk.store', {project: props.project}), { events: createdEvents }, {
-            preserveState: false,
-            preserveScroll: true,
-            onFinish: () => { isLoading.value = false; },
-        });*/
-
+        // Kopien direkt aus der Response übernehmen, damit sie ohne Refresh erscheinen.
         axios.post(route('events.bulk.store', {project: props.project}), {events: createdEvents})
-            .finally(() => {
-                //isLoading.value = false;
-            });
-    } else {
-        // isLoading.value = false;
+            .then(({data}) => {
+                const stored = Array.isArray(data?.events) ? data.events : [];
+                events.value.forEach(e => {
+                    e.isNew = false;
+                });
+                stored.forEach(payload => upsertEventRowFromResponse(payload));
+                // Alle Kopien dieses Vorgangs als "neu" markieren
+                const storedIds = new Set(stored.map(p => p.id));
+                events.value.forEach(e => {
+                    if (storedIds.has(e.id)) e.isNew = true;
+                });
+            })
+            .catch((e) => console.error('bulk:copy-failed', e));
     }
 };
 
@@ -1064,7 +1146,8 @@ const deleteSelectedEvents = () => {
         .then(() => {
             // Close the confirmation modal
             showConfirmDeleteModal.value = false;
-            // Clear selection on remaining events - broadcasts will handle removal
+            // Gelöschte sofort lokal entfernen; Broadcasts informieren andere Nutzer
+            removeEventRowsByIds(selectedIds);
             events.value.forEach(e => e.isSelectedForMultiEdit = false);
         })
         .catch(error => {
@@ -1145,6 +1228,7 @@ async function fetchBulkEditData() {
                     end_day: event.event_date_without_time?.end_clear || event.end_day,
                     start_time: !event.allDay ? (event.start_time_without_day || event.start_time || '') : '',
                     end_time: !event.allDay ? (event.end_time_without_day || event.end_time || '') : '',
+                    admission_time: event.admission_time?.slice(0, 5) || null,
                     copy: false,
                     copyCount: 1,
                     copyType: copyTypes.value[0],
@@ -1216,6 +1300,7 @@ onMounted(async () => {
                 end_day: event.event_date_without_time.end_clear ?? event.event_date_without_time.end_clear,
                 start_time: !event.allDay ? (event.start_time_without_day || '') : '',
                 end_time: !event.allDay ? (event.end_time_without_day || '') : '',
+                admission_time: event.admission_time?.slice(0, 5) || null,
                 copy: false,
                 copyCount: 1,
                 copyType: copyTypes.value[0],

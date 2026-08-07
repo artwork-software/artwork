@@ -36,7 +36,11 @@ trait HasShifts
                 'start_date',
                 'end_date',
                 'start_time',
-                'end_time'
+                'end_time',
+                'confirmation_status',
+                'confirmation_at',
+                'confirmation_by_user_id',
+                'confirmation_comment'
             ]);
     }
 

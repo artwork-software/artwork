@@ -276,6 +276,16 @@
                 $timeString = $startCarbon->format('H:i') . '–' . $endCarbon->format('H:i');
             }
 
+            // Einlass (Instanz-Setting): nur am Starttag, Uhrzeit ohne Sekunden
+            static $__admissionEnabled = null;
+            if ($__admissionEnabled === null) {
+                $__admissionEnabled = (bool) app(\App\Settings\EventSettings::class)->enable_admission;
+            }
+            $isStartDayCell = str_contains($dayDisplay, $startCarbon->format('d.m.Y'));
+            $admissionSuffix = ($__admissionEnabled && !empty($event->admission_time) && (!$isMultiDay || $isStartDayCell))
+                ? ' · Einlass ' . substr((string) $event->admission_time, 0, 5)
+                : '';
+
             // Farben: aufgehellte HEX-Farben statt rgba (vermeidet DomPDF-Rendering-Artefakte)
             $mixWithWhite = function(string $hex, float $t): string {
                 $hex = ltrim($hex, '#');
@@ -316,9 +326,9 @@
                 $startHuman = $startCarbon->format('d.m. H:i');
                 $endHuman   = $endCarbon->format('d.m. H:i');
 
-                echo e($startHuman).' – '.e($endHuman);
+                echo e($startHuman).' – '.e($endHuman).e($admissionSuffix);
             } else {
-                echo e($timeString);
+                echo e($timeString.$admissionSuffix);
             }
 
             echo        '</div>'; // .event-time

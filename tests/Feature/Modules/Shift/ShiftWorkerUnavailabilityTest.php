@@ -161,6 +161,68 @@ final class ShiftWorkerUnavailabilityTest extends FeatureTestCase
 
         $this->assertCount(1, $dto->workers);
         $this->assertTrue($dto->workers[0]['is_unavailable']);
+        $this->assertSame(VacationType::NOT_AVAILABLE->value, $dto->workers[0]['unavailable_status']);
+    }
+
+    #[Test]
+    public function unavailable_status_is_null_for_available_worker(): void
+    {
+        [$shift] = $this->createCommittedShiftWithUser();
+
+        $shift->load(['users', 'shiftsQualifications', 'globalQualifications']);
+        $dto = ShiftDTO::fromModel($shift);
+
+        $this->assertNull($dto->workers[0]['unavailable_status']);
+    }
+
+    #[Test]
+    public function most_severe_conflicting_status_wins(): void
+    {
+        [$shift, $user] = $this->createCommittedShiftWithUser();
+
+        // Zwei konfliktierende Einträge am selben Tag: FREE_WORK und NOT_AVAILABLE —
+        // die Anzeige soll den schwereren Status (NOT_AVAILABLE) melden
+        Vacation::factory()->create([
+            'vacationer_type' => User::class,
+            'vacationer_id' => $user->id,
+            'date' => '2026-07-20',
+            'full_day' => true,
+            'is_series' => false,
+            'type' => 'FREE_WORK',
+        ]);
+        Vacation::factory()->create([
+            'vacationer_type' => User::class,
+            'vacationer_id' => $user->id,
+            'date' => '2026-07-20',
+            'full_day' => true,
+            'is_series' => false,
+            'type' => VacationType::NOT_AVAILABLE,
+        ]);
+
+        $this->assertSame(
+            VacationType::NOT_AVAILABLE->value,
+            ShiftWorkerAvailability::getWorkerUnavailableStatus($shift, $this->loadedWorker($shift))
+        );
+    }
+
+    #[Test]
+    public function off_work_status_is_reported_as_unavailable_status(): void
+    {
+        [$shift, $user] = $this->createCommittedShiftWithUser();
+
+        Vacation::factory()->create([
+            'vacationer_type' => User::class,
+            'vacationer_id' => $user->id,
+            'date' => '2026-07-20',
+            'full_day' => true,
+            'is_series' => false,
+            'type' => VacationType::OFF_WORK,
+        ]);
+
+        $this->assertSame(
+            VacationType::OFF_WORK->value,
+            ShiftWorkerAvailability::getWorkerUnavailableStatus($shift, $this->loadedWorker($shift))
+        );
     }
 
     #[Test]

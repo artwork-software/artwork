@@ -94,6 +94,33 @@ class IndividualTimeSeriesController extends Controller
         /** @var IndividualTime|null $sample */
         $sample = $timeQuery->orderBy('start_date')->first();
 
+        // Alle Personen der Serie, damit das Frontend im Edit-Modus die komplette
+        // Teilnehmerliste vorbelegen kann (nicht nur die angeklickte Person).
+        $subjects = IndividualTime::query()
+            ->where('series_uuid', $series->uuid)
+            ->select('timeable_type', 'timeable_id')
+            ->distinct()
+            ->get()
+            ->map(function (IndividualTime $row) {
+                $timeable = $row->timeable_type::query()->find($row->timeable_id);
+                if (!$timeable) {
+                    return null;
+                }
+
+                return [
+                    'id'           => $row->timeable_id,
+                    'type'         => match ($row->timeable_type) {
+                        Freelancer::class      => 'freelancer',
+                        ServiceProvider::class => 'service_provider',
+                        default                => 'user',
+                    },
+                    'display_name' => $timeable->provider_name
+                        ?? trim(($timeable->first_name ?? '') . ' ' . ($timeable->last_name ?? '')),
+                ];
+            })
+            ->filter()
+            ->values();
+
         return response()->json([
             'data' => [
                 'uuid'                 => $series->uuid,
@@ -108,6 +135,7 @@ class IndividualTimeSeriesController extends Controller
                 'end_time'             => optional($sample)->end_time,
                 'working_time_minutes' => optional($sample)->working_time_minutes,
                 'break_minutes'        => optional($sample)->break_minutes ?? 0,
+                'subjects'             => $subjects,
             ],
         ]);
     }

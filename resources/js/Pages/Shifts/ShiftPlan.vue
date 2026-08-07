@@ -1916,6 +1916,18 @@ function summarizeCell(room: any, dayKey: string): CellSummary {
             // Zeitzeile: mt-0.5 (2px) + text-xs/5 (20px)
             h += 2 + 20
 
+            // Einlass-Zeile: mt-0.5 (2px) + text-xs/5 (20px) — nur auf der Starttag-Zelle
+            if (
+                (usePage().props as any).event_admission_module &&
+                settings.show_event_admission !== false &&
+                event.admission_time
+            ) {
+                const parts = String(dayKey ?? '').split('.')
+                const dayIso = parts.length === 3 ? `${parts[2]}-${parts[1]}-${parts[0]}` : null
+                const startIso = event.start ? String(event.start).slice(0, 10) : null
+                if (!dayIso || !startIso || dayIso === startIso) h += 2 + 20
+            }
+
             // Notizen (Anzeigeeinstellung "Notizen einblenden"): mt-0.5 + text-xs
             if (settings.shift_notes && event.description) {
                 const noteLines = expanded ? measureTextLines(event.description, contentWidth, 400) : 1

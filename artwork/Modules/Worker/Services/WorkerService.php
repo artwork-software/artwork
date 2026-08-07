@@ -154,6 +154,7 @@ class WorkerService
                 'full_day' => $individualTime->full_day,
                 'working_time_minutes' => $individualTime->working_time_minutes,
                 'break_minutes' => $individualTime->break_minutes,
+                'series_uuid' => $individualTime->series_uuid,
                 'days_of_individual_time' => $individualTime->days_of_individual_time ?? [],
             ];
         });

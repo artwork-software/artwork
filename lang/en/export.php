@@ -46,6 +46,7 @@ return [
             'end_date' => 'Date until',
             'start_time' => 'Time from',
             'end_time' => 'Time to',
+            'admission_time' => 'Admission',
             'event_type' => 'Event type',
             'event_name' => 'Event name',
             'event_description' => 'Event description',

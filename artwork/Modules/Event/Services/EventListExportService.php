@@ -95,6 +95,11 @@ class EventListExportService extends EventExportService
                     'end_date' => $desiredEvent->getAttribute('end_time')->format('d.m.Y'),
                     'start_time' => $desiredEvent->getAttribute('start_time')->format('H:i'),
                     'end_time' => $desiredEvent->getAttribute('end_time')->format('H:i'),
+                    'admission_time' => $this->eventSettingsService->get('enable_admission', false)
+                        ? ($desiredEvent->getAttribute('admission_time')
+                            ? substr($desiredEvent->getAttribute('admission_time'), 0, 5)
+                            : '')
+                        : '',
                     'event_type' => $desiredEvent->getAttribute('event_type')->getAttribute('name'),
                     'event_name' => $desiredEvent->getAttribute('name'),
                     'event_description' => $desiredEvent->getAttribute('description') ?? '',

@@ -36,6 +36,7 @@ use Spatie\Activitylog\Traits\LogsActivity;
  * @property string $description
  * @property Carbon $start_time
  * @property Carbon $end_time
+ * @property string|null $admission_time
  * @property bool $occupancy_option
  * @property bool $audience
  * @property bool $is_loud
@@ -99,6 +100,7 @@ class Event extends Model
         'description',
         'start_time',
         'end_time',
+        'admission_time',
         'occupancy_option',
         'audience',
         'is_loud',

@@ -19,12 +19,32 @@ use DateTimeInterface;
  */
 class ShiftWorkerAvailability
 {
+    /**
+     * Schwerste zuerst — bei mehreren konfliktierenden Einträgen am Tag gewinnt
+     * "Nicht verfügbar" (z.B. krank) vor "Arbeitsfreier Tag" vor "Frei".
+     */
+    private const STATUS_SEVERITY = [
+        VacationType::NOT_AVAILABLE->value,
+        VacationType::OFF_WORK->value,
+    ];
+
     public static function isWorkerUnavailable(Shift $shift, User|Freelancer|ServiceProvider $worker): bool
     {
+        return self::getWorkerUnavailableStatus($shift, $worker) !== null;
+    }
+
+    /**
+     * Verfügbarkeitsstatus (Vacation-Type), der mit dem Einsatzfenster der Person
+     * kollidiert — null, wenn die Person verfügbar ist.
+     */
+    public static function getWorkerUnavailableStatus(
+        Shift $shift,
+        User|Freelancer|ServiceProvider $worker
+    ): ?string {
         $shiftStartDate = $shift->start_date ? Carbon::parse($shift->start_date)->toDateString() : null;
 
         if ($shiftStartDate === null) {
-            return false;
+            return null;
         }
 
         $shiftEndDate = $shift->end_date ? Carbon::parse($shift->end_date)->toDateString() : $shiftStartDate;
@@ -38,7 +58,7 @@ class ShiftWorkerAvailability
         }
 
         if ($worker->vacations->isEmpty()) {
-            return false;
+            return null;
         }
 
         [$startDate, $endDate, $workStart, $workEnd] = self::resolveWorkWindow(
@@ -48,13 +68,26 @@ class ShiftWorkerAvailability
             $shiftEndDate
         );
 
+        $conflictingStatus = null;
         foreach ($worker->vacations as $vacation) {
-            if (self::vacationConflicts($vacation, $startDate, $endDate, $workStart, $workEnd)) {
-                return true;
+            if (!self::vacationConflicts($vacation, $startDate, $endDate, $workStart, $workEnd)) {
+                continue;
+            }
+
+            $type = $vacation->type instanceof VacationType ? $vacation->type->value : $vacation->type;
+            if ($conflictingStatus === null || self::severity($type) < self::severity($conflictingStatus)) {
+                $conflictingStatus = $type;
             }
         }
 
-        return false;
+        return $conflictingStatus;
+    }
+
+    private static function severity(string $type): int
+    {
+        $index = array_search($type, self::STATUS_SEVERITY, true);
+
+        return $index === false ? count(self::STATUS_SEVERITY) : $index;
     }
 
     /**

@@ -162,6 +162,40 @@ final class EventStoreTest extends FeatureTestCase
     }
 
     #[Test]
+    public function admin_can_store_event_with_admission_time(): void
+    {
+        $this->actingAsAdmin();
+        $eventType = EventType::factory()->create();
+        $room = Room::factory()->create();
+
+        $response = $this->postJson(route('events.store'), $this->validPayload($eventType, $room, [
+            'isOption' => false,
+            'admissionTime' => '18:30',
+        ]));
+
+        $response->assertSuccessful();
+        $this->assertDatabaseHas('events', [
+            'event_type_id' => $eventType->id,
+            'admission_time' => '18:30:00',
+        ]);
+    }
+
+    #[Test]
+    public function admission_time_with_invalid_format_is_rejected(): void
+    {
+        $this->actingAsAdmin();
+        $eventType = EventType::factory()->create();
+        $room = Room::factory()->create();
+
+        $this->postJson(route('events.store'), $this->validPayload($eventType, $room, [
+            'isOption' => false,
+            'admissionTime' => 'kein-datum',
+        ]))
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors('admissionTime');
+    }
+
+    #[Test]
     public function user_without_permission_cannot_store_event(): void
     {
         $this->actingAs(User::factory()->create());

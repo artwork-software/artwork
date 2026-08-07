@@ -31,7 +31,8 @@ class EventShiftPlanDTO extends Data
         public ?bool $isPlanning,
         public ?bool $hasVerification = false,
         public ?bool $hasTimelines = false,
-        public ?Collection $timelines = null
+        public ?Collection $timelines = null,
+        public ?string $admission_time = null
     ) {
     }
 
@@ -76,6 +77,8 @@ class EventShiftPlanDTO extends Data
             hasVerification: false,
             hasTimelines: (bool) $event->timelines_exists,
             timelines: $addTimeline ? ($event->getAttribute('timelines') ?? collect()) : collect(),
+            // TIME-Spalte ("HH:mm:ss") → "HH:mm"
+            admission_time: $event->admission_time ? substr($event->admission_time, 0, 5) : null,
         );
     }
 

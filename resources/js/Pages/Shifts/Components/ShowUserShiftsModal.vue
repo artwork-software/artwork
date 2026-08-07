@@ -236,63 +236,117 @@
                         </div>
 
                         <div v-if="individualTimesByDate.length > 0">
-                            <!-- Kopfzeile -->
-                            <div class="hidden md:block text-[11px] text-text-subtle">
-                                <div class="grid grid-cols-1 md:grid-cols-4 gap-2 px-1">
-                                    <div>
-                                        {{ t('Title') }}
-                                    </div>
-                                    <div class="col-span-2">
-                                        {{ t('Period') }}
-                                    </div>
-                                </div>
-                            </div>
-
                             <!-- Einträge -->
                             <div
                                 v-for="(individual_time, index) in individualTimesByDate"
                                 :key="individual_time.id ?? index"
                                 class="rounded-lg border border-border-subtle bg-white px-3 py-3 mt-2 shadow-sm/10 group"
                             >
-                                <!-- Nur Einträge für diesen Tag -->
+                                <!-- Anzeige: Info-Pills, Bearbeitung nur über den Edit-Button -->
                                 <div
-                                    v-if="individual_time?.days_of_individual_time?.includes(day.withoutFormat)"
-                                    class="grid grid-cols-1 md:grid-cols-4 gap-2 items-start"
+                                    v-if="!isEditingIndividualTime(individual_time)"
+                                    class="flex items-center justify-between gap-3"
                                 >
-                                    <!-- FALL 1: Einfache individuelle Zeit (ohne Serie) -->
-                                    <template v-if="!individual_time.series_uuid">
-                                        <BaseInput
-                                            id="title"
-                                            v-model="individual_time.title"
-                                            :label="t('Title')"
-                                            :show-label="false"
-                                            no-margin-top
+                                    <div class="flex flex-wrap items-center gap-1.5 min-w-0">
+                                        <span
+                                            v-if="individual_time.series_uuid"
+                                            class="inline-flex items-center gap-1 rounded-full bg-accent-50 border border-accent-100 px-2.5 py-1 text-[11px] font-medium text-accent-700"
+                                            :title="t('This time belongs to a series. If you change it, it will be detached from the series.')"
+                                        >
+                                            <PropertyIcon name="IconRepeat" class="h-3.5 w-3.5" stroke-width="2" />
+                                            {{ t('Series entry') }}
+                                        </span>
+                                        <span
+                                            v-if="individual_time.title"
+                                            class="inline-flex items-center rounded-full bg-surface-sunken px-2.5 py-1 text-[11px] font-medium text-text truncate max-w-[12rem]"
+                                        >
+                                            {{ individual_time.title }}
+                                        </span>
+                                        <span class="inline-flex items-center gap-1 rounded-full bg-surface-sunken px-2.5 py-1 text-[11px] text-text-muted">
+                                            <PropertyIcon name="IconClock" class="h-3.5 w-3.5" stroke-width="1.5" />
+                                            <template v-if="isFullDayIndividualTime(individual_time)">
+                                                {{ t('Full day') }}
+                                            </template>
+                                            <template v-else>
+                                                {{ formatIndividualTime(individual_time.start_time) }} – {{ formatIndividualTime(individual_time.end_time) }}
+                                            </template>
+                                        </span>
+                                        <span
+                                            v-if="!isFullDayIndividualTime(individual_time) && individual_time.break_minutes > 0"
+                                            class="inline-flex items-center gap-1 rounded-full bg-surface-sunken px-2.5 py-1 text-[11px] text-text-muted"
+                                        >
+                                            <PropertyIcon name="IconCoffee" class="h-3.5 w-3.5" stroke-width="1.5" />
+                                            {{ individual_time.break_minutes }} {{ t('min. break') }}
+                                        </span>
+                                    </div>
+                                    <div class="flex items-center gap-1 shrink-0">
+                                        <ToolTipComponent
+                                            icon="IconEdit"
+                                            icon-size="h-4 w-4"
+                                            direction="top"
+                                            stroke="1.5"
+                                            classes-button="rounded-md p-1.5 hover:bg-accent-50 transition-colors"
+                                            :tooltip-text="individual_time.series_uuid
+                                                ? t('Edit only this single time')
+                                                : t('Edit individual time')"
+                                            @click="startEditingIndividualTime(individual_time)"
                                         />
-                                        <div class="flex items-center justify-center col-span-2 gap-1">
+                                        <ToolTipComponent
+                                            v-if="individual_time.series_uuid"
+                                            icon="IconRepeat"
+                                            icon-size="h-4 w-4"
+                                            direction="top"
+                                            stroke="1.5"
+                                            classes-button="rounded-md p-1.5 hover:bg-accent-50 transition-colors"
+                                            :tooltip-text="t('Edit all times of the series')"
+                                            @click="openSeriesModal(individual_time)"
+                                        />
+                                        <ToolTipComponent
+                                            v-if="individual_time.id"
+                                            icon="IconTrash"
+                                            icon-size="h-4 w-4"
+                                            direction="top"
+                                            stroke="1.5"
+                                            classes-button="rounded-md p-1.5 hover:bg-danger-surface transition-colors"
+                                            :tooltip-text="t('Delete individual time')"
+                                            @click="deleteIndividualTimeById(individual_time)"
+                                        />
+                                    </div>
+                                </div>
+
+                                <!-- Bearbeitungsmodus: Inputs wie bisher -->
+                                <div v-else>
+                                    <div
+                                        v-if="individual_time.series_uuid"
+                                        class="mb-3 flex items-start gap-2 rounded-lg bg-warning-surface border border-warning-border px-3 py-2 text-[11px] text-warning"
+                                    >
+                                        <PropertyIcon name="IconAlertTriangle" class="h-3.5 w-3.5 mt-0.5 shrink-0" stroke-width="2" />
+                                        <span>{{ t('This time belongs to a series. If you change it, it will be detached from the series.') }}</span>
+                                    </div>
+                                    <div class="grid grid-cols-1 md:grid-cols-4 gap-2 items-end">
+                                        <BaseInput
+                                            :id="'individual_time_title_' + index"
+                                            v-model="individual_time.title"
+                                            label="Title"
+                                        />
+                                        <div class="col-span-2 grid grid-cols-2 gap-2">
                                             <BaseInput
                                                 type="time"
-                                                id="start_time"
-                                                classes="rounded-r-none"
+                                                :id="'individual_time_start_' + index"
                                                 v-model="individual_time.start_time"
-                                                :label="t('Start time')"
-                                                :show-label="false"
-                                                no-margin-top
+                                                label="Start time"
                                             />
                                             <BaseInput
                                                 type="time"
-                                                id="end_time"
+                                                :id="'individual_time_end_' + index"
                                                 v-model="individual_time.end_time"
-                                                classes="border-l-0 rounded-l-none"
-                                                :label="t('End time')"
-                                                :show-label="false"
-                                                no-margin-top
+                                                label="End time"
                                             />
                                         </div>
                                         <div
                                             v-if="individual_time.id"
-                                            class="flex items-center justify-end md:justify-center"
+                                            class="flex items-center justify-end md:justify-center pb-0.5"
                                         >
-
                                             <BaseUIButton
                                                 label="Delete"
                                                 :use-translation="true"
@@ -301,105 +355,23 @@
                                                 icon="IconTrash"
                                             />
                                         </div>
+                                    </div>
 
-                                        <!-- Break Minutes -->
-                                        <div class="col-span-full mt-3 pt-3 border-t border-border-subtle">
-                                            <BaseInput
-                                                type="number"
-                                                :id="'break_minutes_' + index"
-                                                v-model.number="individual_time.break_minutes"
-                                                :label="t('Break time (minutes)')"
-                                                :show-label="false"
-                                                :min="0"
-                                                :step="1"
-                                                no-margin-top
-                                                class="max-w-xs"
-                                                @input="markBreakAsManuallyEdited(individual_time)"
-                                            />
-                                            <p class="text-[11px] text-text-subtle mt-1.5 leading-snug">
-                                                {{ t('This time will be deducted from the working hours when calculating the daily working time.') }}
-                                            </p>
-                                        </div>
-                                    </template>
-
-                                    <!-- FALL 3: Zeit gehört zu einer Serie -->
-                                    <template v-else>
-                                        <div class="space-y-1.5">
-                                            <BaseInput
-                                                id="title"
-                                                v-model="individual_time.title"
-                                                :label="t('Title')"
-                                                :show-label="false"
-                                                no-margin-top
-                                            />
-                                            <span class="inline-flex items-center gap-1 rounded-full bg-accent-50 px-2 py-0.5 text-[10px] font-medium text-accent-600 border border-accent-100">
-                                                • {{ t('Series entry') }}
-                                            </span>
-                                        </div>
-                                        <div class="col-span-2">
-                                            <div class="flex items-center justify-center gap-1">
-                                                <BaseInput
-                                                    type="time"
-                                                    id="start_time"
-                                                    classes="rounded-r-none"
-                                                    v-model="individual_time.start_time"
-                                                    :label="t('Start time')"
-                                                    :show-label="false"
-                                                    no-margin-top
-                                                />
-                                                <BaseInput
-                                                    type="time"
-                                                    id="end_time"
-                                                    v-model="individual_time.end_time"
-                                                    classes="border-l-0 rounded-l-none"
-                                                    :label="t('End time')"
-                                                    :show-label="false"
-                                                    no-margin-top
-                                                />
-                                            </div>
-                                        </div>
-                                        <div class="flex flex-col items-end gap-2 col-span-1">
-                                            <BaseUIButton
-                                                is-small
-                                                label="Edit series"
-                                                :use-translation="true"
-                                                @click="openSeriesModal(individual_time)"
-                                            />
-                                            <BaseUIButton
-                                                is-small
-                                                label="Delete"
-                                                :use-translation="true"
-                                                is-delete-button
-                                                @click="deleteIndividualTimeById(individual_time)"
-                                                icon="IconTrash"
-                                            />
-                                        </div>
-                                        <div class="text-[11px] text-text-subtle col-span-full mt-1">
-                                            {{ t('This time belongs to a series. If you change it, it will be detached from the series.') }}
-                                        </div>
-
-                                        <!-- Break Minutes -->
-                                        <div class="col-span-full mt-3 pt-3 border-t border-border-subtle">
-                                            <label class="block text-[11px] font-medium text-text-subtle mb-1.5">
-                                                {{ t('Break time (minutes)') }}
-                                            </label>
-                                            <BaseInput
-                                                type="number"
-                                                :id="'break_minutes_series_' + index"
-                                                v-model.number="individual_time.break_minutes"
-                                                :label="t('Break time (minutes)')"
-                                                :show-label="false"
-                                                :min="0"
-                                                :step="1"
-                                                no-margin-top
-                                                class="max-w-xs"
-                                                @input="markBreakAsManuallyEdited(individual_time)"
-                                            />
-                                            <p class="text-[11px] text-text-subtle mt-1.5 leading-snug">
-                                                {{ t('This time will be deducted from the working hours when calculating the daily working time.') }}
-                                            </p>
-                                        </div>
-                                    </template>
+                                    <!-- Break Minutes -->
+                                    <div class="mt-3 pt-3 border-t border-border-subtle">
+                                        <BaseInput
+                                            type="number"
+                                            :id="'break_minutes_' + index"
+                                            v-model.number="individual_time.break_minutes"
+                                            label="Break time (minutes)"
+                                            :step="1"
+                                            class="max-w-xs"
+                                            @input="markBreakAsManuallyEdited(individual_time)"
+                                        />
+                                        <p class="text-[11px] text-text-subtle mt-1.5 leading-snug">
+                                            {{ t('This time will be deducted from the working hours when calculating the daily working time.') }}
+                                        </p>
+                                    </div>
                                 </div>
 
                                 <div
@@ -745,8 +717,9 @@
                     @click="closeModal"
                 />
                 <BaseUIButton
-                    :label="t('Save')"
+                    :label="isSaving || cleanupProcessing ? t('Saving...') : t('Save')"
                     is-add-button
+                    :disabled="isSaving || cleanupProcessing"
                     @click="checkVacation"
                 />
             </div>
@@ -875,6 +848,36 @@
                 </BaseUIButton>
             </div>
         </ArtworkBaseModal>
+
+        <!-- Warnung: bearbeitete Serienzeit wird beim Speichern von der Serie gelöst -->
+        <ArtworkBaseModal
+            v-if="showSeriesDetachModal"
+            :title="t('Detach time from series')"
+            :description="t('You have edited a time that belongs to a series. When saving, it is detached from the series and will no longer be affected by future series changes.')"
+            @close="showSeriesDetachModal = false"
+        >
+            <ul class="mt-4 space-y-1.5">
+                <li
+                    v-for="it in getChangedSeriesTimes()"
+                    :key="`detach-${it.id}`"
+                    class="flex items-center gap-2 rounded-lg border border-border-subtle bg-surface-sunken/70 px-3 py-2 text-xs text-text-muted"
+                >
+                    <PropertyIcon name="IconRepeat" class="h-3.5 w-3.5 text-accent-600" stroke-width="1.5" />
+                    <span v-if="it.title" class="font-medium truncate">{{ it.title }}</span>
+                    <span class="text-text-subtle">
+                        {{ formatIndividualTime(it.start_time) }} – {{ formatIndividualTime(it.end_time) }}
+                    </span>
+                </li>
+            </ul>
+            <div class="flex justify-end gap-2 mt-6">
+                <BaseUIButton type="button" variant="secondary" hide-icon @click="showSeriesDetachModal = false">
+                    {{ t('Cancel') }}
+                </BaseUIButton>
+                <BaseUIButton type="button" variant="primary" hide-icon @click="confirmSeriesDetach">
+                    {{ t('Save and detach from series') }}
+                </BaseUIButton>
+            </div>
+        </ArtworkBaseModal>
     </ArtworkBaseModal>
 </template>
 
@@ -897,6 +900,7 @@ import ArtworkBaseModal from '@/Artwork/Modals/ArtworkBaseModal.vue';
 import RequestWorkTimeChangeModal from '@/Pages/Shifts/Components/RequestWorkTimeChangeModal.vue';
 import SingleShiftInShiftOverviewUser from '@/Pages/Shifts/Components/SingleShiftInShiftOverviewUser.vue';
 import ConfirmDeleteModal from '@/Layouts/Components/ConfirmDeleteModal.vue';
+import ToolTipComponent from '@/Components/ToolTips/ToolTipComponent.vue';
 import BaseUIButton from '@/Artwork/Buttons/BaseUIButton.vue';
 import IndividualTimeSeriesModal from '@/Pages/Shifts/Components/IndividualTimeSeriesModal.vue';
 import AddManualViolationModal from '@/Pages/Shifts/Components/AddManualViolationModal.vue';
@@ -947,6 +951,7 @@ const vacationTypes = ref([
 
 // DP-18: Ganzer/Halber freier Tag für den "Frei"-Status
 const freeDayPart = ref('full');
+const freeDayPartBeforeUpdate = ref('full');
 const freeDayPartOptions = [
     { value: 'full', label: 'Full free day' },
     { value: 'morning', label: 'Half free day (morning)' },
@@ -1075,8 +1080,18 @@ const showSeriesModal = ref(false);
 const activeSeriesUuid = ref(null);
 const activeSeriesSubject = ref(null);
 
-// Edit-Modus-Flag (bisher nicht verwendet, aber Logik bleibt erhalten)
-const editMode = ref(false);
+// Individuelle Zeiten werden als Info-Pills angezeigt; Inputs erst nach Klick auf den Edit-Button.
+// Neue Einträge (ohne id) sind automatisch im Bearbeitungsmodus.
+const editingIndividualTimeIds = ref([]);
+
+// Warnung: bearbeitete Serienzeit wird beim Speichern von der Serie gelöst
+// (das Backend entfernt die series_uuid beim Einzel-Update automatisch).
+const showSeriesDetachModal = ref(false);
+const seriesDetachConfirmed = ref(false);
+
+// Guard gegen Doppel-Klick auf Speichern: ohne ihn werden neue individuelle
+// Zeiten (id null) bei jedem weiteren Klick erneut angelegt.
+const isSaving = ref(false);
 
 // Violations
 const showAddViolationModal = ref(false);
@@ -1143,6 +1158,40 @@ const individualTimesByDate = computed(() => {
         individual_time.days_of_individual_time?.includes(props.day.withoutFormat),
     );
 });
+
+function isEditingIndividualTime(individualTime) {
+    return !individualTime.id || editingIndividualTimeIds.value.includes(individualTime.id);
+}
+
+function startEditingIndividualTime(individualTime) {
+    if (!editingIndividualTimeIds.value.includes(individualTime.id)) {
+        editingIndividualTimeIds.value.push(individualTime.id);
+    }
+}
+
+function isFullDayIndividualTime(individualTime) {
+    return Boolean(individualTime.full_day) || (!individualTime.start_time && !individualTime.end_time);
+}
+
+function formatIndividualTime(time) {
+    return time ? String(time).slice(0, 5) : '';
+}
+
+function getChangedSeriesTimes() {
+    return (props.user.individual_times || []).filter((individualTime) => {
+        if (!individualTime.series_uuid || !individualTime.id) {
+            return false;
+        }
+        const original = originalIndividualTimes.value.find((orig) => orig.id === individualTime.id);
+        return JSON.stringify(original) !== JSON.stringify(individualTime);
+    });
+}
+
+function confirmSeriesDetach() {
+    seriesDetachConfirmed.value = true;
+    showSeriesDetachModal.value = false;
+    checkVacation();
+}
 
 // Watch each individual time for start/end time changes to auto-calculate break
 watch(
@@ -1247,6 +1296,7 @@ onMounted(async () => {
         vacationTypeBeforeUpdate.value = vacationTypes.value[0];
         freeDayPart.value = 'full';
     }
+    freeDayPartBeforeUpdate.value = freeDayPart.value;
 
     // Load active rules for manual violation creation
     if (can('can plan shifts') || hasAdminRole()) {
@@ -1392,6 +1442,12 @@ function handleShiftDeleted(deletedShiftId) {
 }
 
 function sendIndividualTimes() {
+    // Doppel-Klick-Schutz: ein zweiter Aufruf würde neue Zeiten (id null)
+    // erneut anlegen und damit Duplikate erzeugen.
+    if (isSaving.value) {
+        return;
+    }
+    isSaving.value = true;
 
     // nur zeiten die wirklich verändert wurden senden
     const individualTimesWhereAreEdited = (props.user.individual_times || []).filter(
@@ -1424,7 +1480,8 @@ function sendIndividualTimes() {
             sendCheckVacation();
         })
         .catch(() => {
-            // Fehler-Fall ggf. später behandeln
+            // Erneutes Speichern nach Fehler wieder erlauben
+            isSaving.value = false;
         });
 }
 
@@ -1444,6 +1501,17 @@ function sendCheckVacation() {
     }
 
     if (compensationDayForDate.value.length > 0) {
+        closeModal(true);
+        return;
+    }
+
+    // Unveränderter Status: der Vacation-Patch (voller Inertia-Visit) wäre ein
+    // No-op — überspringen, damit das Modal nach dem Speichern schneller schließt.
+    const statusUnchanged =
+        checked.value?.type === vacationTypeBeforeUpdate.value?.type &&
+        (checked.value?.type !== 'FREE_WORK' || freeDayPart.value === freeDayPartBeforeUpdate.value);
+    if (statusUnchanged) {
+        emit('desiresReload');
         closeModal(true);
         return;
     }
@@ -1525,16 +1593,14 @@ function sendCheckVacation() {
 }
 
 function checkVacation() {
-    // Bisherige Errors leeren
-    for (const individualTime of props.user.individual_times || []) {
-        delete individualTime.error;
+    // Doppel-Klick-Schutz: während eines laufenden Speicherns (oder der
+    // Cleanup-Vorprüfung) keinen zweiten Speicherlauf starten.
+    if (isSaving.value || cleanupProcessing.value) {
+        return;
     }
 
-    // Serien-Detach nur bei EditMode (aktuell false, Verhaltens-Änderung vermeiden)
+    // Bisherige Errors leeren
     for (const individualTime of props.user.individual_times || []) {
-        if (individualTime.series_uuid && editMode.value) {
-            individualTime.series_uuid = null;
-        }
         delete individualTime.error;
     }
 
@@ -1548,6 +1614,12 @@ function checkVacation() {
             individualTime.error = t('Please also enter a start time here.');
             return;
         }
+    }
+
+    // Geänderte Serienzeiten müssen bestätigt werden, bevor sie von der Serie gelöst werden.
+    if (!seriesDetachConfirmed.value && getChangedSeriesTimes().length > 0) {
+        showSeriesDetachModal.value = true;
+        return;
     }
 
     // Bei "Frei"/"Nicht Verfügbar" autoritativ im Backend prüfen, ob an dem Tag aktive

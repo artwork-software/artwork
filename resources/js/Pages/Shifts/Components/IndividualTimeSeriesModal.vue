@@ -33,9 +33,7 @@
                         <BaseInput
                             id="series_title"
                             v-model="form.title"
-                            :label="'Series title (optional)'"
-                            :placeholder="'e.g. Office time, Homeoffice, Training'"
-                            :without-translation="false"
+                            :placeholder="$t('e.g. Office time, Homeoffice, Training')"
                             :is-small="true"
                         />
                     </div>
@@ -51,7 +49,6 @@
                                 id="series_start_date"
                                 v-model="form.start_date"
                                 type="date"
-                                :label="'Start date'"
                                 :is-small="true"
                             />
                         </div>
@@ -64,7 +61,6 @@
                                 id="series_end_date"
                                 v-model="form.end_date"
                                 type="date"
-                                :label="'End date'"
                                 :is-small="true"
                             />
                         </div>
@@ -96,7 +92,6 @@
                                     id="series_start_time"
                                     v-model="form.start_time"
                                     type="time"
-                                    :label="'Start'"
                                     :is-small="true"
                                     :disabled="form.full_day"
                                 />
@@ -109,7 +104,6 @@
                                     id="series_end_time"
                                     v-model="form.end_time"
                                     type="time"
-                                    :label="'End'"
                                     :is-small="true"
                                     :disabled="form.full_day"
                                 />
@@ -162,7 +156,6 @@
                                         id="series_interval"
                                         v-model="form.interval"
                                         type="number"
-                                        :label="'Interval'"
                                         :is-small="true"
                                         :step="1"
                                     />
@@ -222,8 +215,7 @@
                             <BaseInput
                                 id="series_subject_search"
                                 v-model="search"
-                                :label="'Search people'"
-                                :placeholder="'Type a name to search...'"
+                                :placeholder="$t('Type a name to search...')"
                                 :is-small="true"
                                 :show-loading="isSearching"
                             />
@@ -298,6 +290,14 @@
                             <span class="text-[11px] text-text-subtle">
                                 {{ $t('{count} selected', { count: subjects.length }) }}
                             </span>
+                        </div>
+
+                        <div
+                            v-if="seriesUuid && subjects.length > 1"
+                            class="mt-2 flex items-start gap-2 rounded-lg bg-warning-surface border border-warning-border px-3 py-2 text-[11px] text-warning"
+                        >
+                            <PropertyIcon name="IconAlertTriangle" class="h-3.5 w-3.5 mt-0.5 shrink-0" stroke-width="2" />
+                            <span>{{ $t('This series includes several people. Changes apply to all people listed here. Removed people keep their previously created times.') }}</span>
                         </div>
 
                         <div
@@ -414,6 +414,7 @@ const props = defineProps<{
 const emit = defineEmits<{
     (e: 'close'): void;
     (e: 'created'): void;
+    (e: 'updated'): void;
 }>();
 
 const { t } = useI18n();
@@ -608,6 +609,12 @@ async function loadSeries(uuid: string) {
         form.frequency = data.frequency ?? 'weekly';
         form.interval = data.interval ?? 1;
         form.weekdays = Array.isArray(data.weekdays) ? data.weekdays : [1, 2, 3, 4, 5];
+
+        // Alle Personen der Serie vorbelegen, damit ein Update die gesamte Serie
+        // betrifft und nicht nur die Person, über die das Modal geöffnet wurde.
+        if (Array.isArray(data.subjects) && data.subjects.length > 0) {
+            form.subjects = data.subjects;
+        }
     } catch (e) {
         console.error('Failed to load series', e);
     }

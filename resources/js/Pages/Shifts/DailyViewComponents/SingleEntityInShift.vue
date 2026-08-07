@@ -52,7 +52,7 @@
             <p class="text-xs text-left font-lexend whitespace-nowrap"><span v-if="prependCraftAbbreviation && craft?.abbreviation" class="font-semibold mr-1">{{ craft.abbreviation }}</span>{{ normalizeTime(person.pivot?.start_time ?? shift.start) }} - {{ normalizeTime(person.pivot?.end_time ?? shift.end) }}</p>
         </div>
     </div>
-    <div ref="rowRef" class="flex w-full min-w-0 items-center gap-x-2 flex-nowrap">
+    <div ref="rowRef" class="flex w-full min-w-0 items-center gap-x-2 flex-nowrap" :class="availabilityRowClass || confirmationRowClass" v-tooltip.bottom="availabilityTooltip">
         <!-- LINKS: Name (darf schrumpfen, nimmt aber nicht allen Platz ein) -->
         <div class="flex min-w-0 items-center gap-x-2">
             <span v-if="person.pivot?.craft_abbreviation && person.pivot.craft_abbreviation !== craft?.abbreviation" class="shrink-0 text-[10px] text-text-subtle">
@@ -82,6 +82,13 @@
 
         <!-- RECHTS: Icons (dürfen NICHT rausgedrückt werden) -->
         <div class="flex shrink-0 items-center gap-x-2">
+            <component
+                v-if="confirmationInfo"
+                :is="confirmationInfo.accepted ? IconCircleCheck : IconCircleX"
+                class="size-4 shrink-0"
+                :class="confirmationInfo.accepted ? 'text-success' : 'text-danger'"
+                v-tooltip.bottom="{ value: getConfirmationTooltip(person, $t), appendTo: 'body', class: 'aw-tooltip', position: 'bottom', useTranslation: false }"
+            />
             <ToolTipComponent
                 :icon="findShiftQualification(person.pivot?.shift_qualification_id)?.icon"
                 :tooltip-text="findShiftQualification(person.pivot?.shift_qualification_id)?.name || ''"
@@ -184,6 +191,21 @@
                         title="User von Schicht entfernen"
                         @click="deleteUserFromShift(person)"
                     />
+                    <!-- Proxy-Erfassung: Zu-/Absage für Externe (kein Login) -->
+                    <template v-if="showProxyConfirmationActions">
+                        <BaseMenuItem
+                            white-menu-background
+                            :icon="IconCircleCheck"
+                            title="Record acceptance"
+                            @click="proxyAccept"
+                        />
+                        <BaseMenuItem
+                            white-menu-background
+                            :icon="IconCircleX"
+                            title="Record declination"
+                            @click="showProxyDeclineModal = true"
+                        />
+                    </template>
                 </BaseMenu>
             </div>
         </div>
@@ -191,6 +213,13 @@
 
 
     <RequestWorkTimeChangeModal :user="person" :shift="shift" v-if="showRequestWorkTimeChangeModal" @close="showRequestWorkTimeChangeModal = false" />
+
+    <ShiftConfirmationDeclineModal
+        v-if="showProxyDeclineModal"
+        :worker-name="person.name || person.full_name || person.provider_name"
+        @close="showProxyDeclineModal = false"
+        @submit="proxyDecline"
+    />
 </template>
 
 <script setup>
@@ -211,15 +240,25 @@ import {router, usePage} from "@inertiajs/vue3";
 import axios from "axios";
 import RequestWorkTimeChangeModal from "@/Pages/Shifts/Components/RequestWorkTimeChangeModal.vue";
 import {computed, ref, onMounted, onBeforeUnmount, watch, nextTick} from "vue";
-import {IconDeviceFloppy, IconNote, IconChevronDown, IconTrash} from "@tabler/icons-vue";
+import {IconDeviceFloppy, IconNote, IconChevronDown, IconTrash, IconCircleCheck, IconCircleX} from "@tabler/icons-vue";
 import {can, is} from "laravel-permission-to-vuejs";
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
 import BaseMenu from "@/Components/Menu/BaseMenu.vue";
 import BaseMenuItem from "@/Components/Menu/BaseMenuItem.vue";
 import {useShiftPlanLookups} from "@/Composeables/useShiftPlanLookups.js";
+import {useI18n} from "vue-i18n";
+import ShiftConfirmationDeclineModal from "@/Layouts/Components/ShiftPlanComponents/ShiftConfirmationDeclineModal.vue";
+import {useShiftWorkerConfirmation} from "@/Composeables/useShiftWorkerConfirmation.js";
 
 const { resolveCraft } = useShiftPlanLookups();
+const { t } = useI18n();
+const {
+    isEnabled: confirmationEnabled,
+    respond: respondToShift,
+    getConfirmationInfo,
+    getConfirmationTooltip,
+} = useShiftWorkerConfirmation();
 
 // Normalize time values that may arrive as "HH:MM", "HH:MM:SS" or ISO datetime
 function normalizeTime(val) {
@@ -487,6 +526,67 @@ const deleteUserFromShift = (user, removeFromSingleShift = true, preserveState =
 }
 
 const hasAdminRole = () => is('artwork admin')
+
+// ----- Zu-/Absage der Zuweisung -----
+const showProxyDeclineModal = ref(false);
+
+const confirmationInfo = computed(() => getConfirmationInfo(props.person));
+
+// ----- Tagesstatus der Person weicht von "Verfügbar" ab (z.B. krank gemeldet) -----
+// Umrandung in der Farbe des Status (gleiche Farblogik wie die Status-Punkte im
+// Tagesstatus-Modal) + Erklärung on hover. Gewinnt gegen den Zu-/Absage-Ring,
+// da der Verfügbarkeitskonflikt der akutere Hinweis ist.
+const unavailableStatus = computed(() => props.person?.unavailable_status ?? null);
+
+const availabilityRowClass = computed(() => {
+    switch (unavailableStatus.value) {
+        case 'NOT_AVAILABLE': return 'ring-2 ring-danger rounded-md';
+        case 'OFF_WORK': return 'ring-2 ring-warning rounded-md';
+        case null: return '';
+        default: return 'ring-2 ring-border rounded-md';
+    }
+});
+
+const availabilityTooltip = computed(() => {
+    if (!unavailableStatus.value) {
+        return { value: '', disabled: true };
+    }
+    const committed = props.shift.isCommitted ?? props.shift.is_committed;
+    const hint = t(committed ? 'Assigned but not available (committed shift)' : 'Assigned but not available');
+    return {
+        value: `${t('Day status')}: ${t(unavailableStatus.value)} – ${hint}`,
+        appendTo: 'body',
+        class: 'aw-tooltip',
+        position: 'bottom',
+        useTranslation: false,
+    };
+});
+
+const confirmationRowClass = computed(() => {
+    if (!confirmationInfo.value) return '';
+    return confirmationInfo.value.accepted
+        ? 'ring-1 ring-success rounded-md'
+        : 'ring-1 ring-danger rounded-md';
+});
+
+// Planer:innen erfassen Zu-/Absagen stellvertretend nur für Externe
+// (Freelancer/Dienstleister haben keinen Login).
+const showProxyConfirmationActions = computed(() =>
+    confirmationEnabled()
+    && (props.shift.isCommitted ?? props.shift.is_committed)
+    && props.person.type
+    && props.person.type !== 'user'
+    && !!props.person.pivot?.id
+);
+
+const proxyAccept = () => {
+    respondToShift(props.person.pivot.id, 'accepted');
+};
+
+const proxyDecline = (comment) => {
+    showProxyDeclineModal.value = false;
+    respondToShift(props.person.pivot.id, 'declined', comment);
+};
 </script>
 
 <style scoped>

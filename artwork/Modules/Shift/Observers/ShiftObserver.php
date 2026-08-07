@@ -3,6 +3,7 @@
 namespace Artwork\Modules\Shift\Observers;
 
 use Artwork\Modules\Shift\Models\Shift;
+use Artwork\Modules\Shift\Models\ShiftWorker;
 use Artwork\Modules\Shift\Services\ShiftChangeRecorder;
 
 class ShiftObserver
@@ -19,6 +20,21 @@ class ShiftObserver
     public function updated(Shift $shift): void
     {
         $this->recorder->record($shift, 'updated');
+
+        // Datum/Uhrzeit geändert → abgegebene Zu-/Absagen beziehen sich auf die
+        // alte Zeit und werden auf "ausstehend" zurückgesetzt (bewusst ohne
+        // Benachrichtigung — die Personen sehen den offenen Status im Einsatzplan).
+        if ($shift->wasChanged(['start_date', 'end_date', 'start', 'end'])) {
+            ShiftWorker::query()
+                ->where('shift_id', $shift->id)
+                ->whereNotNull('confirmation_status')
+                ->update([
+                    'confirmation_status' => null,
+                    'confirmation_at' => null,
+                    'confirmation_by_user_id' => null,
+                    'confirmation_comment' => null,
+                ]);
+        }
     }
 
     public function deleting(Shift $shift): void

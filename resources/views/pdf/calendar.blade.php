@@ -334,6 +334,15 @@
             }
         }
 
+        // Einlass (Instanz-Setting): nur am Starttag, Uhrzeit ohne Sekunden
+        static $__admissionEnabled = null;
+        if ($__admissionEnabled === null) {
+            $__admissionEnabled = (bool) app(\App\Settings\EventSettings::class)->enable_admission;
+        }
+        if ($__admissionEnabled && !empty($event->admission_time) && (!$isMultiDay || $isStartDay)) {
+            $timeString .= ' · Einlass ' . substr((string) $event->admission_time, 0, 5);
+        }
+
         // Minuten
         $startMinRaw = $allDay ? 6*60 : __minutesSinceMidnight($effStart);
         $endMinRaw   = $allDay ? 24*60 : __minutesSinceMidnight($effEnd);

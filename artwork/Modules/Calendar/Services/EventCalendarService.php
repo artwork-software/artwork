@@ -130,7 +130,7 @@ readonly class EventCalendarService
     private function getEventQueryForPdf(): Builder
     {
         return Event::query()
-            ->select(['id', 'start_time', 'end_time', 'eventName', 'allDay', 'room_id',
+            ->select(['id', 'start_time', 'end_time', 'admission_time', 'eventName', 'allDay', 'room_id',
                        'event_type_id', 'project_id', 'is_planning'])
             ->without([]);
     }
@@ -172,8 +172,9 @@ readonly class EventCalendarService
     {
         return Event::query()
             ->select([
-                'id','start_time','end_time','eventName','description','project_id','event_type_id','event_status_id',
-                'allDay','room_id','user_id','occupancy_option','declined_room_id','is_series','series_id','is_planning'
+                'id','start_time','end_time','admission_time','eventName','description','project_id','event_type_id',
+                'event_status_id','allDay','room_id','user_id','occupancy_option','declined_room_id','is_series',
+                'series_id','is_planning'
             ])
             ->with([
                 'project:id,name,state,artists',

@@ -34,6 +34,7 @@ class EventPlanningCalendarService
                 'id',
                 'start_time',
                 'end_time',
+                'admission_time',
                 'eventName',
                 'description',
                 'project_id',

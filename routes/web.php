@@ -182,6 +182,7 @@ use Artwork\Modules\Shift\Http\Controllers\ProjectShiftPersonalPlanExportControl
 use Artwork\Modules\Shift\Http\Controllers\ShiftCommitWorkflowUserController;
 use Artwork\Modules\Shift\Http\Controllers\ShiftGroupController;
 use Artwork\Modules\Shift\Http\Controllers\ShiftHistoryController;
+use Artwork\Modules\Shift\Http\Controllers\ShiftWorkerConfirmationController;
 use Artwork\Modules\System\ApiManagement\Http\Controller\ApiManagementController;
 use Artwork\Modules\WorkTime\Http\Controllers\CraftDistributionExportController;
 use Artwork\Modules\WorkTime\Http\Controllers\WorkTimeOverviewExportController;
@@ -1025,6 +1026,11 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
             ->name('shifts.updateShortDescription');
     });
 
+    // Bewusst OHNE 'can plan shifts': eingeplante Personen bestätigen ihre
+    // eigene Zuweisung selbst; Proxy-Erfassung wird im Controller autorisiert.
+    Route::patch('/shift-workers/{shiftWorker}/confirmation', [ShiftWorkerConfirmationController::class, 'update'])
+        ->name('shift-worker.confirmation.update');
+
 
     Route::get('/shifts/view/events-and-workers', [EventController::class, 'getEventsForRoomsByDaysWithUser'])
         ->name('shifts.events.for-rooms-by-days-and-project');
@@ -1301,6 +1307,11 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
 
     Route::patch('/user/{user}/update/bulk/show-description', [UserController::class, 'updateShowDescriptionInBulk'])
         ->name('user.update.show_description_in_bulk');
+
+    Route::patch(
+        '/user/{user}/update/shift-period-on-start-date-change',
+        [UserController::class, 'updateShiftPeriodOnStartDateChange']
+    )->name('user.update.shift_period_on_start_date_change');
 
     Route::resource(
         'user.commentedBudgetItemsSettings',
@@ -2085,6 +2096,12 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
             [ShiftSettingsController::class, 'updateOwnRosterUncommittedShiftVisibility']
         )->middleware('shift-settings-area:general,edit')
             ->name('shift.settings.update.own-roster-uncommitted-visibility');
+
+        Route::patch(
+            'shift-settings/updateShiftConfirmationSettings',
+            [ShiftSettingsController::class, 'updateShiftConfirmationSettings']
+        )->middleware('shift-settings-area:general,edit')
+            ->name('shift.settings.update.shift-confirmation');
 
         Route::post('shift/add/craft', [CraftController::class, 'store'])->middleware('shift-settings-area:general,edit')->name('craft.store');
         Route::patch('shift/update/craft/{craft}', [CraftController::class, 'update'])->middleware('shift-settings-area:general,edit')->name('craft.update');

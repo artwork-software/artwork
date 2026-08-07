@@ -103,6 +103,44 @@
                 </div>
             </div>
 
+            <div class="mt-10 border-t border-border-subtle pt-8">
+                <div class="mb-4">
+                    <BasePageTitle
+                        title="Admission"
+                        description="Optional admission time for events."
+                    />
+                </div>
+                <div class="flex items-center gap-x-2">
+                    <Switch v-model="settingsForm.enable_admission" :class="[settingsForm.enable_admission ? 'bg-accent-600' : 'bg-border-subtle', 'relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-accent-600 focus:ring-offset-2']">
+                        <span :class="[settingsForm.enable_admission ? 'translate-x-5' : 'translate-x-0', 'pointer-events-none relative inline-block size-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']">
+                          <span :class="[settingsForm.enable_admission ? 'opacity-0 duration-100 ease-out' : 'opacity-100 duration-200 ease-in', 'absolute inset-0 flex size-full items-center justify-center transition-opacity']" aria-hidden="true">
+                            <svg class="size-3 text-text-subtle" fill="none" viewBox="0 0 12 12">
+                              <path d="M4 8l2-2m0 0l2-2M6 6L4 4m2 2l2 2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                            </svg>
+                          </span>
+                          <span :class="[settingsForm.enable_admission ? 'opacity-100 duration-200 ease-in' : 'opacity-0 duration-100 ease-out', 'absolute inset-0 flex size-full items-center justify-center transition-opacity']" aria-hidden="true">
+                            <svg class="size-3 text-accent-600" fill="currentColor" viewBox="0 0 12 12">
+                              <path d="M3.707 5.293a1 1 0 00-1.414 1.414l1.414-1.414zM5 8l-.707.707a1 1 0 001.414 0L5 8zm4.707-3.293a1 1 0 00-1.414-1.414l1.414 1.414zm-7.414 2l2 2 1.414-1.414-2-2-1.414 1.414z" />
+                            </svg>
+                          </span>
+                        </span>
+                    </Switch>
+                    <div>
+                        <p class="text-sm/5 font-semibold text-text">{{ $t('Would you like to use the ‘Admission’ field for events in {0}?', [usePage().props.page_title])}}</p>
+                    </div>
+                </div>
+
+                <SettingsGuideBanner
+                    class="mt-4"
+                    variant="static"
+                    title="Where the admission time appears"
+                    :paragraphs="[
+                        'When the field is active, an optional admission time can be entered in the event creation form and in bulk editing. It refers to the start day of the event.',
+                        'The admission time is shown on event tiles in the calendar and the shift plan — users can hide it via the calendar display settings.',
+                    ]"
+                />
+            </div>
+
             <AddEditEventStatusModal
                 v-if="showCreateEventStatusModal"
                 @closeModal="closeAddEditStatusModal"
@@ -149,6 +187,10 @@ const props = defineProps({
     enable_status: {
         type: Boolean,
         required: true
+    },
+    enable_admission: {
+        type: Boolean,
+        required: true
     }
 })
 
@@ -160,7 +202,8 @@ const showDeleteEventStatusModal = ref(false);
 const showVisualFeedback = ref(false);
 
 const settingsForm = useForm({
-    enable_status: props.enable_status
+    enable_status: props.enable_status,
+    enable_admission: props.enable_admission
 })
 
 const updateEventStatusSettings = () => {
@@ -213,6 +256,10 @@ const updateEventStatus = (eventStatus) => {
 }
 
 watch(() => settingsForm.enable_status, () => {
+    updateEventStatusSettings()
+})
+
+watch(() => settingsForm.enable_admission, () => {
     updateEventStatusSettings()
 })
 

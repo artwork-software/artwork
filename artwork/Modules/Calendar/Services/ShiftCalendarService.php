@@ -40,7 +40,9 @@ class ShiftCalendarService
         bool $addTimeline = false,
         ?Project $project = null,
         bool $minimalWorkerData = false,
-        ?object $displaySettings = null
+        ?object $displaySettings = null,
+        bool $showUnrelatedEvents = false,
+        bool $showUnrelatedShifts = false
     ): array {
         $roomIds = $rooms->modelKeys();
 
@@ -70,6 +72,7 @@ class ShiftCalendarService
                 'id',
                 'start_time',
                 'end_time',
+                'admission_time',
                 'eventName',
                 'description',
                 'project_id',
@@ -84,7 +87,8 @@ class ShiftCalendarService
             ->withExists('timelines')
             ->with($eventWith)
             ->whereIn('room_id', $roomIds)
-            ->when($project !== null, fn ($q) => $q->where('project_id', $project->id))
+            // "Projektfremde Termine anzeigen": Projektfilter aussetzen, es zählt nur Raum + Zeitraum
+            ->when($project !== null && !$showUnrelatedEvents, fn ($q) => $q->where('project_id', $project->id))
             ->when(!empty($filter->event_type_ids), fn ($q) => $q->whereIn('event_type_id', $filter->event_type_ids))
             ->when(!empty($filter->event_property_ids), function ($q) use ($filter): void {
                 $ids = $filter->event_property_ids;
@@ -158,7 +162,8 @@ class ShiftCalendarService
             ])
             ->whereNull('event_id')
             ->whereIn('room_id', $roomIds)
-            ->when($project !== null, fn ($q) => $q->where('project_id', $project->id))
+            // "Projektfremde Schichten anzeigen": Projektfilter aussetzen, es zählt nur Raum + Zeitraum
+            ->when($project !== null && !$showUnrelatedShifts, fn ($q) => $q->where('project_id', $project->id))
             ->when(!empty($filter->craft_ids), fn ($q) => $q->whereIn('craft_id', $filter->craft_ids))
             ->where(fn ($q) => $overlap($q, 'start_date', 'end_date'))
             ->with($shiftWorkerWith)

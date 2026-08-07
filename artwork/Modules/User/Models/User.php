@@ -175,6 +175,7 @@ use Spatie\Permission\Traits\HasRoles;
  * @property int $last_project_id
  * @property array $bulk_column_size
  * @property boolean $show_description_in_bulk
+ * @property boolean $shift_period_on_start_date_change
  * @property string $chat_public_key
  * @property boolean $use_chat
  * @property string $work_name
@@ -282,6 +283,7 @@ class User extends Model implements
         'last_project_id',
         'bulk_column_size',
         'show_description_in_bulk',
+        'shift_period_on_start_date_change',
         'show_project_team_names',
         'chat_public_key',
         'use_chat',
@@ -333,6 +335,7 @@ class User extends Model implements
         'share_calendar_date' => 'boolean',
         'bulk_column_size' => 'array',
         'show_description_in_bulk' => 'boolean',
+        'shift_period_on_start_date_change' => 'boolean',
         'show_project_team_names' => 'boolean',
         'use_chat' => 'boolean',
         'chat_push_notification' => 'boolean',

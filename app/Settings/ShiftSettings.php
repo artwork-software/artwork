@@ -10,6 +10,8 @@ use Spatie\LaravelSettings\Settings;
  * @property bool $allow_shift_overbooking
  * @property bool $granular_permissions_enabled
  * @property bool $hide_uncommitted_shifts_from_own_roster
+ * @property bool $shift_confirmation_enabled
+ * @property bool $shift_confirmation_in_history
  */
 class ShiftSettings extends Settings
 {
@@ -27,6 +29,13 @@ class ShiftSettings extends Settings
     public bool $granular_defaults_granted;
 
     public bool $hide_uncommitted_shifts_from_own_roster;
+
+    // Mitarbeitende können festgeschriebene Schichtzuweisungen selbst
+    // zu-/absagen (bzw. Planer als Proxy für Externe).
+    public bool $shift_confirmation_enabled;
+
+    // Zu-/Absagen zusätzlich im Schichtverlauf anzeigen (geloggt wird immer).
+    public bool $shift_confirmation_in_history;
 
     public static function group(): string
     {

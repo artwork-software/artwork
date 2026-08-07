@@ -190,7 +190,8 @@
                                                             <div class="flex items-center text-xs text-text-subtle">
                                                                 ({{ getUsedWorkerCount(section.shift) }}/{{ getMaxWorkerCount(section.shift) }})
                                                                 <svg v-if="getUnavailableWorkers(section.shift).length"
-                                                                     class="h-3.5 w-3.5 ml-1 shrink-0 text-warning"
+                                                                     class="h-3.5 w-3.5 ml-1 shrink-0"
+                                                                     :class="section.shift.is_committed ? 'text-danger' : 'text-warning'"
                                                                      fill="currentColor" viewBox="0 0 20 20">
                                                                     <title>{{ getUnavailableTooltip(section.shift) }}</title>
                                                                     <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
@@ -311,7 +312,8 @@
                                                     <div class="flex items-center text-xs text-text-subtle">
                                                         ({{ getUsedWorkerCount(section.shift) }}/{{ getMaxWorkerCount(section.shift) }})
                                                         <svg v-if="getUnavailableWorkers(section.shift).length"
-                                                             class="h-3.5 w-3.5 ml-1 shrink-0 text-warning"
+                                                             class="h-3.5 w-3.5 ml-1 shrink-0"
+                                                             :class="section.shift.is_committed ? 'text-danger' : 'text-warning'"
                                                              fill="currentColor" viewBox="0 0 20 20">
                                                             <title>{{ getUnavailableTooltip(section.shift) }}</title>
                                                             <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
@@ -411,7 +413,8 @@
                                                 <div class="flex items-center text-xs text-text-subtle">
                                                     ({{ getUsedWorkerCount(shift) }}/{{ getMaxWorkerCount(shift) }})
                                                     <svg v-if="getUnavailableWorkers(shift).length"
-                                                         class="h-3.5 w-3.5 ml-1 shrink-0 text-warning"
+                                                         class="h-3.5 w-3.5 ml-1 shrink-0"
+                                                         :class="shift.is_committed ? 'text-danger' : 'text-warning'"
                                                          fill="currentColor" viewBox="0 0 20 20">
                                                         <title>{{ getUnavailableTooltip(shift) }}</title>
                                                         <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
@@ -976,7 +979,9 @@ const getQualificationRows = (shift) => getShiftDisplay(shift).rows;
 const getUnavailableWorkers = (shift) => getShiftDisplay(shift).unavailable ?? [];
 const getUnavailableTooltip = (shift) => {
     const names = getUnavailableWorkers(shift).map((w) => w.name).filter(Boolean);
-    const label = $t('Assigned but not available');
+    const label = shift?.is_committed
+        ? $t('Assigned but not available (committed shift)')
+        : $t('Assigned but not available');
     return names.length ? `${label}: ${names.join(', ')}` : label;
 };
 

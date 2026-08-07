@@ -25,6 +25,7 @@
             :in-shift-plan="isInShiftPlan"
             :is-daily-view="isDailyView"
             :is-list-view="isListView"
+            :is-in-project-view="isInProjectView"
         />
     </teleport>
 </template>
@@ -50,6 +51,10 @@ const props = defineProps({
         default: false
     },
     isListView: {
+        type: Boolean,
+        default: false
+    },
+    isInProjectView: {
         type: Boolean,
         default: false
     }
@@ -100,6 +105,11 @@ const checkIfAnySettingIsActive = computed(() => {
         'hide_unoccupied_days', 'hide_unoccupied_rooms', 'show_shift_group_tag', 'show_only_not_fully_staffed_shifts',
         'project_artists', 'project_status', 'project_management'
     ]
+
+    // Projektfremde Termine/Schichten gibt es nur im Projekt-Schichten-Tab
+    if (props.isInProjectView) {
+        settingsInShiftPlan.push('show_unrelated_events', 'show_unrelated_shifts')
+    }
 
     if (props.isInShiftPlan) {
         return settingsInShiftPlan.some(setting => settings[setting]);

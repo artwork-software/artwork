@@ -16,6 +16,11 @@
                         <span v-if="dayRole === 'end' || dayRole === 'middle'" class="opacity-60">→ </span>{{ displayStartTime }} - {{ displayEndTime }}<span v-if="dayRole === 'start' || dayRole === 'middle'" class="opacity-60"> →</span>
                     </span>
                 </div>
+                <!-- Einlass (Anzeigeeinstellung "Einlass", nur Starttag) -->
+                <div v-if="showAdmissionTime" class="flex items-center gap-1 shrink-0 whitespace-nowrap">
+                    <IconDoorEnter class="size-3.5 shrink-0" stroke-width="2" />
+                    <span class="text-xs">{{ $t('Admission') }} {{ event.admission_time }}</span>
+                </div>
                 <!-- Projekt-Status Punkt (Anzeigeeinstellung "Projektstatus") -->
                 <div
                     v-if="displaySettings?.project_status && project?.status"
@@ -195,7 +200,7 @@ import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
 import {usePage} from "@inertiajs/vue3";
 import {can, is} from "laravel-permission-to-vuejs";
 import EventComponent from "@/Layouts/Components/EventComponent.vue";
-import {IconDeviceFloppy, IconEdit, IconFileImport, IconTrash, IconWand} from "@tabler/icons-vue";
+import {IconDeviceFloppy, IconDoorEnter, IconEdit, IconFileImport, IconTrash, IconWand} from "@tabler/icons-vue";
 import BaseMenu from "@/Components/Menu/BaseMenu.vue";
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 import BaseMenuItem from "@/Components/Menu/BaseMenuItem.vue";
@@ -260,6 +265,14 @@ const showNotes = computed(() => !!displaySettings.value?.shift_notes)
 // Avatar-Reihen ein "PL:"/"Erstell:"-Label zur Unterscheidung.
 const showCreatorLeaderLabels = computed(() =>
     displaySettings.value?.project_management && displaySettings.value?.show_event_creator
+)
+
+// Einlass bezieht sich auf den Starttag — Folgetage (middle/end) zeigen ihn nicht
+const showAdmissionTime = computed(() =>
+    Boolean(usePage().props.event_admission_module)
+    && displaySettings.value?.show_event_admission !== false
+    && Boolean(props.event.admission_time)
+    && (props.dayRole === 'single' || props.dayRole === 'start')
 )
 
 // Angezeigte Zeiten anpassen wenn Event über Tagesgrenze geht

@@ -79,7 +79,9 @@ class ShiftPlanService
             $useDailyView,
             $shiftPlanContext['currentProject'],
             false,
-            $shiftPlanContext['userCalendarSettings']
+            $shiftPlanContext['userCalendarSettings'],
+            $shiftPlanContext['showUnrelatedEvents'],
+            $shiftPlanContext['showUnrelatedShifts']
         );
         $roomsForRequestedRoom = $filterResult['rooms'];
 
@@ -117,7 +119,9 @@ class ShiftPlanService
             $useDailyView,
             $shiftPlanContext['currentProject'],
             false,
-            $shiftPlanContext['userCalendarSettings']
+            $shiftPlanContext['userCalendarSettings'],
+            $shiftPlanContext['showUnrelatedEvents'],
+            $shiftPlanContext['showUnrelatedShifts']
         );
         $filteredRooms = $filterResult['rooms'];
 
@@ -146,6 +150,18 @@ class ShiftPlanService
         $currentUser = $request->user();
 
         $isDailyView = !$isProjectView && (bool) $currentUser->getAttribute('shift_plan_daily_view');
+
+        // "Projektfremde Termine/Schichten anzeigen" (nur im Projekt-Schichten-Tab relevant):
+        // Das Zahnrad im Projekt-Tab schreibt in shift_plan_daily_settings (is_daily_view=true),
+        // daher werden die Flags bewusst dort gelesen — nicht aus den shift_plan_settings,
+        // die die Projektansicht sonst als Anzeige-Settings nutzt.
+        $showUnrelatedEvents = false;
+        $showUnrelatedShifts = false;
+        if ($isProjectView && $currentProject !== null) {
+            $projectViewSettings = $currentUser->getAttribute('shift_plan_daily_settings');
+            $showUnrelatedEvents = (bool) ($projectViewSettings?->show_unrelated_events ?? false);
+            $showUnrelatedShifts = (bool) ($projectViewSettings?->show_unrelated_shifts ?? false);
+        }
 
         if ($isDailyView) {
             $userCalendarSettings = $currentUser->getAttribute('shift_plan_daily_settings');
@@ -202,7 +218,9 @@ class ShiftPlanService
             $calendarStartDate,
             $calendarEndDate,
             true,
-            $currentProject
+            $currentProject,
+            $showUnrelatedEvents,
+            $showUnrelatedShifts
         );
 
         $calendarPeriod = $this->calendarDataService->createCalendarPeriodDto(
@@ -222,6 +240,8 @@ class ShiftPlanService
             'calendarEndDate' => $calendarEndDate,
             'calendarPeriod' => $calendarPeriod,
             'filteredRooms' => $filteredRooms,
+            'showUnrelatedEvents' => $showUnrelatedEvents,
+            'showUnrelatedShifts' => $showUnrelatedShifts,
         ];
     }
 

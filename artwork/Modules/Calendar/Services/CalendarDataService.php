@@ -220,7 +220,9 @@ readonly class CalendarDataService
         CarbonInterface $startDate,
         CarbonInterface $endDate,
         bool $considerShiftsForOccupancy = false,
-        ?Project $project = null
+        ?Project $project = null,
+        bool $showUnrelatedEvents = false,
+        bool $showUnrelatedShifts = false
     ): SupportCollection {
         $overlap = static function ($q, string $startCol, string $endCol) use ($startDate, $endDate): void {
             // Overlap: start <= endDate AND end >= startDate (SQL-Server indexfreundlich)
@@ -228,12 +230,21 @@ readonly class CalendarDataService
                 ->where($endCol, '>=', $startDate);
         };
 
-        $eventOccupancySubquery = function ($eventQuery) use ($filter, $project, $overlap, $userCalendarSettings): void {
+        $eventOccupancySubquery = function (
+            $eventQuery
+        ) use (
+            $filter,
+            $project,
+            $overlap,
+            $userCalendarSettings,
+            $showUnrelatedEvents
+        ): void {
             $eventQuery->selectRaw('1')
                 ->from('events')
                 ->whereColumn('events.room_id', 'rooms.id')
                 ->whereNull('events.deleted_at')
-                ->when($project !== null, fn ($q) => $q->where('events.project_id', $project->id))
+                // "Projektfremde Termine anzeigen": auch Räume behalten, die nur durch fremde Termine belegt sind
+                ->when($project !== null && !$showUnrelatedEvents, fn ($q) => $q->where('events.project_id', $project->id))
                 ->when(!empty($filter?->event_type_ids), fn ($q) => $q->whereIn('events.event_type_id', $filter->event_type_ids))
                 ->where(fn ($q) => $overlap($q, 'events.start_time', 'events.end_time'))
                 ->where(function ($q) use ($userCalendarSettings): void {
@@ -260,12 +271,13 @@ readonly class CalendarDataService
             }
         };
 
-        $shiftOccupancySubquery = function ($shiftQuery) use ($filter, $project, $overlap): void {
+        $shiftOccupancySubquery = function ($shiftQuery) use ($filter, $project, $overlap, $showUnrelatedShifts): void {
             $shiftQuery->selectRaw('1')
                 ->from('shifts')
                 ->whereNull('shifts.event_id')
                 ->whereColumn('shifts.room_id', 'rooms.id')
-                ->when($project !== null, fn ($q) => $q->where('shifts.project_id', $project->id))
+                // "Projektfremde Schichten anzeigen": auch Räume behalten, die nur durch fremde Schichten belegt sind
+                ->when($project !== null && !$showUnrelatedShifts, fn ($q) => $q->where('shifts.project_id', $project->id))
                 ->when(!empty($filter?->craft_ids), fn ($q) => $q->whereIn('shifts.craft_id', $filter->craft_ids))
                 ->where(fn ($q) => $overlap($q, 'shifts.start_date', 'shifts.end_date'));
         };

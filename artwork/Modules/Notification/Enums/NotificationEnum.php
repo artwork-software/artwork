@@ -85,6 +85,8 @@ enum NotificationEnum: string
 
     case NOTIFICATION_NEW_SHIFT_COMMIT_WORKFLOW_REQUEST = 'NOTIFICATION_NEW_SHIFT_COMMIT_WORKFLOW_REQUEST';
 
+    case NOTIFICATION_SHIFT_WORKER_CONFIRMATION = 'NOTIFICATION_SHIFT_WORKER_CONFIRMATION';
+
     case NOTIFICATION_EXTERNAL_CRM_SUBMITTED = 'NOTIFICATION_EXTERNAL_CRM_SUBMITTED';
 
     case NOTIFICATION_EXTERNAL_TAB_COMPONENT_UPDATED = 'NOTIFICATION_EXTERNAL_TAB_COMPONENT_UPDATED';
@@ -131,6 +133,7 @@ enum NotificationEnum: string
             self::NOTIFICATION_SHIFT_WORKTIME_GET_REQUEST,
             self::NOTIFICATION_SHIFT_OPEN_DEMAND,
             self::NOTIFICATION_NEW_SHIFT_COMMIT_WORKFLOW_REQUEST,
+            self::NOTIFICATION_SHIFT_WORKER_CONFIRMATION,
             self::NOTIFICATION_SHIFT_CONFLICT => "SHIFTS",
             self::NOTIFICATION_INVENTORY_ARTICLE_CHANGED,
             self::NOTIFICATION_INVENTORY_OVERBOOKED => "INVENTORY",
@@ -174,6 +177,7 @@ enum NotificationEnum: string
             self::NOTIFICATION_SHIFT_WORKTIME_REQUEST_DECLINED,
             self::NOTIFICATION_SHIFT_WORKTIME_GET_REQUEST,
             self::NOTIFICATION_NEW_SHIFT_COMMIT_WORKFLOW_REQUEST,
+            self::NOTIFICATION_SHIFT_WORKER_CONFIRMATION,
             self::NOTIFICATION_SHIFT_CONFLICT => ShiftNotification::class,
             self::NOTIFICATION_EXTERNAL_CRM_SUBMITTED =>
                 \Artwork\Modules\ExternalAccess\Notifications\ExternalCrmSubmissionNotification::class,
@@ -227,6 +231,7 @@ enum NotificationEnum: string
 
             self::NOTIFICATION_EVENT_VERIFICATION_REQUESTS => "Event verification requests",
             self::NOTIFICATION_NEW_SHIFT_COMMIT_WORKFLOW_REQUEST => "New shift commit workflow request",
+            self::NOTIFICATION_SHIFT_WORKER_CONFIRMATION => "Shift assignments accepted or declined",
 
             self::NOTIFICATION_DOCUMENT_REQUEST_CREATED => "New document request",
             self::NOTIFICATION_DOCUMENT_REQUEST_COMPLETED => "Document request completed",
@@ -277,6 +282,7 @@ enum NotificationEnum: string
             self::NOTIFICATION_SHIFT_WORKTIME_REQUEST_DECLINED => "Find out if your worktime change request has been declined.",
             self::NOTIFICATION_SHIFT_WORKTIME_GET_REQUEST => "Find out if you have a new worktime change request.",
             self::NOTIFICATION_NEW_SHIFT_COMMIT_WORKFLOW_REQUEST => "Find out if there is a new shift commit workflow request.",
+            self::NOTIFICATION_SHIFT_WORKER_CONFIRMATION => "Find out when a scheduled person accepts or declines a shift you planned.",
 
             self::NOTIFICATION_DOCUMENT_REQUEST_CREATED => "Find out if someone has created a document request for you.",
             self::NOTIFICATION_DOCUMENT_REQUEST_COMPLETED => "Find out if a document request you created has been completed.",

@@ -1548,6 +1548,7 @@ class UserController extends Controller
             'options',
             'project_management',
             'show_event_creator',
+            'show_event_admission',
             'repeating_events',
             'work_shifts',
             'description',
@@ -1572,6 +1573,10 @@ class UserController extends Controller
             'show_timeline',
             'show_only_not_fully_staffed_shifts',
             'show_project_assignments',
+            // Nur vom Projekt-Schichten-Tab gesendet (Spalten existieren nur
+            // auf user_shift_plan_daily_settings)
+            'show_unrelated_events',
+            'show_unrelated_shifts',
             'show_user_overview'
         ]);
 
@@ -1779,6 +1784,13 @@ class UserController extends Controller
         $this->authorize('updateOwnPreferences', $user);
 
         $user->update($request->only('show_description_in_bulk'));
+    }
+
+    public function updateShiftPeriodOnStartDateChange(User $user, Request $request): void
+    {
+        $this->authorize('updateOwnPreferences', $user);
+
+        $user->update($request->only('shift_period_on_start_date_change'));
     }
 
     /**

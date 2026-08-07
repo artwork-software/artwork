@@ -2029,6 +2029,7 @@ readonly class EventService
             'user_id' => $userId,
             'start_time' => $startTime,
             'end_time' => $endTime,
+            'admission_time' => ($event['admission_time'] ?? null) ?: null,
             'allDay' => $allDay,
             'event_type_id' => $event['type']['id'],
             'room_id' => $event['room']['id'],
@@ -2094,6 +2095,11 @@ readonly class EventService
             'name' => $data['name'],
             'start_time' => $startTime,
             'end_time' => $endTime,
+            // Nur schreiben, wenn der Client das Feld mitschickt — fehlender Key darf
+            // eine vorhandene Einlasszeit nicht auf NULL setzen.
+            'admission_time' => $data->has('admission_time')
+                ? ($data['admission_time'] ?: null)
+                : $event->admission_time,
             'allDay' => $allDay,
             'event_type_id' => $data['type']['id'],
             'room_id' => $data['room']['id'],

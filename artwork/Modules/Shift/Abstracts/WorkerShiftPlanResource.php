@@ -206,6 +206,10 @@ class WorkerShiftPlanResource extends JsonResource
                 'isCommitted'           => $shift->is_committed,
                 'inWorkflow'            => $shift->in_workflow,
                 'shiftGroup'            => $shiftGroup ? $shiftGroup->only(['id', 'name']) : null,
+
+                'confirmationStatus'    => $pivot?->confirmation_status,
+                'confirmationAt'        => $pivot?->confirmation_at,
+                'confirmationComment'   => $pivot?->confirmation_comment,
             ];
         });
     }

@@ -141,6 +141,18 @@ class ShiftHistoryController
         // gespeicherten Zeitraum (Überlappung) und optional die craft_ids eingesammelt.
         $paginator = Activity::query()
             ->where('log_name', 'shift')
+            // Zu-/Absagen der Mitarbeitenden werden immer geloggt, aber nur
+            // angezeigt, wenn das Setting es erlaubt. NULL-safe filtern:
+            // "event NOT IN (...)" würde Einträge ohne event-Wert mit verwerfen.
+            ->when(
+                !app(\App\Settings\ShiftSettings::class)->shift_confirmation_in_history,
+                function ($query): void {
+                    $query->where(function ($inner): void {
+                        $inner->whereNull('event')
+                            ->orWhereNotIn('event', ['confirmation_accepted', 'confirmation_declined']);
+                    });
+                }
+            )
             ->where(function ($query) use (
                 $matchedShiftIds,
                 $startYmd,

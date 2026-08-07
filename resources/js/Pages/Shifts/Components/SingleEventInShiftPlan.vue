@@ -126,6 +126,11 @@
                                 {{ formattedDates?.start }} - {{ formattedDates?.end }}
                             </div>
                         </div>
+                        <!-- Einlass (Anzeigeeinstellung "Einlass", nur Starttag) -->
+                        <div v-if="showAdmissionTime" class="text-xs/5 mt-0.5 flex items-center gap-1">
+                            <IconDoorEnter class="size-3.5 shrink-0" stroke-width="2" />
+                            <span>{{ $t('Admission') }} {{ event.admission_time }}</span>
+                        </div>
                         <!-- Terminbeschreibung (Anzeigeeinstellung "Notizen einblenden") -->
                         <div
                             v-if="shiftPlanSettings.shift_notes && event.description"
@@ -208,7 +213,7 @@ import { ref, computed, defineAsyncComponent } from "vue";
 import axios from "axios";
 import {useColorHelper} from "@/Composeables/UseColorHelper.js";
 import {usePage} from "@inertiajs/vue3";
-import {IconTimeline} from "@tabler/icons-vue";
+import {IconDoorEnter, IconTimeline} from "@tabler/icons-vue";
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
 import {useShiftPlanLookups} from "@/Composeables/useShiftPlanLookups.js";
@@ -256,6 +261,20 @@ const eventType = computed(() => props.event.eventType ?? resolveEventType(props
 const project = computed(() => props.event.project ?? resolveProject(props.event.projectId));
 const daysOfEvent = computed(() => props.event.daysOfEvent ?? getDaysInRange(props.event.start, props.event.end));
 const formattedDates = computed(() => props.event.formattedDates ?? computeEventFormattedDates(props.event.start, props.event.end));
+
+// Einlass bezieht sich auf den Starttag — Spiegelungen an Folgetagen zeigen ihn nicht
+const isStartDayCell = computed(() => {
+    const dayIso = props.day?.withoutFormat ?? null;
+    if (!dayIso || !props.event.start) return true;
+    return String(props.event.start).slice(0, 10) === dayIso;
+});
+
+const showAdmissionTime = computed(() =>
+    Boolean(usePage().props.event_admission_module)
+    && shiftPlanSettings.value?.show_event_admission !== false
+    && Boolean(props.event.admission_time)
+    && isStartDayCell.value
+);
 
 const showTimelineModal = ref(false);
 const timelineData = ref([]);

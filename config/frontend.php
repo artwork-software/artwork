@@ -16,6 +16,6 @@ return [
         'key' => env('REVERB_APP_KEY'),
         'cluster' => env('REVERB_APP_CLUSTER'),
         'host' => env('REVERB_HOST'),
-        'port' => env('REVERB_PORT'),
+        'port' => env('VITE_REVERB_PORT'),
     ],
 ];

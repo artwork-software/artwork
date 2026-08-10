@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use Artwork\Core\FileHandling\Naming\StoredFileName;
 use Artwork\Modules\Change\Services\ChangeService;
 use Artwork\Modules\MoneySource\Models\MoneySource;
 use Artwork\Modules\MoneySource\Models\MoneySourceFile;
@@ -12,7 +13,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class MoneySourceFileController extends Controller
@@ -34,7 +34,7 @@ class MoneySourceFileController extends Controller
 
         $file = $request->file('file');
         $original_name = $file->getClientOriginalName();
-        $basename = Str::random(20) . $original_name;
+        $basename = StoredFileName::forUpload($file);
 
         Storage::putFileAs('money_source_files', $file, $basename);
 
@@ -77,7 +77,7 @@ class MoneySourceFileController extends Controller
             Storage::delete('money_source_files/' . $moneySourceFile->basename);
             $file = $request->file('file');
             $original_name = $file->getClientOriginalName();
-            $basename = Str::random(20) . $original_name;
+            $basename = StoredFileName::forUpload($file);
 
             $moneySourceFile->basename = $basename;
             $moneySourceFile->name = $original_name;

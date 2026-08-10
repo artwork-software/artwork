@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use Artwork\Core\FileHandling\Naming\StoredFileName;
 use Artwork\Core\FileHandling\Upload\ArtworkFileTypes;
 use Artwork\Core\FileHandling\Upload\HandlesFileUpload;
 use Artwork\Modules\GeneralSettings\Http\Requests\UploadBrandingGraphicRequest;
@@ -43,17 +44,29 @@ class ToolSettingsBrandingController extends Controller
         $banner = $request->file('banner');
         if ($smallLogo) {
             $this->handleFile(ArtworkFileTypes::BRANDING, $smallLogo);
-            $generalSettings->small_logo_path = $smallLogo->storePublicly('logo', ['disk' => 'public']);
+            $generalSettings->small_logo_path = $smallLogo->storeAs(
+                'logo',
+                StoredFileName::forUpload($smallLogo),
+                ['disk' => 'public']
+            );
         }
 
         if ($bigLogo) {
             $this->handleFile(ArtworkFileTypes::BRANDING, $bigLogo);
-            $generalSettings->big_logo_path = $bigLogo->storePublicly('logo', ['disk' => 'public']);
+            $generalSettings->big_logo_path = $bigLogo->storeAs(
+                'logo',
+                StoredFileName::forUpload($bigLogo),
+                ['disk' => 'public']
+            );
         }
 
         if ($banner) {
             $this->handleFile(ArtworkFileTypes::BRANDING, $banner);
-            $generalSettings->banner_path = $banner->storePublicly('banner', ['disk' => 'public']);
+            $generalSettings->banner_path = $banner->storeAs(
+                'banner',
+                StoredFileName::forUpload($banner),
+                ['disk' => 'public']
+            );
         }
 
         $generalSettings->save();

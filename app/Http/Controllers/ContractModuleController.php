@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use Artwork\Core\FileHandling\Naming\StoredFileName;
 use Artwork\Core\FileHandling\Upload\ArtworkFileTypes;
 use Artwork\Core\FileHandling\Upload\HandlesFileUpload;
 use Artwork\Modules\Change\Services\ChangeService;
@@ -11,7 +12,6 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class ContractModuleController extends Controller
@@ -35,7 +35,7 @@ class ContractModuleController extends Controller
         if ($file) {
             $this->handleFile(ArtworkFileTypes::CONTRACT, $file);
             $original_name = $file->getClientOriginalName();
-            $basename = Str::random(20) . $original_name;
+            $basename = StoredFileName::forUpload($file);
 
             Storage::putFileAs('contract_modules', $file, $basename);
 

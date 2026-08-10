@@ -9,6 +9,7 @@ use Artwork\Modules\ArtistResidency\Models\Artist;
 use Artwork\Modules\ArtistResidency\Models\ArtistResidency;
 use Artwork\Modules\ArtistResidency\Services\ArtistResidencyService;
 use Artwork\Modules\Project\Models\Project;
+use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -112,8 +113,10 @@ class ArtistResidencyController extends Controller
         return $this->artistResidencyService->exportPerDiemPdf($project, $language);
     }
 
-    public function exportPdfDownload(string $filename): \Symfony\Component\HttpFoundation\BinaryFileResponse
-    {
-        return $this->artistResidencyService->downloadPdf($filename);
+    public function exportPdfDownload(
+        Request $request,
+        string $filename
+    ): \Symfony\Component\HttpFoundation\BinaryFileResponse {
+        return $this->artistResidencyService->downloadPdf($filename, $request->query('name'));
     }
 }

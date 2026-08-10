@@ -3,6 +3,7 @@
 namespace Artwork\Modules\GlobalNotification\Http\Controller;
 
 use App\Http\Controllers\Controller;
+use Artwork\Core\FileHandling\Naming\StoredFileName;
 use Artwork\Modules\GlobalNotification\Http\Requests\StoreGlobalNotificationRequest;
 use Artwork\Modules\GlobalNotification\Http\Requests\UpdateGlobalNotificationRequest;
 use Artwork\Modules\GlobalNotification\Models\GlobalNotification;
@@ -12,6 +13,7 @@ use DateTime;
 use Exception;
 use Illuminate\Filesystem\FilesystemManager;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Routing\Redirector;
 
 class GlobalNotificationController extends Controller
@@ -30,12 +32,14 @@ class GlobalNotificationController extends Controller
     public function store(
         StoreGlobalNotificationRequest $request
     ): RedirectResponse {
+        $image = $request->file('notificationImage');
+
         $this->globalNotificationService->create(
             $request->string('notificationName'),
             $request->string('notificationDescription'),
-            $request
-                ->file('notificationImage')
-                ?->storePublicly('notificationImage', ['disk' => 'public']) ?? '',
+            $image instanceof UploadedFile
+                ? $image->storeAs('notificationImage', StoredFileName::forUpload($image), ['disk' => 'public'])
+                : '',
             new DateTime(
                 $request->string('notificationDeadlineDate') .
                 ' ' .
@@ -54,10 +58,13 @@ class GlobalNotificationController extends Controller
         GlobalNotification $globalNotification,
         UpdateGlobalNotificationRequest $request
     ): RedirectResponse {
+        $image = $request->file('notificationImage');
+
         $fileUrl = ($fileUrl = $request->string('notificationImage'))->contains(['https://', 'http://']) ?
             substr($fileUrl, strpos($fileUrl, 'notificationImage')) :
-            $request->file('notificationImage')
-                ?->storePublicly('notificationImage', ['disk' => 'public']) ?? '';
+            ($image instanceof UploadedFile
+                ? $image->storeAs('notificationImage', StoredFileName::forUpload($image), ['disk' => 'public'])
+                : '');
 
         if ($fileUrl !== ($notificationImage = $globalNotification->getAttribute('image_name'))) {
             $publicDisk = $this->filesystemManager->disk('public');

@@ -1392,7 +1392,10 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
                 ->name('artist-residencies.export-per-diem-pdf');
 
             //artist-residency.export.pdf.download
+            // The constraint mirrors StoredFileName::PATTERN so the parameter
+            // cannot escape the pdf/ directory.
             Route::get('/export-pdf/download/{filename}', [ArtistResidencyController::class, 'exportPdfDownload'])
+                ->where('filename', '[a-f0-9]{32}\.pdf')
                 ->name('artist-residency.export.pdf.download');
         });
 
@@ -2215,10 +2218,13 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         ->can('can view shift plan');
     Route::post('/users/{user}/shiftplan/export/monthly-pdf', [ExportPDFController::class, 'createUserShiftPlanPDF'])
         ->name('user.shiftplan.export.monthly-pdf');
+    // The constraint mirrors StoredFileName::PATTERN so the parameter cannot
+    // escape the pdf/ directory.
     Route::get(
         '/calendar/export/pdf/{filename}/download',
         [ExportPDFController::class, 'download']
-    )->name('calendar.export.pdf.download');
+    )->where('filename', '[a-f0-9]{32}\.pdf')
+        ->name('calendar.export.pdf.download');
 
     Route::get('/pdf-export-user-filters', [\Artwork\Modules\User\Http\Controllers\PdfExportUserFilterController::class, 'index'])
         ->name('pdf-export-user-filters.index');

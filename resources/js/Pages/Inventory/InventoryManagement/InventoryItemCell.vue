@@ -19,7 +19,7 @@
                 <div class="flex items-center justify-between gap-4">
                     <div @click="getDownloadLink">
                         <div class="text-accent-500 underline-offset-2 underline cursor-pointer flex items-center gap-1">
-                            <div class="truncate max-w-52">{{ cell.cell_value }}</div>
+                            <div class="truncate max-w-52">{{ cell.file_original_name || cell.cell_value }}</div>
                              {{ $t('View') }}
                         </div>
                     </div>
@@ -261,9 +261,9 @@ const uploadFileToColumn = () => {
         return;
     }
 
+    // The stored name is derived server-side from the file itself.
     const formData = new FormData();
     formData.append('file', file);
-    formData.append('cell_value', String(file.name));
 
     router.post(
         route(

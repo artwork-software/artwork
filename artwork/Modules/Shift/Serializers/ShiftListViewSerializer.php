@@ -77,6 +77,10 @@ readonly class ShiftListViewSerializer
         }
 
         return $workers->map(function ($worker) use ($type, $shift) {
+            $unavailableStatus = $shift !== null
+                ? ShiftWorkerAvailability::getWorkerUnavailableStatus($shift, $worker)
+                : null;
+
             $data = [
                 'id' => $worker->id,
                 'type' => $type,
@@ -90,12 +94,17 @@ readonly class ShiftListViewSerializer
                     'short_description' => $worker->pivot->short_description ?? null,
                     'start_time' => $worker->pivot->start_time ?? null,
                     'end_time' => $worker->pivot->end_time ?? null,
+                    'confirmation_status' => $worker->pivot->confirmation_status ?? null,
+                    'confirmation_at' => $worker->pivot->confirmation_at ?? null,
+                    'confirmation_by_user_id' => $worker->pivot->confirmation_by_user_id ?? null,
+                    'confirmation_comment' => $worker->pivot->confirmation_comment ?? null,
                 ] : null,
                 'globalQualifications' => $worker->relationLoaded('globalQualifications')
                     ? $worker->globalQualifications->map(fn ($q) => ['id' => $q->id])->values()->all()
                     : [],
-                'is_unavailable' => $shift !== null
-                    && ShiftWorkerAvailability::isWorkerUnavailable($shift, $worker),
+                'is_unavailable' => $unavailableStatus !== null,
+                // Konfliktierender Tagesstatus für die statusfarbene Umrandung im Schichten-Tab
+                'unavailable_status' => $unavailableStatus,
             ];
 
             if ($type === 'service_provider') {

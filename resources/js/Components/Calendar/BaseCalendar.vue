@@ -183,6 +183,7 @@
                                                                         :verifierForEventTypIds="verifierForEventTypIds"
                                                                         :is-planning="isPlanning"
                                                                         :is-height-full="settings.expand_days && !!item.data.allDay"
+                                                                        :cell-day="day.withoutFormat"
                                                                         @edit-event="showEditEventModel"
                                                                         @edit-sub-event="openAddSubEventModal"
                                                                         @open-add-sub-event-modal="openAddSubEventModal"
@@ -290,6 +291,7 @@
                                         @changed-multi-edit-checkbox="handleMultiEditEventCheckboxChange"
                                         :verifierForEventTypIds="verifierForEventTypIds"
                                         :is-planning="isPlanning"
+                                        :cell-day="day.withoutFormat"
                                     />
                                 </div>
                             </div>

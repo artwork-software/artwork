@@ -60,6 +60,43 @@
                     </p>
                 </div>
             </div>
+
+            <div class="rounded-2xl border border-border-subtle bg-surface p-5">
+                <div class="flex items-start justify-between gap-5">
+                    <BasePageTitle
+                        :title="$t('Shift confirmation by employees')"
+                        :description="$t('Scheduled people can accept or decline their committed shifts in their own operational plan. Planners can record responses on behalf of freelancers and service providers.')"
+                    />
+                    <SwitchIconTooltip
+                        v-model="shiftSettings.shift_confirmation_enabled"
+                        :tooltip-text="canEditGeneralSettings
+                            ? $t('Shift confirmation by employees')
+                            : $t('You have read access only')"
+                        :disabled="!canEditGeneralSettings"
+                        size="md"
+                        icon="IconUserCheck"
+                        @change="updateShiftConfirmationSettings"
+                    />
+                </div>
+                <div v-if="shiftSettings.shift_confirmation_enabled" class="mt-4 flex items-start justify-between gap-5 rounded-xl border border-border-subtle bg-white/80 px-4 py-3">
+                    <div class="text-xs leading-5 text-text-subtle">
+                        <strong class="text-text">{{ $t('Show confirmations in shift history') }}</strong>
+                        <p class="mt-1">
+                            {{ $t('Accepted and declined shifts additionally appear as their own category in the shift history. Responses are always recorded; this only controls their visibility in the history.') }}
+                        </p>
+                    </div>
+                    <SwitchIconTooltip
+                        v-model="shiftSettings.shift_confirmation_in_history"
+                        :tooltip-text="canEditGeneralSettings
+                            ? $t('Show confirmations in shift history')
+                            : $t('You have read access only')"
+                        :disabled="!canEditGeneralSettings"
+                        size="md"
+                        icon="IconHistory"
+                        @change="updateShiftConfirmationSettings"
+                    />
+                </div>
+            </div>
         </div>
         <div class="my-10">
                 <div class="rounded-lg bg-surface border border-border-subtle w-full shadow-raised p-5">
@@ -959,6 +996,12 @@ export default defineComponent({
         updateOwnRosterUncommittedShiftVisibility(hideUncommittedShifts) {
             router.patch(route('shift.settings.update.own-roster-uncommitted-visibility'), {
                 hide_uncommitted_shifts_from_own_roster: hideUncommittedShifts
+            }, { preserveScroll: true })
+        },
+        updateShiftConfirmationSettings() {
+            router.patch(route('shift.settings.update.shift-confirmation'), {
+                shift_confirmation_enabled: this.shiftSettings.shift_confirmation_enabled,
+                shift_confirmation_in_history: this.shiftSettings.shift_confirmation_in_history
             }, { preserveScroll: true })
         }
     }

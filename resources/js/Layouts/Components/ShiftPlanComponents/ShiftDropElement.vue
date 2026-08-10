@@ -54,9 +54,11 @@
 
                     <div v-if="!showRoom" class="ml-0.5 flex items-center justify-end" :class="multiEditMode ? 'text-[10px]' : 'text-[10px]'">
                         ({{ computedUsedWorkerCount }}/{{ computedMaxWorkerCount }})
-                        <!-- Eingeplante Person nicht (mehr) verfügbar: Warndreieck statt Besetzungs-Punkt -->
+                        <!-- Eingeplante Person nicht (mehr) verfügbar: Warndreieck statt Besetzungs-Punkt.
+                             Rot bei festgeschriebener Schicht (akuter Konflikt), sonst gelb. -->
                         <svg v-if="unavailableWorkers.length"
-                             class="h-3.5 w-3.5 ml-1 shrink-0 text-warning"
+                             class="h-3.5 w-3.5 ml-1 shrink-0"
+                             :class="shift.isCommitted ? 'text-danger' : 'text-warning'"
                              fill="currentColor" viewBox="0 0 20 20">
                             <title>{{ unavailableWorkersTooltip }}</title>
                             <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
@@ -269,7 +271,10 @@ const unavailableWorkers = computed(() => shiftWorkers.value.filter((w: any) => 
 
 const unavailableWorkersTooltip = computed(() => {
     const names = unavailableWorkers.value.map((w: any) => w.name || `${w.first_name ?? ''} ${w.last_name ?? ''}`.trim()).filter(Boolean)
-    const label = (proxy as any)?.$t?.('Assigned but not available') ?? 'Assigned but not available'
+    const labelKey = props.shift?.isCommitted
+        ? 'Assigned but not available (committed shift)'
+        : 'Assigned but not available'
+    const label = (proxy as any)?.$t?.(labelKey) ?? labelKey
     return names.length ? `${label}: ${names.join(', ')}` : label
 })
 

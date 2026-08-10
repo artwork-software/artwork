@@ -95,7 +95,7 @@
                             classesButton="ui-button"
                         />
 
-                        <FunctionBarSetting :is-planning="false" is-in-shift-plan :is-daily-view="true" />
+                        <FunctionBarSetting :is-planning="false" is-in-shift-plan :is-daily-view="true" :is-in-project-view="props.isInProjectView" />
                     </div>
                 </div>
             </div>
@@ -488,6 +488,7 @@
                                 <div class="p-4 w-full relative">
                                     <DailyRoomSplitTimeline
                                         :day="day.fullDay"
+                                        :current-project-id="props.isInProjectView ? ((props.project as any)?.id ?? null) : null"
                                         :events="getEventsForRoomDay(room, day.fullDay)"
                                         :shifts="getFilteredShiftsForRoomDay(room, day.fullDay)"
                                         :event-types="eventTypesResolved"

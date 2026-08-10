@@ -99,6 +99,11 @@
                             />
                         </div>
                     </div>
+
+                    <!-- Einlass (nur wenn instanzweit aktiv) -->
+                    <div v-if="usePage().props.event_admission_module" class="shrink-0 min-w-0" :style="getColumnSize(6)">
+                        <span class="uppercase tracking-wider font-semibold text-text-muted ">{{ $t('Admission') }}</span>
+                    </div>
                 </div>
             </div>
 

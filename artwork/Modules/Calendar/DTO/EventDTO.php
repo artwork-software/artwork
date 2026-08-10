@@ -43,6 +43,7 @@ class EventDTO extends Data
         public ?bool $isPlanning = false,
         public ?bool $hasVerification = false,
         public ?bool $hasTimelines = false,
+        public ?string $admission_time = null,
     ) {
     }
 
@@ -105,7 +106,9 @@ class EventDTO extends Data
             isPlanning: $event->is_planning ?? false,
             hasVerification: $event->getAttribute('has_pending_verification')
                 ?? $event->getAttribute('has_verification') ?? false,
-            hasTimelines: $event->timelines_exists ?? $event->hasTimelines()
+            hasTimelines: $event->timelines_exists ?? $event->hasTimelines(),
+            // TIME-Spalte ("HH:mm:ss") → "HH:mm"
+            admission_time: $event->admission_time ? substr($event->admission_time, 0, 5) : null,
         );
     }
 

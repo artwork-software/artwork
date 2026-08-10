@@ -40,32 +40,45 @@ class BulkEventChanged implements ShouldBroadcastNow
 
 
     /**
+     * Einheitliche Event-Payload für Broadcast UND JSON-Responses der Bulk-Endpunkte —
+     * der eigene Client aktualisiert seine Liste aus der Response, andere Clients
+     * über den Broadcast; beide müssen dieselbe Form sehen.
+     *
+     * @return array<string, mixed>
+     */
+    public static function eventPayload(Event $event): array
+    {
+        return [
+            'id' => $event->id,
+            'project_id' => $event->project_id,
+            'type' => $event->event_type,
+            'status' => $event->eventStatus,
+            'eventTypeName' => $event->event_type?->name ?? null,
+            'name' => $event->name,
+            'room' => $event->room,
+            'roomName' => $event->room?->name ?? null,
+            'roomPosition' => $event->room?->position ?? null,
+            'day' => Carbon::parse($event->start_time)->format('Y-m-d'),
+            'end_day' => Carbon::parse($event->end_time)->format('Y-m-d'),
+            'start_time' => $event->allDay ?  '' : Carbon::parse($event->start_time)->format('H:i'),
+            'end_time' => $event->allDay ? '' : Carbon::parse($event->end_time)->format('H:i'),
+            'admission_time' => $event->admission_time ? substr($event->admission_time, 0, 5) : null,
+            'allDay' => $event->allDay,
+            'description' => $event->description,
+            'is_planning' => $event->is_planning,
+            'created_at' => $event->created_at,
+            'updated_at' => $event->updated_at,
+            'isNew' => $event->created_at->eq($event->updated_at),
+        ];
+    }
+
+    /**
      * @return array<string, mixed>
      */
     public function broadcastWith(): array
     {
         return [
-            'event' => [
-                'id' => $this->event->id,
-                'project_id' => $this->event->project_id,
-                'type' => $this->event->event_type,
-                'status' => $this->event->eventStatus,
-                'eventTypeName' => $this->event->event_type?->name ?? null,
-                'name' => $this->event->name,
-                'room' => $this->event->room,
-                'roomName' => $this->event->room?->name ?? null,
-                'roomPosition' => $this->event->room?->position ?? null,
-                'day' => Carbon::parse($this->event->start_time)->format('Y-m-d'),
-                'end_day' => Carbon::parse($this->event->end_time)->format('Y-m-d'),
-                'start_time' => $this->event->allDay ?  '' : Carbon::parse($this->event->start_time)->format('H:i'),
-                'end_time' => $this->event->allDay ? '' : Carbon::parse($this->event->end_time)->format('H:i'),
-                'allDay' => $this->event->allDay,
-                'description' => $this->event->description,
-                'is_planning' => $this->event->is_planning,
-                'created_at' => $this->event->created_at,
-                'updated_at' => $this->event->updated_at,
-                'isNew' => $this->event->created_at->eq($this->event->updated_at),
-            ],
+            'event' => self::eventPayload($this->event),
             'action' => $this->action,
         ];
     }

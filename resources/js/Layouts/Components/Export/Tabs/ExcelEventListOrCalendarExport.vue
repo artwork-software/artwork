@@ -372,6 +372,8 @@ const props = defineProps({
         end_date: 'End date',
         start_time: 'Start time',
         end_time: 'End time',
+        // Einlass nur anbieten, wenn das Feld instanzweit aktiv ist
+        ...(usePage().props.event_admission_module ? { admission_time: 'Admission' } : {}),
         event_type: 'Event type',
         event_name: 'Event name',
         event_description: 'Event description',

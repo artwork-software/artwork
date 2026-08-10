@@ -483,6 +483,7 @@ class NotificationService
             case NotificationEnum::NOTIFICATION_SHIFT_WORKTIME_REQUEST_DECLINED:
             case NotificationEnum::NOTIFICATION_SHIFT_WORKTIME_GET_REQUEST:
             case NotificationEnum::NOTIFICATION_NEW_SHIFT_COMMIT_WORKFLOW_REQUEST:
+            case NotificationEnum::NOTIFICATION_SHIFT_WORKER_CONFIRMATION:
                 if ($this->getNotificationTo()->id !== Auth::id()) {
                     Notification::send(
                         $this->getNotificationTo(),

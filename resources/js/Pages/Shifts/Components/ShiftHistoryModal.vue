@@ -519,13 +519,14 @@ const selectedShift = ref<ShiftLite | null>(null)
 const groupByShiftDay = ref(false)
 const onlyPostCommit = ref(false)
 
-type ActionCategory = 'staffing' | 'shift_data' | 'lifecycle' | 'commitment' | 'other'
+type ActionCategory = 'staffing' | 'shift_data' | 'lifecycle' | 'commitment' | 'confirmation' | 'other'
 
 const ACTION_META: Record<ActionCategory, { label: string; description: string; chip: string }> = {
     staffing: { label: 'Staffing', description: 'Person assigned to or removed from a shift.', chip: 'border-accent-200 bg-accent-50 text-accent-700' },
     shift_data: { label: 'Shift details', description: 'Times, room, qualifications or similar changed.', chip: 'border-warning-border bg-warning-surface text-warning' },
     lifecycle: { label: 'Shift created/deleted', description: 'Shift created, deleted or restored.', chip: 'border-border-strong bg-surface-sunken text-text' },
     commitment: { label: 'Commitment & request', description: 'Shifts committed, commitment revoked or requested for approval.', chip: 'border-success-border bg-success-surface text-success' },
+    confirmation: { label: 'Confirmations', description: 'Shift assignments accepted or declined by the scheduled person.', chip: 'border-special-teal-border bg-special-teal-surface text-special-teal' },
     other: { label: 'Other', description: 'Rare entries that do not fit any other category, e.g. older log entries.', chip: 'border-border-subtle bg-surface-sunken text-text-muted' },
 }
 
@@ -542,6 +543,11 @@ const actionItems = computed(() => {
         { id: 'lifecycle', name: ACTION_META.lifecycle.label },
         { id: 'commitment', name: ACTION_META.commitment.label },
     ]
+    // Rubrik nur anbieten, wenn Zu-/Absagen im Verlauf sichtbar sind
+    // (Backend filtert sie je nach Setting bereits heraus).
+    if (normalizedLogs.value.some((e) => e.category === 'confirmation')) {
+        items.push({ id: 'confirmation', name: ACTION_META.confirmation.label })
+    }
     if (normalizedLogs.value.some((e) => e.category === 'other')) {
         items.push({ id: 'other', name: ACTION_META.other.label })
     }
@@ -870,6 +876,8 @@ const detectCategory = (log: RawShiftActivity): ActionCategory => {
     const ev = log.event || ''
     const key = String(log.properties?.translation_key || '').toLowerCase()
     const ctx = log.properties?.context || ''
+
+    if (ev === 'confirmation_accepted' || ev === 'confirmation_declined') return 'confirmation'
 
     if ((log.properties as any)?.commit_summary) return 'commitment'
     if (ctx === 'commit') return 'commitment'

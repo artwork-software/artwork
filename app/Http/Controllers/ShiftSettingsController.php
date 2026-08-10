@@ -144,6 +144,17 @@ class ShiftSettingsController extends Controller
         return $this->redirector->back();
     }
 
+    public function updateShiftConfirmationSettings(
+        Request $request,
+        ShiftSettings $shiftSettings
+    ): RedirectResponse {
+        $shiftSettings->shift_confirmation_enabled = $request->boolean('shift_confirmation_enabled');
+        $shiftSettings->shift_confirmation_in_history = $request->boolean('shift_confirmation_in_history');
+        $shiftSettings->save();
+
+        return $this->redirector->back();
+    }
+
     public function saveWarningMultipleAssignments(Request $request): void
     {
         $this->generalSettingsService->updateWarningMultipleAssignmentsFromRequest($request);

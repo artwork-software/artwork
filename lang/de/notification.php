@@ -73,6 +73,10 @@ return [
         'open_demand_description' =>
             'Der Termin :event hat noch :count offene Stellen für die Gewerk :craft :shift',
 
+        'confirmation_accepted' => ':workerName hat die Schicht :craftAbbreviation am :date angenommen',
+        'confirmation_declined' => ':workerName hat die Schicht :craftAbbreviation am :date abgelehnt',
+        'confirmation_comment' => 'Kommentar: :comment',
+        'confirmation_by_proxy' => 'Erfasst durch :userName',
         'worktime-request' => [
             'new-request' => 'Neue Arbeitszeitänderungsanfrage',
             'link-to-request' => 'Gehe zu Anfrage',

@@ -1983,6 +1983,13 @@ class ShiftController extends Controller
             $startDateTime->format('H:i') . ' - ' . $endDateTime->format('H:i')
         );
 
+        // Individuelle Zeit geändert → eine bereits abgegebene Zu-/Absage bezog
+        // sich auf die alte Zeit und wird auf "ausstehend" zurückgesetzt.
+        if ($pivot->wasChanged(['start_time', 'end_time', 'start_date', 'end_date'])) {
+            app(\Artwork\Modules\Shift\Services\ShiftWorkerConfirmationService::class)
+                ->resetConfirmation($pivot);
+        }
+
         $this->workingHourCacheService->forgetForEntity(
             WorkingHourCacheService::entityType($pivot->employable),
             $pivot->employable_id

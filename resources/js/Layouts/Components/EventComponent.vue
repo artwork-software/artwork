@@ -86,7 +86,16 @@
 
                 <!-- Date & Time -->
                 <section class="border-t border-border-hairline py-4">
-                    <h3 class="mb-3 font-lexend font-semibold text-[11px] uppercase tracking-[0.08em] text-accent-600">{{ $t('Date & Time') }}</h3>
+                    <div class="mb-3 flex items-center justify-between gap-2">
+                        <h3 class="font-lexend font-semibold text-[11px] uppercase tracking-[0.08em] text-accent-600">{{ $t('Date & Time') }}</h3>
+                        <SwitchIconTooltip
+                            v-model="shiftPeriodOnStartDateChange"
+                            :tooltip-text="shiftPeriodTooltipText"
+                            :icon="IconArrowsMoveHorizontal"
+                            size="sm"
+                            @change="onToggleShiftPeriodOnStartDateChange"
+                        />
+                    </div>
 
                     <label class="inline-flex items-center gap-2">
                         <input
@@ -122,6 +131,22 @@
                                 @change="() => { endAutoFilled = false; checkChanges() }"
                                 class="ui-input"
                             />
+                        </div>
+                    </div>
+
+                    <!-- Einlass: optionale Uhrzeit, bezogen auf den Starttag (Instanz-Setting) -->
+                    <div class="ui-grid-2 mt-2" v-if="admissionModule">
+                        <div class="flex gap-2 items-end">
+                            <BaseInput
+                                type="time"
+                                id="admissionTime"
+                                v-model="admissionTime"
+                                :label="$t('Admission')"
+                                class="ui-input"
+                            />
+                        </div>
+                        <div class="flex items-end pb-2 text-[12px] text-text-muted" v-if="startDate && endDate && startDate !== endDate">
+                            {{ $t('Refers to the start day') }}
                         </div>
                     </div>
 
@@ -486,6 +511,9 @@
                             <span v-if="startDate === endDate">{{ formatDateGerman(startDate) }} • {{ startTime }} – {{ endTime }}</span>
                             <span v-else>{{ formatDateGerman(startDate) }} {{ startTime }} — {{ formatDateGerman(endDate) }} {{ endTime }}</span>
                         </div>
+                        <div class="text-[13px] text-text" v-if="admissionModule && admissionTime">
+                            {{ $t('Admission') }}: {{ admissionTime }}
+                        </div>
                     </div>
                     <div class="space-y-1.5">
                         <div class="ui-hint">{{ $t('Room') }}</div>
@@ -626,7 +654,8 @@ import ConfirmationComponent from '@/Layouts/Components/ConfirmationComponent.vu
 import ProjectSearch from '@/Components/SearchBars/ProjectSearch.vue'
 import RoomSearch from '@/Components/SearchBars/RoomSearch.vue'
 
-import { IconAlertTriangle, IconCheck, IconChevronUp, IconCircleX, IconTrash } from '@tabler/icons-vue'
+import { IconAlertTriangle, IconArrowsMoveHorizontal, IconCheck, IconChevronUp, IconCircleX, IconTrash } from '@tabler/icons-vue'
+import SwitchIconTooltip from '@/Artwork/Toggles/SwitchIconTooltip.vue'
 import { useEvent } from '@/Composeables/Event.js'
 import ArtworkBaseListbox from "@/Artwork/Listbox/ArtworkBaseListbox.vue";
 import {useI18n} from "vue-i18n";
@@ -659,6 +688,7 @@ const emit = defineEmits(['closed'])
 
 const page = usePage()
 const statusModule = computed(() => page.props.event_status_module)
+const admissionModule = computed(() => page.props.event_admission_module)
 const { getDaysOfEvent } = useEvent()
 const event_properties = inject('event_properties', [])
 
@@ -668,10 +698,30 @@ const startDate = ref(null)
 const startTime = ref(null)
 const endDate = ref(null)
 const endTime = ref(null)
+const admissionTime = ref(null)
 const oldStartDate = ref(null)
 const oldStartTime = ref(null)
 const oldEndDate = ref(null)
 const oldEndTime = ref(null)
+
+// Bearbeitungsverhalten beim Ändern des Startdatums: Zeitraum mitverschieben (true)
+// oder Enddatum fixiert lassen (false, Standard). Persistiertes User-Setting;
+// im Bulk-Kontext wird die von BulkBody bereitgestellte Ref geteilt, damit beide
+// Umschalter synchron bleiben.
+const injectedShiftPeriod = inject('shiftPeriodOnStartDateChange', null)
+const shiftPeriodOnStartDateChange = injectedShiftPeriod
+    ?? ref(usePage().props.auth.user?.shift_period_on_start_date_change ?? false)
+
+const shiftPeriodTooltipText = computed(() => shiftPeriodOnStartDateChange.value
+    ? $t('When the start date is changed, the whole period shifts along (duration is kept). Click to keep the end date fixed instead.')
+    : $t('The end date stays fixed when the start date is changed. Click to shift the whole period along instead.'))
+
+const onToggleShiftPeriodOnStartDateChange = () => {
+    axios.patch(
+        route('user.update.shift_period_on_start_date_change', {user: usePage().props.auth.user.id}),
+        {shift_period_on_start_date_change: shiftPeriodOnStartDateChange.value}
+    ).catch((e) => console.error('shift-period-setting:patch-failed', e))
+}
 
 const showSeriesEdit = ref(false)
 const allSeriesEvents = ref(false)
@@ -895,6 +945,8 @@ function openModal() {
     startTime.value = start.format('HH:mm')
     endDate.value = end.format('YYYY-MM-DD')
     endTime.value = end.format('HH:mm')
+    // TIME-Spalte kommt als "HH:mm:ss" — Inputs erwarten "HH:mm"
+    admissionTime.value = (props.event.admission_time ?? props.event.admissionTime ?? null)?.slice(0, 5) ?? null
     oldStartDate.value = startDate.value
     oldStartTime.value = startTime.value
     oldEndDate.value = endDate.value
@@ -962,7 +1014,7 @@ function closeModal(closedOnPurpose = false) {
     }
 
     // minimal reset
-    startDate.value = startTime.value = endDate.value = endTime.value = null
+    startDate.value = startTime.value = endDate.value = endTime.value = admissionTime.value = null
     oldStartDate.value = oldStartTime.value = oldEndDate.value = oldEndTime.value = null
     eventName.value = description.value = null
     selectedProject.value = selectedRoom.value = null
@@ -1088,7 +1140,15 @@ function shiftEndByStartDelta(type) {
         const diffDays = newStart.diff(oldStart, 'day')
         if (diffDays === 0) return
 
-        endDate.value = dayjs(endDate.value).add(diffDays, 'day').format('YYYY-MM-DD')
+        if (shiftPeriodOnStartDateChange.value) {
+            // Zeitraum mitverschieben: Dauer beibehalten
+            endDate.value = dayjs(endDate.value).add(diffDays, 'day').format('YYYY-MM-DD')
+        } else if (dayjs(endDate.value).isBefore(newStart, 'day')) {
+            // Standard: Enddatum bleibt stehen. Läge es vor dem neuen Start, auf den Start clampen.
+            endDate.value = newStart.format('YYYY-MM-DD')
+        }
+        // oldStartDate immer nachführen — auch ohne Verschiebung, sonst rechnet
+        // die Uhrzeit-Verschiebung ('time') später mit tagesgroßen Deltas.
         oldStartDate.value = startDate.value
     } else if (type === 'time') {
         if (!oldStartTime.value || !startTime.value || !endTime.value || !endDate.value) return
@@ -1193,6 +1253,7 @@ function payload() {
         eventStatusId: selectedEventStatus.value?.id,
         start: formatDate(startDate.value, allDayEvent.value ? '00:00' : startTime.value),
         end: formatDate(endDate.value, allDayEvent.value ? '23:59' : endTime.value),
+        admissionTime: admissionTime.value || null,
         roomId: selectedRoom.value?.id,
         description: description.value,
         isOption: isOption.value,

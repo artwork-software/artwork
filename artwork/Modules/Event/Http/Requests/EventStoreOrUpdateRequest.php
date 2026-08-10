@@ -23,6 +23,8 @@ class EventStoreOrUpdateRequest extends FormRequest
             'eventName' => ['required_if:eventNameMandatory,true','nullable','string'],
             'start' => ['required', 'date'],
             'end' => ['required', 'date', 'after:start'],
+            // Einlass: bewusst ohne Abgleich mit start (Einlass am Vortag möglich)
+            'admissionTime' => ['sometimes', 'nullable', 'date_format:H:i'],
             'roomId' => ['sometimes', 'nullable', 'exists:rooms,id'],
             'declinedRoomId' => ['sometimes','nullable','exists:rooms,id'],
             'description' => ['sometimes', 'nullable', 'string'],

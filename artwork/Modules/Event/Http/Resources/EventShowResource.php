@@ -29,6 +29,7 @@ class EventShowResource extends JsonResource
             'endDate' => Carbon::parse($this->end_time)->format('Y-m-d'),
             'endTime' => Carbon::parse($this->end_time)->format('H:i'),
             'end_time_weekday' => Carbon::parse($this->end_time)->format('l'),
+            'admission_time' => $this->admission_time ? substr($this->admission_time, 0, 5) : null,
             'start_time_dt_local' => Carbon::parse($this->start_time)->toDateTimeLocalString(),
             'end_time_dt_local' => Carbon::parse($this->end_time)->toDateTimeLocalString(),
             'occupancy_option' => $this->occupancy_option,

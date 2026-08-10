@@ -90,6 +90,10 @@ class ShiftDTO extends Data
             }
 
             foreach ($collection as $worker) {
+                // Person ist eingeplant, hat aber am Schichttag einen anderen
+                // Verfügbarkeitsstatus als "Verfügbar" (z.B. nachträglich krank gemeldet)
+                $unavailableStatus = ShiftWorkerAvailability::getWorkerUnavailableStatus($shift, $worker);
+
                 $workers[] = [
                     'id' => $worker->id,
                     'type' => $type,
@@ -101,6 +105,10 @@ class ShiftDTO extends Data
                         'short_description' => $worker->pivot->short_description ?? null,
                         'start_time' => $worker->pivot->start_time ?? null,
                         'end_time' => $worker->pivot->end_time ?? null,
+                        'confirmation_status' => $worker->pivot->confirmation_status ?? null,
+                        'confirmation_at' => $worker->pivot->confirmation_at ?? null,
+                        'confirmation_by_user_id' => $worker->pivot->confirmation_by_user_id ?? null,
+                        'confirmation_comment' => $worker->pivot->confirmation_comment ?? null,
                     ] : null,
                     'first_name' => $type === 'service_provider'
                         ? ($worker->provider_name ?? '')
@@ -112,9 +120,10 @@ class ShiftDTO extends Data
                     'globalQualifications' => ($worker->relationLoaded('globalQualifications'))
                         ? $worker->globalQualifications->map(fn ($q) => ['id' => $q->id])->values()->all()
                         : [],
-                    // Person ist eingeplant, hat aber am Schichttag einen anderen
-                    // Verfügbarkeitsstatus als "Verfügbar" (z.B. nachträglich krank gemeldet)
-                    'is_unavailable' => ShiftWorkerAvailability::isWorkerUnavailable($shift, $worker),
+                    'is_unavailable' => $unavailableStatus !== null,
+                    // Konfliktierender Tagesstatus (NOT_AVAILABLE/OFF_WORK/FREE_WORK) für
+                    // die statusfarbene Umrandung im Schichten-Tab
+                    'unavailable_status' => $unavailableStatus,
                 ];
             }
         }

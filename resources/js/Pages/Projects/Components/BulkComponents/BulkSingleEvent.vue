@@ -189,6 +189,21 @@
                 </div>
             </div>
 
+            <!-- Einlass (nur wenn instanzweit aktiv) -->
+            <div v-if="usePage().props.event_admission_module" class="col-span-1" :style="getColumnSize(6)">
+                <div class="flex items-center" v-if="timeArray">
+                    <BaseInput
+                        v-model="draftAdmissionTime"
+                        type="time"
+                        :id="'admission-time-' + index"
+                        class="print:border-0"
+                        :disabled="canEditComponent === false || !hasPermission"
+                        @focusout="onAdmissionTimeFocusOut"
+                        @mousedown="storeFocus('admission-time-' + index)"
+                    />
+                </div>
+            </div>
+
             <!-- Actions -->
             <div
                 v-if="canEditComponent && hasPermission"
@@ -460,6 +475,14 @@ const showSearchTimelinePresetModal = ref(false);
 
 // Inline description
 const showDescriptionInBulk = inject('showDescriptionInBulk', ref(false));
+
+// Bearbeitungsverhalten beim Ändern des Startdatums: Zeitraum mitverschieben (true)
+// oder Enddatum fixiert lassen (false, Standard). Kommt aus BulkBody (provide),
+// Fallback auf das User-Setting, falls ohne Provider verwendet.
+const shiftPeriodOnStartDateChange = inject('shiftPeriodOnStartDateChange', null);
+const shouldShiftPeriod = () => shiftPeriodOnStartDateChange
+    ? !!shiftPeriodOnStartDateChange.value
+    : !!usePage().props.auth.user?.shift_period_on_start_date_change;
 const editingDescription = ref(false);
 const draftDescription = ref(props.event.description || '');
 const descriptionTextarea = ref(null);
@@ -503,6 +526,7 @@ const draftStartDate = ref(props.event.day);
 // Local draft state for times to prevent immediate re-sorting while typing
 const draftStartTime = ref(props.event.start_time || '');
 const draftEndTime = ref(props.event.end_time || '');
+const draftAdmissionTime = ref(props.event.admission_time?.slice(0, 5) || '');
 
 // Wurzel-Element der Zeile, um beim focusout zu erkennen, ob der Fokus in ein
 // anderes Feld derselben Event-Zeile wandert.
@@ -584,6 +608,7 @@ const getComparableEvent = (ev) => ({
     end_day: ev.end_day ?? null,
     start_time: ev.start_time ?? null,
     end_time: ev.end_time ?? null,
+    admission_time: ev.admission_time ?? null,
     is_planning: ev.is_planning ?? false,
     statusId: ev.status?.id ?? null,
 });
@@ -666,12 +691,27 @@ const onStartDateFocusOut = async () => {
     // Commit draft to actual event object only on focusout
     const oldStart = props.event.day;
     const newStart = draftStartDate.value;
-    const deltaDays = diffDaysISO(oldStart, newStart);
 
-    // Keep the existing duration by shifting end_day by the same delta.
+    // Leeres oder ungültiges Datum nie übernehmen: Feld auf den alten Wert zurücksetzen
+    // statt zu patchen — sonst macht der Backend-Fallback aus dem Termin "heute".
+    if (!newStart || !/^\d{4}-\d{2}-\d{2}$/.test(String(newStart))) {
+        draftStartDate.value = oldStart;
+        return;
+    }
+    // Unverändert → kein Patch (vermeidet unnötige updated_at-/Broadcast-Änderungen)
+    if (newStart === oldStart) return;
+
     // If end_day is missing, treat it as equal to the old start day.
     const oldEnd = props.event.end_day || oldStart;
-    const newEndDay = addDaysISO(oldEnd, deltaDays);
+
+    let newEndDay;
+    if (shouldShiftPeriod()) {
+        // Zeitraum mitverschieben: Dauer beibehalten, Ende um dieselbe Differenz verschieben.
+        newEndDay = addDaysISO(oldEnd, diffDaysISO(oldStart, newStart));
+    } else {
+        // Standard: Enddatum bleibt stehen. Läge es vor dem neuen Start, auf den Start clampen.
+        newEndDay = diffDaysISO(newStart, oldEnd) < 0 ? newStart : oldEnd;
+    }
 
     // Prepare payload BEFORE reactive changes to avoid component unmount issues during sorting
     if (props.event.id) {
@@ -712,6 +752,13 @@ const onStartTimeFocusOut = (e) => {
 const onEndTimeFocusOut = (e) => {
     // Commit draft end time to actual event object only on focusout
     props.event.end_time = draftEndTime.value;
+    if (focusStaysInRow(e)) return;
+    updateEventInDatabase();
+};
+
+const onAdmissionTimeFocusOut = (e) => {
+    // Commit draft admission time to actual event object only on focusout
+    props.event.admission_time = draftAdmissionTime.value || null;
     if (focusStaysInRow(e)) return;
     updateEventInDatabase();
 };
@@ -774,6 +821,13 @@ watch(() => props.event.end_time, (v) => {
     const newVal = v || '';
     if (newVal !== draftEndTime.value) {
         draftEndTime.value = newVal;
+    }
+});
+
+watch(() => props.event.admission_time, (v) => {
+    const newVal = v?.slice(0, 5) || '';
+    if (newVal !== draftAdmissionTime.value) {
+        draftAdmissionTime.value = newVal;
     }
 });
 

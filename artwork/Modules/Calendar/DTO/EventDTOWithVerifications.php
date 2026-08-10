@@ -43,6 +43,7 @@ class EventDTOWithVerifications extends Data
         public ?bool $isPlanning = false,
         public ?bool $hasVerification = false,
         public ?array $verifications = null,
+        public ?string $admission_time = null,
     ) {
     }
 
@@ -110,6 +111,8 @@ class EventDTOWithVerifications extends Data
             hasVerification: $event->getAttribute('has_pending_verification')
                 ?? $event->getAttribute('has_verification') ?? false,
             verifications: self::serializeVerifications($verificationsByEvent, $event->id),
+            // TIME-Spalte ("HH:mm:ss") → "HH:mm"
+            admission_time: $event->admission_time ? substr($event->admission_time, 0, 5) : null,
         );
     }
 

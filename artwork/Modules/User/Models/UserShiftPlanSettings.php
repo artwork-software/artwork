@@ -16,6 +16,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property boolean $options
  * @property boolean $project_management
  * @property boolean $show_event_creator
+ * @property boolean $show_event_admission
  * @property boolean $repeating_events
  * @property boolean $use_project_time_period
  * @property int $time_period_project_id
@@ -55,6 +56,7 @@ class UserShiftPlanSettings extends Model
         'options',
         'project_management',
         'show_event_creator',
+        'show_event_admission',
         'repeating_events',
         'work_shifts',
         'description',
@@ -85,6 +87,7 @@ class UserShiftPlanSettings extends Model
         'options' => 'boolean',
         'project_management' => 'boolean',
         'show_event_creator' => 'boolean',
+        'show_event_admission' => 'boolean',
         'repeating_events' => 'boolean',
         'work_shifts' => 'boolean',
         'description' => 'boolean',

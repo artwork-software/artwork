@@ -56,8 +56,14 @@
 
             <!-- Zeile 2: Gewerkname (gleiches Typo-Level wie Termin-/Projektname) -->
             <div class="min-w-0">
-
-
+                <!-- Projektfremde Schicht: Projektname bzw. "Ohne Projektzuordnung" als Kontext-Label -->
+                <div
+                    v-if="isUnrelatedProjectShift"
+                    class="ml-2 text-[10px] text-text-subtle italic truncate"
+                    v-tooltip.bottom="{ value: unrelatedProjectLabel ?? $t('Without project assignment'), class: 'aw-tooltip' }"
+                >
+                    {{ unrelatedProjectLabel ?? $t('Without project assignment') }}
+                </div>
             </div>
 
             <!-- Zeile 3: Funktionen (Badges/Liste) -->
@@ -439,10 +445,27 @@ const props = defineProps({
         type: String,
         default: 'single', // 'single' | 'start' | 'middle' | 'end'
     },
+    // Projekt-Schichten-Tab ("Projektfremde Schichten anzeigen"): aktuelle Projekt-ID,
+    // damit Schichten anderer Projekte bzw. ohne Projekt gelabelt werden
+    currentProjectId: {
+        type: [Number, String],
+        default: null
+    },
 });
 
 // Folgetag (End-/Mitteltag): visuell abgehoben, nur Kerninfos
 const isFollowUpDay = computed(() => props.dayRole === 'end' || props.dayRole === 'middle')
+
+// Projektfremde Schicht (anderes Projekt oder ohne Projektzuordnung) im Projekt-Schichten-Tab
+const isUnrelatedProjectShift = computed(() => {
+    if (props.currentProjectId === null || props.currentProjectId === undefined) return false
+    const shiftProjectId = props.shift?.projectId ?? props.shift?.project_id ?? null
+    return Number(shiftProjectId ?? 0) !== Number(props.currentProjectId)
+})
+
+const unrelatedProjectLabel = computed(() =>
+    props.shift?.projectName ?? props.shift?.project_name ?? null
+)
 
 // Anzeigeeinstellung "Notizen einblenden" (Tagesansicht-Settings mit Fallback-Kette)
 const showNotes = computed(() => {

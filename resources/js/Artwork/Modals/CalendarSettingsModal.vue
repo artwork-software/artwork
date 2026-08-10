@@ -511,6 +511,58 @@
                         </div>
                     </div>
 
+                    <!-- Projektfremde Termine (nur Projekt-Schichten-Tab) -->
+                    <div class="flex gap-3" v-if="inShiftPlan && isDailyView && isInProjectView">
+                        <div class="flex h-6 shrink-0 items-center">
+                            <div class="group grid size-4 grid-cols-1">
+                                <input
+                                    v-model="userCalendarSettings.show_unrelated_events"
+                                    id="show_unrelated_events"
+                                    aria-describedby="show_unrelated_events-description"
+                                    name="show_unrelated_events"
+                                    type="checkbox"
+                                    class="col-start-1 row-start-1 appearance-none rounded-sm border border-border bg-surface checked:border-accent-600 checked:bg-accent-600 indeterminate:border-accent-600 indeterminate:bg-accent-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-600 disabled:border-border disabled:bg-surface-sunken disabled:checked:bg-surface-sunken forced-colors:appearance-auto"
+                                />
+                                <svg class="pointer-events-none col-start-1 row-start-1 size-3.5 self-center justify-self-center stroke-white group-has-disabled:stroke-text-subtle" viewBox="0 0 14 14" fill="none">
+                                    <path class="opacity-0 group-has-checked:opacity-100" d="M3 8L6 11L11 3.5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                    <path class="opacity-0 group-has-indeterminate:opacity-100" d="M3 7H11" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                </svg>
+                            </div>
+                        </div>
+                        <div class="text-sm/6">
+                            <label for="show_unrelated_events" class="font-medium text-text">{{ $t('Show events from other projects') }}</label>
+                            <p id="show_unrelated_events-description" class="text-text-subtle text-xs">
+                                {{ $t('Also displays events from other projects or without a project assignment to keep the context of the whole house in view.') }}
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Projektfremde Schichten (nur Projekt-Schichten-Tab) -->
+                    <div class="flex gap-3" v-if="inShiftPlan && isDailyView && isInProjectView">
+                        <div class="flex h-6 shrink-0 items-center">
+                            <div class="group grid size-4 grid-cols-1">
+                                <input
+                                    v-model="userCalendarSettings.show_unrelated_shifts"
+                                    id="show_unrelated_shifts"
+                                    aria-describedby="show_unrelated_shifts-description"
+                                    name="show_unrelated_shifts"
+                                    type="checkbox"
+                                    class="col-start-1 row-start-1 appearance-none rounded-sm border border-border bg-surface checked:border-accent-600 checked:bg-accent-600 indeterminate:border-accent-600 indeterminate:bg-accent-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-600 disabled:border-border disabled:bg-surface-sunken disabled:checked:bg-surface-sunken forced-colors:appearance-auto"
+                                />
+                                <svg class="pointer-events-none col-start-1 row-start-1 size-3.5 self-center justify-self-center stroke-white group-has-disabled:stroke-text-subtle" viewBox="0 0 14 14" fill="none">
+                                    <path class="opacity-0 group-has-checked:opacity-100" d="M3 8L6 11L11 3.5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                    <path class="opacity-0 group-has-indeterminate:opacity-100" d="M3 7H11" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                </svg>
+                            </div>
+                        </div>
+                        <div class="text-sm/6">
+                            <label for="show_unrelated_shifts" class="font-medium text-text">{{ $t('Show shifts from other projects') }}</label>
+                            <p id="show_unrelated_shifts-description" class="text-text-subtle text-xs">
+                                {{ $t('Also displays shifts from other projects or without a project assignment to keep the context of the whole house in view.') }}
+                            </p>
+                        </div>
+                    </div>
+
                     <!-- Show fully staffed shifts (nur Listenansicht) -->
                     <div class="flex gap-3" v-if="isListView">
                         <div class="flex h-6 shrink-0 items-center">
@@ -807,6 +859,32 @@
                         </div>
                     </div>
 
+                    <!-- Admission time (nur wenn das Einlass-Feld instanzweit aktiv ist) -->
+                    <div class="flex gap-3" v-if="usePage().props.event_admission_module">
+                        <div class="flex h-6 shrink-0 items-center">
+                            <div class="group grid size-4 grid-cols-1">
+                                <input
+                                    v-model="userCalendarSettings.show_event_admission"
+                                    id="show_event_admission"
+                                    aria-describedby="show_event_admission-description"
+                                    name="show_event_admission"
+                                    type="checkbox"
+                                    class="col-start-1 row-start-1 appearance-none rounded-sm border border-border bg-surface checked:border-accent-600 checked:bg-accent-600 indeterminate:border-accent-600 indeterminate:bg-accent-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-600 disabled:border-border disabled:bg-surface-sunken disabled:checked:bg-surface-sunken forced-colors:appearance-auto"
+                                />
+                                <svg class="pointer-events-none col-start-1 row-start-1 size-3.5 self-center justify-self-center stroke-white group-has-disabled:stroke-text-subtle" viewBox="0 0 14 14" fill="none">
+                                    <path class="opacity-0 group-has-checked:opacity-100" d="M3 8L6 11L11 3.5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                    <path class="opacity-0 group-has-indeterminate:opacity-100" d="M3 7H11" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                </svg>
+                            </div>
+                        </div>
+                        <div class="text-sm/6">
+                            <label for="show_event_admission" class="font-medium text-text">{{ $t('Admission') }}</label>
+                            <p id="show_event_admission-description" class="text-text-subtle text-xs">
+                                {{ $t('Shows the admission time on event tiles, helpful for everyone preparing the house opening.') }}
+                            </p>
+                        </div>
+                    </div>
+
                     <!-- Artists -->
                     <div class="flex gap-3">
                         <div class="flex h-6 shrink-0 items-center">
@@ -1015,6 +1093,7 @@ const props = defineProps({
     inShiftPlan: { type: Boolean, default: false },
     isDailyView: { type: Boolean, default: false },
     isListView: { type: Boolean, default: false },
+    isInProjectView: { type: Boolean, default: false },
 });
 
 const emit = defineEmits(["close"]);
@@ -1059,6 +1138,8 @@ const userCalendarSettings = props.isListView
         options: activeSettings ? activeSettings.options : false,
         project_management: activeSettings ? activeSettings.project_management : false,
         show_event_creator: activeSettings ? activeSettings.show_event_creator : false,
+        // Default AN; fehlender Wert (Alt-Settings) zählt als aktiviert
+        show_event_admission: activeSettings ? (activeSettings.show_event_admission ?? true) : true,
         repeating_events: activeSettings ? activeSettings.repeating_events : false,
         work_shifts: activeSettings ? activeSettings.work_shifts : false,
         description: activeSettings ? activeSettings.description : false,
@@ -1080,6 +1161,13 @@ const userCalendarSettings = props.isListView
         // Default AN; fehlender Wert (Alt-Settings) zählt als aktiviert
         ...(props.inShiftPlan && props.isDailyView
             ? { show_project_assignments: activeSettings ? (activeSettings.show_project_assignments ?? true) : true }
+            : {}),
+        // Nur Projekt-Schichten-Tab: projektfremde Termine/Schichten (default AUS)
+        ...(props.inShiftPlan && props.isDailyView && props.isInProjectView
+            ? {
+                show_unrelated_events: activeSettings?.show_unrelated_events ?? false,
+                show_unrelated_shifts: activeSettings?.show_unrelated_shifts ?? false,
+            }
             : {}),
         // Nur Standard-Kalender: Spalten existieren nur auf user_calendar_settings
         ...(!props.inShiftPlan && !props.isDailyView

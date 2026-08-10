@@ -132,7 +132,19 @@
                         @focusout="onStartDateFocusOut"
                         class="min-w-0 flex-1"
                     />
-
+                    <!-- Ausnahme-Anzeige bei ausgeblendeter Enddatum-Spalte: mehrtägige
+                         Termine sind nie unsichtbar mehrtägig. Klick blendet die Spalte ein.
+                         Amber-Puls, wenn eine Startdatum-Änderung das Ende still betroffen hat. -->
+                    <button
+                        v-if="!showEndDate && (isMultiDay || endDateHintPulse)"
+                        type="button"
+                        v-tooltip.bottom="endChipTooltipBinding"
+                        class="shrink-0 inline-flex items-center rounded-full px-1.5 py-0.5 text-[11px] font-medium whitespace-nowrap cursor-pointer transition-colors"
+                        :class="endDateHintPulse
+                            ? 'bg-warning-surface text-warning ring-1 ring-warning-border animate-pulse'
+                            : 'bg-surface-sunken text-text-muted ring-1 ring-border-subtle hover:text-accent-700'"
+                        @click="revealEndDateColumn"
+                    >→ {{ formatChipDate(event.end_day) }}</button>
                 </div>
             </div>
 
@@ -418,6 +430,7 @@ import ArtworkBaseListbox from "@/Artwork/Listbox/ArtworkBaseListbox.vue";
 import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
 import EditSeriesEventsModal from "@/Components/Calendar/Elements/Events/EditSeriesEventsModal.vue";
 import {usePermission} from "@/Composeables/Permission.js";
+import {useTranslation} from "@/Composeables/Translation.js";
 
 const CreateTimelinePresetFormEvent = defineAsyncComponent({
     loader: () => import('@/Pages/Projects/Components/TimelineComponents/CreateTimelinePresetFormEvent.vue'),
@@ -437,6 +450,7 @@ const storeFocus     = inject('storeFocusGlobal');
 // Fallback auf die Prop, falls die Komponente ohne Provider verwendet wird.
 const injectedMultiEdit = inject('bulkMultiEdit', null);
 const {hasAdminRole, can} = usePermission(usePage().props);
+const $t = useTranslation();
 
 const props = defineProps({
     event: { type: Object, required: true },
@@ -483,6 +497,48 @@ const shiftPeriodOnStartDateChange = inject('shiftPeriodOnStartDateChange', null
 const shouldShiftPeriod = () => shiftPeriodOnStartDateChange
     ? !!shiftPeriodOnStartDateChange.value
     : !!usePage().props.auth.user?.shift_period_on_start_date_change;
+
+// --- Enddatum-Chip (Ausnahme-Anzeige bei ausgeblendeter Enddatum-Spalte) ---
+const injectedShowEndDate = inject('bulkShowEndDate', null);
+const isMultiDay = computed(() => !!props.event.end_day && props.event.end_day !== props.event.day);
+
+// Kurzer Amber-Puls, wenn eine Startdatum-Änderung das (unsichtbare) Ende betroffen hat
+const endDateHintPulse = ref(false);
+let endDateHintTimer = null;
+const triggerEndDateHint = () => {
+    endDateHintPulse.value = true;
+    if (endDateHintTimer) clearTimeout(endDateHintTimer);
+    endDateHintTimer = setTimeout(() => {
+        endDateHintPulse.value = false;
+    }, 2500);
+};
+
+const revealEndDateColumn = () => {
+    if (injectedShowEndDate) injectedShowEndDate.value = true;
+};
+
+// Kompaktformat für den Chip: DD.MM., Jahr nur wenn abweichend vom Startjahr
+const formatChipDate = (iso) => {
+    const d = parseISODateToUTCMidnight(iso);
+    if (!d) return '';
+    const start = parseISODateToUTCMidnight(props.event.day);
+    const dd = String(d.getUTCDate()).padStart(2, '0');
+    const mm = String(d.getUTCMonth() + 1).padStart(2, '0');
+    const sameYear = start && start.getUTCFullYear() === d.getUTCFullYear();
+    return sameYear ? `${dd}.${mm}.` : `${dd}.${mm}.${d.getUTCFullYear()}`;
+};
+
+const formatFullDate = (iso) => {
+    const d = parseISODateToUTCMidnight(iso);
+    if (!d) return '';
+    return `${String(d.getUTCDate()).padStart(2, '0')}.${String(d.getUTCMonth() + 1).padStart(2, '0')}.${d.getUTCFullYear()}`;
+};
+
+const endChipTooltipBinding = computed(() => ({
+    value: $t('Event ends on {0}. Click to show the end date column.', [formatFullDate(props.event.end_day)]),
+    appendTo: 'body',
+    class: 'aw-tooltip'
+}));
 const editingDescription = ref(false);
 const draftDescription = ref(props.event.description || '');
 const descriptionTextarea = ref(null);
@@ -711,6 +767,14 @@ const onStartDateFocusOut = async () => {
     } else {
         // Standard: Enddatum bleibt stehen. Läge es vor dem neuen Start, auf den Start clampen.
         newEndDay = diffDaysISO(newStart, oldEnd) < 0 ? newStart : oldEnd;
+    }
+
+    // Enddatum-Spalte ausgeblendet und das (unsichtbare) Ende ist bemerkenswert betroffen?
+    // → Chip kurz amber pulsen lassen, damit die stille Änderung im Moment der Aktion
+    // sichtbar ist. NICHT pulsen beim Normalfall "eintägig bleibt eintägig" (Ende folgt Start).
+    const staysSingleDay = oldEnd === oldStart && newEndDay === newStart;
+    if (!props.showEndDate && !staysSingleDay) {
+        triggerEndDateHint();
     }
 
     // Prepare payload BEFORE reactive changes to avoid component unmount issues during sorting

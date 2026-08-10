@@ -67,19 +67,17 @@
                             color-property="color"
                         >
                         </ArtworkBaseListbox>
-                        <div :class="statusModule ? '' : 'pt-5'">
-                            <BaseInput
-                                v-model="eventName"
-                                id="eventTitle"
-                                :label="selectedEventType?.individual_name ? $t('Event name') + '*' : $t('Event name')"
-                                class="ui-input"
-                            />
-                        </div>
+                        <BaseInput
+                            v-model="eventName"
+                            id="eventTitle"
+                            :label="selectedEventType?.individual_name ? $t('Event name') + '*' : $t('Event name')"
+                            class="ui-input"
+                        />
                     </div>
 
                     <div class="ui-grid-2 mt-0.5">
                         <p class="ui-error" v-if="errorMsg('eventType')" v-html="errorMsg('eventType')" />
-                        <span />
+                        <span v-if="statusModule" />
                         <p class="ui-error" v-if="selectedEventType?.individual_name && errorMsg('eventName')" v-html="errorMsg('eventName')" />
                     </div>
                 </section>
@@ -90,7 +88,7 @@
                         <h3 class="font-lexend font-semibold text-[11px] uppercase tracking-[0.08em] text-accent-600">{{ $t('Date & Time') }}</h3>
                         <SwitchIconTooltip
                             v-model="shiftPeriodOnStartDateChange"
-                            :tooltip-text="shiftPeriodTooltipText"
+                            :tooltip-text="$t('Move the end date along when the start date is changed')"
                             :icon="IconArrowsMoveHorizontal"
                             size="sm"
                             @change="onToggleShiftPeriodOnStartDateChange"
@@ -199,7 +197,7 @@
                         <span class="ui-hint">{{ $t('Enable if this event should repeat automatically.') }}</span>
                     </div>
 
-                    <div v-show="series" class="mt-2 ui-grid-2 items-end">
+                    <div v-show="series" class="mt-2 ui-grid-2">
                         <ArtworkBaseListbox
                             v-model="selectedFrequency"
                             :items="frequencies"
@@ -208,7 +206,6 @@
                             option-key="id"
                             label="Frequency"
                             :use-translations="false"
-                            :button-class="uiLbBtn"
                         />
                         <BaseInput id="seriesEndDate" type="date" v-model="seriesEndDate" :label="$t('End date Repeat event')" class="ui-input" />
                     </div>
@@ -414,7 +411,6 @@
                                     by="name"
                                     label="Option"
                                     :use-translations="false"
-                                    :button-class="uiLbBtn"
                                 />
                             </div>
                         </div>
@@ -711,10 +707,6 @@ const oldEndTime = ref(null)
 const injectedShiftPeriod = inject('shiftPeriodOnStartDateChange', null)
 const shiftPeriodOnStartDateChange = injectedShiftPeriod
     ?? ref(usePage().props.auth.user?.shift_period_on_start_date_change ?? false)
-
-const shiftPeriodTooltipText = computed(() => shiftPeriodOnStartDateChange.value
-    ? $t('When the start date is changed, the whole period shifts along (duration is kept). Click to keep the end date fixed instead.')
-    : $t('The end date stays fixed when the start date is changed. Click to shift the whole period along instead.'))
 
 const onToggleShiftPeriodOnStartDateChange = () => {
     axios.patch(
@@ -1213,11 +1205,6 @@ function checkChanges() {
     }
     updateTimes()
 }
-
-const uiLbBtn =
-    'menu-button bg-white w-full text-left rounded-md border border-border-subtle px-3 py-4 h-13 text-sm/5 font-semibold text-text';
-const uiLbOpts =
-    'mt-1 max-h-60 overflow-auto rounded-md bg-white py-1 text-text ring-1 shadow-lg ring-black/5 focus:outline-none';
 
 function toggleAccept(type) {
     if (type === 'option') {

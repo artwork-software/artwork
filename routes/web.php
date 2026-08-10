@@ -2671,6 +2671,8 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
             ->middleware('can:crm manager')->name('crm.duplicates');
         Route::post('/duplicates/merge', [\Artwork\Modules\Crm\Http\Controllers\CrmDuplicateController::class, 'merge'])
             ->middleware('can:crm manager')->name('crm.duplicates.merge');
+        Route::post('/duplicates/merge-all', [\Artwork\Modules\Crm\Http\Controllers\CrmDuplicateController::class, 'mergeAll'])
+            ->middleware('can:crm manager')->name('crm.duplicates.merge-all');
 
         Route::get('/contacts-search', [CrmContactController::class, 'search'])->name('crm.contacts.search');
         // Papierkorb — muss vor den /contacts/{crmContact}-Routen stehen!

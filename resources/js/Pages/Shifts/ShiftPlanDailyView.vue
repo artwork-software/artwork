@@ -72,7 +72,7 @@
                         <SwitchIconTooltip
                             v-if="!props.project"
                             v-model="dailyViewMode"
-                            :tooltip-text="$t('Daily view')"
+                            :tooltip-text="$t('Switch between weekly and daily view')"
                             size="md"
                             @change="changeDailyViewMode"
                             :icon="IconCalendarWeek"

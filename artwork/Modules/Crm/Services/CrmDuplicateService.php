@@ -113,6 +113,68 @@ readonly class CrmDuplicateService
     }
 
     /**
+     * Führt alle gefundenen Duplikat-Cluster auf einmal zusammen. Hauptkontakt je
+     * Cluster ist der entity-gebundene Kontakt, sonst der älteste — dieselbe
+     * Vorauswahl wie im Frontend. Entity-gebundene Kontakte werden nie eingeschmolzen.
+     *
+     * Cluster können sich überschneiden (Name- und E-Mail-Treffer) und ein Merge kann
+     * neue Treffer erzeugen (E-Mail wird auf den Hauptkontakt übernommen) — daher
+     * passweise, bis nichts mehr zusammengeführt werden kann.
+     *
+     * @return array{merged: int, groups: int}
+     */
+    public function mergeAll(): array
+    {
+        $mergedTotal = 0;
+        $groupsTotal = 0;
+
+        for ($pass = 0; $pass < 10; $pass++) {
+            $consumed = [];
+            $mergedThisPass = 0;
+
+            foreach ($this->findDuplicateGroups() as $cluster) {
+                $ids = array_column($cluster['contacts'], 'id');
+
+                // Kontakt in diesem Pass schon angefasst → Cluster im nächsten Pass erneut prüfen
+                if (array_intersect($ids, $consumed) !== []) {
+                    continue;
+                }
+
+                $contacts = collect($cluster['contacts']);
+                $primaryData = $contacts->firstWhere('has_entity', true) ?? $contacts->first();
+                $duplicateIds = $contacts
+                    ->filter(fn (array $c) => $c['id'] !== $primaryData['id'] && !$c['has_entity'])
+                    ->pluck('id');
+
+                if ($duplicateIds->isEmpty()) {
+                    continue;
+                }
+
+                $primary = CrmContact::find($primaryData['id']);
+                $duplicates = CrmContact::whereIn('id', $duplicateIds)->get();
+
+                if ($primary === null || $duplicates->isEmpty()) {
+                    continue;
+                }
+
+                $this->merge($primary, $duplicates);
+
+                $consumed = array_merge($consumed, $ids);
+                $mergedThisPass += $duplicates->count();
+                $groupsTotal++;
+            }
+
+            $mergedTotal += $mergedThisPass;
+
+            if ($mergedThisPass === 0) {
+                break;
+            }
+        }
+
+        return ['merged' => $mergedTotal, 'groups' => $groupsTotal];
+    }
+
+    /**
      * Führt Duplikate in den Hauptkontakt zusammen:
      * - Eigenschaftswerte ergänzen den Hauptkontakt nur dort, wo er leer ist
      * - Projekt-/Team-/Aufenthalts-/Zugriffs-Verknüpfungen werden umgehängt

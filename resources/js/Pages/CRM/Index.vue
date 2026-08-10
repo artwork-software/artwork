@@ -80,8 +80,21 @@
                 </div>
             </Transition>
 
+            <!-- Import Error Banner (z.B. abgelaufene Import-Session) -->
+            <div v-if="importError" class="mt-4 rounded-md bg-danger-surface p-3">
+                <p class="text-sm font-medium text-danger">{{ importError }}</p>
+            </div>
+
             <!-- Import Result Banner -->
             <div v-if="importResult" class="mt-4 space-y-2">
+                <div
+                    v-if="!importResult.created && !importResult.updated && !importResult.duplicates && !importResult.skipped?.length"
+                    class="rounded-md bg-warning-surface border border-warning-border p-3"
+                >
+                    <p class="text-sm font-medium text-warning">
+                        {{ $t('No contacts were imported. Please restart the import.') }}
+                    </p>
+                </div>
                 <div v-if="importResult.created > 0" class="rounded-md bg-success-surface p-3">
                     <p class="text-sm font-medium text-success">
                         {{ $t('{count} contacts created', { count: importResult.created }) }}
@@ -308,6 +321,7 @@ const props = defineProps({
     contacts: { type: Object, default: null },
     canImport: { type: Boolean, default: false },
     importResult: { type: Object, default: null },
+    importError: { type: String, default: null },
 })
 
 const $t = useTranslation()

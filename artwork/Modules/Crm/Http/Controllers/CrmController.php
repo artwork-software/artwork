@@ -80,6 +80,7 @@ class CrmController extends Controller
             'contacts' => $contacts,
             'canImport' => $isCrmManager,
             'importResult' => session('importResult'),
+            'importError' => session('error'),
         ]);
     }
 

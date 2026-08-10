@@ -61,6 +61,13 @@ readonly class CrmImportService
 
     public function storeSession(string $path, int $contactTypeId): void
     {
+        // Reste eines zuvor abgebrochenen Typ-Spalten-Imports entfernen, sonst liefert
+        // getSession() das Multi-Typ-Format ohne typeId und der Import crasht
+        session()->forget([
+            'crm_import_multi_type',
+            'crm_import_type_column_index',
+            'crm_import_type_value_mapping',
+        ]);
         session([
             'crm_import_path' => $path,
             'crm_import_type_id' => $contactTypeId,
@@ -69,6 +76,7 @@ readonly class CrmImportService
 
     public function storeSessionMultiType(string $path): void
     {
+        session()->forget('crm_import_type_id');
         session([
             'crm_import_path' => $path,
             'crm_import_multi_type' => true,
@@ -110,7 +118,7 @@ readonly class CrmImportService
     public function runImport(array $mapping, array $duplicates = []): array
     {
         $sessionData = $this->getSession();
-        if (!$sessionData) {
+        if (!$sessionData || !isset($sessionData['typeId'])) {
             return ['created' => 0, 'updated' => 0, 'duplicates' => 0, 'skipped' => []];
         }
 

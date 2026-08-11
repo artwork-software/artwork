@@ -6517,5 +6517,6 @@
     "Switch between weekly and daily view": "Switch between weekly and daily view",
     "Multi-edit: select multiple shifts to edit them together.": "Multi-edit: select multiple shifts to edit them together.",
     "Show event descriptions directly in the list": "Show event descriptions directly in the list",
-    "Event ends on {0}. Click to show the end date column.": "Event ends on {0}. Click to show the end date column."
+    "Event ends on {0}. Click to show the end date column.": "Event ends on {0}. Click to show the end date column.",
+    "Create tags here and assign event types to them — a tag without assigned event types is not counted.": "Create tags here and assign event types to them — a tag without assigned event types is not counted."
 }

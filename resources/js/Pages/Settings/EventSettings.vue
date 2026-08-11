@@ -87,8 +87,6 @@
             :event-type="eventTypeToDelete"
             @closed="closeDeletingUndefined"
         />
-
-        <BiEventTypeTagManager :event-types="event_types" />
     </app-layout>
 </template>
 
@@ -113,7 +111,6 @@ import DeleteStandardEventTypeModal from "@/Pages/Settings/EventType/Components/
 import BaseMenuItem from "@/Components/Menu/BaseMenuItem.vue";
 import {IconCheck, IconChevronDown, IconCirclePlus, IconCircleX, IconDotsVertical, IconEdit, IconPlus, IconTrash, IconX} from "@tabler/icons-vue";
 import BasePageTitle from "@/Artwork/Titles/BasePageTitle.vue";
-import BiEventTypeTagManager from "@/Pages/Settings/EventType/Components/BiEventTypeTagManager.vue";
 import SettingsGuideBanner from "@/Artwork/Guide/SettingsGuideBanner.vue";
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 export default {
@@ -157,7 +154,6 @@ export default {
     components: {
         BaseUIButton,
         SettingsGuideBanner,
-        BiEventTypeTagManager,
         BasePageTitle,
         BaseMenuItem,
         ColorPicker,

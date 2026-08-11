@@ -1080,6 +1080,9 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         Route::get('/event_types', [EventTypeController::class, 'index'])
             ->name('event_types.management')
             ->can('change event settings');
+        Route::get('/event_types/bi-tags', [EventTypeController::class, 'biTags'])
+            ->name('event_types.bi_tags')
+            ->can('change event settings');
         Route::get('/holiday', [HolidayController::class, 'index'])
             ->name('holiday.management');
         Route::post('/holiday/api', [HolidayController::class, 'create'])

@@ -4657,6 +4657,14 @@ class EventController extends Controller
         $this->generalSettingsService->updateEventTimeLengthMinutesFromRequest($request);
         $this->generalSettingsService->updateEventStartTimeFromRequest($request);
         $this->generalSettingsService->updateEventAllDayDefaultFromRequest($request);
+
+        // Einlass-Feld instanzweit aktivieren/deaktivieren (kein Standardwert,
+        // sondern Modul-Schalter — Werte bleiben beim Deaktivieren erhalten)
+        if ($request->has('enable_admission')) {
+            $eventSettings = app(EventSettings::class);
+            $eventSettings->enable_admission = $request->boolean('enable_admission');
+            $eventSettings->save();
+        }
     }
 
 

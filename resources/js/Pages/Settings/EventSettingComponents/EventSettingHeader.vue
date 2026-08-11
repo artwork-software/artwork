@@ -48,6 +48,12 @@ export default defineComponent({
                     permission: true
                 },
                 {
+                    name: this.$t('BI Tags'),
+                    href: route('event_types.bi_tags'),
+                    current: route().current('event_types.bi_tags'),
+                    permission: true
+                },
+                {
                     name: this.$t('Standard values'),
                     href: route('event.standard.values'),
                     current: route().current('event.standard.values'),

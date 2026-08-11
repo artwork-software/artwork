@@ -1,5 +1,6 @@
 <template>
-    <div class="mt-10 border-t border-border-subtle pt-8">
+    <!-- standalone: als eigene Reiter-Seite ohne Abschnitts-Trennlinie -->
+    <div :class="standalone ? '' : 'mt-10 border-t border-border-subtle pt-8'">
         <div class="sm:flex sm:items-center mb-4">
             <div class="sm:flex-auto">
                 <h2 class="text-lg font-semibold text-text">{{ $t('BI Tags') }}</h2>
@@ -146,6 +147,7 @@ const $t = useTranslation();
 
 const props = defineProps({
     eventTypes: { type: Array, default: () => [] },
+    standalone: { type: Boolean, default: false },
 });
 
 const tags = ref([]);

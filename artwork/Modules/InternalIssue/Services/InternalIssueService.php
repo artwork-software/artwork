@@ -2,6 +2,7 @@
 
 namespace Artwork\Modules\InternalIssue\Services;
 
+use Artwork\Core\FileHandling\Naming\StoredFileName;
 use Artwork\Modules\InternalIssue\Models\InternalIssue;
 use Artwork\Modules\InternalIssue\Models\InternalIssueFile;
 use Artwork\Modules\Inventory\Services\InventoryArticleService;
@@ -162,7 +163,7 @@ class InternalIssueService
     protected function handleFiles(InternalIssue $issue, array $files): void
     {
         foreach ($files as $file) {
-            $path = $file->store('material-issue', 'public');
+            $path = $file->storeAs('material-issue', StoredFileName::forUpload($file), 'public');
             InternalIssueFile::create([
                 'internal_issue_id' => $issue->id,
                 'file_path' => $path,

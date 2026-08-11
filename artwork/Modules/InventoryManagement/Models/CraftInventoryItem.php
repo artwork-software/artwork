@@ -49,6 +49,7 @@ class CraftInventoryItem extends Model
                 'craft_inventory_item_cells.crafts_inventory_column_id',
                 'craft_inventory_item_cells.craft_inventory_item_id',
                 'craft_inventory_item_cells.cell_value',
+                'craft_inventory_item_cells.file_original_name',
                 'crafts_inventory_columns.order as column_order' // Optional: Falls `order` benötigt wird
             ])
             ->join(

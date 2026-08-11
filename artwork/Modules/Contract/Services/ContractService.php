@@ -2,6 +2,7 @@
 
 namespace Artwork\Modules\Contract\Services;
 
+use Artwork\Core\FileHandling\Naming\StoredFileName;
 use Artwork\Core\FileHandling\Upload\ArtworkFileTypes;
 use Artwork\Core\FileHandling\Upload\HandlesFileUpload;
 use Artwork\Modules\Contract\Exports\ContractExcelExport;
@@ -48,7 +49,7 @@ class ContractService
 
         $this->handleFile(ArtworkFileTypes::CONTRACT, $file);
         $originalName = $file->getClientOriginalName();
-        $basename = Str::random(20) . $originalName;
+        $basename = StoredFileName::forUpload($file);
 
         Storage::putFileAs('contracts', $file, $basename);
 
@@ -123,7 +124,7 @@ class ContractService
             Storage::delete('contracts/' . $contract->basename);
             $this->handleFile(ArtworkFileTypes::CONTRACT, $file);
             $originalName = $file->getClientOriginalName();
-            $basename = Str::random(20) . $originalName;
+            $basename = StoredFileName::forUpload($file);
 
             $contract->basename = $basename;
             $contract->name = $originalName;
@@ -211,7 +212,7 @@ class ContractService
 
         $this->handleFile(ArtworkFileTypes::CONTRACT, $file);
         $originalName = $file->getClientOriginalName();
-        $basename = Str::random(20) . $originalName;
+        $basename = StoredFileName::forUpload($file);
 
         Storage::putFileAs('contracts', $file, $basename);
 

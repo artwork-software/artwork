@@ -3,6 +3,8 @@
 namespace Artwork\Modules\ArtistResidency\Services;
 
 use Artwork\Core\Enums\ExportType;
+use Artwork\Core\FileHandling\Naming\DownloadFileName;
+use Artwork\Core\FileHandling\Naming\StoredFileName;
 use Artwork\Modules\ArtistResidency\Exports\ArtistResidencyExcelExport;
 use Artwork\Modules\ArtistResidency\Models\Artist;
 use Artwork\Modules\ArtistResidency\Models\ArtistResidency;
@@ -329,7 +331,8 @@ readonly class ArtistResidencyService
                 'dpi' => 72,
             ]);
 
-        $filename = $this->createFilename(now(), $project->name, '72');
+        $filename = $this->createFilename();
+        $downloadName = $this->createDownloadName(now(), $project->name, '72');
         $filePath = $this->createStoragePath($filename);
 
         // Ensure the full directory path exists, including any subdirectories from the filename
@@ -341,7 +344,10 @@ readonly class ArtistResidencyService
         $pdfContent->save($filePath);
 
         return $this->inertiaResponseFactory->location(
-            route('artist-residency.export.pdf.download', ['filename' => $filename])
+            route(
+                'artist-residency.export.pdf.download',
+                ['filename' => $filename, 'name' => $downloadName]
+            )
         );
     }
 
@@ -414,7 +420,8 @@ readonly class ArtistResidencyService
                 'enable-local-file-access' => true,
             ]);
 
-        $filename = $this->createFilename(now(), $project->name . '_per_diem', '72');
+        $filename = $this->createFilename();
+        $downloadName = $this->createDownloadName(now(), $project->name . '_per_diem', '72');
         $filePath = $this->createStoragePath($filename);
 
         $directory = dirname($filePath);
@@ -425,7 +432,10 @@ readonly class ArtistResidencyService
         $pdfContent->save($filePath);
 
         return $this->inertiaResponseFactory->location(
-            route('artist-residency.export.pdf.download', ['filename' => $filename])
+            route(
+                'artist-residency.export.pdf.download',
+                ['filename' => $filename, 'name' => $downloadName]
+            )
         );
     }
 
@@ -450,21 +460,31 @@ readonly class ArtistResidencyService
     /**
      * Handles PDF file download.
      */
-    public function downloadPdf(string $filename): BinaryFileResponse
+    public function downloadPdf(string $filename, mixed $downloadName = null): BinaryFileResponse
     {
         return $this->responseFactory->download(
-            $this->createStoragePath($filename)
+            $this->createStoragePath($filename),
+            DownloadFileName::sanitize($downloadName)
         )->deleteFileAfterSend();
     }
 
     /**
-     * Generates a filename based on the provided parameters.
+     * The name the file is stored under. Carries no user input - the readable
+     * name travels separately, see createDownloadName().
      */
-    public function createFilename(Carbon $carbon, string $title, string $dpi): string
+    public function createFilename(): string
+    {
+        return StoredFileName::forGenerated('pdf');
+    }
+
+    /**
+     * The name the browser saves the file as.
+     */
+    public function createDownloadName(Carbon $carbon, string $title, string $dpi): string
     {
         return sprintf(
             '%s_%s_dpi_%s.pdf',
-            $carbon->format('d.m.Y-H:i:s'),
+            $carbon->format('d.m.Y-H-i-s'),
             str_replace(' ', '_', $title),
             $dpi
         );

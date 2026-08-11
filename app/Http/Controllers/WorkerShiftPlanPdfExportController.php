@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\WorkerShiftPlanPdfExportRequest;
+use Artwork\Core\FileHandling\Naming\StoredFileName;
 use Artwork\Modules\Craft\Models\Craft;
 use Artwork\Modules\Shift\Services\WorkerShiftPlanPdfBuilder;
 use Artwork\Modules\User\Models\User;
@@ -65,14 +66,18 @@ class WorkerShiftPlanPdfExportController extends Controller
             ->setPaper($validated['paperSize'], $validated['paperOrientation'])
             ->setOption('dpi', $validated['dpi']);
 
-        $filename = sprintf('%s_%s.pdf', Carbon::now()->format('Y-m-d'), Str::uuid());
+        $filename = StoredFileName::forGenerated('pdf');
+        $downloadName = sprintf('%s_%s.pdf', Carbon::now()->format('Y-m-d'), Str::uuid());
         if ($this->filesystem->directoryMissing('pdf')) {
             $this->filesystem->makeDirectory('pdf');
         }
         $this->pdf->save($this->filesystem->path('pdf/' . $filename));
 
         return $this->inertia->location(
-            $this->url->route('calendar.export.pdf.download', ['filename' => $filename])
+            $this->url->route(
+                'calendar.export.pdf.download',
+                ['filename' => $filename, 'name' => $downloadName]
+            )
         );
     }
 }

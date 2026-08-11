@@ -3,6 +3,7 @@
 namespace Artwork\Modules\InternalIssue\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use Artwork\Core\FileHandling\Naming\StoredFileName;
 use Artwork\Modules\InternalIssue\Http\Requests\StoreInternalIssueRequest;
 use Artwork\Modules\InternalIssue\Http\Requests\UpdateInternalIssueRequest;
 use Artwork\Modules\InternalIssue\Models\InternalIssue;
@@ -17,6 +18,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Illuminate\Auth\AuthManager;
+use Symfony\Component\HttpFoundation\HeaderUtils;
 
 class InternalIssueController extends Controller
 {
@@ -224,8 +226,10 @@ class InternalIssueController extends Controller
 
         $pdfContent = $pdf->output();
         $projectPart = $internalIssue->project ? str_replace(' ', '_', $internalIssue->project->name) . '_' : '';
-        $fileName = 'int._Materialausgabe_' . $projectPart . 'Nr._' . $internalIssue->id . '_' . now()->format('Y-m-d') . '.pdf';
-        $storagePath = 'material-issue/' . $fileName;
+        // Readable name only - the project name would otherwise reach the path.
+        $fileName = 'int._Materialausgabe_' . $projectPart . 'Nr._' . $internalIssue->id
+            . '_' . now()->format('Y-m-d') . '.pdf';
+        $storagePath = 'material-issue/' . StoredFileName::forGenerated('pdf', (string) $internalIssue->id);
 
         Storage::disk('public')->put($storagePath, $pdfContent);
 
@@ -237,7 +241,11 @@ class InternalIssueController extends Controller
 
         return response($pdfContent, 200, [
             'Content-Type' => 'application/pdf',
-            'Content-Disposition' => 'inline; filename="' . $fileName . '"',
+            'Content-Disposition' => HeaderUtils::makeDisposition(
+                HeaderUtils::DISPOSITION_INLINE,
+                $fileName,
+                'materialausgabe.pdf'
+            ),
         ]);
     }
 

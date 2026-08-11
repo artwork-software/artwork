@@ -2,6 +2,7 @@
 
 namespace Artwork\Modules\User\Models\Traits;
 
+use Artwork\Core\FileHandling\Naming\StoredFileName;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
@@ -85,8 +86,10 @@ SVG;
     {
         tap($this->profile_photo_path, function ($previous) use ($photo, $storagePath) {
             $this->forceFill([
-                'profile_photo_path' => $photo->storePublicly(
-                    $storagePath, ['disk' => $this->profilePhotoDisk()]
+                'profile_photo_path' => $photo->storeAs(
+                    $storagePath,
+                    StoredFileName::forUpload($photo),
+                    ['disk' => $this->profilePhotoDisk()]
                 ),
             ])->save();
 

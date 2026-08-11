@@ -23,6 +23,14 @@ class EventTypeController extends Controller
         ]);
     }
 
+    // Eigener Terminsettings-Reiter für BI-Tags (vormals unten im Terminarten-Tab)
+    public function biTags(): Response|ResponseFactory
+    {
+        return inertia('Settings/EventBiTags/Index', [
+            'event_types' => EventTypeResource::collection(EventType::all())->resolve(),
+        ]);
+    }
+
     public function store(Request $request, EventTypeService $eventTypeService): RedirectResponse
     {
         $eventTypeService->save($this->setProperties(new EventType(), $request));

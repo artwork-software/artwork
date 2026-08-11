@@ -6517,5 +6517,6 @@
     "Switch between weekly and daily view": "Zwischen Wochen- und Tagesansicht wechseln",
     "Multi-edit: select multiple shifts to edit them together.": "Multi-Edit: mehrere Schichten auswählen, um sie gemeinsam zu bearbeiten.",
     "Show event descriptions directly in the list": "Termin-Beschreibungen direkt in der Liste anzeigen und bearbeiten",
-    "Event ends on {0}. Click to show the end date column.": "Termin endet am {0}. Klicken, um die Enddatum-Spalte einzublenden."
+    "Event ends on {0}. Click to show the end date column.": "Termin endet am {0}. Klicken, um die Enddatum-Spalte einzublenden.",
+    "Create tags here and assign event types to them — a tag without assigned event types is not counted.": "Lege hier Tags an und weise ihnen Terminarten zu – ein Tag ohne zugewiesene Terminarten wird nicht gezählt."
 }

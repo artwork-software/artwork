@@ -3,6 +3,7 @@
 namespace Artwork\Modules\InternalIssue\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use Artwork\Core\FileHandling\Naming\DownloadFileName;
 use Artwork\Core\FileHandling\Naming\StoredFileName;
 use Artwork\Modules\InternalIssue\Http\Requests\StoreInternalIssueRequest;
 use Artwork\Modules\InternalIssue\Http\Requests\UpdateInternalIssueRequest;
@@ -227,8 +228,12 @@ class InternalIssueController extends Controller
         $pdfContent = $pdf->output();
         $projectPart = $internalIssue->project ? str_replace(' ', '_', $internalIssue->project->name) . '_' : '';
         // Readable name only - the project name would otherwise reach the path.
-        $fileName = 'int._Materialausgabe_' . $projectPart . 'Nr._' . $internalIssue->id
-            . '_' . now()->format('Y-m-d') . '.pdf';
+        // makeDisposition() throws on "/", "\" and "%" — a project name like
+        // "Spielzeit 24/25" must not turn the print into a 500.
+        $fileName = DownloadFileName::sanitize(
+            'int._Materialausgabe_' . $projectPart . 'Nr._' . $internalIssue->id
+            . '_' . now()->format('Y-m-d') . '.pdf'
+        ) ?? 'materialausgabe.pdf';
         $storagePath = 'material-issue/' . StoredFileName::forGenerated('pdf', (string) $internalIssue->id);
 
         Storage::disk('public')->put($storagePath, $pdfContent);

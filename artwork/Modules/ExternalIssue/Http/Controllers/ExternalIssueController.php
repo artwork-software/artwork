@@ -3,6 +3,7 @@
 namespace Artwork\Modules\ExternalIssue\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use Artwork\Core\FileHandling\Naming\StoredFileName;
 use Artwork\Modules\ExternalIssue\Http\Requests\StoreExternalIssueRequest;
 use Artwork\Modules\ExternalIssue\Http\Requests\UpdateExternalIssueRequest;
 use Artwork\Modules\ExternalIssue\Models\ExternalIssue;
@@ -19,6 +20,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
+use Symfony\Component\HttpFoundation\HeaderUtils;
 
 class ExternalIssueController extends Controller
 {
@@ -212,7 +214,8 @@ class ExternalIssueController extends Controller
 
         $pdfContent = $pdf->output();
         $fileName = 'ext._Materialausgabe_Nr._' . $externalIssue->id . '_' . now()->format('Y-m-d') . '.pdf';
-        $storagePath = 'external_material_issues/' . $fileName;
+        $storagePath = 'external_material_issues/'
+            . StoredFileName::forGenerated('pdf', (string) $externalIssue->id);
 
         Storage::disk('public')->put($storagePath, $pdfContent);
 
@@ -224,7 +227,11 @@ class ExternalIssueController extends Controller
 
         return response($pdfContent, 200, [
             'Content-Type' => 'application/pdf',
-            'Content-Disposition' => 'inline; filename="' . $fileName . '"',
+            'Content-Disposition' => HeaderUtils::makeDisposition(
+                HeaderUtils::DISPOSITION_INLINE,
+                $fileName,
+                'materialausgabe.pdf'
+            ),
         ]);
     }
 

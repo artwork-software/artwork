@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use Artwork\Core\FileHandling\Naming\StoredFileName;
 use Artwork\Core\FileHandling\Upload\ArtworkFileTypes;
 use Artwork\Core\FileHandling\Upload\HandlesFileUpload;
 use Artwork\Core\Http\Requests\FileUpload;
@@ -64,7 +65,7 @@ class ProjectFileController extends Controller
         $file = $request->file('file');
         $this->handleFile(ArtworkFileTypes::PROJECT, $file);
         $original_name = $file->getClientOriginalName();
-        $basename = Str::random(20) . $original_name;
+        $basename = StoredFileName::forUpload($file);
 
         Storage::putFileAs('project_files', $file, $basename);
 
@@ -188,7 +189,7 @@ class ProjectFileController extends Controller
             Storage::delete('project_files/' . $projectFile->basename);
             $file = $request->file('file');
             $original_name = $file->getClientOriginalName();
-            $basename = Str::random(20) . $original_name;
+            $basename = StoredFileName::forUpload($file);
 
             $projectFile->basename = $basename;
             $projectFile->name = $original_name;

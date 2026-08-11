@@ -2,15 +2,15 @@
 
 namespace Artwork\Modules\Crm\Services;
 
+use Artwork\Core\FileHandling\Naming\StoredFileName;
 use Artwork\Modules\Crm\Enums\CrmPropertyTypeEnum;
 use Artwork\Modules\Crm\Models\CrmContactType;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
 use Maatwebsite\Excel\Facades\Excel;
-use Symfony\Component\HttpFoundation\File\UploadedFile;
 
 readonly class CrmImportService
 {
@@ -31,8 +31,8 @@ readonly class CrmImportService
 
     public function storeAndParseUpload(UploadedFile $file): ?array
     {
-        $filename = Str::uuid() . '.' . $file->getClientOriginalExtension();
-        $path = $file->storeAs('crm-imports', $filename, 'local');
+        // Maatwebsite picks its reader from the extension, so it has to survive.
+        $path = $file->storeAs('crm-imports', StoredFileName::forUpload($file), 'local');
         $fullPath = Storage::disk('local')->path($path);
 
         $parsed = $this->parseFile($fullPath);

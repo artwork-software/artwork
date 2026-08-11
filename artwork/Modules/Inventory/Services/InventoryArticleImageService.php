@@ -2,6 +2,7 @@
 
 namespace Artwork\Modules\Inventory\Services;
 
+use Artwork\Core\FileHandling\Naming\StoredFileName;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -32,7 +33,7 @@ class InventoryArticleImageService
         if (in_array($file->getMimeType(), self::HEIC_MIME_TYPES, true)) {
             $path = $this->storeConvertedHeic($file);
         } else {
-            $path = $file->store(self::STORAGE_DIR, 'public');
+            $path = $file->storeAs(self::STORAGE_DIR, StoredFileName::forUpload($file), 'public');
         }
 
         return [
@@ -95,7 +96,7 @@ class InventoryArticleImageService
 
         try {
             $image = $this->makeImageManager('imagick')->make($disk->path($imagePath));
-            $newPath = self::STORAGE_DIR . '/' . Str::random(40) . '.jpg';
+            $newPath = self::STORAGE_DIR . '/' . StoredFileName::forGenerated('jpg', $imagePath);
             $disk->put($newPath, (string) $image->encode('jpg', 90));
 
             return $newPath;
@@ -108,14 +109,15 @@ class InventoryArticleImageService
     {
         try {
             $image = $this->makeImageManager('imagick')->make($file->getRealPath());
-            $path = self::STORAGE_DIR . '/' . Str::random(40) . '.jpg';
+            $path = self::STORAGE_DIR . '/'
+                . StoredFileName::forGenerated('jpg', $file->getClientOriginalName());
             Storage::disk('public')->put($path, (string) $image->encode('jpg', 90));
 
             return $path;
         } catch (Throwable) {
             // Without Imagick/HEIC support store the original — the frontend
             // falls back to the placeholder logo when it cannot render it.
-            return $file->store(self::STORAGE_DIR, 'public');
+            return $file->storeAs(self::STORAGE_DIR, StoredFileName::forUpload($file), 'public');
         }
     }
 

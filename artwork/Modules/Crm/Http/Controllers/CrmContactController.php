@@ -3,6 +3,7 @@
 namespace Artwork\Modules\Crm\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use Artwork\Core\FileHandling\Naming\StoredFileName;
 use Artwork\Modules\Accommodation\Models\AccommodationRoomType;
 use Artwork\Modules\Crm\Enums\CrmPropertyTypeEnum;
 use Artwork\Modules\Crm\Enums\CrmSystemContactTypeEnum;
@@ -379,7 +380,12 @@ class CrmContactController extends Controller
             'profile_image' => 'required|image|max:2048',
         ]);
 
-        $path = $request->file('profile_image')->store('crm-profile-images', 'public');
+        $profileImage = $request->file('profile_image');
+        $path = $profileImage->storeAs(
+            'crm-profile-images',
+            StoredFileName::forUpload($profileImage),
+            'public'
+        );
         $this->contactService->updateProfileImage($crmContact, $path);
 
         return redirect()->back();

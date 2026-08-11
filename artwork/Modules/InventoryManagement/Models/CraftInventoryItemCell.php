@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property int $id
  * @property int $craft_inventory_item_id
  * @property string $cell_value
+ * @property string|null $file_original_name
  */
 class CraftInventoryItemCell extends Model
 {
@@ -19,6 +20,7 @@ class CraftInventoryItemCell extends Model
         'crafts_inventory_column_id',
         'craft_inventory_item_id',
         'cell_value',
+        'file_original_name',
     ];
 
     public function item(): BelongsTo

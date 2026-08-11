@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use Artwork\Core\FileHandling\Naming\StoredFileName;
 use Artwork\Modules\Craft\Models\Craft;
 use Artwork\Modules\Event\Services\EventService;
 use Artwork\Modules\EventType\Services\EventTypeService;
@@ -20,7 +21,6 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -243,7 +243,7 @@ class ServiceProviderController extends Controller
 
         $file = $request->file('profileImage');
         $original_name = $file->getClientOriginalName();
-        $basename = Str::random(20) . $original_name;
+        $basename = StoredFileName::forUpload($file);
 
         Storage::putFileAs('public/profile-photos', $file, $basename);
 

@@ -5,6 +5,7 @@ namespace Tests\Feature\Http\Controllers;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Models\ProjectFile;
 use Artwork\Modules\User\Models\User;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\Feature\FeatureTestCase;
@@ -86,6 +87,49 @@ final class ProjectFileControllerTest extends FeatureTestCase
 
         $this->assertStringContainsString('attachment', $contentDisposition);
         $this->assertStringContainsString('page.html', $contentDisposition);
+    }
+
+    #[Test]
+    public function stored_file_name_is_hashed_while_the_display_name_stays_raw(): void
+    {
+        $user = $this->adminUser();
+        $project = Project::factory()->create();
+        $originalName = 'Mein broken°^„Filename “quoted” 12:30.pdf';
+
+        $this->actingAs($user)
+            ->post(route('project_files.store', $project), [
+                'file' => UploadedFile::fake()->create($originalName, 10, 'application/pdf'),
+            ]);
+
+        $projectFile = ProjectFile::query()->firstOrFail();
+
+        $this->assertSame($originalName, $projectFile->name);
+        $this->assertMatchesRegularExpression('/^[a-f0-9]{32}\.[a-z0-9]+$/', $projectFile->basename);
+        Storage::assertExists('project_files/' . $projectFile->basename);
+    }
+
+    #[Test]
+    public function a_hashed_file_is_downloaded_under_its_original_name(): void
+    {
+        $user = $this->adminUser();
+        $project = Project::factory()->create();
+        $originalName = 'Jahresbericht “2026”.pdf';
+
+        $this->actingAs($user)
+            ->post(route('project_files.store', $project), [
+                'file' => UploadedFile::fake()->create($originalName, 10, 'application/pdf'),
+            ]);
+
+        $projectFile = ProjectFile::query()->firstOrFail();
+
+        $response = $this->actingAs($user)->get(route('download_file', $projectFile));
+
+        $response->assertOk();
+
+        $contentDisposition = $response->headers->get('content-disposition', '');
+
+        $this->assertStringNotContainsString($projectFile->basename, $contentDisposition);
+        $this->assertStringContainsString('Jahresbericht', $contentDisposition);
     }
 
     #[Test]

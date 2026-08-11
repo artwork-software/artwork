@@ -555,7 +555,7 @@ export default {
             creatingNewTask: false,
             tasks: [],
             uploadDocumentFeedback: "",
-            file: this.contract?.basename,
+            file: this.contract?.name,
             description: this.contract?.description || "",
             contractPartner: this.contract?.partner || '',
             selectedLegalForm: this.contract?.company_type || null,

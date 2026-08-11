@@ -95,9 +95,9 @@
                     </template>
 
                     <template #moreButtons>
-                        <SwitchIconTooltip v-model="dailyViewMode" :tooltip-text="$t('Daily view')" size="md"
+                        <SwitchIconTooltip v-model="dailyViewMode" :tooltip-text="$t('Switch between weekly and daily view')" size="md"
                                            @change="changeDailyViewMode" icon="IconCalendarWeek"/>
-                        <SwitchIconTooltip v-if="can('can plan shifts') || is('artwork admin')" v-model="multiEditModeCalendar" :tooltip-text="$t('Edit')" size="md"
+                        <SwitchIconTooltip v-if="can('can plan shifts') || is('artwork admin')" v-model="multiEditModeCalendar" :tooltip-text="$t('Multi-edit: select multiple shifts to edit them together.')" size="md"
                                            @change="toggleMultiEditModeCalendar" icon="IconPencil"/>
                     </template>
                 </ShiftPlanFunctionBar>
@@ -489,7 +489,7 @@
                         :style="showUserOverview ? { height: userOverviewHeight + 'px' } : { height: 20 + 'px' }">
                         <div class="fixed z-20 flex w-full items-center justify-between bg-surface-inverse pr-9 py-3">
                             <div class="flex items-center justify-end gap-x-3">
-                                <SwitchIconTooltip v-if="can('can plan shifts') || is('artwork admin')" v-model="multiEditMode" :tooltip-text="$t('Edit')" size="md" @change="toggleMultiEditMode" icon="IconPencil"/>
+                                <SwitchIconTooltip v-if="can('can plan shifts') || is('artwork admin')" v-model="multiEditMode" :tooltip-text="$t('Multi-edit: select multiple shifts to edit them together.')" size="md" @change="toggleMultiEditMode" icon="IconPencil"/>
                                 <ToolTipComponent
                                     direction="right"
                                     :tooltip-text="$t('Create individual time series')"

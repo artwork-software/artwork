@@ -46,8 +46,23 @@
                 <p class="mt-1 text-sm text-text-subtle">{{ $t('There are no contacts of the same type with identical names or email addresses.') }}</p>
             </div>
 
+            <!-- Merge all -->
+            <div v-else class="mt-6 flex items-center justify-between gap-4 flex-wrap">
+                <p class="text-sm text-text-muted">
+                    {{ $t('{count} groups found', { count: duplicateGroups.length }) }}
+                </p>
+                <BaseUIButton
+                    variant="primary"
+                    hide-icon
+                    :disabled="mergeAllCount === 0 || merging"
+                    @click="confirmMergeAll = true"
+                >
+                    {{ $t('Merge all {count} duplicates', { count: mergeAllCount }) }}
+                </BaseUIButton>
+            </div>
+
             <!-- Clusters -->
-            <div v-else class="mt-8 space-y-6">
+            <div v-if="duplicateGroups.length" class="mt-4 space-y-6">
                 <div v-for="(cluster, index) in duplicateGroups" :key="clusterKey(cluster)" class="bg-white border border-border-subtle rounded-lg">
                     <div class="px-5 py-3 bg-surface-sunken rounded-t-lg flex items-center gap-3 flex-wrap">
                         <span
@@ -133,11 +148,20 @@
             @close="confirmCluster = null"
             @delete="mergeCluster(confirmCluster)"
         />
+
+        <!-- Confirm merge all -->
+        <ConfirmDeleteModal
+            v-if="confirmMergeAll"
+            :title="$t('Merge all duplicates')"
+            :description="$t('In every group the contact linked to a profile (otherwise the oldest) is kept as main contact; all other duplicates are merged into it and moved to the recycle bin. Values already present on the main contact are kept.')"
+            @close="confirmMergeAll = false"
+            @delete="mergeAll"
+        />
     </AppLayout>
 </template>
 
 <script setup>
-import { ref, reactive, watch } from 'vue'
+import { ref, reactive, computed, watch } from 'vue'
 import { router, Link, usePage } from '@inertiajs/vue3'
 import AppLayout from '@/Layouts/AppLayout.vue'
 import ToolbarHeader from '@/Artwork/Toolbar/ToolbarHeader.vue'
@@ -205,6 +229,30 @@ const toggleMerge = (index, contactId) => {
 
 const merging = ref(false)
 const confirmCluster = ref(null)
+const confirmMergeAll = ref(false)
+
+// Wie viele Kontakte würde "Alle zusammenführen" einschmelzen? Gleiche Vorauswahl wie
+// pro Gruppe: profilverknüpfter (sonst ältester) Kontakt bleibt, alle anderen gehen.
+const mergeAllCount = computed(() =>
+    props.duplicateGroups.reduce((sum, cluster) => {
+        const entityContact = cluster.contacts.find(c => c.has_entity)
+        const primaryId = (entityContact ?? cluster.contacts[0]).id
+        return sum + cluster.contacts.filter(c => c.id !== primaryId && !c.has_entity).length
+    }, 0)
+)
+
+const mergeAll = () => {
+    merging.value = true
+    router.post(route('crm.duplicates.merge-all'), {}, {
+        preserveScroll: true,
+        onSuccess: () => {
+            confirmMergeAll.value = false
+            flashSuccess.value = usePage().props.flash?.success ?? ''
+            setTimeout(() => { flashSuccess.value = '' }, 4000)
+        },
+        onFinish: () => { merging.value = false },
+    })
+}
 
 const mergeCluster = (index) => {
     const entry = selection[index]

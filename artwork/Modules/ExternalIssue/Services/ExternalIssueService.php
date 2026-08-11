@@ -2,6 +2,7 @@
 
 namespace Artwork\Modules\ExternalIssue\Services;
 
+use Artwork\Core\FileHandling\Naming\StoredFileName;
 use Artwork\Modules\ExternalIssue\Models\ExternalIssue;
 use Artwork\Modules\ExternalIssue\Models\ExternalIssueFile;
 use Artwork\Modules\Inventory\Services\InventoryArticleService;
@@ -157,7 +158,11 @@ class ExternalIssueService
     protected function handleFiles(ExternalIssue $issue, array $files): void
     {
         foreach ($files as $file) {
-            $path = $file->store('external_material_issues', 'public');
+            $path = $file->storeAs(
+                'external_material_issues',
+                StoredFileName::forUpload($file),
+                'public'
+            );
             ExternalIssueFile::create([
                 'external_issue_id' => $issue->id,
                 'file_path' => $path,

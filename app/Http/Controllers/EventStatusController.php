@@ -28,7 +28,6 @@ class EventStatusController extends Controller
         return Inertia::render('Settings/EventStatus/Index', [
             'eventStatuses' => EventStatus::orderBy('order')->get(),
             'enable_status' => app(EventSettings::class)->enable_status,
-            'enable_admission' => app(EventSettings::class)->enable_admission,
         ]);
     }
 

@@ -38,19 +38,15 @@
                         :show-color-indicator="true"
                         color-property="color"
                     />
-                    <div :class="statusModule && statusList.length > 0 ? '' : 'pt-5'">
+                    <div>
                         <BaseInput
                             v-model="eventName"
                             id="multiCellEventTitle"
                             :label="selectedEventType?.individual_name ? $t('Event name') + '*' : $t('Event name')"
                             class="ui-input"
                         />
+                        <p class="ui-error mt-0.5" v-if="fieldErrors.eventName">{{ fieldErrors.eventName }}</p>
                     </div>
-                </div>
-
-                <div class="ui-grid-2 mt-0.5">
-                    <span />
-                    <p class="ui-error" v-if="fieldErrors.eventName">{{ fieldErrors.eventName }}</p>
                 </div>
             </section>
 

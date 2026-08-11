@@ -35,7 +35,7 @@
 
                 <SwitchIconTooltip
                     v-model="showDescriptionInBulk"
-                    :tooltip-text="$t('Show descriptions')"
+                    :tooltip-text="$t('Show event descriptions directly in the list')"
                     :icon="IconNote"
                     size="md"
                     @change="onToggleShowDescriptionInBulk"
@@ -44,7 +44,7 @@
                 <SwitchIconTooltip
                     v-if="hasCreateEventsPermission && canEditComponent"
                     v-model="shiftPeriodOnStartDateChange"
-                    :tooltip-text="shiftPeriodTooltipText"
+                    :tooltip-text="$t('Move the end date along when the start date is changed')"
                     :icon="IconArrowsMoveHorizontal"
                     size="md"
                     @change="onToggleShiftPeriodOnStartDateChange"
@@ -256,7 +256,14 @@
                             <!-- Add Event Button for this group -->
                             <div v-else-if="item.kind === 'add'"
                                  class="flex justify-center pt-4 pb-6">
+                                <IconLoader2
+                                    v-if="isCreatingEvent"
+                                    class="w-8 h-8 text-accent-600 animate-spin"
+                                    stroke-width="2"
+                                    :aria-label="$t('Data is currently loaded. Please wait')"
+                                />
                                 <IconCirclePlus
+                                    v-else
                                     @click="addEmptyEventForGroup(item.group)"
                                     class="w-8 h-8 text-text-muted cursor-pointer hover:text-accent-700 transition-all duration-150 ease-in-out"
                                     stroke-width="2"
@@ -275,7 +282,14 @@
                         <!-- Add Event Button when no events exist -->
                         <div v-if="canEditComponent && hasCreateEventsPermission && !multiEdit"
                              class="flex justify-center mt-4">
+                            <IconLoader2
+                                v-if="isCreatingEvent"
+                                class="w-8 h-8 text-accent-600 animate-spin"
+                                stroke-width="2"
+                                :aria-label="$t('Data is currently loaded. Please wait')"
+                            />
                             <IconCirclePlus
+                                v-else
                                 @click="addEmptyEvent"
                                 class="w-8 h-8 text-text-muted cursor-pointer hover:text-accent-700 transition-all duration-150 ease-in-out"
                                 stroke-width="2"
@@ -412,6 +426,7 @@ import {
     IconCalendarMonth,
     IconCheck,
     IconCirclePlus,
+    IconLoader2,
     IconCircuitCapacitorPolarized,
     IconFileExport,
     IconNote
@@ -573,10 +588,8 @@ const onToggleShowDescriptionInBulk = () => {
 // Am User persistiert; EventComponent liest dasselbe Setting.
 const shiftPeriodOnStartDateChange = ref(usePage().props.auth.user.shift_period_on_start_date_change ?? false);
 provide('shiftPeriodOnStartDateChange', shiftPeriodOnStartDateChange);
-
-const shiftPeriodTooltipText = computed(() => shiftPeriodOnStartDateChange.value
-    ? $t('When the start date is changed, the whole period shifts along (duration is kept). Click to keep the end date fixed instead.')
-    : $t('The end date stays fixed when the start date is changed. Click to shift the whole period along instead.'));
+// Enddatum-Chip in den Zeilen kann die ausgeblendete Enddatum-Spalte per Klick einblenden
+provide('bulkShowEndDate', showEndDate);
 
 const onToggleShiftPeriodOnStartDateChange = () => {
     router.patch(
@@ -639,6 +652,43 @@ const upsertEventRowFromResponse = (payload, {markNew = false} = {}) => {
 const removeEventRowsByIds = (ids) => {
     const idSet = new Set(Array.isArray(ids) ? ids : [ids]);
     events.value = events.value.filter(e => !idSet.has(e.id));
+};
+
+// Guard gegen Doppel-Klicks: solange ein Create-Request läuft, sind die Plus-Buttons
+// gesperrt (Spinner). Zähler statt Boolean, falls mehrere Aktionen (z.B. Kopien) laufen.
+const pendingCreateCount = ref(0);
+const isCreatingEvent = computed(() => pendingCreateCount.value > 0);
+
+// Optimistisches Anlegen: Zeile erscheint SOFORT (Key = localUid) — die Server-Response
+// ersetzt sie anhand der localUid durch die echte Zeile (mit id). Bei Fehler wird die
+// optimistische Zeile wieder entfernt. So gibt es keine "unsichtbare" Wartezeit mehr,
+// egal wie langsam der Server antwortet.
+const persistNewEventRow = (base) => {
+    events.value.push(base);
+    pendingCreateCount.value++;
+
+    axios.post(route('event.store.bulk.single', {project: props.project}), {event: base})
+        .then(({data}) => {
+            const idx = events.value.findIndex(e => e.localUid === base.localUid);
+            if (data?.event?.id) {
+                const row = {...mapPayloadToBulkRow(data.event), isNew: true};
+                if (idx !== -1) {
+                    events.value[idx] = row;
+                } else {
+                    upsertEventRowFromResponse(data.event, {markNew: true});
+                }
+            } else if (idx !== -1) {
+                events.value.splice(idx, 1);
+            }
+        })
+        .catch((e) => {
+            console.error('bulk:create-failed', e);
+            const idx = events.value.findIndex(e2 => e2.localUid === base.localUid);
+            if (idx !== -1) events.value.splice(idx, 1);
+        })
+        .finally(() => {
+            pendingCreateCount.value--;
+        });
 };
 
 const toISO = (d) => d.toISOString().split('T')[0];
@@ -900,7 +950,8 @@ const onEventComponentClosed = () => {
 };
 
 const addEmptyEvent = () => {
-    //isLoading.value = true;
+    // Doppel-Klick-Guard: solange der vorherige Create läuft, nichts Neues abfeuern
+    if (!props.isInModal && isCreatingEvent.value) return;
 
     events.value.forEach(e => {
         e.isNew = false;
@@ -939,14 +990,14 @@ const addEmptyEvent = () => {
         return;
     }
 
-    // Persist, wenn nicht im Modal — Response direkt in die Liste übernehmen,
-    // damit der neue Termin ohne Refresh sichtbar ist (Broadcast nur für andere Nutzer).
-    axios.post(route('event.store.bulk.single', {project: props.project}), {event: base})
-        .then(({data}) => upsertEventRowFromResponse(data?.event, {markNew: true}))
-        .catch((e) => console.error('bulk:create-failed', e));
+    // Optimistisch einfügen + persistieren (sofort sichtbar, Guard via pendingCreateCount)
+    persistNewEventRow(base);
 };
 
 const addEmptyEventForGroup = (groupRow) => {
+    // Doppel-Klick-Guard: solange der vorherige Create läuft, nichts Neues abfeuern
+    if (!props.isInModal && isCreatingEvent.value) return;
+
     events.value.forEach(e => {
         e.isNew = false;
     });
@@ -1000,25 +1051,36 @@ const addEmptyEventForGroup = (groupRow) => {
         return;
     }
 
-    // Persist, wenn nicht im Modal — Response direkt in die Liste übernehmen,
-    // damit der neue Termin ohne Refresh sichtbar ist (Broadcast nur für andere Nutzer).
-    axios.post(route('event.store.bulk.single', {project: props.project}), {event: base})
-        .then(({data}) => upsertEventRowFromResponse(data?.event, {markNew: true}))
-        .catch((e) => console.error('bulk:create-failed', e));
+    // Optimistisch einfügen + persistieren (sofort sichtbar, Guard via pendingCreateCount)
+    persistNewEventRow(base);
 };
 
+// Laufende Delete-Requests (Event-Ids) — verhindert doppeltes Abfeuern pro Zeile
+const pendingDeleteIds = new Set();
+
 const deleteCurrentEvent = (event) => {
-    if (event.id) {
-        // Nach erfolgreichem Löschen sofort lokal entfernen — nicht auf den
-        // eigenen Broadcast warten (der bleibt für andere Nutzer zuständig).
-        axios.delete(route('event.bulk.delete', {event: event.id}))
-            .then(() => removeEventRowsByIds(event.id))
-            .catch((e) => console.error('bulk:delete-failed', event.id, e));
-    }
+    if (!event.id || pendingDeleteIds.has(event.id)) return;
+    pendingDeleteIds.add(event.id);
+
+    // Optimistisch entfernen: Zeile verschwindet sofort; bei Fehler wieder einfügen.
+    const removedRow = events.value.find(e => e.id === event.id);
+    removeEventRowsByIds(event.id);
+
+    axios.delete(route('event.bulk.delete', {event: event.id}))
+        .catch((e) => {
+            console.error('bulk:delete-failed', event.id, e);
+            if (removedRow && !events.value.some(r => r.id === event.id)) {
+                events.value.push(removedRow);
+            }
+        })
+        .finally(() => {
+            pendingDeleteIds.delete(event.id);
+        });
 };
 
 const createCopyByEventWithData = (event) => {
-    //isLoading.value = true;
+    // Doppel-Klick-Guard: solange ein Create/Kopieren läuft, nichts Neues abfeuern
+    if (!props.isInModal && isCreatingEvent.value) return;
     lastUsedCopyCount.value = event.copyCount;
 
     let cursor = new Date(event.day);
@@ -1078,21 +1140,37 @@ const createCopyByEventWithData = (event) => {
     }
 
     if (createdEvents.length > 0 && !props.isInModal) {
-        // Kopien direkt aus der Response übernehmen, damit sie ohne Refresh erscheinen.
+        // Optimistisch einfügen: Kopien erscheinen sofort; die Response ersetzt sie
+        // anhand der localUid (Reihenfolge der Response entspricht der Request-Reihenfolge).
+        events.value.forEach(e => {
+            e.isNew = false;
+        });
+        events.value.push(...createdEvents);
+        pendingCreateCount.value++;
+
         axios.post(route('events.bulk.store', {project: props.project}), {events: createdEvents})
             .then(({data}) => {
                 const stored = Array.isArray(data?.events) ? data.events : [];
-                events.value.forEach(e => {
-                    e.isNew = false;
-                });
-                stored.forEach(payload => upsertEventRowFromResponse(payload));
-                // Alle Kopien dieses Vorgangs als "neu" markieren
-                const storedIds = new Set(stored.map(p => p.id));
-                events.value.forEach(e => {
-                    if (storedIds.has(e.id)) e.isNew = true;
+                createdEvents.forEach((clone, i) => {
+                    const idx = events.value.findIndex(e => e.localUid === clone.localUid);
+                    const payload = stored[i];
+                    if (payload?.id) {
+                        const row = {...mapPayloadToBulkRow(payload), isNew: true};
+                        if (idx !== -1) events.value[idx] = row;
+                        else upsertEventRowFromResponse(payload, {markNew: false});
+                    } else if (idx !== -1) {
+                        events.value.splice(idx, 1);
+                    }
                 });
             })
-            .catch((e) => console.error('bulk:copy-failed', e));
+            .catch((e) => {
+                console.error('bulk:copy-failed', e);
+                const uids = new Set(createdEvents.map(c => c.localUid));
+                events.value = events.value.filter(row => !uids.has(row.localUid));
+            })
+            .finally(() => {
+                pendingCreateCount.value--;
+            });
     }
 };
 

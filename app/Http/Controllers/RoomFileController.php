@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use Artwork\Core\FileHandling\Naming\StoredFileName;
 use Artwork\Core\FileHandling\Upload\ArtworkFileTypes;
 use Artwork\Core\FileHandling\Upload\HandlesFileUpload;
 use Artwork\Core\Http\Requests\FileUpload;
@@ -13,7 +14,6 @@ use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class RoomFileController extends Controller
@@ -40,7 +40,7 @@ class RoomFileController extends Controller
         $file = $request->file('file');
         $this->handleFile(ArtworkFileTypes::ROOM, $file);
         $original_name = $file->getClientOriginalName();
-        $basename = Str::random(20) . $original_name;
+        $basename = StoredFileName::forUpload($file);
 
         Storage::putFileAs('room_files', $file, $basename);
 

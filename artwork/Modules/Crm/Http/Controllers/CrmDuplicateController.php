@@ -66,4 +66,21 @@ class CrmDuplicateController extends Controller
             ])
         );
     }
+
+    public function mergeAll(): RedirectResponse
+    {
+        $result = $this->duplicateService->mergeAll();
+
+        if ($result['merged'] === 0) {
+            return redirect()->back()->with('success', __('No mergeable duplicates found.'));
+        }
+
+        return redirect()->back()->with(
+            'success',
+            __(':count duplicates merged into :groups main contacts.', [
+                'count' => $result['merged'],
+                'groups' => $result['groups'],
+            ])
+        );
+    }
 }

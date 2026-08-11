@@ -1080,6 +1080,9 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         Route::get('/event_types', [EventTypeController::class, 'index'])
             ->name('event_types.management')
             ->can('change event settings');
+        Route::get('/event_types/bi-tags', [EventTypeController::class, 'biTags'])
+            ->name('event_types.bi_tags')
+            ->can('change event settings');
         Route::get('/holiday', [HolidayController::class, 'index'])
             ->name('holiday.management');
         Route::post('/holiday/api', [HolidayController::class, 'create'])
@@ -1392,7 +1395,10 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
                 ->name('artist-residencies.export-per-diem-pdf');
 
             //artist-residency.export.pdf.download
+            // The constraint mirrors StoredFileName::PATTERN so the parameter
+            // cannot escape the pdf/ directory.
             Route::get('/export-pdf/download/{filename}', [ArtistResidencyController::class, 'exportPdfDownload'])
+                ->where('filename', '[a-f0-9]{32}\.pdf')
                 ->name('artist-residency.export.pdf.download');
         });
 
@@ -2215,10 +2221,13 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         ->can('can view shift plan');
     Route::post('/users/{user}/shiftplan/export/monthly-pdf', [ExportPDFController::class, 'createUserShiftPlanPDF'])
         ->name('user.shiftplan.export.monthly-pdf');
+    // The constraint mirrors StoredFileName::PATTERN so the parameter cannot
+    // escape the pdf/ directory.
     Route::get(
         '/calendar/export/pdf/{filename}/download',
         [ExportPDFController::class, 'download']
-    )->name('calendar.export.pdf.download');
+    )->where('filename', '[a-f0-9]{32}\.pdf')
+        ->name('calendar.export.pdf.download');
 
     Route::get('/pdf-export-user-filters', [\Artwork\Modules\User\Http\Controllers\PdfExportUserFilterController::class, 'index'])
         ->name('pdf-export-user-filters.index');
@@ -2671,6 +2680,8 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
             ->middleware('can:crm manager')->name('crm.duplicates');
         Route::post('/duplicates/merge', [\Artwork\Modules\Crm\Http\Controllers\CrmDuplicateController::class, 'merge'])
             ->middleware('can:crm manager')->name('crm.duplicates.merge');
+        Route::post('/duplicates/merge-all', [\Artwork\Modules\Crm\Http\Controllers\CrmDuplicateController::class, 'mergeAll'])
+            ->middleware('can:crm manager')->name('crm.duplicates.merge-all');
 
         Route::get('/contacts-search', [CrmContactController::class, 'search'])->name('crm.contacts.search');
         // Papierkorb — muss vor den /contacts/{crmContact}-Routen stehen!

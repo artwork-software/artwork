@@ -3142,8 +3142,11 @@ class EventController extends Controller
     ): void {
         //$eventBeforeDelete = $event->replicate();
         $this->authorize('delete', $event);
-        broadcast(new RemoveEvent($event, $event->room_id));
-        broadcast(new BulkEventChanged($event, 'deleted'));
+        // Broadcasts nach der Response (hängender Websocket-Server bremst sonst den Client)
+        dispatch(static function () use ($event): void {
+            broadcast(new RemoveEvent($event, $event->room_id));
+            broadcast(new BulkEventChanged($event, 'deleted'));
+        })->afterResponse();
         $this->eventService->delete(
             $event,
             $shiftsQualificationsService,
@@ -4173,15 +4176,21 @@ class EventController extends Controller
         });
 
         $createdEventPayloads = [];
+        $freshEvents = [];
         foreach ($storedEvents as $storedEvent) {
             $freshEvent = $storedEvent->fresh();
-            broadcast(new \Artwork\Modules\Event\Events\BulkEventChanged(
-                $freshEvent,
-                'created'
-            ));
-            broadcast(new EventCreated($freshEvent, $freshEvent->room_id));
+            $freshEvents[] = $freshEvent;
             $createdEventPayloads[] = \Artwork\Modules\Event\Events\BulkEventChanged::eventPayload($freshEvent);
         }
+
+        // Broadcasts (ShouldBroadcastNow) erst NACH der Response senden — ein hängender
+        // Websocket-Server darf die Antwort an den auslösenden Client nicht verzögern.
+        dispatch(static function () use ($freshEvents): void {
+            foreach ($freshEvents as $freshEvent) {
+                broadcast(new \Artwork\Modules\Event\Events\BulkEventChanged($freshEvent, 'created'));
+                broadcast(new EventCreated($freshEvent, $freshEvent->room_id));
+            }
+        })->afterResponse();
 
         // Erstellte Events zurückgeben: der auslösende Client aktualisiert seine Liste
         // aus der Response und ist damit nicht auf den eigenen Broadcast angewiesen.
@@ -4201,11 +4210,11 @@ class EventController extends Controller
         );
 
         $freshEvent = $event->fresh();
-        broadcast(new \Artwork\Modules\Event\Events\BulkEventChanged(
-            $event,
-            'updated'
-        ));
-        broadcast(new EventUpdated($freshEvent, $freshEvent->room_id));
+        // Broadcasts nach der Response — hängender Websocket-Server darf den Patch nicht bremsen
+        dispatch(static function () use ($freshEvent): void {
+            broadcast(new \Artwork\Modules\Event\Events\BulkEventChanged($freshEvent, 'updated'));
+            broadcast(new EventUpdated($freshEvent, $freshEvent->room_id));
+        })->afterResponse();
     }
 
     public function createSingleBulkEvent(
@@ -4233,11 +4242,11 @@ class EventController extends Controller
             $this->authManager->id()
         );
         $freshEvent = $event->fresh();
-        broadcast(new \Artwork\Modules\Event\Events\BulkEventChanged(
-            $freshEvent,
-            'created'
-        ));
-        broadcast(new EventCreated($freshEvent, $freshEvent->room_id));
+        // Broadcasts nach der Response — hängender Websocket-Server darf den Create nicht bremsen
+        dispatch(static function () use ($freshEvent): void {
+            broadcast(new \Artwork\Modules\Event\Events\BulkEventChanged($freshEvent, 'created'));
+            broadcast(new EventCreated($freshEvent, $freshEvent->room_id));
+        })->afterResponse();
 
         // Erstelltes Event zurückgeben: der auslösende Client aktualisiert seine Liste
         // aus der Response und ist damit nicht auf den eigenen Broadcast angewiesen.
@@ -4252,7 +4261,10 @@ class EventController extends Controller
 
         $event->update($request->only(['description']));
 
-        broadcast(new EventCreated($event->fresh(), $event->fresh()->room_id));
+        $freshEvent = $event->fresh();
+        dispatch(static function () use ($freshEvent): void {
+            broadcast(new EventCreated($freshEvent, $freshEvent->room_id));
+        })->afterResponse();
     }
 
 
@@ -4277,11 +4289,13 @@ class EventController extends Controller
             ])
         );
 
-        // Broadcast updates for each affected event
+        // Broadcasts nach der Response (hängender Websocket-Server bremst sonst den Client)
         $events = Event::whereIn('id', $eventIds)->get();
-        foreach ($events as $event) {
-            broadcast(new EventCreated($event->fresh(), $event->fresh()->room_id));
-        }
+        dispatch(static function () use ($events): void {
+            foreach ($events as $event) {
+                broadcast(new EventCreated($event, $event->room_id));
+            }
+        })->afterResponse();
     }
 
     public function bulkDeleteEvent(Request $request): void
@@ -4297,13 +4311,15 @@ class EventController extends Controller
 
         $this->eventService->bulkDeleteEvent($eventIds);
 
-        // Broadcast deletions for each affected event
-        foreach ($events as $event) {
-            if ($event->room_id !== null) {
-                broadcast(new RemoveEvent($event, $event->room_id));
+        // Broadcasts nach der Response (hängender Websocket-Server bremst sonst den Client)
+        dispatch(static function () use ($events): void {
+            foreach ($events as $event) {
+                if ($event->room_id !== null) {
+                    broadcast(new RemoveEvent($event, $event->room_id));
+                }
+                broadcast(new BulkEventChanged($event, 'deleted'));
             }
-            broadcast(new BulkEventChanged($event, 'deleted'));
-        }
+        })->afterResponse();
     }
 
     /**
@@ -4641,6 +4657,14 @@ class EventController extends Controller
         $this->generalSettingsService->updateEventTimeLengthMinutesFromRequest($request);
         $this->generalSettingsService->updateEventStartTimeFromRequest($request);
         $this->generalSettingsService->updateEventAllDayDefaultFromRequest($request);
+
+        // Einlass-Feld instanzweit aktivieren/deaktivieren (kein Standardwert,
+        // sondern Modul-Schalter — Werte bleiben beim Deaktivieren erhalten)
+        if ($request->has('enable_admission')) {
+            $eventSettings = app(EventSettings::class);
+            $eventSettings->enable_admission = $request->boolean('enable_admission');
+            $eventSettings->save();
+        }
     }
 
 

@@ -4,6 +4,7 @@ namespace Artwork\Modules\InventoryManagement\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\UploadInventoryFileRequest;
+use Artwork\Core\FileHandling\Naming\StoredFileName;
 use Artwork\Modules\InventoryManagement\Http\Requests\ItemCell\UpdateCraftInventoryItemCellCellValueRequest;
 use Artwork\Modules\InventoryManagement\Models\CraftInventoryItemCell;
 use Artwork\Modules\InventoryManagement\Services\CraftInventoryItemCellService;
@@ -13,6 +14,7 @@ use Illuminate\Routing\Redirector;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Translation\Translator;
 use Psr\Log\LoggerInterface;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 use Throwable;
 
 class CraftInventoryItemCellController extends Controller
@@ -57,27 +59,55 @@ class CraftInventoryItemCellController extends Controller
         CraftInventoryItemCell $craftInventoryItemCell,
         UploadInventoryFileRequest $request
     ): void {
-        $cellValue = $request->string('cell_value');
-        $this->craftInventoryItemCellService->updateCellValue($cellValue, $craftInventoryItemCell);
-
         $file = $request->file('file');
 
-        $file->storeAs('uploads/inventar', $file->getClientOriginalName());
+        // The stored name comes from the file, never from the request - cell_value
+        // is interpolated into a storage path further down.
+        $storedName = StoredFileName::forUpload($file);
+
+        $file->storeAs('uploads/inventar', $storedName);
+
+        $this->craftInventoryItemCellService->updateCellValue($storedName, $craftInventoryItemCell);
+
+        $craftInventoryItemCell->forceFill([
+            'file_original_name' => $file->getClientOriginalName(),
+        ])->save();
 
         $this->redirector->back();
     }
 
     public function getDownloadCellValueUpload(
         CraftInventoryItemCell $craftInventoryItemCell
-    ): \Symfony\Component\HttpFoundation\StreamedResponse {
-        return Storage::download('uploads/inventar/' . $craftInventoryItemCell->cell_value);
+    ): StreamedResponse {
+        $storedName = $this->storedFileName($craftInventoryItemCell);
+
+        return Storage::download(
+            'uploads/inventar/' . $storedName,
+            $craftInventoryItemCell->file_original_name ?: $storedName
+        );
     }
 
     public function removeUploadedFile(CraftInventoryItemCell $craftInventoryItemCell): RedirectResponse
     {
-        Storage::delete('uploads/inventar/' . $craftInventoryItemCell->cell_value);
+        Storage::delete('uploads/inventar/' . $this->storedFileName($craftInventoryItemCell));
+
+        $craftInventoryItemCell->forceFill(['file_original_name' => null])->save();
         $this->craftInventoryItemCellService->updateCellValue('', $craftInventoryItemCell);
 
         return $this->redirector->back();
+    }
+
+    /**
+     * cell_value doubles as the on-disk filename. Legacy rows hold whatever the
+     * client sent, so anything that is not a plain filename is refused rather
+     * than interpolated into a storage path.
+     */
+    private function storedFileName(CraftInventoryItemCell $craftInventoryItemCell): string
+    {
+        $storedName = (string) $craftInventoryItemCell->cell_value;
+
+        abort_if($storedName === '' || basename($storedName) !== $storedName, 404);
+
+        return $storedName;
     }
 }

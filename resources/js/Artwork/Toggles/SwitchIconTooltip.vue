@@ -1,10 +1,14 @@
 <template>
     <div v-if="!roomMode" class="inline-flex items-center">
+        <!-- v-tooltip (PrimeVue-Direktive) braucht ein echtes DOM-Element — auf der
+             Headless-UI-Switch-Komponente wird die Direktive nicht angewendet
+             ("Runtime directive used on component with non-element root node").
+             Deshalb trägt dieser Wrapper-Span den Tooltip. -->
+        <span class="inline-flex" v-tooltip.bottom="tooltipBinding">
         <Switch
             v-model="model"
             :disabled="disabled"
             :aria-label="tooltipText"
-            v-tooltip.bottom="tooltipBinding"
             :class="[
         disabled
             ? (model ? 'bg-accent-200' : (onBand ? 'bg-white/10' : 'bg-border-subtle'))
@@ -34,6 +38,7 @@
         />
       </span>
         </Switch>
+        </span>
 
         <!-- Right Label -->
         <span v-if="label"

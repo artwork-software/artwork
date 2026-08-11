@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Settings\EventSettings;
+use Artwork\Core\FileHandling\Naming\StoredFileName;
 use Artwork\Core\Http\Requests\SearchRequest;
 use Artwork\Modules\Accommodation\Models\Accommodation;
 use Artwork\Modules\Area\Services\AreaService;
@@ -169,7 +170,6 @@ use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 use Inertia\ResponseFactory;
-use Intervention\Image\Facades\Image;
 use phpDocumentor\Reflection\PseudoTypes\IntegerRange;
 use stdClass;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
@@ -4649,22 +4649,16 @@ class ProjectController extends Controller
 
             $file = $request->file('keyVisual');
 
-            $img = Image::make($file);
+            $basename = StoredFileName::forUpload($file);
 
-            /*if ($img->width() < 1080) {
-                throw ValidationException::withMessages([
-                    'keyVisual' => __('notification.project.key_visual.width')
-                ]);
-            }*/
+            Storage::putFileAs('public/keyVisual', $file, $basename);
 
-            Storage::delete('keyVisual/' . $project->key_visual_path);
-
-            $original_name = $file->getClientOriginalName();
-            $basename = Str::random(20) . $original_name;
+            // Only drop the previous file once the replacement is safely on disk.
+            if ($oldKeyVisual) {
+                Storage::delete('public/keyVisual/' . $oldKeyVisual);
+            }
 
             $project->key_visual_path = $basename;
-            $img->save(Storage::path('public/keyVisual/') . $basename, 100, $file->clientExtension());
-            Storage::putFileAs('public/keyVisual', $file, $basename);
         }
         $project->save();
 

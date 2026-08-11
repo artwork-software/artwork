@@ -14,7 +14,7 @@
                 <template #moreButtons>
                     <SwitchIconTooltip
                         v-model="multiEditMode"
-                        :tooltip-text="$t('Multi-Edit')"
+                        :tooltip-text="$t('Multi-edit: select multiple shifts to edit them together.')"
                         size="md"
                         icon="IconPencil"
                         @change="onMultiEditToggle"

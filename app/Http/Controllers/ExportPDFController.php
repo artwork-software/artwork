@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use Artwork\Core\FileHandling\Naming\DownloadFileName;
+use Artwork\Core\FileHandling\Naming\StoredFileName;
 use Artwork\Modules\Area\Models\Area;
 use Artwork\Modules\Calendar\Services\CalendarDataService;
 use Artwork\Modules\Calendar\Services\EventCalendarService;
@@ -389,7 +391,10 @@ class ExportPDFController extends Controller
         $pdf->save($this->createStoragePath($this->filesystemManager, $filename));
 
         return $this->inertiaResponseFactory->location(
-            $this->urlGenerator->route('calendar.export.pdf.download', ['filename' => $filename])
+            $this->urlGenerator->route(
+                'calendar.export.pdf.download',
+                ['filename' => $filename, 'name' => $this->createDownloadName()]
+            )
         );
     }
 
@@ -636,7 +641,10 @@ class ExportPDFController extends Controller
         $pdf->save($this->createStoragePath($this->filesystemManager, $filename));
 
         return $this->inertiaResponseFactory->location(
-            $this->urlGenerator->route('calendar.export.pdf.download', ['filename' => $filename])
+            $this->urlGenerator->route(
+                'calendar.export.pdf.download',
+                ['filename' => $filename, 'name' => $this->createDownloadName()]
+            )
         );
     }
 
@@ -853,7 +861,10 @@ class ExportPDFController extends Controller
         $pdf->save($this->createStoragePath($this->filesystemManager, $filename));
 
         return $this->inertiaResponseFactory->location(
-            $this->urlGenerator->route('calendar.export.pdf.download', ['filename' => $filename])
+            $this->urlGenerator->route(
+                'calendar.export.pdf.download',
+                ['filename' => $filename, 'name' => $this->createDownloadName()]
+            )
         );
     }
 
@@ -1081,7 +1092,10 @@ class ExportPDFController extends Controller
         $pdf->save($this->createStoragePath($this->filesystemManager, $filename));
 
         return $this->inertiaResponseFactory->location(
-            $this->urlGenerator->route('calendar.export.pdf.download', ['filename' => $filename])
+            $this->urlGenerator->route(
+                'calendar.export.pdf.download',
+                ['filename' => $filename, 'name' => $this->createDownloadName()]
+            )
         );
     }
 
@@ -1175,12 +1189,14 @@ class ExportPDFController extends Controller
     }
 
     public function download(
+        Request $request,
         string $filename,
         ResponseFactory $responseFactory,
         FilesystemManager $filesystemManager
     ): BinaryFileResponse {
         return $responseFactory->download(
-            $this->createStoragePath($filesystemManager, $filename)
+            $this->createStoragePath($filesystemManager, $filename),
+            DownloadFileName::sanitize($request->query('name'))
         )->deleteFileAfterSend();
     }
 
@@ -1189,7 +1205,20 @@ class ExportPDFController extends Controller
         return $filesystemManager->path('pdf/' . $filename);
     }
 
-    private function createFilename(): string {
+    /**
+     * The name the file is stored under. The readable name travels separately,
+     * see createDownloadName().
+     */
+    private function createFilename(): string
+    {
+        return StoredFileName::forGenerated('pdf');
+    }
+
+    /**
+     * The name the browser saves the file as.
+     */
+    private function createDownloadName(): string
+    {
         return sprintf(
             '%s_%s.pdf',
             Carbon::now()->format('d.m.Y'),

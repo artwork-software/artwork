@@ -21,13 +21,21 @@ final class ArtistResidencyServiceTest extends TestCase
     }
 
     #[Test]
-    public function create_filename_combines_carbon_title_and_dpi(): void
+    public function create_filename_returns_hashed_stored_name(): void
+    {
+        $filename = $this->service->createFilename();
+
+        $this->assertMatchesRegularExpression('/^[a-f0-9]{32}\.pdf$/', $filename);
+    }
+
+    #[Test]
+    public function create_download_name_combines_carbon_title_and_dpi(): void
     {
         $carbon = Carbon::parse('2025-04-15 10:30:00');
 
-        $filename = $this->service->createFilename($carbon, 'My Project', '72');
+        $filename = $this->service->createDownloadName($carbon, 'My Project', '72');
 
-        $this->assertSame('15.04.2025-10:30:00_My_Project_dpi_72.pdf', $filename);
+        $this->assertSame('15.04.2025-10-30-00_My_Project_dpi_72.pdf', $filename);
     }
 
     #[Test]

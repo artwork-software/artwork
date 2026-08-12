@@ -17,6 +17,7 @@
         <Switch
             v-model="model"
             :disabled="disabled"
+            :aria-label="accessibleName"
             :class="[
         disabled
             ? (model ? 'bg-accent-200' : 'bg-border-subtle')
@@ -27,7 +28,7 @@
         disabled ? 'cursor-not-allowed' : ''
       ]"
         >
-            <span class="sr-only">Toggle</span>
+            <span class="sr-only">{{ accessibleName }}</span>
             <!-- Knopf -->
             <span
                 aria-hidden="true"
@@ -95,6 +96,10 @@ const model = computed({
         emit('change', val)
     }
 })
+
+const accessibleName = computed(() =>
+    props.tooltipText || `${props.leftLabel} / ${props.rightLabel}`
+)
 
 function set(val) {
     if (!props.disabled) {

@@ -4,18 +4,18 @@
             <date-picker-component v-if="dateValue" :project="project" :dateValueArray="dateValue" :is_shift_plan="false"></date-picker-component>
             <div v-if="!project">
                 <div v-if="dateValue && dateValue[0] === dateValue[1]" class="flex items-center">
-                    <button class="ml-2 text-black previousDay" @click="previousDay">
+                    <button class="ml-2 text-black previousDay" :aria-label="$t('Previous day')" @click="previousDay">
                         <IconChevronLeft  class="h-5 w-5 text-text"/>
                     </button>
-                    <button class="ml-2 text-black nextDay" @click="nextDay">
+                    <button class="ml-2 text-black nextDay" :aria-label="$t('Next day')" @click="nextDay">
                         <IconChevronRight class="h-5 w-5 text-text"/>
                     </button>
                 </div>
                 <div v-else class="flex items-center">
-                    <button  class="ml-2 text-black previousTimeRange" @click="previousTimeRange">
+                    <button  class="ml-2 text-black previousTimeRange" :aria-label="$t('Previous time range')" @click="previousTimeRange">
                         <IconChevronLeft class="h-5 w-5 text-text"/>
                     </button>
-                    <button class="ml-2 text-black nextTimeRange" @click="nextTimeRange">
+                    <button class="ml-2 text-black nextTimeRange" :aria-label="$t('Next time range')" @click="nextTimeRange">
                         <IconChevronRight class="h-5 w-5 text-text"/>
                     </button>
                 </div>
@@ -24,8 +24,8 @@
         <div class="flex items-center gap-x-2">
             <div v-if="dateValue[0] !== dateValue[1]" class="flex items-center">
                <div class="flex items-center gap-x-2">
-                   <Switch @click="changeMultiEdit(multiEdit)" v-if="!roomMode" v-model="multiEdit" :class="[multiEdit ? 'bg-accent-700' : 'bg-border-subtle', 'relative inline-flex items-center h-6 w-14 flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out']">
-                       <span class="sr-only">Use setting</span>
+                   <Switch @click="changeMultiEdit(multiEdit)" v-if="!roomMode" v-model="multiEdit" :aria-label="$t('Multi-edit: select multiple events to edit or delete them together.')" :class="[multiEdit ? 'bg-accent-700' : 'bg-border-subtle', 'relative inline-flex items-center h-6 w-14 flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out']">
+                       <span class="sr-only">{{ $t('Multi-edit: select multiple events to edit or delete them together.') }}</span>
                        <span :class="[multiEdit ? 'translate-x-7' : 'translate-x-0', 'pointer-events-none relative inline-block h-8 w-8 border border-border transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']">
                           <span :class="[multiEdit ? 'opacity-0 duration-100 ease-out' : 'opacity-100 duration-200 ease-in', 'absolute inset-0 flex h-full w-full items-center justify-center transition-opacity']" aria-hidden="true">
                              <IconPencil stroke-width="1.5" class="w-5 h-5" />
@@ -35,8 +35,8 @@
                           </span>
                     </span>
                    </Switch>
-                   <Switch @click="changeAtAGlance()" v-if="!roomMode" v-model="atAGlance" :class="[atAGlance ? 'bg-accent-700' : 'bg-border-subtle', 'relative inline-flex items-center h-6 w-14 flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out']">
-                       <span class="sr-only">Use setting</span>
+                   <Switch @click="changeAtAGlance()" v-if="!roomMode" v-model="atAGlance" :aria-label="$t('At a glance')" :class="[atAGlance ? 'bg-accent-700' : 'bg-border-subtle', 'relative inline-flex items-center h-6 w-14 flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out']">
+                       <span class="sr-only">{{ $t('At a glance') }}</span>
                        <span :class="[atAGlance ? 'translate-x-7' : 'translate-x-0', 'pointer-events-none relative inline-block h-8 w-8 border border-border transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']">
                           <span :class="[atAGlance ? 'opacity-0 duration-100 ease-out' : 'opacity-100 duration-200 ease-in', 'absolute inset-0 flex h-full w-full items-center justify-center transition-opacity']" aria-hidden="true">
                              <IconList stroke-width="1.5" class="w-5 h-5" />

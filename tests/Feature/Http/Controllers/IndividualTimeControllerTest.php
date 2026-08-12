@@ -48,6 +48,35 @@ final class IndividualTimeControllerTest extends FeatureTestCase
     }
 
     #[Test]
+    public function admin_can_store_individual_time_without_shift_comment(): void
+    {
+        $this->actingAsAdmin();
+        $user = User::factory()->create();
+
+        $response = $this->post(route('add.update.individualTimesAndShiftPlanComment'), [
+            'modelType' => 0,
+            'modelId' => $user->id,
+            'individualTimes' => [
+                [
+                    'title' => 'Single save',
+                    'start_time' => '09:00',
+                    'end_time' => '10:00',
+                    'start_date' => '2026-01-01',
+                    'break_minutes' => 0,
+                ],
+            ],
+        ]);
+
+        $response->assertOk();
+        $response->assertJsonPath('shift_comment', null);
+        $this->assertDatabaseHas('individual_times', [
+            'title' => 'Single save',
+            'timeable_id' => $user->id,
+        ]);
+        $this->assertDatabaseCount('shift_plan_comments', 0);
+    }
+
+    #[Test]
     public function guest_cannot_destroy(): void
     {
         $user = User::factory()->create();

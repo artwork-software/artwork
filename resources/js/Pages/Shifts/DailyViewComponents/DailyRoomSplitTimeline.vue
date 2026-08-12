@@ -358,6 +358,7 @@ const eventItems = computed<Item[]>(() => {
                     first_project_calendar_tab_id: props.first_project_calendar_tab_id,
                     eventStatuses: props.eventStatuses,
                     dayRole,
+                    currentProjectId: props.currentProjectId,
                 },
             })
 
@@ -386,6 +387,7 @@ const eventItems = computed<Item[]>(() => {
                 first_project_calendar_tab_id: props.first_project_calendar_tab_id,
                 eventStatuses: props.eventStatuses,
                 dayRole,
+                currentProjectId: props.currentProjectId,
             },
         })
     }

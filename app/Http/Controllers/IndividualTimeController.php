@@ -120,30 +120,35 @@ class IndividualTimeController extends Controller
         }
 
 
+        // Optional: das Einzel-Speichern einer individuellen Zeit sendet keinen Kommentar mit.
         $shiftComment = $request->get('shift_comment');
 
-        if ($shiftComment['comment'] !== null || !isset($shiftComment['id'])) {
-            $this->shiftPlanCommentService->addOrUpdateShiftPlanComment(
-                $modelInstance,
-                $shiftComment['comment'],
-                $shiftComment['date'],
-                $shiftComment['id'] ?? null,
-            );
-        } elseif (isset($shiftComment['id'])) {
-            $this->shiftPlanCommentService->addOrUpdateShiftPlanComment(
-                $modelInstance,
-                '',
-                $shiftComment['date'],
-                $shiftComment['id'] ?? null,
-            );
+        if (is_array($shiftComment)) {
+            if ($shiftComment['comment'] !== null || !isset($shiftComment['id'])) {
+                $this->shiftPlanCommentService->addOrUpdateShiftPlanComment(
+                    $modelInstance,
+                    $shiftComment['comment'],
+                    $shiftComment['date'],
+                    $shiftComment['id'] ?? null,
+                );
+            } elseif (isset($shiftComment['id'])) {
+                $this->shiftPlanCommentService->addOrUpdateShiftPlanComment(
+                    $modelInstance,
+                    '',
+                    $shiftComment['date'],
+                    $shiftComment['id'] ?? null,
+                );
+            }
         }
 
         broadcast(new IndividualTimeChanged($modelInstance->id, $this->resolveWorkerType($modelInstance)));
 
         return response()->json([
             'individual_times' => $modelInstance->individualTimes()->get(),
-            'shift_comment' => $modelInstance->shiftPlanComments()
-                ->where('date', $request->input('shift_comment.date'))->first(),
+            'shift_comment' => is_array($shiftComment)
+                ? $modelInstance->shiftPlanComments()
+                    ->where('date', $request->input('shift_comment.date'))->first()
+                : null,
         ]);
     }
 

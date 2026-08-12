@@ -632,7 +632,7 @@ onMounted(() => {
     }
 });
 
-async function submit() {
+function submit() {
     if (!canSubmit.value || isSubmitting.value) return;
 
     isSubmitting.value = true;
@@ -650,36 +650,41 @@ async function submit() {
         series_uuid: props.seriesUuid ?? null,
     };
 
-    try {
-        if (isEdit) {
-            await form
-                .transform(() => payload)
-                .put(
-                    route('individual-time-series.update', { series: props.seriesUuid }),
-                    {
-                        preserveScroll: true,
-                        onSuccess: () => {
-                            emit('updated');
-                            handleClose();
-                        },
-                    }
-                );
-        } else {
-            await form
-                .transform(() => payload)
-                .post(
-                    route('individual-time-series.store'),
-                    {
-                        preserveScroll: true,
-                        onSuccess: () => {
-                            emit('created');
-                            handleClose();
-                        },
-                    }
-                );
-        }
-    } finally {
-        isSubmitting.value = false;
+    // isSubmitting erst in onFinish zurücksetzen: Inertias post/put geben kein
+    // Promise zurück, ein try/finally würde den Guard sofort wieder freigeben
+    // und Doppelklicks legen dann zwei Serien an.
+    if (isEdit) {
+        form
+            .transform(() => payload)
+            .put(
+                route('individual-time-series.update', { series: props.seriesUuid }),
+                {
+                    preserveScroll: true,
+                    onSuccess: () => {
+                        emit('updated');
+                        handleClose();
+                    },
+                    onFinish: () => {
+                        isSubmitting.value = false;
+                    },
+                }
+            );
+    } else {
+        form
+            .transform(() => payload)
+            .post(
+                route('individual-time-series.store'),
+                {
+                    preserveScroll: true,
+                    onSuccess: () => {
+                        emit('created');
+                        handleClose();
+                    },
+                    onFinish: () => {
+                        isSubmitting.value = false;
+                    },
+                }
+            );
     }
 }
 

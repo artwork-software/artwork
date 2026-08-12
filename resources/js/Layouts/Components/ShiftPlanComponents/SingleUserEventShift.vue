@@ -106,31 +106,33 @@
                         v-if="showOwnConfirmationControls"
                         type="button"
                         class="text-xs text-text-subtle underline hover:text-text transition"
-                        @click="ownConfirmationInfo.accepted ? (showDeclineModal = true) : acceptShift()"
+                        @click="responseModalMode = ownConfirmationInfo.accepted ? 'decline' : 'accept'"
                     >
                         {{ ownConfirmationInfo.accepted ? $t('Decline shift') : $t('Accept shift') }}
                     </button>
                 </div>
                 <div v-else class="flex items-center justify-between gap-2">
                     <span class="text-xs font-semibold uppercase tracking-wide text-text-subtle">
-                        {{ $t('Confirm shift?') }}
+                        {{ $t('Reply to planner') }}
                     </span>
-                    <div class="flex items-center gap-1.5">
+                    <div class="flex items-center gap-1.5 shrink-0">
                         <button
                             type="button"
-                            class="inline-flex items-center gap-1 rounded-lg border border-success-border bg-success-surface px-2.5 py-1 text-xs font-semibold text-success hover:opacity-80 transition"
-                            @click="acceptShift"
+                            class="inline-flex items-center justify-center h-7 w-7 rounded-lg border border-success-border bg-success-surface text-success hover:opacity-80 transition"
+                            :aria-label="$t('Accept shift')"
+                            v-tooltip.bottom="{ value: $t('Accept shift'), class: 'aw-tooltip' }"
+                            @click="responseModalMode = 'accept'"
                         >
                             <PropertyIcon name="IconCheck" class="h-4 w-4" stroke-width="2.5" />
-                            {{ $t('Accept shift') }}
                         </button>
                         <button
                             type="button"
-                            class="inline-flex items-center gap-1 rounded-lg border border-danger-border bg-danger-surface px-2.5 py-1 text-xs font-semibold text-danger hover:opacity-80 transition"
-                            @click="showDeclineModal = true"
+                            class="inline-flex items-center justify-center h-7 w-7 rounded-lg border border-danger-border bg-danger-surface text-danger hover:opacity-80 transition"
+                            :aria-label="$t('Decline shift')"
+                            v-tooltip.bottom="{ value: $t('Decline shift'), class: 'aw-tooltip' }"
+                            @click="responseModalMode = 'decline'"
                         >
                             <PropertyIcon name="IconX" class="h-4 w-4" stroke-width="2.5" />
-                            {{ $t('Decline shift') }}
                         </button>
                     </div>
                 </div>
@@ -193,11 +195,12 @@
         </div>
     </div>
 
-    <!-- Ablehnen mit optionalem Kommentar -->
-    <ShiftConfirmationDeclineModal
-        v-if="showDeclineModal"
-        @close="showDeclineModal = false"
-        @submit="declineShift"
+    <!-- Zu-/Absage mit optionalem Kommentar -->
+    <ShiftConfirmationResponseModal
+        v-if="responseModalMode"
+        :mode="responseModalMode"
+        @close="responseModalMode = null"
+        @submit="submitResponse"
     />
 
     <!-- Anfrage Arbeitszeitänderung -->
@@ -225,7 +228,7 @@ import { useColorHelper } from '@/Composeables/UseColorHelper.js'
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 import { usePermission } from "@/Composeables/Permission.js";
 import {useShiftPlanLookups} from "@/Composeables/useShiftPlanLookups.js";
-import ShiftConfirmationDeclineModal from '@/Layouts/Components/ShiftPlanComponents/ShiftConfirmationDeclineModal.vue'
+import ShiftConfirmationResponseModal from '@/Layouts/Components/ShiftPlanComponents/ShiftConfirmationResponseModal.vue'
 import { useShiftWorkerConfirmation } from '@/Composeables/useShiftWorkerConfirmation.js'
 
 const { backgroundColorWithOpacity, getHighContrastPercent, getTextColorBasedOnBackground } = useColorHelper()
@@ -248,7 +251,8 @@ const resolvedCraft = computed(() => props.shift?.craft ?? resolveCraft(props.sh
 
 const showRequestWorkTimeChangeModal = ref(false)
 const hasIndivTime = ref(false)
-const showDeclineModal = ref(false)
+// 'accept' | 'decline' | null — steuert das Antwort-Modal (Kommentar optional)
+const responseModalMode = ref(null)
 
 const { isEnabled: confirmationEnabled, respond: respondToShift, getConfirmationInfo } = useShiftWorkerConfirmation()
 
@@ -272,13 +276,10 @@ const ownConfirmationInfo = computed(() =>
     props.shift.is_committed ? getConfirmationInfo(ownWorker.value) : null
 )
 
-const acceptShift = () => {
-    respondToShift(ownWorker.value.pivot.id, 'accepted')
-}
-
-const declineShift = (comment) => {
-    showDeclineModal.value = false
-    respondToShift(ownWorker.value.pivot.id, 'declined', comment)
+const submitResponse = (comment) => {
+    const status = responseModalMode.value === 'accept' ? 'accepted' : 'declined'
+    responseModalMode.value = null
+    respondToShift(ownWorker.value.pivot.id, status, comment)
 }
 
 const canAccessProject = computed(() => {

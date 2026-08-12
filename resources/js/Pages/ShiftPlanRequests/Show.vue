@@ -98,6 +98,7 @@
             :global-comment="rejectState.globalComment"
             :has-any-selection="hasAnySelection"
             :can-confirm-reject="canConfirmReject"
+            :error-messages="rejectState.errorMessages"
             @toggle-day="toggleDaySelection"
             @toggle-shift="toggleShiftSelection"
             @update-day-reason="updateDayReason"
@@ -183,6 +184,7 @@ const rejectState = reactive({
     dayReasons: {},   // date => reason string
     shiftSelections: {}, // uniqueKey => true
     shiftReasons: {}, // uniqueKey => reason string
+    errorMessages: [], // Backend-Fehler (Validierung etc.) zur Anzeige im Modal
 });
 
 const hasAnySelection = computed(() => Object.keys(rejectState.selectedDays).length > 0 || Object.keys(rejectState.shiftSelections).length > 0);
@@ -233,6 +235,7 @@ const updateGlobalComment = (val) => {
 const startReject = () => {
     rejectState.active = true;
     rejectState.modalOpen = true;
+    rejectState.errorMessages = [];
 };
 const cancelReject = () => {
     rejectState.active = false;
@@ -242,6 +245,7 @@ const cancelReject = () => {
     rejectState.dayReasons = {};
     rejectState.shiftSelections = {};
     rejectState.shiftReasons = {};
+    rejectState.errorMessages = [];
 };
 
 const confirmReject = () => {
@@ -263,12 +267,21 @@ const confirmReject = () => {
             date,
             reason: rejectState.dayReasons[date] || null,
         })),
-        shifts: Object.keys(rejectState.shiftSelections).map(key => ({
-            ...parseUniqueKey(key),
-            reason: rejectState.shiftReasons[key] || null,
-        })),
+        shifts: Object.keys(rejectState.shiftSelections)
+            .map(key => ({
+                ...parseUniqueKey(key),
+                reason: rejectState.shiftReasons[key] || null,
+            }))
+            // Sicherheitsnetz: Keys ohne parsebares shift_id-Format (z.B. individuelle Zeiten
+            // "it-…" oder Geister-Einträge "ghost-…") würden die Backend-Validierung des
+            // GESAMTEN Requests scheitern lassen. Das Modal bietet sie nicht mehr an, aber
+            // hier filtern wir zusätzlich, damit eine einzelne kaputte Auswahl nie die
+            // Ablehnung aller anderen Schichten blockiert.
+            .filter(entry => Number.isInteger(entry.shift_id)
+                && ['user', 'freelancer', 'service_provider', 'unassigned'].includes(entry.row_type)),
     };
 
+    rejectState.errorMessages = [];
 
     router.post(
         route('shift-plan-requests.reject', props.request.id),
@@ -281,6 +294,12 @@ const confirmReject = () => {
             },
             onError: (errors) => {
                 console.error('Reject error', errors);
+                // Fehler im Modal anzeigen statt nur in der Konsole — sonst bleibt das
+                // Modal für den Nutzer kommentarlos offen ("Ablehnen geht nicht").
+                const messages = Object.values(errors || {}).flat().filter(Boolean);
+                rejectState.errorMessages = messages.length
+                    ? messages
+                    : [t('Something went wrong while saving. Please try again.')];
             }
         }
     );

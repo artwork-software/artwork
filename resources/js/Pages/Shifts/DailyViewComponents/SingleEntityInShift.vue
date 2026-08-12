@@ -197,13 +197,13 @@
                             white-menu-background
                             :icon="IconCircleCheck"
                             title="Record acceptance"
-                            @click="proxyAccept"
+                            @click="proxyResponseMode = 'accept'"
                         />
                         <BaseMenuItem
                             white-menu-background
                             :icon="IconCircleX"
                             title="Record declination"
-                            @click="showProxyDeclineModal = true"
+                            @click="proxyResponseMode = 'decline'"
                         />
                     </template>
                 </BaseMenu>
@@ -214,11 +214,12 @@
 
     <RequestWorkTimeChangeModal :user="person" :shift="shift" v-if="showRequestWorkTimeChangeModal" @close="showRequestWorkTimeChangeModal = false" />
 
-    <ShiftConfirmationDeclineModal
-        v-if="showProxyDeclineModal"
+    <ShiftConfirmationResponseModal
+        v-if="proxyResponseMode"
+        :mode="proxyResponseMode"
         :worker-name="person.name || person.full_name || person.provider_name"
-        @close="showProxyDeclineModal = false"
-        @submit="proxyDecline"
+        @close="proxyResponseMode = null"
+        @submit="proxyRespond"
     />
 </template>
 
@@ -248,7 +249,7 @@ import BaseMenu from "@/Components/Menu/BaseMenu.vue";
 import BaseMenuItem from "@/Components/Menu/BaseMenuItem.vue";
 import {useShiftPlanLookups} from "@/Composeables/useShiftPlanLookups.js";
 import {useI18n} from "vue-i18n";
-import ShiftConfirmationDeclineModal from "@/Layouts/Components/ShiftPlanComponents/ShiftConfirmationDeclineModal.vue";
+import ShiftConfirmationResponseModal from "@/Layouts/Components/ShiftPlanComponents/ShiftConfirmationResponseModal.vue";
 import {useShiftWorkerConfirmation} from "@/Composeables/useShiftWorkerConfirmation.js";
 
 const { resolveCraft } = useShiftPlanLookups();
@@ -528,7 +529,8 @@ const deleteUserFromShift = (user, removeFromSingleShift = true, preserveState =
 const hasAdminRole = () => is('artwork admin')
 
 // ----- Zu-/Absage der Zuweisung -----
-const showProxyDeclineModal = ref(false);
+// 'accept' | 'decline' | null — Antwort-Modal für Proxy-Erfassung (Kommentar optional)
+const proxyResponseMode = ref(null);
 
 const confirmationInfo = computed(() => getConfirmationInfo(props.person));
 
@@ -579,13 +581,10 @@ const showProxyConfirmationActions = computed(() =>
     && !!props.person.pivot?.id
 );
 
-const proxyAccept = () => {
-    respondToShift(props.person.pivot.id, 'accepted');
-};
-
-const proxyDecline = (comment) => {
-    showProxyDeclineModal.value = false;
-    respondToShift(props.person.pivot.id, 'declined', comment);
+const proxyRespond = (comment) => {
+    const status = proxyResponseMode.value === 'accept' ? 'accepted' : 'declined';
+    proxyResponseMode.value = null;
+    respondToShift(props.person.pivot.id, status, comment);
 };
 </script>
 

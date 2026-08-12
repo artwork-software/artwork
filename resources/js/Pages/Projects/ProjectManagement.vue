@@ -33,7 +33,7 @@
                                     <SwitchGroup as="div" class="flex items-center">
                                         <Switch v-model="showOnlyMyProjects"
                                                 :class="[showOnlyMyProjects ? 'bg-success' : 'bg-border-subtle', 'relative inline-flex h-3 w-6 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-accent-600 focus:ring-offset-2']">
-                                            <span class="sr-only">Use setting</span>
+                                            <span class="sr-only">{{ $t('Show only my projects') }}</span>
                                             <span aria-hidden="true"
                                                   :class="[showOnlyMyProjects ? 'translate-x-3' : 'translate-x-0', 'pointer-events-none inline-block h-2 w-2 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']"/>
                                         </Switch>

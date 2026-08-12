@@ -32,9 +32,9 @@ class ShiftWorkerConfirmationService
             'confirmation_status' => $status,
             'confirmation_at' => now(),
             'confirmation_by_user_id' => $this->auth->id(),
-            // Kommentar ist nur für Ablehnungen gedacht — bei (erneuter) Zusage
-            // würde ein alter Ablehngrund sonst am Pivot kleben bleiben.
-            'confirmation_comment' => $status === ShiftWorker::CONFIRMATION_DECLINED ? $comment : null,
+            // Immer überschreiben: eine neue Antwort ohne Kommentar setzt null
+            // und lässt so keinen alten Ablehngrund am Pivot kleben.
+            'confirmation_comment' => $comment,
         ]);
 
         $workerName = $this->resolveWorkerName($pivot);
@@ -163,7 +163,7 @@ class ShiftWorkerConfirmationService
                 ],
             ];
 
-            if ($comment && !$accepted) {
+            if ($comment) {
                 $description[2] = [
                     'type' => 'string',
                     'title' => __(

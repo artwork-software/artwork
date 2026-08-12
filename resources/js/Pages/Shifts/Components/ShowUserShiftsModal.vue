@@ -372,6 +372,24 @@
                                             {{ t('This time will be deducted from the working hours when calculating the daily working time.') }}
                                         </p>
                                     </div>
+
+                                    <!-- Eintrag einzeln abbrechen oder speichern, ohne das ganze Modal loszuschicken -->
+                                    <div class="mt-3 pt-3 border-t border-border-subtle flex items-center justify-end gap-2">
+                                        <BaseUIButton
+                                            label="Cancel"
+                                            is-cancel-button
+                                            type="button"
+                                            @click="cancelEditingIndividualTime(individual_time)"
+                                        />
+                                        <BaseUIButton
+                                            label="Save"
+                                            variant="primary"
+                                            hide-icon
+                                            type="button"
+                                            :disabled="isSaving"
+                                            @click="saveIndividualTime(individual_time)"
+                                        />
+                                    </div>
                                 </div>
 
                                 <div
@@ -854,11 +872,11 @@
             v-if="showSeriesDetachModal"
             :title="t('Detach time from series')"
             :description="t('You have edited a time that belongs to a series. When saving, it is detached from the series and will no longer be affected by future series changes.')"
-            @close="showSeriesDetachModal = false"
+            @close="closeSeriesDetachModal"
         >
             <ul class="mt-4 space-y-1.5">
                 <li
-                    v-for="it in getChangedSeriesTimes()"
+                    v-for="it in seriesDetachCandidates"
                     :key="`detach-${it.id}`"
                     class="flex items-center gap-2 rounded-lg border border-border-subtle bg-surface-sunken/70 px-3 py-2 text-xs text-text-muted"
                 >
@@ -870,7 +888,7 @@
                 </li>
             </ul>
             <div class="flex justify-end gap-2 mt-6">
-                <BaseUIButton type="button" variant="secondary" hide-icon @click="showSeriesDetachModal = false">
+                <BaseUIButton type="button" variant="secondary" hide-icon @click="closeSeriesDetachModal">
                     {{ t('Cancel') }}
                 </BaseUIButton>
                 <BaseUIButton type="button" variant="primary" hide-icon @click="confirmSeriesDetach">
@@ -1089,6 +1107,10 @@ const editingIndividualTimeIds = ref([]);
 const showSeriesDetachModal = ref(false);
 const seriesDetachConfirmed = ref(false);
 
+// Eintrag, der über den Einzel-Speichern-Button gespeichert werden soll und
+// noch auf die Serien-Detach-Bestätigung wartet (null = Gesamt-Speichern-Flow).
+const pendingSingleSaveTime = ref(null);
+
 // Guard gegen Doppel-Klick auf Speichern: ohne ihn werden neue individuelle
 // Zeiten (id null) bei jedem weiteren Klick erneut angelegt.
 const isSaving = ref(false);
@@ -1169,6 +1191,107 @@ function startEditingIndividualTime(individualTime) {
     }
 }
 
+function hasIndividualTimeChanged(individualTime) {
+    const original = originalIndividualTimes.value.find((orig) => orig.id === individualTime.id);
+    return JSON.stringify(original) !== JSON.stringify(individualTime);
+}
+
+// Bearbeitungsmodus ohne Speichern verlassen: bestehende Einträge werden auf den
+// ursprünglichen Zustand zurückgesetzt, neue (noch nicht gespeicherte) entfernt.
+function cancelEditingIndividualTime(individualTime) {
+    delete individualTime.error;
+
+    if (!individualTime.id) {
+        props.user.individual_times = (props.user.individual_times || []).filter(
+            (it) => it !== individualTime,
+        );
+        return;
+    }
+
+    const original = originalIndividualTimes.value.find((orig) => orig.id === individualTime.id);
+    if (original) {
+        Object.assign(individualTime, JSON.parse(JSON.stringify(original)));
+    }
+    editingIndividualTimeIds.value = editingIndividualTimeIds.value.filter(
+        (id) => id !== individualTime.id,
+    );
+}
+
+// Einzelnen Eintrag speichern, ohne den Gesamt-Speichern-Flow (inkl. Status/Kommentar
+// und Modal-Schließen) auszulösen.
+function saveIndividualTime(individualTime) {
+    delete individualTime.error;
+
+    if (individualTime.start_time && !individualTime.end_time) {
+        individualTime.error = t('Please also enter an end time here.');
+        return;
+    }
+    if (!individualTime.start_time && individualTime.end_time) {
+        individualTime.error = t('Please also enter a start time here.');
+        return;
+    }
+
+    // Geänderte Serienzeit: erst bestätigen lassen, dass sie von der Serie gelöst wird.
+    if (individualTime.id && individualTime.series_uuid && hasIndividualTimeChanged(individualTime)) {
+        pendingSingleSaveTime.value = individualTime;
+        showSeriesDetachModal.value = true;
+        return;
+    }
+
+    performSingleIndividualTimeSave(individualTime);
+}
+
+function performSingleIndividualTimeSave(individualTime) {
+    if (isSaving.value) {
+        return;
+    }
+    isSaving.value = true;
+
+    axios
+        .post(route('add.update.individualTimesAndShiftPlanComment'), {
+            modelId: props.user.element.id,
+            modelType: props.user.type,
+            individualTimes: [individualTime],
+        })
+        .then((response) => {
+            const times = response.data.individual_times ?? [];
+            const knownIds = new Set(originalIndividualTimes.value.map((it) => it.id));
+
+            // Nur den gespeicherten Eintrag mergen — die Antwort enthält alle Zeiten
+            // des Workers, ein Komplett-Ersetzen würde andere offene Edits verwerfen.
+            const savedEntry = individualTime.id
+                ? times.find((it) => it.id === individualTime.id)
+                : times.find((it) => !knownIds.has(it.id));
+
+            if (savedEntry) {
+                Object.assign(individualTime, savedEntry);
+
+                // Original nachführen, damit der Gesamt-Speichern-Lauf den Eintrag
+                // nicht erneut sendet und Schließen ihn nicht verwirft.
+                const copy = JSON.parse(JSON.stringify(savedEntry));
+                const originalIndex = originalIndividualTimes.value.findIndex(
+                    (it) => it.id === savedEntry.id,
+                );
+                if (originalIndex === -1) {
+                    originalIndividualTimes.value.push(copy);
+                } else {
+                    originalIndividualTimes.value[originalIndex] = copy;
+                }
+            }
+
+            editingIndividualTimeIds.value = editingIndividualTimeIds.value.filter(
+                (id) => id !== individualTime.id,
+            );
+            emit('desiresReload');
+        })
+        .catch(() => {
+            individualTime.error = t('Saving failed. Please try again.');
+        })
+        .finally(() => {
+            isSaving.value = false;
+        });
+}
+
 function isFullDayIndividualTime(individualTime) {
     return Boolean(individualTime.full_day) || (!individualTime.start_time && !individualTime.end_time);
 }
@@ -1187,9 +1310,28 @@ function getChangedSeriesTimes() {
     });
 }
 
-function confirmSeriesDetach() {
-    seriesDetachConfirmed.value = true;
+// Liste im Detach-Modal: beim Einzel-Speichern nur der betroffene Eintrag,
+// beim Gesamt-Speichern alle geänderten Serienzeiten.
+const seriesDetachCandidates = computed(() =>
+    pendingSingleSaveTime.value ? [pendingSingleSaveTime.value] : getChangedSeriesTimes(),
+);
+
+function closeSeriesDetachModal() {
     showSeriesDetachModal.value = false;
+    pendingSingleSaveTime.value = null;
+}
+
+function confirmSeriesDetach() {
+    showSeriesDetachModal.value = false;
+
+    if (pendingSingleSaveTime.value) {
+        const entry = pendingSingleSaveTime.value;
+        pendingSingleSaveTime.value = null;
+        performSingleIndividualTimeSave(entry);
+        return;
+    }
+
+    seriesDetachConfirmed.value = true;
     checkVacation();
 }
 

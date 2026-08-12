@@ -1,7 +1,7 @@
 <template>
     <!-- Container: unterscheidet Kollision/Nicht-Kollision -->
-    <div v-if="!detailsOnly" :class="['w-full min-w-64 rounded-lg select-none border']"
-         :style="{ backgroundColor: `${fullCraft.color ?? '#999999'}${isFollowUpDay ? '30' : '50'}`, borderColor: isFollowUpDay ? '#d1d5db' : borderColor }">
+    <div v-if="!detailsOnly" :class="['w-full min-w-64 rounded-lg select-none border', { 'border-dashed': isUnrelatedProjectShift }]"
+         :style="cardStyle">
         <!-- Linke Spalte: Zeilenstruktur -->
         <div class="flex flex-col w-full">
             <!-- Zeile 1: Zeit (niemals umbrechen) + optionale Gruppe + Gewerkname + Menü am Zeilenende -->
@@ -1128,6 +1128,23 @@ const subtitleTextClass = computed(() => props.hasCollision ? 'text-xs' : 'text-
 const functionBadgeClass = computed(() => props.hasCollision ? 'text-[10px] border-border bg-white' : 'text-xs border-border bg-white')
 const craftTitleFull = computed(() => `[${fullCraft.value?.abbreviation}] ${fullCraft.value?.name}`)
 const borderColor = computed(() => props.hasCollision ? `${fullCraft.value?.color ?? '#999999'}A0` : 'transparent')
+
+// Projektfremde Schichten: schraffierter Hintergrund + gestrichelter Rand zur Abgrenzung
+const cardStyle = computed(() => {
+    const base = fullCraft.value?.color ?? '#999999'
+    if (isUnrelatedProjectShift.value) {
+        const stripe = `${base}${isFollowUpDay.value ? '20' : '30'}`
+        return {
+            backgroundColor: `${base}0D`,
+            backgroundImage: `repeating-linear-gradient(135deg, ${stripe} 0px, ${stripe} 5px, transparent 5px, transparent 11px)`,
+            borderColor: `${base}A0`,
+        }
+    }
+    return {
+        backgroundColor: `${base}${isFollowUpDay.value ? '30' : '50'}`,
+        borderColor: isFollowUpDay.value ? '#d1d5db' : borderColor.value,
+    }
+})
 
 // Wenn sich die Schichtdaten ändern, Cache zurücksetzen.
 // Kollisionen werden lazy beim nächsten Dropdown-Open geprüft.

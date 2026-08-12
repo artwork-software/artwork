@@ -4,8 +4,8 @@
         {{$t('All day')}}
     </div>
     <!-- Hauptkarte: Einheitliches Styling (ehemals "bei Kollision") -->
-    <div :class="['w-full min-w-64 select-none rounded-lg border']"
-         :style="{ backgroundColor: hexColor + (isFollowUpDay ? '20' : '40'), borderColor: isFollowUpDay ? '#d1d5db' : borderColor }">
+    <div :class="['w-full min-w-64 select-none rounded-lg border', { 'border-dashed': isUnrelatedProjectEvent }]"
+         :style="cardStyle">
         <!-- Inhalt: zweizeilig (Zeit/Typ, darunter Titel + Menü) -->
         <div class="flex justify-between font-lexend min-w-0">
             <!-- Zeile 1: Zeit + Typ -->
@@ -242,6 +242,12 @@ const props = defineProps({
         type: String,
         default: 'single', // 'single' | 'start' | 'middle' | 'end'
     },
+    // Projekt-Schichten-Tab ("Projektfremde Termine anzeigen"): aktuelle Projekt-ID,
+    // damit Termine anderer Projekte visuell abgegrenzt werden
+    currentProjectId: {
+        type: [Number, String],
+        default: null
+    },
 })
 
 // Resolve normalized data via lookups
@@ -295,6 +301,30 @@ const showEventComponent = ref(false);
 const showConfirmDeleteModal = ref(false);
 const hexColor = computed(() => eventType.value.hex_code || '#cccccc');
 const borderColor = computed(() => hexColor.value + 'A0')
+
+// Projektfremder Termin (anderes Projekt oder ohne Projekt) im Projekt-Schichten-Tab
+const isUnrelatedProjectEvent = computed(() => {
+    if (props.currentProjectId === null || props.currentProjectId === undefined) return false
+    const eventProjectId = props.event?.projectId ?? props.event?.project_id ?? props.event?.project?.id ?? null
+    return Number(eventProjectId ?? 0) !== Number(props.currentProjectId)
+})
+
+// Projektfremde Termine: schraffierter Hintergrund + gestrichelter Rand zur Abgrenzung
+const cardStyle = computed(() => {
+    const base = hexColor.value
+    if (isUnrelatedProjectEvent.value) {
+        const stripe = `${base}${isFollowUpDay.value ? '20' : '30'}`
+        return {
+            backgroundColor: `${base}0D`,
+            backgroundImage: `repeating-linear-gradient(135deg, ${stripe} 0px, ${stripe} 5px, transparent 5px, transparent 11px)`,
+            borderColor: borderColor.value,
+        }
+    }
+    return {
+        backgroundColor: base + (isFollowUpDay.value ? '20' : '40'),
+        borderColor: isFollowUpDay.value ? '#d1d5db' : borderColor.value,
+    }
+})
 
 const wantedRoomId = ref(props.event.roomId);
 const wantedDate = ref(null);

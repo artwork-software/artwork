@@ -257,7 +257,7 @@ const cellParts = computed(() => {
             confirmationTitle = accepted
                 ? t('Accepted on {date}', { date: dateLabel })
                 : t('Declined on {date}', { date: dateLabel })
-            if (!accepted && s.confirmationComment) {
+            if (s.confirmationComment) {
                 confirmationTitle += ` – „${s.confirmationComment}"`
             }
         }

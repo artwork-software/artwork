@@ -99,6 +99,23 @@ final class ShiftWorkerConfirmationTest extends FeatureTestCase
     }
 
     #[Test]
+    public function worker_can_accept_with_optional_comment(): void
+    {
+        [, $user, $pivot] = $this->createCommittedShiftWithUser();
+
+        $this->actingAs($user)
+            ->patch(route('shift-worker.confirmation.update', $pivot), [
+                'status' => 'accepted',
+                'comment' => 'Komme etwas später, ab 8:30',
+            ])
+            ->assertRedirect();
+
+        $pivot->refresh();
+        $this->assertSame('accepted', $pivot->confirmation_status);
+        $this->assertSame('Komme etwas später, ab 8:30', $pivot->confirmation_comment);
+    }
+
+    #[Test]
     public function confirmation_is_rejected_when_feature_disabled(): void
     {
         [, $user, $pivot] = $this->createCommittedShiftWithUser();

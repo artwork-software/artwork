@@ -66,14 +66,14 @@
                             <!-- Shifts for this day -->
                             <div class="space-y-2">
                                 <template v-for="row in rows" :key="row.key + '-' + day.date">
-                                    <div v-if="row.days[day.date] && row.days[day.date].length" class="space-y-1">
+                                    <div v-if="selectableEntries(row, day.date).length" class="space-y-1">
                                         <div class="text-[10px] uppercase tracking-wide text-text-subtle font-semibold">
                                             {{ row.name }}
                                         </div>
 
                                         <div class="grid gap-2 grid-cols-1">
                                             <div
-                                                v-for="entry in row.days[day.date]"
+                                                v-for="entry in selectableEntries(row, day.date)"
                                                 :key="entry.unique_key"
                                                 class="rounded-md border text-[11px] p-2 flex flex-col gap-1"
                                                 :class="shiftSelections[entry.unique_key] ? 'border-danger-border bg-white shadow-sm ring-1 ring-danger-border'
@@ -122,6 +122,18 @@
                 </div>
             </div>
 
+            <!-- Fehler aus dem Backend (Validierung etc.) sichtbar machen — vorher landeten
+                 sie nur in der Browser-Konsole und das Modal blieb kommentarlos offen. -->
+            <div
+                v-if="errorMessages.length"
+                class="rounded-md border border-danger-border bg-danger-surface p-3 text-[11px] text-danger space-y-1"
+            >
+                <div class="font-semibold">{{ $t('The rejection could not be saved.') }}</div>
+                <ul class="list-disc list-inside space-y-0.5">
+                    <li v-for="(message, index) in errorMessages" :key="index">{{ message }}</li>
+                </ul>
+            </div>
+
             <!-- Footer -->
             <div class="flex items-center justify-between pt-2 border-t border-border-subtle">
                 <div class="text-[11px] text-text-muted">
@@ -164,7 +176,8 @@ const props = defineProps({
     dayReasons: { type: Object, required: true },
     globalComment: { type: String, default: '' },
     hasAnySelection: { type: Boolean, required: true },
-    canConfirmReject: { type: Boolean, required: true }
+    canConfirmReject: { type: Boolean, required: true },
+    errorMessages: { type: Array, default: () => [] }
 });
 
 defineEmits([
@@ -178,5 +191,11 @@ defineEmits([
     'confirm'
 ]);
 
-const hasAnyShiftForDay = (date) => props.rows.some(r => r.days?.[date]?.length);
+// Nur echte Schicht-Einträge sind ablehnbar: individuelle Zeiten (unique_key "it-…") und
+// Geister-Einträge entfernter Schichten ("ghost-…") haben kein parsebares shift_id-Format
+// und würden beim Absenden die Backend-Validierung des gesamten Requests scheitern lassen.
+const selectableEntries = (row, date) => (row.days?.[date] || [])
+    .filter(e => !e.is_individual_time && !e.is_removed_ghost);
+
+const hasAnyShiftForDay = (date) => props.rows.some(r => selectableEntries(r, date).length);
 </script>

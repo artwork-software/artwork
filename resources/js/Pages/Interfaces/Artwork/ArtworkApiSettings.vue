@@ -31,6 +31,9 @@
               {{ $t('Name') }}
             </th>
             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-text-subtle uppercase tracking-wider">
+              {{ $t('Permissions') }}
+            </th>
+            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-text-subtle uppercase tracking-wider">
               {{ $t('Created') }}
             </th>
             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-text-subtle uppercase tracking-wider">
@@ -53,6 +56,20 @@
           <tr v-for="token in tokens" :key="token.id" class="hover:bg-surface-sunken">
             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-text">
               {{ token.name }}
+            </td>
+            <td class="px-6 py-4 text-sm text-text-subtle">
+              <div v-if="token.scopes && token.scopes.length" class="flex flex-wrap gap-1">
+                <span
+                  v-for="scope in token.scopes"
+                  :key="scope"
+                  class="px-2 py-0.5 rounded bg-surface-sunken text-xs font-mono"
+                >
+                  {{ scope }}
+                </span>
+              </div>
+              <span v-else class="text-xs italic">
+                {{ $t('None — created before permissions were introduced') }}
+              </span>
             </td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-text-subtle">
               {{ formatDate(token.created_at) }}
@@ -130,6 +147,36 @@
             />
             <div v-if="form.errors.name" class="text-danger text-xs mt-1">
               {{ form.errors.name }}
+            </div>
+          </div>
+
+          <div class="mb-4">
+            <span class="block text-sm font-medium text-text-muted">
+              {{ $t('Permissions') }} <span class="text-danger">*</span>
+            </span>
+            <p class="text-xs text-text-subtle mt-1 mb-2">
+              {{ $t('A key can only do what you allow here. Grant as little as possible.') }}
+            </p>
+            <div class="space-y-2">
+              <label
+                v-for="scope in availableScopes"
+                :key="scope.id"
+                class="flex items-start gap-2 cursor-pointer"
+              >
+                <input
+                  type="checkbox"
+                  :value="scope.id"
+                  v-model="form.scopes"
+                  class="mt-0.5 rounded border-border text-accent-600 focus:ring-accent-600"
+                />
+                <span class="text-sm">
+                  <span class="font-mono text-xs">{{ scope.id }}</span>
+                  <span class="block text-xs text-text-subtle">{{ scope.description }}</span>
+                </span>
+              </label>
+            </div>
+            <div v-if="form.errors.scopes" class="text-danger text-xs mt-1">
+              {{ form.errors.scopes }}
             </div>
           </div>
 
@@ -339,6 +386,10 @@ export default defineComponent({
     tokens: {
       type: Array,
       default: () => []
+    },
+    availableScopes: {
+      type: Array,
+      default: () => []
     }
   },
   data() {
@@ -362,7 +413,8 @@ export default defineComponent({
       loadingLogs: false,
       form: useForm({
         name: '',
-        expires_at: null
+        expires_at: null,
+        scopes: []
       })
     }
   },

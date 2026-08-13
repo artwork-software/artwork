@@ -107,6 +107,18 @@ class AuthServiceProvider extends ServiceProvider
 
         Passport::$clientUuids = false;
 
+        // Scopes der Maschinen-API. Ein Scope, der hier fehlt, lässt sich nicht vergeben — die
+        // ScopeRepository lehnt ihn beim Anlegen mit invalid_scope ab.
+        //
+        // Wichtig: Scopes stehen im signierten JWT, nicht in der Datenbank. Tokens, die vor der
+        // Einführung dieser Liste ausgegeben wurden, tragen dauerhaft eine leere Scope-Menge und
+        // können nachträglich keine Rechte erhalten — sie müssen neu erstellt werden.
+        Passport::tokensCan([
+            'inventory:read' => 'Read inventory categories and articles',
+            'ticketing:read' => 'Read released events, price categories and branding',
+            'ticketing:write' => 'Report sales, bookings and check-ins back to artwork',
+        ]);
+
         // Passport ≥12 registriert keine Default-View mehr – ohne dieses Binding
         // wirft /oauth/authorize eine BindingResolutionException, sobald ein
         // Client eine Consent-Abfrage braucht.

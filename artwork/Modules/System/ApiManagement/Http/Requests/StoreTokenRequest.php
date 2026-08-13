@@ -3,6 +3,8 @@
 namespace Artwork\Modules\System\ApiManagement\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
+use Laravel\Passport\Passport;
 
 class StoreTokenRequest extends FormRequest
 {
@@ -20,8 +22,10 @@ class StoreTokenRequest extends FormRequest
         return [
             'name' => 'required|string|max:255',
             'expires_at' => 'nullable|date|after:now',
-            'scopes' => 'array',
-            'scopes.*' => 'string',
+            // Mindestens ein Scope: Ein Token ohne Scopes käme durch keine Prüfung der Maschinen-API
+            // und wäre damit nutzlos.
+            'scopes' => 'required|array|min:1',
+            'scopes.*' => ['string', Rule::in(Passport::scopeIds())],
         ];
     }
 }

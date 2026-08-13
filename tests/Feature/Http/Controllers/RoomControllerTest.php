@@ -301,14 +301,14 @@ final class RoomControllerTest extends FeatureTestCase
     }
 
     #[Test]
-    public function guest_can_search_rooms_via_public_api(): void
+    public function guest_cannot_search_rooms_via_api(): void
     {
-        // /api/room/search is not auth-protected (public API endpoint)
+        // Die Route gab unauthentifiziert Raum-Admins, Buchungsberechtigte und die Area heraus.
+        // Alle Aufrufer sitzen im eingeloggten Bereich, deshalb ist sie jetzt auth-pflichtig.
         Room::factory()->create(['name' => 'GuestStage']);
 
-        $response = $this->post(route('room.search'), ['search' => 'GuestStage']);
-
-        $response->assertOk();
+        $this->postJson(route('room.search'), ['search' => 'GuestStage'])
+            ->assertUnauthorized();
     }
 
     #[Test]

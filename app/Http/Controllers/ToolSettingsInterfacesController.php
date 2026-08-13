@@ -21,6 +21,8 @@ use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Redirect;
 use Inertia\Inertia;
 use Inertia\Response;
+use Laravel\Passport\Passport;
+use Laravel\Passport\Scope;
 use Laravel\Passport\Token;
 use Maatwebsite\Excel\Excel;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
@@ -65,6 +67,12 @@ class ToolSettingsInterfacesController extends Controller
                 'sageSettings' => $this->sageApiSettingsService->getFirst(),
                 'tableColumnOrder' => $this->tableColumnOrderService->getAllOrderedByPosition(),
                 'tokens' => $tokens,
+                'availableScopes' => Passport::scopes()
+                    ->map(fn (Scope $scope): array => [
+                        'id' => $scope->id,
+                        'description' => $scope->description,
+                    ])
+                    ->values(),
             ]
         );
     }

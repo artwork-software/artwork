@@ -25,14 +25,8 @@ Route::middleware('auth:api')->get('/user', function (Request $request) {
 });
 
 
-// search timeline preset timeline-preset.search
-Route::get('/timeline-preset/search', [
-    \App\Http\Controllers\TimelinePresetController::class,
-    'search'
-])->name('timeline-preset.search');
-
 // get all timeline presets with times count
-Route::get('/timeline-presets', function () {
+Route::middleware('auth:sanctum')->get('/timeline-presets', function () {
     return \Artwork\Modules\Shift\Models\ShiftPresetTimeline::withCount('times')->get();
 })->name('timeline-presets.all');
 
@@ -42,15 +36,16 @@ Route::middleware('auth:sanctum')->post('/chat/store', [ChatController::class, '
 Route::middleware('auth:sanctum')->post('/chat/message/{message}/read', [ChatController::class, 'markAsRead'])->name('chat-system.mark-as-read');
 Route::middleware('auth:sanctum')->post('/chat/messages/read', [ChatController::class, 'markMultipleAsRead'])->name('chat-system.mark-multiple-as-read');
 
-Route::get('/user-status/{id}', function ($id, UserStatusService $service) {
+Route::middleware('auth:sanctum')->get('/user-status/{id}', function ($id, UserStatusService $service) {
     return response()->json(['status' => $service->getStatus($id)]);
-});
+})->name('user-status.show');
 
 Route::get('/inventory/categories', [\Artwork\Modules\Inventory\Http\Controllers\InventoryCategoryController::class, 'getAllCategories'])
     ->middleware('auth:sanctum')
     ->name('inventory.categories.get-all');
 
 Route::post('/room/search', [RoomController::class, 'search'])
+    ->middleware('auth:sanctum')
     ->name('room.search');
 
 

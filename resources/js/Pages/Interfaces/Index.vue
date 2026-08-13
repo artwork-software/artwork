@@ -21,6 +21,7 @@
                         <div v-if="openSection === openSections.ARTWORK" class="p-4 bg-white rounded shadow">
                             <ArtworkApiSettings
                                 :tokens="tokens"
+                                :available-scopes="availableScopes"
                             />
                         </div>
                     </transition>
@@ -56,6 +57,10 @@ defineProps({
     sageSettings: Object,
     tableColumnOrder: Array,
     tokens: {
+        type: Array,
+        default: () => []
+    },
+    availableScopes: {
         type: Array,
         default: () => []
     }

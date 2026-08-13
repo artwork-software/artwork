@@ -1014,9 +1014,25 @@ class UserController extends Controller
 
     public function updateUserPhoto(User $user, Request $request): void
     {
+        if ($user->id !== Auth::user()->id && !Auth::user()->can(PermissionEnum::TEAM_UPDATE->value)) {
+            abort(\Illuminate\Http\Response::HTTP_FORBIDDEN);
+        }
+
         if (isset($request['photo'])) {
             $user->updateProfilePhoto($request['photo']);
         }
+    }
+
+    public function deleteUserPhoto(User $user): void
+    {
+        if ($user->id !== Auth::user()->id && !Auth::user()->can(PermissionEnum::TEAM_UPDATE->value)) {
+            abort(\Illuminate\Http\Response::HTTP_FORBIDDEN);
+        }
+
+        // Ersetzt Jetstreams current-user-photo.destroy: die liegt hinter dem
+        // Passport-'api'-Guard (Web-Session → Redirect /login → Browser wiederholt
+        // DELETE → 405) und würde zudem immer das Foto des EINGELOGGTEN Users löschen.
+        $user->deleteProfilePhoto();
     }
 
     /**

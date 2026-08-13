@@ -2013,6 +2013,11 @@ readonly class EventService
         // Respect explicit end_day from UI if provided (multi-day)
         if (!empty($event['end_day'])) {
             $explicitEndDay = $this->parseDayInput($event['end_day']);
+            // end_day vor dem Starttag (stale Client-Daten, Feld ist unvalidiert) würde
+            // sonst als invertierter Termin (end < start) gespeichert = unsichtbar im Kalender.
+            if ($explicitEndDay->lt($day)) {
+                $explicitEndDay = $day->copy();
+            }
             if ($allDay) {
                 $endTime = $explicitEndDay->copy()->endOfDay();
             } else {
@@ -2085,6 +2090,10 @@ readonly class EventService
         // Respect explicit end_day from UI if provided (multi-day update)
         if (!empty($data['end_day'])) {
             $explicitEndDay = $this->parseDayInput($data['end_day']);
+            // end_day vor dem Starttag: gleicher Guard wie in createBulkEvent
+            if ($explicitEndDay->lt($day)) {
+                $explicitEndDay = $day->copy();
+            }
             if ($allDay) {
                 $endTime = $explicitEndDay->copy()->endOfDay();
             } else {

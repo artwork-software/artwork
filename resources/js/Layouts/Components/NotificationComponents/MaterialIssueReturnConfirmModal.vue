@@ -38,11 +38,15 @@ const returnForm = useForm({
 })
 
 const submit = () => {
-    returnForm.post(route('extern-issue-of-material.return', props.externalIssueId), {
-        preserveScroll: true,
-        onSuccess: () => {
-            emits('close')
-        },
-    })
+    // Leere Eingabe: Key weglassen, sonst würde das Backend ($remarksProvided)
+    // bereits gespeicherte Rückgabe-Bemerkungen mit null überschreiben.
+    returnForm
+        .transform((data) => data.return_remarks?.trim() ? data : {})
+        .post(route('extern-issue-of-material.return', props.externalIssueId), {
+            preserveScroll: true,
+            onSuccess: () => {
+                emits('close')
+            },
+        })
 }
 </script>

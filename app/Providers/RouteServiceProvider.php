@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use Artwork\Modules\Project\Models\Project;
+use Dedoc\Scramble\Scramble;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Foundation\Support\Providers\RouteServiceProvider as ServiceProvider;
 use Illuminate\Http\Request;
@@ -13,6 +14,23 @@ use Laravel\Passport\AccessToken;
 class RouteServiceProvider extends ServiceProvider
 {
     public const HOME = '/dashboard';
+
+    /**
+     * Scramble ist eine Entwicklungsabhängigkeit, wird vom Container aber mitinstalliert. Ohne
+     * diesen Aufruf brächte es eine Doku-Oberfläche unter /docs/api mit; die Spezifikation entsteht
+     * in der CI und muss zur Laufzeit nicht ausgeliefert werden.
+     *
+     * Der Aufruf gehört in register(): Scramble registriert seine Routen beim Booten, und alle
+     * register()-Durchläufe liegen davor.
+     */
+    public function register(): void
+    {
+        parent::register();
+
+        if (class_exists(Scramble::class)) {
+            Scramble::ignoreDefaultRoutes();
+        }
+    }
 
     public function boot(): void
     {

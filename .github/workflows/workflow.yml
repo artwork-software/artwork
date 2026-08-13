@@ -102,6 +102,16 @@ jobs:
           php artisan migrate:fresh --env=testing --force
       - name: Run PHPUnit
         run: vendor/bin/phpunit --colors=always --coverage-clover=coverage.xml --coverage-text
+      # Die OpenAPI-Spezifikation der Maschinen-API wird erzeugt, nicht gepflegt. Sie liegt als
+      # Artefakt am Pipeline-Lauf; Partner (und Postman) importieren sie von dort.
+      - name: Export OpenAPI specification
+        run: php artisan scramble:export --env=testing
+      - name: Upload OpenAPI specification
+        uses: actions/upload-artifact@v4
+        with:
+          name: openapi
+          path: openapi.json
+          if-no-files-found: error
 
   push_to_registry:
     name: Push Docker image to Docker Hub

@@ -412,7 +412,7 @@ class EventController extends Controller
             'isDailyView' => $isDailyView,
             // Daten für Schicht-Karten + Schicht-Bearbeiten-Modal (nur bei aktivem "Schichten anzeigen")
             'shiftQualifications' => fn () => $userCalendarSettings?->work_shifts
-                ? $this->shiftQualificationService->getAllOrderedByCreationDateAscending()
+                ? $this->shiftQualificationService->getAllOrderedByPosition()
                 : [],
             'globalQualifications' => fn () => $userCalendarSettings?->work_shifts
                 ? $this->globalQualificationService->getAll()
@@ -664,7 +664,7 @@ class EventController extends Controller
             'isDailyView' => $isDailyView,
             // Daten für Schicht-Karten + Schicht-Bearbeiten-Modal (nur bei aktivem "Schichten anzeigen")
             'shiftQualifications' => fn () => $userCalendarSettings?->work_shifts
-                ? $this->shiftQualificationService->getAllOrderedByCreationDateAscending()
+                ? $this->shiftQualificationService->getAllOrderedByPosition()
                 : [],
             'globalQualifications' => fn () => $userCalendarSettings?->work_shifts
                 ? $this->globalQualificationService->getAll()
@@ -943,7 +943,7 @@ class EventController extends Controller
             'filterOptions' => $this->filterService->getCalendarFilterDefinitions(),
             'dateValue' => $dateValue,
             'user_filters' => $userCalendarFilter,
-            'shiftQualifications' => $this->shiftQualificationService->getAllOrderedByCreationDateAscending(),
+            'shiftQualifications' => $this->shiftQualificationService->getAllOrderedByPosition(),
             'dayServices' => $this->dayServicesService->getAll(),
             'firstProjectShiftTabId' => $this->projectTabService
                 ->getFirstProjectTabWithTypeIdOrFirstProjectTabId(ProjectTabComponentEnum::SHIFT_TAB),
@@ -1053,7 +1053,7 @@ class EventController extends Controller
             'eventTypes' => EventType::select(['id', 'name', 'abbreviation', 'hex_code'])->get(),
             'filterOptions' => $this->filterService->getCalendarFilterDefinitions(),
             'personalFilters' => $this->filterService->getPersonalFilter($user, $shiftFilterType),
-            'shiftQualifications' => $this->shiftQualificationService->getAllOrderedByCreationDateAscending(),
+            'shiftQualifications' => $this->shiftQualificationService->getAllOrderedByPosition(),
             'firstProjectShiftTabId' => $this->projectTabService
                 ->getFirstProjectTabWithTypeIdOrFirstProjectTabId(ProjectTabComponentEnum::SHIFT_TAB),
             'filterType' => $shiftFilterType,

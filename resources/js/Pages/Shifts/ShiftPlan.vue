@@ -603,6 +603,19 @@
                                                           class="h-5 w-5"/>
                                         </div>
                                     </MenuItem>
+                                    <MenuItem v-if="sortWorkersByQualification" v-slot="{ active }">
+                                        <div @click.stop.prevent="toggleShowQualificationDuplicates"
+                                             :class="[active ? 'text-text-muted' : 'text-text-subtle','group flex cursor-pointer items-center gap-x-2 pl-8 pr-4 py-2 text-sm subpixel-antialiased']">
+                                            <input
+                                                type="checkbox"
+                                                :checked="showQualificationDuplicates"
+                                                class="input-checklist pointer-events-none"
+                                            />
+                                            <span>
+                                                {{ $t('Show duplicate entries') }}
+                                            </span>
+                                        </div>
+                                    </MenuItem>
                                     <MenuItem
                                         v-for="computedShiftPlanWorkerSortEnum in computedShiftPlanWorkerSortEnums"
                                         :key="computedShiftPlanWorkerSortEnum" v-slot="{ active }">
@@ -1463,6 +1476,7 @@ const displayProjectGroups = computed(() => calendarSettings.value?.display_proj
 const compactMode = computed(() => authUser.value.compact_mode)
 const openedCrafts = computed(() => authUser.value.opened_crafts ?? [])
 const sortWorkersByQualification = computed(() => authUser.value.sort_workers_by_qualification ?? true)
+const showQualificationDuplicates = computed(() => authUser.value.show_qualification_duplicates ?? true)
 const closedQualificationGroups = ref<string[]>([...(authUser.value.closed_qualification_groups ?? [])])
 
 const {userOverviewHeight, windowHeight, startResize, updateLayout} = useUserOverviewLayout(showUserOverview, {
@@ -3009,39 +3023,68 @@ function pushWorkerRows(rows: GridRow[], workers: any[], keyPrefix: string, craf
 }
 
 /**
+ * Funktionen in der in den Schichteinstellungen festgelegten Reihenfolge
+ * (position) vergleichen; ohne Position am Ende, gleichauf alphabetisch.
+ */
+function compareQualificationsByPosition(a: any, b: any): number {
+    const positionA = a?.position ?? Number.MAX_SAFE_INTEGER
+    const positionB = b?.position ?? Number.MAX_SAFE_INTEGER
+    if (positionA !== positionB) return positionA - positionB
+    return (a?.name ?? '').localeCompare(b?.name ?? '')
+}
+
+/**
+ * Funktionen eines Workers, die zum Gewerk passen (pivot.craft_id == null gilt
+ * als gewerksübergreifend), dedupliziert und nach Reihenfolge sortiert.
+ */
+function getCraftQualificationsSorted(worker: any, craftId: number): any[] {
+    const seen = new Set<number>()
+    const qualifications: any[] = []
+
+    for (const sq of worker.element?.shift_qualifications ?? []) {
+        const pivotCraftId = sq.pivot?.craft_id
+        if (pivotCraftId != null && pivotCraftId !== craftId) continue
+        if (seen.has(sq.id)) continue
+        seen.add(sq.id)
+        qualifications.push(sq)
+    }
+
+    return qualifications.sort(compareQualificationsByPosition)
+}
+
+/**
  * Worker eines Gewerks nach ihren Funktionen (shift_qualifications mit passender
  * pivot.craft_id) gruppieren. Personen mit mehreren Funktionen erscheinen in jeder
- * Gruppe (nur Referenzen, keine Daten-Duplikate). Personen ohne Funktion im Gewerk
- * landen in einer "Ohne Funktion"-Gruppe am Ende.
+ * Gruppe (nur Referenzen, keine Daten-Duplikate) — außer "Doppeleinträge anzeigen"
+ * ist deaktiviert, dann nur in ihrer laut Reihenfolge ersten Funktion. Personen
+ * ohne Funktion im Gewerk landen in einer "Ohne Funktion"-Gruppe am Ende.
  */
 function buildQualificationGroupsOfCraft(craft: any) {
     const groupsById = new Map<number, { qualification: any; workers: any[] }>()
     const withoutQualification: any[] = []
 
     for (const w of craft.users) {
-        const seen = new Set<number>()
-        let grouped = false
+        let workerQualifications = getCraftQualificationsSorted(w, craft.id)
 
-        for (const sq of w.element?.shift_qualifications ?? []) {
-            const pivotCraftId = sq.pivot?.craft_id
-            if (pivotCraftId != null && pivotCraftId !== craft.id) continue
-            if (seen.has(sq.id)) continue
-            seen.add(sq.id)
+        if (!showQualificationDuplicates.value && workerQualifications.length > 1) {
+            workerQualifications = [workerQualifications[0]]
+        }
 
+        if (workerQualifications.length === 0) {
+            withoutQualification.push(w)
+            continue
+        }
+
+        for (const sq of workerQualifications) {
             if (!groupsById.has(sq.id)) {
                 groupsById.set(sq.id, { qualification: sq, workers: [] })
             }
             groupsById.get(sq.id)!.workers.push(w)
-            grouped = true
-        }
-
-        if (!grouped) {
-            withoutQualification.push(w)
         }
     }
 
     const groups = [...groupsById.values()]
-        .sort((a, b) => (a.qualification.name ?? '').localeCompare(b.qualification.name ?? ''))
+        .sort((a, b) => compareQualificationsByPosition(a.qualification, b.qualification))
         .map((g) => ({ ...g, groupKey: `${craft.id}_${g.qualification.id}` }))
 
     if (withoutQualification.length > 0) {
@@ -3222,8 +3265,21 @@ function filterAndSortWorkersOfCraft(craft: any) {
     const useFirstName = !!props.useFirstNameForSort
 
     if (sortBy === null) {
-        // Keine Sortierung → nur Managing zuerst
-        return assignedManagingWorkers.concat(assignedNonManagingWorkersFiltered)
+        // Keine Sortierung → Managing zuerst, danach nach der in den
+        // Schichteinstellungen festgelegten Funktionsreihenfolge (ohne Funktion ans Ende)
+        const firstQualificationByWorker = new Map<any, any>()
+        for (const w of assignedNonManagingWorkersFiltered) {
+            firstQualificationByWorker.set(w, getCraftQualificationsSorted(w, craft.id)[0] ?? null)
+        }
+        const byQualificationOrder = [...assignedNonManagingWorkersFiltered].sort((a, b) => {
+            const firstQualA = firstQualificationByWorker.get(a)
+            const firstQualB = firstQualificationByWorker.get(b)
+            if (!firstQualA && !firstQualB) return 0
+            if (!firstQualA) return 1
+            if (!firstQualB) return -1
+            return compareQualificationsByPosition(firstQualA, firstQualB)
+        })
+        return assignedManagingWorkers.concat(byQualificationOrder)
     }
 
     // Helper für intern/extern-Split nur 1x
@@ -3979,6 +4035,16 @@ function toggleSortWorkersByQualification() {
     router.patch(
         route('user.update.sort_workers_by_qualification', {user: authUser.value.id}),
         {sort_workers_by_qualification: authUser.value.sort_workers_by_qualification},
+        {preserveState: true, preserveScroll: true},
+    )
+}
+
+function toggleShowQualificationDuplicates() {
+    authUser.value.show_qualification_duplicates = !showQualificationDuplicates.value
+
+    router.patch(
+        route('user.update.show_qualification_duplicates', {user: authUser.value.id}),
+        {show_qualification_duplicates: authUser.value.show_qualification_duplicates},
         {preserveState: true, preserveScroll: true},
     )
 }

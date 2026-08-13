@@ -1388,7 +1388,7 @@ readonly class EventService
                 $userService->getAuthUserCrafts()->merge($craftService->getAssignableByAllCrafts())
             )
             ->setShiftTimePresets($this->shiftTimePresetService->getAll())
-            ->setShiftQualifications($shiftQualificationService->getAllOrderedByCreationDateAscending())
+            ->setShiftQualifications($shiftQualificationService->getAllOrderedByPosition())
             ->setDayServices($dayServicesService->getAll())
             ->setFirstProjectShiftTabId(
                 $projectTabService->getFirstProjectTabWithTypeIdOrFirstProjectTabId(

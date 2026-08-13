@@ -397,17 +397,29 @@
                     </div>
 
                     <!-- List -->
-                    <ul v-else role="list" class="space-y-2">
-                        <transition-group
-                            name="list-fade"
-                            tag="div"
-                            class="space-y-2 divide-y divide-border-subtle divide-dashed">
-                            <li v-for="shiftQualification in shiftQualifications"
-                                :key="shiftQualification.id"
-                                class="group bg-white px-4 py-3 transition">
+                    <draggable
+                        v-else
+                        ghost-class="opacity-50"
+                        item-key="id"
+                        :list="shiftQualifications"
+                        handle=".qualification-drag-handle"
+                        @start="dragging = true"
+                        @end="dragging = false"
+                        @change="reorderShiftQualifications"
+                        tag="ul"
+                        class="space-y-2 divide-y divide-border-subtle divide-dashed"
+                    >
+                        <template #item="{ element: shiftQualification }">
+                            <li class="group bg-white px-4 py-3 transition">
                                 <div class="flex items-center justify-between gap-4 pb-2">
-                                    <!-- Left: Icon + name + meta -->
+                                    <!-- Left: Drag-Handle + Icon + name + meta -->
                                     <div class="min-w-0 flex items-center gap-3">
+                                        <div
+                                            class="qualification-drag-handle shrink-0 opacity-60 group-hover:opacity-100 transition"
+                                            :class="dragging ? 'cursor-grabbing' : 'cursor-grab'"
+                                        >
+                                            <PropertyIcon name="IconGripVertical" class="size-5" aria-hidden="true" />
+                                        </div>
                                         <div class="mt-0.5 rounded-lg bg-surface-sunken p-2 ring-1 ring-inset ring-border-subtle">
                                             <PropertyIcon
                                                 stroke-width="1.5"
@@ -449,8 +461,8 @@
                                     </div>
                                 </div>
                             </li>
-                        </transition-group>
-                    </ul>
+                        </template>
+                    </draggable>
                 </div>
             </div>
         </section>
@@ -945,6 +957,16 @@ export default defineComponent({
                 this.deleteShiftTimePreset(this.shiftTimePresetToDelete);
                 this.closeDeleteShiftTimePresetModal();
             }
+        },
+        reorderShiftQualifications() {
+            this.shiftQualifications.map((shiftQualification, index) => {
+                shiftQualification.position = index + 1;
+            });
+            router.post(
+                route('shift-qualifications.reorder'),
+                {ids: this.shiftQualifications.map((shiftQualification) => shiftQualification.id)},
+                {preserveScroll: true, preserveState: true}
+            );
         },
         reorderCrafts(crafts) {
             crafts.map((craft, index) => {

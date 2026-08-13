@@ -152,6 +152,7 @@ use Spatie\Permission\Traits\HasRoles;
  * @property int $shift_plan_user_sort_by_id
  * @property boolean $sort_workers_by_qualification
  * @property array $closed_qualification_groups
+ * @property boolean $show_qualification_duplicates
  * @property boolean $is_freelancer
  * @property string $sort_type_shift_tab
  * @property int $drawer_height
@@ -258,6 +259,7 @@ class User extends Model implements
         'shift_plan_user_sort_by_id',
         'sort_workers_by_qualification',
         'closed_qualification_groups',
+        'show_qualification_duplicates',
         'is_freelancer',
         'sort_type_shift_tab',
         'drawer_height',
@@ -327,6 +329,7 @@ class User extends Model implements
         'show_qualifications' => 'array',
         'sort_workers_by_qualification' => 'boolean',
         'closed_qualification_groups' => 'array',
+        'show_qualification_duplicates' => 'boolean',
         'email_private' => 'boolean',
         'phone_private' => 'boolean',
         'daily_view' => 'boolean',

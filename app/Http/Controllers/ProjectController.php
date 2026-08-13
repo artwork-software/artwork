@@ -3050,7 +3050,7 @@ class ProjectController extends Controller
             'personalFilters' => $filterService->getPersonalFilter($user, UserFilterTypes::PROJECT_SHIFT_FILTER->value),
             'filterOptions' => $filterService->getCalendarFilterDefinitions(),
             'dateValue' => $dateValue,
-            'shiftQualifications' => $shiftQualificationService->getAllOrderedByCreationDateAscending(),
+            'shiftQualifications' => $shiftQualificationService->getAllOrderedByPosition(),
             'firstProjectShiftTabId' => $this->projectTabService
                 ->getFirstProjectTabWithTypeIdOrFirstProjectTabId(ProjectTabComponentEnum::SHIFT_TAB),
             'currentUserCrafts' => $this->getCurrentUserCraftsForShiftTab($user, $craftService),

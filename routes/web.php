@@ -2243,6 +2243,10 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::resource('permission-presets', PermissionPresetController::class)
         ->only(['index', 'store', 'update', 'destroy']);
 
+    Route::post('/shift-qualifications/reorder', [ShiftQualificationController::class, 'reorder'])
+        ->name('shift-qualifications.reorder')
+        ->middleware('shift-settings-area:general,edit');
+
     Route::resource('shift-qualifications', ShiftQualificationController::class)->only(
         [
             'store',
@@ -2443,6 +2447,12 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
                 UserController::class, 'updateClosedQualificationGroups'
             ]
         )->name('user.update.closed_qualification_groups');
+        Route::patch(
+            '/{user}/update/show-qualification-duplicates',
+            [
+                UserController::class, 'updateShowQualificationDuplicates'
+            ]
+        )->name('user.update.show_qualification_duplicates');
 
         Route::patch(
             '/{user}/update/shift-tab-user-sort-by',
@@ -3230,6 +3240,8 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         Route::delete('/{externalIssue}/destroy', 'destroy')->name('extern-issue-of-material.destroy');
         //extern-issue-of-material.return
         Route::post('/{externalIssue}/return', 'returnExternal')->name('extern-issue-of-material.return');
+        // Rückmeldung aus der Rückgabe-Erinnerung: Material ist noch nicht zurück
+        Route::post('/{externalIssue}/return-decline', 'declineReturn')->name('extern-issue-of-material.return-decline');
         // extern-issue-of-material.set-special-items-done
         Route::post('/{externalIssue}/set-special-items-done', 'setSpecialItemsDone')->name('extern-issue-of-material.set-special-items-done');
         // extern-issue-of-material.print

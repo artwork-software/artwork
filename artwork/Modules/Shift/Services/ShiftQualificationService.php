@@ -15,9 +15,19 @@ readonly class ShiftQualificationService
     {
     }
 
-    public function getAllOrderedByCreationDateAscending(): Collection
+    public function getAllOrderedByPosition(): Collection
     {
-        return $this->shiftQualificationRepository->getAllOrderedByCreationDateAscending();
+        return $this->shiftQualificationRepository->getAllOrderedByPosition();
+    }
+
+    /**
+     * @param array<int, int> $orderedIds
+     */
+    public function updateOrder(array $orderedIds): void
+    {
+        foreach ($orderedIds as $index => $id) {
+            ShiftQualification::query()->where('id', $id)->update(['position' => $index + 1]);
+        }
     }
 
     /**
@@ -27,7 +37,8 @@ readonly class ShiftQualificationService
     {
         $this->shiftQualificationRepository->saveOrFail(
             new ShiftQualification(
-                $storeShiftQualificationRequest->only(['icon', 'name', 'available'])
+                $storeShiftQualificationRequest->only(['icon', 'name', 'available']) +
+                ['position' => ((int) ShiftQualification::query()->max('position')) + 1]
             )
         );
     }

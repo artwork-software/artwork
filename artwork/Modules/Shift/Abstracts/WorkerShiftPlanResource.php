@@ -54,6 +54,7 @@ class WorkerShiftPlanResource extends JsonResource
                     'name' => $qual->name ?? null,
                     'icon' => $qual->icon ?? null,
                     'available' => $qual->available ?? null,
+                    'position' => $qual->position ?? null,
                     'pivot' => [
                         'craft_id' => $pivot?->craft_id ?? null,
                     ],
@@ -68,6 +69,7 @@ class WorkerShiftPlanResource extends JsonResource
                         'name' => $qual->name ?? null,
                         'icon' => $qual->icon ?? null,
                         'available' => $qual->available ?? null,
+                        'position' => $qual->position ?? null,
                         'pivot' => [
                             'craft_id' => $pivot?->craft_id ?? null,
                         ],

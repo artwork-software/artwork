@@ -1005,7 +1005,7 @@ class UserController extends Controller
                     $craftService->getAll()
                 ))->resolve(),
                 'currentTab' => 'workProfile',
-                'shiftQualifications' => $shiftQualificationRepository->getAllAvailableOrderedByCreationDateAscending(),
+                'shiftQualifications' => $shiftQualificationRepository->getAllAvailableOrderedByPosition(),
                 'globalQualifications' => $globalQualifications,
                 'projectRoles' => ProjectRole::all(),
             ]
@@ -2061,5 +2061,14 @@ class UserController extends Controller
         ]);
 
         $user->update($request->only('closed_qualification_groups'));
+    }
+
+    public function updateShowQualificationDuplicates(User $user, Request $request): void
+    {
+        $this->authorize('updateOwnPreferences', $user);
+
+        $request->validate(['show_qualification_duplicates' => ['required', 'boolean']]);
+
+        $user->update($request->only('show_qualification_duplicates'));
     }
 }

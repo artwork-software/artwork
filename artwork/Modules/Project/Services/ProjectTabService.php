@@ -169,7 +169,7 @@ class ProjectTabService implements ServiceWithArrayCache
             ->setEventsWithRelevant($projectService->getEventsWithRelevantShifts($project))
             ->setCrafts($craftService->getAll(['users', 'freelancers', 'serviceProviders']))
             ->setCurrentUserCrafts($userService->getAuthUserCrafts()->merge($craftService->getAssignableByAllCrafts()))
-            ->setShiftQualifications($shiftQualificationService->getAllOrderedByCreationDateAscending())
+            ->setShiftQualifications($shiftQualificationService->getAllOrderedByPosition())
             ->setShiftTimePresets($this->shiftTimePresetService->getAll())
             ->setShiftSortTypes(ShiftTabSort::cases());
     }

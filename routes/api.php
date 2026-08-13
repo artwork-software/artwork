@@ -6,6 +6,7 @@ use Artwork\Modules\Inventory\Http\Controllers\Api\InventoryArticleApiController
 use Artwork\Modules\User\Services\UserStatusService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use Laravel\Passport\Http\Middleware\CheckToken;
 use Artwork\Modules\Inventory\Http\Controllers\Api\InventoryCategoryApiController;
 use Artwork\Modules\Shift\Http\Controllers\ShiftRuleController;
 
@@ -55,7 +56,14 @@ Route::post('/inventory/article/search', [\Artwork\Modules\Inventory\Http\Contro
 
 
 // Inventory API routes
-Route::middleware('auth:api')->group(function () {
+//
+// DEPRECATED: unversioniert. Nachfolger ist /api/v1/inventory* in routes/api_v1.php; diese Pfade
+// verschwinden, sobald alle Verbraucher umgestellt sind.
+//
+// Ab hier scope-pflichtig: Tokens, die vor Einführung der Scopes ausgegeben wurden, tragen eine
+// leere Scope-Menge im signierten JWT und lassen sich nicht nachrüsten — sie müssen neu erstellt
+// werden. Bewusst ein eigener Deploy, damit dafür ein Zeitfenster bleibt.
+Route::middleware(['auth:api', CheckToken::using('inventory:read')])->group(function () {
     Route::get('/inventory', [InventoryCategoryApiController::class, 'index']);
     Route::get('/inventory/articles', [InventoryArticleApiController::class, 'index']);
     Route::get('/inventory/articles/{article}', [InventoryArticleApiController::class, 'show']);

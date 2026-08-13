@@ -21,11 +21,27 @@ class ProjectTabMaterialIssueService
                 // falls du auch Berechtigungen an den Tags brauchst:
                 'articles.tags.allowedUsers',
                 'articles.tags.allowedDepartments',
+                'articles.statusValues',
+                'articles.detailedArticleQuantities.status',
                 'specialItems',
                 'files',
                 'responsibleUsers',
             ])
             ->get();
+
+        // Globale Zeitraum-Auslastung pro Artikel (alle internen + externen Ausgaben,
+        // inkl. dieser Ausgabe) für den Balken/Überbuchungs-Badge im Projekt-Tab.
+        foreach ($materials as $issue) {
+            $startDate = $issue->start_date?->toDateString();
+            $endDate = $issue->end_date?->toDateString() ?? $startDate;
+
+            foreach ($issue->articles as $article) {
+                $article->setAttribute(
+                    'period_usage',
+                    $startDate ? $article->getAvailableStock($startDate, $endDate) : null
+                );
+            }
+        }
 
         $externalMaterials = ExternalIssue::where('project_id', $project->id)
             ->with([

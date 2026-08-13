@@ -85,6 +85,16 @@
                 {{ $t('Open Project')}}
             </button>
         </div>
+        <div v-if="buttons?.includes('material_issue_return_confirm')">
+            <button @click="$emit('confirmMaterialReturn', true)" type="button" :title="$t('Confirm return')" class="rounded-full bg-success p-2 text-white shadow-sm hover:bg-success focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-success">
+                <PropertyIcon name="IconCheck" stroke-width="1.5" class="h-5 w-5" aria-hidden="true" />
+            </button>
+        </div>
+        <div v-if="buttons?.includes('material_issue_return_decline')">
+            <button @click="$emit('declineMaterialReturn', true)" type="button" :title="$t('Not returned yet')" class="rounded-full bg-danger p-2 text-white shadow-sm hover:bg-danger focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-danger">
+                <PropertyIcon name="IconX" stroke-width="1.5" class="h-5 w-5" aria-hidden="true" />
+            </button>
+        </div>
     </div>
 </template>
 
@@ -111,7 +121,9 @@ export default {
         'openProject',
         'showInTask',
         'showProject',
-        'showInCalendar'
+        'showInCalendar',
+        'confirmMaterialReturn',
+        'declineMaterialReturn'
     ],
     components: {
         PropertyIcon,

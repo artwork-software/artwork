@@ -75,7 +75,17 @@
 
         <!-- Status + Aktionen -->
         <div class="col-span-1 flex items-center justify-end gap-2">
-      <span v-if="isOverdue"
+      <span v-if="externMaterialIssue.return_status === 'returned'"
+            class="inline-flex items-center gap-1 rounded-md border border-success-border bg-success-surface px-1.5 py-0.5 text-[11px] text-success">
+        <component :is="IconCheck" class="size-3.5" />
+        {{ $t('Returned') }}
+      </span>
+      <span v-else-if="externMaterialIssue.return_status === 'not_returned'"
+            class="inline-flex items-center gap-1 rounded-md border border-danger-border bg-danger-surface px-1.5 py-0.5 text-[11px] text-danger">
+        <component :is="IconAlertTriangle" class="size-3.5" />
+        {{ $t('Not returned') }}
+      </span>
+      <span v-else-if="isOverdue"
             class="inline-flex items-center gap-1 rounded-md border border-warning-border bg-warning-surface px-1.5 py-0.5 text-[11px] text-warning">
         <component :is="IconAlertTriangle" class="size-3.5" />
         {{ $t('Overdue') }}

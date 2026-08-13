@@ -135,7 +135,7 @@ class ExternalIssueController extends Controller
             ),
             // optional, falls du urlParameters nutzt:
             'urlParameters' => request()->only([
-                'article_ids','date_from','date_to','issued_by_id','received_by_id','project_id','overdue_only','q'
+                'article_ids','date_from','date_to','issued_by_id','received_by_id','project_id','overdue_only','q','issue'
             ]),
         ]);
     }
@@ -161,35 +161,26 @@ class ExternalIssueController extends Controller
         return redirect()->route('extern-issue-of-material.index');
     }
 
+    /**
+     * Rückgabe bestätigen — aus der Übersicht wie aus der Benachrichtigung.
+     * redirect()->back(), damit die Notification-Seite nicht verlassen wird.
+     */
     public function returnExternal(ExternalIssue $externalIssue, Request $request): \Illuminate\Http\RedirectResponse
     {
-        $updateData = [
-            'return_remarks' => $request->input('return_remarks'),
-        ];
-
-        // Keep the original receiver when the action is triggered again.
-        if ($externalIssue->received_by_id === null) {
-            $updateData['received_by_id'] = $this->auth->user()->id;
-        }
-
-        // Early return frees the reserved quantity: cap the planned return
-        // date to today so availability calculations stop counting it.
-        $today = now()->startOfDay();
-        if ($externalIssue->return_date !== null && $today->lt($externalIssue->return_date)) {
-            $updateData['return_date'] = $today->toDateString();
-        }
-
-        $externalIssue->update($updateData);
-
-        $this->externalIssueService->logActivity($externalIssue, 'returned', 'External issue returned', [
-            'translation_key' => 'External issue returned',
-            'issue_type' => 'external',
-            'issue_name' => $externalIssue->name,
-            'external_name' => $externalIssue->external_name,
-            'return_remarks' => $request->input('return_remarks'),
+        $validated = $request->validate([
+            'return_remarks' => ['nullable', 'string'],
         ]);
 
-        return redirect()->route('extern-issue-of-material.index');
+        $this->externalIssueService->confirmReturn($externalIssue, $validated['return_remarks'] ?? null);
+
+        return redirect()->back();
+    }
+
+    public function declineReturn(ExternalIssue $externalIssue): \Illuminate\Http\RedirectResponse
+    {
+        $this->externalIssueService->declineReturn($externalIssue);
+
+        return redirect()->back();
     }
 
     public function setSpecialItemsDone(ExternalIssue $externalIssue): \Illuminate\Http\RedirectResponse

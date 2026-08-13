@@ -149,4 +149,9 @@ return [
     'inventory_article_overbooked_title' => 'Article ":articleName" in your material issue ":issueName" is now overbooked',
     'inventory_article_overbooked_description' => 'The article ":articleName" in your material issue ":issueName" is now overbooked.',
     'material_issue' => 'Material issue: :issueName',
+    'material' => [
+        'return_due_title' => 'Return date reached: :issueName',
+        'return_due_description' => 'The external material issue to ":externalName" was due for return on :date. '
+            . 'Please confirm the return or report that the material has not been returned yet.',
+    ],
 ];

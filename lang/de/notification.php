@@ -152,4 +152,9 @@ return [
     'inventory_article_overbooked_title' => 'Artikel ":articleName" in deiner Materialausgabe ":issueName" ist nun überbucht',
     'inventory_article_overbooked_description' => 'Der Artikel ":articleName" in deiner Materialausgabe ":issueName" ist nun überbucht.',
     'material_issue' => 'Materialausgabe: :issueName',
+    'material' => [
+        'return_due_title' => 'Rückgabedatum erreicht: :issueName',
+        'return_due_description' => 'Die externe Materialausgabe an ":externalName" sollte bis zum :date zurückgegeben sein. '
+            . 'Bitte bestätige die Rückgabe oder melde, dass das Material noch nicht zurück ist.',
+    ],
 ];

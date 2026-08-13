@@ -319,7 +319,7 @@ export default {
         },
         updateProjectState(state) {
             this.$inertia.patch(route('update.project.state', this.project.id), {
-                state_id: state.id
+                state: state.id
             }, {
                 preserveState: true,
                 preserveScroll: true

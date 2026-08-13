@@ -22,6 +22,7 @@ use Artwork\Modules\Shift\Seeders\ConsolidateShiftsSeeder;
 use Artwork\Modules\User\Models\User;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use Laravel\Passport\Passport;
 
 class UpdateArtwork extends Command
@@ -71,8 +72,31 @@ class UpdateArtwork extends Command
         $this->migrateChangesHistoryToActivityLog();
         $this->backfillShiftPlanRequestShifts();
         $this->generateInventoryArticleThumbnails();
+        $this->warnAboutSynchronousQueue();
 
         $this->info('--- Artwork Update Finished ---');
+    }
+
+    /**
+     * Bei QUEUE_CONNECTION=sync werden Webhooks im Request-Zyklus zugestellt: kein Retry, kein Backoff,
+     * und ein langsamer Empfänger blockiert die auslösende Aktion in der Oberfläche.
+     */
+    private function warnAboutSynchronousQueue(): void
+    {
+        if (config('queue.default') !== 'sync' || !Schema::hasTable('webhook_endpoints')) {
+            return;
+        }
+
+        if (DB::table('webhook_endpoints')->where('is_active', true)->doesntExist()) {
+            return;
+        }
+
+        $this->section('Queue Check');
+        $this->warn(
+            'QUEUE_CONNECTION is "sync" but active webhook endpoints exist. Webhooks will be delivered '
+            . 'synchronously without retries. Set QUEUE_CONNECTION to a real driver (e.g. "database" or '
+            . '"redis") and make sure a worker consumes the "webhooks" queue.'
+        );
     }
 
     private function generateInventoryArticleThumbnails(): void

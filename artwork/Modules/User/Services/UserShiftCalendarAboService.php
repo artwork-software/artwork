@@ -168,13 +168,25 @@ readonly class UserShiftCalendarAboService
             $eventName = $shiftEvent?->eventName ?? '';
             $roomName = $shift->room?->name ?? $shiftEvent?->room?->name ?? '';
 
-            $title = 'Schicht: ' . $craftName;
-            if (!empty($startTime) && !empty($endTime)) {
-                $title .= ' - ' . $startTime . ' - ' . $endTime;
-            }
-            if (trim($title) === '') {
-                $title = 'Schicht (ohne Titel)';
-            }
+            // Titel: Gewerk-Kürzel + Projekt-/Eventname (z.B. "LX - La Horde");
+            // keine Uhrzeit, die steckt bereits im Termin selbst
+            $craftAbbreviation = trim((string) ($shift->craft?->abbreviation ?? ''));
+            $craftLabel = $craftAbbreviation !== '' ? $craftAbbreviation : $craftName;
+            $contextName = $projectName !== '' ? $projectName : $eventName;
+            $title = $contextName !== ''
+                ? $craftLabel . ' - ' . $contextName
+                : 'Schicht: ' . $craftLabel;
+
+            // Kolleg*innen der Schicht für die Beschreibung ("Mit: …");
+            // die Abo-Inhaber*in selbst wird nicht mit aufgezählt
+            $aboUserId = $calendarAbo->user_id;
+            $colleagueNames = $shift->users
+                ->reject(fn ($shiftUser) => $aboUserId !== null && $shiftUser->id === $aboUserId)
+                ->map(fn ($shiftUser) => $shiftUser->full_name)
+                ->concat($shift->freelancer->pluck('name'))
+                ->concat($shift->serviceProvider->pluck('provider_name'))
+                ->filter()
+                ->implode(', ');
 
             $calendar->event(function ($event) use (
                 $shiftEvent,
@@ -189,14 +201,16 @@ readonly class UserShiftCalendarAboService
                 $craftName,
                 $projectName,
                 $eventName,
-                $roomName
+                $roomName,
+                $colleagueNames
             ): void {
                 $event->name($title)
                     ->description(
-                        $title .
+                        'Schicht: ' . $craftName .
                         ($projectName !== '' ? ' Projekt: ' . $projectName : '') .
                         ($eventName !== '' ? ' Event: ' . $eventName : '') .
-                        ($roomName !== '' ? ' Raum: ' . $roomName : '')
+                        ($roomName !== '' ? ' Raum: ' . $roomName : '') .
+                        ($colleagueNames !== '' ? ' Mit: ' . $colleagueNames : '')
                     )
                     ->address(
                         ($roomName !== '' ? 'Raum: ' . $roomName : '') .
@@ -212,7 +226,7 @@ readonly class UserShiftCalendarAboService
                 }
 
                 $this->addAttendeesToEvent($event, $shift, $eventCreator);
-                $this->addAlertToEvent($event, $calendarAbo, $shiftStart, $startTime, $shift, $endTime);
+                $this->addAlertToEvent($event, $calendarAbo, $shiftStart, $startTime, $shift, $endTime, $title);
             });
         } catch (\Throwable $e) {
             return;
@@ -319,8 +333,15 @@ readonly class UserShiftCalendarAboService
     /**
      * Add alert to the event if notifications are enabled
      */
-    public function addAlertToEvent($event, $calendarAbo, $shiftStart, $shiftStartTime, $shift, $shiftEndTime = null): void
-    {
+    public function addAlertToEvent(
+        $event,
+        $calendarAbo,
+        $shiftStart,
+        $shiftStartTime,
+        $shift,
+        $shiftEndTime = null,
+        ?string $title = null
+    ): void {
         if ($calendarAbo->enable_notification) {
             $alertTime = Carbon::parse($shiftStart . ' ' . $shiftStartTime);
             switch ($calendarAbo->notification_time_unit) {
@@ -334,9 +355,9 @@ readonly class UserShiftCalendarAboService
                     $alertTime->subDays($calendarAbo->notification_time);
                     break;
             }
-            $craftName = $shift->craft?->name ?? 'Schicht';
-            $event->alertAt($alertTime, 'Schicht: ' . $craftName . ' - ' .
-                $shiftStartTime . ' - ' . ($shiftEndTime ?? $shift->end) . ' beginnt in ' .
+            $alertTitle = $title ?? ('Schicht: ' . ($shift->craft?->name ?? 'Schicht'));
+            $event->alertAt($alertTime, $alertTitle . ' (' .
+                $shiftStartTime . ' - ' . ($shiftEndTime ?? $shift->end) . ') beginnt in ' .
                 $calendarAbo->notification_time . ' ' . $calendarAbo->notification_time_unit);
         }
     }

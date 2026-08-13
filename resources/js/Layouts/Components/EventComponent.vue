@@ -149,7 +149,7 @@
                     </div>
 
                     <!-- Quick duration pills -->
-                    <div class="mt-3 flex flex-wrap items-center gap-2" v-if="startDate && endDate && startTime">
+                    <div class="mt-4 flex flex-wrap items-center gap-2" v-if="startDate && endDate && startTime">
                         <div class="text-[12px] text-text-muted">{{ $t('Duration Shortcuts:')}}</div>
                         <button
                             v-for="m in quickDurations"

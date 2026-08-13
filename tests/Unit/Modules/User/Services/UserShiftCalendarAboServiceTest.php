@@ -133,6 +133,63 @@ final class UserShiftCalendarAboServiceTest extends TestCase
     }
 
     #[Test]
+    public function add_shift_to_calendar_titles_with_craft_abbreviation_and_project_name(): void
+    {
+        $craft = Craft::factory()->create(['name' => 'Beleuchtung', 'abbreviation' => 'LX']);
+        $shift = Shift::factory()->create([
+            'event_id' => null,
+            'craft_id' => $craft->id,
+            'room_id' => Room::factory(),
+            'project_id' => Project::factory()->create(['name' => 'La Horde'])->id,
+            'start_date' => '2024-05-10',
+            'end_date' => '2024-05-10',
+            'start' => '08:00',
+            'end' => '16:00',
+        ]);
+
+        $abo = new UserShiftCalendarAbo();
+        $abo->enable_notification = false;
+
+        $calendar = Calendar::create('Test');
+        $this->service->addShiftToCalendar($calendar, $abo, $shift->fresh());
+
+        $ics = str_replace("\r\n ", '', $calendar->get());
+        $this->assertStringContainsString('SUMMARY:LX - La Horde', $ics);
+        // Uhrzeit gehört nicht mehr in den Titel
+        $this->assertStringNotContainsString('SUMMARY:Schicht: Beleuchtung - 08:00', $ics);
+    }
+
+    #[Test]
+    public function add_shift_to_calendar_lists_colleagues_in_description_without_abo_owner(): void
+    {
+        $aboOwner = User::factory()->create(['first_name' => 'Abo', 'last_name' => 'Inhaberin']);
+        $colleague = User::factory()->create(['first_name' => 'Kai', 'last_name' => 'Kollege']);
+        $shift = Shift::factory()->create([
+            'event_id' => null,
+            'craft_id' => Craft::factory(),
+            'room_id' => Room::factory(),
+            'start_date' => '2024-05-10',
+            'end_date' => '2024-05-10',
+            'start' => '08:00',
+            'end' => '16:00',
+        ]);
+        $qualificationId = ShiftQualification::factory()->create()->id;
+        $aboOwner->shifts()->attach($shift->id, ['shift_qualification_id' => $qualificationId]);
+        $colleague->shifts()->attach($shift->id, ['shift_qualification_id' => $qualificationId]);
+
+        $abo = new UserShiftCalendarAbo();
+        $abo->user_id = $aboOwner->id;
+        $abo->enable_notification = false;
+
+        $calendar = Calendar::create('Test');
+        $this->service->addShiftToCalendar($calendar, $abo, $aboOwner->shifts()->first());
+
+        $ics = str_replace("\r\n ", '', $calendar->get());
+        $this->assertStringContainsString('Mit: Kai Kollege', $ics);
+        $this->assertStringNotContainsString('Mit: Abo Inhaberin', $ics);
+    }
+
+    #[Test]
     public function add_shift_to_calendar_prefers_individual_pivot_times_over_shift_times(): void
     {
         $user = User::factory()->create();

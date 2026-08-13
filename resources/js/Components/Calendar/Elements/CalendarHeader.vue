@@ -1,12 +1,12 @@
 <template>
     <header
-        class="sticky z-30 rounded-lg bg-surface-inverse flex items-center gap-0.5 h-11"
+        class="sticky z-30 bg-surface-inverse flex items-center gap-0.5 h-11"
         :style="{'--col-w': columnWidth + 'px','--lead-w': dateColumnWidth + 'px','--remarks-w': dayRemarkColumnWidth + 'px', top: stickyTop + 'px'}"
         role="row">
         <!-- linker Spacer: sticky wie die Datumsspalte darunter, sonst schieben
              sich beim horizontalen Scrollen Raumheader über die Datumsspalte -->
         <div
-            class="lead shrink-0 h-full rounded-l-lg bg-surface-inverse sticky-left-lead"
+            class="lead shrink-0 h-full bg-surface-inverse sticky-left-lead"
             :class="{ 'no-nav-offset': isFullscreen }"
             aria-hidden="true"
         ></div>

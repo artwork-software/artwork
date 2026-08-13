@@ -246,7 +246,7 @@
 
                         <div v-if="globalNotification?.image_url || globalNotification?.title" class="mt-4">
                             <!-- Hero Card -->
-                            <div class="mx-4 mb-4 overflow-hidden rounded-md border border-border-subtle bg-surface">
+                            <div class="mx-4 overflow-hidden rounded-md border border-border-subtle bg-surface">
                                 <div class="relative">
                                     <img
                                         v-if="globalNotification?.image_url"
@@ -268,7 +268,7 @@
                             </div>
                         </div>
 
-                        <div v-if="notifications.length" class="px-4 pb-4 grid grid-cols-1 gap-3">
+                        <div v-if="notifications.length" class="p-4 grid grid-cols-1 gap-3">
                             <template v-if="notificationsLoading">
                                 <BaseSkeleton
                                     v-for="index in NOTIFICATIONS_PER_PAGE"
@@ -315,7 +315,7 @@
                             </div>
                         </div>
 
-                        <div v-else class="px-4 pb-4">
+                        <div v-else class="p-4">
                             <EmptyState :title="$t('There are no new announcements for today.')" icon="IconBell" />
                         </div>
 

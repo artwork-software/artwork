@@ -1,7 +1,7 @@
 <template>
-    <div class="my-5">
+    <div class="my-5 flex min-h-0 flex-col">
         <!-- Kopf mit Neuer-Eintrag-Button -->
-        <div v-if="canManage" class="mb-4 flex items-center justify-between">
+        <div v-if="canManage" class="mb-4 flex shrink-0 items-center justify-between">
             <h3 class="text-base font-semibold text-text ">
                 {{ $t('Availability & absence') }}
             </h3>
@@ -15,39 +15,44 @@
             </button>
         </div>
 
-        <!-- Abwesenheiten -->
-        <div v-if="vacationEntries.length > 0" class="mb-6">
-            <h4 class="mb-2 text-sm font-semibold text-text-muted dark:text-text-subtle">
+        <!-- Abwesenheiten: eigener Scrollbereich, damit die Verfügbarkeiten darunter sichtbar bleiben -->
+        <div v-if="vacationEntries.length > 0" class="mb-6 flex min-h-0 flex-auto flex-col">
+            <h4 class="mb-2 shrink-0 text-sm font-semibold text-text-muted dark:text-text-subtle">
                 {{ $t('Absences') }}
             </h4>
-            <SingleUserVacation
-                v-for="entry in vacationEntries"
-                :key="entryKey(entry)"
-                :entry="entry"
-                :user="user"
-                :type="type"
-            />
+            <div class="min-h-0 flex-1 overflow-y-auto pr-1">
+                <SingleUserVacation
+                    v-for="entry in vacationEntries"
+                    :key="entryKey(entry)"
+                    :entry="entry"
+                    :user="user"
+                    :type="type"
+                />
+            </div>
         </div>
 
         <!-- Verfügbarkeiten -->
-        <div v-if="availabilityEntries.length > 0" class="mb-6">
-            <h4 class="mb-2 text-sm font-semibold text-text-muted dark:text-text-subtle">
+        <div v-if="availabilityEntries.length > 0" class="mb-6 flex min-h-0 flex-auto flex-col">
+            <h4 class="mb-2 shrink-0 text-sm font-semibold text-text-muted dark:text-text-subtle">
                 {{ $t('Registered availability') }}
             </h4>
-            <SingleUserVacation
-                v-for="entry in availabilityEntries"
-                :key="entryKey(entry)"
-                :entry="entry"
-                :user="user"
-                :type="type"
-            />
+            <div class="min-h-0 flex-1 overflow-y-auto pr-1">
+                <SingleUserVacation
+                    v-for="entry in availabilityEntries"
+                    :key="entryKey(entry)"
+                    :entry="entry"
+                    :user="user"
+                    :type="type"
+                />
+            </div>
         </div>
 
         <!-- Projektwünsche -->
-        <div v-if="wishEntries.length > 0" class="mb-6">
-            <h4 class="mb-2 text-sm font-semibold text-text-muted dark:text-text-subtle italic">
+        <div v-if="wishEntries.length > 0" class="mb-6 flex min-h-0 flex-auto flex-col">
+            <h4 class="mb-2 shrink-0 text-sm font-semibold text-text-muted dark:text-text-subtle italic">
                 {{ $t('Project wishes') }}
             </h4>
+            <div class="min-h-0 flex-1 overflow-y-auto pr-1">
             <div
                 v-for="entry in wishEntries"
                 :key="`wish-${entry.groupId}`"
@@ -82,6 +87,7 @@
                         <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
                     </svg>
                 </button>
+            </div>
             </div>
         </div>
 

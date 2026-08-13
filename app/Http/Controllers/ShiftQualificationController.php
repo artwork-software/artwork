@@ -74,7 +74,7 @@ class ShiftQualificationController extends Controller
 
         $validated = $request->validate([
             'ids' => ['required', 'array'],
-            'ids.*' => ['integer', 'exists:shift_qualifications,id'],
+            'ids.*' => ['integer', 'distinct', 'exists:shift_qualifications,id'],
         ]);
 
         $this->shiftQualificationService->updateOrder($validated['ids']);

@@ -93,8 +93,18 @@ class SendExternalIssueReturnDueNotificationsCommand extends Command
                 'message' => $notificationTitle,
             ]);
             $this->notificationService->setNotificationTo($responsible);
-            $this->notificationService->createNotification();
-            $this->notificationService->clearNotificationData();
+
+            // Mail geht synchron raus, nachdem der database-Channel bereits
+            // geschrieben hat: Wirft der Transport, darf weder der Rest der
+            // Schleife sterben noch das Versendet-Flag fehlen — sonst gibt es
+            // täglich Duplikate der In-App-Benachrichtigung.
+            try {
+                $this->notificationService->createNotification();
+            } catch (\Throwable $exception) {
+                report($exception);
+            } finally {
+                $this->notificationService->clearNotificationData();
+            }
 
             $issue->updateQuietly(['return_notification_sent_at' => now()]);
         }

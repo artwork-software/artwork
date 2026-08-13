@@ -93,7 +93,7 @@
     </td>
     <td class="py-3 pr-3 pl-3 text-sm whitespace-nowrap text-text-subtle font-semibold sm:pr-0">
         <div class="flex items-center gap-x-4">
-            <button type="button" class="text-accent-600 hover:text-accent-700" @click="openArticleDetail">
+            <button type="button" class="text-accent-600 hover:text-accent-700" @click.stop="openArticleDetail">
                 <component :is="IconEye" class="h-5 w-5" aria-hidden="true" />
             </button>
         </div>
@@ -191,10 +191,8 @@ const imageClick = (index) => {
 };
 
 const openArticleDetail = () => {
-    // Im Warenkorb-Modus fügt der Zeilenklick den Artikel hinzu — kein Detail-Modal öffnen.
-    if (props.enableAddArticleToBasket) {
-        return;
-    }
+    // Auch im Warenkorb-Modus erreichbar: der Button stoppt die Propagation,
+    // damit der Zeilenklick den Artikel nicht ungewollt in den Korb legt.
     showArticleDetail.value = true;
 };
 

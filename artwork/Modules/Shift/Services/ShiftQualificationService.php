@@ -7,6 +7,7 @@ use Artwork\Modules\Shift\Http\Requests\UpdateShiftQualificationRequest;
 use Artwork\Modules\Shift\Models\ShiftQualification;
 use Artwork\Modules\Shift\Repositories\ShiftQualificationRepository;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Facades\DB;
 use Throwable;
 
 readonly class ShiftQualificationService
@@ -25,9 +26,21 @@ readonly class ShiftQualificationService
      */
     public function updateOrder(array $orderedIds): void
     {
-        foreach ($orderedIds as $index => $id) {
-            ShiftQualification::query()->where('id', $id)->update(['position' => $index + 1]);
-        }
+        // Auch mit veralteter Client-Liste (z.B. zwischenzeitlich angelegte
+        // Funktion) müssen alle Zeilen lückenlos und kollisionsfrei nummeriert
+        // werden: unbekannte Ids in bisheriger Reihenfolge hinten anhängen.
+        $missingIds = ShiftQualification::query()
+            ->whereNotIn('id', $orderedIds)
+            ->orderBy('position')
+            ->orderBy('id')
+            ->pluck('id')
+            ->all();
+
+        DB::transaction(function () use ($orderedIds, $missingIds): void {
+            foreach (array_merge(array_values($orderedIds), $missingIds) as $index => $id) {
+                ShiftQualification::query()->where('id', $id)->update(['position' => $index + 1]);
+            }
+        });
     }
 
     /**

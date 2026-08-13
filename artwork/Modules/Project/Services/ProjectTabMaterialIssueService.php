@@ -23,6 +23,10 @@ class ProjectTabMaterialIssueService
                 'articles.tags.allowedDepartments',
                 'articles.statusValues',
                 'articles.detailedArticleQuantities.status',
+                // Für period_usage vorladen — sonst feuert getAvailableStock
+                // zwei Overlap-Queries pro Artikel und Ausgabe (N+1).
+                'articles.internalIssues',
+                'articles.externalIssues',
                 'specialItems',
                 'files',
                 'responsibleUsers',
@@ -36,10 +40,31 @@ class ProjectTabMaterialIssueService
             $endDate = $issue->end_date?->toDateString() ?? $startDate;
 
             foreach ($issue->articles as $article) {
-                $article->setAttribute(
-                    'period_usage',
-                    $startDate ? $article->getAvailableStock($startDate, $endDate) : null
-                );
+                if ($startDate === null) {
+                    $article->setAttribute('period_usage', null);
+                    continue;
+                }
+
+                // getAvailableStock nutzt geladene Relationen ungefiltert —
+                // deshalb hier auf den Zeitraum dieser Ausgabe einschränken.
+                $article->setRelation('internalIssues', $article->internalIssues->filter(
+                    fn ($otherIssue) => ($otherIssue->start_date === null
+                            || $otherIssue->start_date->toDateString() <= $endDate)
+                        && ($otherIssue->end_date === null
+                            || $otherIssue->end_date->toDateString() >= $startDate)
+                )->values());
+                $article->setRelation('externalIssues', $article->externalIssues->filter(
+                    fn ($otherIssue) => ($otherIssue->issue_date === null
+                            || $otherIssue->issue_date->toDateString() <= $endDate)
+                        && ($otherIssue->return_date === null
+                            || $otherIssue->return_date->toDateString() >= $startDate)
+                )->values());
+
+                $article->setAttribute('period_usage', $article->getAvailableStock($startDate, $endDate));
+
+                // Nicht mit ins Inertia-Payload serialisieren.
+                $article->unsetRelation('internalIssues');
+                $article->unsetRelation('externalIssues');
             }
         }
 

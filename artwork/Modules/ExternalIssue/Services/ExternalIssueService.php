@@ -9,6 +9,7 @@ use Artwork\Modules\Inventory\Services\InventoryArticleService;
 use Artwork\Modules\Notification\Enums\NotificationEnum;
 use Artwork\Modules\User\Models\User;
 use Illuminate\Auth\AuthManager;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Spatie\Activitylog\Models\Activity;
@@ -75,6 +76,21 @@ class ExternalIssueService
             'name' => $a->name,
             'quantity' => $a->pivot->quantity,
         ])->toArray();
+
+        // Verändert sich das Rückgabedatum, muss die Rückgabe-Erinnerung neu
+        // scharf gestellt werden (Command filtert auf whereNull) und eine offene
+        // "noch nicht zurück"-Meldung zum alten Termin verfällt.
+        if (array_key_exists('return_date', $data)) {
+            $newReturnDate = $data['return_date'] !== null
+                ? Carbon::parse($data['return_date'])->toDateString()
+                : null;
+            if ($newReturnDate !== $issue->return_date?->toDateString()) {
+                $data['return_notification_sent_at'] = null;
+                if ($issue->return_status === ExternalIssue::RETURN_STATUS_NOT_RETURNED) {
+                    $data['return_status'] = null;
+                }
+            }
+        }
 
         DB::transaction(function () use ($issue, $data, $files): void {
             $issue->update($data);
@@ -200,7 +216,7 @@ class ExternalIssueService
      * Rückgabe bestätigen (aus Benachrichtigung oder Übersicht) — setzt Status,
      * Empfänger und protokolliert die Bestätigung inkl. Freitext-Beschreibung.
      */
-    public function confirmReturn(ExternalIssue $issue, ?string $remarks): ExternalIssue
+    public function confirmReturn(ExternalIssue $issue, ?string $remarks, bool $remarksProvided = false): ExternalIssue
     {
         $oldStatus = $issue->return_status;
         $oldRemarks = $issue->return_remarks;
@@ -209,7 +225,10 @@ class ExternalIssueService
             'return_status' => ExternalIssue::RETURN_STATUS_RETURNED,
         ];
 
-        if ($remarks !== null) {
+        // Ein geleertes Textfeld kommt durch ConvertEmptyStringsToNull als null
+        // an — war das Feld im Request, muss null die alte Bemerkung löschen.
+        // Bestätigungen ohne Bemerkungsfeld (Notification-Button) lassen sie stehen.
+        if ($remarks !== null || $remarksProvided) {
             $updateData['return_remarks'] = $remarks;
         }
 

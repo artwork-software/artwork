@@ -1,7 +1,8 @@
 <template>
     <div
+        ref="rowElement"
         class="group grid grid-cols-12 gap-4 px-2 py-3 text-sm border-b border-border-subtle hover:bg-gradient-to-r hover:from-surface-sunken hover:to-white relative"
-        :class="{ 'bg-warning-surface': usePage().props.urlParameters?.issue === String(externMaterialIssue.id) }"
+        :class="{ 'bg-warning-surface': isDeepLinkTarget }"
     >
         <span class="pointer-events-none absolute left-0 top-0 h-full w-0.5 bg-accent-500/0 transition-all duration-200 group-hover:bg-accent-500/70"></span>
 
@@ -157,7 +158,7 @@ import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
 import EnterExternalIssueReturnModal from "@/Pages/IssueOfMaterial/Components/EnterExternalIssueReturnModal.vue";
 import ExternalMaterialIssueDetailModal from "@/Pages/IssueOfMaterial/Components/ExternalMaterialIssueDetailModal.vue";
 import { IconAlertTriangle, IconCheck, IconEdit, IconPrinter, IconReceiptRefund, IconTrash } from "@tabler/icons-vue";
-import { computed, ref } from "vue";
+import { computed, onMounted, ref } from "vue";
 import { router, usePage } from "@inertiajs/vue3";
 
 const props = defineProps({
@@ -188,6 +189,18 @@ const showIssueOfMaterialModal = ref(false);
 const showIssueOfMaterialConfirmDeleteModal = ref(false);
 const showEnterExternalIssueReturnModal = ref(false);
 const showIssueOfMaterialDetailModal = ref(false);
+
+// Deep-Link aus der Rückgabe-Erinnerung: Backend springt auf die richtige
+// Seite, hier wird die Zeile hervorgehoben und in den Sichtbereich gescrollt.
+const rowElement = ref(null);
+const isDeepLinkTarget = computed(
+    () => String(usePage().props.urlParameters?.issue ?? '') === String(props.externMaterialIssue.id)
+);
+onMounted(() => {
+    if (isDeepLinkTarget.value) {
+        rowElement.value?.scrollIntoView({ block: 'center' });
+    }
+});
 
 const numberFmt = (v) => {
     try { return new Intl.NumberFormat(usePage().props.locale, { style: 'currency', currency: usePage().props.currency || 'EUR' }).format(Number(v||0)); }

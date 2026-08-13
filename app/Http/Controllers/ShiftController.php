@@ -939,7 +939,7 @@ class ShiftController extends Controller
                     // Fallback to a generic worker qualification if available
                     $resolvedShiftQualificationId = \Artwork\Modules\Shift\Models\ShiftQualification::available()
                         ->workerQualification()
-                        ->orderByCreationDateAscending()
+                        ->orderedByPosition()
                         ->value('id');
                 }
             }

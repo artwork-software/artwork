@@ -108,7 +108,7 @@
 
                 <BaseMenu white-menu-background has-no-offset menu-width="w-fit">
                     <BaseMenuItem white-menu-background :title="$t('Edit')" :icon="IconEdit" @click="showIssueOfMaterialModal = true" />
-                    <BaseMenuItem white-menu-background :title="$t('Enter return')" :icon="IconReceiptRefund" @click="showEnterExternalIssueReturnModal = true" v-if="!externMaterialIssue.received_by" />
+                    <BaseMenuItem white-menu-background :title="$t('Enter return')" :icon="IconReceiptRefund" @click="showEnterExternalIssueReturnModal = true" v-if="!externMaterialIssue.received_by && canEnterReturn" />
                     <BaseMenuItem white-menu-background :title="$t('Special items closed')" :icon="IconCheck" @click="setSpecialItemsDone" v-if="checkIfStatusOrHasAnySpecialItem" />
                     <BaseMenuItem white-menu-background :title="$t('Delete')" :icon="IconTrash" @click="showIssueOfMaterialConfirmDeleteModal = true" />
                 </BaseMenu>
@@ -160,6 +160,7 @@ import ExternalMaterialIssueDetailModal from "@/Pages/IssueOfMaterial/Components
 import { IconAlertTriangle, IconCheck, IconEdit, IconPrinter, IconReceiptRefund, IconTrash } from "@tabler/icons-vue";
 import { computed, onMounted, ref } from "vue";
 import { router, usePage } from "@inertiajs/vue3";
+import { usePermission } from "@/Composeables/Permission.js";
 
 const props = defineProps({
     externMaterialIssue: {
@@ -189,6 +190,15 @@ const showIssueOfMaterialModal = ref(false);
 const showIssueOfMaterialConfirmDeleteModal = ref(false);
 const showEnterExternalIssueReturnModal = ref(false);
 const showIssueOfMaterialDetailModal = ref(false);
+
+// Spiegelt ExternalIssueController::authorizeReturnHandling — sonst endet der Submit in einem stummen 403
+const { can, hasAdminRole } = usePermission(usePage().props);
+const canEnterReturn = computed(() => {
+    const currentUserId = usePage().props.auth?.user?.id ?? usePage().props.user?.id ?? null;
+    return hasAdminRole()
+        || can('inventory.disposition')
+        || (currentUserId != null && String(props.externMaterialIssue.issued_by?.id) === String(currentUserId));
+});
 
 // Deep-Link aus der Rückgabe-Erinnerung: Backend springt auf die richtige
 // Seite, hier wird die Zeile hervorgehoben und in den Sichtbereich gescrollt.

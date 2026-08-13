@@ -11,6 +11,15 @@ class ProjectTabMaterialIssueService
 {
     public function buildMaterialIssuePayload(Project $project): array
     {
+        // Zeitfenster über alle Ausgaben dieses Projekts: Historie außerhalb davon kann
+        // period_usage nie beeinflussen — ohne Begrenzung würde pro Artikelzeile die
+        // komplette (mehrjährige) Ausgabe-Historie hydratisiert.
+        $window = InternalIssue::where('project_id', $project->id)
+            ->selectRaw('MIN(start_date) as min_start, MAX(COALESCE(end_date, start_date)) as max_end')
+            ->first();
+        $minStart = $window?->getAttribute('min_start');
+        $maxEnd = $window?->getAttribute('max_end');
+
         $materials = InternalIssue::where('project_id', $project->id)
             ->with([
                 'project',
@@ -25,8 +34,28 @@ class ProjectTabMaterialIssueService
                 'articles.detailedArticleQuantities.status',
                 // Für period_usage vorladen — sonst feuert getAvailableStock
                 // zwei Overlap-Queries pro Artikel und Ausgabe (N+1).
-                'articles.internalIssues',
-                'articles.externalIssues',
+                'articles.internalIssues' => function ($query) use ($minStart, $maxEnd): void {
+                    if ($minStart === null) {
+                        $query->whereRaw('1 = 0');
+                        return;
+                    }
+                    $query->where('internal_issues.start_date', '<=', $maxEnd)
+                        ->where(function ($subQuery) use ($minStart): void {
+                            $subQuery->where('internal_issues.end_date', '>=', $minStart)
+                                ->orWhereNull('internal_issues.end_date');
+                        });
+                },
+                'articles.externalIssues' => function ($query) use ($minStart, $maxEnd): void {
+                    if ($minStart === null) {
+                        $query->whereRaw('1 = 0');
+                        return;
+                    }
+                    $query->where('external_issues.issue_date', '<=', $maxEnd)
+                        ->where(function ($subQuery) use ($minStart): void {
+                            $subQuery->where('external_issues.return_date', '>=', $minStart)
+                                ->orWhereNull('external_issues.return_date');
+                        });
+                },
                 'specialItems',
                 'files',
                 'responsibleUsers',
@@ -60,7 +89,21 @@ class ProjectTabMaterialIssueService
                             || $otherIssue->return_date->toDateString() >= $startDate)
                 )->values());
 
-                $article->setAttribute('period_usage', $article->getAvailableStock($startDate, $endDate));
+                $periodUsage = $article->getAvailableStock($startDate, $endDate);
+
+                // getAvailableStock zählt nur "Einsatzbereit"-Statusmengen. Artikel ohne
+                // gepflegte Statusmengen hätten total=0 und würden im Tab fälschlich als
+                // 100% überbucht (rot) erscheinen — dann auf die Gesamtmenge zurückfallen.
+                $hasMaintainedReadyStatus = $article->is_detailed_quantity
+                    ? $article->detailedArticleQuantities->isNotEmpty()
+                    : $article->statusValues->firstWhere('name', 'Einsatzbereit') !== null;
+                if (!$hasMaintainedReadyStatus && $periodUsage['total'] <= 0 && (float) $article->quantity > 0) {
+                    $periodUsage['total'] = (float) $article->quantity;
+                    $periodUsage['quantity'] = (float) $article->quantity;
+                    $periodUsage['available'] = max($periodUsage['total'] - $periodUsage['reserved'], 0);
+                }
+
+                $article->setAttribute('period_usage', $periodUsage);
 
                 // Nicht mit ins Inertia-Payload serialisieren.
                 $article->unsetRelation('internalIssues');

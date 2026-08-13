@@ -70,7 +70,9 @@ class ShiftQualificationController extends Controller
 
     public function reorder(Request $request): RedirectResponse
     {
-        $this->authorize('update', ShiftQualification::class);
+        // Autorisierung via Route-Middleware 'shift-settings-area:general,edit' —
+        // die Admin-only ShiftQualificationPolicy würde Nicht-Admins mit Edit-Permission
+        // (die das Drag&Drop in den Settings sehen) fälschlich mit 403 aussperren.
 
         $validated = $request->validate([
             'ids' => ['required', 'array'],

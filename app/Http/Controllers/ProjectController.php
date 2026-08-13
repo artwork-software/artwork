@@ -2518,10 +2518,21 @@ class ProjectController extends Controller
 
     public function updateProjectState(Request $request, Project $project): void
     {
-        // Pflichtfeld-Setting: Status darf dann nicht entfernt werden
+        // Payloads ohne state-Key (z.B. Team-/Schicht-Modals via projects.update) lassen den Status unangetastet
+        if (!$request->exists('state')) {
+            return;
+        }
+
+        // Pflichtfeld-Setting: Status darf dann nicht entfernt werden.
+        // Greift nur, wenn das Feld sichtbar ist und das Projekt bereits einen Status hat —
+        // Altprojekte ohne Status bleiben sonst editierbar (state && state_required analog StoreProjectRequest).
+        $createSettings = app(ProjectCreateSettings::class);
+        $stateRemovalBlocked = $createSettings->state
+            && $createSettings->state_required
+            && $project->state !== null;
         $request->validate([
             'state' => [
-                app(ProjectCreateSettings::class)->state_required ? 'required' : 'nullable',
+                $stateRemovalBlocked ? 'required' : 'nullable',
                 'integer',
                 'exists:project_states,id',
             ],

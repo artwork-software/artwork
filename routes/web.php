@@ -534,6 +534,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::patch('/users/{user}', [UserController::class, 'temporaryUserUpdate'])->name('update.user.temporary');
     Route::patch('/users/{user}/conditions', [UserController::class, 'updateUserTerms'])->name('user.update.terms');
     Route::post('/users/{user}/photo', [UserController::class, 'updateUserPhoto'])->name('user.update.photo');
+    Route::delete('/users/{user}/photo', [UserController::class, 'deleteUserPhoto'])->name('user.delete.photo');
 
     Route::post('/users/reset-password', [UserController::class, 'resetUserPassword'])->name('user.reset.password');
     Route::patch('/users/{user}/updateCraftSettings', [UserController::class, 'updateCraftSettings'])

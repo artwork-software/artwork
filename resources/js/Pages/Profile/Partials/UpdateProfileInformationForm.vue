@@ -136,7 +136,9 @@
             },
 
             deletePhoto() {
-                this.$inertia.delete(route('current-user-photo.destroy'), {
+                // Jetstreams current-user-photo.destroy hängt am Passport-'api'-Guard
+                // und endet für Web-Sessions als 405 auf /login — eigene Route nutzen.
+                this.$inertia.delete(route('user.delete.photo', this.$page.props.auth.user.id), {
                     preserveScroll: true,
                     onSuccess: () => {
                         this.photoPreview = null;

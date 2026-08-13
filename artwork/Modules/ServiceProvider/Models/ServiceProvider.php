@@ -107,7 +107,9 @@ class ServiceProvider extends Model implements Vacationer, DayServiceable, Emplo
         }
 
         if ($this->profile_image) {
-            return asset('storage/' . $this->profile_image);
+            // profile_image kann via Storage::url() bereits mit '/storage/' beginnen
+            $path = ltrim($this->profile_image, '/');
+            return str_starts_with($path, 'storage/') ? asset($path) : asset('storage/' . $path);
         }
 
         // Verwende makeAvatarSvg aus HasProfilePhotoCustom Trait

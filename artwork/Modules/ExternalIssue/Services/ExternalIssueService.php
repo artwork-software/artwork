@@ -298,9 +298,19 @@ class ExternalIssueService
      */
     protected function resolveReturnDueNotifications(ExternalIssue $issue, string $status): void
     {
+        // Erinnerungen gehen ausschließlich an issuedBy (siehe Command) — ohne
+        // Empfänger existiert nichts zum Auflösen.
+        if ($issue->issued_by_id === null) {
+            return;
+        }
+
         $handledBy = $this->auth->user();
 
+        // Erst über den Index (notifiable_type, notifiable_id) einschränken —
+        // die JSON-Pfad-Filter allein wären ein Full-Table-Scan über notifications.
         $notifications = DB::table('notifications')
+            ->where('notifiable_type', User::class)
+            ->where('notifiable_id', $issue->issued_by_id)
             ->where('data->type', NotificationEnum::NOTIFICATION_EXTERNAL_ISSUE_RETURN_DUE->value)
             ->where('data->modelId', $issue->id)
             ->get();

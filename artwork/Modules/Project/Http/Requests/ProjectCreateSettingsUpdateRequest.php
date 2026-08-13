@@ -16,6 +16,7 @@ class ProjectCreateSettingsUpdateRequest extends FormRequest
         return [
             'attributes' => 'required|boolean',
             'state' => 'required|boolean',
+            'state_required' => 'sometimes|boolean',
             'managers' => 'required|boolean',
             'cost_center' => 'required|boolean',
             'budget_deadline' => 'required|boolean',

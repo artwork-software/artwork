@@ -3058,12 +3058,14 @@ function getCraftQualificationsSorted(worker: any, craftId: number): any[] {
  * Gruppe (nur Referenzen, keine Daten-Duplikate) — außer "Doppeleinträge anzeigen"
  * ist deaktiviert, dann nur in ihrer laut Reihenfolge ersten Funktion. Personen
  * ohne Funktion im Gewerk landen in einer "Ohne Funktion"-Gruppe am Ende.
+ * Gewerksleitungen werden vorab herausgehalten (workers-Parameter) und über den
+ * Gruppen gerendert.
  */
-function buildQualificationGroupsOfCraft(craft: any) {
+function buildQualificationGroupsOfCraft(craft: any, workers: any[]) {
     const groupsById = new Map<number, { qualification: any; workers: any[] }>()
     const withoutQualification: any[] = []
 
-    for (const w of craft.users) {
+    for (const w of workers) {
         let workerQualifications = getCraftQualificationsSorted(w, craft.id)
 
         if (!showQualificationDuplicates.value && workerQualifications.length > 1) {
@@ -3107,7 +3109,13 @@ const gridRows = computed<GridRow[]>(() => {
             continue
         }
 
-        for (const group of buildQualificationGroupsOfCraft(craft)) {
+        // Gewerksleitungen immer ganz oben, außerhalb der Funktionsgruppen
+        const managingCount = craft.managingCount ?? 0
+        if (managingCount > 0) {
+            pushWorkerRows(rows, craft.users.slice(0, managingCount), `${craft.id}_managing`, craft)
+        }
+
+        for (const group of buildQualificationGroupsOfCraft(craft, craft.users.slice(managingCount))) {
             rows.push({
                 key: `qualGroup_${group.groupKey}`,
                 kind: 'qualificationGroup',
@@ -3237,9 +3245,11 @@ function isManagingWorkerForCraft(worker: any, managingSets: ReturnType<typeof b
 }
 
 /**
- * Filter + Sortierung für einen Craft (arbeitet jetzt auf precomputed Maps)
+ * Filter + Sortierung für einen Craft (arbeitet jetzt auf precomputed Maps).
+ * Managing und Non-Managing werden getrennt zurückgegeben, damit die
+ * Gewerksleitungen auch bei aktiver Funktionsgruppierung immer oben stehen.
  */
-function filterAndSortWorkersOfCraft(craft: any) {
+function filterAndSortWorkersOfCraft(craft: any): { managing: any[]; nonManaging: any[] } {
     const allWorkersOfCraft = craftWorkersMap.value.get(craft.id) ?? []
 
     const managingSets = buildManagingSets(craft)
@@ -3279,7 +3289,7 @@ function filterAndSortWorkersOfCraft(craft: any) {
             if (!firstQualB) return -1
             return compareQualificationsByPosition(firstQualA, firstQualB)
         })
-        return assignedManagingWorkers.concat(byQualificationOrder)
+        return { managing: assignedManagingWorkers, nonManaging: byQualificationOrder }
     }
 
     // Helper für intern/extern-Split nur 1x
@@ -3293,25 +3303,33 @@ function filterAndSortWorkersOfCraft(craft: any) {
 
     switch (sortBy) {
         case 'ALPHABETICALLY_NAME_ASCENDING':
-            return sortWorkersByName(assignedManagingWorkers, useFirstName, 1)
-                .concat(sortWorkersByName(assignedNonManagingWorkersFiltered, useFirstName, 1))
+            return {
+                managing: sortWorkersByName(assignedManagingWorkers, useFirstName, 1),
+                nonManaging: sortWorkersByName(assignedNonManagingWorkersFiltered, useFirstName, 1),
+            }
 
         case 'ALPHABETICALLY_NAME_DESCENDING':
-            return sortWorkersByName(assignedManagingWorkers, useFirstName, -1)
-                .concat(sortWorkersByName(assignedNonManagingWorkersFiltered, useFirstName, -1))
+            return {
+                managing: sortWorkersByName(assignedManagingWorkers, useFirstName, -1),
+                nonManaging: sortWorkersByName(assignedNonManagingWorkersFiltered, useFirstName, -1),
+            }
 
         case 'INTERN_EXTERN_ASCENDING':
-            return sortWorkersByName(assignedManagingWorkers, useFirstName, 1)
-                .concat(sortWorkersByName(intern, useFirstName, 1))
-                .concat(sortWorkersByName(extern, useFirstName, 1))
+            return {
+                managing: sortWorkersByName(assignedManagingWorkers, useFirstName, 1),
+                nonManaging: sortWorkersByName(intern, useFirstName, 1)
+                    .concat(sortWorkersByName(extern, useFirstName, 1)),
+            }
 
         case 'INTERN_EXTERN_DESCENDING':
-            return sortWorkersByName(assignedManagingWorkers, useFirstName, -1)
-                .concat(sortWorkersByName(extern, useFirstName, -1))
-                .concat(sortWorkersByName(intern, useFirstName, -1))
+            return {
+                managing: sortWorkersByName(assignedManagingWorkers, useFirstName, -1),
+                nonManaging: sortWorkersByName(extern, useFirstName, -1)
+                    .concat(sortWorkersByName(intern, useFirstName, -1)),
+            }
 
         default:
-            return assignedManagingWorkers.concat(assignedNonManagingWorkersFiltered)
+            return { managing: assignedManagingWorkers, nonManaging: assignedNonManagingWorkersFiltered }
     }
 }
 
@@ -3320,14 +3338,19 @@ function filterAndSortWorkersOfCraft(craft: any) {
 // -----------------------------------------------------
 
 const craftsToDisplay = computed(() => {
-    const allCrafts = (craftsResolved.value ?? []).map((craft: any) => ({
-        id: craft.id,
-        name: craft.name,
-        abbreviation: craft.abbreviation,
-        users: filterAndSortWorkersOfCraft(craft),
-        color: craft?.color,
-        universally_applicable: craft.universally_applicable,
-    }))
+    const allCrafts = (craftsResolved.value ?? []).map((craft: any) => {
+        const { managing, nonManaging } = filterAndSortWorkersOfCraft(craft)
+
+        return {
+            id: craft.id,
+            name: craft.name,
+            abbreviation: craft.abbreviation,
+            users: managing.concat(nonManaging),
+            managingCount: managing.length,
+            color: craft?.color,
+            universally_applicable: craft.universally_applicable,
+        }
+    })
 
     if (!props.user_filters?.craft_ids || props.user_filters.craft_ids.length === 0) {
         return allCrafts

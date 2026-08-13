@@ -63,6 +63,25 @@ class EventPolicy
             ($event->room?->user_id === $user->id && !$event->room->admins()->exists());
     }
 
+    // "Termin absagen": entfernt den Termin aus dem Raum. Gilt anders als
+    // answerRoomRequest auch für bereits bestätigte Belegungen, nicht nur
+    // für offene Raumanfragen (occupancy_option).
+    public function declineEvent(User $user, Event $event): bool
+    {
+        if ($event->room_id === null) {
+            return false;
+        }
+
+        return $user->can(PermissionEnum::CREATE_EVENTS_WITHOUT_REQUEST->value) ||
+            ($event->is_planning && $user->can(PermissionEnum::CAN_EDIT_PLANNING_CALENDAR->value)) ||
+            $event->creator?->id === $user->id ||
+            $event->room?->users()
+                ->wherePivot('is_admin', true)
+                ->where('user_id', $user->id)
+                ->exists() ||
+            ($event->room?->user_id === $user->id && !$event->room->admins()->exists());
+    }
+
     public function delete(User $user, Event $event): bool
     {
         return $user->can(PermissionEnum::PROJECT_MANAGEMENT->value) ||

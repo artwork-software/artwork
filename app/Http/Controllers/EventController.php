@@ -2564,7 +2564,7 @@ class EventController extends Controller
     //phpcs:ignore Generic.Metrics.CyclomaticComplexity.TooHigh
     public function declineEvent(Request $request, Event $event): RedirectResponse
     {
-        $this->authorize('answerRoomRequest', $event);
+        $this->authorize('declineEvent', $event);
 
         $projectManagers = [];
         $roomId = $event->room_id;
@@ -2573,9 +2573,12 @@ class EventController extends Controller
         if (!empty($project)) {
             $projectManagers = $project->managerUsers()->get();
         }
+        // Absichtlich ohne occupancy_option-Bedingung: Absagen gilt auch für
+        // bereits bestätigte Belegungen. Der room_id-Guard hält die Antwort
+        // atomar (parallele zweite Absage trifft 0 Zeilen → 409).
         $updated = Event::query()
             ->whereKey($event->id)
-            ->where('occupancy_option', true)
+            ->whereNotNull('room_id')
             ->where('room_id', $roomId)
             ->update([
                 'accepted' => false,

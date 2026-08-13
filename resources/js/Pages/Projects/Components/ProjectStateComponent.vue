@@ -38,7 +38,7 @@
                             {{ selectedState.name }}
                             <IconCalendarMonth v-if="selectedState.is_planning === true || selectedState.is_planning === 1" class="w-4 h-4" />
                         </span>
-                        <button type="button" @click="selectedState = null" class="ml-1">
+                        <button v-if="!stateRequired" type="button" @click="selectedState = null" class="ml-1">
                             <IconCircleX class="h-4 w-4 text-text-subtle hover:text-danger" />
                         </button>
                     </div>
@@ -83,6 +83,10 @@
                         </ListboxOptions>
                     </transition>
                 </Listbox>
+
+                <div v-if="stateSaveError" class="text-danger text-xs mt-3">
+                    {{ stateSaveError }}
+                </div>
 
                 <div class="flex justify-end mt-6">
                     <button
@@ -134,6 +138,7 @@ export default defineComponent({
             projectState: this.project?.state ?? this.loadedProjectInformation?.['ProjectStateComponent'] ?? null,
             showEditModal: false,
             selectedState: null,
+            stateSaveError: null,
         };
     },
     computed: {
@@ -142,6 +147,9 @@ export default defineComponent({
         },
         availableStates() {
             return this.headerObject?.states ?? [];
+        },
+        stateRequired() {
+            return !!usePage().props.createSettings?.state_required;
         },
     },
     mounted() {
@@ -162,9 +170,14 @@ export default defineComponent({
             this.selectedState = this.projectState
                 ? this.availableStates.find(s => s.id === this.projectState.id) ?? null
                 : null;
+            this.stateSaveError = null;
             this.showEditModal = true;
         },
         saveState() {
+            if (this.stateRequired && !this.selectedState) {
+                this.stateSaveError = this.$t('Project status is a required field.');
+                return;
+            }
             const projectId = this.project?.id ?? this.projectId;
             router.patch(route('update.project.state', {project: projectId}), {
                 state: this.selectedState ? this.selectedState.id : null,
@@ -172,7 +185,11 @@ export default defineComponent({
                 preserveScroll: true,
                 onSuccess: () => {
                     this.projectState = this.selectedState ? {...this.selectedState} : null;
+                    this.stateSaveError = null;
                     this.showEditModal = false;
+                },
+                onError: (errors) => {
+                    this.stateSaveError = errors?.state ?? this.$t('Project status is a required field.');
                 },
             });
         },

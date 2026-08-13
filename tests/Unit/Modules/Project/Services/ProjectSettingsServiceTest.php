@@ -26,6 +26,7 @@ final class ProjectSettingsServiceTest extends TestCase
         $request = ProjectCreateSettingsUpdateRequest::create('/', 'POST', [
             'attributes' => '1',
             'state' => '0',
+            'state_required' => '1',
             'managers' => '1',
             'cost_center' => '0',
             'budget_deadline' => '1',
@@ -37,6 +38,7 @@ final class ProjectSettingsServiceTest extends TestCase
         $fresh = app(ProjectCreateSettings::class);
         $this->assertTrue($fresh->attributes);
         $this->assertFalse($fresh->state);
+        $this->assertTrue($fresh->state_required);
         $this->assertTrue($fresh->managers);
         $this->assertFalse($fresh->cost_center);
         $this->assertTrue($fresh->budget_deadline);

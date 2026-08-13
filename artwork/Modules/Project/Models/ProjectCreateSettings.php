@@ -9,6 +9,7 @@ class ProjectCreateSettings extends Settings
 
     public bool $attributes;
     public bool $state;
+    public bool $state_required;
     public bool $managers;
     public bool $cost_center;
     public bool $budget_deadline;

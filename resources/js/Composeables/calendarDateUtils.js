@@ -108,7 +108,12 @@ export function enrichDays(slimDays) {
  */
 export function getDaysInRange(startDate, endDate) {
     const start = dayjs(startDate).startOf('day')
-    const end = dayjs(endDate).startOf('day')
+    let end = dayjs(endDate).startOf('day')
+    // Defekte Altdaten (Ende vor Start, z.B. 22:00–00:00 am selben Tag) ergäben
+    // eine leere Liste — mindestens den Starttag liefern.
+    if (end.isBefore(start)) {
+        end = start
+    }
     const days = []
     let current = start
     while (current.isBefore(end) || current.isSame(end, 'day')) {

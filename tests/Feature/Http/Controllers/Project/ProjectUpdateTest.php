@@ -149,6 +149,26 @@ final class ProjectUpdateTest extends FeatureTestCase
     }
 
     #[Test]
+    public function state_cannot_be_removed_when_state_is_required(): void
+    {
+        $this->actingAsAdmin();
+
+        $settings = app(\Artwork\Modules\Project\Models\ProjectCreateSettings::class);
+        $settings->state_required = true;
+        $settings->save();
+
+        $state = \Artwork\Modules\Project\Models\ProjectState::factory()->create();
+        $project = Project::factory()->create(['state' => $state->id]);
+
+        $response = $this->patch('/project/' . $project->id . '/state', [
+            'state' => null,
+        ]);
+
+        $response->assertSessionHasErrors('state');
+        $this->assertSame($state->id, (int) $project->fresh()->state);
+    }
+
+    #[Test]
     public function admin_can_update_attributes(): void
     {
         $this->actingAsAdmin();

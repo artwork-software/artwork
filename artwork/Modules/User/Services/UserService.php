@@ -281,7 +281,7 @@ class UserService
             )
             ->setRooms(static fn() => $roomService->getAllWithoutTrashed())
             ->setProjects(static fn() => $projectService->getAll())
-            ->setShiftQualifications(static fn() => $shiftQualificationService->getAllOrderedByCreationDateAscending())
+            ->setShiftQualifications(static fn() => $shiftQualificationService->getAllOrderedByPosition())
             ->setShifts(fn() => $this->getUserShiftsOrderedByStartAscending(
                 $user,
                 $this->shouldHideUncommittedShiftsInOwnRoster($user)

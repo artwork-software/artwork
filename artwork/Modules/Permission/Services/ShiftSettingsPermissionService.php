@@ -14,20 +14,20 @@ class ShiftSettingsPermissionService
     public static function definitions(): array
     {
         $areas = [
-            [PermissionEnum::SHIFT_SETTINGS_GENERAL_VIEW, 'Allgemeine Schichteinstellungen ansehen', 'View general shift settings', 'Darf Gewerke, Funktionen, Qualifikationen und allgemeine Schichteinstellungen ansehen.'],
-            [PermissionEnum::SHIFT_SETTINGS_GENERAL_EDIT, 'Allgemeine Schichteinstellungen bearbeiten', 'Edit general shift settings', 'Darf Gewerke, Funktionen, Qualifikationen und allgemeine Schichteinstellungen bearbeiten.'],
-            [PermissionEnum::SHIFT_SETTINGS_DAY_SERVICES_VIEW, 'Tagesdienste ansehen', 'View day services', 'Darf Tagesdienste in den Schichteinstellungen ansehen.'],
-            [PermissionEnum::SHIFT_SETTINGS_DAY_SERVICES_EDIT, 'Tagesdienste bearbeiten', 'Edit day services', 'Darf Tagesdienste anlegen, bearbeiten und löschen.'],
-            [PermissionEnum::SHIFT_SETTINGS_WORK_TIME_PATTERNS_VIEW, 'Arbeitszeitmuster ansehen', 'View work time patterns', 'Darf Arbeitszeitmuster ansehen.'],
-            [PermissionEnum::SHIFT_SETTINGS_WORK_TIME_PATTERNS_EDIT, 'Arbeitszeitmuster bearbeiten', 'Edit work time patterns', 'Darf Arbeitszeitmuster anlegen, bearbeiten und löschen.'],
-            [PermissionEnum::SHIFT_SETTINGS_USER_CONTRACTS_VIEW, 'Nutzerverträge ansehen', 'View user contracts', 'Darf Vertragsvorlagen und deren Einstellungen ansehen.'],
-            [PermissionEnum::SHIFT_SETTINGS_USER_CONTRACTS_EDIT, 'Nutzerverträge bearbeiten', 'Edit user contracts', 'Darf Vertragsvorlagen anlegen, bearbeiten und löschen.'],
-            [PermissionEnum::SHIFT_SETTINGS_SHIFT_GROUPS_VIEW, 'Schichtgruppen ansehen', 'View shift groups', 'Darf Schichtgruppen ansehen.'],
-            [PermissionEnum::SHIFT_SETTINGS_SHIFT_GROUPS_EDIT, 'Schichtgruppen bearbeiten', 'Edit shift groups', 'Darf Schichtgruppen anlegen, bearbeiten und löschen.'],
-            [PermissionEnum::SHIFT_SETTINGS_SHIFT_TEMPLATES_VIEW, 'Schichtvorlagen ansehen', 'View shift templates', 'Darf Schichtvorlagen und Vorlagengruppen ansehen.'],
-            [PermissionEnum::SHIFT_SETTINGS_SHIFT_TEMPLATES_EDIT, 'Schichtvorlagen bearbeiten', 'Edit shift templates', 'Darf Schichtvorlagen und Vorlagengruppen anlegen, bearbeiten und löschen.'],
-            [PermissionEnum::SHIFT_SETTINGS_RULES_VIEW, 'Schichtregeln ansehen', 'View shift rules', 'Darf Schichtregeln, Warnungen und offene Verstöße ansehen.'],
-            [PermissionEnum::SHIFT_SETTINGS_RULES_EDIT, 'Schichtregeln bearbeiten', 'Edit shift rules', 'Darf Schichtregeln und Verstöße bearbeiten.'],
+            [PermissionEnum::SHIFT_SETTINGS_GENERAL_VIEW, 'Allgemeine Schichteinstellungen ansehen', 'View general shift settings', 'Darf Gewerke, Funktionen, Qualifikationen und allgemeine Schichteinstellungen ansehen.', 'User can view crafts, functions, qualifications and general shift settings.'],
+            [PermissionEnum::SHIFT_SETTINGS_GENERAL_EDIT, 'Allgemeine Schichteinstellungen bearbeiten', 'Edit general shift settings', 'Darf Gewerke, Funktionen, Qualifikationen und allgemeine Schichteinstellungen bearbeiten.', 'User can edit crafts, functions, qualifications and general shift settings.'],
+            [PermissionEnum::SHIFT_SETTINGS_DAY_SERVICES_VIEW, 'Tagesdienste ansehen', 'View day services', 'Darf Tagesdienste in den Schichteinstellungen ansehen.', 'User can view day services in the shift settings.'],
+            [PermissionEnum::SHIFT_SETTINGS_DAY_SERVICES_EDIT, 'Tagesdienste bearbeiten', 'Edit day services', 'Darf Tagesdienste anlegen, bearbeiten und löschen.', 'User can create, edit and delete day services.'],
+            [PermissionEnum::SHIFT_SETTINGS_WORK_TIME_PATTERNS_VIEW, 'Arbeitszeitmuster ansehen', 'View work time patterns', 'Darf Arbeitszeitmuster ansehen.', 'User can view work time patterns.'],
+            [PermissionEnum::SHIFT_SETTINGS_WORK_TIME_PATTERNS_EDIT, 'Arbeitszeitmuster bearbeiten', 'Edit work time patterns', 'Darf Arbeitszeitmuster anlegen, bearbeiten und löschen.', 'User can create, edit and delete work time patterns.'],
+            [PermissionEnum::SHIFT_SETTINGS_USER_CONTRACTS_VIEW, 'Nutzerverträge ansehen', 'View user contracts', 'Darf Vertragsvorlagen und deren Einstellungen ansehen.', 'User can view contract templates and their settings.'],
+            [PermissionEnum::SHIFT_SETTINGS_USER_CONTRACTS_EDIT, 'Nutzerverträge bearbeiten', 'Edit user contracts', 'Darf Vertragsvorlagen anlegen, bearbeiten und löschen.', 'User can create, edit and delete contract templates.'],
+            [PermissionEnum::SHIFT_SETTINGS_SHIFT_GROUPS_VIEW, 'Schichtgruppen ansehen', 'View shift groups', 'Darf Schichtgruppen ansehen.', 'User can view shift groups.'],
+            [PermissionEnum::SHIFT_SETTINGS_SHIFT_GROUPS_EDIT, 'Schichtgruppen bearbeiten', 'Edit shift groups', 'Darf Schichtgruppen anlegen, bearbeiten und löschen.', 'User can create, edit and delete shift groups.'],
+            [PermissionEnum::SHIFT_SETTINGS_SHIFT_TEMPLATES_VIEW, 'Schichtvorlagen ansehen', 'View shift templates', 'Darf Schichtvorlagen und Vorlagengruppen ansehen.', 'User can view shift templates and template groups.'],
+            [PermissionEnum::SHIFT_SETTINGS_SHIFT_TEMPLATES_EDIT, 'Schichtvorlagen bearbeiten', 'Edit shift templates', 'Darf Schichtvorlagen und Vorlagengruppen anlegen, bearbeiten und löschen.', 'User can create, edit and delete shift templates and template groups.'],
+            [PermissionEnum::SHIFT_SETTINGS_RULES_VIEW, 'Schichtregeln ansehen', 'View shift rules', 'Darf Schichtregeln, Warnungen und offene Verstöße ansehen.', 'User can view shift rules, warnings and open violations.'],
+            [PermissionEnum::SHIFT_SETTINGS_RULES_EDIT, 'Schichtregeln bearbeiten', 'Edit shift rules', 'Darf Schichtregeln und Verstöße bearbeiten.', 'User can edit shift rules and violations.'],
         ];
 
         $definitions = array_map(static fn (array $area): array => [
@@ -36,7 +36,7 @@ class ShiftSettingsPermissionService
             'translation_key' => $area[2],
             'group' => 'Shift settings',
             'tooltipText' => $area[3],
-            'tooltipKey' => $area[3],
+            'tooltipKey' => $area[4],
             'checked' => true,
         ], $areas);
 

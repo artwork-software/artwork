@@ -350,21 +350,27 @@
                                     height="5"
                                 />
                                 <div v-if="event?.project?.leaders.length >= 4" class="ml-1">
+                                    <!-- Float mit Portal, damit die Liste nicht am overflow der Kalenderzelle abgeschnitten wird -->
                                     <Menu as="div" class="relative">
-                                        <MenuButton class="rounded-full focus:outline-none">
-                                            <div class="flex h-5 w-5 items-center justify-center rounded-full bg-black text-[11px] font-semibold text-white">
-                                                +{{ event?.project?.leaders.length - 3 }}
-                                            </div>
-                                        </MenuButton>
-                                        <transition
-                                            enter-active-class="transition ease-out duration-150"
-                                            enter-from-class="opacity-0 scale-95"
-                                            enter-to-class="opacity-100 scale-100"
-                                            leave-active-class="transition ease-in duration-100"
-                                            leave-from-class="opacity-100 scale-100"
-                                            leave-to-class="opacity-0 scale-95"
+                                        <Float
+                                            portal
+                                            strategy="fixed"
+                                            flip
+                                            :offset="6"
+                                            placement="bottom-start"
+                                            enter="transition ease-out duration-150"
+                                            enter-from="opacity-0 scale-95"
+                                            enter-to="opacity-100 scale-100"
+                                            leave="transition ease-in duration-100"
+                                            leave-from="opacity-100 scale-100"
+                                            leave-to="opacity-0 scale-95"
                                         >
-                                            <MenuItems class="absolute mt-2 w-72 origin-top-right rounded-lg bg-surface-inverse py-1 ring-1 ring-black/5 focus:outline-none">
+                                            <MenuButton class="rounded-full focus:outline-none">
+                                                <div class="flex h-5 w-5 items-center justify-center rounded-full bg-black text-[11px] font-semibold text-white">
+                                                    +{{ event?.project?.leaders.length - 3 }}
+                                                </div>
+                                            </MenuButton>
+                                            <MenuItems class="z-[10000] w-72 rounded-lg bg-surface-inverse py-1 ring-1 ring-black/5 focus:outline-none">
                                                 <MenuItem v-for="user in event?.project?.leaders" :key="'menu-'+user.id" v-slot="{ active }">
                                                     <Link
                                                         href="#"
@@ -375,7 +381,7 @@
                                                     </Link>
                                                 </MenuItem>
                                             </MenuItems>
-                                        </transition>
+                                        </Float>
                                     </Menu>
                                 </div>
                             </div>

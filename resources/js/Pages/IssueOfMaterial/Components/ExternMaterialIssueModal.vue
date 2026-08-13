@@ -91,7 +91,7 @@
                 </div>
                 <div class="p-6 grid grid-cols-1 gap-6 md:grid-cols-4">
                     <div class="md:col-span-2">
-                        <BaseInput id="name" type="text" v-model="externMaterialIssueForm.name" :label="$t('Name') + ' *'" />
+                        <BaseInput id="name" type="text" v-model="externMaterialIssueForm.name" :label="$t('Material issue name') + ' *'" />
                         <p class="text-xs text-danger mt-0.5" v-if="externMaterialIssueForm.errors.name">{{ externMaterialIssueForm.errors.name }}</p>
                     </div>
                     <div class="md:col-span-2">
@@ -440,13 +440,14 @@
             :responsiveOptions="responsiveOptions"
             :numVisible="7"
             :pt="{ mask: { onClick: onMaskClick } }"
+            containerStyle="max-width: 850px"
             :circular="true"
             :fullScreen="true"
             :showItemNavigators="true"
             :showThumbnails="true"
         >
             <template #item="slotProps">
-                <img :src="'/storage/' + slotProps.item.image" :alt="slotProps.item.alt || ''" style="width: 100%; display: block" @error="(e) => e.target.src = usePage().props.big_logo" />
+                <img :src="'/storage/' + slotProps.item.image" :alt="slotProps.item.alt || ''" style="width: 100%; max-height: 75vh; object-fit: contain; display: block" @error="(e) => e.target.src = usePage().props.big_logo" />
             </template>
             <template #thumbnail="slotProps">
                 <img :src="'/storage/' + slotProps.item.image" :alt="slotProps.item.alt || ''" class="w-20 max-w-20" style="display: block" @error="(e) => e.target.src = usePage().props.big_logo" />
@@ -570,8 +571,8 @@ const externMaterialIssueForm = useForm({
     id: props.externMaterialIssue.id ?? null,
     name: props.externMaterialIssue.name,
     material_value: props.externMaterialIssue.material_value,
-    issue_date: props.externMaterialIssue.issue_date,
-    return_date: props.externMaterialIssue.return_date,
+    issue_date: props.externMaterialIssue.issue_date ? String(props.externMaterialIssue.issue_date).slice(0, 10) : '',
+    return_date: props.externMaterialIssue.return_date ? String(props.externMaterialIssue.return_date).slice(0, 10) : '',
     return_remarks: props.externMaterialIssue.return_remarks,
     external_name: props.externMaterialIssue.external_name,
     external_address: props.externMaterialIssue.external_address,

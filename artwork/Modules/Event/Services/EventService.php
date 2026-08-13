@@ -1388,7 +1388,7 @@ readonly class EventService
                 $userService->getAuthUserCrafts()->merge($craftService->getAssignableByAllCrafts())
             )
             ->setShiftTimePresets($this->shiftTimePresetService->getAll())
-            ->setShiftQualifications($shiftQualificationService->getAllOrderedByCreationDateAscending())
+            ->setShiftQualifications($shiftQualificationService->getAllOrderedByPosition())
             ->setDayServices($dayServicesService->getAll())
             ->setFirstProjectShiftTabId(
                 $projectTabService->getFirstProjectTabWithTypeIdOrFirstProjectTabId(
@@ -2019,6 +2019,12 @@ readonly class EventService
                 // keep the provided end time (or the computed one) but on the explicit end date
                 $endAt = ($event['end_time'] ?? null) ? \Carbon\Carbon::parse($event['end_time']) : $endTime;
                 $endTime = $explicitEndDay->copy()->setTimeFromTimeString($endAt->toTimeString());
+                // Die UI schickt end_day auch bei eintägigen Terminen (= Starttag) mit.
+                // Bei Über-Mitternacht-Zeiten (z.B. 22:00–00:00) läge das Ende sonst VOR
+                // dem Start — gleiche Korrektur wie in processEventTimes().
+                if ($endTime->lte($startTime)) {
+                    $endTime->addDay();
+                }
             }
         }
         /** @var Event $createdEvent */
@@ -2084,6 +2090,11 @@ readonly class EventService
             } else {
                 $endAt = ($data['end_time'] ?? null) ? \Carbon\Carbon::parse($data['end_time']) : $endTime;
                 $endTime = $explicitEndDay->copy()->setTimeFromTimeString($endAt->toTimeString());
+                // Über-Mitternacht-Guard wie in createBulkEvent: end_day == Starttag +
+                // Endzeit <= Startzeit (z.B. 22:00–00:00) → Ende auf Folgetag.
+                if ($endTime->lte($startTime)) {
+                    $endTime->addDay();
+                }
             }
         }
 

@@ -4,6 +4,8 @@ namespace Tests\Feature\Http\Controllers\Project;
 
 use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Artwork\Modules\Project\Models\Project;
+use Artwork\Modules\Project\Models\ProjectCreateSettings;
+use Artwork\Modules\Project\Models\ProjectState;
 use Artwork\Modules\User\Models\User;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\Feature\FeatureTestCase;
@@ -97,6 +99,66 @@ final class ProjectStoreTest extends FeatureTestCase
         ]);
 
         $response->assertSessionHasErrors('state');
+    }
+
+    #[Test]
+    public function store_requires_state_when_setting_enabled(): void
+    {
+        $this->actingAsAdmin();
+
+        $settings = app(ProjectCreateSettings::class);
+        $settings->state = true;
+        $settings->state_required = true;
+        $settings->save();
+
+        $response = $this->post(route('projects.store'), [
+            'name' => 'Needs State',
+            'isGroup' => false,
+        ]);
+
+        $response->assertSessionHasErrors('state');
+        $this->assertDatabaseMissing('projects', ['name' => 'Needs State']);
+    }
+
+    #[Test]
+    public function store_accepts_project_with_state_when_state_is_required(): void
+    {
+        $this->actingAsAdmin();
+
+        $settings = app(ProjectCreateSettings::class);
+        $settings->state = true;
+        $settings->state_required = true;
+        $settings->save();
+
+        $state = ProjectState::factory()->create();
+
+        $response = $this->post(route('projects.store'), [
+            'name' => 'With State',
+            'isGroup' => false,
+            'state' => $state->id,
+        ]);
+
+        $response->assertRedirect();
+        $this->assertDatabaseHas('projects', ['name' => 'With State', 'state' => $state->id]);
+    }
+
+    #[Test]
+    public function store_does_not_require_state_when_state_field_is_disabled(): void
+    {
+        $this->actingAsAdmin();
+
+        $settings = app(ProjectCreateSettings::class);
+        $settings->state = false;
+        $settings->state_required = true;
+        $settings->save();
+
+        $response = $this->post(route('projects.store'), [
+            'name' => 'Hidden State Field',
+            'isGroup' => false,
+        ]);
+
+        $response->assertRedirect();
+        $this->assertDatabaseHas('projects', ['name' => 'Hidden State Field']);
     }
 
     #[Test]

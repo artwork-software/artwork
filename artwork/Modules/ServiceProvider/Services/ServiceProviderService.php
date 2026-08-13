@@ -171,7 +171,7 @@ readonly class ServiceProviderService
             ->setEventTypes($eventTypeService->getAll())
             ->setProjects($projectService->getAll())
             ->setShifts($this->getShiftsWithEventOrderedByStartAscending($serviceProvider))
-            ->setShiftQualifications($shiftQualificationService->getAllOrderedByCreationDateAscending())
+            ->setShiftQualifications($shiftQualificationService->getAllOrderedByPosition())
             ->setFirstProjectShiftTabId(
                 $this->projectTabService->getFirstProjectTabWithTypeIdOrFirstProjectTabId(
                     ProjectTabComponentEnum::SHIFT_TAB

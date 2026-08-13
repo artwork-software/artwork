@@ -204,6 +204,53 @@ final class EventUpdateTest extends FeatureTestCase
     }
 
     #[Test]
+    public function admin_can_decline_a_confirmed_event_without_occupancy_option(): void
+    {
+        $this->actingAsAdmin();
+        $room = Room::factory()->create();
+        $event = Event::factory()->create([
+            'room_id' => $room->id,
+            'occupancy_option' => false,
+            'accepted' => true,
+        ]);
+
+        $this->put(route('events.decline', $event))->assertRedirect();
+
+        $event->refresh();
+        $this->assertNull($event->room_id);
+        $this->assertFalse($event->accepted);
+        $this->assertSame($room->id, $event->declined_room_id);
+    }
+
+    #[Test]
+    public function room_admin_can_decline_a_confirmed_event_without_occupancy_option(): void
+    {
+        $roomAdmin = User::factory()->create();
+        $room = Room::factory()->create(['everyone_can_book' => false]);
+        $room->users()->attach($roomAdmin->id, ['is_admin' => true, 'can_request' => false]);
+        $event = Event::factory()->create([
+            'room_id' => $room->id,
+            'occupancy_option' => false,
+        ]);
+        $this->actingAs($roomAdmin);
+
+        $this->put(route('events.decline', $event))->assertRedirect();
+
+        $event->refresh();
+        $this->assertNull($event->room_id);
+        $this->assertSame($room->id, $event->declined_room_id);
+    }
+
+    #[Test]
+    public function declining_an_event_without_room_returns_conflict(): void
+    {
+        $this->actingAsAdmin();
+        $event = Event::factory()->create(['room_id' => null]);
+
+        $this->put(route('events.decline', $event))->assertStatus(409);
+    }
+
+    #[Test]
     public function guest_cannot_answer_on_event(): void
     {
         $event = Event::factory()->create();

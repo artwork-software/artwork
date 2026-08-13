@@ -68,6 +68,20 @@ class ShiftQualificationController extends Controller
         );
     }
 
+    public function reorder(Request $request): RedirectResponse
+    {
+        $this->authorize('update', ShiftQualification::class);
+
+        $validated = $request->validate([
+            'ids' => ['required', 'array'],
+            'ids.*' => ['integer', 'distinct', 'exists:shift_qualifications,id'],
+        ]);
+
+        $this->shiftQualificationService->updateOrder($validated['ids']);
+
+        return $this->redirector->back();
+    }
+
     public function updateValue(Shift $shift, Request $request): void
     {
         // Unbekannte qualification_id würde sonst als FK-Verletzung mit 500 enden

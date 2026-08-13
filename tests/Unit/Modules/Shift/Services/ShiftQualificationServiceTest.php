@@ -23,7 +23,7 @@ final class ShiftQualificationServiceTest extends TestCase
     {
         ShiftQualification::factory()->count(3)->create();
 
-        $result = $this->service->getAllOrderedByCreationDateAscending();
+        $result = $this->service->getAllOrderedByPosition();
 
         $this->assertInstanceOf(Collection::class, $result);
         $this->assertGreaterThanOrEqual(3, $result->count());

@@ -7,6 +7,7 @@ use Artwork\Modules\Shift\Http\Requests\UpdateShiftQualificationRequest;
 use Artwork\Modules\Shift\Models\ShiftQualification;
 use Artwork\Modules\Shift\Repositories\ShiftQualificationRepository;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Facades\DB;
 use Throwable;
 
 readonly class ShiftQualificationService
@@ -15,9 +16,31 @@ readonly class ShiftQualificationService
     {
     }
 
-    public function getAllOrderedByCreationDateAscending(): Collection
+    public function getAllOrderedByPosition(): Collection
     {
-        return $this->shiftQualificationRepository->getAllOrderedByCreationDateAscending();
+        return $this->shiftQualificationRepository->getAllOrderedByPosition();
+    }
+
+    /**
+     * @param array<int, int> $orderedIds
+     */
+    public function updateOrder(array $orderedIds): void
+    {
+        // Auch mit veralteter Client-Liste (z.B. zwischenzeitlich angelegte
+        // Funktion) müssen alle Zeilen lückenlos und kollisionsfrei nummeriert
+        // werden: unbekannte Ids in bisheriger Reihenfolge hinten anhängen.
+        $missingIds = ShiftQualification::query()
+            ->whereNotIn('id', $orderedIds)
+            ->orderBy('position')
+            ->orderBy('id')
+            ->pluck('id')
+            ->all();
+
+        DB::transaction(function () use ($orderedIds, $missingIds): void {
+            foreach (array_merge(array_values($orderedIds), $missingIds) as $index => $id) {
+                ShiftQualification::query()->where('id', $id)->update(['position' => $index + 1]);
+            }
+        });
     }
 
     /**
@@ -27,7 +50,8 @@ readonly class ShiftQualificationService
     {
         $this->shiftQualificationRepository->saveOrFail(
             new ShiftQualification(
-                $storeShiftQualificationRequest->only(['icon', 'name', 'available'])
+                $storeShiftQualificationRequest->only(['icon', 'name', 'available']) +
+                ['position' => ((int) ShiftQualification::query()->max('position')) + 1]
             )
         );
     }

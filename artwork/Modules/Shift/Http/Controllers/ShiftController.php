@@ -108,7 +108,7 @@ class ShiftController extends Controller
                 } else {
                     $fallbackQualId = ShiftQualification::available()
                         ->workerQualification()
-                        ->orderByCreationDateAscending()
+                        ->orderedByPosition()
                         ->value('id');
 
                     if ($fallbackQualId) {

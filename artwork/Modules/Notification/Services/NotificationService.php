@@ -508,6 +508,13 @@ class NotificationService
                     );
                 }
                 break;
+            case NotificationEnum::NOTIFICATION_EXTERNAL_ISSUE_RETURN_DUE:
+                // Kommt aus einem Scheduled Command (kein Auth-User) — immer senden.
+                Notification::send(
+                    $this->getNotificationTo(),
+                    new InventoryArticleNotification($body, $this->getBroadcastMessage())
+                );
+                break;
             case NotificationEnum::NOTIFICATION_DOCUMENT_REQUEST_CREATED:
             case NotificationEnum::NOTIFICATION_DOCUMENT_REQUEST_COMPLETED:
                 if ($this->getNotificationTo()->id !== Auth::id()) {

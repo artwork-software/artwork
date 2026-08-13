@@ -21,11 +21,52 @@ class ProjectTabMaterialIssueService
                 // falls du auch Berechtigungen an den Tags brauchst:
                 'articles.tags.allowedUsers',
                 'articles.tags.allowedDepartments',
+                'articles.statusValues',
+                'articles.detailedArticleQuantities.status',
+                // Für period_usage vorladen — sonst feuert getAvailableStock
+                // zwei Overlap-Queries pro Artikel und Ausgabe (N+1).
+                'articles.internalIssues',
+                'articles.externalIssues',
                 'specialItems',
                 'files',
                 'responsibleUsers',
             ])
             ->get();
+
+        // Globale Zeitraum-Auslastung pro Artikel (alle internen + externen Ausgaben,
+        // inkl. dieser Ausgabe) für den Balken/Überbuchungs-Badge im Projekt-Tab.
+        foreach ($materials as $issue) {
+            $startDate = $issue->start_date?->toDateString();
+            $endDate = $issue->end_date?->toDateString() ?? $startDate;
+
+            foreach ($issue->articles as $article) {
+                if ($startDate === null) {
+                    $article->setAttribute('period_usage', null);
+                    continue;
+                }
+
+                // getAvailableStock nutzt geladene Relationen ungefiltert —
+                // deshalb hier auf den Zeitraum dieser Ausgabe einschränken.
+                $article->setRelation('internalIssues', $article->internalIssues->filter(
+                    fn ($otherIssue) => ($otherIssue->start_date === null
+                            || $otherIssue->start_date->toDateString() <= $endDate)
+                        && ($otherIssue->end_date === null
+                            || $otherIssue->end_date->toDateString() >= $startDate)
+                )->values());
+                $article->setRelation('externalIssues', $article->externalIssues->filter(
+                    fn ($otherIssue) => ($otherIssue->issue_date === null
+                            || $otherIssue->issue_date->toDateString() <= $endDate)
+                        && ($otherIssue->return_date === null
+                            || $otherIssue->return_date->toDateString() >= $startDate)
+                )->values());
+
+                $article->setAttribute('period_usage', $article->getAvailableStock($startDate, $endDate));
+
+                // Nicht mit ins Inertia-Payload serialisieren.
+                $article->unsetRelation('internalIssues');
+                $article->unsetRelation('externalIssues');
+            }
+        }
 
         $externalMaterials = ExternalIssue::where('project_id', $project->id)
             ->with([

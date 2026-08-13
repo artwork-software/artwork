@@ -89,8 +89,14 @@ createInertiaApp({
         event.preventDefault()
 
         const status = event.detail.response?.status
-        if (status === 401 || status === 419 || status === 409) {
+        if (status === 401 || status === 419) {
             alert('Deine Sitzung ist abgelaufen. Die Seite wird neu geladen, damit du dich wieder einloggen kannst.')
+            window.location.reload()
+        } else if (status === 409) {
+            // Echter Konflikt (z.B. Raumanfrage wurde parallel bereits beantwortet).
+            // Kein Session-Problem — Inertia-Versions-409er tragen X-Inertia-Location
+            // und werden von Inertia selbst behandelt, bevor 'invalid' feuert.
+            alert('Die Aktion konnte nicht ausgeführt werden, weil die Daten inzwischen geändert wurden. Die Seite wird neu geladen.')
             window.location.reload()
         } else if (status === 413) {
             // Server (nginx client_max_body_size / PHP post_max_size) hat den

@@ -72,6 +72,20 @@
                         <component :is="IconCirclePlus" stroke-width="1" class="size-5" />
                         {{ $t('Add Status') }}
                     </BaseUIButton>
+
+                    <div class="relative flex items-start mt-5 pt-4 border-t border-border-subtle">
+                        <div class="flex h-6 items-center">
+                            <input @change="updateCreateSettings" v-model="createSettingsForm.state_required" id="state_required" aria-describedby="state_required-description" name="state_required" type="checkbox" class="input-checklist" />
+                        </div>
+                        <div class="ml-3 text-sm leading-6">
+                            <label for="state_required" class="font-medium text-text">
+                                {{ $t('Project status as a required field') }}
+                            </label>
+                            <p id="state_required-description" class="text-text-subtle text-xs">
+                                {{ $t('If enabled, a project status must be selected when creating a project and an assigned status cannot be removed.') }}
+                            </p>
+                        </div>
+                    </div>
                 </div>
 
                 <ProjectSettingsItem
@@ -369,6 +383,7 @@ export default {
             createSettingsForm: useForm({
                 attributes: this.createSettings.attributes,
                 state: this.createSettings.state,
+                state_required: this.createSettings.state_required,
                 managers: this.createSettings.managers,
                 cost_center: this.createSettings.cost_center,
                 budget_deadline: this.createSettings.budget_deadline,

@@ -13,6 +13,7 @@ use Artwork\Modules\InternalIssue\Models\InternalIssueFile;
 use Artwork\Modules\Inventory\Models\InventoryArticle;
 use Artwork\Modules\Inventory\Services\InventoryUserFilterShareService;
 use Artwork\Modules\MaterialSet\Models\MaterialSet;
+use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Artwork\Modules\User\Models\User;
 use Barryvdh\Snappy\Facades\SnappyPdf;
 use Illuminate\Auth\AuthManager;
@@ -110,10 +111,23 @@ class ExternalIssueController extends Controller
             });
         }
 
-        $issues = $issuesQuery
+        $issuesQuery
             ->orderBy('issue_date')
-            ->orderBy('return_date')
-            ->paginate($entitiesPerPage);
+            ->orderBy('return_date');
+
+        // Deep-Link aus der Rückgabe-Erinnerung (?issue=): auf die Seite
+        // springen, auf der die Ausgabe liegt — sonst läuft der Link auf
+        // Seite 1 ins Leere. Frontend hebt die Zeile anhand des Params hervor.
+        $page = null;
+        $highlightIssueId = request()?->filled('issue') ? (int) request()->input('issue') : null;
+        if ($highlightIssueId !== null && !request()->filled('page')) {
+            $position = (clone $issuesQuery)->pluck('id')->search($highlightIssueId);
+            if ($position !== false) {
+                $page = intdiv($position, max($entitiesPerPage, 1)) + 1;
+            }
+        }
+
+        $issues = $issuesQuery->paginate($entitiesPerPage, ['*'], 'page', $page);
 
         $this->inventoryUserFilterShareService->getFilterDataForUser($this->auth->user());
 
@@ -135,7 +149,7 @@ class ExternalIssueController extends Controller
             ),
             // optional, falls du urlParameters nutzt:
             'urlParameters' => request()->only([
-                'article_ids','date_from','date_to','issued_by_id','received_by_id','project_id','overdue_only','q'
+                'article_ids','date_from','date_to','issued_by_id','received_by_id','project_id','overdue_only','q','issue'
             ]),
         ]);
     }
@@ -161,35 +175,51 @@ class ExternalIssueController extends Controller
         return redirect()->route('extern-issue-of-material.index');
     }
 
+    /**
+     * Rückgabe bestätigen — aus der Übersicht wie aus der Benachrichtigung.
+     * redirect()->back(), damit die Notification-Seite nicht verlassen wird.
+     */
     public function returnExternal(ExternalIssue $externalIssue, Request $request): \Illuminate\Http\RedirectResponse
     {
-        $updateData = [
-            'return_remarks' => $request->input('return_remarks'),
-        ];
+        $this->authorizeReturnHandling($externalIssue);
 
-        // Keep the original receiver when the action is triggered again.
-        if ($externalIssue->received_by_id === null) {
-            $updateData['received_by_id'] = $this->auth->user()->id;
-        }
-
-        // Early return frees the reserved quantity: cap the planned return
-        // date to today so availability calculations stop counting it.
-        $today = now()->startOfDay();
-        if ($externalIssue->return_date !== null && $today->lt($externalIssue->return_date)) {
-            $updateData['return_date'] = $today->toDateString();
-        }
-
-        $externalIssue->update($updateData);
-
-        $this->externalIssueService->logActivity($externalIssue, 'returned', 'External issue returned', [
-            'translation_key' => 'External issue returned',
-            'issue_type' => 'external',
-            'issue_name' => $externalIssue->name,
-            'external_name' => $externalIssue->external_name,
-            'return_remarks' => $request->input('return_remarks'),
+        $validated = $request->validate([
+            'return_remarks' => ['nullable', 'string'],
         ]);
 
-        return redirect()->route('extern-issue-of-material.index');
+        $this->externalIssueService->confirmReturn(
+            $externalIssue,
+            $validated['return_remarks'] ?? null,
+            $request->exists('return_remarks')
+        );
+
+        return redirect()->back();
+    }
+
+    public function declineReturn(ExternalIssue $externalIssue): \Illuminate\Http\RedirectResponse
+    {
+        $this->authorizeReturnHandling($externalIssue);
+
+        $this->externalIssueService->declineReturn($externalIssue);
+
+        return redirect()->back();
+    }
+
+    /**
+     * Rückmeldungen dürfen nur Disponent*innen oder die verantwortliche Person
+     * der Ausgabe geben — sonst kann jede*r Angemeldete fremde Rückgabestatus
+     * umstellen und die Benachrichtigungen anderer manipulieren.
+     */
+    protected function authorizeReturnHandling(ExternalIssue $externalIssue): void
+    {
+        $user = $this->auth->user();
+
+        abort_unless(
+            $user !== null
+            && ($user->can(PermissionEnum::INVENTORY_DISPOSITION->value)
+                || $externalIssue->issued_by_id === $user->id),
+            403
+        );
     }
 
     public function setSpecialItemsDone(ExternalIssue $externalIssue): \Illuminate\Http\RedirectResponse

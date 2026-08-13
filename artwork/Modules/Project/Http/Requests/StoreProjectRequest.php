@@ -2,6 +2,7 @@
 
 namespace Artwork\Modules\Project\Http\Requests;
 
+use Artwork\Modules\Project\Models\ProjectCreateSettings;
 use Illuminate\Foundation\Http\FormRequest;
 
 class StoreProjectRequest extends FormRequest
@@ -11,12 +12,16 @@ class StoreProjectRequest extends FormRequest
      */
     public function rules(): array
     {
+        $createSettings = app(ProjectCreateSettings::class);
+        // Pflicht nur, wenn das Statusfeld im Anlage-Dialog überhaupt sichtbar ist
+        $stateRequired = $createSettings->state && $createSettings->state_required;
+
         return [
             'name' => 'required|string|max:255',
             'assigned_users.*' => 'exists:users,id',
             'isGroup' => 'required|boolean',
             'budget_deadline' => 'nullable|date',
-            'state' => 'nullable|integer|exists:project_states,id',
+            'state' => ($stateRequired ? 'required' : 'nullable') . '|integer|exists:project_states,id',
             'cost_center' => 'nullable|string|max:255',
             'projects.*' => 'exists:projects,id',
             'color' => 'nullable|string|max:255',

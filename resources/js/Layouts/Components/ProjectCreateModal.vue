@@ -207,7 +207,7 @@
                                 <!-- Show tag when state is selected -->
                                 <div v-if="selectedState" class="w-full">
                                     <div class="text-text-subtle text-xs mb-2">
-                                        {{ t('Project status') }}
+                                        {{ t('Project status') }}{{ isStateRequired ? '*' : '' }}
                                     </div>
                                     <div class="inline-flex items-center gap-x-2 px-3 py-1.5 rounded-full border border-border bg-white">
                                         <div class="block w-3 h-3 rounded-full" :style="{'backgroundColor' : selectedState.color }"/>
@@ -225,7 +225,7 @@
                                     <ListboxButton class="menu-button-no-padding relative">
                                         <div class="truncate">
                                             <div class="top-2 left-4 absolute text-text-subtle text-xs">
-                                                {{ t('Project status') }}
+                                                {{ t('Project status') }}{{ isStateRequired ? '*' : '' }}
                                             </div>
                                             <div class="pt-6 pb-2 flex items-center gap-x-2">
                                                 <div class="truncate">
@@ -267,6 +267,9 @@
                                         </ListboxOptions>
                                     </transition>
                                 </Listbox>
+                                <div v-if="showInvalidProjectStateHelpText || createProjectForm.errors.state" class="text-danger text-xs mt-1">
+                                    {{ t('Project status is a required field.') }}
+                                </div>
                             </div>
 
                             <div class="px-11 py-6 -mx-5 bg-surface-canvas" v-if="createSettings.managers">
@@ -648,7 +651,7 @@ import BaseButton from "@/Layouts/Components/General/Buttons/BaseButton.vue";
 import IconSelector from "@/Components/Icon/IconSelector.vue";
 import ColorPickerComponent from "@/Components/Globale/ColorPickerComponent.vue";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
-import { ref, reactive, computed, defineProps, defineEmits } from 'vue';
+import { ref, reactive, computed, watch, defineProps, defineEmits } from 'vue';
 import { usePage } from '@inertiajs/vue3';
 import { usePermission } from '@/Composeables/Permission.js';
 import { useTranslation } from '@/Composeables/Translation.js';
@@ -763,6 +766,14 @@ const keyVisualForm = useForm({
 const uploadKeyVisualFeedback = ref("");
 const createProjectGroup = ref(false);
 const showInvalidProjectNameHelpText = ref(false);
+const showInvalidProjectStateHelpText = ref(false);
+// Pflicht nur bei Neuanlage: der Edit-Pfad speichert den Status nicht über dieses Modal
+const isStateRequired = computed(() => !props.project && props.createSettings?.state && props.createSettings?.state_required);
+watch(selectedState, (state) => {
+    if (state) {
+        showInvalidProjectStateHelpText.value = false;
+    }
+});
 const hasProperties = computed(() => {
     return (props.genres?.length > 0 || props.categories?.length > 0 || props.sectors?.length > 0);
 });
@@ -844,6 +855,11 @@ const addColorToProject = (color) => {
 const addProject = (bool) => {
     if (createProjectForm.name === '') {
         showInvalidProjectNameHelpText.value = true;
+        return;
+    }
+
+    if (isStateRequired.value && !selectedState.value) {
+        showInvalidProjectStateHelpText.value = true;
         return;
     }
 

@@ -19,6 +19,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property string $icon
  * @property string $name
  * @property bool $available
+ * @property int $position
  */
 class ShiftQualification extends Model
 {
@@ -27,11 +28,13 @@ class ShiftQualification extends Model
     protected $fillable = [
         'icon',
         'name',
-        'available'
+        'available',
+        'position'
     ];
 
     protected $casts = [
-        'available' => 'boolean'
+        'available' => 'boolean',
+        'position' => 'integer'
     ];
 
     public function shiftsQualifications(): HasMany
@@ -47,6 +50,11 @@ class ShiftQualification extends Model
     public function scopeOrderByCreationDateAscending(Builder $builder): Builder
     {
         return $builder->orderBy('created_at');
+    }
+
+    public function scopeOrderedByPosition(Builder $builder): Builder
+    {
+        return $builder->orderBy('position')->orderBy('id');
     }
 
     public function scopeWorkerQualification(Builder $builder): Builder

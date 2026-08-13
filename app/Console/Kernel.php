@@ -12,6 +12,7 @@ use Artwork\Core\Console\Commands\RemoveDatabaseNotificationsCommand;
 use Artwork\Core\Console\Commands\RemoveExpiredInvitationsCommand;
 use Artwork\Core\Console\Commands\RemoveTemporaryRoomsCommand;
 use Artwork\Core\Console\Commands\SendDeadlineNotificationsCommand;
+use Artwork\Core\Console\Commands\SendExternalIssueReturnDueNotificationsCommand;
 use Artwork\Core\Console\Commands\TrackShiftKpisCommand;
 use Artwork\Core\Console\Commands\MarkPayableOvertimeCommand;
 use Artwork\Modules\Crm\Console\Commands\CleanupCrmImportFilesCommand;
@@ -46,6 +47,7 @@ class Kernel extends ConsoleKernel
         ])->daily();
         $schedule->command(SendScheduledNotificationsCommand::class)->everyTenMinutes();
         $schedule->command(SendDeadlineNotificationsCommand::class)->dailyAt('09:00');
+        $schedule->command(SendExternalIssueReturnDueNotificationsCommand::class)->dailyAt('08:00')->runInBackground();
         $schedule->command(RemoveTemporaryRoomsCommand::class)->dailyAt('08:00')->runInBackground();
         $schedule->command(NotifyCraftIfShiftDeadlineReached::class)->dailyAt('07:00');
         $schedule->command(DeleteExpiredNotificationsForAllCommand::class)->everyFiveMinutes()->runInBackground();

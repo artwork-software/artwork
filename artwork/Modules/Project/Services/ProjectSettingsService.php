@@ -14,6 +14,7 @@ class ProjectSettingsService
     ): void {
         $projectCreateSettings->attributes = $request->boolean('attributes');
         $projectCreateSettings->state = $request->boolean('state');
+        $projectCreateSettings->state_required = $request->boolean('state_required');
         $projectCreateSettings->managers = $request->boolean('managers');
         $projectCreateSettings->cost_center = $request->boolean('cost_center');
         $projectCreateSettings->budget_deadline = $request->boolean('budget_deadline');

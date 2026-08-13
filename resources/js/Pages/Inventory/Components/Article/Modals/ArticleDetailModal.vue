@@ -22,7 +22,7 @@
                             <img
                                 :src="'/storage/' + slotProps.item.image"
                                 :alt="slotProps.item.alt"
-                                style="width: 100%; display: block"
+                                style="width: 100%; max-height: 75vh; object-fit: contain; display: block"
                                 @error="(e) => (e.target.src = usePage().props.big_logo)"
                             />
                         </template>

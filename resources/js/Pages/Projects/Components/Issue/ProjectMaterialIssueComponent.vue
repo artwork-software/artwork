@@ -283,10 +283,10 @@
                                 <div class="flex items-start gap-4">
                                     <!-- Article Image -->
                                     <div v-if="a?.images?.length" class="shrink-0" style="max-width: 80px">
-                                        <div class="group relative cursor-zoom-in overflow-hidden rounded-lg border border-border-subtle shadow-sm" @click="openArticleLightbox(0, a.images)">
+                                        <div class="group/zoom relative cursor-zoom-in overflow-hidden rounded-lg border border-border-subtle shadow-sm" @click="openArticleLightbox(0, a.images)">
                                             <img :src="'/storage/' + a.images[0].image" :alt="a.images[0].alt || ''" class="block h-auto w-full object-cover" @error="(e) => e.target.src = usePage().props.big_logo" />
-                                            <div class="pointer-events-none absolute inset-0 grid place-items-center bg-black/0 transition group-hover:bg-black/30">
-                                                <component :is="IconWindowMaximize" class="h-3 w-3 text-white opacity-0 transition group-hover:opacity-100" />
+                                            <div class="pointer-events-none absolute inset-0 grid place-items-center bg-black/0 transition group-hover/zoom:bg-black/30">
+                                                <component :is="IconWindowMaximize" class="h-3 w-3 text-white opacity-0 transition group-hover/zoom:opacity-100" />
                                             </div>
                                         </div>
                                     </div>
@@ -355,7 +355,7 @@
                                         <div class="text-sm font-semibold text-text">{{ a.quantity }}</div>
                                     </div>
                                     <div class="rounded-lg border border-border-subtle bg-white px-2.5 py-1 text-text-muted text-right">
-                                        {{ $t('Planned') }}
+                                        {{ $t('Used in period') }}
                                         <div class="text-sm font-semibold text-text">{{ needProgress(a) }}%</div>
                                     </div>
                                 </div>
@@ -363,13 +363,14 @@
                                 <!-- Progress -->
                                 <div class="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-border-subtle">
                                     <div
-                                        class="h-full rounded-full bg-gradient-to-r from-accent-600 to-success transition-[width]"
+                                        class="h-full rounded-full transition-[width]"
+                                        :class="cardTone(a) === 'over' ? 'bg-danger' : 'bg-gradient-to-r from-accent-600 to-success'"
                                         :style="{ width: (needProgress(a) || 0) + '%' }"
                                     />
                                 </div>
                                         <div class="mt-1 flex items-center justify-between text-[11px] text-text-subtle">
-                                            <span>{{ $t('Planned')}}</span>
-                                            <span>{{ a.pivot?.quantity || 0 }} / {{ a.quantity }}</span>
+                                            <span>{{ $t('Used in period')}}</span>
+                                            <span>{{ usedInPeriod(a) }} / {{ totalInPeriod(a) }}</span>
                                         </div>
                                     </div>
                                 </div>
@@ -550,7 +551,7 @@
         :showThumbnails="true"
     >
         <template #item="slotProps">
-            <img :src="'/storage/' + slotProps.item.image" :alt="slotProps.item.alt || ''" style="width: 60%; display: block" @error="(e) => e.target.src = usePage().props.big_logo" />
+            <img :src="'/storage/' + slotProps.item.image" :alt="slotProps.item.alt || ''" style="width: 100%; max-height: 75vh; object-fit: contain; display: block" @error="(e) => e.target.src = usePage().props.big_logo" />
         </template>
         <template #thumbnail="slotProps">
             <img :src="'/storage/' + slotProps.item.image" :alt="slotProps.item.alt || ''" class="w-20 max-w-20" style="display: block" @error="(e) => e.target.src = usePage().props.big_logo" />
@@ -612,12 +613,15 @@ type Room = { id:number; name:string }
 type Tag = { id:number; name:string; color?:string | null }
 
 type ArticlePivot = { quantity:number } & Record<string, unknown>
+type PeriodUsage = { available:number; total:number; reserved:number }
 type Article = {
     id:number; name:string; description?:string|null; quantity:number;
     room?:Room|null; manufacturer?:Manufacturer|null; pivot?:ArticlePivot|null;
     images?: { image: string; alt?: string }[] | null;
     // 🔹 Tags an Artikeln
     tags?: Tag[] | null;
+    // 🔹 globale Auslastung im Zeitraum der Ausgabe (alle internen + externen Ausgaben)
+    period_usage?: PeriodUsage | null;
 }
 type SpecialItem = { id:number; name:string; quantity:number; description?:string|null }
 type InternalIssue = {
@@ -809,10 +813,18 @@ function diffDays(issue:InternalIssue):number{
     const ms = Math.max(0, end.getTime() - start.getTime())
     return Math.max(1, Math.round(ms / (1000*60*60*24)))
 }
+/** Global im Zeitraum der Ausgabe genutzte Menge (inkl. dieser Ausgabe); Fallback: eigener Bedarf */
+function usedInPeriod(a:Article):number{
+    return Math.max(0, a.period_usage?.reserved ?? a.pivot?.quantity ?? 0)
+}
+/** Einsatzbereite Gesamtmenge im Zeitraum; Fallback: Bestand am Artikel */
+function totalInPeriod(a:Article):number{
+    return Math.max(0, a.period_usage?.total ?? a.quantity ?? 0)
+}
 function needProgress(a:Article):number{
-    const need = Math.max(0, a.pivot?.quantity ?? 0)
-    const stock = Math.max(1, a.quantity || 1)
-    return Math.min(100, Math.round((need/stock)*100))
+    const used = usedInPeriod(a)
+    const total = Math.max(1, totalInPeriod(a) || 1)
+    return Math.min(100, Math.round((used/total)*100))
 }
 function toLocal(dt:string){ return dt }
 
@@ -899,15 +911,8 @@ function totalNeed(issue: { articles?: { pivot?: { quantity?: number|null } | nu
 function totalStock(issue: { articles?: { quantity?: number|null }[] | null }) {
     return (issue.articles ?? []).reduce((sum, a) => sum + (a?.quantity ?? 0), 0)
 }
-function getNeed(a: { pivot?: { quantity?: number|null } | null }) {
-    return Math.max(0, a?.pivot?.quantity ?? 0)
-}
-function getStock(a: { quantity?: number|null }) {
-    return Math.max(0, a?.quantity ?? 0)
-}
 function cardTone(a: any): 'ok' | 'warn' | 'over' {
-    const need = getNeed(a), stock = getStock(a)
-    if (need > stock) return 'over'
+    if (usedInPeriod(a) > totalInPeriod(a)) return 'over'
     if ((needProgress(a) || 0) >= 80) return 'warn'
     return 'ok'
 }

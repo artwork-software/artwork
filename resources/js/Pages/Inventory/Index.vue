@@ -146,7 +146,7 @@
                                             </div>
                                         </div>
                                     </div>
-                                    <InventorySingleArticleInGrid :item="item" :hide-image="hideArticleImages" />
+                                    <InventorySingleArticleInGrid :item="item" :hide-image="hideArticleImages" :active-status="activeStatus" />
                                 </div>
                             </div>
                         </div>
@@ -186,6 +186,7 @@
                                             <col v-if="!hideArticleImages" class="w-20" />
                                             <col class="w-64" />
                                             <col class="w-28" />
+                                            <col v-if="activeStatus" class="w-28" />
                                             <col v-for="property in category.unionProperties" :key="property.id" class="w-44" />
                                             <col class="w-24" />
                                         </colgroup>
@@ -200,6 +201,13 @@
                                                 </th>
                                                 <th scope="col" class="sticky top-0 z-30 bg-surface-sunken px-4 py-3.5 text-left text-sm font-semibold text-text" :class="hideArticleImages ? 'left-[256px]' : 'left-[336px]'">
                                                     {{ $t('Quantity') }}
+                                                </th>
+                                                <!-- Statusmenge des aktiven Status-Schnellfilters, direkt neben der Gesamtmenge (sticky wie diese) -->
+                                                <th v-if="activeStatus" scope="col" class="sticky top-0 z-30 bg-surface-sunken px-4 py-3.5 text-left text-sm font-semibold text-text" :class="hideArticleImages ? 'left-[368px]' : 'left-[448px]'">
+                                                    <span class="flex items-center gap-x-1.5 max-w-full">
+                                                        <span class="inline-block size-2.5 rounded-full border shrink-0" :style="activeStatusDotStyle"></span>
+                                                        <span class="truncate" :title="activeStatus.name">{{ activeStatus.name }}</span>
+                                                    </span>
                                                 </th>
                                                 <!-- Union of all properties across this category's subcategories (pinned top only) -->
                                                 <th scope="col" class="sticky top-0 z-20 bg-surface-sunken px-4 py-3.5 text-left text-sm font-semibold text-text truncate"
@@ -218,7 +226,7 @@
                                             <template v-for="subcategory in category.subcategories" :key="subcategory.id">
                                                 <!-- Subcategory group row (spans the full width of the shared table) -->
                                                 <tr class="bg-surface-sunken/80">
-                                                    <td :colspan="category.unionProperties.length + (hideArticleImages ? 3 : 4)" class="p-0">
+                                                    <td :colspan="category.unionProperties.length + (hideArticleImages ? 3 : 4) + (activeStatus ? 1 : 0)" class="p-0">
                                                         <div class="sticky left-0 w-fit px-4 py-2 border-l-4 border-accent-600 flex items-center gap-x-2">
                                                             <h3 class="text-sm font-semibold text-text">{{ subcategory.name }}</h3>
                                                             <span class="inline-flex items-center rounded-full bg-border-subtle px-2 py-0.5 text-xs font-medium text-text-muted">
@@ -228,14 +236,18 @@
                                                     </td>
                                                 </tr>
                                                 <!-- Article rows share the category-wide column layout -->
-                                                <tr v-for="item in subcategory.articles" :key="item?.id" class="divide-x divide-border-subtle relative bg-white hover:bg-surface-sunken">
+                                                <!-- Im Warenkorb-Modus ist die ganze Zeile klickbar und fügt den Artikel hinzu (wie die Karten-Overlays im Raster) -->
+                                                <tr v-for="item in subcategory.articles" :key="item?.id"
+                                                    class="divide-x divide-border-subtle relative bg-white"
+                                                    :class="enableAddArticleToBasket ? 'cursor-pointer hover:bg-accent-50' : 'hover:bg-surface-sunken'"
+                                                    @click="enableAddArticleToBasket && addArticleToBasket(item.id)">
                                                     <InventorySingleArticleInTable
                                                         :item="item"
                                                         :column-properties="category.unionProperties"
                                                         :enable-add-article-to-basket="enableAddArticleToBasket"
                                                         :find-basket-for-article="findBasketForArticle"
                                                         :hide-image="hideArticleImages"
-                                                        @add-to-basket="addArticleToBasket"
+                                                        :active-status="activeStatus"
                                                     />
                                                 </tr>
                                             </template>
@@ -350,8 +362,10 @@ import ProductBasketModal from "@/Pages/Inventory/ProductBasket/Components/Produ
 import StatusOverview from "@/Pages/Inventory/Components/StatusOverview.vue";
 import IssueOfMaterialModal from "@/Pages/IssueOfMaterial/IssueOfMaterialModal.vue";
 import {useTranslation} from "@/Composeables/Translation.js";
+import {useInventoryPropertyDisplay} from "@/Composeables/InventoryPropertyDisplay.js";
 
 const $t = useTranslation()
+const { getArticlePropertyDefinitions } = useInventoryPropertyDisplay()
 const { hasAdminRole } = usePermission(usePage().props)
 
 const props = defineProps({
@@ -475,6 +489,25 @@ const showAddEditArticleModal = ref(false);
 const showDisplaySettingsModal = ref(false);
 
 const { resetAllFilters } = useInventoryFilters()
+
+// Aktiver Status-Schnellfilter inkl. Name/Farbe (aus countsByStatus) — steuert
+// die zusätzliche Statusmengen-Spalte (Liste) bzw. -Zeile (Raster).
+const activeStatus = computed(() => {
+    if (!props.activeStatusId) {
+        return null
+    }
+    const row = props.countsByStatus?.[props.activeStatusId] ?? props.countsByStatus?.[String(props.activeStatusId)]
+    return {
+        id: props.activeStatusId,
+        name: row?.name ?? $t('Status'),
+        color: row?.color ?? null,
+    }
+})
+
+const activeStatusDotStyle = computed(() => {
+    const base = activeStatus.value?.color || '#6B7280'
+    return { backgroundColor: base + '55', borderColor: base }
+})
 
 /**
  * Suche (+ optionaler Eigenschafts-Scope) in der Funktionsleiste.
@@ -628,17 +661,34 @@ const groupedArticles = computed(() => {
         }
 
         if (!grouped[categoryId].subcategories[subCategoryId]) {
-            // Load properties directly from subcategory or category definition
-            const definedProperties = article.sub_category?.properties || article.category?.properties || []
+            // Columns come from the category AND subcategory definitions — a
+            // subcategory extends its category's properties, it does not replace
+            // them. Only properties flagged "Show in article overview"
+            // (show_in_list) become columns, mirroring the grid view.
+            const definedProperties = [
+                ...(article.category?.properties ?? []),
+                ...(article.sub_category?.properties ?? []),
+            ].filter((property) => property.show_in_list)
+            const byId = new Map(definedProperties.map((property) => [property.id, property]))
             grouped[categoryId].subcategories[subCategoryId] = {
                 id: subCategoryId,
                 name: subCategoryName,
                 articles: [],
-                properties: [...definedProperties]
+                properties: [...byId.values()]
             }
         }
 
-        grouped[categoryId].subcategories[subCategoryId].articles.push(article)
+        const subcategoryGroup = grouped[categoryId].subcategories[subCategoryId]
+
+        // Also add overview-flagged properties the article carries itself (like the
+        // grid view does), so values without a category assignment still get a column.
+        for (const property of getArticlePropertyDefinitions(article)) {
+            if (property.show_in_list && !subcategoryGroup.properties.some((p) => p.id === property.id)) {
+                subcategoryGroup.properties.push(property)
+            }
+        }
+
+        subcategoryGroup.articles.push(article)
     })
 
     // Build one shared, ordered column set (union) per category so that identical

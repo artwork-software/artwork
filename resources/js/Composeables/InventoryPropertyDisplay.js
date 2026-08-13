@@ -159,11 +159,9 @@ export function useInventoryPropertyDisplay() {
         return buildUniform(property, article, articleProperty.pivot?.value ?? null)
     }
 
-    // Returns the list of property rows to render for an article's tile / list,
-    // filtered to those flagged `show_in_list` and ordered by the property order.
-    const getDisplayProperties = (article) => {
-        let definitions
-
+    // Raw property definitions an article carries itself — for detailed-quantity
+    // articles the union across all sub-items, otherwise the article's own list.
+    const getArticlePropertyDefinitions = (article) => {
         const detailedSubs = detailedQuantities(article)
         if (article?.is_detailed_quantity && Array.isArray(detailedSubs)) {
             const byId = new Map()
@@ -174,12 +172,15 @@ export function useInventoryPropertyDisplay() {
                     }
                 }
             }
-            definitions = [...byId.values()]
-        } else {
-            definitions = article?.properties || []
+            return [...byId.values()]
         }
+        return article?.properties || []
+    }
 
-        return definitions
+    // Returns the list of property rows to render for an article's tile / list,
+    // filtered to those flagged `show_in_list` and ordered by the property order.
+    const getDisplayProperties = (article) => {
+        return getArticlePropertyDefinitions(article)
             .filter((property) => property.show_in_list)
             .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
             .map((property) => ({
@@ -189,5 +190,5 @@ export function useInventoryPropertyDisplay() {
             }))
     }
 
-    return { getPropertyDisplay, getDisplayProperties, fileName }
+    return { getPropertyDisplay, getDisplayProperties, getArticlePropertyDefinitions, fileName }
 }

@@ -18,7 +18,7 @@
             <img
                 :src="'/storage/' + slotProps.item.image"
                 :alt="slotProps.item.alt"
-                style="width: 100%; display: block"
+                style="width: 100%; max-height: 75vh; object-fit: contain; display: block"
                 @error="(e) => (e.target.src = usePage().props.big_logo)"
             />
         </template>
@@ -33,16 +33,6 @@
         </template>
     </Galleria>
 
-    <td v-if="enableAddArticleToBasket" class="absolute inset-0 bg-text-subtle/30 opacity-0 hover:opacity-100 duration-200 cursor-pointer z-10 pointer-events-none hover:pointer-events-auto">
-        <div class="flex items-center justify-center h-full w-full">
-            <div class="relative pointer-events-auto">
-                <span class="absolute -top-2 -right-2 size-5 rounded-full bg-accent-50 ring-2 ring-white text-accent-600 text-xs flex items-center justify-center">
-                    {{ findBasketForArticle(item.id) ? findBasketForArticle(item.id).quantity : 0 }}
-                </span>
-                <BaseUIButton :label="$t('Add to Basket')" use-translation icon="IconBasketPlus" @click="$emit('add-to-basket', item.id)" />
-            </div>
-        </div>
-    </td>
     <td v-if="!hideImage" class="sticky left-0 z-10 bg-inherit p-3 text-sm font-medium whitespace-nowrap text-text first-letter:capitalize">
         <div class="flex justify-center">
             <img
@@ -60,12 +50,24 @@
         <div class="flex items-center">
             <span class="truncate">{{ item?.name }}</span>
             <IconIdBadge v-if="item?.is_detailed_quantity" class="size-4 text-text-subtle font-semibold ml-2 shrink-0" />
+            <span
+                v-if="enableAddArticleToBasket"
+                class="ml-2 inline-flex items-center gap-1 rounded-full bg-accent-50 px-2 py-0.5 text-xs font-medium text-accent-600 shrink-0"
+                :title="$t('Add to Basket')"
+            >
+                <IconBasket class="size-3.5" />
+                {{ findBasketForArticle(item.id)?.quantity ?? 0 }}
+            </span>
         </div>
         <div v-if="item?.inventory_number" class="text-xs font-mono font-normal text-text-subtle">
             {{ (usePage().props.inventoryNumberPrefix || '') + item.inventory_number }}
         </div>
     </td>
     <td class="sticky z-10 bg-inherit p-3 text-sm whitespace-nowrap" :class="[hideImage ? 'left-[256px]' : 'left-[336px]', item.quantity === 0 ? 'text-danger' : 'text-accent-600']">{{ formatQuantity(item?.quantity) }}</td>
+    <!-- Statusmenge des aktiven Status-Schnellfilters — sticky direkt neben der Gesamtmenge -->
+    <td v-if="activeStatus" class="sticky z-10 bg-inherit p-3 text-sm whitespace-nowrap tabular-nums font-semibold text-text-subtle" :class="hideImage ? 'left-[368px]' : 'left-[448px]'">
+        {{ formatStatusQuantity(activeStatusQuantity) }}
+    </td>
     <td class="p-3 text-sm whitespace-nowrap font-semibold truncate"
         :class="[ isNumericProperty(property) ? 'text-right tabular-nums' : '',
             isEmptyProperty(property) ? 'text-text-subtle font-normal' : 'text-text-subtle'
@@ -74,6 +76,7 @@
         <template v-if="cellDisplays[property.id].type === 'file'">
             <a v-if="cellDisplays[property.id].file"
                :href="route('inventory-management.articles.property-file.download', { path: cellDisplays[property.id].file.path })"
+               @click.stop
                class="text-accent-600 hover:text-accent-700 underline cursor-pointer">
                 {{ cellDisplays[property.id].file.name }}
             </a>
@@ -90,7 +93,7 @@
     </td>
     <td class="py-3 pr-3 pl-3 text-sm whitespace-nowrap text-text-subtle font-semibold sm:pr-0">
         <div class="flex items-center gap-x-4">
-            <button type="button" class="text-accent-600 hover:text-accent-700" @click="showArticleDetail = true">
+            <button type="button" class="text-accent-600 hover:text-accent-700" @click="openArticleDetail">
                 <component :is="IconEye" class="h-5 w-5" aria-hidden="true" />
             </button>
         </div>
@@ -112,9 +115,9 @@ import {computed, defineAsyncComponent, ref} from "vue";
 import {usePage} from "@inertiajs/vue3";
 import {useTranslation} from "@/Composeables/Translation.js";
 import {useInventoryPropertyDisplay} from "@/Composeables/InventoryPropertyDisplay.js";
+import {formatStatusQuantity, getArticleStatusQuantity} from "@/Pages/Inventory/Composables/useInventoryStatusQuantity.js";
 import PropertyDiffTooltip from "@/Pages/Inventory/Components/PropertyDiffTooltip.vue";
-import {IconEye, IconIdBadge, IconPhoto} from "@tabler/icons-vue";
-import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
+import {IconBasket, IconEye, IconIdBadge, IconPhoto} from "@tabler/icons-vue";
 import Galleria from 'primevue/galleria';
 const $t = useTranslation()
 const {getPropertyDisplay} = useInventoryPropertyDisplay()
@@ -142,10 +145,15 @@ const props = defineProps({
         type: Boolean,
         required: false,
         default: false
+    },
+    activeStatus: {
+        type: Object,
+        required: false,
+        default: null
     }
 })
 
-const emit = defineEmits(['add-to-basket'])
+const activeStatusQuantity = computed(() => getArticleStatusQuantity(props.item, props.activeStatus?.id))
 
 const showEditArticleModal = ref(false);
 const showArticleDetail = ref(false);
@@ -170,12 +178,24 @@ const responsiveOptions = ref([
 ]);
 
 const imageClick = (index) => {
+    // Im Warenkorb-Modus fügt der Zeilenklick den Artikel hinzu — keine Galerie öffnen.
+    if (props.enableAddArticleToBasket) {
+        return;
+    }
     // Don't open gallery if article has no images (showing default image)
     if (!hasImage.value) {
         return;
     }
     activeIndex.value = index;
     displayCustom.value = true;
+};
+
+const openArticleDetail = () => {
+    // Im Warenkorb-Modus fügt der Zeilenklick den Artikel hinzu — kein Detail-Modal öffnen.
+    if (props.enableAddArticleToBasket) {
+        return;
+    }
+    showArticleDetail.value = true;
 };
 
 const onMaskClick = (e) => {

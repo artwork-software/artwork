@@ -55,32 +55,22 @@
                     </div>
                 </div>
 
-                <div v-for="property in displayProperties" :key="property.id">
-                    <div class="flex items-center justify-between py-2 font-lexend">
-                        <div>
-                            {{ property.name }}
-                        </div>
-                        <div>
-                            <template v-if="property.type === 'file'">
-                                <a v-if="property.file"
-                                   :href="route('inventory-management.articles.property-file.download', { path: property.file.path })"
-                                   class="text-accent-600 hover:text-accent-700 underline cursor-pointer">
-                                    {{ property.file.name }}
-                                </a>
-                                <span v-else>-</span>
-                            </template>
-                            <PropertyDiffTooltip
-                                v-else-if="property.varied"
-                                :values="property.distinctValues"
-                                :heading="$t('Values')"
-                                class="text-text-subtle"
-                            >
-                                {{ property.text }}
-                            </PropertyDiffTooltip>
-                            <template v-else>{{ property.empty ? '-' : property.text }}</template>
-                        </div>
+                <!-- Statusmenge des aktiven Status-Schnellfilters, direkt unter der Gesamtmenge -->
+                <div v-if="activeStatus" class="flex items-center justify-between gap-x-2 py-2 font-bold font-lexend">
+                    <div class="flex items-center gap-x-1.5 text-text-subtle min-w-0">
+                        <span class="inline-block size-2.5 rounded-full border shrink-0" :style="activeStatusDotStyle"></span>
+                        <span class="truncate" :title="activeStatus.name">{{ activeStatus.name }}</span>
+                    </div>
+                    <div class="text-text tabular-nums shrink-0">
+                        {{ formatStatusQuantity(activeStatusQuantity) }}
                     </div>
                 </div>
+
+                <InventoryPropertyRow
+                    v-for="property in displayProperties"
+                    :key="property.id"
+                    :property="property"
+                />
             </div>
         </div>
     </div>
@@ -104,7 +94,8 @@ import { Link, usePage } from '@inertiajs/vue3'
 import { computed, defineAsyncComponent, ref } from 'vue'
 import { useTranslation } from '@/Composeables/Translation.js'
 import { useInventoryPropertyDisplay } from '@/Composeables/InventoryPropertyDisplay.js'
-import PropertyDiffTooltip from '@/Pages/Inventory/Components/PropertyDiffTooltip.vue'
+import { formatStatusQuantity, getArticleStatusQuantity } from '@/Pages/Inventory/Composables/useInventoryStatusQuantity.js'
+import InventoryPropertyRow from '@/Pages/Inventory/GridComponents/InventoryPropertyRow.vue'
 import { IconIdBadge, IconPhoto } from '@tabler/icons-vue'
 
 const $t = useTranslation()
@@ -120,6 +111,18 @@ const props = defineProps({
         required: false,
         default: false,
     },
+    activeStatus: {
+        type: Object,
+        required: false,
+        default: null,
+    },
+})
+
+const activeStatusQuantity = computed(() => getArticleStatusQuantity(props.item, props.activeStatus?.id))
+
+const activeStatusDotStyle = computed(() => {
+    const base = props.activeStatus?.color || '#6B7280'
+    return { backgroundColor: base + '55', borderColor: base }
 })
 
 const displayProperties = computed(() => getDisplayProperties(props.item))

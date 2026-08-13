@@ -33,10 +33,10 @@
 
         <div class="px-5 pb-5 pt-2">
             <div v-if="internOrExternal" class="flex flex-col gap-y-4">
-                <ExternMaterialIssueModal :load-article-form-basket="true" :extern-material-issue="externMaterialIssue" :planning-date="planningDate" :project="isInProjectComponent ? project : null" :first-event="firstEvent" :last-event="lastEvent" @close="$emit('close')" @saved="handleSaved" />
+                <ExternMaterialIssueModal :load-article-form-basket="loadArticleFormBasket && !checkIfEditMode" :extern-material-issue="externMaterialIssue" :planning-date="planningDate" :project="isInProjectComponent ? project : null" :first-event="firstEvent" :last-event="lastEvent" @close="$emit('close')" @saved="handleSaved" />
             </div>
             <div v-else>
-                <CreateInternMaterialIssueModul :load-article-form-basket="true" :project="project" :issue-of-material="issueOfMaterial" :is-in-project-component="isInProjectComponent" :first-event="firstEvent" :last-event="lastEvent" :planning-date="planningDate" :project-tab-id="projectTabId" @close="$emit('close')" @saved="handleSaved" />
+                <CreateInternMaterialIssueModul :load-article-form-basket="loadArticleFormBasket && !checkIfEditMode" :project="project" :issue-of-material="issueOfMaterial" :is-in-project-component="isInProjectComponent" :first-event="firstEvent" :last-event="lastEvent" :planning-date="planningDate" :project-tab-id="projectTabId" @close="$emit('close')" @saved="handleSaved" />
             </div>
         </div>
 

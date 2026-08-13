@@ -87,12 +87,6 @@
                 >
                   <div class="py-1">
                     <button
-                      @click="showToken(token)"
-                      class="w-full text-left block px-4 py-2 text-sm text-text-muted hover:bg-surface-sunken"
-                    >
-                      {{ $t('Show') }}
-                    </button>
-                    <button
                       @click="showLogs(token)"
                       class="w-full text-left block px-4 py-2 text-sm text-text-muted hover:bg-surface-sunken"
                     >
@@ -176,32 +170,30 @@
     </BaseModal>
 
     <BaseModal
-      v-if="selectedToken"
-      @closed="selectedToken = null"
+      v-if="newlyCreatedToken"
+      @closed="newlyCreatedToken = null"
       modalSize="sm:max-w-lg"
     >
       <div>
         <h3 class="text-lg leading-6 font-medium text-text mb-4">
-          {{ $t('API Key Details') }}
+          {{ $t('Your new API key') }}
         </h3>
-        <div>
-          <div v-if="selectedToken.token" class="mt-1 flex items-center bg-surface-sunken p-3 rounded border border-border-subtle">
-            <code class="text-xs break-all mr-2 flex-grow">{{ selectedToken.token }}</code>
-            <button
-              @click="copyToken(selectedToken.token)"
-              class="p-1 text-text-muted hover:bg-border-subtle rounded"
-            >
-              <IconClipboardCopy class="h-5 w-5" />
-            </button>
-          </div>
-          <p v-else class="text-sm text-text-subtle mt-2">
-            {{ $t('Can not show token') }}
-          </p>
+        <p class="text-sm text-text-muted mb-3">
+          {{ $t('Copy this key now. It is not stored and cannot be shown again — if you lose it, revoke the key and create a new one.') }}
+        </p>
+        <div class="mt-1 flex items-center bg-surface-sunken p-3 rounded border border-border-subtle">
+          <code class="text-xs break-all mr-2 flex-grow">{{ newlyCreatedToken }}</code>
+          <button
+            @click="copyToken(newlyCreatedToken)"
+            class="p-1 text-text-muted hover:bg-border-subtle rounded"
+          >
+            <IconClipboardCopy class="h-5 w-5" />
+          </button>
         </div>
 
         <div class="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse">
           <button
-            @click="selectedToken = null"
+            @click="newlyCreatedToken = null"
             type="button"
             class="mt-3 w-full inline-flex justify-center rounded-md border border-border shadow-sm px-4 py-2 bg-white text-base font-medium text-text-muted hover:bg-surface-sunken focus:ring-2 focus:ring-offset-2 focus:ring-accent-600 sm:mt-0 sm:w-auto sm:text-sm"
           >
@@ -354,7 +346,7 @@ export default defineComponent({
       showCreateModal: false,
       tokenToDelete: null,
       activeDropdown: null,
-      selectedToken: null,
+      newlyCreatedToken: null,
       showLogModal: false,
       currentLogToken: null,
       logs: {
@@ -390,6 +382,8 @@ export default defineComponent({
         onSuccess: () => {
           this.showCreateModal = false
           this.form.reset()
+          // Einzige Gelegenheit, den Klartext zu lesen — er wird serverseitig nicht gespeichert.
+          this.newlyCreatedToken = this.$page.props.flash.plainTextToken ?? null
         }
       })
     },
@@ -426,26 +420,6 @@ export default defineComponent({
     closeDropdownOnClickOutside(event) {
       if (this.activeDropdown !== null && !event.target.closest('.relative')) {
         this.activeDropdown = null;
-      }
-    },
-    showToken(token) {
-      this.activeDropdown = null;
-
-      if (token.access_token) {
-        this.selectedToken = {
-          ...token,
-          token: token.access_token
-        };
-      } else if (this.$page.props.flash.plainTextToken && token.id === this.tokens[0]?.id) {
-        this.selectedToken = {
-          ...token,
-          token: this.$page.props.flash.plainTextToken
-        };
-      } else {
-        this.selectedToken = {
-          ...token,
-          token: null
-        };
       }
     },
     isExpired(token) {

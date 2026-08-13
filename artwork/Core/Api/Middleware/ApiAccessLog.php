@@ -2,37 +2,70 @@
 
 namespace Artwork\Core\Api\Middleware;
 
-use Artwork\Core\Api\Models\ApiAccessToken;
 use Artwork\Core\Api\Models\ApiLog;
+use Closure;
 use Illuminate\Http\Request;
-use Illuminate\Support\Str;
+use Laravel\Passport\AccessToken;
+use Symfony\Component\HttpFoundation\Response;
+use Throwable;
 
+/**
+ * Protokolliert Zugriffe auf die Maschinen-API.
+ *
+ * Protokolliert wird nach der Verarbeitung, damit Statuscode und Dauer mitgeschrieben werden können.
+ * Erfasst werden ausschließlich Requests mit Bearer-Token — Session-Requests der Oberfläche laufen
+ * durch dieselbe Middleware-Gruppe, gehören aber nicht in dieses Log.
+ *
+ * Fehlgeschlagene Authentifizierungen werden bewusst mitgeschrieben (ohne Token-Bezug), weil genau
+ * die für die Fehlersuche und zum Erkennen von Missbrauch gebraucht werden.
+ */
 class ApiAccessLog
 {
-    public function handle(Request $request, \Closure $next)
+    public function handle(Request $request, Closure $next): mixed
     {
-        $apiKey = Str::after($request->header('authorization', ''), "Bearer ");
+        $startedAt = microtime(true);
 
-        if (!$apiKey) {
-            return $next($request);
+        $response = $next($request);
+
+        if ($this->hasBearerToken($request)) {
+            $this->writeLog($request, $response, $startedAt);
         }
 
-        $apiAccessToken = ApiAccessToken::where('access_token', $apiKey)->first();
+        return $response;
+    }
 
-        if (!$apiAccessToken) {
-            return $next($request);
+    private function hasBearerToken(Request $request): bool
+    {
+        return $request->bearerToken() !== null;
+    }
+
+    private function writeLog(Request $request, Response $response, float $startedAt): void
+    {
+        try {
+            ApiLog::create([
+                'passport_token_id' => $this->resolveTokenId($request),
+                // Bewusst ohne Query-String: Das Log soll keine Nutzdaten aufnehmen.
+                'url' => $request->url(),
+                'method' => $request->method(),
+                'ip' => $request->ip() ?? '',
+                'user_agent' => $request->userAgent() ?? '',
+                'response_status' => $response->getStatusCode(),
+                'duration_ms' => (int) round((microtime(true) - $startedAt) * 1000),
+            ]);
+        } catch (Throwable $throwable) {
+            // Ein fehlschlagendes Protokoll darf die API-Antwort nicht verhindern.
+            report($throwable);
         }
+    }
 
-        $apiLog = new ApiLog();
-        $apiLog->token_id = $apiAccessToken->id;
-        $apiLog->ip = $request->ip();
-        $apiLog->method = $request->method();
-        $apiLog->url = $request->url();
-        $apiLog->api_key = $apiKey;
-        $apiLog->user_agent = $request->userAgent();
-        $apiLog->payload = $request->getContent();
-        $apiLog->save();
+    /**
+     * Die Token-Identität stammt aus dem Auth-Guard. Bei Cookie-Authentifizierung liefert Passport
+     * einen TransientToken ohne Token-ID, bei fehlgeschlagener Authentifizierung gibt es gar keinen.
+     */
+    private function resolveTokenId(Request $request): ?string
+    {
+        $token = $request->user()?->token();
 
-        return $next($request);
+        return $token instanceof AccessToken ? $token->oauth_access_token_id : null;
     }
 }

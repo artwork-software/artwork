@@ -42,7 +42,10 @@ class Kernel extends ConsoleKernel
         $schedule->command('model:prune')->daily();
         // Explicit prune for Prunable models outside app/Models (auto-discovery only scans app/Models).
         $schedule->command('model:prune', [
-            '--model' => [\Artwork\Modules\Budget\Models\SageBookingLog::class],
+            '--model' => [
+                \Artwork\Modules\Budget\Models\SageBookingLog::class,
+                \Artwork\Core\Api\Models\ApiLog::class,
+            ],
         ])->daily();
         $schedule->command(SendScheduledNotificationsCommand::class)->everyTenMinutes();
         $schedule->command(SendDeadlineNotificationsCommand::class)->dailyAt('09:00');

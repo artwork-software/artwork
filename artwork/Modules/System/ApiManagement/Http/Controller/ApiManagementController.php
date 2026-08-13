@@ -3,82 +3,52 @@
 namespace Artwork\Modules\System\ApiManagement\Http\Controller;
 
 use App\Http\Controllers\Controller;
-use Artwork\Core\Api\Models\ApiAccessToken;
 use Artwork\Modules\System\ApiManagement\Http\Requests\StoreTokenRequest;
 use Illuminate\Http\RedirectResponse;
-use Inertia\Inertia;
-use Inertia\Response;
-use Laravel\Passport\PersonalAccessTokenResult;
 use Laravel\Passport\Token;
-use Laravel\Passport\TokenRepository;
-use Laravel\Passport\PersonalAccessTokenFactory;
 
+/**
+ * Verwaltung der Maschinen-Tokens (Tooleinstellungen → Schnittstellen).
+ *
+ * Die Übersicht liegt in ToolSettingsInterfacesController::index(); hier wohnen nur die
+ * schreibenden Operationen.
+ */
 class ApiManagementController extends Controller
 {
-    public function __construct(
-        private readonly TokenRepository $tokenRepository,
-        private readonly PersonalAccessTokenFactory $tokenFactory
-    ) {}
-
-    public function index(): Response
-    {
-        $this->authorize('view', Token::class);
-
-        $tokens = Token::with('user', 'apiAccessToken')
-            ->where('revoked', false)
-            ->orderBy('created_at', 'desc')
-            ->get()
-            ->map(function (Token $token): array {
-                return [
-                    'id' => $token->id,
-                    'name' => $token->name,
-                    'created_at' => $token->created_at,
-                    'expires_at' => $token->expires_at,
-                    'last_used_at' => $token->last_used_at,
-                    'access_token' => $token->apiAccessToken?->access_token ?? null,
-                ];
-            });
-
-        return Inertia::render('Artwork/Settings/ArtworkApiSettings', [
-            'tokens' => $tokens
-        ]);
-    }
-
     public function store(StoreTokenRequest $request): RedirectResponse
     {
         $this->authorize('create', Token::class);
-        $tokenResult = $this->tokenFactory->make(
-            $request->user()->getKey(),
-            $request->input('name'),
-            []
+
+        // createToken() stammt aus Passports HasApiTokens und reicht den User-Provider korrekt an die
+        // PersonalAccessTokenFactory durch. Der frühere Direktaufruf der Factory ließ den in Passport 13
+        // hinzugekommenen vierten Parameter aus und warf deshalb bei jedem Versuch einen ArgumentCountError.
+        $result = $request->user()->createToken(
+            $request->string('name')->toString(),
+            $request->validated('scopes', [])
         );
 
         if ($expiresAt = $request->input('expires_at')) {
-            $tokenResult->token->expires_at = $expiresAt;
-            $tokenResult->token->save();
+            $result->token?->forceFill(['expires_at' => $expiresAt])->save();
         }
 
-        $apiAccessToken = new ApiAccessToken([
-            'passport_token_id' => $tokenResult->token->id,
-            'access_token' => $tokenResult->accessToken,
-        ]);
-        $apiAccessToken->save();
-
+        // Einziger Moment, in dem der Klartext-Token existiert. Er wird bewusst nirgends persistiert:
+        // Passport validiert eingehende Tokens über die JWT-Signatur und braucht keine Kopie.
         return back()
             ->with('success', __('API key created successfully.'))
-            ->with('plainTextToken', $tokenResult->accessToken);
+            ->with('plainTextToken', $result->accessToken);
     }
 
     public function destroy(string $id): RedirectResponse
     {
-        $this->authorize('create', Token::class);
+        $this->authorize('delete', Token::class);
+
         $token = Token::find($id);
 
         if (!$token) {
             return back()->with('error', __('Token not found.'));
         }
 
-        $this->tokenRepository->revokeAccessToken($id);
+        $token->revoke();
 
         return back()->with('success', __('API key revoked successfully.'));
     }

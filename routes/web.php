@@ -392,10 +392,11 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         });
 
         //API SETTINGS
+        // Kein index: Die Token-Übersicht wird von tool.interfaces gerendert. Die frühere index-Route
+        // zeigte auf eine Inertia-Seite, die es nicht gibt, und lief damit ins Leere.
         Route::resource('api-management', ApiManagementController::class)
-            ->only(['index', 'store', 'destroy'])
+            ->only(['store', 'destroy'])
             ->names([
-                'index' => 'api-management.index',
                 'store' => 'api-management.store',
                 'destroy' => 'api-management.destroy'
             ]);

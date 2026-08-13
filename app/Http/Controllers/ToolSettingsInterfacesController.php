@@ -42,18 +42,19 @@ class ToolSettingsInterfacesController extends Controller
     {
         $this->authorize('view', Token::class);
 
-        $tokens = Token::with(['apiAccessToken'])
+        // Kein access_token mehr: Der Klartext existiert nur einmalig direkt nach der Erstellung.
+        // Kein last_used_at: Die Spalte gibt es auf oauth_access_tokens nicht, der Wert war immer null.
+        $tokens = Token::query()
             ->orderBy('name')
             ->get()
             ->map(function (Token $token): array {
                 return [
                     'id' => $token->id,
                     'name' => $token->name,
-                    "revoked" => $token->revoked,
+                    'revoked' => $token->revoked,
                     'created_at' => $token->created_at,
                     'expires_at' => $token->expires_at,
-                    'last_used_at' => $token->last_used_at,
-                    'access_token' => $token?->apiAccessToken?->access_token ?? null,
+                    'scopes' => $token->scopes,
                 ];
             });
 
@@ -68,23 +69,19 @@ class ToolSettingsInterfacesController extends Controller
         );
     }
 
-    public function tokenLogs(Request $request, Token $token)
+    public function tokenLogs(Token $token): JsonResponse
     {
         $this->authorize('view', Token::class);
 
-        $logs = ApiLog::where('token_id', '=', $token->apiAccessToken->id)
-            ->orderBy('created_at', 'desc')
+        $logs = ApiLog::query()
+            ->where('passport_token_id', $token->getKey())
+            ->orderByDesc('created_at')
             ->paginate(50);
 
-        if ($request->wantsJson() || $request->ajax()) {
-            return response()->json([
-                'logs' => $logs,
-            ]);
-        }
-
-        return Inertia::render('Interfaces/TokenLogs', [
+        // Aufgerufen wird das ausschließlich per axios aus dem Log-Modal. Der frühere Inertia-Zweig
+        // rendert eine Seite, die es nicht gibt, und war deshalb nie erreichbar.
+        return response()->json([
             'logs' => $logs,
-            'token' => $token,
         ]);
     }
 

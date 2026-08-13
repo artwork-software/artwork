@@ -6,8 +6,10 @@ use Artwork\Core\FileHandling\Naming\StoredFileName;
 use Artwork\Modules\ExternalIssue\Models\ExternalIssue;
 use Artwork\Modules\ExternalIssue\Models\ExternalIssueFile;
 use Artwork\Modules\Inventory\Services\InventoryArticleService;
+use Artwork\Modules\Notification\Enums\NotificationEnum;
 use Artwork\Modules\User\Models\User;
 use Illuminate\Auth\AuthManager;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Spatie\Activitylog\Models\Activity;
@@ -74,6 +76,21 @@ class ExternalIssueService
             'name' => $a->name,
             'quantity' => $a->pivot->quantity,
         ])->toArray();
+
+        // Verändert sich das Rückgabedatum, muss die Rückgabe-Erinnerung neu
+        // scharf gestellt werden (Command filtert auf whereNull) und eine offene
+        // "noch nicht zurück"-Meldung zum alten Termin verfällt.
+        if (array_key_exists('return_date', $data)) {
+            $newReturnDate = $data['return_date'] !== null
+                ? Carbon::parse($data['return_date'])->toDateString()
+                : null;
+            if ($newReturnDate !== $issue->return_date?->toDateString()) {
+                $data['return_notification_sent_at'] = null;
+                if ($issue->return_status === ExternalIssue::RETURN_STATUS_NOT_RETURNED) {
+                    $data['return_status'] = null;
+                }
+            }
+        }
 
         DB::transaction(function () use ($issue, $data, $files): void {
             $issue->update($data);
@@ -193,6 +210,128 @@ class ExternalIssueService
     {
         Storage::disk('public')->delete($file->file_path);
         $file->delete();
+    }
+
+    /**
+     * Rückgabe bestätigen (aus Benachrichtigung oder Übersicht) — setzt Status,
+     * Empfänger und protokolliert die Bestätigung inkl. Freitext-Beschreibung.
+     */
+    public function confirmReturn(ExternalIssue $issue, ?string $remarks, bool $remarksProvided = false): ExternalIssue
+    {
+        $oldStatus = $issue->return_status;
+        $oldRemarks = $issue->return_remarks;
+
+        $updateData = [
+            'return_status' => ExternalIssue::RETURN_STATUS_RETURNED,
+        ];
+
+        // Ein geleertes Textfeld kommt durch ConvertEmptyStringsToNull als null
+        // an — war das Feld im Request, muss null die alte Bemerkung löschen.
+        // Bestätigungen ohne Bemerkungsfeld (Notification-Button) lassen sie stehen.
+        if ($remarks !== null || $remarksProvided) {
+            $updateData['return_remarks'] = $remarks;
+        }
+
+        // Keep the original receiver when the action is triggered again.
+        if ($issue->received_by_id === null) {
+            $updateData['received_by_id'] = $this->auth->user()?->id;
+        }
+
+        // Early return frees the reserved quantity: cap the planned return
+        // date to today so availability calculations stop counting it.
+        $today = now()->startOfDay();
+        if ($issue->return_date !== null && $today->lt($issue->return_date)) {
+            $updateData['return_date'] = $today->toDateString();
+        }
+
+        $issue->update($updateData);
+
+        $this->logActivity($issue, 'return_confirmed', 'External issue return confirmed', [
+            'translation_key' => 'External issue return confirmed',
+            'issue_type' => 'external',
+            'issue_name' => $issue->name,
+            'external_name' => $issue->external_name,
+            'return_remarks' => $remarks,
+            'old' => [
+                'return_status' => $oldStatus,
+                'return_remarks' => $oldRemarks,
+            ],
+            'attributes' => [
+                'return_status' => ExternalIssue::RETURN_STATUS_RETURNED,
+                'return_remarks' => $issue->return_remarks,
+            ],
+        ]);
+
+        $this->resolveReturnDueNotifications($issue, ExternalIssue::RETURN_STATUS_RETURNED);
+
+        return $issue;
+    }
+
+    /**
+     * Rückmeldung "noch nicht zurück" — Material bleibt offen, die Bestätigung
+     * kann später über Benachrichtigung oder Übersicht nachgeholt werden.
+     */
+    public function declineReturn(ExternalIssue $issue): ExternalIssue
+    {
+        $oldStatus = $issue->return_status;
+
+        $issue->update(['return_status' => ExternalIssue::RETURN_STATUS_NOT_RETURNED]);
+
+        $this->logActivity($issue, 'return_declined', 'External issue reported as not returned', [
+            'translation_key' => 'External issue reported as not returned',
+            'issue_type' => 'external',
+            'issue_name' => $issue->name,
+            'external_name' => $issue->external_name,
+            'old' => ['return_status' => $oldStatus],
+            'attributes' => ['return_status' => ExternalIssue::RETURN_STATUS_NOT_RETURNED],
+        ]);
+
+        $this->resolveReturnDueNotifications($issue, ExternalIssue::RETURN_STATUS_NOT_RETURNED);
+
+        return $issue;
+    }
+
+    /**
+     * Setzt offene Rückgabe-Erinnerungen aller Empfänger auf den Rückmeldestatus.
+     * Nach "noch nicht zurück" bleibt der Bestätigen-Button erhalten, damit die
+     * Rückgabe später direkt aus der Benachrichtigung gemeldet werden kann.
+     */
+    protected function resolveReturnDueNotifications(ExternalIssue $issue, string $status): void
+    {
+        // Erinnerungen gehen ausschließlich an issuedBy (siehe Command) — ohne
+        // Empfänger existiert nichts zum Auflösen.
+        if ($issue->issued_by_id === null) {
+            return;
+        }
+
+        $handledBy = $this->auth->user();
+
+        // Erst über den Index (notifiable_type, notifiable_id) einschränken —
+        // die JSON-Pfad-Filter allein wären ein Full-Table-Scan über notifications.
+        $notifications = DB::table('notifications')
+            ->where('notifiable_type', User::class)
+            ->where('notifiable_id', $issue->issued_by_id)
+            ->where('data->type', NotificationEnum::NOTIFICATION_EXTERNAL_ISSUE_RETURN_DUE->value)
+            ->where('data->modelId', $issue->id)
+            ->get();
+
+        foreach ($notifications as $notification) {
+            $data = json_decode($notification->data, true);
+            $data['handledStatus'] = $status === ExternalIssue::RETURN_STATUS_RETURNED
+                ? 'material_returned'
+                : 'material_not_returned';
+            $data['handledBy'] = $handledBy
+                ? ['id' => $handledBy->id, 'name' => $handledBy->full_name]
+                : null;
+            $data['handledAt'] = now()->translatedFormat('d.m.Y H:i');
+            $data['buttons'] = $status === ExternalIssue::RETURN_STATUS_RETURNED
+                ? []
+                : ['material_issue_return_confirm'];
+
+            DB::table('notifications')
+                ->where('id', $notification->id)
+                ->update(['data' => json_encode($data)]);
+        }
     }
 
     public function logActivity(ExternalIssue $issue, string $event, string $description, array $properties = []): void

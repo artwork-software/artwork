@@ -68,6 +68,22 @@ class ShiftQualificationController extends Controller
         );
     }
 
+    public function reorder(Request $request): RedirectResponse
+    {
+        // Autorisierung via Route-Middleware 'shift-settings-area:general,edit' —
+        // die Admin-only ShiftQualificationPolicy würde Nicht-Admins mit Edit-Permission
+        // (die das Drag&Drop in den Settings sehen) fälschlich mit 403 aussperren.
+
+        $validated = $request->validate([
+            'ids' => ['required', 'array'],
+            'ids.*' => ['integer', 'distinct', 'exists:shift_qualifications,id'],
+        ]);
+
+        $this->shiftQualificationService->updateOrder($validated['ids']);
+
+        return $this->redirector->back();
+    }
+
     public function updateValue(Shift $shift, Request $request): void
     {
         // Unbekannte qualification_id würde sonst als FK-Verletzung mit 500 enden

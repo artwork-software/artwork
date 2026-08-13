@@ -13,19 +13,19 @@ class ShiftQualificationRepository extends BaseRepository
         return ShiftQualification::find($id);
     }
 
-    public function getAllOrderedByCreationDateAscending(): Collection
+    public function getAllOrderedByPosition(): Collection
     {
         return ShiftQualification::query()
-            ->select(['id', 'name', 'icon', 'available', 'created_at'])
-            ->orderByCreationDateAscending()
+            ->select(['id', 'name', 'icon', 'available', 'position', 'created_at'])
+            ->orderedByPosition()
             ->get();
     }
 
-    public function getAllAvailableOrderedByCreationDateAscending(): Collection
+    public function getAllAvailableOrderedByPosition(): Collection
     {
         return ShiftQualification::query()
             ->available()
-            ->orderByCreationDateAscending()
+            ->orderedByPosition()
             ->get();
     }
 }

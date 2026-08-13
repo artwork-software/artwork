@@ -249,7 +249,7 @@ readonly class FreelancerService
                 )
             )
             ->setShiftQualifications(
-                static fn() => $shiftQualificationService->getAllOrderedByCreationDateAscending()
+                static fn() => $shiftQualificationService->getAllOrderedByPosition()
             )
             ->setFirstProjectShiftTabId(
                 fn() => $this->projectTabService->getFirstProjectTabWithTypeIdOrFirstProjectTabId(

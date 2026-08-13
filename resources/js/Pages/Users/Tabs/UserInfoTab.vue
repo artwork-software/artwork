@@ -683,16 +683,16 @@ const changeProfilePicture = () => {
 }
 
 const deletePhoto = () => {
-    // Jetstream-Route
-    router.delete
-        ? router.delete(route('current-user-photo.destroy'), {
-            preserveScroll: true,
-            onSuccess: () => {
-                photoPreview.value = null
-                clearPhotoFileInput()
-            },
-        })
-        : null
+    // Eigene Route statt Jetstreams current-user-photo.destroy: die hängt am
+    // Passport-'api'-Guard (endet als 405 auf /login) und löscht außerdem das
+    // Foto des eingeloggten Users statt des bearbeiteten.
+    router.delete(route('user.delete.photo', props.user_to_edit.id), {
+        preserveScroll: true,
+        onSuccess: () => {
+            photoPreview.value = null
+            clearPhotoFileInput()
+        },
+    })
 }
 
 const clearPhotoFileInput = () => {

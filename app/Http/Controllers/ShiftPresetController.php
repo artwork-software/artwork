@@ -34,7 +34,7 @@ class ShiftPresetController extends Controller
     {
         return Inertia::render('Shifts/ShiftPresets', [
             'shiftPresets' => $this->shiftPresetService->getAllShiftPresetsWithSortedTimelines(),
-            'shiftQualifications' => $this->shiftQualificationService->getAllOrderedByCreationDateAscending(),
+            'shiftQualifications' => $this->shiftQualificationService->getAllOrderedByPosition(),
             'crafts' => $this->craftService->getAll(),
             'event_types' => $this->eventTypeService->getAll()
         ]);

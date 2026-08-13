@@ -5,9 +5,10 @@
             ? 'border-success ring-1 ring-success'
             : (ownConfirmationInfo ? 'border-danger ring-1 ring-danger' : 'border-border-subtle')"
     >
-        <!-- Farb-Akzent / Headerzeile -->
+        <!-- Farb-Akzent / Headerblock: Titel nutzt die volle Breite,
+             die Icons sitzen darunter rechtsbündig am Blockende -->
         <div
-            class="flex items-start justify-between gap-2 px-3 py-2"
+            class="px-3 py-2"
             :style="{
         backgroundColor: eventType ? backgroundColorWithOpacity(eventType?.hex_code, percentage) : (resolvedCraft?.color ? `${resolvedCraft.color}40` : '#e8e8e8'),
         color: eventType ? getTextColorBasedOnBackground(backgroundColorWithOpacity(eventType?.hex_code, percentage)) : getTextColorBasedOnBackground(resolvedCraft?.color ? `${resolvedCraft.color}40` : '#e8e8e8')
@@ -16,15 +17,15 @@
             <a
                 v-if="project && eventType && canAccessProject"
                 :href="project?.id ? route('projects.tab', { project: project.id, projectTab: firstProjectShiftTabId }) : '#'"
-                class="min-w-0 break-words text-sm font-semibold hover:opacity-90 transition"
+                class="block break-words text-sm font-semibold hover:opacity-90 transition"
             >
                 {{ eventType?.abbreviation }}: {{ project?.name }}
             </a>
-            <span v-else-if="project && eventType" class="min-w-0 break-words text-sm font-semibold">
+            <span v-else-if="project && eventType" class="block break-words text-sm font-semibold">
                 {{ eventType?.abbreviation }}: {{ project?.name }}
             </span>
 
-            <span v-else class="min-w-0 break-words text-sm font-semibold">
+            <span v-else class="block break-words text-sm font-semibold">
                 {{ getCraftAndFunctionLabel() }} - <span>
                     <a
                         v-if="canAccessProject"
@@ -35,7 +36,7 @@
                 </span>
             </span>
 
-            <div class="ml-auto flex items-center gap-2 shrink-0">
+            <div v-if="hasHeaderIcons" class="mt-1 flex items-center justify-end gap-2">
                 <PropertyIcon
                     name="IconLock"
                     v-if="shift.is_committed"
@@ -90,7 +91,9 @@
             <!-- Zu-/Absage der Zuweisung (nur festgeschriebene Schichten); Status ist
                  auch für Planer:innen sichtbar, die einen fremden Plan ansehen -->
             <div v-if="showOwnConfirmationControls || ownConfirmationInfo" class="border-b border-border-subtle pb-2">
-                <div v-if="ownConfirmationInfo" class="flex items-center justify-between gap-2">
+                <!-- flex-wrap + whitespace-nowrap: auf schmalen Karten rutscht der
+                     Aktionslink in eine eigene Zeile statt abgeschnitten zu werden -->
+                <div v-if="ownConfirmationInfo" class="flex flex-wrap items-center justify-between gap-x-2 gap-y-1">
                     <span
                         class="inline-flex items-center gap-1.5 rounded-full px-2 py-1 text-xs font-semibold"
                         :class="ownConfirmationInfo.accepted
@@ -105,7 +108,7 @@
                     <button
                         v-if="showOwnConfirmationControls"
                         type="button"
-                        class="text-xs text-text-subtle underline hover:text-text transition"
+                        class="ml-auto whitespace-nowrap text-xs text-text-subtle underline hover:text-text transition"
                         @click="responseModalMode = ownConfirmationInfo.accepted ? 'decline' : 'accept'"
                     >
                         {{ ownConfirmationInfo.accepted ? $t('Decline shift') : $t('Accept shift') }}
@@ -250,6 +253,15 @@ const { resolveCraft } = useShiftPlanLookups();
 const resolvedCraft = computed(() => props.shift?.craft ?? resolveCraft(props.shift?.craftId) ?? {});
 
 const showRequestWorkTimeChangeModal = ref(false)
+
+// Icon-Zeile im Header nur rendern, wenn mindestens ein Icon sichtbar ist
+// (Bedingungen spiegeln die v-ifs der einzelnen Icons/Buttons)
+const hasHeaderIcons = computed(() =>
+    props.shift.is_committed
+    || props.shift.in_workflow
+    || !!props.project
+    || (props.userToEditId === usePage().props.auth.user.id && props.type === 'user')
+)
 const hasIndivTime = ref(false)
 // 'accept' | 'decline' | null — steuert das Antwort-Modal (Kommentar optional)
 const responseModalMode = ref(null)

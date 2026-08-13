@@ -285,13 +285,14 @@
                 :responsiveOptions="responsiveOptions"
                 :numVisible="7"
                 :pt="{ mask: { onClick: onMaskClick } }"
+                containerStyle="max-width: 850px"
                 :circular="true"
                 :fullScreen="true"
                 :showItemNavigators="true"
                 :showThumbnails="true"
             >
                 <template #item="slotProps">
-                    <img :src="'/storage/' + slotProps.item.image" :alt="slotProps.item.alt || ''" style="width: 100%; display: block" @error="(e) => e.target.src = usePage().props.big_logo" />
+                    <img :src="'/storage/' + slotProps.item.image" :alt="slotProps.item.alt || ''" style="width: 100%; max-height: 75vh; object-fit: contain; display: block" @error="(e) => e.target.src = usePage().props.big_logo" />
                 </template>
                 <template #thumbnail="slotProps">
                     <img :src="'/storage/' + slotProps.item.image" :alt="slotProps.item.alt || ''" class="w-20 max-w-20" style="display: block" @error="(e) => e.target.src = usePage().props.big_logo" />

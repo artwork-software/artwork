@@ -60,6 +60,40 @@ final class ShiftQualificationControllerTest extends FeatureTestCase
     }
 
     #[Test]
+    public function guest_cannot_reorder(): void
+    {
+        $sq = ShiftQualification::factory()->create();
+
+        $this->post(route('shift-qualifications.reorder'), ['ids' => [$sq->id]])
+            ->assertRedirect(route('login'));
+    }
+
+    #[Test]
+    public function admin_can_reorder(): void
+    {
+        $this->actingAsAdmin();
+
+        $first = ShiftQualification::factory()->create(['position' => 1]);
+        $second = ShiftQualification::factory()->create(['position' => 2]);
+
+        $this->post(route('shift-qualifications.reorder'), ['ids' => [$second->id, $first->id]])
+            ->assertRedirect();
+
+        $this->assertSame(1, $second->fresh()->position);
+        $this->assertSame(2, $first->fresh()->position);
+    }
+
+    #[Test]
+    public function reorder_rejects_unknown_ids(): void
+    {
+        $this->actingAsAdmin();
+
+        $this->postJson(route('shift-qualifications.reorder'), ['ids' => [999999999]])
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors('ids.0');
+    }
+
+    #[Test]
     public function admin_destroy_default_qualification_is_blocked(): void
     {
         $this->actingAsAdmin();

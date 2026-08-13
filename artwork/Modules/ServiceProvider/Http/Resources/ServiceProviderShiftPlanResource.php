@@ -19,7 +19,7 @@ class ServiceProviderShiftPlanResource extends WorkerShiftPlanResource
         return array_merge(
             [
                 'provider_name' => $this->getAttribute('provider_name'),
-                'profile_photo_url' => $this->getAttribute('profile_image'),
+                'profile_photo_url' => $this->getAttribute('profile_photo_url'),
                 'email' => $this->getAttribute('email'),
                 'phone_number' => $this->getAttribute('phone_number'),
                 'street' => $this->getAttribute('street'),

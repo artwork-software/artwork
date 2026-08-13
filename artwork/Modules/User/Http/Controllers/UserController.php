@@ -1005,7 +1005,7 @@ class UserController extends Controller
                     $craftService->getAll()
                 ))->resolve(),
                 'currentTab' => 'workProfile',
-                'shiftQualifications' => $shiftQualificationRepository->getAllAvailableOrderedByCreationDateAscending(),
+                'shiftQualifications' => $shiftQualificationRepository->getAllAvailableOrderedByPosition(),
                 'globalQualifications' => $globalQualifications,
                 'projectRoles' => ProjectRole::all(),
             ]
@@ -1014,9 +1014,25 @@ class UserController extends Controller
 
     public function updateUserPhoto(User $user, Request $request): void
     {
+        if ($user->id !== Auth::user()->id && !Auth::user()->can(PermissionEnum::TEAM_UPDATE->value)) {
+            abort(\Illuminate\Http\Response::HTTP_FORBIDDEN);
+        }
+
         if (isset($request['photo'])) {
             $user->updateProfilePhoto($request['photo']);
         }
+    }
+
+    public function deleteUserPhoto(User $user): void
+    {
+        if ($user->id !== Auth::user()->id && !Auth::user()->can(PermissionEnum::TEAM_UPDATE->value)) {
+            abort(\Illuminate\Http\Response::HTTP_FORBIDDEN);
+        }
+
+        // Ersetzt Jetstreams current-user-photo.destroy: die liegt hinter dem
+        // Passport-'api'-Guard (Web-Session → Redirect /login → Browser wiederholt
+        // DELETE → 405) und würde zudem immer das Foto des EINGELOGGTEN Users löschen.
+        $user->deleteProfilePhoto();
     }
 
     /**
@@ -2061,5 +2077,14 @@ class UserController extends Controller
         ]);
 
         $user->update($request->only('closed_qualification_groups'));
+    }
+
+    public function updateShowQualificationDuplicates(User $user, Request $request): void
+    {
+        $this->authorize('updateOwnPreferences', $user);
+
+        $request->validate(['show_qualification_duplicates' => ['required', 'boolean']]);
+
+        $user->update($request->only('show_qualification_duplicates'));
     }
 }

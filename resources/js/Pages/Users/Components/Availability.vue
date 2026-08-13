@@ -29,7 +29,7 @@
         <div class="col-span-1">
 
         </div>
-        <div class="col-span-4 mt-12 overflow-y-auto" :style="{ maxHeight: calendarHeight + 'px' }">
+        <div class="col-span-4 mt-12 flex min-h-0 flex-col" :style="{ maxHeight: calendarHeight + 'px' }">
             <UserVacations
                 :availabilities="availabilities"
                 :type="type"

@@ -1388,7 +1388,7 @@ readonly class EventService
                 $userService->getAuthUserCrafts()->merge($craftService->getAssignableByAllCrafts())
             )
             ->setShiftTimePresets($this->shiftTimePresetService->getAll())
-            ->setShiftQualifications($shiftQualificationService->getAllOrderedByCreationDateAscending())
+            ->setShiftQualifications($shiftQualificationService->getAllOrderedByPosition())
             ->setDayServices($dayServicesService->getAll())
             ->setFirstProjectShiftTabId(
                 $projectTabService->getFirstProjectTabWithTypeIdOrFirstProjectTabId(
@@ -2013,12 +2013,23 @@ readonly class EventService
         // Respect explicit end_day from UI if provided (multi-day)
         if (!empty($event['end_day'])) {
             $explicitEndDay = $this->parseDayInput($event['end_day']);
+            // end_day vor dem Starttag (stale Client-Daten, Feld ist unvalidiert) würde
+            // sonst als invertierter Termin (end < start) gespeichert = unsichtbar im Kalender.
+            if ($explicitEndDay->lt($day)) {
+                $explicitEndDay = $day->copy();
+            }
             if ($allDay) {
                 $endTime = $explicitEndDay->copy()->endOfDay();
             } else {
                 // keep the provided end time (or the computed one) but on the explicit end date
                 $endAt = ($event['end_time'] ?? null) ? \Carbon\Carbon::parse($event['end_time']) : $endTime;
                 $endTime = $explicitEndDay->copy()->setTimeFromTimeString($endAt->toTimeString());
+                // Die UI schickt end_day auch bei eintägigen Terminen (= Starttag) mit.
+                // Bei Über-Mitternacht-Zeiten (z.B. 22:00–00:00) läge das Ende sonst VOR
+                // dem Start — gleiche Korrektur wie in processEventTimes().
+                if ($endTime->lte($startTime)) {
+                    $endTime->addDay();
+                }
             }
         }
         /** @var Event $createdEvent */
@@ -2079,11 +2090,20 @@ readonly class EventService
         // Respect explicit end_day from UI if provided (multi-day update)
         if (!empty($data['end_day'])) {
             $explicitEndDay = $this->parseDayInput($data['end_day']);
+            // end_day vor dem Starttag: gleicher Guard wie in createBulkEvent
+            if ($explicitEndDay->lt($day)) {
+                $explicitEndDay = $day->copy();
+            }
             if ($allDay) {
                 $endTime = $explicitEndDay->copy()->endOfDay();
             } else {
                 $endAt = ($data['end_time'] ?? null) ? \Carbon\Carbon::parse($data['end_time']) : $endTime;
                 $endTime = $explicitEndDay->copy()->setTimeFromTimeString($endAt->toTimeString());
+                // Über-Mitternacht-Guard wie in createBulkEvent: end_day == Starttag +
+                // Endzeit <= Startzeit (z.B. 22:00–00:00) → Ende auf Folgetag.
+                if ($endTime->lte($startTime)) {
+                    $endTime->addDay();
+                }
             }
         }
 

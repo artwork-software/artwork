@@ -2518,6 +2518,26 @@ class ProjectController extends Controller
 
     public function updateProjectState(Request $request, Project $project): void
     {
+        // Payloads ohne state-Key (z.B. Team-/Schicht-Modals via projects.update) lassen den Status unangetastet
+        if (!$request->exists('state')) {
+            return;
+        }
+
+        // Pflichtfeld-Setting: Status darf dann nicht entfernt werden.
+        // Greift nur, wenn das Feld sichtbar ist und das Projekt bereits einen Status hat —
+        // Altprojekte ohne Status bleiben sonst editierbar (state && state_required analog StoreProjectRequest).
+        $createSettings = app(ProjectCreateSettings::class);
+        $stateRemovalBlocked = $createSettings->state
+            && $createSettings->state_required
+            && $project->state !== null;
+        $request->validate([
+            'state' => [
+                $stateRemovalBlocked ? 'required' : 'nullable',
+                'integer',
+                'exists:project_states,id',
+            ],
+        ]);
+
         // Hole alte State-ID bevor wir updaten
         $oldStateId = optional($project->state);
 
@@ -3050,7 +3070,7 @@ class ProjectController extends Controller
             'personalFilters' => $filterService->getPersonalFilter($user, UserFilterTypes::PROJECT_SHIFT_FILTER->value),
             'filterOptions' => $filterService->getCalendarFilterDefinitions(),
             'dateValue' => $dateValue,
-            'shiftQualifications' => $shiftQualificationService->getAllOrderedByCreationDateAscending(),
+            'shiftQualifications' => $shiftQualificationService->getAllOrderedByPosition(),
             'firstProjectShiftTabId' => $this->projectTabService
                 ->getFirstProjectTabWithTypeIdOrFirstProjectTabId(ProjectTabComponentEnum::SHIFT_TAB),
             'currentUserCrafts' => $this->getCurrentUserCraftsForShiftTab($user, $craftService),

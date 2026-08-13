@@ -94,9 +94,8 @@ class ProjectDTO extends Data
             'first_name' => $user->first_name,
             'last_name' => $user->last_name,
             'position' => $user->position ?? null,
-            'profile_photo_url' => $user->profile_photo_path
-                ? '/storage/' . $user->profile_photo_path
-                : null,
+            // Accessor liefert bei fehlendem Foto den Buchstaben-Avatar (SVG-Data-URI)
+            'profile_photo_url' => $user->profile_photo_url,
         ])->values()->all();
     }
 }

@@ -68,6 +68,7 @@ class WorkerEagerLoadConfig
                     'shift_qualifications.name',
                     'shift_qualifications.icon',
                     'shift_qualifications.available',
+                    'shift_qualifications.position',
                     'shift_qualifications.created_at'
                 ]);
             },

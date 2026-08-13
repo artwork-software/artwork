@@ -1,7 +1,8 @@
 <template>
     <div
+        ref="rowElement"
         class="group grid grid-cols-12 gap-4 px-2 py-3 text-sm border-b border-border-subtle hover:bg-gradient-to-r hover:from-surface-sunken hover:to-white relative"
-        :class="{ 'bg-warning-surface': usePage().props.urlParameters?.issue === String(externMaterialIssue.id) }"
+        :class="{ 'bg-warning-surface': isDeepLinkTarget }"
     >
         <span class="pointer-events-none absolute left-0 top-0 h-full w-0.5 bg-accent-500/0 transition-all duration-200 group-hover:bg-accent-500/70"></span>
 
@@ -75,7 +76,17 @@
 
         <!-- Status + Aktionen -->
         <div class="col-span-1 flex items-center justify-end gap-2">
-      <span v-if="isOverdue"
+      <span v-if="externMaterialIssue.return_status === 'returned'"
+            class="inline-flex items-center gap-1 rounded-md border border-success-border bg-success-surface px-1.5 py-0.5 text-[11px] text-success">
+        <component :is="IconCheck" class="size-3.5" />
+        {{ $t('Returned') }}
+      </span>
+      <span v-else-if="externMaterialIssue.return_status === 'not_returned'"
+            class="inline-flex items-center gap-1 rounded-md border border-danger-border bg-danger-surface px-1.5 py-0.5 text-[11px] text-danger">
+        <component :is="IconAlertTriangle" class="size-3.5" />
+        {{ $t('Not returned') }}
+      </span>
+      <span v-else-if="isOverdue"
             class="inline-flex items-center gap-1 rounded-md border border-warning-border bg-warning-surface px-1.5 py-0.5 text-[11px] text-warning">
         <component :is="IconAlertTriangle" class="size-3.5" />
         {{ $t('Overdue') }}
@@ -97,7 +108,7 @@
 
                 <BaseMenu white-menu-background has-no-offset menu-width="w-fit">
                     <BaseMenuItem white-menu-background :title="$t('Edit')" :icon="IconEdit" @click="showIssueOfMaterialModal = true" />
-                    <BaseMenuItem white-menu-background :title="$t('Enter return')" :icon="IconReceiptRefund" @click="showEnterExternalIssueReturnModal = true" v-if="!externMaterialIssue.received_by" />
+                    <BaseMenuItem white-menu-background :title="$t('Enter return')" :icon="IconReceiptRefund" @click="showEnterExternalIssueReturnModal = true" v-if="!externMaterialIssue.received_by && canEnterReturn" />
                     <BaseMenuItem white-menu-background :title="$t('Special items closed')" :icon="IconCheck" @click="setSpecialItemsDone" v-if="checkIfStatusOrHasAnySpecialItem" />
                     <BaseMenuItem white-menu-background :title="$t('Delete')" :icon="IconTrash" @click="showIssueOfMaterialConfirmDeleteModal = true" />
                 </BaseMenu>
@@ -147,8 +158,9 @@ import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
 import EnterExternalIssueReturnModal from "@/Pages/IssueOfMaterial/Components/EnterExternalIssueReturnModal.vue";
 import ExternalMaterialIssueDetailModal from "@/Pages/IssueOfMaterial/Components/ExternalMaterialIssueDetailModal.vue";
 import { IconAlertTriangle, IconCheck, IconEdit, IconPrinter, IconReceiptRefund, IconTrash } from "@tabler/icons-vue";
-import { computed, ref } from "vue";
+import { computed, onMounted, ref } from "vue";
 import { router, usePage } from "@inertiajs/vue3";
+import { usePermission } from "@/Composeables/Permission.js";
 
 const props = defineProps({
     externMaterialIssue: {
@@ -178,6 +190,27 @@ const showIssueOfMaterialModal = ref(false);
 const showIssueOfMaterialConfirmDeleteModal = ref(false);
 const showEnterExternalIssueReturnModal = ref(false);
 const showIssueOfMaterialDetailModal = ref(false);
+
+// Spiegelt ExternalIssueController::authorizeReturnHandling — sonst endet der Submit in einem stummen 403
+const { can, hasAdminRole } = usePermission(usePage().props);
+const canEnterReturn = computed(() => {
+    const currentUserId = usePage().props.auth?.user?.id ?? usePage().props.user?.id ?? null;
+    return hasAdminRole()
+        || can('inventory.disposition')
+        || (currentUserId != null && String(props.externMaterialIssue.issued_by?.id) === String(currentUserId));
+});
+
+// Deep-Link aus der Rückgabe-Erinnerung: Backend springt auf die richtige
+// Seite, hier wird die Zeile hervorgehoben und in den Sichtbereich gescrollt.
+const rowElement = ref(null);
+const isDeepLinkTarget = computed(
+    () => String(usePage().props.urlParameters?.issue ?? '') === String(props.externMaterialIssue.id)
+);
+onMounted(() => {
+    if (isDeepLinkTarget.value) {
+        rowElement.value?.scrollIntoView({ block: 'center' });
+    }
+});
 
 const numberFmt = (v) => {
     try { return new Intl.NumberFormat(usePage().props.locale, { style: 'currency', currency: usePage().props.currency || 'EUR' }).format(Number(v||0)); }

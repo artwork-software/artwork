@@ -19,7 +19,7 @@ class FreelancerDropResource extends JsonResource
             'id' => $this->id,
             'first_name' => $this->first_name,
             'last_name' => $this->last_name,
-            'profile_photo_url' => $this->profile_image,
+            'profile_photo_url' => $this->profile_photo_url,
             'assigned_craft_ids' => $this->assignedCrafts->pluck('id'),
             'can_work_shifts' => $this->can_work_shifts,
             'shift_qualifications' => $this->shiftQualifications()->get(['shift_qualifications.id', 'name', 'available'])

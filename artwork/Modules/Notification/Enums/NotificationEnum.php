@@ -91,6 +91,8 @@ enum NotificationEnum: string
 
     case NOTIFICATION_EXTERNAL_TAB_COMPONENT_UPDATED = 'NOTIFICATION_EXTERNAL_TAB_COMPONENT_UPDATED';
 
+    case NOTIFICATION_EXTERNAL_ISSUE_RETURN_DUE = 'NOTIFICATION_EXTERNAL_ISSUE_RETURN_DUE';
+
     public function groupType(): string
     {
         return match ($this) {
@@ -136,7 +138,8 @@ enum NotificationEnum: string
             self::NOTIFICATION_SHIFT_WORKER_CONFIRMATION,
             self::NOTIFICATION_SHIFT_CONFLICT => "SHIFTS",
             self::NOTIFICATION_INVENTORY_ARTICLE_CHANGED,
-            self::NOTIFICATION_INVENTORY_OVERBOOKED => "INVENTORY",
+            self::NOTIFICATION_INVENTORY_OVERBOOKED,
+            self::NOTIFICATION_EXTERNAL_ISSUE_RETURN_DUE => "INVENTORY",
 
             self::NOTIFICATION_EXTERNAL_CRM_SUBMITTED,
             self::NOTIFICATION_EXTERNAL_TAB_COMPONENT_UPDATED => "EXTERNAL_ACCESS",
@@ -179,6 +182,8 @@ enum NotificationEnum: string
             self::NOTIFICATION_NEW_SHIFT_COMMIT_WORKFLOW_REQUEST,
             self::NOTIFICATION_SHIFT_WORKER_CONFIRMATION,
             self::NOTIFICATION_SHIFT_CONFLICT => ShiftNotification::class,
+            self::NOTIFICATION_EXTERNAL_ISSUE_RETURN_DUE =>
+                \Artwork\Modules\Inventory\Notifications\InventoryArticleNotification::class,
             self::NOTIFICATION_EXTERNAL_CRM_SUBMITTED =>
                 \Artwork\Modules\ExternalAccess\Notifications\ExternalCrmSubmissionNotification::class,
             self::NOTIFICATION_EXTERNAL_TAB_COMPONENT_UPDATED =>
@@ -228,6 +233,7 @@ enum NotificationEnum: string
 
             self::NOTIFICATION_INVENTORY_ARTICLE_CHANGED => 'Inventory article changed',
             self::NOTIFICATION_INVENTORY_OVERBOOKED => 'Inventory article overbooked',
+            self::NOTIFICATION_EXTERNAL_ISSUE_RETURN_DUE => 'External material issue return due',
 
             self::NOTIFICATION_EVENT_VERIFICATION_REQUESTS => "Event verification requests",
             self::NOTIFICATION_NEW_SHIFT_COMMIT_WORKFLOW_REQUEST => "New shift commit workflow request",
@@ -276,6 +282,7 @@ enum NotificationEnum: string
             self::NOTIFICATION_REMINDER_ROOM_REQUEST => "Find out if there are any room requests that need to be confirmed or declined.",
             self::NOTIFICATION_INVENTORY_ARTICLE_CHANGED => 'An inventory article or one of its status values has changed.',
             self::NOTIFICATION_INVENTORY_OVERBOOKED => 'The article in your material issue is now overbooked.',
+            self::NOTIFICATION_EXTERNAL_ISSUE_RETURN_DUE => 'Get notified when the return date of one of your external material issues is reached.',
             self::NOTIFICATION_EVENT_VERIFICATION_REQUESTS => "Find out if there are any event verification requests.",
 
             self::NOTIFICATION_SHIFT_WORKTIME_REQUEST_APPROVED => "Find out if your worktime change request has been approved.",

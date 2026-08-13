@@ -201,6 +201,67 @@ final class EventBulkActionsTest extends FeatureTestCase
     }
 
     #[Test]
+    public function bulk_event_ending_at_midnight_gets_end_time_on_next_day(): void
+    {
+        $this->actingAsAdmin();
+        $project = Project::factory()->create();
+        $eventType = EventType::factory()->create();
+        $room = Room::factory()->create();
+
+        // Der BulkBody schickt end_day auch bei eintägigen Terminen (= Starttag) mit.
+        // 22:00–00:00 muss trotzdem auf dem Folgetag enden — sonst liegt end_time vor
+        // start_time und der Termin verschwindet aus dem Kalender (leere CarbonPeriod).
+        $response = $this->postJson(route('event.store.bulk.single', $project), [
+            'event' => [
+                'name' => 'Mitternachtstermin',
+                'day' => '2026-09-01',
+                'end_day' => '2026-09-01',
+                'start_time' => '22:00',
+                'end_time' => '00:00',
+                'type' => ['id' => $eventType->id],
+                'room' => ['id' => $room->id],
+            ],
+        ]);
+
+        $response->assertSuccessful();
+        $this->assertDatabaseHas('events', [
+            'eventName' => 'Mitternachtstermin',
+            'start_time' => '2026-09-01 22:00:00',
+            'end_time' => '2026-09-02 00:00:00',
+        ]);
+    }
+
+    #[Test]
+    public function bulk_event_update_ending_at_midnight_gets_end_time_on_next_day(): void
+    {
+        $this->actingAsAdmin();
+        $event = Event::factory()->create([
+            'start_time' => '2026-09-01 20:00:00',
+            'end_time' => '2026-09-01 23:00:00',
+            'allDay' => false,
+        ]);
+
+        $response = $this->patchJson(route('event.update.single.bulk', $event), [
+            'data' => [
+                'name' => 'Mitternachtstermin',
+                'day' => '2026-09-01',
+                'end_day' => '2026-09-01',
+                'start_time' => '22:00',
+                'end_time' => '00:00',
+                'type' => ['id' => $event->event_type_id],
+                'room' => ['id' => $event->room_id],
+            ],
+        ]);
+
+        $response->assertSuccessful();
+        $this->assertDatabaseHas('events', [
+            'id' => $event->id,
+            'start_time' => '2026-09-01 22:00:00',
+            'end_time' => '2026-09-02 00:00:00',
+        ]);
+    }
+
+    #[Test]
     public function guest_cannot_update_single_bulk_event(): void
     {
         $event = Event::factory()->create();

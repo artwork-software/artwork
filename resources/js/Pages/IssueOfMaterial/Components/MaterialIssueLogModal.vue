@@ -188,8 +188,8 @@
                                             <tbody class="divide-y divide-border-subtle">
                                             <tr v-for="(change, idx) in entry.changes" :key="idx" class="align-top">
                                                 <td class="py-2 pr-3 text-text-muted">{{ fieldLabel(change.field) }}</td>
-                                                <td class="py-2 pr-3 text-text-subtle">{{ change.oldValue ?? '-' }}</td>
-                                                <td class="py-2 text-text">{{ change.newValue ?? '-' }}</td>
+                                                <td class="py-2 pr-3 text-text-subtle">{{ formatFieldValue(change.field, change.oldValue) ?? '-' }}</td>
+                                                <td class="py-2 text-text">{{ formatFieldValue(change.field, change.newValue) ?? '-' }}</td>
                                             </tr>
                                             </tbody>
                                         </table>
@@ -391,10 +391,18 @@ const fieldLabelMap: Record<string, string> = {
     return_date: 'Return date',
     material_value: 'Material value',
     return_remarks: 'Return remarks',
+    return_status: 'Return status',
 }
 
 const fieldLabel = (field: string): string => {
     return t(fieldLabelMap[field] ?? field)
+}
+
+const formatFieldValue = (field: string, value: any) => {
+    if (field === 'return_status' && value) {
+        return t(value === 'returned' ? 'Returned' : 'Not returned')
+    }
+    return value
 }
 
 const computeFieldChanges = (log: any) => {

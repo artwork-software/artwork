@@ -110,6 +110,43 @@ final class UserShiftPlanQualificationSortTest extends FeatureTestCase
     }
 
     #[Test]
+    public function user_can_toggle_show_qualification_duplicates_setting(): void
+    {
+        $user = User::factory()->create();
+        $this->actingAs($user);
+
+        $this->patch(
+            route('user.update.show_qualification_duplicates', $user),
+            ['show_qualification_duplicates' => false]
+        )->assertSessionHasNoErrors();
+
+        $this->assertFalse($user->fresh()->show_qualification_duplicates);
+    }
+
+    #[Test]
+    public function show_qualification_duplicates_defaults_to_true(): void
+    {
+        $user = User::factory()->create();
+
+        $this->assertTrue($user->fresh()->show_qualification_duplicates);
+    }
+
+    #[Test]
+    public function user_cannot_update_another_users_show_qualification_duplicates_setting(): void
+    {
+        $user = User::factory()->create();
+        $otherUser = User::factory()->create(['show_qualification_duplicates' => true]);
+        $this->actingAs($user);
+
+        $this->patchJson(
+            route('user.update.show_qualification_duplicates', $otherUser),
+            ['show_qualification_duplicates' => false]
+        )->assertForbidden();
+
+        $this->assertTrue($otherUser->fresh()->show_qualification_duplicates);
+    }
+
+    #[Test]
     public function user_cannot_update_another_users_modal_backdrop_setting(): void
     {
         $user = User::factory()->create();

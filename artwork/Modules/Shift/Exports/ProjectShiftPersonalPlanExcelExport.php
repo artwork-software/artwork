@@ -181,11 +181,8 @@ class ProjectShiftPersonalPlanExcelExport implements FromView, WithEvents, WithC
             $q->available();
         }
 
-        if (method_exists(ShiftQualification::class, 'scopeOrderByCreationDateAscending')) {
-            $q->orderByCreationDateAscending();
-        }
-
-        $q->orderBy('name');
+        // Spaltenreihenfolge = in den Schichteinstellungen festgelegte Funktionsreihenfolge
+        $q->orderedByPosition();
 
         return $q->get(['id', 'name']);
     }

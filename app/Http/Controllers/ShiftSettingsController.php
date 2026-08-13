@@ -41,7 +41,7 @@ class ShiftSettingsController extends Controller
             'eventTypes' => EventType::all(),
             'usersWithPermission' => User::permission(PermissionEnum::SHIFT_PLANNER->value)->get(),
             'usersWithInventoryPermission' => User::permission(PermissionEnum::INVENTORY_PLANER->value)->get(),
-            'shiftQualifications' => $shiftQualificationService->getAllOrderedByCreationDateAscending(),
+            'shiftQualifications' => $shiftQualificationService->getAllOrderedByPosition(),
             'shiftTimePresets' => ShiftTimePreset::all(),
             'shiftSettings' => $shiftSettings,
             'shiftCommitWorkflowUsers' => ShiftCommitWorkflowUser::with('user')

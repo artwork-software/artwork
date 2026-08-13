@@ -53,6 +53,12 @@
                     <span v-else-if="notification.data.handledStatus === 'deleted'" class="text-text-muted bg-surface-sunken px-2 py-1 rounded">
                         {{ $t('Event deleted by') }} {{ notification.data.handledBy?.name }}
                     </span>
+                    <span v-else-if="notification.data.handledStatus === 'material_returned'" class="text-success bg-success-surface px-2 py-1 rounded">
+                        {{ $t('Return confirmed by') }} {{ notification.data.handledBy?.name }}<template v-if="notification.data.handledAt"> ({{ notification.data.handledAt }})</template>
+                    </span>
+                    <span v-else-if="notification.data.handledStatus === 'material_not_returned'" class="text-danger bg-danger-surface px-2 py-1 rounded">
+                        {{ $t('Reported as not returned by') }} {{ notification.data.handledBy?.name }}<template v-if="notification.data.handledAt"> ({{ notification.data.handledAt }})</template>
+                    </span>
                 </div>
                 <NotificationButtons v-if="!isArchive"
                                      :buttons="notification.data.buttons"
@@ -69,12 +75,14 @@
                                      @showInTask="openProjectTasks(notification.data?.taskId)"
                                      @show-project="openProject(notification.data?.projectId)"
                                      @delete-verification-request="deleteVerificationRequest"
+                                     @confirm-material-return="showMaterialReturnConfirmModal = true"
+                                     @decline-material-return="declineMaterialReturn"
                 />
             </div>
         </div>
         <img @click="setReadAt"
              v-show="notification.hovered"
-             v-if="!isArchive && notification.data.buttons.filter(button => !['showInTasks', 'show_project', 'delete_shift_notification', 'see_shift', 'change_shift', 'accept', 'decline', 'answerDialog', 'answer', 'change_request', 'event_delete', 'show_in_calendar'].includes(button)).length === 0"
+             v-if="!isArchive && notification.data.buttons.filter(button => !['showInTasks', 'show_project', 'delete_shift_notification', 'see_shift', 'change_shift', 'accept', 'decline', 'answerDialog', 'answer', 'change_request', 'event_delete', 'show_in_calendar', 'material_issue_return_confirm', 'material_issue_return_decline'].includes(button)).length === 0"
              src="/Svgs/IconSvgs/icon_archive_white.svg"
              class="h-6 w-6 p-1 ml-1 flex cursor-pointer bg-accent-600 rounded-full"
              aria-hidden="true"
@@ -149,6 +157,11 @@
         :description="$t('Are you sure you want to put the selected appointments in the recycle bin? All sub-events will also be deleted.')"
         v-if="showDeleteConfirmModal"
     />
+    <MaterialIssueReturnConfirmModal
+        v-if="showMaterialReturnConfirmModal"
+        :external-issue-id="notification.data?.modelId"
+        @close="showMaterialReturnConfirmModal = false"
+    />
 </template>
 
 <script>
@@ -164,6 +177,7 @@ import RoomRequestDialogComponent from "@/Layouts/Components/RoomRequestDialogCo
 import UserVacationHistoryModal from "@/Pages/Notifications/Components/UserVacationHistoryModal.vue";
 import EventHistoryModal from "@/Pages/Notifications/Components/EventHistoryModal.vue";
 import EventsWithoutRoomComponent from "@/Layouts/Components/EventsWithoutRoomComponent.vue";
+import MaterialIssueReturnConfirmModal from "@/Layouts/Components/NotificationComponents/MaterialIssueReturnConfirmModal.vue";
 import Permissions from "@/Mixins/Permissions.vue";
 import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
 import { provide } from 'vue';
@@ -172,6 +186,7 @@ export default {
     name: "NotificationBlock",
     components: {
         UserPopoverTooltip,
+        MaterialIssueReturnConfirmModal,
         EventsWithoutRoomComponent,
         EventHistoryModal,
         UserVacationHistoryModal,
@@ -219,11 +234,24 @@ export default {
             showEventWithoutRoomComponent: false,
             showRoomRequestDialogComponent: false,
             showUserVacationHistory: false,
-            showEventHistory: false
+            showEventHistory: false,
+            showMaterialReturnConfirmModal: false
         }
     },
     computed: {},
     methods: {
+        declineMaterialReturn() {
+            if (!this.notification.data?.modelId) {
+                return;
+            }
+            router.post(
+                route('extern-issue-of-material.return-decline', this.notification.data.modelId),
+                {},
+                {
+                    preserveScroll: true,
+                }
+            );
+        },
         deleteVerificationRequest() {
             router.post(
                 route('project.budget.remove.verification'),

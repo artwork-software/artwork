@@ -17,7 +17,7 @@
                             <img class="min-h-14 min-w-14 h-14 w-14 object-cover rounded-full" :src="resolvedUser.profile_photo_url" alt=""/>
                             <div class="">
                                 <div class="font-black font-lexend  text-lg flex items-start gap-x-4 mb-2 border-b border-dashed" :class="isWhite ? 'text-text border-border' : 'text-text-inverse border-white/10'">
-                                    <span :class="{'underline cursor-pointer': canViewUserInfo}" @click="goToUserInfo">{{ resolvedUser.first_name }} {{ resolvedUser.last_name }}</span>
+                                    <span :class="{'underline cursor-pointer': canViewUserInfo}" @click="goToUserInfo">{{ displayName }}</span>
                                     <div class="text-white/70 text-xs my-1">
                                         {{ resolvedUser.pronouns }}
                                     </div>
@@ -142,8 +142,22 @@ export default {
                 this.can('can manage workers') ||
                 this.can('can view private user info');
         },
+        // Freelancer/Dienstleister teilen sich den Id-Raum nicht mit Usern —
+        // Lazy-Load (user.tooltip.info) und Cache gelten nur für echte User.
+        isUserEntity() {
+            const type = this.user?.type;
+            return type === undefined || type === null || type === 'user' || type === 0;
+        },
+        displayName() {
+            const user = this.resolvedUser;
+            if (!user) {
+                return '';
+            }
+            const fullName = [user.first_name, user.last_name].filter(Boolean).join(' ');
+            return fullName || user.provider_name || user.name || '';
+        },
         resolvedUser() {
-            if (!this.lazyLoad || !this.user?.id) {
+            if (!this.lazyLoad || !this.user?.id || !this.isUserEntity) {
                 return this.user;
             }
 
@@ -160,7 +174,7 @@ export default {
     },
     methods: {
         fetchLazyUserDetails() {
-            if (!this.lazyLoad || !this.user?.id) {
+            if (!this.lazyLoad || !this.user?.id || !this.isUserEntity) {
                 return;
             }
 
@@ -215,7 +229,16 @@ export default {
             }
         },
         goToUserInfo() {
-            if (this.canViewUserInfo && this.user?.id) {
+            if (!this.canViewUserInfo || !this.user?.id) {
+                return;
+            }
+
+            const type = this.user.type;
+            if (type === 'freelancer' || type === 1) {
+                router.visit(route('freelancer.show', {freelancer: this.user.id}));
+            } else if (type === 'service_provider' || type === 2) {
+                router.visit(route('service_provider.show', {serviceProvider: this.user.id}));
+            } else {
                 router.visit(route('user.edit.info', {user: this.user.id}));
             }
         },

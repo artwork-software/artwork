@@ -384,9 +384,8 @@ class ShiftCalendarService
                     'first_name' => $user->first_name,
                     'last_name' => $user->last_name,
                     'position' => $user->position ?? null,
-                    'profile_photo_url' => $user->profile_photo_path
-                        ? '/storage/' . $user->profile_photo_path
-                        : null,
+                    // Accessor liefert bei fehlendem Foto den Buchstaben-Avatar (SVG-Data-URI)
+                    'profile_photo_url' => $user->profile_photo_url,
                 ])->values()->all()
                 : null,
         ];
@@ -412,9 +411,7 @@ class ShiftCalendarService
                     'full_name' => trim($user->first_name . ' ' . $user->last_name),
                     'position' => $user->position ?? null,
                     'business' => $user->business ?? null,
-                    'profile_photo_url' => $user->profile_photo_path
-                        ? '/storage/' . $user->profile_photo_path
-                        : null,
+                    'profile_photo_url' => $user->profile_photo_url,
                 ])->values()->all()
                 : [],
         ];

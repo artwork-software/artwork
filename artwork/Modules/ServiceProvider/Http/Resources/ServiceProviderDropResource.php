@@ -18,7 +18,7 @@ class ServiceProviderDropResource extends JsonResource
             'resource' => class_basename($this),
             'id' => $this->id,
             'provider_name' => $this->provider_name,
-            'profile_photo_url' => $this->profile_image,
+            'profile_photo_url' => $this->profile_photo_url,
             'assigned_craft_ids' => $this->assignedCrafts->pluck('id'),
             'can_work_shifts' => $this->can_work_shifts,
             'shift_qualifications' => $this->shiftQualifications()->get(['shift_qualifications.id', 'name', 'available'])

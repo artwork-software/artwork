@@ -171,6 +171,16 @@ const visibleCols = computed(() => {
         >
         <!-- Spacer erzeugt echte Scrollbars -->
         <div class="relative" :style="{ width: totalW + 'px', height: totalH + 'px' }">
+            <!-- Spalten-Overlay (z.B. durchgehende KW-Trennlinie): exakt an der Spaltenkante,
+                 ohne das p-0.5 der Zellen — Zellen-Borders wären 2px versetzt und pro Zeile unterbrochen -->
+            <div
+                v-for="vc in visibleCols"
+                :key="`ov_${vc.col.fullDay ?? vc.c}`"
+                class="pointer-events-none absolute top-0"
+                :style="{ left: vc.left + 'px', width: vc.width + 'px', height: totalH + 'px' }"
+            >
+                <slot name="colOverlay" :day="vc.col" :colIndex="vc.c" />
+            </div>
             <div
                 v-for="vr in visibleRows"
                 :key="vr.row.key"

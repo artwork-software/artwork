@@ -681,6 +681,11 @@
                             :top-padding="10"
                             :header-height="22"
                         >
+                            <!-- Durchgehende KW-Trennlinie über die gesamte Grid-Höhe (statt Stückel-Borders pro Zeile) -->
+                            <template #colOverlay="{ day }">
+                                <div v-if="day.isExtraRow" class="h-full border-l-2 border-white/40"></div>
+                            </template>
+
                             <!-- KW-Spaltenheader im unteren Bereich (Tages-Spalten bleiben leer) -->
                             <template #colHeader="{ day }">
                                 <div
@@ -793,22 +798,20 @@
 
                             <template #cell="{ row, day }">
 
-                                <!-- Intern/Extern-Trennzeile: durchgehende Linie -->
-                                <div v-if="row.kind === 'internExternDivider'" class="flex h-full w-full items-center"
-                                     :class="day.isExtraRow ? 'border-l-2 border-white/40' : ''">
+                                <!-- Intern/Extern-Trennzeile: durchgehende Linie (KW-Trennlinie kommt vom colOverlay) -->
+                                <div v-if="row.kind === 'internExternDivider'" class="flex h-full w-full items-center">
                                     <div class="w-full border-t border-white/30"></div>
                                 </div>
 
-                                <!-- Craft-/Funktionsgruppen-Row: keine Zellen, aber KW-Trennlinie durchziehen -->
-                                <div v-else-if="row.kind !== 'worker'" class="h-full w-full"
-                                     :class="day.isExtraRow ? 'border-l-2 border-white/40' : ''"></div>
+                                <!-- Craft-/Funktionsgruppen-Row: keine Zellen -->
+                                <div v-else-if="row.kind !== 'worker'" class="h-full w-full"></div>
 
                                 <!-- Worker row -->
                                 <div v-else class="relative h-full w-full">
                                     <!-- ExtraRow / Wochenarbeitszeit + Freigabe-Status (blau=angefragt, grün=festgeschrieben, gelb=Achtung) -->
                                     <div
                                         v-if="day.isExtraRow"
-                                        class="shiftCell flex h-full items-center justify-center overflow-hidden rounded-lg p-2 text-center text-white border-l-2 border-white/40"
+                                        class="shiftCell flex h-full items-center justify-center overflow-hidden rounded-lg p-2 text-center text-white"
                                         :class="[kwWorkflowStatusClass(row, day), cellWrapperClass(row, day)]"
                                         :title="kwWorkflowStatusTitle(row, day)"
                                     >

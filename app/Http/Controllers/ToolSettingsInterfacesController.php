@@ -13,6 +13,7 @@ use Artwork\Modules\Budget\Services\TableColumnOrderService;
 use Artwork\Modules\SageApiSettings\Http\Requests\CreateOrUpdateSageApiSettingsRequest;
 use Artwork\Modules\SageApiSettings\Models\SageApiSettings;
 use Artwork\Modules\SageApiSettings\Services\SageApiSettingsService;
+use Artwork\Modules\Webhook\Models\WebhookEndpoint;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -40,9 +41,11 @@ class ToolSettingsInterfacesController extends Controller
     /**
      * @throws AuthorizationException
      */
-    public function index(): Response
+    public function index(Request $request): Response
     {
         $this->authorize('view', Token::class);
+
+        $canManageWebhooks = $request->user()?->can('viewAny', WebhookEndpoint::class) ?? false;
 
         // Kein access_token mehr: Der Klartext existiert nur einmalig direkt nach der Erstellung.
         // Kein last_used_at: Die Spalte gibt es auf oauth_access_tokens nicht, der Wert war immer null.
@@ -73,6 +76,20 @@ class ToolSettingsInterfacesController extends Controller
                         'description' => $scope->description,
                     ])
                     ->values(),
+                'canManageWebhooks' => $canManageWebhooks,
+                // Endpunkte tragen ein Signaturgeheimnis; sie werden nur geladen, wenn der Benutzer
+                // sie auch verwalten darf. Das Geheimnis selbst ist im Model als hidden markiert.
+                'webhookEndpoints' => $canManageWebhooks
+                    ? WebhookEndpoint::query()->orderBy('name')->get()
+                    : [],
+                'webhookEvents' => $canManageWebhooks
+                    ? collect(config('webhooks.events', []))
+                        ->map(fn (string $description, string $name): array => [
+                            'name' => $name,
+                            'description' => $description,
+                        ])
+                        ->values()
+                    : [],
             ]
         );
     }

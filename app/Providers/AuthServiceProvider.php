@@ -57,6 +57,8 @@ use Artwork\Modules\TaskTemplate\Models\TaskTemplate;
 use Artwork\Modules\TaskTemplate\Policies\TaskTemplatePolicy;
 use Artwork\Modules\User\Models\User;
 use Artwork\Modules\User\Policies\UserPolicy;
+use Artwork\Modules\Webhook\Models\WebhookEndpoint;
+use Artwork\Modules\Webhook\Policies\WebhookEndpointPolicy;
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
 use Illuminate\Support\Facades\Gate;
 use Laravel\Passport\Passport;
@@ -82,6 +84,7 @@ class AuthServiceProvider extends ServiceProvider
         ServiceProviderModel::class => ServiceProviderPolicy::class,
         GeneralSettings::class => GeneralSettingsPolicy::class,
         Token::class => TokenPolicy::class,
+        WebhookEndpoint::class => WebhookEndpointPolicy::class,
         ShiftQualification::class => ShiftQualificationPolicy::class,
         SageApiSettings::class => SageApiSettingsPolicy::class,
         SageAssignedDataComment::class => SageAssignedDataCommentPolicy::class,

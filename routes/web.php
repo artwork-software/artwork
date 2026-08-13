@@ -184,6 +184,7 @@ use Artwork\Modules\Shift\Http\Controllers\ShiftGroupController;
 use Artwork\Modules\Shift\Http\Controllers\ShiftHistoryController;
 use Artwork\Modules\Shift\Http\Controllers\ShiftWorkerConfirmationController;
 use Artwork\Modules\System\ApiManagement\Http\Controller\ApiManagementController;
+use Artwork\Modules\Webhook\Http\Controllers\WebhookEndpointController;
 use Artwork\Modules\WorkTime\Http\Controllers\CraftDistributionExportController;
 use Artwork\Modules\WorkTime\Http\Controllers\WorkTimeOverviewExportController;
 use Artwork\Modules\User\Http\Controllers\UserCalendarFilterController;
@@ -400,6 +401,22 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
                 'store' => 'api-management.store',
                 'destroy' => 'api-management.destroy'
             ]);
+
+        //WEBHOOKS
+        // Die Übersicht rendert tool.interfaces mit; hier liegen nur die schreibenden Operationen
+        // und das Zustellprotokoll.
+        Route::post('/webhooks', [WebhookEndpointController::class, 'store'])
+            ->name('webhooks.store');
+        Route::patch('/webhooks/{webhookEndpoint}', [WebhookEndpointController::class, 'update'])
+            ->name('webhooks.update');
+        Route::delete('/webhooks/{webhookEndpoint}', [WebhookEndpointController::class, 'destroy'])
+            ->name('webhooks.destroy');
+        Route::get('/webhooks/{webhookEndpoint}/deliveries', [WebhookEndpointController::class, 'deliveries'])
+            ->name('webhooks.deliveries');
+        Route::post('/webhooks/deliveries/{webhookDelivery}/redeliver', [
+            WebhookEndpointController::class,
+            'redeliver'
+        ])->name('webhooks.deliveries.redeliver');
     });
 
     Route::group(['middleware' => CanEditMoneySource::class], function (): void {

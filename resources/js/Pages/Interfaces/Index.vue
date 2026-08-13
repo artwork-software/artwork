@@ -26,6 +26,23 @@
                         </div>
                     </transition>
                 </div>
+                <!-- Webhooks -->
+                <div class="space-y-6" v-if="canManageWebhooks">
+                    <div @click="toggleSection(openSections.WEBHOOKS)"
+                         class="cursor-pointer flex items-center justify-between bg-surface-sunken p-4 rounded">
+                        <span class="font-semibold">{{ $t('Webhooks') }}</span>
+                        <IconChevronDown :class="['transition-transform', { 'rotate-180': openSection === openSections.WEBHOOKS }]"
+                                         class="w-5 h-5"/>
+                    </div>
+                    <transition name="fade">
+                        <div v-if="openSection === openSections.WEBHOOKS" class="p-4 bg-white rounded shadow">
+                            <WebhookSettings
+                                :endpoints="webhookEndpoints"
+                                :available-events="webhookEvents"
+                            />
+                        </div>
+                    </transition>
+                </div>
                 <!-- Sage API -->
                 <div class="space-y-6" v-if="sageSettings">
                     <div @click="toggleSection(openSections.SAGE)"
@@ -50,6 +67,7 @@ import {onMounted, ref} from 'vue'
 import ToolSettingsHeader from "@/Pages/ToolSettings/ToolSettingsHeader.vue"
 import SageApiSettings from "@/Pages/Interfaces/Sage/SageApiSettings.vue";
 import ArtworkApiSettings from "@/Pages/Interfaces/Artwork/ArtworkApiSettings.vue";
+import WebhookSettings from "@/Pages/Interfaces/Webhooks/WebhookSettings.vue";
 import SettingsGuideBanner from "@/Artwork/Guide/SettingsGuideBanner.vue";
 
 defineProps({
@@ -63,11 +81,24 @@ defineProps({
     availableScopes: {
         type: Array,
         default: () => []
+    },
+    canManageWebhooks: {
+        type: Boolean,
+        default: false
+    },
+    webhookEndpoints: {
+        type: Array,
+        default: () => []
+    },
+    webhookEvents: {
+        type: Array,
+        default: () => []
     }
 })
 
 const openSections = {
     ARTWORK: 'artwork',
+    WEBHOOKS: 'webhooks',
     SAGE: 'sage'
 }
 

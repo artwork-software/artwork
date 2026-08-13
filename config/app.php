@@ -217,6 +217,7 @@ return [
         Artwork\Modules\Setup\SetupServiceProvider::class,
         Artwork\Modules\Holidays\HolidayServiceProvider::class,
         Artwork\Modules\Sage100\Providers\Sage100ClientServiceProvider::class,
+        Artwork\Modules\Webhook\Providers\WebhookServiceProvider::class,
 
         ShiftChangeServiceProvider::class,
         Clockwork\Support\Laravel\ClockworkServiceProvider::class

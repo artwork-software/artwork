@@ -45,6 +45,7 @@ class Kernel extends ConsoleKernel
             '--model' => [
                 \Artwork\Modules\Budget\Models\SageBookingLog::class,
                 \Artwork\Core\Api\Models\ApiLog::class,
+                \Artwork\Modules\Webhook\Models\WebhookDelivery::class,
             ],
         ])->daily();
         $schedule->command(SendScheduledNotificationsCommand::class)->everyTenMinutes();
@@ -113,6 +114,7 @@ class Kernel extends ConsoleKernel
         $this->load(dirname(__DIR__, 2) . '/artwork/Modules/ExternalAccess/Console/Commands', true);
         $this->load(dirname(__DIR__, 2) . '/artwork/Modules/ExternalUserManagement/Console/Commands', true);
         $this->load(dirname(__DIR__, 2) . '/artwork/Modules/Inventory/Console/Commands', true);
+        $this->load(dirname(__DIR__, 2) . '/artwork/Modules/Webhook/Console/Commands', true);
 
         require base_path('routes/console.php');
     }

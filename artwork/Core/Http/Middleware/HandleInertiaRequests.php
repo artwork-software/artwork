@@ -241,6 +241,8 @@ class HandleInertiaRequests extends Middleware
                     // Einmalige Anzeige eines frisch erstellten Maschinen-Tokens. Der Klartext wird
                     // nirgends gespeichert, diese Flash-Nachricht ist die einzige Gelegenheit ihn zu lesen.
                     'plainTextToken' => fn() => $request->session()->get('plainTextToken'),
+                    // Ebenso einmalig: das Signaturgeheimnis eines neu angelegten Webhook-Endpunkts.
+                    'webhookSecret' => fn() => $request->session()->get('webhookSecret'),
                 ],
                 'event_status_module' => $eventSettings->enable_status,
                 'event_admission_module' => $eventSettings->enable_admission,

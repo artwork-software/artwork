@@ -163,16 +163,16 @@ class ShiftPlanService
             $showUnrelatedShifts = (bool) ($projectViewSettings?->show_unrelated_shifts ?? false);
         }
 
+        // firstOrCreate statt create: meta- und rooms.batch-Request laufen parallel
+        // und können hier gleichzeitig ohne Settings-Zeile ankommen — der Verlierer
+        // liest dank unique(user_id) die Zeile des Gewinners statt eine Dublette
+        // anzulegen.
         if ($isDailyView) {
-            $userCalendarSettings = $currentUser->getAttribute('shift_plan_daily_settings');
-            if ($userCalendarSettings === null) {
-                $userCalendarSettings = $currentUser->shift_plan_daily_settings()->create();
-            }
+            $userCalendarSettings = $currentUser->getAttribute('shift_plan_daily_settings')
+                ?? $currentUser->shift_plan_daily_settings()->firstOrCreate();
         } else {
-            $userCalendarSettings = $currentUser->getAttribute('shift_plan_settings');
-            if ($userCalendarSettings === null) {
-                $userCalendarSettings = $currentUser->shift_plan_settings()->create();
-            }
+            $userCalendarSettings = $currentUser->getAttribute('shift_plan_settings')
+                ?? $currentUser->shift_plan_settings()->firstOrCreate();
         }
 
         $shiftFilterType = $isProjectView

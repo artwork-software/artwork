@@ -7,9 +7,30 @@ use Artwork\Modules\Budget\Models\ColumnCell;
 use Artwork\Modules\Budget\Models\MainPositionDetails;
 use Artwork\Modules\Budget\Models\SubPositionSumDetail;
 use Artwork\Modules\MoneySource\Models\MoneySource;
+use Illuminate\Database\Eloquent\Collection;
 
 class MoneySourceCalculationService
 {
+    /**
+     * Pro Zeile zählt genau eine verknüpfte Zelle: bevorzugt die der
+     * budgetrelevanten Spalte, sonst die der hintersten Wertspalte
+     * (Position-Reihenfolge, analog ColumnRelevanceService). Vorher wurde
+     * die höchste column_id genommen — nach Duplizieren/Wiederherstellen
+     * oder manuellem Umhängen des Flags traf das die falsche Spalte.
+     */
+    public function getLinkedColumnCellsPerRow(array|int $moneySourceIds, array $with = []): Collection
+    {
+        return ColumnCell::query()
+            ->whereIn('linked_money_source_id', (array) $moneySourceIds)
+            ->with(array_merge(['column'], $with))
+            ->get()
+            ->sortByDesc(fn(ColumnCell $columnCell) => (
+                ($columnCell->column?->relevant_for_project_groups ? 1_000_000 : 0)
+                + ($columnCell->column?->position ?? 0)
+            ))
+            ->unique('sub_position_row_id');
+    }
+
     public function getPositionSumOfOneMoneySource(MoneySource $moneySource): float
     {
         $positionSum = 0;
@@ -31,20 +52,7 @@ class MoneySourceCalculationService
 
     private function calculateColumnCellLinkedSum(MoneySource $moneySource): float
     {
-        // Pro Zeile zählt genau eine verknüpfte Zelle: bevorzugt die der
-        // budgetrelevanten Spalte, sonst die der hintersten Wertspalte
-        // (Position-Reihenfolge, analog ColumnRelevanceService). Vorher wurde
-        // die höchste column_id genommen — nach Duplizieren/Wiederherstellen
-        // oder manuellem Umhängen des Flags traf das die falsche Spalte.
-        $columnCells = ColumnCell::query()
-            ->where('linked_money_source_id', $moneySource->id)
-            ->with('column')
-            ->get()
-            ->sortByDesc(fn(ColumnCell $columnCell) => (
-                ($columnCell->column?->relevant_for_project_groups ? 1_000_000 : 0)
-                + ($columnCell->column?->position ?? 0)
-            ))
-            ->unique('sub_position_row_id');
+        $columnCells = $this->getLinkedColumnCellsPerRow($moneySource->id);
 
         $columnCellsLinkedSum = 0;
 

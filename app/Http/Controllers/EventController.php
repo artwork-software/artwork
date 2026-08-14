@@ -875,20 +875,16 @@ class EventController extends Controller
                 ['filter_type' => $shiftFilterType],
                 ['start_date' => null, 'end_date' => null]
             );
-            $userCalendarSettings = $user->getAttribute('shift_plan_daily_settings');
-            if ($userCalendarSettings === null) {
-                $userCalendarSettings = $user->shift_plan_daily_settings()->create();
-            }
+            $userCalendarSettings = $user->getAttribute('shift_plan_daily_settings')
+                ?? $user->shift_plan_daily_settings()->firstOrCreate();
         } else {
             $shiftFilterType = UserFilterTypes::SHIFT_FILTER->value;
             $userCalendarFilter = $user->userFilters()->firstOrCreate(
                 ['filter_type' => $shiftFilterType],
                 ['start_date' => null, 'end_date' => null]
             );
-            $userCalendarSettings = $user->getAttribute('shift_plan_settings');
-            if ($userCalendarSettings === null) {
-                $userCalendarSettings = $user->shift_plan_settings()->create();
-            }
+            $userCalendarSettings = $user->getAttribute('shift_plan_settings')
+                ?? $user->shift_plan_settings()->firstOrCreate();
         }
 
         $renderViewName = 'Shifts/ShiftPlan';

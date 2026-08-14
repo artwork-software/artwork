@@ -115,6 +115,11 @@
                                 </div>
                             </div>
                         </div>
+                        <!-- Einlass (Anzeigeeinstellung "Einlass", nur Starttag) -->
+                        <div v-if="showAdmissionTime" class="text-xs/5 mt-0.5 flex items-center gap-1">
+                            <IconDoorEnter class="size-3.5 shrink-0" stroke-width="2" />
+                            <span>{{ $t('Admission') }} {{ event.admission_time }}</span>
+                        </div>
                         <div class="text-xs/5 mt-0.5">
                             <div v-if="event.allDay">
                                 {{ $t('All day') }}
@@ -125,11 +130,6 @@
                             <div v-else>
                                 {{ formattedDates?.start }} - {{ formattedDates?.end }}
                             </div>
-                        </div>
-                        <!-- Einlass (Anzeigeeinstellung "Einlass", nur Starttag) -->
-                        <div v-if="showAdmissionTime" class="text-xs/5 mt-0.5 flex items-center gap-1">
-                            <IconDoorEnter class="size-3.5 shrink-0" stroke-width="2" />
-                            <span>{{ $t('Admission') }} {{ event.admission_time }}</span>
                         </div>
                         <!-- Terminbeschreibung (Anzeigeeinstellung "Notizen einblenden") -->
                         <div

@@ -31,10 +31,19 @@ class MoneySourceCalculationService
 
     private function calculateColumnCellLinkedSum(MoneySource $moneySource): float
     {
+        // Pro Zeile zählt genau eine verknüpfte Zelle: bevorzugt die der
+        // budgetrelevanten Spalte, sonst die der hintersten Wertspalte
+        // (Position-Reihenfolge, analog ColumnRelevanceService). Vorher wurde
+        // die höchste column_id genommen — nach Duplizieren/Wiederherstellen
+        // oder manuellem Umhängen des Flags traf das die falsche Spalte.
         $columnCells = ColumnCell::query()
             ->where('linked_money_source_id', $moneySource->id)
-            ->latest('column_id')
+            ->with('column')
             ->get()
+            ->sortByDesc(fn(ColumnCell $columnCell) => (
+                ($columnCell->column?->relevant_for_project_groups ? 1_000_000 : 0)
+                + ($columnCell->column?->position ?? 0)
+            ))
             ->unique('sub_position_row_id');
 
         $columnCellsLinkedSum = 0;

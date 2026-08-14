@@ -396,7 +396,9 @@ class WorkingHourService
 
             $userData['violations'] = $violationsByUser->get($user->id, collect());
             $userData['compensation_day_offs'] = $compensationDaysByUser->get($user->id, collect());
-            $userData['compensation_period'] = $user->activeWorkContract()?->compensation_period ?? 0;
+            // contract.userContract ist in loadWorkerRelations eager geladen — kein activeWorkContract()
+            // (das würde pro User zwei Queries feuern)
+            $userData['compensation_period'] = $user->contract?->userContract?->compensation_period ?? 0;
 
             $usersWithPlannedWorkingHours[] = $userData;
         }
@@ -505,6 +507,15 @@ class WorkingHourService
             ];
         }
 
+        // Feiertags-Ausgleichstage einmal für alle User laden statt einer Query pro User im Loop
+        $holidayCompDaysByUser = CompensationDayOff::query()
+            ->whereIn('user_id', $users->pluck('id'))
+            ->whereNotNull('granted_date')
+            ->where('for_holiday', true)
+            ->whereBetween('granted_date', [$startDate->toDateString(), $endDate->toDateString()])
+            ->get()
+            ->groupBy('user_id');
+
         // Process each user — precompute shift minutes, workTime patterns, and weekly hours in one loop
         foreach ($users as $user) {
             $userId = $user->id;
@@ -573,13 +584,9 @@ class WorkingHourService
                 $bookingsPerDay[$bookingDay] += $booking->worked_hours;
             }
 
-            // Create a map of granted compensation days per day
+            // Create a map of granted compensation days per day (vorab gebatcht, s.o.)
             $compensationDays = collect();
-            $grantedCompDays = CompensationDayOff::where('user_id', $userId)
-                ->whereNotNull('granted_date')
-                ->where('for_holiday', true)
-                ->whereBetween('granted_date', [$startDate->toDateString(), $endDate->toDateString()])
-                ->get();
+            $grantedCompDays = $holidayCompDaysByUser->get($userId, collect());
             foreach ($grantedCompDays as $compDay) {
                 $compDateStr = $compDay->granted_date->toDateString();
                 if (!$compensationDays->has($compDateStr)) {
@@ -735,8 +742,13 @@ class WorkingHourService
             return $weeklyWorkingHours;
         }
 
-        // Lade individualTimes einmal
-        $individualTimes = $entity->individualTimes()->individualByDateRange($startDate->toDateString(), $endDate->toDateString())->get();
+        // individualTimes sind in loadWorkerRelations bereits für genau diesen Zeitraum eager
+        // geladen — nachladen nur als Fallback, sonst wäre das eine Query pro Person
+        $individualTimes = $entity->relationLoaded('individualTimes')
+            ? $entity->individualTimes
+            : $entity->individualTimes()
+                ->individualByDateRange($startDate->toDateString(), $endDate->toDateString())
+                ->get();
 
         $individualMinutesPerDay = collect();
         foreach ($individualTimes as $individualTime) {
@@ -766,12 +778,14 @@ class WorkingHourService
             }
         }
 
-        // Lade bookings für User einmal
+        // Lade bookings für User einmal (eager geladen in loadWorkerRelations, Query nur als Fallback)
         $bookingsPerDay = collect();
         if ($entity instanceof User) {
-            $bookings = $entity->workTimeBookings()
-                ->whereBetween('booking_day', [$startDate->toDateString(), $endDate->toDateString()])
-                ->get();
+            $bookings = $entity->relationLoaded('workTimeBookings')
+                ? $entity->workTimeBookings
+                : $entity->workTimeBookings()
+                    ->whereBetween('booking_day', [$startDate->toDateString(), $endDate->toDateString()])
+                    ->get();
 
             foreach ($bookings as $booking) {
                 $bookingDay = $booking->booking_day;

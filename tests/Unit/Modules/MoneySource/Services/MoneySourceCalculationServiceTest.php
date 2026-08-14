@@ -121,4 +121,36 @@ final class MoneySourceCalculationServiceTest extends TestCase
 
         $this->assertSame(0.0, $sum);
     }
+
+    #[Test]
+    public function linked_cell_sum_prefers_the_budget_relevant_column(): void
+    {
+        $moneySource = MoneySource::factory()->create(['is_group' => false]);
+        $table = Table::factory()->create(['is_template' => false]);
+        $flagged = Column::factory()->create([
+            'table_id' => $table->id,
+            'position' => 3,
+            'relevant_for_project_groups' => true,
+        ]);
+        // später angelegte (höhere id) ungeflaggte Wertspalte — unter der alten
+        // "höchste column_id"-Heuristik hätte deren Zelle gewonnen
+        $newerColumn = Column::factory()->create(['table_id' => $table->id, 'position' => 4]);
+        $row = SubPositionRow::factory()->create();
+
+        foreach ([[$flagged, '100'], [$newerColumn, '999']] as [$column, $value]) {
+            ColumnCell::create([
+                'column_id' => $column->id,
+                'sub_position_row_id' => $row->id,
+                'value' => $value,
+                'verified_value' => null,
+                'commented' => false,
+                'linked_money_source_id' => $moneySource->id,
+                'linked_type' => 'EARNING',
+            ]);
+        }
+
+        $sum = $this->service->getPositionSumOfOneMoneySource($moneySource);
+
+        $this->assertSame(100.0, $sum);
+    }
 }

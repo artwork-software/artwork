@@ -21,52 +21,27 @@
             </div>
         </transition>
 
-        <!-- Kalender -->
+        <!-- Kalender: immer direkt rendern. Die Events lädt BaseCalendar selbst
+             monatsweise über events.all — der frühere WhenVisible-Pfad wartete auf
+             eine 'calendar'-Prop, die der Controller nie liefert, und blockierte
+             das erste Rendern mit einem nutzlosen Partial-Reload. -->
         <div class="w-full">
-            <!-- synchron (calendar bereits vorhanden) -->
-            <template v-if="!isCalendarLazy">
-                <BaseCalendar
-                    v-memo="[rooms, period, calendar]"
-                    :rooms="rooms"
-                    :days="period"
-                    :calendar-data="calendar"
-                    :eventsWithoutRoom="eventsWithoutRoom"
-                    :projectNameUsedForProjectTimePeriod="projectNameUsedForProjectTimePeriod"
-                    :first-project-shift-tab-id="first_project_shift_tab_id"
-                    :event-statuses="eventStatuses"
-                />
-            </template>
-
-            <!-- lazy (calendar ist Lazy-Prop von Inertia v2) -->
-            <WhenVisible v-else data="calendar">
-                <template #fallback>
-                    <div class="mt-6 text-sm text-text-subtle">{{ $t('Loading calendar…') }}</div>
-                </template>
-                <Suspense>
-                    <template #default>
-                        <BaseCalendar
-                            v-memo="[rooms, period, calendar]"
-                            :rooms="rooms"
-                            :days="period"
-                            :calendar-data="calendar"
-                            :eventsWithoutRoom="eventsWithoutRoom"
-                            :projectNameUsedForProjectTimePeriod="projectNameUsedForProjectTimePeriod"
-                            :first-project-shift-tab-id="first_project_shift_tab_id"
-                            :event-statuses="eventStatuses"
-                        />
-                    </template>
-                    <template #fallback>
-                        <div class="mt-6 text-sm text-text-subtle">{{ $t('Loading calendar component…') }}</div>
-                    </template>
-                </Suspense>
-            </WhenVisible>
+            <BaseCalendar
+                v-memo="[rooms, period, calendar]"
+                :rooms="rooms"
+                :days="period"
+                :calendar-data="calendar"
+                :eventsWithoutRoom="eventsWithoutRoom"
+                :projectNameUsedForProjectTimePeriod="projectNameUsedForProjectTimePeriod"
+                :first-project-shift-tab-id="first_project_shift_tab_id"
+                :event-statuses="eventStatuses"
+            />
         </div>
     </AppLayout>
 </template>
 
 <script setup lang="ts">
 import AppLayout from '@/Layouts/AppLayout.vue'
-import { WhenVisible } from '@inertiajs/vue3'
 import { defineAsyncComponent, onMounted, onUnmounted, provide, ref, computed, type PropType } from 'vue'
 import { IconAlertSquareRounded, IconX } from '@tabler/icons-vue'
 import { enrichDays } from '@/Composeables/calendarDateUtils.js'
@@ -122,8 +97,6 @@ let timer:number|undefined
 onMounted(() => { if (showCalendarWarning.value) timer = window.setTimeout(() => (showCalendarWarning.value = ''), 5000) })
 onUnmounted(() => { if (timer) clearTimeout(timer) })
 
-// Lazy?
-const isCalendarLazy = computed(() => typeof props.calendar === 'undefined')
 const calendar = computed(() => props.calendar ?? [])
 const rooms = computed(() => props.rooms)
 const period = computed(() => enrichDays(props.period))

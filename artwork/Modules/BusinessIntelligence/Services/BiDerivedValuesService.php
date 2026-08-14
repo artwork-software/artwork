@@ -9,6 +9,7 @@ use Artwork\Modules\Budget\Models\MainPosition;
 use Artwork\Modules\Budget\Models\SageAssignedData;
 use Artwork\Modules\Budget\Models\SubPosition;
 use Artwork\Modules\Budget\Models\SubPositionRow;
+use Artwork\Modules\Budget\Services\ColumnRelevanceService;
 use Artwork\Modules\Project\Models\Project;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
@@ -236,8 +237,7 @@ class BiDerivedValuesService
         $table->loadMissing('columns');
 
         $plan = null;
-        $forecastColumn = $table->columns->first(fn($column) => $column->relevant_for_project_groups)
-            ?? $table->columns->filter(fn($column) => $column->type === 'empty')->last();
+        $forecastColumn = app(ColumnRelevanceService::class)->resolveRelevantColumn($table->columns);
         if ($forecastColumn) {
             $earnings = (float) ($table->earningSums[$forecastColumn->id] ?? 0);
             // 0 heißt praktisch "keine Einnahmen kalkuliert" — kein sinnvoller Vorschlag
@@ -288,8 +288,7 @@ class BiDerivedValuesService
         $table->loadMissing('columns');
 
         $plan = null;
-        $forecastColumn = $table->columns->first(fn($column) => $column->relevant_for_project_groups)
-            ?? $table->columns->filter(fn($column) => $column->type === 'empty')->last();
+        $forecastColumn = app(ColumnRelevanceService::class)->resolveRelevantColumn($table->columns);
         if ($forecastColumn) {
             $costs = (float) ($table->costSums[$forecastColumn->id] ?? 0);
             $plan = $costs > 0 ? round($costs, 2) : null;

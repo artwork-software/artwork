@@ -48,15 +48,10 @@ class EventPlanningCalendarService
                 'is_planning'
             ])
             ->with([
-                'project:id,name,state,artists',
-                'project.status:id,name,color',
-                'project.managerUsers:id,first_name,last_name,position,email',
-                'project.managerUsers.departments:id',
-                'project.groups',
-                'eventStatus:id,color',
-                'event_type:id,name,abbreviation,hex_code',
+                // project/creator/eventStatus/event_type liest EventDTOWithVerifications
+                // NICHT vom Event-Model, sondern aus den Bulk-Lookups weiter unten —
+                // pro Event eager zu laden wäre doppelte Hydration ohne Nutzen.
                 'room:id,name',
-                'creator:id,first_name,last_name,position,email',
             ])
             ->withExists([
                 'verifications as has_pending_verification' => fn ($q) => $q->where('status', 'pending'),

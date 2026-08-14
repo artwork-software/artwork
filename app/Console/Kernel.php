@@ -43,7 +43,11 @@ class Kernel extends ConsoleKernel
         $schedule->command('model:prune')->daily();
         // Explicit prune for Prunable models outside app/Models (auto-discovery only scans app/Models).
         $schedule->command('model:prune', [
-            '--model' => [\Artwork\Modules\Budget\Models\SageBookingLog::class],
+            '--model' => [
+                \Artwork\Modules\Budget\Models\SageBookingLog::class,
+                \Artwork\Core\Api\Models\ApiLog::class,
+                \Artwork\Modules\Webhook\Models\WebhookDelivery::class,
+            ],
         ])->daily();
         $schedule->command(SendScheduledNotificationsCommand::class)->everyTenMinutes();
         $schedule->command(SendDeadlineNotificationsCommand::class)->dailyAt('09:00');
@@ -112,6 +116,7 @@ class Kernel extends ConsoleKernel
         $this->load(dirname(__DIR__, 2) . '/artwork/Modules/ExternalAccess/Console/Commands', true);
         $this->load(dirname(__DIR__, 2) . '/artwork/Modules/ExternalUserManagement/Console/Commands', true);
         $this->load(dirname(__DIR__, 2) . '/artwork/Modules/Inventory/Console/Commands', true);
+        $this->load(dirname(__DIR__, 2) . '/artwork/Modules/Webhook/Console/Commands', true);
 
         require base_path('routes/console.php');
     }

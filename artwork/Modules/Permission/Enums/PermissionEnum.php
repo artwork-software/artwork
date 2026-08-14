@@ -104,4 +104,6 @@ enum PermissionEnum : string
 
     case DAY_REMARKS_VIEW = 'can view day remarks';
     case DAY_REMARKS_EDIT = 'can edit day remarks';
+
+    case WEBHOOKS_MANAGE = 'manage webhooks';
 }

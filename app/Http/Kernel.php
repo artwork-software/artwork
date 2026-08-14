@@ -75,6 +75,15 @@ class Kernel extends HttpKernel
             ApiAccessLog::class,
         ],
 
+        // Stack für die versionierte Maschinen-API (/api/v1). Bewusst ohne Sanctums
+        // EnsureFrontendRequestsAreStateful — hier authentifiziert ausschließlich ein Bearer-Token,
+        // keine Session. Ebenso ohne throttle:api, weil dessen 60/min pro Benutzer gelten und damit
+        // das feinere Limit pro Token (throttle:machine-api) überstimmen würden.
+        'api.machine' => [
+            SubstituteBindings::class,
+            ApiAccessLog::class,
+        ],
+
         // Isolated stack for external-access (magic-link) users.
         // Deliberately excludes AuthenticateSession, ModuleSettingsMiddleware, the standard
         // HandleInertiaRequests (which leaks permissions/roles), SetDeveloperEnvironment, and

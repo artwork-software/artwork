@@ -53,6 +53,7 @@
         "tightenco/ziggy": "^2.6"
     },
     "require-dev": {
+        "dedoc/scramble": "^0.13",
         "fakerphp/faker": "^v1.20.0",
         "fruitcake/laravel-debugbar": "^4.0",
         "larastan/larastan": "^3.4",

@@ -26,7 +26,7 @@ web_extra_exposed_ports:
       https_port: 8080
 web_extra_daemons:
     - name: queue-1
-      command: while true; do /usr/bin/php /var/www/html/artisan queue:work --sleep=3 --tries=3; sleep 1; done
+      command: while true; do /usr/bin/php /var/www/html/artisan queue:work --queue=default,webhooks,workflows --sleep=3 --tries=3; sleep 1; done
       directory: /var/www/html
     - name: vite
       command: npm run dev

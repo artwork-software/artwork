@@ -2478,9 +2478,20 @@ async function initializeShiftPlan() {
             isInProjectView: !!props.projectId,
         }
 
-        const { data: metaData } = await axios.get(route('shift.plan.meta'), {
+        // Meta + Rooms-Batch parallel anstoßen — der Batch-Request hängt nicht vom
+        // Meta-Ergebnis ab, nur die Verarbeitung bleibt sequenziell (Skeleton zuerst)
+        const metaPromise = axios.get(route('shift.plan.meta'), {
             params: baseParams,
         })
+        const batchPromise = axios.get(route('shift.plan.rooms.batch'), {
+            params: baseParams,
+        })
+        // Rejection-Handler sofort anhängen (gegen unhandledrejection, falls der
+        // Batch fehlschlägt, während wir noch auf Meta warten); Fehler wirft das
+        // await batchPromise unten trotzdem
+        batchPromise.catch(() => {})
+
+        const { data: metaData } = await metaPromise
 
         // Enrich slim CalendarPeriodDTOs with computed display properties
         clearDayPropsCache()
@@ -2505,9 +2516,7 @@ async function initializeShiftPlan() {
             shiftGroupPresetsLocal.value = metaData.shiftGroupPresets
         }
 
-        const { data: batchData } = await axios.get(route('shift.plan.rooms.batch'), {
-            params: baseParams,
-        })
+        const { data: batchData } = await batchPromise
 
         // Store lookup maps from batch response
         if (batchData.lookups) {
@@ -2538,6 +2547,13 @@ async function initializeShiftPlan() {
 
 
 onMounted(async () => {
+    // Crafts + Workers sofort parallel zum Meta/Batch-Load starten — die drei
+    // Endpunkte sind unabhängig; vorher liefen alle vier Requests seriell
+    const craftsPromise = axios.get(route('shifts.crafts'))
+        .then(({ data }) => { craftsLoaded.value = data.crafts ?? [] })
+        .catch(() => { craftsLoaded.value = [] })
+    const workersPromise = loadShiftPlanWorkers()
+
     await initializeShiftPlan()
 
     // Handle highlight query param from list view navigation
@@ -2576,15 +2592,9 @@ onMounted(async () => {
         }
     })
 
-    // Load crafts asynchronously for shift plan
-    try {
-        const { data } = await axios.get(route('shifts.crafts'))
-        craftsLoaded.value = data.crafts ?? []
-    } catch {
-        craftsLoaded.value = []
-    }
-
-    await loadShiftPlanWorkers()
+    // Crafts + Workers wurden oben bereits parallel gestartet — hier nur noch abwarten
+    await craftsPromise
+    await workersPromise
 
     // Dev-only: overflow debug check for visible cells
     if (import.meta.env.DEV && expandDays.value) {

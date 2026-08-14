@@ -3,6 +3,7 @@
 namespace Artwork\Modules\Project\Services;
 
 use Artwork\Core\Carbon\Service\CarbonService;
+use Artwork\Modules\Budget\Services\ColumnRelevanceService;
 use Artwork\Modules\Change\Services\ChangeService;
 use Artwork\Modules\Checklist\Models\Checklist;
 use Artwork\Modules\Crm\Enums\CrmSystemContactTypeEnum;
@@ -577,6 +578,9 @@ class ProjectService
                     $budgetSumDetail->restore();
                 }
             }
+            // Wiederhergestellte Spalten können noch ein veraltetes Flag tragen —
+            // Invariante "genau eine budgetrelevante Spalte" reparieren.
+            app(ColumnRelevanceService::class)->ensureSingleRelevantColumn($table);
             // Soft delete the budget
             $mainPositions = $table->mainPositions()->onlyTrashed()->get();
             foreach ($mainPositions as $mainPosition) {
@@ -846,7 +850,7 @@ class ProjectService
         // Ensure the project has exactly one budget-relevant column
         $table = $project->table()->first();
         if ($table) {
-            app(\Artwork\Modules\Budget\Services\ColumnRelevanceService::class)->ensureSingleRelevantColumn($table);
+            app(ColumnRelevanceService::class)->ensureSingleRelevantColumn($table);
         }
     }
 

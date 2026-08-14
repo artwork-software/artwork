@@ -10,6 +10,7 @@ use Artwork\Modules\Budget\Models\ColumnCell;
 use Artwork\Modules\Budget\Models\MainPosition;
 use Artwork\Modules\Budget\Models\SubPositionRow;
 use Artwork\Modules\Budget\Models\Table;
+use Artwork\Modules\Budget\Services\ColumnRelevanceService;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Models\ProjectState;
 use Carbon\Carbon;
@@ -160,7 +161,7 @@ class DetailedBudgetsByBudgetDeadlineExport implements FromView, ShouldAutoSize,
                 }
             )?->load('cells.sageAssignedData');
 
-            $lastColumn = $tableColumns->filter(fn($column) => $column->getAttribute('type') === "empty")->last();
+            $lastColumn = app(ColumnRelevanceService::class)->resolveRelevantColumn($tableColumns);
 
             $premiere = Carbon::createFromFormat(
                 'Y-m-d',
@@ -235,11 +236,10 @@ class DetailedBudgetsByBudgetDeadlineExport implements FromView, ShouldAutoSize,
 
         // Die budgetrelevante Spalte liefert die Vorschau-Werte - identisch zur
         // aggregierten Export-Variante. Fallback für Altbestand ohne Flag:
-        // letzte Wertspalte (type "empty").
-        $forecastColumnId = (
-            $tableColumns->first(fn(Column $column) => $column->getAttribute('relevant_for_project_groups'))
-                ?? $tableColumns->filter(fn(Column $column) => $column->getAttribute('type') === 'empty')->last()
-        )?->getAttribute('id');
+        // hinterste Wertspalte (zentral im Service).
+        $forecastColumnId = app(ColumnRelevanceService::class)
+            ->resolveRelevantColumn($tableColumns)
+            ?->getAttribute('id');
 
         $rows = [];
         foreach ($projectBudgetTable->getAttribute('mainPositions') as $mainPosition) {

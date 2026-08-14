@@ -65,6 +65,19 @@ readonly class FreelancerService
 
         $freelancersWithPlannedWorkingHours = [];
 
+        // Availabilities in EINER Query für alle Freelancer laden (analog zum User-Pfad)
+        // statt pro Freelancer über das Repository — sonst N+1
+        $availabilitiesByFreelancer = collect();
+        if ($addVacationsAndAvailabilities && $freelancers->isNotEmpty()) {
+            $availabilitiesByFreelancer = Availability::query()
+                ->where('available_type', Freelancer::class)
+                ->whereIn('available_id', $freelancers->pluck('id'))
+                ->betweenDates($startDate, $endDate)
+                ->get()
+                ->groupBy('available_id')
+                ->map(fn ($availabilities) => $availabilities->groupBy('formatted_date'));
+        }
+
         // KW-Stunden externer Personen nur mit Berechtigung (eigene Werte gibt es hier nicht)
         $canSeeWorkerHours = $currentUser?->can(PermissionEnum::CAN_VIEW_SHIFT_WORKER_HOURS->value) ?? false;
 
@@ -96,12 +109,8 @@ readonly class FreelancerService
 
             // Freelancer specific stuff
             if ($addVacationsAndAvailabilities) {
-                $freelancerData['availabilities'] = $this->freelancerRepository
-                    ->getAvailabilitiesBetweenDatesGroupedByFormattedDate(
-                        $freelancer,
-                        $startDate,
-                        $endDate
-                    );
+                $freelancerData['availabilities'] = $availabilitiesByFreelancer
+                    ->get($freelancer->id, collect());
             }
 
             $freelancersWithPlannedWorkingHours[] = $freelancerData;

@@ -51,6 +51,13 @@ readonly class WorkerShiftPlanService
             $eagerLoads['permissions'] = function ($query): void {
                 $query->select(['permissions.id', 'permissions.name', 'permissions.guard_name']);
             };
+            // Rollen ebenfalls vorladen: Spatie fällt bei fehlender Direkt-Permission auf
+            // hasPermissionViaRole zurück und würde sonst pro User die roles-Relation nachladen
+            $eagerLoads['roles'] = function ($query): void {
+                $query->select(['roles.id', 'roles.name', 'roles.guard_name']);
+            };
+            // Vertrag inkl. Vertragsvorlage für compensation_period ohne Query pro User
+            $eagerLoads[] = 'contract.userContract';
         }
 
         return $workers->load($eagerLoads);

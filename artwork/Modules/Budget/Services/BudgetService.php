@@ -612,7 +612,11 @@ class BudgetService
                 'columns' => $subColumns,
                 'firstColumn' => $firstTwoSubColumns->first(),
                 'secondColumn' => $firstTwoSubColumns->last(),
-                'relevantColumns' => $subColumns->where('relevant_for_project_groups', true),
+                // Budgetrelevante Spalte des Unterprojekts; Fallback für Altbestand
+                // ohne Flag: hinterste Wertspalte (zentral im Service).
+                'relevantColumns' => collect(
+                    [app(ColumnRelevanceService::class)->resolveRelevantColumn($subColumns)]
+                )->filter(),
                 'sageColumn' => $subColumns->firstWhere('type', 'sage'),
             ];
 
@@ -894,7 +898,11 @@ class BudgetService
         }
 
         $columns = $table->columns ?? collect();
-        $relevantColumns = $columns->where('relevant_for_project_groups', true);
+        // Budgetrelevante Spalte der Gruppe; Fallback für Altbestand ohne Flag:
+        // hinterste Wertspalte (zentral im Service).
+        $relevantColumns = collect(
+            [app(ColumnRelevanceService::class)->resolveRelevantColumn($columns)]
+        )->filter();
         $sageColumn = $columns->firstWhere('type', 'sage');
 
         $sumByGroupRowIdAndColumn = [];

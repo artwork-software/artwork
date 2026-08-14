@@ -177,18 +177,14 @@ readonly class EventCalendarService
                 'series_id','is_planning'
             ])
             ->with([
-                'project:id,name,state,artists',
-                'project.status:id,name,color',
-                'project.managerUsers:id,first_name,last_name,position,email,profile_photo_path',
-                'project.managerUsers.departments:id',
-                'project.groups',
-                'eventStatus:id,color',
-                'event_type:id,name,abbreviation,hex_code',
+                // project/creator/eventStatus/event_type liest EventDTO::fromModel NICHT
+                // vom Event-Model, sondern aus den Bulk-Lookups in filterRoomsEvents —
+                // pro Event eager zu laden wäre doppelte Hydration ohne Nutzen.
                 'room:id,name',
-                'creator:id,first_name,last_name,position,email,profile_photo_path',
                 'eventProperties',
-                'subEvents',
-                'subEvents.eventProperties',
+                // SubEvent::$with lädt type/eventProperties automatisch mit;
+                // creator wird von serializeSubEvents nicht gelesen.
+                'subEvents' => fn ($query) => $query->without('creator'),
             ])
             ->withExists([
                 'timelines',

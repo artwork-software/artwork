@@ -84,7 +84,17 @@ readonly class BudgetManagementAccountService
         //set all according column cells to 00000
         /** @var Project $project */
         foreach ($projectService->getAll() as $project) {
-            $firstColumnId = $project->table->columns()->orderBy('id')->first()->id;
+            // KTO-Spalte ist die erste nach position - die globale Sage-Einstellung
+            // kann die id-Reihenfolge der ersten beiden Spalten umkehren
+            $firstColumnId = $project->table?->columns()
+                ->orderBy('position')
+                ->orderBy('id')
+                ->first()
+                ?->id;
+
+            if ($firstColumnId === null) {
+                continue;
+            }
 
             $project->table->mainPositions->each(
                 function (MainPosition $mainPosition) use (
@@ -108,7 +118,7 @@ readonly class BudgetManagementAccountService
                                         ->where('column_id', $firstColumnId)
                                         ->first();
 
-                                    if ($columnCell->value === $budgetManagementAccount->account_number) {
+                                    if ($columnCell?->value === $budgetManagementAccount->account_number) {
                                         $columnCellService->updateValue($columnCell, '00000');
                                     }
                                 }
@@ -131,7 +141,17 @@ readonly class BudgetManagementAccountService
         //set all according column cells to 00000
         /** @var Project $project */
         foreach ($projectService->getAll() as $project) {
-            $firstColumnId = $project->table->columns()->orderBy('id')->first()->id;
+            // KTO-Spalte ist die erste nach position - die globale Sage-Einstellung
+            // kann die id-Reihenfolge der ersten beiden Spalten umkehren
+            $firstColumnId = $project->table?->columns()
+                ->orderBy('position')
+                ->orderBy('id')
+                ->first()
+                ?->id;
+
+            if ($firstColumnId === null) {
+                continue;
+            }
 
             $project->table->mainPositions->each(
                 function (MainPosition $mainPosition) use (
@@ -155,7 +175,7 @@ readonly class BudgetManagementAccountService
                                         ->where('column_id', $firstColumnId)
                                         ->first();
 
-                                    if ($columnCell->value === $budgetManagementAccount->account_number) {
+                                    if ($columnCell?->value === $budgetManagementAccount->account_number) {
                                         $columnCellService->updateValue($columnCell, '00000');
                                     }
                                 }

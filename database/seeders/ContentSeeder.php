@@ -2,7 +2,7 @@
 
 namespace Database\Seeders;
 
-use App\Http\Controllers\ProjectController;
+use Artwork\Modules\Budget\Services\BudgetService;
 use Artwork\Modules\Category\Services\CategoryService;
 use Artwork\Modules\Checklist\Models\Checklist;
 use Artwork\Modules\CompanyType\Models\CompanyType;
@@ -588,9 +588,9 @@ class ContentSeeder extends Seeder
             ]
         ]);
 
-        /** @var ProjectController $projectController */
-        $projectController = app()->get(ProjectController::class);
-        $projectController->generateBasicBudgetValues($project);
+        /** @var BudgetService $budgetService */
+        $budgetService = app()->get(BudgetService::class);
+        $budgetService->generateBasicBudgetValues($project);
 
         Checklist::create([
             'name' => 'Aufbau',
@@ -622,7 +622,7 @@ class ContentSeeder extends Seeder
             ]
         ]);
 
-        $projectController->generateBasicBudgetValues($second_project);
+        $budgetService->generateBasicBudgetValues($second_project);
 
         $nextProject = Project::create([
             'name' => 'Participative Audio Lab',
@@ -648,7 +648,7 @@ class ContentSeeder extends Seeder
             ]
         ]);
 
-        $projectController->generateBasicBudgetValues($nextProject);
+        $budgetService->generateBasicBudgetValues($nextProject);
 
         $nextProject = Project::create([
             'name' => 'Mega Projekt 🚀',
@@ -677,7 +677,7 @@ class ContentSeeder extends Seeder
             ]
         ]);
 
-        $projectController->generateBasicBudgetValues($nextProject);
+        $budgetService->generateBasicBudgetValues($nextProject);
     }
 
     private function seedCostCenters(): void

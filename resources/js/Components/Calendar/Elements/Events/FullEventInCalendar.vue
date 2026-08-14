@@ -249,6 +249,22 @@
                             </div>
                         </div>
 
+                        <!-- Einlass (Anzeigeeinstellung "Einlass", nur Starttag-Kachel, nicht bei kleinem Zoom) -->
+                        <div
+                            v-if="showAdmissionTime && !project && zoom_factor >= 0.8"
+                            class="mt-0.5 flex items-center gap-1.5 text-xs/5"
+                        >
+                            <component
+                                :is="IconDoorEnter"
+                                class="size-3.5 shrink-0"
+                                stroke-width="2"
+                                :style="{ color: eventTextColor }"
+                            />
+                            <span class="text-xs/[18px] subpixel-antialiased whitespace-nowrap" :style="{ color: eventTypeTextColor }">
+                                {{ $t('Admission') }} {{ event.admission_time }}
+                            </span>
+                        </div>
+
                         <!-- Zeit/Optionen Zeile -->
                         <div class="mt-0.5 flex items-center gap-1.5 text-xs/5" :class="[isSameDay && !project && !atAGlance ? 'flex-nowrap' : 'flex-wrap']">
                             <component
@@ -316,22 +332,6 @@
                                   ({{ event.option_string.charAt(7) }})
                                 </span>
                             </div>
-                        </div>
-
-                        <!-- Einlass (Anzeigeeinstellung "Einlass", nur Starttag-Kachel, nicht bei kleinem Zoom) -->
-                        <div
-                            v-if="showAdmissionTime && !project && zoom_factor >= 0.8"
-                            class="mt-0.5 flex items-center gap-1.5 text-xs/5"
-                        >
-                            <component
-                                :is="IconDoorEnter"
-                                class="size-3.5 shrink-0"
-                                stroke-width="2"
-                                :style="{ color: eventTextColor }"
-                            />
-                            <span class="text-xs/[18px] subpixel-antialiased whitespace-nowrap" :style="{ color: eventTypeTextColor }">
-                                {{ $t('Admission') }} {{ event.admission_time }}
-                            </span>
                         </div>
 
                         <!-- Projektleiter -->
@@ -614,6 +614,16 @@
                                                 </div>
                                             </div>
 
+                                            <!-- Einlass (Anzeigeeinstellung "Einlass", nur Starttag) -->
+                                            <div v-if="showAdmissionTime" class="mt-0.5 flex items-center gap-1.5 text-xs/5">
+                                                <component
+                                                    :is="IconDoorEnter"
+                                                    class="size-3.5 shrink-0"
+                                                    stroke-width="2"
+                                                />
+                                                <span class="subpixel-antialiased">{{ $t('Admission') }} {{ event.admission_time }}</span>
+                                            </div>
+
                                             <!-- Zeit -->
                                             <div class="mt-0.5 flex items-center gap-1.5 text-xs/5 flex-wrap">
                                                 <component
@@ -646,16 +656,6 @@
                                                 <div v-if="event.option_string && calSettings.options" class="text-xs/5">
                                                     , {{ event.option_string }}
                                                 </div>
-                                            </div>
-
-                                            <!-- Einlass (Anzeigeeinstellung "Einlass", nur Starttag) -->
-                                            <div v-if="showAdmissionTime" class="mt-0.5 flex items-center gap-1.5 text-xs/5">
-                                                <component
-                                                    :is="IconDoorEnter"
-                                                    class="size-3.5 shrink-0"
-                                                    stroke-width="2"
-                                                />
-                                                <span class="subpixel-antialiased">{{ $t('Admission') }} {{ event.admission_time }}</span>
                                             </div>
 
                                             <!-- Projektleiter -->

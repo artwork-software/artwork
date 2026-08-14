@@ -6,6 +6,7 @@ use Artwork\Modules\BusinessIntelligence\Exports\BiExportWorkbook;
 use Artwork\Modules\BusinessIntelligence\Exports\BiProjectExport;
 use Artwork\Modules\Budget\Models\BudgetColumnSetting;
 use Artwork\Modules\Budget\Models\SubPositionRow;
+use Artwork\Modules\Budget\Services\ColumnRelevanceService;
 use Artwork\Modules\CostCenter\Models\CostCenter;
 use Artwork\Modules\Project\Models\Project;
 use Carbon\Carbon;
@@ -344,12 +345,11 @@ class BiBudgetExportService
             $table = $row->subPosition?->mainPosition?->table;
             $project = $table ? $projectsById->get($table->project_id) : null;
 
-            // budgetrelevante Spalte je Tabelle (Fallback Altbestand: letzte Wertspalte)
+            // budgetrelevante Spalte je Tabelle (Fallback Altbestand: hinterste Wertspalte)
             if ($table && !array_key_exists($table->id, $forecastColumnIds)) {
-                $forecastColumnIds[$table->id] = (
-                    $table->columns->first(fn($column) => $column->relevant_for_project_groups)
-                        ?? $table->columns->filter(fn($column) => $column->type === 'empty')->last()
-                )?->id;
+                $forecastColumnIds[$table->id] = app(ColumnRelevanceService::class)
+                    ->resolveRelevantColumn($table->columns)
+                    ?->id;
             }
             $forecastColumnId = $table ? $forecastColumnIds[$table->id] : null;
 

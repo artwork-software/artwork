@@ -385,13 +385,33 @@ class EventController extends Controller
             'personalFilters' => fn () =>
             $this->filterService->getPersonalFilter($user, $calendarFilterType),
             'filterOptions'   => fn () => $this->filterService->getCalendarFilterDefinitions(),
-            'eventsWithoutRoom' => fn () =>
-             Event::query()->hasNoRoom()->get()->map(fn($event) =>
-                 \Artwork\Modules\Calendar\DTO\EventWithoutRoomDTO::formModel(
-                     $event,
-                     $userCalendarSettings,
-                     EventType::select(['id','name','abbreviation','hex_code'])->get()->keyBy('id')
-                 )),
+            'eventsWithoutRoom' => function () use ($userCalendarSettings) {
+                // Lookup EINMAL bauen — vorher lief die EventType-Query in der
+                // map-Closure und damit einmal pro raumlosem Event (N+1).
+                $eventTypes = EventType::select(['id', 'name', 'abbreviation', 'hex_code'])->get()->keyBy('id');
+
+                return Event::query()
+                    ->hasNoRoom()
+                    ->with([
+                        // Alles, was EventWithoutRoomDTO/ProjectDTO lazy lesen würde
+                        'project:id,name,state,artists,is_group,color,icon',
+                        'project.status:id,name,color',
+                        'project.managerUsers:id,first_name,last_name,position,email,profile_photo_path',
+                        'project.groups',
+                        'project.users:id',
+                        'project.categories',
+                        'creator:id,first_name,last_name,position,email,profile_photo_path',
+                        'eventStatus:id,color',
+                        'eventProperties',
+                        'subEvents' => fn ($query) => $query->without('creator'),
+                    ])
+                    ->get()
+                    ->map(fn ($event) => \Artwork\Modules\Calendar\DTO\EventWithoutRoomDTO::formModel(
+                        $event,
+                        $userCalendarSettings,
+                        $eventTypes
+                    ));
+            },
             'areas'            => fn () => $this->areaService->getAll(),
             'eventTypes'       => fn () => EventType::select(['id','name','abbreviation','hex_code'])->orderBy('name')->get(),
             'eventStatuses'    => fn () => EventStatus::orderBy('order')->get(),
@@ -855,20 +875,16 @@ class EventController extends Controller
                 ['filter_type' => $shiftFilterType],
                 ['start_date' => null, 'end_date' => null]
             );
-            $userCalendarSettings = $user->getAttribute('shift_plan_daily_settings');
-            if ($userCalendarSettings === null) {
-                $userCalendarSettings = $user->shift_plan_daily_settings()->create();
-            }
+            $userCalendarSettings = $user->getAttribute('shift_plan_daily_settings')
+                ?? $user->shift_plan_daily_settings()->firstOrCreate();
         } else {
             $shiftFilterType = UserFilterTypes::SHIFT_FILTER->value;
             $userCalendarFilter = $user->userFilters()->firstOrCreate(
                 ['filter_type' => $shiftFilterType],
                 ['start_date' => null, 'end_date' => null]
             );
-            $userCalendarSettings = $user->getAttribute('shift_plan_settings');
-            if ($userCalendarSettings === null) {
-                $userCalendarSettings = $user->shift_plan_settings()->create();
-            }
+            $userCalendarSettings = $user->getAttribute('shift_plan_settings')
+                ?? $user->shift_plan_settings()->firstOrCreate();
         }
 
         $renderViewName = 'Shifts/ShiftPlan';
@@ -1807,8 +1823,7 @@ class EventController extends Controller
     //phpcs:ignore Generic.Metrics.CyclomaticComplexity.MaxExceeded
     public function updateEvent(
         EventUpdateRequest $request,
-        Event $event,
-        ProjectController $projectController
+        Event $event
     ): void {
         $this->authorize('update', $event);
 
@@ -2106,7 +2121,7 @@ class EventController extends Controller
         if ($request->get('projectName')) {
             $project = Project::create(['name' => $request->get('projectName')]);
             $project->users()->save(Auth::user(), ['access_budget' => true]);
-            $projectController->generateBasicBudgetValues($project);
+            $this->budgetService->generateBasicBudgetValues($project);
             $event->project()->associate($project);
             $this->eventService->save($event);
         }

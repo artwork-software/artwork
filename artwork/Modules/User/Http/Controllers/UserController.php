@@ -1597,20 +1597,13 @@ class UserController extends Controller
         ]);
 
         if ($request->boolean('is_shift_plan')) {
+            // updateOrCreate: die Tabellen haben unique(user_id), ein nacktes
+            // create() würde im Race mit den parallelen Schichtplan-Requests
+            // auf den Unique-Index laufen.
             if ($request->boolean('is_daily_view')) {
-                $settings = $user->shift_plan_daily_settings;
-                if ($settings === null) {
-                    $user->shift_plan_daily_settings()->create($settingsFields);
-                } else {
-                    $settings->update($settingsFields);
-                }
+                $user->shift_plan_daily_settings()->updateOrCreate([], $settingsFields);
             } else {
-                $settings = $user->shift_plan_settings;
-                if ($settings === null) {
-                    $user->shift_plan_settings()->create($settingsFields);
-                } else {
-                    $settings->update($settingsFields);
-                }
+                $user->shift_plan_settings()->updateOrCreate([], $settingsFields);
             }
         } elseif ($request->boolean('is_daily_view')) {
             $dailySettings = $user->daily_view_calendar_settings;
@@ -1719,12 +1712,7 @@ class UserController extends Controller
             'zoom_factor' => 'required|numeric|between:0.5,1',
         ]);
 
-        $settings = $user->shift_plan_settings;
-        if ($settings === null) {
-            $user->shift_plan_settings()->create($request->only('zoom_factor'));
-        } else {
-            $settings->update($request->only('zoom_factor'));
-        }
+        $user->shift_plan_settings()->updateOrCreate([], $request->only('zoom_factor'));
     }
 
     public function updateBulkSortId(User $user, Request $request): void

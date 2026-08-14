@@ -194,17 +194,20 @@ class MoneySourceController extends Controller
 
     //@todo: fix phpcs error - refactor function because complexity exceeds allowed maximum
     //phpcs:ignore Generic.Metrics.CyclomaticComplexity.MaxExceeded
-    public function show(MoneySource $moneySource, ProjectTabService $projectTabService): Response|ResponseFactory
-    {
+    public function show(
+        MoneySource $moneySource,
+        ProjectTabService $projectTabService,
+        MoneySourceCalculationService $moneySourceCalculationService
+    ): Response|ResponseFactory {
         $moneySource->load([
             'moneySourceFiles'
         ]);
         $amount = $moneySource->amount;
         $subMoneySources = MoneySource::where('group_id', $moneySource->id)->get();
-        $columns = ColumnCell::where('linked_money_source_id', $moneySource->id)
-            ->latest('column_id')
-            ->get()
-            ->unique('sub_position_row_id');
+        // Gleiche Zellen-Auswahl wie getPositionSumOfOneMoneySource, sonst
+        // weichen Detail-Liste/amount_available von Übersichts-Summe und
+        // Schwellenwert-Warnung ab.
+        $columns = $moneySourceCalculationService->getLinkedColumnCellsPerRow($moneySource->id);
 
         $subPositionSumDetails = SubPositionSumDetail::with('subPosition.mainPosition.table.project', 'sumMoneySource')
             ->whereRelation('sumMoneySource', 'money_source_id', $moneySource->id)
@@ -224,11 +227,10 @@ class MoneySourceController extends Controller
         $usersWithAccess = [];
         if ($moneySource->is_group) {
             $subMoneySourceIds = $subMoneySources->pluck('id');
-            $groupColumns = ColumnCell::whereIn('linked_money_source_id', $subMoneySourceIds)
-                ->with(['subPositionRow.subPosition.mainPosition.table.project.users'])
-                ->latest('column_id')
-                ->get()
-                ->unique('sub_position_row_id');
+            $groupColumns = $moneySourceCalculationService->getLinkedColumnCellsPerRow(
+                $subMoneySourceIds->all(),
+                ['subPositionRow.subPosition.mainPosition.table.project.users']
+            );
 
             foreach ($groupColumns as $column) {
                 $subPositionRow = $column->subPositionRow;
@@ -367,7 +369,7 @@ class MoneySourceController extends Controller
             }
 
             // Eager load the relationship chain to avoid N+1 queries
-            $columns->load(['subPositionRow.subPosition.mainPosition.table.project.users', 'column']);
+            $columns->load(['subPositionRow.subPosition.mainPosition.table.project.users']);
 
             foreach ($columns as $column) {
                 $subPositionRow = $column->subPositionRow;

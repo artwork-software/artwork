@@ -35,6 +35,10 @@
                 </div>
             </RadioGroup>
 
+            <div v-if="selectedType === 'empty'" class="mt-6 rounded-lg bg-surface-sunken border border-border-subtle p-4 text-xs text-text-subtle">
+                {{ $t('The new empty column is automatically marked as relevant for budget. You can move this flag to another value column at any time via the column menu.') }}
+            </div>
+
             <div v-if="selectedType !== 'empty'" class="mt-6 rounded-lg bg-surface-sunken border border-border-subtle p-4">
                 <h2 class="text-sm/5 font-bold text-text-subtle mb-4">
                     {{ selectedType === 'sum' ? $t('What amount would you like to receive?') : $t('What difference do you want to get?') }}

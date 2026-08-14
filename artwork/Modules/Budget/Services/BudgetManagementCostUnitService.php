@@ -85,13 +85,18 @@ readonly class BudgetManagementCostUnitService
         //set all according column cells to 00000
         /** @var Project $project */
         foreach ($projectService->getAll() as $project) {
-            $secondColumnId = $project->table
-                ->columns()
+            // KST-Spalte ist die zweite nach position - die globale Sage-Einstellung
+            // kann die id-Reihenfolge der ersten beiden Spalten umkehren
+            $secondColumnId = $project->table?->columns()
+                ->orderBy('position')
                 ->orderBy('id')
-                ->get()
-                ->splice(1, 1)
+                ->skip(1)
                 ->first()
-                ->id;
+                ?->id;
+
+            if ($secondColumnId === null) {
+                continue;
+            }
 
             $project->table->mainPositions->each(
                 function (MainPosition $mainPosition) use (
@@ -115,7 +120,7 @@ readonly class BudgetManagementCostUnitService
                                         ->where('column_id', $secondColumnId)
                                         ->first();
 
-                                    if ($columnCell->value === $budgetManagementCostUnit->cost_unit_number) {
+                                    if ($columnCell?->value === $budgetManagementCostUnit->cost_unit_number) {
                                         $columnCellService->updateValue($columnCell, '00000');
                                     }
                                 }
@@ -136,13 +141,18 @@ readonly class BudgetManagementCostUnitService
         //set all according column cells to 00000
         /** @var Project $project */
         foreach ($projectService->getAll() as $project) {
-            $secondColumnId = $project->table
-                ->columns()
+            // KST-Spalte ist die zweite nach position - die globale Sage-Einstellung
+            // kann die id-Reihenfolge der ersten beiden Spalten umkehren
+            $secondColumnId = $project->table?->columns()
+                ->orderBy('position')
                 ->orderBy('id')
-                ->get()
-                ->splice(1, 1)
+                ->skip(1)
                 ->first()
-                ->id;
+                ?->id;
+
+            if ($secondColumnId === null) {
+                continue;
+            }
 
             $project->table->mainPositions->each(
                 function (MainPosition $mainPosition) use (
@@ -166,7 +176,7 @@ readonly class BudgetManagementCostUnitService
                                         ->where('column_id', $secondColumnId)
                                         ->first();
 
-                                    if ($columnCell->value === $budgetManagementCostUnit->cost_unit_number) {
+                                    if ($columnCell?->value === $budgetManagementCostUnit->cost_unit_number) {
                                         $columnCellService->updateValue($columnCell, '00000');
                                     }
                                 }

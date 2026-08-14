@@ -787,7 +787,8 @@ class WalidRaadSeeder extends Seeder
                 'position' => 5,
                 'linked_first_column' => null,
                 'linked_second_column' => null,
-                'color' => 'redColumn'
+                'color' => 'redColumn',
+                'relevant_for_project_groups' => true
             ]
         ]);
 

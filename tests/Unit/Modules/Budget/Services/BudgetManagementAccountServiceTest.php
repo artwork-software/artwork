@@ -3,7 +3,16 @@
 namespace Tests\Unit\Modules\Budget\Services;
 
 use Artwork\Modules\Budget\Models\BudgetManagementAccount;
+use Artwork\Modules\Budget\Models\Column;
+use Artwork\Modules\Budget\Models\ColumnCell;
+use Artwork\Modules\Budget\Models\MainPosition;
+use Artwork\Modules\Budget\Models\SubPosition;
+use Artwork\Modules\Budget\Models\SubPositionRow;
+use Artwork\Modules\Budget\Models\Table;
 use Artwork\Modules\Budget\Services\BudgetManagementAccountService;
+use Artwork\Modules\Budget\Services\ColumnCellService;
+use Artwork\Modules\Project\Models\Project;
+use Artwork\Modules\Project\Services\ProjectService;
 use Illuminate\Http\Request;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
@@ -64,6 +73,45 @@ final class BudgetManagementAccountServiceTest extends TestCase
         $titles = $result->pluck('title')->all();
         $this->assertContains('Personalkosten', $titles);
         $this->assertNotContains('Sonstiges', $titles);
+    }
+
+    #[Test]
+    public function soft_delete_zeroes_kto_cells_by_column_position_even_if_id_order_is_swapped(): void
+    {
+        $project = Project::factory()->create();
+        $table = Table::factory()->create(['project_id' => $project->id, 'is_template' => false]);
+
+        // Globaler Sage-Spalten-Swap: Spalte mit kleinerer id steht per position an zweiter Stelle
+        $kstColumn = Column::factory()->create(['table_id' => $table->id, 'position' => 1]);
+        $ktoColumn = Column::factory()->create(['table_id' => $table->id, 'position' => 0]);
+
+        $mainPosition = MainPosition::factory()->create(['table_id' => $table->id]);
+        $subPosition = SubPosition::factory()->create(['main_position_id' => $mainPosition->id]);
+        $row = SubPositionRow::factory()->create(['sub_position_id' => $subPosition->id]);
+        // Zeile ohne Zellen darf den Durchlauf nicht abbrechen
+        SubPositionRow::factory()->create(['sub_position_id' => $subPosition->id]);
+
+        $account = BudgetManagementAccount::factory()->create();
+
+        $ktoCell = ColumnCell::factory()->create([
+            'column_id' => $ktoColumn->id,
+            'sub_position_row_id' => $row->id,
+            'value' => $account->account_number,
+        ]);
+        $kstCell = ColumnCell::factory()->create([
+            'column_id' => $kstColumn->id,
+            'sub_position_row_id' => $row->id,
+            'value' => $account->account_number,
+        ]);
+
+        // Projekt ohne Budgettabelle darf den Durchlauf nicht abbrechen
+        Project::factory()->create();
+
+        $this->service->softDelete($account, app(ProjectService::class), app(ColumnCellService::class));
+
+        $this->assertSame('00000', $ktoCell->refresh()->value);
+        $this->assertSame($account->account_number, $kstCell->refresh()->value);
+        $this->assertSoftDeleted('budget_management_accounts', ['id' => $account->id]);
     }
 
     #[Test]

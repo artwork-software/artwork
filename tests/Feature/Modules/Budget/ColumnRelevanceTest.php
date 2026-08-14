@@ -251,6 +251,48 @@ final class ColumnRelevanceTest extends FeatureTestCase
     }
 
     #[Test]
+    public function resolve_relevant_column_prefers_the_flagged_column(): void
+    {
+        $table = $this->createTableWithColumns();
+        $flaggedId = $this->relevantColumnIds($table)[0];
+        // hinterste Wertspalte, aber ungeflaggt — darf den Vorrang nicht bekommen
+        Column::factory()->create(['table_id' => $table->id, 'position' => 4]);
+
+        $resolved = app(ColumnRelevanceService::class)->resolveRelevantColumn($table->refresh()->columns);
+
+        $this->assertSame($flaggedId, $resolved->id);
+    }
+
+    #[Test]
+    public function resolve_relevant_column_falls_back_to_the_rightmost_value_column_by_position(): void
+    {
+        $table = Table::factory()->create(['is_template' => false]);
+        foreach ([0, 1, 2] as $position) {
+            Column::factory()->create(['table_id' => $table->id, 'position' => $position]);
+        }
+        // absichtlich in umgekehrter Reihenfolge angelegt: höchste id ≠ höchste Position
+        $rightmost = Column::factory()->create(['table_id' => $table->id, 'position' => 5]);
+        Column::factory()->create(['table_id' => $table->id, 'position' => 4]);
+
+        $resolved = app(ColumnRelevanceService::class)->resolveRelevantColumn($table->refresh()->columns);
+
+        $this->assertSame($rightmost->id, $resolved->id);
+    }
+
+    #[Test]
+    public function resolve_relevant_column_returns_null_without_value_columns(): void
+    {
+        $table = Table::factory()->create(['is_template' => false]);
+        foreach ([0, 1, 2] as $position) {
+            Column::factory()->create(['table_id' => $table->id, 'position' => $position]);
+        }
+
+        $this->assertNull(
+            app(ColumnRelevanceService::class)->resolveRelevantColumn($table->refresh()->columns)
+        );
+    }
+
+    #[Test]
     public function project_groups_get_a_budget_relevant_column_on_creation(): void
     {
         $project = Project::factory()->create(['is_group' => true]);

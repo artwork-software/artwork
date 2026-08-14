@@ -6,6 +6,7 @@ use Artwork\Modules\Budget\Models\Column;
 use Artwork\Modules\Budget\Models\ColumnCell;
 use Artwork\Modules\Budget\Models\SageAssignedData;
 use Artwork\Modules\Budget\Models\Table;
+use Artwork\Modules\Budget\Services\ColumnRelevanceService;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Models\ProjectState;
 use Carbon\Carbon;
@@ -88,9 +89,9 @@ class BudgetsByBudgetDeadlineExport implements FromView, ShouldAutoSize, WithSty
             )?->load('cells.sageAssignedData');
 
             // Die budgetrelevante Spalte liefert die Vorschau-Werte; Fallback für
-            // Altbestand ohne Flag: letzte Wertspalte (type "empty").
-            $lastColumn = $projectBudgetTable->columns->first(fn($column) => $column->relevant_for_project_groups)
-                ?? $projectBudgetTable->columns->filter(fn($column) => $column->type === "empty")->last();
+            // Altbestand ohne Flag: hinterste Wertspalte (zentral im Service).
+            $lastColumn = app(ColumnRelevanceService::class)
+                ->resolveRelevantColumn($projectBudgetTable->columns);
             if ($lastColumn === null) {
                 $rows[] = [
                     'premiere' => Carbon::createFromFormat('Y-m-d', $project->budget_deadline)

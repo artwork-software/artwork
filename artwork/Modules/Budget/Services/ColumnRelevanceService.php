@@ -5,6 +5,7 @@ namespace Artwork\Modules\Budget\Services;
 use Artwork\Modules\Budget\Events\BudgetUpdated;
 use Artwork\Modules\Budget\Models\Column;
 use Artwork\Modules\Budget\Models\Table;
+use Illuminate\Support\Collection;
 
 /**
  * Verwaltet die budgetrelevante Spalte (Feld relevant_for_project_groups):
@@ -20,6 +21,24 @@ class ColumnRelevanceService
     public function isFlaggable(Column $column): bool
     {
         return $column->type === 'empty' && $column->position >= self::FIRST_VALUE_COLUMN_POSITION;
+    }
+
+    /**
+     * Liefert die budgetrelevante Spalte aus einer bereits geladenen
+     * Column-Collection: die (hinterste) geflaggte Wertspalte, für Altbestand
+     * ohne Flag als Fallback die hinterste Wertspalte in Position-Reihenfolge.
+     * Nimmt die Collection statt der Tabelle entgegen, damit Exporte/BI ihre
+     * eager-geladenen Relationen weiterverwenden können (kein N+1).
+     */
+    public function resolveRelevantColumn(Collection $columns): ?Column
+    {
+        $flaggable = $columns
+            ->filter(fn(Column $column) => $this->isFlaggable($column))
+            ->sortBy('position')
+            ->values();
+
+        return $flaggable->last(fn(Column $column) => $column->relevant_for_project_groups)
+            ?? $flaggable->last();
     }
 
     /**

@@ -305,5 +305,9 @@ readonly class TableService
         );
 
         $this->tableRepository->restore($table);
+
+        // Wiederhergestellte Spalten können noch ein veraltetes Flag tragen —
+        // Invariante "genau eine budgetrelevante Spalte" reparieren.
+        app(ColumnRelevanceService::class)->ensureSingleRelevantColumn($table);
     }
 }

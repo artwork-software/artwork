@@ -31,10 +31,19 @@ class MoneySourceCalculationService
 
     private function calculateColumnCellLinkedSum(MoneySource $moneySource): float
     {
+        // Pro Zeile zählt genau eine verknüpfte Zelle: bevorzugt die der
+        // budgetrelevanten Spalte, sonst die der hintersten Wertspalte
+        // (Position-Reihenfolge, analog ColumnRelevanceService). Vorher wurde
+        // die höchste column_id genommen — nach Duplizieren/Wiederherstellen
+        // oder manuellem Umhängen des Flags traf das die falsche Spalte.
         $columnCells = ColumnCell::query()
             ->where('linked_money_source_id', $moneySource->id)
-            ->latest('column_id')
+            ->with('column')
             ->get()
+            ->sortByDesc(fn(ColumnCell $columnCell) => (
+                ($columnCell->column?->relevant_for_project_groups ? 1_000_000 : 0)
+                + ($columnCell->column?->position ?? 0)
+            ))
             ->unique('sub_position_row_id');
 
         $columnCellsLinkedSum = 0;
@@ -93,7 +102,12 @@ class MoneySourceCalculationService
         $subPositionSumDetailsLinkedSum = 0;
 
         foreach ($subPositionSumDetails as $subPositionSumDetail) {
-            foreach ($subPositionSumDetail->subPosition->columnSums as $columnSum) {
+            // Nur die verknüpfte Spalte zählt (siehe Referenz-Logik in MoneySourceController),
+            // sonst geht der Betrag pro Wertspalte mehrfach ein.
+            foreach ($subPositionSumDetail->subPosition->columnSums as $columnId => $columnSum) {
+                if ($columnId !== $subPositionSumDetail->column_id) {
+                    continue;
+                }
                 if ($subPositionSumDetail->sumMoneySource->linked_type === 'EARNING') {
                     $subPositionSumDetailsLinkedSum += $columnSum['sum'];
                 } else {
@@ -115,7 +129,12 @@ class MoneySourceCalculationService
         $mainPositionDetailsLinkedSum = 0;
 
         foreach ($mainPositionDetails as $mainPositionDetail) {
-            foreach ($mainPositionDetail->mainPosition->columnSums as $columnSum) {
+            // Nur die verknüpfte Spalte zählt (siehe Referenz-Logik in MoneySourceController),
+            // sonst geht der Betrag pro Wertspalte mehrfach ein.
+            foreach ($mainPositionDetail->mainPosition->columnSums as $columnId => $columnSum) {
+                if ($columnId !== $mainPositionDetail->column_id) {
+                    continue;
+                }
                 if ($mainPositionDetail->sumMoneySource->linked_type === 'EARNING') {
                     $mainPositionDetailsLinkedSum += $columnSum['sum'];
                 } else {

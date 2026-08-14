@@ -2,6 +2,15 @@
 
 namespace Tests\Unit\Modules\MoneySource\Services;
 
+use Artwork\Modules\Budget\Models\Column;
+use Artwork\Modules\Budget\Models\ColumnCell;
+use Artwork\Modules\Budget\Models\MainPosition;
+use Artwork\Modules\Budget\Models\MainPositionDetails;
+use Artwork\Modules\Budget\Models\SubPosition;
+use Artwork\Modules\Budget\Models\SubPositionRow;
+use Artwork\Modules\Budget\Models\SubPositionSumDetail;
+use Artwork\Modules\Budget\Models\SumMoneySource;
+use Artwork\Modules\Budget\Models\Table;
 use Artwork\Modules\MoneySource\Models\MoneySource;
 use Artwork\Modules\MoneySource\Services\MoneySourceCalculationService;
 use PHPUnit\Framework\Attributes\Test;
@@ -15,6 +24,82 @@ final class MoneySourceCalculationServiceTest extends TestCase
     {
         parent::setUp();
         $this->service = app(MoneySourceCalculationService::class);
+    }
+
+    /**
+     * Baut eine Tabelle mit einer SubPosition-Zeile und 5 Spalten. columnSums skippt die
+     * ersten 3 Spaltengruppen (Textspalten), es bleiben also 2 Wertspalten: die erste mit
+     * 100, die zweite mit 250.
+     *
+     * @return array{subPosition: SubPosition, mainPosition: MainPosition, linkedColumn: Column}
+     */
+    private function createTableWithTwoValueColumns(): array
+    {
+        $table = Table::factory()->create();
+        $mainPosition = MainPosition::factory()->create(['table_id' => $table->id]);
+        $subPosition = SubPosition::factory()->create(['main_position_id' => $mainPosition->id]);
+        $row = SubPositionRow::factory()->create(['sub_position_id' => $subPosition->id]);
+
+        $columns = Column::factory()->count(5)->create(['table_id' => $table->id]);
+        foreach ($columns as $index => $column) {
+            ColumnCell::factory()->create([
+                'column_id' => $column->id,
+                'sub_position_row_id' => $row->id,
+                'value' => match ($index) {
+                    3 => '100,00',
+                    4 => '250,00',
+                    default => '0,00',
+                },
+            ]);
+        }
+
+        return [
+            'subPosition' => $subPosition,
+            'mainPosition' => $mainPosition,
+            'linkedColumn' => $columns[3],
+        ];
+    }
+
+    #[Test]
+    public function sub_position_sum_detail_counts_only_the_linked_column(): void
+    {
+        ['subPosition' => $subPosition, 'linkedColumn' => $linkedColumn] = $this->createTableWithTwoValueColumns();
+
+        $moneySource = MoneySource::factory()->create(['is_group' => false]);
+        $detail = SubPositionSumDetail::factory()->create([
+            'sub_position_id' => $subPosition->id,
+            'column_id' => $linkedColumn->id,
+        ]);
+        SumMoneySource::factory()->create([
+            'sourceable_type' => SubPositionSumDetail::class,
+            'sourceable_id' => $detail->id,
+            'money_source_id' => $moneySource->id,
+            'linked_type' => 'EARNING',
+        ]);
+
+        // Nur die verknüpfte Spalte (100) darf zählen, nicht zusätzlich die zweite Wertspalte (250).
+        $this->assertSame(100.0, $this->service->getPositionSumOfOneMoneySource($moneySource));
+    }
+
+    #[Test]
+    public function main_position_detail_counts_only_the_linked_column(): void
+    {
+        ['mainPosition' => $mainPosition, 'linkedColumn' => $linkedColumn] = $this->createTableWithTwoValueColumns();
+
+        $moneySource = MoneySource::factory()->create(['is_group' => false]);
+        $detail = MainPositionDetails::factory()->create([
+            'main_position_id' => $mainPosition->id,
+            'column_id' => $linkedColumn->id,
+        ]);
+        SumMoneySource::factory()->create([
+            'sourceable_type' => MainPositionDetails::class,
+            'sourceable_id' => $detail->id,
+            'money_source_id' => $moneySource->id,
+            'linked_type' => 'COST',
+        ]);
+
+        // COST-Verknüpfung: nur die verknüpfte Spalte, mit negativem Vorzeichen.
+        $this->assertSame(-100.0, $this->service->getPositionSumOfOneMoneySource($moneySource));
     }
 
     #[Test]
@@ -35,5 +120,37 @@ final class MoneySourceCalculationServiceTest extends TestCase
         $sum = $this->service->getPositionSumOfOneMoneySource($group);
 
         $this->assertSame(0.0, $sum);
+    }
+
+    #[Test]
+    public function linked_cell_sum_prefers_the_budget_relevant_column(): void
+    {
+        $moneySource = MoneySource::factory()->create(['is_group' => false]);
+        $table = Table::factory()->create(['is_template' => false]);
+        $flagged = Column::factory()->create([
+            'table_id' => $table->id,
+            'position' => 3,
+            'relevant_for_project_groups' => true,
+        ]);
+        // später angelegte (höhere id) ungeflaggte Wertspalte — unter der alten
+        // "höchste column_id"-Heuristik hätte deren Zelle gewonnen
+        $newerColumn = Column::factory()->create(['table_id' => $table->id, 'position' => 4]);
+        $row = SubPositionRow::factory()->create();
+
+        foreach ([[$flagged, '100'], [$newerColumn, '999']] as [$column, $value]) {
+            ColumnCell::create([
+                'column_id' => $column->id,
+                'sub_position_row_id' => $row->id,
+                'value' => $value,
+                'verified_value' => null,
+                'commented' => false,
+                'linked_money_source_id' => $moneySource->id,
+                'linked_type' => 'EARNING',
+            ]);
+        }
+
+        $sum = $this->service->getPositionSumOfOneMoneySource($moneySource);
+
+        $this->assertSame(100.0, $sum);
     }
 }

@@ -634,6 +634,17 @@ class BaseDataProvider implements RoleAndPermissionDataProvider
                     'and shift plan.',
                 'checked' => false
             ],
+            [
+                'name' => PermissionEnum::WEBHOOKS_MANAGE->value,
+                'name_de' => "Webhooks verwalten",
+                'translation_key' => "Manage webhooks",
+                'group' => 'Interfaces',
+                'tooltipText' => 'Darf Webhook-Empfänger anlegen, bearbeiten und löschen sowie deren ' .
+                    'Zustellprotokoll einsehen. Webhooks senden Daten aus artwork an fremde Systeme.',
+                'tooltipKey' => 'User can create, edit and delete webhook endpoints and inspect their delivery ' .
+                    'log. Webhooks send data from artwork to external systems.',
+                'checked' => false
+            ],
             ...ShiftSettingsPermissionService::definitions(),
         ];
     }

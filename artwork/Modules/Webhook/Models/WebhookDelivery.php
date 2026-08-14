@@ -57,13 +57,6 @@ class WebhookDelivery extends Model
         return $this->belongsTo(WebhookEndpoint::class, 'webhook_endpoint_id');
     }
 
-    /**
-     * Erfolgreiche Zustellungen sind nach 30 Tagen uninteressant, fehlgeschlagene bleiben länger,
-     * weil sie für die Fehlersuche beim Empfänger gebraucht werden.
-     *
-     * Achtung: model:prune findet nur Models unter app/Models automatisch — dieses Model ist
-     * deshalb in app/Console/Kernel.php explizit eingetragen.
-     */
     public function prunable(): Builder
     {
         return static::query()

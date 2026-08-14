@@ -47,8 +47,6 @@ class ToolSettingsInterfacesController extends Controller
 
         $canManageWebhooks = $request->user()?->can('viewAny', WebhookEndpoint::class) ?? false;
 
-        // Kein access_token mehr: Der Klartext existiert nur einmalig direkt nach der Erstellung.
-        // Kein last_used_at: Die Spalte gibt es auf oauth_access_tokens nicht, der Wert war immer null.
         $tokens = Token::query()
             ->orderBy('name')
             ->get()
@@ -77,8 +75,6 @@ class ToolSettingsInterfacesController extends Controller
                     ])
                     ->values(),
                 'canManageWebhooks' => $canManageWebhooks,
-                // Endpunkte tragen ein Signaturgeheimnis; sie werden nur geladen, wenn der Benutzer
-                // sie auch verwalten darf. Das Geheimnis selbst ist im Model als hidden markiert.
                 'webhookEndpoints' => $canManageWebhooks
                     ? WebhookEndpoint::query()->orderBy('name')->get()
                     : [],
@@ -103,8 +99,6 @@ class ToolSettingsInterfacesController extends Controller
             ->orderByDesc('created_at')
             ->paginate(50);
 
-        // Aufgerufen wird das ausschließlich per axios aus dem Log-Modal. Der frühere Inertia-Zweig
-        // rendert eine Seite, die es nicht gibt, und war deshalb nie erreichbar.
         return response()->json([
             'logs' => $logs,
         ]);

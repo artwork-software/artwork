@@ -8,13 +8,6 @@ use Artwork\Modules\Webhook\Models\WebhookDelivery;
 use Artwork\Modules\Webhook\Models\WebhookEndpoint;
 use Illuminate\Support\Collection;
 
-/**
- * Einstiegspunkt für ausgehende Ereignisse.
- *
- * Bewusst domänenneutral: Der Dispatcher kennt Ereignisnamen nur als Zeichenketten. Welche Namen es
- * gibt, entscheiden die aufrufenden Module; config/webhooks.php führt die Liste lediglich für die
- * Auswahl in der Oberfläche.
- */
 class WebhookDispatcher
 {
     /**

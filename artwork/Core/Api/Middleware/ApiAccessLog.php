@@ -9,16 +9,6 @@ use Laravel\Passport\AccessToken;
 use Symfony\Component\HttpFoundation\Response;
 use Throwable;
 
-/**
- * Protokolliert Zugriffe auf die Maschinen-API.
- *
- * Protokolliert wird nach der Verarbeitung, damit Statuscode und Dauer mitgeschrieben werden können.
- * Erfasst werden ausschließlich Requests mit Bearer-Token — Session-Requests der Oberfläche laufen
- * durch dieselbe Middleware-Gruppe, gehören aber nicht in dieses Log.
- *
- * Fehlgeschlagene Authentifizierungen werden bewusst mitgeschrieben (ohne Token-Bezug), weil genau
- * die für die Fehlersuche und zum Erkennen von Missbrauch gebraucht werden.
- */
 class ApiAccessLog
 {
     public function handle(Request $request, Closure $next): mixed

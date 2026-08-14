@@ -4,10 +4,6 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-/**
- * Erste ausgehende Webhook-Fähigkeit von artwork. Bewusst domänenneutral: Das Modul kennt nur
- * Ereignisnamen als Zeichenketten, keine Ticketing-, Projekt- oder Kalenderbegriffe.
- */
 return new class extends Migration
 {
     public function up(): void

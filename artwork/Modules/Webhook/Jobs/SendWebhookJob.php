@@ -14,13 +14,6 @@ use Illuminate\Support\Facades\Http;
 use RuntimeException;
 use Throwable;
 
-/**
- * Stellt eine einzelne Zustellung zu.
- *
- * Läuft auf der Queue "webhooks" — der Worker muss sie also bedienen (siehe docker-compose.yml und
- * .ddev/config.yaml). Wiederholungen übernimmt die Queue über $tries und $backoff; der Job hält den
- * Zustand in der Zustellungszeile nach, damit er in der Oberfläche sichtbar wird.
- */
 class SendWebhookJob implements ShouldQueue
 {
     use Dispatchable;
@@ -38,8 +31,7 @@ class SendWebhookJob implements ShouldQueue
     }
 
     /**
-     * Wachsende Abstände: 1 min, 5 min, 30 min, 2 h, 6 h. Ein Empfänger, der ein Wartungsfenster
-     * hat, bekommt die Zustellung so noch, ohne dass wir ihn in der Zwischenzeit zuschütten.
+     * Wachsende Abstände: 1 min, 5 min, 30 min, 2 h, 6 h.
      *
      * @return list<int>
      */
@@ -117,9 +109,6 @@ class SendWebhookJob implements ShouldQueue
         ));
     }
 
-    /**
-     * Wird von der Queue aufgerufen, wenn alle Versuche verbraucht sind.
-     */
     public function failed(Throwable $throwable): void
     {
         WebhookDelivery::query()

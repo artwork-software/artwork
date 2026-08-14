@@ -6,12 +6,6 @@ use Artwork\Modules\Setup\DataProvider\BaseDataProvider;
 use Illuminate\Database\Migrations\Migration;
 use Spatie\Permission\PermissionRegistrar;
 
-/**
- * Backfill der Webhook-Berechtigung für Bestandsinstanzen (Neuinstallationen bekommen sie über den
- * Seeder). Anders als bei den Tagesbemerkungen wird sie bewusst niemandem automatisch zugewiesen:
- * Webhooks senden Daten aus artwork hinaus, das gehört ausdrücklich vergeben. Admins kommen ohnehin
- * über den Gate::before-Bypass daran.
- */
 return new class extends Migration
 {
     public function up(): void

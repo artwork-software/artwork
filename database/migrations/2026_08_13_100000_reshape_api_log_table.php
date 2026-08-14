@@ -5,16 +5,6 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
-/**
- * Das API-Zugriffslog referenziert Tokens künftig direkt über die Passport-Token-ID statt über die
- * Zwischentabelle api_access_tokens (die im Folge-Migrationsschritt entfällt).
- *
- * Dabei fallen zwei Datenschutzprobleme weg: api_key hielt den Bearer-Token bei jedem Request erneut
- * im Klartext, payload den vollständigen ungefilterten Request-Body. Ersatzlos gestrichen — ab der
- * Ticketing-API würden dort personenbezogene Käuferdaten landen.
- *
- * Neu hinzu kommen response_status und duration_ms, damit das Log überhaupt aussagekräftig ist.
- */
 return new class extends Migration
 {
     public function up(): void

@@ -15,14 +15,6 @@ class RouteServiceProvider extends ServiceProvider
 {
     public const HOME = '/dashboard';
 
-    /**
-     * Scramble ist eine Entwicklungsabhängigkeit, wird vom Container aber mitinstalliert. Ohne
-     * diesen Aufruf brächte es eine Doku-Oberfläche unter /docs/api mit; die Spezifikation entsteht
-     * in der CI und muss zur Laufzeit nicht ausgeliefert werden.
-     *
-     * Der Aufruf gehört in register(): Scramble registriert seine Routen beim Booten, und alle
-     * register()-Durchläufe liegen davor.
-     */
     public function register(): void
     {
         parent::register();
@@ -69,8 +61,6 @@ class RouteServiceProvider extends ServiceProvider
             return Limit::perMinute(60)->by($request->user()?->id ?: $request->ip());
         });
 
-        // Maschinen-API: Das Limit gilt je Token, nicht je Benutzer. Sonst teilen sich alle Tokens
-        // desselben Erstellers ein Kontingent und ein einzelner Verbraucher legt die übrigen lahm.
         RateLimiter::for('machine-api', function (Request $request) {
             $token = $request->user()?->token();
             $key = $token instanceof AccessToken

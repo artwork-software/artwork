@@ -93,7 +93,12 @@ class MoneySourceCalculationService
         $subPositionSumDetailsLinkedSum = 0;
 
         foreach ($subPositionSumDetails as $subPositionSumDetail) {
-            foreach ($subPositionSumDetail->subPosition->columnSums as $columnSum) {
+            // Nur die verknüpfte Spalte zählt (siehe Referenz-Logik in MoneySourceController),
+            // sonst geht der Betrag pro Wertspalte mehrfach ein.
+            foreach ($subPositionSumDetail->subPosition->columnSums as $columnId => $columnSum) {
+                if ($columnId !== $subPositionSumDetail->column_id) {
+                    continue;
+                }
                 if ($subPositionSumDetail->sumMoneySource->linked_type === 'EARNING') {
                     $subPositionSumDetailsLinkedSum += $columnSum['sum'];
                 } else {
@@ -115,7 +120,12 @@ class MoneySourceCalculationService
         $mainPositionDetailsLinkedSum = 0;
 
         foreach ($mainPositionDetails as $mainPositionDetail) {
-            foreach ($mainPositionDetail->mainPosition->columnSums as $columnSum) {
+            // Nur die verknüpfte Spalte zählt (siehe Referenz-Logik in MoneySourceController),
+            // sonst geht der Betrag pro Wertspalte mehrfach ein.
+            foreach ($mainPositionDetail->mainPosition->columnSums as $columnId => $columnSum) {
+                if ($columnId !== $mainPositionDetail->column_id) {
+                    continue;
+                }
                 if ($mainPositionDetail->sumMoneySource->linked_type === 'EARNING') {
                     $mainPositionDetailsLinkedSum += $columnSum['sum'];
                 } else {

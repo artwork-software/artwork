@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Database\Seeders\Demo;
 
+use Artwork\Modules\Availability\Models\Availability;
 use Artwork\Modules\Freelancer\Models\Freelancer;
 use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\Shift\Models\ShiftWorker;
@@ -40,7 +41,61 @@ class DemoAvailabilitySeeder extends Seeder
             : Carbon::now()->subMonths(2))->startOfMonth();
 
         $this->seedVacations($context, $random, $windowStart);
+        $this->seedAvailabilities($context, $random, $windowStart);
         $this->seedWorkTimeHistory($context, $random, $windowStart);
+    }
+
+    /**
+     * Eingetragene Verfügbarkeiten: Freelancer und Teilzeitkräfte melden
+     * regelmäßig, an welchen Tagen sie verfügbar sind — sichtbar im
+     * Verfügbarkeitskalender und in der Worker-Zeile des Schichtplans.
+     */
+    private function seedAvailabilities(DemoContext $context, DemoRandom $random, Carbon $windowStart): void
+    {
+        $windowEnd = $windowStart->copy()->addMonths($this->months)->endOfDay();
+        $reporters = collect()
+            ->merge(Freelancer::query()->where('email', 'like', '%@' . DemoDataPools::EMAIL_DOMAIN)->get())
+            ->merge(
+                $context->demoUsers()->filter(
+                    static fn (User $user) => $user->can_work_shifts && (float) $user->weekly_working_hours <= 20
+                )
+            );
+        if ($reporters->isEmpty()) {
+            return;
+        }
+
+        $created = 0;
+        foreach ($reporters as $reporter) {
+            $rng = $random->fork('availability|' . get_class($reporter) . '|' . $reporter->id);
+            // je Person 2-3 feste Wochentage, an denen sie verfügbar ist
+            $weekdays = $rng->pickMany([1, 2, 3, 4, 5, 6], $rng->int(2, 3));
+            $fullDay = $rng->chance(0.5);
+
+            for ($day = $windowStart->copy(); $day->lte($windowEnd); $day->addDay()) {
+                if (!in_array($day->isoWeekday(), $weekdays, true) || $day->isPast()) {
+                    continue;
+                }
+                $availability = Availability::firstOrCreate(
+                    [
+                        'available_type' => get_class($reporter),
+                        'available_id' => $reporter->id,
+                        'date' => $day->toDateString(),
+                    ],
+                    [
+                        'full_day' => $fullDay,
+                        'start_time' => $fullDay ? null : '10:00',
+                        'end_time' => $fullDay ? null : '18:00',
+                        'comment' => 'Demo: verfügbar',
+                        'is_series' => false,
+                    ]
+                );
+                if ($availability->wasRecentlyCreated) {
+                    $created++;
+                }
+            }
+        }
+
+        $this->command?->info(sprintf('Verfügbarkeiten: %d Einträge angelegt.', $created));
     }
 
     private function seedVacations(DemoContext $context, DemoRandom $random, Carbon $windowStart): void

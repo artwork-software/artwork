@@ -86,8 +86,10 @@ final class DemoContext
     }
 
     /**
-     * Räume nach Rolle der Demo-Pools (main_stage, rehearsal, ...). Fällt auf
-     * alle Räume zurück, wenn kein Pool-Raum mit dieser Rolle existiert.
+     * Räume nach Rolle der Demo-Pools (main_stage, rehearsal, ...). Räume, die
+     * schon VOR dem Seeding existierten, werden deterministisch auf die
+     * Spielstätten-Rollen verteilt — sonst blieben sie im Kalender/Schichtplan
+     * leer und die Demo-Termine drängen sich in den Pool-Räumen.
      *
      * @return Collection<int, Room>
      */
@@ -95,6 +97,19 @@ final class DemoContext
     {
         $names = collect(DemoDataPools::ROOMS)->where('role', $role)->pluck('name');
         $rooms = $this->rooms()->whereIn('name', $names)->values();
+
+        $legacyRoles = ['main_stage', 'second_stage', 'rehearsal'];
+        if (in_array($role, $legacyRoles, true)) {
+            $poolNames = collect(DemoDataPools::ROOMS)->pluck('name');
+            $legacy = $this->rooms()
+                ->reject(fn (Room $room) => $poolNames->contains($room->name) || $room->temporary)
+                ->sortBy('id')
+                ->values();
+            $roleIndex = array_search($role, $legacyRoles, true);
+            $rooms = $rooms->merge(
+                $legacy->filter(static fn (Room $room, int $index) => $index % count($legacyRoles) === $roleIndex)
+            )->values();
+        }
 
         return $rooms->isNotEmpty() ? $rooms : $this->rooms()->values();
     }

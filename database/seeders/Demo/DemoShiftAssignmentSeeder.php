@@ -18,6 +18,7 @@ use Database\Seeders\Demo\Support\DemoProjectPools;
 use Database\Seeders\Demo\Support\DemoRandom;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 
 /**
  * Zuweisungs-Workflow: besetzt die Demo-Schichten passend zu Gewerk +
@@ -56,6 +57,7 @@ class DemoShiftAssignmentSeeder extends Seeder
             : Carbon::now()->subMonths(2))->startOfMonth();
         $this->windowEnd = $this->windowStart->copy()->addMonths($this->months)->endOfDay();
 
+        $this->repairPivotTimes();
         $this->buildPools();
         $this->loadBusyTimes();
         $this->loadVacations();
@@ -69,6 +71,35 @@ class DemoShiftAssignmentSeeder extends Seeder
 
         $this->commitPastShifts($shifts);
         $this->seedDemoConflicts($shifts);
+    }
+
+    /**
+     * Repariert Alt-Zuweisungen ohne Zeiten/Kürzel: der echte Zuweisungsflow
+     * (ShiftUserRepository etc.) setzt start/end + craft_abbreviation IMMER —
+     * Rows mit NULL rendern im Worker-Panel als "null - null Raum".
+     */
+    private function repairPivotTimes(): void
+    {
+        $repaired = DB::update('
+            UPDATE shift_workers sw
+            JOIN shifts s ON s.id = sw.shift_id
+            SET sw.start_date = COALESCE(sw.start_date, s.start_date),
+                sw.end_date = COALESCE(sw.end_date, s.end_date),
+                sw.start_time = COALESCE(sw.start_time, s.start),
+                sw.end_time = COALESCE(sw.end_time, s.end)
+            WHERE sw.start_time IS NULL OR sw.end_time IS NULL
+               OR sw.start_date IS NULL OR sw.end_date IS NULL
+        ');
+        $repaired += DB::update('
+            UPDATE shift_workers sw
+            JOIN shifts s ON s.id = sw.shift_id
+            JOIN crafts c ON c.id = s.craft_id
+            SET sw.craft_abbreviation = c.abbreviation
+            WHERE sw.craft_abbreviation IS NULL OR sw.craft_abbreviation = ""
+        ');
+        if ($repaired > 0) {
+            $this->command?->info(sprintf('%d Zuweisungen ohne Zeiten/Kürzel repariert.', $repaired));
+        }
     }
 
     /** @return Collection<int, Shift> */
@@ -249,25 +280,30 @@ class DemoShiftAssignmentSeeder extends Seeder
         bool $markOverbooked = false
     ): ShiftWorker {
         $worker = $candidate['worker'];
+        $shiftCraft = $this->context->crafts()->firstWhere('id', $shift->craft_id);
+
+        // Wie der echte Zuweisungsflow (ShiftUserRepository): Zeiten + Kürzel IMMER setzen —
+        // NULL-Werte rendern im Worker-Panel als "null - null Raum".
+        $shiftStart = Carbon::parse($shift->start_date->format('Y-m-d') . ' ' . $shift->start);
+        $shiftEnd = Carbon::parse($shift->end_date->format('Y-m-d') . ' ' . $shift->end);
         $attributes = [
             'shift_id' => $shift->id,
             'employable_type' => get_class($worker),
             'employable_id' => $worker->id,
             'shift_qualification_id' => $qualificationId,
             'shift_count' => 1,
-            'craft_abbreviation' => $candidate['universalAbbreviation'],
+            'craft_abbreviation' => $candidate['universalAbbreviation'] ?? $shiftCraft?->abbreviation,
             'assigned_by_user_id' => $this->context->plannerUser()->id,
             'is_overbooked' => $markOverbooked,
+            'start_date' => $shift->start_date->format('Y-m-d'),
+            'end_date' => $shift->end_date->format('Y-m-d'),
+            'start_time' => $shiftStart->format('H:i'),
+            'end_time' => $shiftEnd->format('H:i'),
         ];
 
         // ~15 % individuelle Zeiten mit passendem Vermerk im Pivot
         if ($rng->chance(0.15)) {
             $note = $rng->pick(DemoDataPools::SHIFT_WORKER_NOTES);
-            // Zeiten aus den Schichtfeldern ableiten (keine Timestamps — Zeitzonen!)
-            $shiftStart = Carbon::parse($shift->start_date->format('Y-m-d') . ' ' . $shift->start);
-            $shiftEnd = Carbon::parse($shift->end_date->format('Y-m-d') . ' ' . $shift->end);
-            $attributes['start_date'] = $shift->start_date->format('Y-m-d');
-            $attributes['end_date'] = $shift->end_date->format('Y-m-d');
             $attributes['start_time'] = $shiftStart->copy()->addMinutes($note['start_offset'] ?? 0)->format('H:i');
             $attributes['end_time'] = $shiftEnd->copy()->addMinutes($note['end_offset'] ?? 0)->format('H:i');
             $attributes['short_description'] = $note['note'];
@@ -348,7 +384,66 @@ class DemoShiftAssignmentSeeder extends Seeder
         $this->seedDoubleBooking($futureShifts, $rng);
         $this->seedVacationConflict($futureShifts, $rng);
         $this->seedOverbooking($futureShifts, $rng);
+        $this->seedConsecutiveDaysStreak($futureShifts, $rng);
         $this->seedManualRuleViolations($shifts, $rng);
+    }
+
+    /**
+     * Bewusster Regelverstoß "Höchstens 6 Arbeitstage in Folge": ein NV-Bühne-User
+     * wird an 7+ aufeinanderfolgenden Tagen eingeplant — die echte Regel-Engine
+     * erzeugt daraus die Verletzung(en), die in der Übersicht zeigbar sind.
+     */
+    private function seedConsecutiveDaysStreak(Collection $futureShifts, DemoRandom $rng): void
+    {
+        $streakUser = $this->context->demoUser('Ole', 'Jensen');
+        if ($streakUser === null) {
+            return;
+        }
+        $mitarbeiter = $this->context->qualification('mitarbeiter');
+
+        // Schichten nach Tag gruppieren und die längste erreichbare Tagesfolge nehmen
+        $byDay = $futureShifts->groupBy(static fn (Shift $shift) => $shift->start_date->format('Y-m-d'))->sortKeys();
+        $assignedDays = 0;
+        $previousDay = null;
+        foreach ($byDay as $day => $dayShifts) {
+            if ($previousDay !== null && Carbon::parse($day)->diffInDays(Carbon::parse($previousDay)) > 1) {
+                if ($assignedDays >= 7) {
+                    break;
+                }
+                $assignedDays = 0; // Lücke — Streak neu beginnen
+            }
+            $previousDay = $day;
+
+            $shift = $dayShifts->first();
+            $alreadyAssigned = ShiftWorker::query()
+                ->where('shift_id', $shift->id)
+                ->where('employable_type', User::class)
+                ->where('employable_id', $streakUser->id)
+                ->exists();
+            if (!$alreadyAssigned) {
+                [$start, $end] = $this->shiftInterval($shift);
+                $this->assign(
+                    $shift,
+                    ['worker' => $streakUser, 'universalAbbreviation' => null],
+                    $mitarbeiter->id,
+                    $rng->fork('streak|' . $shift->id),
+                    $start,
+                    $end
+                );
+            }
+            $assignedDays++;
+            if ($assignedDays >= 8) {
+                break;
+            }
+        }
+
+        if ($assignedDays >= 7) {
+            $this->command?->info(sprintf(
+                'Demo-Regelverstoß: %s an %d Tagen in Folge eingeplant (Engine erzeugt Verletzungen).',
+                $streakUser->first_name . ' ' . $streakUser->last_name,
+                $assignedDays
+            ));
+        }
     }
 
     /** Ein Azubi wird auf zwei parallele Schichten desselben Termins gebucht (Mehrfacheinsatz-Warnung). */

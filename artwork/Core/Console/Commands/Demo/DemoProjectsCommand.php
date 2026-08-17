@@ -5,8 +5,10 @@ declare(strict_types=1);
 namespace Artwork\Core\Console\Commands\Demo;
 
 use Carbon\Carbon;
+use Database\Seeders\Demo\DemoProjectDayAssignmentSeeder;
 use Database\Seeders\Demo\DemoProjectSeeder;
 use Database\Seeders\Demo\DemoShiftAssignmentSeeder;
+use Database\Seeders\Demo\DemoShiftPlanRequestSeeder;
 use Database\Seeders\Demo\DemoShiftSeeder;
 use Database\Seeders\Demo\DemoTodayProgramSeeder;
 
@@ -54,7 +56,15 @@ class DemoProjectsCommand extends BaseDemoCommand
             return self::SUCCESS;
         }
 
-        foreach ([DemoTodayProgramSeeder::class, DemoShiftSeeder::class, DemoShiftAssignmentSeeder::class] as $seederClass) {
+        foreach (
+            [
+                DemoTodayProgramSeeder::class,
+                DemoShiftSeeder::class,
+                DemoShiftAssignmentSeeder::class,
+                DemoProjectDayAssignmentSeeder::class,
+                DemoShiftPlanRequestSeeder::class,
+            ] as $seederClass
+        ) {
             $this->newLine();
             $this->line('<comment>' . class_basename($seederClass) . '</comment>');
             $seeder = new $seederClass();

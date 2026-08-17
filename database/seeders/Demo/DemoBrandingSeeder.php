@@ -81,6 +81,8 @@ class DemoBrandingSeeder extends Seeder
     {
         $general = app(GeneralSettings::class);
         $general->warn_multiple_assignments = true;
+        // Festschreibungs-Workflow an: die KW-Anfragen (angefragt/bestätigt) sind Teil der Demo
+        $general->shift_commit_workflow_enabled = true;
         $general->save();
 
         $shiftSettings = app(ShiftSettings::class);

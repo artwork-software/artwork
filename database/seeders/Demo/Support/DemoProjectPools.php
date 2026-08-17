@@ -15,7 +15,7 @@ final class DemoProjectPools
      */
     public const ARCHETYPES = [
         'eigenproduktion' => [
-            'per_month' => [1, 2],
+            'per_month' => [2, 2],
             'category' => 'Eigenproduktion',
             'sector' => 'Große Bühne',
             'cost_center' => '4711 – Künstlerisches Programm',
@@ -23,7 +23,7 @@ final class DemoProjectPools
             'color' => '#9e1c60',
         ],
         'gastspiel' => [
-            'per_month' => [2, 2],
+            'per_month' => [2, 3],
             'category' => 'Gastspiel',
             'sector' => 'Große Bühne',
             'cost_center' => '4712 – Gastspiele',
@@ -31,7 +31,7 @@ final class DemoProjectPools
             'color' => '#2563eb',
         ],
         'konzert' => [
-            'per_month' => [1, 2],
+            'per_month' => [2, 3],
             'category' => 'Konzert',
             'sector' => 'Studiobühne',
             'cost_center' => '4711 – Künstlerisches Programm',
@@ -39,7 +39,7 @@ final class DemoProjectPools
             'color' => '#059669',
         ],
         'vermietung' => [
-            'per_month' => [1, 1],
+            'per_month' => [1, 2],
             'category' => 'Vermietung',
             'sector' => 'Studiobühne',
             'cost_center' => '4720 – Vermietung & Events',

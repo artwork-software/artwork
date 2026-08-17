@@ -28,6 +28,7 @@ class DemoWorkerSeeder extends Seeder
     public function run(): void
     {
         $createdUsers = $this->seedUsers();
+        $this->backfillShiftPlanDefaults();
         $createdFreelancers = $this->seedFreelancers();
         $createdProviders = $this->seedServiceProviders();
 
@@ -96,6 +97,12 @@ class DemoWorkerSeeder extends Seeder
 
         $user->calendar_settings()->create();
 
+        // Demo-Default: unbespielte Räume ausblenden — sonst beginnt der Projekt-
+        // Schichten-Tab (und der Schichtplan) mit einem Block leerer Raumzeilen
+        // und die eigenen Schichten liegen unsichtbar weiter unten.
+        $user->shift_plan_settings()->firstOrCreate([], ['hide_unoccupied_rooms' => true]);
+        $user->shift_plan_daily_settings()->firstOrCreate([], ['hide_unoccupied_rooms' => true]);
+
         $userManagementSettings = app(UserUserManagementSettingService::class);
         $userManagementSettings->updateOrCreateIfNecessary($user, $userManagementSettings->getDefaults());
         $projectManagementSettings = app(UserProjectManagementSettingService::class);
@@ -113,6 +120,22 @@ class DemoWorkerSeeder extends Seeder
                 'start_date' => Carbon::now()->startOfDay(),
                 'end_date' => Carbon::now()->addWeeks(2)->endOfDay(),
             ]);
+        }
+    }
+
+    /** Bestehende Demo-User auf den Demo-Default "unbespielte Räume ausblenden" heben. */
+    private function backfillShiftPlanDefaults(): void
+    {
+        $demoUsers = User::query()
+            ->where('email', 'like', '%@' . DemoDataPools::EMAIL_DOMAIN)
+            ->get();
+        foreach ($demoUsers as $user) {
+            foreach (['shift_plan_settings', 'shift_plan_daily_settings'] as $relation) {
+                $settings = $user->{$relation}()->firstOrCreate([], ['hide_unoccupied_rooms' => true]);
+                if (!$settings->hide_unoccupied_rooms) {
+                    $settings->update(['hide_unoccupied_rooms' => true]);
+                }
+            }
         }
     }
 

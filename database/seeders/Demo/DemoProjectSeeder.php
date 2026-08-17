@@ -133,11 +133,13 @@ class DemoProjectSeeder extends Seeder
             $this->seedAttributes($project, $archetype, $entry);
             $this->seedTeam($project, $rng);
             $this->seedShiftMeta($project, $archetypeKey);
-            $this->seedComponentValues($project, $archetypeKey, $entry, $rng);
             $this->seedChecklist($project, $archetypeKey, $month, $rng);
             $this->seedComments($project, $month, $rng);
             $this->seedBudget($project, $archetypeKey, $rng);
         }
+        // idempotent (firstOrCreate je Komponente) — füllt auch bei bestehenden
+        // Projekten nachträglich hinzugekommene Custom-Komponenten
+        $this->seedComponentValues($project, $archetypeKey, $entry, $rng);
 
         if ($project->events()->doesntExist()) {
             $this->scheduleEvents($project, $archetypeKey, $month, $rng);
@@ -235,6 +237,54 @@ class DemoProjectSeeder extends Seeder
             if ($component === null) {
                 continue;
             }
+            ProjectComponentValue::firstOrCreate(
+                ['project_id' => $project->id, 'component_id' => $component->id],
+                ['data' => $data]
+            );
+        }
+
+        // Auch alle ÜBRIGEN Custom-Komponenten der Installation befüllen (gewachsene
+        // Konfigurationen haben eigene Felder) — sonst wirken die Tabs leer.
+        $this->fillRemainingCustomComponents($project, $rng);
+    }
+
+    /** Generische, plausible Werte für alle unbefüllten Custom-Komponenten des Systems. */
+    private function fillRemainingCustomComponents(Project $project, DemoRandom $rng): void
+    {
+        $textPool = [
+            'Wird in der nächsten Produktionsbesprechung geklärt.',
+            'Abgestimmt mit der Technischen Leitung.',
+            'Details siehe Produktionsmappe.',
+            'Rücksprache mit der Produktionsleitung läuft.',
+        ];
+
+        $customComponents = Component::query()
+            ->whereIn('type', ['Checkbox', 'TextField', 'TextArea', 'DropDown', 'Link'])
+            ->get();
+
+        foreach ($customComponents as $component) {
+            $componentRng = $rng->fork('component|' . $component->id);
+            $data = match ($component->type) {
+                'Checkbox' => ['checked' => $componentRng->chance(0.5)],
+                'TextField' => ['text' => $componentRng->pick($textPool)],
+                'TextArea' => ['text' => $componentRng->pick($textPool)],
+                'Link' => ['text' => 'https://testhaus.artwork.software/info/' . $project->id],
+                'DropDown' => (function () use ($component, $componentRng) {
+                    $options = collect($component->data['options'] ?? [])
+                        ->pluck('value')
+                        ->filter(fn ($value) => $value !== null && $value !== '')
+                        ->values();
+
+                    return $options->isNotEmpty()
+                        ? ['selected' => $componentRng->pick($options->all())]
+                        : null;
+                })(),
+                default => null,
+            };
+            if ($data === null) {
+                continue;
+            }
+
             ProjectComponentValue::firstOrCreate(
                 ['project_id' => $project->id, 'component_id' => $component->id],
                 ['data' => $data]

@@ -11,6 +11,8 @@ use Artwork\Modules\Role\Enums\RoleEnum;
 use Artwork\Modules\ServiceProvider\Models\ServiceProvider;
 use Artwork\Modules\User\Enums\UserFilterTypes;
 use Artwork\Modules\User\Models\User;
+use Artwork\Modules\User\Services\UserProjectManagementSettingService;
+use Artwork\Modules\User\Services\UserUserManagementSettingService;
 use Carbon\Carbon;
 use Database\Seeders\Demo\Support\DemoDataPools;
 use Illuminate\Database\Seeder;
@@ -93,6 +95,11 @@ class DemoWorkerSeeder extends Seeder
         }
 
         $user->calendar_settings()->create();
+
+        $userManagementSettings = app(UserUserManagementSettingService::class);
+        $userManagementSettings->updateOrCreateIfNecessary($user, $userManagementSettings->getDefaults());
+        $projectManagementSettings = app(UserProjectManagementSettingService::class);
+        $projectManagementSettings->updateOrCreateIfNecessary($user, $projectManagementSettings->getDefaults());
 
         foreach (
             [

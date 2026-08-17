@@ -56,7 +56,13 @@ class HandleInertiaRequests extends Middleware
             }
             $settings = $user->getAttribute($relation);
             if ($settings === null) {
-                $settings = $user->{$relation}()->create();
+                try {
+                    $settings = $user->{$relation}()->create();
+                } catch (\Illuminate\Database\UniqueConstraintViolationException) {
+                    // Race beim Erstaufruf: paralleler Request hat die Row gerade angelegt
+                    // (unique user_id) — dann einfach die vorhandene lesen.
+                    $settings = $user->{$relation}()->first();
+                }
                 $user->setRelation($relation, $settings);
             }
             return $settings;

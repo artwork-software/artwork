@@ -25,7 +25,13 @@ class UserUserManagementSettingService
 
     public function getFromUser(int|User $user): ?UserUserManagementSetting
     {
-        return $this->userUserManagementSettingRepository->getByUser($user);
+        // Lazy anlegen: geseedete/importierte User haben noch keine Row — Aufrufer
+        // lesen direkt ->getAttribute('settings') und würden sonst auf null crashen.
+        return $this->userUserManagementSettingRepository->getByUser($user)
+            ?? $this->updateOrCreateIfNecessary(
+                $user instanceof User ? $user : User::query()->findOrFail($user),
+                $this->getDefaults()
+            );
     }
 
     public function updateOrCreateIfNecessary(User $user, array $filters): UserUserManagementSetting

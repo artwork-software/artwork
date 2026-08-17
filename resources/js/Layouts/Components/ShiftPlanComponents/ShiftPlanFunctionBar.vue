@@ -1,6 +1,8 @@
 <template>
     <div class="bg-white border-b border-border-subtle shadow-sm py-2 sticky top-0 z-50 ">
-        <div class="flex justify-between items-center mt-2 mb-2 px-5">
+        <!-- flex-wrap als Sicherheitsnetz: falls es doch mal nicht passt, umbrechen statt
+             die Seite horizontal scrollen zu lassen -->
+        <div class="flex flex-wrap justify-between items-center gap-y-2 mt-2 mb-2 px-5">
             <div class="inline-flex items-center">
                 <div v-if="!isCalendarUsingProjectTimePeriod" class="flex">
                     <DateRangeControl
@@ -160,96 +162,149 @@
 
                     </slot>
 
-                    <!-- Kompaktmodus-Hinweis: unter 100 % zeigen Schichtkarten nur Zeit·Gewerk·Besetzung,
-                         Zuweisen per Drag & Drop braucht 100 % (Klick öffnet weiterhin das Schicht-Modal) -->
-                    <div
-                        v-if="isCompactShiftZoom && !isDailyView"
-                        class="ui-button !bg-accent-50 !border-accent-200/80 !text-accent-700 text-xs !cursor-help"
-                    >
-                        <ToolTipWithTextComponent
-                            direction="bottom"
-                            :text="$t('Compact')"
-                            :icon="IconInfoCircle"
-                            icon-size="size-4"
-                            tooltip-width="w-72"
-                            :tooltip-text="$t('Below 100% zoom, shift cards show only time, craft and staffing. Click a card to open it — for drag & drop assignment zoom back to 100%.')"
+                    <!-- ab 2xl: alle Funktionen als einzelne Buttons -->
+                    <div class="hidden 2xl:flex items-center gap-x-3">
+                        <!-- Kompaktmodus-Hinweis: unter 100 % zeigen Schichtkarten nur Zeit·Gewerk·Besetzung,
+                             Zuweisen per Drag & Drop braucht 100 % (Klick öffnet weiterhin das Schicht-Modal) -->
+                        <div
+                            v-if="isCompactShiftZoom && !isDailyView"
+                            class="ui-button !bg-accent-50 !border-accent-200/80 !text-accent-700 text-xs !cursor-help"
+                        >
+                            <ToolTipWithTextComponent
+                                direction="bottom"
+                                :text="$t('Compact')"
+                                :icon="IconInfoCircle"
+                                icon-size="size-4"
+                                tooltip-width="w-72"
+                                :tooltip-text="$t('Below 100% zoom, shift cards show only time, craft and staffing. Click a card to open it — for drag & drop assignment zoom back to 100%.')"
+                            />
+                        </div>
+
+                        <!-- Zoom-Schnellauswahl: Tagesspaltenbreite (mehr Tage auf einen Blick) -->
+                        <Menu v-if="!isDailyView" as="div" class="relative">
+                            <MenuButton class="ui-button text-xs" :title="$t('Zoom')">
+                                {{ shiftZoomPercent }}%
+                                <PropertyIcon name="IconChevronDown" class="size-3.5" />
+                            </MenuButton>
+                            <transition
+                                enter-active-class="transition ease-out duration-100"
+                                enter-from-class="opacity-0 scale-95"
+                                enter-to-class="opacity-100 scale-100"
+                                leave-active-class="transition ease-in duration-75"
+                                leave-from-class="opacity-100 scale-100"
+                                leave-to-class="opacity-0 scale-95"
+                            >
+                                <MenuItems class="absolute right-0 z-50 mt-2 origin-top-right focus:outline-none">
+                                    <div class="w-56 rounded-xl border border-border-subtle bg-white p-1.5 shadow-xl ring-1 ring-black/5">
+                                        <BaseMenuItem
+                                            v-for="step in shiftZoomSteps"
+                                            :key="step"
+                                            white-menu-background
+                                            without-translation
+                                            :icon="step === shiftZoomFactor ? 'IconCheck' : 'IconPercentage'"
+                                            :title="Math.round(step * 100) + '%' + (step === 1 ? ' – ' + $t('Standard') : ' – ' + $t('more days at a glance'))"
+                                            @click="setShiftZoomFactor(step)"
+                                        />
+                                    </div>
+                                </MenuItems>
+                            </transition>
+                        </Menu>
+
+                        <FunctionBarSetting :is-planning="false" is-in-shift-plan :is-daily-view="isDailyView" />
+
+                        <FunctionBarFilter
+                            :user_filters="user_filters"
+                            :personal-filters="personalFilters"
+                            :filter-options="filterOptions"
+                            :crafts="crafts"
+                            :filter-type="isDailyView ? 'shift_daily_filter' : 'shift_filter'"
                         />
+
+                        <ToolTipComponent v-if="can('can commit shifts') || hasAdminRole()" direction="bottom"
+                                          :tooltip-text="commitShiftsTooltip" icon="IconCalendarCheck" icon-size="h-5 w-5" classes-button="ui-button"
+                                          @click="commitAllShifts()"/>
+
+                        <ToolTipComponent direction="bottom" :tooltip-text="$t('History')" icon="IconHistory"
+                                          icon-size="h-5 w-5" classes-button="ui-button" @click="openHistoryModal()"/>
+                        <ToolTipComponent direction="bottom" :tooltip-text="$t('Export')" icon="IconFileExport"
+                                          icon-size="h-5 w-5" classes-button="ui-button" @click="showShiftPlanExportModal = true"/>
+                        <ToolTipComponent direction="bottom" :tooltip-text="isFullscreen ? $t('Exit full screen') : $t('Full screen')"
+                                          :icon="isFullscreen ? 'IconArrowsDiagonalMinimize' : 'IconArrowsDiagonal'"
+                                          icon-size="h-5 w-5" classes-button="ui-button" @click="enterFullscreenMode"/>
+
+                        <ToolTipComponent v-if="can('can subscribe shift calendar') || hasAdminRole()" direction="bottom" :tooltip-text="$t('Subscribe to shift calendar')" icon="IconCalendarStar"
+                                          icon-size="h-5 w-5" classes-button="ui-button" @click="showCalendarAboSettingModal = true"/>
                     </div>
 
-                    <!-- Zoom-Schnellauswahl: Tagesspaltenbreite (mehr Tage auf einen Blick) -->
-                    <Menu v-if="!isDailyView" as="div" class="relative">
-                        <MenuButton class="ui-button text-xs" :title="$t('Zoom')">
-                            {{ shiftZoomPercent }}%
-                            <PropertyIcon name="IconChevronDown" class="size-3.5" />
-                        </MenuButton>
-                        <transition
-                            enter-active-class="transition ease-out duration-100"
-                            enter-from-class="opacity-0 scale-95"
-                            enter-to-class="opacity-100 scale-100"
-                            leave-active-class="transition ease-in duration-75"
-                            leave-from-class="opacity-100 scale-100"
-                            leave-to-class="opacity-0 scale-95"
-                        >
-                            <MenuItems class="absolute right-0 z-50 mt-2 origin-top-right focus:outline-none">
-                                <div class="w-56 rounded-xl border border-border-subtle bg-white p-1.5 shadow-xl ring-1 ring-black/5">
-                                    <BaseMenuItem
-                                        v-for="step in shiftZoomSteps"
-                                        :key="step"
-                                        white-menu-background
-                                        without-translation
-                                        :icon="step === shiftZoomFactor ? 'IconCheck' : 'IconPercentage'"
-                                        :title="Math.round(step * 100) + '%' + (step === 1 ? ' – ' + $t('Standard') : ' – ' + $t('more days at a glance'))"
-                                        @click="setShiftZoomFactor(step)"
-                                    />
-                                </div>
-                            </MenuItems>
-                        </transition>
-                    </Menu>
+                    <!-- unter 2xl: nur Settings + Filter direkt, Rest im Menü (wie FunctionBarCalendar) —
+                         die Function Bar darf nie breiter als der Viewport werden, sonst entsteht ein
+                         Seiten-Scrollbalken, der nur den oberen Bereich verschiebt (User-Overview ist fixed) -->
+                    <div class="2xl:hidden flex items-center gap-x-2">
+                        <FunctionBarSetting :is-planning="false" is-in-shift-plan :is-daily-view="isDailyView" />
 
-                    <!--<ToolTipComponent direction="bottom" :tooltip-text="$t('Display Settings')" icon="IconSettings" icon-size="h-7 w-7"
-                                      @click="showCalendarSettingsModal = true"/>-->
+                        <FunctionBarFilter
+                            :user_filters="user_filters"
+                            :personal-filters="personalFilters"
+                            :filter-options="filterOptions"
+                            :crafts="crafts"
+                            :filter-type="isDailyView ? 'shift_daily_filter' : 'shift_filter'"
+                        />
 
-                    <FunctionBarSetting :is-planning="false" is-in-shift-plan :is-daily-view="isDailyView" />
-
-                    <!--<ToolTipComponent  direction="bottom"
-                                       :tooltip-text="$t('Filter')"
-                                       icon="IconFilter"
-                                       icon-size="h-7 w-7"
-                                      @click="showCalendarFilterModal = true"/>-->
-
-                    <FunctionBarFilter
-                        :user_filters="user_filters"
-                        :personal-filters="personalFilters"
-                        :filter-options="filterOptions"
-                        :crafts="crafts"
-                        :filter-type="isDailyView ? 'shift_daily_filter' : 'shift_filter'"
-                    />
-
-                    <ToolTipComponent v-if="can('can commit shifts') || hasAdminRole()" direction="bottom"
-                                      :tooltip-text="commitShiftsTooltip" icon="IconCalendarCheck" icon-size="h-5 w-5" classes-button="ui-button"
-                                      @click="commitAllShifts()"/>
-
-                    <ToolTipComponent direction="bottom" :tooltip-text="$t('History')" icon="IconHistory"
-                                      icon-size="h-5 w-5" classes-button="ui-button" @click="openHistoryModal()"/>
-                    <ToolTipComponent direction="bottom" :tooltip-text="$t('Export')" icon="IconFileExport"
-                                      icon-size="h-5 w-5" classes-button="ui-button" @click="showShiftPlanExportModal = true"/>
-                    <ToolTipComponent direction="bottom" :tooltip-text="isFullscreen ? $t('Exit full screen') : $t('Full screen')"
-                                      :icon="isFullscreen ? 'IconArrowsDiagonalMinimize' : 'IconArrowsDiagonal'"
-                                      icon-size="h-5 w-5" classes-button="ui-button" @click="enterFullscreenMode"/>
-
-                    <ToolTipComponent v-if="can('can subscribe shift calendar') || hasAdminRole()" direction="bottom" :tooltip-text="$t('Subscribe to shift calendar')" icon="IconCalendarStar"
-                                      icon-size="h-5 w-5" classes-button="ui-button" @click="showCalendarAboSettingModal = true"/>
-                    <!--<ShiftPlanFilter
-                        :filter-options="filterOptions"
-                        :personal-filters="personalFilters"
-                        :user_filters="user_filters"
-                        :crafts="crafts"
-                    />-->
+                        <BaseMenu tooltip-direction="bottom" show-custom-icon icon="IconList" translation-key="More options" has-no-offset>
+                            <template v-if="!isDailyView">
+                                <BaseMenuItem
+                                    v-for="step in shiftZoomSteps"
+                                    :key="step"
+                                    white-menu-background
+                                    without-translation
+                                    :icon="step === shiftZoomFactor ? 'IconCheck' : 'IconPercentage'"
+                                    :title="$t('Zoom') + ' ' + Math.round(step * 100) + '%' + (step === 1 ? ' – ' + $t('Standard') : '')"
+                                    @click="setShiftZoomFactor(step)"
+                                />
+                            </template>
+                            <BaseMenuItem
+                                v-if="can('can commit shifts') || hasAdminRole()"
+                                icon="IconCalendarCheck"
+                                white-menu-background
+                                without-translation
+                                :title="commitShiftsTooltip"
+                                @click="commitAllShifts()"
+                            />
+                            <BaseMenuItem
+                                icon="IconHistory"
+                                white-menu-background
+                                title="History"
+                                @click="openHistoryModal()"
+                            />
+                            <BaseMenuItem
+                                icon="IconFileExport"
+                                white-menu-background
+                                title="Export"
+                                @click="showShiftPlanExportModal = true"
+                            />
+                            <BaseMenuItem
+                                :icon="isFullscreen ? 'IconArrowsDiagonalMinimize' : 'IconArrowsDiagonal'"
+                                white-menu-background
+                                without-translation
+                                :title="isFullscreen ? $t('Exit full screen') : $t('Full screen')"
+                                @click="enterFullscreenMode"
+                            />
+                            <BaseMenuItem
+                                v-if="can('can subscribe shift calendar') || hasAdminRole()"
+                                icon="IconCalendarStar"
+                                white-menu-background
+                                title="Subscribe to shift calendar"
+                                @click="showCalendarAboSettingModal = true"
+                            />
+                        </BaseMenu>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
-    <div class="mb-1 ml-4 flex items-center w-full">
+    <!-- kein w-full: zusammen mit ml-4 ragte die Zeile 16px über den Viewport hinaus
+         und erzeugte einen Seiten-Scrollbalken -->
+    <div class="mb-1 mx-4 flex flex-wrap items-center gap-1">
         <BaseFilterTag v-for="activeFilter in activeFilters" :filter="activeFilter" @removeFilter="removeFilter"/>
     </div>
     <ConfirmDeleteModal
@@ -315,6 +370,7 @@ import CalendarAboSettingModal from "@/Pages/Shifts/Components/CalendarAboSettin
 import CalendarAboInfoModal from "@/Pages/Shifts/Components/CalendarAboInfoModal.vue";
 import SwitchIconTooltip from "@/Artwork/Toggles/SwitchIconTooltip.vue";
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
+import BaseMenu from "@/Components/Menu/BaseMenu.vue";
 import BaseMenuItem from "@/Components/Menu/BaseMenuItem.vue";
 import ToolTipWithTextComponent from "@/Components/ToolTips/ToolTipWithTextComponent.vue";
 import {IconInfoCircle} from "@tabler/icons-vue";

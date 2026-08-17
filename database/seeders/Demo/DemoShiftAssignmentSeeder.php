@@ -446,15 +446,17 @@ class DemoShiftAssignmentSeeder extends Seeder
         }
     }
 
-    /** Ein Azubi wird auf zwei parallele Schichten desselben Termins gebucht (Mehrfacheinsatz-Warnung). */
+    /** Ein Azubi wird auf zwei parallele Schichten gebucht (Mehrfacheinsatz-Warnung). */
     private function seedDoubleBooking(Collection $futureShifts, DemoRandom $rng): void
     {
-        $byEvent = $futureShifts->whereNotNull('event_id')->groupBy('event_id')
+        // zwei zeitgleiche Schichten am selben Tag (unterschiedliche Gewerke)
+        $byDayAndStart = $futureShifts
+            ->groupBy(static fn (Shift $shift) => $shift->start_date->format('Y-m-d') . '|' . $shift->start)
             ->first(static fn (Collection $group) => $group->count() >= 2);
-        if ($byEvent === null) {
+        if ($byDayAndStart === null) {
             return;
         }
-        [$first, $second] = [$byEvent->values()->get(0), $byEvent->values()->get(1)];
+        [$first, $second] = [$byDayAndStart->values()->get(0), $byDayAndStart->values()->get(1)];
 
         $azubiCraft = $this->context->craft('azubi');
         $candidates = $this->pools[$azubiCraft?->id]['Mitarbeiter'] ?? [];

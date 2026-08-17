@@ -2699,9 +2699,12 @@ class ProjectController extends Controller
                 'created_at' => $latestActivity->created_at->diffInHours() < 24
                     ? $latestActivity->created_at->diffForHumans()
                     : $latestActivity->created_at->format('d.m.Y, H:i'),
-                'changer'    => $latestActivity->causer()
-                    ->without(['roles', 'departments', 'calendar_settings', 'calendarAbo', 'shiftCalendarAbo'])
-                    ->first(),
+                // Aktivitäten ohne Verursacher (System/Konsole): morphTo-Query wäre kaputtes SQL
+                'changer'    => $latestActivity->causer_type !== null && $latestActivity->causer_id !== null
+                    ? $latestActivity->causer()
+                        ->without(['roles', 'departments', 'calendar_settings', 'calendarAbo', 'shiftCalendarAbo'])
+                        ->first()
+                    : null,
             ]];
         }
         $headerObject->project_history = $latestChange;
@@ -2855,9 +2858,12 @@ class ProjectController extends Controller
                 'created_at' => $activity->created_at->diffInHours() < 24
                     ? $activity->created_at->diffForHumans()
                     : $activity->created_at->format('d.m.Y, H:i'),
-                'changer'    => $activity->causer()
-                    ->without(['roles', 'departments', 'calendar_settings', 'calendarAbo', 'shiftCalendarAbo'])
-                    ->first(),
+                // Aktivitäten ohne Verursacher (System/Konsole): morphTo-Query wäre kaputtes SQL
+                'changer'    => $activity->causer_type !== null && $activity->causer_id !== null
+                    ? $activity->causer()
+                        ->without(['roles', 'departments', 'calendar_settings', 'calendarAbo', 'shiftCalendarAbo'])
+                        ->first()
+                    : null,
             ];
         })->all();
 

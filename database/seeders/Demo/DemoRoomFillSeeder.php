@@ -29,8 +29,8 @@ class DemoRoomFillSeeder extends Seeder
     public int $months = 6;
 
     /** Belegte Tage je Raum und Woche, die angestrebt werden. */
-    private const TARGET_DAYS_STAGE = [4, 6];
-    private const TARGET_DAYS_REHEARSAL = [3, 5];
+    private const TARGET_DAYS_STAGE = [5, 6];
+    private const TARGET_DAYS_REHEARSAL = [4, 5];
 
     private DemoContext $context;
 

@@ -41,6 +41,7 @@ class DemoWorkerLinkSeeder extends Seeder
         $this->linkPoolFreelancers();
         $this->linkPoolServiceProviders();
         $this->linkRemainingWorkers();
+        $this->ensureQualificationCoverage();
         $this->assignContractsToAllUsers();
 
         $this->command?->info('Verknüpfungs-Workflow abgeschlossen (Gewerke, Funktionen, Verträge, Arbeitszeiten).');
@@ -158,6 +159,78 @@ class DemoWorkerLinkSeeder extends Seeder
 
         if ($linked > 0) {
             $this->command?->info(sprintf('%d Bestands-Worker ohne Gewerk nachverknüpft.', $linked));
+        }
+    }
+
+    /**
+     * Abdeckung sicherstellen: Da JEDE Funktion an JEDEM Gewerk hängt, braucht
+     * jedes Gewerk je Funktion mindestens 2 zuordnenbare Personen — sonst gibt
+     * es Schichtbedarfe, die niemand besetzen kann. Gewerke ohne Mitglieder
+     * werden zuerst mit Demo-Workern aufgefüllt.
+     */
+    private function ensureQualificationCoverage(): void
+    {
+        $qualifications = ShiftQualification::all();
+        $demoUserPool = $this->context->demoUsers()
+            ->filter(static fn ($user) => $user->can_work_shifts)
+            ->values();
+        $added = 0;
+
+        foreach ($this->context->crafts() as $craft) {
+            $rng = $this->random->fork('coverage|' . $craft->id);
+
+            $members = collect()
+                ->merge($craft->users()->get())
+                ->merge($craft->freelancers()->get())
+                ->merge($craft->serviceProviders()->get());
+
+            // Gewerke ohne (oder mit zu wenigen) Mitgliedern auffüllen
+            if ($members->count() < 3 && $demoUserPool->isNotEmpty()) {
+                $needed = 3 - $members->count();
+                $candidates = $demoUserPool->reject(
+                    fn ($user) => $members->contains(fn ($m) => $m instanceof User && $m->id === $user->id)
+                )->values();
+                foreach ($rng->pickMany($candidates->all(), $needed) as $user) {
+                    $this->attachCraft($user, $craft);
+                    $members->push($user);
+                }
+            }
+            if ($members->isEmpty()) {
+                continue;
+            }
+
+            foreach ($qualifications as $qualification) {
+                $covered = DB::table('shift_qualifiables')
+                    ->where('craft_id', $craft->id)
+                    ->where('shift_qualification_id', $qualification->id)
+                    ->count();
+                $attempts = 0;
+                while ($covered < 2 && $covered < $members->count() && $attempts++ < 20) {
+                    // deterministisch Mitglieder ergänzen, die die Funktion noch nicht haben
+                    $candidate = $rng->pick($members->all());
+                    $exists = DB::table('shift_qualifiables')
+                        ->where('craft_id', $craft->id)
+                        ->where('shift_qualification_id', $qualification->id)
+                        ->where('qualifiable_type', get_class($candidate))
+                        ->where('qualifiable_id', $candidate->id)
+                        ->exists();
+                    if (!$exists) {
+                        $this->attachQualification($candidate, $qualification, $craft);
+                        $added++;
+                    }
+                    $covered = DB::table('shift_qualifiables')
+                        ->where('craft_id', $craft->id)
+                        ->where('shift_qualification_id', $qualification->id)
+                        ->count();
+                }
+            }
+        }
+
+        if ($added > 0) {
+            $this->command?->info(sprintf(
+                'Funktions-Abdeckung: %d zusätzliche Gewerk-Funktions-Zuordnungen für lückenlose Besetzbarkeit.',
+                $added
+            ));
         }
     }
 

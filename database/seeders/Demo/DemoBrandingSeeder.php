@@ -97,20 +97,17 @@ class DemoBrandingSeeder extends Seeder
 
     // Farbwelt "artwork core" (Design-Basis-Moodboard): Ink #27233C, Papier #EDECE8,
     // Markenorange #EB7A3D (als Text auf hell: #B3541A), Nacht #151320, Neutral-40 #A7A6B1.
+    // Der Bogen ist die Original-Konstruktion aus der artwork-Wortmarke: ein Viertelring
+    // (aussen R, innen R/2), der dort das "a" ersetzt.
     private function bigLogoSvg(): string
     {
         return <<<'SVG'
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 260 72" width="260" height="72">
-  <rect x="0" y="8" width="56" height="56" rx="14" fill="#27233C"/>
-  <text x="28" y="42" text-anchor="middle" font-family="Lexend, 'Helvetica Neue', Helvetica, Arial, sans-serif"
-        font-size="24" font-weight="600" fill="#FCFCFB">aT</text>
-  <path d="M14 52 Q28 42 42 52" stroke="#EB7A3D" stroke-width="3" fill="none" stroke-linecap="round"/>
-  <text x="68" y="36" font-family="Lexend, 'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="24"
-        font-weight="600" fill="#27233C">artwork</text>
-  <text x="68" y="58" font-family="Inter, 'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="14"
-        font-weight="600" letter-spacing="3" fill="#B3541A">TESTHAUS</text>
-  <rect x="196" y="14" width="58" height="20" rx="10" fill="#B3541A"/>
-  <text x="225" y="28" text-anchor="middle" font-family="Inter, 'Helvetica Neue', Helvetica, Arial, sans-serif"
+  <path d="M8,48 A26,26 0 0 1 34,22 L34,35 A13,13 0 0 0 21,48 Z" fill="#EB7A3D"/>
+  <text x="38" y="48" font-family="Lexend, 'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="34"
+        fill="#27233C"><tspan font-weight="600">test</tspan><tspan font-weight="300">haus</tspan></text>
+  <rect x="196" y="26" width="58" height="20" rx="10" fill="#B3541A"/>
+  <text x="225" y="40" text-anchor="middle" font-family="Inter, 'Helvetica Neue', Helvetica, Arial, sans-serif"
         font-size="12" font-weight="700" fill="#FFFFFF">DEMO</text>
 </svg>
 SVG;
@@ -121,11 +118,9 @@ SVG;
         return <<<'SVG'
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
   <rect x="0" y="0" width="64" height="64" rx="14" fill="#27233C"/>
-  <text x="32" y="36" text-anchor="middle" font-family="Lexend, 'Helvetica Neue', Helvetica, Arial, sans-serif"
-        font-size="24" font-weight="600" fill="#FCFCFB">aT</text>
-  <path d="M15 45 Q32 34 49 45" stroke="#EB7A3D" stroke-width="3.5" fill="none" stroke-linecap="round"/>
-  <rect x="9" y="49" width="46" height="12" rx="6" fill="#EB7A3D"/>
-  <text x="32" y="58" text-anchor="middle" font-family="Inter, 'Helvetica Neue', Helvetica, Arial, sans-serif"
+  <path d="M19,37 A26,26 0 0 1 45,11 L45,24 A13,13 0 0 0 32,37 Z" fill="#EB7A3D"/>
+  <rect x="9" y="47" width="46" height="13" rx="6.5" fill="#EDECE8"/>
+  <text x="32" y="56.5" text-anchor="middle" font-family="Inter, 'Helvetica Neue', Helvetica, Arial, sans-serif"
         font-size="8.5" font-weight="700" letter-spacing="1.5" fill="#27233C">DEMO</text>
 </svg>
 SVG;
@@ -140,12 +135,8 @@ SVG;
   <rect width="900" height="1200" fill="#27233C"/>
   <circle cx="120" cy="1160" r="380" fill="#151320"/>
   <circle cx="820" cy="40" r="260" fill="#151320"/>
-  <path d="M-80 320 Q450 80 980 320" stroke="#EB7A3D" stroke-width="4" fill="none"/>
-  <path d="M-80 370 Q450 130 980 370" stroke="#A7A6B1" stroke-width="2" fill="none" opacity="0.3"/>
-  <rect x="390" y="420" width="120" height="120" rx="28" fill="#EDECE8"/>
-  <text x="450" y="492" text-anchor="middle" font-family="Lexend, 'Helvetica Neue', Helvetica, Arial, sans-serif"
-        font-size="46" font-weight="600" fill="#27233C">aT</text>
-  <path d="M418 518 Q450 496 482 518" stroke="#EB7A3D" stroke-width="6" fill="none" stroke-linecap="round"/>
+  <circle cx="450" cy="480" r="62" fill="#FCFCFB"/>
+  <path d="M420,510 A60,60 0 0 1 480,450 L480,480 A30,30 0 0 0 450,510 Z" fill="#27233C"/>
   <text x="450" y="640" text-anchor="middle" font-family="Lexend, 'Helvetica Neue', Helvetica, Arial, sans-serif"
         font-size="64" fill="#F4F4F2"><tspan font-weight="600">artwork</tspan><tspan font-weight="300"> Testhaus</tspan></text>
   <text x="450" y="690" text-anchor="middle" font-family="Inter, 'Helvetica Neue', Helvetica, Arial, sans-serif"

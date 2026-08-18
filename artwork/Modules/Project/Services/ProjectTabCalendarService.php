@@ -47,11 +47,9 @@ class ProjectTabCalendarService
                 $project
             )
             : $this->eventService->createEventManagementDto(
-                $this->roomService,
                 $this->userService,
                 $this->filterService,
                 $this->projectTabService,
-                $this->eventTypeService,
                 $this->areaService,
                 $this->projectService,
                 $this->projectCreateSettings,
@@ -64,4 +62,3 @@ class ProjectTabCalendarService
         ];
     }
 }
-

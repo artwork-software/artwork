@@ -44,7 +44,6 @@ class ProjectService
         private readonly EventService $eventService,
         private readonly UserService $userService,
         private readonly CarbonService $carbonService,
-
     ) {
     }
 
@@ -171,7 +170,7 @@ class ProjectService
                         $userId = $this->userService->getAuthUserId();
                         // Only show projects where the auth user is part of the project team.
                         // The creator (user_id) must be ignored completely for this filter.
-                        $builder->whereHas('users', function ($query) use ($userId) {
+                        $builder->whereHas('users', function ($query) use ($userId): void {
                             $query->where('user_id', $userId);
                         });
                     }
@@ -221,7 +220,12 @@ class ProjectService
                         if ($hasExpiredFilter || $hasFutureFilter) {
                             $todayMidnight = $this->carbonService->getTodayMidnight();
 
-                            $builder->where(function (Builder $builder) use ($hasExpiredFilter, $hasFutureFilter, $todayMidnight, $projectFilters): void {
+                            $builder->where(function (Builder $builder) use (
+                                $hasExpiredFilter,
+                                $hasFutureFilter,
+                                $todayMidnight,
+                                $projectFilters
+                            ): void {
                                 if ($hasExpiredFilter && $hasFutureFilter) {
                                     // Both active: show all projects (no time restriction)
                                     $builder->whereRaw('1 = 1');
@@ -256,7 +260,8 @@ class ProjectService
                             }
                         }
 
-                        // Handle showOnlyProjectsWithoutGroup filter - when true, exclude project groups and projects with assigned groups
+                        // Handle showOnlyProjectsWithoutGroup filter - when true,
+                        // exclude project groups and projects with assigned groups
                         if ($projectFilters->contains('showOnlyProjectsWithoutGroup')) {
                             $builder->where('is_group', 0) // Exclude project groups
                                    ->whereDoesntHave('groups'); // Exclude projects that have a group assigned
@@ -740,6 +745,11 @@ class ProjectService
                 'shifts.users.vacations',
                 'shifts.freelancer.globalQualifications',
                 'shifts.serviceProvider.globalQualifications',
+                // Bewusst KEIN eager load von assignedCrafts: Freelancer und
+                // Dienstleister hängen zwar assigned_craft_ids an (dessen Accessor
+                // sonst je Person eine craftables-Query nachschiebt), die Relation
+                // zieht über ihr eigenes with('qualifications') aber ~3 MB in den
+                // Payload. Die paar Zusatzqueries sind hier das kleinere Übel.
             ])
             ->orderBy('start_time', 'asc')
             ->get();
@@ -936,8 +946,11 @@ class ProjectService
         ]);
     }
 
-    public function syncCategories(Project $project, IlluminateCollection $categories, ?int $mainCategoryId = null): void
-    {
+    public function syncCategories(
+        Project $project,
+        IlluminateCollection $categories,
+        ?int $mainCategoryId = null
+    ): void {
         $syncData = $this->buildSyncDataWithMain($categories, $mainCategoryId, 'category_project');
         $project->categories()->sync($syncData);
     }
@@ -954,8 +967,11 @@ class ProjectService
         $project->sectors()->sync($syncData);
     }
 
-    private function buildSyncDataWithMain(IlluminateCollection $ids, ?int $mainId, string $pivotTable = 'category_project'): array
-    {
+    private function buildSyncDataWithMain(
+        IlluminateCollection $ids,
+        ?int $mainId,
+        string $pivotTable = 'category_project'
+    ): array {
         $syncData = [];
         $hasIsMain = Schema::hasColumn($pivotTable, 'is_main');
         foreach ($ids as $id) {

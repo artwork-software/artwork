@@ -1842,7 +1842,7 @@ onMounted(async () => {
     // aus shifts.crafts, Kollisionen kommen on-demand über shift.check-collisions.
     await Promise.all([
         initializeDailyShiftPlan(),
-        axios.get(route("shifts.crafts"), { params: { lightweight: 1 } }).then(({ data }) => {
+        axios.get(route("shifts.crafts"), { params: { lightweight: 1, withPeople: 1 } }).then(({ data }) => {
             craftsLoaded.value = data.crafts ?? []
         }).catch(() => { craftsLoaded.value = [] }),
         loadProjectDayAssignments(),

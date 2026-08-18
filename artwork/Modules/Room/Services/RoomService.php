@@ -155,7 +155,7 @@ readonly class RoomService
                     'creator',
                     'project',
                     'project.managerUsers',
-                    'project.state',
+                    'project.status',
                     'project.shiftRelevantEventTypes',
                     'shifts',
                     'shifts.craft',

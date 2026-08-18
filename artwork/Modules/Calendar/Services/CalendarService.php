@@ -165,7 +165,10 @@ class CalendarService
                     'creator',
                     'project',
                     'project.managerUsers',
-                    'project.state',
+                    // Am Project heißt die Relation status() (HasOne auf ProjectState
+                    // über die Spalte state); 'project.state' liess jeden Aufruf mit
+                    // einer RelationNotFoundException in einen HTTP 500 laufen.
+                    'project.status',
                     'project.categories',
                     'shifts',
                     'shifts.craft',

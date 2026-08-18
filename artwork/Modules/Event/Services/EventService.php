@@ -145,16 +145,15 @@ readonly class EventService
         broadcast(new OccupancyUpdated())->toOthers();
         $notificationService->deleteUpsertRoomRequestNotificationByEventId($event->id);
 
-        if ($event->room_id){
+        if ($event->room_id) {
             broadcast(new RemoveEvent($event, $event->room_id));
         }
 
-        $event->verifications()->each(function (EventVerification $eventVerification) use ($event) {
+        $event->verifications()->each(function (EventVerification $eventVerification) use ($event): void {
             $eventVerification->delete();
         });
 
         $this->eventRepository->delete($event);
-
     }
 
     public function deleteAll(
@@ -445,7 +444,8 @@ readonly class EventService
     /**
      * Formatiert Minuten in HH:MM Format.
      */
-    private function formatTime(int $minutes): string {
+    private function formatTime(int $minutes): string
+    {
         $hours = floor($minutes / 60);
         $mins = $minutes % 60;
         return sprintf('%02d:%02d', $hours, $mins);
@@ -454,7 +454,8 @@ readonly class EventService
     /**
      * Summiert zwei Zeitangaben im Format HH:MM.
      */
-    private function sumTimes(string $time1, string $time2): string {
+    private function sumTimes(string $time1, string $time2): string
+    {
         [$h1, $m1] = explode(':', $time1);
         [$h2, $m2] = explode(':', $time2);
 
@@ -900,6 +901,8 @@ readonly class EventService
         return false;
     }
 
+    // Diese Methode hat aktuell keinen Aufrufer; $roomService ist ungenutzt.
+    //phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.FoundBeforeLastUsed
     public function getShiftPlanDto(
         UserService $userService,
         FreelancerService $freelancerService,
@@ -960,8 +963,14 @@ readonly class EventService
 
         $calendarPeriod = CarbonPeriod::create($startDate, $endDate);
 
+        // Feiertage einmal für den gesamten Zeitraum laden und pro Tag im
+        // Speicher zuordnen. Vorher lief getHolidaysForPeriod() je Kalendertag —
+        // im Projekt-Kalender-Tab (184 Tage) waren das 184 holidays- plus 75
+        // subdivisions-Queries. Gleiches Vorgehen wie in getDaysWithData().
+        $holidaysForPeriod = $this->getHolidaysGroupedByDate($startDate, $endDate);
+
         foreach ($calendarPeriod as $period) {
-            if ($extraRow){
+            if ($extraRow) {
                 if ($period->isMonday()) {
                     $periodArray[] = [
                         'isExtraRow' => true,
@@ -970,7 +979,7 @@ readonly class EventService
                 }
             }
 
-            $holidays = $this->getHolidaysForPeriod($period);
+            $holidays = $holidaysForPeriod[$period->format('Y-m-d')] ?? collect();
 
             $periodArray[] = [
                 'day' => $period->format('d.m.'),
@@ -1000,6 +1009,85 @@ readonly class EventService
 
 
 
+    /**
+     * Feiertage des Zeitraums in EINER Query, pro Tag zugeordnet.
+     *
+     * Die Tages-Prüfung in holidayMatchesDay() spiegelt bewusst exakt die
+     * Bedingung aus getHolidaysForPeriod() — inklusive der ungewöhnlichen
+     * yearly-Regel (Monat aus `date`, Tag aus `end_date`).
+     *
+     * @return array<string, SupportCollection<int, CalendarHolidayDTO>>
+     */
+    private function getHolidaysGroupedByDate($startDate, $endDate): array
+    {
+        $rangeStart = Carbon::parse($startDate)->format('Y-m-d');
+        $rangeEnd = Carbon::parse($endDate)->format('Y-m-d');
+
+        $holidays = Holiday::query()
+            ->where(function (Builder $query) use ($rangeStart, $rangeEnd): void {
+                $query->where(function (Builder $builder) use ($rangeStart, $rangeEnd): void {
+                    // Direkter Vergleich statt whereDate(): beide Spalten sind vom
+                    // Typ DATE, DATE(spalte) wäre also identisch — würde aber den
+                    // Index auf (date, end_date) unbenutzbar machen.
+                    $builder->where('date', '<=', $rangeEnd)
+                        ->where('end_date', '>=', $rangeStart);
+                })->orWhere('yearly', true);
+            })
+            ->with('subdivisions')
+            ->get();
+
+        if ($holidays->isEmpty()) {
+            return [];
+        }
+
+        // DTO je Feiertag einmal bauen und über die Tage teilen — die DTOs sind
+        // reine Wertobjekte und werden nur serialisiert.
+        $dtoByHolidayId = [];
+        foreach ($holidays as $holiday) {
+            $dtoByHolidayId[$holiday->getKey()] = new CalendarHolidayDTO(
+                name: $holiday->name,
+                date: $holiday->date?->format('Y-m-d'),
+                end_date: $holiday->end_date?->format('Y-m-d'),
+                color: $holiday->color,
+                subdivisions: $holiday->subdivisions->pluck('name')->toArray(),
+            );
+        }
+
+        $grouped = [];
+        foreach (CarbonPeriod::create($startDate, $endDate) as $day) {
+            $matches = new SupportCollection();
+
+            foreach ($holidays as $holiday) {
+                if ($this->holidayMatchesDay($holiday, $day)) {
+                    $matches->push($dtoByHolidayId[$holiday->getKey()]);
+                }
+            }
+
+            if ($matches->isNotEmpty()) {
+                $grouped[$day->format('Y-m-d')] = $matches;
+            }
+        }
+
+        return $grouped;
+    }
+
+    private function holidayMatchesDay(Holiday $holiday, Carbon $day): bool
+    {
+        $dayKey = $day->format('Y-m-d');
+        $start = $holiday->date?->format('Y-m-d');
+        $end = $holiday->end_date?->format('Y-m-d');
+
+        if ($start !== null && $end !== null && $start <= $dayKey && $end >= $dayKey) {
+            return true;
+        }
+
+        return (bool) $holiday->yearly
+            && $holiday->date !== null
+            && $holiday->end_date !== null
+            && (int) $holiday->date->month === (int) $day->month
+            && (int) $holiday->end_date->day === (int) $day->day;
+    }
+
     public function getHolidaysForPeriod($period): SupportCollection
     {
         return Holiday::where(function (Builder $query) use ($period): void {
@@ -1020,8 +1108,12 @@ readonly class EventService
         ));
     }
 
-    public function fetchFilteredRooms(UserFilter $filter, $startDate, $endDate, UserCalendarSettings|null $userCalendarSettings = null)
-    {
+    public function fetchFilteredRooms(
+        UserFilter $filter,
+        $startDate,
+        $endDate,
+        UserCalendarSettings|null $userCalendarSettings = null
+    ) {
         $userCalendarFilter = $filter;
 
         return Room::query()->unlessRoomIds($userCalendarFilter?->rooms)
@@ -1034,38 +1126,47 @@ readonly class EventService
                 $startDate,
                 $endDate
             )
-            ->when($userCalendarSettings?->hide_unoccupied_rooms, function ($query) use ($startDate, $endDate, $userCalendarSettings) {
-                $query->whereHas('events', function ($eventQuery) use ($startDate, $endDate, $userCalendarSettings) {
-                    $eventQuery->where(function ($q) use ($startDate, $endDate) {
-                        $q->whereBetween('start_time', [$startDate, $endDate])
-                            ->orWhereBetween('end_time', [$startDate, $endDate])
-                            ->orWhere(function ($subQuery) use ($startDate, $endDate) {
-                                $subQuery->where('start_time', '<', $startDate)
-                                    ->where('end_time', '>', $endDate);
+            ->when(
+                $userCalendarSettings?->hide_unoccupied_rooms,
+                function ($query) use ($startDate, $endDate, $userCalendarSettings): void {
+                    $query->whereHas(
+                        'events',
+                        function ($eventQuery) use ($startDate, $endDate, $userCalendarSettings): void {
+                            $eventQuery->where(function ($q) use ($startDate, $endDate): void {
+                                $q->whereBetween('start_time', [$startDate, $endDate])
+                                    ->orWhereBetween('end_time', [$startDate, $endDate])
+                                    ->orWhere(function ($subQuery) use ($startDate, $endDate): void {
+                                        $subQuery->where('start_time', '<', $startDate)
+                                            ->where('end_time', '>', $endDate);
+                                    });
+                            })
+                        // Only consider non-deleted events (explicit table name for whereHas context)
+                            ->whereNull('events.deleted_at')
+                        // Filter planning events based on user settings and permission
+                            ->where(function ($q) use ($userCalendarSettings): void {
+                                $q->where('is_planning', false);
+                                $user = $this->authManager->user();
+                                if (
+                                    $userCalendarSettings?->show_planned_events &&
+                                    $user &&
+                                    (
+                                    $user->hasRole('artwork admin') ||
+                                    $user->can('can see planning calendar') ||
+                                    $user->can('can edit planning calendar')
+                                    )
+                                ) {
+                                    $q->orWhere('is_planning', true);
+                                }
                             });
-                    })
-                    // Only consider non-deleted events (explicit table name for whereHas context)
-                    ->whereNull('events.deleted_at')
-                    // Filter planning events based on user settings and permission
-                    ->where(function ($q) use ($userCalendarSettings) {
-                        $q->where('is_planning', false);
-                        $user = $this->authManager->user();
-                        if (
-                            $userCalendarSettings?->show_planned_events &&
-                            $user &&
-                            ($user->hasRole('artwork admin') || $user->can('can see planning calendar') || $user->can('can edit planning calendar'))
-                        ) {
-                            $q->orWhere('is_planning', true);
                         }
-                    });
-                });
-            })
+                    );
+                }
+            )
             ->orderBy('position')
             ->orderBy('id')
             // Für getEffectiveColor() (Farb-Vererbung Raum → Areal) ohne Lazy-Load pro Raum
             ->with('area:id,color')
             ->get();
-
     }
 
     public function filterRoomsEventsAndShifts(
@@ -1077,20 +1178,20 @@ readonly class EventService
         $isShiftPlan = false
     ): void {
         $q = Event::query();
-        $q->where(function(Builder $query) use ($startDate, $endDate) {
-            $query->where(function(Builder $q) use ($startDate, $endDate) {
+        $q->where(function (Builder $query) use ($startDate, $endDate): void {
+            $query->where(function (Builder $q) use ($startDate, $endDate): void {
                 $q->where('start_time', '>=', $startDate)
                     ->where('start_time', '<=', $endDate);
-            })->orWhere(function(Builder $q)  use ($startDate, $endDate){
+            })->orWhere(function (Builder $q) use ($startDate, $endDate): void {
                 $q->where('end_time', '>=', $startDate)
                     ->where('end_time', '<=', $endDate);
-            })->orWhere(function(Builder $q) use ($startDate, $endDate) {
+            })->orWhere(function (Builder $q) use ($startDate, $endDate): void {
                 $q->where('start_time', '<', $startDate)
                     ->where('end_time', '>', $endDate);
             });
         });
 
-        if (!empty ($filter->event_types)) {
+        if (!empty($filter->event_types)) {
             $q->where('events.event_type_id', $filter->event_types);
         }
 
@@ -1134,7 +1235,7 @@ readonly class EventService
                 /** @var Project $project */
                 $project = $event->project ?: null;
                 $projectState = null;
-                if($project?->state && $userCalendarSettings?->project_status){
+                if ($project?->state && $userCalendarSettings?->project_status) {
                     /** @var ProjectState $projectState */
                     $projectState = ProjectState::find($project->state);
                 }
@@ -1185,12 +1286,12 @@ readonly class EventService
                     //'created_by' => $creator, // lazy load
                 ];
 
-                if ($userCalendarSettings?->work_shifts || $isShiftPlan){
+                if ($userCalendarSettings?->work_shifts || $isShiftPlan) {
                     $eventArray['shifts'] = MinimalShiftPlanShiftResource::collection($event->shifts)->resolve();
                     $eventArray['days_of_shifts'] = $event->getDaysOfShifts($event->shifts);
                 }
 
-                if ($userCalendarSettings?->project_status){
+                if ($userCalendarSettings?->project_status) {
                     $eventArray['projectStatusId'] =  $projectState?->id;
                     $eventArray['projectStatusBackgroundColor'] =  $projectState?->color . '33';
                     $eventArray['projectStatusBorderColor'] =  $projectState?->color;
@@ -1525,7 +1626,7 @@ readonly class EventService
                                 'creator',
                                 'project',
                                 'project.managerUsers',
-                                'project.state',
+                                'project.status',
                                 'shifts',
                                 'shifts.craft',
                                 'shifts.users',
@@ -1586,11 +1687,9 @@ readonly class EventService
      */
     //phpcs:ignore Generic.Metrics.CyclomaticComplexity.TooHigh
     public function createEventManagementDto(
-        RoomService $roomService,
         UserService $userService,
         FilterService $filterService,
         ProjectTabService $projectTabService,
-        EventTypeService $eventTypeService,
         AreaService $areaService,
         ProjectService $projectService,
         ProjectCreateSettings $projectCreateSettings,
@@ -1635,7 +1734,6 @@ readonly class EventService
                         $today->endOfDay(),
                 ];
             }
-
         }
 
 
@@ -1667,9 +1765,23 @@ readonly class EventService
         $userFilter = $user->userFilters()->calendarFilter()->first();
         $rooms = $this->fetchFilteredRooms($userFilter, $startDate, $endDate, $userCalendarSettings);
 
-        $this->filterRoomsEventsAndShifts($rooms, $userFilter, $startDate, $endDate, $userCalendarSettings);
+        // Bewusst KEIN Aufbau der Kalenderzellen mehr: BaseCalendar lädt die
+        // Termine nach dem Mount ohnehin monatsweise über events.all nach und
+        // ersetzt dabei den kompletten Inhalt (setCalendarMonthData baut auch aus
+        // leerem Stand auf). Die hier früher erzeugte calendar-Prop war damit nur
+        // ein teurer Zwischenstand: 6,97 MB, weil jeder Termin für jeden Tag
+        // dupliziert wird, den er überspannt. Der Hauptkalender macht es seit
+        // jeher so — sein Controller liefert gar kein calendar.
+        // Wichtig: leeres Array statt null, sonst greift die hasCalendar-Prüfung
+        // in CalendarTab.vue nicht und BaseCalendar würde nie gerendert.
+        $mappedRooms = [];
 
-        $mappedRooms = $this->mapRoomsToContentForCalendar($rooms, $startDate, $endDate);
+        // creator kommt über das globale $with des Room-Models und wird im
+        // Kalender nirgends gelesen; events/shifts stehen hier nur noch als
+        // Sicherheitsnetz, falls wieder etwas an die Räume gehängt wird.
+        $rooms->each(function (Room $room): void {
+            $room->makeHidden(['events', 'shifts', 'creator']);
+        });
 
         if ($useProjectTimePeriod && !$startDate && !$endDate) {
             $startDate = $today->startOfDay();
@@ -1698,7 +1810,7 @@ readonly class EventService
             ->setDateValue($dateValue)
             ->setCalendarType($calendarType)
             ->setSelectedDate($selectedDate)
-            ->setEventsWithoutRoom( CalendarEventResource::collection(
+            ->setEventsWithoutRoom(CalendarEventResource::collection(
                 $this->eventCollectionService->getEventsWithoutRoom(
                     $project,
                     [
@@ -1706,7 +1818,7 @@ readonly class EventService
                         'creator',
                         'project',
                         'project.managerUsers',
-                        'project.state',
+                        'project.status',
                         'shifts',
                         'shifts.craft',
                         'shifts.users',

@@ -75,6 +75,18 @@ SVG;
         // base64 ist am stabilsten (keine Probleme mit Sonderzeichen/Quotes)
         return 'data:image/svg+xml;base64,' . base64_encode($svg);
     }
+
+    /**
+     * Alte Datenbestände enthalten persistierte Avatar-Fallback-URLs:
+     * ui-avatars.com (von der CSP img-src geblockt) sowie generate-avatar-image-URLs
+     * aus der Zeit, als die Route unter /api lag (heute 404). Solche Werte wie
+     * "kein Bild" behandeln, damit der lokale SVG-Fallback greift.
+     */
+    protected function isStaleAvatarFallbackUrl(?string $value): bool
+    {
+        return $value !== null
+            && (str_contains($value, 'ui-avatars.com') || str_contains($value, 'generate-avatar-image'));
+    }
     /**
      * Update the user's profile photo.
      *

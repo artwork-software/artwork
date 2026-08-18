@@ -7,6 +7,7 @@ namespace Artwork\Core\Console\Commands\Demo;
 use Carbon\Carbon;
 use Database\Seeders\Demo\DemoProjectDayAssignmentSeeder;
 use Database\Seeders\Demo\DemoProjectSeeder;
+use Database\Seeders\Demo\DemoRoomFillSeeder;
 use Database\Seeders\Demo\DemoShiftAssignmentSeeder;
 use Database\Seeders\Demo\DemoShiftPlanRequestSeeder;
 use Database\Seeders\Demo\DemoShiftSeeder;
@@ -59,6 +60,7 @@ class DemoProjectsCommand extends BaseDemoCommand
         foreach (
             [
                 DemoTodayProgramSeeder::class,
+                DemoRoomFillSeeder::class,
                 DemoShiftSeeder::class,
                 DemoShiftAssignmentSeeder::class,
                 DemoProjectDayAssignmentSeeder::class,

@@ -15,7 +15,7 @@ final class DemoProjectPools
      */
     public const ARCHETYPES = [
         'eigenproduktion' => [
-            'per_month' => [1, 2],
+            'per_month' => [2, 2],
             'category' => 'Eigenproduktion',
             'sector' => 'Große Bühne',
             'cost_center' => '4711 – Künstlerisches Programm',
@@ -23,7 +23,7 @@ final class DemoProjectPools
             'color' => '#9e1c60',
         ],
         'gastspiel' => [
-            'per_month' => [2, 2],
+            'per_month' => [2, 3],
             'category' => 'Gastspiel',
             'sector' => 'Große Bühne',
             'cost_center' => '4712 – Gastspiele',
@@ -31,7 +31,7 @@ final class DemoProjectPools
             'color' => '#2563eb',
         ],
         'konzert' => [
-            'per_month' => [1, 2],
+            'per_month' => [2, 3],
             'category' => 'Konzert',
             'sector' => 'Studiobühne',
             'cost_center' => '4711 – Künstlerisches Programm',
@@ -39,7 +39,7 @@ final class DemoProjectPools
             'color' => '#059669',
         ],
         'vermietung' => [
-            'per_month' => [1, 1],
+            'per_month' => [1, 2],
             'category' => 'Vermietung',
             'sector' => 'Studiobühne',
             'cost_center' => '4720 – Vermietung & Events',
@@ -98,6 +98,52 @@ final class DemoProjectPools
             ['name' => 'Festival: Tanz-Triple %s', 'genre' => 'Tanz', 'artists' => 'Cie. Marelle / PULS / Compagnia Vento', 'stage_role' => 'main_stage'],
             ['name' => 'Festival: Lange Nacht der Performance %s', 'genre' => 'Performance', 'artists' => 'Kollektiv Beton, Studio Nachtblau u.a.', 'stage_role' => 'second_stage'],
         ],
+    ];
+
+    /* -----------------------------------------------------------------
+     | Raum-Auslastung: Hausprogramm-Reihen, die die Lücken ALLER Räume
+     | (auch der vorbestehenden) mit realitätsnahen Formaten füllen.
+     | ----------------------------------------------------------------- */
+
+    public const FILL_SERIES = [
+        'offene_buehne' => [
+            'project' => 'Offene Bühne & Hausprogramm',
+            'artists' => 'Diverse Künstler*innen der freien Szene',
+            'color' => '#0891b2',
+        ],
+        'workshops' => [
+            'project' => 'Theaterpädagogik & Workshops',
+            'artists' => 'Vermittlungsteam Testhaus & Gäste',
+            'color' => '#059669',
+        ],
+        'gastproben' => [
+            'project' => 'Gastproben & Residenzen',
+            'artists' => 'Wechselnde Compagnien',
+            'color' => '#7c3aed',
+        ],
+        'vermietungen' => [
+            'project' => 'Externe Nutzungen & Vermietungen',
+            'artists' => 'Externe Veranstalter*innen',
+            'color' => '#b45309',
+        ],
+    ];
+
+    /**
+     * Formate fürs Auffüllen: [seriesKey, eventTypeKey, name, startzeit, endzeit, tageszeit]
+     * tageszeit: day|evening — steuert, welche Slots belegt werden.
+     */
+    public const FILL_FORMATS = [
+        ['workshops', 'sonderveranstaltung', 'Workshop: Bühnenkampf & Falltechnik', '10:00', '15:00', 'day'],
+        ['workshops', 'sonderveranstaltung', 'Workshop: Licht für Einsteiger*innen', '10:00', '16:00', 'day'],
+        ['workshops', 'probe', 'Jugendclub-Probe', '16:00', '19:00', 'day'],
+        ['gastproben', 'probe', 'Gastprobe: Compagnie Fremdkörper', '10:00', '17:00', 'day'],
+        ['gastproben', 'probe', 'Residenz: Kollektiv Windstärke', '10:00', '18:00', 'day'],
+        ['offene_buehne', 'vorstellung', 'Offene Bühne', '19:30', '22:30', 'evening'],
+        ['offene_buehne', 'vorstellung', 'Kindertheater am Nachmittag', '15:00', '16:30', 'day'],
+        ['offene_buehne', 'sonderveranstaltung', 'Poetry Slam', '20:00', '22:30', 'evening'],
+        ['vermietungen', 'sonderveranstaltung', 'Firmenveranstaltung (Vermietung)', '18:00', '22:30', 'evening'],
+        ['vermietungen', 'sonderveranstaltung', 'Empfang & Netzwerkabend (Vermietung)', '18:30', '22:00', 'evening'],
+        ['vermietungen', 'fuehrung', 'Führung hinter die Kulissen', '11:00', '12:00', 'day'],
     ];
 
     public const PLANNING_PROJECTS = [
@@ -271,6 +317,12 @@ final class DemoProjectPools
         foreach ($festivalPrefixes as $prefix) {
             if (str_starts_with($name, $prefix)) {
                 return 'eigenproduktion';
+            }
+        }
+
+        foreach (self::FILL_SERIES as $series) {
+            if ($name === $series['project']) {
+                return 'hausnutzung';
             }
         }
 

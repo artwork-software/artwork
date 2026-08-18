@@ -167,6 +167,10 @@ class ProjectTabService implements ServiceWithArrayCache
                 )
             )
             ->setEventsWithRelevant($projectService->getEventsWithRelevantShifts($project))
+            // Bewusst OHNE nested assignedCrafts: das würde zwar die
+            // craftables-Nachfragen des assigned_craft_ids-Accessors sparen,
+            // serialisiert aber die Relation (inkl. ihres eigenen
+            // with('qualifications')) mit und blies den Payload um ~3 MB auf.
             ->setCrafts($craftService->getAll(['users', 'freelancers', 'serviceProviders']))
             ->setCurrentUserCrafts($userService->getAuthUserCrafts()->merge($craftService->getAssignableByAllCrafts()))
             ->setShiftQualifications($shiftQualificationService->getAllOrderedByPosition())

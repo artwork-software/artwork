@@ -50,11 +50,19 @@ class DemoShiftSeeder extends Seeder
         $archetypes = $demoProjects->pluck('name', 'id')
             ->map(static fn (string $name) => DemoProjectPools::archetypeForProjectName($name));
 
+        // Altbestand reparieren: Schichten sind im aktuellen System event-los
+        // (event_id wird von artwork:update remapShiftEventProjectRelations
+        // abgebaut) — event-gebundene Schichten erscheinen NICHT im Schichtplan.
+        $repaired = Shift::query()
+            ->whereIn('project_id', $demoProjects->pluck('id'))
+            ->whereNotNull('event_id')
+            ->update(['event_id' => null]);
+        if ($repaired > 0) {
+            $this->command?->info(sprintf('%d event-gebundene Demo-Schichten auf standalone umgestellt.', $repaired));
+        }
+
         $createdShifts = 0;
         foreach ($events as $event) {
-            if ($event->shifts()->exists()) {
-                continue;
-            }
             $matrixKey = $this->matrixKeyForEvent($event, $archetypes[$event->project_id] ?? null);
             if ($matrixKey === null) {
                 continue;
@@ -96,23 +104,32 @@ class DemoShiftSeeder extends Seeder
                 ? DemoProjectPools::FRONT_OF_HOUSE_TIMES
                 : DemoProjectPools::SHIFT_TIMES[$matrixKey];
 
-            $shift = Shift::create([
-                'event_id' => $event->id,
-                'start_date' => $eventDay->toDateString(),
-                'end_date' => $eventDay->copy()->addDays($endDayOffset)->toDateString(),
-                'event_start_day' => $eventDay->toDateString(),
-                'event_end_day' => $eventDay->copy()->addDays($endDayOffset)->toDateString(),
-                'start' => $startTime,
-                'end' => $endTime,
-                'break_minutes' => $breakMinutes,
-                'craft_id' => $craft->id,
-                'room_id' => $event->room_id,
-                'project_id' => $event->project_id,
-                'description' => $rng->chance(0.5) ? $rng->pick(DemoDataPools::SHIFT_DESCRIPTIONS) : null,
-                'shift_uuid' => (string) Str::uuid(),
-                'is_committed' => false,
-                'shift_group_id' => $this->shiftGroupIdFor($matrixKey),
-            ]);
+            // Standalone-Schicht (KEIN event_id — das aktuelle System lädt nur
+            // event-lose Schichten in Schichtplan und Projekt-Schichten-Tab);
+            // idempotent über Projekt+Raum+Gewerk+Tag+Startzeit.
+            $shift = Shift::firstOrCreate(
+                [
+                    'project_id' => $event->project_id,
+                    'room_id' => $event->room_id,
+                    'craft_id' => $craft->id,
+                    'start_date' => $eventDay->toDateString(),
+                    'start' => $startTime,
+                ],
+                [
+                    'end_date' => $eventDay->copy()->addDays($endDayOffset)->toDateString(),
+                    'event_start_day' => $eventDay->toDateString(),
+                    'event_end_day' => $eventDay->copy()->addDays($endDayOffset)->toDateString(),
+                    'end' => $endTime,
+                    'break_minutes' => $breakMinutes,
+                    'description' => $rng->chance(0.5) ? $rng->pick(DemoDataPools::SHIFT_DESCRIPTIONS) : null,
+                    'shift_uuid' => (string) Str::uuid(),
+                    'is_committed' => false,
+                    'shift_group_id' => $this->shiftGroupIdFor($matrixKey),
+                ]
+            );
+            if (!$shift->wasRecentlyCreated) {
+                continue;
+            }
             $created++;
 
             foreach ($demands as $qualificationKey => $count) {

@@ -42,10 +42,9 @@ class DemoShiftBaseSeeder extends Seeder
 
     private function seedCrafts(): void
     {
-        $qualifications = ShiftQualification::all()->keyBy('name');
         $created = 0;
 
-        foreach (DemoDataPools::CRAFTS as $poolKey => $data) {
+        foreach (DemoDataPools::CRAFTS as $data) {
             $craft = Craft::firstOrCreate(
                 ['name' => $data['name']],
                 [
@@ -59,18 +58,20 @@ class DemoShiftBaseSeeder extends Seeder
             if ($craft->wasRecentlyCreated) {
                 $created++;
             }
-
-            $qualificationIds = collect(DemoDataPools::CRAFT_QUALIFICATIONS[$poolKey] ?? [])
-                ->map(static fn (string $key) => $qualifications
-                    ->get(DemoDataPools::QUALIFICATIONS[$key]['name'])?->id)
-                ->filter()
-                ->all();
-            if ($qualificationIds !== []) {
-                $craft->qualifications()->syncWithoutDetaching($qualificationIds);
-            }
         }
 
-        $this->command?->info(sprintf('Gewerke: %d neu angelegt (inkl. universeller Gewerke AZ/VT).', $created));
+        // JEDE Funktion an JEDES Gewerk (auch Bestandsgewerke): Schichtbedarfe
+        // mit einer dem Gewerk fremden Funktion wären im UI nicht besetzbar.
+        $allQualificationIds = ShiftQualification::query()->pluck('id')->all();
+        foreach (Craft::all() as $craft) {
+            $craft->qualifications()->syncWithoutDetaching($allQualificationIds);
+        }
+
+        $this->command?->info(sprintf(
+            'Gewerke: %d neu angelegt; alle %d Funktionen an alle Gewerke zugeordnet.',
+            $created,
+            count($allQualificationIds)
+        ));
     }
 
     private function seedTimePresets(): void

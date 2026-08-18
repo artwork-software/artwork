@@ -217,8 +217,9 @@
                                         v-if="!day.isExtraRow"
                                         class="h-full rounded bg-warning-surface/90 text-text px-1.5 py-0.5 overflow-hidden"
                                         :class="dayRemarksCanEdit ? 'cursor-pointer' : ''"
-                                        :title="remarkForDay(day)?.text"
                                         @click.stop="dayRemarksCanEdit ? openDayRemarkModal(day) : null"
+                                        @mouseenter="dayRemarkTooltip = { day, anchor: $event.currentTarget }"
+                                        @mouseleave="dayRemarkTooltip = null"
                                     >
                                         <p
                                             v-if="remarkForDay(day)?.text"
@@ -964,6 +965,13 @@
         @close="dayRemarkModalDay = null"
     />
 
+    <DayRemarkHoverTooltip
+        v-if="dayRemarkTooltip && !dayRemarkModalDay && remarkForDay(dayRemarkTooltip.day)?.text"
+        :key="dayRemarkTooltip.day.withoutFormat"
+        :remark="remarkForDay(dayRemarkTooltip.day)"
+        :anchor="dayRemarkTooltip.anchor"
+    />
+
     <!-- Als letztes Modal im Template: rendert dadurch über den Modals, aus denen
          es per Shortcut geöffnet wird (Tagesmodal, Schicht-bearbeiten-Modal). -->
     <ShiftHistoryModal
@@ -1021,6 +1029,7 @@ import CompactShiftInRoom from "@/Pages/Shifts/Components/ShiftWithoutEventCompo
 import {useShiftPlanZoom} from "@/Composeables/useShiftPlanZoom.js";
 import {useDayRemarks} from "@/Composeables/useDayRemarks.js";
 import DayRemarkEditModal from "@/Components/Calendar/Elements/DayRemarkEditModal.vue";
+import DayRemarkHoverTooltip from "@/Components/Calendar/Elements/DayRemarkHoverTooltip.vue";
 import DayServiceFilter from "@/Components/Filter/DayServiceFilter.vue";
 import CraftFilter from "@/Components/Filter/CraftFilter.vue";
 import DragElement from "@/Pages/Projects/Components/DragElement.vue";
@@ -1170,7 +1179,10 @@ const {
     listenForDayRemarkUpdates,
 } = useDayRemarks()
 const dayRemarkModalDay = ref<any>(null)
+// Hover-Tooltip mit dem vollen Text (Band zeigt nur 2 geclampte Zeilen)
+const dayRemarkTooltip = ref<any>(null)
 const openDayRemarkModal = (day: any) => {
+    dayRemarkTooltip.value = null
     dayRemarkModalDay.value = day
 }
 // Live-Updates anderer User → Store

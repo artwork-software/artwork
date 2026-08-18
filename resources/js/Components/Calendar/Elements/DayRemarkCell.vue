@@ -5,13 +5,14 @@
         :class="[isFullscreen ? 'stickyRemarksNoMarginLeft' : 'stickyRemarks', editable ? 'cursor-pointer' : '']"
         class="group/remark relative bg-warning-surface border-r border-warning-border text-left overflow-hidden"
         @click.stop="openEditor"
+        @mouseenter="hovering = true"
+        @mouseleave="hovering = false"
     >
         <div :style="stickyTop !== null ? { position: 'sticky', top: stickyTop + 'px' } : {}" class="px-1.5 py-1">
             <p
                 v-if="remark?.text"
                 class="text-[11px] leading-[14px] text-text whitespace-pre-line break-words remark-clamp"
                 :style="clampStyle"
-                :title="remarkTitle"
             >
                 {{ remark.text }}
             </p>
@@ -32,6 +33,13 @@
             <component :is="IconPencil" class="size-3" stroke-width="1.5" />
         </div>
     </div>
+
+    <!-- Voller Text beim Hover (nur wenn geclampt); beim Editieren unterdrückt -->
+    <DayRemarkHoverTooltip
+        v-if="hovering && !editing && remark?.text"
+        :remark="remark"
+        :anchor="cellRef"
+    />
 
     <!-- Inline-Editor: teleportiert + fixed, damit overflow-hidden/sticky der
          Zelle und Zeilen ihn nicht abschneiden. Esc bricht ab, Klick außerhalb
@@ -84,6 +92,7 @@ import { useCalendarZoom } from '@/Composeables/useCalendarZoom.js'
 import { useDayRemarks, DAY_REMARK_COLUMN_WIDTH, DAY_REMARK_MAX_LENGTH } from '@/Composeables/useDayRemarks.js'
 import BaseTextarea from '@/Artwork/Inputs/BaseTextarea.vue'
 import BaseUIButton from '@/Artwork/Buttons/BaseUIButton.vue'
+import DayRemarkHoverTooltip from '@/Components/Calendar/Elements/DayRemarkHoverTooltip.vue'
 
 const props = defineProps({
     day: { type: Object, required: true },
@@ -101,14 +110,7 @@ const calendarSettings = computed(() => usePage().props.auth.user.calendar_setti
 // selbst wenn das day-Objekt selbst nicht reaktiv ist (computed/v-memo im Parent)
 const remark = computed(() => remarkForDay(props.day))
 
-const remarkTitle = computed(() => {
-    if (!remark.value?.text) {
-        return null
-    }
-    return remark.value.updated_by
-        ? `${remark.value.text}\n— ${remark.value.updated_by}, ${remark.value.updated_at}`
-        : remark.value.text
-})
+const hovering = ref(false)
 
 const containerStyle = computed(() => ({
     height: calendarSettings.value.expand_days ? '' : rowHeight.value + 'px',

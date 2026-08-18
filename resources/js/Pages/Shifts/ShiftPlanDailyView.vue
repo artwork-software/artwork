@@ -389,8 +389,9 @@
                                 v-if="dayRemarksColumnVisible && (remarkForDay(day)?.text || dayRemarksCanEdit)"
                                 class="flex items-center min-w-0 max-w-md shrink"
                                 :class="dayRemarksCanEdit ? 'cursor-pointer' : ''"
-                                :title="remarkForDay(day)?.text"
-                                @click.stop="dayRemarksCanEdit ? (dayRemarkModalDay = day) : null"
+                                @click.stop="dayRemarksCanEdit ? openDayRemarkModal(day) : null"
+                                @mouseenter="dayRemarkTooltip = { day, anchor: $event.currentTarget }"
+                                @mouseleave="dayRemarkTooltip = null"
                             >
                                 <span
                                     class="text-[11px] bg-warning-surface/90 text-text rounded-lg px-2 py-1 truncate"
@@ -577,6 +578,13 @@
                 @close="dayRemarkModalDay = null"
             />
 
+            <DayRemarkHoverTooltip
+                v-if="dayRemarkTooltip && !dayRemarkModalDay && remarkForDay(dayRemarkTooltip.day)?.text"
+                :key="dayRemarkTooltip.day.withoutFormat"
+                :remark="remarkForDay(dayRemarkTooltip.day)"
+                :anchor="dayRemarkTooltip.anchor"
+            />
+
             <!-- Projektzentriert Personen zuordnen (Schichten-Tab) -->
             <ProjectAssignPersonModal
                 v-if="assignPersonModalDays !== null && props.project?.id"
@@ -639,6 +647,7 @@ import axios from "axios";
 import { enrichDays } from "@/Composeables/calendarDateUtils.js";
 import { useDayRemarks } from "@/Composeables/useDayRemarks.js";
 import DayRemarkEditModal from "@/Components/Calendar/Elements/DayRemarkEditModal.vue";
+import DayRemarkHoverTooltip from "@/Components/Calendar/Elements/DayRemarkHoverTooltip.vue";
 import DailyRoomSplitTimeline from "@/Pages/Shifts/DailyViewComponents/DailyRoomSplitTimeline.vue";
 import dayjs from "dayjs";
 import {can, is} from "laravel-permission-to-vuejs";
@@ -930,6 +939,12 @@ const {
     listenForDayRemarkUpdates,
 } = useDayRemarks()
 const dayRemarkModalDay = ref<any>(null)
+// Hover-Tooltip mit dem vollen Text (Chip zeigt nur eine truncate-Zeile)
+const dayRemarkTooltip = ref<any>(null)
+const openDayRemarkModal = (day: any) => {
+    dayRemarkTooltip.value = null
+    dayRemarkModalDay.value = day
+}
 // Live-Updates anderer User → Store
 const stopDayRemarkListener = listenForDayRemarkUpdates()
 onBeforeUnmount(() => stopDayRemarkListener())

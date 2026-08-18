@@ -40,8 +40,9 @@
                         v-if="dayRemarksColumnVisible && (remarkForDay(day)?.text || dayRemarksCanEdit)"
                         class="ml-4 flex items-center max-w-md mt-1.5"
                         :class="dayRemarksCanEdit ? 'cursor-pointer' : ''"
-                        :title="remarkForDay(day)?.text"
-                        @click="dayRemarksCanEdit ? (dayRemarkModalDay = day) : null"
+                        @click="dayRemarksCanEdit ? openDayRemarkModal(day) : null"
+                        @mouseenter="dayRemarkTooltip = { day, anchor: $event.currentTarget }"
+                        @mouseleave="dayRemarkTooltip = null"
                     >
                         <span
                             class="text-xs bg-warning-surface border border-warning-border text-text rounded-lg px-2 py-1 truncate"
@@ -133,6 +134,13 @@
             :remark="remarkForDay(dayRemarkModalDay)"
             @close="dayRemarkModalDay = null"
         />
+
+        <DayRemarkHoverTooltip
+            v-if="dayRemarkTooltip && !dayRemarkModalDay && remarkForDay(dayRemarkTooltip.day)?.text"
+            :key="dayRemarkTooltip.day.withoutFormat"
+            :remark="remarkForDay(dayRemarkTooltip.day)"
+            :anchor="dayRemarkTooltip.anchor"
+        />
     </div>
 
 </template>
@@ -150,6 +158,7 @@ import { getDaysInRange, computeEventFormattedDates } from "@/Composeables/calen
 import { useCalendarZoom } from "@/Composeables/useCalendarZoom.js";
 import { useDayRemarks } from "@/Composeables/useDayRemarks.js";
 import DayRemarkEditModal from "@/Components/Calendar/Elements/DayRemarkEditModal.vue";
+import DayRemarkHoverTooltip from "@/Components/Calendar/Elements/DayRemarkHoverTooltip.vue";
 const { can, canAny, hasAdminRole } = usePermission(usePage().props)
 
 
@@ -161,6 +170,12 @@ const { zoomFactor: zoom_factor } = useCalendarZoom();
 // Broadcast-Listener läuft im umgebenden BaseCalendar
 const { columnVisible: dayRemarksColumnVisible, canEdit: dayRemarksCanEdit, remarkForDay } = useDayRemarks();
 const dayRemarkModalDay = ref(null);
+// Hover-Tooltip mit dem vollen Text (Chip zeigt nur eine truncate-Zeile)
+const dayRemarkTooltip = ref(null);
+const openDayRemarkModal = (day) => {
+    dayRemarkTooltip.value = null;
+    dayRemarkModalDay.value = day;
+};
 const props = defineProps({
     rooms: {
         type: Object,

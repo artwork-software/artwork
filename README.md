@@ -141,6 +141,20 @@ If you seed the database with dummy data, you can log in with:
 4. Enter a name and optionally set an expiration date
 5. Copy the generated key and store it securely
 
+## OpenAPI Specification
+
+The specification of the machine API (`/api/v1`) is generated from the routes themselves, not
+maintained by hand, and is therefore not committed to the repository. Generate it whenever you
+need it — for example to import the API into Postman or to generate a client:
+
+```bash
+php artisan artwork:export-openapi
+```
+
+This writes `openapi.yaml` into the project root. Run it where the application environment works
+(inside the app container, for example) — route analysis touches the database. The `servers` entry
+in the generated document comes from `config/scramble.php`; adjust it there for your own domain.
+
 ----------------
 
 If you have questions, feel free to open an issue.

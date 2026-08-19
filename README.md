@@ -153,7 +153,8 @@ php artisan artwork:export-openapi
 
 This writes `openapi.yaml` into the project root. Run it where the application environment works
 (inside the app container, for example) — route analysis touches the database. The `servers` entry
-in the generated document comes from `config/scramble.php`; adjust it there for your own domain.
+in the generated document is `APP_URL` plus `/api/v1`, so the spec points at the instance you
+generated it on.
 
 ----------------
 

@@ -12,20 +12,6 @@ const ddevPrimaryUrl = process.env.DDEV_PRIMARY_URL_WITHOUT_PORT
     ?? process.env.DDEV_PRIMARY_URL?.replace(/:\d+$/, '');
 const origin = ddevPrimaryUrl ? `${ddevPrimaryUrl}:${port}` : undefined;
 
-// @tabler/icons-vue ist ein Barrel ueber 6092 Icon-Module. Schon ein einzelner Named Import
-// zwingt Rollup, das ganze Barrel aufzuloesen — der Peak beim Graph-Aufbau lag dadurch bei
-// ~2,5 GB und der Build starb auf kleineren Maschinen am OOM-Killer.
-//
-// Deshalb werden Barrel-Imports beim Build auf Deep-Pfade umgeschrieben:
-//
-//   import { IconCheck, IconX } from '@tabler/icons-vue'
-//   -> import IconCheck from '@tabler/icons-vue/dist/esm/icons/IconCheck.mjs'; import IconX from ...
-//
-// Damit landen nur die tatsaechlich benutzten Icons im Modulgraph. Die Quelldateien bleiben
-// unveraendert lesbar, und neue Imports greifen automatisch mit.
-//
-// Nur fuer den Build: der Dev-Server serviert Module ohnehin einzeln, dort gibt es weder ein
-// Speicherproblem noch einen Grund, optimizeDeps und Sourcemaps anzufassen.
 function tablerDeepImports() {
     const BARREL = /import\s*\{([^}]+)\}\s*from\s*['"]@tabler\/icons-vue['"]\s*;?/g
     const ANY_BARREL = /from\s*['"]@tabler\/icons-vue['"]/
@@ -47,8 +33,6 @@ function tablerDeepImports() {
                     .join(' ')
             )
 
-            // Kein stiller Rueckfall aufs Barrel: lieber der Build bricht, als dass wieder
-            // 6092 Module in den Graph wandern.
             if (ANY_BARREL.test(out)) {
                 this.error(
                     `tabler-deep-imports: Import aus '@tabler/icons-vue' in ${id} konnte nicht `
@@ -63,22 +47,16 @@ function tablerDeepImports() {
 }
 
 export default defineConfig({
-    // Frontend-Env kommt ausschliesslich zur Laufzeit ueber window.__APP_CONFIG__
-    // (config/frontend.php -> app.blade.php). Kein VITE_-Wert darf ins Bundle, sonst
-    // ist das Artefakt wieder an eine Umgebung gebunden und muss pro Kunde neu gebaut
-    // werden. Dieser Prefix existiert nicht, Vite exponiert damit nichts mehr.
     envPrefix: 'ARTWORK_NEVER_EXPOSE_',
     build: {
         // for modern browsers / node versions — ESNext includes top-level await
         target: 'esnext',
         reportCompressedSize: false,
     },
-    // you can also tweak esbuildOptions directly:
     esbuild: {
         target: 'esnext',
     },
     server: {
-        // respond to all network requests
         host: '0.0.0.0',
         port: port,
         strictPort: true,

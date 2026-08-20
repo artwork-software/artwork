@@ -61,7 +61,8 @@ export default defineComponent({
                     name: this.$t('Interfaces'),
                     href: route('tool.interfaces'),
                     current: route().current('tool.interfaces'),
-                    permission: this.$can('change tool settings') || this.hasAdminRole()
+                    // Webhooks hängen an einer eigenen Permission und leben auf derselben Seite
+                    permission: this.$can('change tool settings') || this.$can('manage webhooks') || this.hasAdminRole()
                 },
                 {
                     name: this.$t('Module visibility'),

@@ -166,7 +166,10 @@ let debTimer = null
 watch(searchInput, (v) => {
     clearTimeout(debTimer)
     debTimer = setTimeout(() => {
-        debouncedQuery.value = v.toLowerCase().trim()
+        // Slugs sind bindestrich-getrennt, angezeigt werden aber Namen mit Leerzeichen
+        // ("Arrow Left") — Leerzeichen im Suchbegriff müssen deshalb auf Bindestriche
+        // normalisiert werden, sonst findet "arrow left" nichts.
+        debouncedQuery.value = v.toLowerCase().trim().replace(/\s+/g, '-')
         resetPagination()
     }, 200)
 })

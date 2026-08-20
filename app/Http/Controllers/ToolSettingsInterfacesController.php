@@ -43,37 +43,47 @@ class ToolSettingsInterfacesController extends Controller
      */
     public function index(Request $request): Response
     {
-        $this->authorize('view', Token::class);
-
+        // Die Seite bündelt zwei getrennt berechtigte Bereiche: API-Tokens/Sage ("change tool
+        // settings" via TokenPolicy) und Webhooks (eigenständige Permission "manage webhooks").
+        // Wer nur eine der beiden hält, darf die Seite öffnen und sieht nur seinen Bereich.
+        $canManageTokens = $request->user()?->can('view', Token::class) ?? false;
         $canManageWebhooks = $request->user()?->can('viewAny', WebhookEndpoint::class) ?? false;
 
-        $tokens = Token::query()
-            ->orderBy('name')
-            ->get()
-            ->map(function (Token $token): array {
-                return [
-                    'id' => $token->id,
-                    'name' => $token->name,
-                    'revoked' => $token->revoked,
-                    'created_at' => $token->created_at,
-                    'expires_at' => $token->expires_at,
-                    'scopes' => $token->scopes,
-                ];
-            });
+        if (!$canManageTokens && !$canManageWebhooks) {
+            $this->authorize('view', Token::class);
+        }
 
+        $tokens = $canManageTokens
+            ? Token::query()
+                ->orderBy('name')
+                ->get()
+                ->map(function (Token $token): array {
+                    return [
+                        'id' => $token->id,
+                        'name' => $token->name,
+                        'revoked' => $token->revoked,
+                        'created_at' => $token->created_at,
+                        'expires_at' => $token->expires_at,
+                        'scopes' => $token->scopes,
+                    ];
+                })
+            : collect();
 
         return Inertia::render(
             'Interfaces/Index',
             [
-                'sageSettings' => $this->sageApiSettingsService->getFirst(),
+                'sageSettings' => $canManageTokens ? $this->sageApiSettingsService->getFirst() : null,
                 'tableColumnOrder' => $this->tableColumnOrderService->getAllOrderedByPosition(),
+                'canManageTokens' => $canManageTokens,
                 'tokens' => $tokens,
-                'availableScopes' => Passport::scopes()
-                    ->map(fn (Scope $scope): array => [
-                        'id' => $scope->id,
-                        'description' => $scope->description,
-                    ])
-                    ->values(),
+                'availableScopes' => $canManageTokens
+                    ? Passport::scopes()
+                        ->map(fn (Scope $scope): array => [
+                            'id' => $scope->id,
+                            'description' => $scope->description,
+                        ])
+                        ->values()
+                    : collect(),
                 'canManageWebhooks' => $canManageWebhooks,
                 'webhookEndpoints' => $canManageWebhooks
                     ? WebhookEndpoint::query()->orderBy('name')->get()

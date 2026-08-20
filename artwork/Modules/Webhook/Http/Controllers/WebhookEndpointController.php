@@ -3,6 +3,7 @@
 namespace Artwork\Modules\Webhook\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use Artwork\Modules\Webhook\Enums\WebhookDeliveryStatus;
 use Artwork\Modules\Webhook\Http\Requests\StoreWebhookEndpointRequest;
 use Artwork\Modules\Webhook\Http\Requests\UpdateWebhookEndpointRequest;
 use Artwork\Modules\Webhook\Jobs\SendWebhookJob;
@@ -79,8 +80,15 @@ class WebhookEndpointController extends Controller
     {
         $this->authorize('update', WebhookEndpoint::class);
 
+        // Nur erschöpfte Zustellungen dürfen neu angestoßen werden: Bei pending/failed läuft die
+        // Retry-Kette des ursprünglichen Jobs noch — ein zweiter Job würde denselben Empfänger
+        // doppelt beliefern und sich mit dem ersten die attempt-/status-Felder überschreiben.
+        if ($webhookDelivery->status !== WebhookDeliveryStatus::EXHAUSTED) {
+            return back()->with('error', __('Only exhausted deliveries can be sent again.'));
+        }
+
         $webhookDelivery->update([
-            'status' => \Artwork\Modules\Webhook\Enums\WebhookDeliveryStatus::PENDING,
+            'status' => WebhookDeliveryStatus::PENDING,
             'attempt' => 0,
             'error' => null,
             'response_status' => null,

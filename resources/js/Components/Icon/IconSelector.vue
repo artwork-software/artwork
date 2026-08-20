@@ -136,7 +136,7 @@ const FALLBACK = 'photo-circle'
 
 /*
  * Intern arbeitet der Picker mit Slugs ("home-2"), weil die SVGs unter diesem Namen in
- * public/icons/tabler/ liegen. Nach aussen — Prop rein, Emit raus — bleibt es beim
+ * public/build/icons/tabler/ liegen. Nach aussen — Prop rein, Emit raus — bleibt es beim
  * Tabler-Export-Namen ("IconHome2"), denn genau der steht in der DB und in den
  * PHP-Seedern. So braucht es keine Datenmigration.
  */

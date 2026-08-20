@@ -14,7 +14,7 @@ function isVueComponent(v: unknown): v is Component {
     return typeof v === 'object' || typeof v === 'function'
 }
 
-// Ein String wird ueber das Composable zu einem SVG aus public/icons/tabler/ aufgeloest —
+// Ein String wird ueber das Composable zu einem SVG aus public/build/icons/tabler/ aufgeloest —
 // bewusst ohne Bundler-Beteiligung, damit nicht alle 6092 Tabler-Module im Modulgraph landen.
 // Wird stattdessen direkt eine Komponente durchgereicht (z.B. ein statisch importiertes
 // Tabler-Icon aus ToolTipComponent), bleibt die unveraendert.

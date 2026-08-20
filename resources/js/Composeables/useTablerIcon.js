@@ -5,9 +5,10 @@
 // 6092 Icon-Module in den Modulgraph — der Build brauchte dadurch ~2,5 GB Heap und starb
 // auf kleineren Maschinen am OOM-Killer.
 //
-// Stattdessen liegen die SVGs als statische Assets unter public/icons/tabler/ (erzeugt von
-// scripts/sync-tabler-icons.mjs) und werden zur Laufzeit per fetch geholt. Der Bundler
-// sieht davon nichts.
+// Stattdessen liegen die SVGs als statische Assets unter public/build/icons/tabler/ (erzeugt
+// von scripts/sync-tabler-icons.mjs, im Build via Vite-Hook tabler-icons-sync) und werden zur
+// Laufzeit per fetch geholt. Der Bundler sieht davon nichts. Der Ordner liegt bewusst im
+// Vite-outDir, damit Docker-Builds ihn zusammen mit dem Bundle ins finale Image kopieren.
 //
 // Statische Imports (`import { IconCheck } from '@tabler/icons-vue'`) bleiben erlaubt und
 // erwuenscht — das Vite-Plugin `tabler-deep-imports` schreibt sie beim Build auf Deep-Pfade
@@ -18,7 +19,7 @@ import { FALLBACK_SLUG, toSlug } from '@/Composeables/tablerIconNames'
 
 export { ALIASES, FALLBACK_SLUG, slugFromExportName, toSlug, toExportName, toDisplayName } from '@/Composeables/tablerIconNames'
 
-const BASE = '/icons/tabler'
+const BASE = '/build/icons/tabler'
 
 const svgCache = new Map()
 const compCache = new Map()

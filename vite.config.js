@@ -1,3 +1,4 @@
+import { spawnSync } from 'node:child_process';
 import { defineConfig } from 'vite';
 import laravel from 'laravel-vite-plugin';
 import vue from '@vitejs/plugin-vue';
@@ -42,6 +43,22 @@ function tablerDeepImports() {
             }
 
             return out
+        },
+    }
+}
+
+// Legt die Tabler-SVGs nach dem Bundle-Schreiben in den outDir (public/build/icons/tabler).
+// Als Build-Hook statt npm-Script-Kette, damit auch ein direktes "vite build" (z.B. im
+// Docker-Build) die Icons erzeugt. closeBundle laeuft nach dem Leeren von outDir.
+function tablerIconsSync() {
+    return {
+        name: 'tabler-icons-sync',
+        apply: 'build',
+        closeBundle() {
+            const result = spawnSync(process.execPath, ['scripts/sync-tabler-icons.mjs'], { stdio: 'inherit' })
+            if (result.status !== 0) {
+                throw new Error('tabler-icons-sync: scripts/sync-tabler-icons.mjs fehlgeschlagen')
+            }
         },
     }
 }
@@ -91,6 +108,7 @@ export default defineConfig({
         }),
         tailwindcss(),
         viteCompression({ algorithm: 'brotliCompress', ext: '.br', deleteOriginFile: false }),
-        viteCompression({ algorithm: 'gzip', ext: '.gz', deleteOriginFile: false })
+        viteCompression({ algorithm: 'gzip', ext: '.gz', deleteOriginFile: false }),
+        tablerIconsSync()
     ],
 });

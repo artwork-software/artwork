@@ -3,7 +3,7 @@
     "type": "module",
     "scripts": {
         "dev": "npm run icons:sync && vite",
-        "build": "npm run icons:sync && vite build",
+        "build": "vite build",
         "icons:sync": "node scripts/sync-tabler-icons.mjs"
     },
     "devDependencies": {

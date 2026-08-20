@@ -47,3 +47,4 @@ cachegrind.*
 !/README.md
 !/LICENSE.md
 !/AGENTS.md
+/public/icons/tabler

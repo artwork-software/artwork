@@ -6581,5 +6581,19 @@
     "User can create, edit and delete day remarks in the calendar, planning calendar and shift plan.": "Nutzer*in darf Tagesbemerkungen im Kalender, Planungskalender und Dienstplan anlegen, bearbeiten und löschen.",
     "Project status as a required field": "Projektstatus als Pflichtfeld",
     "If enabled, a project status must be selected when creating a project and an assigned status cannot be removed.": "Wenn aktiviert, muss beim Erstellen eines Projekts ein Projektstatus ausgewählt werden und ein zugewiesener Status kann nicht mehr entfernt werden.",
-    "Project status is a required field.": "Der Projektstatus muss zwingend angegeben werden."
+    "Project status is a required field.": "Der Projektstatus muss zwingend angegeben werden.",
+    "PDF_SEASON_SCHEDULE_EXPORT": "Spielplan-Übersicht Projekte (PDF)",
+    "Only show days with event type": "Nur Tage mit Terminart anzeigen",
+    "If active, a project only appears on days on which it has at least one event of the selected event types. Without a selection, all events count.": "Wenn aktiv, erscheint ein Projekt nur an Tagen, an denen es mindestens einen Termin der gewählten Terminarten hat. Ohne Auswahl zählen alle Termine.",
+    "Display options": "Darstellungsoptionen",
+    "Show holidays": "Feiertage anzeigen",
+    "Show calendar weeks": "Kalenderwochen anzeigen",
+    "Highlight weekends": "Wochenenden hervorheben",
+    "Color dot per event type": "Farbpunkt je Terminart",
+    "Show events without project": "Termine ohne Projekt anzeigen",
+    "Show room abbreviations": "Raumkürzel anzeigen",
+    "The season schedule is always exported in landscape format.": "Die Spielplan-Übersicht wird immer im Querformat exportiert.",
+    "Up to 6 months are displayed per page (A3 landscape).": "Pro Seite können 6 Monate dargestellt werden (A3 quer).",
+    "This export shows you when which project takes place in the selected period. If required, you can filter the projects by specific event types - projects will then only appear on days on which they have an event of one of the selected event types.": "Dieser Export zeigt dir für den gewählten Zeitraum an, wann welches Projekt stattfindet. Bei Bedarf kannst du die Projekte nach bestimmten Terminarten filtern lassen – dann werden die Projekte nur an den Tagen in der Übersicht dargestellt, an denen sie einen Termin mit einer der ausgewählten Terminarten haben.",
+    "Half months per page (double row height)": "Halbe Monate pro Seite (doppelte Zeilenhöhe)"
 }

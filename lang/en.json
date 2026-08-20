@@ -6581,5 +6581,19 @@
     "User can create, edit and delete day remarks in the calendar, planning calendar and shift plan.": "User can create, edit and delete day remarks in the calendar, planning calendar and shift plan.",
     "Project status as a required field": "Project status as a required field",
     "If enabled, a project status must be selected when creating a project and an assigned status cannot be removed.": "If enabled, a project status must be selected when creating a project and an assigned status cannot be removed.",
-    "Project status is a required field.": "Project status is a required field."
+    "Project status is a required field.": "Project status is a required field.",
+    "PDF_SEASON_SCHEDULE_EXPORT": "Season schedule projects (PDF)",
+    "Only show days with event type": "Only show days with event type",
+    "If active, a project only appears on days on which it has at least one event of the selected event types. Without a selection, all events count.": "If active, a project only appears on days on which it has at least one event of the selected event types. Without a selection, all events count.",
+    "Display options": "Display options",
+    "Show holidays": "Show holidays",
+    "Show calendar weeks": "Show calendar weeks",
+    "Highlight weekends": "Highlight weekends",
+    "Color dot per event type": "Color dot per event type",
+    "Show events without project": "Show events without project",
+    "Show room abbreviations": "Show room abbreviations",
+    "The season schedule is always exported in landscape format.": "The season schedule is always exported in landscape format.",
+    "Up to 6 months are displayed per page (A3 landscape).": "Up to 6 months are displayed per page (A3 landscape).",
+    "This export shows you when which project takes place in the selected period. If required, you can filter the projects by specific event types - projects will then only appear on days on which they have an event of one of the selected event types.": "This export shows you when which project takes place in the selected period. If required, you can filter the projects by specific event types - projects will then only appear on days on which they have an event of one of the selected event types.",
+    "Half months per page (double row height)": "Half months per page (double row height)"
 }

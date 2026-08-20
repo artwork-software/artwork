@@ -756,6 +756,7 @@ function loadFullDescription() {
     descriptionTouched.value = false
     descriptionLoadFailed.value = false
     descriptionRequest = null
+    initialTiming.value = null
     if (!props.event?.id) return
 
     const prefilled = description.value
@@ -1025,6 +1026,7 @@ function openModal() {
     declinedRoomId.value = props.declinedRoomId ?? props.event.declinedRoomId ?? null
     description.value = props.event.description ?? ''
     loadFullDescription()
+    initialTiming.value = timingSnapshot()
 
     ;(event_properties ?? []).forEach(ep => {
         ep.checked = props.event?.eventProperties?.some(eep => eep.id === ep.id) || false
@@ -1328,9 +1330,33 @@ async function updateOrCreateEvent(isOptionParam = false) {
 const showAssignmentImpactModal = ref(false)
 const assignmentImpactList = ref([])
 let assignmentImpactConfirmed = false
+// Zeit-/Projekt-Stand beim Oeffnen. Der Precheck fragt nur nach, wenn sich daran
+// wirklich etwas geaendert hat — sonst kam der Dialog auch beim reinen
+// Bearbeiten der Beschreibung.
+const initialTiming = ref(null)
+
+function timingSnapshot() {
+    return {
+        start: formatDate(startDate.value, allDayEvent.value ? '00:00' : startTime.value),
+        end: formatDate(endDate.value, allDayEvent.value ? '23:59' : endTime.value),
+        projectId: showProjectInfo.value ? (selectedProject.value?.id ?? null) : null,
+    }
+}
 
 async function checkProjectAssignmentImpact(data) {
     if (!props.event?.id || assignmentImpactConfirmed) return true
+
+    // Zuordnungen fallen nur durch verschobene Zeiten oder einen Projektwechsel
+    // heraus. Bleibt beides gleich, gibt es nichts zu bestaetigen.
+    const before = initialTiming.value
+    if (
+        before &&
+        before.start === data.start &&
+        before.end === data.end &&
+        before.projectId === (data.projectId ?? null)
+    ) {
+        return true
+    }
 
     try {
         const { data: response } = await axios.get(

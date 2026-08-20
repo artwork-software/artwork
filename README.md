@@ -1,8 +1,39 @@
-## About Artwork
+# artwork
 
-![Artwork Logo](https://artwork.software/wp-content/uploads/2023/05/artwork-logo.svg)
+![artwork Logo](https://artwork.software/wp-content/uploads/2023/05/artwork-logo.svg)
 
-Artwork is a project organization tool for scheduling projects with events, tasks, and responsibilities. It helps teams keep track of all essential project components.
+artwork is open-source operations software for theatres, festivals and other cultural venues. It covers the day-to-day running of a house in one system: event and room scheduling, shift and duty planning, staff availability, inventory and material issue, contacts, and project budgets. Instead of generic project boards, artwork models the things a venue actually works with — productions, events, rooms, crews, shifts and equipment — and keeps planning, staffing and resources connected in one place.
+
+## Who this is for
+
+artwork is built for organisations that run events as their core business:
+
+- Theatres and production houses
+- Festivals
+- Concert halls
+- Museums and exhibition venues with an event programme
+
+Modules can be enabled individually, so a small venue can start with scheduling and rooms only, while a large house can run the full stack from shift planning to inventory and budgets.
+
+## What artwork is not
+
+- **Not a ticketing or box-office system** — artwork plans and runs events, it does not sell tickets.
+- **Not financial accounting** — project budgets live in artwork, your bookkeeping stays in your accounting software.
+- **Not payroll** — shift planning and hour tracking are covered, wage processing is not.
+- **Not collection management** — despite the name, artwork does not manage artworks or museum collections. The inventory module manages operational equipment such as technical gear and materials.
+
+## Background
+
+artwork has been developed together with [Deichtorhallen Hamburg](https://www.deichtorhallen.de/), [Kampnagel](https://kampnagel.de/) and [HAU Hebbel am Ufer](https://www.hebbel-am-ufer.de/), funded by the [Kulturstiftung des Bundes](https://www.kulturstiftung-des-bundes.de/) (German Federal Cultural Foundation). It has been published under the AGPL-3.0 license since 2023.
+
+- Website: [artwork.software](https://artwork.software)
+- Documentation: [Wiki](https://github.com/artwork-software/artwork/wiki)
+
+## Running artwork
+
+artwork is self-hostable — you can install, operate and update it entirely on your own infrastructure using the instructions below. If you prefer support, [Caldero Systems](https://caldero-systems.de/) is available as a service partner for onboarding, hosting and support.
+
+----------------
 
 # Update from 1.5 to 1.6
 

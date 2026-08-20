@@ -852,6 +852,39 @@ final class ProjectDayAssignmentTest extends FeatureTestCase
     }
 
     #[Test]
+    public function reschedule_impact_ignores_assignments_that_are_already_out_of_period(): void
+    {
+        $this->actingAsUserWith([
+            PermissionEnum::SHIFT_PLANNER->value,
+            PermissionEnum::VIEW_SHIFT_PLAN->value,
+        ]);
+        $project = $this->createProjectWithPeriod('2026-08-01', '2026-08-05');
+        $worker = User::factory()->create();
+
+        // Zuordnung liegt schon jetzt ausserhalb des Projektzeitraums
+        ProjectDayAssignment::query()->create([
+            'project_id' => $project->id,
+            'employable_type' => User::class,
+            'employable_id' => $worker->id,
+            'date' => '2026-08-09',
+            'type' => ProjectDayAssignmentType::BINDING,
+            'is_full_period' => false,
+            'group_id' => (string) Str::uuid(),
+        ]);
+
+        $event = $project->events()->firstOrFail();
+
+        // Unveraenderte Zeiten (z. B. Speichern nach reiner Beschreibungsaenderung)
+        $response = $this->getJson(route('events.project-assignment-impact', [
+            'event' => $event->id,
+            'start_time' => '2026-08-01 10:00:00',
+            'end_time' => '2026-08-05 18:00:00',
+        ]))->assertOk();
+
+        $this->assertSame([], $response->json('affected'));
+    }
+
+    #[Test]
     public function reschedule_impact_requires_shift_plan_view_permission(): void
     {
         $this->actingAs(User::factory()->create());

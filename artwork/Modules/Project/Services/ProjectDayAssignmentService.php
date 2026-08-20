@@ -1570,8 +1570,60 @@ class ProjectDayAssignmentService
             ->orderBy('date')
             ->get();
 
+        return $this->groupAssignmentsForDialog($rows);
+    }
+
+    /**
+     * Einzeltag-Zuordnungen, die durch eine Zeitraum-Aenderung NEU herausfallen:
+     * ausserhalb des neuen Zeitraums, aber innerhalb des heutigen. Zuordnungen,
+     * die schon jetzt ausserhalb liegen, loest die Aenderung nicht auf — sonst
+     * meldet sich der Confirm-Dialog bei jedem Speichern eines Termins dieses
+     * Projekts, auch wenn nur die Beschreibung geaendert wurde.
+     *
+     * @param array{start: Carbon, end: Carbon}|null $newPeriod
+     * @param array{start: Carbon, end: Carbon}|null $currentPeriod
+     * @return array<int, array{worker_name: string, type: string, dates: array<string>}>
+     */
+    public function getSingleDayAssignmentsLostByPeriodChange(
+        Project $project,
+        ?array $newPeriod,
+        ?array $currentPeriod
+    ): array {
+        // Ohne heutigen Zeitraum liegt bereits alles ausserhalb — dann loest die
+        // Aenderung nichts auf, was nicht ohnehin schon ausserhalb waere.
+        if ($currentPeriod === null) {
+            return [];
+        }
+
+        $rows = ProjectDayAssignment::query()
+            ->where('project_id', $project->id)
+            ->where('is_full_period', false)
+            ->whereBetween('date', [
+                $currentPeriod['start']->toDateString(),
+                $currentPeriod['end']->toDateString(),
+            ])
+            ->when($newPeriod !== null, static function ($query) use ($newPeriod): void {
+                $query->where(static function ($dateQuery) use ($newPeriod): void {
+                    $dateQuery
+                        ->where('date', '<', $newPeriod['start']->toDateString())
+                        ->orWhere('date', '>', $newPeriod['end']->toDateString());
+                });
+            })
+            ->orderBy('date')
+            ->get();
+
+        return $this->groupAssignmentsForDialog($rows);
+    }
+
+    /**
+     * @param Collection<int, ProjectDayAssignment> $rows
+     * @return array<int, array{worker_name: string, type: string, dates: array<string>}>
+     */
+    private function groupAssignmentsForDialog(Collection $rows): array
+    {
         return $rows
-            ->groupBy(static fn (ProjectDayAssignment $row) => $row->employable_type . '_' . $row->employable_id . '_' . $row->type)
+            ->groupBy(static fn (ProjectDayAssignment $row) => $row->employable_type .
+                '_' . $row->employable_id . '_' . $row->type)
             ->map(function (Collection $group) {
                 $first = $group->first();
 

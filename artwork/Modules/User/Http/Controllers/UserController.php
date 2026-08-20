@@ -1971,14 +1971,21 @@ class UserController extends Controller
         // Sicherheitsprüfung (max. 2 Buchstaben)
         $letters = strtoupper(substr($letters, 0, 2));
 
-        // Hintergrundfarbe über Parameter oder Standardwert setzen
-        $bgColor = request()?->query('bg', '#00a3ff'); // Standard: Blau
-        $textColor = request()?->query('color', '#ffffff'); // Standard: Weiß
+        // Farben kommen aus der Query — nur echte Hex-Werte durchlassen,
+        // sonst landet beliebiger Text in den SVG-Attributen.
+        // mixed, weil ?bg[]=... als Array ankommen kann
+        $hex = static fn (mixed $value, string $fallback): string =>
+            is_string($value) && preg_match('/^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/', $value) ? $value : $fallback;
 
-        // SVG in Blade rendern
+        $bgColor = $hex(request()?->query('bg'), '#00a3ff'); // Standard: Blau
+        $textColor = $hex(request()?->query('color'), '#ffffff'); // Standard: Weiß
+
+        // SVG in Blade rendern. Fuer ein Initialen-Paar ist das Bild konstant,
+        // deshalb aggressiv cachen — sonst holt der Browser es pro Termin neu.
         return response()->view('avatar', compact('letters', 'bgColor', 'textColor'))
-            ->header('Content-Type', 'image/svg+xml');
-        }
+            ->header('Content-Type', 'image/svg+xml')
+            ->header('Cache-Control', 'public, max-age=31536000, immutable');
+    }
 
     private function getOrCreateDeletedPlaceholderUserId(): int
     {

@@ -67,7 +67,10 @@ class EventDTO extends Data
             start: Carbon::parse($event->start_time)->format('Y-m-d H:i'),
             end: Carbon::parse($event->end_time)->format('Y-m-d H:i'),
             eventName: $event->eventName,
-            description: $event->description,
+            // Volltext nur, wenn die Anzeigeeinstellung ihn in der Kachel zeigt.
+            // Sonst holt das Termin-Modal ihn beim Oeffnen ueber events.description nach —
+            // lange Beschreibungen sonst in jedem Termin des Monatspakets.
+            description: $userCalendarSettings?->description ? $event->description : null,
             // Lookup kann leer sein, wenn das Projekt bereits im Papierkorb liegt
             // (z.B. abgebrochene Lösch-Kaskade) – dann ohne Projekt-Chip rendern statt 500.
             project: $project ? ProjectDTO::fromModel($project, $userCalendarSettings) : null,

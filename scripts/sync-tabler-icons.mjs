@@ -10,7 +10,9 @@ const root = join(dirname(fileURLToPath(import.meta.url)), '..')
 
 const COMPONENT_DIR = join(root, 'node_modules/@tabler/icons-vue/dist/esm/icons')
 const SVG_DIR = join(root, 'node_modules/@tabler/icons/icons')
-const DEST = join(root, 'public/icons/tabler')
+// Im Vite-Ausgabeordner, damit die Icons in Docker-Builds automatisch mit dem Bundle
+// ins finale Image gelangen (public/icons/... wuerde dort fehlen, weil gitignored).
+const DEST = join(root, 'public/build/icons/tabler')
 
 const SIGNATURE = /createVueComponent\("(outline|filled)",\s*"([^"]+)",\s*"([^"]+)"/
 
@@ -90,4 +92,4 @@ const icons = readIcons()
 assertAliases(icons)
 const count = syncSvgs(icons)
 
-console.log(`[sync-tabler-icons] ${count} Icons nach public/icons/tabler/ synchronisiert`)
+console.log(`[sync-tabler-icons] ${count} Icons nach public/build/icons/tabler/ synchronisiert`)

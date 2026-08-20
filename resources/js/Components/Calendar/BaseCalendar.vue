@@ -1063,14 +1063,49 @@ function debounce(fn: () => void, wait = 120) {
     };
 }
 
-async function ensureAroundInternal(key: string | null) {
+// Beim Scrollen wird ein breiteres Fenster geladen als beim Erstaufruf: der
+// Initial-Load bleibt bewusst bei Radius 1 (schnelles erstes Bild), waehrend
+// des Scrollens sind Termine, die erst nach dem Anhalten erscheinen, das
+// groessere Uebel. KEEP_RADIUS haelt bereits laufende Requests am Leben —
+// vorher brach jeder Fokuswechsel die Nachbarmonate ab, sodass bei schnellem
+// Scrollen ueber mehrere Monate gar nichts fertig wurde.
+const SCROLL_WINDOW_RADIUS = 2;
+const KEEP_RADIUS = 3;
+const PREFETCH_RADIUS = 3;
+
+async function ensureAroundInternal(key: string | null, radius = SCROLL_WINDOW_RADIUS) {
     if (!key) return;
     const idx = monthIndexByKey.value.get(key);
     if (idx == null) return;
     const myEpoch = ++currentEpoch;
-    const targets = windowKeysAround(idx, 1);
-    cancelAllExcept(targets);
+    const targets = windowKeysAround(idx, radius);
+    cancelAllExcept(windowKeysAround(idx, Math.max(radius, KEEP_RADIUS)));
     await Promise.allSettled(targets.map(k => loadMonth(k, myEpoch)));
+    // Nur prefetchen, wenn inzwischen kein neuerer Fokus gewonnen hat
+    if (myEpoch === currentEpoch) schedulePrefetchAround(idx);
+}
+
+// Aeusserer Ring erst im Leerlauf — konkurriert so nicht mit dem Fenster,
+// das der Nutzer gerade ansieht.
+let prefetchHandle: number | null = null;
+function schedulePrefetchAround(idx: number) {
+    const run = () => {
+        prefetchHandle = null;
+        const epoch = currentEpoch;
+        windowKeysAround(idx, PREFETCH_RADIUS)
+            .filter(k => !loadedMonths.value.has(k) && !loadingMonths.value.has(k))
+            .forEach(k => loadMonth(k, epoch));
+    };
+    if (prefetchHandle !== null) {
+        if (typeof (window as any).cancelIdleCallback === 'function') {
+            (window as any).cancelIdleCallback(prefetchHandle);
+        } else {
+            window.clearTimeout(prefetchHandle);
+        }
+    }
+    prefetchHandle = typeof (window as any).requestIdleCallback === 'function'
+        ? (window as any).requestIdleCallback(run, { timeout: 2000 })
+        : window.setTimeout(run, 600);
 }
 
 const ensureAround = debounce(() => {
@@ -1078,7 +1113,12 @@ const ensureAround = debounce(() => {
 }, 120);
 
 let monthObserver: IntersectionObserver | null = null;
-const monthSentinelSeen = ref<Set<string>>(new Set());
+// Beobachtet werden ALLE Tageszeilen, nicht nur die erste je Monat. Bei einem
+// Jahres-Zeitraum liegt die erste Zeile eines Monats schnell weit ausserhalb
+// von Viewport + rootMargin, der Fokus haette sich dann auf einen Monat
+// gestuetzt, dessen Startzeile gerade niemand sieht. Kosten: 365 statt 12
+// beobachtete Elemente — neben den ~7.000 Zell-Observern vernachlaessigbar.
+const observedSentinels = new WeakSet<Element>();
 
 function initMonthObserver() {
     if (monthObserver) return;
@@ -1101,8 +1141,8 @@ function initMonthObserver() {
 function registerMonthSentinel(el, day) {
     if (!el) return;
     const key = monthKeyFromDay(day);
-    if (!key || monthSentinelSeen.value.has(key)) return;
-    monthSentinelSeen.value.add(key);
+    if (!key || observedSentinels.has(el)) return;
+    observedSentinels.add(el);
     initMonthObserver();
     monthObserver!.observe(el);
 }
@@ -1148,6 +1188,8 @@ async function runInitialLoad() {
     await Promise.allSettled(targets.map(k => loadMonth(k, epoch)));
 
     didInitialLoad.value = true;
+    // Nachbarmonate erst nach dem ersten Bild und nur im Leerlauf
+    schedulePrefetchAround(idx);
 }
 
 
@@ -1190,8 +1232,15 @@ onBeforeUnmount(() => {
     calendarRef.value?.removeEventListener('wheel', handleWheelZoom);
     if (monthObserver) monthObserver.disconnect();
     monthObserver = null;
-    monthSentinelSeen.value.clear();
     cancelAllExcept([]);
+    if (prefetchHandle !== null) {
+        if (typeof (window as any).cancelIdleCallback === 'function') {
+            (window as any).cancelIdleCallback(prefetchHandle);
+        } else {
+            window.clearTimeout(prefetchHandle);
+        }
+        prefetchHandle = null;
+    }
 
     // Remove fullscreen event listeners
     document.removeEventListener('fullscreenchange', handleFullscreenChange);

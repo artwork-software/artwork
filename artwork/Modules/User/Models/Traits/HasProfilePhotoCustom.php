@@ -18,13 +18,7 @@ trait HasProfilePhotoCustom
             return asset('storage/' . ltrim($this->profile_photo_path, '/'));
         }
 
-        $letters = $this->initials();
-        $bg = (string) config('artwork.avatar.bg', '#4F46E5'); // eine Farbe
-        $fg = (string) config('artwork.avatar.fg', '#FFFFFF'); // Textfarbe fix
-
-        $svg = $this->makeAvatarSvg($letters, $bg, $fg);
-
-        return $this->svgToDataUri($svg);
+        return $this->letterAvatarUrl($this->initials());
     }
 
     private function initials(): string
@@ -51,30 +45,22 @@ trait HasProfilePhotoCustom
         return $letters;
     }
 
-    private function makeAvatarSvg(string $letters, string $bgColor, string $textColor): string
+    /**
+     * Buchstaben-Avatar als URL statt als base64-Data-URI: Die Grafik ist fuer
+     * jedes Initialen-Paar identisch, als Data-URI landete sie aber in JEDEM
+     * Termin des Kalender-Payloads erneut (~686 Byte, ein Drittel des Monats-
+     * pakets). Als URL wiegt sie ein paar Byte und der Browser holt das Bild
+     * genau einmal aus dem Cache.
+     */
+    protected function letterAvatarUrl(string $letters): string
     {
-        // echtes Zentrieren: x/y in px + dominant-baseline="central"
-        // Font-weight bewusst nicht zu fett (passt zu deinem Stil)
-        return <<<SVG
-<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64" role="img" aria-label="Avatar {$letters}">
-  <rect x="0" y="0" width="64" height="64" rx="12" ry="12" fill="{$bgColor}"/>
-  <text x="32" y="32"
-        text-anchor="middle"
-        dominant-baseline="central"
-        font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Inter,Arial,sans-serif"
-        font-size="26"
-        font-weight="500"
-        letter-spacing="0.5"
-        fill="{$textColor}">{$letters}</text>
-</svg>
-SVG;
+        return route('generate-avatar-image', [
+            'letters' => $letters !== '' ? $letters : 'U',
+            'bg' => (string) config('artwork.avatar.bg', '#4F46E5'),
+            'color' => (string) config('artwork.avatar.fg', '#FFFFFF'),
+        ]);
     }
 
-    private function svgToDataUri(string $svg): string
-    {
-        // base64 ist am stabilsten (keine Probleme mit Sonderzeichen/Quotes)
-        return 'data:image/svg+xml;base64,' . base64_encode($svg);
-    }
     /**
      * Update the user's profile photo.
      *

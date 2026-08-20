@@ -335,8 +335,21 @@ class ProjectDayAssignmentController extends Controller
             )
             : $this->projectDayAssignmentService->computePeriodWithoutEvent($project, $event);
 
+        // Vergleichsbasis ist der heutige Zeitraum (Termin mit seinen aktuellen
+        // Zeiten). Gemeldet wird nur, was durch die Aenderung NEU herausfaellt.
+        $currentPeriod = $this->projectDayAssignmentService->computeHypotheticalPeriod(
+            $project,
+            $event,
+            Carbon::parse($event->start_time),
+            Carbon::parse($event->end_time)
+        );
+
         return new JsonResponse([
-            'affected' => $this->projectDayAssignmentService->getOutOfPeriodSingleDayAssignments($project, $period),
+            'affected' => $this->projectDayAssignmentService->getSingleDayAssignmentsLostByPeriodChange(
+                $project,
+                $period,
+                $currentPeriod
+            ),
         ]);
     }
 

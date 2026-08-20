@@ -117,7 +117,7 @@
                      class="mt-0.5 rounded border-border text-accent-600 focus:ring-accent-600" />
               <span class="text-sm">
                 <span class="font-mono text-xs">{{ event.name }}</span>
-                <span class="block text-xs text-text-subtle">{{ event.description }}</span>
+                <span class="block text-xs text-text-subtle">{{ $t(event.description) }}</span>
               </span>
             </label>
           </div>
@@ -207,7 +207,8 @@
                 </td>
                 <td class="px-4 py-3 whitespace-nowrap text-sm text-text-subtle">{{ delivery.attempt }}</td>
                 <td class="px-4 py-3 whitespace-nowrap text-right text-sm">
-                  <button v-if="delivery.status !== 'success'" @click="redeliver(delivery)"
+                  <!-- Nur erschöpfte Zustellungen: bei pending/failed läuft die Retry-Kette noch -->
+                  <button v-if="delivery.status === 'exhausted'" @click="redeliver(delivery)"
                           class="text-accent-700 hover:underline">
                     {{ $t('Send again') }}
                   </button>

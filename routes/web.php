@@ -2233,6 +2233,8 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
 
     Route::post('/calendar/export/pdf', [ExportPDFController::class, 'createPDF'])->name('calendar.export.pdf');
     Route::post('/calendar/export/monthly-pdf', [ExportPDFController::class, 'createMonthlyPDF'])->name('calendar.export.monthly-pdf');
+    Route::post('/calendar/export/season-schedule-pdf', \App\Http\Controllers\SeasonSchedulePdfExportController::class)
+        ->name('calendar.export.season-schedule-pdf');
     Route::post('/shift-plan/export/pdf', [ExportPDFController::class, 'createShiftPlanPDF'])
         ->name('shift.plan.export.pdf');
     Route::post('/shift-plan/export/worker-matrix-pdf', WorkerShiftPlanPdfExportController::class)

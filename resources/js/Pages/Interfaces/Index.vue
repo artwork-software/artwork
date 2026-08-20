@@ -10,7 +10,7 @@
             ]"
         />
         <div>
-                <div class="space-y-6">
+                <div class="space-y-6" v-if="canManageTokens">
                     <div @click="toggleSection(openSections.ARTWORK)"
                          class="cursor-pointer flex items-center justify-between bg-surface-sunken p-4 rounded">
                         <span class="font-semibold">{{ $t('Artwork interface') }}</span>
@@ -44,7 +44,7 @@
                     </transition>
                 </div>
                 <!-- Sage API -->
-                <div class="space-y-6" v-if="sageSettings">
+                <div class="space-y-6" v-if="canManageTokens && sageSettings">
                     <div @click="toggleSection(openSections.SAGE)"
                          class="cursor-pointer flex items-center justify-between bg-surface-sunken p-4 rounded">
                         <span class="font-semibold">{{ $t('Sage interface') }}</span>
@@ -70,10 +70,14 @@ import ArtworkApiSettings from "@/Pages/Interfaces/Artwork/ArtworkApiSettings.vu
 import WebhookSettings from "@/Pages/Interfaces/Webhooks/WebhookSettings.vue";
 import SettingsGuideBanner from "@/Artwork/Guide/SettingsGuideBanner.vue";
 
-defineProps({
+const props = defineProps({
     title: String,
     sageSettings: Object,
     tableColumnOrder: Array,
+    canManageTokens: {
+        type: Boolean,
+        default: false
+    },
     tokens: {
         type: Array,
         default: () => []
@@ -102,10 +106,13 @@ const openSections = {
     SAGE: 'sage'
 }
 
-const openSection = ref(openSections.ARTWORK)
+// Wer nur Webhooks verwalten darf, sieht die Artwork-Sektion nicht — dann startet Webhooks offen.
+const initialSection = () => props.canManageTokens ? openSections.ARTWORK : openSections.WEBHOOKS
+
+const openSection = ref(initialSection())
 
 onMounted(() => {
-    openSection.value = openSections.ARTWORK
+    openSection.value = initialSection()
 })
 
 function toggleSection(section) {

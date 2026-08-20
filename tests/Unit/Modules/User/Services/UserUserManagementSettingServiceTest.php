@@ -25,11 +25,17 @@ final class UserUserManagementSettingServiceTest extends TestCase
     }
 
     #[Test]
-    public function get_from_user_returns_null_initially(): void
+    public function get_from_user_lazily_creates_defaults_initially(): void
     {
+        // getFromUser legt seit dem Lazy-Create-Umbau fehlende Rows mit den Defaults an,
+        // damit Aufrufer nicht auf null crashen.
         $user = User::factory()->create();
 
-        $this->assertNull($this->service->getFromUser($user));
+        $setting = $this->service->getFromUser($user);
+
+        $this->assertNotNull($setting);
+        $this->assertSame($this->service->getDefaults(), $setting->getAttribute('settings'));
+        $this->assertTrue($setting->exists);
     }
 
     #[Test]

@@ -59,9 +59,10 @@ final class MachineApiScopeTest extends FeatureTestCase
     #[Test]
     public function all_registered_scopes_are_available(): void
     {
-        $this->assertEqualsCanonicalizing(
-            ['inventory:read', 'ticketing:read', 'ticketing:write'],
-            Passport::scopeIds()
-        );
+        // Teilmengen-Prüfung statt exakter Gleichheit: Vendor-Pakete registrieren eigene Scopes
+        // (laravel/mcp etwa "mcp:use"), die hier nicht mitgepflegt werden sollen.
+        foreach (['inventory:read', 'ticketing:read', 'ticketing:write'] as $scopeId) {
+            $this->assertContains($scopeId, Passport::scopeIds());
+        }
     }
 }

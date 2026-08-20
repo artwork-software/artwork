@@ -54,7 +54,8 @@ class WebhookDelivery extends Model
 
     public function endpoint(): BelongsTo
     {
-        return $this->belongsTo(WebhookEndpoint::class, 'webhook_endpoint_id');
+        // Das strikte Basis-Model verlangt alle Parameter — ohne sie wirft jede Job-Ausführung.
+        return $this->belongsTo(WebhookEndpoint::class, 'webhook_endpoint_id', 'id', 'endpoint');
     }
 
     public function prunable(): Builder

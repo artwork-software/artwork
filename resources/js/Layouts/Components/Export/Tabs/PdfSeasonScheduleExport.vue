@@ -1,118 +1,82 @@
 <template>
     <div class="mx-auto w-full max-w-4xl">
         <div class="flex flex-col space-y-6">
-            <!-- Titel + Hinweis -->
+            <!-- Titel + Zeitraum -->
             <section class="rounded-2xl border border-border-subtle bg-white p-6 shadow-sm space-y-4">
-                <BaseInput id="monthly-title" v-model="pdf.title" :label="$t('Heading')" :placeholder="$t('Monthly overview')" />
-
-                <div
-                    v-if="showModalInformation"
-                    class="rounded-xl border border-info-border bg-info-surface/70 p-4"
-                >
+                <div class="rounded-xl border border-info-border bg-info-surface/70 p-4">
                     <div class="flex items-start gap-x-3">
                         <PropertyIcon name="IconExclamationCircle" class="size-5 min-h-5 min-w-5 text-info"/>
                         <p class="text-sm text-info">
                             {{
                                 $t(
-                                    'If a project is specified, the months in which the project takes place are automatically determined and one page per month is created. If no project is specified, you can select start and end month yourself.'
+                                    'This export shows you when which project takes place in the selected period. If required, you can filter the projects by specific event types - projects will then only appear on days on which they have an event of one of the selected event types.'
                                 )
                             }}
                         </p>
                     </div>
-                    <button
-                        type="button"
-                        class="mt-2 block w-fit text-xs text-danger underline"
-                        @click="showModalInformation = false"
-                    >
-                        {{ $t('Close note') }}
-                    </button>
                 </div>
+
+                <BaseInput id="season-title" v-model="pdf.title" :label="$t('Heading')" :placeholder="defaultTitle" />
+
+                <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    <BaseInput type="date" v-model="pdf.startDate" id="season-startDate" :label="$t('Start date')" />
+                    <BaseInput type="date" v-model="pdf.endDate" id="season-endDate" :label="$t('End date')" />
+                </div>
+                <p class="text-xs text-text-muted">
+                    {{ $t('Up to 6 months are displayed per page (A3 landscape).') }}
+                </p>
             </section>
 
-            <!-- Projektwahl / Zeitraum -->
-            <section class="rounded-2xl border border-border-subtle bg-white p-6 shadow-sm space-y-4">
-                <div class="rounded-xl border border-border-subtle bg-surface-sunken px-4" :class="pdfSelectedProject ? 'pt-3' : 'pt-8'">
-                    <ProjectSearch
-                        v-if="!pdfSelectedProject"
-                        @project-selected="addProjectToPdf"
-                        no-project-groups
-                        get-first-last-event
-                    />
-                    <div v-else class="flex flex-col gap-2">
-                        <h3 class="text-base font-semibold text-text">
-                            {{ pdfSelectedProject.name }}
-                        </h3>
-                        <p
-                            class="text-sm text-text-muted"
-                            v-if="pdfSelectedProject?.first_event && pdfSelectedProject?.last_event"
-                        >
-                            {{ $t('Project period') }}:
-                            <span class="text-accent-700" v-if="pdfSelectedProject.first_event.start_time">
-                              {{ pdfSelectedProject.first_event.start_time }}
-                            </span>
-                            –
-                            <span class="text-accent-700" v-if="pdfSelectedProject.last_event.end_time">
-                              {{ pdfSelectedProject.last_event.end_time }}
-                            </span>
-                        </p>
-                        <p v-else class="text-sm text-text-muted">
-                            {{ $t('Project period') }}:
-                            <span class="text-accent-700" v-if="pdfSelectedProject.firstEventStart">
-                              {{ pdfSelectedProject.firstEventStart }}
-                            </span>
-                            –
-                            <span class="text-accent-700" v-if="pdfSelectedProject.lastEventEnd">
-                              {{ pdfSelectedProject.lastEventEnd }}
-                            </span>
-                        </p>
+            <!-- Terminarten-Filter (prominent) -->
+            <section class="rounded-2xl border border-border-subtle bg-white p-6 shadow-sm space-y-3">
+                <div class="flex items-center justify-between">
+                    <label class="block text-sm font-semibold text-text">
+                        {{ $t('Only show days with event type') }}
+                    </label>
+                    <div class="flex items-center gap-2">
                         <button
                             type="button"
-                            class="w-fit text-left text-xs text-accent-700 underline"
-                            @click="pdfSelectedProject = null"
+                            class="text-[11px] text-accent-600 hover:text-accent-700 cursor-pointer"
+                            @click="setAllEventTypes(true)"
                         >
-                            {{ $t('Cancel project selection') }}
+                            {{ $t('Select all') }}
+                        </button>
+                        <span class="text-text-subtle text-xs">•</span>
+                        <button
+                            type="button"
+                            class="text-[11px] text-accent-600 hover:text-accent-700 cursor-pointer"
+                            @click="setAllEventTypes(false)"
+                        >
+                            {{ $t('Deselect all') }}
                         </button>
                     </div>
-
-                    <div class="mt-4">
-                        <LastedProjects :limit="10" @select="addProjectToPdf" />
-                    </div>
                 </div>
-
-                <!-- Monatswahl nur wenn kein Projekt -->
-                <div v-if="!pdfSelectedProject" class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                    <div>
-                        <div class="flex items-center gap-1.5 mb-0.5">
-                            <label class="text-sm font-medium text-text-muted" for="startMonth">
-                                {{ $t('Day of start month') }}
-                            </label>
-                            <div class="group/info relative">
-                                <IconInfoCircle class="size-4 text-text-subtle cursor-help" />
-                                <span class="invisible group-hover/info:visible absolute left-5 bottom-0 z-10 w-max max-w-xs rounded-lg bg-surface-inverse px-3 py-2 text-xs text-text-inverse shadow-lg">
-                                    {{ $t('Select a day of the month in which the export should start. The entire month of the selected day will be used for the export.') }}
-                                </span>
+                <p class="text-xs text-text-muted">
+                    {{ $t('If active, a project only appears on days on which it has at least one event of the selected event types. Without a selection, all events count.') }}
+                </p>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-2">
+                    <div v-for="eventType in eventTypeFilterList" :key="eventType.id" class="flex items-center gap-x-2">
+                        <div class="flex h-6 shrink-0 items-center">
+                            <div class="group grid size-4 grid-cols-1">
+                                <input
+                                    v-model="eventType.checked"
+                                    :id="'season-event-type-' + eventType.id"
+                                    type="checkbox"
+                                    class="col-start-1 row-start-1 appearance-none rounded-sm border border-border bg-surface checked:border-accent-600 checked:bg-accent-600 indeterminate:border-accent-600 indeterminate:bg-accent-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-600 forced-colors:appearance-auto"
+                                />
+                                <svg class="pointer-events-none col-start-1 row-start-1 size-3.5 self-center justify-self-center stroke-white" viewBox="0 0 14 14" fill="none">
+                                    <path class="opacity-0 group-has-checked:opacity-100" d="M3 8L6 11L11 3.5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                </svg>
                             </div>
                         </div>
-                        <BaseInput type="date" v-model="pdf.startMonth" :placeholder="todayFormatted" id="startMonth" />
-                    </div>
-                    <div>
-                        <div class="flex items-center gap-1.5 mb-0.5">
-                            <label class="text-sm font-medium text-text-muted" for="endMonth">
-                                {{ $t('Day of end month') }}
-                            </label>
-                            <div class="group/info relative">
-                                <IconInfoCircle class="size-4 text-text-subtle cursor-help" />
-                                <span class="invisible group-hover/info:visible absolute left-5 bottom-0 z-10 w-max max-w-xs rounded-lg bg-surface-inverse px-3 py-2 text-xs text-text-inverse shadow-lg">
-                                    {{ $t('Select a day of the month in which the export should end. The entire month of the selected day will be used for the export.') }}
-                                </span>
-                            </div>
-                        </div>
-                        <BaseInput type="date" v-model="pdf.endMonth" :placeholder="todayFormatted" id="endMonth" />
+                        <label :for="'season-event-type-' + eventType.id" class="text-sm text-text">
+                            {{ eventType.name }}
+                        </label>
                     </div>
                 </div>
             </section>
 
-            <!-- Filter -->
+            <!-- Weitere Filter -->
             <section class="rounded-2xl border border-border-subtle bg-white p-6 shadow-sm">
                 <!-- Gespeicherte Filter Presets -->
                 <div v-if="savedFilterPresets.length > 0" class="mb-4 pb-4 border-b-2 border-dashed border-border">
@@ -162,8 +126,7 @@
                             <div class="flex items-center">
                                 <div class="mx-2">
                                     <p class="text-accent-600 text-xs group-hover:text-accent-700">
-                                        <span v-if="filter.id === 'adjoiningNoAudience' || filter.id === 'adjoiningNotLoud'">{{ $t(filter?.name)}}</span>
-                                        <span v-else>{{ filter?.name }}</span>
+                                        {{ filter?.name }}
                                     </p>
                                 </div>
                                 <div class="flex items-center">
@@ -177,7 +140,7 @@
                 </div>
 
                 <div class="space-y-1">
-                    <div v-for="(filterMainCategory, mainKey) in filteredOptionsByCategories" :key="mainKey" class="py-1" v-show="hasNonEmptySubcategory(filterMainCategory)">
+                    <div v-for="(filterMainCategory, mainKey) in accordionFilterCategories" :key="mainKey" class="py-1" v-show="hasNonEmptySubcategory(filterMainCategory)">
                         <div class="text-text-inverse bg-surface-inverse rounded-lg px-4 py-2 font-lexend shadow text-sm">
                             {{ $t(mainKey) }}
                         </div>
@@ -256,18 +219,45 @@
                 </div>
             </section>
 
-            <!-- Papierformat + Orientierung + DPI -->
+            <!-- Darstellungs-Optionen -->
+            <section class="rounded-2xl border border-border-subtle bg-white p-6 shadow-sm space-y-3">
+                <label class="block text-sm font-semibold text-text">
+                    {{ $t('Display options') }}
+                </label>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+                    <div v-for="option in displayOptions" :key="option.key" class="flex items-center gap-x-2">
+                        <div class="flex h-6 shrink-0 items-center">
+                            <div class="group grid size-4 grid-cols-1">
+                                <input
+                                    v-model="pdf[option.key]"
+                                    :id="'season-option-' + option.key"
+                                    type="checkbox"
+                                    class="col-start-1 row-start-1 appearance-none rounded-sm border border-border bg-surface checked:border-accent-600 checked:bg-accent-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-600 forced-colors:appearance-auto"
+                                />
+                                <svg class="pointer-events-none col-start-1 row-start-1 size-3.5 self-center justify-self-center stroke-white" viewBox="0 0 14 14" fill="none">
+                                    <path class="opacity-0 group-has-checked:opacity-100" d="M3 8L6 11L11 3.5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                </svg>
+                            </div>
+                        </div>
+                        <label :for="'season-option-' + option.key" class="text-sm text-text">
+                            {{ option.label }}
+                        </label>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Papierformat + DPI -->
             <section class="rounded-2xl border border-border-subtle bg-white p-6 shadow-sm">
-                <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
-                    <!-- Papierformat -->
-                    <div class="space-y-2">
+                <div class="grid grid-cols-1 gap-6 lg:grid-cols-2 items-start">
+                    <div>
                         <Listbox as="div" v-model="selectedPaperSize">
-                            <ListboxLabel class="block text-sm font-medium text-text-muted">
+                            <!-- Label- und Feldmaße wie BaseInput, damit Papiergröße und DPI bündig sind -->
+                            <ListboxLabel class="mb-1 block font-lexend text-xs font-medium text-[#3F424A]">
                                 {{ $t('Paper size') }}
                             </ListboxLabel>
-                            <div class="relative mt-1">
+                            <div class="relative">
                                 <ListboxButton
-                                    class="relative w-full cursor-pointer rounded-xl border border-border-subtle bg-white px-4 py-3 text-left text-sm hover:bg-surface-sunken"
+                                    class="relative block h-8 w-full cursor-pointer rounded-md border border-border bg-surface px-3 text-left text-sm text-text hover:bg-surface-sunken"
                                 >
                                     <div class="block truncate">{{ selectedPaperSize.name }}</div>
                                     <span class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
@@ -319,85 +309,14 @@
                                 </transition>
                             </div>
                         </Listbox>
+                        <p class="mt-1 text-xs text-text-muted">
+                            {{ $t('The season schedule is always exported in landscape format.') }}
+                        </p>
                     </div>
 
-                    <!-- Orientierung -->
-                    <div class="space-y-2">
-                        <label class="block text-sm font-medium text-text-muted">
-                            {{ $t('Paper orientation') }}
-                        </label>
-                        <fieldset>
-                            <legend class="sr-only">Paper orientation</legend>
-                            <div class="flex gap-3">
-                                <div
-                                    v-for="paperOrientation in paperOrientations"
-                                    :key="paperOrientation.id"
-                                    class="relative flex-1"
-                                >
-                                    <input
-                                        :id="'monthly-' + paperOrientation.id"
-                                        name="monthly-orientation"
-                                        type="radio"
-                                        :checked="paperOrientation.id === checkedOrientation"
-                                        class="peer absolute inset-0 h-0 w-0 opacity-0"
-                                        :disabled="orientationDisabled"
-                                        @change="changePaperOrientation(paperOrientation)"
-                                    />
-                                    <label
-                                        :for="'monthly-' + paperOrientation.id"
-                                        class="block cursor-pointer rounded-xl border px-4 py-3 text-sm transition
-                                        peer-checked:border-surface-inverse peer-checked:bg-surface-inverse peer-checked:text-text-inverse
-                                        border-border-subtle bg-white text-text hover:bg-surface-sunken hover:text-text"
-                                        :class="orientationDisabled ? 'text-text-subtle cursor-not-allowed' : ''"
-                                    >
-                                        {{ paperOrientation.title }}
-                                    </label>
-                                </div>
-                            </div>
-                            <span class="mt-2 block text-xs text-danger" v-if="orientationDisabled">
-                                {{ $t('The A6 format is only possible in landscape format.') }}
-                            </span>
-                        </fieldset>
-                    </div>
-
-                    <!-- Color Source Toggle -->
-                    <div class="space-y-2">
-                        <label class="block text-sm font-medium text-text-muted">
-                            {{ $t('Event color') }}
-                        </label>
-                        <fieldset class="flex gap-2">
-                            <div
-                                v-for="mode in [
-                                    { id: 'eventType', label: $t('Color by event type') },
-                                    { id: 'mainCategory', label: $t('Color by main category of project') }
-                                ]"
-                                :key="mode.id"
-                                class="relative flex-1"
-                            >
-                                <input
-                                    :id="`monthly-colorSource-${mode.id}`"
-                                    name="monthly-color-source"
-                                    type="radio"
-                                    :value="mode.id"
-                                    v-model="pdf.colorSource"
-                                    class="peer absolute inset-0 h-0 w-0 opacity-0"
-                                />
-                                <label
-                                    :for="`monthly-colorSource-${mode.id}`"
-                                    class="block cursor-pointer rounded-xl border px-4 py-3 text-sm transition
-                                    peer-checked:border-surface-inverse peer-checked:bg-surface-inverse peer-checked:text-text-inverse
-                                    border-border-subtle bg-white text-text hover:bg-surface-sunken hover:text-text"
-                                >
-                                    {{ mode.label }}
-                                </label>
-                            </div>
-                        </fieldset>
-                    </div>
-
-                    <!-- DPI -->
                     <div>
                         <BaseInput
-                            id="monthly-dpi"
+                            id="season-dpi"
                             v-model="pdf.dpi"
                             :label="$t('Resolution (DPI) (Standard: 72) (Maximum: 300)')"
                         />
@@ -440,38 +359,34 @@
 import {computed, onMounted, ref, watch} from 'vue'
 import {useForm, usePage} from '@inertiajs/vue3'
 import { Listbox, ListboxButton, ListboxLabel, ListboxOption, ListboxOptions } from '@headlessui/vue'
-import ProjectSearch from '@/Components/SearchBars/ProjectSearch.vue'
 import BaseInput from '@/Artwork/Inputs/BaseInput.vue'
-import LastedProjects from '@/Artwork/LastedProjects.vue'
 import { useTranslation } from '@/Composeables/Translation.js'
-import PropertyIcon from '@/Artwork/Icon/PropertyIcon.vue'
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
-import {IconChevronDown, IconX, IconInfoCircle} from "@tabler/icons-vue";
+import PropertyIcon from '@/Artwork/Icon/PropertyIcon.vue'
+import {IconChevronDown, IconX} from "@tabler/icons-vue";
 import SaveFilterPresetModal from '@/Layouts/Components/Export/Modals/SaveFilterPresetModal.vue'
 import ConfirmDeleteModal from '@/Layouts/Components/ConfirmDeleteModal.vue'
 
 const $t = useTranslation()
 const emits = defineEmits<{ (e: 'closed', value: boolean): void }>()
-const props = defineProps<{ pdfTitle?: string; project?: any; preselectedFilters?: Record<string, number[] | null> | null }>()
+const props = defineProps<{ preselectedFilters?: Record<string, number[] | null> | null }>()
 
-const showModalInformation = ref(true)
+const toDateInputValue = (date: Date): string => {
+    const month = String(date.getMonth() + 1).padStart(2, '0')
+    const day = String(date.getDate()).padStart(2, '0')
+    return `${date.getFullYear()}-${month}-${day}`
+}
 
-const todayFormatted = computed(() => {
-    const now = new Date()
-    const day = String(now.getDate()).padStart(2, '0')
-    const month = String(now.getMonth() + 1).padStart(2, '0')
-    return `${day}.${month}.${now.getFullYear()}`
-})
+// Default: 6 volle Monate ab dem 01. des aktuellen Monats
+const defaultStart = new Date()
+defaultStart.setDate(1)
+const defaultEnd = new Date(defaultStart)
+defaultEnd.setMonth(defaultEnd.getMonth() + 6)
+defaultEnd.setDate(0) // letzter Tag des 6. Monats
 
 const paperSizes = [
-    { id: 'a4', name: 'A4 (Standard)' },
-    { id: 'a3', name: 'A3' },
-    { id: 'a5', name: 'A5' },
-    { id: 'a6', name: 'A6' }
-]
-const paperOrientations = [
-    { id: 'portrait', title: $t('Portrait format') },
-    { id: 'landscape', title: $t('Landscape format') }
+    { id: 'a3', name: 'A3 (Standard)' },
+    { id: 'a4', name: 'A4' }
 ]
 
 const openState = ref<Record<string, boolean>>({});
@@ -482,32 +397,39 @@ const toggleOpen = (mainKey: string, subKey: string) => {
     openState.value[k] = !openState.value[k];
 };
 
-// Default-Zeitraum: aktueller Monat (Backend nutzt den ganzen Monat des gewählten Tags)
-const todayIso = (() => {
-    const now = new Date()
-    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
-})()
-
 const pdf = useForm({
-    title: props.project ? props.project.name : $t('Monthly overview'),
-    startMonth: todayIso as string | null,
-    endMonth: todayIso as string | null,
+    title: '',
+    startDate: toDateInputValue(defaultStart) as string | null,
+    endDate: toDateInputValue(defaultEnd) as string | null,
     paperSize: null as string | null,
-    paperOrientation: null as string | null,
-    project: null as number | null,
     dpi: 72,
     filter: {} as Record<string, number[] | null>,
-    colorSource: 'eventType' as 'eventType' | 'mainCategory'
+    showHolidays: true,
+    showWeekNumbers: true,
+    highlightWeekends: true,
+    showColorDots: true,
+    showEventsWithoutProject: false,
+    showRoomAbbreviations: false,
+    splitMonths: false,
 })
 
-const pdfSelectedProject = ref<any | null>(null)
-const selectedPaperSize = ref<{ id: string; name: string }>({ id: 'a3', name: 'A3' })
-const selectedPaperOrientation = ref<{ id: 'portrait' | 'landscape'; title: string }>({
-    id: 'landscape',
-    title: $t('Landscape format')
+const defaultTitle = computed(() => {
+    const startYear = pdf.startDate ? new Date(pdf.startDate).getFullYear() : new Date().getFullYear()
+    const endYear = pdf.endDate ? new Date(pdf.endDate).getFullYear() : startYear
+    return startYear === endYear ? `Spielplan ${startYear}` : `Spielplan ${startYear}/${endYear}`
 })
-const checkedOrientation = ref<'portrait' | 'landscape'>('landscape')
-const orientationDisabled = ref(false)
+
+const displayOptions = computed(() => [
+    { key: 'showHolidays', label: $t('Show holidays') },
+    { key: 'showWeekNumbers', label: $t('Show calendar weeks') },
+    { key: 'highlightWeekends', label: $t('Highlight weekends') },
+    { key: 'showColorDots', label: $t('Color dot per event type') },
+    { key: 'showEventsWithoutProject', label: $t('Show events without project') },
+    { key: 'showRoomAbbreviations', label: $t('Show room abbreviations') },
+    { key: 'splitMonths', label: $t('Half months per page (double row height)') },
+])
+
+const selectedPaperSize = ref<{ id: string; name: string }>({ id: 'a3', name: 'A3 (Standard)' })
 
 const closeModal = (bool: boolean) => emits('closed', bool)
 
@@ -609,29 +531,24 @@ const deletePreset = async () => {
 
 const createPdf = () => {
     pdf.paperSize = selectedPaperSize.value.id
-    pdf.paperOrientation = selectedPaperOrientation.value.id
-
-    if (props.project) {
-        pdf.project = props.project.id
-    }
-    if (pdfSelectedProject.value) {
-        pdf.project = pdfSelectedProject.value.id
+    if (!pdf.title) {
+        pdf.title = defaultTitle.value
     }
 
-    // Auf YYYY-MM normalisieren – Browser ohne date-Input-Support liefern auch
-    // Freitext wie "10.2025" oder "15.10.2025" (war Ursache eines Prod-500ers)
-    const toYearMonth = (value: string | null): string | null => {
+    // Auf YYYY-MM-DD normalisieren – Browser ohne date-Input-Support liefern auch
+    // Freitext wie "15.10.2025"
+    const toIsoDate = (value: string | null): string | null => {
         if (!value) return null
-        const iso = value.match(/^(\d{4})-(\d{2})/)
-        if (iso) return `${iso[1]}-${iso[2]}`
-        const monthYear = value.match(/^(\d{1,2})\.(\d{4})$/)
-        if (monthYear) return `${monthYear[2]}-${monthYear[1].padStart(2, '0')}`
-        const dayMonthYear = value.match(/^\d{1,2}\.(\d{1,2})\.(\d{4})$/)
-        if (dayMonthYear) return `${dayMonthYear[2]}-${dayMonthYear[1].padStart(2, '0')}`
+        const iso = value.match(/^(\d{4})-(\d{2})-(\d{2})/)
+        if (iso) return `${iso[1]}-${iso[2]}-${iso[3]}`
+        const dayMonthYear = value.match(/^(\d{1,2})\.(\d{1,2})\.(\d{4})$/)
+        if (dayMonthYear) {
+            return `${dayMonthYear[3]}-${dayMonthYear[2].padStart(2, '0')}-${dayMonthYear[1].padStart(2, '0')}`
+        }
         return null
     }
-    pdf.startMonth = toYearMonth(pdf.startMonth)
-    pdf.endMonth = toYearMonth(pdf.endMonth)
+    pdf.startDate = toIsoDate(pdf.startDate)
+    pdf.endDate = toIsoDate(pdf.endDate)
 
     const data: Record<string, number[] | null> = {};
 
@@ -641,7 +558,7 @@ const createPdf = () => {
 
     pdf.filter = data;
 
-    pdf.post(route('calendar.export.monthly-pdf'), { preserveScroll: true })
+    pdf.post(route('calendar.export.season-schedule-pdf'), { preserveScroll: true })
     closeModal(true)
 }
 
@@ -690,6 +607,29 @@ const filteredOptionsByCategories = computed(() => {
     return filteredOptions;
 })
 
+// Terminarten kommen prominent nach oben, deshalb im generischen Akkordeon ausblenden
+const eventTypeFilterList = computed(() => filteredOptionsByCategories.value.eventFilters['event_type_ids'] ?? [])
+const accordionFilterCategories = computed(() => {
+    const cats = filteredOptionsByCategories.value
+    const eventFiltersWithoutTypes: Record<string, any[]> = {}
+    Object.keys(cats.eventFilters).forEach((subKey) => {
+        if (subKey !== 'event_type_ids') {
+            eventFiltersWithoutTypes[subKey] = cats.eventFilters[subKey]
+        }
+    })
+    return {
+        roomFilters: cats.roomFilters,
+        areaFilters: cats.areaFilters,
+        eventFilters: eventFiltersWithoutTypes,
+    }
+})
+
+const setAllEventTypes = (value: boolean) => {
+    eventTypeFilterList.value.forEach((eventType: any) => {
+        eventType.checked = value
+    })
+}
+
 const extractCheckedIds = (filterGroup: 'roomFilters' | 'areaFilters' | 'eventFilters') => {
     const result: Record<string, number[] | null> = {};
     Object.entries(filteredOptionsByCategories.value[filterGroup]).forEach(([key, list]) => {
@@ -721,37 +661,13 @@ const mutateSubcategory = (mainKey: string, subKey: string, value: boolean) => {
 const selectAllInSubcategory = (mainKey: string, subKey: string) => mutateSubcategory(mainKey, subKey, true);
 const deselectAllInSubcategory = (mainKey: string, subKey: string) => mutateSubcategory(mainKey, subKey, false);
 
-const changePaperOrientation = (orientation: { id: 'portrait' | 'landscape'; title: string }) => {
-    selectedPaperOrientation.value = orientation
-    checkedOrientation.value = orientation.id
-}
-
-const addProjectToPdf = (project: any) => {
-    pdfSelectedProject.value = project
-}
-
-// When start month changes, auto-set end month to same value
+// When start date changes, keep end date at or after it
 watch(
-    () => pdf.startMonth,
+    () => pdf.startDate,
     (newVal) => {
-        if (newVal && (!pdf.endMonth || pdf.endMonth < newVal)) {
-            pdf.endMonth = newVal
+        if (newVal && (!pdf.endDate || pdf.endDate < newVal)) {
+            pdf.endDate = newVal
         }
     }
-)
-
-// A6 erzwingt Landscape
-watch(
-    () => selectedPaperSize.value,
-    () => {
-        if (selectedPaperSize.value.id === 'a6') {
-            checkedOrientation.value = 'landscape'
-            orientationDisabled.value = true
-            changePaperOrientation({ id: 'landscape', title: $t('Landscape format') })
-        } else {
-            orientationDisabled.value = false
-        }
-    },
-    { immediate: true }
 )
 </script>

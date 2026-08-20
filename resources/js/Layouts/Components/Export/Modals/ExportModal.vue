@@ -72,6 +72,11 @@
                                                    :configuration="configuration[exportTabEnums.EXCEL_SHIFT_PERSONNEL_PLAN_EXPORT]"
                                                    @close="close()"/>
                 </template>
+                <template v-else-if="tab === exportTabEnums.PDF_SEASON_SCHEDULE_EXPORT">
+                    <PdfSeasonScheduleExport v-if="activeTab === exportTabEnums.PDF_SEASON_SCHEDULE_EXPORT"
+                                             @close="close()"
+                                             :preselected-filters="configuration[exportTabEnums.PDF_SEASON_SCHEDULE_EXPORT]?.user_filters ?? null"/>
+                </template>
                 <template v-else>
                     {{ throwUndefinedEnumUsed() }}
                 </template>
@@ -119,6 +124,9 @@ const exportTabEnums = useExportTabEnums(),
     ),
     ExcelShiftPersonnelPlanExport = defineAsyncComponent(
         () => import("@/Layouts/Components/Export/Tabs/ExcelShiftPersonnelPlanExport.vue")
+    ),
+    PdfSeasonScheduleExport = defineAsyncComponent(
+        () => import("@/Layouts/Components/Export/Tabs/PdfSeasonScheduleExport.vue")
     ),
     props = defineProps({
         enums: {

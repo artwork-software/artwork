@@ -31,7 +31,9 @@ final class ApiManagementControllerTest extends FeatureTestCase
     {
         $this->actingAs(User::factory()->create());
 
-        $this->post(route('api-management.store'), ['name' => 'Shop'])
+        // Payload muss valide sein: Die FormRequest-Validierung läuft vor der Policy-Prüfung im
+        // Controller — ohne scopes käme ein Validierungs-Redirect statt der erwarteten 403.
+        $this->post(route('api-management.store'), ['name' => 'Shop', 'scopes' => ['inventory:read']])
             ->assertForbidden();
     }
 
@@ -43,7 +45,10 @@ final class ApiManagementControllerTest extends FeatureTestCase
 
         // Vor der Reparatur warf dieser Aufruf einen ArgumentCountError: der Direktaufruf der
         // PersonalAccessTokenFactory ließ den in Passport 13 hinzugekommenen Provider-Parameter aus.
-        $response = $this->post(route('api-management.store'), ['name' => 'Ticketshop']);
+        $response = $this->post(
+            route('api-management.store'),
+            ['name' => 'Ticketshop', 'scopes' => ['inventory:read']]
+        );
 
         $response->assertRedirect();
         $response->assertSessionHas('plainTextToken');
@@ -56,7 +61,8 @@ final class ApiManagementControllerTest extends FeatureTestCase
         $this->preparePassportClient();
         $this->actingAsUserWith(PermissionEnum::SETTINGS_UPDATE->value);
 
-        $plainTextToken = $this->post(route('api-management.store'), ['name' => 'Ticketshop'])
+        $plainTextToken = $this
+            ->post(route('api-management.store'), ['name' => 'Ticketshop', 'scopes' => ['inventory:read']])
             ->getSession()
             ->get('plainTextToken');
 

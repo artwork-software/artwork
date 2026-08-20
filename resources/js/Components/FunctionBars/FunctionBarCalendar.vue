@@ -313,6 +313,7 @@
                   @close="showExportModal = false"
                   :enums="[
                       exportTabEnums.PDF_MONTHLY_CALENDAR_EXPORT,
+                      exportTabEnums.PDF_SEASON_SCHEDULE_EXPORT,
                       exportTabEnums.PDF_CALENDAR_EXPORT,
                       exportTabEnums.EXCEL_EVENT_LIST_EXPORT,
                       exportTabEnums.EXCEL_CALENDAR_EXPORT
@@ -438,6 +439,10 @@ const getExportModalConfiguration = () => {
 
     cfg[exportTabEnums.PDF_MONTHLY_CALENDAR_EXPORT] = {
         project: props.project,
+        user_filters: activeUserFilters
+    };
+
+    cfg[exportTabEnums.PDF_SEASON_SCHEDULE_EXPORT] = {
         user_filters: activeUserFilters
     };
 

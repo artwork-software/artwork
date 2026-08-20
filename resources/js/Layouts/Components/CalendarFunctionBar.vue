@@ -154,8 +154,9 @@
     <export-modal v-if="showExportModal"
                   @close="showExportModal = false"
                   :enums="[
-                      exportTabEnums.PDF_CALENDAR_EXPORT,
                       exportTabEnums.PDF_MONTHLY_CALENDAR_EXPORT,
+                      exportTabEnums.PDF_SEASON_SCHEDULE_EXPORT,
+                      exportTabEnums.PDF_CALENDAR_EXPORT,
                       exportTabEnums.EXCEL_EVENT_LIST_EXPORT,
                       exportTabEnums.EXCEL_CALENDAR_EXPORT
                   ]"
@@ -389,6 +390,10 @@ export default {
 
             cfg[exportTabEnums.PDF_MONTHLY_CALENDAR_EXPORT] = {
                 project: this.project,
+                user_filters: this.user_filters ?? null
+            };
+
+            cfg[exportTabEnums.PDF_SEASON_SCHEDULE_EXPORT] = {
                 user_filters: this.user_filters ?? null
             };
 

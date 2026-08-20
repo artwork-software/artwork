@@ -192,7 +192,10 @@ defineExpose({
 
 <template>
     <!-- ==================== NO-VIRTUALIZE MODE ==================== -->
-    <div v-if="noVirtualize" ref="viewportEl" class="relative w-full overflow-auto pointer-events-auto">
+    <!-- scrollbar-gutter:stable: beide Schichtplan-Viewports (Haupt- und Worker-Grid) reservieren
+         die vertikale Scrollbar unabhängig vom Overflow — sonst differieren ihre clientWidths um
+         eine Scrollbarbreite und die per scrollLeft synchronisierten Spalten laufen auseinander. -->
+    <div v-if="noVirtualize" ref="viewportEl" class="relative w-full overflow-auto pointer-events-auto [scrollbar-gutter:stable]">
         <!-- Sticky Header Row -->
         <div
             class="sticky top-0 z-40 bg-surface-inverse/95 backdrop-blur
@@ -251,7 +254,7 @@ defineExpose({
     </div>
 
     <!-- ==================== VIRTUAL MODE (default) ==================== -->
-    <div v-else ref="viewportEl" class="relative w-full overflow-auto pointer-events-auto">
+    <div v-else ref="viewportEl" class="relative w-full overflow-auto pointer-events-auto [scrollbar-gutter:stable]">
         <div class="relative" :style="{ width: totalW + 'px', height: totalH + 'px' }">
 
             <!-- Sticky Header Row -->

@@ -22,7 +22,12 @@ class FreelancerDropResource extends JsonResource
             'profile_photo_url' => $this->profile_photo_url,
             'assigned_craft_ids' => $this->assignedCrafts->pluck('id'),
             'can_work_shifts' => $this->can_work_shifts,
-            'shift_qualifications' => $this->shiftQualifications()->get(['shift_qualifications.id', 'name', 'available'])
+            // Siehe UserDropResource: geladene Relation nutzen statt neu abfragen.
+            'shift_qualifications' => $this->relationLoaded('shiftQualifications')
+                ? $this->shiftQualifications
+                : $this->shiftQualifications()->get(
+                    ['shift_qualifications.id', 'name', 'available']
+                )
         ];
     }
 }

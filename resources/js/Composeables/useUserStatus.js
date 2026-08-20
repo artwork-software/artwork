@@ -6,7 +6,7 @@ export function useUserStatus() {
 
     const getUserStatus = async (userId) => {
         try {
-            const response = await axios.get(`/api/user-status/${userId}`)
+            const response = await axios.get(route('user-status.show', userId))
             status.value = response.data.status
         } catch (error) {
             status.value = 'offline'

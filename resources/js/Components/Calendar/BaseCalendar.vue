@@ -207,14 +207,15 @@
                                                 <button
                                                     v-if="!multiEdit"
                                                     type="button"
-                                                    class="pointer-events-auto group-hover/container:inline-flex hidden absolute bottom-1 right-1 z-20
-                                                     items-center justify-center cursor-pointer gap-1 rounded-md size-7 text-sm font-medium
+                                                    class="pointer-events-auto group-hover/container:inline-flex hidden absolute bottom-1 right-3 z-20
+                                                     items-center justify-center cursor-pointer gap-1 rounded-md text-sm font-medium
                                                      ring-0 bg-white/90 hover:bg-gray-50/90 focus:outline-none focus:ring-0
                                                      transition duration-200 ease-in-out"
+                                                    :style="addEventButtonStyle"
                                                     :aria-label="$t('Add event')"
                                                     @click="openNewEventModalWithBaseData(day.withoutFormat, (room.roomId ?? room.id))"
                                                 >
-                                                    <component :is="IconCirclePlus" class="size-4" />
+                                                    <component :is="IconCirclePlus" :style="addEventIconStyle" />
                                                 </button>
 
                                             </div>
@@ -625,6 +626,17 @@ const cellStyle = computed(() => ({
     height: settings.value.expand_days ? "" : rowHeightPx.value,
     minHeight: settings.value.expand_days ? rowHeightPx.value : ""
 }));
+// "+"-Button: 40px Zielgröße, aber nie höher als die Zoom-Zeilenhöhe
+// (bei 40 % sind die Zeilen nur 33px hoch — dort auf Zeile minus Offset kappen).
+const addEventButtonSize = computed(() => Math.min(40, Math.max(20, rowHeight.value - 8)));
+const addEventButtonStyle = computed(() => ({
+    width: `${addEventButtonSize.value}px`,
+    height: `${addEventButtonSize.value}px`
+}));
+const addEventIconStyle = computed(() => {
+    const size = Math.round(addEventButtonSize.value * 0.65);
+    return { width: `${size}px`, height: `${size}px` };
+});
 // Vertikale Trennlinie zwischen den Raumspalten (inline statt Tailwind-Klasse,
 // damit sie unabhängig vom Zeilen-Border-Style bleibt).
 const cellSeparatorStyle = computed(() => ({

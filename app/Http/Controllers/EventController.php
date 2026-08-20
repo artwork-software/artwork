@@ -413,7 +413,9 @@ class EventController extends Controller
                     ));
             },
             'areas'            => fn () => $this->areaService->getAll(),
-            'eventTypes'       => fn () => EventType::select(['id','name','abbreviation','hex_code'])->orderBy('name')->get(),
+            'eventTypes'       => fn () => EventType::select(
+                ['id', 'name', 'abbreviation', 'hex_code']
+            )->orderBy('name')->get(),
             'eventStatuses'    => fn () => EventStatus::orderBy('order')->get(),
             'event_properties' => fn () => EventProperty::all(),
             'first_project_tab_id' => fn () => $this->projectTabService->getDefaultOrFirstProjectTabId(),
@@ -528,6 +530,7 @@ class EventController extends Controller
         return response()->json(['calendar' => $calendar->rooms]);
     }
 
+    //phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.FoundInExtendedClassBeforeLastUsed
     public function viewPlanningCalendar(Request $request, ?Project $project = null): Response
     {
         /** @var User $user */
@@ -819,7 +822,7 @@ class EventController extends Controller
                 ->select(['id', 'name'])
                 ->withCount('presets')
                 ->with([
-                    'presets' => function ($q) {
+                    'presets' => function ($q): void {
                         $q->select([
                             'single_shift_presets.id',
                             'single_shift_presets.name',
@@ -939,13 +942,24 @@ class EventController extends Controller
 
         return Inertia::render($renderViewName, [
             'history' => [],
+            // Bewusst OHNE 'users'/'freelancers'/'serviceProviders': die Worker-Zeilen
+            // des Schichtplans werden aus shifts.workers gebaut (dropWorkers ->
+            // craftWorkersMap gruppiert nach assigned_craft_ids), nicht aus den
+            // Craft-Relationen. Die vollen User-Zeilen machten hier 2,38 MB von
+            // 2,45 MB Props aus. Von den Managing-Relationen wird nur die id
+            // gelesen (buildManagingSets), qualifications braucht das
+            // AddShiftModal zum Auflösen der Schichtplätze.
             'crafts' => Craft::query()
                 ->select(['id', 'name', 'abbreviation', 'color', 'universally_applicable', 'position'])
                 ->with([
-                    'users',
-                    'managingUsers',
-                    'managingFreelancers',
-                    'managingServiceProviders',
+                    // Das Frontend liest hier nur die id — die Namens-/Bildspalten
+                    // müssen trotzdem mit, weil die $appends der Modelle beim
+                    // Serialisieren darauf zugreifen (ServiceProvider::getNameAttribute
+                    // wirft ohne provider_name einen TypeError).
+                    'managingUsers:id,first_name,last_name,profile_photo_path,work_time_balance',
+                    'managingFreelancers:id,first_name,last_name,profile_image',
+                    'managingServiceProviders:id,provider_name,profile_image',
+                    'qualifications:id,name,icon,available',
                 ])
                 ->without(['craftShiftPlaner', 'craftInventoryPlaner'])
                 ->orderBy('position')
@@ -982,7 +996,7 @@ class EventController extends Controller
                 ->select(['id', 'name'])
                 ->withCount('presets')
                 ->with([
-                    'presets' => function ($q) {
+                    'presets' => function ($q): void {
                         $q->select([
                             'single_shift_presets.id',
                             'single_shift_presets.name',
@@ -1060,6 +1074,11 @@ class EventController extends Controller
             'dateValue' => $dateValue,
             'listViewSettings' => $listViewSettings,
             'user_filters' => $userCalendarFilter,
+            // ACHTUNG: users/freelancers/serviceProviders müssen hier bleiben.
+            // Die Listenansicht reicht diese crafts an SingleShiftInDailyShiftView
+            // weiter, dessen getAssignablePeople() daraus die Auswahlliste zum
+            // Zuweisen von Personen auf Schichtplätze baut. Ohne die Relationen
+            // bleibt dieses Dropdown leer.
             'crafts' => Craft::with([
                 'users',
                 'freelancers',
@@ -2915,7 +2934,14 @@ class EventController extends Controller
             [$nextStart, $nextEnd] = $this->generateNextOccurrence($cursorStart, $cursorEnd, (int) $newFrequency);
 
             while ($nextEnd < $endSeriesDateExclusive) {
-                $this->createSeriesEvent($nextStart->copy(), $nextEnd->copy(), $request, $series, $event->project_id, $event);
+                $this->createSeriesEvent(
+                    $nextStart->copy(),
+                    $nextEnd->copy(),
+                    $request,
+                    $series,
+                    $event->project_id,
+                    $event
+                );
                 [$nextStart, $nextEnd] = $this->generateNextOccurrence($nextStart, $nextEnd, (int) $newFrequency);
             }
 
@@ -2963,7 +2989,14 @@ class EventController extends Controller
             [$nextStart, $nextEnd] = $this->generateNextOccurrence($eventStart->copy(), $eventEnd->copy(), $freq);
 
             while ($nextEnd < $newEndExclusive) {
-                $this->createSeriesEvent($nextStart->copy(), $nextEnd->copy(), $request, $series, $event->project_id, $event);
+                $this->createSeriesEvent(
+                    $nextStart->copy(),
+                    $nextEnd->copy(),
+                    $request,
+                    $series,
+                    $event->project_id,
+                    $event
+                );
                 [$nextStart, $nextEnd] = $this->generateNextOccurrence($nextStart, $nextEnd, $freq);
             }
 
@@ -3063,8 +3096,8 @@ class EventController extends Controller
 
         $trashedEvents = Event::onlyTrashed()
             ->with(['project', 'event_type', 'room'])
-            ->when($search !== '', function ($query) use ($search) {
-                $query->where(function ($subQuery) use ($search) {
+            ->when($search !== '', function ($query) use ($search): void {
+                $query->where(function ($subQuery) use ($search): void {
                     $subQuery->where('eventName', 'like', '%' . $search . '%')
                         ->orWhere('name', 'like', '%' . $search . '%')
                         ->orWhereHas('project', fn ($project) => $project->where('name', 'like', '%' . $search . '%'));
@@ -3333,8 +3366,14 @@ class EventController extends Controller
                         $seriesEvent->setAttribute('start_time', $startDate->addDays($value));
                         $seriesEvent->setAttribute('end_time', $endDate->addDays($value));
                         foreach ($shifts as $shift) {
-                            $shift->setAttribute('start_date', Carbon::parse($shift->getAttribute('start_date'))->addDays($value));
-                            $shift->setAttribute('end_date', Carbon::parse($shift->getAttribute('end_date'))->addDays($value));
+                            $shift->setAttribute(
+                                'start_date',
+                                Carbon::parse($shift->getAttribute('start_date'))->addDays($value)
+                            );
+                            $shift->setAttribute(
+                                'end_date',
+                                Carbon::parse($shift->getAttribute('end_date'))->addDays($value)
+                            );
                             $shift->save();
                         }
                     }
@@ -3342,8 +3381,14 @@ class EventController extends Controller
                         $seriesEvent->setAttribute('start_time', $startDate->addWeeks($value));
                         $seriesEvent->setAttribute('end_time', $endDate->addWeeks($value));
                         foreach ($shifts as $shift) {
-                            $shift->setAttribute('start_date', Carbon::parse($shift->getAttribute('start_date'))->addWeeks($value));
-                            $shift->setAttribute('end_date', Carbon::parse($shift->getAttribute('end_date'))->addWeeks($value));
+                            $shift->setAttribute(
+                                'start_date',
+                                Carbon::parse($shift->getAttribute('start_date'))->addWeeks($value)
+                            );
+                            $shift->setAttribute(
+                                'end_date',
+                                Carbon::parse($shift->getAttribute('end_date'))->addWeeks($value)
+                            );
                             $shift->save();
                         }
                     }
@@ -3351,8 +3396,14 @@ class EventController extends Controller
                         $seriesEvent->setAttribute('start_time', $startDate->addMonths($value));
                         $seriesEvent->setAttribute('end_time', $endDate->addMonths($value));
                         foreach ($shifts as $shift) {
-                            $shift->setAttribute('start_date', Carbon::parse($shift->getAttribute('start_date'))->addMonths($value));
-                            $shift->setAttribute('end_date', Carbon::parse($shift->getAttribute('end_date'))->addMonths($value));
+                            $shift->setAttribute(
+                                'start_date',
+                                Carbon::parse($shift->getAttribute('start_date'))->addMonths($value)
+                            );
+                            $shift->setAttribute(
+                                'end_date',
+                                Carbon::parse($shift->getAttribute('end_date'))->addMonths($value)
+                            );
                             $shift->save();
                         }
                     }
@@ -3360,8 +3411,14 @@ class EventController extends Controller
                         $seriesEvent->setAttribute('start_time', $startDate->addYears($value));
                         $seriesEvent->setAttribute('end_time', $endDate->addYears($value));
                         foreach ($shifts as $shift) {
-                            $shift->setAttribute('start_date', Carbon::parse($shift->getAttribute('start_date'))->addYears($value));
-                            $shift->setAttribute('end_date', Carbon::parse($shift->getAttribute('end_date'))->addYears($value));
+                            $shift->setAttribute(
+                                'start_date',
+                                Carbon::parse($shift->getAttribute('start_date'))->addYears($value)
+                            );
+                            $shift->setAttribute(
+                                'end_date',
+                                Carbon::parse($shift->getAttribute('end_date'))->addYears($value)
+                            );
                             $shift->save();
                         }
                     }
@@ -3376,8 +3433,14 @@ class EventController extends Controller
                         $seriesEvent->setAttribute('start_time', $startDate->subDays($value));
                         $seriesEvent->setAttribute('end_time', $endDate->subDays($value));
                         foreach ($shifts as $shift) {
-                            $shift->setAttribute('start_date', Carbon::parse($shift->getAttribute('start_date'))->subDays($value));
-                            $shift->setAttribute('end_date', Carbon::parse($shift->getAttribute('end_date'))->subDays($value));
+                            $shift->setAttribute(
+                                'start_date',
+                                Carbon::parse($shift->getAttribute('start_date'))->subDays($value)
+                            );
+                            $shift->setAttribute(
+                                'end_date',
+                                Carbon::parse($shift->getAttribute('end_date'))->subDays($value)
+                            );
                             $shift->save();
                         }
                     }
@@ -3385,8 +3448,14 @@ class EventController extends Controller
                         $seriesEvent->setAttribute('start_time', $startDate->subWeeks($value));
                         $seriesEvent->setAttribute('end_time', $endDate->subWeeks($value));
                         foreach ($shifts as $shift) {
-                            $shift->setAttribute('start_date', Carbon::parse($shift->getAttribute('start_date'))->subWeeks($value));
-                            $shift->setAttribute('end_date', Carbon::parse($shift->getAttribute('end_date'))->subWeeks($value));
+                            $shift->setAttribute(
+                                'start_date',
+                                Carbon::parse($shift->getAttribute('start_date'))->subWeeks($value)
+                            );
+                            $shift->setAttribute(
+                                'end_date',
+                                Carbon::parse($shift->getAttribute('end_date'))->subWeeks($value)
+                            );
                             $shift->save();
                         }
                     }
@@ -3394,8 +3463,14 @@ class EventController extends Controller
                         $seriesEvent->setAttribute('start_time', $startDate->subMonths($value));
                         $seriesEvent->setAttribute('end_time', $endDate->subMonths($value));
                         foreach ($shifts as $shift) {
-                            $shift->setAttribute('start_date', Carbon::parse($shift->getAttribute('start_date'))->subMonths($value));
-                            $shift->setAttribute('end_date', Carbon::parse($shift->getAttribute('end_date'))->subMonths($value));
+                            $shift->setAttribute(
+                                'start_date',
+                                Carbon::parse($shift->getAttribute('start_date'))->subMonths($value)
+                            );
+                            $shift->setAttribute(
+                                'end_date',
+                                Carbon::parse($shift->getAttribute('end_date'))->subMonths($value)
+                            );
                             $shift->save();
                         }
                     }
@@ -3403,8 +3478,14 @@ class EventController extends Controller
                         $seriesEvent->setAttribute('start_time', $startDate->subYears($value));
                         $seriesEvent->setAttribute('end_time', $endDate->subYears($value));
                         foreach ($shifts as $shift) {
-                            $shift->setAttribute('start_date', Carbon::parse($shift->getAttribute('start_date'))->subYears($value));
-                            $shift->setAttribute('end_date', Carbon::parse($shift->getAttribute('end_date'))->subYears($value));
+                            $shift->setAttribute(
+                                'start_date',
+                                Carbon::parse($shift->getAttribute('start_date'))->subYears($value)
+                            );
+                            $shift->setAttribute(
+                                'end_date',
+                                Carbon::parse($shift->getAttribute('end_date'))->subYears($value)
+                            );
                             $shift->save();
                         }
                     }
@@ -3515,8 +3596,9 @@ class EventController extends Controller
      * inklusive eingeplanter Mitarbeiter. timelines/sub_events haben gar keinen FK und
      * blieben als verwaiste Zeilen zurück.
      */
-    private function forceDeleteSeriesEventsWithCascade(\Illuminate\Support\Collection|\Illuminate\Database\Eloquent\Collection $eventsToDelete): void
-    {
+    private function forceDeleteSeriesEventsWithCascade(
+        \Illuminate\Support\Collection|\Illuminate\Database\Eloquent\Collection $eventsToDelete
+    ): void {
         if ($eventsToDelete->isEmpty()) {
             return;
         }
@@ -4839,20 +4921,38 @@ class EventController extends Controller
      */
     public function getShiftPlanCrafts(Request $request): JsonResponse
     {
+        // Das Grid des Schichtplans baut seine Zeilen aus shifts.workers, nicht aus
+        // den Craft-Relationen — dort waren users/freelancers/serviceProviders 95%
+        // des Payloads (1,25 MB), ohne gelesen zu werden.
+        // ABER: die Tagesansicht reicht diese crafts an SingleShiftInDailyShiftView
+        // weiter, dessen getAssignablePeople() die Personen zum Zuweisen von
+        // Schichtplätzen daraus zieht. Sie fordert sie deshalb per withPeople an.
         $eagerLoad = [
-            'users:id,first_name,last_name,position,profile_photo_path',
-            'freelancers:id,first_name,last_name,position,profile_image',
-            'serviceProviders:id,provider_name,profile_image',
             'qualifications:id,name,icon,available',
         ];
 
-        if (!$request->boolean('lightweight')) {
-            $eagerLoad[] = 'managingUsers:id';
-            $eagerLoad[] = 'managingFreelancers:id';
-            $eagerLoad[] = 'managingServiceProviders:id';
+        if ($request->boolean('withPeople')) {
+            $eagerLoad[] = 'users:id,first_name,last_name,position,profile_photo_path';
+            $eagerLoad[] = 'freelancers:id,first_name,last_name,position,profile_image';
+            $eagerLoad[] = 'serviceProviders:id,provider_name,profile_image';
         }
 
-        $crafts = Craft::with($eagerLoad)->get();
+        if (!$request->boolean('lightweight')) {
+            // Nur die id wird gelesen; die übrigen Spalten brauchen die $appends
+            // der Modelle beim Serialisieren (siehe viewShiftPlan). Mit reinem
+            // ':id' warf ServiceProvider::getNameAttribute() einen TypeError,
+            // sobald überhaupt eine Gewerksleitung hinterlegt war.
+            $eagerLoad[] = 'managingUsers:id,first_name,last_name,profile_photo_path,work_time_balance';
+            $eagerLoad[] = 'managingFreelancers:id,first_name,last_name,profile_image';
+            $eagerLoad[] = 'managingServiceProviders:id,provider_name,profile_image';
+        }
+
+        // craftShiftPlaner bleibt bewusst drin: die Lookups des Schichtplans
+        // speisen RequestWorkTimeChangeModal, das die Planer-Liste anzeigt.
+        $crafts = Craft::query()
+            ->with($eagerLoad)
+            ->orderBy('position')
+            ->get();
 
         return new JsonResponse(['crafts' => $crafts]);
     }
@@ -4931,7 +5031,11 @@ class EventController extends Controller
 
         if ($workerType === 'user') {
             $workerData = $this->workerShiftPlanService->enrichUserWorkerData(
-                $workerData, $workerId, $startDate, $endDate, $worker
+                $workerData,
+                $workerId,
+                $startDate,
+                $endDate,
+                $worker
             );
         }
 

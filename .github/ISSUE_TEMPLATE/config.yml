@@ -1,0 +1,11 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Documentation (Wiki)
+    url: https://github.com/artwork-software/artwork/wiki
+    about: Guides and documentation for installing and using artwork.
+  - name: Website
+    url: https://artwork.software
+    about: General information about artwork.
+  - name: Security vulnerability
+    url: https://github.com/artwork-software/artwork/security/policy
+    about: Please report security issues privately — never as a public issue.

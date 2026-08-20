@@ -164,9 +164,11 @@ const visibleCols = computed(() => {
             </div>
         </div>
 
+        <!-- scrollbar-gutter:stable: hält die clientWidth identisch zum Haupt-Grid-Viewport
+             (Virtual2DGridWithHeader), damit der scrollLeft-Sync spaltengenau bleibt -->
         <div
             ref="viewportEl"
-            class="relative w-full overflow-auto pointer-events-auto"
+            class="relative w-full overflow-auto pointer-events-auto [scrollbar-gutter:stable]"
             :class="headerHeight > 0 ? 'min-h-0 flex-1' : 'h-full pt-10'"
         >
         <!-- Spacer erzeugt echte Scrollbars -->

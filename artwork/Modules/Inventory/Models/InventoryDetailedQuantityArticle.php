@@ -47,7 +47,10 @@ class InventoryDetailedQuantityArticle extends Model
 
         $roomId = $roomProperty->pivot->value;
 
-        if (!isset($roomCache[$roomId])) {
+        // array_key_exists statt isset: ein gecachtes null gilt bei isset() nicht
+        // als vorhanden, wodurch nicht auflösbare Werte bei JEDER Serialisierung
+        // erneut abgefragt wurden.
+        if (!array_key_exists($roomId, $roomCache)) {
             $roomCache[$roomId] = Room::select('id', 'name')->find($roomId);
         }
 
@@ -77,8 +80,12 @@ class InventoryDetailedQuantityArticle extends Model
 
         $manufacturerId = $manufacturerProperty->pivot->value;
 
-        if (!isset($manufacturerCache[$manufacturerId])) {
-            $manufacturerCache[$manufacturerId] = CrmContact::select('id', 'display_name as name')->find($manufacturerId);
+        // array_key_exists statt isset: siehe getRoomAttribute()
+        if (!array_key_exists($manufacturerId, $manufacturerCache)) {
+            $manufacturerCache[$manufacturerId] = CrmContact::select(
+                'id',
+                'display_name as name'
+            )->find($manufacturerId);
         }
 
         $manufacturer = $manufacturerCache[$manufacturerId];
@@ -99,5 +106,4 @@ class InventoryDetailedQuantityArticle extends Model
         return $this->belongsTo(InventoryArticleStatus::class, 'inventory_article_status_id')
             ->orderBy('order');
     }
-
 }

@@ -3,15 +3,26 @@
 namespace App\Providers;
 
 use Artwork\Modules\Project\Models\Project;
+use Dedoc\Scramble\Scramble;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Foundation\Support\Providers\RouteServiceProvider as ServiceProvider;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Route;
+use Laravel\Passport\AccessToken;
 
 class RouteServiceProvider extends ServiceProvider
 {
     public const HOME = '/dashboard';
+
+    public function register(): void
+    {
+        parent::register();
+
+        if (class_exists(Scramble::class)) {
+            Scramble::ignoreDefaultRoutes();
+        }
+    }
 
     public function boot(): void
     {
@@ -22,6 +33,11 @@ class RouteServiceProvider extends ServiceProvider
         }
 
         $this->routes(function (): void {
+            // Vor routes/api.php registriert, damit die versionierten Pfade zuerst greifen.
+            Route::prefix('api/v1')
+                ->middleware('api.machine')
+                ->group(base_path('routes/api_v1.php'));
+
             Route::prefix('api')
                 ->middleware('api')
                 ->group(base_path('routes/api.php'));
@@ -43,6 +59,15 @@ class RouteServiceProvider extends ServiceProvider
     {
         RateLimiter::for('api', function (Request $request) {
             return Limit::perMinute(60)->by($request->user()?->id ?: $request->ip());
+        });
+
+        RateLimiter::for('machine-api', function (Request $request) {
+            $token = $request->user()?->token();
+            $key = $token instanceof AccessToken
+                ? $token->oauth_access_token_id
+                : $request->ip();
+
+            return Limit::perMinute(120)->by($key);
         });
     }
 }

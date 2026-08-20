@@ -216,8 +216,8 @@ return [
         Intervention\Image\ImageServiceProvider::class,
         Artwork\Modules\Setup\SetupServiceProvider::class,
         Artwork\Modules\Holidays\HolidayServiceProvider::class,
-        Artwork\Core\Api\ServiceProvider\ApiAuthServiceProvider::class,
         Artwork\Modules\Sage100\Providers\Sage100ClientServiceProvider::class,
+        Artwork\Modules\Webhook\Providers\WebhookServiceProvider::class,
 
         ShiftChangeServiceProvider::class,
         Clockwork\Support\Laravel\ClockworkServiceProvider::class

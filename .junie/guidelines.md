@@ -9,7 +9,7 @@ Artwork is a project organization tool for scheduling projects with events, task
 - **CSS Framework**: Tailwind CSS 3.4
 - **Database**: MySQL/MariaDB
 - **Search**: Meilisearch
-- **Real-time**: Soketi (WebSockets), Pusher, Laravel Echo
+- **Real-time**: Laravel Reverb (WebSockets), Laravel Echo
 - **Queue**: Laravel Horizon
 - **Testing**: PHPUnit (NOT Pest)
 

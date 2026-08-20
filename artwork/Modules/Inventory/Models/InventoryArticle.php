@@ -26,7 +26,8 @@ use Laravel\Scout\Searchable;
  * @property bool is_detailed_quantity
  * @property string external_id
  * @property string inventory_number
- * @property \Illuminate\Database\Eloquent\Collection|\Artwork\Modules\Inventory\Models\InventoryArticleProperty[] properties
+ * @property \Illuminate\Database\Eloquent\Collection<int,
+ *     \Artwork\Modules\Inventory\Models\InventoryArticleProperty> properties
  * @property \Illuminate\Database\Eloquent\Collection|\Artwork\Modules\Inventory\Models\InventoryArticleImage[] images
  * @property \Artwork\Modules\Inventory\Models\InventoryCategory category
  * @property \Artwork\Modules\Inventory\Models\InventorySubCategory subCategory
@@ -71,7 +72,7 @@ class InventoryArticle extends Model
     {
         parent::boot();
 
-        static::saving(function (InventoryArticle $article) {
+        static::saving(function (InventoryArticle $article): void {
             if (!$article->external_id) {
                 $article->external_id = TypeNumberGenerator::generateExternalId();
             }
@@ -174,7 +175,10 @@ class InventoryArticle extends Model
 
         $roomId = $roomProperty->pivot->value;
 
-        if (!isset($roomCache[$roomId])) {
+        // array_key_exists statt isset: ein gecachtes null gilt bei isset() nicht
+        // als vorhanden, wodurch nicht auflösbare Werte bei JEDER Serialisierung
+        // erneut abgefragt wurden (gemessen 100x dieselbe Query auf /inventory).
+        if (!array_key_exists($roomId, $roomCache)) {
             $roomCache[$roomId] = Room::select('id', 'name')->find($roomId);
         }
 
@@ -203,7 +207,8 @@ class InventoryArticle extends Model
 
         $manufacturerId = $manufacturerProperty->pivot->value;
 
-        if (!isset($manufacturerCache[$manufacturerId])) {
+        // array_key_exists statt isset: siehe getRoomAttribute()
+        if (!array_key_exists($manufacturerId, $manufacturerCache)) {
             $manufacturerCache[$manufacturerId] = CrmContact::select('id', 'display_name')->find($manufacturerId);
         }
 
@@ -237,11 +242,11 @@ class InventoryArticle extends Model
         } else {
             $internalIssues = $this->internalIssues()
                 ->where('start_date', '<=', $endDate)
-                ->where(function ($q) use ($startDate) {
+                ->where(function ($q) use ($startDate): void {
                     $q->where('end_date', '>=', $startDate)
                         ->orWhereNull('end_date');
                 })
-                ->when($excludeType === 'intern' && $excludeIssueId, function ($q) use ($excludeIssueId) {
+                ->when($excludeType === 'intern' && $excludeIssueId, function ($q) use ($excludeIssueId): void {
                     $q->where('internal_issues.id', '!=', $excludeIssueId);
                 })
                 ->get();
@@ -258,11 +263,11 @@ class InventoryArticle extends Model
         } else {
             $externalIssues = $this->externalIssues()
                 ->where('issue_date', '<=', $endDate)
-                ->where(function ($q) use ($startDate) {
+                ->where(function ($q) use ($startDate): void {
                     $q->where('return_date', '>=', $startDate)
                         ->orWhereNull('return_date');
                 })
-                ->when($excludeType === 'extern' && $excludeIssueId, function ($q) use ($excludeIssueId) {
+                ->when($excludeType === 'extern' && $excludeIssueId, function ($q) use ($excludeIssueId): void {
                     $q->where('external_issues.id', '!=', $excludeIssueId);
                 })
                 ->get();
@@ -277,7 +282,8 @@ class InventoryArticle extends Model
         $total = 0;
 
         if ($this->is_detailed_quantity) {
-            // For detailed quantity articles, sum up the quantities of all detailed articles with "Einsatzbereit" status
+            // For detailed quantity articles, sum up the quantities of all
+        // detailed articles with "Einsatzbereit" status
             if ($this->relationLoaded('detailedArticleQuantities')) {
                 $detailedQuantities = $this->detailedArticleQuantities;
             } else {
@@ -396,6 +402,4 @@ class InventoryArticle extends Model
             'inventory_tag_id'
         )->withTimestamps();
     }
-
-
 }

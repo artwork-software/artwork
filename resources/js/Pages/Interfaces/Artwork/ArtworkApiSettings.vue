@@ -31,6 +31,9 @@
               {{ $t('Name') }}
             </th>
             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-text-subtle uppercase tracking-wider">
+              {{ $t('Permissions') }}
+            </th>
+            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-text-subtle uppercase tracking-wider">
               {{ $t('Created') }}
             </th>
             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-text-subtle uppercase tracking-wider">
@@ -53,6 +56,20 @@
           <tr v-for="token in tokens" :key="token.id" class="hover:bg-surface-sunken">
             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-text">
               {{ token.name }}
+            </td>
+            <td class="px-6 py-4 text-sm text-text-subtle">
+              <div v-if="token.scopes && token.scopes.length" class="flex flex-wrap gap-1">
+                <span
+                  v-for="scope in token.scopes"
+                  :key="scope"
+                  class="px-2 py-0.5 rounded bg-surface-sunken text-xs font-mono"
+                >
+                  {{ scope }}
+                </span>
+              </div>
+              <span v-else class="text-xs italic">
+                {{ $t('None — created before permissions were introduced') }}
+              </span>
             </td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-text-subtle">
               {{ formatDate(token.created_at) }}
@@ -86,12 +103,6 @@
                      style="max-height: 200px; overflow-y: auto;"
                 >
                   <div class="py-1">
-                    <button
-                      @click="showToken(token)"
-                      class="w-full text-left block px-4 py-2 text-sm text-text-muted hover:bg-surface-sunken"
-                    >
-                      {{ $t('Show') }}
-                    </button>
                     <button
                       @click="showLogs(token)"
                       class="w-full text-left block px-4 py-2 text-sm text-text-muted hover:bg-surface-sunken"
@@ -140,6 +151,36 @@
           </div>
 
           <div class="mb-4">
+            <span class="block text-sm font-medium text-text-muted">
+              {{ $t('Permissions') }} <span class="text-danger">*</span>
+            </span>
+            <p class="text-xs text-text-subtle mt-1 mb-2">
+              {{ $t('A key can only do what you allow here. Grant as little as possible.') }}
+            </p>
+            <div class="space-y-2">
+              <label
+                v-for="scope in availableScopes"
+                :key="scope.id"
+                class="flex items-start gap-2 cursor-pointer"
+              >
+                <input
+                  type="checkbox"
+                  :value="scope.id"
+                  v-model="form.scopes"
+                  class="mt-0.5 rounded border-border text-accent-600 focus:ring-accent-600"
+                />
+                <span class="text-sm">
+                  <span class="font-mono text-xs">{{ scope.id }}</span>
+                  <span class="block text-xs text-text-subtle">{{ scope.description }}</span>
+                </span>
+              </label>
+            </div>
+            <div v-if="form.errors.scopes" class="text-danger text-xs mt-1">
+              {{ form.errors.scopes }}
+            </div>
+          </div>
+
+          <div class="mb-4">
             <label for="expires_at" class="block text-sm font-medium text-text-muted">
               {{ $t('Expires At') }}
             </label>
@@ -176,32 +217,30 @@
     </BaseModal>
 
     <BaseModal
-      v-if="selectedToken"
-      @closed="selectedToken = null"
+      v-if="newlyCreatedToken"
+      @closed="newlyCreatedToken = null"
       modalSize="sm:max-w-lg"
     >
       <div>
         <h3 class="text-lg leading-6 font-medium text-text mb-4">
-          {{ $t('API Key Details') }}
+          {{ $t('Your new API key') }}
         </h3>
-        <div>
-          <div v-if="selectedToken.token" class="mt-1 flex items-center bg-surface-sunken p-3 rounded border border-border-subtle">
-            <code class="text-xs break-all mr-2 flex-grow">{{ selectedToken.token }}</code>
-            <button
-              @click="copyToken(selectedToken.token)"
-              class="p-1 text-text-muted hover:bg-border-subtle rounded"
-            >
-              <IconClipboardCopy class="h-5 w-5" />
-            </button>
-          </div>
-          <p v-else class="text-sm text-text-subtle mt-2">
-            {{ $t('Can not show token') }}
-          </p>
+        <p class="text-sm text-text-muted mb-3">
+          {{ $t('Copy this key now. It is not stored and cannot be shown again — if you lose it, revoke the key and create a new one.') }}
+        </p>
+        <div class="mt-1 flex items-center bg-surface-sunken p-3 rounded border border-border-subtle">
+          <code class="text-xs break-all mr-2 flex-grow">{{ newlyCreatedToken }}</code>
+          <button
+            @click="copyToken(newlyCreatedToken)"
+            class="p-1 text-text-muted hover:bg-border-subtle rounded"
+          >
+            <IconClipboardCopy class="h-5 w-5" />
+          </button>
         </div>
 
         <div class="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse">
           <button
-            @click="selectedToken = null"
+            @click="newlyCreatedToken = null"
             type="button"
             class="mt-3 w-full inline-flex justify-center rounded-md border border-border shadow-sm px-4 py-2 bg-white text-base font-medium text-text-muted hover:bg-surface-sunken focus:ring-2 focus:ring-offset-2 focus:ring-accent-600 sm:mt-0 sm:w-auto sm:text-sm"
           >
@@ -347,6 +386,10 @@ export default defineComponent({
     tokens: {
       type: Array,
       default: () => []
+    },
+    availableScopes: {
+      type: Array,
+      default: () => []
     }
   },
   data() {
@@ -354,7 +397,7 @@ export default defineComponent({
       showCreateModal: false,
       tokenToDelete: null,
       activeDropdown: null,
-      selectedToken: null,
+      newlyCreatedToken: null,
       showLogModal: false,
       currentLogToken: null,
       logs: {
@@ -370,7 +413,8 @@ export default defineComponent({
       loadingLogs: false,
       form: useForm({
         name: '',
-        expires_at: null
+        expires_at: null,
+        scopes: []
       })
     }
   },
@@ -390,6 +434,8 @@ export default defineComponent({
         onSuccess: () => {
           this.showCreateModal = false
           this.form.reset()
+          // Einzige Gelegenheit, den Klartext zu lesen — er wird serverseitig nicht gespeichert.
+          this.newlyCreatedToken = this.$page.props.flash.plainTextToken ?? null
         }
       })
     },
@@ -426,26 +472,6 @@ export default defineComponent({
     closeDropdownOnClickOutside(event) {
       if (this.activeDropdown !== null && !event.target.closest('.relative')) {
         this.activeDropdown = null;
-      }
-    },
-    showToken(token) {
-      this.activeDropdown = null;
-
-      if (token.access_token) {
-        this.selectedToken = {
-          ...token,
-          token: token.access_token
-        };
-      } else if (this.$page.props.flash.plainTextToken && token.id === this.tokens[0]?.id) {
-        this.selectedToken = {
-          ...token,
-          token: this.$page.props.flash.plainTextToken
-        };
-      } else {
-        this.selectedToken = {
-          ...token,
-          token: null
-        };
       }
     },
     isExpired(token) {

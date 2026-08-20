@@ -66,6 +66,13 @@ class UpdateContainerCommand extends Command
 
         $this->line('Updating artwork components');
         Artisan::call('artwork:update');
+
+        // Signalisiert allen laufenden Workern, sich nach dem aktuellen Job zu beenden, damit sie mit dem
+        // neuen Code neu starten. Das Signal liegt im Cache und erreicht auch den separaten Worker-Container,
+        // weil dieser storage/ per Bind-Mount teilt.
+        $this->line('Restarting queue workers');
+        Artisan::call('queue:restart');
+
         $this->line('Container update finished');
     }
 }

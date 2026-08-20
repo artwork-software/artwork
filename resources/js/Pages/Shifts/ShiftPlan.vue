@@ -217,8 +217,9 @@
                                         v-if="!day.isExtraRow"
                                         class="h-full rounded bg-warning-surface/90 text-text px-1.5 py-0.5 overflow-hidden"
                                         :class="dayRemarksCanEdit ? 'cursor-pointer' : ''"
-                                        :title="remarkForDay(day)?.text"
                                         @click.stop="dayRemarksCanEdit ? openDayRemarkModal(day) : null"
+                                        @mouseenter="dayRemarkTooltip = { day, anchor: $event.currentTarget }"
+                                        @mouseleave="dayRemarkTooltip = null"
                                     >
                                         <p
                                             v-if="remarkForDay(day)?.text"
@@ -445,7 +446,10 @@
                 </div>
 
             </div>
-            <div  id="userOverview" class="fixed bottom-0 z-40 w-full overflow-x-auto pointer-events-none">
+            <!-- left-16 = Sidebar-Breite: derselbe linke Ursprung wie das obere Grid (lg:pl-20 im
+                 AppLayout minus -ml-4 im ShiftHeader). Nur mit identischem Ursprung und identischer
+                 Breite beider Scroll-Container ist der 1:1-scrollLeft-Sync bei jeder Fensterbreite bündig. -->
+            <div id="userOverview" class="fixed bottom-0 left-0 lg:left-16 right-0 z-40 pointer-events-none">
                 <div class="flex justify-center overflow-y-scroll pointer-events-none">
                     <div class="pointer-events-auto relative mb-2">
                         <!-- Schweben + Shadow + Blur -->
@@ -485,9 +489,11 @@
 
                 <div class="bg-surface-inverse pointer-events-auto">
                     <div v-show="showUserOverview"
-                        class="relative z-20 w-[97%] overflow-y-scroll bg-surface-inverse "
+                        class="relative z-20 w-full overflow-y-auto bg-surface-inverse "
                         :style="showUserOverview ? { height: userOverviewHeight + 'px' } : { height: 20 + 'px' }">
-                        <div class="fixed z-20 flex w-full items-center justify-between bg-surface-inverse pr-9 py-3">
+                        <!-- absolute statt fixed: fixed + w-full wäre viewportbreit und ragte durch den
+                             lg:left-16-Versatz des Panels rechts über den Fensterrand hinaus -->
+                        <div class="absolute inset-x-0 top-0 z-20 flex items-center justify-between bg-surface-inverse pr-9 py-3">
                             <div class="flex items-center justify-end gap-x-3">
                                 <SwitchIconTooltip v-if="can('can plan shifts') || is('artwork admin')" v-model="multiEditMode" :tooltip-text="$t('Multi-edit: select multiple shifts to edit them together.')" size="md" @change="toggleMultiEditMode" icon="IconPencil"/>
                                 <ToolTipComponent
@@ -674,7 +680,7 @@
                             :rows="gridRows"
                             :cols="gridCols"
                             :row-height="rowHeight"
-                            :col-width="dayColWidth"
+                            :col-width="shiftColWidth"
                             :col-widths="gridColWidths"
                             :sticky-col-width="shiftLeftWidth"
                             class="h-full"
@@ -959,6 +965,13 @@
         @close="dayRemarkModalDay = null"
     />
 
+    <DayRemarkHoverTooltip
+        v-if="dayRemarkTooltip && !dayRemarkModalDay && remarkForDay(dayRemarkTooltip.day)?.text"
+        :key="dayRemarkTooltip.day.withoutFormat"
+        :remark="remarkForDay(dayRemarkTooltip.day)"
+        :anchor="dayRemarkTooltip.anchor"
+    />
+
     <!-- Als letztes Modal im Template: rendert dadurch über den Modals, aus denen
          es per Shortcut geöffnet wird (Tagesmodal, Schicht-bearbeiten-Modal). -->
     <ShiftHistoryModal
@@ -1016,6 +1029,7 @@ import CompactShiftInRoom from "@/Pages/Shifts/Components/ShiftWithoutEventCompo
 import {useShiftPlanZoom} from "@/Composeables/useShiftPlanZoom.js";
 import {useDayRemarks} from "@/Composeables/useDayRemarks.js";
 import DayRemarkEditModal from "@/Components/Calendar/Elements/DayRemarkEditModal.vue";
+import DayRemarkHoverTooltip from "@/Components/Calendar/Elements/DayRemarkHoverTooltip.vue";
 import DayServiceFilter from "@/Components/Filter/DayServiceFilter.vue";
 import CraftFilter from "@/Components/Filter/CraftFilter.vue";
 import DragElement from "@/Pages/Projects/Components/DragElement.vue";
@@ -1165,7 +1179,10 @@ const {
     listenForDayRemarkUpdates,
 } = useDayRemarks()
 const dayRemarkModalDay = ref<any>(null)
+// Hover-Tooltip mit dem vollen Text (Band zeigt nur 2 geclampte Zeilen)
+const dayRemarkTooltip = ref<any>(null)
 const openDayRemarkModal = (day: any) => {
+    dayRemarkTooltip.value = null
     dayRemarkModalDay.value = day
 }
 // Live-Updates anderer User → Store
@@ -1557,9 +1574,51 @@ const {
     isCompact: isCompactShiftZoom,
     dayColWidth,
 } = useShiftPlanZoom()
-const shiftColWidth = computed(() => dayColWidth.value)
 const kwColWidth = 130
-const shiftLeftWidth = 191.5
+const shiftLeftWidth = 192
+
+// Elastische Tagesspalten: Ist der geladene Zeitraum schmaler als der Viewport, wird die
+// Restbreite gleichmäßig auf die Tagesspalten verteilt (nur strecken, nie unter die
+// Zoombreite stauchen) — sonst bleibt rechts ein Leerstreifen. Beide Grids lesen dieselbe
+// Breite und bleiben dadurch konstruktionsbedingt bündig. Ändert sich nur bei
+// Resize/Zoom/Zeitraumwechsel, nie im Scroll-Pfad.
+const shiftViewportWidth = ref(0)
+let _viewportWidthTimer: ReturnType<typeof setTimeout> | null = null
+watch(
+    () => shiftPlanEl.value,
+    (el, _prev, onCleanup) => {
+        if (!el) return
+        shiftViewportWidth.value = el.clientWidth
+        const ro = new ResizeObserver(() => {
+            // Debounce: während des Fenster-Resizens nicht pro Frame die Messcaches invalidieren
+            if (_viewportWidthTimer) clearTimeout(_viewportWidthTimer)
+            _viewportWidthTimer = setTimeout(() => {
+                shiftViewportWidth.value = el.clientWidth
+            }, 120)
+        })
+        ro.observe(el)
+        onCleanup(() => {
+            ro.disconnect()
+            if (_viewportWidthTimer) clearTimeout(_viewportWidthTimer)
+        })
+    },
+    { immediate: true },
+)
+
+const shiftColWidth = computed(() => {
+    const base = dayColWidth.value
+    const viewport = shiftViewportWidth.value
+    if (!viewport) return base
+    let dayCount = 0
+    let kwCount = 0
+    for (const d of (days.value ?? [])) {
+        if (d.isExtraRow) kwCount++
+        else dayCount++
+    }
+    if (dayCount === 0) return base
+    const available = viewport - shiftLeftWidth - kwCount * kwColWidth
+    return available > dayCount * base ? available / dayCount : base
+})
 
 const shiftColWidths = computed(() =>
     shiftCols.value.map((col: any) => col.data?.isExtraRow ? kwColWidth : shiftColWidth.value)
@@ -2144,6 +2203,9 @@ watch(
         // Spaltenzoom ändert die verfügbaren Textbreiten UND die Kartenhöhen
         // (Kompaktkarte) — Summaries verwerfen und Baseline neu messen
         shiftZoomFactor.value,
+        // Elastische Spaltenbreite (Resize) ändert die Textbreiten ebenfalls —
+        // Summaries mit alten Zeilenzahlen wären sonst stale
+        shiftColWidth.value,
     ],
     () => {
         cellSummaryCache.clear()

@@ -52,10 +52,13 @@ use Artwork\Modules\ServiceProvider\Policies\ServiceProviderPolicy;
 use Artwork\Modules\Shift\Models\ShiftCommitWorkflowUser;
 use Artwork\Modules\Shift\Models\ShiftQualification;
 use Artwork\Modules\Shift\Policies\ShiftQualificationPolicy;
+use Artwork\Modules\System\ApiManagement\Policies\TokenPolicy;
 use Artwork\Modules\TaskTemplate\Models\TaskTemplate;
 use Artwork\Modules\TaskTemplate\Policies\TaskTemplatePolicy;
 use Artwork\Modules\User\Models\User;
 use Artwork\Modules\User\Policies\UserPolicy;
+use Artwork\Modules\Webhook\Models\WebhookEndpoint;
+use Artwork\Modules\Webhook\Policies\WebhookEndpointPolicy;
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
 use Illuminate\Support\Facades\Gate;
 use Laravel\Passport\Passport;
@@ -80,7 +83,8 @@ class AuthServiceProvider extends ServiceProvider
         Freelancer::class => FreelancerPolicy::class,
         ServiceProviderModel::class => ServiceProviderPolicy::class,
         GeneralSettings::class => GeneralSettingsPolicy::class,
-        Token::class => GeneralSettings::class, // If you can change general settings, you can change ApiTokens too
+        Token::class => TokenPolicy::class,
+        WebhookEndpoint::class => WebhookEndpointPolicy::class,
         ShiftQualification::class => ShiftQualificationPolicy::class,
         SageApiSettings::class => SageApiSettingsPolicy::class,
         SageAssignedDataComment::class => SageAssignedDataCommentPolicy::class,
@@ -105,6 +109,18 @@ class AuthServiceProvider extends ServiceProvider
         $this->registerPolicies();
 
         Passport::$clientUuids = false;
+
+        // Scopes der Maschinen-API. Ein Scope, der hier fehlt, lässt sich nicht vergeben — die
+        // ScopeRepository lehnt ihn beim Anlegen mit invalid_scope ab.
+        //
+        // Wichtig: Scopes stehen im signierten JWT, nicht in der Datenbank. Tokens, die vor der
+        // Einführung dieser Liste ausgegeben wurden, tragen dauerhaft eine leere Scope-Menge und
+        // können nachträglich keine Rechte erhalten — sie müssen neu erstellt werden.
+        Passport::tokensCan([
+            'inventory:read' => 'Read inventory categories and articles',
+            'ticketing:read' => 'Read released events, price categories and branding',
+            'ticketing:write' => 'Report sales, bookings and check-ins back to artwork',
+        ]);
 
         // Passport ≥12 registriert keine Default-View mehr – ohne dieses Binding
         // wirft /oauth/authorize eine BindingResolutionException, sobald ein

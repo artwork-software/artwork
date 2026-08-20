@@ -16,8 +16,10 @@ import axios from 'axios'
 
 export const SHIFT_PLAN_ZOOM_STEPS = [0.55, 0.75, 1]
 
-// Basisbreite einer Tagesspalte (bisheriger Fixwert im Haupt- UND Worker-Grid).
-// KW-Trennspalte (130px) und Sticky-Spalte (191,5px) skalieren bewusst nicht.
+// Basisbreite einer Tagesspalte (Haupt- UND Worker-Grid). ShiftPlan.vue streckt die
+// Tagesspalten zusätzlich elastisch, wenn der geladene Zeitraum schmaler als der
+// Viewport ist — dieser Wert ist also die MINDESTbreite je Zoomstufe.
+// KW-Trennspalte (130px) und Sticky-Spalte (192px) skalieren bewusst nicht.
 export const BASE_DAY_COL_WIDTH = 202
 
 const zoomFactor = ref(null)

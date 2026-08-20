@@ -482,10 +482,16 @@ const toggleOpen = (mainKey: string, subKey: string) => {
     openState.value[k] = !openState.value[k];
 };
 
+// Default-Zeitraum: aktueller Monat (Backend nutzt den ganzen Monat des gewählten Tags)
+const todayIso = (() => {
+    const now = new Date()
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
+})()
+
 const pdf = useForm({
     title: props.project ? props.project.name : $t('Monthly overview'),
-    startMonth: null as string | null,
-    endMonth: null as string | null,
+    startMonth: todayIso as string | null,
+    endMonth: todayIso as string | null,
     paperSize: null as string | null,
     paperOrientation: null as string | null,
     project: null as number | null,

@@ -6,7 +6,7 @@
             class="size-10 inline-flex items-center justify-center rounded-full ring-1 ring-border-subtle bg-white hover:ring-accent-200 hover:shadow-sm transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-600"
         >
             <ToolTipComponent
-                :icon="selectedIconComp"
+                :icon="selectedIcon"
                 icon-size="size-7"
                 :tooltip-text="$t('Select an icon')"
                 direction="bottom"
@@ -47,14 +47,14 @@
                                     class="w-full rounded-lg bg-surface-sunken pl-10 pr-8 py-2 text-sm text-text ring-1 ring-border-subtle outline-none focus:bg-white focus:ring-2 focus:ring-accent-600 transition"
                                     @keydown.enter.prevent="selectFirstIfAny"
                                 />
-                                <component :is="SearchIconComp" class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 size-4 text-text-subtle" />
+                                <IconSearch class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 size-4 text-text-subtle" />
                                 <button
                                     v-if="searchInput.length > 0"
                                     type="button"
                                     class="absolute right-2 top-1/2 -translate-y-1/2 grid place-items-center rounded p-1 hover:bg-surface-sunken"
                                     @click="searchInput = ''"
                                 >
-                                    <component :is="XIconComp" class="size-4 text-text-subtle" />
+                                    <IconX class="size-4 text-text-subtle" />
                                 </button>
                             </div>
                         </div>
@@ -73,7 +73,7 @@
                         <!-- Kein Treffer -->
                         <div v-else-if="filteredNames.length === 0" class="py-14 text-center">
                             <div class="mx-auto mb-3 flex size-10 items-center justify-center rounded-full bg-surface-sunken text-text-subtle">
-                                <component :is="SearchIconComp" class="size-5" />
+                                <IconSearch class="size-5" />
                             </div>
                             <p class="text-sm font-medium text-text">{{ $t('No results') }}</p>
                             <p class="mt-1 text-xs text-text-subtle">
@@ -88,14 +88,14 @@
                                     type="button"
                                     @click="selectIcon(name)"
                                     class="group relative w-full rounded-xl border border-border-subtle bg-white p-4 transition hover:border-border hover:shadow-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-600"
-                                    :class="selectedIconName === name ? 'ring-2 ring-accent-600 border-accent-200' : ''"
+                                    :class="selectedIconSlug === name ? 'ring-2 ring-accent-600 border-accent-200' : ''"
                                 >
                                     <!-- Auswahl-Badge -->
                                     <span
-                                        v-if="selectedIconName === name"
+                                        v-if="selectedIconSlug === name"
                                         class="absolute right-2 top-2 inline-flex items-center justify-center rounded-full bg-accent-600 text-white"
                                     >
-                    <component :is="CheckIconComp" class="size-4" />
+                    <IconCheck class="size-4" />
                   </span>
 
                                     <div class="grid place-items-center">
@@ -118,9 +118,11 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch, defineAsyncComponent, unref } from 'vue'
+import { ref, computed, onMounted, watch, unref } from 'vue'
 import { Popover, PopoverButton, PopoverPanel } from '@headlessui/vue'
+import { IconCheck, IconSearch, IconX } from '@tabler/icons-vue'
 import ToolTipComponent from '@/Components/ToolTips/ToolTipComponent.vue'
+import { iconComponent, loadIconNames, toDisplayName, toExportName, toSlug } from '@/Composeables/useTablerIcon'
 
 /* Props */
 const props = defineProps({
@@ -130,33 +132,31 @@ const props = defineProps({
     },
 })
 
-/* Lazy Tabler Loader */
-let tablerMod = null
-let loadPromise = null
-const ensureTabler = async () => {
-    if (tablerMod) return tablerMod
-    if (!loadPromise) loadPromise = import('@tabler/icons-vue')
-    tablerMod = await loadPromise
-    return tablerMod
-}
+const FALLBACK = 'photo-circle'
+
+/*
+ * Intern arbeitet der Picker mit Slugs ("home-2"), weil die SVGs unter diesem Namen in
+ * public/build/icons/tabler/ liegen. Nach aussen — Prop rein, Emit raus — bleibt es beim
+ * Tabler-Export-Namen ("IconHome2"), denn genau der steht in der DB und in den
+ * PHP-Seedern. So braucht es keine Datenmigration.
+ */
 
 /* State */
 const loading = ref(false)
-const allNames = ref([])           // nur Export-Namen ("IconHome", ...)
+const allNames = ref([])           // Slugs
 const searchInput = ref('')
 const debouncedQuery = ref('')
-const selectedIconName = ref(null) // string-basierte Auswahl
+const selectedIconSlug = ref(null)
 
 const panelRef = ref(null)
 const scrollRef = ref(null)
 const sentinelRef = ref(null)
 
-/* Öffnen => erst dann Icons einlesen */
+/* Öffnen => erst dann den Slug-Index laden */
 async function openPanel () {
     if (allNames.value.length) return
     loading.value = true
-    const mod = await ensureTabler()
-    allNames.value = Object.keys(mod).filter(k => /^Icon[A-Z0-9]/.test(k))
+    allNames.value = await loadIconNames()
     loading.value = false
     resetPagination()
 }
@@ -166,13 +166,16 @@ let debTimer = null
 watch(searchInput, (v) => {
     clearTimeout(debTimer)
     debTimer = setTimeout(() => {
-        debouncedQuery.value = v.toLowerCase().trim()
+        // Slugs sind bindestrich-getrennt, angezeigt werden aber Namen mit Leerzeichen
+        // ("Arrow Left") — Leerzeichen im Suchbegriff müssen deshalb auf Bindestriche
+        // normalisiert werden, sonst findet "arrow left" nichts.
+        debouncedQuery.value = v.toLowerCase().trim().replace(/\s+/g, '-')
         resetPagination()
     }, 200)
 })
 const filteredNames = computed(() => {
     if (!debouncedQuery.value) return allNames.value
-    return allNames.value.filter(n => toDisplayName(n).toLowerCase().includes(debouncedQuery.value))
+    return allNames.value.filter(n => n.includes(debouncedQuery.value))
 })
 
 /* Progressive Rendering */
@@ -203,78 +206,44 @@ onMounted(() => {
     })
 
     // Initiale Vorauswahl (nur für visuelles Highlight)
-    selectedIconName.value = props.currentIcon ? toExportName(props.currentIcon) : null
+    selectedIconSlug.value = currentSlug()
 })
 
 /* Prop-Änderungen synchronisieren (z.B. externes Entfernen des Icons) */
-watch(() => props.currentIcon, (val) => {
-    selectedIconName.value = val ? toExportName(val) : null
+watch(() => props.currentIcon, () => {
+    selectedIconSlug.value = currentSlug()
 })
 
-/* Async Komponente pro Icon (mit Cache) */
-const compCache = new Map()
-function iconComp (name) {
-    if (compCache.has(name)) return compCache.get(name)
-    const Comp = defineAsyncComponent({
-        loader: async () => {
-            const mod = await ensureTabler()
-            return mod?.[name] ?? mod?.IconPhotoCircle
-        },
-        delay: 0,
-        timeout: 10000,
-        onError (err, _retry, fail, attempts) {
-            if (attempts > 1) fail(err)
-        }
-    })
-    compCache.set(name, Comp)
-    return Comp
+/* Icon-Komponente pro Slug (Composable cached selbst) */
+function iconComp (slug) {
+    return iconComponent(slug)
 }
-
-/* Kleine Hilfs-Icons */
-const SearchIconComp = iconComp('IconSearch')
-const XIconComp = iconComp('IconX')
-const CheckIconComp = iconComp('IconCheck')
 
 /* Button-Icon (aktuelle Auswahl) */
 function isComponentLike (v) {
     const t = typeof v
     return v && (t === 'function' || t === 'object')
 }
-function toExportName (input) {
-    if (!input) return 'IconPhotoCircle'
-    const raw = unref(input)
-    if (isComponentLike(raw)) return 'IconPhotoCircle' // Komponente wird direkt unten genutzt
-    const s = String(raw).trim()
-    if (/^Icon[A-Z0-9]/.test(s)) return s
-    const core = s.replace(/^icon[-_]*/i, '')
-        .toLowerCase()
-        .replace(/(^\w|[-_]\w)/g, m => m.replace(/[-_]/, '').toUpperCase())
-    return `Icon${core}`
+function currentSlug () {
+    const raw = unref(props.currentIcon)
+    if (!raw || isComponentLike(raw)) return null
+    return toSlug(raw)
 }
-const selectedIconComp = computed(() => {
+const selectedIcon = computed(() => {
+    // Eine direkt durchgereichte Komponente rendert PropertyIcon unveraendert,
+    // ansonsten reicht der Slug als String.
     if (isComponentLike(props.currentIcon)) return props.currentIcon
-    const name = selectedIconName.value
-    if (!name) return iconComp('IconPhotoCircle')
-    return iconComp(name)
+    return selectedIconSlug.value ?? FALLBACK
 })
 
 /* Auswahl & Aktionen */
 const emit = defineEmits(['update:modelValue'])
-function selectIcon (name) {
-    selectedIconName.value = name
-    emit('update:modelValue', name)
+function selectIcon (slug) {
+    selectedIconSlug.value = slug
+    emit('update:modelValue', toExportName(slug))
     document.getElementById('iconSelectorButton')?.click()
 }
 function selectFirstIfAny () {
     if (filteredNames.value.length > 0) selectIcon(filteredNames.value[0])
-}
-
-/* Utils */
-function toDisplayName (iconName) {
-    return iconName
-        .replace(/^Icon/, '')
-        .replace(/([a-z])([A-Z])/g, '$1 $2')
-        .replace(/\b(\d+)\b/g, '$1D')
-        .trim()
 }
 </script>

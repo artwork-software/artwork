@@ -38,8 +38,13 @@ cachegrind.*
 /storage/app/public/inventory_articles/*
 .output.txt
 /storage/.dep-hashes
+# Erzeugte OpenAPI-Spezifikation (on demand via `php artisan artwork:export-openapi`)
+/openapi.json
+/openapi.yaml
+
 # Markdown-Arbeitsnotizen im Root nie committen (Audits, Konzepte, Pläne …)
 /*.md
 !/README.md
 !/LICENSE.md
 !/AGENTS.md
+/public/icons/tabler

@@ -32,7 +32,13 @@ class UserProjectManagementSettingService
 
     public function getFromUser(int|User $user): ?UserProjectManagementSetting
     {
-        return $this->userProjectManagementSettingRepository->getByUser($user);
+        // Lazy anlegen: geseedete/importierte User haben noch keine Row — Aufrufer
+        // lesen direkt ->getAttribute('settings') und würden sonst auf null crashen.
+        return $this->userProjectManagementSettingRepository->getByUser($user)
+            ?? $this->updateOrCreateIfNecessary(
+                $user instanceof User ? $user : User::query()->findOrFail($user),
+                $this->getDefaults()
+            );
     }
 
     public function updateOrCreateIfNecessary(User $user, array $filters): UserProjectManagementSetting

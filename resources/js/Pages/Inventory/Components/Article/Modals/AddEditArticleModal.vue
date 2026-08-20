@@ -6,9 +6,24 @@
             <div class="grid grid-cols-1 md:grid-cols-4 gap-4 px-6 pb-4">
                 <div class="col-span-1">
                     <div @click="addImage"
-                         class="relative block w-full rounded-lg border-2 border-dashed border-border p-12 cursor-pointer text-center hover:border-border-strong focus:ring-2 focus:ring-accent-600 focus:ring-offset-2 focus:outline-hidden">
+                         @keydown.enter.prevent="addImage"
+                         @keydown.space.prevent="addImage"
+                         @dragenter.prevent="isDraggingImages = true"
+                         @dragover.prevent="isDraggingImages = true"
+                         @dragleave.prevent="handleImageDragLeave"
+                         @drop.stop.prevent="handleImageDrop"
+                         role="button"
+                         tabindex="0"
+                         :aria-dropeffect="isDraggingImages ? 'copy' : undefined"
+                         :class="isDraggingImages ? 'border-accent-600 bg-accent-50' : 'border-border hover:border-border-strong'"
+                         class="relative block w-full rounded-lg border-2 border-dashed p-12 cursor-pointer text-center transition-colors focus:ring-2 focus:ring-accent-600 focus:ring-offset-2 focus:outline-hidden">
                         <component :is="IconPhotoPlus" class="mx-auto size-12 text-text-subtle" aria-hidden="true"/>
-                        <span class="mt-2 block text-sm font-semibold text-text">{{ $t('Upload Images') }}</span>
+                        <span class="mt-2 block text-sm font-semibold text-text">
+                            {{ isDraggingImages ? $t('Drop here') : $t('Upload Images') }}
+                        </span>
+                        <span v-if="!isDraggingImages" class="mt-1 block text-xs text-text-subtle">
+                            {{ $t('or drag and drop') }}
+                        </span>
                         <input type="file" accept="image/*,.heic,.heif" class="sr-only" ref="articleImageInput" multiple
                                @input="handleImageInput"/>
                     </div>
@@ -1206,6 +1221,7 @@ import BasePageTitle from "@/Artwork/Titles/BasePageTitle.vue";
 import BaseAlertComponent from "@/Components/Alerts/BaseAlertComponent.vue";
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 import {useTranslation} from "@/Composeables/Translation.js";
+import {getDroppedArticleImageFiles, validateArticleImageFiles} from "./articleImageFiles.js";
 
 
 const $t = useTranslation()
@@ -1246,6 +1262,7 @@ const handleClose = () => {
 }
 
 const articleImageInput = ref(null)
+const isDraggingImages = ref(false)
 const articleToDelete = ref(null)
 const confirmMultiEditDeleteModalOpen = ref(false)
 const confirmSingleDeleteModalOpen = ref(false)
@@ -1672,41 +1689,30 @@ const copyDetailedArticle = (d) => {
     syncAcrossValuesToDetailedArticles()
 }
 
-// Mirrors backend validation: Store-/UpdateInventoryArticleRequest 'newImages.*' => ['image', 'max:…'].
-// The limit is configurable per house via inventory settings (GeneralSettings).
 const maxImageSizeMb = computed(() => usePage().props.inventoryArticleImageMaxSizeMb ?? 10)
-const ALLOWED_IMAGE_MIME_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/bmp', 'image/svg+xml', 'image/heic', 'image/heif']
-// Windows/Linux browsers often report an empty MIME type for HEIC — match by extension too.
-const HEIC_FILE_NAME = /\.(heic|heif)$/i
 const imageUploadErrors = ref([])
 
-const handleImageInput = (e) => {
-    const files = Array.from(e.target.files)
-    const errors = []
-    const validFiles = []
-
-    files.forEach((file) => {
-        if (!ALLOWED_IMAGE_MIME_TYPES.includes(file.type) && !HEIC_FILE_NAME.test(file.name)) {
-            errors.push($t(
-                'The image "{0}" has an unsupported format – allowed are JPG, PNG, GIF, WEBP, BMP, SVG and HEIC.',
-                [file.name]
-            ))
-            return
-        }
-        if (file.size > maxImageSizeMb.value * 1024 * 1024) {
-            errors.push($t(
-                'The image "{0}" is too large ({1} MB) – each image may be a maximum of {2} MB.',
-                [file.name, (file.size / 1024 / 1024).toFixed(1), maxImageSizeMb.value]
-            ))
-            return
-        }
-        validFiles.push(file)
-    })
-
+const setNewArticleImages = (files) => {
+    const {validFiles, errors} = validateArticleImageFiles(files, maxImageSizeMb.value, $t)
     articleForm.newImages = validFiles
     imageUploadErrors.value = errors
+}
+
+const handleImageInput = (event) => {
+    setNewArticleImages(event.target.files)
     // Reset so selecting the same file again re-triggers the input event.
-    e.target.value = ''
+    event.target.value = ''
+}
+
+const handleImageDragLeave = (event) => {
+    if (event.currentTarget.contains(event.relatedTarget)) return
+
+    isDraggingImages.value = false
+}
+
+const handleImageDrop = (event) => {
+    isDraggingImages.value = false
+    setNewArticleImages(getDroppedArticleImageFiles(event))
 }
 
 const allImages = computed(() => [

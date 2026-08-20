@@ -13,6 +13,7 @@ use Artwork\Modules\Budget\Services\TableColumnOrderService;
 use Artwork\Modules\SageApiSettings\Http\Requests\CreateOrUpdateSageApiSettingsRequest;
 use Artwork\Modules\SageApiSettings\Models\SageApiSettings;
 use Artwork\Modules\SageApiSettings\Services\SageApiSettingsService;
+use Artwork\Modules\Webhook\Models\WebhookEndpoint;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -21,6 +22,8 @@ use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Redirect;
 use Inertia\Inertia;
 use Inertia\Response;
+use Laravel\Passport\Passport;
+use Laravel\Passport\Scope;
 use Laravel\Passport\Token;
 use Maatwebsite\Excel\Excel;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
@@ -38,53 +41,76 @@ class ToolSettingsInterfacesController extends Controller
     /**
      * @throws AuthorizationException
      */
-    public function index(): Response
+    public function index(Request $request): Response
     {
-        $this->authorize('view', Token::class);
+        // Die Seite bündelt zwei getrennt berechtigte Bereiche: API-Tokens/Sage ("change tool
+        // settings" via TokenPolicy) und Webhooks (eigenständige Permission "manage webhooks").
+        // Wer nur eine der beiden hält, darf die Seite öffnen und sieht nur seinen Bereich.
+        $canManageTokens = $request->user()?->can('view', Token::class) ?? false;
+        $canManageWebhooks = $request->user()?->can('viewAny', WebhookEndpoint::class) ?? false;
 
-        $tokens = Token::with(['apiAccessToken'])
-            ->orderBy('name')
-            ->get()
-            ->map(function (Token $token): array {
-                return [
-                    'id' => $token->id,
-                    'name' => $token->name,
-                    "revoked" => $token->revoked,
-                    'created_at' => $token->created_at,
-                    'expires_at' => $token->expires_at,
-                    'last_used_at' => $token->last_used_at,
-                    'access_token' => $token?->apiAccessToken?->access_token ?? null,
-                ];
-            });
+        if (!$canManageTokens && !$canManageWebhooks) {
+            $this->authorize('view', Token::class);
+        }
 
+        $tokens = $canManageTokens
+            ? Token::query()
+                ->orderBy('name')
+                ->get()
+                ->map(function (Token $token): array {
+                    return [
+                        'id' => $token->id,
+                        'name' => $token->name,
+                        'revoked' => $token->revoked,
+                        'created_at' => $token->created_at,
+                        'expires_at' => $token->expires_at,
+                        'scopes' => $token->scopes,
+                    ];
+                })
+            : collect();
 
         return Inertia::render(
             'Interfaces/Index',
             [
-                'sageSettings' => $this->sageApiSettingsService->getFirst(),
+                'sageSettings' => $canManageTokens ? $this->sageApiSettingsService->getFirst() : null,
                 'tableColumnOrder' => $this->tableColumnOrderService->getAllOrderedByPosition(),
+                'canManageTokens' => $canManageTokens,
                 'tokens' => $tokens,
+                'availableScopes' => $canManageTokens
+                    ? Passport::scopes()
+                        ->map(fn (Scope $scope): array => [
+                            'id' => $scope->id,
+                            'description' => $scope->description,
+                        ])
+                        ->values()
+                    : collect(),
+                'canManageWebhooks' => $canManageWebhooks,
+                'webhookEndpoints' => $canManageWebhooks
+                    ? WebhookEndpoint::query()->orderBy('name')->get()
+                    : [],
+                'webhookEvents' => $canManageWebhooks
+                    ? collect(config('webhooks.events', []))
+                        ->map(fn (string $description, string $name): array => [
+                            'name' => $name,
+                            'description' => $description,
+                        ])
+                        ->values()
+                    : [],
             ]
         );
     }
 
-    public function tokenLogs(Request $request, Token $token)
+    public function tokenLogs(Token $token): JsonResponse
     {
         $this->authorize('view', Token::class);
 
-        $logs = ApiLog::where('token_id', '=', $token->apiAccessToken->id)
-            ->orderBy('created_at', 'desc')
+        $logs = ApiLog::query()
+            ->where('passport_token_id', $token->getKey())
+            ->orderByDesc('created_at')
             ->paginate(50);
 
-        if ($request->wantsJson() || $request->ajax()) {
-            return response()->json([
-                'logs' => $logs,
-            ]);
-        }
-
-        return Inertia::render('Interfaces/TokenLogs', [
+        return response()->json([
             'logs' => $logs,
-            'token' => $token,
         ]);
     }
 

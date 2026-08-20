@@ -3,78 +3,26 @@
 </template>
 
 <script setup lang="ts">
-import { computed, defineAsyncComponent, unref, type Component } from 'vue'
-import {IconTag} from "@tabler/icons-vue";
+import { computed, unref, type Component } from 'vue'
+import { iconComponent } from '@/Composeables/useTablerIcon'
 
 // name kann String | Component | Ref davon sein
 const props = defineProps<{ name?: unknown }>()
-const cache = new Map<string, Component>()
 
 /** Ist es (vermutlich) eine Vue-Komponente? */
 function isVueComponent(v: unknown): v is Component {
     return typeof v === 'object' || typeof v === 'function'
 }
 
-/**
- * Normalisiert verschiedene Schreibweisen:
- * "home", "home-2", "icon-home-2", "IconHome2" -> "IconHome2"
- */
-function toTablerExportName(input: string): string {
-    let s = input.trim()
+// Ein String wird ueber das Composable zu einem SVG aus public/build/icons/tabler/ aufgeloest —
+// bewusst ohne Bundler-Beteiligung, damit nicht alle 6092 Tabler-Module im Modulgraph landen.
+// Wird stattdessen direkt eine Komponente durchgereicht (z.B. ein statisch importiertes
+// Tabler-Icon aus ToolTipComponent), bleibt die unveraendert.
+const Comp = computed<Component>(() => {
+    const n = unref(props.name)
 
-    // "IconHome2" bleibt so
-    if (/^Icon[A-Z0-9]/.test(s)) return s
+    if (n != null && isVueComponent(n)) return n as Component
 
-    // "icon-home-2" -> "home-2"
-    s = s.replace(/^icon[-_]*/i, '')
-
-    // "home-2" -> "Home2"
-    const pascal = s
-        .toLowerCase()
-        .replace(/(^\w|[-_]\w)/g, m => m.replace(/[-_]/, '').toUpperCase())
-
-    return `Icon${pascal}`
-}
-
-/** Lädt das Tabler-Icon-Modul genau EINMAL, wenn benötigt */
-let tablerModPromise: Promise<any> | null = null
-function loadTablerModule() {
-    if (!tablerModPromise) {
-        tablerModPromise = import('@tabler/icons-vue')
-    }
-    return tablerModPromise
-}
-
-/** Holt (und cached) die Icon-Komponente nach Name oder gibt direkt die übergebene Komponente zurück */
-function resolveTablerIcon(nameLike: unknown): Component {
-    const n = unref(nameLike) as any
-
-    if (n == null) return IconTag
-
-    // Wenn bereits eine Komponente übergeben wird: direkt verwenden
-    if (isVueComponent(n)) return n as Component
-
-    // Alles andere sicher in String wandeln
-    const exportName = toTablerExportName(String(n))
-
-    const cached = cache.get(exportName)
-    if (cached) return cached
-
-    const Comp = defineAsyncComponent({
-        loader: async () => {
-            try {
-                const mod = await loadTablerModule()
-                return mod?.[exportName] ?? IconTag
-            } catch {
-                return IconTag
-            }
-        },
-        delay: 0,
-    })
-
-    cache.set(exportName, Comp)
-    return Comp
-}
-
-const Comp = computed<Component>(() => resolveTablerIcon(props.name))
+    return iconComponent(n)
+})
 </script>

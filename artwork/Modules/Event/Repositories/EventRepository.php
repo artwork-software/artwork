@@ -166,7 +166,7 @@ class EventRepository extends BaseRepository
         $query->with(['shifts.users',
             'project',
             'project.managerUsers',
-            'project.state',
+            'project.status',
             'shifts.shiftsQualifications'
         ]);
         $query->without([
@@ -336,9 +336,20 @@ class EventRepository extends BaseRepository
         return $event;
     }
 
-    public function updateEvents(SupportCollection $eventIds, array $updates, $selectedDay, $selectedStartTime, $selectedEndTime): void
-    {
-        DB::transaction(function () use ($eventIds, $updates, $selectedDay, $selectedStartTime, $selectedEndTime) {
+    public function updateEvents(
+        SupportCollection $eventIds,
+        array $updates,
+        $selectedDay,
+        $selectedStartTime,
+        $selectedEndTime
+    ): void {
+        DB::transaction(function () use (
+            $eventIds,
+            $updates,
+            $selectedDay,
+            $selectedStartTime,
+            $selectedEndTime
+        ): void {
             foreach ($eventIds as $eventId) {
                 $event = Event::findOrFail($eventId);
 
@@ -365,8 +376,12 @@ class EventRepository extends BaseRepository
                     } elseif ($selectedStartTime || $selectedEndTime) {
                         // Time-only change: update times and convert to non-all-day event
                         $day = optional($startTime)->toDateString() ?? Carbon::now()->toDateString();
-                        if ($selectedStartTime) $startTime = Carbon::parse("$day $selectedStartTime");
-                        if ($selectedEndTime) $endTime = Carbon::parse("$day $selectedEndTime");
+                        if ($selectedStartTime) {
+                            $startTime = Carbon::parse("$day $selectedStartTime");
+                        }
+                        if ($selectedEndTime) {
+                            $endTime = Carbon::parse("$day $selectedEndTime");
+                        }
                         $allDay = false; // Convert to timed event when times are provided
                     }
 
@@ -398,7 +413,9 @@ class EventRepository extends BaseRepository
 
     public function deleteEvents(SupportCollection $eventIds): void
     {
-        DB::transaction(function () use ($eventIds) {
+        DB::transaction(function () use (
+            $eventIds
+        ): void {
             Event::whereIn('id', $eventIds)->delete();
         });
     }

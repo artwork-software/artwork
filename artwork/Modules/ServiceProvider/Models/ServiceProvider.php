@@ -112,14 +112,8 @@ class ServiceProvider extends Model implements Vacationer, DayServiceable, Emplo
             return str_starts_with($path, 'storage/') ? asset($path) : asset('storage/' . $path);
         }
 
-        // Verwende makeAvatarSvg aus HasProfilePhotoCustom Trait
-        $letters = $this->initials();
-        $bg = (string) config('artwork.avatar.bg', '#4F46E5');
-        $fg = (string) config('artwork.avatar.fg', '#FFFFFF');
-
-        $svg = $this->makeAvatarSvg($letters, $bg, $fg);
-
-        return $this->svgToDataUri($svg);
+        // Buchstaben-Avatar als URL (siehe HasProfilePhotoCustom::letterAvatarUrl)
+        return $this->letterAvatarUrl($this->initials());
     }
 
     private function initials(): string

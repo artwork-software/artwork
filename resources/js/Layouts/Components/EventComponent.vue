@@ -370,7 +370,11 @@
                             id="description"
                             v-model="description"
                             rows="4"
+                            @update:model-value="descriptionTouched = true"
                         />
+                        <p v-if="descriptionLoadFailed && !descriptionTouched" class="text-xs text-red-600">
+                            {{ $t('The description could not be loaded. Please reopen the event before saving.') }}
+                        </p>
 
                         <div v-if="event?.occupancy_option" class="space-y-2">
                             <BaseTextarea
@@ -741,6 +745,41 @@ const selectedRoom = ref(null)
 const error = ref(null)
 const creatingProject = ref(false)
 const description = ref(null)
+// Der Kalender liefert den Beschreibungs-Volltext nur mit, wenn die Anzeige-
+// einstellung ihn in der Kachel zeigt. Sonst wird er beim Oeffnen nachgeladen —
+// ohne das wuerde Speichern einen vorhandenen Text ueberschreiben.
+const descriptionTouched = ref(false)
+const descriptionLoadFailed = ref(false)
+let descriptionRequest = null
+
+function loadFullDescription() {
+    descriptionTouched.value = false
+    descriptionLoadFailed.value = false
+    descriptionRequest = null
+    if (!props.event?.id) return
+
+    const prefilled = description.value
+    descriptionRequest = axios.get(route('events.description', { event: props.event.id }))
+        .then(({ data }) => {
+            // Nur uebernehmen, wenn zwischenzeitlich niemand getippt hat
+            if (!descriptionTouched.value && description.value === prefilled) {
+                description.value = data?.description ?? ''
+            }
+        })
+        .catch(() => { descriptionLoadFailed.value = true })
+        .finally(() => { descriptionRequest = null })
+}
+
+// Vor dem Speichern muss der Volltext stehen, sonst geht er verloren.
+async function ensureDescriptionLoaded() {
+    if (descriptionTouched.value) return true
+    if (descriptionRequest) await descriptionRequest
+    if (!descriptionLoadFailed.value) return true
+
+    loadFullDescription()
+    if (descriptionRequest) await descriptionRequest
+    return !descriptionLoadFailed.value
+}
 const canEdit = ref(false)
 const declinedRoomId = ref(null)
 const deleteComponentVisible = ref(false)
@@ -985,6 +1024,7 @@ function openModal() {
     initialRoomId.value = selectedRoom.value?.id ?? null
     declinedRoomId.value = props.declinedRoomId ?? props.event.declinedRoomId ?? null
     description.value = props.event.description ?? ''
+    loadFullDescription()
 
     ;(event_properties ?? []).forEach(ep => {
         ep.checked = props.event?.eventProperties?.some(eep => eep.id === ep.id) || false
@@ -1009,6 +1049,9 @@ function closeModal(closedOnPurpose = false) {
     startDate.value = startTime.value = endDate.value = endTime.value = admissionTime.value = null
     oldStartDate.value = oldStartTime.value = oldEndDate.value = oldEndTime.value = null
     eventName.value = description.value = null
+    descriptionTouched.value = false
+    descriptionLoadFailed.value = false
+    descriptionRequest = null
     selectedProject.value = selectedRoom.value = null
     selectedEventType.value = props.eventTypes?.[0] ?? null
     selectedEventStatus.value = props.eventStatuses?.find(s => s.default) ?? props.eventStatuses?.[0] ?? null
@@ -1314,6 +1357,13 @@ async function confirmAssignmentImpactAndSave() {
 }
 
 async function doSaveEvent() {
+    // Alle Speicherwege laufen hier durch: ohne geladenen Volltext wuerde
+    // payload() eine leere Beschreibung schicken und den Text loeschen.
+    if (!await ensureDescriptionLoaded()) {
+        error.value = { description: $t('The description could not be loaded. Please reopen the event before saving.') }
+        return
+    }
+
     isLoading.value = true
     const data = payload()
 

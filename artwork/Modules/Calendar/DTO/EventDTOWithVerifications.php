@@ -71,7 +71,10 @@ class EventDTOWithVerifications extends Data
             start: Carbon::parse($event->start_time)->format('Y-m-d H:i'),
             end: Carbon::parse($event->end_time)->format('Y-m-d H:i'),
             eventName: $event->eventName,
-            description: $event->description,
+            // Volltext nur, wenn die Anzeigeeinstellung ihn in der Kachel zeigt.
+            // Sonst holt das Termin-Modal ihn beim Oeffnen ueber events.description nach —
+            // lange Beschreibungen sonst in jedem Termin des Monatspakets.
+            description: $userCalendarSettings?->description ? $event->description : null,
             project: $project ? ProjectDTO::fromModel($project, $userCalendarSettings) : null,
             eventType: $eventType ? [
                 'id' => $eventType->id,

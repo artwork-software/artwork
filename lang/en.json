@@ -6627,5 +6627,6 @@
     "Your new API key": "Your new API key",
     "Up to 6 months are displayed per page (A3 landscape).": "Up to 6 months are displayed per page (A3 landscape).",
     "This export shows you when which project takes place in the selected period. If required, you can filter the projects by specific event types - projects will then only appear on days on which they have an event of one of the selected event types.": "This export shows you when which project takes place in the selected period. If required, you can filter the projects by specific event types - projects will then only appear on days on which they have an event of one of the selected event types.",
-    "Half months per page (double row height)": "Half months per page (double row height)"
+    "Half months per page (double row height)": "Half months per page (double row height)",
+    "The description could not be loaded. Please reopen the event before saving.": "The description could not be loaded. Please reopen the event before saving."
 }

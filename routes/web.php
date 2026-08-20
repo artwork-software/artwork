@@ -953,6 +953,10 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::put('/events/{event}', [EventController::class, 'updateEvent'])->name('events.update');
     Route::patch('/events/{event}/description', [EventController::class, 'updateDescription'])
         ->name('event.update.description');
+    // Beschreibung haengt nicht mehr an jedem Termin des Kalender-Payloads,
+    // das Termin-Modal laedt sie beim Oeffnen nach.
+    Route::get('/events/{event}/description', [EventController::class, 'showDescription'])
+        ->name('events.description');
     Route::post('/events/{event}/convert-to-planning', [EventController::class, 'convertToPlanning'])
         ->name('events.convertToPlanning');
     Route::patch('/events/{event}/single/bulk', [EventController::class, 'updateSingleBulkEvent'])

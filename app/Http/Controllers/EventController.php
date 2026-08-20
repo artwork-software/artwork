@@ -4355,6 +4355,17 @@ class EventController extends Controller
         ]);
     }
 
+    /**
+     * Beschreibung eines einzelnen Termins. Der Kalender liefert den Volltext nur
+     * noch mit, wenn die Anzeigeeinstellung ihn in der Kachel zeigt — das Termin-Modal
+     * holt ihn hier nach. Bewusst ohne zusaetzliche Policy: die Kachel-Daten desselben
+     * Termins bekommt jede angemeldete Person ohnehin ueber events.all.
+     */
+    public function showDescription(Event $event): JsonResponse
+    {
+        return new JsonResponse(['description' => $event->description]);
+    }
+
     public function updateDescription(Request $request, Event $event): void
     {
         $this->authorize('update', $event);

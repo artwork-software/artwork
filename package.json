@@ -4,8 +4,7 @@
     "scripts": {
         "dev": "npm run icons:sync && vite",
         "build": "npm run icons:sync && vite build",
-        "icons:sync": "node scripts/sync-tabler-icons.mjs",
-        "postinstall": "node scripts/sync-tabler-icons.mjs"
+        "icons:sync": "node scripts/sync-tabler-icons.mjs"
     },
     "devDependencies": {
         "@tailwindcss/postcss": "^4.1.16",

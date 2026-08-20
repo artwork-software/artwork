@@ -1,0 +1,42 @@
+name: Feature request
+description: Suggest an improvement or new functionality
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for your suggestion! You can write in English or German.
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem does this solve?
+      description: Describe the situation in your day-to-day work where artwork currently falls short.
+    validations:
+      required: true
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed solution
+      description: How should artwork behave instead?
+    validations:
+      required: true
+  - type: dropdown
+    id: module
+    attributes:
+      label: Affected area
+      options:
+        - Calendar / event scheduling
+        - Shift planning
+        - Rooms
+        - Inventory / material issue
+        - Projects / budgets
+        - Contacts (CRM)
+        - Users / permissions
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Workarounds you use today, or other ways this could be solved.

@@ -917,29 +917,130 @@ watch(dayRangeKey, () => {
     scheduleDayFill();
 });
 
+// Sichtbarkeit der Zellen — mit gedrosselter Freigabe.
+//
+// Gemessen (Jahres-Zeitraum, 19 Räume, Schichten an): eine Termin-/Schichtkachel
+// kostet beim Mounten ~1,9 ms, im Sichtfenster hängen ~5.000 davon. Wurde ein
+// ganzer Monat auf einmal sichtbar (beim Scrollen oder wenn Monatsdaten
+// eintrafen), mountete Vue alles in EINEM Task — gemessene Blockaden bis 15 s,
+// in Summe ~60 s für einen Durchlauf durchs Jahr. Genau das ist das "jedes
+// Scrollen führt zu erneutem Warten".
+//
+// Deshalb zwei getrennte Mengen: `visibleKeys` = was der Observer sieht,
+// `releasedKeys` = was tatsächlich rendern darf. Freigegeben wird pro Frame nur
+// ein Häppchen, nach Nähe zum Viewport sortiert und mit adaptivem Budget: wird
+// der Frame zu lang, halbiert sich das Budget, bleibt Luft, wächst es wieder.
+// Beim schnellen Vorbeiscrollen fällt Wartendes still wieder raus, weil es beim
+// Freigeben erneut gegen `visibleKeys` geprüft wird — durchgescrollte Bereiche
+// werden also gar nicht erst gebaut.
 function useCellVisibility(options = {}) {
-    const { root = null, rootMargin = '1200px', threshold = 0.01 } = options;
+    const { root = null, rootMargin = '600px', threshold = 0.01 } = options;
     const visibleKeys = shallowRef(new Set<string>());
+    const releasedKeys = shallowRef(new Set<string>());
     let io: IntersectionObserver | null = null;
     const map = new Map<Element, string>();
+    const pending = new Map<string, number>();      // key -> Distanz zur Viewport-Mitte
+    const pendingRemove = new Set<string>();       // freigegeben, aber wieder ausserhalb
+    let flushHandle: number | null = null;
+    let lastFlushTs = 0;
+    let lastReleased = 0;
+    let costPerCell = 4;                            // ms, gleitend geschaetzt
+    let lastScrollTs = 0;
 
-    const isVisible = (key: string) => visibleKeys.value.has(key);
+    // Waehrend aktiv gescrollt wird, wird GAR NICHTS aufgebaut — nur die Queue
+    // gepflegt. Jeder Versuch, waehrenddessen "ein bisschen" zu mounten, kostete
+    // messbar Bildrate (79 ms/Frame statt 13 ms), weil eine einzige Zelle schon
+    // ~7 ms bindet. Steht das Bild, wird zuegig nachgezogen; das entspricht dem
+    // gewuenschten Verhalten "stueckweise aufbauen ist ok, Scrollen darf nicht
+    // haken". Frueher Versuch war ein Halbierungs-Regler — der rastete beim
+    // Mounten dauerhaft auf dem Minimum ein und kam nie wieder hoch.
+    const SCROLL_QUIET_MS = 120;
+    const TARGET_MS_IDLE = 48;   // steht das Bild, darf ein Frame laenger dauern
+    const onScroll = () => { lastScrollTs = performance.now(); };
+    window.addEventListener('scroll', onScroll, { passive: true });
+
+    // Render-Gate: nur freigegebene Zellen bauen ihren Inhalt auf.
+    const isVisible = (key: string) => releasedKeys.value.has(key);
+
+    const schedule = () => {
+        if (flushHandle !== null) return;
+        flushHandle = requestAnimationFrame(flush);
+    };
+
+    const flush = (ts: number) => {
+        flushHandle = null;
+        if (lastFlushTs && lastReleased > 0) {
+            const measured = (ts - lastFlushTs) / lastReleased;
+            costPerCell = costPerCell * 0.7 + Math.max(0.2, measured) * 0.3;
+        }
+        lastFlushTs = ts;
+
+        if ((ts - lastScrollTs) < SCROLL_QUIET_MS) {
+            lastReleased = 0;
+            lastFlushTs = 0;
+            if (pending.size || pendingRemove.size) schedule();
+            return;
+        }
+        const budget = Math.max(1, Math.min(128, Math.round(TARGET_MS_IDLE / costPerCell)));
+
+        // Erst abraeumen, dann aufbauen: Unmounten ist billiger als Mounten,
+        // aber nicht umsonst — 200-400 Kacheln auf einmal zu entfernen hat pro
+        // Frame ~60 ms gekostet. Deshalb ebenfalls gedeckelt (dreifaches Budget).
+        let removed = 0;
+        if (pendingRemove.size) {
+            for (const key of pendingRemove) {
+                if (removed >= budget * 3) break;
+                pendingRemove.delete(key);
+                if (releasedKeys.value.delete(key)) removed++;
+            }
+        }
+
+        let released = 0;
+        if (pending.size) {
+            const sorted = Array.from(pending.entries()).sort((a, b) => a[1] - b[1]);
+            for (const [key] of sorted) {
+                if (released >= budget) break;
+                pending.delete(key);
+                if (!visibleKeys.value.has(key) || releasedKeys.value.has(key)) continue;
+                releasedKeys.value.add(key);
+                released++;
+            }
+        }
+        lastReleased = released;
+        if (released || removed) triggerRef(releasedKeys);
+        if (pending.size || pendingRemove.size) {
+            schedule();
+        } else {
+            lastFlushTs = 0;
+            lastReleased = 0;
+        }
+    };
 
     const observe = (el: Element, key: string) => {
         if (!el) return;
         if (!io) {
             io = new IntersectionObserver((entries) => {
-                let changed = false;
+                const mid = (root ? (root as Element).clientHeight : window.innerHeight) / 2;
                 for (const entry of entries) {
                     const k = map.get(entry.target);
                     if (!k) continue;
                     if (entry.isIntersecting) {
-                        if (!visibleKeys.value.has(k)) { visibleKeys.value.add(k); changed = true; }
+                        visibleKeys.value.add(k);
+                        pendingRemove.delete(k);   // war nur kurz draussen: nichts zu tun
+                        if (!releasedKeys.value.has(k)) {
+                            const rect = entry.boundingClientRect;
+                            pending.set(k, Math.abs((rect.top + rect.bottom) / 2 - mid));
+                        }
                     } else {
-                        if (visibleKeys.value.has(k)) { visibleKeys.value.delete(k); changed = true; }
+                        visibleKeys.value.delete(k);
+                        pending.delete(k);
+                        if (releasedKeys.value.has(k)) pendingRemove.add(k);
                     }
                 }
-                if (changed) triggerRef(visibleKeys);
+                // Bewusst KEIN triggerRef hier: `visibleKeys` ist reine Buchhaltung
+                // und keine Render-Abhaengigkeit. Waehrend des Scrollens laeuft so
+                // gar kein Re-Render — gerendert wird erst beim Freigeben/Abraeumen.
+                if (pending.size || pendingRemove.size) schedule();
             }, { root, rootMargin, threshold });
         }
         map.set(el, key);
@@ -947,16 +1048,25 @@ function useCellVisibility(options = {}) {
     };
 
     const dispose = () => {
+        window.removeEventListener('scroll', onScroll);
         if (io) io.disconnect();
+        if (flushHandle !== null) cancelAnimationFrame(flushHandle);
+        flushHandle = null;
         map.clear();
+        pending.clear();
+        pendingRemove.clear();
         visibleKeys.value.clear();
+        releasedKeys.value.clear();
     };
 
-    return { observe, isVisible, visibleKeys, dispose };
+    return { observe, isVisible, visibleKeys: releasedKeys, dispose };
 }
+// 600px statt 1200px Vorlauf: halbiert die Zahl gleichzeitig gemounteter
+// Kacheln. Bei ~1,9 ms pro Kachel ist das der direkteste Hebel auf die
+// Aufbauzeit; der Vorlauf reicht weiterhin für ruhiges Scrollen.
 const { observe: observeCell, isVisible: isCellVisible, visibleKeys: visibleCellKeys, dispose: disposeCells } = useCellVisibility({
     root: null,
-    rootMargin: '1200px',
+    rootMargin: '600px',
     threshold: 0.01
 });
 const cellKey = (day, room) => `${day.withoutFormat}:${(room.roomId ?? room.id)}`;

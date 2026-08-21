@@ -62,7 +62,7 @@
                             ref="calendarToCalculate"
                         >
                             <template
-                                v-for="(day, dayIndex) in days"
+                                v-for="(day, dayIndex) in visibleDays"
                                 :key="day.fullDay"
                             >
                             <!-- Monatsgrenze: schwarzer Balken über die ganze Zeile mit Monat + Jahr
@@ -224,6 +224,14 @@
                                 </template>
                             </div>
                             </template>
+                            <!-- Nachschub-Marker: kommt er in Sichtweite, werden sofort
+                                 weitere Tageszeilen gerendert (progressives Rendern) -->
+                            <div
+                                v-if="!allDaysRendered"
+                                ref="dayFillSentinel"
+                                class="h-px w-full"
+                                aria-hidden="true"
+                            ></div>
                         </div>
                     </div>
                 </div>
@@ -748,6 +756,114 @@ function ensureCalendarShape() {
     }
 }
 
+// ---------- Progressives Rendern der Tageszeilen ----------
+// Das Grid entstand bisher in EINEM Render-Durchgang: bei einem Jahres-Zeitraum
+// sind das 365 Zeilen x Raeume an Zellen, die den ersten Paint blockieren — und
+// weil die Monats-Requests in onMounted haengen, gingen sie erst danach raus.
+// Jetzt kommt zuerst ein kleines Stueck, der Rest waechst in Haeppchen nach:
+// im Leerlauf (requestIdleCallback) und sofort, wenn der Nutzer ans untere Ende
+// des bereits Gerenderten scrollt.
+const INITIAL_DAY_CHUNK = 45;
+const DAY_CHUNK = 30;
+const renderedDayCount = ref(INITIAL_DAY_CHUNK);
+const dayCount = computed(() => ((props.days as any[]) ?? []).length);
+const allDaysRendered = computed(() => renderedDayCount.value >= dayCount.value);
+const visibleDays = computed(() => {
+    const all = (props.days as any[]) ?? [];
+    return allDaysRendered.value ? all : all.slice(0, renderedDayCount.value);
+});
+
+let dayFillHandle: number | null = null;
+let dayFillUsesIdle = false;
+
+function growRenderedDays(by: number) {
+    if (allDaysRendered.value) return;
+    renderedDayCount.value = Math.min(renderedDayCount.value + by, dayCount.value);
+}
+
+function cancelDayFill() {
+    if (dayFillHandle === null) return;
+    if (dayFillUsesIdle && typeof (window as any).cancelIdleCallback === 'function') {
+        (window as any).cancelIdleCallback(dayFillHandle);
+    } else {
+        window.clearTimeout(dayFillHandle);
+    }
+    dayFillHandle = null;
+}
+
+function scheduleDayFill() {
+    if (dayFillHandle !== null || allDaysRendered.value) return;
+    const run = () => {
+        dayFillHandle = null;
+        growRenderedDays(DAY_CHUNK);
+        scheduleDayFill();
+    };
+    if (typeof (window as any).requestIdleCallback === 'function') {
+        dayFillUsesIdle = true;
+        dayFillHandle = (window as any).requestIdleCallback(run, { timeout: 300 });
+    } else {
+        dayFillUsesIdle = false;
+        dayFillHandle = window.setTimeout(run, 32);
+    }
+}
+
+// Sprungziele (Datum/Monat) koennen noch ungerendert sein — vorher auffuellen,
+// sonst findet der Sprung sein Ziel-Element nicht.
+async function ensureDayRendered(dayIso: string) {
+    if (!dayIso || allDaysRendered.value) return;
+    const all = (props.days as any[]) ?? [];
+    const idx = all.findIndex((d: any) => d?.withoutFormat === dayIso);
+    if (idx < 0 || idx < renderedDayCount.value) return;
+    renderedDayCount.value = Math.min(idx + 1 + DAY_CHUNK, all.length);
+    await nextTick();
+}
+
+const dayFillSentinel = ref<HTMLElement | null>(null);
+let dayFillObserver: IntersectionObserver | null = null;
+let dayFillSentinelVisible = false;
+
+// Solange der Marker sichtbar bleibt, Frame fuer Frame nachlegen — sonst haengt
+// der Nutzer beim schnellen Scrollen an der Unterkante fest.
+function pumpDayFill() {
+    if (!dayFillSentinelVisible || allDaysRendered.value) return;
+    growRenderedDays(DAY_CHUNK);
+    requestAnimationFrame(pumpDayFill);
+}
+
+watch(dayFillSentinel, (el) => {
+    dayFillObserver?.disconnect();
+    dayFillObserver = null;
+    dayFillSentinelVisible = false;
+    if (!el) return;
+    dayFillObserver = new IntersectionObserver((entries) => {
+        dayFillSentinelVisible = entries.some(entry => entry.isIntersecting);
+        if (dayFillSentinelVisible) pumpDayFill();
+    }, { root: null, rootMargin: '1200px 0px', threshold: 0 });
+    dayFillObserver.observe(el);
+});
+
+// Neuer Zeitraum -> wieder klein anfangen. Bewusst auf die Eckdaten geankert
+// statt auf die Array-Identitaet: ein Inertia-Reload schickt `period` neu,
+// ohne dass sich der Zeitraum geaendert hat — der Reset wuerde das Grid sonst
+// nach jedem Speichern sichtbar zusammenklappen. Die Monats-Sentinels der alten
+// Zeilen sind damit hinfaellig: ohne Reset beobachtet der Observer abgehaengte
+// Elemente, `monthSentinelSeen` verhindert die Neuanmeldung und der
+// Monatsfokus (und damit das Nachladen beim Scrollen) bliebe stehen.
+const dayRangeKey = computed(() => {
+    const all = (props.days as any[]) ?? [];
+    if (!all.length) return '';
+    return `${all[0]?.withoutFormat ?? ''}_${all[all.length - 1]?.withoutFormat ?? ''}_${all.length}`;
+});
+
+watch(dayRangeKey, () => {
+    cancelDayFill();
+    renderedDayCount.value = INITIAL_DAY_CHUNK;
+    monthObserver?.disconnect();
+    monthObserver = null;
+    monthSentinelSeen.value.clear();
+    scheduleDayFill();
+});
+
 function useCellVisibility(options = {}) {
     const { root = null, rootMargin = '1200px', threshold = 0.01 } = options;
     const visibleKeys = shallowRef(new Set<string>());
@@ -1195,6 +1311,8 @@ async function runInitialLoad() {
 
 onMounted(async () => {
     await runInitialLoad();
+    // Erst die Daten anfordern, dann den Rest des Zeitraums nachrendern.
+    scheduleDayFill();
 
     const ShiftCalendarListener = useShiftCalendarListener(newCalendarData);
     ShiftCalendarListener.init();
@@ -1254,6 +1372,11 @@ onBeforeUnmount(() => {
         topbarObserver = null;
     }
 
+    // Progressives Rendern stoppen
+    cancelDayFill();
+    dayFillObserver?.disconnect();
+    dayFillObserver = null;
+    dayFillSentinelVisible = false;
 });
 
 // ---------- Multi-Edit etc. ----------
@@ -1569,6 +1692,9 @@ const deleteSelectedEvents = () => {
         });
 };
 const jumpToDayOfMonth = async (day) => {
+    // Ziel kann beim progressiven Rendern noch fehlen
+    await ensureDayRendered(day);
+
     // Globales `html { scroll-behavior: smooth }` (siehe app.blade.php) zwingt
     // sonst alle programmatischen Scrolls in eine Animation. Während des
     // Sprungs temporär abschalten, damit Korrektur-Scrolls instant wirken und

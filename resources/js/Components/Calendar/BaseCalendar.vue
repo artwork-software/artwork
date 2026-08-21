@@ -61,9 +61,16 @@
                             :class="[isFullscreen ? 'mt-4' : '']"
                             ref="calendarToCalculate"
                         >
-                            <template
+                            <!-- v-for UND v-memo liegen bewusst auf demselben Element:
+                                 nur dann legt der Compiler pro Schleifendurchlauf einen
+                                 eigenen Memo-Cache an (v-memo auf einem Kind-Element
+                                 innerhalb eines template-v-for teilt sich EINEN Slot und
+                                 ist damit wirkungslos). Der Wrapper klammert Monatsbalken
+                                 und Tageszeile zu einer memoisierbaren Einheit. -->
+                            <div
                                 v-for="(day, dayIndex) in visibleDays"
                                 :key="day.fullDay"
+                                v-memo="rowMemoDeps(day, dayIndex)"
                             >
                             <!-- Monatsgrenze: schwarzer Balken über die ganze Zeile mit Monat + Jahr
                                  (gleiche Optik wie die dunklen Leisten in anderen Screens);
@@ -223,7 +230,7 @@
                                     </template>
                                 </template>
                             </div>
-                            </template>
+                            </div>
                             <!-- Nachschub-Marker: kommt er in Sichtweite, werden sofort
                                  weitere Tageszeilen gerendert (progressives Rendern) -->
                             <div
@@ -754,6 +761,52 @@ function ensureCalendarShape() {
     if (!Array.isArray(newCalendarData.value)) {
         newCalendarData.value = [];
     }
+}
+
+// ---------- Render-Memoisierung der Tageszeilen ----------
+// Jede Sichtbarkeitsaenderung (IntersectionObserver) und jeder geladene Monat
+// loesen ein Re-Render der GESAMTEN Komponente aus — bei einem Jahres-Zeitraum
+// waren das ~7.000 Zellen pro Scroll-Tick, jede mit Sortierung von Terminen und
+// Schichten. v-memo laesst Vue unveraenderte Zeilen komplett ueberspringen: der
+// Block wird gar nicht erst ausgefuehrt, der alte Vnode-Baum wiederverwendet.
+//
+// Die Deps muessen ALLES abdecken, was die Zeile liest:
+//  - Tagesidentitaet + Position (Monatsbalken haengt an dayIndex === 0)
+//  - alle Zeilen-Skalare (Zoom, Multi-Edit, Settings, Sticky-Offsets) als eine
+//    zusammengefasste Signatur
+//  - die Zellen-Auswahl (Map wird bei jeder Aenderung ersetzt -> Identitaet reicht)
+//  - je Raum: der Tages-Slot (Objekt-IDENTITAET; alle Mutationspfade ersetzen ihn
+//    per Spread) und die Zell-Sichtbarkeit
+const rowSignature = computed(() => [
+    rowHeightPx.value,
+    cellWidthPx.value,
+    fontSizeCalc.value,
+    lineHeightCalc.value,
+    cardWidthNum.value,
+    multiEdit.value,
+    settings.value.expand_days,
+    settings.value.high_contrast,
+    dayRemarksColumnVisible.value,
+    dayRemarksCanEdit.value,
+    isFullscreen.value,
+    dayStickyTop.value,
+    isAdmin.value,
+].join('|'));
+
+function rowMemoDeps(day: any, dayIndex: number) {
+    const deps: any[] = [
+        day?.withoutFormat,
+        dayIndex === 0,
+        rowSignature.value,
+        selectedCells.value,
+        props.verifierForEventTypIds,
+    ];
+    const key = dayKey(day);
+    for (const room of (newCalendarData.value as any[]) ?? []) {
+        deps.push(room?.content?.[key]);
+        deps.push(isCellVisible(cellKey(day, room)));
+    }
+    return deps;
 }
 
 // ---------- Progressives Rendern der Tageszeilen ----------
@@ -1859,15 +1912,34 @@ const itemStartTimeOnDay = (item: any, dayIso: string): string => {
     return match ? match[1] : '00:00';
 };
 
-// Termine + eigenständige Schichten einer Zelle, gemischt nach Startzeit sortiert
+// Termine + eigenständige Schichten einer Zelle, gemischt nach Startzeit sortiert.
+// Ergebnis wird am Tages-Slot gecacht: das Mischen kostet pro Zelle zwei
+// Array-Kopien und eine Sortierung mit Zeit-Parsing — bei aktiver Schichten-
+// Anzeige und einem Jahres-Zeitraum lief das bisher zehntausendfach pro
+// Re-Render. Alle Mutationspfade ersetzen den Slot per Spread, die Identitaet
+// ist damit eine korrekte Cache-Invalidierung.
+const EMPTY_CELL_ITEMS: any[] = [];
+const itemsInCellCache = new WeakMap<object, any[]>();
 const itemsInCell = (day: any, room: any) => {
-    const events = eventsInCell(day, room).map((evt: any) => ({ type: 'event', data: evt }));
-    const shifts = shiftsInCell(day, room).map((shift: any) => ({ type: 'shift', data: shift }));
-    if (shifts.length === 0) return events;
-    const dayIso = day.withoutFormat ?? deKeyToIso(dayKey(day));
-    return [...events, ...shifts].sort((a, b) =>
-        itemStartTimeOnDay(a, dayIso).localeCompare(itemStartTimeOnDay(b, dayIso))
-    );
+    const slot = room?.content?.[dayKey(day)];
+    if (!slot || typeof slot !== 'object') return EMPTY_CELL_ITEMS;
+
+    const cached = itemsInCellCache.get(slot);
+    if (cached) return cached;
+
+    const events = (slot.events ?? []).map((evt: any) => ({ type: 'event', data: evt }));
+    const shifts = (slot.shifts ?? []).map((shift: any) => ({ type: 'shift', data: shift }));
+    let items: any[];
+    if (shifts.length === 0) {
+        items = events;
+    } else {
+        const dayIso = day.withoutFormat ?? deKeyToIso(dayKey(day));
+        items = [...events, ...shifts].sort((a, b) =>
+            itemStartTimeOnDay(a, dayIso).localeCompare(itemStartTimeOnDay(b, dayIso))
+        );
+    }
+    itemsInCellCache.set(slot, items);
+    return items;
 };
 
 // Nach Schicht-Bearbeitung den betroffenen Monat neu laden

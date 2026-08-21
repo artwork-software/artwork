@@ -61,16 +61,9 @@
                             :class="[isFullscreen ? 'mt-4' : '']"
                             ref="calendarToCalculate"
                         >
-                            <!-- v-for UND v-memo liegen bewusst auf demselben Element:
-                                 nur dann legt der Compiler pro Schleifendurchlauf einen
-                                 eigenen Memo-Cache an (v-memo auf einem Kind-Element
-                                 innerhalb eines template-v-for teilt sich EINEN Slot und
-                                 ist damit wirkungslos). Der Wrapper klammert Monatsbalken
-                                 und Tageszeile zu einer memoisierbaren Einheit. -->
-                            <div
-                                v-for="(day, dayIndex) in visibleDays"
+                            <template
+                                v-for="(day, dayIndex) in days"
                                 :key="day.fullDay"
-                                v-memo="rowMemoDeps(day, dayIndex)"
                             >
                             <!-- Monatsgrenze: schwarzer Balken über die ganze Zeile mit Monat + Jahr
                                  (gleiche Optik wie die dunklen Leisten in anderen Screens);
@@ -230,15 +223,7 @@
                                     </template>
                                 </template>
                             </div>
-                            </div>
-                            <!-- Nachschub-Marker: kommt er in Sichtweite, werden sofort
-                                 weitere Tageszeilen gerendert (progressives Rendern) -->
-                            <div
-                                v-if="!allDaysRendered"
-                                ref="dayFillSentinel"
-                                class="h-px w-full"
-                                aria-hidden="true"
-                            ></div>
+                            </template>
                         </div>
                     </div>
                 </div>
@@ -763,284 +748,29 @@ function ensureCalendarShape() {
     }
 }
 
-// ---------- Render-Memoisierung der Tageszeilen ----------
-// Jede Sichtbarkeitsaenderung (IntersectionObserver) und jeder geladene Monat
-// loesen ein Re-Render der GESAMTEN Komponente aus — bei einem Jahres-Zeitraum
-// waren das ~7.000 Zellen pro Scroll-Tick, jede mit Sortierung von Terminen und
-// Schichten. v-memo laesst Vue unveraenderte Zeilen komplett ueberspringen: der
-// Block wird gar nicht erst ausgefuehrt, der alte Vnode-Baum wiederverwendet.
-//
-// Die Deps muessen ALLES abdecken, was die Zeile liest:
-//  - Tagesidentitaet + Position (Monatsbalken haengt an dayIndex === 0)
-//  - alle Zeilen-Skalare (Zoom, Multi-Edit, Settings, Sticky-Offsets) als eine
-//    zusammengefasste Signatur
-//  - die Zellen-Auswahl (Map wird bei jeder Aenderung ersetzt -> Identitaet reicht)
-//  - je Raum: der Tages-Slot (Objekt-IDENTITAET; alle Mutationspfade ersetzen ihn
-//    per Spread) und die Zell-Sichtbarkeit
-const rowSignature = computed(() => [
-    rowHeightPx.value,
-    cellWidthPx.value,
-    fontSizeCalc.value,
-    lineHeightCalc.value,
-    cardWidthNum.value,
-    multiEdit.value,
-    settings.value.expand_days,
-    settings.value.high_contrast,
-    dayRemarksColumnVisible.value,
-    dayRemarksCanEdit.value,
-    isFullscreen.value,
-    dayStickyTop.value,
-    isAdmin.value,
-].join('|'));
-
-function rowMemoDeps(day: any, dayIndex: number) {
-    const deps: any[] = [
-        day?.withoutFormat,
-        dayIndex === 0,
-        rowSignature.value,
-        selectedCells.value,
-        props.verifierForEventTypIds,
-    ];
-    const key = dayKey(day);
-    for (const room of (newCalendarData.value as any[]) ?? []) {
-        deps.push(room?.content?.[key]);
-        deps.push(isCellVisible(cellKey(day, room)));
-    }
-    return deps;
-}
-
-// ---------- Progressives Rendern der Tageszeilen ----------
-// Das Grid entstand bisher in EINEM Render-Durchgang: bei einem Jahres-Zeitraum
-// sind das 365 Zeilen x Raeume an Zellen, die den ersten Paint blockieren — und
-// weil die Monats-Requests in onMounted haengen, gingen sie erst danach raus.
-// Jetzt kommt zuerst ein kleines Stueck, der Rest waechst in Haeppchen nach:
-// im Leerlauf (requestIdleCallback) und sofort, wenn der Nutzer ans untere Ende
-// des bereits Gerenderten scrollt.
-const INITIAL_DAY_CHUNK = 45;
-const DAY_CHUNK = 30;
-const renderedDayCount = ref(INITIAL_DAY_CHUNK);
-const dayCount = computed(() => ((props.days as any[]) ?? []).length);
-const allDaysRendered = computed(() => renderedDayCount.value >= dayCount.value);
-const visibleDays = computed(() => {
-    const all = (props.days as any[]) ?? [];
-    return allDaysRendered.value ? all : all.slice(0, renderedDayCount.value);
-});
-
-let dayFillHandle: number | null = null;
-let dayFillUsesIdle = false;
-
-function growRenderedDays(by: number) {
-    if (allDaysRendered.value) return;
-    renderedDayCount.value = Math.min(renderedDayCount.value + by, dayCount.value);
-}
-
-function cancelDayFill() {
-    if (dayFillHandle === null) return;
-    if (dayFillUsesIdle && typeof (window as any).cancelIdleCallback === 'function') {
-        (window as any).cancelIdleCallback(dayFillHandle);
-    } else {
-        window.clearTimeout(dayFillHandle);
-    }
-    dayFillHandle = null;
-}
-
-function scheduleDayFill() {
-    if (dayFillHandle !== null || allDaysRendered.value) return;
-    const run = () => {
-        dayFillHandle = null;
-        growRenderedDays(DAY_CHUNK);
-        scheduleDayFill();
-    };
-    if (typeof (window as any).requestIdleCallback === 'function') {
-        dayFillUsesIdle = true;
-        dayFillHandle = (window as any).requestIdleCallback(run, { timeout: 300 });
-    } else {
-        dayFillUsesIdle = false;
-        dayFillHandle = window.setTimeout(run, 32);
-    }
-}
-
-// Sprungziele (Datum/Monat) koennen noch ungerendert sein — vorher auffuellen,
-// sonst findet der Sprung sein Ziel-Element nicht.
-async function ensureDayRendered(dayIso: string) {
-    if (!dayIso || allDaysRendered.value) return;
-    const all = (props.days as any[]) ?? [];
-    const idx = all.findIndex((d: any) => d?.withoutFormat === dayIso);
-    if (idx < 0 || idx < renderedDayCount.value) return;
-    renderedDayCount.value = Math.min(idx + 1 + DAY_CHUNK, all.length);
-    await nextTick();
-}
-
-const dayFillSentinel = ref<HTMLElement | null>(null);
-let dayFillObserver: IntersectionObserver | null = null;
-let dayFillSentinelVisible = false;
-
-// Solange der Marker sichtbar bleibt, Frame fuer Frame nachlegen — sonst haengt
-// der Nutzer beim schnellen Scrollen an der Unterkante fest.
-function pumpDayFill() {
-    if (!dayFillSentinelVisible || allDaysRendered.value) return;
-    growRenderedDays(DAY_CHUNK);
-    requestAnimationFrame(pumpDayFill);
-}
-
-watch(dayFillSentinel, (el) => {
-    dayFillObserver?.disconnect();
-    dayFillObserver = null;
-    dayFillSentinelVisible = false;
-    if (!el) return;
-    dayFillObserver = new IntersectionObserver((entries) => {
-        dayFillSentinelVisible = entries.some(entry => entry.isIntersecting);
-        if (dayFillSentinelVisible) pumpDayFill();
-    }, { root: null, rootMargin: '1200px 0px', threshold: 0 });
-    dayFillObserver.observe(el);
-});
-
-// Neuer Zeitraum -> wieder klein anfangen. Bewusst auf die Eckdaten geankert
-// statt auf die Array-Identitaet: ein Inertia-Reload schickt `period` neu,
-// ohne dass sich der Zeitraum geaendert hat — der Reset wuerde das Grid sonst
-// nach jedem Speichern sichtbar zusammenklappen. Die Monats-Sentinels der alten
-// Zeilen sind damit hinfaellig: ohne Reset beobachtet der Observer abgehaengte
-// Elemente, `monthSentinelSeen` verhindert die Neuanmeldung und der
-// Monatsfokus (und damit das Nachladen beim Scrollen) bliebe stehen.
-const dayRangeKey = computed(() => {
-    const all = (props.days as any[]) ?? [];
-    if (!all.length) return '';
-    return `${all[0]?.withoutFormat ?? ''}_${all[all.length - 1]?.withoutFormat ?? ''}_${all.length}`;
-});
-
-watch(dayRangeKey, () => {
-    cancelDayFill();
-    renderedDayCount.value = INITIAL_DAY_CHUNK;
-    monthObserver?.disconnect();
-    monthObserver = null;
-    monthSentinelSeen.value.clear();
-    scheduleDayFill();
-});
-
-// Sichtbarkeit der Zellen — mit gedrosselter Freigabe.
-//
-// Gemessen (Jahres-Zeitraum, 19 Räume, Schichten an): eine Termin-/Schichtkachel
-// kostet beim Mounten ~1,9 ms, im Sichtfenster hängen ~5.000 davon. Wurde ein
-// ganzer Monat auf einmal sichtbar (beim Scrollen oder wenn Monatsdaten
-// eintrafen), mountete Vue alles in EINEM Task — gemessene Blockaden bis 15 s,
-// in Summe ~60 s für einen Durchlauf durchs Jahr. Genau das ist das "jedes
-// Scrollen führt zu erneutem Warten".
-//
-// Deshalb zwei getrennte Mengen: `visibleKeys` = was der Observer sieht,
-// `releasedKeys` = was tatsächlich rendern darf. Freigegeben wird pro Frame nur
-// ein Häppchen, nach Nähe zum Viewport sortiert und mit adaptivem Budget: wird
-// der Frame zu lang, halbiert sich das Budget, bleibt Luft, wächst es wieder.
-// Beim schnellen Vorbeiscrollen fällt Wartendes still wieder raus, weil es beim
-// Freigeben erneut gegen `visibleKeys` geprüft wird — durchgescrollte Bereiche
-// werden also gar nicht erst gebaut.
 function useCellVisibility(options = {}) {
-    const { root = null, rootMargin = '600px', threshold = 0.01 } = options;
+    const { root = null, rootMargin = '1200px', threshold = 0.01 } = options;
     const visibleKeys = shallowRef(new Set<string>());
-    const releasedKeys = shallowRef(new Set<string>());
     let io: IntersectionObserver | null = null;
     const map = new Map<Element, string>();
-    const pending = new Map<string, number>();      // key -> Distanz zur Viewport-Mitte
-    const pendingRemove = new Set<string>();       // freigegeben, aber wieder ausserhalb
-    let flushHandle: number | null = null;
-    let lastFlushTs = 0;
-    let lastReleased = 0;
-    let costPerCell = 4;                            // ms, gleitend geschaetzt
-    let lastScrollTs = 0;
 
-    // Waehrend aktiv gescrollt wird, wird GAR NICHTS aufgebaut — nur die Queue
-    // gepflegt. Jeder Versuch, waehrenddessen "ein bisschen" zu mounten, kostete
-    // messbar Bildrate (79 ms/Frame statt 13 ms), weil eine einzige Zelle schon
-    // ~7 ms bindet. Steht das Bild, wird zuegig nachgezogen; das entspricht dem
-    // gewuenschten Verhalten "stueckweise aufbauen ist ok, Scrollen darf nicht
-    // haken". Frueher Versuch war ein Halbierungs-Regler — der rastete beim
-    // Mounten dauerhaft auf dem Minimum ein und kam nie wieder hoch.
-    const SCROLL_QUIET_MS = 120;
-    const TARGET_MS_IDLE = 48;   // steht das Bild, darf ein Frame laenger dauern
-    const onScroll = () => { lastScrollTs = performance.now(); };
-    window.addEventListener('scroll', onScroll, { passive: true });
-
-    // Render-Gate: nur freigegebene Zellen bauen ihren Inhalt auf.
-    const isVisible = (key: string) => releasedKeys.value.has(key);
-
-    const schedule = () => {
-        if (flushHandle !== null) return;
-        flushHandle = requestAnimationFrame(flush);
-    };
-
-    const flush = (ts: number) => {
-        flushHandle = null;
-        if (lastFlushTs && lastReleased > 0) {
-            const measured = (ts - lastFlushTs) / lastReleased;
-            costPerCell = costPerCell * 0.7 + Math.max(0.2, measured) * 0.3;
-        }
-        lastFlushTs = ts;
-
-        if ((ts - lastScrollTs) < SCROLL_QUIET_MS) {
-            lastReleased = 0;
-            lastFlushTs = 0;
-            if (pending.size || pendingRemove.size) schedule();
-            return;
-        }
-        const budget = Math.max(1, Math.min(128, Math.round(TARGET_MS_IDLE / costPerCell)));
-
-        // Erst abraeumen, dann aufbauen: Unmounten ist billiger als Mounten,
-        // aber nicht umsonst — 200-400 Kacheln auf einmal zu entfernen hat pro
-        // Frame ~60 ms gekostet. Deshalb ebenfalls gedeckelt (dreifaches Budget).
-        let removed = 0;
-        if (pendingRemove.size) {
-            for (const key of pendingRemove) {
-                if (removed >= budget * 3) break;
-                pendingRemove.delete(key);
-                if (releasedKeys.value.delete(key)) removed++;
-            }
-        }
-
-        let released = 0;
-        if (pending.size) {
-            const sorted = Array.from(pending.entries()).sort((a, b) => a[1] - b[1]);
-            for (const [key] of sorted) {
-                if (released >= budget) break;
-                pending.delete(key);
-                if (!visibleKeys.value.has(key) || releasedKeys.value.has(key)) continue;
-                releasedKeys.value.add(key);
-                released++;
-            }
-        }
-        lastReleased = released;
-        if (released || removed) triggerRef(releasedKeys);
-        if (pending.size || pendingRemove.size) {
-            schedule();
-        } else {
-            lastFlushTs = 0;
-            lastReleased = 0;
-        }
-    };
+    const isVisible = (key: string) => visibleKeys.value.has(key);
 
     const observe = (el: Element, key: string) => {
         if (!el) return;
         if (!io) {
             io = new IntersectionObserver((entries) => {
-                const mid = (root ? (root as Element).clientHeight : window.innerHeight) / 2;
+                let changed = false;
                 for (const entry of entries) {
                     const k = map.get(entry.target);
                     if (!k) continue;
                     if (entry.isIntersecting) {
-                        visibleKeys.value.add(k);
-                        pendingRemove.delete(k);   // war nur kurz draussen: nichts zu tun
-                        if (!releasedKeys.value.has(k)) {
-                            const rect = entry.boundingClientRect;
-                            pending.set(k, Math.abs((rect.top + rect.bottom) / 2 - mid));
-                        }
+                        if (!visibleKeys.value.has(k)) { visibleKeys.value.add(k); changed = true; }
                     } else {
-                        visibleKeys.value.delete(k);
-                        pending.delete(k);
-                        if (releasedKeys.value.has(k)) pendingRemove.add(k);
+                        if (visibleKeys.value.has(k)) { visibleKeys.value.delete(k); changed = true; }
                     }
                 }
-                // Bewusst KEIN triggerRef hier: `visibleKeys` ist reine Buchhaltung
-                // und keine Render-Abhaengigkeit. Waehrend des Scrollens laeuft so
-                // gar kein Re-Render — gerendert wird erst beim Freigeben/Abraeumen.
-                if (pending.size || pendingRemove.size) schedule();
+                if (changed) triggerRef(visibleKeys);
             }, { root, rootMargin, threshold });
         }
         map.set(el, key);
@@ -1048,25 +778,16 @@ function useCellVisibility(options = {}) {
     };
 
     const dispose = () => {
-        window.removeEventListener('scroll', onScroll);
         if (io) io.disconnect();
-        if (flushHandle !== null) cancelAnimationFrame(flushHandle);
-        flushHandle = null;
         map.clear();
-        pending.clear();
-        pendingRemove.clear();
         visibleKeys.value.clear();
-        releasedKeys.value.clear();
     };
 
-    return { observe, isVisible, visibleKeys: releasedKeys, dispose };
+    return { observe, isVisible, visibleKeys, dispose };
 }
-// 600px statt 1200px Vorlauf: halbiert die Zahl gleichzeitig gemounteter
-// Kacheln. Bei ~1,9 ms pro Kachel ist das der direkteste Hebel auf die
-// Aufbauzeit; der Vorlauf reicht weiterhin für ruhiges Scrollen.
 const { observe: observeCell, isVisible: isCellVisible, visibleKeys: visibleCellKeys, dispose: disposeCells } = useCellVisibility({
     root: null,
-    rootMargin: '600px',
+    rootMargin: '1200px',
     threshold: 0.01
 });
 const cellKey = (day, room) => `${day.withoutFormat}:${(room.roomId ?? room.id)}`;
@@ -1474,8 +1195,6 @@ async function runInitialLoad() {
 
 onMounted(async () => {
     await runInitialLoad();
-    // Erst die Daten anfordern, dann den Rest des Zeitraums nachrendern.
-    scheduleDayFill();
 
     const ShiftCalendarListener = useShiftCalendarListener(newCalendarData);
     ShiftCalendarListener.init();
@@ -1535,11 +1254,6 @@ onBeforeUnmount(() => {
         topbarObserver = null;
     }
 
-    // Progressives Rendern stoppen
-    cancelDayFill();
-    dayFillObserver?.disconnect();
-    dayFillObserver = null;
-    dayFillSentinelVisible = false;
 });
 
 // ---------- Multi-Edit etc. ----------
@@ -1855,9 +1569,6 @@ const deleteSelectedEvents = () => {
         });
 };
 const jumpToDayOfMonth = async (day) => {
-    // Ziel kann beim progressiven Rendern noch fehlen
-    await ensureDayRendered(day);
-
     // Globales `html { scroll-behavior: smooth }` (siehe app.blade.php) zwingt
     // sonst alle programmatischen Scrolls in eine Animation. Während des
     // Sprungs temporär abschalten, damit Korrektur-Scrolls instant wirken und
@@ -2022,34 +1733,15 @@ const itemStartTimeOnDay = (item: any, dayIso: string): string => {
     return match ? match[1] : '00:00';
 };
 
-// Termine + eigenständige Schichten einer Zelle, gemischt nach Startzeit sortiert.
-// Ergebnis wird am Tages-Slot gecacht: das Mischen kostet pro Zelle zwei
-// Array-Kopien und eine Sortierung mit Zeit-Parsing — bei aktiver Schichten-
-// Anzeige und einem Jahres-Zeitraum lief das bisher zehntausendfach pro
-// Re-Render. Alle Mutationspfade ersetzen den Slot per Spread, die Identitaet
-// ist damit eine korrekte Cache-Invalidierung.
-const EMPTY_CELL_ITEMS: any[] = [];
-const itemsInCellCache = new WeakMap<object, any[]>();
+// Termine + eigenständige Schichten einer Zelle, gemischt nach Startzeit sortiert
 const itemsInCell = (day: any, room: any) => {
-    const slot = room?.content?.[dayKey(day)];
-    if (!slot || typeof slot !== 'object') return EMPTY_CELL_ITEMS;
-
-    const cached = itemsInCellCache.get(slot);
-    if (cached) return cached;
-
-    const events = (slot.events ?? []).map((evt: any) => ({ type: 'event', data: evt }));
-    const shifts = (slot.shifts ?? []).map((shift: any) => ({ type: 'shift', data: shift }));
-    let items: any[];
-    if (shifts.length === 0) {
-        items = events;
-    } else {
-        const dayIso = day.withoutFormat ?? deKeyToIso(dayKey(day));
-        items = [...events, ...shifts].sort((a, b) =>
-            itemStartTimeOnDay(a, dayIso).localeCompare(itemStartTimeOnDay(b, dayIso))
-        );
-    }
-    itemsInCellCache.set(slot, items);
-    return items;
+    const events = eventsInCell(day, room).map((evt: any) => ({ type: 'event', data: evt }));
+    const shifts = shiftsInCell(day, room).map((shift: any) => ({ type: 'shift', data: shift }));
+    if (shifts.length === 0) return events;
+    const dayIso = day.withoutFormat ?? deKeyToIso(dayKey(day));
+    return [...events, ...shifts].sort((a, b) =>
+        itemStartTimeOnDay(a, dayIso).localeCompare(itemStartTimeOnDay(b, dayIso))
+    );
 };
 
 // Nach Schicht-Bearbeitung den betroffenen Monat neu laden

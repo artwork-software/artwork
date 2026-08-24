@@ -6596,7 +6596,7 @@
     "User can see the day remarks column in the calendar, planning calendar and shift plan if it is enabled in the system settings.": "Nutzer*in sieht die Tagesbemerkungen-Spalte im Kalender, Planungskalender und Dienstplan, wenn sie in den Systemeinstellungen aktiviert ist.",
     "User can create, edit and delete day remarks in the calendar, planning calendar and shift plan.": "Nutzer*in darf Tagesbemerkungen im Kalender, Planungskalender und Dienstplan anlegen, bearbeiten und löschen.",
     "Project status as a required field": "Projektstatus als Pflichtfeld",
-    "If enabled, a project status must be selected when creating a project and an assigned status cannot be removed.": "Wenn aktiviert, muss beim Erstellen eines Projekts ein Projektstatus ausgewählt werden und ein zugewiesener Status kann nicht mehr entfernt werden.",
+    "If enabled, a project status must be selected when creating a project and an assigned status can be edited but not removed.": "Wenn aktiviert, muss beim Erstellen eines Projekts ein Projektstatus ausgewählt werden und ein zugewiesener Status kann bearbeitet, aber nicht entfernt werden.",
     "Project status is a required field.": "Der Projektstatus muss zwingend angegeben werden.",
     "PDF_SEASON_SCHEDULE_EXPORT": "Spielplan-Übersicht Projekte (PDF)",
     "Only show days with event type": "Nur Tage mit Terminart anzeigen",

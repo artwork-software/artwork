@@ -82,7 +82,7 @@
                                 {{ $t('Project status as a required field') }}
                             </label>
                             <p id="state_required-description" class="text-text-subtle text-xs">
-                                {{ $t('If enabled, a project status must be selected when creating a project and an assigned status cannot be removed.') }}
+                                {{ $t('If enabled, a project status must be selected when creating a project and an assigned status can be edited but not removed.') }}
                             </p>
                         </div>
                     </div>

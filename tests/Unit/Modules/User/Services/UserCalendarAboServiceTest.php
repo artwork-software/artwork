@@ -2,11 +2,13 @@
 
 namespace Tests\Unit\Modules\User\Services;
 
+use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\User\Models\User;
 use Artwork\Modules\User\Models\UserCalendarAbo;
 use Artwork\Modules\User\Services\UserCalendarAboService;
 use Illuminate\Database\Eloquent\Builder;
 use PHPUnit\Framework\Attributes\Test;
+use Spatie\IcalendarGenerator\Components\Calendar;
 use Tests\TestCase;
 
 final class UserCalendarAboServiceTest extends TestCase
@@ -78,5 +80,32 @@ final class UserCalendarAboServiceTest extends TestCase
         $query = $this->service->getFilteredEventsQuery($abo);
 
         $this->assertInstanceOf(Builder::class, $query);
+    }
+
+    #[Test]
+    public function add_event_to_calendar_omits_organizer(): void
+    {
+        $creator = User::factory()->create([
+            'first_name' => 'Orga',
+            'last_name' => 'Nisator',
+            'email' => 'orga@example.test',
+        ]);
+        $event = Event::factory()->create([
+            'user_id' => $creator->id,
+            'description' => 'Technikprobe',
+        ]);
+
+        $calendar = Calendar::create('Test');
+        $this->service->addEventToCalendar($calendar, $event->fresh());
+
+        $ics = str_replace("\r\n ", '', $calendar->get());
+
+        // Keine ORGANIZER-Zeile: sonst haengt im Zielkalender eine fremde
+        // Mailadresse am Termin und Clients behandeln ihn als Einladung
+        $this->assertStringNotContainsString('ORGANIZER', $ics);
+        $this->assertStringNotContainsString('ATTENDEE', $ics);
+        $this->assertStringNotContainsString('orga@example.test', $ics);
+        $this->assertStringContainsString('Technikprobe', $ics);
+        $this->assertStringContainsString('Organisation: Orga Nisator', $ics);
     }
 }

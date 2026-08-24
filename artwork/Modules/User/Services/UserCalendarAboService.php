@@ -124,15 +124,33 @@ readonly class UserCalendarAboService
         return 'Termin (ohne Titel)';
     }
 
+    /**
+     * Beschreibung des ICS-Termins. Der Name der/des Erstellenden steht bewusst hier
+     * und nicht als ORGANIZER-Property: sonst behandeln Kalender-Clients den Termin
+     * beim Import als Einladung und benachrichtigen die hinterlegten Adressen.
+     */
+    private function icsDescriptionFor($event): string
+    {
+        $description = trim((string) ($event->description ?? ''));
+        $creatorName = trim((string) ($event->creator?->full_name ?? ''));
+
+        if ($creatorName === '') {
+            return $description;
+        }
+
+        return ($description !== '' ? $description . ' ' : '') . 'Organisation: ' . $creatorName;
+    }
+
     public function addEventToCalendar($calendar, $event): void
     {
         try {
             $title = $this->icsTitleFor($event);
+            $description = $this->icsDescriptionFor($event);
 
-            $calendar->event(function ($calendarEvent) use ($event, $title): void {
+            $calendar->event(function ($calendarEvent) use ($event, $title, $description): void {
                 $calendarEvent
                     ->name($title)
-                    ->description($event->description ?? '')
+                    ->description($description)
                     ->uniqueIdentifier($event->id)
                     ->createdAt(Carbon::parse($event->created_at))
                     ->startsAt(Carbon::parse($event->start_time))
@@ -148,10 +166,6 @@ readonly class UserCalendarAboService
 
                 if ($event->room === null) {
                     $calendarEvent->status(EventStatus::cancelled());
-                }
-
-                if ($event->creator) {
-                    $calendarEvent->organizer($event->creator->email, $event->creator->full_name);
                 }
 
                 if ($event->project) {

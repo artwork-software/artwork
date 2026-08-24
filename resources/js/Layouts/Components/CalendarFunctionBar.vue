@@ -382,30 +382,37 @@ export default {
         },
         getExportModalConfiguration() {
             const cfg = {};
+            // Sichtbarer Kalenderzeitraum als Vorauswahl für die Export-Datumsfelder
+            const activeDateRange = Array.isArray(this.dateValue) ? this.dateValue : null;
 
             cfg[exportTabEnums.PDF_CALENDAR_EXPORT] = {
                 project: this.project,
-                user_filters: this.user_filters ?? null
+                user_filters: this.user_filters ?? null,
+                date_range: activeDateRange
             };
 
             cfg[exportTabEnums.PDF_MONTHLY_CALENDAR_EXPORT] = {
                 project: this.project,
-                user_filters: this.user_filters ?? null
+                user_filters: this.user_filters ?? null,
+                date_range: activeDateRange
             };
 
             cfg[exportTabEnums.PDF_SEASON_SCHEDULE_EXPORT] = {
-                user_filters: this.user_filters ?? null
+                user_filters: this.user_filters ?? null,
+                date_range: activeDateRange
             };
 
             cfg[exportTabEnums.EXCEL_EVENT_LIST_EXPORT] = {
                 project: this.project,
                 show_artists: this.$page.props.createSettings?.show_artists,
-                user_filters: this.user_filters ?? null
+                user_filters: this.user_filters ?? null,
+                date_range: activeDateRange
             };
 
             cfg[exportTabEnums.EXCEL_CALENDAR_EXPORT] = {
                 project: this.project,
-                user_filters: this.user_filters ?? null
+                user_filters: this.user_filters ?? null,
+                date_range: activeDateRange
             };
 
             return cfg;

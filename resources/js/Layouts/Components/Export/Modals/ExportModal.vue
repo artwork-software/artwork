@@ -16,14 +16,18 @@
                 <template v-if="tab === exportTabEnums.PDF_CALENDAR_EXPORT">
                     <PdfCalendarExport v-if="activeTab === exportTabEnums.PDF_CALENDAR_EXPORT"
                                        @close="close()"
+                                       @closed="close()"
                                        :project="configuration[exportTabEnums.PDF_CALENDAR_EXPORT]?.project"
-                                       :preselected-filters="configuration[exportTabEnums.PDF_CALENDAR_EXPORT]?.user_filters ?? null"/>
+                                       :preselected-filters="configuration[exportTabEnums.PDF_CALENDAR_EXPORT]?.user_filters ?? null"
+                                       :preselected-date-range="configuration[exportTabEnums.PDF_CALENDAR_EXPORT]?.date_range ?? null"/>
                 </template>
                 <template v-else-if="tab === exportTabEnums.PDF_MONTHLY_CALENDAR_EXPORT">
                     <PdfMonthlyCalendarExport v-if="activeTab === exportTabEnums.PDF_MONTHLY_CALENDAR_EXPORT"
                                               @close="close()"
+                                              @closed="close()"
                                               :project="configuration[exportTabEnums.PDF_MONTHLY_CALENDAR_EXPORT]?.project"
-                                              :preselected-filters="configuration[exportTabEnums.PDF_MONTHLY_CALENDAR_EXPORT]?.user_filters ?? null"/>
+                                              :preselected-filters="configuration[exportTabEnums.PDF_MONTHLY_CALENDAR_EXPORT]?.user_filters ?? null"
+                                              :preselected-date-range="configuration[exportTabEnums.PDF_MONTHLY_CALENDAR_EXPORT]?.date_range ?? null"/>
                 </template>
                 <template v-else-if="tab === exportTabEnums.PDF_SHIFT_PLAN_EXPORT">
                     <PdfShiftPlanExport v-if="activeTab === exportTabEnums.PDF_SHIFT_PLAN_EXPORT"
@@ -39,6 +43,7 @@
                                                     :show-artists="configuration[exportTabEnums.EXCEL_EVENT_LIST_EXPORT].show_artists"
                                                     :project-preselect="configuration[exportTabEnums.EXCEL_EVENT_LIST_EXPORT]?.project ?? null"
                                                     :preselected-filters="configuration[exportTabEnums.EXCEL_EVENT_LIST_EXPORT]?.user_filters ?? null"
+                                                    :preselected-date-range="configuration[exportTabEnums.EXCEL_EVENT_LIST_EXPORT]?.date_range ?? null"
                                                     @close="close()"/>
                 </template>
                 <template v-else-if="tab === exportTabEnums.EXCEL_CALENDAR_EXPORT">
@@ -46,6 +51,7 @@
                                                     :export-tab-enum="exportTabEnums.EXCEL_CALENDAR_EXPORT"
                                                     :project-preselect="configuration[exportTabEnums.EXCEL_CALENDAR_EXPORT]?.project ?? null"
                                                     :preselected-filters="configuration[exportTabEnums.EXCEL_CALENDAR_EXPORT]?.user_filters ?? null"
+                                                    :preselected-date-range="configuration[exportTabEnums.EXCEL_CALENDAR_EXPORT]?.date_range ?? null"
                                                     @close="close()"/>
                 </template>
                 <template v-else-if="tab === exportTabEnums.EXCEL_WORK_TIME_OVERVIEW_EXPORT">
@@ -75,7 +81,9 @@
                 <template v-else-if="tab === exportTabEnums.PDF_SEASON_SCHEDULE_EXPORT">
                     <PdfSeasonScheduleExport v-if="activeTab === exportTabEnums.PDF_SEASON_SCHEDULE_EXPORT"
                                              @close="close()"
-                                             :preselected-filters="configuration[exportTabEnums.PDF_SEASON_SCHEDULE_EXPORT]?.user_filters ?? null"/>
+                                             @closed="close()"
+                                             :preselected-filters="configuration[exportTabEnums.PDF_SEASON_SCHEDULE_EXPORT]?.user_filters ?? null"
+                                             :preselected-date-range="configuration[exportTabEnums.PDF_SEASON_SCHEDULE_EXPORT]?.date_range ?? null"/>
                 </template>
                 <template v-else>
                     {{ throwUndefinedEnumUsed() }}

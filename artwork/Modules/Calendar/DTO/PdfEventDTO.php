@@ -18,6 +18,14 @@ class PdfEventDTO
     public array $daysOfEvent;
     public ?string $artistNames;
     public ?string $mainCategoryColor;
+    public ?string $description;
+    public ?object $eventStatus;
+    public ?string $createdBy;
+    public ?string $projectStatus;
+    /** @var array<int, string>|null */
+    public ?array $projectLeaders;
+    /** Bewusst snake_case: die PDF-Blades lesen `$event->admission_time`. */
+    public ?string $admission_time;
 
     public function __construct(
         int $id,
@@ -30,6 +38,12 @@ class PdfEventDTO
         ?object $project,
         ?string $artistNames = null,
         ?string $mainCategoryColor = null,
+        ?string $description = null,
+        ?object $eventStatus = null,
+        ?string $createdBy = null,
+        ?string $projectStatus = null,
+        ?array $projectLeaders = null,
+        ?string $admissionTime = null,
     ) {
         $this->id = $id;
         $this->start = Carbon::parse($startTime)->format('Y-m-d H:i');
@@ -41,6 +55,12 @@ class PdfEventDTO
         $this->project = $project;
         $this->artistNames = $artistNames;
         $this->mainCategoryColor = $mainCategoryColor;
+        $this->description = $description;
+        $this->eventStatus = $eventStatus;
+        $this->createdBy = $createdBy;
+        $this->projectStatus = $projectStatus;
+        $this->projectLeaders = $projectLeaders;
+        $this->admission_time = $admissionTime;
         $this->daysOfEvent = collect(CarbonPeriod::create($startTime, $endTime))
             ->map(fn($d) => $d->format('d.m.Y'))
             ->toArray();

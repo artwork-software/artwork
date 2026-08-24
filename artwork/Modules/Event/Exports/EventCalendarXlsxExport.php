@@ -2,6 +2,7 @@
 
 namespace Artwork\Modules\Event\Exports;
 
+use Artwork\Modules\Calendar\Services\EventExportDisplaySettings;
 use Carbon\Carbon;
 use Illuminate\Contracts\View\Factory as ViewFactory;
 use Illuminate\Contracts\View\View;
@@ -29,6 +30,8 @@ class EventCalendarXlsxExport implements FromView, WithStyles
 
     private array $projects;
 
+    private ?EventExportDisplaySettings $displaySettings = null;
+
     public function __construct(private readonly ViewFactory $viewFactory)
     {
     }
@@ -45,8 +48,16 @@ class EventCalendarXlsxExport implements FromView, WithStyles
                 'dateStart' => $this->dateStart ?? null,
                 'dateEnd' => $this->dateEnd ?? null,
                 'projects' => $this->projects ?? null,
+                'displaySettings' => $this->displaySettings,
             ]
         );
+    }
+
+    public function setDisplaySettings(?EventExportDisplaySettings $displaySettings): self
+    {
+        $this->displaySettings = $displaySettings;
+
+        return $this;
     }
 
     public function setDesiresTimespanExport(bool $desiresTimespanExport): self

@@ -3,6 +3,7 @@
 namespace Artwork\Modules\Event\Services;
 
 use Artwork\Core\Carbon\Service\CarbonService;
+use Artwork\Modules\Calendar\Services\EventExportDisplaySettings;
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Room\Models\Room;
 use Carbon\Carbon;
@@ -30,6 +31,10 @@ class EventCalendarExportBladeTemplateService
 
     private ?Carbon $dateEnd;
 
+    private ?EventExportDisplaySettings $displaySettings = null;
+
+    private bool $admissionEnabled = false;
+
     public function __construct(
         private readonly CarbonService $carbonService,
         private readonly Translator $translator,
@@ -44,6 +49,7 @@ class EventCalendarExportBladeTemplateService
         Carbon $dateStart,
         Carbon $dateEnd,
         ?array $projects,
+        ?EventExportDisplaySettings $displaySettings = null,
     ): void {
 
         $this->desiresTimespanExport = $desiresTimespanExport;
@@ -53,6 +59,8 @@ class EventCalendarExportBladeTemplateService
         $this->projects = $projects;
         $this->dateStart = $dateStart;
         $this->dateEnd = $dateEnd;
+        $this->displaySettings = $displaySettings;
+        $this->admissionEnabled = (bool) app(\App\Settings\EventSettings::class)->enable_admission;
 
         $desiredLocale = $this->translator->getLocale();
 
@@ -255,13 +263,9 @@ class EventCalendarExportBladeTemplateService
                 if ($rowOfDay % 2 === 0) {
                     if ($hasEvent) {
                         $markup .= sprintf(
-                            '<td style="%s">%s %s %s</td><td style="%s"></td>',
+                            '<td style="%s">%s</td><td style="%s"></td>',
                             'width: 125px; border-bottom:1px solid #000000; border-left:1px solid #000000;',
-                            ($eventName = $event->getAttribute('name')) ? e($eventName) . ' | ' : '',
-                            (
-                                $eventStatusName = $event->getAttribute('eventStatus')?->getAttribute('name')
-                            ) ? e($eventStatusName) : '',
-                            ($description = $event->getAttribute('description')) ? ' | ' . e($description) : '',
+                            $this->composeEventDetailRow($event),
                             'width: 125px; border-bottom:1px solid #000000; border-right:1px solid #000000;'
                         );
                     } else {
@@ -277,12 +281,12 @@ class EventCalendarExportBladeTemplateService
                     if ($hasEvent) {
                         $eventType = $event->getAttribute('event_type');
 
-                        $eventNameBackgroundColorHexCode = $eventType?->getAttribute('hex_code') ?? '#FFFFFF';
+                        $eventNameBackgroundColorHexCode = $this->resolveEventBackgroundColor($event, $eventType);
                         [$r, $g, $b] = sscanf($eventNameBackgroundColorHexCode, "#%02x%02x%02x");
                         $fontColor = (($r + $g + $b) > ((255 + 255 + 255) / 2)) ? 'color: black;' : 'color: white;';
                         $markup .= sprintf(
                             '<td style="%s">%s</td>' .
-                            '<td style="%s">%s - %s</td>',
+                            '<td style="%s">%s - %s%s</td>',
                             sprintf(
                                 '%s %s %s %s %s',
                                 'width: 125px;',
@@ -295,6 +299,7 @@ class EventCalendarExportBladeTemplateService
                             'width: 125px; border-top:1px solid #000000; border-right:1px solid #000000;',
                             $event->getAttribute('start_time')->format('H:i'),
                             $event->getAttribute('end_time')->format('H:i'),
+                            $this->composeAdmissionSuffix($event),
                         );
                     } else {
                         $markup .= sprintf(
@@ -309,6 +314,107 @@ class EventCalendarExportBladeTemplateService
         }
 
         return $markup;
+    }
+
+    /**
+     * Detailzeile eines Termins gemäß Anzeigeeinstellungen (ohne Settings: Altverhalten
+     * Terminname | Terminstatus | Beschreibung). Liefert bereits escaptes Markup.
+     */
+    private function composeEventDetailRow(Event $event): string
+    {
+        $display = $this->displaySettings;
+
+        if ($display === null) {
+            $parts = [];
+            if ($eventName = $event->getAttribute('name')) {
+                $parts[] = e($eventName);
+            }
+            if ($eventStatusName = $event->getAttribute('eventStatus')?->getAttribute('name')) {
+                $parts[] = e($eventStatusName);
+            }
+            if ($description = $event->getAttribute('description')) {
+                $parts[] = e($description);
+            }
+
+            return implode(' | ', $parts);
+        }
+
+        $project = $event->getAttribute('project');
+        $artists = $project?->getAttribute('artists');
+        $primaryName = $display->resolveEventName($event->getAttribute('name'), $artists);
+
+        $parts = [];
+        if ($primaryName) {
+            $parts[] = e($primaryName);
+        }
+        if ($display->shows('project_artists') && $artists && $artists !== $primaryName) {
+            $parts[] = e($artists);
+        }
+        if (
+            $display->shows('show_event_status')
+            && ($eventStatusName = $event->getAttribute('eventStatus')?->getAttribute('name'))
+        ) {
+            $parts[] = e($eventStatusName);
+        }
+        if ($display->shows('description') && ($description = $event->getAttribute('description'))) {
+            $parts[] = e($description);
+        }
+        if (
+            $display->shows('project_status')
+            && ($projectStatusName = $project?->getAttribute('status')?->getAttribute('name'))
+        ) {
+            $parts[] = e($projectStatusName);
+        }
+        if ($display->shows('project_management') && $project) {
+            $leaders = $project->getAttribute('managerUsers');
+            if ($leaders && $leaders->isNotEmpty()) {
+                $parts[] = e(
+                    $leaders
+                        ->map(static fn ($leader) => trim($leader->first_name . ' ' . $leader->last_name))
+                        ->implode(', ')
+                );
+            }
+        }
+        if ($display->shows('show_event_creator') && ($creator = $event->getAttribute('creator'))) {
+            $parts[] = e(trim($creator->first_name . ' ' . $creator->last_name));
+        }
+
+        return implode(' | ', $parts);
+    }
+
+    /**
+     * Zellenfarbe gemäß Anzeigeeinstellung (Terminart / Terminstatus / Hauptkategorie);
+     * ohne Settings wie bisher Terminart-Farbe.
+     */
+    private function resolveEventBackgroundColor(Event $event, ?object $eventType): string
+    {
+        if ($this->displaySettings === null) {
+            return $eventType?->getAttribute('hex_code') ?? '#FFFFFF';
+        }
+
+        $project = $event->getAttribute('project');
+
+        return $this->displaySettings->resolveColor(
+            $eventType,
+            $event->getAttribute('eventStatus'),
+            (bool) $project,
+            $project?->getAttribute('categories')?->firstWhere('pivot.is_main', true)?->color,
+            '#FFFFFF'
+        );
+    }
+
+    private function composeAdmissionSuffix(Event $event): string
+    {
+        if (
+            !$this->admissionEnabled
+            || $this->displaySettings === null
+            || !$this->displaySettings->shows('show_event_admission')
+            || empty($event->getAttribute('admission_time'))
+        ) {
+            return '';
+        }
+
+        return ' | Einlass ' . substr((string) $event->getAttribute('admission_time'), 0, 5);
     }
 
     private function createDateColumn(Carbon $date, string $desiredLocale): string

@@ -201,6 +201,13 @@
                 </div>
             </section>
 
+            <!-- Anzeigeeinstellungen (nur Kalender-Export; vorbelegt aus dem Kalender) -->
+            <ExportDisplaySettings
+                v-if="!isExcelEventListExport()"
+                v-model="displaySettings"
+                id-prefix="excelCalendar"
+            />
+
             <section class="flex items-center justify-end">
                 <BaseUIButton
                     @click="initializeDownload()"
@@ -231,6 +238,7 @@ import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 import LastedProjects from "@/Artwork/LastedProjects.vue";
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 import {IconChevronDown, IconChevronUp, IconFileReport, IconX} from "@tabler/icons-vue";
+import ExportDisplaySettings from "@/Layouts/Components/Export/Components/ExportDisplaySettings.vue";
 
 // Local open/close state per subcategory to avoid mutating computed arrays
 const openState = ref({});
@@ -273,6 +281,13 @@ onMounted(async () => {
         }
     }
     applyActiveUserFilters();
+
+    // Zeitraum: aktuell sichtbarer Kalenderzeitraum als Vorauswahl für den Zeitraum-Modus
+    const range = props.preselectedDateRange;
+    if (Array.isArray(range) && range[0] && range[1]) {
+        conditionalDateStart.value = String(range[0]).slice(0, 10);
+        conditionalDateEnd.value = String(range[1]).slice(0, 10);
+    }
 });
 
 
@@ -352,6 +367,11 @@ const props = defineProps({
             default: null,
             required: false
         },
+        preselectedDateRange: {
+            type: Array,
+            default: null,
+            required: false
+        },
         exportTabEnum: {
             type: String,
             required: true
@@ -392,8 +412,11 @@ const props = defineProps({
         desiresEventListExport: isExcelEventListExport(),
         desiredColumns: Object.keys(availableColumns.value).filter(
             (column) => column !== 'artists' || props.showArtists
-        )
+        ),
+        displaySettings: null
     }),
+    // Anzeigeeinstellungen (nur Kalender-Export; v-model der ExportDisplaySettings-Sektion)
+    displaySettings = ref(null),
     conditionalDateStart = ref(''),
     conditionalDateEnd = ref(''),
     conditionalProjects = ref(
@@ -454,6 +477,9 @@ const props = defineProps({
 
         if (!isExcelEventListExport()) {
             delete exportForm.desiredColumns;
+            exportForm.displaySettings = displaySettings.value;
+        } else {
+            delete exportForm.displaySettings;
         }
 
 
@@ -512,6 +538,7 @@ const props = defineProps({
                     '_blank',
                     'noopener'
                 );
+                emits('close');
             }).catch(() => console.error($t('Export could not be created. Please try again.')));
 };
 </script>

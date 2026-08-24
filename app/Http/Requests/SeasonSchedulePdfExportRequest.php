@@ -57,6 +57,12 @@ class SeasonSchedulePdfExportRequest extends FormRequest
             'filter.event_property_ids.*' => ['integer'],
             'filter.project_state_ids' => ['sometimes', 'nullable', 'array'],
             'filter.project_state_ids.*' => ['integer'],
+            // Anzeigeeinstellungen (Farbquelle + Künstler:innen statt Titel) — nested Keys
+            // einzeln validieren, validated() strippt unvalidierte Sub-Keys
+            'displaySettings' => ['sometimes', 'nullable', 'array'],
+            'displaySettings.use_event_status_color' => ['sometimes', 'boolean'],
+            'displaySettings.use_main_category_color' => ['sometimes', 'boolean'],
+            'displaySettings.show_artist_names_as_title' => ['sometimes', 'boolean'],
             'showHolidays' => ['required', 'boolean'],
             'showWeekNumbers' => ['required', 'boolean'],
             'highlightWeekends' => ['required', 'boolean'],

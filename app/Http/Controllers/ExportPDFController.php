@@ -7,6 +7,7 @@ use Artwork\Core\FileHandling\Naming\StoredFileName;
 use Artwork\Modules\Area\Models\Area;
 use Artwork\Modules\Calendar\Services\CalendarDataService;
 use Artwork\Modules\Calendar\Services\EventCalendarService;
+use Artwork\Modules\Calendar\Services\EventExportDisplaySettings;
 use Artwork\Modules\Calendar\Services\ShiftCalendarService;
 use Artwork\Modules\Event\Models\EventProperty;
 use Artwork\Modules\Event\Services\EventService;
@@ -72,12 +73,17 @@ class ExportPDFController extends Controller
             $userFilter->end_date;
 
 
-        $userCalendarSettings = $user->getAttribute('calendar_settings');
+        // Anzeigeeinstellungen: Kalender-Settings des Users als Default, Export-Modal
+        // darf pro Export übersteuern; wirkt auch auf Raum-/Terminselektion
+        $displaySettings = EventExportDisplaySettings::fromRequest(
+            $this->resolveDisplaySettingsInput($request),
+            $user->getAttribute('calendar_settings')
+        );
+        $userCalendarSettings = $displaySettings->settings();
         $filterData   = $request->filter;
 
         $userCalendarFilter = new UserFilter($filterData);
         $userCalendarFilter->exists = false;
-        //dd($userCalendarFilter);
 
         // Falls nur Projekt angegeben -> Zeitspanne aus dem Projekt ableiten
         if ($projectId) {
@@ -121,7 +127,8 @@ class ExportPDFController extends Controller
                 $userCalendarFilter,
                 $startDate,
                 $endDate,
-                $userCalendarSettings
+                $userCalendarSettings,
+                $displaySettings
             ),
             $startDate,
             $endDate
@@ -154,7 +161,7 @@ class ExportPDFController extends Controller
         // nur wenn angefordert, Feature aktiv und der User sie sehen darf
         $dayRemarks = [];
         if (
-            $request->boolean('includeDayRemarks')
+            $displaySettings->shows('show_day_remarks')
             && app(\App\Settings\GeneralCalendarSettings::class)->day_remarks_enabled
             && (
                 // Gleiche Sichtbarkeitsregel wie im Kalender (CalendarDataService):
@@ -298,7 +305,12 @@ class ExportPDFController extends Controller
 
                             $slot = $allDay ? 'morning' : ($startMin < 720 ? 'morning' : ($startMin < 1080 ? 'noon' : 'evening'));
 
-                            $name        = $event->eventName ?? '';
+                            // Gleiche Namens-/Zeilenlogik wie __buildSegmentForDay im Blade,
+                            // damit die vorberechneten Slot-Höhen zum Rendering passen
+                            $name        = $displaySettings->resolveEventName(
+                                $event->eventName ?? null,
+                                $event->artistNames ?? null
+                            ) ?? '';
                             $abbr        = $event->eventType?->abbreviation ?? '';
                             $projectName = $event->project->name ?? '';
 
@@ -311,6 +323,10 @@ class ExportPDFController extends Controller
                                 + $timeLineH
                                 + $paddingPx
                             );
+                            foreach ($displaySettings->extraContentLines($event) as $extraLine) {
+                                $contentHeight += max(1, (int) ceil(mb_strlen($extraLine) / $effectiveCharsPerLine))
+                                    * $projectLineH;
+                            }
 
                             $slotContentHeights[$slot][] = $contentHeight;
                         }
@@ -371,7 +387,7 @@ class ExportPDFController extends Controller
                 ],
                 'DAYS_PER_PAGE'  => $DAYS_PER_PAGE,
                 'rowHeights'     => $rowHeights,   // Einheitliche Mindesthöhen pro Raum+Slot
-                'colorSource'    => $request->get('colorSource', 'eventType'),
+                'display'        => $displaySettings,
                 'paperSize'      => $request->string('paperSize', 'a4'),
                 'dayRemarks'     => $dayRemarks,   // d.m.Y => Bemerkungstext (leer wenn nicht angefordert)
             ]
@@ -676,6 +692,31 @@ class ExportPDFController extends Controller
 
 
     /**
+     * `displaySettings` aus dem Request; alte Payloads (colorSource/includeDayRemarks)
+     * werden auf die entsprechenden Flags gemappt, damit noch offene Tabs weiter funktionieren.
+     *
+     * @return array<string, bool>|null
+     */
+    private function resolveDisplaySettingsInput(Request $request): ?array
+    {
+        $input = $request->input('displaySettings');
+        if (is_array($input)) {
+            return $input;
+        }
+
+        $legacy = [];
+        if ($request->has('colorSource')) {
+            $legacy['use_main_category_color'] = $request->get('colorSource') === 'mainCategory';
+            $legacy['use_event_status_color'] = false;
+        }
+        if ($request->has('includeDayRemarks')) {
+            $legacy['show_day_remarks'] = $request->boolean('includeDayRemarks');
+        }
+
+        return $legacy !== [] ? $legacy : null;
+    }
+
+    /**
      * Normalisiert Monats-Eingaben auf "YYYY-MM". Akzeptiert "YYYY-MM", "YYYY-MM-DD",
      * "MM.YYYY" und "DD.MM.YYYY"; alles andere ergibt null (= Fallback aktueller Monat).
      */
@@ -707,7 +748,11 @@ class ExportPDFController extends Controller
         $userFilter = $user->userFilters()->calendarFilter()->first();
 
         $projectId = $request->get('project');
-        $userCalendarSettings = $user->getAttribute('calendar_settings');
+        $displaySettings = EventExportDisplaySettings::fromRequest(
+            $this->resolveDisplaySettingsInput($request),
+            $user->getAttribute('calendar_settings')
+        );
+        $userCalendarSettings = $displaySettings->settings();
         $filterData = $request->filter;
         $userCalendarFilter = new UserFilter($filterData);
         $userCalendarFilter->exists = false;
@@ -778,7 +823,8 @@ class ExportPDFController extends Controller
                 $userCalendarFilter,
                 $globalStart,
                 $globalEnd,
-                $userCalendarSettings
+                $userCalendarSettings,
+                $displaySettings
             ),
             $globalStart,
             $globalEnd
@@ -842,7 +888,7 @@ class ExportPDFController extends Controller
                 'created_by' => $user->first_name . ' ' . $user->last_name,
                 'created_date' => Carbon::now()->format('d.m.Y'),
                 'bigLogoBase64' => $bigLogoBase64,
-                'colorSource' => $request->get('colorSource', 'eventType'),
+                'display' => $displaySettings,
                 'paperSize' => $request->string('paperSize', 'a3'),
             ]
         )

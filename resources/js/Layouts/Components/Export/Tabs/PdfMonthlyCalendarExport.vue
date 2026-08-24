@@ -360,40 +360,6 @@
                         </fieldset>
                     </div>
 
-                    <!-- Color Source Toggle -->
-                    <div class="space-y-2">
-                        <label class="block text-sm font-medium text-text-muted">
-                            {{ $t('Event color') }}
-                        </label>
-                        <fieldset class="flex gap-2">
-                            <div
-                                v-for="mode in [
-                                    { id: 'eventType', label: $t('Color by event type') },
-                                    { id: 'mainCategory', label: $t('Color by main category of project') }
-                                ]"
-                                :key="mode.id"
-                                class="relative flex-1"
-                            >
-                                <input
-                                    :id="`monthly-colorSource-${mode.id}`"
-                                    name="monthly-color-source"
-                                    type="radio"
-                                    :value="mode.id"
-                                    v-model="pdf.colorSource"
-                                    class="peer absolute inset-0 h-0 w-0 opacity-0"
-                                />
-                                <label
-                                    :for="`monthly-colorSource-${mode.id}`"
-                                    class="block cursor-pointer rounded-xl border px-4 py-3 text-sm transition
-                                    peer-checked:border-surface-inverse peer-checked:bg-surface-inverse peer-checked:text-text-inverse
-                                    border-border-subtle bg-white text-text hover:bg-surface-sunken hover:text-text"
-                                >
-                                    {{ mode.label }}
-                                </label>
-                            </div>
-                        </fieldset>
-                    </div>
-
                     <!-- DPI -->
                     <div>
                         <BaseInput
@@ -404,6 +370,9 @@
                     </div>
                 </div>
             </section>
+
+            <!-- Anzeigeeinstellungen (vorbelegt aus dem Kalender, pro Export anpassbar) -->
+            <ExportDisplaySettings v-model="displaySettings" id-prefix="pdfMonthly" />
 
             <!-- Export -->
             <section class="flex items-center justify-end">
@@ -449,10 +418,16 @@ import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 import {IconChevronDown, IconX, IconInfoCircle} from "@tabler/icons-vue";
 import SaveFilterPresetModal from '@/Layouts/Components/Export/Modals/SaveFilterPresetModal.vue'
 import ConfirmDeleteModal from '@/Layouts/Components/ConfirmDeleteModal.vue'
+import ExportDisplaySettings from '@/Layouts/Components/Export/Components/ExportDisplaySettings.vue'
 
 const $t = useTranslation()
 const emits = defineEmits<{ (e: 'closed', value: boolean): void }>()
-const props = defineProps<{ pdfTitle?: string; project?: any; preselectedFilters?: Record<string, number[] | null> | null }>()
+const props = defineProps<{
+    pdfTitle?: string;
+    project?: any;
+    preselectedFilters?: Record<string, number[] | null> | null;
+    preselectedDateRange?: string[] | null;
+}>()
 
 const showModalInformation = ref(true)
 
@@ -497,8 +472,19 @@ const pdf = useForm({
     project: null as number | null,
     dpi: 72,
     filter: {} as Record<string, number[] | null>,
-    colorSource: 'eventType' as 'eventType' | 'mainCategory'
+    displaySettings: null as Record<string, boolean> | null
 })
+
+// Anzeigeeinstellungen (v-model der ExportDisplaySettings-Sektion)
+const displaySettings = ref<Record<string, boolean> | null>(null)
+
+// Zeitraum: aktuell sichtbarer Kalenderzeitraum als Vorauswahl (Backend nutzt volle Monate)
+const applyPreselectedDateRange = () => {
+    const range = props.preselectedDateRange
+    if (!Array.isArray(range) || !range[0] || !range[1]) return
+    pdf.startMonth = String(range[0]).slice(0, 10)
+    pdf.endMonth = String(range[1]).slice(0, 10)
+}
 
 const pdfSelectedProject = ref<any | null>(null)
 const selectedPaperSize = ref<{ id: string; name: string }>({ id: 'a3', name: 'A3' })
@@ -546,6 +532,7 @@ const applyActiveUserFilters = () => {
 onMounted(() => {
     loadFilterPresets()
     applyActiveUserFilters()
+    applyPreselectedDateRange()
 })
 
 const getCurrentFilterData = () => {
@@ -640,6 +627,7 @@ const createPdf = () => {
     Object.assign(data, extractCheckedIds('eventFilters'));
 
     pdf.filter = data;
+    pdf.displaySettings = displaySettings.value;
 
     pdf.post(route('calendar.export.monthly-pdf'), { preserveScroll: true })
     closeModal(true)

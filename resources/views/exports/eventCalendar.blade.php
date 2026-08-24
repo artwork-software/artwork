@@ -21,5 +21,6 @@
             $dateStart,
             $dateEnd,
             $projects,
+            $displaySettings ?? null,
         );
 @endphp

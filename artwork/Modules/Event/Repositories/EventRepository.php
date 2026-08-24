@@ -20,6 +20,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Query\Builder as BaseBuilder;
 use Illuminate\Notifications\DatabaseNotification;
 use Illuminate\Support\Collection as SupportCollection;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
 class EventRepository extends BaseRepository
@@ -226,19 +227,31 @@ class EventRepository extends BaseRepository
         $desiresTimespanExport = $exportConfiguration->get('desiresTimespanExport', false);
         $conditional = $exportConfiguration->get('conditional', []);
         $filter = $exportConfiguration->get('filter', []);
+        $displaySettings = $exportConfiguration->get('displaySettings');
+        $displaySettings = is_array($displaySettings) ? $displaySettings : null;
+
+        $with = [
+            'eventStatus',
+            'room',
+            'project',
+            'project.users',
+            'project.categories',
+            'project.genres',
+            'project.sectors',
+        ];
+        // Zusatzrelationen nur laden, wenn die Export-Anzeigeeinstellungen sie rendern
+        if (!empty($displaySettings['show_event_creator'])) {
+            $with[] = 'creator';
+        }
+        if (!empty($displaySettings['project_management'])) {
+            $with[] = 'project.managerUsers';
+        }
+        if (!empty($displaySettings['project_status'])) {
+            $with[] = 'project.status';
+        }
 
         $query
-            ->with(
-                [
-                    'eventStatus',
-                    'room',
-                    'project',
-                    'project.users',
-                    'project.categories',
-                    'project.genres',
-                    'project.sectors',
-                ]
-            )
+            ->with($with)
             //handle conditionals
             ->when(
                 $desiresTimespanExport,
@@ -336,6 +349,29 @@ class EventRepository extends BaseRepository
                 }
             )
             //@todo: optional: fixed event attributes (is_loud/audience) can be added here when frontend sends them
+            // Geplante Termine wie im Kalender: nur bei aktivem Flag UND Planungs-Berechtigung.
+            // Nur wenn das Export-Modal Anzeigeeinstellungen mitschickt — alte Payloads (z. B.
+            // Terminlisten-Export) bleiben unverändert.
+            ->when(
+                $displaySettings !== null,
+                function (Builder $query) use ($displaySettings): void {
+                    $query->where(function (Builder $inner) use ($displaySettings): void {
+                        $inner->where('is_planning', false);
+                        $user = Auth::user();
+                        if (
+                            !empty($displaySettings['show_planned_events'])
+                            && $user
+                            && (
+                                $user->hasRole('artwork admin')
+                                || $user->can('can see planning calendar')
+                                || $user->can('can edit planning calendar')
+                            )
+                        ) {
+                            $inner->orWhere('is_planning', true);
+                        }
+                    });
+                }
+            )
                 ->where('deleted_at', null)
             ->orderBy('start_time');
 

@@ -16,6 +16,22 @@ use Spatie\IcalendarGenerator\Components\Event;
 
 readonly class UserShiftCalendarAboService
 {
+    /**
+     * Optionale Felder sind nach der Validierung schlicht abwesend, deshalb hier die Defaults.
+     *
+     * @var array<string, mixed>
+     */
+    private const CREATE_DEFAULTS = [
+        'date_range' => false,
+        'start_date' => null,
+        'end_date' => null,
+        'specific_crafts' => false,
+        'craft_ids' => [],
+        'enable_notification' => false,
+        'notification_time' => null,
+        'notification_time_unit' => null,
+    ];
+
     public function __construct(
         private UserShiftCalendarAboRepository $userShiftCalendarAboRepository,
         private ShiftSettings $shiftSettings,
@@ -25,10 +41,13 @@ readonly class UserShiftCalendarAboService
 
     public function create(array $data, int $userId): void
     {
+        $data = array_replace(self::CREATE_DEFAULTS, $data);
+
         $calendarAbo = new UserShiftCalendarAbo();
         $calendarAbo->user_id = $userId;
-        // $calendarAbo->calendar_abo_id random string
-        $calendarAbo->calendar_abo_id = $data['calendar_abo_id'] ?? Str::uuid();
+        // Die Feed-URL ist das einzige Geheimnis des oeffentlichen ICS-Endpunkts,
+        // deshalb wird die UUID immer serverseitig erzeugt und nie aus $data uebernommen.
+        $calendarAbo->calendar_abo_id = (string) Str::uuid();
         $calendarAbo->date_range = $data['date_range'];
         $calendarAbo->start_date = $data['start_date'];
         $calendarAbo->end_date = $data['end_date'];

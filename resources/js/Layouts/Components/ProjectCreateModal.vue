@@ -204,25 +204,32 @@
                                 </div>
                             </div>
                             <div class="px-6 pb-5 pt-4 w-full" v-if="createSettings.state">
-                                <!-- Show tag when state is selected -->
-                                <div v-if="selectedState" class="w-full">
-                                    <div class="text-text-subtle text-xs mb-2">
-                                        {{ t('Project status') }}{{ isStateRequired ? '*' : '' }}
+                                <!-- Ändern geht immer über die Listbox (Chip = Button); nur das
+                                     Entfernen-X entfällt bei Pflichtfeld -->
+                                <Listbox as="div" class="w-full relative" v-model="selectedState" @update:model-value="handleStateChange($event)">
+                                    <!-- Chip-Ansicht bei gewähltem Status: Klick öffnet die Auswahl -->
+                                    <div v-if="selectedState" class="w-full">
+                                        <div class="text-text-subtle text-xs mb-2">
+                                            {{ t('Project status') }}{{ isStateRequired ? '*' : '' }}
+                                        </div>
+                                        <div class="inline-flex items-center gap-x-1">
+                                            <ListboxButton
+                                                class="inline-flex items-center gap-x-2 px-3 py-1.5 rounded-full border border-border bg-white cursor-pointer hover:border-text-subtle transition-colors duration-150"
+                                            >
+                                                <div class="block w-3 h-3 rounded-full" :style="{'backgroundColor' : selectedState.color }"/>
+                                                <span class="text-sm flex items-center gap-x-1">
+                                                    {{ selectedState.name }}
+                                                    <IconCalendarMonth v-if="selectedState.is_planning === true || selectedState.is_planning === 1" class="w-4 h-4" />
+                                                </span>
+                                                <IconChevronDown class="h-4 w-4 text-text-subtle" aria-hidden="true"/>
+                                            </ListboxButton>
+                                            <button v-if="!isStateRequired" type="button" @click="selectedState = null" class="ml-1">
+                                                <IconX class="h-4 w-4 text-text-subtle hover:text-danger" />
+                                            </button>
+                                        </div>
                                     </div>
-                                    <div class="inline-flex items-center gap-x-2 px-3 py-1.5 rounded-full border border-border bg-white">
-                                        <div class="block w-3 h-3 rounded-full" :style="{'backgroundColor' : selectedState.color }"/>
-                                        <span class="text-sm flex items-center gap-x-1">
-                                            {{ selectedState.name }}
-                                            <IconCalendarMonth v-if="selectedState.is_planning === true || selectedState.is_planning === 1" class="w-4 h-4" />
-                                        </span>
-                                        <button v-if="!isStateRequired" type="button" @click="selectedState = null" class="ml-1">
-                                            <IconX class="h-4 w-4 text-text-subtle hover:text-danger" />
-                                        </button>
-                                    </div>
-                                </div>
-                                <!-- Show dropdown when no state is selected -->
-                                <Listbox v-else as="div" class="w-full relative" v-model="selectedState" @update:model-value="handleStateChange($event)">
-                                    <ListboxButton class="menu-button-no-padding relative">
+                                    <!-- Platzhalter-Ansicht ohne Status -->
+                                    <ListboxButton v-else class="menu-button-no-padding relative">
                                         <div class="truncate">
                                             <div class="top-2 left-4 absolute text-text-subtle text-xs">
                                                 {{ t('Project status') }}{{ isStateRequired ? '*' : '' }}

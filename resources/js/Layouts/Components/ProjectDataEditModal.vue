@@ -14,7 +14,7 @@
                             <button class="w-full h-12 flex justify-between text-sm/5 font-semibold text-text items-center text-left border border-2 border-border bg-white px-4 py-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
                                     @click="openColor = !openColor">
                                 <span class="w-full" v-if="!selectedState">
-                                    {{ $t('Select project status') }}
+                                    {{ $t('Select project status') }}{{ isStateRequired ? '*' : '' }}
                                 </span>
                                 <span v-else  class="items-center font-medium px-2 py-1.5 inline-flex border rounded-full"
                                       :style="{
@@ -54,6 +54,9 @@
                             </ListboxOptions>
                         </transition>
                     </Listbox>
+                </div>
+                <div v-if="showStateRequiredError" class="text-danger text-xs mt-1">
+                    {{ $t('Project status is a required field.') }}
                 </div>
                 <div class="py-2" v-if="createSettings.managers">
                     <div class="font-semibold text-sm -mb-1">{{ $t('Project management')}}</div>
@@ -256,6 +259,11 @@ export default {
         IconCheck
     },
     watch: {
+        selectedState(state) {
+            if (state) {
+                this.showStateRequiredError = false;
+            }
+        },
         groupName: {
             deep: true,
             handler() {
@@ -283,15 +291,26 @@ export default {
             uploadKeyVisualFeedback: "",
             assignedUsers: this.project.users.filter(user => user.pivot.is_manager),
             cost_center: this.project.cost_center ? this.project.cost_center.name : "",
+            showStateRequiredError: false,
         }
+    },
+    computed: {
+        isStateRequired() {
+            return !!(this.createSettings?.state && this.createSettings?.state_required);
+        },
     },
     methods: {
         updateProjectData() {
+            if (this.isStateRequired && !this.selectedState) {
+                this.showStateRequiredError = true;
+                return;
+            }
             this.$inertia.patch(route('projects.update', {project: this.project.id}), {
                 name: this.name,
                 selectedGroup: this.selectedGroup,
                 budget_deadline: this.budgetDeadline,
-                state: this.selectedState,
+                // immer explizit senden (undefined würde den Key strippen und die Backend-Pflicht umgehen)
+                state: this.selectedState ?? null,
                 assignedUsers: this.assignedUsers.map(user => user.id),
                 cost_center: this.cost_center,
             }, {

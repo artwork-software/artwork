@@ -2,10 +2,12 @@
 
 namespace Tests\Feature\Http\Controllers;
 
+use Artwork\Modules\Craft\Models\Craft;
 use Artwork\Modules\DayService\Models\DayService;
 use Artwork\Modules\IndividualTimes\Models\IndividualTime;
 use Artwork\Modules\User\Models\User;
 use Artwork\Modules\User\Models\UserShiftCalendarAbo;
+use Illuminate\Support\Str;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\Feature\FeatureTestCase;
 
@@ -142,6 +144,110 @@ final class UserShiftCalendarAboControllerTest extends FeatureTestCase
         }
 
         $this->assertSame(2, substr_count($response->getContent(), 'SUMMARY:Tagesdienst: Bereitschaft'));
+    }
+
+    #[Test]
+    public function updateCannotReassignTheSubscriptionToAnotherUser(): void
+    {
+        $victim = User::factory()->create();
+        $attacker = User::factory()->create();
+        $calendarAbo = $this->createCalendarAbo($attacker);
+
+        $this->actingAs($attacker)
+            ->patch(
+                route('user.shift.calendar.abo.update', $calendarAbo->id),
+                ['user_id' => $victim->id]
+            );
+
+        $this->assertSame($attacker->id, $calendarAbo->fresh()->user_id);
+    }
+
+    #[Test]
+    public function updateOfAForeignSubscriptionIsForbidden(): void
+    {
+        $victim = User::factory()->create();
+        $attacker = User::factory()->create();
+        $calendarAbo = $this->createCalendarAbo($victim, ['specific_crafts' => false]);
+
+        $response = $this->actingAs($attacker)
+            ->patch(
+                route('user.shift.calendar.abo.update', $calendarAbo->id),
+                ['specific_crafts' => true]
+            );
+
+        $response->assertForbidden();
+        $this->assertFalse((bool) $calendarAbo->fresh()->specific_crafts);
+        $this->assertSame($victim->id, $calendarAbo->fresh()->user_id);
+    }
+
+    #[Test]
+    public function updateCannotOverwriteTheFeedUuid(): void
+    {
+        $owner = User::factory()->create();
+        $calendarAbo = $this->createCalendarAbo($owner);
+        $originalUuid = $calendarAbo->calendar_abo_id;
+
+        $this->actingAs($owner)
+            ->patch(
+                route('user.shift.calendar.abo.update', $calendarAbo->id),
+                ['calendar_abo_id' => 'attacker-chosen-uuid']
+            );
+
+        $this->assertSame($originalUuid, $calendarAbo->fresh()->calendar_abo_id);
+        $this->get(route('user-shift-calendar-abo.show', 'attacker-chosen-uuid'))->assertNotFound();
+    }
+
+    #[Test]
+    public function storeAlwaysGeneratesTheFeedUuidOnTheServer(): void
+    {
+        $user = User::factory()->create();
+
+        $this->actingAs($user)->post(route('user.shift.calendar.abo.create'), [
+            'calendar_abo_id' => 'attacker-chosen-uuid',
+            'user_id' => User::factory()->create()->id,
+            'date_range' => false,
+            'specific_crafts' => false,
+            'craft_ids' => [],
+            'enable_notification' => false,
+            'notification_time' => 0,
+            'notification_time_unit' => 'minutes',
+        ]);
+
+        $calendarAbo = UserShiftCalendarAbo::query()->where('user_id', $user->id)->sole();
+
+        $this->assertNotSame('attacker-chosen-uuid', $calendarAbo->calendar_abo_id);
+        $this->assertTrue(Str::isUuid($calendarAbo->calendar_abo_id));
+        $this->get(route('user-shift-calendar-abo.show', 'attacker-chosen-uuid'))->assertNotFound();
+    }
+
+    #[Test]
+    public function theOwnerCanStillUpdateTheirOwnSubscription(): void
+    {
+        $owner = User::factory()->create();
+        $calendarAbo = $this->createCalendarAbo($owner);
+        $craft = Craft::factory()->create();
+
+        $this->actingAs($owner)
+            ->patch(route('user.shift.calendar.abo.update', $calendarAbo->id), [
+                'id' => $calendarAbo->id,
+                'date_range' => true,
+                'start_date' => '2026-07-01',
+                'end_date' => '2026-07-31',
+                'specific_crafts' => true,
+                'craft_ids' => [$craft->id],
+                'enable_notification' => true,
+                'notification_time' => 30,
+                'notification_time_unit' => 'minutes',
+            ]);
+
+        $calendarAbo = $calendarAbo->fresh();
+
+        $this->assertTrue((bool) $calendarAbo->date_range);
+        $this->assertTrue((bool) $calendarAbo->specific_crafts);
+        $this->assertSame([$craft->id], $calendarAbo->craft_ids);
+        $this->assertSame(30, $calendarAbo->notification_time);
+        $this->assertSame('minutes', $calendarAbo->notification_time_unit);
+        $this->assertSame($owner->id, $calendarAbo->user_id);
     }
 
     /**

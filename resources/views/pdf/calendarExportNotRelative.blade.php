@@ -240,26 +240,23 @@
      * Wenn ein Event über Zeitfenster geht, taucht es in mehreren Slots auf,
      * weil eventOverlapsSlot() für mehrere Slots true sein kann.
      */
-    $renderEventsForSlot = function(array $events, string $dayDisplay, string $slot) use ($colorSource) {
+    $renderEventsForSlot = function(array $events, string $dayDisplay, string $slot) use ($display) {
         foreach ($events as $event) {
             if (!\App\Http\Controllers\ExportPDFController::eventOverlapsSlot($event, $dayDisplay, $slot)) {
                 continue;
             }
 
             $abbr      = $event->eventType?->abbreviation ?? '';
-            // Color based on colorSource setting
-            if (($colorSource ?? 'eventType') === 'mainCategory') {
-                if (!$event->project) {
-                    $hexColor = '#9E9E9E';
-                } elseif ($event->mainCategoryColor ?? null) {
-                    $hexColor = $event->mainCategoryColor;
-                } else {
-                    $hexColor = '#3A3A3A';
-                }
-            } else {
-                $hexColor = $event->eventType?->hex_code ?? '#000000';
-            }
-            $name      = $event->eventName ?? '';
+            // Farbe gemäß Anzeigeeinstellung (Terminart / Terminstatus / Hauptkategorie)
+            $hexColor  = $display->resolveColor(
+                $event->eventType ?? null,
+                $event->eventStatus ?? null,
+                (bool) ($event->project ?? null),
+                $event->mainCategoryColor ?? null,
+                '#000000'
+            );
+            $name      = $display->resolveEventName($event->eventName ?? null, $event->artistNames ?? null) ?? '';
+            $extras    = $display->extraContentLines($event);
             $projectNm = $event->project->name ?? null;
             $allDay    = $event->allDay ?? false;
 
@@ -282,7 +279,10 @@
                 $__admissionEnabled = (bool) app(\App\Settings\EventSettings::class)->enable_admission;
             }
             $isStartDayCell = str_contains($dayDisplay, $startCarbon->format('d.m.Y'));
-            $admissionSuffix = ($__admissionEnabled && !empty($event->admission_time) && (!$isMultiDay || $isStartDayCell))
+            $admissionSuffix = (
+                $__admissionEnabled && $display->shows('show_event_admission')
+                && !empty($event->admission_time) && (!$isMultiDay || $isStartDayCell)
+            )
                 ? ' · Einlass ' . substr((string) $event->admission_time, 0, 5)
                 : '';
 
@@ -314,6 +314,10 @@
                     ? mb_substr($projectNm, 0, 50) . '…'
                     : $projectNm;
                 echo '<div class="event-project">'.e($projectText).'</div>';
+            }
+            // Zusatzzeilen gemäß Anzeigeeinstellungen
+            foreach ($extras as $extraLine) {
+                echo '<div class="event-project">'.e($extraLine).'</div>';
             }
             echo        '</div>';
 

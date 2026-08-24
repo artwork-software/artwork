@@ -325,6 +325,14 @@
         @close="handleWishModalClose"
     />
 
+    <!-- Ergebnis-Feedback nach dem Wunsch-Eintragen -->
+    <NotificationToast
+        v-model:show="wishToastVisible"
+        :title="$t('Project wish saved')"
+        :description="wishToastDescription"
+        type="success"
+    />
+
     <!-- Schichtverlauf – im Einsatzplan eines Users mit dessen Namen vorbelegt.
          Person + Zeitraum stehen hier schon fest → direkt laden (wie bei den
          anderen Shortcuts), statt erst auf "Verlauf laden" zu warten. -->
@@ -357,6 +365,13 @@ import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 import { provideShiftPlanLookups } from '@/Composeables/useShiftPlanLookups.js';
 import axios from 'axios';
 import { colorForProjectId, assignmentLabel } from '@/Composeables/UseProjectDayAssignments.js';
+import { useTranslation } from '@/Composeables/Translation.js';
+
+const translate = useTranslation();
+
+const NotificationToast = defineAsyncComponent({
+    loader: () => import('@/Artwork/Feedback/NotificationToast.vue'),
+});
 
 const ShiftHistoryModal = defineAsyncComponent({
     loader: () => import('@/Pages/Shifts/Components/ShiftHistoryModal.vue'),
@@ -411,9 +426,19 @@ const openWishModal = (day) => {
     showWishModal.value = true
 }
 
-const handleWishModalClose = ({ saved } = { saved: false }) => {
+// Ergebnis-Feedback nach dem Wunsch-Eintragen (Toast)
+const wishToastVisible = ref(false)
+const wishToastDescription = ref('')
+
+const handleWishModalClose = ({ saved, created, skipped } = { saved: false }) => {
     showWishModal.value = false
     if (saved) {
+        if ((created ?? 0) > 0) {
+            wishToastDescription.value = (skipped ?? 0) > 0
+                ? translate('{0} day(s) assigned, {1} day(s) were already covered', [created, skipped])
+                : translate('{0} day(s) assigned', [created])
+            wishToastVisible.value = true
+        }
         router.reload({ only: ['projectAssignments'] })
     }
 }

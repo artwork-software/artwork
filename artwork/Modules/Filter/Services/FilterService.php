@@ -7,6 +7,8 @@ use Artwork\Modules\Craft\Services\CraftService;
 use Artwork\Modules\Event\Repositories\EventPropertyRepository;
 use Artwork\Modules\EventType\Services\EventTypeService;
 use Artwork\Modules\Filter\Repositories\FilterRepository;
+use Artwork\Modules\Project\Models\ProjectState;
+use Artwork\Modules\Project\Services\ProjectStateService;
 use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\Room\Repositories\RoomRepository;
 use Artwork\Modules\Room\Repositories\RoomAttributeRepository;
@@ -28,6 +30,7 @@ class FilterService
         private readonly RoomCategoryRepository $categoryRepository,
         private readonly EventPropertyRepository $eventPropertyRepository,
         private readonly CraftService $craftService,
+        private readonly ProjectStateService $projectStateService,
         private readonly AuthManager $authManager
     ) {
     }
@@ -69,6 +72,13 @@ class FilterService
                     'color' => $room->getEffectiveColor(),
                 ]),
             'craft_ids' => $this->map($crafts),
+            // Farbe mitliefern, damit das Filter-Modal die Statusfarbe hinterlegt (wie bei Räumen)
+            'project_state_ids' => $this->projectStateService->getAll()
+                ->map(fn(ProjectState $projectState) => [
+                    'id' => $projectState->getAttribute('id'),
+                    'name' => $projectState->getAttribute('name'),
+                    'color' => $projectState->getAttribute('color'),
+                ]),
         ];
     }
 

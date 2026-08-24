@@ -192,6 +192,8 @@ class EventController extends Controller
             'room_category_ids' => null,
             'event_property_ids' => null,
             'craft_ids' => null,
+            // Blendet sonst den Zieltermin aus (und alle Termine ohne Projekt)
+            'project_state_ids' => null,
         ]);
 
         return redirect()->route('events', [
@@ -401,7 +403,7 @@ class EventController extends Controller
                         'project.users:id',
                         'project.categories',
                         'creator:id,first_name,last_name,position,email,profile_photo_path',
-                        'eventStatus:id,color',
+                        'eventStatus:id,name,color',
                         'eventProperties',
                         'subEvents' => fn ($query) => $query->without('creator'),
                     ])

@@ -37,6 +37,8 @@ class UpdateUserFilterRequest extends FormRequest
             'event_property_ids.*' => 'integer|exists:event_properties,id',
             'craft_ids' => 'nullable|array',
             'craft_ids.*' => 'integer|exists:crafts,id',
+            'project_state_ids' => 'nullable|array',
+            'project_state_ids.*' => 'integer|exists:project_states,id',
         ];
     }
 }

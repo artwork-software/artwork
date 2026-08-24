@@ -585,6 +585,14 @@
                 :anchor="dayRemarkTooltip.anchor"
             />
 
+            <!-- Ergebnis-Feedback nach dem Zuordnen -->
+            <NotificationToast
+                v-model:show="assignmentToastVisible"
+                :title="assignmentToastTitle"
+                :description="assignmentToastDescription"
+                type="success"
+            />
+
             <!-- Projektzentriert Personen zuordnen (Schichten-Tab) -->
             <ProjectAssignPersonModal
                 v-if="assignPersonModalDays !== null && props.project?.id"
@@ -660,6 +668,8 @@ import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
 import { formatAssignmentDate } from "@/Composeables/UseProjectDayAssignments.js";
 import ProjectAssignPersonModal from "@/Pages/Shifts/Components/ProjectAssignPersonModal.vue";
 import ProjectAssignmentModal from "@/Pages/Shifts/Components/ProjectAssignmentModal.vue";
+import NotificationToast from "@/Artwork/Feedback/NotificationToast.vue";
+import { useTranslation } from "@/Composeables/Translation.js";
 import ConfirmationComponent from "@/Layouts/Components/ConfirmationComponent.vue";
 
 type AnyRoom = any
@@ -798,14 +808,36 @@ const openAssignPersonModal = (days: string[] = []) => {
     assignPersonModalDays.value = days
 }
 
-const onAssignPersonModalClose = (payload?: { saved?: boolean }) => {
-    assignPersonModalDays.value = null
-    if (payload?.saved) loadProjectDayAssignments()
+const translate = useTranslation()
+
+// Ergebnis-Feedback nach dem Zuordnen (Toast)
+const assignmentToastVisible = ref(false)
+const assignmentToastTitle = ref('')
+const assignmentToastDescription = ref('')
+
+const showAssignmentResultToast = (title: string, created?: number, skipped?: number) => {
+    if ((created ?? 0) <= 0) return
+    assignmentToastTitle.value = title
+    assignmentToastDescription.value = (skipped ?? 0) > 0
+        ? translate('{0} day(s) assigned, {1} day(s) were already covered', [created, skipped])
+        : translate('{0} day(s) assigned', [created])
+    assignmentToastVisible.value = true
 }
 
-const onSelfWishModalClose = (payload?: { saved?: boolean }) => {
+const onAssignPersonModalClose = (payload?: { saved?: boolean, created?: number, skipped?: number }) => {
+    assignPersonModalDays.value = null
+    if (payload?.saved) {
+        showAssignmentResultToast(translate('Project assignment saved'), payload?.created, payload?.skipped)
+        loadProjectDayAssignments()
+    }
+}
+
+const onSelfWishModalClose = (payload?: { saved?: boolean, created?: number, skipped?: number }) => {
     showSelfWishModal.value = false
-    if (payload?.saved) loadProjectDayAssignments()
+    if (payload?.saved) {
+        showAssignmentResultToast(translate('Project wish saved'), payload?.created, payload?.skipped)
+        loadProjectDayAssignments()
+    }
 }
 
 // Entfernen mit Bestätigung (verbindliche Zuordnung benachrichtigt die Person)

@@ -94,16 +94,23 @@
                 </h3>
 
                 <div class="space-y-2">
-                    <label class="flex items-start gap-2 cursor-pointer">
+                    <label
+                        class="flex items-start gap-2"
+                        :class="fullPeriodDisabled ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'"
+                    >
                         <input
                             type="radio"
                             value="full_period"
                             v-model="periodMode"
-                            class="mt-0.5 h-4 w-4 border-border text-accent-600 focus:ring-accent-600"
+                            :disabled="fullPeriodDisabled"
+                            class="mt-0.5 h-4 w-4 border-border text-accent-600 focus:ring-accent-600 disabled:cursor-not-allowed"
                         />
                         <span>
                             <span class="text-text">{{ $t('Entire project period') }}</span>
-                            <span v-if="selectedProject?.period_start" class="block text-[11px] text-text-subtle">
+                            <span v-if="fullPeriodDisabled" class="block text-[11px] text-text-subtle">
+                                {{ $t('The project has no events yet, so there is no project period to assign.') }}
+                            </span>
+                            <span v-else-if="selectedProject?.period_start" class="block text-[11px] text-text-subtle">
                                 {{ formatAssignmentDate(selectedProject.period_start) }} - {{ formatAssignmentDate(selectedProject.period_end) }}
                                 &middot; {{ $t('Moves along if the project is rescheduled.') }}
                             </span>
@@ -136,25 +143,19 @@
                             {{ $t('No days selected yet') }}
                         </span>
                     </div>
-                    <div class="flex items-center gap-2">
-                        <BaseInput
-                            id="project-assignment-add-day"
-                            type="date"
-                            v-model="dayToAdd"
-                            :label="$t('Add day')"
-                            :show-label="false"
-                            no-margin-top
-                        />
-                        <BaseUIButton
-                            :label="$t('Add')"
-                            :disabled="!dayToAdd"
-                            @click="addDay"
-                        />
-                    </div>
+                    <VueDatePicker
+                        v-model="pickerDates"
+                        multi-dates
+                        inline
+                        auto-apply
+                        :enable-time-picker="false"
+                        :locale="userLanguage"
+                        class="assignment-day-picker"
+                    />
                 </div>
             </section>
 
-            <!-- Warnung (z. B. Wunsch auf Abwesenheitstag) -->
+            <!-- Warnung (z. B. Wunsch auf Abwesenheitstag, Frei-Tag bei Zuordnung) -->
             <div
                 v-if="warningMessage"
                 class="rounded-lg border border-warning-border bg-warning-surface px-3 py-2 text-xs text-warning"
@@ -163,12 +164,18 @@
             </div>
 
             <!-- Footer -->
-            <div class="flex justify-end pt-2 border-t border-border-subtle">
+            <div class="flex justify-end gap-2 pt-2 border-t border-border-subtle">
+                <BaseUIButton
+                    v-if="absenceWarningActive"
+                    :label="$t('Assign anyway')"
+                    :disabled="submitting"
+                    @click="submit(true)"
+                />
                 <BaseUIButton
                     :label="mode === 'wish' ? $t('Enter wish') : $t('Assign')"
                     is-add-button
                     :disabled="!canSubmit || submitting"
-                    @click="submit"
+                    @click="submit(false)"
                 />
             </div>
         </div>
@@ -176,7 +183,7 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
+import { ref, computed, watch, onMounted, onUnmounted, defineAsyncComponent } from 'vue';
 import axios from 'axios';
 import { usePage } from '@inertiajs/vue3';
 import ArtworkBaseModal from '@/Artwork/Modals/ArtworkBaseModal.vue';
@@ -184,6 +191,16 @@ import BaseInput from '@/Artwork/Inputs/BaseInput.vue';
 import BaseUIButton from '@/Artwork/Buttons/BaseUIButton.vue';
 import PropertyIcon from '@/Artwork/Icon/PropertyIcon.vue';
 import { colorForProjectId, formatAssignmentDate } from '@/Composeables/UseProjectDayAssignments.js';
+import { useTranslation } from '@/Composeables/Translation.js';
+import '@vuepic/vue-datepicker/dist/main.css';
+
+const $t = useTranslation();
+
+const VueDatePicker = defineAsyncComponent({
+    loader: () => import('@vuepic/vue-datepicker'),
+    delay: 200,
+    timeout: 3000,
+});
 
 const props = defineProps({
     workerType: { type: Number, required: true }, // 0=User, 1=Freelancer, 2=ServiceProvider
@@ -204,18 +221,53 @@ const loadingProjects = ref(false);
 const selectedProject = ref(props.fixedProject ? { ...props.fixedProject } : null);
 const periodMode = ref(props.initialDays.length ? 'days' : 'full_period');
 const selectedDays = ref([...props.initialDays]);
-const dayToAdd = ref('');
 const warningMessage = ref('');
+const absenceWarningActive = ref(false);
 const submitting = ref(false);
+
+const userLanguage = usePage().props.auth?.user?.language ?? 'de';
+
+// Lokales Heute (kein toISOString — das wäre UTC und abends schon der Vortag)
+function toLocalDateString(date) {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+}
+
+// Kalender-Mehrfachauswahl: Date-Objekte des Pickers <-> Y-m-d-Strings
+const pickerDates = computed({
+    get: () => selectedDays.value.map((day) => new Date(`${day}T12:00:00`)),
+    set: (dates) => {
+        selectedDays.value = (dates ?? [])
+            .map((date) => toLocalDateString(new Date(date)))
+            .sort();
+    },
+});
+
+// Projekt ohne Termine hat keinen Zeitraum — Option ausgrauen statt Backend-Fehler
+const fullPeriodDisabled = computed(
+    () => selectedProject.value !== null && (selectedProject.value.period_start ?? null) === null
+        && 'period_start' in selectedProject.value
+);
+
+// immediate: ist die Option von Anfang an disabled (fixedProject ohne Termine),
+// darf der initiale periodMode 'full_period' nicht aktiv bleiben
+watch(fullPeriodDisabled, (disabled) => {
+    if (disabled && periodMode.value === 'full_period') {
+        periodMode.value = 'days';
+    }
+}, { immediate: true });
 
 const daysForSuggestion = computed(() => selectedDays.value.length
     ? selectedDays.value
-    : [new Date().toISOString().slice(0, 10)]);
+    : [toLocalDateString(new Date())]);
 
 const canSubmit = computed(() => {
     if (!selectedProject.value) return false;
     if (periodMode.value === 'days') return selectedDays.value.length > 0;
-    return true;
+    // Zweiter Riegel zum Watch: disabled Zeitraum-Modus nie absenden
+    return !fullPeriodDisabled.value;
 });
 
 let searchDebounce = null;
@@ -296,37 +348,47 @@ onUnmounted(() => {
 function selectProject(project) {
     selectedProject.value = project;
     warningMessage.value = '';
-}
-
-function addDay() {
-    if (dayToAdd.value && !selectedDays.value.includes(dayToAdd.value)) {
-        selectedDays.value.push(dayToAdd.value);
-        selectedDays.value.sort();
-    }
-    dayToAdd.value = '';
+    absenceWarningActive.value = false;
 }
 
 function removeDay(day) {
     selectedDays.value = selectedDays.value.filter(d => d !== day);
 }
 
-async function submit() {
+async function submit(force = false) {
     if (!canSubmit.value || submitting.value) return;
     warningMessage.value = '';
+    absenceWarningActive.value = false;
     submitting.value = true;
 
     try {
-        await axios.post(route('project-day-assignments.store'), {
+        const { data } = await axios.post(route('project-day-assignments.store'), {
             project_id: selectedProject.value.id,
             worker_type: props.workerType,
             worker_id: props.workerId,
             type: props.mode,
             full_period: periodMode.value === 'full_period',
             days: periodMode.value === 'days' ? selectedDays.value : [],
+            force,
         });
         rememberLastUsedProject();
-        emit('close', { saved: true });
+
+        if ((data.created ?? 0) === 0) {
+            // Alles bereits abgedeckt (bestehende Zuordnung oder Schicht desselben
+            // Projekts) — offen lassen und erklären statt kommentarlos zu schließen
+            warningMessage.value = $t('All selected days are already covered for the selected persons.');
+            return;
+        }
+
+        emit('close', { saved: true, created: data.created ?? 0, skipped: data.skipped ?? 0 });
     } catch (error) {
+        if (error?.response?.status === 409 && error.response.data?.warning === 'absences') {
+            // Frei-/Abwesenheitstag im Zeitraum: warnen, „Trotzdem zuordnen" anbieten
+            warningMessage.value = error.response.data.message;
+            absenceWarningActive.value = true;
+            return;
+        }
+
         // 422 mit verständlicher Meldung (z. B. Wunsch auf Abwesenheitstag) als
         // freundliche Warnung anzeigen statt rohem Fehler.
         const errors = error?.response?.data?.errors;
@@ -338,3 +400,14 @@ async function submit() {
     }
 }
 </script>
+
+<style scoped>
+/* Inline-Kalender an die Modalbreite anpassen */
+.assignment-day-picker :deep(.dp__menu) {
+    width: 100%;
+    border-radius: 0.5rem;
+}
+.assignment-day-picker :deep(.dp__flex_display) {
+    display: block;
+}
+</style>

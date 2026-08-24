@@ -198,6 +198,7 @@ class EventCollectionService
         $areaIds          = $calendarFilter?->area_ids;
         $roomAttributeIds = $calendarFilter?->room_attribute_ids;
         $roomCategoryIds  = $calendarFilter?->room_category_ids;
+        $projectStateIds  = $calendarFilter?->project_state_ids;
 
         return $builder
             ->unless(
@@ -216,6 +217,10 @@ class EventCollectionService
                     $b->whereIn('event_type_id', $eventTypeIds)
                         ->orWhereHas('subEvents', fn($sb) => $sb->whereIn('event_type_id', $eventTypeIds));
                 });
+            })
+            // Projektstatus-Filter (zentrale Semantik im Event-Scope)
+            ->when($projectStateIds, function ($builder) use ($projectStateIds) {
+                $builder->byProjectStateIds($projectStateIds);
             });
     }
 

@@ -287,7 +287,7 @@
         $event,
         string $dayDisplay,
         int $hMorning, int $hNoon, int $hEvening,
-        string $colorSource = 'eventType',
+        \Artwork\Modules\Calendar\Services\EventExportDisplaySettings $display,
         int $laneCount = 1
     ) {
         $tz = config('app.timezone');
@@ -334,12 +334,15 @@
             }
         }
 
-        // Einlass (Instanz-Setting): nur am Starttag, Uhrzeit ohne Sekunden
+        // Einlass (Instanz-Setting + Anzeigeeinstellung): nur am Starttag, Uhrzeit ohne Sekunden
         static $__admissionEnabled = null;
         if ($__admissionEnabled === null) {
             $__admissionEnabled = (bool) app(\App\Settings\EventSettings::class)->enable_admission;
         }
-        if ($__admissionEnabled && !empty($event->admission_time) && (!$isMultiDay || $isStartDay)) {
+        if (
+            $__admissionEnabled && $display->shows('show_event_admission')
+            && !empty($event->admission_time) && (!$isMultiDay || $isStartDay)
+        ) {
             $timeString .= ' · Einlass ' . substr((string) $event->admission_time, 0, 5);
         }
 
@@ -358,9 +361,10 @@
         // Mindesthöhe: basierend auf Textlänge und Lane-Breite
         $baseCharsPerLine = 14;
         $charsPerLine = max(4, (int) floor($baseCharsPerLine / max(1, $laneCount)));
-        $_evName = $event->eventName ?? '';
+        $_evName = $display->resolveEventName($event->eventName ?? null, $event->artistNames ?? null) ?? '';
         $_abbr   = $event->eventType?->abbreviation ?? '';
         $_projNm = $event->project->name ?? '';
+        $_extras = $display->extraContentLines($event);
         $_titleText = ($_abbr !== '' ? $_abbr . ': ' : '') . $_evName;
         $titleLines = max(1, (int) ceil(mb_strlen($_titleText) / $charsPerLine));
         $projectLines = $_projNm !== '' ? max(1, (int) ceil(mb_strlen($_projNm) / $charsPerLine)) : 0;
@@ -375,26 +379,25 @@
             + $timeLineH
             + $paddingPx
         );
+        foreach ($_extras as $_extraLine) {
+            $minHeightPx += max(1, (int) ceil(mb_strlen($_extraLine) / $charsPerLine)) * $projectLineH;
+        }
 
         // Slot-Span (für Kompaktheitslogik)
         $slotSpan = 1;
         if ($qStart < 12*60 && $qEnd > 12*60) $slotSpan++;
         if ($qStart < 18*60 && $qEnd > 18*60) $slotSpan++;
 
-        // Farben
+        // Farben (Terminart / Terminstatus / Hauptkategorie gemäß Anzeigeeinstellung)
         $abbr = $event->eventType?->abbreviation ?? '';
-        if (($colorSource ?? 'eventType') === 'mainCategory') {
-            if (!$event->project) {
-                $hexColor = '#9E9E9E';
-            } elseif ($event->mainCategoryColor ?? null) {
-                $hexColor = $event->mainCategoryColor;
-            } else {
-                $hexColor = '#3A3A3A';
-            }
-        } else {
-            $hexColor = $event->eventType?->hex_code ?? '#111111';
-        }
-        $name      = $event->eventName ?? '';
+        $hexColor = $display->resolveColor(
+            $event->eventType ?? null,
+            $event->eventStatus ?? null,
+            (bool) ($event->project ?? null),
+            $event->mainCategoryColor ?? null,
+            '#111111'
+        );
+        $name      = $_evName;
         $projectNm = $event->project->name ?? null;
 
         $r = hexdec(substr($hexColor, 1, 2));
@@ -420,6 +423,7 @@
             'abbr'        => $abbr,
             'name'        => $name,
             'project'     => $projectNm,
+            'extras'      => $_extras,
             'time'        => $timeString,
             'isMulti'     => $isMultiDay,
             'bg'          => $bgHex,
@@ -464,11 +468,11 @@
         return [$byLane, $laneCount];
     }
 
-    $renderDayCell = function(array $eventsForDay, string $dayDisplay, int $hMorning, int $hNoon, int $hEvening, string $colorSource = 'eventType') {
+    $renderDayCell = function(array $eventsForDay, string $dayDisplay, int $hMorning, int $hNoon, int $hEvening, \Artwork\Modules\Calendar\Services\EventExportDisplaySettings $display) {
         // Pre-compute lane count so segment min-heights account for narrower lanes
         $preSegments = [];
         foreach ($eventsForDay as $event) {
-            $seg = __buildSegmentForDay($event, $dayDisplay, $hMorning, $hNoon, $hEvening, $colorSource, 1);
+            $seg = __buildSegmentForDay($event, $dayDisplay, $hMorning, $hNoon, $hEvening, $display, 1);
             if ($seg) $preSegments[] = $seg;
         }
         [, $laneCount] = __assignLanes($preSegments);
@@ -476,7 +480,7 @@
         // Rebuild segments with correct lane count for accurate min-heights
         $segments = [];
         foreach ($eventsForDay as $event) {
-            $seg = __buildSegmentForDay($event, $dayDisplay, $hMorning, $hNoon, $hEvening, $colorSource, $laneCount);
+            $seg = __buildSegmentForDay($event, $dayDisplay, $hMorning, $hNoon, $hEvening, $display, $laneCount);
             if ($seg) $segments[] = $seg;
         }
 
@@ -570,6 +574,11 @@
                         ? mb_substr($seg['project'], 0, 50) . '…'
                         : $seg['project'];
                     echo '<div class="event-sub">'.e($projectText).'</div>';
+                }
+
+                // Zusatzzeilen gemäß Anzeigeeinstellungen (CSS blendet sie in Kompakt-Lanes aus)
+                foreach (($seg['extras'] ?? []) as $extraLine) {
+                    echo '<div class="event-sub">'.e($extraLine).'</div>';
                 }
 
                 echo '<div class="event-time">';
@@ -702,7 +711,7 @@
                                     style="{{ $isWeekend ? 'background-color:#f4f4f5;' : 'background-color:#fff;' }} height: {{ $hDay }}px;"
                                 >
                                     <div class="day-wrap" style="height: {{ $hDay }}px;">
-                                        @php $renderDayCell($eventsForDay, $fullDay, $hMorning, $hNoon, $hEvening, $colorSource ?? 'eventType'); @endphp
+                                        @php $renderDayCell($eventsForDay, $fullDay, $hMorning, $hNoon, $hEvening, $display); @endphp
                                     </div>
                                 </td>
                             @endif

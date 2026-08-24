@@ -39,6 +39,7 @@ class FilterController extends Controller
             'event_type_ids' => $filter->event_type_ids,
             'event_property_ids' => $filter->event_property_ids,
             'craft_ids' => $filter->craft_ids,
+            'project_state_ids' => $filter->project_state_ids,
         ]);
     }
 }

@@ -47,6 +47,10 @@ class ProjectTabBulkEditService
             ->when(!empty($userCalendarFilter?->event_type_ids), function ($q) use ($userCalendarFilter) {
                 $q->whereIn('event_type_id', $userCalendarFilter->event_type_ids);
             })
+            // Projektstatus-Filter (zentrale Semantik im Event-Scope)
+            ->when(!empty($userCalendarFilter?->project_state_ids), function ($q) use ($userCalendarFilter) {
+                $q->byProjectStateIds($userCalendarFilter->project_state_ids);
+            })
             // Raumfilter via whereHas(Room …) anwenden
             ->when(
                 !empty($userCalendarFilter?->room_ids)

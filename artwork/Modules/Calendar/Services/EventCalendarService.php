@@ -53,7 +53,7 @@ readonly class EventCalendarService
         $users        = $userIds->isEmpty() ? collect() : User::whereIn('id', $userIds)->select(['id','first_name','last_name','position','email','profile_photo_path'])->get()->keyBy('id');
         $projects     = $projectIds->isEmpty() ? collect() : Project::whereIn('id',$projectIds)->select(['id','name','state','artists','is_group','color','icon'])->with(['status:id,name,color','managerUsers:id,first_name,last_name,position,email,profile_photo_path','managerUsers.departments:id','groups','categories'])->get()->keyBy('id');
         $eventTypes   = $eventTypeIds->isEmpty() ? collect() : EventType::whereIn('id',$eventTypeIds)->select(['id','name','abbreviation','hex_code'])->get()->keyBy('id');
-        $eventStatuses= $eventStatusIds->isEmpty() ? collect() : EventStatus::whereIn('id',$eventStatusIds)->select(['id','color'])->get()->keyBy('id');
+        $eventStatuses= $eventStatusIds->isEmpty() ? collect() : EventStatus::whereIn('id',$eventStatusIds)->select(['id','name','color'])->get()->keyBy('id');
 
         $eventDTOs = $events->map(fn($event) => EventDTO::fromModel(
             $event,
@@ -85,9 +85,10 @@ readonly class EventCalendarService
                    $startDate,
                    $endDate,
         null|UserCalendarSettings|UserDailyViewCalendarSettings $userCalendarSettings = null,
+        ?EventExportDisplaySettings $displaySettings = null,
     ): SupportCollection {
         $events = $this->filter(
-            $this->getEventQueryForPdf(),
+            $this->getEventQueryForPdf($displaySettings),
             $rooms,
             $filter,
             $startDate,
@@ -95,17 +96,49 @@ readonly class EventCalendarService
             $userCalendarSettings,
         );
 
-        // Bulk-Lookup nur für benötigte Daten
-        $eventTypeIds = $events->pluck('event_type_id')->unique()->filter();
-        $projectIds   = $events->pluck('project_id')->unique()->filter();
+        // Bulk-Lookup nur für benötigte Daten — Zusatzfelder ausschließlich laden,
+        // wenn die Anzeigeeinstellungen des Exports sie tatsächlich rendern
+        $needsEventStatus   = $displaySettings?->shows('use_event_status_color')
+            || $displaySettings?->shows('show_event_status');
+        $needsCreator       = (bool) $displaySettings?->shows('show_event_creator');
+        $needsProjectStatus = (bool) $displaySettings?->shows('project_status');
+        $needsLeaders       = (bool) $displaySettings?->shows('project_management');
+
+        $eventTypeIds   = $events->pluck('event_type_id')->unique()->filter();
+        $projectIds     = $events->pluck('project_id')->unique()->filter();
+        $eventStatusIds = $needsEventStatus ? $events->pluck('event_status_id')->unique()->filter() : collect();
+        $userIds        = $needsCreator ? $events->pluck('user_id')->unique()->filter() : collect();
+
+        $projectSelect = $needsProjectStatus ? ['id', 'name', 'artists', 'state'] : ['id', 'name', 'artists'];
+        $projectWith = ['categories'];
+        if ($needsProjectStatus) {
+            $projectWith[] = 'status:id,name,color';
+        }
+        if ($needsLeaders) {
+            $projectWith[] = 'managerUsers:id,first_name,last_name,position,email,profile_photo_path';
+        }
 
         $projects   = $projectIds->isEmpty() ? collect() :
-            Project::whereIn('id', $projectIds)->select(['id', 'name', 'artists'])->with('categories')->get()->keyBy('id');
+            Project::whereIn('id', $projectIds)->select($projectSelect)->with($projectWith)->get()->keyBy('id');
         $eventTypes = $eventTypeIds->isEmpty() ? collect() :
             EventType::whereIn('id', $eventTypeIds)->select(['id', 'name', 'abbreviation', 'hex_code'])->get()->keyBy('id');
+        $eventStatuses = $eventStatusIds->isEmpty() ? collect() :
+            EventStatus::whereIn('id', $eventStatusIds)->select(['id', 'name', 'color'])->get()->keyBy('id');
+        $users = $userIds->isEmpty() ? collect() :
+            User::whereIn('id', $userIds)
+                ->select(['id', 'first_name', 'last_name', 'position', 'email', 'profile_photo_path'])
+                ->get()->keyBy('id');
 
-        $eventDTOs = $events->map(function ($event) use ($eventTypes, $projects) {
+        $eventDTOs = $events->map(function ($event) use (
+            $eventTypes,
+            $projects,
+            $eventStatuses,
+            $users,
+            $needsProjectStatus,
+            $needsLeaders
+        ) {
             $project = $projects[$event->project_id] ?? null;
+            $creator = $users[$event->user_id ?? null] ?? null;
             return new PdfEventDTO(
                 id: $event->id,
                 startTime: $event->start_time,
@@ -117,6 +150,16 @@ readonly class EventCalendarService
                 project: $project,
                 artistNames: $project?->artists,
                 mainCategoryColor: $project?->categories?->firstWhere('pivot.is_main', true)?->color,
+                description: $event->description ?? null,
+                eventStatus: $eventStatuses[$event->event_status_id ?? null] ?? null,
+                createdBy: $creator ? trim($creator->first_name . ' ' . $creator->last_name) : null,
+                projectStatus: $needsProjectStatus ? $project?->status?->name : null,
+                projectLeaders: $needsLeaders && $project
+                    ? $project->managerUsers->map(
+                        static fn ($leader) => trim($leader->first_name . ' ' . $leader->last_name)
+                    )->all()
+                    : null,
+                admissionTime: $event->admission_time,
             );
         })->groupBy('roomId');
 
@@ -127,11 +170,23 @@ readonly class EventCalendarService
         return $rooms;
     }
 
-    private function getEventQueryForPdf(): Builder
+    private function getEventQueryForPdf(?EventExportDisplaySettings $displaySettings = null): Builder
     {
+        $select = ['id', 'start_time', 'end_time', 'admission_time', 'eventName', 'allDay', 'room_id',
+                   'event_type_id', 'project_id', 'is_planning'];
+
+        if ($displaySettings?->shows('description')) {
+            $select[] = 'description';
+        }
+        if ($displaySettings?->shows('use_event_status_color') || $displaySettings?->shows('show_event_status')) {
+            $select[] = 'event_status_id';
+        }
+        if ($displaySettings?->shows('show_event_creator')) {
+            $select[] = 'user_id';
+        }
+
         return Event::query()
-            ->select(['id', 'start_time', 'end_time', 'admission_time', 'eventName', 'allDay', 'room_id',
-                       'event_type_id', 'project_id', 'is_planning'])
+            ->select($select)
             ->without([]);
     }
 
@@ -222,6 +277,10 @@ readonly class EventCalendarService
             ->when(!empty($filter->event_type_ids), fn($q) => $q->whereIn('event_type_id', $filter->event_type_ids))
             ->when(!empty($filter->event_property_ids), function ($q) use ($filter): void {
                 $q->whereHas('eventProperties', fn($sub) => $sub->whereIn('event_property_id', $filter->event_property_ids));
+            })
+            // Projektstatus-Filter (zentrale Semantik im Event-Scope)
+            ->when(!empty($filter->project_state_ids), function ($q) use ($filter): void {
+                $q->byProjectStateIds($filter->project_state_ids);
             })
             // Planung filtern: Immer echte Events; geplante nur wenn Setting aktiv UND Berechtigung vorhanden
             ->where(function ($query) use ($userCalendarSettings): void {

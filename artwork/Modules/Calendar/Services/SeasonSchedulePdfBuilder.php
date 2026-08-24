@@ -39,7 +39,8 @@ class SeasonSchedulePdfBuilder
         Carbon $endDate,
         UserFilter $filter,
         ?UserCalendarSettings $userCalendarSettings,
-        array $options
+        array $options,
+        ?EventExportDisplaySettings $displaySettings = null
     ): array {
         // Tagesgenauer Zeitraum: das Raster zeigt immer volle Monate, Tage außerhalb
         // des Zeitraums werden im Blade ausgegraut und ohne Inhalt gerendert.
@@ -54,12 +55,14 @@ class SeasonSchedulePdfBuilder
         );
 
         // Settings bewusst nicht durchreichen: Planungstermine bleiben immer außen vor.
+        // Die Anzeigeeinstellungen (Farbe/Künstler:innen) gehen separat mit.
         $roomsWithEvents = $this->eventCalendarService->filterRoomsEventsForPdf(
             $rooms,
             $filter,
             $globalStart,
             $globalEnd,
-            null
+            null,
+            $displaySettings
         );
 
         $roomAbbreviations = $this->buildRoomAbbreviations($rooms);
@@ -71,7 +74,8 @@ class SeasonSchedulePdfBuilder
             $globalEnd,
             $options['showEventsWithoutProject'],
             $showRoomAbbreviations,
-            $roomAbbreviations
+            $roomAbbreviations,
+            $displaySettings
         );
 
         $holidayMap = $options['showHolidays']
@@ -103,9 +107,11 @@ class SeasonSchedulePdfBuilder
         Carbon $globalEnd,
         bool $showEventsWithoutProject,
         bool $showRoomAbbreviations,
-        array $roomAbbreviations
+        array $roomAbbreviations,
+        ?EventExportDisplaySettings $displaySettings = null
     ): array {
         $cells = [];
+        $showArtistNames = (bool) $displaySettings?->shows('show_artist_names_as_title');
 
         foreach ($roomsWithEvents as $room) {
             foreach ($room->events as $event) {
@@ -113,7 +119,8 @@ class SeasonSchedulePdfBuilder
 
                 if ($projectName !== null && $projectName !== '') {
                     $entryKey = 'p' . $event->project->id;
-                    $name = $projectName;
+                    // Künstler:innen-Namen statt Projektname, wenn eingestellt und vorhanden
+                    $name = $showArtistNames && $event->artistNames ? $event->artistNames : $projectName;
                 } elseif ($showEventsWithoutProject) {
                     $name = $event->eventName ?: ($event->eventType->name ?? null);
                     if ($name === null || $name === '') {
@@ -123,6 +130,16 @@ class SeasonSchedulePdfBuilder
                 } else {
                     continue;
                 }
+
+                // Punktfarbe gemäß Anzeigeeinstellung (Terminart / Terminstatus / Hauptkategorie)
+                $entryColor = $displaySettings
+                    ? $displaySettings->resolveColor(
+                        $event->eventType ?? null,
+                        $event->eventStatus ?? null,
+                        (bool) ($event->project ?? null),
+                        $event->mainCategoryColor ?? null
+                    )
+                    : ($event->eventType->hex_code ?? null);
 
                 foreach ($event->daysOfEvent as $dayDisplay) {
                     $day = Carbon::createFromFormat('d.m.Y', $dayDisplay)->startOfDay();
@@ -135,7 +152,7 @@ class SeasonSchedulePdfBuilder
                         $cells[$dateKey][$entryKey] = [
                             'name' => $name,
                             'count' => 0,
-                            'color' => $event->eventType->hex_code ?? null,
+                            'color' => $entryColor,
                             'rooms' => [],
                             'firstStart' => $event->start,
                         ];
@@ -144,7 +161,7 @@ class SeasonSchedulePdfBuilder
                     $cells[$dateKey][$entryKey]['count']++;
                     if ($event->start < $cells[$dateKey][$entryKey]['firstStart']) {
                         $cells[$dateKey][$entryKey]['firstStart'] = $event->start;
-                        $cells[$dateKey][$entryKey]['color'] = $event->eventType->hex_code ?? null;
+                        $cells[$dateKey][$entryKey]['color'] = $entryColor;
                     }
                     if ($showRoomAbbreviations && isset($roomAbbreviations[$event->roomId])) {
                         $cells[$dateKey][$entryKey]['rooms'][$roomAbbreviations[$event->roomId]] = true;

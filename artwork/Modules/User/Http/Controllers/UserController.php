@@ -1565,6 +1565,7 @@ class UserController extends Controller
             'project_management',
             'show_event_creator',
             'show_event_admission',
+            'show_event_status',
             'repeating_events',
             'work_shifts',
             'description',

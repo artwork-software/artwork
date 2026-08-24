@@ -29,9 +29,12 @@ class UserCalendarAbo extends Model
 {
     use HasFactory;
 
+    /**
+     * user_id und calendar_abo_id sind bewusst NICHT mass-assignable: sie werden nur
+     * serverseitig gesetzt. Waeren sie fillable, koennte ein Request ein Abo einer
+     * fremden Person zuordnen oder die geheime Feed-URL veraendern.
+     */
     protected $fillable = [
-        'user_id',
-        'calendar_abo_id',
         'date_range',
         'start_date',
         'end_date',

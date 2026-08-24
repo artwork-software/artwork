@@ -112,7 +112,7 @@ class EventPlanningCalendarService
             ->keyBy('id');
 
         $eventStatuses = EventStatus::whereIn('id', $eventStatusIds)
-            ->select(['id', 'color'])
+            ->select(['id', 'name', 'color'])
             ->get()
             ->keyBy('id');
 

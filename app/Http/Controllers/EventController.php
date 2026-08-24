@@ -401,7 +401,7 @@ class EventController extends Controller
                         'project.users:id',
                         'project.categories',
                         'creator:id,first_name,last_name,position,email,profile_photo_path',
-                        'eventStatus:id,color',
+                        'eventStatus:id,name,color',
                         'eventProperties',
                         'subEvents' => fn ($query) => $query->without('creator'),
                     ])

@@ -17,6 +17,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property boolean $project_management
  * @property boolean $show_event_creator
  * @property boolean $show_event_admission
+ * @property boolean $show_event_status
  * @property boolean $repeating_events
  * @property boolean $use_project_time_period
  * @property int $time_period_project_id
@@ -59,6 +60,7 @@ class UserCalendarSettings extends Model
         'project_management',
         'show_event_creator',
         'show_event_admission',
+        'show_event_status',
         'repeating_events',
         'work_shifts',
         'description',
@@ -92,6 +94,7 @@ class UserCalendarSettings extends Model
         'project_management' => 'boolean',
         'show_event_creator' => 'boolean',
         'show_event_admission' => 'boolean',
+        'show_event_status' => 'boolean',
         'repeating_events' => 'boolean',
         'work_shifts' => 'boolean',
         'description' => 'boolean',

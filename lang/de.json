@@ -6544,6 +6544,8 @@
     "Admission": "Einlass",
     "Refers to the start day": "Bezieht sich auf den Starttag",
     "Shows the admission time on event tiles, helpful for everyone preparing the house opening.": "Zeigt die Einlasszeit auf den Termin-Kacheln an – hilfreich für alle, die die Hausöffnung vorbereiten.",
+    "Event status spelled out": "Terminstatus ausgeschrieben",
+    "Shows the event status by name in its own row below the event name on the event tile.": "Zeigt den Terminstatus ausgeschrieben in einer eigenen Zeile unter dem Terminnamen in der Termin-Kachel an.",
     "Would you like to use the ‘Admission’ field for events in {0}?": "Möchtest du das Feld „Einlass“ für Termine in {0} verwenden?",
     "Admission time changed": "Einlass geändert",
     "Optional admission time for events.": "Optionale Einlasszeit für Termine.",

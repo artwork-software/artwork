@@ -6544,6 +6544,8 @@
     "Admission": "Admission",
     "Refers to the start day": "Refers to the start day",
     "Shows the admission time on event tiles, helpful for everyone preparing the house opening.": "Shows the admission time on event tiles, helpful for everyone preparing the house opening.",
+    "Event status spelled out": "Event status spelled out",
+    "Shows the event status by name in its own row below the event name on the event tile.": "Shows the event status by name in its own row below the event name on the event tile.",
     "Would you like to use the ‘Admission’ field for events in {0}?": "Would you like to use the ‘Admission’ field for events in {0}?",
     "Admission time changed": "Admission time changed",
     "Optional admission time for events.": "Optional admission time for events.",

@@ -80,6 +80,7 @@ class BroadcastEventDTO extends Data
             declinedRoomId: $event->declined_room_id,
             eventStatus: $event->eventStatus ? [
                 'id' => $event->eventStatus->id,
+                'name' => $event->eventStatus->name,
                 'color' => $event->eventStatus->color,
             ] : null,
             eventProperties: self::serializeEventProperties($event),

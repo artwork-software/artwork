@@ -20,6 +20,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property array $room_category_ids
  * @property array $event_property_ids
  * @property array $craft_ids
+ * @property array $project_state_ids
  * * @property \Illuminate\Support\Carbon $created_at
  * @property \Illuminate\Support\Carbon $updated_at
  * * @property User $user
@@ -44,6 +45,7 @@ class UserFilterTemplate extends Model
         'room_category_ids',
         'event_property_ids',
         'craft_ids',
+        'project_state_ids',
     ];
 
     protected $casts = [
@@ -54,6 +56,7 @@ class UserFilterTemplate extends Model
         'room_category_ids' => 'array',
         'event_property_ids' => 'array',
         'craft_ids' => 'array',
+        'project_state_ids' => 'array',
     ];
 
     public function user(): BelongsTo

@@ -269,6 +269,20 @@ readonly class CalendarDataService
                         ->whereIn('eep.event_property_id', $ids);
                 });
             }
+
+            // Projektstatus-Filter: Raum zählt nur als belegt, wenn der Termin einem
+            // Projekt mit einem der gewählten Status zugewiesen ist
+            if (!empty($filter?->project_state_ids)) {
+                $projectStateIds = $filter->project_state_ids;
+
+                $eventQuery->whereExists(function ($sq) use ($projectStateIds) {
+                    $sq->selectRaw('1')
+                        ->from('projects')
+                        ->whereColumn('projects.id', 'events.project_id')
+                        ->whereNull('projects.deleted_at')
+                        ->whereIn('projects.state', $projectStateIds);
+                });
+            }
         };
 
         $shiftOccupancySubquery = function ($shiftQuery) use ($filter, $project, $overlap, $showUnrelatedShifts): void {

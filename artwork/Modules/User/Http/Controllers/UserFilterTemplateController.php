@@ -43,6 +43,7 @@ class UserFilterTemplateController extends Controller
             'event_type_ids' => $this->nullableArray($request->collect('event_type_ids')),
             'event_property_ids' => $this->nullableArray($request->collect('event_property_ids')),
             'craft_ids' => $this->nullableArray($request->collect('craft_ids')),
+            'project_state_ids' => $this->nullableArray($request->collect('project_state_ids')),
             'filter_type' => $request->input('filter_type'),
         ]);
     }

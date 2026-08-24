@@ -223,6 +223,10 @@ readonly class EventCalendarService
             ->when(!empty($filter->event_property_ids), function ($q) use ($filter): void {
                 $q->whereHas('eventProperties', fn($sub) => $sub->whereIn('event_property_id', $filter->event_property_ids));
             })
+            // Projektstatus-Filter: nur Termine, die einem Projekt mit einem der gewählten Status zugewiesen sind
+            ->when(!empty($filter->project_state_ids), function ($q) use ($filter): void {
+                $q->whereHas('project', fn($sub) => $sub->whereIn('state', $filter->project_state_ids));
+            })
             // Planung filtern: Immer echte Events; geplante nur wenn Setting aktiv UND Berechtigung vorhanden
             ->where(function ($query) use ($userCalendarSettings): void {
                 $query->where('is_planning', false);

@@ -149,39 +149,42 @@
                             {{ $t('No days selected yet') }}
                         </span>
                     </div>
-                    <div class="flex items-center gap-2">
-                        <BaseInput
-                            id="project-assign-person-add-day"
-                            type="date"
-                            v-model="dayToAdd"
-                            :label="$t('Add day')"
-                            :show-label="false"
-                            no-margin-top
-                        />
-                        <BaseUIButton
-                            :label="$t('Add')"
-                            :disabled="!dayToAdd"
-                            @click="addDay"
-                        />
-                    </div>
+                    <VueDatePicker
+                        v-model="pickerDates"
+                        multi-dates
+                        inline
+                        auto-apply
+                        :enable-time-picker="false"
+                        :locale="userLanguage"
+                        class="assignment-day-picker"
+                    />
                 </div>
             </section>
 
-            <!-- Warnung/Info (z. B. alle Tage bereits abgedeckt) -->
+            <!-- Warnung/Info (z. B. alle Tage bereits abgedeckt, Fehler pro Person) -->
             <div
-                v-if="warningMessage"
-                class="rounded-lg border border-warning-border bg-warning-surface px-3 py-2 text-xs text-warning"
+                v-if="warningMessage || errorList.length"
+                class="rounded-lg border border-warning-border bg-warning-surface px-3 py-2 text-xs text-warning space-y-1"
             >
-                {{ warningMessage }}
+                <p v-if="warningMessage">{{ warningMessage }}</p>
+                <p v-for="entry in errorList" :key="entry.key">
+                    <span class="font-semibold">{{ entry.name }}:</span> {{ entry.message }}
+                </p>
             </div>
 
             <!-- Footer -->
-            <div class="flex justify-end pt-2 border-t border-border-subtle">
+            <div class="flex justify-end gap-2 pt-2 border-t border-border-subtle">
+                <BaseUIButton
+                    v-if="absenceBlockedWorkers.length"
+                    :label="$t('Assign anyway')"
+                    :disabled="submitting"
+                    @click="submitForce"
+                />
                 <BaseUIButton
                     :label="$t('Assign')"
                     is-add-button
                     :disabled="!canSubmit || submitting"
-                    @click="submit"
+                    @click="submit()"
                 />
             </div>
         </div>
@@ -189,16 +192,24 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
+import { ref, computed, watch, onMounted, onUnmounted, defineAsyncComponent } from 'vue';
 import axios from 'axios';
+import { usePage } from '@inertiajs/vue3';
 import ArtworkBaseModal from '@/Artwork/Modals/ArtworkBaseModal.vue';
 import BaseInput from '@/Artwork/Inputs/BaseInput.vue';
 import BaseUIButton from '@/Artwork/Buttons/BaseUIButton.vue';
 import PropertyIcon from '@/Artwork/Icon/PropertyIcon.vue';
 import { formatAssignmentDate } from '@/Composeables/UseProjectDayAssignments.js';
 import { useTranslation } from '@/Composeables/Translation.js';
+import '@vuepic/vue-datepicker/dist/main.css';
 
 const $t = useTranslation();
+
+const VueDatePicker = defineAsyncComponent({
+    loader: () => import('@vuepic/vue-datepicker'),
+    delay: 200,
+    timeout: 3000,
+});
 
 const props = defineProps({
     project: { type: Object, required: true }, // { id, name }
@@ -215,11 +226,35 @@ const loadingWorkers = ref(false);
 const selectedWorkers = ref([]);
 const periodMode = ref(props.initialDays.length ? 'days' : 'full_period');
 const selectedDays = ref([...props.initialDays]);
-const dayToAdd = ref('');
 const warningMessage = ref('');
+const errorList = ref([]); // [{ key, name, message }] — Fehler pro Person benennen
+const absenceBlockedWorkers = ref([]); // Personen mit Frei-/Abwesenheitstagen (409) — „Trotzdem zuordnen"
 const submitting = ref(false);
 // Falls nach Teil-Erfolg offen geblieben: beim Schließen trotzdem neu laden lassen
 let anySaved = false;
+// Über Teil-Versuche hinweg aufsummiert — fürs Ergebnis-Feedback beim Schließen
+let totalCreated = 0;
+let totalSkipped = 0;
+
+const userLanguage = usePage().props.auth?.user?.language ?? 'de';
+
+// Lokales Heute-sicheres Y-m-d (kein toISOString — das wäre UTC)
+function toLocalDateString(date) {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+}
+
+// Kalender-Mehrfachauswahl: Date-Objekte des Pickers <-> Y-m-d-Strings
+const pickerDates = computed({
+    get: () => selectedDays.value.map((day) => new Date(`${day}T12:00:00`)),
+    set: (dates) => {
+        selectedDays.value = (dates ?? [])
+            .map((date) => toLocalDateString(new Date(date)))
+            .sort();
+    },
+});
 
 const canSubmit = computed(() => {
     if (!selectedWorkers.value.length) return false;
@@ -280,33 +315,29 @@ onUnmounted(() => {
     workerRequest?.abort();
 });
 
-function addDay() {
-    if (dayToAdd.value && !selectedDays.value.includes(dayToAdd.value)) {
-        selectedDays.value.push(dayToAdd.value);
-        selectedDays.value.sort();
-    }
-    dayToAdd.value = '';
-}
-
 function removeDay(day) {
     selectedDays.value = selectedDays.value.filter((d) => d !== day);
 }
 
 function close() {
-    emit('close', { saved: anySaved });
+    emit('close', { saved: anySaved, created: totalCreated, skipped: totalSkipped });
 }
 
-async function submit() {
-    if (!canSubmit.value || submitting.value) return;
+async function submit(workersToSubmit = null, force = false) {
+    if ((!canSubmit.value && workersToSubmit === null) || submitting.value) return;
     warningMessage.value = '';
+    errorList.value = [];
+    absenceBlockedWorkers.value = [];
     submitting.value = true;
 
     let created = 0;
-    let firstError = null;
+    let skipped = 0;
+    const failed = [];
+    const absenceBlocked = [];
 
     // Ein Store-Call pro Person (Backend-API ist Einzelperson-basiert);
     // sequenziell, damit Fehlermeldungen eindeutig zuordenbar bleiben.
-    for (const worker of selectedWorkers.value) {
+    for (const worker of (workersToSubmit ?? selectedWorkers.value)) {
         try {
             const { data } = await axios.post(route('project-day-assignments.store'), {
                 project_id: props.project.id,
@@ -315,30 +346,70 @@ async function submit() {
                 type: 'binding',
                 full_period: periodMode.value === 'full_period',
                 days: periodMode.value === 'days' ? selectedDays.value : [],
+                force,
             });
             created += data.created ?? 0;
+            skipped += data.skipped ?? 0;
         } catch (error) {
-            if (!firstError) {
-                const errors = error?.response?.data?.errors;
-                firstError = errors
-                    ? Object.values(errors).flat()[0]
-                    : (error?.response?.data?.message ?? String(error));
+            if (error?.response?.status === 409 && error.response.data?.warning === 'absences') {
+                absenceBlocked.push({ worker, message: error.response.data.message });
+                continue;
             }
+
+            const errors = error?.response?.data?.errors;
+            failed.push({
+                key: workerKey(worker),
+                name: worker.name,
+                message: errors
+                    ? Object.values(errors).flat()[0]
+                    : (error?.response?.data?.message ?? String(error)),
+            });
         }
     }
 
     submitting.value = false;
     anySaved = anySaved || created > 0;
+    totalCreated += created;
+    totalSkipped += skipped;
 
-    if (firstError) {
-        warningMessage.value = firstError;
+    if (absenceBlocked.length) {
+        // Frei-/Abwesenheitstage: pro Person benennen, „Trotzdem zuordnen" anbieten
+        absenceBlockedWorkers.value = absenceBlocked.map((entry) => entry.worker);
+        errorList.value = absenceBlocked.map((entry) => ({
+            key: workerKey(entry.worker),
+            name: entry.worker.name,
+            message: entry.message,
+        }));
+        errorList.value.push(...failed);
         return;
     }
+
+    if (failed.length) {
+        errorList.value = failed;
+        return;
+    }
+
     if (created === 0) {
         // Alles bereits abgedeckt (bestehende Zuordnung oder Schicht desselben Projekts)
         warningMessage.value = $t('All selected days are already covered for the selected persons.');
         return;
     }
-    emit('close', { saved: true });
+
+    emit('close', { saved: true, created: totalCreated, skipped: totalSkipped });
+}
+
+function submitForce() {
+    submit(absenceBlockedWorkers.value, true);
 }
 </script>
+
+<style scoped>
+/* Inline-Kalender an die Modalbreite anpassen */
+.assignment-day-picker :deep(.dp__menu) {
+    width: 100%;
+    border-radius: 0.5rem;
+}
+.assignment-day-picker :deep(.dp__flex_display) {
+    display: block;
+}
+</style>

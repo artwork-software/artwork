@@ -280,11 +280,52 @@
                 <BaseUIButton
                     :label="$t('Save')"
                     is-add-button
-                    :disabled="multiEditCellForm.processing"
+                    :disabled="multiEditCellForm.processing || checkingVacationImpact"
                     @click="submitForm"
                 />
             </div>
         </div>
+
+        <!-- Rückfrage: der neue Status löst Projektzuordnungen/-wünsche auf -->
+        <ArtworkBaseModal
+            v-if="showVacationImpactModal"
+            :title="$t('Change availability status')"
+            :description="$t('The new status dissolves project assignments of this person. Do you want to continue?')"
+            @close="showVacationImpactModal = false"
+        >
+            <ul class="mt-4 space-y-1.5">
+                <li
+                    v-for="(entry, index) in vacationImpactAffected"
+                    :key="`impact-${index}`"
+                    class="flex items-center gap-2 rounded-lg border border-border-subtle bg-surface-sunken/70 px-3 py-2 text-xs text-text-muted"
+                >
+                    <span
+                        class="inline-flex h-1.5 w-1.5 rounded-full"
+                        :class="entry.type === 'binding' ? 'bg-danger' : 'bg-warning'"
+                    ></span>
+                    <span class="font-medium truncate">{{ entry.worker_name }}</span>
+                    <span class="text-text-subtle truncate">· {{ entry.project_name }}</span>
+                    <span class="text-text-subtle">
+                        · {{ entry.type === 'binding' ? $t('Binding assignment') : $t('Project wish') }}
+                    </span>
+                    <span class="text-text-subtle">· {{ entry.dates.join(', ') }}</span>
+                </li>
+            </ul>
+            <div class="flex justify-end gap-2 mt-6">
+                <BaseUIButton type="button" variant="secondary" hide-icon @click="showVacationImpactModal = false">
+                    {{ $t('Cancel') }}
+                </BaseUIButton>
+                <BaseUIButton
+                    type="button"
+                    variant="primary"
+                    hide-icon
+                    :disabled="multiEditCellForm.processing"
+                    @click="confirmVacationImpactAndSubmit"
+                >
+                    {{ $t('Change status anyway') }}
+                </BaseUIButton>
+            </div>
+        </ArtworkBaseModal>
     </ArtworkBaseModal>
 </template>
 
@@ -433,7 +474,49 @@ const deleteIndividualTimeByIndex = (index) => {
     multiEditCellForm.individual_times.splice(index, 1);
 };
 
-const submitForm = () => {
+// --- Rückfrage vor dem Speichern: löst der neue Status Projektzuordnungen auf? ---
+const showVacationImpactModal = ref(false);
+const vacationImpactAffected = ref([]);
+const checkingVacationImpact = ref(false);
+const DISSOLVING_VACATION_TYPES = ['FREE_WORK', 'OFF_WORK', 'NOT_AVAILABLE'];
+
+const submitForm = async () => {
+    const vacationType = multiEditCellForm.vacation_type?.type;
+
+    if (vacationType && DISSOLVING_VACATION_TYPES.includes(vacationType) && !checkingVacationImpact.value) {
+        checkingVacationImpact.value = true;
+        try {
+            const workers = Object.values(props.multiEditCellByDayAndUser ?? {}).map((entry) => ({
+                type: entry.type,
+                id: entry.id,
+                dates: entry.days ?? [],
+            }));
+            const { data } = await axios.post(route('project-day-assignments.vacation-impact'), {
+                workers,
+                vacation_type: vacationType,
+            });
+
+            if ((data.affected ?? []).length) {
+                vacationImpactAffected.value = data.affected;
+                showVacationImpactModal.value = true;
+                return;
+            }
+        } catch (error) {
+            // Precheck fehlgeschlagen: Speichern nicht blockieren
+        } finally {
+            checkingVacationImpact.value = false;
+        }
+    }
+
+    doSubmit();
+};
+
+function confirmVacationImpactAndSubmit() {
+    showVacationImpactModal.value = false;
+    doSubmit();
+}
+
+const doSubmit = () => {
     multiEditCellForm.post(route('shift.plan.user.cell.update'), {
         preserveScroll: true,
         preserveState: true,

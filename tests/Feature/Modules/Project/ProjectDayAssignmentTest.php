@@ -47,6 +47,16 @@ final class ProjectDayAssignmentTest extends FeatureTestCase
         return app(ProjectDayAssignmentService::class);
     }
 
+    /**
+     * Nach der Response aufgeschobene Arbeit (defer(): Personen-/Planer-Notifications,
+     * Broadcasts) sofort ausführen — bei HTTP-Tests übernimmt das der Kernel-Terminate,
+     * bei direkten Service-Aufrufen muss manuell geflusht werden.
+     */
+    private function flushDeferred(): void
+    {
+        app(\Illuminate\Support\Defer\DeferredCallbackCollection::class)->invoke();
+    }
+
     // ---------- Anlegen + Rechte ----------
 
     #[Test]
@@ -54,7 +64,7 @@ final class ProjectDayAssignmentTest extends FeatureTestCase
     {
         $this->actingAsUserWith(PermissionEnum::SHIFT_PLANNER->value);
         $project = $this->createProjectWithPeriod('2026-08-01', '2026-08-10');
-        $worker = User::factory()->create();
+        $worker = User::factory()->create(['can_work_shifts' => true]);
 
         $response = $this->postJson(route('project-day-assignments.store'), [
             'project_id' => $project->id,
@@ -83,7 +93,7 @@ final class ProjectDayAssignmentTest extends FeatureTestCase
     #[Test]
     public function non_planner_cannot_create_binding_assignment(): void
     {
-        $user = User::factory()->create();
+        $user = User::factory()->create(['can_work_shifts' => true]);
         $this->actingAs($user);
         $project = $this->createProjectWithPeriod('2026-08-01', '2026-08-10');
 
@@ -101,7 +111,7 @@ final class ProjectDayAssignmentTest extends FeatureTestCase
     public function wish_can_only_be_created_for_oneself(): void
     {
         $project = $this->createProjectWithPeriod('2026-08-01', '2026-08-10');
-        $user = User::factory()->create();
+        $user = User::factory()->create(['can_work_shifts' => true]);
         $this->actingAs($user);
 
         $this->postJson(route('project-day-assignments.store'), [
@@ -134,7 +144,7 @@ final class ProjectDayAssignmentTest extends FeatureTestCase
     {
         $this->actingAsUserWith(PermissionEnum::SHIFT_PLANNER->value);
         $project = $this->createProjectWithPeriod('2026-08-01', '2026-08-05');
-        $worker = User::factory()->create();
+        $worker = User::factory()->create(['can_work_shifts' => true]);
 
         $this->postJson(route('project-day-assignments.store'), [
             'project_id' => $project->id,
@@ -162,7 +172,7 @@ final class ProjectDayAssignmentTest extends FeatureTestCase
     {
         $this->actingAsUserWith(PermissionEnum::SHIFT_PLANNER->value);
         $project = $this->createProjectWithPeriod('2026-08-01', '2026-08-10');
-        $worker = User::factory()->create();
+        $worker = User::factory()->create(['can_work_shifts' => true]);
 
         $this->service()->createAssignments(
             $project,
@@ -191,7 +201,7 @@ final class ProjectDayAssignmentTest extends FeatureTestCase
     {
         $this->actingAsAdmin();
         $project = $this->createProjectWithPeriod('2026-08-01', '2026-08-10');
-        $worker = User::factory()->create();
+        $worker = User::factory()->create(['can_work_shifts' => true]);
 
         $wish = $this->service()->createAssignments(
             $project,
@@ -225,7 +235,7 @@ final class ProjectDayAssignmentTest extends FeatureTestCase
     public function wish_on_absence_day_returns_friendly_validation_error(): void
     {
         $project = $this->createProjectWithPeriod('2026-08-01', '2026-08-10');
-        $user = User::factory()->create();
+        $user = User::factory()->create(['can_work_shifts' => true]);
         $this->actingAs($user);
 
         $user->vacations()->create([
@@ -254,7 +264,7 @@ final class ProjectDayAssignmentTest extends FeatureTestCase
     {
         $this->actingAsAdmin();
         $project = $this->createProjectWithPeriod('2026-08-01', '2026-08-10');
-        $worker = User::factory()->create();
+        $worker = User::factory()->create(['can_work_shifts' => true]);
 
         $assignment = $this->service()->createAssignments(
             $project,
@@ -275,7 +285,7 @@ final class ProjectDayAssignmentTest extends FeatureTestCase
     {
         $this->actingAsAdmin();
         $project = $this->createProjectWithPeriod('2026-08-01', '2026-08-10');
-        $worker = User::factory()->create();
+        $worker = User::factory()->create(['can_work_shifts' => true]);
 
         $binding = $this->service()->createAssignments(
             $project,
@@ -308,7 +318,7 @@ final class ProjectDayAssignmentTest extends FeatureTestCase
     {
         $this->actingAsAdmin();
         $project = $this->createProjectWithPeriod('2026-08-01', '2026-08-10');
-        $worker = User::factory()->create();
+        $worker = User::factory()->create(['can_work_shifts' => true]);
 
         $assignment = $this->service()->createAssignments(
             $project,
@@ -345,7 +355,7 @@ final class ProjectDayAssignmentTest extends FeatureTestCase
     {
         $this->actingAsAdmin();
         $project = $this->createProjectWithPeriod('2026-08-01', '2026-08-10');
-        $worker = User::factory()->create();
+        $worker = User::factory()->create(['can_work_shifts' => true]);
 
         $created = $this->service()->createAssignments(
             $project,
@@ -379,7 +389,7 @@ final class ProjectDayAssignmentTest extends FeatureTestCase
     {
         $this->actingAsAdmin();
         $project = $this->createProjectWithPeriod('2026-08-01', '2026-08-10');
-        $worker = User::factory()->create();
+        $worker = User::factory()->create(['can_work_shifts' => true]);
 
         $assignment = $this->service()->createAssignments(
             $project,
@@ -421,7 +431,7 @@ final class ProjectDayAssignmentTest extends FeatureTestCase
     {
         $this->actingAsAdmin();
         $project = $this->createProjectWithPeriod('2026-08-01', '2026-08-10');
-        $worker = User::factory()->create();
+        $worker = User::factory()->create(['can_work_shifts' => true]);
 
         $assignment = $this->service()->createAssignments(
             $project,
@@ -484,7 +494,7 @@ final class ProjectDayAssignmentTest extends FeatureTestCase
         $this->actingAsAdmin();
         $project = $this->createProjectWithPeriod('2026-08-01', '2026-08-10');
         $otherProject = $this->createProjectWithPeriod('2026-08-01', '2026-08-10');
-        $worker = User::factory()->create();
+        $worker = User::factory()->create(['can_work_shifts' => true]);
 
         $assignment = $this->service()->createAssignments(
             $project,
@@ -511,7 +521,7 @@ final class ProjectDayAssignmentTest extends FeatureTestCase
     {
         $this->actingAsAdmin();
         $project = $this->createProjectWithPeriod('2026-08-01', '2026-08-10');
-        $worker = User::factory()->create();
+        $worker = User::factory()->create(['can_work_shifts' => true]);
 
         $shift = Shift::factory()->create([
             'project_id' => $project->id,
@@ -545,7 +555,7 @@ final class ProjectDayAssignmentTest extends FeatureTestCase
     {
         $this->actingAsAdmin();
         $project = $this->createProjectWithPeriod('2026-08-01', '2026-08-05');
-        $worker = User::factory()->create();
+        $worker = User::factory()->create(['can_work_shifts' => true]);
 
         $this->service()->createFullPeriodAssignments(
             $project,
@@ -587,7 +597,7 @@ final class ProjectDayAssignmentTest extends FeatureTestCase
     {
         $this->actingAsAdmin();
         $project = $this->createProjectWithPeriod('2026-08-01', '2026-08-03');
-        $worker = User::factory()->create();
+        $worker = User::factory()->create(['can_work_shifts' => true]);
 
         $this->service()->createFullPeriodAssignments(
             $project,
@@ -625,7 +635,7 @@ final class ProjectDayAssignmentTest extends FeatureTestCase
             'start_time' => '2026-08-04 10:00:00',
             'end_time' => '2026-08-05 18:00:00',
         ]);
-        $worker = User::factory()->create();
+        $worker = User::factory()->create(['can_work_shifts' => true]);
 
         $this->service()->createFullPeriodAssignments(
             $project,
@@ -653,7 +663,7 @@ final class ProjectDayAssignmentTest extends FeatureTestCase
     {
         $this->actingAsAdmin();
         $project = $this->createProjectWithPeriod('2026-08-01', '2026-08-03');
-        $worker = User::factory()->create();
+        $worker = User::factory()->create(['can_work_shifts' => true]);
 
         $this->service()->createFullPeriodAssignments(
             $project,
@@ -676,7 +686,7 @@ final class ProjectDayAssignmentTest extends FeatureTestCase
     public function planner_can_accept_wish_group_as_binding(): void
     {
         $project = $this->createProjectWithPeriod('2026-08-01', '2026-08-10');
-        $user = User::factory()->create();
+        $user = User::factory()->create(['can_work_shifts' => true]);
         $this->actingAs($user);
 
         $this->postJson(route('project-day-assignments.store'), [
@@ -709,7 +719,7 @@ final class ProjectDayAssignmentTest extends FeatureTestCase
     {
         $this->actingAsUserWith(PermissionEnum::SHIFT_PLANNER->value);
         $project = $this->createProjectWithPeriod('2026-08-01', '2026-08-10');
-        $worker = User::factory()->create();
+        $worker = User::factory()->create(['can_work_shifts' => true]);
 
         $rows = $this->service()->createAssignments(
             $project,
@@ -747,7 +757,7 @@ final class ProjectDayAssignmentTest extends FeatureTestCase
     {
         $this->actingAsAdmin();
         $project = $this->createProjectWithPeriod('2026-08-01', '2026-08-10');
-        $worker = User::factory()->create();
+        $worker = User::factory()->create(['can_work_shifts' => true]);
 
         $assignment = $this->service()->createAssignments(
             $project,
@@ -791,7 +801,7 @@ final class ProjectDayAssignmentTest extends FeatureTestCase
     {
         $this->actingAsUserWith([PermissionEnum::SHIFT_PLANNER->value]);
         $project = $this->createProjectWithPeriod('2026-08-01', '2026-08-10');
-        $worker = User::factory()->create();
+        $worker = User::factory()->create(['can_work_shifts' => true]);
 
         $this->postJson(route('shift.plan.user.cell.update'), [
             'comment' => null,
@@ -825,7 +835,7 @@ final class ProjectDayAssignmentTest extends FeatureTestCase
             PermissionEnum::VIEW_SHIFT_PLAN->value,
         ]);
         $project = $this->createProjectWithPeriod('2026-08-01', '2026-08-05');
-        $worker = User::factory()->create();
+        $worker = User::factory()->create(['can_work_shifts' => true]);
 
         $this->service()->createAssignments(
             $project,
@@ -859,7 +869,7 @@ final class ProjectDayAssignmentTest extends FeatureTestCase
             PermissionEnum::VIEW_SHIFT_PLAN->value,
         ]);
         $project = $this->createProjectWithPeriod('2026-08-01', '2026-08-05');
-        $worker = User::factory()->create();
+        $worker = User::factory()->create(['can_work_shifts' => true]);
 
         // Zuordnung liegt schon jetzt ausserhalb des Projektzeitraums
         ProjectDayAssignment::query()->create([
@@ -902,7 +912,7 @@ final class ProjectDayAssignmentTest extends FeatureTestCase
     {
         $this->actingAsUserWith(PermissionEnum::SHIFT_PLANNER->value);
         $project = $this->createProjectWithPeriod('2026-08-01', '2026-08-03');
-        $worker = User::factory()->create();
+        $worker = User::factory()->create(['can_work_shifts' => true]);
 
         $this->postJson(route('shift.multi.edit.save'), [
             'userType' => 0,
@@ -933,7 +943,7 @@ final class ProjectDayAssignmentTest extends FeatureTestCase
     {
         $this->actingAsUserWith(PermissionEnum::SHIFT_PLANNER->value);
         $project = $this->createProjectWithPeriod('2026-08-01', '2026-08-03');
-        $worker = User::factory()->create();
+        $worker = User::factory()->create(['can_work_shifts' => true]);
 
         $created = $this->service()->createFullPeriodAssignments(
             $project,
@@ -974,7 +984,7 @@ final class ProjectDayAssignmentTest extends FeatureTestCase
         ]);
         $oldProject = $this->createProjectWithPeriod('2026-08-01', '2026-08-05');
         $newProject = $this->createProjectWithPeriod('2026-09-01', '2026-09-02');
-        $worker = User::factory()->create();
+        $worker = User::factory()->create(['can_work_shifts' => true]);
         $this->service()->createAssignments(
             $oldProject,
             User::class,
@@ -997,7 +1007,7 @@ final class ProjectDayAssignmentTest extends FeatureTestCase
     {
         $this->actingAsAdmin();
         $project = $this->createProjectWithPeriod('2026-08-01', '2026-08-03');
-        $worker = User::factory()->create();
+        $worker = User::factory()->create(['can_work_shifts' => true]);
         $this->service()->createAssignments(
             $project,
             User::class,
@@ -1027,7 +1037,7 @@ final class ProjectDayAssignmentTest extends FeatureTestCase
     {
         $this->actingAsUserWith(PermissionEnum::SHIFT_PLANNER->value);
         $project = $this->createProjectWithPeriod('2026-08-01', '2026-08-10');
-        $worker = User::factory()->create();
+        $worker = User::factory()->create(['can_work_shifts' => true]);
 
         $this->service()->createAssignments(
             $project,
@@ -1037,6 +1047,7 @@ final class ProjectDayAssignmentTest extends FeatureTestCase
             ['2026-08-02', '2026-08-03'],
             false
         );
+        $this->flushDeferred();
 
         Notification::assertSentTo(
             $worker,
@@ -1059,7 +1070,7 @@ final class ProjectDayAssignmentTest extends FeatureTestCase
     {
         $this->actingAsUserWith(PermissionEnum::SHIFT_PLANNER->value);
         $project = $this->createProjectWithPeriod('2026-08-01', '2026-08-10');
-        $worker = User::factory()->create();
+        $worker = User::factory()->create(['can_work_shifts' => true]);
 
         // Bereits vorhandene ungelesene Benachrichtigung desselben Tages simulieren
         // (Notification::fake() im FeatureTestCase schreibt selbst keine DB-Zeilen)
@@ -1089,6 +1100,7 @@ final class ProjectDayAssignmentTest extends FeatureTestCase
             ['2026-08-02'],
             false
         );
+        $this->flushDeferred();
 
         // Bestehende Benachrichtigung wurde gebündelt statt eine zweite zu erzeugen
         Notification::assertNotSentTo($worker, ShiftNotification::class);
@@ -1112,7 +1124,7 @@ final class ProjectDayAssignmentTest extends FeatureTestCase
     {
         $admin = $this->actingAsAdmin();
         $project = $this->createProjectWithPeriod('2026-08-01', '2026-08-10');
-        $worker = User::factory()->create();
+        $worker = User::factory()->create(['can_work_shifts' => true]);
 
         $this->service()->createAssignments(
             $project,
@@ -1130,6 +1142,7 @@ final class ProjectDayAssignmentTest extends FeatureTestCase
             ['2026-08-02'],
             false
         );
+        $this->flushDeferred();
 
         Notification::assertNotSentTo($worker, ShiftNotification::class);
         Notification::assertNotSentTo($admin, ShiftNotification::class);
@@ -1140,7 +1153,7 @@ final class ProjectDayAssignmentTest extends FeatureTestCase
     {
         $this->actingAsUserWith(PermissionEnum::SHIFT_PLANNER->value);
         $project = $this->createProjectWithPeriod('2026-08-01', '2026-08-10');
-        $worker = User::factory()->create();
+        $worker = User::factory()->create(['can_work_shifts' => true]);
 
         $assignment = $this->service()->createAssignments(
             $project,
@@ -1152,6 +1165,7 @@ final class ProjectDayAssignmentTest extends FeatureTestCase
         )->first();
 
         $this->service()->deleteAssignment($assignment->fresh(), true);
+        $this->flushDeferred();
 
         Notification::assertSentTo(
             $worker,
@@ -1167,7 +1181,7 @@ final class ProjectDayAssignmentTest extends FeatureTestCase
     public function person_is_notified_when_wish_is_accepted(): void
     {
         $project = $this->createProjectWithPeriod('2026-08-01', '2026-08-10');
-        $worker = User::factory()->create();
+        $worker = User::factory()->create(['can_work_shifts' => true]);
         $this->actingAs($worker);
 
         $wish = $this->service()->createAssignments(
@@ -1181,6 +1195,7 @@ final class ProjectDayAssignmentTest extends FeatureTestCase
 
         $this->actingAsUserWith(PermissionEnum::SHIFT_PLANNER->value);
         $this->service()->acceptWishGroup($wish->fresh());
+        $this->flushDeferred();
 
         Notification::assertSentTo(
             $worker,
@@ -1197,7 +1212,7 @@ final class ProjectDayAssignmentTest extends FeatureTestCase
     {
         $this->actingAsAdmin();
         $project = $this->createProjectWithPeriod('2026-08-01', '2026-08-05');
-        $worker = User::factory()->create();
+        $worker = User::factory()->create(['can_work_shifts' => true]);
 
         $this->service()->createAssignments(
             $project,
@@ -1213,6 +1228,7 @@ final class ProjectDayAssignmentTest extends FeatureTestCase
             'start_time' => '2026-08-01 10:00:00',
             'end_time' => '2026-08-03 18:00:00',
         ]);
+        $this->flushDeferred();
 
         Notification::assertSentTo(
             $worker,
@@ -1231,7 +1247,7 @@ final class ProjectDayAssignmentTest extends FeatureTestCase
     {
         $this->actingAsAdmin();
         $project = $this->createProjectWithPeriod('2026-08-01', '2026-08-03');
-        $worker = User::factory()->create();
+        $worker = User::factory()->create(['can_work_shifts' => true]);
 
         $this->service()->createFullPeriodAssignments(
             $project,
@@ -1285,7 +1301,7 @@ final class ProjectDayAssignmentTest extends FeatureTestCase
     {
         $this->actingAsAdmin();
         $project = $this->createProjectWithPeriod('2026-08-01', '2026-08-03');
-        $worker = User::factory()->create();
+        $worker = User::factory()->create(['can_work_shifts' => true]);
 
         // Verbindliche Zuordnung zuerst (danach angelegte Wünsche bleiben parallel bestehen)
         $this->service()->createFullPeriodAssignments(
@@ -1470,5 +1486,148 @@ final class ProjectDayAssignmentTest extends FeatureTestCase
         $this->assertTrue($workers->contains(fn (array $row) => $row['id'] === $match->id && $row['type'] === 0));
         $this->assertTrue($workers->contains(fn (array $row) => $row['id'] === $freelancerMatch->id && $row['type'] === 1));
         $this->assertFalse($workers->contains(fn (array $row) => $row['name'] === 'Otto Anders'));
+    }
+
+    // ---------- Guards im Store-Endpoint ----------
+
+    #[Test]
+    public function store_rejects_workers_who_cannot_work_shifts(): void
+    {
+        $this->actingAsUserWith(PermissionEnum::SHIFT_PLANNER->value);
+        $project = $this->createProjectWithPeriod('2026-08-01', '2026-08-10');
+        $worker = User::factory()->create(['can_work_shifts' => false]);
+
+        $this->postJson(route('project-day-assignments.store'), [
+            'project_id' => $project->id,
+            'worker_type' => 0,
+            'worker_id' => $worker->id,
+            'type' => 'binding',
+            'full_period' => false,
+            'days' => ['2026-08-02'],
+        ])->assertUnprocessable()->assertJsonValidationErrors(['worker_id']);
+    }
+
+    #[Test]
+    public function full_period_store_rejects_overlong_project_periods_before_materializing(): void
+    {
+        $this->actingAsUserWith(PermissionEnum::SHIFT_PLANNER->value);
+        // Tippfehler-Jahr: Zeitraum > MAX_FULL_PERIOD_DAYS
+        $project = $this->createProjectWithPeriod('2026-08-01', '2029-08-01');
+        $worker = User::factory()->create(['can_work_shifts' => true]);
+
+        $this->postJson(route('project-day-assignments.store'), [
+            'project_id' => $project->id,
+            'worker_type' => 0,
+            'worker_id' => $worker->id,
+            'type' => 'binding',
+            'full_period' => true,
+            'days' => [],
+        ])->assertUnprocessable()->assertJsonValidationErrors(['project_id']);
+
+        $this->assertSame(0, ProjectDayAssignment::query()->where('project_id', $project->id)->count());
+    }
+
+    #[Test]
+    public function binding_on_absence_day_warns_first_and_saves_with_force(): void
+    {
+        $this->actingAsUserWith(PermissionEnum::SHIFT_PLANNER->value);
+        $project = $this->createProjectWithPeriod('2026-08-01', '2026-08-10');
+        $worker = User::factory()->create(['can_work_shifts' => true]);
+
+        $worker->vacations()->create([
+            'date' => '2026-08-02',
+            'full_day' => true,
+            'is_series' => false,
+            'comment' => 'FREE_WORK',
+            'type' => 'FREE_WORK',
+            'created_by' => $worker->id,
+        ]);
+
+        $payload = [
+            'project_id' => $project->id,
+            'worker_type' => 0,
+            'worker_id' => $worker->id,
+            'type' => 'binding',
+            'full_period' => false,
+            'days' => ['2026-08-02', '2026-08-03'],
+        ];
+
+        // Ohne force: 409-Warnung, nichts gespeichert
+        $this->postJson(route('project-day-assignments.store'), $payload)
+            ->assertStatus(409)
+            ->assertJson(['warning' => 'absences', 'dates' => ['02.08.2026']]);
+        $this->assertSame(0, ProjectDayAssignment::query()->where('project_id', $project->id)->count());
+
+        // Mit force: bewusst trotzdem zuordnen
+        $this->postJson(route('project-day-assignments.store'), $payload + ['force' => true])
+            ->assertOk()
+            ->assertJson(['created' => 2]);
+    }
+
+    #[Test]
+    public function vacation_impact_endpoint_lists_assignments_dissolved_by_the_new_status(): void
+    {
+        $this->actingAsUserWith(PermissionEnum::SHIFT_PLANNER->value);
+        $project = $this->createProjectWithPeriod('2026-08-01', '2026-08-10');
+        $worker = User::factory()->create(['can_work_shifts' => true]);
+        $other = User::factory()->create(['can_work_shifts' => true]);
+
+        $this->service()->createAssignments(
+            $project,
+            User::class,
+            $worker->id,
+            ProjectDayAssignmentType::BINDING,
+            ['2026-08-02', '2026-08-03'],
+            false
+        );
+
+        $payload = [
+            'workers' => [
+                ['type' => 0, 'id' => $worker->id, 'dates' => ['2026-08-02']],
+                ['type' => 0, 'id' => $other->id, 'dates' => ['2026-08-02']],
+            ],
+            'vacation_type' => 'FREE_WORK',
+        ];
+
+        $response = $this->postJson(route('project-day-assignments.vacation-impact'), $payload)->assertOk();
+
+        $affected = collect($response->json('affected'));
+        $this->assertCount(1, $affected);
+        $this->assertSame($project->id, $affected->first()['project_id']);
+        $this->assertSame('binding', $affected->first()['type']);
+        $this->assertSame(['02.08.2026'], $affected->first()['dates']);
+
+        // Abwesenheit (kein "Frei") löst nur Wünsche auf — verbindliche Zuordnung bleibt unerwähnt
+        $this->postJson(route('project-day-assignments.vacation-impact'), [
+            'workers' => [['type' => 0, 'id' => $worker->id, 'dates' => ['2026-08-02']]],
+            'vacation_type' => 'OFF_WORK',
+        ])->assertOk()->assertJson(['affected' => []]);
+    }
+
+    #[Test]
+    public function available_entries_do_not_block_wishes(): void
+    {
+        $project = $this->createProjectWithPeriod('2026-08-01', '2026-08-10');
+        $user = User::factory()->create(['can_work_shifts' => true]);
+        $this->actingAs($user);
+
+        // Konkreter Verfügbarkeits-Eintrag (AVAILABLE) ist keine Abwesenheit
+        $user->vacations()->create([
+            'date' => '2026-08-02',
+            'full_day' => false,
+            'is_series' => false,
+            'comment' => 'AVAILABLE',
+            'type' => 'AVAILABLE',
+            'created_by' => $user->id,
+        ]);
+
+        $this->postJson(route('project-day-assignments.store'), [
+            'project_id' => $project->id,
+            'worker_type' => 0,
+            'worker_id' => $user->id,
+            'type' => 'wish',
+            'full_period' => false,
+            'days' => ['2026-08-02'],
+        ])->assertOk()->assertJson(['created' => 1]);
     }
 }

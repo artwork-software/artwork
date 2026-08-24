@@ -744,6 +744,13 @@
         </div>
 
         <!-- Modale -->
+        <NotificationToast
+            v-model:show="assignmentToastVisible"
+            :title="assignmentToastTitle"
+            :description="assignmentToastDescription"
+            type="success"
+        />
+
         <ProjectAssignmentModal
             v-if="showProjectAssignmentModal"
             :worker-type="user.type"
@@ -805,11 +812,14 @@
             @granted="handleCompensationGranted"
         />
 
-        <!-- Warnung: Person aus startenden Schichten entfernen / individuelle Zeiten löschen -->
+        <!-- Warnung: Person aus startenden Schichten entfernen / individuelle Zeiten löschen /
+             Projektzuordnungen werden aufgelöst -->
         <ArtworkBaseModal
             v-if="showAvailabilityCleanupModal"
             :title="t('Change availability status')"
-            :description="t('Should the person also be removed from all shifts on this day and their individual times deleted?')"
+            :description="cleanupShifts.length || cleanupIndividualTimes.length
+                ? t('Should the person also be removed from all shifts on this day and their individual times deleted?')
+                : t('The new status dissolves project assignments of this person. Do you want to continue?')"
             @close="showAvailabilityCleanupModal = false"
         >
             <div class="mt-4 space-y-4">
@@ -849,21 +859,63 @@
                         </li>
                     </ul>
                 </div>
+
+                <div v-if="cleanupProjectAssignments.length">
+                    <h3 class="text-xs font-semibold tracking-wide text-text-subtle uppercase mb-2">
+                        {{ t('Project assignments') }}
+                    </h3>
+                    <p class="text-[11px] text-text-subtle mb-2">
+                        {{ t('These project assignments and wishes will be dissolved by the new status:') }}
+                    </p>
+                    <ul class="space-y-1.5">
+                        <li
+                            v-for="assignment in cleanupProjectAssignments"
+                            :key="`pa-${assignment.project_id}-${assignment.type}`"
+                            class="flex items-center gap-2 rounded-lg border border-border-subtle bg-surface-sunken/70 px-3 py-2 text-xs text-text-muted"
+                        >
+                            <span
+                                class="inline-flex h-1.5 w-1.5 rounded-full"
+                                :class="assignment.type === 'binding' ? 'bg-danger' : 'bg-warning'"
+                            ></span>
+                            <span class="font-medium truncate">{{ assignment.project_name }}</span>
+                            <span class="text-text-subtle">
+                                · {{ assignment.type === 'binding' ? t('Binding assignment') : t('Project wish') }}
+                            </span>
+                            <span class="text-text-subtle">· {{ assignment.dates.join(', ') }}</span>
+                        </li>
+                    </ul>
+                </div>
             </div>
 
             <div class="flex justify-end gap-2 mt-6">
-                <BaseUIButton type="button" variant="secondary" hide-icon @click="keepShiftsAndSetStatus">
-                    {{ t('No, only change status') }}
-                </BaseUIButton>
-                <BaseUIButton
-                    type="button"
-                    variant="primary"
-                    hide-icon
-                    :disabled="cleanupProcessing"
-                    @click="confirmCleanupAndSetStatus"
-                >
-                    {{ t('Yes, remove') }}
-                </BaseUIButton>
+                <template v-if="cleanupShifts.length || cleanupIndividualTimes.length">
+                    <BaseUIButton type="button" variant="secondary" hide-icon @click="keepShiftsAndSetStatus">
+                        {{ t('No, only change status') }}
+                    </BaseUIButton>
+                    <BaseUIButton
+                        type="button"
+                        variant="primary"
+                        hide-icon
+                        :disabled="cleanupProcessing"
+                        @click="confirmCleanupAndSetStatus"
+                    >
+                        {{ t('Yes, remove') }}
+                    </BaseUIButton>
+                </template>
+                <template v-else>
+                    <BaseUIButton type="button" variant="secondary" hide-icon @click="showAvailabilityCleanupModal = false">
+                        {{ t('Cancel') }}
+                    </BaseUIButton>
+                    <BaseUIButton
+                        type="button"
+                        variant="primary"
+                        hide-icon
+                        :disabled="cleanupProcessing"
+                        @click="keepShiftsAndSetStatus"
+                    >
+                        {{ t('Change status anyway') }}
+                    </BaseUIButton>
+                </template>
             </div>
         </ArtworkBaseModal>
 
@@ -932,6 +984,10 @@ import { colorForProjectId, formatAssignmentDate } from '@/Composeables/UseProje
 
 const ProjectAssignmentModal = defineAsyncComponent({
     loader: () => import('@/Pages/Shifts/Components/ProjectAssignmentModal.vue'),
+});
+
+const NotificationToast = defineAsyncComponent({
+    loader: () => import('@/Artwork/Feedback/NotificationToast.vue'),
 });
 
 defineOptions({
@@ -1065,10 +1121,21 @@ async function refreshAssignmentsForDay() {
     ];
 }
 
-async function handleProjectAssignmentModalClose({ saved } = { saved: false }) {
+async function handleProjectAssignmentModalClose({ saved, created, skipped } = { saved: false }) {
     showProjectAssignmentModal.value = false;
 
     if (saved) {
+        // Ergebnis-Feedback: wie viele Tage wurden zugeordnet, was war schon abgedeckt
+        if ((created ?? 0) > 0) {
+            assignmentToastTitle.value = canPlanShifts.value
+                ? t('Project assignment saved')
+                : t('Project wish saved');
+            assignmentToastDescription.value = (skipped ?? 0) > 0
+                ? t('{0} day(s) assigned, {1} day(s) were already covered', [created, skipped])
+                : t('{0} day(s) assigned', [created]);
+            assignmentToastVisible.value = true;
+        }
+
         await refreshAssignmentsForDay();
         emit('desiresReload');
     }
@@ -1090,6 +1157,12 @@ const showAvailabilityCleanupModal = ref(false);
 const cleanupProcessing = ref(false);
 const cleanupShifts = ref([]);
 const cleanupIndividualTimes = ref([]);
+const cleanupProjectAssignments = ref([]);
+
+// Ergebnis-Feedback nach dem Zuordnen (Toast)
+const assignmentToastVisible = ref(false);
+const assignmentToastTitle = ref('');
+const assignmentToastDescription = ref('');
 
 const showRequestWorkTimeChangeModal = ref(false);
 const selectedShift = ref(null);
@@ -1776,14 +1849,22 @@ function checkVacation() {
                     model_type: props.user.type,
                     model_id: props.user.element.id,
                     date: props.day.withoutFormat,
+                    // Ziel-Status mitgeben: liefert zusätzlich die Projektzuordnungen/
+                    // -wünsche, die der Wechsel auflösen würde
+                    vacation_type: checked.value?.type,
                 },
             })
             .then(({ data }) => {
                 cleanupProcessing.value = false;
                 cleanupShifts.value = data.shifts ?? [];
                 cleanupIndividualTimes.value = data.individual_times ?? [];
+                cleanupProjectAssignments.value = data.project_assignments ?? [];
 
-                if (cleanupShifts.value.length || cleanupIndividualTimes.value.length) {
+                if (
+                    cleanupShifts.value.length ||
+                    cleanupIndividualTimes.value.length ||
+                    cleanupProjectAssignments.value.length
+                ) {
                     showAvailabilityCleanupModal.value = true;
                 } else {
                     sendIndividualTimes();

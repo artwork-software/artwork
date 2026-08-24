@@ -820,6 +820,57 @@ class ProjectDayAssignmentService
     }
 
     /**
+     * Precheck fürs Frei-/Abwesenheits-Confirm-Modal: welche Zuordnungen/Wünsche
+     * würde ein Eintrag des Typs an den Tagen auflösen? Gleiche Invariante wie
+     * handleVacationEntry — „Frei" (FREE_WORK) löst verbindliche Zuordnungen und
+     * Wünsche auf, Abwesenheiten (OFF_WORK, NOT_AVAILABLE) nur Wünsche.
+     *
+     * @param array<string> $dates Y-m-d
+     * @return array<int, array{project_id: int, project_name: string, type: string, dates: array<string>}>
+     */
+    public function getAssignmentsDissolvedByVacation(
+        string $employableType,
+        int $employableId,
+        array $dates,
+        string $vacationType
+    ): array {
+        if ($vacationType === \Artwork\Modules\Vacation\Enums\Vacation::AVAILABLE->value || $dates === []) {
+            return [];
+        }
+
+        $query = ProjectDayAssignment::query()
+            ->with('project:id,name')
+            ->whereHas('project')
+            ->forEmployable($employableType, $employableId)
+            ->whereIn('date', $dates);
+
+        if ($vacationType !== 'FREE_WORK') {
+            $query->wish();
+        }
+
+        return $query
+            ->orderBy('date')
+            ->get()
+            ->groupBy(static fn (ProjectDayAssignment $row) => $row->project_id . '_' . $row->type)
+            ->map(static function (Collection $group) {
+                $first = $group->first();
+
+                return [
+                    'project_id' => $first->project_id,
+                    'project_name' => $first->project?->name ?? '',
+                    'type' => $first->type,
+                    'dates' => $group
+                        ->map(static fn (ProjectDayAssignment $row) => $row->date->format('d.m.Y'))
+                        ->unique()
+                        ->values()
+                        ->all(),
+                ];
+            })
+            ->values()
+            ->all();
+    }
+
+    /**
      * Dienstplan-Payload: hängt project_assignments (Map Y-m-d => Einträge) an
      * die Worker-Einträge eines Typs — eine Batch-Query pro Worker-Typ.
      *
@@ -1057,6 +1108,17 @@ class ProjectDayAssignmentService
         string $datesLabel,
         string $reason
     ): void {
+        // Nach der Response: der Mail-Kanal versendet synchron per SMTP (BaseNotification
+        // ist nicht queued) und darf den auslösenden Request nicht blockieren (502-Klasse)
+        defer(fn () => $this->sendPlannersDissolutionNotificationsNow($project, $workerName, $datesLabel, $reason));
+    }
+
+    private function sendPlannersDissolutionNotificationsNow(
+        ?Project $project,
+        string $workerName,
+        string $datesLabel,
+        string $reason
+    ): void {
         $planners = User::permission(PermissionEnum::SHIFT_PLANNER->value)->get();
 
         foreach ($planners as $planner) {
@@ -1118,6 +1180,25 @@ class ProjectDayAssignmentService
         if ($employableType !== User::class || $employableId === Auth::id()) {
             return;
         }
+
+        // Nach der Response: der Mail-Kanal versendet synchron per SMTP (BaseNotification
+        // ist nicht queued) und darf den speichernden Request nicht blockieren (502-Klasse)
+        defer(fn () => $this->sendPersonBindingChangeNotificationNow(
+            $kind,
+            $project,
+            $employableId,
+            $datesLabel,
+            $reasonKey
+        ));
+    }
+
+    private function sendPersonBindingChangeNotificationNow(
+        string $kind,
+        ?Project $project,
+        int $employableId,
+        string $datesLabel,
+        ?string $reasonKey
+    ): void {
 
         $person = User::find($employableId);
 
@@ -1444,15 +1525,14 @@ class ProjectDayAssignmentService
 
     private function broadcastProjectAssignmentsChanged(int $projectId): void
     {
-        $broadcast = static fn (): mixed => broadcast(new ProjectDayAssignmentsChanged($projectId));
-
-        if (DB::connection()->transactionLevel() > 0) {
-            DB::afterCommit($broadcast);
-
-            return;
-        }
-
-        $broadcast();
+        // Nach der Response ausführen: der Broadcast geht synchron per HTTP an den
+        // Websocket-Server (ShouldBroadcastNow) — hängt der, darf er den speichernden
+        // Request nicht blockieren (502-Klasse, gleiches Muster wie die Event-Broadcasts).
+        // Der Name dedupliziert mehrere Aufrufe fürs selbe Projekt im selben Request.
+        defer(
+            static fn (): mixed => broadcast(new ProjectDayAssignmentsChanged($projectId)),
+            'project-day-assignments-changed-' . $projectId
+        );
     }
 
     /**

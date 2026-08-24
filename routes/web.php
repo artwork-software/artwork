@@ -610,6 +610,9 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         ->name('project-day-assignments.projects');
     Route::post('/project-day-assignments', [ProjectDayAssignmentController::class, 'store'])
         ->name('project-day-assignments.store');
+    Route::post('/project-day-assignments/vacation-impact', [ProjectDayAssignmentController::class, 'vacationImpact'])
+        ->name('project-day-assignments.vacation-impact')
+        ->can('can plan shifts');
     Route::get('/project-day-assignments/full-period', [ProjectDayAssignmentController::class, 'fullPeriodForWorker'])
         ->name('project-day-assignments.full-period.index')
         ->can('can plan shifts');

@@ -215,7 +215,7 @@
                                             {{ selectedState.name }}
                                             <IconCalendarMonth v-if="selectedState.is_planning === true || selectedState.is_planning === 1" class="w-4 h-4" />
                                         </span>
-                                        <button type="button" @click="selectedState = null" class="ml-1">
+                                        <button v-if="!isStateRequired" type="button" @click="selectedState = null" class="ml-1">
                                             <IconX class="h-4 w-4 text-text-subtle hover:text-danger" />
                                         </button>
                                     </div>
@@ -767,8 +767,8 @@ const uploadKeyVisualFeedback = ref("");
 const createProjectGroup = ref(false);
 const showInvalidProjectNameHelpText = ref(false);
 const showInvalidProjectStateHelpText = ref(false);
-// Pflicht nur bei Neuanlage: der Edit-Pfad speichert den Status nicht über dieses Modal
-const isStateRequired = computed(() => !props.project && props.createSettings?.state && props.createSettings?.state_required);
+// Pflicht bei Neuanlage UND Basisdaten-Edit (der Edit-Pfad speichert den Status via updateProjectState)
+const isStateRequired = computed(() => props.createSettings?.state && props.createSettings?.state_required);
 watch(selectedState, (state) => {
     if (state) {
         showInvalidProjectStateHelpText.value = false;

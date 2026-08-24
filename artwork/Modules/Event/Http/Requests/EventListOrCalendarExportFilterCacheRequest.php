@@ -35,6 +35,8 @@ class EventListOrCalendarExportFilterCacheRequest extends FormRequest
             // Event properties (custom properties from event_properties table)
             'filter.eventProperties' => 'array',
             'filter.eventProperties.*' => 'exists:event_properties,id',
+            'filter.projectStates' => 'array',
+            'filter.projectStates.*' => 'exists:project_states,id',
             // Optional: event attributes (fixed flags) — kept for future use if frontend sends them
 //            'filter.eventAttributes' => 'array',
 //            'filter.eventAttributes.*' => Rule::in(

@@ -192,6 +192,8 @@ class EventController extends Controller
             'room_category_ids' => null,
             'event_property_ids' => null,
             'craft_ids' => null,
+            // Blendet sonst den Zieltermin aus (und alle Termine ohne Projekt)
+            'project_state_ids' => null,
         ]);
 
         return redirect()->route('events', [

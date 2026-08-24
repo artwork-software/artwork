@@ -290,7 +290,7 @@ const activeFilters = computed(() => {
 const filteredOptionsByCategories = computed(() => {
     const filterOptions = usePage().props.filterOptions || loadedFilterOptions.value || {};
     const roomFilters = Object.keys(filterOptions).filter((key) => key.includes('room'));
-    const eventFilters = Object.keys(filterOptions).filter((key) => key.includes('event'));
+    const eventFilters = Object.keys(filterOptions).filter((key) => key.includes('event') || key === 'project_state_ids'); // Projektstatus-Filter gehoert zur Termin-Gruppe
     const areaFilters = Object.keys(filterOptions).filter((key) => key.includes('area'));
 
     const filteredOptions = {
@@ -481,6 +481,7 @@ const props = defineProps({
             room_attribute_ids: 'roomAttributes',
             event_type_ids: 'eventTypes',
             event_property_ids: 'eventProperties',
+            project_state_ids: 'projectStates',
         };
         Object.entries(aliasMap).forEach(([alias, target]) => {
             if (Array.isArray(data[alias])) {
@@ -491,7 +492,7 @@ const props = defineProps({
         });
 
         // Ensure expected filter keys exist as arrays to avoid undefined indexes on backend
-        ['rooms', 'areas', 'roomCategories', 'roomAttributes', 'eventTypes', 'eventProperties'].forEach((k) => {
+        ['rooms', 'areas', 'roomCategories', 'roomAttributes', 'eventTypes', 'eventProperties', 'projectStates'].forEach((k) => {
             if (!Array.isArray(data[k])) data[k] = [];
         });
 

@@ -839,8 +839,10 @@ class ProjectDayAssignmentService
         }
 
         $query = ProjectDayAssignment::query()
-            ->with('project:id,name')
-            ->whereHas('project')
+            // BEWUSST kein whereHas('project'): handleVacationEntry löst auch Zeilen
+            // auf, deren Projekt im Papierkorb liegt — der Precheck muss dieselben
+            // Zeilen melden, sonst fehlt der Confirm-Dialog. withTrashed fürs Label.
+            ->with(['project' => static fn ($q) => $q->withTrashed()->select(['id', 'name'])])
             ->forEmployable($employableType, $employableId)
             ->whereIn('date', $dates);
 
@@ -867,6 +869,99 @@ class ProjectDayAssignmentService
                 ];
             })
             ->values()
+            ->all();
+    }
+
+    /**
+     * Bulk-Variante des Prechecks (vacationImpact): EINE Assignment-Query und EIN
+     * Namens-Lookup pro Employable-Typ statt zwei Queries pro Person — Multi-Edit
+     * schickt bis zu 200 Personen. Gleiche Invariante wie handleVacationEntry.
+     *
+     * @param array<int, array{type: class-string, id: int, dates: array<string>}> $workers dates als Y-m-d
+     * @return array<int, array{project_id: int, project_name: string, type: string,
+     *     dates: array<string>, worker_name: string}>
+     */
+    public function getAssignmentsDissolvedByVacationBulk(array $workers, string $vacationType): array
+    {
+        if ($vacationType === \Artwork\Modules\Vacation\Enums\Vacation::AVAILABLE->value) {
+            return [];
+        }
+
+        $affected = [];
+
+        foreach (collect($workers)->groupBy('type') as $employableType => $group) {
+            $datesByWorker = [];
+            foreach ($group as $worker) {
+                if ($worker['dates'] !== []) {
+                    $datesByWorker[$worker['id']] = array_flip($worker['dates']);
+                }
+            }
+            if ($datesByWorker === []) {
+                continue;
+            }
+
+            $query = ProjectDayAssignment::query()
+                // BEWUSST kein whereHas('project') — siehe getAssignmentsDissolvedByVacation
+                ->with(['project' => static fn ($q) => $q->withTrashed()->select(['id', 'name'])])
+                ->where('employable_type', $employableType)
+                ->whereIn('employable_id', array_keys($datesByWorker))
+                ->whereIn('date', array_keys(array_merge(...array_values($datesByWorker))));
+
+            if ($vacationType !== 'FREE_WORK') {
+                $query->wish();
+            }
+
+            $rows = $query
+                ->orderBy('date')
+                ->get()
+                // Zellauswahl kann je Person abweichen: nur die eigenen Tage zählen
+                ->filter(static fn (ProjectDayAssignment $row) => isset(
+                    $datesByWorker[$row->employable_id][$row->date->format('Y-m-d')]
+                ));
+
+            if ($rows->isEmpty()) {
+                continue;
+            }
+
+            $names = $this->getWorkerNamesBulk($employableType, $rows->pluck('employable_id')->unique()->all());
+
+            $grouped = $rows->groupBy(
+                static fn (ProjectDayAssignment $row) => $row->employable_id . '_' . $row->project_id . '_' . $row->type
+            );
+            foreach ($grouped as $rowGroup) {
+                $first = $rowGroup->first();
+                $affected[] = [
+                    'project_id' => $first->project_id,
+                    'project_name' => $first->project?->name ?? '',
+                    'type' => $first->type,
+                    'dates' => $rowGroup
+                        ->map(static fn (ProjectDayAssignment $row) => $row->date->format('d.m.Y'))
+                        ->unique()
+                        ->values()
+                        ->all(),
+                    'worker_name' => $names[$first->employable_id] ?? '',
+                ];
+            }
+        }
+
+        return $affected;
+    }
+
+    /**
+     * @param array<int> $ids
+     * @return array<int, string> employable_id => Anzeigename
+     */
+    private function getWorkerNamesBulk(string $employableType, array $ids): array
+    {
+        return $employableType::query()
+            ->whereIn('id', $ids)
+            ->get()
+            ->mapWithKeys(static fn ($worker) => [$worker->id => match (true) {
+                $worker instanceof User => $worker->getFullNameAttribute(),
+                $worker instanceof Freelancer,
+                $worker instanceof ServiceProvider => $worker->getNameAttribute(),
+                default => '',
+            }])
             ->all();
     }
 
@@ -1110,7 +1205,9 @@ class ProjectDayAssignmentService
     ): void {
         // Nach der Response: der Mail-Kanal versendet synchron per SMTP (BaseNotification
         // ist nicht queued) und darf den auslösenden Request nicht blockieren (502-Klasse)
-        defer(fn () => $this->sendPlannersDissolutionNotificationsNow($project, $workerName, $datesLabel, $reason));
+        $this->deferAfterCommit(
+            fn () => $this->sendPlannersDissolutionNotificationsNow($project, $workerName, $datesLabel, $reason)
+        );
     }
 
     private function sendPlannersDissolutionNotificationsNow(
@@ -1183,7 +1280,7 @@ class ProjectDayAssignmentService
 
         // Nach der Response: der Mail-Kanal versendet synchron per SMTP (BaseNotification
         // ist nicht queued) und darf den speichernden Request nicht blockieren (502-Klasse)
-        defer(fn () => $this->sendPersonBindingChangeNotificationNow(
+        $this->deferAfterCommit(fn () => $this->sendPersonBindingChangeNotificationNow(
             $kind,
             $project,
             $employableId,
@@ -1529,10 +1626,32 @@ class ProjectDayAssignmentService
         // Websocket-Server (ShouldBroadcastNow) — hängt der, darf er den speichernden
         // Request nicht blockieren (502-Klasse, gleiches Muster wie die Event-Broadcasts).
         // Der Name dedupliziert mehrere Aufrufe fürs selbe Projekt im selben Request.
-        defer(
+        $this->deferAfterCommit(
             static fn (): mixed => broadcast(new ProjectDayAssignmentsChanged($projectId)),
             'project-day-assignments-changed-' . $projectId
         );
+    }
+
+    /**
+     * Nach-Response-Ausführung mit den Garantien der Mutation: Die Löschungen/Writes
+     * dieses Services sind beim Registrieren bereits committed (bzw. werden es mit
+     * dem umschließenden Commit) — der Callback muss deshalb auch dann laufen, wenn
+     * der Request später mit 4xx/5xx endet (defer() verwirft sonst bei >=400, und
+     * Broadcasts/Benachrichtigungen für committete Löschungen gingen verloren).
+     * In einer offenen Transaktion wird erst nach Commit registriert, damit ein
+     * Rollback keine Phantom-Broadcasts/-Mails auslöst.
+     */
+    private function deferAfterCommit(callable $callback, ?string $name = null): void
+    {
+        $register = static function () use ($callback, $name): void {
+            ($name !== null ? defer($callback, $name) : defer($callback))->always();
+        };
+
+        if (DB::connection()->transactionLevel() > 0) {
+            DB::afterCommit($register);
+        } else {
+            $register();
+        }
     }
 
     /**

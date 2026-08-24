@@ -55,6 +55,8 @@ class SeasonSchedulePdfExportRequest extends FormRequest
             'filter.room_category_ids.*' => ['integer'],
             'filter.event_property_ids' => ['sometimes', 'nullable', 'array'],
             'filter.event_property_ids.*' => ['integer'],
+            'filter.project_state_ids' => ['sometimes', 'nullable', 'array'],
+            'filter.project_state_ids.*' => ['integer'],
             'showHolidays' => ['required', 'boolean'],
             'showWeekNumbers' => ['required', 'boolean'],
             'highlightWeekends' => ['required', 'boolean'],

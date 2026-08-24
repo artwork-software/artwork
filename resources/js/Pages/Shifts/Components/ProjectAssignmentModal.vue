@@ -251,11 +251,13 @@ const fullPeriodDisabled = computed(
         && 'period_start' in selectedProject.value
 );
 
+// immediate: ist die Option von Anfang an disabled (fixedProject ohne Termine),
+// darf der initiale periodMode 'full_period' nicht aktiv bleiben
 watch(fullPeriodDisabled, (disabled) => {
     if (disabled && periodMode.value === 'full_period') {
         periodMode.value = 'days';
     }
-});
+}, { immediate: true });
 
 const daysForSuggestion = computed(() => selectedDays.value.length
     ? selectedDays.value
@@ -264,7 +266,8 @@ const daysForSuggestion = computed(() => selectedDays.value.length
 const canSubmit = computed(() => {
     if (!selectedProject.value) return false;
     if (periodMode.value === 'days') return selectedDays.value.length > 0;
-    return true;
+    // Zweiter Riegel zum Watch: disabled Zeitraum-Modus nie absenden
+    return !fullPeriodDisabled.value;
 });
 
 let searchDebounce = null;

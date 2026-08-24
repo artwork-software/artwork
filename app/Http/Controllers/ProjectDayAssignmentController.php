@@ -190,27 +190,18 @@ class ProjectDayAssignmentController extends Controller
 
         $globalDates = $normalizeDates($validated['dates'] ?? []);
 
-        $affected = [];
+        // Bulk statt Schleife: eine Assignment- und eine Namens-Query pro
+        // Employable-Typ — bei 200 Personen sonst ~400 Einzelqueries.
+        $workers = array_map(fn (array $worker) => [
+            'type' => $this->resolveEmployableType((int) $worker['type']),
+            'id' => (int) $worker['id'],
+            'dates' => isset($worker['dates']) ? $normalizeDates($worker['dates']) : $globalDates,
+        ], $validated['workers']);
 
-        foreach ($validated['workers'] as $worker) {
-            $employableType = $this->resolveEmployableType((int) $worker['type']);
-            $rows = $this->projectDayAssignmentService->getAssignmentsDissolvedByVacation(
-                $employableType,
-                (int) $worker['id'],
-                isset($worker['dates']) ? $normalizeDates($worker['dates']) : $globalDates,
-                $validated['vacation_type']
-            );
-
-            if ($rows === []) {
-                continue;
-            }
-
-            $workerName = $this->projectDayAssignmentService->getWorkerName($employableType, (int) $worker['id']);
-
-            foreach ($rows as $row) {
-                $affected[] = $row + ['worker_name' => $workerName];
-            }
-        }
+        $affected = $this->projectDayAssignmentService->getAssignmentsDissolvedByVacationBulk(
+            $workers,
+            $validated['vacation_type']
+        );
 
         return new JsonResponse(['affected' => $affected]);
     }
@@ -510,9 +501,11 @@ class ProjectDayAssignmentController extends Controller
             ->whereIn('type', ['FREE_WORK', 'OFF_WORK', 'NOT_AVAILABLE'])
             ->whereIn('date', $dates)
             ->pluck('date')
-            ->map(static fn ($date) => Carbon::parse($date)->format('d.m.Y'))
+            // erst chronologisch sortieren, DANN formatieren — d.m.Y sortiert lexikografisch falsch
+            ->map(static fn ($date) => Carbon::parse($date)->format('Y-m-d'))
             ->unique()
             ->sort()
-            ->values();
+            ->values()
+            ->map(static fn (string $date) => Carbon::parse($date)->format('d.m.Y'));
     }
 }

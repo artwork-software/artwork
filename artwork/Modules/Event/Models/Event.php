@@ -408,6 +408,22 @@ class Event extends Model
         return $builder->where('project_id', $projectId);
     }
 
+    /**
+     * Projektstatus-Filter: nur Termine, deren (nicht gelöschtes) Projekt einen der
+     * Status hat — Termine ohne Projekt fallen bewusst heraus. Zentrale Definition
+     * für alle Kalender-/Filter-Query-Sites; nicht-korrelierte Subquery statt
+     * whereHas-EXISTS, weil sie auf den heißesten Kalenderpfaden läuft.
+     *
+     * @param array<int> $projectStateIds
+     */
+    public function scopeByProjectStateIds(Builder $builder, array $projectStateIds): Builder
+    {
+        return $builder->whereIn(
+            $this->qualifyColumn('project_id'),
+            Project::query()->whereIn('state', $projectStateIds)->select('id')
+        );
+    }
+
     public function scopeByEventTypeId(Builder $builder, int $eventTypeId): Builder
     {
         return $builder->where('event_type_id', $eventTypeId);

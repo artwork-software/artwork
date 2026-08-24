@@ -73,11 +73,9 @@ class EventPlanningCalendarService
                     $q->whereIn('event_property_id', $filter->event_property_ids);
                 });
             })
-            // Projektstatus-Filter: nur Termine, die einem Projekt mit einem der gewählten Status zugewiesen sind
+            // Projektstatus-Filter (zentrale Semantik im Event-Scope)
             ->unless(empty($filter->project_state_ids), function ($q) use ($filter): void {
-                $q->whereHas('project', function ($q) use ($filter): void {
-                    $q->whereIn('state', $filter->project_state_ids);
-                });
+                $q->byProjectStateIds($filter->project_state_ids);
             })
             ->where(function ($query) use ($userCalendarSettings): void {
                 // Always include planning events

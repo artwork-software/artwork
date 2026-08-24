@@ -271,17 +271,14 @@ readonly class CalendarDataService
             }
 
             // Projektstatus-Filter: Raum zählt nur als belegt, wenn der Termin einem
-            // Projekt mit einem der gewählten Status zugewiesen ist
+            // Projekt mit einem der gewählten Status zugewiesen ist. Gleiche Semantik
+            // wie Event::scopeByProjectStateIds (Raw-Subquery, daher kein Scope-Aufruf);
+            // SoftDeletes kommen aus dem Global Scope von Project::query().
             if (!empty($filter?->project_state_ids)) {
-                $projectStateIds = $filter->project_state_ids;
-
-                $eventQuery->whereExists(function ($sq) use ($projectStateIds) {
-                    $sq->selectRaw('1')
-                        ->from('projects')
-                        ->whereColumn('projects.id', 'events.project_id')
-                        ->whereNull('projects.deleted_at')
-                        ->whereIn('projects.state', $projectStateIds);
-                });
+                $eventQuery->whereIn(
+                    'events.project_id',
+                    Project::query()->whereIn('state', $filter->project_state_ids)->select('id')
+                );
             }
         };
 

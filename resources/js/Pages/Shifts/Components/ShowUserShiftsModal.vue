@@ -1575,9 +1575,13 @@ const shiftsForDay = computed(() => {
     );
 });
 
-// "Frei"/"Nicht Verfügbar" sind die Status, die eine Bereinigung erfordern können.
+// "Frei"/"Nicht Verfügbar" können Schichten/individuelle Zeiten bereinigen …
+const SHIFT_CLEANUP_TYPES = ['FREE_WORK', 'NOT_AVAILABLE'];
+// … aber Projektzuordnungen/-wünsche löst auch "Arbeitsfreier Tag" auf
+// (Parität mit CellMultiEditModal und handleVacationEntry im Backend).
+const DISSOLVING_VACATION_TYPES = ['FREE_WORK', 'OFF_WORK', 'NOT_AVAILABLE'];
 function isBlockingAvailabilityStatus() {
-    return checked.value?.type === 'FREE_WORK' || checked.value?.type === 'NOT_AVAILABLE';
+    return DISSOLVING_VACATION_TYPES.includes(checked.value?.type);
 }
 
 function addIndividualTime() {
@@ -1856,8 +1860,12 @@ function checkVacation() {
             })
             .then(({ data }) => {
                 cleanupProcessing.value = false;
-                cleanupShifts.value = data.shifts ?? [];
-                cleanupIndividualTimes.value = data.individual_times ?? [];
+                // Schicht-/Zeiten-Bereinigung nur bei "Frei"/"Nicht Verfügbar" —
+                // "Arbeitsfreier Tag" löst nur Projektwünsche auf und darf keine
+                // Schicht-Entfernung anbieten, die der Speicherpfad nie ausführt.
+                const allowShiftCleanup = SHIFT_CLEANUP_TYPES.includes(checked.value?.type);
+                cleanupShifts.value = allowShiftCleanup ? (data.shifts ?? []) : [];
+                cleanupIndividualTimes.value = allowShiftCleanup ? (data.individual_times ?? []) : [];
                 cleanupProjectAssignments.value = data.project_assignments ?? [];
 
                 if (

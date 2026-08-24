@@ -486,20 +486,27 @@ const submitForm = async () => {
     if (vacationType && DISSOLVING_VACATION_TYPES.includes(vacationType) && !checkingVacationImpact.value) {
         checkingVacationImpact.value = true;
         try {
-            const workers = Object.values(props.multiEditCellByDayAndUser ?? {}).map((entry) => ({
-                type: entry.type,
-                id: entry.id,
-                dates: entry.days ?? [],
-            }));
-            const { data } = await axios.post(route('project-day-assignments.vacation-impact'), {
-                workers,
-                vacation_type: vacationType,
-            });
+            // Dienstleister (type 2) ausnehmen: der Speicherpfad (updateUserCell)
+            // schreibt für sie keine Verfügbarkeiten und löst nichts auf — sie
+            // hier mitzuprüfen würde eine Auflösung ankündigen, die nie passiert.
+            const workers = Object.values(props.multiEditCellByDayAndUser ?? {})
+                .filter((entry) => Number(entry.type) !== 2)
+                .map((entry) => ({
+                    type: entry.type,
+                    id: entry.id,
+                    dates: entry.days ?? [],
+                }));
+            if (workers.length) {
+                const { data } = await axios.post(route('project-day-assignments.vacation-impact'), {
+                    workers,
+                    vacation_type: vacationType,
+                });
 
-            if ((data.affected ?? []).length) {
-                vacationImpactAffected.value = data.affected;
-                showVacationImpactModal.value = true;
-                return;
+                if ((data.affected ?? []).length) {
+                    vacationImpactAffected.value = data.affected;
+                    showVacationImpactModal.value = true;
+                    return;
+                }
             }
         } catch (error) {
             // Precheck fehlgeschlagen: Speichern nicht blockieren

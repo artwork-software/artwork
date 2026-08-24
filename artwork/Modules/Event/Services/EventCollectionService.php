@@ -218,9 +218,9 @@ class EventCollectionService
                         ->orWhereHas('subEvents', fn($sb) => $sb->whereIn('event_type_id', $eventTypeIds));
                 });
             })
-            // Projektstatus-Filter: nur Termine, die einem Projekt mit einem der gewählten Status zugewiesen sind
+            // Projektstatus-Filter (zentrale Semantik im Event-Scope)
             ->when($projectStateIds, function ($builder) use ($projectStateIds) {
-                $builder->whereHas('project', fn($pb) => $pb->whereIn('state', $projectStateIds));
+                $builder->byProjectStateIds($projectStateIds);
             });
     }
 

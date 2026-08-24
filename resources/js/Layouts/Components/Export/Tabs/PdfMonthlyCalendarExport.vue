@@ -658,7 +658,7 @@ const activeFilters = computed(() => {
 
 const filteredOptionsByCategories = computed(() => {
     const roomFilters = Object.keys(usePage().props.filterOptions).filter((key: string) => key.includes('room'));
-    const eventFilters = Object.keys(usePage().props.filterOptions).filter((key: string) => key.includes('event'));
+    const eventFilters = Object.keys(usePage().props.filterOptions).filter((key: string) => key.includes('event') || key === 'project_state_ids'); // Projektstatus-Filter gehoert zur Termin-Gruppe
     const areaFilters = Object.keys(usePage().props.filterOptions).filter((key: string) => key.includes('area'));
 
     const filteredOptions: Record<string, Record<string, any[]>> = {

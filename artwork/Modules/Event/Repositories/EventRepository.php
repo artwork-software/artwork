@@ -322,6 +322,19 @@ class EventRepository extends BaseRepository
                     );
                 }
             )
+            // Projektstatus-Filter: nur Termine von Projekten mit einem der Status
+            // (Parität zum Kalender-Filter project_state_ids)
+            ->when(
+                count(($projectStates = ($filter['projectStates'] ?? []))) > 0,
+                function (Builder $query) use ($projectStates): void {
+                    $query->whereHas(
+                        'project',
+                        function (Builder $relation) use ($projectStates): void {
+                            $relation->whereIn('state', $projectStates);
+                        }
+                    );
+                }
+            )
             //@todo: optional: fixed event attributes (is_loud/audience) can be added here when frontend sends them
                 ->where('deleted_at', null)
             ->orderBy('start_time');

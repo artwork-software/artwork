@@ -228,7 +228,9 @@ const periodMode = ref(props.initialDays.length ? 'days' : 'full_period');
 const selectedDays = ref([...props.initialDays]);
 const warningMessage = ref('');
 const errorList = ref([]); // [{ key, name, message }] — Fehler pro Person benennen
-const absenceBlockedWorkers = ref([]); // Personen mit Frei-/Abwesenheitstagen (409) — „Trotzdem zuordnen"
+// Beim 409 eingefrorene Requests ({worker, payload}) für „Trotzdem zuordnen" —
+// der Force-Pass speichert exakt das, wovor gewarnt wurde
+const absenceBlockedWorkers = ref([]);
 const submitting = ref(false);
 // Falls nach Teil-Erfolg offen geblieben: beim Schließen trotzdem neu laden lassen
 let anySaved = false;
@@ -323,8 +325,13 @@ function close() {
     emit('close', { saved: anySaved, created: totalCreated, skipped: totalSkipped });
 }
 
-async function submit(workersToSubmit = null, force = false) {
-    if ((!canSubmit.value && workersToSubmit === null) || submitting.value) return;
+// Harte Fehler des Passes, der die 409-Warnungen produziert hat — sie müssen den
+// Force-Pass überleben, sonst schließt das Modal mit Erfolg, obwohl Personen fehlen.
+const carriedFailures = ref([]);
+
+async function submit(forceRequests = null) {
+    const isForcePass = forceRequests !== null;
+    if ((!canSubmit.value && !isForcePass) || submitting.value) return;
     warningMessage.value = '';
     errorList.value = [];
     absenceBlockedWorkers.value = [];
@@ -332,34 +339,44 @@ async function submit(workersToSubmit = null, force = false) {
 
     let created = 0;
     let skipped = 0;
-    const failed = [];
+    const failed = isForcePass ? [...carriedFailures.value] : [];
     const absenceBlocked = [];
+
+    // Request-Payloads einfrieren: beim Force-Pass gelten Worker UND Tages-/Zeitraum-
+    // Auswahl vom Zeitpunkt der Warnung — das Modal bleibt offen und editierbar,
+    // nachträgliche Änderungen dürfen nicht ungeprüft mit force gespeichert werden.
+    const requests = forceRequests ?? selectedWorkers.value.map((worker) => ({
+        worker,
+        payload: {
+            project_id: props.project.id,
+            worker_type: worker.type,
+            worker_id: worker.id,
+            type: 'binding',
+            full_period: periodMode.value === 'full_period',
+            days: periodMode.value === 'days' ? [...selectedDays.value] : [],
+        },
+    }));
 
     // Ein Store-Call pro Person (Backend-API ist Einzelperson-basiert);
     // sequenziell, damit Fehlermeldungen eindeutig zuordenbar bleiben.
-    for (const worker of (workersToSubmit ?? selectedWorkers.value)) {
+    for (const request of requests) {
         try {
             const { data } = await axios.post(route('project-day-assignments.store'), {
-                project_id: props.project.id,
-                worker_type: worker.type,
-                worker_id: worker.id,
-                type: 'binding',
-                full_period: periodMode.value === 'full_period',
-                days: periodMode.value === 'days' ? selectedDays.value : [],
-                force,
+                ...request.payload,
+                force: isForcePass,
             });
             created += data.created ?? 0;
             skipped += data.skipped ?? 0;
         } catch (error) {
             if (error?.response?.status === 409 && error.response.data?.warning === 'absences') {
-                absenceBlocked.push({ worker, message: error.response.data.message });
+                absenceBlocked.push({ ...request, message: error.response.data.message });
                 continue;
             }
 
             const errors = error?.response?.data?.errors;
             failed.push({
-                key: workerKey(worker),
-                name: worker.name,
+                key: workerKey(request.worker),
+                name: request.worker.name,
                 message: errors
                     ? Object.values(errors).flat()[0]
                     : (error?.response?.data?.message ?? String(error)),
@@ -374,7 +391,8 @@ async function submit(workersToSubmit = null, force = false) {
 
     if (absenceBlocked.length) {
         // Frei-/Abwesenheitstage: pro Person benennen, „Trotzdem zuordnen" anbieten
-        absenceBlockedWorkers.value = absenceBlocked.map((entry) => entry.worker);
+        absenceBlockedWorkers.value = absenceBlocked.map(({ worker, payload }) => ({ worker, payload }));
+        carriedFailures.value = failed;
         errorList.value = absenceBlocked.map((entry) => ({
             key: workerKey(entry.worker),
             name: entry.worker.name,
@@ -383,6 +401,8 @@ async function submit(workersToSubmit = null, force = false) {
         errorList.value.push(...failed);
         return;
     }
+
+    carriedFailures.value = [];
 
     if (failed.length) {
         errorList.value = failed;
@@ -399,7 +419,10 @@ async function submit(workersToSubmit = null, force = false) {
 }
 
 function submitForce() {
-    submit(absenceBlockedWorkers.value, true);
+    // Nur Personen force-zuordnen, die (a) beim 409 gewarnt wurden UND (b) noch
+    // ausgewählt sind — eine Abwahl nach der Warnung ist eine Entscheidung.
+    const stillSelected = new Set(selectedWorkers.value.map((worker) => workerKey(worker)));
+    submit(absenceBlockedWorkers.value.filter((entry) => stillSelected.has(workerKey(entry.worker))));
 }
 </script>
 

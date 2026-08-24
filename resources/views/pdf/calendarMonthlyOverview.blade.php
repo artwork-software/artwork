@@ -181,6 +181,10 @@
 </head>
 <body>
 
+@php
+    $__admissionEnabled = (bool) app(\App\Settings\EventSettings::class)->enable_admission;
+@endphp
+
 @foreach($pages as $pageIndex => $page)
     <div class="page {{ $pageIndex === 0 ? 'first-page' : 'subsequent-page' }}">
         @if($pageIndex === 0)
@@ -226,27 +230,31 @@
                             <td class="{{ $bgClass }}">
                                 @foreach($events as $event)
                                     @php
-                                        // Color based on colorSource setting
-                                        if (($colorSource ?? 'eventType') === 'mainCategory') {
-                                            if (!$event->project) {
-                                                $hexColor = '#9E9E9E'; // grey for events without project
-                                            } elseif ($event->mainCategoryColor) {
-                                                $hexColor = $event->mainCategoryColor;
-                                            } else {
-                                                $hexColor = '#3A3A3A'; // anthracite for project without main category
-                                            }
-                                        } else {
-                                            $hexColor = $event->eventType->hex_code ?? '#111111';
-                                        }
+                                        // Farbe gemäß Anzeigeeinstellung (Terminart / Terminstatus / Hauptkategorie)
+                                        $hexColor = $display->resolveColor(
+                                            $event->eventType ?? null,
+                                            $event->eventStatus ?? null,
+                                            (bool) ($event->project ?? null),
+                                            $event->mainCategoryColor ?? null,
+                                            '#111111'
+                                        );
 
                                         $abbr = $event->eventType->abbreviation ?? '';
                                         $eventTypeName = $event->eventType->name ?? '';
                                         $projectName = $event->project->name ?? null;
-                                        $eventName = $event->eventName ?? null;
-                                        $artistNames = $event->artistNames ?? null;
+                                        $eventName = $display->resolveEventName($event->eventName ?? null, $event->artistNames ?? null);
+                                        $extraLines = $display->extraContentLines($event);
 
                                         $startFormatted = \Carbon\Carbon::parse($event->start)->format('H:i');
                                         $endFormatted = \Carbon\Carbon::parse($event->end)->format('H:i');
+
+                                        // Einlass (Instanz-Setting + Anzeigeeinstellung)
+                                        $admissionSuffix = (
+                                            $__admissionEnabled && $display->shows('show_event_admission')
+                                            && !empty($event->admission_time)
+                                        )
+                                            ? ' · Einlass ' . substr((string) $event->admission_time, 0, 5)
+                                            : '';
 
                                         $r = hexdec(substr($hexColor, 1, 2));
                                         $g = hexdec(substr($hexColor, 3, 2));
@@ -259,16 +267,18 @@
                                         $borderRGB = "rgba($r,$g,$b,0.95)";
                                         $leftRGB = "rgba($r,$g,$b,1)";
 
-                                        $line1 = $startFormatted . '-' . $endFormatted . ' ' . $abbr . ' ' . $eventTypeName;
+                                        $line1 = $startFormatted . '-' . $endFormatted . $admissionSuffix . ' ' . $abbr . ' ' . $eventTypeName;
 
                                         $line2Parts = [];
                                         if ($projectName) $line2Parts[] = $projectName;
                                         if ($eventName) $line2Parts[] = $eventName;
-                                        if ($artistNames) $line2Parts[] = $artistNames;
                                         $line2 = implode(', ', $line2Parts);
                                         if (mb_strlen($line2) > 60) {
                                             $line2 = mb_substr($line2, 0, 60) . '…';
                                         }
+
+                                        // Zusatzinfos gemäß Anzeigeeinstellungen (Künstler:innen, Status, Beschreibung, …)
+                                        $line3 = implode(' · ', $extraLines);
                                     @endphp
                                     <div class="evt" style="background:{{ $bgRGB }}; border-color:{{ $borderRGB }}; border-left-color:{{ $leftRGB }};">
                                         <div class="evt-line1">
@@ -277,6 +287,11 @@
                                         @if($line2)
                                             <div class="evt-line2">
                                                 {{ $line2 }}
+                                            </div>
+                                        @endif
+                                        @if($line3)
+                                            <div class="evt-line2">
+                                                {{ $line3 }}
                                             </div>
                                         @endif
                                     </div>

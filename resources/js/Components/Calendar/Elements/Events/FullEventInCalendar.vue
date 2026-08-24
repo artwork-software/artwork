@@ -217,6 +217,20 @@
                                 </Teleport>
                             </div>
 
+                            <!-- Terminstatus (Anzeigeeinstellung "Terminstatus ausgeschrieben", eigene Zeile unter dem Terminnamen) -->
+                            <div
+                                v-if="showEventStatusName && !project && zoom_factor >= 0.8"
+                                class="flex items-center gap-1.5 text-xs/5 min-w-0"
+                            >
+                                <span
+                                    class="size-2.5 shrink-0 rounded-full border"
+                                    :style="{ backgroundColor: event.eventStatus.color + '33', borderColor: event.eventStatus.color }"
+                                ></span>
+                                <span :class="[expandDays ? 'break-words' : 'truncate', 'subpixel-antialiased opacity-90']">
+                                    {{ event.eventStatus.name }}
+                                </span>
+                            </div>
+
                             <!-- Eventtyp (nur ausgeschrieben, wenn kein Name sichtbar ist) + Projekt-State-Indicator rechts -->
                             <div
                                 v-if="showFullEventTypeName || (calSettings.project_status && event.projectStateColor)"
@@ -596,6 +610,14 @@
                                                 <!-- Eventname -->
                                                 <div v-if="calSettings.event_name && event.eventName" class="truncate text-xs/4 font-semibold">
                                                     {{ event.eventName }}
+                                                </div>
+                                                <!-- Terminstatus (Anzeigeeinstellung "Terminstatus ausgeschrieben") -->
+                                                <div v-if="showEventStatusName" class="flex items-center gap-1.5 text-xs/5 min-w-0">
+                                                    <span
+                                                        class="size-2.5 shrink-0 rounded-full border"
+                                                        :style="{ backgroundColor: event.eventStatus.color + '33', borderColor: event.eventStatus.color }"
+                                                    ></span>
+                                                    <span class="truncate subpixel-antialiased opacity-90">{{ event.eventStatus.name }}</span>
                                                 </div>
                                                 <!-- Eventtyp -->
                                                 <div class="flex items-center justify-between">
@@ -1062,6 +1084,13 @@ const showAdmissionTime = computed(() =>
     && isStartDayCell.value
 );
 
+// Terminstatus ausgeschrieben: eigene Zeile unter dem Terminnamen (Anzeigeeinstellung, Default AUS)
+const showEventStatusName = computed(() =>
+    Boolean(pageProps.event_status_module)
+    && Boolean(calSettings.value.show_event_status)
+    && Boolean(props.event.eventStatus?.name)
+);
+
 const isHighlighted = computed(() => {
     const highlightEventId = pageProps.urlParameters.highlightEventId;
     return highlightEventId && parseInt(highlightEventId) === parseInt(props.event.id);
@@ -1349,6 +1378,7 @@ const totalHeight = computed(() => {
     if (calSettings.value.project_management) height += 17;
     if (calSettings.value.show_event_creator) height += 17;
     if (pageProps.event_admission_module && calSettings.value.show_event_admission !== false) height += 17;
+    if (pageProps.event_status_module && calSettings.value.show_event_status) height += 17;
     if (calSettings.value.repeating_events) height += 20;
     return height;
 });
@@ -1364,6 +1394,12 @@ const heightSubtraction = (event) => {
     if (
         pageProps.event_admission_module && calSettings.value.show_event_admission !== false &&
         (!event.admission_time || !isStartDayCell.value)
+    ) {
+        heightSubtraction += 17;
+    }
+    if (
+        pageProps.event_status_module && calSettings.value.show_event_status &&
+        !event.eventStatus?.name
     ) {
         heightSubtraction += 17;
     }

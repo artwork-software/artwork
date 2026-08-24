@@ -169,6 +169,71 @@ final class ProjectUpdateTest extends FeatureTestCase
     }
 
     #[Test]
+    public function basic_data_update_requires_state_when_setting_active(): void
+    {
+        $this->actingAsAdmin();
+
+        $settings = app(\Artwork\Modules\Project\Models\ProjectCreateSettings::class);
+        $settings->state = true;
+        $settings->state_required = true;
+        $settings->save();
+
+        $project = Project::factory()->create(['name' => 'Old Name', 'state' => null]);
+
+        $response = $this->patch(route('projects.update', $project), [
+            'name' => 'Updated Name',
+            'state' => null,
+        ]);
+
+        $response->assertSessionHasErrors('state');
+        $this->assertSame('Old Name', $project->fresh()->name);
+    }
+
+    #[Test]
+    public function basic_data_update_succeeds_with_state_when_setting_active(): void
+    {
+        $this->actingAsAdmin();
+
+        $settings = app(\Artwork\Modules\Project\Models\ProjectCreateSettings::class);
+        $settings->state = true;
+        $settings->state_required = true;
+        $settings->save();
+
+        $state = \Artwork\Modules\Project\Models\ProjectState::factory()->create();
+        $project = Project::factory()->create(['state' => null]);
+
+        $response = $this->patch(route('projects.update', $project), [
+            'name' => 'Updated Name',
+            'state' => $state->id,
+        ]);
+
+        $response->assertSessionDoesntHaveErrors();
+        $this->assertSame('Updated Name', $project->fresh()->name);
+        $this->assertSame($state->id, (int) $project->fresh()->state);
+    }
+
+    #[Test]
+    public function update_without_state_key_is_not_blocked_by_state_requirement(): void
+    {
+        $this->actingAsAdmin();
+
+        $settings = app(\Artwork\Modules\Project\Models\ProjectCreateSettings::class);
+        $settings->state = true;
+        $settings->state_required = true;
+        $settings->save();
+
+        $project = Project::factory()->create(['state' => null]);
+
+        // Team-/Schicht-Modals rufen projects.update ohne state-Key auf und dürfen nicht blockiert werden
+        $response = $this->patch(route('projects.update', $project), [
+            'name' => 'Updated Name',
+        ]);
+
+        $response->assertSessionDoesntHaveErrors();
+        $this->assertSame('Updated Name', $project->fresh()->name);
+    }
+
+    #[Test]
     public function admin_can_update_attributes(): void
     {
         $this->actingAsAdmin();

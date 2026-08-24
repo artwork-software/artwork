@@ -885,6 +885,32 @@
                         </div>
                     </div>
 
+                    <!-- Terminstatus ausgeschrieben (falls Modul aktiv & nicht Schichtplan) -->
+                    <div class="flex gap-3" v-if="usePage().props.event_status_module && !inShiftPlan">
+                        <div class="flex h-6 shrink-0 items-center">
+                            <div class="group grid size-4 grid-cols-1">
+                                <input
+                                    v-model="userCalendarSettings.show_event_status"
+                                    id="show_event_status"
+                                    aria-describedby="show_event_status-description"
+                                    name="show_event_status"
+                                    type="checkbox"
+                                    class="col-start-1 row-start-1 appearance-none rounded-sm border border-border bg-surface checked:border-accent-600 checked:bg-accent-600 indeterminate:border-accent-600 indeterminate:bg-accent-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-600 disabled:border-border disabled:bg-surface-sunken disabled:checked:bg-surface-sunken forced-colors:appearance-auto"
+                                />
+                                <svg class="pointer-events-none col-start-1 row-start-1 size-3.5 self-center justify-self-center stroke-white group-has-disabled:stroke-text-subtle" viewBox="0 0 14 14" fill="none">
+                                    <path class="opacity-0 group-has-checked:opacity-100" d="M3 8L6 11L11 3.5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                    <path class="opacity-0 group-has-indeterminate:opacity-100" d="M3 7H11" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                </svg>
+                            </div>
+                        </div>
+                        <div class="text-sm/6">
+                            <label for="show_event_status" class="font-medium text-text">{{ $t('Event status spelled out') }}</label>
+                            <p id="show_event_status-description" class="text-text-subtle text-xs">
+                                {{ $t('Shows the event status by name in its own row below the event name on the event tile.') }}
+                            </p>
+                        </div>
+                    </div>
+
                     <!-- Artists -->
                     <div class="flex gap-3">
                         <div class="flex h-6 shrink-0 items-center">
@@ -1140,6 +1166,7 @@ const userCalendarSettings = props.isListView
         show_event_creator: activeSettings ? activeSettings.show_event_creator : false,
         // Default AN; fehlender Wert (Alt-Settings) zählt als aktiviert
         show_event_admission: activeSettings ? (activeSettings.show_event_admission ?? true) : true,
+        show_event_status: activeSettings ? (activeSettings.show_event_status ?? false) : false,
         repeating_events: activeSettings ? activeSettings.repeating_events : false,
         work_shifts: activeSettings ? activeSettings.work_shifts : false,
         description: activeSettings ? activeSettings.description : false,

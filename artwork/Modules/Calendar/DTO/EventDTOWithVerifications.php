@@ -60,7 +60,10 @@ class EventDTOWithVerifications extends Data
         $user = $event->user_id ? ($users[$event->user_id] ?? null) : null;
         $project = $event->project_id ? ($projects[$event->project_id] ?? null) : null;
 
-        $useStatusColor = $userCalendarSettings->use_event_status_color ?? false;
+        // Status wird eager gebraucht, sobald er die Kachel färbt ODER die
+        // Anzeigeeinstellung "Terminstatus ausgeschrieben" ihn als Textzeile zeigt.
+        $useStatusColor = ($userCalendarSettings->use_event_status_color ?? false)
+            || ($userCalendarSettings->show_event_status ?? false);
         $eventStatusModel = null;
         if ($event->event_type_id !== null) {
             $eventStatusModel = $eventStatuses[$event->event_status_id] ?? null;
@@ -103,9 +106,11 @@ class EventDTOWithVerifications extends Data
             declinedRoomId: $event->declined_room_id,
             eventStatus: ($useStatusColor && $eventStatusModel) ? [
                 'id' => $eventStatusModel->id,
+                'name' => $eventStatusModel->name,
                 'color' => $eventStatusModel->color,
             ] : ($eventStatusModel ? Lazy::inertia(fn () => [
                 'id' => $eventStatusModel->id,
+                'name' => $eventStatusModel->name,
                 'color' => $eventStatusModel->color,
             ]) : null),
             subEvents: self::serializeSubEvents($event),

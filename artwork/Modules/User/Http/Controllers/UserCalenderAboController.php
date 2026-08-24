@@ -3,9 +3,10 @@
 namespace Artwork\Modules\User\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use Artwork\Modules\User\Http\Requests\StoreUserCalendarAboRequest;
+use Artwork\Modules\User\Http\Requests\UpdateUserCalendarAboRequest;
 use Artwork\Modules\User\Models\UserCalendarAbo;
 use Artwork\Modules\User\Services\UserCalendarAboService;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Spatie\IcalendarGenerator\Components\Calendar;
 use Spatie\IcalendarGenerator\Properties\TextProperty;
@@ -35,9 +36,9 @@ class UserCalenderAboController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request): void
+    public function store(StoreUserCalendarAboRequest $request): void
     {
-        $this->userCalendarAboService->create($request->all(), Auth::id());
+        $this->userCalendarAboService->create($request->validated(), Auth::id());
     }
 
     /**
@@ -81,9 +82,9 @@ class UserCalenderAboController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, UserCalendarAbo $userCalenderAbo): void
+    public function update(UpdateUserCalendarAboRequest $request, UserCalendarAbo $userCalenderAbo): void
     {
-        $this->userCalendarAboService->updateByRequest($request->all(), $userCalenderAbo);
+        $this->userCalendarAboService->updateByRequest($request->validated(), $userCalenderAbo);
     }
 
     /**

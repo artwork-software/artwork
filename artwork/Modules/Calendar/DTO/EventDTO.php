@@ -102,6 +102,7 @@ class EventDTO extends Data
             declinedRoomId: $event->declined_room_id,
             eventStatus: $eventStatus ? [
                 'id' => $eventStatus->id,
+                'name' => $eventStatus->name,
                 'color' => $eventStatus->color,
             ] : null,
             subEvents: self::serializeSubEvents($event),

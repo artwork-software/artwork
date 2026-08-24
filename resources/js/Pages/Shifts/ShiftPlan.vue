@@ -912,6 +912,22 @@
         :multi-edit-cell-by-day-and-user="multiEditCellByDayAndUser"
         @close="closeCellMultiEditDelete"
     />
+    <!-- Rückfrage: Projektzeitraum-Zuordnung trotz Abwesenheits-/Frei-Tagen? -->
+    <ArtworkBaseModal
+        v-if="fullPeriodAbsenceWarning"
+        :title="$t('Assign person to the entire project period')"
+        :description="fullPeriodAbsenceWarning.message"
+        @close="fullPeriodAbsenceWarning = null"
+    >
+        <div class="flex justify-end gap-2 mt-6">
+            <BaseUIButton type="button" variant="secondary" hide-icon @click="fullPeriodAbsenceWarning = null">
+                {{ $t('Cancel') }}
+            </BaseUIButton>
+            <BaseUIButton type="button" variant="primary" hide-icon @click="confirmFullPeriodAssignmentDespiteAbsence">
+                {{ $t('Assign anyway') }}
+            </BaseUIButton>
+        </div>
+    </ArtworkBaseModal>
     <DeleteCalendarRoomShiftEntriesModal
         v-if="openCellMultiEditCalendarDelete"
         :multi-edit-cell-by-room-and-dates="multiEditCalendarDays"
@@ -1019,6 +1035,8 @@ import {enrichDays, getDaysInRange, computeShiftFormattedDates, computeEventForm
 import {provideShiftPlanLookups} from '@/Composeables/useShiftPlanLookups.js'
 import SwitchIconTooltip from '@/Artwork/Toggles/SwitchIconTooltip.vue'
 import PropertyIcon from '@/Artwork/Icon/PropertyIcon.vue'
+import ArtworkBaseModal from '@/Artwork/Modals/ArtworkBaseModal.vue'
+import BaseUIButton from '@/Artwork/Buttons/BaseUIButton.vue'
 import {can, is} from 'laravel-permission-to-vuejs'
 import {useUserOverviewLayout} from '@/Pages/Shifts/Composables/useUserOverviewLayout.ts'
 import {useSyncedHorizontalScroll} from '@/Pages/Shifts/Composables/useSyncedHorizontalScroll.ts'
@@ -3957,7 +3975,18 @@ async function refreshFullPeriodAssignedProjects() {
     }
 }
 
-async function toggleFullPeriodProjectAssignment(projectId: number) {
+// 409-Abwesenheitswarnung des Stores: Rückfrage "Trotzdem zuordnen?" statt Fehler
+const fullPeriodAbsenceWarning = ref<{ projectId: number, message: string } | null>(null)
+
+async function confirmFullPeriodAssignmentDespiteAbsence() {
+    const warning = fullPeriodAbsenceWarning.value
+    fullPeriodAbsenceWarning.value = null
+    if (warning) {
+        await toggleFullPeriodProjectAssignment(warning.projectId, true)
+    }
+}
+
+async function toggleFullPeriodProjectAssignment(projectId: number, force = false) {
     const item = userForMultiEdit.value
     if (!item || savingFullPeriodProjectIds.value.has(projectId)) return
 
@@ -3987,6 +4016,7 @@ async function toggleFullPeriodProjectAssignment(projectId: number) {
                 type: 'binding',
                 full_period: true,
                 days: [],
+                force,
             })
             showNotice('success', 'Assigned', 'The person was assigned to the entire project period.')
         }
@@ -3994,9 +4024,15 @@ async function toggleFullPeriodProjectAssignment(projectId: number) {
         await reloadSingleWorker(item.id, numericTypeToWorkerType(item.type))
         await refreshFullPeriodAssignedProjects()
     } catch (error: any) {
-        const errors = error?.response?.data?.errors
-        const message = errors ? Object.values(errors).flat()[0] : $t('Saving failed')
-        $toast?.error?.(message)
+        const response = error?.response
+        if (response?.status === 409 && response?.data?.warning === 'absences') {
+            // Verbindliche Zuordnung trifft Abwesenheits-/Frei-Tage: Rückfrage mit Force-Option
+            fullPeriodAbsenceWarning.value = { projectId, message: response.data.message ?? '' }
+        } else {
+            const errors = response?.data?.errors
+            const message = errors ? Object.values(errors).flat()[0] : $t('Saving failed')
+            $toast?.error?.(message)
+        }
         await refreshFullPeriodAssignedProjects().catch(() => {})
     } finally {
         const next = new Set(savingFullPeriodProjectIds.value)

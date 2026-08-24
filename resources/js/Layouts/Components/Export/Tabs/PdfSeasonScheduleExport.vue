@@ -219,6 +219,9 @@
                 </div>
             </section>
 
+            <!-- Anzeigeeinstellungen (Farbquelle + Künstler:innen statt Titel; vorbelegt aus dem Kalender) -->
+            <ExportDisplaySettings v-model="displaySettings" compact id-prefix="season" />
+
             <!-- Darstellungs-Optionen -->
             <section class="rounded-2xl border border-border-subtle bg-white p-6 shadow-sm space-y-3">
                 <label class="block text-sm font-semibold text-text">
@@ -366,10 +369,14 @@ import PropertyIcon from '@/Artwork/Icon/PropertyIcon.vue'
 import {IconChevronDown, IconX} from "@tabler/icons-vue";
 import SaveFilterPresetModal from '@/Layouts/Components/Export/Modals/SaveFilterPresetModal.vue'
 import ConfirmDeleteModal from '@/Layouts/Components/ConfirmDeleteModal.vue'
+import ExportDisplaySettings from '@/Layouts/Components/Export/Components/ExportDisplaySettings.vue'
 
 const $t = useTranslation()
 const emits = defineEmits<{ (e: 'closed', value: boolean): void }>()
-const props = defineProps<{ preselectedFilters?: Record<string, number[] | null> | null }>()
+const props = defineProps<{
+    preselectedFilters?: Record<string, number[] | null> | null;
+    preselectedDateRange?: string[] | null;
+}>()
 
 const toDateInputValue = (date: Date): string => {
     const month = String(date.getMonth() + 1).padStart(2, '0')
@@ -404,6 +411,7 @@ const pdf = useForm({
     paperSize: null as string | null,
     dpi: 72,
     filter: {} as Record<string, number[] | null>,
+    displaySettings: null as Record<string, boolean> | null,
     showHolidays: true,
     showWeekNumbers: true,
     highlightWeekends: true,
@@ -412,6 +420,24 @@ const pdf = useForm({
     showRoomAbbreviations: false,
     splitMonths: false,
 })
+
+// Anzeigeeinstellungen (Farbquelle + Künstler:innen statt Titel)
+const displaySettings = ref<Record<string, boolean> | null>(null)
+
+// Zeitraum: aktuell sichtbarer Kalenderzeitraum, auf volle Monate gerundet
+// (das Raster zeigt ohnehin immer ganze Monate)
+const applyPreselectedDateRange = () => {
+    const range = props.preselectedDateRange
+    if (!Array.isArray(range) || !range[0] || !range[1]) return
+    const start = new Date(String(range[0]).slice(0, 10))
+    const end = new Date(String(range[1]).slice(0, 10))
+    if (isNaN(start.getTime()) || isNaN(end.getTime())) return
+    start.setDate(1)
+    end.setMonth(end.getMonth() + 1)
+    end.setDate(0) // letzter Tag des Endmonats
+    pdf.startDate = toDateInputValue(start)
+    pdf.endDate = toDateInputValue(end)
+}
 
 const defaultTitle = computed(() => {
     const startYear = pdf.startDate ? new Date(pdf.startDate).getFullYear() : new Date().getFullYear()
@@ -468,6 +494,7 @@ const applyActiveUserFilters = () => {
 onMounted(() => {
     loadFilterPresets()
     applyActiveUserFilters()
+    applyPreselectedDateRange()
 })
 
 const getCurrentFilterData = () => {
@@ -557,6 +584,7 @@ const createPdf = () => {
     Object.assign(data, extractCheckedIds('eventFilters'));
 
     pdf.filter = data;
+    pdf.displaySettings = displaySettings.value;
 
     pdf.post(route('calendar.export.season-schedule-pdf'), { preserveScroll: true })
     closeModal(true)
@@ -575,7 +603,7 @@ const activeFilters = computed(() => {
 
 const filteredOptionsByCategories = computed(() => {
     const roomFilters = Object.keys(usePage().props.filterOptions).filter((key: string) => key.includes('room'));
-    const eventFilters = Object.keys(usePage().props.filterOptions).filter((key: string) => key.includes('event'));
+    const eventFilters = Object.keys(usePage().props.filterOptions).filter((key: string) => key.includes('event') || key === 'project_state_ids'); // Projektstatus-Filter gehoert zur Termin-Gruppe
     const areaFilters = Object.keys(usePage().props.filterOptions).filter((key: string) => key.includes('area'));
 
     const filteredOptions: Record<string, Record<string, any[]>> = {

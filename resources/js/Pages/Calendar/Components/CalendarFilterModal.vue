@@ -83,8 +83,18 @@
             <div class="space-y-1">
                 <div v-for="(filterMainCategory, mainKey) in filteredOptionsByCategories" :key="mainKey"
                      v-show="Object.values(filterMainCategory).some(sub => sub.length > 0)" class="py-1">
-                    <div class="text-text-inverse bg-surface-inverse rounded-lg px-4 py-2 font-lexend shadow text-sm">
+                    <div class="flex items-center gap-x-1.5 text-text-inverse bg-surface-inverse rounded-lg px-4 py-2 font-lexend shadow text-sm">
                         {{ $t(mainKey) }}
+                        <ToolTipComponent
+                            v-if="mainKey === 'projectStateFilters'"
+                            direction="right"
+                            :tooltip-text="$t('project_state_filter_info')"
+                            icon="IconInfoCircle"
+                            icon-size="size-4"
+                            white-icon
+                            classes-button=""
+                            tooltip-css-class="aw-tooltip-wide"
+                        />
                     </div>
 
                     <div class="space-y-2 mt-2">
@@ -162,6 +172,7 @@ import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
 import {IconChevronDown, IconX} from "@tabler/icons-vue";
 import BasePageTitle from "@/Artwork/Titles/BasePageTitle.vue";
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
+import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
 
 // Local open/close state per subcategory to avoid mutating computed arrays
 const openState = ref({});
@@ -216,11 +227,21 @@ const activeFilters = computed(() => {
     return activeFilters;
 })
 
+// Schicht-Kontexte (Schichtplan & Co.) — dort gibt es Gewerke, aber keinen Projektstatus-Filter
+const isShiftFilterContext = computed(() =>
+    props.filterType === 'shift_filter' ||
+    props.filterType === 'shift_daily_filter' ||
+    props.filterType === 'shift_list_view_filter' ||
+    props.filterType === 'project_shift_filter' ||
+    props.inShiftPlan
+);
+
 const filteredOptionsByCategories = computed(() => {
     let roomFilters = Object.keys(props.filterOptions).filter(key => key.includes('room'));
     let eventFilters = Object.keys(props.filterOptions).filter(key => key.includes('event'));
     let areaFilters = Object.keys(props.filterOptions).filter(key => key.includes('area'));
     let craftFilter = Object.keys(props.filterOptions).filter(key => key.includes('craft'));
+    let projectStateFilter = Object.keys(props.filterOptions).filter(key => key.includes('project_state'));
     let filteredOptions = {
         roomFilters: {},
         areaFilters: {},
@@ -256,10 +277,18 @@ const filteredOptionsByCategories = computed(() => {
     })
 
     // Crafts are only included for shift filter / shift plan
-    if(props.filterType === 'shift_filter' || props.filterType === 'shift_daily_filter' || props.filterType === 'shift_list_view_filter' || props.filterType === 'project_shift_filter' || props.inShiftPlan) {
+    if(isShiftFilterContext.value) {
         filteredOptions.craftFilters = {};
         craftFilter.forEach(filter => {
             filteredOptions.craftFilters[filter] = props.filterOptions[filter];
+        })
+    }
+
+    // Project states are only offered in calendar contexts (not in the shift plan)
+    if(!isShiftFilterContext.value) {
+        filteredOptions.projectStateFilters = {};
+        projectStateFilter.forEach(filter => {
+            filteredOptions.projectStateFilters[filter] = props.filterOptions[filter];
         })
     }
 
@@ -322,8 +351,10 @@ const applyFilter = () => {
     Object.assign(data, extractCheckedIds('roomFilters'));
     Object.assign(data, extractCheckedIds('areaFilters'));
     Object.assign(data, extractCheckedIds('eventFilters'));
-    if(props.filterType === 'shift_filter' || props.filterType === 'shift_daily_filter' || props.filterType === 'shift_list_view_filter' || props.filterType === 'project_shift_filter' || props.inShiftPlan) {
+    if(isShiftFilterContext.value) {
         Object.assign(data, extractCheckedIds('craftFilters'));
+    } else {
+        Object.assign(data, extractCheckedIds('projectStateFilters'));
     }
     router.patch(route('update.user.calendar.filter', usePage().props.auth.user.id), data, {
         preserveScroll: true,
@@ -345,8 +376,10 @@ const saveFilter = () => {
     Object.assign(data, extractCheckedIds('roomFilters'));
     Object.assign(data, extractCheckedIds('areaFilters'));
     Object.assign(data, extractCheckedIds('eventFilters'));
-    if(props.inShiftPlan || props.filterType === 'shift_filter' || props.filterType === 'shift_daily_filter' || props.filterType === 'shift_list_view_filter' || props.filterType === 'project_shift_filter') {
+    if(isShiftFilterContext.value) {
         Object.assign(data, extractCheckedIds('craftFilters'));
+    } else {
+        Object.assign(data, extractCheckedIds('projectStateFilters'));
     }
     router.post(route('filter.store', usePage().props.auth.user.id), data, {
         preserveScroll: true,

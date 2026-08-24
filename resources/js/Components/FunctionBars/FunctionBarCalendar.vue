@@ -429,33 +429,40 @@ const CalendarSettingsModal = defineAsyncComponent({
 const exportTabEnums = useExportTabEnums();
 const getExportModalConfiguration = () => {
     const cfg = {};
-    // Aktive Kalender-Filter mitgeben, damit sie im Export-Modal vorausgewählt sind
+    // Aktive Kalender-Filter und den sichtbaren Zeitraum mitgeben, damit sie im
+    // Export-Modal vorausgewählt sind (dort weiterhin anpassbar)
     const activeUserFilters = unref(user_filters) ?? null;
+    const activeDateRange = unref(dateValue) ?? null;
 
     cfg[exportTabEnums.PDF_CALENDAR_EXPORT] = {
         project: props.project,
-        user_filters: activeUserFilters
+        user_filters: activeUserFilters,
+        date_range: activeDateRange
     };
 
     cfg[exportTabEnums.PDF_MONTHLY_CALENDAR_EXPORT] = {
         project: props.project,
-        user_filters: activeUserFilters
+        user_filters: activeUserFilters,
+        date_range: activeDateRange
     };
 
     cfg[exportTabEnums.PDF_SEASON_SCHEDULE_EXPORT] = {
-        user_filters: activeUserFilters
+        user_filters: activeUserFilters,
+        date_range: activeDateRange
     };
 
     cfg[exportTabEnums.EXCEL_EVENT_LIST_EXPORT] = {
         project: props.project,
         show_artists: (usePage().props.createSettings?.show_artists ?? false) ||
             (usePage().props.show_artists ?? false),
-        user_filters: activeUserFilters
+        user_filters: activeUserFilters,
+        date_range: activeDateRange
     };
 
     cfg[exportTabEnums.EXCEL_CALENDAR_EXPORT] = {
         project: props.project,
-        user_filters: activeUserFilters
+        user_filters: activeUserFilters,
+        date_range: activeDateRange
     };
 
     return cfg;

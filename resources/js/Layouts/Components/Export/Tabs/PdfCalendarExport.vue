@@ -350,40 +350,6 @@
                         />
                     </div>
 
-                    <!-- Color Source Toggle -->
-                    <div class="space-y-2">
-                        <label class="block text-sm font-medium text-text-muted">
-                            {{ $t('Event color') }}
-                        </label>
-                        <fieldset class="flex gap-2">
-                            <div
-                                v-for="mode in [
-                                    { id: 'eventType', label: $t('Color by event type') },
-                                    { id: 'mainCategory', label: $t('Color by main category of project') }
-                                ]"
-                                :key="mode.id"
-                                class="relative flex-1"
-                            >
-                                <input
-                                    :id="`colorSource-${mode.id}`"
-                                    name="color-source"
-                                    type="radio"
-                                    :value="mode.id"
-                                    v-model="pdf.colorSource"
-                                    class="peer absolute inset-0 h-0 w-0 opacity-0"
-                                />
-                                <label
-                                    :for="`colorSource-${mode.id}`"
-                                    class="block cursor-pointer rounded-xl border px-4 py-3 text-sm transition
-                                    peer-checked:border-surface-inverse peer-checked:bg-surface-inverse peer-checked:text-text-inverse
-                                    border-border-subtle bg-white text-text hover:bg-surface-sunken hover:text-text"
-                                >
-                                    {{ mode.label }}
-                                </label>
-                            </div>
-                        </fieldset>
-                    </div>
-
                     <!-- Export Mode Toggle -->
                     <div class="space-y-2">
                         <div class="flex items-center gap-2">
@@ -434,20 +400,15 @@
                         </fieldset>
                     </div>
 
-                    <!-- Tagesbemerkungen mitdrucken (nur bei aktivem Feature & Sichtrecht) -->
-                    <div v-if="dayRemarksAvailable" class="flex items-center gap-2">
-                        <input
-                            id="includeDayRemarks"
-                            v-model="pdf.includeDayRemarks"
-                            type="checkbox"
-                            class="h-4 w-4 rounded border-border text-accent-600 focus:ring-accent-600"
-                        />
-                        <label for="includeDayRemarks" class="text-sm text-text cursor-pointer">
-                            {{ $t('Include day remarks') }}
-                        </label>
-                    </div>
                 </div>
             </section>
+
+            <!-- Anzeigeeinstellungen (vorbelegt aus dem Kalender, pro Export anpassbar) -->
+            <ExportDisplaySettings
+                v-model="displaySettings"
+                :show-day-remarks="dayRemarksAvailable"
+                id-prefix="pdfCalendar"
+            />
 
             <!-- Export -->
             <section class="flex items-center justify-end">
@@ -495,10 +456,16 @@ import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 import {IconChevronDown, IconX} from "@tabler/icons-vue";
 import SaveFilterPresetModal from '@/Layouts/Components/Export/Modals/SaveFilterPresetModal.vue'
 import ConfirmDeleteModal from '@/Layouts/Components/ConfirmDeleteModal.vue'
+import ExportDisplaySettings from '@/Layouts/Components/Export/Components/ExportDisplaySettings.vue'
 
 const $t = useTranslation()
 const emits = defineEmits<{ (e: 'closed', value: boolean): void }>()
-const props = defineProps<{ pdfTitle?: string; project?: any; preselectedFilters?: Record<string, number[] | null> | null }>()
+const props = defineProps<{
+    pdfTitle?: string;
+    project?: any;
+    preselectedFilters?: Record<string, number[] | null> | null;
+    preselectedDateRange?: string[] | null;
+}>()
 
 const showModalInformation = ref(true)
 
@@ -533,9 +500,20 @@ const pdf = useForm({
     daysPerPage: 7,
     exportMode: 'relative' as 'relative' | 'block',
     filter: {} as Record<string, number[] | null>,
-    colorSource: 'eventType' as 'eventType' | 'mainCategory',
-    includeDayRemarks: false
+    displaySettings: null as Record<string, boolean> | null
 })
+
+// Anzeigeeinstellungen (v-model der ExportDisplaySettings-Sektion; initialisiert sich
+// selbst aus den aktiven Kalender-Anzeigeeinstellungen des Users)
+const displaySettings = ref<Record<string, boolean> | null>(null)
+
+// Zeitraum: aktuell sichtbarer Kalenderzeitraum als Vorauswahl (anpassbar)
+const applyPreselectedDateRange = () => {
+    const range = props.preselectedDateRange
+    if (!Array.isArray(range) || !range[0] || !range[1]) return
+    pdf.start = String(range[0]).slice(0, 10)
+    pdf.end = String(range[1]).slice(0, 10)
+}
 
 // Tagesbemerkungen nur anbieten, wenn Feature aktiv und User sie sehen darf
 const dayRemarksState = (usePage().props.day_remarks ?? { enabled: false, can_view: false }) as any
@@ -589,6 +567,7 @@ const applyActiveUserFilters = () => {
 onMounted(() => {
     loadFilterPresets()
     applyActiveUserFilters()
+    applyPreselectedDateRange()
 })
 
 // Aktuellen Filter-Status für das Speichern sammeln
@@ -675,6 +654,7 @@ const createPdf = () => {
     Object.assign(data, extractCheckedIds('eventFilters'));
 
     pdf.filter = data;
+    pdf.displaySettings = displaySettings.value;
 
     pdf.post(route('calendar.export.pdf'), { preserveScroll: true })
     closeModal(true)
@@ -693,7 +673,7 @@ const activeFilters = computed(() => {
 
 const filteredOptionsByCategories = computed(() => {
     const roomFilters = Object.keys(usePage().props.filterOptions).filter((key: string) => key.includes('room'));
-    const eventFilters = Object.keys(usePage().props.filterOptions).filter((key: string) => key.includes('event'));
+    const eventFilters = Object.keys(usePage().props.filterOptions).filter((key: string) => key.includes('event') || key === 'project_state_ids'); // Projektstatus-Filter gehoert zur Termin-Gruppe
     const areaFilters = Object.keys(usePage().props.filterOptions).filter((key: string) => key.includes('area'));
 
     const filteredOptions: Record<string, Record<string, any[]>> = {

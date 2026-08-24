@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\SeasonSchedulePdfExportRequest;
 use Artwork\Core\FileHandling\Naming\StoredFileName;
+use Artwork\Modules\Calendar\Services\EventExportDisplaySettings;
 use Artwork\Modules\Calendar\Services\SeasonSchedulePdfBuilder;
 use Artwork\Modules\EventType\Models\EventType;
 use Artwork\Modules\GeneralSettings\Models\GeneralSettings;
@@ -50,12 +51,19 @@ class SeasonSchedulePdfExportController extends Controller
             'showRoomAbbreviations' => $validated['showRoomAbbreviations'],
         ];
 
+        // Farbquelle/Künstler:innen-Anzeige: Kalender-Settings als Default, Modal übersteuert
+        $displaySettings = EventExportDisplaySettings::fromRequest(
+            $validated['displaySettings'] ?? null,
+            $user->getAttribute('calendar_settings')
+        );
+
         $scheduleData = $this->builder->build(
             $startDate,
             $endDate,
             $filter,
             $user->getAttribute('calendar_settings'),
-            $options
+            $options,
+            $displaySettings
         );
 
         $title = trim((string) ($validated['title'] ?? ''));

@@ -74,13 +74,20 @@ class ProjectDayAssignmentController extends Controller
             'full_period' => 'required|boolean',
             'days' => 'required_if:full_period,false|array|max:366',
             'days.*' => 'date',
+            'force' => 'sometimes|boolean',
         ]);
 
         $type = ProjectDayAssignmentType::from($validated['type']);
         $employableType = $this->resolveEmployableType($validated['worker_type']);
 
         // Existenz der Person sicherstellen — sonst entstehen verwaiste Zuordnungszeilen
-        $employableType::query()->findOrFail((int) $validated['worker_id']);
+        $worker = $employableType::query()->findOrFail((int) $validated['worker_id']);
+
+        if (!$worker->getAttribute('can_work_shifts')) {
+            throw ValidationException::withMessages([
+                'worker_id' => __('The selected person cannot be scheduled for shifts.'),
+            ]);
+        }
 
         $this->authorizeMutation($type, $employableType, (int) $validated['worker_id'], isCreation: true);
 
@@ -95,6 +102,14 @@ class ProjectDayAssignmentController extends Controller
                 ]);
             }
 
+            // Guard VOR der Materialisierung: ein kaputter Termin (Tippfehler-Jahr)
+            // würde sonst hier bereits Millionen Tageszeilen im Speicher erzeugen
+            if ($period['start']->diffInDays($period['end']) > ProjectDayAssignmentService::MAX_FULL_PERIOD_DAYS) {
+                throw ValidationException::withMessages([
+                    'project_id' => __('The project period is too long for a full period assignment.'),
+                ]);
+            }
+
             $dates = collect(CarbonPeriod::create($period['start'], $period['end']))
                 ->map(static fn ($day) => $day->format('Y-m-d'))
                 ->all();
@@ -106,6 +121,24 @@ class ProjectDayAssignmentController extends Controller
 
         if ($type === ProjectDayAssignmentType::WISH) {
             $this->ensureNoAbsenceOnDates($employableType, (int) $validated['worker_id'], $dates);
+        }
+
+        // Verbindliche Zuordnung auf Frei-/Abwesenheitstagen: erst warnen, mit
+        // force=true bewusst trotzdem zuordnen (Parität zur Wunsch-Sperre, aber
+        // für Planer*innen überstimmbar).
+        if ($type === ProjectDayAssignmentType::BINDING && !($validated['force'] ?? false)) {
+            $absenceDates = $this->getAbsenceDatesForWarning($employableType, (int) $validated['worker_id'], $dates);
+
+            if ($absenceDates->isNotEmpty()) {
+                return new JsonResponse([
+                    'warning' => 'absences',
+                    'message' => __(
+                        'The person has an absence or free day entered on :dates. The assignment was not saved yet.',
+                        ['dates' => $absenceDates->implode(', ')]
+                    ),
+                    'dates' => $absenceDates->values()->all(),
+                ], 409);
+            }
         }
 
         $created = $validated['full_period']
@@ -128,6 +161,49 @@ class ProjectDayAssignmentController extends Controller
             'created' => $created->count(),
             'skipped' => count($dates) - $created->count(),
         ]);
+    }
+
+    /**
+     * Precheck fürs Multi-Edit: welche Zuordnungen/Wünsche würde ein Frei-/
+     * Abwesenheits-Eintrag der Personen an den Tagen auflösen? (Confirm-Modal)
+     */
+    public function vacationImpact(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'workers' => 'required|array|min:1|max:200',
+            'workers.*.type' => 'required|integer|in:0,1,2',
+            'workers.*.id' => 'required|integer',
+            // Tage pro Person (Multi-Edit: Zellauswahl kann je Person abweichen);
+            // fehlen sie, gelten die globalen dates
+            'workers.*.dates' => 'sometimes|array|max:366',
+            'workers.*.dates.*' => 'date',
+            'dates' => 'sometimes|array|max:366',
+            'dates.*' => 'date',
+            'vacation_type' => 'required|string|max:32',
+        ]);
+
+        $normalizeDates = static fn (array $dates) => collect($dates)
+            ->map(static fn ($date) => Carbon::parse($date)->format('Y-m-d'))
+            ->unique()
+            ->values()
+            ->all();
+
+        $globalDates = $normalizeDates($validated['dates'] ?? []);
+
+        // Bulk statt Schleife: eine Assignment- und eine Namens-Query pro
+        // Employable-Typ — bei 200 Personen sonst ~400 Einzelqueries.
+        $workers = array_map(fn (array $worker) => [
+            'type' => $this->resolveEmployableType((int) $worker['type']),
+            'id' => (int) $worker['id'],
+            'dates' => isset($worker['dates']) ? $normalizeDates($worker['dates']) : $globalDates,
+        ], $validated['workers']);
+
+        $affected = $this->projectDayAssignmentService->getAssignmentsDissolvedByVacationBulk(
+            $workers,
+            $validated['vacation_type']
+        );
+
+        return new JsonResponse(['affected' => $affected]);
     }
 
     public function destroy(Request $request, ProjectDayAssignment $projectDayAssignment): JsonResponse
@@ -396,14 +472,7 @@ class ProjectDayAssignmentController extends Controller
      */
     private function ensureNoAbsenceOnDates(string $employableType, int $employableId, array $dates): void
     {
-        $absenceDates = Vacation::query()
-            ->where('vacationer_type', $employableType)
-            ->where('vacationer_id', $employableId)
-            ->whereIn('date', $dates)
-            ->pluck('date')
-            ->map(static fn ($date) => Carbon::parse($date)->format('d.m.Y'))
-            ->unique()
-            ->values();
+        $absenceDates = $this->getAbsenceDatesForWarning($employableType, $employableId, $dates);
 
         if ($absenceDates->isNotEmpty()) {
             throw ValidationException::withMessages([
@@ -412,5 +481,31 @@ class ProjectDayAssignmentController extends Controller
                 ]),
             ]);
         }
+    }
+
+    /**
+     * Frei-/Abwesenheitstage der Person innerhalb der angefragten Tage (d.m.Y) —
+     * „Verfügbar"-Einträge (AVAILABLE) zählen bewusst nicht als Abwesenheit.
+     *
+     * @param array<string> $dates
+     * @return \Illuminate\Support\Collection<int, string>
+     */
+    private function getAbsenceDatesForWarning(
+        string $employableType,
+        int $employableId,
+        array $dates
+    ): \Illuminate\Support\Collection {
+        return Vacation::query()
+            ->where('vacationer_type', $employableType)
+            ->where('vacationer_id', $employableId)
+            ->whereIn('type', ['FREE_WORK', 'OFF_WORK', 'NOT_AVAILABLE'])
+            ->whereIn('date', $dates)
+            ->pluck('date')
+            // erst chronologisch sortieren, DANN formatieren — d.m.Y sortiert lexikografisch falsch
+            ->map(static fn ($date) => Carbon::parse($date)->format('Y-m-d'))
+            ->unique()
+            ->sort()
+            ->values()
+            ->map(static fn (string $date) => Carbon::parse($date)->format('d.m.Y'));
     }
 }

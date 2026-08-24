@@ -3,10 +3,11 @@
 namespace Artwork\Modules\User\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use Artwork\Modules\User\Http\Requests\StoreUserShiftCalendarAboRequest;
+use Artwork\Modules\User\Http\Requests\UpdateUserShiftCalendarAboRequest;
 use Artwork\Modules\User\Models\UserShiftCalendarAbo;
 use Artwork\Modules\User\Services\UserShiftCalendarAboService;
 use Carbon\Carbon;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 use Spatie\IcalendarGenerator\Components\Calendar;
@@ -39,9 +40,9 @@ class UserShiftCalendarAboController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request): void
+    public function store(StoreUserShiftCalendarAboRequest $request): void
     {
-        $this->userShiftCalendarAboService->create($request->all(), Auth::id());
+        $this->userShiftCalendarAboService->create($request->validated(), Auth::id());
     }
 
     /**
@@ -123,9 +124,11 @@ class UserShiftCalendarAboController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, UserShiftCalendarAbo $userShiftCalendarAbo): void
-    {
-        $this->userShiftCalendarAboService->updateByRequest($userShiftCalendarAbo, $request->all());
+    public function update(
+        UpdateUserShiftCalendarAboRequest $request,
+        UserShiftCalendarAbo $userShiftCalendarAbo
+    ): void {
+        $this->userShiftCalendarAboService->updateByRequest($userShiftCalendarAbo, $request->validated());
     }
 
     /**

@@ -1212,6 +1212,9 @@ class ShiftController extends Controller
             'model_type' => ['required', 'integer', 'in:0,1,2'],
             'model_id' => ['required', 'integer'],
             'date' => ['required', 'date'],
+            // Ziel-Status des Verfügbarkeitswechsels: bestimmt, welche Projekt-
+            // zuordnungen/-wünsche der Wechsel auflösen würde (Confirm-Modal)
+            'vacation_type' => ['sometimes', 'nullable', 'string', 'max:32'],
         ]);
 
         $modelClass = match ((int) $validated['model_type']) {
@@ -1263,9 +1266,15 @@ class ShiftController extends Controller
             ])
             ->values();
 
+        $projectAssignments = ($validated['vacation_type'] ?? null) !== null
+            ? app(\Artwork\Modules\Project\Services\ProjectDayAssignmentService::class)
+                ->getAssignmentsDissolvedByVacation($modelClass, $modelId, [$date], $validated['vacation_type'])
+            : [];
+
         return response()->json([
             'shifts' => $shifts,
             'individual_times' => $individualTimes,
+            'project_assignments' => $projectAssignments,
         ]);
     }
 

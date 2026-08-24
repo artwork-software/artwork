@@ -147,7 +147,8 @@ class ProjectRepository extends BaseRepository
 
     public function searchByNameOrArtists(string $search, int $limit = 20): Collection
     {
-        $like = '%' . $search . '%';
+        // LIKE-Wildcards im Suchbegriff escapen — sonst matcht "%" alles
+        $like = '%' . str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], $search) . '%';
 
         return Project::query()
             ->with('crmContacts')

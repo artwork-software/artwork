@@ -2,6 +2,7 @@
 
 namespace Artwork\Modules\Project\Http\Requests;
 
+use Artwork\Modules\Project\Models\ProjectCreateSettings;
 use Illuminate\Foundation\Http\FormRequest;
 
 class UpdateProjectRequest extends FormRequest
@@ -11,8 +12,14 @@ class UpdateProjectRequest extends FormRequest
      */
     public function rules(): array
     {
+        $createSettings = app(ProjectCreateSettings::class);
+        // Pflicht analog StoreProjectRequest; 'sometimes', damit Aufrufer ohne state-Key
+        // (Team-/Schicht-Modals) nicht betroffen sind — die Basisdaten-Modals senden state immer mit.
+        $stateRequired = $createSettings->state && $createSettings->state_required;
+
         return [
             'name' => ['required', 'string', 'max:255'],
+            'state' => ['sometimes', $stateRequired ? 'required' : 'nullable', 'integer', 'exists:project_states,id'],
             'description' => ['sometimes', 'nullable', 'string'],
             'number_of_participants' => ['sometimes', 'nullable', 'int'],
             'cost_center' => ['sometimes', 'nullable', 'string'],

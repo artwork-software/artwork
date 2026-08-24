@@ -5,6 +5,7 @@ namespace Artwork\Modules\Event\Services;
 use Artwork\Core\Carbon\Service\CarbonService;
 use Artwork\Core\Services\CacheService;
 use Artwork\Core\Services\CollectionService;
+use Artwork\Modules\Calendar\Services\EventExportDisplaySettings;
 use Artwork\Modules\Event\Abstracts\EventExportService;
 use Artwork\Modules\Event\Exports\EventCalendarXlsxExport;
 use Artwork\Modules\Event\Repositories\EventRepository;
@@ -55,13 +56,33 @@ class EventCalendarExportService extends EventExportService
     {
         $conditional = $this->getFromCachedData('conditional');
 
+        // Anzeigeeinstellungen: Kalender-Settings des Users als Default, das Export-Modal
+        // hat sie ggf. übersteuert in den Cache gelegt
+        $cachedDisplaySettings = $this->getFromCachedData('displaySettings');
+        $displaySettings = EventExportDisplaySettings::fromRequest(
+            is_array($cachedDisplaySettings) ? $cachedDisplaySettings : null,
+            $this->userService->getAuthUser()?->getAttribute('calendar_settings')
+        );
+
+        $rooms = $this->getFilteredRooms();
+        $events = $this->eventRepository->getEventsForExport($this->getFromCachedData());
+
+        // Leere Räume gemäß Anzeigeeinstellung ausblenden
+        if ($displaySettings->shows('hide_unoccupied_rooms')) {
+            $roomIdsWithEvents = $events->pluck('room_id')->unique();
+            $rooms = $rooms->filter(
+                static fn ($room) => $roomIdsWithEvents->contains($room->getAttribute('id'))
+            )->values();
+        }
+
         $this->eventCalendarXlsxExport
             ->setDesiresTimespanExport(
                 ($desiresTimespanExport = $this->getFromCachedData('desiresTimespanExport'))
             )
             ->setCreatedBy($this->aggregateCreatedBy())
-            ->setRooms($this->getFilteredRooms())
-            ->setEvents($this->eventRepository->getEventsForExport($this->getFromCachedData()));
+            ->setDisplaySettings($displaySettings)
+            ->setRooms($rooms)
+            ->setEvents($events);
 
         if ($desiresTimespanExport) {
             $this->eventCalendarXlsxExport

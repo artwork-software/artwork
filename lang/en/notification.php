@@ -85,6 +85,12 @@ return [
         'commit_request_approved' => 'Shift plan request :craft (week :week) was approved',
         'commit_request_rejected' => 'Shift plan request :craft (week :week) was rejected',
         'commit_request_comment' => 'Note from :user: :comment',
+        'commit_request_deadline_title' => 'Deadline for shift plan request :craft (week :week) reached',
+        'commit_request_deadline' =>
+            'The deadline of :days days for submitting the shift plan for week :week ' .
+            '(:start_time – :end_time) in craft :craft has been reached. ' .
+            'Please submit a shift plan request.',
+        'link_label_commit_request_deadline' => 'Go to shift plan',
         'confirmation_accepted' => ':workerName has accepted the shift :craftAbbreviation on :date',
         'confirmation_declined' => ':workerName has declined the shift :craftAbbreviation on :date',
         'confirmation_comment' => 'Comment: :comment',

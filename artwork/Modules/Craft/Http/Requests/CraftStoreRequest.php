@@ -25,6 +25,7 @@ class CraftStoreRequest extends FormRequest
             'qualifications.*.id' => 'integer|exists:shift_qualifications,id',
             'color' => 'nullable|string|max:7',
             'notify_days' => 'nullable|integer|min:0',
+            'commit_request_deadline_days' => 'nullable|integer|min:0|max:365',
         ];
     }
 }

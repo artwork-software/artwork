@@ -58,6 +58,18 @@
                     <p class="mt-2 text-xs text-text-subtle">{{$t('We will alert you when a shift remains under-staffed after this many days.')}}</p>
                 </div>
 
+                <div v-if="shiftCommitWorkflowEnabled" class="sm:col-span-full">
+                    <BaseInput
+                        type="number"
+                        v-model.number="craft.commit_request_deadline_days"
+                        id="commit_request_deadline_days"
+                        :label="$t('Deadline for shift plan request (days before start of week)')"
+                        :min="0"
+                        :max="365"
+                    />
+                    <p class="mt-2 text-xs text-text-subtle">{{$t('If no shift plan request has been submitted for a calendar week by this deadline, the craft management will be notified. Leave empty to disable the reminder.')}}</p>
+                </div>
+
                 <div class="sm:col-span-full flex items-center gap-3 rounded-xl border border-border-subtle bg-surface-sunken/70 p-4">
                     <input id="universally_applicable" v-model="craft.universally_applicable" type="checkbox" class="h-4 w-4 rounded border-border text-text focus:ring-surface-inverse focus:ring-2">
                     <label for="universally_applicable" class="text-sm text-text">{{$t('Universally applicable')}}</label>
@@ -181,7 +193,7 @@
 
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
-import { useForm } from '@inertiajs/vue3'
+import { useForm, usePage } from '@inertiajs/vue3'
 import {
     Listbox,
     ListboxButton,
@@ -220,11 +232,15 @@ const craft = useForm({
     inventory_planned_by_all: true,
     color: props.craftToEdit?.color ?? '#ffffff',
     notify_days: props.craftToEdit?.notify_days ?? 0,
+    // beim Bearbeiten den gespeicherten Wert übernehmen (null = Erinnerung aus), bei Neuanlage Default 14
+    commit_request_deadline_days: props.craftToEdit ? props.craftToEdit.commit_request_deadline_days : 14,
     universally_applicable: props.craftToEdit?.universally_applicable ?? false,
     users_for_inventory: [] as number[],
     managersToBeAssigned: [] as Array<{ manager_id: number; manager_type: string }>,
     qualifications: props.craftToEdit?.qualifications ?? [],
 })
+
+const shiftCommitWorkflowEnabled = computed<boolean>(() => !!usePage().props.shiftCommitWorkflow)
 
 const enabled = ref<boolean>(props.craftToEdit?.assignable_by_all ?? true)
 const inventoryPlannedByAll = ref<boolean>(props.craftToEdit?.inventory_planned_by_all ?? true)
@@ -297,6 +313,11 @@ function saveCraft() {
 
     // Clamp notify days
     if ((craft.notify_days as number) < 0) craft.notify_days = 0
+
+    // leeres Zahlenfeld (v-model.number liefert dann '') als "keine Frist" speichern
+    if (typeof craft.commit_request_deadline_days !== 'number' || Number.isNaN(craft.commit_request_deadline_days)) {
+        craft.commit_request_deadline_days = null
+    }
 
     // Shift planners
     if (!enabled.value) {

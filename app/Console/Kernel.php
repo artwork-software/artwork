@@ -8,6 +8,7 @@ use Artwork\Core\Console\Commands\DeleteExpiredNotificationsForAllCommand;
 use Artwork\Core\Console\Commands\ImportHolidaysCommand;
 use Artwork\Core\Console\Commands\ImportSage100ApiDataCommand;
 use Artwork\Core\Console\Commands\NotifyCraftIfShiftDeadlineReached;
+use Artwork\Core\Console\Commands\NotifyShiftPlanRequestDeadlineReached;
 use Artwork\Core\Console\Commands\RemoveDatabaseNotificationsCommand;
 use Artwork\Core\Console\Commands\RemoveExpiredInvitationsCommand;
 use Artwork\Core\Console\Commands\RemoveTemporaryRoomsCommand;
@@ -54,6 +55,7 @@ class Kernel extends ConsoleKernel
         $schedule->command(SendExternalIssueReturnDueNotificationsCommand::class)->dailyAt('08:00')->runInBackground();
         $schedule->command(RemoveTemporaryRoomsCommand::class)->dailyAt('08:00')->runInBackground();
         $schedule->command(NotifyCraftIfShiftDeadlineReached::class)->dailyAt('07:00');
+        $schedule->command(NotifyShiftPlanRequestDeadlineReached::class)->dailyAt('07:15')->runInBackground();
         $schedule->command(DeleteExpiredNotificationsForAllCommand::class)->everyFiveMinutes()->runInBackground();
         $schedule->command(SendNotificationsEmailSummariesCommand::class)->dailyAt('9:00');
         $schedule->command(CalculateDailyWorkingHoursOfUsers::class)->dailyAt('23:59')->runInBackground();

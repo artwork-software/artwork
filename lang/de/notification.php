@@ -90,6 +90,12 @@ return [
         'commit_request_approved' => 'Dienstplananfrage :craft (KW :week) wurde genehmigt',
         'commit_request_rejected' => 'Dienstplananfrage :craft (KW :week) wurde abgelehnt',
         'commit_request_comment' => 'Hinweis von :user: :comment',
+        'commit_request_deadline_title' => 'Frist für Dienstplananfrage :craft (KW :week) erreicht',
+        'commit_request_deadline' =>
+            'Die Frist von :days Tagen zur Einreichung des Dienstplans für KW :week ' .
+            '(:start_time – :end_time) im Gewerk :craft ist erreicht. ' .
+            'Bitte stelle eine Dienstplananfrage.',
+        'link_label_commit_request_deadline' => 'Gehe zum Dienstplan',
     ],
     'event' => [
         'with_adjoining_audience' => 'Termin mit Publikum im Nebenraum',

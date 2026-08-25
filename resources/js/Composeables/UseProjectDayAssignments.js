@@ -57,6 +57,34 @@ export function formatAssignmentDate(value) {
     return `${day}.${month}.${date.getFullYear()}`;
 }
 
+/**
+ * Verdichtet Y-m-d-Tage zu Bereichen: zusammenhängende Tage werden zu
+ * "01.09.2026 - 05.09.2026", Einzeltage bleiben stehen, alles kommagetrennt.
+ */
+export function formatAssignmentDateRanges(dates) {
+    if (!dates?.length) return '-';
+    const sorted = [...new Set(dates)].sort();
+    const ranges = [];
+    let start = sorted[0];
+    let prev = sorted[0];
+    for (let i = 1; i <= sorted.length; i++) {
+        const current = sorted[i];
+        // Y-m-d parst als UTC-Mitternacht → Differenz aufeinanderfolgender Tage ist exakt 24h
+        const isConsecutive = current != null
+            && new Date(current).getTime() - new Date(prev).getTime() === 86400000;
+        if (isConsecutive) {
+            prev = current;
+            continue;
+        }
+        ranges.push(start === prev
+            ? formatAssignmentDate(start)
+            : `${formatAssignmentDate(start)} - ${formatAssignmentDate(prev)}`);
+        start = current;
+        prev = current;
+    }
+    return ranges.join(', ');
+}
+
 /** Tooltip-/Listen-Label: Projektname + Serien-Zeitraum (+ Wunsch-Kennzeichnung). */
 export function assignmentLabel(assignment, wishLabel = 'Wunsch') {
     const period = assignment.series_start === assignment.series_end

@@ -14,6 +14,7 @@ use Artwork\Modules\Shift\Models\ShiftPlanRequest;
 use Artwork\Modules\Shift\Models\ShiftPlanRequestChange;
 use Artwork\Modules\Shift\Models\ShiftsQualifications;
 use Artwork\Modules\Shift\Models\ShiftQualification;
+use Artwork\Modules\Shift\Models\ShiftRuleViolation;
 use Artwork\Modules\IndividualTimes\Models\IndividualTime;
 use Artwork\Modules\Notification\Enums\NotificationEnum;
 use Artwork\Modules\Notification\Services\NotificationService;
@@ -118,6 +119,34 @@ class ShiftPlanRequestController extends Controller
                 $shift->unsetRelation('event');
             })
             ->values();
+    }
+
+    /**
+     * Schichtwarnungen (ShiftRuleViolations) der Craft-User im Wochenzeitraum, gruppiert
+     * nach User-ID und Datum — für die Warn-Icons in der Freigabeansicht. Violations
+     * existieren derzeit nur für User, nicht für Freelancer/Dienstleister.
+     *
+     * @param \Illuminate\Support\Collection<int, int> $userIds
+     * @return \Illuminate\Support\Collection<int, \Illuminate\Support\Collection<string, mixed>>
+     */
+    private function loadShiftRuleViolationsForUsers(
+        \Illuminate\Support\Collection $userIds,
+        Carbon $start,
+        Carbon $end
+    ): \Illuminate\Support\Collection {
+        return ShiftRuleViolation::query()
+            ->select(['id', 'shift_rule_id', 'user_id', 'violation_date', 'status'])
+            ->with(['shiftRule:id,name,description,warning_color'])
+            ->whereIn('user_id', $userIds)
+            ->whereBetween('violation_date', [$start->toDateString(), $end->toDateString()])
+            ->whereIn('status', ['active', 'resolved'])
+            ->get()
+            ->groupBy('user_id')
+            ->map(
+                fn ($violations) => $violations->groupBy(
+                    fn (ShiftRuleViolation $violation) => $violation->violation_date->format('Y-m-d')
+                )
+            );
     }
 
     /**
@@ -403,6 +432,7 @@ class ShiftPlanRequestController extends Controller
             'overviewChanges' => $overviewChanges,
             'navigation' => $this->buildRequestNavigation($shiftPlanRequest),
             'shiftQualifications' => ShiftQualification::query()->get(['id', 'name']),
+            'shiftRuleViolations' => $this->loadShiftRuleViolationsForUsers($craftUserIds, $start, $end),
             'craftWorkers' => [
                 'users' => $craftUsers->map(fn ($u) => [
                     'id' => $u->id,
@@ -1503,6 +1533,7 @@ class ShiftPlanRequestController extends Controller
                 ($craftIsAccessible || $user->can('approve-shift-plan-requests')) ? null : $user->id
             ),
             'shiftQualifications' => ShiftQualification::query()->get(['id', 'name']),
+            'shiftRuleViolations' => $this->loadShiftRuleViolationsForUsers($craftUserIds, $start, $end),
             'craftWorkers' => [
                 'users' => $craftUsers->map(fn ($u) => [
                     'id' => $u->id,

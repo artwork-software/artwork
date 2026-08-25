@@ -26,6 +26,7 @@ use Illuminate\Database\Eloquent\Relations\MorphToMany;
  * @property string $updated_at
  * @property string $color
  * @property int $notify_days
+ * @property int|null $commit_request_deadline_days
  * @property User[] $users
  * @property Shift[] $shifts
  * @property Collection $inventoryCategories
@@ -46,6 +47,7 @@ class Craft extends Model
         'assignable_by_all',
         'color',
         'notify_days',
+        'commit_request_deadline_days',
         'universally_applicable',
         'position',
         'inventory_planned_by_all'
@@ -53,6 +55,7 @@ class Craft extends Model
 
     protected $casts = [
         'assignable_by_all' => 'boolean',
+        'commit_request_deadline_days' => 'integer',
         'universally_applicable' => 'boolean',
         'inventory_planned_by_all' => 'boolean'
     ];

@@ -11,7 +11,6 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 use Spatie\IcalendarGenerator\Components\Calendar;
-use Spatie\IcalendarGenerator\Properties\Parameter;
 use Spatie\IcalendarGenerator\Properties\TextProperty;
 
 class UserShiftCalendarAboController extends Controller

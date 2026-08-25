@@ -3,8 +3,11 @@
 namespace Tests\Unit\Modules\User\Services;
 
 use Artwork\Modules\Craft\Models\Craft;
+use Artwork\Modules\Event\Models\Event;
+use Artwork\Modules\Freelancer\Models\Freelancer;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Room\Models\Room;
+use Artwork\Modules\ServiceProvider\Models\ServiceProvider;
 use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\Shift\Models\ShiftQualification;
 use Artwork\Modules\User\Models\User;
@@ -187,6 +190,71 @@ final class UserShiftCalendarAboServiceTest extends TestCase
         $ics = str_replace("\r\n ", '', $calendar->get());
         $this->assertStringContainsString('Mit: Kai Kollege', $ics);
         $this->assertStringNotContainsString('Mit: Abo Inhaberin', $ics);
+    }
+
+    #[Test]
+    public function add_shift_to_calendar_omits_attendees_and_organizer(): void
+    {
+        $creator = User::factory()->create([
+            'first_name' => 'Orga',
+            'last_name' => 'Nisator',
+            'email' => 'orga@example.test',
+        ]);
+        $aboOwner = User::factory()->create(['first_name' => 'Abo', 'last_name' => 'Inhaberin']);
+        $colleague = User::factory()->create([
+            'first_name' => 'Kai',
+            'last_name' => 'Kollege',
+            'email' => 'kollege@example.test',
+        ]);
+        $freelancer = Freelancer::factory()->create([
+            'first_name' => 'Frei',
+            'last_name' => 'Lancer',
+            'email' => 'freelancer@example.test',
+        ]);
+        $serviceProvider = ServiceProvider::factory()->create([
+            'provider_name' => 'Dienstleister GmbH',
+            'email' => 'dienstleister@example.test',
+        ]);
+        $event = Event::factory()->create(['user_id' => $creator->id]);
+        $shift = Shift::factory()->create([
+            'event_id' => $event->id,
+            'craft_id' => Craft::factory(),
+            'room_id' => Room::factory(),
+            'start_date' => '2024-05-10',
+            'end_date' => '2024-05-10',
+            'start' => '08:00',
+            'end' => '16:00',
+        ]);
+
+        $qualificationId = ShiftQualification::factory()->create()->id;
+        $aboOwner->shifts()->attach($shift->id, ['shift_qualification_id' => $qualificationId]);
+        $colleague->shifts()->attach($shift->id, ['shift_qualification_id' => $qualificationId]);
+        $shift->freelancer()->attach($freelancer->id, ['shift_qualification_id' => $qualificationId]);
+        $shift->serviceProvider()->attach($serviceProvider->id, ['shift_qualification_id' => $qualificationId]);
+
+        $abo = new UserShiftCalendarAbo();
+        $abo->user_id = $aboOwner->id;
+        $abo->enable_notification = false;
+
+        $calendar = Calendar::create('Test');
+        $this->service->addShiftToCalendar($calendar, $abo, $aboOwner->shifts()->first());
+
+        $ics = str_replace("\r\n ", '', $calendar->get());
+
+        // Keine Einladungs-Properties: Google & Co. laden sonst beim Import
+        // alle hinterlegten Adressen als Gaeste ein
+        $this->assertStringNotContainsString('ATTENDEE', $ics);
+        $this->assertStringNotContainsString('ORGANIZER', $ics);
+        $this->assertStringNotContainsString('orga@example.test', $ics);
+        $this->assertStringNotContainsString('kollege@example.test', $ics);
+        $this->assertStringNotContainsString('freelancer@example.test', $ics);
+        $this->assertStringNotContainsString('dienstleister@example.test', $ics);
+
+        // Die Personen bleiben namentlich in der Beschreibung erhalten
+        $this->assertStringContainsString('Kai Kollege', $ics);
+        $this->assertStringContainsString('Frei Lancer', $ics);
+        $this->assertStringContainsString('Dienstleister GmbH', $ics);
+        $this->assertStringContainsString('Organisation: Orga Nisator', $ics);
     }
 
     #[Test]

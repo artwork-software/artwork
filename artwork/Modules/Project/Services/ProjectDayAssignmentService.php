@@ -24,6 +24,8 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
+use function Illuminate\Support\defer;
+
 class ProjectDayAssignmentService
 {
     // Sicherung gegen versehentliche Massen-Anlage bei kaputten Projektzeiträumen
@@ -1640,6 +1642,10 @@ class ProjectDayAssignmentService
      * Broadcasts/Benachrichtigungen für committete Löschungen gingen verloren).
      * In einer offenen Transaktion wird erst nach Commit registriert, damit ein
      * Rollback keine Phantom-Broadcasts/-Mails auslöst.
+     *
+     * defer() meint hier Illuminate\Support\defer (siehe use function oben): das
+     * globale defer() wird von der Swoole-Extension besetzt (1 Argument, void)
+     * und Laravels function_exists-geguardeter Helper existiert dann nicht.
      */
     private function deferAfterCommit(callable $callback, ?string $name = null): void
     {

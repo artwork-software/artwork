@@ -131,7 +131,10 @@
                 >
                     {{ projectAssignmentError }}
                 </p>
-                <p v-if="!hasAnyProjectAssignments" class="mb-3 text-xs text-text-subtle">
+                <p v-if="!canViewAllAssignments" class="mb-3 text-xs text-text-subtle">
+                    {{ $t('You only see your own assignments and wishes here.') }}
+                </p>
+                <p v-if="!hasAnyProjectAssignments && canViewAllAssignments" class="mb-3 text-xs text-text-subtle">
                     {{ $t('Nobody is assigned to this project yet. Assign persons bindingly for single days or the entire project period — or enter yourself as a wish.') }}
                 </p>
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -182,38 +185,72 @@
                         <h4 class="text-[11px] font-medium text-text-subtle mb-1.5">{{ $t('Single days') }}</h4>
                         <div class="space-y-1.5">
                             <div
-                                v-for="group in assignmentOverviewGroups.singleDays"
-                                :key="group.group_id"
-                                class="flex items-center gap-2"
+                                v-for="bundle in assignmentOverviewGroups.singleDays"
+                                :key="bundle.personKey"
                             >
-                                <UserPopoverTooltip
-                                    v-if="group.worker.type === 0"
-                                    :user="group.worker"
-                                    lazy-load
-                                    height="7"
-                                    width="7"
-                                />
-                                <img
-                                    v-else-if="group.worker.profile_photo_url"
-                                    :src="group.worker.profile_photo_url"
-                                    :alt="group.worker.name"
-                                    class="h-7 w-7 rounded-full object-cover"
-                                />
-                                <div class="min-w-0 flex-1">
-                                    <div class="text-xs text-text truncate">{{ group.worker.name }}</div>
-                                    <div class="text-[10px] text-text-subtle truncate" :title="group.dates.map(formatAssignmentDate).join(', ')">
-                                        {{ group.dates.map(formatAssignmentDate).join(', ') }}
+                                <div class="flex items-center gap-2">
+                                    <UserPopoverTooltip
+                                        v-if="bundle.worker.type === 0"
+                                        :user="bundle.worker"
+                                        lazy-load
+                                        height="7"
+                                        width="7"
+                                    />
+                                    <img
+                                        v-else-if="bundle.worker.profile_photo_url"
+                                        :src="bundle.worker.profile_photo_url"
+                                        :alt="bundle.worker.name"
+                                        class="h-7 w-7 rounded-full object-cover"
+                                    />
+                                    <div class="min-w-0 flex-1">
+                                        <div class="text-xs text-text truncate">{{ bundle.worker.name }}</div>
+                                        <div class="text-[10px] text-text-subtle truncate" :title="bundle.dates.map(formatAssignmentDate).join(', ')">
+                                            {{ formatAssignmentDateRanges(bundle.dates) }}
+                                        </div>
                                     </div>
+                                    <button
+                                        v-if="canPlanProjectAssignments"
+                                        type="button"
+                                        class="shrink-0 rounded-md p-1 text-text-subtle hover:text-text transition-colors"
+                                        :title="expandedAssignmentBundles.has(bundle.personKey) ? $t('Hide days') : $t('Edit days')"
+                                        @click="toggleAssignmentBundle(bundle.personKey)"
+                                    >
+                                        <PropertyIcon
+                                            :name="expandedAssignmentBundles.has(bundle.personKey) ? 'IconChevronUp' : 'IconChevronDown'"
+                                            class="h-3.5 w-3.5"
+                                            stroke-width="2"
+                                        />
+                                    </button>
+                                    <button
+                                        v-if="canPlanProjectAssignments"
+                                        type="button"
+                                        class="shrink-0 rounded-md p-1 text-text-subtle hover:text-danger hover:bg-danger-surface transition-colors"
+                                        :title="$t('Remove assignment')"
+                                        @click="requestAssignmentRemoval(bundle, 'single_days')"
+                                    >
+                                        <PropertyIcon name="IconX" class="h-3.5 w-3.5" stroke-width="2" />
+                                    </button>
                                 </div>
-                                <button
-                                    v-if="canPlanProjectAssignments"
-                                    type="button"
-                                    class="shrink-0 rounded-md p-1 text-text-subtle hover:text-danger hover:bg-danger-surface transition-colors"
-                                    :title="$t('Remove assignment')"
-                                    @click="requestAssignmentRemoval(group, 'single_days')"
+                                <div
+                                    v-if="canPlanProjectAssignments && expandedAssignmentBundles.has(bundle.personKey)"
+                                    class="mt-1 ml-9 flex flex-wrap gap-1"
                                 >
-                                    <PropertyIcon name="IconX" class="h-3.5 w-3.5" stroke-width="2" />
-                                </button>
+                                    <span
+                                        v-for="day in bundle.days"
+                                        :key="day.id"
+                                        class="inline-flex items-center gap-0.5 rounded-full border border-border-subtle bg-white px-1.5 py-0.5 text-[10px] text-text"
+                                    >
+                                        {{ formatAssignmentDate(day.date) }}
+                                        <button
+                                            type="button"
+                                            class="rounded-full p-0.5 text-text-subtle hover:text-danger transition-colors"
+                                            :title="$t('Remove day')"
+                                            @click="requestSingleDayRemoval(bundle, day, false)"
+                                        >
+                                            <PropertyIcon name="IconX" class="h-3 w-3" stroke-width="2" />
+                                        </button>
+                                    </span>
+                                </div>
                             </div>
                             <div v-if="!assignmentOverviewGroups.singleDays.length" class="text-[11px] text-text-subtle italic">
                                 {{ $t('None') }}
@@ -225,56 +262,85 @@
                         <h4 class="text-[11px] font-medium text-text-subtle mb-1.5 italic">{{ $t('Wishes') }}</h4>
                         <div class="space-y-1.5">
                             <div
-                                v-for="group in assignmentOverviewGroups.wishes"
-                                :key="group.group_id"
-                                class="flex items-center gap-2"
+                                v-for="bundle in assignmentOverviewGroups.wishes"
+                                :key="bundle.personKey"
                             >
-                                <span class="rounded-full border-2 border-dashed border-success p-[1px] shrink-0">
-                                    <UserPopoverTooltip
-                                        v-if="group.worker.type === 0"
-                                        :user="group.worker"
-                                        lazy-load
-                                        height="6"
-                                        width="6"
-                                    />
-                                    <img
-                                        v-else-if="group.worker.profile_photo_url"
-                                        :src="group.worker.profile_photo_url"
-                                        :alt="group.worker.name"
-                                        class="h-6 w-6 rounded-full object-cover"
-                                    />
-                                </span>
-                                <div class="min-w-0 flex-1">
-                                    <div class="text-xs text-text italic truncate">{{ group.worker.name }}</div>
-                                    <div class="text-[10px] text-text-subtle truncate" :title="group.dates.map(formatAssignmentDate).join(', ')">
-                                        <template v-if="group.is_full_period">
-                                            {{ formatAssignmentDate(group.series_start) }} - {{ formatAssignmentDate(group.series_end) }}
-                                        </template>
-                                        <template v-else>
-                                            {{ group.dates.map(formatAssignmentDate).join(', ') }}
-                                        </template>
+                                <div class="flex items-center gap-2">
+                                    <span class="rounded-full border-2 border-dashed border-success p-[1px] shrink-0">
+                                        <UserPopoverTooltip
+                                            v-if="bundle.worker.type === 0"
+                                            :user="bundle.worker"
+                                            lazy-load
+                                            height="6"
+                                            width="6"
+                                        />
+                                        <img
+                                            v-else-if="bundle.worker.profile_photo_url"
+                                            :src="bundle.worker.profile_photo_url"
+                                            :alt="bundle.worker.name"
+                                            class="h-6 w-6 rounded-full object-cover"
+                                        />
+                                    </span>
+                                    <div class="min-w-0 flex-1">
+                                        <div class="text-xs text-text italic truncate">{{ bundle.worker.name }}</div>
+                                        <div class="text-[10px] text-text-subtle truncate" :title="bundle.dates.map(formatAssignmentDate).join(', ')">
+                                            {{ formatAssignmentDateRanges(bundle.dates) }}
+                                        </div>
                                     </div>
+                                    <button
+                                        v-if="canPlanProjectAssignments"
+                                        type="button"
+                                        class="shrink-0 inline-flex items-center gap-1 rounded-full border border-success-border bg-white px-2 py-0.5 text-[10px] text-success hover:border-success transition-colors"
+                                        :disabled="projectAssignmentActionKey === bundle.personKey"
+                                        :class="projectAssignmentActionKey === bundle.personKey ? 'cursor-wait !text-text-subtle' : ''"
+                                        :title="$t('Accept wish as binding assignment')"
+                                        @click="acceptProjectWishBundle(bundle)"
+                                    >
+                                        {{ $t('Accept') }}
+                                    </button>
+                                    <button
+                                        v-if="canRemoveWish(bundle) && bundle.days.some(day => !day.is_full_period)"
+                                        type="button"
+                                        class="shrink-0 rounded-md p-1 text-text-subtle hover:text-text transition-colors"
+                                        :title="expandedAssignmentBundles.has('wish_' + bundle.personKey) ? $t('Hide days') : $t('Edit days')"
+                                        @click="toggleAssignmentBundle('wish_' + bundle.personKey)"
+                                    >
+                                        <PropertyIcon
+                                            :name="expandedAssignmentBundles.has('wish_' + bundle.personKey) ? 'IconChevronUp' : 'IconChevronDown'"
+                                            class="h-3.5 w-3.5"
+                                            stroke-width="2"
+                                        />
+                                    </button>
+                                    <button
+                                        v-if="canRemoveWish(bundle)"
+                                        type="button"
+                                        class="shrink-0 rounded-md p-1 text-text-subtle hover:text-danger hover:bg-danger-surface transition-colors"
+                                        :title="$t('Remove wish')"
+                                        @click="requestAssignmentRemoval(bundle, 'wish')"
+                                    >
+                                        <PropertyIcon name="IconX" class="h-3.5 w-3.5" stroke-width="2" />
+                                    </button>
                                 </div>
-                                <button
-                                    v-if="can('can plan shifts') || is('artwork admin')"
-                                    type="button"
-                                    class="shrink-0 inline-flex items-center gap-1 rounded-full border border-success-border bg-white px-2 py-0.5 text-[10px] text-success hover:border-success transition-colors"
-                                    :disabled="projectAssignmentActionId === group.id"
-                                    :class="projectAssignmentActionId === group.id ? 'cursor-wait !text-text-subtle' : ''"
-                                    :title="$t('Accept wish as binding assignment')"
-                                    @click="acceptProjectWish(group)"
+                                <div
+                                    v-if="canRemoveWish(bundle) && expandedAssignmentBundles.has('wish_' + bundle.personKey)"
+                                    class="mt-1 ml-8 flex flex-wrap gap-1"
                                 >
-                                    {{ $t('Accept') }}
-                                </button>
-                                <button
-                                    v-if="canRemoveWish(group)"
-                                    type="button"
-                                    class="shrink-0 rounded-md p-1 text-text-subtle hover:text-danger hover:bg-danger-surface transition-colors"
-                                    :title="$t('Remove wish')"
-                                    @click="requestAssignmentRemoval(group, 'wish')"
-                                >
-                                    <PropertyIcon name="IconX" class="h-3.5 w-3.5" stroke-width="2" />
-                                </button>
+                                    <span
+                                        v-for="day in bundle.days.filter(entry => !entry.is_full_period)"
+                                        :key="day.id"
+                                        class="inline-flex items-center gap-0.5 rounded-full border border-border-subtle bg-white px-1.5 py-0.5 text-[10px] text-text italic"
+                                    >
+                                        {{ formatAssignmentDate(day.date) }}
+                                        <button
+                                            type="button"
+                                            class="rounded-full p-0.5 text-text-subtle hover:text-danger transition-colors"
+                                            :title="$t('Remove day')"
+                                            @click="requestSingleDayRemoval(bundle, day, true)"
+                                        >
+                                            <PropertyIcon name="IconX" class="h-3 w-3" stroke-width="2" />
+                                        </button>
+                                    </span>
+                                </div>
                             </div>
                             <div v-if="!assignmentOverviewGroups.wishes.length" class="text-[11px] text-text-subtle italic">
                                 {{ $t('None') }}
@@ -615,10 +681,10 @@
 
             <ConfirmationComponent
                 v-if="assignmentRemovalCandidate"
-                :titel="assignmentRemovalCandidate.kind === 'wish' ? $t('Remove wish') : $t('Remove assignment')"
-                :description="assignmentRemovalCandidate.kind === 'wish'
-                    ? $t('Should the wish of {0} really be removed?', [assignmentRemovalCandidate.group.worker.name])
-                    : $t('Should the binding assignment of {0} really be removed? The person will be notified.', [assignmentRemovalCandidate.group.worker.name])"
+                :titel="assignmentRemovalCandidate.kind === 'wish' || assignmentRemovalCandidate.isWish
+                    ? $t('Remove wish')
+                    : $t('Remove assignment')"
+                :description="assignmentRemovalDescription"
                 @closed="onAssignmentRemovalConfirmed"
             />
         </component>
@@ -665,7 +731,7 @@ import HolidayToolTip from "@/Components/ToolTips/HolidayToolTip.vue";
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 import AddShiftsByPresetsAndGroupsModal from "@/Pages/Shifts/Components/AddShiftsByPresetsAndGroupsModal.vue";
 import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
-import { formatAssignmentDate } from "@/Composeables/UseProjectDayAssignments.js";
+import { formatAssignmentDate, formatAssignmentDateRanges } from "@/Composeables/UseProjectDayAssignments.js";
 import ProjectAssignPersonModal from "@/Pages/Shifts/Components/ProjectAssignPersonModal.vue";
 import ProjectAssignmentModal from "@/Pages/Shifts/Components/ProjectAssignmentModal.vue";
 import NotificationToast from "@/Artwork/Feedback/NotificationToast.vue";
@@ -713,7 +779,7 @@ const hasAdminRole = () => is("artwork admin")
 
 // --- Projektzuordnungen (Zugewiesene Personen + Wünsche; nur Projektansicht) ---
 const projectDayAssignments = ref<any[]>([])
-const projectAssignmentActionId = ref<number | null>(null)
+const projectAssignmentActionKey = ref<string | null>(null)
 const projectAssignmentError = ref('')
 let projectAssignmentEchoChannel: any = null
 
@@ -753,38 +819,97 @@ const dayAssignmentAvatars = (day: any, kind: 'binding' | 'wish') => {
     return list.filter((assignment: any) => assignment.type === kind)
 }
 
-/** Overview-Gruppen: ein Eintrag pro Anlage-Vorgang (group_id) */
+/**
+ * Overview-Gruppen: Ganzer Zeitraum bleibt pro Anlage-Gruppe (Löschen läuft über
+ * group_id); Einzeltage und Wünsche werden pro Person gebündelt — mehrere
+ * Anlage-Vorgänge derselben Person ergeben EINE Zeile mit verdichteten Tagen.
+ */
 const assignmentOverviewGroups = computed(() => {
-    const byGroup = new Map<string, any>()
-    for (const assignment of projectDayAssignments.value) {
-        if (!byGroup.has(assignment.group_id)) {
-            byGroup.set(assignment.group_id, { ...assignment, dates: [] })
+    const fullPeriodByGroup = new Map<string, any>()
+    const singleByPerson = new Map<string, any>()
+    const wishByPerson = new Map<string, any>()
+
+    const bundleFor = (map: Map<string, any>, assignment: any) => {
+        const key = `${assignment.worker.type}_${assignment.worker.id}`
+        if (!map.has(key)) {
+            map.set(key, {
+                personKey: key,
+                worker: assignment.worker,
+                days: [], // { id, date, group_id, is_full_period }
+                groupRepIds: new Map<string, number>(), // group_id → eine Zeilen-id der Gruppe
+            })
         }
-        byGroup.get(assignment.group_id).dates.push(assignment.date)
+        return map.get(key)
     }
-    const groups = [...byGroup.values()]
+
+    for (const assignment of projectDayAssignments.value) {
+        if (assignment.type === 'binding' && assignment.is_full_period) {
+            if (!fullPeriodByGroup.has(assignment.group_id)) {
+                fullPeriodByGroup.set(assignment.group_id, { ...assignment, dates: [] })
+            }
+            fullPeriodByGroup.get(assignment.group_id).dates.push(assignment.date)
+            continue
+        }
+        const bundle = bundleFor(assignment.type === 'wish' ? wishByPerson : singleByPerson, assignment)
+        bundle.days.push({
+            id: assignment.id,
+            date: assignment.date,
+            group_id: assignment.group_id,
+            is_full_period: assignment.is_full_period,
+        })
+        if (!bundle.groupRepIds.has(assignment.group_id)) {
+            bundle.groupRepIds.set(assignment.group_id, assignment.id)
+        }
+    }
+
+    const finalize = (bundle: any) => {
+        bundle.days.sort((a: any, b: any) => a.date.localeCompare(b.date))
+        bundle.dates = bundle.days.map((day: any) => day.date)
+        return bundle
+    }
+    const byWorkerName = (a: any, b: any) =>
+        String(a.worker.name ?? '').localeCompare(String(b.worker.name ?? ''))
+
     return {
-        fullPeriod: groups.filter(g => g.type === 'binding' && g.is_full_period),
-        singleDays: groups.filter(g => g.type === 'binding' && !g.is_full_period),
-        wishes: groups.filter(g => g.type === 'wish'),
+        fullPeriod: [...fullPeriodByGroup.values()],
+        singleDays: [...singleByPerson.values()].map(finalize).sort(byWorkerName),
+        wishes: [...wishByPerson.values()].map(finalize).sort(byWorkerName),
     }
 })
 
-const acceptProjectWish = async (group: any) => {
-    if (projectAssignmentActionId.value !== null) return
-    projectAssignmentActionId.value = group.id
+// Aufgeklappte Personen-Bündel (Tages-Chips mit Einzeltag-X)
+const expandedAssignmentBundles = ref<Set<string>>(new Set())
+
+const toggleAssignmentBundle = (key: string) => {
+    const next = new Set(expandedAssignmentBundles.value)
+    if (next.has(key)) {
+        next.delete(key)
+    } else {
+        next.add(key)
+    }
+    expandedAssignmentBundles.value = next
+}
+
+/** Akzeptiert alle Wunsch-Gruppen der Person als verbindliche Zuordnung. */
+const acceptProjectWishBundle = async (bundle: any) => {
+    if (projectAssignmentActionKey.value !== null) return
+    projectAssignmentActionKey.value = bundle.personKey
     projectAssignmentError.value = ''
     try {
-        await axios.patch(route('project-day-assignments.accept-wish', { projectDayAssignment: group.id }))
+        for (const repId of bundle.groupRepIds.values()) {
+            await axios.patch(route('project-day-assignments.accept-wish', { projectDayAssignment: repId }))
+        }
         await loadProjectDayAssignments()
     } catch (error: any) {
         projectAssignmentError.value = error?.response?.data?.message ?? String(error)
     } finally {
-        projectAssignmentActionId.value = null
+        projectAssignmentActionKey.value = null
     }
 }
 
 const canPlanProjectAssignments = computed(() => can('can plan shifts') || is('artwork admin'))
+// Ohne Schichtplan-Leserecht liefert das Backend nur die eigenen Einträge
+const canViewAllAssignments = computed(() => can('can view shift plan') || is('artwork admin'))
 const authUserId = computed(() => (page.props.auth as any)?.user?.id ?? null)
 
 // Anzeige-Zeitraum fürs Zuordnungs-Modal (Projektzeitraum aus dem Tab-Datumsbereich)
@@ -841,14 +966,34 @@ const onSelfWishModalClose = (payload?: { saved?: boolean, created?: number, ski
 }
 
 // Entfernen mit Bestätigung (verbindliche Zuordnung benachrichtigt die Person)
-const assignmentRemovalCandidate = ref<any | null>(null) // { group, kind: 'full_period' | 'single_days' | 'wish' }
+// kind: 'full_period' | 'single_days' | 'wish' (Personen-Bündel) | 'single_day' (ein Tag)
+const assignmentRemovalCandidate = ref<any | null>(null)
 
 const requestAssignmentRemoval = (group: any, kind: string) => {
     assignmentRemovalCandidate.value = { group, kind }
 }
 
+const requestSingleDayRemoval = (bundle: any, day: any, isWish: boolean) => {
+    assignmentRemovalCandidate.value = { group: bundle, day, kind: 'single_day', isWish }
+}
+
 const canRemoveWish = (group: any) =>
     canPlanProjectAssignments.value || (group.worker.type === 0 && group.worker.id === authUserId.value)
+
+const assignmentRemovalDescription = computed(() => {
+    const candidate = assignmentRemovalCandidate.value
+    if (!candidate) return ''
+    const name = candidate.group.worker.name
+    if (candidate.kind === 'single_day') {
+        const date = formatAssignmentDate(candidate.day.date)
+        return candidate.isWish
+            ? translate('Should the wish of {0} on {1} really be removed?', [name, date])
+            : translate('Should the binding assignment of {0} on {1} really be removed? The person will be notified.', [name, date])
+    }
+    return candidate.kind === 'wish'
+        ? translate('Should the wish of {0} really be removed?', [name])
+        : translate('Should the binding assignment of {0} really be removed? The person will be notified.', [name])
+})
 
 const onAssignmentRemovalConfirmed = async (confirmed: boolean) => {
     const candidate = assignmentRemovalCandidate.value
@@ -865,11 +1010,19 @@ const onAssignmentRemovalConfirmed = async (confirmed: boolean) => {
                     group_id: candidate.group.group_id,
                 },
             })
-        } else {
+        } else if (candidate.kind === 'single_day') {
             await axios.delete(
-                route('project-day-assignments.destroy', { projectDayAssignment: candidate.group.id }),
-                { params: { whole_group: true } }
+                route('project-day-assignments.destroy', { projectDayAssignment: candidate.day.id }),
+                { params: { whole_group: false } }
             )
+        } else {
+            // Personen-Bündel: alle Anlage-Gruppen der Person entfernen
+            for (const repId of candidate.group.groupRepIds.values()) {
+                await axios.delete(
+                    route('project-day-assignments.destroy', { projectDayAssignment: repId }),
+                    { params: { whole_group: true } }
+                )
+            }
         }
         await loadProjectDayAssignments()
     } catch (error: any) {

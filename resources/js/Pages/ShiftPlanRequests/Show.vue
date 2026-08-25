@@ -139,6 +139,8 @@ const props = defineProps({
     isMyRequest: {type: Boolean, required: false, default: false},
     navigation: {type: Object, default: () => ({previous: null, next: null})},
     shiftQualifications: {type: Array, default: () => []},
+    // user_id => { 'YYYY-MM-DD' => [ShiftRuleViolation, …] } — Warnungen gibt es nur für User
+    shiftRuleViolations: {type: Object, default: () => ({})},
 });
 
 const requestShowUrl = (id) => route(
@@ -371,6 +373,7 @@ const rows = computed(() => {
                 avatar: base.avatar || null,
                 typeLabel: base.typeLabel,
                 days: {},
+                violations: base.type === 'user' ? (props.shiftRuleViolations?.[base.id] ?? {}) : {},
                 totals: {total_shifts: 0, total_hours: 0}
             });
         }

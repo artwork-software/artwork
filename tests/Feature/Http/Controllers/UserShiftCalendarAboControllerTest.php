@@ -63,6 +63,11 @@ final class UserShiftCalendarAboControllerTest extends FeatureTestCase
             '/DTEND[^:]*:20260715T113000/',
             $response->getContent()
         );
+
+        // Zeitgebundene Individualzeiten sind echte Arbeitszeit und dürfen
+        // NICHT als "frei" markiert werden
+        $response->assertDontSee('TRANSP:TRANSPARENT', false)
+            ->assertDontSee('X-MICROSOFT-CDO-BUSYSTATUS:FREE', false);
     }
 
     #[Test]
@@ -83,7 +88,10 @@ final class UserShiftCalendarAboControllerTest extends FeatureTestCase
         $response = $this->get(route('user-shift-calendar-abo.show', $calendarAbo->calendar_abo_id));
 
         $response->assertOk()
-            ->assertSee('SUMMARY:Individuelle Zeit: Fortbildung', false);
+            ->assertSee('SUMMARY:Individuelle Zeit: Fortbildung', false)
+            // Ganztägige Einträge sollen im Zielkalender nicht als "beschäftigt" blocken
+            ->assertSee('TRANSP:TRANSPARENT', false)
+            ->assertSee('X-MICROSOFT-CDO-BUSYSTATUS:FREE', false);
 
         $this->assertMatchesRegularExpression(
             '/DTSTART[^:]*;VALUE=DATE:20260720/',
@@ -120,6 +128,9 @@ final class UserShiftCalendarAboControllerTest extends FeatureTestCase
         $response->assertOk()
             ->assertSee('SUMMARY:Tagesdienst: Abendschluss', false)
             ->assertSee('UID:day-service-' . $dayServiceAssignment->pivot->id, false)
+            // Tagesdienste sollen im Zielkalender nicht als "beschäftigt" blocken
+            ->assertSee('TRANSP:TRANSPARENT', false)
+            ->assertSee('X-MICROSOFT-CDO-BUSYSTATUS:FREE', false)
             ->assertDontSee('Nicht im Zeitraum', false);
 
         $this->assertMatchesRegularExpression(

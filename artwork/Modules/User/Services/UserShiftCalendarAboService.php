@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 use Spatie\IcalendarGenerator\Components\Calendar;
 use Spatie\IcalendarGenerator\Components\Event;
+use Spatie\IcalendarGenerator\Properties\TextProperty;
 
 readonly class UserShiftCalendarAboService
 {
@@ -157,6 +158,8 @@ readonly class UserShiftCalendarAboService
                     // Kopien übergeben: endsAt() mutiert die Instanz bei fullDay via modify('+1 day')
                     ->startsAt($date->copy())
                     ->endsAt($date->copy());
+
+                $this->markEventAsFree($event);
 
                 $this->addStartAlertToEvent($event, $calendarAbo, $date->copy()->startOfDay(), $title);
             });
@@ -308,6 +311,8 @@ readonly class UserShiftCalendarAboService
                         ->startsAt($startDate)
                         ->endsAt($endDate);
 
+                    $this->markEventAsFree($event);
+
                     $eventStart = $startDate->copy()->startOfDay();
                 } else {
                     $eventStart = Carbon::parse($startDate->toDateString() . ' ' . $individualTime->start_time);
@@ -325,6 +330,18 @@ readonly class UserShiftCalendarAboService
         } catch (\Throwable $e) {
             return;
         }
+    }
+
+    /**
+     * Ganztägige Info-Einträge (Tagesdienste, ganztägige Individualzeiten) sollen
+     * im Zielkalender nicht als "beschäftigt" blocken. TRANSP deckt Apple/Google/
+     * Thunderbird ab; Outlook ignoriert TRANSP bei ICS-Feeds häufig und liest
+     * stattdessen X-MICROSOFT-CDO-BUSYSTATUS.
+     */
+    private function markEventAsFree(Event $event): void
+    {
+        $event->transparent()
+            ->appendProperty(TextProperty::create('X-MICROSOFT-CDO-BUSYSTATUS', 'FREE'));
     }
 
     private function addStartAlertToEvent(

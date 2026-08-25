@@ -166,6 +166,37 @@ readonly class UserShiftCalendarAboService
     }
 
     /**
+     * Beschreibung der Schicht. Beteiligte stehen hier namentlich und bewusst nicht als
+     * ATTENDEE/ORGANIZER: sonst laden Kalender-Clients sie beim Import als Gaeste ein
+     * und verschicken Benachrichtigungen.
+     */
+    private function shiftDescription(
+        string $craftName,
+        string $projectName,
+        string $eventName,
+        string $roomName,
+        string $colleagueNames,
+        string $creatorName
+    ): string {
+        $parts = ['Schicht: ' . $craftName];
+        $optional = [
+            'Projekt: ' => $projectName,
+            'Event: ' => $eventName,
+            'Raum: ' => $roomName,
+            'Mit: ' => $colleagueNames,
+            'Organisation: ' => $creatorName,
+        ];
+
+        foreach ($optional as $label => $value) {
+            if ($value !== '') {
+                $parts[] = $label . $value;
+            }
+        }
+
+        return implode(' ', $parts);
+    }
+
+    /**
      * Add a shift to the calendar
      */
     public function addShiftToCalendar($calendar, $calendarAbo, $shift): void
@@ -180,7 +211,9 @@ readonly class UserShiftCalendarAboService
             $shiftStart = Carbon::parse($pivot?->start_date ?? $shift->start_date)->format('Y-m-d');
             $shiftEnd = Carbon::parse($pivot?->end_date ?? $shift->end_date)->format('Y-m-d');
             $shiftEvent = $shift->event;
-            $eventCreator = $shiftEvent?->creator;
+            // Nur der Name der/des Erstellenden wandert in die Beschreibung — keine
+            // ORGANIZER-Zeile, sonst behandeln Kalender-Clients den Termin als Einladung
+            $creatorName = trim((string) ($shiftEvent?->creator?->full_name ?? ''));
             $craftName = $shift->craft?->name ?? 'Unbekannte Tätigkeit';
             // Eventlose Schichten tragen Projekt/Raum direkt auf der Schicht
             $projectName = $shift->project?->name ?? $shiftEvent?->project?->name ?? '';
@@ -207,6 +240,15 @@ readonly class UserShiftCalendarAboService
                 ->filter()
                 ->implode(', ');
 
+            $description = $this->shiftDescription(
+                $craftName,
+                $projectName,
+                $eventName,
+                $roomName,
+                $colleagueNames,
+                $creatorName
+            );
+
             $calendar->event(function ($event) use (
                 $shiftEvent,
                 $calendarAbo,
@@ -215,22 +257,13 @@ readonly class UserShiftCalendarAboService
                 $shiftEnd,
                 $startTime,
                 $endTime,
-                $eventCreator,
                 $title,
-                $craftName,
-                $projectName,
+                $description,
                 $eventName,
-                $roomName,
-                $colleagueNames
+                $roomName
             ): void {
                 $event->name($title)
-                    ->description(
-                        'Schicht: ' . $craftName .
-                        ($projectName !== '' ? ' Projekt: ' . $projectName : '') .
-                        ($eventName !== '' ? ' Event: ' . $eventName : '') .
-                        ($roomName !== '' ? ' Raum: ' . $roomName : '') .
-                        ($colleagueNames !== '' ? ' Mit: ' . $colleagueNames : '')
-                    )
+                    ->description($description)
                     ->address(
                         ($roomName !== '' ? 'Raum: ' . $roomName : '') .
                         ($eventName !== '' ? ' | Event: ' . $eventName : '')
@@ -240,11 +273,6 @@ readonly class UserShiftCalendarAboService
                     ->uniqueIdentifier('shift-' . $shift->id)
                     ->createdAt(Carbon::parse($shiftEvent->created_at ?? $shift->created_at));
 
-                if ($eventCreator) {
-                    $event->organizer($eventCreator->email, $eventCreator->full_name);
-                }
-
-                $this->addAttendeesToEvent($event, $shift, $eventCreator);
                 $this->addAlertToEvent($event, $calendarAbo, $shiftStart, $startTime, $shift, $endTime, $title);
             });
         } catch (\Throwable $e) {
@@ -323,30 +351,6 @@ readonly class UserShiftCalendarAboService
             $title . ' beginnt in ' . $calendarAbo->notification_time . ' ' .
             $calendarAbo->notification_time_unit
         );
-    }
-
-    /**
-     * Add attendees to the event
-     */
-    public function addAttendeesToEvent($event, $shift, $eventCreator): void
-    {
-        foreach ($shift->users as $shiftUser) {
-            if (!$eventCreator || $eventCreator->id !== $shiftUser->id) {
-                $event->attendee($shiftUser->email, $shiftUser->full_name . ' (Intern)');
-            }
-        }
-
-        foreach ($shift->freelancer as $freelancer) {
-            if (!empty($freelancer->email)) {
-                $event->attendee($freelancer->email, $freelancer->name . ' (Extern)');
-            }
-        }
-
-        foreach ($shift->serviceProvider as $provider) {
-            if (!empty($provider->email)) {
-                $event->attendee($provider->email, $provider->provider_name . ' (Dienstleister)');
-            }
-        }
     }
 
     /**

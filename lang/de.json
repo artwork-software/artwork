@@ -3894,6 +3894,7 @@
     "Requests": "Anfragen",
     "No shift plan requests for this craft yet.": "Noch keine Schichtplan-Anfragen für dieses Gewerk.",
     "Shift plan requests": "Dienstplananfragen",
+    "To shift plan (current week)": "Zum Dienstplan (aktuelle KW)",
     "Here you can see all shift plan requests grouped by craft.": "Hier siehst du alle Dienstplananfragen, gruppiert nach Gewerken.",
     "Here you can see all shift plan approval requests grouped by craft.": "Hier kannst du alle Schichtplan-Genehmigungsanfragen gruppiert nach Gewerk sehen.",
     "Shift plan approvals": "Schichtplan-Genehmigungen",
@@ -5411,6 +5412,12 @@
     "Remove wish": "Wunsch entfernen",
     "Should the wish of {0} really be removed?": "Soll der Wunsch von {0} wirklich entfernt werden?",
     "Should the binding assignment of {0} really be removed? The person will be notified.": "Soll die verbindliche Zuordnung von {0} wirklich entfernt werden? Die Person wird benachrichtigt.",
+    "Should the wish of {0} on {1} really be removed?": "Soll der Wunsch von {0} am {1} wirklich entfernt werden?",
+    "Should the binding assignment of {0} on {1} really be removed? The person will be notified.": "Soll die verbindliche Zuordnung von {0} am {1} wirklich entfernt werden? Die Person wird benachrichtigt.",
+    "You only see your own assignments and wishes here.": "Du siehst hier nur deine eigenen Zuordnungen und Wünsche.",
+    "Edit days": "Tage bearbeiten",
+    "Hide days": "Tage ausblenden",
+    "Remove day": "Tag entfernen",
     "No days selected yet": "Noch keine Tage ausgewählt",
     "Add day": "Tag hinzufügen",
     "Enter wish": "Wunsch eintragen",
@@ -6648,5 +6655,7 @@
     "Up to 6 months are displayed per page (A3 landscape).": "Pro Seite können 6 Monate dargestellt werden (A3 quer).",
     "This export shows you when which project takes place in the selected period. If required, you can filter the projects by specific event types - projects will then only appear on days on which they have an event of one of the selected event types.": "Dieser Export zeigt dir für den gewählten Zeitraum an, wann welches Projekt stattfindet. Bei Bedarf kannst du die Projekte nach bestimmten Terminarten filtern lassen – dann werden die Projekte nur an den Tagen in der Übersicht dargestellt, an denen sie einen Termin mit einer der ausgewählten Terminarten haben.",
     "Half months per page (double row height)": "Halbe Monate pro Seite (doppelte Zeilenhöhe)",
-    "The description could not be loaded. Please reopen the event before saving.": "Die Beschreibung konnte nicht geladen werden. Bitte öffne den Termin erneut, bevor du speicherst."
+    "The description could not be loaded. Please reopen the event before saving.": "Die Beschreibung konnte nicht geladen werden. Bitte öffne den Termin erneut, bevor du speicherst.",
+    "Deadline for shift plan request (days before start of week)": "Frist für Dienstplananfrage (Tage vor KW-Beginn)",
+    "If no shift plan request has been submitted for a calendar week by this deadline, the craft management will be notified. Leave empty to disable the reminder.": "Wird bis zu dieser Frist keine Dienstplananfrage für eine Kalenderwoche gestellt, wird die Gewerkeleitung benachrichtigt. Leer lassen, um keine Erinnerung zu senden."
 }

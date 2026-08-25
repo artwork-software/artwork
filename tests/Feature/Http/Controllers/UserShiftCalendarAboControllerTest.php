@@ -4,7 +4,13 @@ namespace Tests\Feature\Http\Controllers;
 
 use Artwork\Modules\Craft\Models\Craft;
 use Artwork\Modules\DayService\Models\DayService;
+use Artwork\Modules\Event\Models\Event;
+use Artwork\Modules\Freelancer\Models\Freelancer;
 use Artwork\Modules\IndividualTimes\Models\IndividualTime;
+use Artwork\Modules\Room\Models\Room;
+use Artwork\Modules\ServiceProvider\Models\ServiceProvider;
+use Artwork\Modules\Shift\Models\Shift;
+use Artwork\Modules\Shift\Models\ShiftQualification;
 use Artwork\Modules\User\Models\User;
 use Artwork\Modules\User\Models\UserShiftCalendarAbo;
 use Illuminate\Support\Str;
@@ -57,6 +63,11 @@ final class UserShiftCalendarAboControllerTest extends FeatureTestCase
             '/DTEND[^:]*:20260715T113000/',
             $response->getContent()
         );
+
+        // Zeitgebundene Individualzeiten sind echte Arbeitszeit und dürfen
+        // NICHT als "frei" markiert werden
+        $response->assertDontSee('TRANSP:TRANSPARENT', false)
+            ->assertDontSee('X-MICROSOFT-CDO-BUSYSTATUS:FREE', false);
     }
 
     #[Test]
@@ -77,7 +88,10 @@ final class UserShiftCalendarAboControllerTest extends FeatureTestCase
         $response = $this->get(route('user-shift-calendar-abo.show', $calendarAbo->calendar_abo_id));
 
         $response->assertOk()
-            ->assertSee('SUMMARY:Individuelle Zeit: Fortbildung', false);
+            ->assertSee('SUMMARY:Individuelle Zeit: Fortbildung', false)
+            // Ganztägige Einträge sollen im Zielkalender nicht als "beschäftigt" blocken
+            ->assertSee('TRANSP:TRANSPARENT', false)
+            ->assertSee('X-MICROSOFT-CDO-BUSYSTATUS:FREE', false);
 
         $this->assertMatchesRegularExpression(
             '/DTSTART[^:]*;VALUE=DATE:20260720/',
@@ -114,6 +128,9 @@ final class UserShiftCalendarAboControllerTest extends FeatureTestCase
         $response->assertOk()
             ->assertSee('SUMMARY:Tagesdienst: Abendschluss', false)
             ->assertSee('UID:day-service-' . $dayServiceAssignment->pivot->id, false)
+            // Tagesdienste sollen im Zielkalender nicht als "beschäftigt" blocken
+            ->assertSee('TRANSP:TRANSPARENT', false)
+            ->assertSee('X-MICROSOFT-CDO-BUSYSTATUS:FREE', false)
             ->assertDontSee('Nicht im Zeitraum', false);
 
         $this->assertMatchesRegularExpression(
@@ -144,6 +161,65 @@ final class UserShiftCalendarAboControllerTest extends FeatureTestCase
         }
 
         $this->assertSame(2, substr_count($response->getContent(), 'SUMMARY:Tagesdienst: Bereitschaft'));
+    }
+
+    #[Test]
+    public function shiftCalendarFeedContainsNoAttendeesOrganizerOrEmailAddresses(): void
+    {
+        $creator = User::factory()->create([
+            'first_name' => 'Orga',
+            'last_name' => 'Nisator',
+            'email' => 'orga@example.test',
+        ]);
+        $user = User::factory()->create();
+        $colleague = User::factory()->create([
+            'first_name' => 'Kai',
+            'last_name' => 'Kollege',
+            'email' => 'kollege@example.test',
+        ]);
+        $freelancer = Freelancer::factory()->create(['email' => 'freelancer@example.test']);
+        $serviceProvider = ServiceProvider::factory()->create(['email' => 'dienstleister@example.test']);
+        $calendarAbo = $this->createCalendarAbo($user);
+
+        $event = Event::factory()->create(['user_id' => $creator->id]);
+        $shift = Shift::factory()->create([
+            'event_id' => $event->id,
+            'craft_id' => Craft::factory(),
+            'room_id' => Room::factory(),
+            'start_date' => '2026-07-15',
+            'end_date' => '2026-07-15',
+            'start' => '08:00',
+            'end' => '16:00',
+            'is_committed' => true,
+        ]);
+
+        $qualificationId = ShiftQualification::factory()->create()->id;
+        $user->shifts()->attach($shift->id, ['shift_qualification_id' => $qualificationId]);
+        $colleague->shifts()->attach($shift->id, ['shift_qualification_id' => $qualificationId]);
+        $shift->freelancer()->attach($freelancer->id, ['shift_qualification_id' => $qualificationId]);
+        $shift->serviceProvider()->attach($serviceProvider->id, ['shift_qualification_id' => $qualificationId]);
+
+        $response = $this->get(route('user-shift-calendar-abo.show', $calendarAbo->calendar_abo_id));
+
+        $response->assertOk();
+        $ics = str_replace("\r\n ", '', $response->getContent());
+
+        // Schicht ist wirklich im Feed — sonst wuerden die Assertions unten
+        // auch bei einem leeren Kalender gruen sein
+        $this->assertStringContainsString('UID:shift-' . $shift->id, $ics);
+
+        // Kein Einladungs-Verhalten beim Import (Google & Co.)
+        $this->assertStringContainsString('METHOD:PUBLISH', $ics);
+        $this->assertStringNotContainsString('ATTENDEE', $ics);
+        $this->assertStringNotContainsString('ORGANIZER', $ics);
+        $this->assertStringNotContainsString('orga@example.test', $ics);
+        $this->assertStringNotContainsString('kollege@example.test', $ics);
+        $this->assertStringNotContainsString('freelancer@example.test', $ics);
+        $this->assertStringNotContainsString('dienstleister@example.test', $ics);
+
+        // Namen bleiben erhalten
+        $this->assertStringContainsString('Mit: Kai Kollege', $ics);
+        $this->assertStringContainsString('Organisation: Orga Nisator', $ics);
     }
 
     #[Test]

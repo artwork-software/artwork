@@ -623,9 +623,9 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         ->name('project-day-assignments.destroy');
     Route::patch('/project-day-assignments/{projectDayAssignment}/accept-wish', [ProjectDayAssignmentController::class, 'acceptWish'])
         ->name('project-day-assignments.accept-wish');
+    // Sichtbarkeit im Controller: ohne Schichtplan-Leserecht nur die EIGENEN Einträge
     Route::get('/projects/{project}/day-assignments', [ProjectDayAssignmentController::class, 'forProject'])
-        ->name('projects.day-assignments')
-        ->can('can view shift plan');
+        ->name('projects.day-assignments');
     Route::get('/projects/{project}/day-assignments/worker-options', [ProjectDayAssignmentController::class, 'workerOptions'])
         ->name('projects.day-assignments.worker-options');
     Route::get('/shifts/{shift}/project-assignees', [ProjectDayAssignmentController::class, 'forShift'])

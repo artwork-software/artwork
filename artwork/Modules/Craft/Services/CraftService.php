@@ -119,6 +119,7 @@ class CraftService
                 'assignable_by_all',
                 'color',
                 'notify_days',
+                'commit_request_deadline_days',
                 'universally_applicable',
                 'inventory_planned_by_all'
             ]));

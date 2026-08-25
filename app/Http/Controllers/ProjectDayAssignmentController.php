@@ -289,9 +289,19 @@ class ProjectDayAssignmentController extends Controller
      */
     public function forProject(Project $project): JsonResponse
     {
+        $user = auth()->user();
+        // Ohne globales Schichtplan-Leserecht nur die EIGENEN Zuordnungen/Wünsche —
+        // sonst könnte man einen Wunsch anlegen, ihn danach aber nie sehen.
+        // Admins passieren via Gate::before.
+        $canViewAll = (bool) $user?->can(PermissionEnum::VIEW_SHIFT_PLAN->value);
+
         $rows = ProjectDayAssignment::query()
             ->with('project:id,name')
             ->where('project_id', $project->id)
+            ->when(!$canViewAll, static function ($query) use ($user): void {
+                $query->where('employable_type', User::class)
+                    ->where('employable_id', $user?->id ?? 0);
+            })
             ->orderBy('date')
             ->get();
 
@@ -309,7 +319,10 @@ class ProjectDayAssignmentController extends Controller
                 ->get(['id', 'first_name', 'last_name', 'profile_image'])
                 ->keyBy('id'),
             ServiceProvider::class => ServiceProvider::query()
-                ->whereIn('id', $rows->where('employable_type', ServiceProvider::class)->pluck('employable_id')->unique())
+                ->whereIn(
+                    'id',
+                    $rows->where('employable_type', ServiceProvider::class)->pluck('employable_id')->unique()
+                )
                 ->get(['id', 'provider_name', 'profile_image'])
                 ->keyBy('id'),
         ];

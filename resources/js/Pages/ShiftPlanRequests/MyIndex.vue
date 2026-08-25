@@ -14,6 +14,7 @@
                         }}
                     </p>
                 </div>
+                <ShiftPlanWeekShortcut />
             </div>
 
             <!-- Kein Craft / keine Requests -->
@@ -128,6 +129,7 @@
 
 <script setup>
 import AppLayout from "@/Layouts/AppLayout.vue";
+import ShiftPlanWeekShortcut from "@/Pages/ShiftPlanRequests/components/ShiftPlanWeekShortcut.vue";
 import { router } from "@inertiajs/vue3";
 import {
     IconChevronRight,

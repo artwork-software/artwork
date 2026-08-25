@@ -34,6 +34,7 @@
                     :key="day.date"
                     :day="day"
                     :entries="row.days[day.date]"
+                    :violations="row.violations?.[day.date] || []"
                     :reject-active="rejectActive"
                     :day-date="day.date"
                     :selected-days="selectedDays"

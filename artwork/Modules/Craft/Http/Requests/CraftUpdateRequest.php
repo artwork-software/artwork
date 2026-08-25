@@ -25,6 +25,8 @@ class CraftUpdateRequest extends FormRequest
             'assignable_by_all' => 'required|boolean',
             'inventory_planned_by_all' => 'required|boolean',
             'universally_applicable' => 'required|boolean',
+            'notify_days' => 'nullable|integer|min:0',
+            'commit_request_deadline_days' => 'nullable|integer|min:0|max:365',
             'managersToBeAssigned' => 'sometimes|array',
             'managersToBeAssigned.*' => 'array',
             'managersToBeAssigned.*.manager_id' => 'required|integer',

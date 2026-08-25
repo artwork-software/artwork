@@ -1378,6 +1378,46 @@ final class ProjectDayAssignmentTest extends FeatureTestCase
         );
     }
 
+    #[Test]
+    public function for_project_returns_only_own_entries_without_view_permission(): void
+    {
+        $me = User::factory()->create(['can_work_shifts' => true]);
+        $other = User::factory()->create(['can_work_shifts' => true]);
+        $this->actingAs($me);
+        $project = $this->createProjectWithPeriod('2026-08-01', '2026-08-05');
+
+        $this->service()->createAssignments(
+            $project,
+            User::class,
+            $me->id,
+            ProjectDayAssignmentType::WISH,
+            ['2026-08-02'],
+            false
+        );
+        $this->service()->createAssignments(
+            $project,
+            User::class,
+            $other->id,
+            ProjectDayAssignmentType::BINDING,
+            ['2026-08-03'],
+            false
+        );
+
+        // Ohne Schichtplan-Leserecht: nur die eigenen Einträge (sonst wäre der
+        // eigene Wunsch nach dem Anlegen unsichtbar)
+        $response = $this->getJson(route('projects.day-assignments', $project))->assertOk();
+        $this->assertCount(1, $response->json('assignments'));
+        $this->assertSame($me->id, $response->json('assignments.0.worker.id'));
+        $this->assertSame('wish', $response->json('assignments.0.type'));
+
+        // Mit Leserecht: alle Einträge des Projekts
+        $this->actingAsUserWith(PermissionEnum::VIEW_SHIFT_PLAN->value);
+        $this->assertCount(
+            2,
+            $this->getJson(route('projects.day-assignments', $project))->assertOk()->json('assignments')
+        );
+    }
+
     // ---------- Personen-Vorschläge (workerOptions, Schichten-Tab) ----------
 
     #[Test]

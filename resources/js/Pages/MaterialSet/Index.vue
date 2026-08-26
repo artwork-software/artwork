@@ -1,5 +1,5 @@
 <template>
-    <MaterialSetSettingsHeader
+    <InventorySettingsHeader
         :title="$t('Material Sets')"
         :description="$t('Manage material sets for inventory planning.')"
     >
@@ -173,12 +173,12 @@
             :material-set="selectedSet"
             @close="closeModal"
         />
-    </MaterialSetSettingsHeader>
+    </InventorySettingsHeader>
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
-import MaterialSetSettingsHeader from '@/Pages/MaterialSet/Components/MaterialSetSettingsHeader.vue'
+import { ref, computed, watch } from 'vue'
+import InventorySettingsHeader from '@/Pages/InventorySetting/Components/InventorySettingsHeader.vue'
 import SettingsGuideBanner from '@/Artwork/Guide/SettingsGuideBanner.vue'
 import SingleMaterialSet from '@/Pages/MaterialSet/Components/SingleMaterialSet.vue'
 import CreateOrUpdateMaterialSetModal from '@/Pages/MaterialSet/Components/CreateOrUpdateMaterialSetModal.vue'
@@ -198,28 +198,44 @@ const rawSets = computed<any[]>(() => {
         : (props.materialSets?.data ?? [])
 })
 
-// Suche & Filter
+// Suche & Filter — durchsucht wie das Auswahl-Modal in der Materialausgabe auch die enthaltenen Artikel
 const search = ref('')
 const normalized = (s: unknown) => String(s ?? '').toLowerCase().trim()
 const filteredSets = computed(() => {
     const q = normalized(search.value)
     if (!q) return rawSets.value
     return rawSets.value.filter((s: any) => {
-        return normalized(s.name).includes(q) || normalized(s.description).includes(q)
+        if (normalized(s.name).includes(q) || normalized(s.description).includes(q)) return true
+        return (s.items ?? []).some((i: any) => normalized(i.name ?? i.article?.name).includes(q))
     })
 })
 
-// View Toggle
-const viewMode = ref<'table' | 'cards'>('table')
+// View Toggle (pro Browser gemerkt)
+const VIEW_MODE_STORAGE_KEY = 'material-sets.view-mode'
+const readStoredViewMode = (): 'table' | 'cards' => {
+    try {
+        const stored = localStorage.getItem(VIEW_MODE_STORAGE_KEY)
+        return stored === 'cards' ? 'cards' : 'table'
+    } catch {
+        return 'table'
+    }
+}
+const viewMode = ref<'table' | 'cards'>(readStoredViewMode())
+watch(viewMode, (mode) => {
+    try {
+        localStorage.setItem(VIEW_MODE_STORAGE_KEY, mode)
+    } catch {
+        // localStorage nicht verfügbar — Auswahl gilt dann nur für die Sitzung
+    }
+})
 
 // Artikelanzahl robust ermitteln (unterstützt verschiedene Backends)
 function articlesCount(set: any): number {
-    return (
-        set.articles_count ??
-        set.items_count ??
-        (Array.isArray(set.items) ? set.items.length : 0) ??
-        (Array.isArray(set.articles) ? set.articles.length : 0)
-    ) as number
+    if (set.articles_count != null) return set.articles_count
+    if (set.items_count != null) return set.items_count
+    if (Array.isArray(set.items)) return set.items.length
+    if (Array.isArray(set.articles)) return set.articles.length
+    return 0
 }
 
 // Modal-Steuerung

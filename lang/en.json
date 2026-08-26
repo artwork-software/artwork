@@ -6657,5 +6657,13 @@
     "Half months per page (double row height)": "Half months per page (double row height)",
     "The description could not be loaded. Please reopen the event before saving.": "The description could not be loaded. Please reopen the event before saving.",
     "Deadline for shift plan request (days before start of week)": "Deadline for shift plan request (days before start of week)",
-    "If no shift plan request has been submitted for a calendar week by this deadline, the craft management will be notified. Leave empty to disable the reminder.": "If no shift plan request has been submitted for a calendar week by this deadline, the craft management will be notified. Leave empty to disable the reminder."
+    "If no shift plan request has been submitted for a calendar week by this deadline, the craft management will be notified. Leave empty to disable the reminder.": "If no shift plan request has been submitted for a calendar week by this deadline, the craft management will be notified. Leave empty to disable the reminder.",
+    "Articles already in this issue": "Articles already in this issue",
+    "Some articles from the set are already part of this material issue.": "Some articles from the set are already part of this material issue.",
+    "Should the set quantities be added to the existing quantities? Articles that are not yet part of the issue will be added in both cases.": "Should the set quantities be added to the existing quantities? Articles that are not yet part of the issue will be added in both cases.",
+    "Existing quantity": "Existing quantity",
+    "Quantity in set": "Quantity in set",
+    "Keep existing quantities": "Keep existing quantities",
+    "Add quantities": "Add quantities",
+    "Here you can see the articles you have selected for this set. Adjust the quantity or remove articles.": "Here you can see the articles you have selected for this set. Adjust the quantity or remove articles."
 }

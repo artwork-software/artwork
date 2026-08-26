@@ -1,6 +1,6 @@
 <template>
     <ArtworkBaseModal
-        title="Select Material Set"
+        :title="$t('Select Material Set')"
         :description="$t('Select a material set to issue.')"
         @close="$emit('close')"
         modal-size="max-w-5xl"
@@ -11,52 +11,28 @@
                 {{ $t('Please select a material set to issue.') }}
             </p>
 
-            <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+            <div class="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
                 <!-- Suche -->
-                <div class="relative w-full sm:max-w-md">
-                    <input
+                <div class="w-full sm:max-w-md">
+                    <BaseInput
+                        id="materialSetSearchQuery"
                         v-model="query"
                         :placeholder="$t('Search by name, description or item')"
-                        class="w-full rounded-md border border-border bg-white px-3 py-2 text-sm outline-none ring-0 focus:border-accent-600"
-                        type="text"
                         @keydown.down.prevent="moveActive(1)"
                         @keydown.up.prevent="moveActive(-1)"
                         @keydown.enter.prevent="selectActive()"
                     />
-                    <button
-                        v-if="query"
-                        class="absolute inset-y-0 right-0 mr-2 rounded p-1 text-text-subtle hover:text-text-muted"
-                        @click="query = ''"
-                        :aria-label="$t('Clear search')"
-                    >
-                        ×
-                    </button>
                 </div>
 
                 <!-- Filter + Sortierung -->
-                <div class="flex items-center gap-2">
-                    <label class="flex items-center gap-2 text-xs text-text-muted">
-                        <input
-                            type="checkbox"
-                            v-model="onlyWithItems"
-                            class="h-4 w-4 rounded border-border text-accent-600 focus:ring-accent-600"
-                        />
-                        {{ $t('Only sets with items') }}
-                    </label>
-
-                    <div class="flex items-center gap-2">
-                        <span class="text-xs text-text-muted">{{ $t('Sort by') }}:</span>
-                        <select
-                            v-model="sortBy"
-                            class="rounded-md border border-border bg-white px-2 py-1 text-xs outline-none focus:border-accent-600"
-                        >
-                            <option value="relevance">{{ $t('Relevance') }}</option>
-                            <option value="name">{{ $t('Name (A–Z)') }}</option>
-                            <option value="items">{{ $t('Items (desc)') }}</option>
-                            <option value="newest">{{ $t('Newest') }}</option>
-                            <option value="updated">{{ $t('Last updated') }}</option>
-                        </select>
-                    </div>
+                <div class="flex items-center gap-4">
+                    <BaseCheckbox v-model="onlyWithItems" :label="$t('Only sets with items')" id="materialSetOnlyWithItems" />
+                    <ArtworkBaseListbox
+                        v-model="sortByOption"
+                        :items="sortOptions"
+                        :label="$t('Sort by')"
+                        class="w-44"
+                    />
                 </div>
             </div>
         </div>
@@ -163,16 +139,24 @@
 </template>
 
 <script setup>
-import { ref, computed, inject, onMounted, watch } from 'vue'
+import { ref, computed, inject, onMounted, unref, watch } from 'vue'
 import ArtworkBaseModal from '@/Artwork/Modals/ArtworkBaseModal.vue'
 import ToolTipWithTextComponent from '@/Components/ToolTips/ToolTipWithTextComponent.vue'
 import {useTranslation} from "@/Composeables/Translation.js";
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
+import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
+import BaseCheckbox from "@/Artwork/Inputs/BaseCheckbox.vue";
+import ArtworkBaseListbox from "@/Artwork/Listbox/ArtworkBaseListbox.vue";
 
 const emit = defineEmits(['close', 'add-material-set'])
 
-// Datenquelle wie gehabt via provide/inject
-const materialSets = inject('materialSets', ref([])) // Fallback: ref([])
+// Datenquelle wie gehabt via provide/inject — je nach Seite kommt eine Ref
+// (Projekt-Tab) oder ein rohes Array (Materialausgabe-Buch) an, beides abfangen
+const injectedMaterialSets = inject('materialSets', ref([]))
+const materialSets = computed(() => {
+    const raw = unref(injectedMaterialSets)
+    return Array.isArray(raw) ? raw : []
+})
 
 // UI-State
 const query = ref('')
@@ -187,6 +171,19 @@ const activeId = computed(() => {
 })
 const scrollEl = ref(null)
 const $t = useTranslation();
+
+// Sortier-Auswahl als Listbox-Optionen; sortBy bleibt der String-State der Sortierlogik
+const sortOptions = [
+    { id: 'relevance', name: $t('Relevance') },
+    { id: 'name', name: $t('Name (A–Z)') },
+    { id: 'items', name: $t('Items (desc)') },
+    { id: 'newest', name: $t('Newest') },
+    { id: 'updated', name: $t('Last updated') },
+]
+const sortByOption = computed({
+    get: () => sortOptions.find((o) => o.id === sortBy.value) ?? sortOptions[0],
+    set: (option) => { sortBy.value = option?.id ?? 'relevance' },
+})
 // Pagination (clientseitig)
 const pageSize = 50
 const page = ref(1)

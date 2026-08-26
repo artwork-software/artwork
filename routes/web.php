@@ -3289,11 +3289,20 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         ->as('material-sets.')
         ->controller(MaterialSetController::class)
         ->group(function (): void {
-            Route::get('/', 'index')->name('index');     // material-sets.index
+            // Sichtbar für Set-Verwalter UND Inventar-Settings-Nutzer (Tab in den Inventar-Einstellungen)
+            Route::get('/', 'index')
+                ->middleware(sprintf(
+                    'permission:%s|%s|%s',
+                    PermissionEnum::SET_CREATE_EDIT->value,
+                    PermissionEnum::SET_DELETE->value,
+                    PermissionEnum::INVENTORY_SETTINGS->value
+                ))
+                ->name('index');     // material-sets.index
             // Frontend gated diese Buttons mit 'set.create_edit' -> Backend daran angleichen.
             Route::post('/', 'store')->middleware('can:set.create_edit')->name('store');
             Route::patch('{set}', 'update')->middleware('can:set.create_edit')->name('update');
-            Route::delete('{set}', 'destroy')->middleware('can:set.create_edit')->name('destroy');
+            // Frontend zeigt den Löschen-Button nur mit 'set.delete' — Backend daran angleichen.
+            Route::delete('{set}', 'destroy')->middleware('can:set.delete')->name('destroy');
         });
 
     // get inventory.articles.available-stock article.id, start_date, end_date

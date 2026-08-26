@@ -518,6 +518,13 @@
     <SelectMaterialSetModal v-if="showSelectMaterialSetModal" @close="showSelectMaterialSetModal = false"
         @add-material-set="addMaterialSetToIssue" />
 
+    <ApplyMaterialSetConfirmModal
+        v-if="materialSetOverlaps.length"
+        :overlaps="materialSetOverlaps"
+        @close="closeApplyMaterialSetConfirm"
+        @apply="confirmApplyMaterialSet"
+    />
+
     <CopyFromMaterialIssueModal v-if="showCopyIssueModal" :exclude-issue-id="internMaterialIssue.id"
         @close="showCopyIssueModal = false" @copy-issue="addArticlesFromCopiedIssue" />
 
@@ -533,6 +540,7 @@ import UserSearch from "@/Components/SearchBars/UserSearch.vue";
 import BaseAlertComponent from "@/Components/Alerts/BaseAlertComponent.vue";
 import BaseTextarea from "@/Artwork/Inputs/BaseTextarea.vue";
 import ArticleSearchFilterModal from "@/Pages/IssueOfMaterial/Components/ArticleSearchFilterModal.vue";
+import ApplyMaterialSetConfirmModal from "@/Pages/IssueOfMaterial/Components/ApplyMaterialSetConfirmModal.vue";
 import ProjectSearch from "@/Components/SearchBars/ProjectSearch.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import {router, useForm, usePage} from "@inertiajs/vue3";
@@ -1104,10 +1112,37 @@ const getArticleDataForUsage = async (article) => {
     }
 };
 
+// Set-Anwendung mit Rückfrage: Überschneiden sich Set-Artikel mit bereits gewählten,
+// entscheidet der Nutzer im Modal, ob die Set-Mengen addiert werden.
+const pendingMaterialSet = ref(null);
+const materialSetOverlaps = ref([]);
+
 const addMaterialSetToIssue = (materialSet) => {
+    const overlaps = (materialSet.items ?? [])
+        .filter((item) => item.article?.id)
+        .filter((item) => internMaterialIssue.articles.some((a) => a.id === item.article.id))
+        .map((item) => ({
+            id: item.article.id,
+            name: item.article.name,
+            existingQuantity: Number(internMaterialIssue.articles.find((a) => a.id === item.article.id)?.quantity ?? 0),
+            setQuantity: item.quantity || 1,
+        }));
+
+    if (overlaps.length > 0) {
+        pendingMaterialSet.value = materialSet;
+        materialSetOverlaps.value = overlaps;
+        return;
+    }
+
+    applyMaterialSetToIssue(materialSet, false);
+};
+
+const applyMaterialSetToIssue = (materialSet, additive) => {
     // Process each item in the material set
     for (const item of materialSet.items) {
         const article = item.article;
+        // Items gelöschter Artikel haben keine article-Relation mehr
+        if (!article?.id) continue;
         const existingArticleIndex = internMaterialIssue.articles.findIndex(
             (a) => a.id === article.id
         );
@@ -1123,10 +1158,12 @@ const addMaterialSetToIssue = (materialSet) => {
                 availableStockRequestIsLoading: true,
             });
         } else {
-            // Article exists, don't modify its quantity
-            // Just ensure it has the correct properties
             const existingArticle =
                 internMaterialIssue.articles[existingArticleIndex];
+            if (additive) {
+                existingArticle.quantity =
+                    Number(existingArticle.quantity ?? 0) + (item.quantity || 1);
+            }
             if (!existingArticle.availableStock) {
                 existingArticle.availableStock = 0;
                 existingArticle.availableStockRequestIsLoading = true;
@@ -1136,6 +1173,18 @@ const addMaterialSetToIssue = (materialSet) => {
 
     // after add check the available stock
     checkAvailableStock();
+};
+
+const confirmApplyMaterialSet = (additive) => {
+    if (pendingMaterialSet.value) {
+        applyMaterialSetToIssue(pendingMaterialSet.value, additive);
+    }
+    closeApplyMaterialSetConfirm();
+};
+
+const closeApplyMaterialSetConfirm = () => {
+    pendingMaterialSet.value = null;
+    materialSetOverlaps.value = [];
 };
 
 // Übernimmt alle Artikel einer anderen Materialausgabe mit deren Mengen

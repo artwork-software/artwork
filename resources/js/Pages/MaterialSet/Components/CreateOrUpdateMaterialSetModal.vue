@@ -35,11 +35,12 @@
                     <!-- Sticky Tools -->
                     <div class="sticky top-0 z-10 rounded-t-2xl border-b border-border-subtle bg-white/90 px-5 py-3 backdrop-blur">
                         <div class="flex w-full items-center gap-3">
-                            <ArticleSearch
+                            <BaseInput
                                 id="articleSearchInModal"
+                                v-model="articleSearchQuery"
                                 class="w-full"
-                                :label="$t('Search Articles')"
-                                @article-selected="addItemToSet"
+                                :label="$t('Search article, (sub)category...')"
+                                :placeholder="$t('Search article, (sub)category...')"
                             />
                             <InventoryFunctionBarFilter @close="reloadArticlesWithNewFilter" />
                         </div>
@@ -152,7 +153,7 @@
                                         {{ $t('Selected Articles') }}
                                     </h3>
                                     <p class="text-xs text-text-subtle">
-                                        {{ $t('Here you can see the items you have selected for the material issue. Adjust the quantity or remove items.') }}
+                                        {{ $t('Here you can see the articles you have selected for this set. Adjust the quantity or remove articles.') }}
                                     </p>
                                 </div>
 
@@ -313,10 +314,10 @@
 import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
 import { useForm, usePage } from "@inertiajs/vue3";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
-import ArticleSearch from "@/Components/SearchBars/ArticleSearch.vue";
 import BaseTextarea from "@/Artwork/Inputs/BaseTextarea.vue";
 import InventoryFunctionBarFilter from "@/Artwork/Filter/InventoryFunctionBarFilter.vue";
-import { computed, onMounted, onBeforeUnmount, ref } from "vue";
+import { computed, onMounted, onBeforeUnmount, ref, watch } from "vue";
+import debounce from "lodash.debounce";
 import axios from "axios";
 import Galleria from "primevue/galleria";
 import BaseAlertComponent from "@/Components/Alerts/BaseAlertComponent.vue";
@@ -381,10 +382,13 @@ const canSubmit = computed(() => materialSetForm.name.trim().length > 0 && mater
 
 // Artikel-Liste & Infinite Scroll
 const articles = ref<Article[]>([]);
+const articleSearchQuery = ref('');
 const initialLoading = ref(true);
 const loadingMore = ref(false);
 const hasMoreArticles = ref(true);
 const paginationPage = ref(1);
+// Zählt Reloads hoch, damit verspätete Antworten einer alten Suche die Liste nicht mehr befüllen.
+let loadGeneration = 0;
 const scrollContainer = ref<HTMLElement | null>(null);
 const sentinel = ref<HTMLElement | null>(null);
 let io: IntersectionObserver | null = null;
@@ -449,8 +453,16 @@ onBeforeUnmount(() => { io?.disconnect(); });
 
 async function loadMoreArticles() {
     loadingMore.value = true;
+    const generation = loadGeneration;
     try {
-        const res = await axios.get(route('inventory.articles.api', { page: paginationPage.value }));
+        // Suchterm immer hier lesen, damit Infinite Scroll gefiltert bleibt und
+        // Suche und Pagination nicht auseinanderlaufen.
+        const search = articleSearchQuery.value.trim();
+        const res = await axios.get(route('inventory.articles.api', {
+            page: paginationPage.value,
+            search: search || undefined,
+        }));
+        if (generation !== loadGeneration) return;
         const newArticles: Article[] = (res.data?.articles?.data ?? []).reverse();
 
         for (const a of newArticles) {
@@ -463,21 +475,33 @@ async function loadMoreArticles() {
             paginationPage.value += 1;
         }
     } catch (e) {
+        if (generation !== loadGeneration) return;
         console.error('Error loading articles:', e);
         hasMoreArticles.value = false;
     } finally {
-        loadingMore.value = false;
+        if (generation === loadGeneration) loadingMore.value = false;
     }
 }
 
 async function reloadArticlesWithNewFilter() {
+    loadGeneration += 1;
+    const generation = loadGeneration;
     articles.value = [];
     paginationPage.value = 1;
     hasMoreArticles.value = true;
+    loadingMore.value = false;
     initialLoading.value = true;
     await loadMoreArticles();
-    initialLoading.value = false;
+    if (generation === loadGeneration) initialLoading.value = false;
 }
+
+const searchArticlesFromServer = debounce(() => {
+    reloadArticlesWithNewFilter();
+}, 300);
+
+watch(articleSearchQuery, () => {
+    searchArticlesFromServer();
+});
 
 // Bild-Helper
 const page = usePage();

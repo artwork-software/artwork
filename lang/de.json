@@ -6657,5 +6657,13 @@
     "Half months per page (double row height)": "Halbe Monate pro Seite (doppelte Zeilenhöhe)",
     "The description could not be loaded. Please reopen the event before saving.": "Die Beschreibung konnte nicht geladen werden. Bitte öffne den Termin erneut, bevor du speicherst.",
     "Deadline for shift plan request (days before start of week)": "Frist für Dienstplananfrage (Tage vor KW-Beginn)",
-    "If no shift plan request has been submitted for a calendar week by this deadline, the craft management will be notified. Leave empty to disable the reminder.": "Wird bis zu dieser Frist keine Dienstplananfrage für eine Kalenderwoche gestellt, wird die Gewerkeleitung benachrichtigt. Leer lassen, um keine Erinnerung zu senden."
+    "If no shift plan request has been submitted for a calendar week by this deadline, the craft management will be notified. Leave empty to disable the reminder.": "Wird bis zu dieser Frist keine Dienstplananfrage für eine Kalenderwoche gestellt, wird die Gewerkeleitung benachrichtigt. Leer lassen, um keine Erinnerung zu senden.",
+    "Articles already in this issue": "Artikel bereits in der Ausgabe",
+    "Some articles from the set are already part of this material issue.": "Einige Artikel aus dem Set sind bereits Teil dieser Materialausgabe.",
+    "Should the set quantities be added to the existing quantities? Articles that are not yet part of the issue will be added in both cases.": "Sollen die Mengen aus dem Set zu den vorhandenen Mengen addiert werden? Artikel, die noch nicht in der Ausgabe sind, werden in beiden Fällen hinzugefügt.",
+    "Existing quantity": "Vorhandene Menge",
+    "Quantity in set": "Menge im Set",
+    "Keep existing quantities": "Vorhandene Mengen behalten",
+    "Add quantities": "Mengen addieren",
+    "Here you can see the articles you have selected for this set. Adjust the quantity or remove articles.": "Hier siehst du die Artikel, die du für dieses Set ausgewählt hast. Passe die Menge an oder entferne Artikel."
 }

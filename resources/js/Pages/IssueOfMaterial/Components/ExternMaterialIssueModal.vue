@@ -467,6 +467,13 @@
         @add-material-set="addMaterialSetToIssue"
     />
 
+    <ApplyMaterialSetConfirmModal
+        v-if="materialSetOverlaps.length"
+        :overlaps="materialSetOverlaps"
+        @close="closeApplyMaterialSetConfirm"
+        @apply="confirmApplyMaterialSet"
+    />
+
     <CopyFromMaterialIssueModal
         v-if="showCopyIssueModal"
         issue-type="extern"
@@ -495,6 +502,7 @@ import {computed, nextTick, onBeforeUnmount, onMounted, ref, watch} from "vue";
 import debounce from "lodash.debounce";
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
 import SelectMaterialSetModal from "@/Pages/IssueOfMaterial/Components/SelectMaterialSetModal.vue";
+import ApplyMaterialSetConfirmModal from "@/Pages/IssueOfMaterial/Components/ApplyMaterialSetConfirmModal.vue";
 import CopyFromMaterialIssueModal from "@/Pages/IssueOfMaterial/Components/CopyFromMaterialIssueModal.vue";
 import InventoryFunctionBarFilter from "@/Artwork/Filter/InventoryFunctionBarFilter.vue";
 import axios from "axios";
@@ -829,18 +837,63 @@ const addArticleToIssue = (article) => {
     checkAvailableStock();
 };
 
+// Set-Anwendung mit Rückfrage: Überschneiden sich Set-Artikel mit bereits gewählten,
+// entscheidet der Nutzer im Modal, ob die Set-Mengen addiert werden.
+const pendingMaterialSet = ref(null)
+const materialSetOverlaps = ref([])
+
 const addMaterialSetToIssue = (materialSet) => {
-    const existingArticleIds = externMaterialIssueForm.articles.map(a => a.id)
-    const newArticles = materialSet.items.filter(item => !existingArticleIds.includes(item.article.id)).map(item => ({
-        id: item.article.id,
-        name: item.article.name,
-        description: item.article.description,
-        quantity: item.quantity || 1,
-        availableStock: 0,
-        availableStockRequestIsLoading: true,
-    }))
-    externMaterialIssueForm.articles.push(...newArticles)
+    const overlaps = (materialSet.items ?? [])
+        .filter((item) => item.article?.id)
+        .filter((item) => externMaterialIssueForm.articles.some((a) => a.id === item.article.id))
+        .map((item) => ({
+            id: item.article.id,
+            name: item.article.name,
+            existingQuantity: Number(externMaterialIssueForm.articles.find((a) => a.id === item.article.id)?.quantity ?? 0),
+            setQuantity: item.quantity || 1,
+        }))
+
+    if (overlaps.length > 0) {
+        pendingMaterialSet.value = materialSet
+        materialSetOverlaps.value = overlaps
+        return
+    }
+
+    applyMaterialSetToIssue(materialSet, false)
+}
+
+const applyMaterialSetToIssue = (materialSet, additive) => {
+    for (const item of materialSet.items ?? []) {
+        // Items gelöschter Artikel haben keine article-Relation mehr
+        if (!item.article?.id) continue;
+        const existingArticle = externMaterialIssueForm.articles.find((a) => a.id === item.article.id)
+
+        if (!existingArticle) {
+            externMaterialIssueForm.articles.push({
+                id: item.article.id,
+                name: item.article.name,
+                description: item.article.description,
+                quantity: item.quantity || 1,
+                availableStock: 0,
+                availableStockRequestIsLoading: true,
+            })
+        } else if (additive) {
+            existingArticle.quantity = Number(existingArticle.quantity ?? 0) + (item.quantity || 1)
+        }
+    }
     checkAvailableStock()
+}
+
+const confirmApplyMaterialSet = (additive) => {
+    if (pendingMaterialSet.value) {
+        applyMaterialSetToIssue(pendingMaterialSet.value, additive)
+    }
+    closeApplyMaterialSetConfirm()
+}
+
+const closeApplyMaterialSetConfirm = () => {
+    pendingMaterialSet.value = null
+    materialSetOverlaps.value = []
 }
 
 // Übernimmt alle Artikel einer anderen Materialausgabe mit deren Mengen

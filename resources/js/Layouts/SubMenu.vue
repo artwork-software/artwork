@@ -811,17 +811,16 @@ const navigation = ref([
             // },
             {
                 name: 'Inventory',
-                href: route('inventory-management.settings.category'),
+                // Nutzer mit reinen Material-Set-Rechten dürfen die übrigen Inventar-Settings nicht sehen —
+                // sie landen direkt auf dem Material-Sets-Tab.
+                href: is('artwork admin') || can('inventory.settings')
+                    ? route('inventory-management.settings.category')
+                    : route('material-sets.index'),
                 icon: 'IconBuildingWarehouse',
-                current: route().current('inventory-management.settings.category'),
-                has_permission: is('artwork admin') || can('inventory.settings')
-            },
-            {
-                name: 'Material Sets',
-                href: route('material-sets.index'),
-                icon: 'IconParentheses',
-                current: route().current('material-sets.index'),
-                has_permission: is('artwork admin') || can('set.create_edit | set.delete')
+                current: route().current('inventory-management.settings.*')
+                    || route().current('material-sets.index')
+                    || route().current('settings.inventory-tags.index'),
+                has_permission: is('artwork admin') || can('inventory.settings | set.create_edit | set.delete')
             },
             {
                 name: 'Rooms',

@@ -29,6 +29,7 @@ import AppLayout from "@/Layouts/AppLayout.vue";
 import ToolbarHeader from "@/Artwork/Toolbar/ToolbarHeader.vue";
 import BaseTabs from "@/Artwork/Tabs/BaseTabs.vue";
 import {IconPackage} from '@tabler/icons-vue';
+import {can, is} from 'laravel-permission-to-vuejs';
 
 export default defineComponent({
     props: ['title', 'description'],
@@ -38,6 +39,9 @@ export default defineComponent({
         BaseTabs
     },
     data() {
+        // Nutzer mit reinen Material-Set-Rechten sehen nur den Material-Sets-Tab,
+        // die übrigen Tabs verlangen weiterhin die Inventar-Settings-Permission.
+        const canInventorySettings = is('artwork admin') || can('inventory.settings');
         return {
             IconPackage,
             tabs: [
@@ -45,31 +49,37 @@ export default defineComponent({
                     name: this.$t('General'),
                     href: route('inventory-management.settings.general'),
                     current: route().current('inventory-management.settings.general'),
-                    permission: true
+                    permission: canInventorySettings
                 },
                 {
                     name: this.$t('Categories & Sub-Categories'),
                     href: route('inventory-management.settings.category'),
                     current: route().current('inventory-management.settings.category'),
-                    permission: true
+                    permission: canInventorySettings
                 },
                 {
                     name: this.$t('Properties'),
                     href: route('inventory-management.settings.properties'),
                     current: route().current('inventory-management.settings.properties'),
-                    permission: true
+                    permission: canInventorySettings
                 },
                 {
                     name: this.$t('Status Settings'),
                     href: route('inventory-management.settings.status'),
                     current: route().current('inventory-management.settings.status'),
-                    permission: true
+                    permission: canInventorySettings
                 },
                 {
                     name: this.$t('Tags'),
                     href: route('settings.inventory-tags.index'),
                     current: route().current('settings.inventory-tags.index'),
-                    permission: true
+                    permission: canInventorySettings
+                },
+                {
+                    name: this.$t('Material Sets'),
+                    href: route('material-sets.index'),
+                    current: route().current('material-sets.index'),
+                    permission: canInventorySettings || can('set.create_edit | set.delete')
                 },
             ]
         }

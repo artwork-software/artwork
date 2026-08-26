@@ -12,6 +12,7 @@ use Artwork\Modules\Inventory\Services\TypeNumberGenerator;
 use Artwork\Modules\Inventory\Models\InventoryCategory;
 use Artwork\Modules\Inventory\Models\InventorySubCategory;
 use Artwork\Modules\Inventory\Repositories\InventoryCategoryRepository;
+use Artwork\Modules\MaterialSet\Models\MaterialSetItem;
 use Artwork\Modules\User\Models\User;
 use Illuminate\Auth\AuthManager;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
@@ -854,6 +855,9 @@ class InventoryArticleService
     public function delete(InventoryArticle $article): void
     {
         $this->articleRepository->delete($article);
+        // Material-Set-Items des Artikels mitbereinigen — Sets sollen keine Papierkorb-Artikel referenzieren
+        // (bewusst auch ohne Restore-Rückweg; Wiederherstellen legt die Set-Zugehörigkeit nicht neu an).
+        MaterialSetItem::query()->where('inventory_article_id', $article->id)->delete();
         Cache::forget('inventory_article_count');
     }
 

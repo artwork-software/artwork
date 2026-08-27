@@ -54,18 +54,20 @@
                 <button
                     v-if="project"
                     type="button"
-                    class="rounded-md/50 p-1 hover:bg-white/10 rounded-lg transition"
+                    class="rounded-md/50 p-1 hover:bg-white/10 rounded-lg transition cursor-pointer"
                     @click="toggleProjectTimePeriodAndRedirect"
-                    :aria-label="$t('Open project time period')"
+                    :aria-label="$t('Show in calendar')"
+                    v-tooltip.bottom="{ value: $t('Show in calendar'), class: 'aw-tooltip' }"
                 >
                     <IconCalendarMonth class="h-5 w-5" />
                 </button>
                 <button
                     v-if="userToEditId === usePage().props.auth.user.id && type === 'user'"
                     type="button"
-                    class="rounded-md/50 p-1 hover:bg-white/10 rounded-lg transition"
+                    class="rounded-md/50 p-1 hover:bg-white/10 rounded-lg transition cursor-pointer"
                     @click="showRequestWorkTimeChangeModal = true"
                     :aria-label="$t('Request work time change')"
+                    v-tooltip.bottom="{ value: $t('Request work time change'), class: 'aw-tooltip' }"
                 >
                     <PropertyIcon name="IconClockEdit" class="h-5 w-5" stroke-width="1.5" />
                 </button>
@@ -377,34 +379,15 @@ const hasColleaguesOnShift = (shift) => {
 }
 
 const getCraftAndFunctionLabel = () => {
-    // Try to get craft and function from the current user's pivot data
-    let craftName = null
-    let functionName = null
-
-    // Abkürzung des Gewerks bevorzugen, damit der Projektname im Header Platz hat
+    // Abkürzung des Gewerks bevorzugen, damit der Projektname im Header Platz hat.
+    // pivot.short_description ist die individuelle Schichtnotiz (einziger Writer:
+    // shifts.updateShortDescription) und gehört nicht in den Kartentitel.
     if (resolvedCraft.value?.abbreviation || resolvedCraft.value?.name) {
-        craftName = resolvedCraft.value.abbreviation || resolvedCraft.value.name
+        return resolvedCraft.value.abbreviation || resolvedCraft.value.name
     }
 
-    // Find the current worker in the shift to get their function
-    const currentWorker = (props.shift.workers || []).find(
-        w => w.type === props.type && w.id === props.userToEditId
-    )
-    if (currentWorker?.pivot?.short_description) {
-        functionName = currentWorker.pivot.short_description
-    }
-
-    // Build the label
-    if (craftName && functionName) {
-        return `${craftName} - ${functionName}`
-    } else if (craftName) {
-        return craftName
-    } else if (functionName) {
-        return functionName
-    } else {
-        // Fallback to Universal Shift if no craft or function is found
-        return usePage().props?.translations?.universal_shift || 'Universal Shift'
-    }
+    // Fallback to Universal Shift if no craft is found
+    return usePage().props?.translations?.universal_shift || 'Universal Shift'
 }
 
 const toggleProjectTimePeriodAndRedirect = () => {

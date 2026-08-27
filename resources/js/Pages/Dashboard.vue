@@ -186,6 +186,28 @@
                                 <PropertyIcon name="IconCalendarUser" class="size-4" /> {{ $t('to the shift plan') }}
                             </a>
                         </div>
+                        <!-- Tagesdienste des Users: ein Balken pro Dienst (Icon + Name in Dienstfarbe) -->
+                        <div v-if="dayServicesOfDay.length" class="p-4 pb-0 space-y-2">
+                            <div
+                                v-for="dayService in dayServicesOfDay"
+                                :key="`day-service-${dayService.id}`"
+                                class="flex items-stretch gap-x-3 overflow-hidden rounded-md border border-border-subtle bg-surface p-3"
+                            >
+                                <div class="w-1 rounded-lg" :style="{ backgroundColor: dayService.hex_color ?? '#3f3f46' }"></div>
+                                <div class="flex items-center gap-2 min-w-0">
+                                    <PropertyIcon
+                                        v-if="dayService.icon"
+                                        :name="dayService.icon"
+                                        class="size-5 shrink-0"
+                                        :style="{ color: dayService.hex_color ?? '#3f3f46' }"
+                                    />
+                                    <span class="truncate text-sm font-semibold text-text" :title="dayService.name">
+                                        {{ dayService.name }}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+
                         <div v-if="workTimesTodaySorted.length" class="p-4">
                             <div v-for="item in workTimesTodaySorted" :key="item.id" class="mb-3 last:mb-0">
                                 <SingleUserEventShift
@@ -229,9 +251,11 @@
                             </div>
                         </div>
 
-                        <div v-else class="p-4">
+                        <div v-else-if="!dayServicesOfDay.length" class="p-4">
                             <EmptyState :title="$t('You don\'t have any shifts today.')" icon="IconCalendarUser" />
                         </div>
+                        <!-- Nur Tagesdienste, keine Schichten: Abstand unter den Balken statt EmptyState -->
+                        <div v-else class="pb-4"></div>
                     </BaseCard>
                 </section>
 
@@ -416,6 +440,7 @@ const props = defineProps<{
     tasks: any[],
     shiftsOfDay: any[],
     individualTimesOfDay: any[],
+    users_day_services_of_day: any[],
     todayDate: string,
     eventsOfDay: any[],
     globalNotification: any,
@@ -440,6 +465,7 @@ const user = computed(() => page.props.auth.user)
 const doneTaskForm = useForm({ done: false })
 const canViewShifts = computed(() => can('can view shift plan') || is('artwork admin'))
 
+const dayServicesOfDay = computed(() => props.users_day_services_of_day ?? [])
 const eventsCountToday = computed(() => props.eventsOfDay?.length ?? 0)
 const shiftsCountToday = computed(() => (props.shiftsOfDay?.length ?? 0) + (props.individualTimesOfDay?.length ?? 0))
 const notificationsCountToday = computed(() => props.notificationCount ?? 0)

@@ -1311,7 +1311,11 @@ const dayObserver = typeof IntersectionObserver !== 'undefined'
     }, { rootMargin: '300px 0px' })
     : null
 
+// Tages-Elemente für den goToDate-Anker (Link aus Dashboard/Einsatzplan-Schichtkarte)
+const dayEls = new Map<string, HTMLElement>()
+
 const setDayRef = (dayKey: string, el: HTMLElement | null) => {
+    if (el) dayEls.set(dayKey, el)
     if (!dayObserver) return
     if (el) {
         (el as any).__dayKey = dayKey
@@ -1319,6 +1323,49 @@ const setDayRef = (dayKey: string, el: HTMLElement | null) => {
     } else if (el === null) {
         // el is null on unmount — no-op (we can't unobserve without the element ref)
     }
+}
+
+// ?goToDate=YYYY-MM-DD: im Projekt-Schichten-Tab zum Tag der angeklickten Schicht
+// scrollen. Die lazy gerenderten Tage darüber haben anfangs nur geschätzte
+// Platzhalterhöhen und verschieben die Zielposition beim Nachrendern — deshalb
+// wird die Ausrichtung wiederholt korrigiert, bis sie stabil ist.
+const scrollToRequestedDay = () => {
+    if (!props.isInProjectView) return
+    let goToDate: string | null = null
+    try {
+        goToDate = new URLSearchParams(window.location.search).get('goToDate')
+    } catch {
+        return
+    }
+    if (!goToDate) return
+
+    let attempts = 0
+    let stableChecks = 0
+    // Scrollt der User selbst, darf die Korrekturschleife nicht zurückreißen
+    const cancel = () => { attempts = 999 }
+    window.addEventListener('wheel', cancel, { once: true, passive: true })
+    window.addEventListener('touchmove', cancel, { once: true, passive: true })
+
+    // Konvergenz statt fester Durchläufe: jede Korrektur macht Tage oberhalb
+    // sichtbar, deren echte Höhen die Schätzhöhen ersetzen und das Ziel erneut
+    // verschieben — weiter nachführen, bis die Position mehrfach stabil bleibt.
+    const align = () => {
+        if (_isUnmounted || ++attempts > 60) return
+        const el = dayEls.get(goToDate as string)
+        if (el) {
+            const stickyOffset = (props.stickyOffsetTopPx ?? 130) + topBarHeightPx.value + 8
+            const delta = el.getBoundingClientRect().top - stickyOffset
+            if (Math.abs(delta) > 4) {
+                stableChecks = 0
+                window.scrollBy({ top: delta })
+            } else if (++stableChecks >= 3) {
+                return
+            }
+        }
+        setTimeout(align, 250)
+    }
+
+    nextTick(align)
 }
 
 // G2: Watch visibleDays to progressively reveal rooms for newly visible days
@@ -2063,6 +2110,7 @@ onMounted(async () => {
     await nextTick()
     measureTopBarHeight()
     checkAllRoomNameTruncations()
+    scrollToRequestedDay()
 
     if (topBarEl.value && "ResizeObserver" in window) {
         ro = new ResizeObserver(() => measureTopBarHeight())

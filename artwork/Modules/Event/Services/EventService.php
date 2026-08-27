@@ -864,6 +864,27 @@ readonly class EventService
             }
         }
 
+        // Projektteam-Flag fürs Frontend-Gating des Projektlinks (SingleUserEventShift):
+        // ohne project.users im Payload wüsste das Frontend sonst nicht, ob der
+        // eingeloggte User Teammitglied ist. Ein Bulk-Lookup statt Exists pro Projekt.
+        $authUserId = $this->authManager->id();
+        if ($authUserId !== null) {
+            $shiftProjects = collect($daysWithData)
+                ->flatMap(static fn (array $day) => $day['shifts'])
+                ->pluck('project')
+                ->filter();
+
+            $teamProjectIds = DB::table('project_user')
+                ->where('user_id', $authUserId)
+                ->whereIn('project_id', $shiftProjects->pluck('id')->unique())
+                ->pluck('project_id')
+                ->flip();
+
+            foreach ($shiftProjects as $shiftProject) {
+                $shiftProject->setAttribute('auth_user_in_team', isset($teamProjectIds[$shiftProject->id]));
+            }
+        }
+
         foreach ($daysWithData as &$day) {
             usort($day['shifts'], fn($a, $b) => strtotime($a['start']) - strtotime($b['start']));
         }

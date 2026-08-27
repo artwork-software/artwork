@@ -16,7 +16,7 @@
         >
             <a
                 v-if="project && eventType && canAccessProject"
-                :href="project?.id ? route('projects.tab', { project: project.id, projectTab: firstProjectShiftTabId }) : '#'"
+                :href="projectShiftTabHref"
                 class="block break-words text-sm font-semibold hover:opacity-90 transition"
             >
                 {{ eventType?.abbreviation }}: {{ project?.name }}
@@ -29,7 +29,7 @@
                 {{ getCraftAndFunctionLabel() }} - <span>
                     <a
                         v-if="canAccessProject"
-                        :href="project?.id ? route('projects.tab', { project: project.id, projectTab: firstProjectShiftTabId }) : '#'"
+                        :href="projectShiftTabHref"
                         class="break-words text-sm font-semibold hover:opacity-90 transition"
                     >{{ project?.name }}</a>
                     <span v-else>{{ project?.name }}</span>
@@ -297,11 +297,39 @@ const submitResponse = (comment) => {
 const canAccessProject = computed(() => {
     if (hasAdminRole()) return true
     if (can('view projects')) return true
+    // Backend-Flag (withExists auf project_user): Payloads schicken project.users
+    // aus Gewichtsgründen nicht mit — ohne das Flag wäre der Link für
+    // Teammitglieder ohne "view projects"-Permission nie sichtbar.
+    if (props.project?.auth_user_in_team) return true
     // Check if user is part of project team
     const currentUserId = usePage().props.auth.user.id
     if (props.project?.users?.some(u => u.id === currentUserId)) return true
     if (props.project?.managers?.some(m => m.id === currentUserId)) return true
     return false
+})
+
+// Datum der Schicht (YYYY-MM-DD) für den Tagesanker im Schichten-Tab; die
+// Payload-Formen unterscheiden sich je nach Quelle (Einsatzplan vs. Dashboard).
+const shiftDayYMD = computed(() => {
+    const shift = props.shift
+    if (shift?._day) return shift._day
+    if (shift?.formatted_dates?.frontend_start) return shift.formatted_dates.frontend_start
+    if (typeof shift?.start_date === 'string') return shift.start_date.slice(0, 10)
+    if (/^\d{2}\.\d{2}\.\d{4}$/.test(shift?.start_of_shift ?? '')) {
+        const [d, m, y] = shift.start_of_shift.split('.')
+        return `${y}-${m}-${d}`
+    }
+    return null
+})
+
+const projectShiftTabHref = computed(() => {
+    if (!props.project?.id) return '#'
+    return route('projects.tab', {
+        project: props.project.id,
+        projectTab: props.firstProjectShiftTabId,
+        // Query-Param: ShiftPlanDailyView scrollt im Projekt-Schichten-Tab zum Tag
+        ...(shiftDayYMD.value ? { goToDate: shiftDayYMD.value } : {}),
+    })
 })
 
 const formatDateDMYForModal = (dateStr) => {

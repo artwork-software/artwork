@@ -1199,12 +1199,55 @@ class EventController extends Controller
 
         $now = $carbonService->getNow();
         $today = $now->format('Y-m-d');
+
+        // Projektteam-Flag fürs Frontend-Gating des Projektlinks (SingleUserEventShift):
+        // project.users mitzuschicken wäre zu schwer, ein Exists-Flag reicht.
+        $withTeamFlag = static function ($query) use ($user): void {
+            $query->withExists([
+                'users as auth_user_in_team' => static function (Builder $builder) use ($user): void {
+                    $builder->whereKey($user->id);
+                },
+            ]);
+        };
+
         $shiftsOfDay = $user
             ->shifts()
             ->whereDate(
                 'shifts.start_date',
                 $today
-            )->with(['event','event.project','event.room', 'event.event_type', 'room', 'project'])->get();
+            )->with([
+                'event',
+                'event.project' => $withTeamFlag,
+                'event.room',
+                'event.event_type',
+                'room',
+                'project' => $withTeamFlag,
+                'craft',
+                'users',
+                'freelancer',
+                'serviceProvider',
+            ])->get();
+
+        // Vereinheitlichte workers-Liste wie im Einsatzplan (EventService::getDaysWith…):
+        // SingleUserEventShift liest shift.workers (inkl. type-Tag und Pivot) für
+        // Kolleg*innen, individuelle Zeiten und die Zu-/Absage-Buttons.
+        $shiftsOfDay->each(static function ($shift): void {
+            $tag = static fn ($workers, string $type) => ($workers ?? collect())
+                ->map(static function ($worker) use ($type) {
+                    $worker->setAttribute('type', $type);
+                    return $worker;
+                });
+
+            $shift->setAttribute(
+                'workers',
+                $tag($shift->users, 'user')
+                    ->concat($tag($shift->freelancer, 'freelancer'))
+                    ->concat($tag($shift->serviceProvider, 'service_provider'))
+                    ->values()
+                    ->all()
+            );
+            $shift->makeHidden(['users', 'freelancer', 'serviceProvider']);
+        });
 
         $individualTimesOfDay = $user
             ->individualTimes()
@@ -1290,7 +1333,9 @@ class EventController extends Controller
         }
         return inertia('Dashboard', [
             'tasks' => TaskDashboardResource::collection($tasks)->resolve(),
-            'users_day_services_of_day' => $user->dayServices()->wherePivot('date', $now)->get(),
+            // Pivot-Spalte ist DATE — Vergleich mit vollem Timestamp ($now) würde nur um
+            // Mitternacht matchen und die Tagesdienste sonst immer leer lassen.
+            'users_day_services_of_day' => $user->dayServices()->wherePivot('date', $today)->get(),
             'shiftsOfDay' => $shiftsOfDay,
             'individualTimesOfDay' => $individualTimesOfDay,
             'todayDate' => $todayDate,

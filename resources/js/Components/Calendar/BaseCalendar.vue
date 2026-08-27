@@ -647,7 +647,9 @@ const cellSeparatorStyle = computed(() => ({
 // Feiertag schlägt Wochenende; Feiertagston wird aus holiday.color abgeleitet.
 // Eintägige Feiertage färben deutlich, mehrtägige Zeiträume (Ferien) nur sehr
 // dezent — sonst wären ganze Wochen farblich überladen. Liegen beide auf einem
-// Tag, gewinnt der eintägige Feiertag.
+// Tag, gewinnt der eintägige Feiertag. Wochenenden innerhalb eines Ferien-
+// zeitraums bekommen dieselbe Farbe in kräftigerer Abstufung, damit der
+// Wochenrhythmus im Ferienband ablesbar bleibt.
 const dayTintColor = (day) => {
     if (!day || day.isExtraRow) return null;
     const holidays = day.holidays ?? [];
@@ -656,9 +658,14 @@ const dayTintColor = (day) => {
     );
     const coloredHoliday = singleDayHoliday ?? holidays.find((holiday) => holiday?.color);
     if (coloredHoliday) {
-        const alpha = singleDayHoliday
-            ? (settings.value.high_contrast ? '59' : '33')
-            : (settings.value.high_contrast ? '33' : '1A');
+        let alpha;
+        if (singleDayHoliday) {
+            alpha = settings.value.high_contrast ? '59' : '33';
+        } else if (day.isWeekend) {
+            alpha = settings.value.high_contrast ? '66' : '40';
+        } else {
+            alpha = settings.value.high_contrast ? '33' : '1A';
+        }
         return `${coloredHoliday.color}${alpha}`;
     }
     if (day.isWeekend) {

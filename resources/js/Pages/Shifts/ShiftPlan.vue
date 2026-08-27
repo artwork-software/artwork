@@ -1670,9 +1670,11 @@ const dayTintByKey = computed(() => {
         let dark: string | null = null
         let accent: string | null = null
         if (coloredHoliday) {
-            // Eintägige Feiertage deutlich, Ferienzeiträume dezent (wie im Kalender)
-            const lightAlpha = singleDayHoliday ? (highContrast ? '59' : '33') : (highContrast ? '33' : '1A')
-            const darkAlpha = singleDayHoliday ? '4D' : '26'
+            // Eintägige Feiertage deutlich, Ferienzeiträume dezent (wie im Kalender);
+            // Wochenenden im Ferienzeitraum als kräftigere Abstufung derselben Farbe
+            const periodAlphaLight = d.isWeekend ? (highContrast ? '66' : '40') : (highContrast ? '33' : '1A')
+            const lightAlpha = singleDayHoliday ? (highContrast ? '59' : '33') : periodAlphaLight
+            const darkAlpha = singleDayHoliday ? '4D' : (d.isWeekend ? '4D' : '26')
             light = `${coloredHoliday.color}${lightAlpha}`
             dark = `${coloredHoliday.color}${darkAlpha}`
             accent = coloredHoliday.color

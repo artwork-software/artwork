@@ -404,7 +404,7 @@ import ToolTipWithTextComponent from "@/Components/ToolTips/ToolTipWithTextCompo
 // Tageszeile synchron importieren: das Grid-Skelett muss beim ersten Render
 // stehen, sonst springt die Scroll-Höhe beim Nachladen der Zeilen-Chunks.
 import CalendarDayRow from "@/Components/Calendar/Elements/CalendarDayRow.vue";
-import {dayKey, deKeyToIso, itemsInCell} from "@/Components/Calendar/calendarCellItems.js";
+import {cellKey, dayKey, deKeyToIso, itemsInCell} from "@/Components/Calendar/calendarCellItems.js";
 
 const props = defineProps({
     rooms: { type: Object, required: true },
@@ -535,8 +535,6 @@ const eventTypes = inject("eventTypes");
 const fontSizeCalc = computed(() => `max(calc(${zoom_factor.value} * 0.875rem), 10px)`);
 const lineHeightCalc = computed(() => `max(calc(${zoom_factor.value} * 1.25rem), 1.3)`);
 
-type DayLike = { withoutFormat: string };
-type RoomLike = { id?: number|string; roomId?: number|string };
 
 const monthKeyFromDay = (day) => (day.withoutFormat || "").slice(0, 7);
 function deDateToIso(de: string): string | null {
@@ -558,7 +556,6 @@ function ensureCalendarShape() {
     }
 }
 
-const cellKey = (day, room) => `${day.withoutFormat}:${(room.roomId ?? room.id)}`;
 
 // ---------- Zeilen-Sichtbarkeit (Mount-only mit LRU-Obergrenze) ----------
 // Ein IntersectionObserver auf den 365 Zeilen-Wurzeln mountet Zell-Inhalte
@@ -664,7 +661,9 @@ function initRowVisibilityObservers() {
 
 // Von CalendarDayRow beim Mount/Unmount aufgerufen (stabile Funktions-Props):
 // registriert die Zeilen-Wurzel für Sichtbarkeits- UND Monatsfokus-Observer.
-const registerRowElement = (el: HTMLElement, day: DayLike) => {
+// Die Observer lesen Tag/Monat aus den data-Attributen des Zeilen-Elements —
+// ein day-Parameter wäre nur Schein-Keying.
+const registerRowElement = (el: HTMLElement) => {
     initRowVisibilityObservers();
     initMonthObserver();
     rowNearObserver!.observe(el);
@@ -904,10 +903,25 @@ async function loadMonth(key: string, epoch: number) {
         failedMonths.value.set(key, (failedMonths.value.get(key) ?? 0) + 1);
         console.error('Fehler beim Laden Monat', key, err);
     } finally {
-        loadingMonths.value.delete(key);
+        // Ownership-Guard: Wurde dieser Request inzwischen ersetzt (z.B. durch einen
+        // Refetch nach Schicht-Edit), darf sein finally die Buchhaltung des
+        // Nachfolgers nicht wegräumen.
         if (monthControllers.get(key) === controller) {
             monthControllers.delete(key);
+            loadingMonths.value.delete(key);
         }
+    }
+}
+
+// Laufenden Request eines Monats verwerfen, damit ein Refetch nicht am
+// loadingMonths-Guard in loadMonth abprallt (sonst re-markiert die alte,
+// vor dem Edit gestartete Antwort den Monat als geladen → Edit unsichtbar).
+function abortInflightMonth(key: string) {
+    const inflight = monthControllers.get(key);
+    if (inflight) {
+        inflight.abort();
+        monthControllers.delete(key);
+        loadingMonths.value.delete(key);
     }
 }
 
@@ -1193,8 +1207,14 @@ const hasSelectedRoomRequests = computed(() => selectedRoomRequestIds.value.leng
 // betroffenen Terminkacheln lesen considerOnMultiEdit und re-rendern. Das
 // frühere Neu-Aufbauen des kompletten Räume-Arrays per map+spread würde die
 // Zeilen-Stabilität von CalendarDayRow zunichtemachen (Voll-Re-Render pro Klick).
-function setEventConsiderFlag(eventId, considerOnMultiEdit) {
-    for (const room of newCalendarData.value) {
+function setEventConsiderFlag(eventId, considerOnMultiEdit, eventRoomId = null) {
+    // Bekannter Raum → nur dessen Slots scannen; der Voll-Scan über alle Räume ×
+    // alle gecachten Monats-Slots (36-Monats-Cache!) bleibt nur als Fallback,
+    // wenn kein room_id mitkommt.
+    const rooms = eventRoomId != null
+        ? newCalendarData.value.filter((room) => String(room.roomId ?? room.id) === String(eventRoomId))
+        : newCalendarData.value;
+    for (const room of rooms) {
         for (const slot of Object.values(room.content ?? {})) {
             for (const evt of (slot.events ?? [])) {
                 if (evt.id === eventId && evt.considerOnMultiEdit !== considerOnMultiEdit) {
@@ -1215,20 +1235,26 @@ function clearAllConsiderFlags() {
     }
 }
 
+// Termin-Auswahl zurücksetzen, Multi-Edit-Modus bleibt aktiv (ein Ort für alle
+// Modal-Close-/Success-Handler — Auswahl-Reset immer komplett, nie halb).
+function clearEventSelection() {
+    editEvents.value = [];
+    clearAllConsiderFlags();
+}
+
 function handleMultiEditEventCheckboxChange(eventId, considerOnMultiEdit, eventRoomId) {
     if (considerOnMultiEdit) {
         if (!editEvents.value.includes(eventId)) editEvents.value.push(eventId);
     } else {
         editEvents.value = editEvents.value.filter(id => id !== eventId);
     }
-    setEventConsiderFlag(eventId, considerOnMultiEdit);
+    setEventConsiderFlag(eventId, considerOnMultiEdit, eventRoomId ?? null);
 }
 function toggleMultiEdit(value) {
     multiEdit.value = value;
     if (!value) clearCellSelection();
     if (!value && editEvents.value.length) {
-        clearAllConsiderFlags();
-        editEvents.value = [];
+        clearEventSelection();
     }
 }
 // ---------- Multi-Edit: Zellen-Auswahl (Tag×Raum) ----------
@@ -1264,6 +1290,7 @@ async function refetchMonthsForCells(cellList) {
         cellList.map((cell) => (cell.day ?? "").slice(0, 7)).filter(Boolean)
     );
     for (const key of keys) {
+        abortInflightMonth(key);
         loadedMonths.value.delete(key);
         failedMonths.value.delete(key);
         await loadMonth(key, ++currentEpoch);
@@ -1309,10 +1336,9 @@ const closeMultiCellMoveModal = async (moved) => {
 };
 
 const cancelMultiEditDuplicateSelection = () => {
-    // Clear event and cell selections but keep multi-edit mode active
+    // Zell- und Termin-Auswahl leeren, Multi-Edit-Modus bleibt aktiv
     clearCellSelection();
-    editEvents.value = [];
-    clearAllConsiderFlags();
+    clearEventSelection();
 };
 
 const openDeclineEventModal = (event) => { declineEvent.value = event; showDeclineEventModal.value = true; };
@@ -1360,17 +1386,13 @@ const handleFullscreenChange = () => {
 const closeMultiEditModal = (closedOnPurpose) => {
     showMultiEditModal.value = false;
     if (closedOnPurpose) {
-        // Clear event selections but keep multi-edit mode active
-        editEvents.value = [];
-        clearAllConsiderFlags();
+        clearEventSelection();
     }
 };
 const closeMultiDuplicateModal = (closedOnPurpose) => {
     showMultiDuplicateModal.value = false;
     if (closedOnPurpose) {
-        // Clear event selections but keep multi-edit mode active
-        editEvents.value = [];
-        clearAllConsiderFlags();
+        clearEventSelection();
     }
 };
 const closeAddSubEventModal = () => { showAddSubEventModal.value = false; eventToEdit.value = null; subEventToEdit.value = null; };
@@ -1399,18 +1421,14 @@ const deleteEvent = () => {
 const closeDeleteSelectedEventsModal = (closedOnPurpose) => {
     openDeleteSelectedEventsModal.value = false;
     if (closedOnPurpose) {
-        // Clear event selections but keep multi-edit mode active
-        editEvents.value = [];
-        clearAllConsiderFlags();
+        clearEventSelection();
     }
 };
 const deleteSelectedEvents = () => {
     axios.post(route("multi-edit.delete"), { events: editEvents.value })
         .finally(() => {
             openDeleteSelectedEventsModal.value = false;
-            // Clear event selections but keep multi-edit mode active
-            editEvents.value = [];
-            clearAllConsiderFlags();
+            clearEventSelection();
         });
 };
 const jumpToDayOfMonth = async (day) => {
@@ -1488,18 +1506,14 @@ const jumpToDayOfMonth = async (day) => {
 const approveRequests = () => {
     router.post(route("event-verifications.approved-by-events"), { events: editEvents.value }, {
         preserveScroll: true, preserveState: true, onSuccess: () => {
-            // Clear event selections but keep multi-edit mode active
-            editEvents.value = [];
-            clearAllConsiderFlags();
+            clearEventSelection();
         }
     });
 };
 const requestVerification = () => {
     router.post(route("events-verifications.request-verification"), { events: editEvents.value }, {
         preserveScroll: true, preserveState: true, onSuccess: () => {
-            // Clear event selections but keep multi-edit mode active
-            editEvents.value = [];
-            clearAllConsiderFlags();
+            clearEventSelection();
         }
     });
 };
@@ -1530,6 +1544,7 @@ const openAddSubEventModal = (mainEvent, mode, desiredEvent) => {
 async function refetchMonthForDay(day: any) {
     const key = monthKeyFromDay(day);
     if (!key) return;
+    abortInflightMonth(key);
     loadedMonths.value.delete(key);
     failedMonths.value.delete(key);
     await loadMonth(key, ++currentEpoch);

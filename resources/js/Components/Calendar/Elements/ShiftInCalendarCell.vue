@@ -140,7 +140,7 @@
 </template>
 
 <script setup>
-import {computed, defineAsyncComponent, ref} from "vue";
+import {computed, defineAsyncComponent, inject, ref} from "vue";
 import { useCalendarZoom } from "@/Composeables/useCalendarZoom.js";
 import { useTranslation } from "@/Composeables/Translation.js";
 import {Link, usePage} from "@inertiajs/vue3";
@@ -185,13 +185,14 @@ const contentZoom = computed(() => (zoomFactor.value > 1 ? zoomFactor.value : 1)
 const isCompactView = computed(() => isCompact.value && !props.isInDailyView);
 
 // ----- Kompaktkachel: Summen + title-Tooltip (bewusst ohne Komponenten/Direktiven) -----
-const compactDemandedTotal = computed(() => {
-    const perQualification = (props.shift.shifts_qualifications ?? [])
-        .reduce((sum, sq) => sum + (Number(sq?.value) || 0), 0);
-    const global = demandedGlobalQualifications.value
-        .reduce((sum, gq) => sum + (Number(getGlobalQuantity(gq)) || 0), 0);
-    return perQualification + global;
-});
+// Nenner = NUR shifts_qualifications-Summe (Konvention von Shift::getMaxUsersAttribute):
+// globale Qualifikationen sind Querschnittsanforderungen, die von bereits gezählten
+// Personen erfüllt werden — sie in den Bedarf zu addieren ließe volle Schichten
+// dauerhaft unterbesetzt aussehen.
+const compactDemandedTotal = computed(() =>
+    (props.shift.shifts_qualifications ?? [])
+        .reduce((sum, sq) => sum + (Number(sq?.value) || 0), 0)
+);
 const compactAssignedTotal = computed(() =>
     Number(props.shift.assignedWorkersTotal ?? (props.shift.workers?.length ?? 0))
 );
@@ -203,7 +204,12 @@ const compactTitle = computed(() => {
     if (props.shift.description) parts.push(props.shift.description);
     return parts.filter(Boolean).join(' · ');
 });
+// Im Multi-Edit übernimmt die Zellen-Auswahl den Klick (Wrapper in CalendarDayRow
+// reicht ihn dann durch) — die Pille darf dabei kein Schicht-Modal öffnen.
+const injectedMultiEdit = inject('calendarMultiEdit', null);
+
 const onCompactClick = () => {
+    if (injectedMultiEdit?.value) return;
     if (!canPlanShifts.value || isFollowUpDay.value) return;
     showAddShiftModal.value = true;
 };

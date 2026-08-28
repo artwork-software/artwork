@@ -10,6 +10,11 @@ const toGermanDate = (iso) => {
 
 export const dayKey = (day) => day.fullDay ?? toGermanDate(day.withoutFormat);
 
+// Schlüssel einer Tag×Raum-Zelle für die Multi-Edit-Zellenauswahl.
+// Produzent (BaseCalendar toggleCellSelection) und Konsument (CalendarDayRow
+// isCellSelected) MÜSSEN denselben Schlüssel verwenden — deshalb hier zentral.
+export const cellKey = (day, room) => `${day.withoutFormat}:${(room.roomId ?? room.id)}`;
+
 // "dd.mm.yyyy" → "yyyy-mm-dd"
 export const deKeyToIso = (deKey) => {
     const parts = String(deKey ?? '').split('.');

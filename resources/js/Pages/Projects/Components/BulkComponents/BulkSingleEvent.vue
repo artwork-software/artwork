@@ -422,6 +422,7 @@ import ConfirmationComponent from "@/Layouts/Components/ConfirmationComponent.vu
 import {computed, defineAsyncComponent, inject, nextTick, onMounted, ref, watch} from "vue";
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
 import AddEditEventNoteModal from "@/Pages/Projects/Components/BulkComponents/AddEditEventNoteModal.vue";
+import {getBulkColumnSize as getColumnSize} from "@/Pages/Projects/Components/BulkComponents/bulkColumnSizing.js";
 import BaseMenu from "@/Components/Menu/BaseMenu.vue";
 import BaseMenuItem from "@/Components/Menu/BaseMenuItem.vue";
 import {Float} from "@headlessui-float/vue";
@@ -630,16 +631,8 @@ const diffDaysISO = (fromISO, toISO) => {
     return Math.round(ms / (1000 * 60 * 60 * 24));
 };
 
-// Konfigurierte Breite = Mindestbreite; Restplatz wächst proportional dazu mit
-// (flex-grow = px). Muss identisch zur Berechnung in BulkHeader bleiben, sonst
-// laufen Header- und Zeilenspalten auseinander.
-const getColumnSize = (column) => {
-    const px = parseInt(usePage().props.auth.user.bulk_column_size[column]);
-    return {
-        flex: `${px} 0 ${px}px`,
-        minWidth: px + 'px'
-    };
-};
+// Spalten-Maße kommen aus bulkColumnSizing.js (geteilt mit BulkHeader —
+// Header und Zeilen sind getrennte Flex-Container und müssen identisch rechnen).
 
 const createCopyByEventWithData = (event) => emit('createCopyByEventWithData', event);
 const openDeleteEventConfirmModal = () => showDeleteEventConfirmModal.value = true;

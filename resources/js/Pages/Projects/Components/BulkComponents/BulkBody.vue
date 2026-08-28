@@ -149,7 +149,7 @@
                      Kopf um genau diesen Betrag nach unten, damit er sichtbar bleibt. -->
                 <BulkHeader v-model="timeArray" v-model:showEndDate="showEndDate" :is-in-modal="isInModal"
                             :multi-edit="multiEdit"
-                            :style="!isInModal ? { top: bulkHeaderStickyTop + 'px' } : undefined"
+                            :style="!isInModal ? { top: 'var(--bulk-header-sticky-top, 0px)' } : undefined"
                             :show-actions-spacer="canEditComponent && hasCreateEventsPermission"/>
                 <!-- Legend row-->
                 <div
@@ -538,17 +538,20 @@ const updateBulkFunctionBarHeight = () => {
 
 // Sticky-Offset des Spaltenkopfs: wie weit liegt die Container-Oberkante über der
 // Unterkante der Function-Bar (nur bei gescrolltem Dokument > 0)?
-const bulkHeaderStickyTop = ref(0);
+// Bewusst als CSS-Variable direkt am Container statt als reaktiver Ref: der Wert
+// ändert sich pro Scroll-Frame, und ein Ref im Template würde bei jedem Frame die
+// komplette BulkBody (gesamte Termin-Tabelle) re-rendern.
 const updateBulkHeaderStickyTop = () => {
+    const container = bulkScrollContainer.value;
+    if (!container) return;
     if (props.isInModal) {
-        bulkHeaderStickyTop.value = 0;
+        container.style.setProperty('--bulk-header-sticky-top', '0px');
         return;
     }
     const bar = bulkFunctionBarEl.value;
-    const container = bulkScrollContainer.value;
-    if (!bar || !container) return;
+    if (!bar) return;
     const offset = Math.round(bar.getBoundingClientRect().bottom - container.getBoundingClientRect().top);
-    bulkHeaderStickyTop.value = Math.max(0, offset);
+    container.style.setProperty('--bulk-header-sticky-top', Math.max(0, offset) + 'px');
 };
 
 const copyTypes = ref([

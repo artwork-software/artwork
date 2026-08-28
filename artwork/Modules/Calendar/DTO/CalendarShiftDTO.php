@@ -83,6 +83,17 @@ class CalendarShiftDTO extends Data
         $globalAssignedCounts = [];
         $total = 0;
 
+        // Nur an der Schicht geforderte globale Qualifikationen zählen — alles andere
+        // wäre totes Payload und würde Konsumenten Phantom-Zuweisungen vorgaukeln.
+        $demandedGlobalQualificationIds = [];
+        if ($shift->relationLoaded('globalQualifications')) {
+            foreach ($shift->globalQualifications as $globalQualification) {
+                if (($globalQualification->pivot->quantity ?? 0) > 0) {
+                    $demandedGlobalQualificationIds[$globalQualification->id] = true;
+                }
+            }
+        }
+
         foreach (['users', 'freelancer', 'serviceProvider'] as $relation) {
             if (!$shift->relationLoaded($relation)) {
                 continue;
@@ -102,6 +113,9 @@ class CalendarShiftDTO extends Data
 
                 if ($worker->relationLoaded('globalQualifications')) {
                     foreach ($worker->globalQualifications as $globalQualification) {
+                        if (!isset($demandedGlobalQualificationIds[$globalQualification->id])) {
+                            continue;
+                        }
                         $globalAssignedCounts[$globalQualification->id] =
                             ($globalAssignedCounts[$globalQualification->id] ?? 0) + 1;
                     }

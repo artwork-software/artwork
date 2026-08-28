@@ -83,7 +83,7 @@
                                         <div
                                             v-if="item.type === 'shift'"
                                             class="py-0.5"
-                                            @click.stop
+                                            @click="onShiftItemClick"
                                         >
                                             <ShiftInCalendarCell
                                                 :shift="item.data"
@@ -163,7 +163,7 @@ import { IconCirclePlus } from "@tabler/icons-vue";
 import { useCalendarZoom } from "@/Composeables/useCalendarZoom.js";
 import { useTranslation } from "@/Composeables/Translation.js";
 import { formatMonthLabel } from "@/Composeables/calendarDateUtils.js";
-import { dayKey, itemsInCell } from "@/Components/Calendar/calendarCellItems.js";
+import { cellKey, dayKey, itemsInCell } from "@/Components/Calendar/calendarCellItems.js";
 import CalendarPlaceholder from "@/Components/Calendar/Elements/CalendarPlaceholder.vue";
 
 // Async-Wrapper auf Modul-Ebene: eine Definition für alle 365 Zeilen-Instanzen,
@@ -301,8 +301,14 @@ const cellItems = computed(() => {
     return props.calendarRooms.map((room) => itemsInCell(props.day, room));
 });
 
-const isCellSelected = (room) =>
-    !!props.selectedCells?.has(`${props.day.withoutFormat}:${(room.roomId ?? room.id)}`);
+const isCellSelected = (room) => !!props.selectedCells?.has(cellKey(props.day, room));
+
+// Schichtpillen-Wrapper: außerhalb des Multi-Edit den Klick nicht zur Zelle
+// durchreichen (dort würde er einen neuen Termin öffnen); im Multi-Edit
+// übernimmt die Zellen-Auswahl — die Pille selbst ignoriert den Klick dann.
+const onShiftItemClick = (event) => {
+    if (!props.multiEdit) event.stopPropagation();
+};
 
 // Multi-Edit: Klick auf einen Termin toggelt seine Auswahl
 const onEventClick = (evt, e) => {
@@ -315,10 +321,10 @@ const onEventClick = (evt, e) => {
 // Observer-Registrierung (Monatsfokus + Zeilen-Sichtbarkeit) in BaseCalendar
 const rootEl = ref(null);
 onMounted(() => {
-    if (rootEl.value && props.registerRowEl) props.registerRowEl(rootEl.value, props.day);
+    if (rootEl.value && props.registerRowEl) props.registerRowEl(rootEl.value);
 });
 onBeforeUnmount(() => {
-    if (rootEl.value && props.unregisterRowEl) props.unregisterRowEl(rootEl.value, props.day);
+    if (rootEl.value && props.unregisterRowEl) props.unregisterRowEl(rootEl.value);
 });
 </script>
 

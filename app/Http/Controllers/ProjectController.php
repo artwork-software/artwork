@@ -99,6 +99,7 @@ use Artwork\Modules\Project\Http\Requests\UpdateProjectRequest;
 use Artwork\Modules\Project\Http\Resources\ProjectEditResource;
 use Artwork\Modules\Project\Http\Resources\ProjectIndexResource;
 use Artwork\Modules\Project\Models\Project;
+use Artwork\Modules\Project\Policies\ProjectPolicy;
 use Artwork\Modules\Project\Models\ProjectCreateSettings;
 use Artwork\Modules\Project\Models\ProjectRole;
 use Artwork\Modules\Project\Models\ProjectState;
@@ -331,13 +332,9 @@ class ProjectController extends Controller
         // Zutritt (Projektseite öffnen): globales Recht ODER Projektteam (User/Abteilung).
         // Ein Sammel-Query statt ProjectPolicy::view pro Zeile — die Übersicht bleibt für
         // alle sichtbar, nur der Einstieg wird im Frontend über dieses Flag gegated.
+        // Rechteliste kommt aus der Policy (eine Quelle); Admins passieren via Gate::before.
         $authUser = Auth::user();
-        $canEnterAll = $authUser->hasRole(RoleEnum::ARTWORK_ADMIN->value) ||
-            $authUser->canAny([
-                PermissionEnum::PROJECT_VIEW->value,
-                PermissionEnum::WRITE_PROJECTS->value,
-                PermissionEnum::PROJECT_MANAGEMENT->value,
-            ]);
+        $canEnterAll = $authUser->canAny(ProjectPolicy::GLOBAL_ENTER_PERMISSIONS);
         $enterableProjectIds = $canEnterAll ? [] : Project::query()
             ->whereIn('id', $projects->pluck('id'))
             ->where(function (Builder $query) use ($authUser): void {
@@ -2393,6 +2390,10 @@ class ProjectController extends Controller
 
     public function updateProjectState(Request $request, Project $project): void
     {
+        // Spiegelt das Frontend-Gate (ProjectStateComponent: canEditComponent UND Schreibzugriff);
+        // der interne Aufruf aus update() hat dieselbe Policy bereits passiert.
+        $this->authorize('update', $project);
+
         // Payloads ohne state-Key (z.B. Team-/Schicht-Modals via projects.update) lassen den Status unangetastet
         if (!$request->exists('state')) {
             return;
@@ -4611,9 +4612,33 @@ class ProjectController extends Controller
         $project->update(['key_visual_path' => null]);
     }
 
+    /**
+     * Bearbeitungsregel für Inhalte, deren Edit-UI über die Komponenten-Einstellung
+     * (canEditComponent) gegated ist — nicht über das Projekt-Schreibrecht. Spiegel von
+     * ProjectComponentValueController::update: Projekt-Zutritt + ("write projects" ODER
+     * Komponenten-Einstellung erlaubt es). Ohne Komponenten-Datensatz greift die
+     * Projekt-Bearbeitungsregel als konservativer Fallback.
+     */
+    private function authorizeProjectComponentEdit(Project $project, ProjectTabComponentEnum $componentType): void
+    {
+        /** @var User $user */
+        $user = Auth::user();
+        abort_unless($user->can('view', $project), 403);
+
+        if ($user->can(PermissionEnum::WRITE_PROJECTS->value)) {
+            return;
+        }
+
+        $component = Component::query()->where('type', $componentType->value)->first();
+        abort_unless(
+            $component !== null ? $component->isEditableBy($user) : $user->can('update', $project),
+            403
+        );
+    }
+
     public function updateShiftDescription(Request $request, Project $project): void
     {
-        $this->authorize('update', $project);
+        $this->authorizeProjectComponentEdit($project, ProjectTabComponentEnum::GENERAL_SHIFT_INFORMATION);
 
         $project->shift_description = $request->shiftDescription;
         $project->save();
@@ -4621,14 +4646,14 @@ class ProjectController extends Controller
 
     public function updateShiftContacts(Request $request, Project $project): void
     {
-        $this->authorize('update', $project);
+        $this->authorizeProjectComponentEdit($project, ProjectTabComponentEnum::SHIFT_CONTACT_PERSONS);
 
         $project->shift_contact()->sync(collect($request->contactIds));
     }
 
     public function updateShiftRelevantEventTypes(Request $request, Project $project): void
     {
-        $this->authorize('update', $project);
+        $this->authorizeProjectComponentEdit($project, ProjectTabComponentEnum::RELEVANT_DATES_FOR_SHIFT_PLANNING);
 
         $project->shiftRelevantEventTypes()->sync(collect($request->shiftRelevantEventTypeIds));
     }

@@ -125,6 +125,7 @@ import ToolTipDefault from "@/Components/ToolTips/ToolTipDefault.vue";
 import {usePage} from "@inertiajs/vue3";
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
 import {IconExclamationCircle} from "@tabler/icons-vue";
+import {getBulkColumnSize as getColumnSize} from "@/Pages/Projects/Components/BulkComponents/bulkColumnSizing.js";
 
 // Emit Event
 const emit = defineEmits(['update:modelValue', 'update:showEndDate']);
@@ -157,15 +158,8 @@ const props = defineProps({
     }
 });
 
-// Konfigurierte Breite = Mindestbreite; Restplatz wächst proportional dazu mit
-// (flex-grow = px), damit die vom User gewählten Proportionen erhalten bleiben.
-const getColumnSize = (column) => {
-    const px = parseInt(usePage().props.auth.user.bulk_column_size[column]);
-    return {
-        flex: `${px} 0 ${px}px`,
-        minWidth: px + 'px'
-    }
-}
+// Spalten-Maße kommen aus bulkColumnSizing.js (geteilt mit BulkSingleEvent —
+// Header und Zeilen sind getrennte Flex-Container und müssen identisch rechnen).
 
 // Lokaler Wert, um den Zustand des Switches zu halten
 const localValue = ref(props.modelValue);

@@ -21,47 +21,22 @@
         />
         <div class="mb-10 rounded-lg bg-surface border border-border-subtle w-full shadow-raised p-5">
 
-            <div class="my-8 flow-root">
-                <div class="-mx-4 -my-2 sm:-mx-6 lg:-mx-8">
-                    <div class="inline-block min-w-full py-2 align-middle sm:px-6 lg:px-8">
-                        <div class="table-container ">
-                            <div class="overflow-x-auto w-full">
-                                <div class="inline-flex w-full max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg xl:max-w-xl 2xl:max-w-full">
-                                    <table class="min-w-0 w-full divide-y divide-border flex-grow overflow-hidden">
-                                        <thead>
-                                        <tr class="divide-x divide-border-subtle">
-                                            <th scope="col" class="py-3.5 pr-4 pl-4 text-left text-sm font-semibold text-text sm:pl-0">Name</th>
-                                            <th scope="col" class="px-4 py-3.5 text-left text-sm font-semibold text-text">{{ $t('Sub-Categories') }}</th>
-                                            <th scope="col" class="px-4 py-3.5 text-left text-sm font-semibold text-text">{{ $t('Properties') }}</th>
-                                        </tr>
-                                        </thead>
-                                        <tbody class="divide-y divide-border-subtle bg-white">
-                                        <tr v-for="category in categories.data" :key="category?.id" class="divide-x divide-border-subtle">
-                                            <SingleCategoryInSettings :category="category" :properties="properties" :rooms="rooms" :manufacturers="manufacturers" :show-actions="false" />
-                                        </tr>
-                                        </tbody>
-                                    </table>
-
-                                    <!-- Fixed Actions Column -->
-                                    <div class="fixed-actions-column">
-                                        <table class="h-full divide-y divide-border">
-                                            <thead>
-                                            <tr>
-                                                <th scope="col" class="py-3.5 pr-4 pl-4 text-left text-sm font-semibold text-text sm:pr-0 bg-white">{{ $t('Actions') }}</th>
-                                            </tr>
-                                            </thead>
-                                            <tbody class="divide-y divide-border-subtle bg-white">
-                                            <tr v-for="category in categories.data" :key="category?.id">
-                                                <SingleCategoryInSettings :category="category" :properties="properties" :rooms="rooms" :manufacturers="manufacturers" :show-only-actions="true" />
-                                            </tr>
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+            <div class="my-8 overflow-x-auto">
+                <table class="min-w-full divide-y divide-border">
+                    <thead>
+                    <tr class="divide-x divide-border-subtle">
+                        <th scope="col" class="py-3.5 pr-4 pl-4 text-left text-sm font-semibold text-text sm:pl-0">Name</th>
+                        <th scope="col" class="px-4 py-3.5 text-left text-sm font-semibold text-text">{{ $t('Sub-Categories') }}</th>
+                        <th scope="col" class="px-4 py-3.5 text-left text-sm font-semibold text-text">{{ $t('Properties') }}</th>
+                        <th scope="col" class="py-3.5 pr-4 pl-4 text-left text-sm font-semibold text-text sm:pr-0 sticky right-0 bg-surface">{{ $t('Actions') }}</th>
+                    </tr>
+                    </thead>
+                    <tbody class="divide-y divide-border-subtle bg-white">
+                    <tr v-for="category in categories.data" :key="category?.id" class="divide-x divide-border-subtle">
+                        <SingleCategoryInSettings :category="category" :properties="properties" :rooms="rooms" :manufacturers="manufacturers" />
+                    </tr>
+                    </tbody>
+                </table>
             </div>
 
             <BasePaginator
@@ -117,31 +92,4 @@ const showAddEditCategoryModal = ref(false)
 </script>
 
 <style scoped>
-.table-container {
-    position: relative;
-    overflow: hidden;
-    width: 100%;
-}
-
-/* Add a shadow to the fixed actions column */
-.fixed-actions-column {
-    position: sticky;
-    top: 0;
-    right: 0;
-    height: 100%;
-    background-color: white;
-    box-shadow: -4px 0 6px -2px rgba(0, 0, 0, 0.05);
-    border-left: 1px solid #e5e7eb;
-    z-index: 10;
-    width: 100px;
-    min-width: 100px;
-    flex-shrink: 0; /* Prevent the column from shrinking */
-    margin-left: auto; /* Push to the right edge in flex container */
-}
-
-/* Ensure the actions column has a consistent width */
-.actions-column {
-    width: 100px;
-    min-width: 100px;
-}
 </style>

@@ -1,6 +1,6 @@
 <template>
     <AppLayout :title="$t('My tasks')">
-        <div class="artwork-container">
+        <div class="artwork-container-fluid">
 
             <ToolbarHeader
                 band

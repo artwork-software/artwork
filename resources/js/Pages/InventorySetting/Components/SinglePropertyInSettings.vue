@@ -20,7 +20,7 @@
 
     <!-- Actions column -->
     <template v-if="showActions || showOnlyActions">
-        <td class="py-5 pr-4 pl-4 text-sm whitespace-nowrap text-text-subtle sm:pr-0 actions-column">
+        <td class="py-5 pr-4 pl-4 text-sm whitespace-nowrap text-text-subtle sm:pr-0 actions-column sticky right-0">
             <div class="flex items-center gap-x-4">
                 <button type="button" class="text-accent-600 hover:text-accent-700">
                     <component :is="IconEdit" class="h-5 w-5" aria-hidden="true" @click="showAddEditPropertyModal = true" />

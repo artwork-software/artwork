@@ -92,7 +92,10 @@
                     classes-button="ui-button"
                 />
 
-                <BaseMenu show-sort-icon dots-size="size-5" menu-width="w-72" class="!w-fit ui-button">
+                <!-- classes-button="flex …": der Tooltip-Wrapper in ToolTipComponent ist sonst ein
+                     Block-div mit Inline-Baseline-Layout → ~5px Leerraum unterm Icon, Icon sitzt
+                     im ui-button-Rahmen zu hoch. -->
+                <BaseMenu show-sort-icon dots-size="size-5" menu-width="w-72" class="!w-fit ui-button" classes-button="flex items-center">
                     <MenuItem v-slot="{ active }">
                         <div @click="updateUserSortId(1)"
                              :class="[active ? 'bg-text-inverse/10 text-accent-700' : 'text-text-subtle', 'group flex items-center justify-between px-4 py-2 text-sm subpixel-antialiased cursor-pointer']">
@@ -136,10 +139,18 @@
              :class="isInModal ? '' : 'overflow-y-auto'"
              :style="isInModal ? '' : 'max-height: calc(100vh - var(--project-header-height, 130px) - var(--bulk-function-bar-height, 60px) - 32px)'"
              @scroll="onMainScroll">
-            <div class="w-fit mx-auto">
-                <!-- Function bar (sticky unter ProjectHeader) -->
+            <!-- w-full + min-w-max: füllt den Viewport, wenn Platz da ist (Spalten wachsen
+                 per flex-grow mit), fällt bei Platzmangel auf Inhaltsbreite + horizontalen
+                 Scroll zurück. -->
+            <div class="w-full min-w-max mx-auto">
+                <!-- Spaltenkopf: sticky nur innerhalb dieses Containers. Scrollt zusätzlich das
+                     Dokument (Function-Bar klebt dann unterm ProjectHeader), wandert die
+                     Container-Oberkante hinter die Function-Bar — der top-Offset schiebt den
+                     Kopf um genau diesen Betrag nach unten, damit er sichtbar bleibt. -->
                 <BulkHeader v-model="timeArray" v-model:showEndDate="showEndDate" :is-in-modal="isInModal"
-                            :multi-edit="multiEdit"/>
+                            :multi-edit="multiEdit"
+                            :style="!isInModal ? { top: bulkHeaderStickyTop + 'px' } : undefined"
+                            :show-actions-spacer="canEditComponent && hasCreateEventsPermission"/>
                 <!-- Legend row-->
                 <div
                     v-if="!isInModal"
@@ -522,6 +533,22 @@ const updateBulkFunctionBarHeight = () => {
     } catch {
         // ignore
     }
+    updateBulkHeaderStickyTop();
+};
+
+// Sticky-Offset des Spaltenkopfs: wie weit liegt die Container-Oberkante über der
+// Unterkante der Function-Bar (nur bei gescrolltem Dokument > 0)?
+const bulkHeaderStickyTop = ref(0);
+const updateBulkHeaderStickyTop = () => {
+    if (props.isInModal) {
+        bulkHeaderStickyTop.value = 0;
+        return;
+    }
+    const bar = bulkFunctionBarEl.value;
+    const container = bulkScrollContainer.value;
+    if (!bar || !container) return;
+    const offset = Math.round(bar.getBoundingClientRect().bottom - container.getBoundingClientRect().top);
+    bulkHeaderStickyTop.value = Math.max(0, offset);
 };
 
 const copyTypes = ref([
@@ -1415,7 +1442,10 @@ onMounted(async () => {
     isLoading.value = false;
 
     // Initial sticky scrollbar check
-    requestAnimationFrame(updateStickyScrollbar);
+    requestAnimationFrame(() => {
+        updateStickyScrollbar();
+        updateBulkHeaderStickyTop();
+    });
 });
 
 onBeforeUnmount(() => {
@@ -1498,7 +1528,10 @@ const updateStickyScrollbar = () => {
 let stickyScrollRAF = null;
 const onScrollOrResize = () => {
     if (stickyScrollRAF) cancelAnimationFrame(stickyScrollRAF);
-    stickyScrollRAF = requestAnimationFrame(updateStickyScrollbar);
+    stickyScrollRAF = requestAnimationFrame(() => {
+        updateStickyScrollbar();
+        updateBulkHeaderStickyTop();
+    });
 };
 </script>
 

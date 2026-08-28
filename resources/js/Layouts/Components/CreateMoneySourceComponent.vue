@@ -1,433 +1,274 @@
 <template>
-    <ArtworkBaseModal @close="closeModal" v-if="true" :title="$t('New source of funding')"
+    <ArtworkBaseModal @close="closeModal" :title="$t('New source of funding')"
                       :description="$t('Create a funding source and link projects and items to get an overview of your budget.')">
-            <div class="mx-4">
-                <div>
-                    <div class="mb-8">
-                        <div class="hidden sm:block">
-                            <div class="border-border-subtle">
-                                <nav class="-mb-px uppercase text-xs tracking-wide pt-4 flex space-x-8"
-                                     aria-label="Tabs">
-                                    <a @click="changeTab(tab)" v-for="tab in tabs" href="#" :key="tab.name"
-                                       :class="[tab.current ? 'border-accent-600 text-accent-600' : 'border-transparent text-text-subtle hover:text-text-muted hover:border-border', 'whitespace-nowrap py-4 px-1 border-b-2 font-semibold']"
-                                       :aria-current="tab.current ? 'page' : undefined">
-                                        {{ tab.name }}
-                                    </a>
-                                </nav>
-                            </div>
-                        </div>
-                    </div>
-                    <!-- Form when Single Source -->
-                    <div v-if="isSingleSourceTab">
-                        <div class="pb-2">
-                            <div class="mb-2">
-                                <BaseInput
-                                       v-model="this.createSingleSourceForm.name"
-                                       id="sourceName"
-                                       label="Title*"
-                                />
-                            </div>
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                <div>
+        <BaseTabs :tabs="tabs" navigation-mode="events" :use-translation="false" class="!mt-0" @tab-select="changeTab"/>
+        <!-- Form when Single Source -->
+        <div v-if="isSingleSourceTab" class="space-y-4">
+            <BaseInput
+                v-model="createSingleSourceForm.name"
+                id="sourceName"
+                label="Title*"
+            />
+            <div class="grid grid-cols-1 gap-3 md:grid-cols-2">
+                <BaseInput
+                    type="number"
+                    v-model="createSingleSourceForm.amount"
+                    id="sourceAmount"
+                    label="Sum*"
+                />
+                <BaseInput
+                    v-model="createSingleSourceForm.source_name"
+                    id="nameOfSource"
+                    label="Source"
+                />
+                <BaseInput
+                    type="date"
+                    v-model="createSingleSourceForm.start_date"
+                    id="sourceStartDate"
+                    label="Runtime Start"
+                />
+                <BaseInput
+                    type="date"
+                    v-model="createSingleSourceForm.end_date"
+                    id="sourceEndDate"
+                    label="Runtime End"
+                />
+                <BaseInput
+                    type="date"
+                    v-model="createSingleSourceForm.funding_start_date"
+                    id="fundingStartDate"
+                    label="Funding period Start"
+                />
+                <BaseInput
+                    type="date"
+                    v-model="createSingleSourceForm.funding_end_date"
+                    id="fundingEndDate"
+                    label="Funding period End"
+                />
+            </div>
+            <div>
+                <UserSearch v-model="user_query" @user-selected="addUserToMoneySourceUserArray" :label="$t('Who is responsible?')"/>
+                <div v-if="usersToAdd.length > 0" class="mt-2 flex flex-wrap gap-2">
+                    <span v-for="(user, index) in usersToAdd" :key="user.id"
+                          class="inline-flex items-center gap-x-2 rounded-full border border-border-subtle bg-surface-sunken py-1 pl-1 pr-2">
+                        <img class="size-6 rounded-full object-cover"
+                             :src="user.profile_photo_url"
+                             alt=""/>
+                        <span class="text-[13px] font-medium text-text">
+                            {{ user.first_name }} {{ user.last_name }}
+                        </span>
+                        <button type="button" class="text-text-subtle hover:text-danger" @click="deleteUserFromMoneySourceUserArray(index)">
+                            <span class="sr-only">{{ $t('Remove user from funding source') }}</span>
+                            <IconX stroke-width="1.5" class="size-3.5"/>
+                        </button>
+                    </span>
+                </div>
+            </div>
+            <div class="space-y-2">
+                <BaseCheckbox id="hasGroup" v-model="hasGroup" :label="$t('Belongs to funding Sources Group')"/>
+                <div v-if="hasGroup" class="pl-7">
+                    <ArtworkBaseListbox
+                        v-model="selectedMoneySourceGroup"
+                        :items="moneySourceGroups"
+                        placeholder="Search for a funding group"
+                        :empty-text="$t('No funding source groups available')"
+                    />
+                </div>
+            </div>
+            <BaseTextarea
+                label="Comment / Note"
+                id="description"
+                v-model="createSingleSourceForm.description"
+                rows="4"
+            />
+            <div class="space-y-3 border-t border-border-subtle pt-4">
+                <div class="space-y-2">
+                    <BaseCheckbox id="remindOnExpiration" v-model="remindOnExpiration" :label="$t('Remind me when this source runs out')"/>
+                    <div v-if="remindOnExpiration" class="space-y-2 pl-7">
+                        <div v-for="(expirationReminder, index) in expirationReminders" :key="index">
+                            <div class="flex items-center gap-x-2">
+                                <div class="w-20 shrink-0">
                                     <BaseInput
                                         type="number"
-                                        v-model="this.createSingleSourceForm.amount"
-                                        id="sourceAmount"
-                                        label="Sum*"
+                                        is-small
+                                        :show-label="false"
+                                        :id="'expirationReminderDays' + index"
+                                        label="Remind day/s before"
+                                        v-model="expirationReminder.days"
                                     />
                                 </div>
-                                <div>
-                                    <BaseInput
-                                        v-model="this.createSingleSourceForm.source_name"
-                                        id="nameOfSource"
-                                        label="Source"
-                                    />
-                                </div>
-                                <div>
-                                    <BaseInput
-                                        type="date"
-                                        v-model="this.createSingleSourceForm.start_date"
-                                        id="sourceStartDate"
-                                        label="Runtime Start"
-                                    />
-                                </div>
-                                <div>
-                                    <BaseInput
-                                        type="date"
-                                        v-model="this.createSingleSourceForm.end_date"
-                                        id="sourceEndDate"
-                                        label="Runtime End"
-                                    />
-                                </div>
-                                <div>
-                                    <BaseInput
-                                        type="date"
-                                        v-model="this.createSingleSourceForm.funding_start_date"
-                                        id="sourceStartDate"
-                                        label="Funding period Start"
-                                    />
-                                </div>
-                                <div>
-                                    <BaseInput
-                                        type="date"
-                                        v-model="this.createSingleSourceForm.funding_end_date"
-                                        id="sourceEndDate"
-                                        label="Funding period End"
-                                    />
-                                </div>
-
+                                <span class="text-[13px] text-text-muted">
+                                    {{ $t('Remind day/s before') }}
+                                </span>
+                                <button type="button" class="text-text-subtle hover:text-danger" @click="removeExpirationReminder(index)">
+                                    <IconTrash stroke-width="1.5" class="size-4"/>
+                                </button>
                             </div>
-                            <div class="my-5 bg-surface-canvas -mx-10 px-10 py-6">
-                                <div class="mb-3">
-                                    <UserSearch v-model="user_query" @user-selected="addUserToMoneySourceUserArray" :label="$t('Who is responsible?')"/>
-                                </div>
-                                <div v-if="usersToAdd.length > 0" class="flex items-center">
-                                    <div v-for="(user,index) in usersToAdd" class="flex mr-5 rounded-full items-center font-bold text-text">
-                                        <div class="flex items-center">
-                                            <img class="flex h-11 w-11 rounded-full object-cover"
-                                                 :src="user.profile_photo_url"
-                                                 alt=""/>
-                                            <span class="flex ml-4 text-base/5 font-semibold text-text">
-                                            {{ user.first_name }} {{ user.last_name }}
-                                            </span>
-                                            <button type="button" @click="deleteUserFromMoneySourceUserArray(index)">
-                                                <span class="sr-only">{{ $t('Remove user from funding source')}}</span>
-                                                <IconX stroke-width="1.5"
-                                                    class="ml-2 h-4 w-4 p-0.5 hover:text-danger rounded-full text-text border-0 "/>
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="flex items-center mb-2">
-                                <input id="hasGroup" type="checkbox" v-model="this.hasGroup"
-                                       class="input-checklist"/>
-                                <label for="hasGroup" :class="this.hasGroup ? 'text-sm/5 font-semibold text-text' : 'text-sm/5 font-bold text-text-subtle subpixel-antialiased'"
-                                       class="ml-2">
-                                    {{ $t('Belongs to funding Sources Group')}}
-                                </label>
-                            </div>
-                            <div v-if="this.hasGroup" class="mb-2">
-                                <Listbox as="div" v-model="this.selectedMoneySourceGroup" id="room" class="relative">
-                                    <ListboxButton class="menu-button">
-                                        <span v-if="!selectedMoneySourceGroup">
-                                            {{ $t('Search for a funding group') }}
-                                        </span>
-                                        <div v-else class="flex-grow flex text-left text-sm/5 font-semibold text-text">
-                                            {{ selectedMoneySourceGroup.name }}
-                                        </div>
-                                        <IconChevronDown stroke-width="1.5" class="h-5 w-5 text-text" aria-hidden="true"/>
-                                    </ListboxButton>
-                                    <ListboxOptions class="w-full rounded-lg bg-surface-inverse max-h-32 overflow-y-auto text-sm absolute z-30">
-                                        <ListboxOption v-if="this.moneySourceGroups.length > 0" v-for="moneySourceGroup in this.moneySourceGroups"
-                                                       class="hover:bg-accent-700 hover:text-white text-text-subtle cursor-pointer p-2 flex justify-between "
-                                                       :key="moneySourceGroup.id"
-                                                       :value="moneySourceGroup"
-                                                       v-slot="{ active, selected }">
-                                            <div :class="[selected ? 'text-sm/5 font-bold text-white' : 'text-sm/5 font-bold text-text-subtle', 'flex']">
-                                                {{ moneySourceGroup.name }}
-                                            </div>
-                                            <IconCheck stroke-width="1.5" v-if="selected" class="h-5 w-5 text-success" aria-hidden="true"/>
-                                        </ListboxOption>
-                                        <div v-else class="text-text-subtle py-2 ml-2">
-                                            {{ $t('No funding source groups available')}}
-                                        </div>
-                                    </ListboxOptions>
-                                </Listbox>
-                            </div>
-                            <div>
-                                <BaseTextarea
-                                    label="Comment / Note"
-                                    id="description"
-                                    v-model="createSingleSourceForm.description"
-                                    rows="4"
-                                />
-                            </div>
-                            <div class="flex flex-col mt-2">
-                                <div class="flex flex-row items-center">
-                                    <input id="remindOnExpiration"
-                                           type="checkbox"
-                                           v-model="remindOnExpiration"
-                                           class="input-checklist"
-                                    />
-                                    <label for="remindOnExpiration"
-                                           :class="[
-                                               this.remindOnExpiration ?
-                                                    'text-sm/5 font-semibold text-text' :
-                                                    'text-sm/5 font-bold text-text-subtle',
-                                               'ml-2 subpixel-antialiased'
-                                           ]">
-                                        {{ $t('Remind me when this source runs out')}}
-                                    </label>
-                                </div>
-                                <div v-if="remindOnExpiration" class="flex flex-col columns-1 mt-2">
-                                    <div v-for="(expirationReminder, index) in expirationReminders"
-                                         class="flex flex-col mb-2">
-                                        <div class="flex flex-row items-center">
-                                            <input
-                                                type="number"
-                                                :class="[!this.isValidNumber(expirationReminder.days) ? 'border-danger' : '', 'w-24 input mr-2']"
-                                                min="1"
-                                                v-model="expirationReminder.days"
-                                            />
-                                            <span class="text-sm/5 font-bold text-text-subtle">
-                                                {{ $t('Remind day/s before')}}
-                                            </span>
-                                            <IconTrash stroke-width="1.5" class="w-5 h-5 cursor-pointer text-sm/5 font-bold text-text-subtle ml-2 hover:text-danger"
-                                                       @click="removeExpirationReminder(index)"
-                                            />
-                                        </div>
-                                        <span v-if="!this.isValidNumber(expirationReminder.days)"
-                                           class="text-danger text-xs subpixel-antialiased mt-2">
-                                            {{ $t('If a reminder is to be created, enter the number of days or remove the reminder.')}}
-                                        </span>
-                                    </div>
-                                    <div class="flex flex-row items-center w-fit" @click="addExpirationReminder()">
-                                        <IconCirclePlus class="h-5 w-5 rounded-full mr-2 cursor-pointer"/>
-                                        <span class="text-xs underline text-accent-600 cursor-pointer">
-                                            {{ $t('Add another reminder')}}
-                                        </span>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="flex flex-col mt-2">
-                                <div class="flex flex-row items-center">
-                                    <input id="remindOnThreshold"
-                                           type="checkbox"
-                                           v-model="remindOnThreshold"
-                                           class="input-checklist"
-                                    />
-                                    <label for="remindOnThreshold"
-                                           :class="[
-                                               this.remindOnThreshold ?
-                                                    'text-sm/5 font-semibold text-text' :
-                                                    'text-sm/5 font-bold text-text-subtle',
-                                               'ml-2 subpixel-antialiased'
-                                           ]">
-                                        {{ $t('Remind me when only a certain percentage of the source still exists')}}
-                                    </label>
-                                </div>
-                                <div v-if="remindOnThreshold" class="flex flex-col columns-1 mt-2">
-                                    <div v-for="(thresholdReminder, index) in thresholdReminders"
-                                         class="flex flex-col mb-2">
-                                        <div class="flex flex-row items-center">
-                                            <input type="number"
-                                                   :class="[
-                                                       !this.isValidNumber(thresholdReminder.threshold) ?
-                                                            'border-danger' :
-                                                            '',
-                                                       'w-24 input mr-2'
-                                                   ]"
-                                                   min="1"
-                                                   v-model="thresholdReminder.threshold"
-                                            />
-                                            <span class="text-sm/5 font-bold text-text-subtle">
-                                                {{ $t('Percent triggers a countdown notification')}}
-                                            </span>
-                                            <IconTrash stroke-width="1.5" class="w-5 h-5 cursor-pointer text-sm/5 font-bold text-text-subtle ml-2 hover:text-danger"
-                                                       @click="removeThresholdReminder(index)"
-                                            />
-                                        </div>
-                                        <span v-if="!this.isValidNumber(thresholdReminder.threshold)"
-                                              class="text-danger text-xs subpixel-antialiased mt-2">
-                                            {{ $t('If a countdown is to be created, enter the percentage or remove the countdown.')}}
-                                        </span>
-                                    </div>
-                                    <div class="flex flex-row items-center w-fit" @click="addThresholdReminder()">
-                                        <IconCirclePlus class="h-5 w-5 rounded-full mr-2 cursor-pointer"/>
-                                        <span class="text-xs underline text-accent-600 cursor-pointer">
-                                               {{ $t('Add another reminder')}}
-                                        </span>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="flex justify-center mt-5">
-                                <FormButton
-                                    :text="$t('Creating a source of funding')"
-                                    :disabled="!isFormComplete()"
-                                    @click="createSingleSource()"
-                                />
-                            </div>
+                            <p v-if="!isValidNumber(expirationReminder.days)" class="mt-1 text-xs text-danger">
+                                {{ $t('If a reminder is to be created, enter the number of days or remove the reminder.') }}
+                            </p>
                         </div>
+                        <button type="button"
+                                class="flex items-center gap-x-1.5 text-xs font-medium text-accent-600 hover:text-accent-700"
+                                @click="addExpirationReminder()">
+                            <IconCirclePlus stroke-width="1.5" class="size-4"/>
+                            {{ $t('Add another reminder') }}
+                        </button>
                     </div>
-                    <!-- Form when Source Group -->
-                    <div v-else>
-                        <div class="grid grid-cols-1 gap-3">
-                            <div>
-                                <BaseInput
-                                    v-model="this.createSourceGroupForm.name"
-                                    id="sourceName"
-                                    label="Title*"
-                                />
-                            </div>
-                            <div class="bg-surface-canvas -mx-10 px-10 py-6">
-                                <div class="relative w-full">
-                                    <div class="w-full mb-3">
-                                        <UserSearch v-model="user_query" @userSelected="addUserToMoneySourceUserArray" :label="$t('Who is responsible?')" />
-                                    </div>
+                </div>
+                <div class="space-y-2">
+                    <BaseCheckbox id="remindOnThreshold" v-model="remindOnThreshold" :label="$t('Remind me when only a certain percentage of the source still exists')"/>
+                    <div v-if="remindOnThreshold" class="space-y-2 pl-7">
+                        <div v-for="(thresholdReminder, index) in thresholdReminders" :key="index">
+                            <div class="flex items-center gap-x-2">
+                                <div class="w-20 shrink-0">
+                                    <BaseInput
+                                        type="number"
+                                        is-small
+                                        :show-label="false"
+                                        :id="'thresholdReminderPercent' + index"
+                                        label="Percent triggers a countdown notification"
+                                        v-model="thresholdReminder.threshold"
+                                    />
                                 </div>
-                                <div v-if="usersToAdd.length > 0" class="mt-2 mb-4 flex items-center">
-                                    <div v-for="(user,index) in usersToAdd" class="flex mr-5 rounded-full items-center font-bold text-text">
-                                        <div class="flex items-center">
-                                            <img class="flex h-11 w-11 rounded-full object-cover"
-                                                 :src="user.profile_photo_url"
-                                                 alt=""/>
-                                            <span class="flex ml-4 text-base/5 font-semibold text-text">
-                                             {{ user.first_name }} {{ user.last_name }}
-                                            </span>
-                                            <button type="button" @click="deleteUserFromMoneySourceUserArray(index)">
-                                                <span class="sr-only">{{ $t('Remove user from money source')}}</span>
-                                                <IconX stroke-width="1.5"
-                                                       class="ml-2 h-4 w-4 p-0.5 hover:text-danger rounded-full text-text border-0 "/>
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
+                                <span class="text-[13px] text-text-muted">
+                                    {{ $t('Percent triggers a countdown notification') }}
+                                </span>
+                                <button type="button" class="text-text-subtle hover:text-danger" @click="removeThresholdReminder(index)">
+                                    <IconTrash stroke-width="1.5" class="size-4"/>
+                                </button>
                             </div>
-                            <div>
-                                <div class="relative w-full">
-                                    <div class="w-full">
-                                        <BaseInput
-                                            id="moneySourceSearch"
-                                            v-model="moneySource_query"
-                                            label="Which sources of funding belong to this group?"
-                                        />
-                                    </div>
-                                    <transition leave-active-class="transition ease-in duration-100"
-                                                leave-from-class="opacity-100"
-                                                leave-to-class="opacity-0">
-                                        <div v-if="moneySource_search_results.length > 0 && moneySource_query.length > 0"
-                                             class="absolute rounded-lg z-10 mt-1 w-full max-h-60 bg-surface-inverse shadow-lg
-                                                        text-base ring-1 ring-black ring-opacity-5
-                                                        overflow-auto focus:outline-none sm:text-sm">
-                                            <div class="border-border-subtle">
-                                                <div v-for="(moneySource, index) in moneySource_search_results" :key="index"
-                                                     class="flex items-center cursor-pointer">
-                                                    <div class="flex-1 text-sm py-4">
-                                                        <p @click="addMoneySourceToGroup(moneySource)"
-                                                           class="font-bold px-4 text-white hover:border-l-4 hover:border-l-success">
-                                                            {{ moneySource.name }}
-                                                        </p>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </transition>
-                                </div>
-                                <div v-if="subMoneySources.length > 0" class="mt-2 mb-4 flex items-center">
-                                    <div v-for="(subMoneySource,index) in subMoneySources" class="flex mr-5 rounded-full items-center font-bold text-text">
-                                        <div
-                                            class="rounded-full items-center font-medium  border  border-tag px-3 text-sm mr-1 mb-1 h-8 inline-flex">
-                                            {{ subMoneySource.name }}
-                                            <button type="button"
-                                                    @click="this.deleteSubMoneySourceFromGroup(index)">
-                                                <IconX stroke-width="1.5" class="ml-1 h-4 w-4 hover:text-danger "/>
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div>
-                                 <BaseTextarea
-                                     label="Comment / Note"
-                                     id="description"
-                                     v-model="this.createSourceGroupForm.description"
-                                     rows="4"
-                                 />
-                            </div>
+                            <p v-if="!isValidNumber(thresholdReminder.threshold)" class="mt-1 text-xs text-danger">
+                                {{ $t('If a countdown is to be created, enter the percentage or remove the countdown.') }}
+                            </p>
                         </div>
-                        <div class="flex justify-center mt-5">
-                            <FormButton :disabled="!isGroupFormComplete()"
-                                       @click="createMoneySourceGroup()" :text="$t('Create funding source group')"/>
-                        </div>
+                        <button type="button"
+                                class="flex items-center gap-x-1.5 text-xs font-medium text-accent-600 hover:text-accent-700"
+                                @click="addThresholdReminder()">
+                            <IconCirclePlus stroke-width="1.5" class="size-4"/>
+                            {{ $t('Add another reminder') }}
+                        </button>
                     </div>
                 </div>
             </div>
+        </div>
+        <!-- Form when Source Group -->
+        <div v-else class="space-y-4">
+            <BaseInput
+                v-model="createSourceGroupForm.name"
+                id="sourceGroupName"
+                label="Title*"
+            />
+            <div>
+                <UserSearch v-model="user_query" @user-selected="addUserToMoneySourceUserArray" :label="$t('Who is responsible?')"/>
+                <div v-if="usersToAdd.length > 0" class="mt-2 flex flex-wrap gap-2">
+                    <span v-for="(user, index) in usersToAdd" :key="user.id"
+                          class="inline-flex items-center gap-x-2 rounded-full border border-border-subtle bg-surface-sunken py-1 pl-1 pr-2">
+                        <img class="size-6 rounded-full object-cover"
+                             :src="user.profile_photo_url"
+                             alt=""/>
+                        <span class="text-[13px] font-medium text-text">
+                            {{ user.first_name }} {{ user.last_name }}
+                        </span>
+                        <button type="button" class="text-text-subtle hover:text-danger" @click="deleteUserFromMoneySourceUserArray(index)">
+                            <span class="sr-only">{{ $t('Remove user from money source') }}</span>
+                            <IconX stroke-width="1.5" class="size-3.5"/>
+                        </button>
+                    </span>
+                </div>
+            </div>
+            <div>
+                <div class="relative w-full">
+                    <BaseInput
+                        id="moneySourceSearch"
+                        v-model="moneySource_query"
+                        label="Which sources of funding belong to this group?"
+                    />
+                    <transition leave-active-class="transition ease-in duration-100"
+                                leave-from-class="opacity-100"
+                                leave-to-class="opacity-0">
+                        <div v-if="moneySource_search_results.length > 0 && moneySource_query.length > 0"
+                             class="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-lg border border-border-subtle bg-surface text-sm shadow-overlay">
+                            <button v-for="(moneySource, index) in moneySource_search_results" :key="index"
+                                    type="button"
+                                    class="block w-full cursor-pointer px-3 py-2 text-left font-medium text-text hover:bg-accent-50 hover:text-accent-700"
+                                    @click="addMoneySourceToGroup(moneySource)">
+                                {{ moneySource.name }}
+                            </button>
+                        </div>
+                    </transition>
+                </div>
+                <div v-if="subMoneySources.length > 0" class="mt-2 flex flex-wrap gap-2">
+                    <span v-for="(subMoneySource, index) in subMoneySources" :key="subMoneySource.id"
+                          class="inline-flex items-center gap-x-1.5 rounded-full border border-border-subtle bg-surface-sunken px-2.5 py-1 text-[13px] font-medium text-text">
+                        {{ subMoneySource.name }}
+                        <button type="button" class="text-text-subtle hover:text-danger" @click="deleteSubMoneySourceFromGroup(index)">
+                            <IconX stroke-width="1.5" class="size-3.5"/>
+                        </button>
+                    </span>
+                </div>
+            </div>
+            <BaseTextarea
+                label="Comment / Note"
+                id="groupDescription"
+                v-model="createSourceGroupForm.description"
+                rows="4"
+            />
+        </div>
+        <template #footer>
+            <BaseUIButton label="Cancel" is-cancel-button hide-icon @click="closeModal(false)"/>
+            <BaseUIButton v-if="isSingleSourceTab"
+                          label="Creating a source of funding"
+                          variant="primary"
+                          :disabled="!isFormComplete()"
+                          @click="createSingleSource()"
+            />
+            <BaseUIButton v-else
+                          label="Create funding source group"
+                          variant="primary"
+                          :disabled="!isGroupFormComplete()"
+                          @click="createMoneySourceGroup()"
+            />
+        </template>
     </ArtworkBaseModal>
-
 </template>
 
 <script>
-import {IconCheck, IconChevronDown, IconChevronUp, IconCircleX, IconDotsVertical, IconEdit, IconTrash, IconX} from "@tabler/icons-vue";
+import {IconCirclePlus, IconTrash, IconX} from "@tabler/icons-vue";
 
-import JetDialogModal from "@/Jetstream/DialogModal.vue";
-import {
-    Listbox,
-    ListboxButton,
-    ListboxOption,
-    ListboxOptions,
-    Menu,
-    MenuButton,
-    MenuItem,
-    MenuItems
-} from "@headlessui/vue";
-import SvgCollection from "@/Layouts/Components/SvgCollection.vue";
-import Input from "@/Jetstream/Input.vue";
-import ConfirmationComponent from "@/Layouts/Components/ConfirmationComponent.vue";
-import TagComponent from "@/Layouts/Components/TagComponent.vue";
-import InputComponent from "@/Layouts/Components/InputComponent.vue";
-import {useForm} from "@inertiajs/vue3";
+import {router, useForm} from "@inertiajs/vue3";
 import Permissions from "@/Mixins/Permissions.vue";
-import {router} from "@inertiajs/vue3";
-import BaseButton from "@/Layouts/Components/General/Buttons/BaseButton.vue";
-import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import IconLib from "@/Mixins/IconLib.vue";
-import BaseModal from "@/Components/Modals/BaseModal.vue";
-import ModalHeader from "@/Components/Modals/ModalHeader.vue";
-import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
-import NumberInputComponent from "@/Components/Inputs/NumberInputComponent.vue";
-import DateInputComponent from "@/Components/Inputs/DateInputComponent.vue";
 import UserSearch from "@/Components/SearchBars/UserSearch.vue";
-import TextareaComponent from "@/Components/Inputs/TextareaComponent.vue";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 import BaseTextarea from "@/Artwork/Inputs/BaseTextarea.vue";
+import BaseCheckbox from "@/Artwork/Inputs/BaseCheckbox.vue";
 import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
+import ArtworkBaseListbox from "@/Artwork/Listbox/ArtworkBaseListbox.vue";
+import BaseTabs from "@/Artwork/Tabs/BaseTabs.vue";
+import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 
 export default {
-    name: 'EventComponent',
+    name: 'CreateMoneySourceComponent',
     mixins: [Permissions, IconLib],
     components: {
         ArtworkBaseModal,
+        ArtworkBaseListbox,
+        BaseTabs,
+        BaseUIButton,
+        BaseCheckbox,
         BaseTextarea,
         BaseInput,
-        TextareaComponent,
         UserSearch,
-        DateInputComponent,
-        NumberInputComponent,
-        TextInputComponent,
-        ModalHeader,
-        BaseModal,
-        FormButton,
-        BaseButton,
-        Input,
-        JetDialogModal,
         IconX,
-        IconCircleX,
-        Listbox,
-        ListboxButton,
-        ListboxOption,
-        ListboxOptions,
-        IconChevronDown,
-        IconChevronUp,
-        SvgCollection,
-        IconCheck,
-        Menu,
-        MenuButton,
-        MenuItem,
-        MenuItems,
-        IconEdit,
         IconTrash,
-        IconDotsVertical,
-        ConfirmationComponent,
-        TagComponent,
-        InputComponent,
+        IconCirclePlus,
     },
     computed: {
         tabs() {
             return [
-                {name: this.$t('Single source'), href: '#', current: this.isSingleSourceTab},
-                {name: this.$t('Group'), href: '#', current: this.isGroupTab},
+                {name: this.$t('Single source'), href: '#', current: this.isSingleSourceTab, permission: true},
+                {name: this.$t('Group'), href: '#', current: this.isGroupTab, permission: true},
             ]
         }
     },

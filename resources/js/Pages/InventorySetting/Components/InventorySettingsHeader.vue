@@ -1,6 +1,6 @@
 <template>
     <app-layout :title="$t('Inventory Settings') + ' - ' + title">
-        <div class="artwork-container">
+        <div class="artwork-container-fluid">
             <ToolbarHeader
                 :icon="IconPackage"
                 :title="title || $t('Inventory Settings')"

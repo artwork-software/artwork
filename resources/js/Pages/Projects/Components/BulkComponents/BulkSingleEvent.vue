@@ -216,10 +216,12 @@
                 </div>
             </div>
 
-            <!-- Actions -->
+            <!-- Actions: feste Breite (Spiegel: Spacer in BulkHeader), damit der
+                 flex-grow-Restplatz in Header und Zeilen identisch aufgeht. -->
             <div
                 v-if="canEditComponent && hasPermission"
-                class="flex items-center col-span-1 print:hidden"
+                class="flex items-center col-span-1 print:hidden shrink-0"
+                :class="isInModal ? 'w-16' : 'w-56'"
             >
                 <div class="flex items-center gap-x-3">
                     <ToolTipComponent
@@ -628,16 +630,16 @@ const diffDaysISO = (fromISO, toISO) => {
     return Math.round(ms / (1000 * 60 * 60 * 24));
 };
 
-const getColumnSize = (column) => ({
-    minWidth: usePage().props.auth.user.bulk_column_size[column] + 'px',
-    width: usePage().props.auth.user.bulk_column_size[column] + 'px',
-    maxWidth: usePage().props.auth.user.bulk_column_size[column] + 'px'
-});
-const getColumnTextSize = (column) => ({
-    minWidth: parseInt(usePage().props.auth.user.bulk_column_size[column]) - 50 + 'px',
-    width: parseInt(usePage().props.auth.user.bulk_column_size[column]) - 50 + 'px',
-    maxWidth: parseInt(usePage().props.auth.user.bulk_column_size[column]) - 50 + 'px'
-});
+// Konfigurierte Breite = Mindestbreite; Restplatz wächst proportional dazu mit
+// (flex-grow = px). Muss identisch zur Berechnung in BulkHeader bleiben, sonst
+// laufen Header- und Zeilenspalten auseinander.
+const getColumnSize = (column) => {
+    const px = parseInt(usePage().props.auth.user.bulk_column_size[column]);
+    return {
+        flex: `${px} 0 ${px}px`,
+        minWidth: px + 'px'
+    };
+};
 
 const createCopyByEventWithData = (event) => emit('createCopyByEventWithData', event);
 const openDeleteEventConfirmModal = () => showDeleteEventConfirmModal.value = true;

@@ -1,6 +1,6 @@
 <template>
     <AppLayout :title="$t('BI Dashboard')">
-        <div class="artwork-container space-y-6">
+        <div class="artwork-container-fluid space-y-6">
             <ToolbarHeader
                 :icon="IconChartHistogram"
                 :title="$t('BI Dashboard')"

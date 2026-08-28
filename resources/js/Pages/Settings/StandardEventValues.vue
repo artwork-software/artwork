@@ -21,11 +21,10 @@
             </div>
 
             <div class="mt-6">
-                <h3 class="text-sm font-semibold text-text-subtle">{{ $t('Default event duration') }}</h3>
+                <h3 class="text-sm font-semibold text-text-subtle">{{ $t('Default event duration (minutes)') }}</h3>
                 <p class="text-xs text-text-subtle mt-1">{{ $t('The default event duration specified here will be preselected when you create an event in artwork.') }}</p>
                 <BaseInput
                     id="event_time_length_minutes"
-                    :label="$t('Default event duration (minutes)')"
                     type="number"
                     class="mt-2"
                     v-model="event_time_length_minutes"
@@ -38,7 +37,6 @@
                 <p class="text-xs text-text-subtle mt-1">{{ $t('The default start time determines which time should be prefilled when you create a new event in artwork.') }}</p>
                 <BaseInput
                     id="event_start_time"
-                    :label="$t('Default start time')"
                     type="time"
                     class="mt-2"
                     v-model="event_start_time"

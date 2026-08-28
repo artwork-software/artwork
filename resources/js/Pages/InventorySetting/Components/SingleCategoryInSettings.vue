@@ -1,16 +1,16 @@
 <template>
     <template v-if="!showOnlyActions">
         <td class="py-4 pr-4 pl-4 text-sm font-medium whitespace-nowrap text-text sm:pl-0 first-letter:capitalize">{{ category?.name }}</td>
-        <td class="p-4 text-sm whitespace-nowrap text-text-subtle capitalize">
+        <td class="p-4 text-sm text-text-subtle capitalize">
             {{ category.subcategories.map((category) => category.name).join(', ') }}
         </td>
-        <td class="p-4 text-sm whitespace-nowrap text-text-subtle capitalize">
+        <td class="p-4 text-sm text-text-subtle capitalize">
             {{ category.properties.map((property) => property.name).join(', ') }}
         </td>
     </template>
 
     <template v-if="showActions || showOnlyActions">
-        <td class="py-4 pr-4 pl-4 text-sm whitespace-nowrap text-text-subtle sm:pr-0 actions-column">
+        <td class="py-4 pr-4 pl-4 text-sm whitespace-nowrap text-text-subtle sm:pr-0 actions-column sticky right-0 bg-white">
             <div class="flex items-center gap-x-4">
                 <button type="button" class="text-accent-600 hover:text-accent-700">
                     <component :is="IconEdit" @click="showAddEditCategoryModal = true" class="h-5 w-5" aria-hidden="true" />
@@ -93,5 +93,8 @@ const deleteCategory = () => {
 </script>
 
 <style scoped>
-
+.actions-column {
+    width: 100px;
+    min-width: 100px;
+}
 </style>

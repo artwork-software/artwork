@@ -582,7 +582,7 @@
                                     :type="prop.type"
                                     v-model="acrossValues[prop.id]"
                                     :required="prop.is_required"
-                                    :label="prop.is_required ? $t('Value*') : $t('Value')"
+                                    :placeholder="prop.is_required ? $t('Value*') : $t('Value')"
                                 />
                             </div>
                         </div>
@@ -758,7 +758,7 @@
                                                 :type="selectedBulkProp.type"
                                                 id="bulk_property_value"
                                                 v-model="bulkEdit.propertyValue"
-                                                :label="$t('Value')"
+                                                :placeholder="$t('Value')"
                                             />
                                         </div>
                                     </div>
@@ -970,7 +970,7 @@
                                                 :id="'bulk-prop-' + prop.id"
                                                 :type="prop.type"
                                                 v-model="prop.value"
-                                                :label="prop.is_required ? $t('Value*') : $t('Value')"
+                                                :placeholder="prop.is_required ? $t('Value*') : $t('Value')"
                                             />
                                         </div>
                                     </template>
@@ -1102,7 +1102,7 @@
                                         v-else-if="property.type === 'year'"
                                         type="number" v-model="property.value"
                                         :required="property.is_required"
-                                        :label="property.is_required ? $t('Year*') : $t('Year')"
+                                        :placeholder="property.is_required ? $t('Year*') : $t('Year')"
                                         @focusout="onDetailedPropertySave(activeDetailedArticleForEditing, property.id, property.value)"
                                     />
 
@@ -1111,7 +1111,7 @@
                                         v-else-if="property.type !== 'file' && property.type !== 'checkbox' && property.type !== 'selection'"
                                         :type="property.type" v-model="property.value"
                                         :required="property.is_required"
-                                        :label="property.is_required ? $t('Value*') : $t('Value')"
+                                        :placeholder="property.is_required ? $t('Value*') : $t('Value')"
                                         @focusout="onDetailedPropertySave(activeDetailedArticleForEditing, property.id, property.value)"
                                     />
 

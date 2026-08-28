@@ -91,6 +91,7 @@
                                                 <ShiftInCalendarCell
                                                     :shift="event.shift"
                                                     :day="day.fullDay"
+                                                    :is-in-daily-view="true"
                                                     @shift-edited="emits('shiftEdited', day)"
                                                 />
                                             </div>

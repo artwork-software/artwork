@@ -100,18 +100,25 @@ export default {
             }
 
             if (this.entityType === 'user') {
-                return (this.shift?.users || []).find(u => u.id === this.userToEditId) ?? null
+                const entity = (this.shift?.users || []).find(u => u.id === this.userToEditId) ?? null
+                if (entity) return entity
             }
 
             if (this.entityType === 'freelancer') {
-                return (this.shift?.freelancer || []).find(f => f.id === this.userToEditId) ?? null
+                const entity = (this.shift?.freelancer || []).find(f => f.id === this.userToEditId) ?? null
+                if (entity) return entity
             }
 
             if (this.entityType === 'service_provider') {
-                return (this.shift?.service_provider || []).find(sp => sp.id === this.userToEditId) ?? null
+                const entity = (this.shift?.service_provider || []).find(sp => sp.id === this.userToEditId) ?? null
+                if (entity) return entity
             }
 
-            return null
+            // Dashboard-Payload versteckt users/freelancer/serviceProvider und liefert
+            // stattdessen eine vereinheitlichte workers-Liste mit type-Tag + Pivot.
+            return (this.shift?.workers || []).find(
+                w => w.type === this.entityType && w.id === this.userToEditId
+            ) ?? null
         },
         pivotId() {
             return this.pivotEntity?.pivot?.id ?? null

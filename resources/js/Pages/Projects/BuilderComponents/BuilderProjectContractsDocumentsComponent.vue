@@ -1,8 +1,5 @@
 <template>
     <div class="space-y-2">
-        <div class="font-lexend font-black tracking-wide text-primaryText text-md">
-            {{ $t('Contracts') }}
-        </div>
         <div v-if="contracts.length > 0" class="space-y-1.5">
             <div v-for="contract in contracts" :key="contract.id" class="text-sm text-primaryText border-b border-border-subtle pb-1">
                 <div class="font-medium">{{ contract.name || '-' }}</div>

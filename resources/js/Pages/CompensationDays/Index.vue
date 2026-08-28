@@ -1,6 +1,6 @@
 <template>
     <app-layout :title="$t('Compensation days overview')">
-        <div class="artwork-container">
+        <div class="artwork-container-fluid">
             <ToolbarHeader
                 band
                 :icon="IconCalendarOff"

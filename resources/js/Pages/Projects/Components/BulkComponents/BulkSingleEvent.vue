@@ -216,10 +216,12 @@
                 </div>
             </div>
 
-            <!-- Actions -->
+            <!-- Actions: feste Breite (Spiegel: Spacer in BulkHeader), damit der
+                 flex-grow-Restplatz in Header und Zeilen identisch aufgeht. -->
             <div
                 v-if="canEditComponent && hasPermission"
-                class="flex items-center col-span-1 print:hidden"
+                class="flex items-center col-span-1 print:hidden shrink-0"
+                :class="isInModal ? 'w-16' : 'w-56'"
             >
                 <div class="flex items-center gap-x-3">
                     <ToolTipComponent
@@ -420,6 +422,7 @@ import ConfirmationComponent from "@/Layouts/Components/ConfirmationComponent.vu
 import {computed, defineAsyncComponent, inject, nextTick, onMounted, ref, watch} from "vue";
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
 import AddEditEventNoteModal from "@/Pages/Projects/Components/BulkComponents/AddEditEventNoteModal.vue";
+import {getBulkColumnSize as getColumnSize} from "@/Pages/Projects/Components/BulkComponents/bulkColumnSizing.js";
 import BaseMenu from "@/Components/Menu/BaseMenu.vue";
 import BaseMenuItem from "@/Components/Menu/BaseMenuItem.vue";
 import {Float} from "@headlessui-float/vue";
@@ -628,16 +631,8 @@ const diffDaysISO = (fromISO, toISO) => {
     return Math.round(ms / (1000 * 60 * 60 * 24));
 };
 
-const getColumnSize = (column) => ({
-    minWidth: usePage().props.auth.user.bulk_column_size[column] + 'px',
-    width: usePage().props.auth.user.bulk_column_size[column] + 'px',
-    maxWidth: usePage().props.auth.user.bulk_column_size[column] + 'px'
-});
-const getColumnTextSize = (column) => ({
-    minWidth: parseInt(usePage().props.auth.user.bulk_column_size[column]) - 50 + 'px',
-    width: parseInt(usePage().props.auth.user.bulk_column_size[column]) - 50 + 'px',
-    maxWidth: parseInt(usePage().props.auth.user.bulk_column_size[column]) - 50 + 'px'
-});
+// Spalten-Maße kommen aus bulkColumnSizing.js (geteilt mit BulkHeader —
+// Header und Zeilen sind getrennte Flex-Container und müssen identisch rechnen).
 
 const createCopyByEventWithData = (event) => emit('createCopyByEventWithData', event);
 const openDeleteEventConfirmModal = () => showDeleteEventConfirmModal.value = true;

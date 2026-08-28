@@ -1,8 +1,5 @@
 <template>
     <div class="space-y-2">
-        <div class="font-lexend font-black tracking-wide text-primaryText text-md">
-            {{ $t('cost unit') }}
-        </div>
         <div class="text-sm text-primaryText">
             {{ project.cost_center?.name || '-' }}
         </div>

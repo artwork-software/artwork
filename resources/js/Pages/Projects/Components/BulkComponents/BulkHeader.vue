@@ -4,7 +4,7 @@
          darunterliegenden Event-Zeilen durch die (transparente) Headerzeile durch.
          backdrop-blur wird nicht in allen Browsern unterstützt → deshalb voll deckend. -->
     <div
-        class="sticky top-0 z-20 print:static w-max bg-white border-b border-border-subtle/70"
+        class="sticky top-0 z-20 print:static w-full min-w-max bg-white border-b border-border-subtle/70"
     >
         <div
             class="px-6 sm:px-4 mt-2 mb-3"
@@ -104,6 +104,11 @@
                     <div v-if="usePage().props.event_admission_module" class="shrink-0 min-w-0" :style="getColumnSize(6)">
                         <span class="uppercase tracking-wider font-semibold text-text-muted ">{{ $t('Admission') }}</span>
                     </div>
+
+                    <!-- Spacer in Breite der Aktionsspalte der Zeilen: Header und Zeilen sind
+                         getrennte Flex-Container — nur mit identischem Fixanteil verteilt
+                         flex-grow den Restplatz in beiden gleich und die Spalten bleiben bündig. -->
+                    <div v-if="showActionsSpacer" :class="isInModal ? 'w-16' : 'w-56'" class="shrink-0" aria-hidden="true"></div>
                 </div>
             </div>
 
@@ -120,6 +125,7 @@ import ToolTipDefault from "@/Components/ToolTips/ToolTipDefault.vue";
 import {usePage} from "@inertiajs/vue3";
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
 import {IconExclamationCircle} from "@tabler/icons-vue";
+import {getBulkColumnSize as getColumnSize} from "@/Pages/Projects/Components/BulkComponents/bulkColumnSizing.js";
 
 // Emit Event
 const emit = defineEmits(['update:modelValue', 'update:showEndDate']);
@@ -144,16 +150,16 @@ const props = defineProps({
         type: Boolean,
         required: false,
         default: false
+    },
+    showActionsSpacer: {
+        type: Boolean,
+        required: false,
+        default: false
     }
 });
 
-const getColumnSize = (column) => {
-    return {
-        minWidth: usePage().props.auth.user.bulk_column_size[column] + 'px',
-        width: usePage().props.auth.user.bulk_column_size[column] + 'px',
-        maxWidth: usePage().props.auth.user.bulk_column_size[column] + 'px'
-    }
-}
+// Spalten-Maße kommen aus bulkColumnSizing.js (geteilt mit BulkSingleEvent —
+// Header und Zeilen sind getrennte Flex-Container und müssen identisch rechnen).
 
 // Lokaler Wert, um den Zustand des Switches zu halten
 const localValue = ref(props.modelValue);

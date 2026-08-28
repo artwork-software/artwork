@@ -166,7 +166,7 @@
                                             Schichtbeschreibung für {{ person.name || person.full_name }} anpassen
                                         </p>
                                     </div>
-                                    <div class="flex items-center gap-x-2">
+                                    <div class="flex items-end gap-x-2">
                                         <BaseInput
                                             id="start" label="Short Description" type="text" class="max-w-56 text-xs"
                                             v-model="person.pivot.short_description"

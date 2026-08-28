@@ -1,6 +1,6 @@
 <template>
     <AppLayout :title="$t('Material Issues')">
-        <div class="artwork-container">
+        <div class="artwork-container-fluid">
             <!-- Header -->
 
             <ToolbarHeader title="Material issue book"

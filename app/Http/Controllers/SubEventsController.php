@@ -20,6 +20,9 @@ class SubEventsController extends Controller
 
     public function store(Request $request): bool
     {
+        // Untertermine folgen der Bearbeitungsregel des Haupttermins (EventPolicy::update)
+        $this->authorize('update', Event::findOrFail($request->input('event_id')));
+
         $subevent = SubEvent::create($request->only([
             'event_id',
             'eventName',
@@ -72,6 +75,8 @@ class SubEventsController extends Controller
 
     public function update(Request $request, SubEvent $subEvents): bool
     {
+        $this->authorize('update', $subEvents->event()->firstOrFail());
+
         $subEvents->update($request->only([
             'eventName',
             'description',
@@ -97,6 +102,8 @@ class SubEventsController extends Controller
     public function destroy(SubEvent $subEvents): void
     {
         $event = $subEvents->event;
+        abort_unless($event !== null, 404);
+        $this->authorize('update', $event);
         broadcast(new EventCreated($event, $event->room_id));
 
         $subEvents->forceDelete();

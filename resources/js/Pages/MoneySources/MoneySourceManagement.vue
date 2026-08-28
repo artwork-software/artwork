@@ -1,6 +1,6 @@
 <template>
     <app-layout :title="$t('Sources of funding')">
-        <div class="artwork-container">
+        <div class="artwork-container-fluid">
 
 
             <ToolbarHeader

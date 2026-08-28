@@ -1,7 +1,29 @@
 <template>
+    <!-- Kompaktkachel unterhalb 80 % Zoom (analog CompactEventInCalendar): bei
+         Monatsdichte stehen tausende Schichtkarten gleichzeitig im Renderfenster —
+         hier darf nichts Teures rein (kein Menü, keine Tooltip-Komponenten, keine
+         Direktiven). Details stehen im nativen title, Klick öffnet das Modal. -->
+    <div
+        v-if="isCompactView"
+        class="w-full flex items-center gap-x-1 rounded-sm border px-1 h-6 select-none overflow-hidden"
+        :class="canPlanShifts && !isFollowUpDay ? 'cursor-pointer' : ''"
+        :style="{ backgroundColor: `${craftColor}${isFollowUpDay ? '30' : '50'}`, borderColor: isFollowUpDay ? '#d1d5db' : craftColor }"
+        :title="compactTitle"
+        @click="onCompactClick"
+    >
+        <span class="text-[10px] font-semibold shrink-0">{{ craftAbbreviation }}</span>
+        <span class="text-[10px] tabular-nums shrink-0"><span v-if="dayRole === 'end' || dayRole === 'middle'" class="opacity-60">→</span>{{ displayStartTime }}-{{ displayEndTime }}<span v-if="dayRole === 'start' || dayRole === 'middle'" class="opacity-60">→</span></span>
+        <span
+            class="text-[10px] tabular-nums shrink-0"
+            :class="compactAssignedTotal > compactDemandedTotal ? 'text-warning font-semibold' : 'text-text-muted'"
+        >{{ compactAssignedTotal }}/{{ compactDemandedTotal }}</span>
+        <span v-if="shift.projectName" class="text-[10px] truncate text-text-muted">{{ shift.projectName }}</span>
+    </div>
+
     <!-- Schicht-Karte im Kalender: Optik wie der obere Teil von SingleShiftInDailyShiftView,
          ohne Zuweisungen/Funktions-Verwaltung. Bearbeiten nur über das 3-Punkte-Menü. -->
     <div
+        v-else
         class="w-full rounded-sm select-none border font-lexend"
         :style="{ backgroundColor: `${craftColor}${isFollowUpDay ? '30' : '50'}`, borderColor: isFollowUpDay ? '#d1d5db' : craftColor, zoom: contentZoom }"
     >
@@ -118,8 +140,9 @@
 </template>
 
 <script setup>
-import {computed, defineAsyncComponent, ref} from "vue";
+import {computed, defineAsyncComponent, inject, ref} from "vue";
 import { useCalendarZoom } from "@/Composeables/useCalendarZoom.js";
+import { useTranslation } from "@/Composeables/Translation.js";
 import {Link, usePage} from "@inertiajs/vue3";
 import {can, is} from "laravel-permission-to-vuejs";
 import {IconEdit} from "@tabler/icons-vue";
@@ -142,16 +165,54 @@ const props = defineProps({
         type: String,
         required: true,
     },
+    // Tagesansicht positioniert die Karten absolut in Zeitspalten — dort keine Kompaktkachel
+    isInDailyView: {
+        type: Boolean,
+        default: false,
+    },
 });
 
 const emit = defineEmits(["shift-edited"]);
+
+const $t = useTranslation();
 
 const canPlanShifts = computed(() => can("can plan shifts") || is("artwork admin"));
 
 // Über 100 % Kalender-Zoom wächst die Karte per CSS zoom mit (Inhalt layoutet wie
 // bei 100 % und wird inkl. Schrift/Icons hochskaliert); bei ≤ 100 % bleibt alles wie bisher.
-const { zoomFactor } = useCalendarZoom();
+const { zoomFactor, isCompact } = useCalendarZoom();
 const contentZoom = computed(() => (zoomFactor.value > 1 ? zoomFactor.value : 1));
+const isCompactView = computed(() => isCompact.value && !props.isInDailyView);
+
+// ----- Kompaktkachel: Summen + title-Tooltip (bewusst ohne Komponenten/Direktiven) -----
+// Nenner = NUR shifts_qualifications-Summe (Konvention von Shift::getMaxUsersAttribute):
+// globale Qualifikationen sind Querschnittsanforderungen, die von bereits gezählten
+// Personen erfüllt werden — sie in den Bedarf zu addieren ließe volle Schichten
+// dauerhaft unterbesetzt aussehen.
+const compactDemandedTotal = computed(() =>
+    (props.shift.shifts_qualifications ?? [])
+        .reduce((sum, sq) => sum + (Number(sq?.value) || 0), 0)
+);
+const compactAssignedTotal = computed(() =>
+    Number(props.shift.assignedWorkersTotal ?? (props.shift.workers?.length ?? 0))
+);
+const compactTitle = computed(() => {
+    const parts = [craftTitleFull.value];
+    parts.push(`${displayStartTime.value} - ${displayEndTime.value}`);
+    parts.push(`${compactAssignedTotal.value}/${compactDemandedTotal.value} ${$t('staffed')}`);
+    if (props.shift.projectName) parts.push(props.shift.projectName);
+    if (props.shift.description) parts.push(props.shift.description);
+    return parts.filter(Boolean).join(' · ');
+});
+// Im Multi-Edit übernimmt die Zellen-Auswahl den Klick (Wrapper in CalendarDayRow
+// reicht ihn dann durch) — die Pille darf dabei kein Schicht-Modal öffnen.
+const injectedMultiEdit = inject('calendarMultiEdit', null);
+
+const onCompactClick = () => {
+    if (injectedMultiEdit?.value) return;
+    if (!canPlanShifts.value || isFollowUpDay.value) return;
+    showAddShiftModal.value = true;
+};
 
 // Projekt-Tab mit Schichtenkomponente; Backend fällt selbst auf den ersten/Default-Tab
 // zurück, wenn keine Schichtenkomponente verbaut ist. Prop-Name je nach Seite unterschiedlich.
@@ -223,7 +284,12 @@ const findGlobalQualification = (id) => globalQualificationsMeta.value.find((q) 
 const pageCrafts = computed(() => toArray(usePage().props.crafts));
 
 // ----- Auslastung -----
+// Bevorzugt die serverseitig aggregierten Zählstände (CalendarShiftDTO);
+// Fallback auf die workers-Liste für Payloads, die noch das volle ShiftDTO
+// liefern (z.B. Broadcast-Events).
 const getAssignedCountForQualification = (id) => {
+    const counts = props.shift.assignedCounts;
+    if (counts && typeof counts === 'object') return Number(counts[id] ?? 0);
     const workers = props.shift.workers || [];
     return workers.filter((w) => w.pivot?.shift_qualification_id === id).length;
 };
@@ -244,6 +310,8 @@ const getPersonGlobalQualificationIds = (person) => {
 };
 
 const countAssignedForGlobalQualification = (globalQualificationId) => {
+    const counts = props.shift.globalAssignedCounts;
+    if (counts && typeof counts === 'object') return Number(counts[globalQualificationId] ?? 0);
     const workers = props.shift?.workers || [];
     return workers.filter((p) => getPersonGlobalQualificationIds(p).includes(globalQualificationId)).length;
 };

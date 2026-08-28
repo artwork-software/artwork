@@ -1,8 +1,5 @@
 <template>
     <div class="space-y-2">
-        <div class="font-lexend font-black tracking-wide text-primaryText text-md">
-            {{ $t('Material Issue') }}
-        </div>
         <div v-if="issues.length > 0" class="space-y-1.5">
             <div v-for="issue in issues" :key="issue.id" class="text-sm text-primaryText border-b border-border-subtle pb-1">
                 {{ issue.name || issue.title || '-' }}

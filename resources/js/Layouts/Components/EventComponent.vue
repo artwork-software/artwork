@@ -752,6 +752,13 @@ const descriptionTouched = ref(false)
 const descriptionLoadFailed = ref(false)
 let descriptionRequest = null
 
+// Zeit-/Projekt-Stand beim Oeffnen (Snapshot passiert in openModal). Muss VOR
+// loadFullDescription deklariert sein: der immediate-Watcher auf props.event
+// ruft openModal -> loadFullDescription bereits waehrend des setup() auf —
+// eine spaetere const-Deklaration crasht dort mit einem TDZ-ReferenceError
+// und das Termin-Modal oeffnet gar nicht.
+const initialTiming = ref(null)
+
 function loadFullDescription() {
     descriptionTouched.value = false
     descriptionLoadFailed.value = false
@@ -1330,11 +1337,9 @@ async function updateOrCreateEvent(isOptionParam = false) {
 const showAssignmentImpactModal = ref(false)
 const assignmentImpactList = ref([])
 let assignmentImpactConfirmed = false
-// Zeit-/Projekt-Stand beim Oeffnen. Der Precheck fragt nur nach, wenn sich daran
-// wirklich etwas geaendert hat — sonst kam der Dialog auch beim reinen
-// Bearbeiten der Beschreibung.
-const initialTiming = ref(null)
-
+// Der Precheck fragt nur nach, wenn sich am initialTiming-Snapshot (Deklaration
+// weiter oben bei loadFullDescription) wirklich etwas geaendert hat — sonst kam
+// der Dialog auch beim reinen Bearbeiten der Beschreibung.
 function timingSnapshot() {
     return {
         start: formatDate(startDate.value, allDayEvent.value ? '00:00' : startTime.value),

@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Http\Controllers\Project;
 
+use Artwork\Modules\Department\Models\Department;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Models\ProjectTab;
 use Artwork\Modules\User\Models\User;
@@ -50,6 +51,36 @@ final class ProjectTabTest extends FeatureTestCase
 
         // CanViewProject middleware should not allow random user
         $this->assertContains($response->getStatusCode(), [302, 403, 404]);
+    }
+
+    #[Test]
+    public function project_team_member_can_view_project_tab(): void
+    {
+        $user = User::factory()->create();
+        $this->actingAs($user);
+        $project = Project::factory()->create();
+        $project->users()->attach($user->id);
+        $tab = ProjectTab::factory()->create(['visible_for_all' => true]);
+
+        $this->get(route('projects.tab', ['project' => $project->id, 'projectTab' => $tab->id]))
+            ->assertOk();
+    }
+
+    #[Test]
+    public function department_team_member_can_view_project_tab(): void
+    {
+        // Abteilungen im Projektteam zählen als Teammitgliedschaft (ProjectPolicy::view) —
+        // die alte CanViewProject-Middleware kannte diesen Fall nicht.
+        $user = User::factory()->create();
+        $this->actingAs($user);
+        $department = Department::factory()->create();
+        $department->users()->attach($user->id);
+        $project = Project::factory()->create();
+        $project->departments()->attach($department->id);
+        $tab = ProjectTab::factory()->create(['visible_for_all' => true]);
+
+        $this->get(route('projects.tab', ['project' => $project->id, 'projectTab' => $tab->id]))
+            ->assertOk();
     }
 
     #[Test]

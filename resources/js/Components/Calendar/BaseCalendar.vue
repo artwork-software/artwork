@@ -61,169 +61,41 @@
                             :class="[isFullscreen ? 'mt-4' : '']"
                             ref="calendarToCalculate"
                         >
-                            <template
+                            <!-- Eine Tageszeile = eigene Komponente: re-rendert nur, wenn sich
+                                 IHRE Daten ändern (Slot-Ersatz beim Monats-Merge, Sichtbarkeits-
+                                 wechsel, Zoom/Settings) — nicht mehr bei jedem Scroll-Tick des
+                                 gesamten Kalenders. -->
+                            <CalendarDayRow
                                 v-for="(day, dayIndex) in days"
                                 :key="day.fullDay"
-                            >
-                            <!-- Monatsgrenze: schwarzer Balken über die ganze Zeile mit Monat + Jahr
-                                 (gleiche Optik wie die dunklen Leisten in anderen Screens);
-                                 auch für den allerersten Tag des Zeitraums, sonst fehlt dem
-                                 obersten Block bei Start mitten im Monat die Orientierung -->
-                            <div
-                                v-if="(day.isFirstDayOfMonth || dayIndex === 0) && !day.isExtraRow"
-                                class="month-separator flex items-center h-7 w-full bg-surface-inverse"
-                            >
-                                <span
-                                    class="month-separator-label text-xs font-semibold text-white whitespace-nowrap px-3"
-                                >
-                                    {{ formatMonthLabel(day.withoutFormat) }}
-                                </span>
-                            </div>
-                            <div
-                                class="flex gap-0.5 day-container border-t"
-                                :class="settings.high_contrast ? 'border-gray-500' : 'border-gray-300'"
-                                :style="[dayRowStyle, dayRowBackgroundStyle(day)]"
-                                :data-day="day.fullDay"
-                                :data-day-to-jump="day.withoutFormat"
-                                :data-month="monthKeyFromDay(day)"
-                                :ref="el => registerMonthSentinel(el, day)"
-                            >
-                                <SingleDayInCalendar v-if="!day.isExtraRow" :isFullscreen="isFullscreen" :day="day" :sticky-top="dayStickyTop" />
-
-                                <!-- Tagesbemerkungen: sticky Spalte direkt neben dem Datum (Inline-Editor in der Zelle) -->
-                                <DayRemarkCell
-                                    v-if="dayRemarksColumnVisible && !day.isExtraRow"
-                                    :day="day"
-                                    :editable="dayRemarksCanEdit"
-                                    :is-fullscreen="isFullscreen"
-                                    :sticky-top="dayStickyTop"
-                                />
-
-                                <!-- Räume -->
-                                <template v-if="!day.isExtraRow">
-                                    <template v-for="(room, roomIdx) in newCalendarData" :key="room.id ?? room.roomId ?? roomIdx">
-                                        <!-- Eine Cell (Tag × Raum) -->
-                                        <section
-                                            :style="[cellStyle, cellSeparatorStyle]"
-                                            :id="`scroll_container-${day.withoutFormat}`"
-                                            :data-room-id="room.roomId ?? room.id"
-                                            :ref="el => registerCell(el, day, room)"
-                                            :class="[
-                    'group/container relative',                 // Basis
-                    multiEdit ? 'cursor-pointer' : '',
-                    // Tagesgrenze liegt jetzt als durchgezogene Linie auf der Zeile (day-container),
-                    // die Zelle trägt nur noch die vertikale Raumtrennlinie (cellSeparatorStyle)
-                  ]"
-                                            @click="toggleCellSelection(day, room)"
-                                        >
-                                            <!-- Multi-Edit: Zellen-Auswahl-Overlay (Klick auf freie Fläche;
-                                                 Termin-Klicks stoppen die Propagation und landen hier nicht) -->
-                                            <div
-                                                v-if="multiEdit"
-                                                class="absolute inset-0 z-30 pointer-events-none"
-                                                :class="isCellSelected(day, room)
-                                                    ? 'border-2 border-dashed border-accent-600 bg-accent-600/10'
-                                                    : 'group-hover/container:border group-hover/container:border-dashed group-hover/container:border-accent-500/70'"
-                                            >
-                                                <div
-                                                    v-if="isCellSelected(day, room)"
-                                                    class="absolute top-0.5 right-0.5 rounded-full bg-accent-600 text-white p-0.5"
-                                                >
-                                                    <component :is="IconCirclePlus" class="size-3.5" stroke-width="2" />
-                                                </div>
-                                            </div>
-                                            <!-- INNERER WRAPPER: hält Scrollbereich + Floating-Buttons -->
-                                            <div :class="['relative w-full', settings.expand_days ? '' : 'h-full']">
-                                                <!-- SCROLLBAR NUR WENN SINNVOLL -->
-                                                <div
-                                                    :class="[
-                                                        'events-scroll',
-                                                        settings.expand_days ? '' : 'h-full',
-                                                        settings.expand_days ? 'overflow-visible flex flex-col' : 'overflow-auto cell'
-                                                      ]"
-                                                    :style="cellStyle"
-                                                >
-                                                    <!-- Nur rendern, wenn Cell (Tag×Raum) in/nahe Viewport; bei
-                                                         expand_days zeilenweise (siehe isDayRowVisible), damit die
-                                                         Auto-Zeilenhöhe beim X-Scrollen stabil bleibt -->
-                                                    <template v-if="settings.expand_days ? isDayRowVisible(day) : isCellVisible(cellKey(day, room))">
-                                                        <template v-for="(cellItems) in [itemsInCell(day, room)]" :key="0">
-                                                            <template v-for="(item, idx) in cellItems" :key="`${item.type}-${item.data.id}`">
-                                                                <div
-                                                                    v-if="item.type === 'shift'"
-                                                                    class="py-0.5"
-                                                                    @click.stop
-                                                                >
-                                                                    <ShiftInCalendarCell
-                                                                        :shift="item.data"
-                                                                        :day="dayKey(day)"
-                                                                        @shift-edited="refetchMonthForDay(day)"
-                                                                    />
-                                                                </div>
-                                                                <div
-                                                                    v-else
-                                                                    :class="[
-                                                                        'py-0.5',
-                                                                        (settings.expand_days && !!item.data.allDay) ? 'flex-1 min-h-0' : ''
-                                                                    ]"
-                                                                    :id="`event_scroll-${idx}-day-${day.withoutFormat}-room-${(room.roomId ?? room.id)}`"
-                                                                    @click="onEventClick(item.data, $event)"
-                                                                >
-                                                                    <AsyncSingleEventInCalendar
-                                                                        v-memo="[item.data.id, item.data.updated_at, multiEdit, item.data.considerOnMultiEdit, fontSizeCalc, lineHeightCalc, cardWidthNum, day.withoutFormat, (room.roomId ?? room.id)]"
-                                                                        :event="item.data"
-                                                                        :multi-edit="multiEdit"
-                                                                        :font-size="fontSizeCalc"
-                                                                        :line-height="lineHeightCalc"
-                                                                        :rooms="rooms"
-                                                                        :has-admin-role="isAdmin"
-                                                                        :width="cardWidthNum"
-                                                                        :first_project_tab_id="first_project_tab_id"
-                                                                        :firstProjectShiftTabId="firstProjectShiftTabId"
-                                                                        :verifierForEventTypIds="verifierForEventTypIds"
-                                                                        :is-planning="isPlanning"
-                                                                        :is-height-full="settings.expand_days && !!item.data.allDay"
-                                                                        :cell-day="day.withoutFormat"
-                                                                        @edit-event="showEditEventModel"
-                                                                        @edit-sub-event="openAddSubEventModal"
-                                                                        @open-add-sub-event-modal="openAddSubEventModal"
-                                                                        @open-confirm-modal="openDeleteEventModal"
-                                                                        @show-decline-event-modal="openDeclineEventModal"
-                                                                        @accept-room-request="acceptSingleRoomRequest"
-                                                                        @changed-multi-edit-checkbox="handleMultiEditEventCheckboxChange"
-                                                                    />
-                                                                </div>
-                                                            </template>
-                                                            <!-- Platzhalter: weicher Abschluss, wenn wenig Inhalt. Nicht im
-                                                                 Kompaktmodus: dort würde er die Einzeiler-Kachel über die
-                                                                 flache Zeilenhöhe drücken und unnötige Scrollbalken erzeugen. -->
-                                                            <div v-if="cellItems.length <= 1 && !settings.expand_days && !isCompact" class="h-2"></div>
-                                                        </template>
-                                                    </template>
-                                                </div>
-
-                                                <!-- "+"-Button: jetzt OBEN RECHTS, außerhalb des Scrollbereichs.
-                                                     Im Multi-Edit ausgeblendet — dort wählt der Zellen-Klick die Zelle aus. -->
-                                                <button
-                                                    v-if="!multiEdit"
-                                                    type="button"
-                                                    class="pointer-events-auto group-hover/container:inline-flex hidden absolute bottom-1 right-3 z-20
-                                                     items-center justify-center cursor-pointer gap-1 rounded-md text-sm font-medium
-                                                     ring-0 bg-white/90 hover:bg-gray-50/90 focus:outline-none focus:ring-0
-                                                     transition duration-200 ease-in-out"
-                                                    :style="addEventButtonStyle"
-                                                    :aria-label="$t('Add event')"
-                                                    @click="openNewEventModalWithBaseData(day.withoutFormat, (room.roomId ?? room.id))"
-                                                >
-                                                    <component :is="IconCirclePlus" :style="addEventIconStyle" />
-                                                </button>
-
-                                            </div>
-                                        </section>
-                                    </template>
-                                </template>
-                            </div>
-                            </template>
+                                :day="day"
+                                :is-first-row="dayIndex === 0"
+                                :visible="isDayRendered(day.withoutFormat)"
+                                :calendar-rooms="newCalendarData"
+                                :rooms="rooms"
+                                :multi-edit="multiEdit"
+                                :is-fullscreen="isFullscreen"
+                                :day-sticky-top="dayStickyTop"
+                                :day-remarks-column-visible="dayRemarksColumnVisible"
+                                :day-remarks-can-edit="dayRemarksCanEdit"
+                                :selected-cells="multiEdit ? selectedCells : null"
+                                :is-admin="isAdmin"
+                                :is-planning="isPlanning"
+                                :verifier-for-event-typ-ids="verifierForEventTypIds"
+                                :first-project-tab-id="first_project_tab_id"
+                                :first-project-shift-tab-id="firstProjectShiftTabId"
+                                :register-row-el="registerRowElement"
+                                :unregister-row-el="unregisterRowElement"
+                                @edit-event="showEditEventModel"
+                                @open-add-sub-event-modal="openAddSubEventModal"
+                                @open-confirm-modal="openDeleteEventModal"
+                                @show-decline-event-modal="openDeclineEventModal"
+                                @accept-room-request="acceptSingleRoomRequest"
+                                @changed-multi-edit-checkbox="handleMultiEditEventCheckboxChange"
+                                @shift-edited="refetchMonthForDay"
+                                @toggle-cell="toggleCellSelection"
+                                @open-new-event="openNewEventModalWithBaseData"
+                            />
                         </div>
                     </div>
                 </div>
@@ -515,21 +387,24 @@
 </template>
 
 <script setup lang="ts">
-import {computed, defineAsyncComponent, inject, nextTick, onBeforeUnmount, onMounted, ref, shallowRef, triggerRef, watch} from "vue";
+import {computed, defineAsyncComponent, inject, nextTick, onBeforeUnmount, onMounted, provide, ref, shallowRef, triggerRef, watch} from "vue";
 import {router, usePage} from "@inertiajs/vue3";
 import axios from "axios";
-import {IconAlertTriangle, IconCirclePlus} from "@tabler/icons-vue";
+import {IconAlertTriangle} from "@tabler/icons-vue";
 
 import {usePermission} from "@/Composeables/Permission.js";
 import {useTranslation} from "@/Composeables/Translation.js";
 import {useShiftCalendarListener} from "@/Composeables/Listener/useShiftCalendarListener.js";
 import {useCalendarZoom} from "@/Composeables/useCalendarZoom.js";
 import {useDayRemarks} from "@/Composeables/useDayRemarks.js";
-import {formatMonthLabel} from "@/Composeables/calendarDateUtils.js";
 import {can} from "laravel-permission-to-vuejs";
 import CalendarPlaceholder from "@/Components/Calendar/Elements/CalendarPlaceholder.vue";
 import SingleRoomInHeader from "@/Components/Calendar/Elements/SingleRoomInHeader.vue";
 import ToolTipWithTextComponent from "@/Components/ToolTips/ToolTipWithTextComponent.vue";
+// Tageszeile synchron importieren: das Grid-Skelett muss beim ersten Render
+// stehen, sonst springt die Scroll-Höhe beim Nachladen der Zeilen-Chunks.
+import CalendarDayRow from "@/Components/Calendar/Elements/CalendarDayRow.vue";
+import {cellKey, dayKey, deKeyToIso, itemsInCell} from "@/Components/Calendar/calendarCellItems.js";
 
 const props = defineProps({
     rooms: { type: Object, required: true },
@@ -554,7 +429,6 @@ const FunctionBarCalendar = defineAsyncComponent({ loader: () => import("@/Compo
 const CalendarHeader = defineAsyncComponent({ loader: () => import("@/Components/Calendar/Elements/CalendarHeader.vue") });
 const AsyncEventsWithoutRoomComponent = defineAsyncComponent({ loader: () => import("@/Layouts/Components/EventsWithoutRoomComponent.vue") });
 const AsyncDailyViewCalendar = defineAsyncComponent({ loader: () => import("@/Components/Calendar/DailyViewCalendar.vue") });
-const SingleDayInCalendar = defineAsyncComponent({ loader: () => import("@/Components/Calendar/Elements/SingleDayInCalendar.vue") });
 const MultiDuplicateModal = defineAsyncComponent({ loader: () => import("@/Layouts/Components/MultiDuplicateModal.vue") });
 const AddSubEventModal = defineAsyncComponent({ loader: () => import("@/Layouts/Components/AddSubEventModal.vue") });
 const DeclineEventModal = defineAsyncComponent({ loader: () => import("@/Layouts/Components/DeclineEventModal.vue") });
@@ -575,9 +449,6 @@ const AsyncSingleEventInCalendar = defineAsyncComponent({
 });
 const ShiftInCalendarCell = defineAsyncComponent({
     loader: () => import('@/Components/Calendar/Elements/ShiftInCalendarCell.vue'),
-});
-const DayRemarkCell = defineAsyncComponent({
-    loader: () => import('@/Components/Calendar/Elements/DayRemarkCell.vue'),
 });
 
 // Tagesbemerkungen: Sichtbarkeit/Rechte zentral aus dem Composable.
@@ -611,65 +482,9 @@ const {
 const isDaily = computed(() => !!user.value.calendar_daily_view);
 const atAGlance = computed(() => !!user.value.at_a_glance);
 
-// Maße/Styles: Spaltenbreite ist vom Zoom entkoppelt (Anzeigeeinstellung),
-// der Zoom steuert nur noch die Zeilenhöhe/Informationsdichte.
-const cellWidthPx = computed(() => `${columnWidth.value}px`);
-const cardWidthNum = computed(() => eventCardWidth.value);
-const rowHeightPx = computed(() => `${rowHeight.value}px`);
-const dayRowStyle = computed(() => ({
-    height: settings.value.expand_days ? "" : rowHeightPx.value,
-    minHeight: settings.value.expand_days ? rowHeightPx.value : ""
-}));
-const cellStyle = computed(() => ({
-    minWidth: cellWidthPx.value,
-    maxWidth: cellWidthPx.value,
-    height: settings.value.expand_days ? "" : rowHeightPx.value,
-    minHeight: settings.value.expand_days ? rowHeightPx.value : ""
-}));
-// "+"-Button: 40px Zielgröße, aber nie höher als die Zoom-Zeilenhöhe
-// (bei 40 % sind die Zeilen nur 33px hoch — dort auf Zeile minus Offset kappen).
-const addEventButtonSize = computed(() => Math.min(40, Math.max(20, rowHeight.value - 8)));
-const addEventButtonStyle = computed(() => ({
-    width: `${addEventButtonSize.value}px`,
-    height: `${addEventButtonSize.value}px`
-}));
-const addEventIconStyle = computed(() => {
-    const size = Math.round(addEventButtonSize.value * 0.65);
-    return { width: `${size}px`, height: `${size}px` };
-});
-// Vertikale Trennlinie zwischen den Raumspalten (inline statt Tailwind-Klasse,
-// damit sie unabhängig vom Zeilen-Border-Style bleibt).
-const cellSeparatorStyle = computed(() => ({
-    borderLeft: `1px solid ${settings.value.high_contrast ? 'rgba(0,0,0,0.4)' : 'rgba(0,0,0,0.18)'}`
-}));
-
-// Wochenend-/Feiertags-Einfärbung der ganzen Tageszeile (inkl. Datumsspalte).
-// Feiertag schlägt Wochenende; Feiertagston wird aus holiday.color abgeleitet.
-// Eintägige Feiertage färben deutlich, mehrtägige Zeiträume (Ferien) nur sehr
-// dezent — sonst wären ganze Wochen farblich überladen. Liegen beide auf einem
-// Tag, gewinnt der eintägige Feiertag.
-const dayTintColor = (day) => {
-    if (!day || day.isExtraRow) return null;
-    const holidays = day.holidays ?? [];
-    const singleDayHoliday = holidays.find(
-        (holiday) => holiday?.color && (!holiday.end_date || holiday.end_date === holiday.date)
-    );
-    const coloredHoliday = singleDayHoliday ?? holidays.find((holiday) => holiday?.color);
-    if (coloredHoliday) {
-        const alpha = singleDayHoliday
-            ? (settings.value.high_contrast ? '59' : '33')
-            : (settings.value.high_contrast ? '33' : '1A');
-        return `${coloredHoliday.color}${alpha}`;
-    }
-    if (day.isWeekend) {
-        return settings.value.high_contrast ? '#dbeafe' : '#eff6ff';
-    }
-    return null;
-};
-const dayRowBackgroundStyle = (day) => {
-    const tint = dayTintColor(day);
-    return tint ? { backgroundColor: tint } : {};
-};
+// Maße/Styles der Tageszeilen/Zellen liegen jetzt in CalendarDayRow.vue —
+// hier verbleiben nur die Werte, die die At-a-Glance-Ansicht braucht
+// (columnWidth, eventCardWidth, fontSizeCalc, lineHeightCalc).
 // Topbar count
 const eventsWithoutRoomLen = computed(() =>
     Array.isArray(props.eventsWithoutRoom) ? props.eventsWithoutRoom.length : (props.eventsWithoutRoom?.length ?? 0)
@@ -686,6 +501,10 @@ let topbarObserver = null;
 
 // State
 const multiEdit = ref(false);
+// Für die Kompakt-Terminkacheln als Inject statt Prop: die lesen den Wert nur
+// im Klick-Handler (nicht im Render) — so re-rendern beim Multi-Edit-Toggle
+// nicht tausende gemountete Kompakt-Kacheln, deren Optik sich gar nicht ändert.
+provide('calendarMultiEdit', multiEdit);
 const isFullscreen = ref(false);
 const showMultiEditModal = ref(false);
 const editEvents = ref([]);
@@ -716,18 +535,7 @@ const eventTypes = inject("eventTypes");
 const fontSizeCalc = computed(() => `max(calc(${zoom_factor.value} * 0.875rem), 10px)`);
 const lineHeightCalc = computed(() => `max(calc(${zoom_factor.value} * 1.25rem), 1.3)`);
 
-const toGermanDate = (iso) => {
-    if (!iso || iso.length < 10) return iso;
-    const [y, m, d] = iso.split("-");
-    return `${d}.${m}.${y}`;
-};
 
-type DayLike = { withoutFormat: string };
-type RoomLike = { id?: number|string; roomId?: number|string };
-
-const cellRefs = ref<Map<string, HTMLElement>>(new Map());
-
-const dayKey = (day) => day.fullDay ?? toGermanDate(day.withoutFormat);
 const monthKeyFromDay = (day) => (day.withoutFormat || "").slice(0, 7);
 function deDateToIso(de: string): string | null {
     if (!de || de.length < 10) return null;
@@ -748,74 +556,122 @@ function ensureCalendarShape() {
     }
 }
 
-function useCellVisibility(options = {}) {
-    const { root = null, rootMargin = '1200px', threshold = 0.01 } = options;
-    const visibleKeys = shallowRef(new Set<string>());
-    let io: IntersectionObserver | null = null;
-    const map = new Map<Element, string>();
 
-    const isVisible = (key: string) => visibleKeys.value.has(key);
+// ---------- Zeilen-Sichtbarkeit (Mount-only mit LRU-Obergrenze) ----------
+// Ein IntersectionObserver auf den 365 Zeilen-Wurzeln mountet Zell-Inhalte
+// kurz vor dem Viewport. Einmal gemountete Zeilen BLEIBEN gemountet — der
+// DOM ist der Zwischenspeicher: Zurückscrollen in besuchte Bereiche baut
+// nichts neu auf (Kundenanforderung: große Zeiträume, viel Hin- und
+// Herscrollen). Begrenzt wird nicht über die Entfernung, sondern über eine
+// zoomabhängige OBERGRENZE an gemounteten Zeilen (LRU): erst wenn sie
+// überschritten ist, werden die am längsten nicht gesehenen, nicht
+// viewport-nahen Zeilen wieder entladen. Bei Kompakt-Zoom (billige Pillen)
+// deckt die Grenze einen ganzen Jahres-Zeitraum ab; bei 100 %+ (teure
+// Vollkarten) hält sie den DOM in Schach. Updates werden pro Frame gesammelt
+// (rAF), damit ein Scroll-Tick höchstens EIN Re-Render auslöst.
+const renderedDayKeys = shallowRef(new Set<string>());
+const isDayRendered = (key: string) => renderedDayKeys.value.has(key);
 
-    const observe = (el: Element, key: string) => {
-        if (!el) return;
-        if (!io) {
-            io = new IntersectionObserver((entries) => {
-                let changed = false;
-                for (const entry of entries) {
-                    const k = map.get(entry.target);
-                    if (!k) continue;
-                    if (entry.isIntersecting) {
-                        if (!visibleKeys.value.has(k)) { visibleKeys.value.add(k); changed = true; }
-                    } else {
-                        if (visibleKeys.value.has(k)) { visibleKeys.value.delete(k); changed = true; }
-                    }
-                }
-                if (changed) triggerRef(visibleKeys);
-            }, { root, rootMargin, threshold });
+// Zeilen, die aktuell im nahen Beobachtungsfenster liegen — nie evikten.
+const nearRowKeys = new Set<string>();
+// LRU-Reihenfolge: key -> zuletzt gesehen (monoton steigende Sequenz)
+const rowLastSeen = new Map<string, number>();
+let rowSeenSeq = 0;
+
+// Budget: ~24.000px an Zeilen bleiben gemountet (Untergrenze 120 Zeilen).
+// 33px-Zeilen (40 %): 727 → ganzer Jahres-Zeitraum bleibt stehen;
+// 212px-Zeilen (100 %): ~113 → knapp 4 Monate Vollkarten.
+const mountedRowCap = computed(() => Math.max(120, Math.round(24000 / rowHeight.value)));
+
+let rowNearObserver: IntersectionObserver | null = null;
+let visibilityFlushHandle: number | null = null;
+let visibilityFlushTimeout: number | null = null;
+const pendingShow = new Set<string>();
+
+function evictRowsOverCap(keys: Set<string>): boolean {
+    const cap = mountedRowCap.value;
+    if (keys.size <= cap) return false;
+    const candidates: Array<[string, number]> = [];
+    for (const key of keys) {
+        if (!nearRowKeys.has(key)) {
+            candidates.push([key, rowLastSeen.get(key) ?? 0]);
         }
-        map.set(el, key);
-        io.observe(el);
-    };
-
-    const dispose = () => {
-        if (io) io.disconnect();
-        map.clear();
-        visibleKeys.value.clear();
-    };
-
-    return { observe, isVisible, visibleKeys, dispose };
+    }
+    candidates.sort((a, b) => a[1] - b[1]); // am längsten nicht gesehen zuerst
+    let removed = false;
+    let toRemove = keys.size - cap;
+    for (const [key] of candidates) {
+        if (toRemove <= 0) break;
+        keys.delete(key);
+        toRemove--;
+        removed = true;
+    }
+    return removed;
 }
-const { observe: observeCell, isVisible: isCellVisible, visibleKeys: visibleCellKeys, dispose: disposeCells } = useCellVisibility({
-    root: null,
-    rootMargin: '1200px',
-    threshold: 0.01
-});
-const cellKey = (day, room) => `${day.withoutFormat}:${(room.roomId ?? room.id)}`;
 
-// Bei "Tage aufklappen" bestimmen ALLE Zellen einer Zeile deren Auto-Höhe.
-// Würden Zellen horizontal virtualisiert (mount/unmount je nach X-Scroll),
-// spränge die Zeilenhöhe beim Scrollen und der Inhalt verschöbe sich vertikal.
-// Deshalb rendert eine Zeile dort alle Raum-Zellen, sobald sie vertikal in
-// Viewport-Nähe ist — erkennbar daran, dass mindestens eine ihrer Zellen im
-// IntersectionObserver sichtbar ist (die Zellen unter dem Viewport-X-Bereich
-// sind das immer). Im Modus mit fixer Zeilenhöhe bleibt die sparsamere
-// Zell-Virtualisierung in beiden Achsen aktiv.
-const visibleDayKeys = computed(() => {
-    const days = new Set<string>();
-    for (const key of visibleCellKeys.value) {
-        days.add(key.slice(0, key.indexOf(':')));
+function flushRowVisibility() {
+    if (visibilityFlushHandle !== null) {
+        cancelAnimationFrame(visibilityFlushHandle);
+        visibilityFlushHandle = null;
     }
-    return days;
-});
-const isDayRowVisible = (day) => visibleDayKeys.value.has(day.withoutFormat);
-const registerCell = (el: HTMLElement | null, day: DayLike, room: RoomLike) => {
-    const key = cellKey(day, room);
-    if (el) {
-        observeCell(el, key);                  // Sichtbarkeits-IO
-        cellRefs.value.set(key, el);           // <-- WICHTIG: referenz speichern
-    } else {
-        cellRefs.value.delete(key);
+    if (visibilityFlushTimeout !== null) {
+        window.clearTimeout(visibilityFlushTimeout);
+        visibilityFlushTimeout = null;
     }
+    if (!pendingShow.size) return;
+    const keys = renderedDayKeys.value;
+    let changed = false;
+    for (const key of pendingShow) {
+        if (!keys.has(key)) { keys.add(key); changed = true; }
+    }
+    pendingShow.clear();
+    if (evictRowsOverCap(keys)) changed = true;
+    if (changed) triggerRef(renderedDayKeys);
+}
+
+function scheduleVisibilityFlush() {
+    if (visibilityFlushHandle !== null || visibilityFlushTimeout !== null) return;
+    // rAF batcht pro Frame — feuert in Hintergrund-Tabs aber NIE. Der
+    // setTimeout-Fallback stellt sicher, dass der Flush auch dann läuft
+    // (z.B. Tab im Hintergrund geöffnet/aktualisiert); wer zuerst dran ist,
+    // räumt beide Handles ab.
+    visibilityFlushHandle = requestAnimationFrame(flushRowVisibility);
+    visibilityFlushTimeout = window.setTimeout(flushRowVisibility, 60);
+}
+
+function initRowVisibilityObservers() {
+    if (rowNearObserver) return;
+    rowNearObserver = new IntersectionObserver((entries) => {
+        for (const entry of entries) {
+            const key = entry.target.getAttribute('data-row-day');
+            if (!key) continue;
+            if (entry.isIntersecting) {
+                nearRowKeys.add(key);
+                rowLastSeen.set(key, ++rowSeenSeq);
+                pendingShow.add(key);
+            } else {
+                // Verlassen des Fensters entlädt NICHTS — es endet nur der
+                // Evict-Schutz und die LRU-Uhr dieser Zeile bleibt stehen.
+                nearRowKeys.delete(key);
+            }
+        }
+        scheduleVisibilityFlush();
+    }, { root: null, rootMargin: '1200px 0px', threshold: 0 });
+}
+
+// Von CalendarDayRow beim Mount/Unmount aufgerufen (stabile Funktions-Props):
+// registriert die Zeilen-Wurzel für Sichtbarkeits- UND Monatsfokus-Observer.
+// Die Observer lesen Tag/Monat aus den data-Attributen des Zeilen-Elements —
+// ein day-Parameter wäre nur Schein-Keying.
+const registerRowElement = (el: HTMLElement) => {
+    initRowVisibilityObservers();
+    initMonthObserver();
+    rowNearObserver!.observe(el);
+    monthObserver!.observe(el);
+};
+const unregisterRowElement = (el: HTMLElement) => {
+    rowNearObserver?.unobserve(el);
+    monthObserver?.unobserve(el);
 };
 
 const monthList = computed(() => {
@@ -858,34 +714,43 @@ async function retryFailedMonths() {
 const monthControllers = new Map<string, AbortController>();
 let currentEpoch = 0;
 const monthEpoch = new Map<string, number>();
-const MAX_LOADED_MONTHS = 24;
+// Daten-Zwischenspeicher: geladene Monate bleiben im Speicher (Kunden laden
+// große Zeiträume und scrollen viel hin und her — 36 Monate ≈ 3 Jahre à
+// ~1,6 MB JSON sind unkritisch). Erst darüber wird geräumt, und zwar die
+// Monate, die am WEITESTEN vom aktuellen Fokus entfernt sind — nie die
+// gerade betrachteten (der alte Code räumte in Einfüge-Reihenfolge).
+const MAX_LOADED_MONTHS = 36;
 function pruneLoadedIfNeeded() {
     if (loadedMonths.value.size <= MAX_LOADED_MONTHS) return;
-    const toRemove = loadedMonths.value.size - MAX_LOADED_MONTHS;
-    let i = 0;
-    for (const key of loadedMonths.value) {
-        if (i >= toRemove) break;
+    const focusIdx = focusedMonthKey.value
+        ? (monthIndexByKey.value.get(focusedMonthKey.value) ?? 0)
+        : 0;
+    const byDistanceDesc = [...loadedMonths.value].sort((a, b) => {
+        const da = Math.abs((monthIndexByKey.value.get(a) ?? 0) - focusIdx);
+        const db = Math.abs((monthIndexByKey.value.get(b) ?? 0) - focusIdx);
+        return db - da;
+    });
+    let toRemove = loadedMonths.value.size - MAX_LOADED_MONTHS;
+    for (const key of byDistanceDesc) {
+        if (toRemove <= 0) break;
         removeCalendarMonthData(key);
         loadedMonths.value.delete(key);
-        i++;
+        toRemove--;
     }
 }
 
 function removeCalendarMonthData(monthKey: string) {
     ensureCalendarShape();
-    const rooms: any[] = newCalendarData.value;
-
-    for (const room of rooms) {
+    // Nur die Slots des Monats einzeln löschen — die Slot-Identität aller
+    // anderen Monate bleibt stabil, betroffene Zeilen re-rendern gezielt.
+    for (const room of newCalendarData.value) {
         if (!room?.content || typeof room.content !== 'object') continue;
-
-        const nextContent: Record<string, any> = {};
         for (const deKey of Object.keys(room.content)) {
             const iso = deDateToIso(deKey);
-            if (!iso || !isoInMonth(iso, monthKey)) {
-                nextContent[deKey] = room.content[deKey];
+            if (iso && isoInMonth(iso, monthKey)) {
+                delete room.content[deKey];
             }
         }
-        room.content = nextContent;
     }
 }
 
@@ -929,6 +794,11 @@ function setCalendarMonthData(monthKey: string, incomingCalendar: any) {
         loadedMonths?.value?.add?.(monthKey);
         return;
     }
+    // MERGE statt Komplett-Ersatz: Raum-Objekte und das Räume-Array behalten
+    // ihre Identität (und damit alle vorhandenen Felder wie roomColor), nur
+    // die Tages-Slots des geladenen Monats werden einzeln ersetzt. Dadurch
+    // re-rendern ausschliesslich die Zeilen dieses Monats — ein fertiger
+    // Monats-Request invalidiert nicht mehr das gesamte Grid.
     const targetRooms: any[] = newCalendarData.value;
     const targetByRoomId = new Map<number, any>();
     for (const r of targetRooms) {
@@ -937,6 +807,7 @@ function setCalendarMonthData(monthKey: string, incomingCalendar: any) {
         }
     }
 
+    let addedRoom = false;
     for (const inc of incRooms) {
         const roomId = inc?.roomId;
         if (roomId == null) continue;
@@ -946,28 +817,30 @@ function setCalendarMonthData(monthKey: string, incomingCalendar: any) {
             target = { roomId: roomId, roomName: inc?.roomName ?? '', roomColor: inc?.roomColor ?? null, content: {} };
             targetRooms.push(target);
             targetByRoomId.set(roomId, target);
+            addedRoom = true;
         }
         if (!target.content || typeof target.content !== 'object') {
             target.content = {};
         }
 
-        const pruned: Record<string, any> = {};
+        const incContent = inc?.content && typeof inc.content === 'object' ? inc.content : {};
+
+        // Alte Slots dieses Monats entfernen, die der neue Load nicht mehr liefert
         for (const deKey of Object.keys(target.content)) {
             const iso = deDateToIso(deKey);
-            if (!iso || !isoInMonth(iso, monthKey)) {
-                pruned[deKey] = target.content[deKey];
+            if (iso && isoInMonth(iso, monthKey) && !(deKey in incContent)) {
+                delete target.content[deKey];
             }
         }
-
-        const incContent = inc?.content && typeof inc.content === 'object' ? inc.content : {};
+        // Neue/aktualisierte Slots einzeln ersetzen (Slot-Identität = Invalidierung
+        // für die cellItems-Computed der betroffenen Zeile)
         for (const deKey of Object.keys(incContent)) {
             const iso = deDateToIso(deKey);
             if (iso && isoInMonth(iso, monthKey)) {
-                pruned[deKey] = incContent[deKey];
+                target.content[deKey] = incContent[deKey];
             }
         }
 
-        target.content = pruned;
         if (inc?.roomName && inc.roomName !== target.roomName) {
             target.roomName = inc.roomName;
         }
@@ -975,18 +848,21 @@ function setCalendarMonthData(monthKey: string, incomingCalendar: any) {
             target.roomColor = inc?.roomColor ?? null;
         }
     }
-    // Sort rooms to match the order from the rooms prop (position-based from DB)
-    const roomOrder = new Map<number, number>();
-    (props.rooms as any[]).forEach((r: any, idx: number) => {
-        roomOrder.set(r.id, idx);
-    });
-    targetRooms.sort((a: any, b: any) => {
-        const posA = roomOrder.get(a.roomId) ?? Number.MAX_SAFE_INTEGER;
-        const posB = roomOrder.get(b.roomId) ?? Number.MAX_SAFE_INTEGER;
-        return posA - posB;
-    });
 
-    newCalendarData.value = [...targetRooms];
+    // Nur bei neu hinzugekommenen Räumen neu sortieren — der Raumbestand ist
+    // über die Monats-Loads hinweg stabil, unnötige sort()-Läufe würden die
+    // Array-Iteration aller Zeilen invalidieren.
+    if (addedRoom) {
+        const roomOrder = new Map<number, number>();
+        (props.rooms as any[]).forEach((r: any, idx: number) => {
+            roomOrder.set(r.id, idx);
+        });
+        targetRooms.sort((a: any, b: any) => {
+            const posA = roomOrder.get(a.roomId) ?? Number.MAX_SAFE_INTEGER;
+            const posB = roomOrder.get(b.roomId) ?? Number.MAX_SAFE_INTEGER;
+            return posA - posB;
+        });
+    }
 }
 
 async function loadMonth(key: string, epoch: number) {
@@ -1027,10 +903,25 @@ async function loadMonth(key: string, epoch: number) {
         failedMonths.value.set(key, (failedMonths.value.get(key) ?? 0) + 1);
         console.error('Fehler beim Laden Monat', key, err);
     } finally {
-        loadingMonths.value.delete(key);
+        // Ownership-Guard: Wurde dieser Request inzwischen ersetzt (z.B. durch einen
+        // Refetch nach Schicht-Edit), darf sein finally die Buchhaltung des
+        // Nachfolgers nicht wegräumen.
         if (monthControllers.get(key) === controller) {
             monthControllers.delete(key);
+            loadingMonths.value.delete(key);
         }
+    }
+}
+
+// Laufenden Request eines Monats verwerfen, damit ein Refetch nicht am
+// loadingMonths-Guard in loadMonth abprallt (sonst re-markiert die alte,
+// vor dem Edit gestartete Antwort den Monat als geladen → Edit unsichtbar).
+function abortInflightMonth(key: string) {
+    const inflight = monthControllers.get(key);
+    if (inflight) {
+        inflight.abort();
+        monthControllers.delete(key);
+        loadingMonths.value.delete(key);
     }
 }
 
@@ -1045,6 +936,10 @@ function windowKeysAround(idx: number, radius = 1): string[] {
 
 function cancelAllExcept(targets: string[]) {
     for (const [key, controller] of monthControllers.entries()) {
+        // Den einen laufenden Hintergrund-Load nie abbrechen — sonst wirft
+        // jeder Fokuswechsel die fast fertige Antwort weg und der Monat muss
+        // beim nächsten Idle-Slot komplett neu geladen werden.
+        if (key === backgroundLoadingKey) continue;
         if (!targets.includes(key)) {
             controller.abort();
             monthControllers.delete(key);
@@ -1071,7 +966,6 @@ function debounce(fn: () => void, wait = 120) {
 // Scrollen ueber mehrere Monate gar nichts fertig wurde.
 const SCROLL_WINDOW_RADIUS = 2;
 const KEEP_RADIUS = 3;
-const PREFETCH_RADIUS = 3;
 
 async function ensureAroundInternal(key: string | null, radius = SCROLL_WINDOW_RADIUS) {
     if (!key) return;
@@ -1081,31 +975,71 @@ async function ensureAroundInternal(key: string | null, radius = SCROLL_WINDOW_R
     const targets = windowKeysAround(idx, radius);
     cancelAllExcept(windowKeysAround(idx, Math.max(radius, KEEP_RADIUS)));
     await Promise.allSettled(targets.map(k => loadMonth(k, myEpoch)));
-    // Nur prefetchen, wenn inzwischen kein neuerer Fokus gewonnen hat
-    if (myEpoch === currentEpoch) schedulePrefetchAround(idx);
+    // Nur weiterladen, wenn inzwischen kein neuerer Fokus gewonnen hat
+    if (myEpoch === currentEpoch) scheduleBackgroundPrefetch();
 }
 
-// Aeusserer Ring erst im Leerlauf — konkurriert so nicht mit dem Fenster,
-// das der Nutzer gerade ansieht.
-let prefetchHandle: number | null = null;
-function schedulePrefetchAround(idx: number) {
-    const run = () => {
-        prefetchHandle = null;
-        const epoch = currentEpoch;
-        windowKeysAround(idx, PREFETCH_RADIUS)
-            .filter(k => !loadedMonths.value.has(k) && !loadingMonths.value.has(k))
-            .forEach(k => loadMonth(k, epoch));
-    };
-    if (prefetchHandle !== null) {
-        if (typeof (window as any).cancelIdleCallback === 'function') {
-            (window as any).cancelIdleCallback(prefetchHandle);
-        } else {
-            window.clearTimeout(prefetchHandle);
-        }
+// ---------- Hintergrund-Vorladen des gesamten Zeitraums ----------
+// Nach dem sichtbaren Fenster lädt ein Idle-Loop nach und nach ALLE Monate
+// des Zeitraums (immer den, der dem aktuellen Fokus am nächsten ist), einen
+// pro Schritt — so ist beim Hin- und Herscrollen irgendwann alles da und
+// nichts muss mehr nachladen. Gestoppt wird am Cache-Budget
+// (MAX_LOADED_MONTHS): weiter entfernte Monate würde das Pruning sofort
+// wieder verwerfen. Fehlgeschlagene Monate respektieren ihr Retry-Limit.
+let backgroundPrefetchHandle: number | null = null;
+let backgroundLoadingKey: string | null = null;
+
+function pickNextBackgroundMonth(): string | null {
+    const list = monthList.value;
+    if (!list.length) return null;
+    const focusIdx = focusedMonthKey.value
+        ? (monthIndexByKey.value.get(focusedMonthKey.value) ?? 0)
+        : 0;
+    let best: string | null = null;
+    let bestDist = Infinity;
+    for (let i = 0; i < list.length; i++) {
+        const key = list[i].key;
+        if (loadedMonths.value.has(key) || loadingMonths.value.has(key)) continue;
+        if ((failedMonths.value.get(key) ?? 0) >= MAX_MONTH_LOAD_RETRIES) continue;
+        const dist = Math.abs(i - focusIdx);
+        if (dist < bestDist) { bestDist = dist; best = key; }
     }
-    prefetchHandle = typeof (window as any).requestIdleCallback === 'function'
-        ? (window as any).requestIdleCallback(run, { timeout: 2000 })
+    if (best !== null && bestDist > Math.floor(MAX_LOADED_MONTHS / 2)) return null;
+    return best;
+}
+
+function cancelBackgroundPrefetch() {
+    if (backgroundPrefetchHandle === null) return;
+    if (typeof (window as any).cancelIdleCallback === 'function') {
+        (window as any).cancelIdleCallback(backgroundPrefetchHandle);
+    } else {
+        window.clearTimeout(backgroundPrefetchHandle);
+    }
+    backgroundPrefetchHandle = null;
+}
+
+function scheduleBackgroundPrefetch() {
+    if (backgroundPrefetchHandle !== null) return;
+    const run = () => {
+        backgroundPrefetchHandle = null;
+        void runBackgroundPrefetchStep();
+    };
+    backgroundPrefetchHandle = typeof (window as any).requestIdleCallback === 'function'
+        ? (window as any).requestIdleCallback(run, { timeout: 3000 })
         : window.setTimeout(run, 600);
+}
+
+async function runBackgroundPrefetchStep() {
+    if (backgroundLoadingKey !== null) return; // es läuft schon ein Hintergrund-Load
+    const key = pickNextBackgroundMonth();
+    if (!key) return; // alles (im Budget) geladen — Neustart beim nächsten Fokuswechsel
+    backgroundLoadingKey = key;
+    try {
+        await loadMonth(key, currentEpoch);
+    } finally {
+        backgroundLoadingKey = null;
+    }
+    scheduleBackgroundPrefetch();
 }
 
 const ensureAround = debounce(() => {
@@ -1113,13 +1047,9 @@ const ensureAround = debounce(() => {
 }, 120);
 
 let monthObserver: IntersectionObserver | null = null;
-// Beobachtet werden ALLE Tageszeilen, nicht nur die erste je Monat. Bei einem
-// Jahres-Zeitraum liegt die erste Zeile eines Monats schnell weit ausserhalb
-// von Viewport + rootMargin, der Fokus haette sich dann auf einen Monat
-// gestuetzt, dessen Startzeile gerade niemand sieht. Kosten: 365 statt 12
-// beobachtete Elemente — neben den ~7.000 Zell-Observern vernachlaessigbar.
-const observedSentinels = new WeakSet<Element>();
-
+// Beobachtet werden ALLE Tageszeilen (Zeilen-Wurzeln aus CalendarDayRow),
+// nicht nur die erste je Monat: bei einem Jahres-Zeitraum liegt die erste
+// Zeile eines Monats schnell weit ausserhalb von Viewport + rootMargin.
 function initMonthObserver() {
     if (monthObserver) return;
     monthObserver = new IntersectionObserver((entries) => {
@@ -1136,15 +1066,6 @@ function initMonthObserver() {
             ensureAround();
         }
     }, { root: null, rootMargin: '1200px 0px', threshold: [0.1, 0.5, 0.75] });
-}
-
-function registerMonthSentinel(el, day) {
-    if (!el) return;
-    const key = monthKeyFromDay(day);
-    if (!key || observedSentinels.has(el)) return;
-    observedSentinels.add(el);
-    initMonthObserver();
-    monthObserver!.observe(el);
 }
 
 function waitUntil(pred: () => boolean, { interval = 30, timeout = 5000 } = {}): Promise<void> {
@@ -1188,8 +1109,8 @@ async function runInitialLoad() {
     await Promise.allSettled(targets.map(k => loadMonth(k, epoch)));
 
     didInitialLoad.value = true;
-    // Nachbarmonate erst nach dem ersten Bild und nur im Leerlauf
-    schedulePrefetchAround(idx);
+    // Restlichen Zeitraum erst nach dem ersten Bild und nur im Leerlauf laden
+    scheduleBackgroundPrefetch();
 }
 
 
@@ -1232,15 +1153,20 @@ onBeforeUnmount(() => {
     calendarRef.value?.removeEventListener('wheel', handleWheelZoom);
     if (monthObserver) monthObserver.disconnect();
     monthObserver = null;
-    cancelAllExcept([]);
-    if (prefetchHandle !== null) {
-        if (typeof (window as any).cancelIdleCallback === 'function') {
-            (window as any).cancelIdleCallback(prefetchHandle);
-        } else {
-            window.clearTimeout(prefetchHandle);
-        }
-        prefetchHandle = null;
+    if (rowNearObserver) rowNearObserver.disconnect();
+    rowNearObserver = null;
+    if (visibilityFlushHandle !== null) {
+        cancelAnimationFrame(visibilityFlushHandle);
+        visibilityFlushHandle = null;
     }
+    if (visibilityFlushTimeout !== null) {
+        window.clearTimeout(visibilityFlushTimeout);
+        visibilityFlushTimeout = null;
+    }
+    // Beim Unmount darf auch der laufende Hintergrund-Load sterben
+    backgroundLoadingKey = null;
+    cancelAllExcept([]);
+    cancelBackgroundPrefetch();
 
     // Remove fullscreen event listeners
     document.removeEventListener('fullscreenchange', handleFullscreenChange);
@@ -1277,47 +1203,58 @@ const selectedRoomRequestIds = computed(() => {
 });
 const hasSelectedRoomRequests = computed(() => selectedRoomRequestIds.value.length > 0);
 
+// Multi-Edit-Flags direkt auf den (reaktiven) Event-Objekten setzen: nur die
+// betroffenen Terminkacheln lesen considerOnMultiEdit und re-rendern. Das
+// frühere Neu-Aufbauen des kompletten Räume-Arrays per map+spread würde die
+// Zeilen-Stabilität von CalendarDayRow zunichtemachen (Voll-Re-Render pro Klick).
+function setEventConsiderFlag(eventId, considerOnMultiEdit, eventRoomId = null) {
+    // Bekannter Raum → nur dessen Slots scannen; der Voll-Scan über alle Räume ×
+    // alle gecachten Monats-Slots (36-Monats-Cache!) bleibt nur als Fallback,
+    // wenn kein room_id mitkommt.
+    const rooms = eventRoomId != null
+        ? newCalendarData.value.filter((room) => String(room.roomId ?? room.id) === String(eventRoomId))
+        : newCalendarData.value;
+    for (const room of rooms) {
+        for (const slot of Object.values(room.content ?? {})) {
+            for (const evt of (slot.events ?? [])) {
+                if (evt.id === eventId && evt.considerOnMultiEdit !== considerOnMultiEdit) {
+                    evt.considerOnMultiEdit = considerOnMultiEdit;
+                }
+            }
+        }
+    }
+}
+
+function clearAllConsiderFlags() {
+    for (const room of newCalendarData.value) {
+        for (const slot of Object.values(room.content ?? {})) {
+            for (const evt of (slot.events ?? [])) {
+                if (evt.considerOnMultiEdit) evt.considerOnMultiEdit = false;
+            }
+        }
+    }
+}
+
+// Termin-Auswahl zurücksetzen, Multi-Edit-Modus bleibt aktiv (ein Ort für alle
+// Modal-Close-/Success-Handler — Auswahl-Reset immer komplett, nie halb).
+function clearEventSelection() {
+    editEvents.value = [];
+    clearAllConsiderFlags();
+}
+
 function handleMultiEditEventCheckboxChange(eventId, considerOnMultiEdit, eventRoomId) {
     if (considerOnMultiEdit) {
         if (!editEvents.value.includes(eventId)) editEvents.value.push(eventId);
     } else {
         editEvents.value = editEvents.value.filter(id => id !== eventId);
     }
-
-    const next = newCalendarData.value.map(room => {
-        let roomChanged = false;
-        const content = { ...room.content };
-        for (const [d, slot] of Object.entries(content)) {
-            let changed = false;
-            const evts = (slot.events ?? []).map(e => {
-                if (e.id === eventId) { changed = true; return { ...e, considerOnMultiEdit }; }
-                return e;
-            });
-            if (changed) { content[d] = { ...slot, events: evts }; roomChanged = true; }
-        }
-        return roomChanged ? { ...room, content } : room;
-    });
-    newCalendarData.value = next;
+    setEventConsiderFlag(eventId, considerOnMultiEdit, eventRoomId ?? null);
 }
 function toggleMultiEdit(value) {
     multiEdit.value = value;
     if (!value) clearCellSelection();
     if (!value && editEvents.value.length) {
-        const next = newCalendarData.value.map(room => {
-            let roomChanged = false;
-            const content = { ...room.content };
-            for (const [d, slot] of Object.entries(content)) {
-                let changed = false;
-                const evts = (slot.events ?? []).map(e => {
-                    if (e.considerOnMultiEdit) { changed = true; return { ...e, considerOnMultiEdit: false }; }
-                    return e;
-                });
-                if (changed) { content[d] = { ...slot, events: evts }; roomChanged = true; }
-            }
-            return roomChanged ? { ...room, content } : room;
-        });
-        newCalendarData.value = next;
-        editEvents.value = [];
+        clearEventSelection();
     }
 }
 // ---------- Multi-Edit: Zellen-Auswahl (Tag×Raum) ----------
@@ -1331,7 +1268,6 @@ const showMultiCellCreateModal = ref(false);
 const showMultiCellDuplicateModal = ref(false);
 const showMultiCellMoveModal = ref(false);
 
-const isCellSelected = (day, room) => selectedCells.value.has(cellKey(day, room));
 const toggleCellSelection = (day, room) => {
     if (!multiEdit.value || day.isExtraRow) return;
     const key = cellKey(day, room);
@@ -1354,6 +1290,7 @@ async function refetchMonthsForCells(cellList) {
         cellList.map((cell) => (cell.day ?? "").slice(0, 7)).filter(Boolean)
     );
     for (const key of keys) {
+        abortInflightMonth(key);
         loadedMonths.value.delete(key);
         failedMonths.value.delete(key);
         await loadMonth(key, ++currentEpoch);
@@ -1399,23 +1336,9 @@ const closeMultiCellMoveModal = async (moved) => {
 };
 
 const cancelMultiEditDuplicateSelection = () => {
-    // Clear event and cell selections but keep multi-edit mode active
+    // Zell- und Termin-Auswahl leeren, Multi-Edit-Modus bleibt aktiv
     clearCellSelection();
-    editEvents.value = [];
-    const next = newCalendarData.value.map(room => {
-        let roomChanged = false;
-        const content = { ...room.content };
-        for (const [d, slot] of Object.entries(content)) {
-            let changed = false;
-            const evts = (slot.events ?? []).map(e => {
-                if (e.considerOnMultiEdit) { changed = true; return { ...e, considerOnMultiEdit: false }; }
-                return e;
-            });
-            if (changed) { content[d] = { ...slot, events: evts }; roomChanged = true; }
-        }
-        return roomChanged ? { ...room, content } : room;
-    });
-    newCalendarData.value = next;
+    clearEventSelection();
 };
 
 const openDeclineEventModal = (event) => { declineEvent.value = event; showDeclineEventModal.value = true; };
@@ -1463,43 +1386,13 @@ const handleFullscreenChange = () => {
 const closeMultiEditModal = (closedOnPurpose) => {
     showMultiEditModal.value = false;
     if (closedOnPurpose) {
-        // Clear event selections but keep multi-edit mode active
-        editEvents.value = [];
-        const next = newCalendarData.value.map(room => {
-            let roomChanged = false;
-            const content = { ...room.content };
-            for (const [d, slot] of Object.entries(content)) {
-                let changed = false;
-                const evts = (slot.events ?? []).map(e => {
-                    if (e.considerOnMultiEdit) { changed = true; return { ...e, considerOnMultiEdit: false }; }
-                    return e;
-                });
-                if (changed) { content[d] = { ...slot, events: evts }; roomChanged = true; }
-            }
-            return roomChanged ? { ...room, content } : room;
-        });
-        newCalendarData.value = next;
+        clearEventSelection();
     }
 };
 const closeMultiDuplicateModal = (closedOnPurpose) => {
     showMultiDuplicateModal.value = false;
     if (closedOnPurpose) {
-        // Clear event selections but keep multi-edit mode active
-        editEvents.value = [];
-        const next = newCalendarData.value.map(room => {
-            let roomChanged = false;
-            const content = { ...room.content };
-            for (const [d, slot] of Object.entries(content)) {
-                let changed = false;
-                const evts = (slot.events ?? []).map(e => {
-                    if (e.considerOnMultiEdit) { changed = true; return { ...e, considerOnMultiEdit: false }; }
-                    return e;
-                });
-                if (changed) { content[d] = { ...slot, events: evts }; roomChanged = true; }
-            }
-            return roomChanged ? { ...room, content } : room;
-        });
-        newCalendarData.value = next;
+        clearEventSelection();
     }
 };
 const closeAddSubEventModal = () => { showAddSubEventModal.value = false; eventToEdit.value = null; subEventToEdit.value = null; };
@@ -1528,44 +1421,14 @@ const deleteEvent = () => {
 const closeDeleteSelectedEventsModal = (closedOnPurpose) => {
     openDeleteSelectedEventsModal.value = false;
     if (closedOnPurpose) {
-        // Clear event selections but keep multi-edit mode active
-        editEvents.value = [];
-        const next = newCalendarData.value.map(room => {
-            let roomChanged = false;
-            const content = { ...room.content };
-            for (const [d, slot] of Object.entries(content)) {
-                let changed = false;
-                const evts = (slot.events ?? []).map(e => {
-                    if (e.considerOnMultiEdit) { changed = true; return { ...e, considerOnMultiEdit: false }; }
-                    return e;
-                });
-                if (changed) { content[d] = { ...slot, events: evts }; roomChanged = true; }
-            }
-            return roomChanged ? { ...room, content } : room;
-        });
-        newCalendarData.value = next;
+        clearEventSelection();
     }
 };
 const deleteSelectedEvents = () => {
     axios.post(route("multi-edit.delete"), { events: editEvents.value })
         .finally(() => {
             openDeleteSelectedEventsModal.value = false;
-            // Clear event selections but keep multi-edit mode active
-            editEvents.value = [];
-            const next = newCalendarData.value.map(room => {
-                let roomChanged = false;
-                const content = { ...room.content };
-                for (const [d, slot] of Object.entries(content)) {
-                    let changed = false;
-                    const evts = (slot.events ?? []).map(e => {
-                        if (e.considerOnMultiEdit) { changed = true; return { ...e, considerOnMultiEdit: false }; }
-                        return e;
-                    });
-                    if (changed) { content[d] = { ...slot, events: evts }; roomChanged = true; }
-                }
-                return roomChanged ? { ...room, content } : room;
-            });
-            newCalendarData.value = next;
+            clearEventSelection();
         });
 };
 const jumpToDayOfMonth = async (day) => {
@@ -1643,44 +1506,14 @@ const jumpToDayOfMonth = async (day) => {
 const approveRequests = () => {
     router.post(route("event-verifications.approved-by-events"), { events: editEvents.value }, {
         preserveScroll: true, preserveState: true, onSuccess: () => {
-            // Clear event selections but keep multi-edit mode active
-            editEvents.value = [];
-            const next = newCalendarData.value.map(room => {
-                let roomChanged = false;
-                const content = { ...room.content };
-                for (const [d, slot] of Object.entries(content)) {
-                    let changed = false;
-                    const evts = (slot.events ?? []).map(e => {
-                        if (e.considerOnMultiEdit) { changed = true; return { ...e, considerOnMultiEdit: false }; }
-                        return e;
-                    });
-                    if (changed) { content[d] = { ...slot, events: evts }; roomChanged = true; }
-                }
-                return roomChanged ? { ...room, content } : room;
-            });
-            newCalendarData.value = next;
+            clearEventSelection();
         }
     });
 };
 const requestVerification = () => {
     router.post(route("events-verifications.request-verification"), { events: editEvents.value }, {
         preserveScroll: true, preserveState: true, onSuccess: () => {
-            // Clear event selections but keep multi-edit mode active
-            editEvents.value = [];
-            const next = newCalendarData.value.map(room => {
-                let roomChanged = false;
-                const content = { ...room.content };
-                for (const [d, slot] of Object.entries(content)) {
-                    let changed = false;
-                    const evts = (slot.events ?? []).map(e => {
-                        if (e.considerOnMultiEdit) { changed = true; return { ...e, considerOnMultiEdit: false }; }
-                        return e;
-                    });
-                    if (changed) { content[d] = { ...slot, events: evts }; roomChanged = true; }
-                }
-                return roomChanged ? { ...room, content } : room;
-            });
-            newCalendarData.value = next;
+            clearEventSelection();
         }
     });
 };
@@ -1704,50 +1537,14 @@ const openAddSubEventModal = (mainEvent, mode, desiredEvent) => {
     showAddSubEventModal.value = true;
 }
 
-const eventsInCell = (day: any, room: any) =>
-    (room.content?.[dayKey(day)]?.events ?? []);
-
-const shiftsInCell = (day: any, room: any) =>
-    (room.content?.[dayKey(day)]?.shifts ?? []);
-
-// "dd.mm.yyyy" → "yyyy-mm-dd"
-const deKeyToIso = (deKey: string) => {
-    const parts = String(deKey ?? '').split('.');
-    return parts.length === 3 ? `${parts[2]}-${parts[1]}-${parts[0]}` : '';
-};
-
-// Effektive Startzeit ("HH:MM") eines Items an diesem Tag: beginnt es an einem
-// Vortag, zählt es ab 00:00 — so mischen sich Termine und Schichten korrekt.
-const itemStartTimeOnDay = (item: any, dayIso: string): string => {
-    if (item.type === 'shift') {
-        const shift = item.data;
-        if (shift.startDate && shift.startDate < dayIso) return '00:00';
-        const time = String(shift.start ?? '');
-        const match = time.match(/(\d{2}:\d{2})/);
-        return match ? match[1] : '00:00';
-    }
-    const start = String(item.data.start ?? ''); // "Y-m-d H:i"
-    const datePart = start.slice(0, 10);
-    if (datePart && datePart < dayIso) return '00:00';
-    const match = start.match(/(\d{2}:\d{2})$/) ?? start.match(/\s(\d{2}:\d{2})/);
-    return match ? match[1] : '00:00';
-};
-
-// Termine + eigenständige Schichten einer Zelle, gemischt nach Startzeit sortiert
-const itemsInCell = (day: any, room: any) => {
-    const events = eventsInCell(day, room).map((evt: any) => ({ type: 'event', data: evt }));
-    const shifts = shiftsInCell(day, room).map((shift: any) => ({ type: 'shift', data: shift }));
-    if (shifts.length === 0) return events;
-    const dayIso = day.withoutFormat ?? deKeyToIso(dayKey(day));
-    return [...events, ...shifts].sort((a, b) =>
-        itemStartTimeOnDay(a, dayIso).localeCompare(itemStartTimeOnDay(b, dayIso))
-    );
-};
+// Zell-Logik (dayKey/itemsInCell/deKeyToIso) kommt aus calendarCellItems.js —
+// geteilt mit CalendarDayRow und der At-a-Glance-Ansicht.
 
 // Nach Schicht-Bearbeitung den betroffenen Monat neu laden
 async function refetchMonthForDay(day: any) {
     const key = monthKeyFromDay(day);
     if (!key) return;
+    abortInflightMonth(key);
     loadedMonths.value.delete(key);
     failedMonths.value.delete(key);
     await loadMonth(key, ++currentEpoch);
@@ -1790,23 +1587,5 @@ watch(monthViewRequestId, async () => {
 });
 </script>
 
-<style scoped>
-/* Monatsname mittig zur sichtbaren Bildschirmbreite: sticky hält das Label
-   beim horizontalen Scrollen durch das breite Grid in der Viewport-Mitte. */
-.month-separator-label {
-    position: sticky;
-    left: 50vw;
-    transform: translateX(-50%);
-}
+<!-- Zeilen-/Zell-Styles (month-separator-label, .cell-Scrollbars) liegen in CalendarDayRow.vue -->
 
-.cell {
-    overflow: auto;
-    scrollbar-color: rgba(156,163,175,0.5) transparent; /* Firefox */
-    scrollbar-width: thin;
-}
-/* WebKit */
-.cell::-webkit-scrollbar { width: 6px !important; height: 6px !important; }
-.cell::-webkit-scrollbar-thumb { background-color: rgba(156,163,175,0.5); border-radius: 3px; }
-.cell::-webkit-scrollbar-thumb:hover { background-color: rgba(107,114,128,0.7); }
-.cell::-webkit-scrollbar-track { background-color: transparent; }
-</style>

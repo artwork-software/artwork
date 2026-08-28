@@ -59,13 +59,13 @@
                     </div>
                     <span>{{ $t('Query data from this booking date') }}&nbsp;</span>
                     <div class="w-72 ml-2">
-                        <BaseInput type="date" v-model="sageForm.bookingDate" label="tt.mm.yyyy" id="bookingDate"/>
+                        <BaseInput type="date" v-model="sageForm.bookingDate" id="bookingDate"/>
                     </div>
                 </div>
                 <div class="flex items-center justify-end gap-x-3">
                     <span>{{ $t('Query daily at') }}&nbsp;</span>
                     <div class="w-28">
-                        <BaseInput type="time" v-model="sageForm.fetchTime" label="hh:mm" id=""/>
+                        <BaseInput type="time" v-model="sageForm.fetchTime" id=""/>
                     </div>
                 </div>
                 <div class="flex items-center justify-end gap-x-3">
@@ -90,7 +90,7 @@
                 <div class="flex flex-row items-center gap-x-2">
                     <span class="text-sm/5 font-bold text-text-subtle">{{ $t('KTR') }}</span>
                     <div class="w-48">
-                        <BaseInput type="text" :label="$t('KTR')" id="specificDayImportKtr"
+                        <BaseInput type="text" id="specificDayImportKtr"
                                    v-model="specificDayImportKtr"
                                    :disabled="!sageInterfaceIsConfigured()"
                                    :class="[!sageInterfaceIsConfigured() ? 'cursor-not-allowed' : 'cursor-pointer']"
@@ -100,7 +100,7 @@
                 <div class="flex flex-row items-center gap-x-2">
                     <span class="text-sm/5 font-bold text-text-subtle">{{ $t('From') }}</span>
                     <div class="w-48">
-                        <BaseInput type="date" label="tt.mm.yyyy" id="specificDayImportDateFrom"
+                        <BaseInput type="date" id="specificDayImportDateFrom"
                                    v-model="specificDayImportDateFrom"
                                    :disabled="!sageInterfaceIsConfigured()"
                                    :class="[!sageInterfaceIsConfigured() ? 'cursor-not-allowed' : 'cursor-pointer']"/>
@@ -109,7 +109,7 @@
                 <div class="flex flex-row items-center gap-x-2">
                     <span class="text-sm/5 font-bold text-text-subtle">{{ $t('Until') }}</span>
                     <div class="w-48">
-                        <BaseInput type="date" label="tt.mm.yyyy" id="specificDayImportDateTo"
+                        <BaseInput type="date" id="specificDayImportDateTo"
                                    v-model="specificDayImportDateTo"
                                    :disabled="!sageInterfaceIsConfigured()"
                                    :class="[!sageInterfaceIsConfigured() ? 'cursor-not-allowed' : 'cursor-pointer']"/>
@@ -137,7 +137,7 @@
             <div class="flex flex-row items-center gap-x-2">
                 <span class="text-sm/5 font-bold text-text-subtle">{{ $t('KTR') }}</span>
                 <div class="w-48">
-                    <BaseInput type="text" :label="$t('KTR')" id="deleteBookingDaysKtr"
+                    <BaseInput type="text" id="deleteBookingDaysKtr"
                                v-model="deleteBookingDaysKtr"
                                :class="'cursor-pointer'"
                                :placeholder="$t('e.g. R12364')"/>
@@ -146,7 +146,7 @@
             <div class="flex flex-row items-center gap-x-2">
                 <span class="text-sm/5 font-bold text-text-subtle">{{ $t('From') }}</span>
                 <div class="w-48">
-                    <BaseInput type="date" label="tt.mm.yyyy" id="deleteBookingDaysDateFrom"
+                    <BaseInput type="date" id="deleteBookingDaysDateFrom"
                                v-model="deleteBookingDaysDateFrom"
                                :class="'cursor-pointer'"/>
                 </div>
@@ -154,7 +154,7 @@
             <div class="flex flex-row items-center gap-x-2">
                 <span class="text-sm/5 font-bold text-text-subtle">{{ $t('Until') }}</span>
                 <div class="w-48">
-                    <BaseInput type="date" label="tt.mm.yyyy" id="deleteBookingDaysDateTo"
+                    <BaseInput type="date" id="deleteBookingDaysDateTo"
                                v-model="deleteBookingDaysDateTo"
                                :class="'cursor-pointer'"/>
                 </div>

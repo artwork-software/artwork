@@ -26,11 +26,22 @@
 
                 <!-- Name -->
                 <div>
-                    <BaseInput
-                        :label="$t('Name of the component')"
-                        v-model="componentName"
-                        id="componentName"
-                    />
+                    <div class="flex items-end gap-x-2">
+                        <BaseInput
+                            class="grow"
+                            :label="$t('Name of the component')"
+                            v-model="componentName"
+                            id="componentName"
+                        />
+                        <div class="mb-2">
+                            <ToolTipComponent
+                                direction="left"
+                                :tooltip-text="$t(fieldTooltips.name)"
+                                icon="IconInfoCircle"
+                                icon-size="h-4 w-4"
+                            />
+                        </div>
+                    </div>
                     <span v-if="helpTexts.name" class="mt-1 text-xs text-danger">
             {{ helpTexts.name }}
           </span>
@@ -43,40 +54,96 @@
                     </div>
 
                     <!-- Titel -->
-                    <div v-if="'title' in textData">
-                        <BaseInput :label="$t('Title')" v-model="textData.title" id="title" />
+                    <div v-if="'title' in textData" class="flex items-end gap-x-2">
+                        <BaseInput class="grow" :label="$t('Title')" v-model="textData.title" id="title" />
+                        <div class="mb-2">
+                            <ToolTipComponent
+                                direction="left"
+                                :tooltip-text="$t(fieldTooltips.title)"
+                                icon="IconInfoCircle"
+                                icon-size="h-4 w-4"
+                            />
+                        </div>
                     </div>
 
                     <!-- Label -->
-                    <div v-if="'label' in textData">
-                        <BaseInput :label="$t('label')" v-model="textData.label" id="label" />
+                    <div v-if="'label' in textData" class="flex items-end gap-x-2">
+                        <BaseInput class="grow" :label="$t('label')" v-model="textData.label" id="label" />
+                        <div class="mb-2">
+                            <ToolTipComponent
+                                direction="left"
+                                :tooltip-text="$t(fieldTooltips.label)"
+                                icon="IconInfoCircle"
+                                icon-size="h-4 w-4"
+                            />
+                        </div>
                     </div>
 
                     <!-- Text -->
-                    <div v-if="'text' in textData">
-                        <BaseInput :label="$t('Text')" v-model="textData.text" id="text" />
+                    <div v-if="'text' in textData" class="flex items-end gap-x-2">
+                        <BaseInput class="grow" :label="$t('Text')" v-model="textData.text" id="text" />
+                        <div class="mb-2">
+                            <ToolTipComponent
+                                direction="left"
+                                :tooltip-text="$t(fieldTooltips.text)"
+                                icon="IconInfoCircle"
+                                icon-size="h-4 w-4"
+                            />
+                        </div>
                     </div>
 
                     <!-- Placeholder -->
-                    <div v-if="'placeholder' in textData">
-                        <BaseInput :label="$t('Placeholder')" v-model="textData.placeholder" id="placeholder" />
+                    <div v-if="'placeholder' in textData" class="flex items-end gap-x-2">
+                        <BaseInput class="grow" :label="$t('Placeholder')" v-model="textData.placeholder" id="placeholder" />
+                        <div class="mb-2">
+                            <ToolTipComponent
+                                direction="left"
+                                :tooltip-text="$t(fieldTooltips.placeholder)"
+                                icon="IconInfoCircle"
+                                icon-size="h-4 w-4"
+                            />
+                        </div>
                     </div>
 
                     <!-- Placeholder Label -->
-                    <div v-if="'placeholder_label' in textData">
-                        <BaseInput :label="$t('Placeholder label')" v-model="textData.placeholder_label" id="placeholder_label" />
+                    <div v-if="'placeholder_label' in textData" class="flex items-end gap-x-2">
+                        <BaseInput class="grow" :label="$t('Placeholder label')" v-model="textData.placeholder_label" id="placeholder_label" />
+                        <div class="mb-2">
+                            <ToolTipComponent
+                                direction="left"
+                                :tooltip-text="$t(fieldTooltips.placeholder_label)"
+                                icon="IconInfoCircle"
+                                icon-size="h-4 w-4"
+                            />
+                        </div>
                     </div>
 
                     <!-- Placeholder URL -->
-                    <div v-if="'placeholder_url' in textData">
-                        <BaseInput :label="$t('Placeholder URL')" v-model="textData.placeholder_url" id="placeholder_url" />
+                    <div v-if="'placeholder_url' in textData" class="flex items-end gap-x-2">
+                        <BaseInput class="grow" :label="$t('Placeholder URL')" v-model="textData.placeholder_url" id="placeholder_url" />
+                        <div class="mb-2">
+                            <ToolTipComponent
+                                direction="left"
+                                :tooltip-text="$t(fieldTooltips.placeholder_url)"
+                                icon="IconInfoCircle"
+                                icon-size="h-4 w-4"
+                            />
+                        </div>
                     </div>
 
                     <!-- Max Items -->
                     <div v-if="'max_items' in textData">
-                        <label for="max_items" class="text-xs text-text-subtle">
-                            {{ $t('Max links') }}
-                        </label>
+                        <div class="flex items-center gap-x-1.5">
+                            <label for="max_items" class="text-xs text-text-subtle">
+                                {{ $t('Max links') }}
+                            </label>
+                            <ToolTipComponent
+                                direction="right"
+                                :tooltip-text="$t(fieldTooltips.max_items)"
+                                icon="IconInfoCircle"
+                                icon-size="h-4 w-4"
+                            />
+                        </div>
                         <input
                             id="max_items"
                             type="number"
@@ -89,9 +156,17 @@
 
                     <!-- Höhe (Range) -->
                     <div v-if="'height' in textData">
-                        <label for="height" class="text-xs text-text-subtle">
-                            {{ $t('Height - ({0} pixels)', [textData.height]) }}
-                        </label>
+                        <div class="flex items-center gap-x-1.5">
+                            <label for="height" class="text-xs text-text-subtle">
+                                {{ $t('Height - ({0} pixels)', [textData.height]) }}
+                            </label>
+                            <ToolTipComponent
+                                direction="right"
+                                :tooltip-text="$t(fieldTooltips.height)"
+                                icon="IconInfoCircle"
+                                icon-size="h-4 w-4"
+                            />
+                        </div>
                         <input
                             id="height"
                             type="range"
@@ -104,9 +179,17 @@
 
                     <!-- Titelgröße (Range) -->
                     <div v-if="'title_size' in textData">
-                        <label for="title_size" class="text-xs text-text-subtle">
-                            {{ $t('Font Size - ({0} pixels)', [textData.title_size]) }}
-                        </label>
+                        <div class="flex items-center gap-x-1.5">
+                            <label for="title_size" class="text-xs text-text-subtle">
+                                {{ $t('Font Size - ({0} pixels)', [textData.title_size]) }}
+                            </label>
+                            <ToolTipComponent
+                                direction="right"
+                                :tooltip-text="$t(fieldTooltips.title_size)"
+                                icon="IconInfoCircle"
+                                icon-size="h-4 w-4"
+                            />
+                        </div>
                         <input
                             id="title_size"
                             type="range"
@@ -118,19 +201,44 @@
                     </div>
 
                     <!-- Show line -->
-                    <label v-if="'showLine' in textData" class="flex items-center gap-2">
-                        <input v-model="textData.showLine" type="checkbox" class="input-checklist" />
-                        <span class="text-sm text-text-muted">{{ $t('Show a separator line') }}</span>
-                    </label>
+                    <div v-if="'showLine' in textData" class="flex items-center gap-2">
+                        <label class="flex items-center gap-2">
+                            <input v-model="textData.showLine" type="checkbox" class="input-checklist" />
+                            <span class="text-sm text-text-muted">{{ $t('Show a separator line') }}</span>
+                        </label>
+                        <ToolTipComponent
+                            direction="right"
+                            :tooltip-text="$t(fieldTooltips.showLine)"
+                            icon="IconInfoCircle"
+                            icon-size="h-4 w-4"
+                        />
+                    </div>
 
                     <!-- Checked (default) -->
-                    <label v-if="'checked' in textData" class="flex items-center gap-2">
-                        <input v-model="textData.checked" type="checkbox" class="input-checklist" />
-                        <span class="text-sm text-text-muted">{{ $t('This checkbox is activated by default') }}</span>
-                    </label>
+                    <div v-if="'checked' in textData" class="flex items-center gap-2">
+                        <label class="flex items-center gap-2">
+                            <input v-model="textData.checked" type="checkbox" class="input-checklist" />
+                            <span class="text-sm text-text-muted">{{ $t('This checkbox is activated by default') }}</span>
+                        </label>
+                        <ToolTipComponent
+                            direction="right"
+                            :tooltip-text="$t(fieldTooltips.checked)"
+                            icon="IconInfoCircle"
+                            icon-size="h-4 w-4"
+                        />
+                    </div>
 
                     <!-- Optionen -->
                     <div v-if="Array.isArray(textData.options)">
+                        <div class="mb-2 flex items-center gap-x-1.5">
+                            <span class="text-xs text-text-subtle">{{ $t('Options') }}</span>
+                            <ToolTipComponent
+                                direction="right"
+                                :tooltip-text="$t(fieldTooltips.options)"
+                                icon="IconInfoCircle"
+                                icon-size="h-4 w-4"
+                            />
+                        </div>
                         <div class="grid grid-cols-1 gap-3">
                             <div
                                 v-for="(opt, idx) in textData.options"
@@ -167,16 +275,25 @@
 
                         <!-- Default Option Auswahl -->
                         <div v-if="textData.options[0]?.value" class="mt-3">
-                            <ArtworkBaseListbox
-                                v-model="textData.selected"
-                                :items="textData.options"
-                                :option-label="(o) => `${o.value}`"
-                                option-key="value"
-                                by="value"
-                                placeholder="Standard Option"
-                                :enable-search="true"
-                                :search-keys="['name']"
-                            />
+                            <div class="flex items-center gap-x-2">
+                                <ArtworkBaseListbox
+                                    class="grow"
+                                    v-model="textData.selected"
+                                    :items="textData.options"
+                                    :option-label="(o) => `${o.value}`"
+                                    option-key="value"
+                                    by="value"
+                                    placeholder="Standard Option"
+                                    :enable-search="true"
+                                    :search-keys="['name']"
+                                />
+                                <ToolTipComponent
+                                    direction="left"
+                                    :tooltip-text="$t(fieldTooltips.selected)"
+                                    icon="IconInfoCircle"
+                                    icon-size="h-4 w-4"
+                                />
+                            </div>
 
                             <div class="mt-3 text-right">
                                 <button
@@ -421,6 +538,7 @@ import {
 import { IconChevronDown, IconCircleCheck, IconX } from '@tabler/icons-vue'
 
 import TeamIconCollection from '@/Layouts/Components/TeamIconCollection.vue'
+import ToolTipComponent from '@/Components/ToolTips/ToolTipComponent.vue'
 import FormButton from '@/Layouts/Components/General/Buttons/FormButton.vue'
 import BaseInput from '@/Artwork/Inputs/BaseInput.vue'
 import ArtworkBaseModal from '@/Artwork/Modals/ArtworkBaseModal.vue'
@@ -501,6 +619,38 @@ onMounted(async () => {
         modulePermissions.permission_type = props.componentToEdit.permission_type ?? 'allSeeAndEdit'
         modulePermissions.users = deepClone(props.componentToEdit.users ?? [])
         modulePermissions.departments = deepClone(props.componentToEdit.departments ?? [])
+    }
+})
+
+/* Feld-Tooltips (Basisdaten) — Texte je nach Komponententyp */
+const currentTypeName = computed(() =>
+    isCreateMode.value ? selectedType.value?.name : componentToEdit.value?.type
+)
+const fieldTooltips = computed(() => {
+    const type = currentTypeName.value
+    let labelText = 'If specified, the label is displayed above the component in the project and on the print layout (optional).'
+    if (type === 'Checkbox') {
+        labelText = 'This text is displayed next to the checkbox in the project and on the print layout.'
+    } else if (type === 'DisclosureComponent') {
+        labelText = 'This text is displayed as the heading of the collapsible area in the project.'
+    }
+    return {
+        name: 'The name is only used to find the component in the settings and when assembling tabs. It is not displayed in the project.',
+        title: type === 'LinkList'
+            ? 'This title is currently not displayed in the project.'
+            : 'This text is displayed as a heading in the project.',
+        label: labelText,
+        text: 'If specified, this text is pre-filled in the component when it is created (optional).',
+        placeholder: 'The placeholder is displayed as long as the field is empty, as a hint what to enter (optional).',
+        placeholder_label: 'Hint text for the display name field of a link as long as it is empty.',
+        placeholder_url: 'Hint text for the URL field of a link as long as it is empty.',
+        max_items: 'Maximum number of links that can be added in the project.',
+        height: 'Height of the spacing in pixels that the component occupies in the project.',
+        title_size: 'Font size of the heading in the project.',
+        showLine: 'Shows a horizontal separator line within the spacing.',
+        checked: 'If enabled, the checkbox is checked by default in projects until it is changed there.',
+        options: 'The options available for selection in the dropdown in the project.',
+        selected: 'This option is preselected in projects until it is changed there.',
     }
 })
 

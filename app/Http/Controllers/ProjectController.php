@@ -99,6 +99,7 @@ use Artwork\Modules\Project\Http\Requests\UpdateProjectRequest;
 use Artwork\Modules\Project\Http\Resources\ProjectEditResource;
 use Artwork\Modules\Project\Http\Resources\ProjectIndexResource;
 use Artwork\Modules\Project\Models\Project;
+use Artwork\Modules\Project\Policies\ProjectPolicy;
 use Artwork\Modules\Project\Models\ProjectCreateSettings;
 use Artwork\Modules\Project\Models\ProjectRole;
 use Artwork\Modules\Project\Models\ProjectState;
@@ -308,7 +309,8 @@ class ProjectController extends Controller
             'projectSortEnumNames' => array_column(ProjectSortEnum::cases(), 'name'),
             'userProjectManagementSetting' => $userProjectManagementSetting,
             'eventStatuses' => EventStatus::orderBy('order')->get(),
-            'lastProject' => $this->userService->getAuthUser()->lastProject,
+            'lastProject' => $lastProject = $this->userService->getAuthUser()->lastProject,
+            'lastProjectCanEnter' => $lastProject !== null && $user->can('view', $lastProject),
             'entitiesPerPage' => $user->entities_per_page
         ]);
     }
@@ -327,18 +329,40 @@ class ProjectController extends Controller
 
         $projectPeriods = $this->prepareProjectsForComponentMapping($projects, $components);
 
+        // Zutritt (Projektseite öffnen): globales Recht ODER Projektteam (User/Abteilung).
+        // Ein Sammel-Query statt ProjectPolicy::view pro Zeile — die Übersicht bleibt für
+        // alle sichtbar, nur der Einstieg wird im Frontend über dieses Flag gegated.
+        // Rechteliste kommt aus der Policy (eine Quelle); Admins passieren via Gate::before.
+        $authUser = Auth::user();
+        $canEnterAll = $authUser->canAny(ProjectPolicy::GLOBAL_ENTER_PERMISSIONS);
+        $enterableProjectIds = $canEnterAll ? [] : Project::query()
+            ->whereIn('id', $projects->pluck('id'))
+            ->where(function (Builder $query) use ($authUser): void {
+                $query
+                    ->whereHas('users', fn(Builder $userQuery) => $userQuery->where('users.id', $authUser->id))
+                    ->orWhereHas(
+                        'departments.users',
+                        fn(Builder $departmentQuery) => $departmentQuery->where('users.id', $authUser->id)
+                    );
+            })
+            ->pluck('id')
+            ->flip();
+
         $mapped = $projects->map(function ($project) use (
             $components,
             $componentData,
             $firstTabId,
             $projectStates,
-            $projectPeriods
+            $projectPeriods,
+            $canEnterAll,
+            $enterableProjectIds
         ) {
             /** @var Project $project */
             $projectData = new stdClass(); // needed for the ProjectShowHeaderComponent
             $projectData->id = $project->id;
             $projectData->updated_at = $project->updated_at;
             $projectData->firstTabId = $firstTabId;
+            $projectData->canEnter = $canEnterAll || isset($enterableProjectIds[$project->id]);
             $projectData->project_managers = $project->managerUsers;
             $projectData->write_auth = $project->writeUsers;
             $projectData->delete_permission_users = $project->delete_permission_users;
@@ -2366,6 +2390,10 @@ class ProjectController extends Controller
 
     public function updateProjectState(Request $request, Project $project): void
     {
+        // Spiegelt das Frontend-Gate (ProjectStateComponent: canEditComponent UND Schreibzugriff);
+        // der interne Aufruf aus update() hat dieselbe Policy bereits passiert.
+        $this->authorize('update', $project);
+
         // Payloads ohne state-Key (z.B. Team-/Schicht-Modals via projects.update) lassen den Status unangetastet
         if (!$request->exists('state')) {
             return;
@@ -3421,6 +3449,8 @@ class ProjectController extends Controller
 
     public function updateAttributes(Request $request, Project $project): JsonResponse|RedirectResponse
     {
+        $this->authorize('update', $project);
+
         $mainCategoryId = $request->input('mainCategoryId');
         $mainGenreId = $request->input('mainGenreId');
         $mainSectorId = $request->input('mainSectorId');
@@ -3471,6 +3501,8 @@ class ProjectController extends Controller
 
     public function updateDescription(Request $request, Project $project): JsonResponse|RedirectResponse
     {
+        $this->authorize('update', $project);
+
         $oldDescription = $project->description;
 
         $project->update([
@@ -4515,6 +4547,8 @@ class ProjectController extends Controller
 
     public function updateKeyVisual(Request $request, Project $project): RedirectResponse
     {
+        $this->authorize('update', $project);
+
         $oldKeyVisual = $project->key_visual_path;
         if ($request->file('keyVisual')) {
             $request->validate([
@@ -4572,23 +4606,55 @@ class ProjectController extends Controller
 
     public function deleteKeyVisual(Project $project): void
     {
+        $this->authorize('update', $project);
+
         Storage::delete('public/keyVisual/' . $project->key_visual_path);
         $project->update(['key_visual_path' => null]);
     }
 
+    /**
+     * Bearbeitungsregel für Inhalte, deren Edit-UI über die Komponenten-Einstellung
+     * (canEditComponent) gegated ist — nicht über das Projekt-Schreibrecht. Spiegel von
+     * ProjectComponentValueController::update: Projekt-Zutritt + ("write projects" ODER
+     * Komponenten-Einstellung erlaubt es). Ohne Komponenten-Datensatz greift die
+     * Projekt-Bearbeitungsregel als konservativer Fallback.
+     */
+    private function authorizeProjectComponentEdit(Project $project, ProjectTabComponentEnum $componentType): void
+    {
+        /** @var User $user */
+        $user = Auth::user();
+        abort_unless($user->can('view', $project), 403);
+
+        if ($user->can(PermissionEnum::WRITE_PROJECTS->value)) {
+            return;
+        }
+
+        $component = Component::query()->where('type', $componentType->value)->first();
+        abort_unless(
+            $component !== null ? $component->isEditableBy($user) : $user->can('update', $project),
+            403
+        );
+    }
+
     public function updateShiftDescription(Request $request, Project $project): void
     {
+        $this->authorizeProjectComponentEdit($project, ProjectTabComponentEnum::GENERAL_SHIFT_INFORMATION);
+
         $project->shift_description = $request->shiftDescription;
         $project->save();
     }
 
     public function updateShiftContacts(Request $request, Project $project): void
     {
+        $this->authorizeProjectComponentEdit($project, ProjectTabComponentEnum::SHIFT_CONTACT_PERSONS);
+
         $project->shift_contact()->sync(collect($request->contactIds));
     }
 
     public function updateShiftRelevantEventTypes(Request $request, Project $project): void
     {
+        $this->authorizeProjectComponentEdit($project, ProjectTabComponentEnum::RELEVANT_DATES_FOR_SHIFT_PLANNING);
+
         $project->shiftRelevantEventTypes()->sync(collect($request->shiftRelevantEventTypeIds));
     }
 

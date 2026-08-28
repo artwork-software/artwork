@@ -1,6 +1,6 @@
 <template>
     <app-layout :title="$t('Contracts')">
-        <div class="artwork-container">
+        <div class="artwork-container-fluid">
             <ToolbarHeader
                 band
                 :icon="IconFileText"

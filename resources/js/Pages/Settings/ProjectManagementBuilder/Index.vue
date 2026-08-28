@@ -39,7 +39,7 @@
                     <div class="w-44 md:w-56 lg:w-72">
                         <div>
                             <div class="relative rounded-md shadow-sm">
-                                <input type="text" name="search" v-model="searchComponent" :placeholder="$t('Search')" class="block w-full rounded-md border-0 py-1.5 pr-10 text-text ring-1 ring-inset ring-border placeholder:text-text-subtle focus:ring-2 focus:ring-inset focus:ring-accent-600 sm:text-sm sm:leading-6" />
+                                <input type="text" name="search" v-model="searchComponent" :placeholder="$t('Search')" class="block w-full rounded-md border-0 py-1.5 pl-3 pr-10 text-text ring-1 ring-inset ring-border placeholder:text-text-subtle focus:ring-2 focus:ring-inset focus:ring-accent-600 sm:text-sm sm:leading-6" />
                                 <div class="absolute inset-y-0 right-0 flex items-center pr-3">
                                     <IconSearch class="h-5 w-5 text-text-subtle pointer-events-none" aria-hidden="true" v-if="searchComponent.length === 0" />
                                     <IconCircleX class="h-5 w-5 text-text-subtle cursor-pointer hover:text-danger" aria-hidden="true" v-else @click="searchComponent = ''" />

@@ -1,6 +1,6 @@
 <template>
     <AppLayout :title="$t('Inventory')">
-        <div class="artwork-container">
+        <div class="artwork-container-fluid">
 
 
             <ToolbarHeader title="External material issues"

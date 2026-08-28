@@ -1,7 +1,7 @@
 <template>
     <div class="w-full">
         <!-- Label über dem Feld -->
-        <label v-if="label" :for="id" class="mb-1 block font-lexend text-xs font-medium text-[#3F424A]">
+        <label v-if="label && showLabel" :for="id" class="mb-1 block font-lexend text-xs font-medium text-[#3F424A]">
             <span class="block truncate">
                 {{ withoutTranslation ? label : $t(label) }}
                 <span v-if="required" class="text-danger">*</span>
@@ -21,6 +21,7 @@
                 :inputmode="isTimeProxy ? 'tel' : undefined"
                 :pattern="isTimeProxy ? timePattern : undefined"
                 :autocomplete="isTimeProxy ? 'off' : undefined"
+                :aria-label="!showLabel && label ? (withoutTranslation ? label : $t(label)) : undefined"
                 :aria-invalid="String(Boolean(error))"
                 :aria-required="String(required)"
                 :aria-describedby="error ? errorId : undefined"
@@ -82,6 +83,8 @@ const model = defineModel({ default: '' })
 
 const props = defineProps({
     label: { type: String, default: '' },
+    /** false blendet das Label aus; der Text bleibt als aria-label erhalten */
+    showLabel: { type: Boolean, default: true },
     type: { type: String, default: 'text' },
     id: { type: String, required: true },
     placeholder: { type: String, default: '' },

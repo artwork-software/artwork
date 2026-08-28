@@ -359,7 +359,8 @@ export default defineComponent({
             if (emails.length === 0) {
                 return;
             }
-            window.location.href = 'mailto:' + emails.join(',');
+            // Semikolon statt Komma: Outlook (Windows) erkennt kommagetrennte Adressen nicht
+            window.location.href = 'mailto:' + emails.join(';');
         },
         toggleShowNames(value) {
             this.showNames = value;

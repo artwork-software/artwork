@@ -1,8 +1,5 @@
 <template>
     <div class="space-y-2">
-        <div class="font-lexend font-black tracking-wide text-primaryText text-md">
-            {{ $t('Basic data') }}
-        </div>
         <div class="space-y-1.5 text-sm text-primaryText">
             <div v-if="project.basic_data?.name">
                 <span class="text-[11px] font-semibold uppercase tracking-wide text-text-subtle">{{ $t('Project name') }}</span>

@@ -345,7 +345,7 @@
                               <BaseInput
                                   v-else-if="prop.type !== 'file'"
                                   :id="`prop-input-${prop.id}`"
-                                  :label="prop.name"
+                                  :placeholder="prop.name"
                                   v-model="prop.value"
                                   :type="mapTypeToInputType(prop.type)"
                               />

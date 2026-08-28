@@ -87,6 +87,7 @@ import DragComponentElement from "@/Pages/Settings/Components/DragComponentEleme
 import {IconCirclePlus} from "@tabler/icons-vue";
 import PlusButton from "@/Layouts/Components/General/Buttons/PlusButton.vue";
 import {computed, ref} from "vue";
+import {useI18n} from "vue-i18n";
 import CreateOrUpdateProjectPrintLayoutModal from "@/Pages/Settings/ProjectPrintLayout/Components/CreateOrUpdateProjectPrintLayoutModal.vue";
 import SingleProjectPrintLayout from "@/Pages/Settings/ProjectPrintLayout/Components/SingleProjectPrintLayout.vue";
 import AlertComponent from "@/Components/Alerts/AlertComponent.vue";
@@ -117,6 +118,8 @@ const props = defineProps({
     }
 })
 
+const { t } = useI18n();
+
 const searchComponent = ref('');
 const showCreateOrUpdateModal = ref(false);
 
@@ -146,9 +149,13 @@ const filteredComponents = computed(() => {
 });
 
 const filteredSpecialComponents = computed(() => {
-    // filter special components with translation
+    // Spezial-Komponenten werden mit übersetztem Namen angezeigt → auch übersetzt durchsuchen
+    const search = searchComponent.value.toLowerCase().trim();
+    if (!search) return props.componentsSpecial;
+
     return props.componentsSpecial.filter(component => {
-        return component.name.toLowerCase().includes(searchComponent.value.toLowerCase());
+        return t(component.name).toLowerCase().includes(search)
+            || component.name.toLowerCase().includes(search);
     });
 })
 

@@ -2,8 +2,6 @@
 
 namespace Artwork\Modules\Project\Http\Middleware;
 
-use Artwork\Modules\Permission\Enums\PermissionEnum;
-use Artwork\Modules\Role\Enums\RoleEnum;
 use Closure;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -23,17 +21,14 @@ class CanViewProject
     {
         $project = $request->route('project');
 
-        if (
-            Auth::user()->hasRole(RoleEnum::ARTWORK_ADMIN->value)
-            || (Auth::user()->hasPermissionTo(PermissionEnum::PROJECT_VIEW->value)
-                || $project->users()->where('users.id', Auth::id())->first())
-        ) {
+        // Zutrittsregel zentral in ProjectPolicy::view (Projektteam inkl. Abteilungen,
+        // globales view/write/management; Admins via Gate::before).
+        if ($project !== null && Auth::user()?->can('view', $project)) {
             return $next($request);
         }
-        if ($project->users()->where('users.id', Auth::id())->first()) {
-            if ($project->users()->where('users.id', Auth::id())->first()->pivot->is_admin) {
-                return $next($request);
-            }
+
+        if ($request->expectsJson()) {
+            abort(403, 'You do not have permission to access this project.');
         }
 
         return redirect()->back();

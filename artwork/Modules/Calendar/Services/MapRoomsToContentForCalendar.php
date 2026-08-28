@@ -4,7 +4,7 @@ namespace Artwork\Modules\Calendar\Services;
 
 use Artwork\Modules\Calendar\DTO\CalendarFrontendDataDTO;
 use Artwork\Modules\Calendar\DTO\CalendarRoomDTO;
-use Artwork\Modules\Calendar\DTO\ShiftDTO;
+use Artwork\Modules\Calendar\DTO\CalendarShiftDTO;
 use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\User\Models\UserFilter;
 use Carbon\Carbon;
@@ -91,14 +91,10 @@ trait MapRoomsToContentForCalendar
     ): Collection {
         $roomIds = $rooms->pluck('id');
 
-        // Abwesenheiten im Zeitraum für das is_unavailable-Flag im ShiftDTO (ohne N+1)
-        $vacationsScope = fn ($q) => $q
-            ->without(['series', 'conflicts'])
-            ->whereBetween('date', [
-                Carbon::parse($startDate)->toDateString(),
-                Carbon::parse($endDate)->toDateString(),
-            ]);
-
+        // Kalender-Kacheln zeigen nur Zählstände — das CalendarShiftDTO aggregiert
+        // die Zuweisungen serverseitig; workers/vacations werden weder serialisiert
+        // noch (im Fall der Abwesenheiten) überhaupt geladen. Die vollen Worker-
+        // Daten liefert weiterhin der Schichtplan-Pfad (ShiftDTO).
         $shifts = Shift::query()
             ->select([
                 'id',
@@ -127,20 +123,17 @@ trait MapRoomsToContentForCalendar
                 'globalQualifications',
                 'users:id,first_name,last_name',
                 'users.globalQualifications:id',
-                'users.vacations' => $vacationsScope,
                 'freelancer:id,first_name,last_name',
                 'freelancer.globalQualifications:id',
-                'freelancer.vacations' => $vacationsScope,
                 'serviceProvider:id,provider_name',
                 'serviceProvider.globalQualifications:id',
-                'serviceProvider.vacations' => $vacationsScope,
                 'project:id,name',
             ])
             ->orderBy('start')
             ->get();
 
         $shiftDTOs = $shifts
-            ->map(fn(Shift $shift) => ShiftDTO::fromModel($shift))
+            ->map(fn(Shift $shift) => CalendarShiftDTO::fromModel($shift))
             ->groupBy('roomId');
 
         foreach ($rooms as $room) {

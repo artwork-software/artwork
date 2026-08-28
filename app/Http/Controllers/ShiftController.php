@@ -2039,6 +2039,16 @@ class ShiftController extends Controller
             return;
         }
 
+        // Spiegelt canEdit der ShiftNoteComponent: Planer:innen dürfen alle Notizen
+        // bearbeiten, sonst nur die eigene (User-Pivot des Requesters).
+        // Admins passieren den can()-Check bereits über Gate::before.
+        $authUser = auth()->user();
+        $isOwnPivot = $pivot->employable_type === User::class
+            && (int) $pivot->employable_id === (int) $authUser?->id;
+        if (!$isOwnPivot && !$authUser?->can(PermissionEnum::SHIFT_PLANNER->value)) {
+            abort(403);
+        }
+
         $beforeDescription = $pivot->short_description;
 
         $pivot->update([

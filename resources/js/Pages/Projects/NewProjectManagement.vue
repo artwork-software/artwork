@@ -1,6 +1,6 @@
 <template>
     <AppLayout title="Projektübersicht">
-        <div class="container mx-auto pt-6 relative">
+        <div class="w-full px-4 sm:px-6 md:px-6 lg:px-8 pt-6 relative">
             <!-- Headbar (neu): dunkles Band (CI »Bühnenlicht«) -->
             <ToolbarHeader
                 band
@@ -147,7 +147,7 @@
 
             <!-- Last visited -->
             <div class="my-5 flex items-center justify-between">
-                <div class="flex items-center gap-2 pb-2" v-if="lastProject?.id">
+                <div class="flex items-center gap-2 pb-2" v-if="lastProject?.id && lastProjectCanEnter">
                     <div class="text-sm text-text-muted ">{{ $t('Last visited project') }}:</div>
                     <a
                         class="text-accent-600 text-sm font-semibold inline-flex items-center gap-1"
@@ -173,7 +173,16 @@
                                     :key="component.name"
                                     :class="['px-3 py-2', component.type === 'ActionsComponent' ? 'text-right' : 'text-left']"
                                 >
-                                    <span v-if="checkIfComponentIsVisible(component)" class="truncate block">{{ $t(component.name) }}</span>
+                                    <span v-if="checkIfComponentIsVisible(component)" class="flex items-center gap-1.5 min-w-0">
+                                        <span class="truncate">{{ $t(component.name) }}</span>
+                                        <ToolTipComponent
+                                            v-if="component.type === 'ProjectBudgetDeadlineComponent'"
+                                            :tooltip-text="$t('This date is currently only relevant for the budget export by deadline in the project overview, to determine the point in time for which the budget is relevant.')"
+                                            direction="bottom"
+                                            icon="IconInfoCircle"
+                                            icon-size="h-3.5 w-3.5"
+                                        />
+                                    </span>
                                 </div>
                             </div>
                         </div>
@@ -428,6 +437,7 @@ const props = defineProps({
     myLastProject: { type: Object, required: false },
     pinnedProjectsAll: { type: Object, required: true },
     lastProject: { type: Object, required: true },
+    lastProjectCanEnter: { type: Boolean, required: false, default: true },
     entitiesPerPage: { type: Number, required: true },
 });
 
@@ -530,12 +540,14 @@ const hasActiveFilters = computed(() => {
 });
 
 // Grid wird 1x berechnet und an Zeilen weitergegeben → weniger Recalcs
+// minmax: bisherige Fixbreite = Mindestbreite, Restplatz wächst proportional (fr);
+// bei zu vielen Spalten greift weiterhin der overflow-x-Scroll (min-w-fit-Wrapper)
 const gridTemplateColumns = computed(() =>
     props.components
         .map((component) => {
-            if (component.type === "ProjectTitleComponent") return "20rem";
+            if (component.type === "ProjectTitleComponent") return "minmax(20rem, 1.5fr)";
             if (component.type === "ActionsComponent") return "8rem";
-            return "14rem";
+            return "minmax(14rem, 1fr)";
         })
         .join(" ")
 );

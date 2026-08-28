@@ -4,6 +4,7 @@ namespace Artwork\Modules\Project\Models;
 
 use Artwork\Core\Database\Models\Model;
 use Artwork\Modules\Department\Models\Department;
+use Artwork\Modules\Project\Enum\ProjectTabComponentPermissionEnum;
 use Artwork\Modules\Project\Models\ComponentDepartment;
 use Artwork\Modules\Project\Models\ComponentInTab;
 use Artwork\Modules\Project\Models\ComponentUser;
@@ -38,8 +39,8 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
  * @property-read \Illuminate\Database\Eloquent\Collection|\Artwork\Modules\User\Models\User[] $users
  * @property-read \Illuminate\Database\Eloquent\Collection|\Artwork\Modules\Department\Models\Department[] $departments
  * @property-read \Artwork\Modules\Project\Models\ProjectComponentValue $projectValue
- * @property-read \Illuminate\Database\Eloquent\Collection|\Artwork\Modules\Project\Models\SidebarTabComponent[] $sidebarTabComponent
- * @property-read \Illuminate\Database\Eloquent\Collection|\Artwork\Modules\Project\Models\ComponentInTab[] $tabComponent
+ * @property-read \Illuminate\Database\Eloquent\Collection|SidebarTabComponent[] $sidebarTabComponent
+ * @property-read \Illuminate\Database\Eloquent\Collection|ComponentInTab[] $tabComponent
  *
  * @method static \Illuminate\Database\Eloquent\Builder|Component notSpecial()
  * @method static \Illuminate\Database\Eloquent\Builder|Component isSpecial()
@@ -156,6 +157,44 @@ class Component extends Model
     public function scopeIsBiField(\Illuminate\Database\Eloquent\Builder $query): Builder
     {
         return $query->where('is_bi_field', true);
+    }
+
+    /**
+     * Serverseitiges Gegenstück zu canEditComponent() im Frontend
+     * (resources/js/Composeables/Permission.js) — beide müssen dieselbe Regel abbilden.
+     */
+    public function isEditableBy(User $user): bool
+    {
+        $permissionType = $this->permission_type;
+
+        if (
+            $permissionType === null ||
+            $permissionType === ProjectTabComponentPermissionEnum::PERMISSION_TYPE_ALL_SEE_AND_EDIT->value
+        ) {
+            return true;
+        }
+
+        if ($permissionType === ProjectTabComponentPermissionEnum::PERMISSION_TYPE_ALL_SEE_SOME_EDIT->value) {
+            return $this->users->contains('id', $user->id) ||
+                $this->departments->contains(
+                    fn(Department $department) => $department->users->contains('id', $user->id)
+                );
+        }
+
+        if ($permissionType === ProjectTabComponentPermissionEnum::PERMISSION_TYPE_SOME_SEE_SOME_EDIT->value) {
+            /** @var User|null $componentUser */
+            $componentUser = $this->users->firstWhere('id', $user->id);
+            if ($componentUser !== null && $componentUser->pivot->can_write) {
+                return true;
+            }
+
+            return $this->departments->contains(
+                fn(Department $department) => $department->pivot->can_write &&
+                    $department->users->contains('id', $user->id)
+            );
+        }
+
+        return false;
     }
 
     public function componentInPrintLayouts(): HasMany

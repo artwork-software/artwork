@@ -107,13 +107,13 @@ export default {
                         <div>
                             <label for="start_date" class="block text-sm font-medium leading-6 text-text">{{ $t('Period Start') }}</label>
                             <div class="mt-2">
-                                <input type="date" v-model="aboForm.start_date" id="start_date" class="block w-full rounded-md border-0 py-1.5 text-text shadow-sm ring-1 ring-inset ring-border placeholder:text-text-subtle focus:ring-2 focus:ring-inset focus:ring-accent-600 sm:text-sm sm:leading-6" placeholder="you@example.com" />
+                                <input type="date" v-model="aboForm.start_date" id="start_date" class="block w-full rounded-md border-0 py-1.5 px-3 text-text shadow-sm ring-1 ring-inset ring-border placeholder:text-text-subtle focus:ring-2 focus:ring-inset focus:ring-accent-600 sm:text-sm sm:leading-6" />
                             </div>
                         </div>
                         <div>
                             <label for="end_date" class="block text-sm font-medium leading-6 text-text">{{ $t('Period End') }}</label>
                             <div class="mt-2">
-                                <input type="date" v-model="aboForm.end_date" id="end_date" class="block w-full rounded-md border-0 py-1.5 text-text shadow-sm ring-1 ring-inset ring-border placeholder:text-text-subtle focus:ring-2 focus:ring-inset focus:ring-accent-600 sm:text-sm sm:leading-6" placeholder="you@example.com" />
+                                <input type="date" v-model="aboForm.end_date" id="end_date" class="block w-full rounded-md border-0 py-1.5 px-3 text-text shadow-sm ring-1 ring-inset ring-border placeholder:text-text-subtle focus:ring-2 focus:ring-inset focus:ring-accent-600 sm:text-sm sm:leading-6" />
                             </div>
                         </div>
                     </div>
@@ -274,7 +274,7 @@ export default {
                             {{ $t('Notification settings') }}
                         </label>
                         <div class="relative mt-2 rounded-md shadow-sm">
-                            <input type="text" v-model="aboForm.notification_time" name="notification_time" id="notification_time" class="block w-full rounded-md border-0 py-1.5 text-text ring-1 ring-inset ring-border placeholder:text-text-subtle focus:ring-2 focus:ring-inset focus:ring-accent-600 sm:text-sm sm:leading-6"/>
+                            <input type="text" v-model="aboForm.notification_time" name="notification_time" id="notification_time" class="block w-full rounded-md border-0 py-1.5 px-3 text-text ring-1 ring-inset ring-border placeholder:text-text-subtle focus:ring-2 focus:ring-inset focus:ring-accent-600 sm:text-sm sm:leading-6"/>
                             <div class="absolute inset-y-0 right-0 flex items-center">
                                 <select v-model="aboForm.notification_time_unit" id="notification_time_unit" name="notification_time_unit" autocomplete="notification_time_unit" class="h-full rounded-md border-0 bg-transparent py-0 pl-3 pr-7 text-text-subtle focus:outline-none focus:ring-2 focus:ring-inset focus:ring-accent-600 sm:text-sm">
                                     <option value="minutes">{{ $t('Minute(s)') }}</option>

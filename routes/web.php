@@ -1894,8 +1894,10 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::delete('/currencies/{id}/force', [CurrencyController::class, 'forceDelete'])
         ->middleware('can:change project settings')->name('currencies.force');
 
-    // Project States
-    Route::post('/state', [ProjectStatesController::class, 'store'])->name('state.store');
+    // Project States (Stammdaten-CRUD wie die Nachbarn currencies/collecting_societies gegated;
+    // der Projekt-Status selbst läuft über update.project.state mit ProjectPolicy::update)
+    Route::post('/state', [ProjectStatesController::class, 'store'])
+        ->middleware('can:change project settings')->name('state.store');
     Route::patch('/project/{project}/state', [ProjectController::class, 'updateProjectState'])
         ->name('update.project.state');
 
@@ -1903,10 +1905,14 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         ->name('projects.request-verification');
     Route::post('/projects/{project}/convert-to-planning', [EventVerificationController::class, 'convertToPlanning'])
         ->name('projects.convert-to-planning');
-    Route::delete('/state/{projectStates}', [ProjectStatesController::class, 'destroy'])->name('state.delete');
-    Route::patch('/states/{state}/restore', [ProjectStatesController::class, 'restore'])->name('state.restore');
-    Route::patch('/states/{projectStates}/update', [ProjectStatesController::class, 'update'])->name('state.update');
-    Route::delete('/states/{id}/force', [ProjectStatesController::class, 'forceDelete'])->name('state.force');
+    Route::delete('/state/{projectStates}', [ProjectStatesController::class, 'destroy'])
+        ->middleware('can:change project settings')->name('state.delete');
+    Route::patch('/states/{state}/restore', [ProjectStatesController::class, 'restore'])
+        ->middleware('can:change project settings')->name('state.restore');
+    Route::patch('/states/{projectStates}/update', [ProjectStatesController::class, 'update'])
+        ->middleware('can:change project settings')->name('state.update');
+    Route::delete('/states/{id}/force', [ProjectStatesController::class, 'forceDelete'])
+        ->middleware('can:change project settings')->name('state.force');
 
     // Project Settings
     Route::get('/trashedProjects/settings', [ProjectController::class, 'getTrashedSettings'])

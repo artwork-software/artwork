@@ -2,8 +2,12 @@
     <div v-if="!roomMode" class="inline-flex items-center">
         <!-- v-tooltip (PrimeVue-Direktive) braucht ein echtes DOM-Element — auf der
              Headless-UI-Switch-Komponente wird die Direktive nicht angewendet.
-             Deshalb trägt dieser Wrapper-Span den Tooltip (wie in SwitchIconTooltip). -->
-        <span class="inline-flex" v-tooltip.bottom="tooltipBinding">
+             Deshalb trägt dieser Wrapper-Span den Tooltip (wie in SwitchIconTooltip).
+             :key erzwingt beim Umschalten ein Neu-Mounten des Wrappers: der offene
+             Tooltip wird sauber entfernt statt mit dem neuen (längeren) Text an der
+             alten Position weiterzuleben — PrimeVue positioniert bei reaktiven
+             Text-Updates nicht neu, der Tooltip hing dann verschoben im Kalender. -->
+        <span class="inline-flex" :key="multiEdit ? 'multi-edit-on' : 'multi-edit-off'" v-tooltip.bottom="tooltipBinding">
         <Switch
             v-model="model"
             :aria-label="tooltipText"

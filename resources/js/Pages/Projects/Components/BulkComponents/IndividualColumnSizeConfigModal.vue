@@ -2,7 +2,7 @@
     <ArtworkBaseModal
         modal-size="max-w-7xl"
         :title="$t('Configure column width')"
-        :description="$t('Configure the width of the columns in the bulk view.')"
+        :description="$t('Configure the minimum width of the columns in the bulk view. If the screen offers more space, all columns grow proportionally.')"
         @close="$emit('close')"
     >
         <!-- Controls -->
@@ -21,7 +21,7 @@
                             {{ $t('Column') }} {{ col.index }}
                         </label>
                         <p class="text-xs text-text-subtle">
-                            {{ $t('Set the width in pixels') }}
+                            {{ $t('Set the minimum width in pixels') }}
                         </p>
                     </div>
 
@@ -70,7 +70,7 @@
         <div class="mt-6">
             <BasePageTitle :title="$t('Preview')" description="" />
             <div class="mt-4 overflow-x-auto">
-                <div class="min-w-max">
+                <div class="w-full min-w-max">
                     <!-- Header preview -->
                     <div class="flex items-center gap-3 mb-2 text-[13px] text-text-muted">
                         <div class="font-semibold" :style="getColumnSize(1)">{{ $t('Event Status') }}</div>
@@ -99,7 +99,7 @@
 
             <!-- Hint -->
             <p class="mt-3 text-xs text-text-subtle">
-                {{ $t('These widths affect only the bulk view table. You can adjust them anytime.') }}
+                {{ $t('These minimum widths affect only the bulk view table. Columns grow proportionally when there is more space. You can adjust them anytime.') }}
             </p>
         </div>
 
@@ -172,12 +172,13 @@ const columns = computed(() =>
         .sort((a, b) => a.index - b.index)
 )
 
+// Spiegelt die Logik in BulkHeader/BulkSingleEvent: konfigurierte Breite als
+// Mindestbreite, Restplatz wird proportional per flex-grow verteilt.
 const getColumnSize = (colIndex) => {
-    const px = columnSizeForm.bulk_column_size[colIndex]
+    const px = parseInt(columnSizeForm.bulk_column_size[colIndex])
     return {
-        minWidth: px + 'px',
-        width: px + 'px',
-        maxWidth: px + 'px'
+        flex: `${px} 0 ${px}px`,
+        minWidth: px + 'px'
     }
 }
 

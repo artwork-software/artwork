@@ -124,7 +124,8 @@ const dayYear = computed(() => (props.day?.withoutFormat ?? '').slice(0, 4));
 
 // Wochenend-/Feiertags-Einfärbung auch in der Datumsspalte (gleiche Töne und
 // Regeln wie die Tageszeile im Grid: Feiertag schlägt Wochenende, eintägige
-// Feiertage deutlich, mehrtägige Zeiträume/Ferien nur sehr dezent).
+// Feiertage deutlich, mehrtägige Zeiträume/Ferien nur sehr dezent, Wochenenden
+// im Ferienzeitraum als kräftigere Abstufung derselben Farbe).
 const tintColor = computed(() => {
     const day = props.day;
     if (!day || day.isExtraRow) return null;
@@ -134,9 +135,14 @@ const tintColor = computed(() => {
     );
     const coloredHoliday = singleDayHoliday ?? holidays.find((holiday) => holiday?.color);
     if (coloredHoliday) {
-        const alpha = singleDayHoliday
-            ? (calendarSettings.value.high_contrast ? '59' : '33')
-            : (calendarSettings.value.high_contrast ? '33' : '1A');
+        let alpha;
+        if (singleDayHoliday) {
+            alpha = calendarSettings.value.high_contrast ? '59' : '33';
+        } else if (day.isWeekend) {
+            alpha = calendarSettings.value.high_contrast ? '66' : '40';
+        } else {
+            alpha = calendarSettings.value.high_contrast ? '33' : '1A';
+        }
         return `${coloredHoliday.color}${alpha}`;
     }
     if (day.isWeekend) {

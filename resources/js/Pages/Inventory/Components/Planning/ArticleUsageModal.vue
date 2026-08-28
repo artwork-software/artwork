@@ -14,88 +14,50 @@
                         {{ props.detailsForModal.article.name }}
                     </h3>
                 </div>
-                <!-- Enhanced Stock Information -->
-                <div class="flex flex-wrap items-start w-full">
-                    <div class="flex flex-col items-center">
-                        <button
-                            @click="toggleStatusDetails"
-                            class="inline-flex items-center flex flex-wrap text-lg bg-accent-50 py-2.5 w-72 text-md font-medium text-accent-700 ring-1 ring-inset ring-accent-200 hover:bg-accent-100 hover:ring-accent-200 transition-all duration-200 cursor-pointer group">
-                            <div class="flex w-full items-center justify-between">
-                                <div class="pl-2">
-                                    {{ $t('Total quantity') }}:
-                                </div>
-                                <div class="flex flex-wrap">
-                                    <div class="ml-1 tabular-nums text-2xl w-16">
-                                        {{ props.detailsForModal?.article?.quantity ?? 0 }}
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="flex items-center justify-center w-full">
-                                <div class="ml-2 text-text-subtle text-sm">{{ $t('Details on Click') }}</div>
-                                <svg
-                                    class=" w-3 h-3 transition-transform duration-200"
-                                    :class="{ 'rotate-90': isStatusDetailsExpanded }"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    viewBox="0 0 24 24"
-                                >
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                          d="M9 5l7 7-7 7"/>
-                                </svg>
-                            </div>
-                        </button>
-                        <div
-                            class="inline-flex items-center justify-between flex text-lg bg-success-surface pr-6 py-2.5 text-md w-72 font-medium text-success ring-1 ring-inset ring-success-border">
-                            <div class="ml-2">
-                                {{ $t('of which available') }}:
-                            </div>
-                            <div class="ml-1 tabular-nums text-2xl">{{ getEinsatzbereitQuantity() }}</div>
-                        </div>
-                        <div
-                            class="inline-flex justify-between flex rounded-bl-lg items-center text-lg bg-success-surface pr-2 py-2.5 text-md w-72 font-medium text-success ring-1 ring-inset ring-success-border">
-                            <div class="ml-2">
-                                {{ $t('available after usage') }}:
-                            </div>
-                            <div class="ml-1 tabular-nums text-2xl"
-                                 :class="{ 'text-danger': getAvailableQuantity() < 0 }">
-                                {{ getAvailableQuantity() }}
-                            </div>
+                <!-- Bestandsübersicht -->
+                <div class="grid grid-cols-3 divide-x divide-border-subtle text-center">
+                    <div class="px-4 py-4">
+                        <div class="text-xs text-text-subtle">{{ $t('Total quantity') }}</div>
+                        <div class="mt-1 text-2xl font-semibold tabular-nums text-text">
+                            {{ props.detailsForModal?.article?.quantity ?? 0 }}
                         </div>
                     </div>
+                    <div class="px-4 py-4">
+                        <div class="text-xs text-text-subtle">{{ $t('of which available') }}</div>
+                        <div class="mt-1 text-2xl font-semibold tabular-nums text-success">
+                            {{ getEinsatzbereitQuantity() }}
+                        </div>
+                    </div>
+                    <div class="px-4 py-4">
+                        <div class="text-xs text-text-subtle">{{ $t('available after usage') }}</div>
+                        <div class="mt-1 text-2xl font-semibold tabular-nums"
+                             :class="getAvailableQuantity() < 0 ? 'text-danger' : 'text-success'">
+                            {{ getAvailableQuantity() }}
+                        </div>
+                    </div>
+                </div>
 
-                    <!-- Expandable Status Details -->
-                    <div class="w-1/2">
-                        <Transition
-                            enter-active-class="transition-all duration-300 ease-out"
-                            enter-from-class="opacity-0 max-h-0"
-                            enter-to-class="opacity-100 max-h-screen"
-                            leave-active-class="transition-all duration-200 ease-in"
-                            leave-from-class="opacity-100 max-h-screen"
-                            leave-to-class="opacity-0 max-h-0"
+                <!-- Statusverteilung -->
+                <div v-if="statusBreakdown.length" class="border-t border-border-subtle px-5 py-3">
+                    <div class="flex h-2 w-full overflow-hidden rounded-full bg-surface-sunken">
+                        <div
+                            v-for="status in statusBreakdown"
+                            :key="status.id"
+                            class="h-full"
+                            :style="{ width: getStatusPercent(status), backgroundColor: status.color }"
+                            :title="`${status.name}: ${status.value}`"
+                        ></div>
+                    </div>
+                    <div class="mt-2 flex flex-wrap gap-x-4 gap-y-1">
+                        <span
+                            v-for="status in statusBreakdown"
+                            :key="status.id"
+                            class="inline-flex items-center gap-1.5 text-xs text-text-muted"
                         >
-                            <div v-show="isStatusDetailsExpanded" class="overflow-hidden">
-                                <div
-                                    class="ml-4 mt-3 rounded-lg border border-border-subtle bg-white p-4 shadow-sm">
-                                    <div class="flex items-center gap-2 mb-2">
-                                        <span class="text-xs font-medium text-text-subtle">{{ $t('Status composition') }}</span>
-                                        <div class="h-px bg-border-subtle flex-1"></div>
-                                    </div>
-                                    <ul class="divide-y divide-border-subtle">
-                                        <li
-                                            v-for="status in props.detailsForModal.article.status"
-                                            :key="status.id"
-                                            class="flex items-center justify-between gap-3 py-2"
-                                        >
-                                            <span class="flex min-w-0 items-center gap-2">
-                                                <span class="inline-block size-2.5 shrink-0 rounded-full" :style="{ backgroundColor: status.color }"></span>
-                                                <span class="truncate text-sm text-text">{{ status.name }}</span>
-                                            </span>
-                                            <span class="shrink-0 text-sm font-semibold tabular-nums text-text">{{ status.value }}</span>
-                                        </li>
-                                    </ul>
-                                </div>
-                            </div>
-                        </Transition>
+                            <span class="inline-block size-2 rounded-full" :style="{ backgroundColor: status.color }"></span>
+                            {{ status.name }}
+                            <span class="font-semibold tabular-nums text-text">{{ status.value }}</span>
+                        </span>
                     </div>
                 </div>
             </section>
@@ -217,7 +179,7 @@
 import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
 import {TabGroup, TabList, Tab, TabPanels, TabPanel} from '@headlessui/vue'
 import UsageTable from './UsageTable.vue'
-import {ref} from 'vue'
+import {computed, ref} from 'vue'
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 import axios from 'axios';
 
@@ -238,11 +200,14 @@ const props = defineProps({
 
 const emit = defineEmits(['close', 'refreshData'])
 
-// State for status details expansion
-const isStatusDetailsExpanded = ref(false)
+const statusBreakdown = computed(() =>
+    (props.detailsForModal?.article?.status || []).filter((status) => (status.value ?? 0) > 0)
+)
 
-const toggleStatusDetails = () => {
-    isStatusDetailsExpanded.value = !isStatusDetailsExpanded.value
+const getStatusPercent = (status) => {
+    const total = statusBreakdown.value.reduce((sum, s) => sum + (s.value ?? 0), 0)
+    if (!total) return '0%'
+    return `${((status.value ?? 0) / total) * 100}%`
 }
 
 const isRefreshing = ref(false)

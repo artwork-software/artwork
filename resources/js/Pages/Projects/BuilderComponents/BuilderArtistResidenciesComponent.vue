@@ -1,6 +1,5 @@
 <template>
     <div>
-        <h3 class="text-[11px] font-semibold uppercase tracking-wide text-text-subtle mb-2">{{ $t('artist management') }}</h3>
         <div v-if="residencies?.length > 0">
             <table class="min-w-full divide-y divide-border text-sm">
                 <thead>

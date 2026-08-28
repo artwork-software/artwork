@@ -39,8 +39,11 @@ export default {
             }
         },
         $canEditComponent(component) {
+            // Bearbeiten kommt entweder über das globale "write projects"-Recht oder über die
+            // Komponenten-Einstellung (Spiegel: Component::isEditableBy() im Backend).
             if (
                 this.hasAdminRole() ||
+                this.$can('write projects') ||
                 component.permission_type === null ||
                 component.permission_type === 'allSeeAndEdit'
             ) {

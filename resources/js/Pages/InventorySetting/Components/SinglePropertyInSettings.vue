@@ -1,7 +1,5 @@
 <template>
-    <!-- Regular columns (all except Actions) -->
-    <template v-if="!showOnlyActions">
-        <td class="py-4 pr-4 pl-6 text-sm font-medium whitespace-nowrap text-text first-letter:capitalize max-w-name truncate" :title="property?.name">{{ property?.name }}</td>
+    <td class="py-4 pr-4 pl-6 text-sm font-medium whitespace-nowrap text-text first-letter:capitalize max-w-name truncate" :title="property?.name">{{ property?.name }}</td>
         <td class="p-4 text-sm whitespace-nowrap text-text-subtle max-w-tooltip truncate" :title="property.tooltip_text ?? $t('No tooltip text')">{{ property.tooltip_text ?? $t('No tooltip text') }}</td>
         <td class="p-4 text-sm whitespace-nowrap text-text-subtle">{{ $t(capitalizeFirstLetter(property?.type)) }}</td>
         <td class="p-4 text-sm whitespace-nowrap text-text-subtle">
@@ -12,25 +10,22 @@
             <span v-if="property?.show_in_list" class="inline-flex items-center rounded-md bg-success-surface px-2 py-1 text-xs font-medium text-success ring-1 ring-success ring-inset">{{ $t('Yes') }}</span>
             <span v-else class="inline-flex items-center rounded-md bg-danger-surface px-2 py-1 text-xs font-medium text-danger ring-1 ring-danger ring-inset">{{ $t('No') }}</span>
         </td>
-        <td class="p-4 text-sm whitespace-nowrap text-text-subtle">
-            <span v-if="property?.is_required" class="inline-flex items-center rounded-md bg-success-surface px-2 py-1 text-xs font-medium text-success ring-1 ring-success ring-inset">{{ $t('Yes') }}</span>
-            <span v-else class="inline-flex items-center rounded-md bg-danger-surface px-2 py-1 text-xs font-medium text-danger ring-1 ring-danger ring-inset">{{ $t('No') }}</span>
-        </td>
-    </template>
+    <td class="p-4 text-sm whitespace-nowrap text-text-subtle">
+        <span v-if="property?.is_required" class="inline-flex items-center rounded-md bg-success-surface px-2 py-1 text-xs font-medium text-success ring-1 ring-success ring-inset">{{ $t('Yes') }}</span>
+        <span v-else class="inline-flex items-center rounded-md bg-danger-surface px-2 py-1 text-xs font-medium text-danger ring-1 ring-danger ring-inset">{{ $t('No') }}</span>
+    </td>
 
     <!-- Actions column -->
-    <template v-if="showActions || showOnlyActions">
-        <td class="py-5 pr-4 pl-4 text-sm whitespace-nowrap text-text-subtle sm:pr-0 actions-column">
-            <div class="flex items-center gap-x-4">
-                <button type="button" class="text-accent-600 hover:text-accent-700">
-                    <component :is="IconEdit" class="h-5 w-5" aria-hidden="true" @click="showAddEditPropertyModal = true" />
-                </button>
-                <button type="button" class="text-danger hover:text-danger" v-if="property.is_deletable">
-                    <component :is="IconTrash" class="h-5 w-5" aria-hidden="true" @click="showDeleteConfirmation = true" />
-                </button>
-            </div>
-        </td>
-    </template>
+    <td class="py-5 pr-4 pl-4 text-sm whitespace-nowrap text-text-subtle actions-column sticky right-0">
+        <div class="flex items-center gap-x-4">
+            <button type="button" class="text-accent-600 hover:text-accent-700">
+                <component :is="IconEdit" class="h-5 w-5" aria-hidden="true" @click="showAddEditPropertyModal = true" />
+            </button>
+            <button type="button" class="text-danger hover:text-danger" v-if="property.is_deletable">
+                <component :is="IconTrash" class="h-5 w-5" aria-hidden="true" @click="showDeleteConfirmation = true" />
+            </button>
+        </div>
+    </td>
 
     <ConfirmDeleteModal
         v-if="showDeleteConfirmation"
@@ -59,14 +54,6 @@ const props = defineProps({
     property: {
         type: Object,
         required: true
-    },
-    showActions: {
-        type: Boolean,
-        default: true
-    },
-    showOnlyActions: {
-        type: Boolean,
-        default: false
     }
 })
 
@@ -91,6 +78,9 @@ const deleteProperty = () => {
     width: 100px;
     min-width: 100px;
     background-color: white;
+    /* Abgrenzung zur darunter durchscrollenden Tabelle (H-Scroll-Fall) */
+    border-left: 1px solid #e5e7eb;
+    box-shadow: -4px 0 6px -2px rgba(0, 0, 0, 0.06);
 }
 
 .max-w-name {

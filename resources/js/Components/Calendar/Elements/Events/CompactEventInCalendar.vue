@@ -54,7 +54,7 @@
 </template>
 
 <script setup>
-import { computed, ref } from "vue";
+import { computed, inject, ref } from "vue";
 import { usePage } from "@inertiajs/vue3";
 import { useI18n } from "vue-i18n";
 import { useColorHelper } from "@/Composeables/UseColorHelper.js";
@@ -184,9 +184,15 @@ const formattedDates = computed(() =>
     props.event.formattedDates ?? computeEventFormattedDates(props.event.start, props.event.end)
 );
 
+// Multi-Edit als Inject, gelesen NUR im Klick-Handler (nicht im Render):
+// so hängt das Rendern der Kachel nicht am Multi-Edit-Zustand und der Toggle
+// re-rendert nicht tausende Kompakt-Kacheln. Prop bleibt als Fallback für
+// Einbindungen außerhalb von BaseCalendar.
+const injectedMultiEdit = inject('calendarMultiEdit', null);
+
 const onClick = () => {
     // Im Multi-Edit übernimmt der Zellen-Wrapper in BaseCalendar die Auswahl
-    if (props.multiEdit) return;
+    if (injectedMultiEdit ? injectedMultiEdit.value : props.multiEdit) return;
     emit('editEvent', props.event);
 };
 

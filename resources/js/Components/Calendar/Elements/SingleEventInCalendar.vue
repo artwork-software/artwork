@@ -1,11 +1,14 @@
 <template>
     <div :class="isHeightFull ? 'h-full' : ''">
         <!-- Kompaktkachel unterhalb 80 % Zoom: eine Zeile (Zeit + Titel), Klick öffnet das Termin-Modal -->
+        <!-- multiEdit kommt hier bewusst NICHT als Prop rein: die Kompaktkachel
+             liest den Wert per Inject nur im Klick-Handler. Als Prop würde der
+             Multi-Edit-Toggle tausende gemountete Kacheln re-rendern, deren
+             Darstellung sich gar nicht ändert. -->
         <CompactEventInCalendar
             v-if="!event.isMinimal && isCompact && !isInDailyView"
             :event="event"
             :width="typeof width === 'number' ? width : parseInt(width, 10) || 196"
-            :multi-edit="multiEdit"
             @editEvent="e => emit('editEvent', e)"
         />
         <component

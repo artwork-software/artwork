@@ -907,7 +907,7 @@
 </template>
 
 <script setup>
-import { computed, defineAsyncComponent, onMounted, onBeforeUnmount, ref, watch, nextTick } from "vue";
+import { computed, defineAsyncComponent, onBeforeUnmount, ref, watch } from "vue";
 import { Link, router, usePage } from "@inertiajs/vue3";
 import axios from "axios";
 import {
@@ -931,7 +931,6 @@ import {
     IconX,
 } from "@tabler/icons-vue";
 import { Menu, MenuButton, MenuItem, MenuItems, Popover, PopoverButton, PopoverPanel } from "@headlessui/vue";
-import VueMathjax from "vue-mathjax-next";
 import { useI18n } from "vue-i18n";
 import { useColorHelper } from "@/Composeables/UseColorHelper.js";
 import { can } from "laravel-permission-to-vuejs";
@@ -1198,6 +1197,9 @@ const checkEventNameTruncation = () => {
 };
 
 const showTooltip = (e) => {
+    // Truncation erst beim Hover messen (scrollWidth-Reads beim Mount würden
+    // pro Kachel ein forced Layout auslösen — teuer beim Scroll-Mounten)
+    checkTruncation();
     if (!isNameTruncated.value) return;
     const rect = e.target.getBoundingClientRect();
     tooltipPosition.value = { top: rect.bottom + 4, left: rect.left };
@@ -1264,41 +1266,30 @@ const toggleSmallZoomTooltip = (e) => {
     showSmallZoomTooltip.value = true;
 };
 
-// Close tooltip when clicking outside
-const handleClickOutside = (e) => {
+// Close tooltip when clicking outside — Listener hängt nur, solange der
+// Tooltip offen ist. Ein document-Listener PRO gemounteter Kachel (früher
+// dauerhaft) summiert sich bei hunderten Karten spürbar.
+const handleClickOutside = () => {
     if (showSmallZoomTooltip.value) {
         showSmallZoomTooltip.value = false;
     }
 };
-
-const onResize = () => {
-    nextTick(() => {
-        checkTruncation();
-        checkEventNameTruncation();
-        checkProjectGroupNameTruncation();
-        checkEventTypeTruncation();
-    });
-};
-
-onMounted(() => {
-    nextTick(onResize);
-    window.addEventListener('resize', onResize);
-    document.addEventListener('click', handleClickOutside);
+watch(showSmallZoomTooltip, (open) => {
+    if (open) {
+        document.addEventListener('click', handleClickOutside);
+    } else {
+        document.removeEventListener('click', handleClickOutside);
+    }
 });
-
 onBeforeUnmount(() => {
-    window.removeEventListener('resize', onResize);
     document.removeEventListener('click', handleClickOutside);
 });
 
-// Re-check truncation when width or zoom changes (event data doesn't change during lifetime)
-watch(
-    () => [props.width, zoom_factor.value],
-    () => nextTick(onResize),
-    { flush: 'post' }
-);
+// Truncation-Messungen (scrollWidth/clientWidth) laufen bewusst NICHT beim
+// Mount oder auf resize/zoom: jede Messung erzwingt Layout — beim Mounten
+// vieler Kacheln während des Scrollens war das ein Haupttreiber des Ruckelns.
+// Alle vier Hover-Handler messen stattdessen unmittelbar vor dem Anzeigen.
 
-const element = ref(null);
 const changeMultiEditCheckbox = (eventId, considerOnMultiEdit, eventRoomId, eventStart, eventEnd) => {
     emits.call(this, "changedMultiEditCheckbox", eventId, considerOnMultiEdit, eventRoomId, eventStart, eventEnd);
 };
@@ -1326,7 +1317,7 @@ const roomCanBeBookedByEveryone = computed(() => {
     return props.rooms?.find((room) => room.id === props.event.roomId).everyone_can_book;
 });
 
-const { backgroundColorWithOpacity, detectParentBackgroundColor, getHighContrastPercent, getTextColorBasedOnBackground } = useColorHelper();
+const { backgroundColorWithOpacity, getHighContrastPercent, getTextColorBasedOnBackground } = useColorHelper();
 
 const textColorWithDarken = computed(() => {
     const percent = 75;
@@ -1408,10 +1399,6 @@ const heightSubtraction = (event) => {
     }
     return heightSubtraction;
 };
-
-onMounted(() => {
-    if (element.value) detectParentBackgroundColor(element.value);
-});
 
 const getEditHref = (projectId) => route("projects.tab", { project: projectId, projectTab: props.first_project_tab_id });
 

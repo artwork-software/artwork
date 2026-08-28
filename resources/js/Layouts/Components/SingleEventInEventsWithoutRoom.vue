@@ -3,14 +3,14 @@
     <div class="flex w-full border border-border-subtle rounded-lg bg-white shadow-sm">
         <div class="ml-2 w-full p-2">
             <!-- Event type + name row -->
-            <div class="w-full flex cursor-pointer truncate">
-                <div>
-                    <div class="block w-10 h-10 rounded-full" :style="{'backgroundColor' : eventTypes.find(type => type.id === event.eventTypeId)?.hex_code }" />
-                </div>
-                <p class="ml-2 font-lexend font-semibold text-[clamp(18px,2.5vw,20px)]/[25px] text-text flex items-center">
-                    {{ eventTypes.find(type => type.id === event.eventTypeId)?.name }}
-                </p>
-                <div class="flex w-1/2 ml-12 text-sm/5 font-semibold text-text items-center">
+            <div class="w-full flex items-center gap-2 cursor-pointer truncate">
+                <template v-if="eventType">
+                    <div class="block w-10 h-10 shrink-0 rounded-full" :style="{'backgroundColor' : eventType.hex_code }" />
+                    <p class="font-lexend font-semibold text-[clamp(18px,2.5vw,20px)]/[25px] text-text flex items-center">
+                        {{ eventType.name }}
+                    </p>
+                </template>
+                <div class="flex text-sm/5 font-semibold text-text items-center">
                     {{ event.eventName }}
                 </div>
             </div>
@@ -119,6 +119,10 @@ const emit = defineEmits(['editEvent']);
 const page = usePage();
 const deleteComponentVisible = ref(false);
 const eventToDelete = ref(null);
+
+const eventType = computed(() => {
+    return props.eventTypes?.find(type => type.id === props.event?.eventTypeId) ?? null;
+});
 
 const canEditEvent = computed(() => {
     return props.event?.user_id === page.props.auth.user.id

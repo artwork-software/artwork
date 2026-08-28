@@ -72,8 +72,11 @@ export function usePermission(pageProps) {
             return false;
         }
 
+        // Bearbeiten kommt entweder über das globale "write projects"-Recht oder über die
+        // Komponenten-Einstellung (Spiegel: Component::isEditableBy() im Backend).
         if (
             hasAdminRole() ||
+            can('write projects') ||
             component.permission_type === null ||
             component.permission_type === 'allSeeAndEdit'
         ) {

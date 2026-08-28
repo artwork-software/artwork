@@ -25,10 +25,14 @@ class ProjectPolicy
             }
         }
 
+        // Wer alle Projekte bearbeiten/verwalten darf, muss sie auch öffnen können —
+        // sonst sperrt ein fehlendes "view projects" User mit Schreibrechten aus.
         return $user->projects->contains($project->id) ||
             $project->users->contains($user->id) ||
             $isTeamMember ||
-            $user->can(PermissionEnum::PROJECT_VIEW->value);
+            $user->can(PermissionEnum::PROJECT_VIEW->value) ||
+            $user->can(PermissionEnum::WRITE_PROJECTS->value) ||
+            $user->can(PermissionEnum::PROJECT_MANAGEMENT->value);
     }
 
     public function create(User $user): bool

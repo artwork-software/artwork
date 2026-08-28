@@ -308,7 +308,8 @@ class ProjectController extends Controller
             'projectSortEnumNames' => array_column(ProjectSortEnum::cases(), 'name'),
             'userProjectManagementSetting' => $userProjectManagementSetting,
             'eventStatuses' => EventStatus::orderBy('order')->get(),
-            'lastProject' => $this->userService->getAuthUser()->lastProject,
+            'lastProject' => $lastProject = $this->userService->getAuthUser()->lastProject,
+            'lastProjectCanEnter' => $lastProject !== null && $user->can('view', $lastProject),
             'entitiesPerPage' => $user->entities_per_page
         ]);
     }
@@ -327,18 +328,44 @@ class ProjectController extends Controller
 
         $projectPeriods = $this->prepareProjectsForComponentMapping($projects, $components);
 
+        // Zutritt (Projektseite öffnen): globales Recht ODER Projektteam (User/Abteilung).
+        // Ein Sammel-Query statt ProjectPolicy::view pro Zeile — die Übersicht bleibt für
+        // alle sichtbar, nur der Einstieg wird im Frontend über dieses Flag gegated.
+        $authUser = Auth::user();
+        $canEnterAll = $authUser->hasRole(RoleEnum::ARTWORK_ADMIN->value) ||
+            $authUser->canAny([
+                PermissionEnum::PROJECT_VIEW->value,
+                PermissionEnum::WRITE_PROJECTS->value,
+                PermissionEnum::PROJECT_MANAGEMENT->value,
+            ]);
+        $enterableProjectIds = $canEnterAll ? [] : Project::query()
+            ->whereIn('id', $projects->pluck('id'))
+            ->where(function (Builder $query) use ($authUser): void {
+                $query
+                    ->whereHas('users', fn(Builder $userQuery) => $userQuery->where('users.id', $authUser->id))
+                    ->orWhereHas(
+                        'departments.users',
+                        fn(Builder $departmentQuery) => $departmentQuery->where('users.id', $authUser->id)
+                    );
+            })
+            ->pluck('id')
+            ->flip();
+
         $mapped = $projects->map(function ($project) use (
             $components,
             $componentData,
             $firstTabId,
             $projectStates,
-            $projectPeriods
+            $projectPeriods,
+            $canEnterAll,
+            $enterableProjectIds
         ) {
             /** @var Project $project */
             $projectData = new stdClass(); // needed for the ProjectShowHeaderComponent
             $projectData->id = $project->id;
             $projectData->updated_at = $project->updated_at;
             $projectData->firstTabId = $firstTabId;
+            $projectData->canEnter = $canEnterAll || isset($enterableProjectIds[$project->id]);
             $projectData->project_managers = $project->managerUsers;
             $projectData->write_auth = $project->writeUsers;
             $projectData->delete_permission_users = $project->delete_permission_users;
@@ -3421,6 +3448,8 @@ class ProjectController extends Controller
 
     public function updateAttributes(Request $request, Project $project): JsonResponse|RedirectResponse
     {
+        $this->authorize('update', $project);
+
         $mainCategoryId = $request->input('mainCategoryId');
         $mainGenreId = $request->input('mainGenreId');
         $mainSectorId = $request->input('mainSectorId');
@@ -3471,6 +3500,8 @@ class ProjectController extends Controller
 
     public function updateDescription(Request $request, Project $project): JsonResponse|RedirectResponse
     {
+        $this->authorize('update', $project);
+
         $oldDescription = $project->description;
 
         $project->update([
@@ -4515,6 +4546,8 @@ class ProjectController extends Controller
 
     public function updateKeyVisual(Request $request, Project $project): RedirectResponse
     {
+        $this->authorize('update', $project);
+
         $oldKeyVisual = $project->key_visual_path;
         if ($request->file('keyVisual')) {
             $request->validate([
@@ -4572,23 +4605,31 @@ class ProjectController extends Controller
 
     public function deleteKeyVisual(Project $project): void
     {
+        $this->authorize('update', $project);
+
         Storage::delete('public/keyVisual/' . $project->key_visual_path);
         $project->update(['key_visual_path' => null]);
     }
 
     public function updateShiftDescription(Request $request, Project $project): void
     {
+        $this->authorize('update', $project);
+
         $project->shift_description = $request->shiftDescription;
         $project->save();
     }
 
     public function updateShiftContacts(Request $request, Project $project): void
     {
+        $this->authorize('update', $project);
+
         $project->shift_contact()->sync(collect($request->contactIds));
     }
 
     public function updateShiftRelevantEventTypes(Request $request, Project $project): void
     {
+        $this->authorize('update', $project);
+
         $project->shiftRelevantEventTypes()->sync(collect($request->shiftRelevantEventTypeIds));
     }
 

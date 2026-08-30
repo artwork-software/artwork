@@ -64,19 +64,13 @@ class LdapIdentifier
         }
     }
 
-    /**
-     * Guid::binaryGuidToString() prueft die Laenge nicht und wuerde aus jedem
-     * beliebigen String eine plausibel aussehende GUID basteln. Deshalb hier
-     * explizit: entweder kanonischer GUID-String oder exakt 16 Byte binaer.
-     */
+
     private static function isGuidValue(string $value): bool
     {
         return Guid::isValid($value) || strlen($value) === 16;
     }
 
     /**
-     * Binaerer SID-Aufbau: Revision (1 Byte, immer 0x01), Anzahl Sub-Authorities
-     * (1 Byte), Identifier Authority (6 Byte), danach 4 Byte je Sub-Authority.
      */
     private static function isSidValue(string $value): bool
     {
@@ -89,11 +83,6 @@ class LdapIdentifier
             && strlen($value) === 8 + (ord($value[1]) * 4);
     }
 
-    /**
-     * Stellt sicher, dass ein Wert gültiges UTF-8 ist. Alles andere wird hex-kodiert,
-     * damit weder die JSON-Antwort des Verbindungstests noch ein DB-Insert an einem
-     * unerwarteten Binärattribut scheitert.
-     */
     public static function safeString(?string $value): ?string
     {
         if ($value === null) {

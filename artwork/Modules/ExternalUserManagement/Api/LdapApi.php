@@ -195,9 +195,6 @@ class LdapApi implements ExternalUserManagementApi
 
         return $query->get()
             ->take($limit)
-            // Jeder Wert muss gueltiges UTF-8 sein: die Antwort des Verbindungstests
-            // wird als JSON serialisiert, ein binaeres Attribut wuerde json_encode()
-            // ausserhalb jedes try/catch im Controller sprengen.
             ->map(fn (LdapUser $ldapUser): array => [
                 'identifier' => $this->getIdentifierValue($ldapUser, $identifierAttribute),
                 'email' => LdapIdentifier::safeString($this->getAttributeValue($ldapUser, 'mail')),
@@ -224,8 +221,6 @@ class LdapApi implements ExternalUserManagementApi
 
         $query = LdapUser::on($connectionName);
 
-        // Ein kanonischer GUID-String ist kein gueltiger AD-Filterwert – dort muss
-        // die escapte Hex-Form stehen, die whereRaw() unveraendert durchreicht.
         $filterValue = LdapIdentifier::toFilterValue($identifierAttribute, $userIdentifier);
 
         $user = $filterValue !== null
@@ -273,8 +268,6 @@ class LdapApi implements ExternalUserManagementApi
                 $group = $this->findGroupByDn($connectionName, $groupDn);
                 $this->groupParentCache[$cacheKey] = Arr::wrap($group?->getAttribute('memberOf') ?? []);
             } catch (\Throwable $e) {
-                // Eine einzelne nicht lesbare Gruppe (fremde Domaene, fehlendes
-                // Leserecht) darf nicht den kompletten Sync-Lauf abbrechen.
                 report($e);
                 $this->groupParentCache[$cacheKey] = [];
             }
@@ -298,16 +291,9 @@ class LdapApi implements ExternalUserManagementApi
     }
 
     /**
-     * Laedt eine Gruppe ueber ihren DN. Eigene Methode, damit die Rekursion in
-     * {@see fetchNestedGroups()} ohne Verzeichnis testbar bleibt.
-     *
-     * find() ist die DN-Suche von LdapRecord v3 (setDn()->read()) und liefert null,
-     * wenn der Eintrag nicht existiert.
      */
     protected function findGroupByDn(string $connectionName, string $groupDn): ?LdapUser
     {
-        // Nur memberOf statt '*': spart bei grossen Gruppen die komplette
-        // member-Liste, die hier nie gebraucht wird.
         $group = LdapUser::on($connectionName)->find($groupDn, ['memberof']);
 
         return $group instanceof LdapUser ? $group : null;
@@ -445,13 +431,6 @@ class LdapApi implements ExternalUserManagementApi
         }
     }
 
-    /**
-     * Liest das konfigurierte Identifier-Attribut und normalisiert es. Active
-     * Directory liefert objectGUID/objectSid binaer – roh ist der Wert weder
-     * JSON-serialisierbar noch als Wert der Spalte external_users.identification
-     * brauchbar. Muss auf allen Pfaden (Sync, Preview, Login) identisch laufen,
-     * sonst erzeugt der Login einen zweiten Datensatz.
-     */
     private function getIdentifierValue(LdapUser $ldapUser, string $attribute): ?string
     {
         return LdapIdentifier::normalize($attribute, $this->getAttributeValue($ldapUser, $attribute));

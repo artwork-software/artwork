@@ -68,9 +68,6 @@ class SyncExternalUserSource implements ShouldBeUnique, ShouldQueue
             $result = $syncService->syncSource($source);
             $this->storeStatus('completed', __('LDAP synchronization completed.'), $result);
         } catch (Throwable $exception) {
-            // Die Ursache landet mit in den Status: die UI zeigte bisher nur
-            // "wird erneut versucht", der Admin musste die Logs vom Server holen.
-            // (Geloggt wird die Exception bereits vom Queue-Worker.)
             $this->storeStatus(
                 'retrying',
                 __('LDAP synchronization failed and will be retried.'),

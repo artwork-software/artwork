@@ -68,7 +68,15 @@ class SyncExternalUserSource implements ShouldBeUnique, ShouldQueue
             $result = $syncService->syncSource($source);
             $this->storeStatus('completed', __('LDAP synchronization completed.'), $result);
         } catch (Throwable $exception) {
-            $this->storeStatus('retrying', __('LDAP synchronization failed and will be retried.'));
+            // Die Ursache landet mit in den Status: die UI zeigte bisher nur
+            // "wird erneut versucht", der Admin musste die Logs vom Server holen.
+            // (Geloggt wird die Exception bereits vom Queue-Worker.)
+            $this->storeStatus(
+                'retrying',
+                __('LDAP synchronization failed and will be retried.'),
+                null,
+                $exception::class . ': ' . $exception->getMessage()
+            );
             throw $exception;
         } finally {
             $lock->release();
@@ -77,16 +85,26 @@ class SyncExternalUserSource implements ShouldBeUnique, ShouldQueue
 
     public function failed(?Throwable $exception): void
     {
-        $this->storeStatus('failed', __('LDAP synchronization failed. Please check the logs.'));
+        $this->storeStatus(
+            'failed',
+            __('LDAP synchronization failed. Please check the logs.'),
+            null,
+            $exception === null ? null : $exception::class . ': ' . $exception->getMessage()
+        );
     }
 
     /** @param array{total:int, synced:int, skipped:int}|null $result */
-    private function storeStatus(string $status, string $message, ?array $result = null): void
-    {
+    private function storeStatus(
+        string $status,
+        string $message,
+        ?array $result = null,
+        ?string $error = null
+    ): void {
         Cache::put(self::statusKey($this->source->id), [
             'status' => $status,
             'message' => $message,
             'result' => $result,
+            'error' => $error,
             'updated_at' => now()->toIso8601String(),
         ], now()->addDay());
     }

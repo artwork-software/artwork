@@ -4,6 +4,8 @@ namespace Artwork\Modules\ExternalUserManagement\Api;
 
 use Artwork\Modules\ExternalUserManagement\Exceptions\LdapAuthenticationFailedException;
 use Artwork\Modules\ExternalUserManagement\Models\ExternalUserSource;
+use Artwork\Modules\ExternalUserManagement\Support\LdapIdentifier;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
 use LdapRecord\Connection;
 use LdapRecord\Container;
@@ -46,7 +48,9 @@ class LdapApi implements ExternalUserManagementApi
      */
     private function registerConnection(ExternalUserSource $source): string
     {
-        $name = 'external_user_source_' . $source->getKey();
+        // Ungespeicherte Sources (Verbindungstest aus dem Modal) haben keinen Key –
+        // ohne Suffix teilten sich alle denselben Container-Slot.
+        $name = 'external_user_source_' . ($source->getKey() ?? 'unsaved_' . spl_object_id($source));
         Container::getInstance()->addConnection($this->createConnection($source), $name);
 
         return $name;
@@ -115,7 +119,7 @@ class LdapApi implements ExternalUserManagementApi
         $filter = $this->normalizeFilter($config['user_filter'] ?? null);
         $identifierAttribute = $config['identifier_attribute'] ?? 'objectGUID';
 
-        $users = LdapUser::on($connectionName)
+        $query = LdapUser::on($connectionName)
             ->select([
                 '*',
                 $identifierAttribute,
@@ -130,12 +134,14 @@ class LdapApi implements ExternalUserManagementApi
                 'title',
                 'telephoneNumber',
             ])
-            ->in($baseDn)
-            ->rawFilter($filter)
-            ->get();
+            ->rawFilter($filter);
 
-        return $users->map(function (LdapUser $ldapUser) use ($source, $connectionName, $identifierAttribute) {
-            $identifier = $this->getAttributeValue($ldapUser, $identifierAttribute);
+        if ($baseDn !== '') {
+            $query->in($baseDn);
+        }
+
+        return $query->get()->map(function (LdapUser $ldapUser) use ($source, $connectionName, $identifierAttribute) {
+            $identifier = $this->getIdentifierValue($ldapUser, $identifierAttribute);
             $email = $this->getAttributeValue($ldapUser, 'mail');
             $firstName = $this->getAttributeValue($ldapUser, 'givenName') ?? '';
             $lastName = $this->getAttributeValue($ldapUser, 'sn') ?? '';
@@ -170,6 +176,7 @@ class LdapApi implements ExternalUserManagementApi
      */
     public function previewUsers(ExternalUserSource $source, int $limit = 3): array
     {
+        $this->groupParentCache = [];
         $connectionName = $this->registerConnection($source);
 
         $config = $source->config ?? [];
@@ -188,13 +195,16 @@ class LdapApi implements ExternalUserManagementApi
 
         return $query->get()
             ->take($limit)
+            // Jeder Wert muss gueltiges UTF-8 sein: die Antwort des Verbindungstests
+            // wird als JSON serialisiert, ein binaeres Attribut wuerde json_encode()
+            // ausserhalb jedes try/catch im Controller sprengen.
             ->map(fn (LdapUser $ldapUser): array => [
-                'identifier' => $this->getAttributeValue($ldapUser, $identifierAttribute),
-                'email' => $this->getAttributeValue($ldapUser, 'mail'),
-                'first_name' => $this->getAttributeValue($ldapUser, 'givenName') ?? '',
-                'last_name' => $this->getAttributeValue($ldapUser, 'sn') ?? '',
-                'display_name' => $this->getAttributeValue($ldapUser, 'displayName'),
-                'dn' => $ldapUser->getDn(),
+                'identifier' => $this->getIdentifierValue($ldapUser, $identifierAttribute),
+                'email' => LdapIdentifier::safeString($this->getAttributeValue($ldapUser, 'mail')),
+                'first_name' => LdapIdentifier::safeString($this->getAttributeValue($ldapUser, 'givenName')) ?? '',
+                'last_name' => LdapIdentifier::safeString($this->getAttributeValue($ldapUser, 'sn')) ?? '',
+                'display_name' => LdapIdentifier::safeString($this->getAttributeValue($ldapUser, 'displayName')),
+                'dn' => LdapIdentifier::safeString($ldapUser->getDn()),
             ])
             ->values()
             ->all();
@@ -212,9 +222,15 @@ class LdapApi implements ExternalUserManagementApi
         $config = $source->config ?? [];
         $identifierAttribute = $config['identifier_attribute'] ?? 'objectGUID';
 
-        $user = LdapUser::on($connectionName)
-            ->where($identifierAttribute, '=', $userIdentifier)
-            ->first();
+        $query = LdapUser::on($connectionName);
+
+        // Ein kanonischer GUID-String ist kein gueltiger AD-Filterwert – dort muss
+        // die escapte Hex-Form stehen, die whereRaw() unveraendert durchreicht.
+        $filterValue = LdapIdentifier::toFilterValue($identifierAttribute, $userIdentifier);
+
+        $user = $filterValue !== null
+            ? $query->whereRaw($identifierAttribute, '=', $filterValue)->first()
+            : $query->where($identifierAttribute, '=', $userIdentifier)->first();
 
         if (!$user) {
             return [];
@@ -232,7 +248,7 @@ class LdapApi implements ExternalUserManagementApi
         $groups = [];
         $processedGroups = [];
 
-        $memberOf = $ldapUser->getAttribute('memberOf') ?? [];
+        $memberOf = Arr::wrap($ldapUser->getAttribute('memberOf') ?? []);
 
         foreach ($memberOf as $groupDn) {
             $groups[] = $groupDn;
@@ -253,8 +269,15 @@ class LdapApi implements ExternalUserManagementApi
 
         $cacheKey = $connectionName . ':' . mb_strtolower($groupDn);
         if (!array_key_exists($cacheKey, $this->groupParentCache)) {
-            $group = LdapUser::on($connectionName)->findByDn($groupDn);
-            $this->groupParentCache[$cacheKey] = $group?->getAttribute('memberOf') ?? [];
+            try {
+                $group = $this->findGroupByDn($connectionName, $groupDn);
+                $this->groupParentCache[$cacheKey] = Arr::wrap($group?->getAttribute('memberOf') ?? []);
+            } catch (\Throwable $e) {
+                // Eine einzelne nicht lesbare Gruppe (fremde Domaene, fehlendes
+                // Leserecht) darf nicht den kompletten Sync-Lauf abbrechen.
+                report($e);
+                $this->groupParentCache[$cacheKey] = [];
+            }
         }
 
         $memberOf = $this->groupParentCache[$cacheKey];
@@ -272,6 +295,22 @@ class LdapApi implements ExternalUserManagementApi
         }
 
         return $nestedGroups;
+    }
+
+    /**
+     * Laedt eine Gruppe ueber ihren DN. Eigene Methode, damit die Rekursion in
+     * {@see fetchNestedGroups()} ohne Verzeichnis testbar bleibt.
+     *
+     * find() ist die DN-Suche von LdapRecord v3 (setDn()->read()) und liefert null,
+     * wenn der Eintrag nicht existiert.
+     */
+    protected function findGroupByDn(string $connectionName, string $groupDn): ?LdapUser
+    {
+        // Nur memberOf statt '*': spart bei grossen Gruppen die komplette
+        // member-Liste, die hier nie gebraucht wird.
+        $group = LdapUser::on($connectionName)->find($groupDn, ['memberof']);
+
+        return $group instanceof LdapUser ? $group : null;
     }
 
     /**
@@ -322,7 +361,7 @@ class LdapApi implements ExternalUserManagementApi
         }
 
         return [
-            'identifier' => $this->getAttributeValue($user, $identifierAttribute),
+            'identifier' => $this->getIdentifierValue($user, $identifierAttribute),
             'email' => $this->getAttributeValue($user, 'mail'),
             'first_name' => $this->getAttributeValue($user, 'givenName') ?? '',
             'last_name' => $this->getAttributeValue($user, 'sn') ?? '',
@@ -404,6 +443,18 @@ class LdapApi implements ExternalUserManagementApi
             // Falsche Credentials / Bind-Fehler → kein Login, aber kein Abbruch.
             return false;
         }
+    }
+
+    /**
+     * Liest das konfigurierte Identifier-Attribut und normalisiert es. Active
+     * Directory liefert objectGUID/objectSid binaer – roh ist der Wert weder
+     * JSON-serialisierbar noch als Wert der Spalte external_users.identification
+     * brauchbar. Muss auf allen Pfaden (Sync, Preview, Login) identisch laufen,
+     * sonst erzeugt der Login einen zweiten Datensatz.
+     */
+    private function getIdentifierValue(LdapUser $ldapUser, string $attribute): ?string
+    {
+        return LdapIdentifier::normalize($attribute, $this->getAttributeValue($ldapUser, $attribute));
     }
 
     private function getAttributeValue(LdapUser $ldapUser, string $attribute): ?string

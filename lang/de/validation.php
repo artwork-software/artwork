@@ -327,6 +327,8 @@ return [
         ],
     ],
     'file_upload' => [
+        'server_max_size' => 'Die Datei überschreitet die Server-Obergrenze von :size MB. Bitte wähle eine kleinere Datei oder bitte deine IT, die Servereinstellungen zu erhöhen.',
+        'failed' => 'Der Upload ist fehlgeschlagen. Bitte versuche es erneut.',
         'max_size' => 'Die maximal freigegebene Dateigröße ist aktuell :size MB, lasse es entweder von einem Admin hochsetzen oder versuche es mit einer kleineren Datei',
         'invalid_file_type' => 'Dieses Dateiformat :format ist nicht freigegeben, bitte einen Admin es freizugeben oder nutze ein anderes Format',
     ],

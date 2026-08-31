@@ -1,6 +1,7 @@
 <template>
     <ShiftDropElement
         :multiEditMode="multiEditMode"
+        :compact="compact"
         :craft-id="craft.id"
         :userForMultiEdit="userForMultiEdit"
         :highlight-mode="highlightMode"
@@ -64,6 +65,7 @@ const props = defineProps({
     eventType: String,
     highlightedShiftId: [String, Number],
     firstProjectShiftTabId: [String, Number],
+    compact: Boolean,
 })
 
 const craft = computed(() => props.shift.craft ?? resolveCraft(props.shift.craftId) ?? {});

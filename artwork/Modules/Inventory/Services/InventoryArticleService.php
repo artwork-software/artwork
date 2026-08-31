@@ -373,6 +373,21 @@ class InventoryArticleService
      * @param StoreInventoryArticleRequest $request
      * @return InventoryArticle
      */
+    /**
+     * Gesamtmenge bei Einzelinventar-Artikeln IMMER aus der Summe der eingereichten
+     * Einzelbestände ableiten — der manuelle Abgleich soll entfallen und ein manipulierter
+     * quantity-Wert im Request darf die Summe nicht überschreiben (Abnahme MAT-05 Ref. 1.24).
+     */
+    private function resolveArticleQuantity(\Illuminate\Http\Request $request): int
+    {
+        if (!$request->boolean('is_detailed_quantity')) {
+            return $request->integer('quantity');
+        }
+
+        return (int) $request->collect('detailed_article_quantities')
+            ->sum(static fn ($detailed) => (int) ($detailed['quantity'] ?? 0));
+    }
+
     public function store(StoreInventoryArticleRequest $request): InventoryArticle
     {
         // Nutze Datenbank-Transaktionen für Konsistenz
@@ -384,7 +399,7 @@ class InventoryArticleService
                 'inventory_sub_category_id' => $request->filled('inventory_sub_category_id')
                     ? $request->integer('inventory_sub_category_id')
                     : null,
-                'quantity' => $request->integer('quantity'),
+                'quantity' => $this->resolveArticleQuantity($request),
                 'is_detailed_quantity' => $request->boolean('is_detailed_quantity'),
             ]);
 
@@ -454,7 +469,7 @@ class InventoryArticleService
                 'name' => $request->get('name'),
                 'description' => $request->get('description'),
                 'inventory_category_id' => $request->integer('inventory_category_id'),
-                'quantity' => $request->integer('quantity'),
+                'quantity' => $this->resolveArticleQuantity($request),
                 'is_detailed_quantity' => $request->boolean('is_detailed_quantity'),
             ];
 

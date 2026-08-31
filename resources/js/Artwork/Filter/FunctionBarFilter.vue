@@ -9,7 +9,7 @@
             classesButton="ui-button"
         />
 
-        <span class="absolute flex size-2.5 top-0 right-0 pointer-events-none" v-if="checkIfAnyFilterIsActive">
+        <span class="absolute flex size-2.5 top-0 right-0 pointer-events-none" v-if="checkIfAnyFilterIsActive || staffingFilterActive">
               <span class="relative inline-flex size-2.5 rounded-full bg-accent-600"></span>
         </span>
     </div>
@@ -31,6 +31,7 @@
 
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
 import {computed, defineAsyncComponent, ref} from "vue";
+import {usePage} from "@inertiajs/vue3";
 
 const props = defineProps({
     filterOptions: {
@@ -79,6 +80,19 @@ const checkIfAnyFilterIsActive = computed(() => {
 
         return value !== null && value !== '';
     });
+});
+
+// Besetzungsfilter (Schichtplan-Setting, kein user_filters-Eintrag) soll den
+// Aktiv-Punkt am Filter-Icon ebenfalls anzeigen
+const staffingFilterActive = computed(() => {
+    const pageProps = usePage().props;
+    if (props.filterType === 'shift_daily_filter') {
+        return !!(pageProps.shift_plan_daily_settings ?? pageProps.shift_plan_settings ?? pageProps.auth.user.calendar_settings)?.show_only_not_fully_staffed_shifts;
+    }
+    if (props.filterType === 'shift_filter') {
+        return !!(pageProps.shift_plan_settings ?? pageProps.auth.user.calendar_settings)?.show_only_not_fully_staffed_shifts;
+    }
+    return false;
 });
 
 const CalendarFilterModal = defineAsyncComponent({

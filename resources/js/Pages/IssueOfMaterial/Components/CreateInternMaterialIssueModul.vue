@@ -179,7 +179,7 @@
                                 :label="$t('Search article, (sub)category...')"
                                 :placeholder="$t('Search article, (sub)category...')"
                             />
-                            <ToolTipComponent @click="showSelectMaterialSetModal = true" :icon="IconParentheses" :tooltip-text="$t('Select material set')" icon-size="size-7" tooltip-width="w-fit whitespace-nowrap" position="top" />
+                            <ToolTipComponent @click="showSelectMaterialSetModal = true" :icon="IconPackages" :tooltip-text="$t('Select material set')" icon-size="size-7" tooltip-width="w-fit whitespace-nowrap" position="top" />
                             <ToolTipComponent @click="showCopyIssueModal = true" :icon="IconCopy" :tooltip-text="$t('Copy material from another material issue')" icon-size="size-7" tooltip-width="w-fit whitespace-nowrap" position="top" />
                             <InventoryFunctionBarFilter @close="reloadArticlesWithNewFilter" />
                         </div>
@@ -425,12 +425,17 @@
                                 <!-- Bestehende Dateien -->
                                 <div v-if="props.issueOfMaterial?.files?.length" class="space-y-2">
                                     <div v-for="(file, index) in props.issueOfMaterial.files" :key="'existing-' + index" class="flex items-center gap-3 rounded-lg border border-border-subtle bg-white px-3 py-2">
-                                        <!-- Thumbnail für Bilddateien -->
-                                        <div v-if="isImageFile(file.original_name)" class="shrink-0">
-                                            <div class="overflow-hidden rounded border border-border-subtle shadow-sm" style="width: 40px; height: 40px;">
-                                                <img :src="'/storage/' + file.file_path" :alt="file.original_name" class="block h-full w-full object-cover" @error="(e) => e.target.src = usePage().props.big_logo" />
-                                            </div>
-                                        </div>
+                                        <!-- Vorschau für Bilder UND PDFs, Klick öffnet den Viewer
+                                             (Abnahme MAT-03 Ref. 1.16, gleiches Muster wie Projekt-Dokumente) -->
+                                        <FilePreview
+                                            v-if="isImageFile(file.original_name) || isPdfFileName(file.original_name)"
+                                            :src="'/storage/' + file.file_path"
+                                            :name="file.original_name"
+                                            :type="isPdfFileName(file.original_name) ? 'pdf' : 'image'"
+                                            size="sm"
+                                            class="shrink-0"
+                                            @open="openAttachmentPreview(file)"
+                                        />
                                         <div class="min-w-0 flex-1">
                                             <a :href="'/storage/' + file.file_path" target="_blank" download class="truncate text-sm font-medium text-accent-700 hover:underline">
                                                 {{ file.original_name }}
@@ -531,6 +536,15 @@
     <ArticleDetailModal :article="articleForDetailModal" v-if="articleForDetailModal" @close="articleForDetailModal = null" :show-button-for-edit-and-delete="false" />
 
     <ArticleUsageModal :details-for-modal="articleForUsageModal" v-if="articleForUsageModal" @close="articleForUsageModal = null; editingArticleQuantity = null" :editing-issue-id="internMaterialIssue.id" :editing-article-quantity="editingArticleQuantity" />
+
+    <!-- Bild-/PDF-Viewer für Dateianhänge (Abnahme MAT-03 Ref. 1.16) -->
+    <FileViewerModal
+        v-if="attachmentPreview"
+        :src="attachmentPreview.src"
+        :name="attachmentPreview.name"
+        :type="attachmentPreview.type"
+        @close="attachmentPreview = null"
+    />
 </template>
 
 <script setup lang="ts">
@@ -542,6 +556,8 @@ import BaseTextarea from "@/Artwork/Inputs/BaseTextarea.vue";
 import ArticleSearchFilterModal from "@/Pages/IssueOfMaterial/Components/ArticleSearchFilterModal.vue";
 import ApplyMaterialSetConfirmModal from "@/Pages/IssueOfMaterial/Components/ApplyMaterialSetConfirmModal.vue";
 import ProjectSearch from "@/Components/SearchBars/ProjectSearch.vue";
+import FilePreview from "@/Artwork/Files/FilePreview.vue";
+import FileViewerModal from "@/Artwork/Files/FileViewerModal.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import {router, useForm, usePage} from "@inertiajs/vue3";
 import {computed, inject, nextTick, onBeforeUnmount, onMounted, provide, ref, watch} from "vue";
@@ -554,7 +570,7 @@ import InventoryFunctionBarFilter from "@/Artwork/Filter/InventoryFunctionBarFil
 import ArticleDetailModal from "@/Pages/Inventory/Components/Article/Modals/ArticleDetailModal.vue";
 import ArticleUsageModal from "@/Pages/Inventory/Components/Planning/ArticleUsageModal.vue";
 import Galleria from "primevue/galleria";
-import {IconCircleCheck, IconCirclePlus, IconCopy, IconFile, IconHome, IconInfoCircle, IconListDetails, IconLoader, IconParentheses, IconTrash, IconWindowMaximize, IconX} from "@tabler/icons-vue";
+import {IconCircleCheck, IconCirclePlus, IconCopy, IconFile, IconHome, IconInfoCircle, IconListDetails, IconLoader, IconPackages, IconTrash, IconWindowMaximize, IconX} from "@tabler/icons-vue";
 import dayjs from "dayjs";
 
 // Ensure time values are always in HH:mm format (strip seconds if present)
@@ -884,14 +900,49 @@ const DEFAULT_END   = '23:59';
 
 const isEmpty = (v: unknown) => v === '' || v === null || v === undefined;
 
+// Merkt sich, welche Werte automatisch aus der Projekt-/Raumauswahl übernommen wurden.
+// Beim Wechsel der Projektzuordnung werden NUR diese wieder freigegeben, damit der
+// Zeitraum dem neuen Projekt folgt (Abnahme Ref. 3.36) — manuell geänderte Werte
+// bleiben stehen.
+const autoFilled = ref<{ name: string | null; startDate: string | null; endDate: string | null }>({
+    name: null,
+    startDate: null,
+    endDate: null,
+});
+// true, wenn der aktuell gewählte Raum über die Projektraum-Chips gesetzt wurde
+// (dann gehört er zum alten Projekt und wird beim Wechsel mit entfernt)
+const roomFromProjectChip = ref(false);
+
+const releaseAutoFilledValues = () => {
+    if (autoFilled.value.name !== null && internMaterialIssue.name === autoFilled.value.name) {
+        internMaterialIssue.name = '';
+    }
+    if (autoFilled.value.startDate !== null && internMaterialIssue.start_date === autoFilled.value.startDate) {
+        internMaterialIssue.start_date = '';
+    }
+    if (autoFilled.value.endDate !== null && internMaterialIssue.end_date === autoFilled.value.endDate) {
+        internMaterialIssue.end_date = '';
+    }
+    autoFilled.value = { name: null, startDate: null, endDate: null };
+};
+
 const addProject = (project?: ProjectLike) => {
     // Auswahl setzen (oder nullen)
     selectedProject.value = project ?? null;
     if (!project) return;
 
+    // Wechsel der Projektzuordnung: automatisch übernommene Werte des vorherigen
+    // Projekts freigeben, damit die Vorbelegung unten neu greift
+    releaseAutoFilledValues();
+    if (roomFromProjectChip.value) {
+        selectedRoom.value = null;
+        roomFromProjectChip.value = false;
+    }
+
     // Name nur setzen, wenn leer
     if (isEmpty(internMaterialIssue.name) && project.name) {
         internMaterialIssue.name = project.name;
+        autoFilled.value.name = project.name;
     }
 
     // Extract start date/time from either format
@@ -919,6 +970,7 @@ const addProject = (project?: ProjectLike) => {
     if (isEmpty(internMaterialIssue.start_date) && startDate) {
         internMaterialIssue.start_date = startDate;
         internMaterialIssue.start_time = startTime ?? DEFAULT_START;
+        autoFilled.value.startDate = startDate;
     }
 
     // Extract end date/time from either format
@@ -949,6 +1001,7 @@ const addProject = (project?: ProjectLike) => {
     if (isEmpty(internMaterialIssue.end_date) && endDate) {
         internMaterialIssue.end_date = endDate;
         internMaterialIssue.end_time = endTime ?? DEFAULT_END;
+        autoFilled.value.endDate = endDate;
     }
 
     // if start empty check if project has project.firstEventStart ("14.11.2025") format it and set it
@@ -957,6 +1010,7 @@ const addProject = (project?: ProjectLike) => {
         if (iso) {
             internMaterialIssue.start_date = iso;
             internMaterialIssue.start_time = DEFAULT_START;
+            autoFilled.value.startDate = iso;
         }
     }
 
@@ -966,6 +1020,7 @@ const addProject = (project?: ProjectLike) => {
         if (iso) {
             internMaterialIssue.end_date = iso;
             internMaterialIssue.end_time = DEFAULT_END;
+            autoFilled.value.endDate = iso;
         }
     }
 
@@ -989,6 +1044,7 @@ const dotDateToIso = (value: string | null | undefined): string | null => {
 
 const addRoom = (room) => {
     selectedRoom.value = room;
+    roomFromProjectChip.value = false;
 };
 
 const isPeriodEmpty = () => !internMaterialIssue.start_date && !internMaterialIssue.end_date;
@@ -1000,12 +1056,16 @@ const isPeriodEmpty = () => !internMaterialIssue.start_date && !internMaterialIs
 const assignRoomFromProject = (room, { force = false } = {}) => {
     if (!room) return;
     selectedRoom.value = { id: room.id, name: room.name };
+    roomFromProjectChip.value = true;
 
     if (force || isPeriodEmpty()) {
         internMaterialIssue.start_date = room.start_date || '';
         internMaterialIssue.start_time = normalizeTime(room.start_time) || '00:00';
         internMaterialIssue.end_date = room.end_date || '';
         internMaterialIssue.end_time = normalizeTime(room.end_time) || '23:59';
+        // Auch dieser Zeitraum stammt aus der Projektzuordnung — beim Projektwechsel freigeben
+        autoFilled.value.startDate = internMaterialIssue.start_date || null;
+        autoFilled.value.endDate = internMaterialIssue.end_date || null;
     }
 };
 
@@ -1342,6 +1402,35 @@ const preventEnterSubmit = (event) => {
     }
 };
 
+// Nutzdaten-Vergleich für die Verwerfen-Rückfrage im Wrapper-Modal (Abnahme Ref. 3.7):
+// bewusst OHNE availableStock/availableStockRequestIsLoading — die schreiben die
+// asynchronen Verfügbarkeits-Requests in die Form-Artikel, form.isDirty wäre damit
+// immer true, ohne dass der User etwas geändert hat
+const dirtyComparableState = () => JSON.stringify({
+    name: internMaterialIssue.name,
+    project: selectedProject.value?.id ?? null,
+    start: [internMaterialIssue.start_date, internMaterialIssue.start_time],
+    end: [internMaterialIssue.end_date, internMaterialIssue.end_time],
+    room: selectedRoom.value?.id ?? null,
+    notes: internMaterialIssue.notes,
+    responsible: selectedResponsibleUsers.value.map((u) => u.id),
+    specialItems: (internMaterialIssue.special_items ?? []).map((s) => [s.name, s.quantity]),
+    specialItemsDone: internMaterialIssue.special_items_done,
+    articles: (internMaterialIssue.articles ?? []).map((a) => [a.id, Number(a.quantity)]),
+    newFiles: internMaterialIssue.files.length,
+    existingFiles: (internMaterialIssue.existing_files ?? []).length,
+});
+
+let initialDirtySnapshot = '';
+onMounted(() => {
+    initialDirtySnapshot = dirtyComparableState();
+});
+
+defineExpose({
+    submit: () => submit(),
+    isDirty: () => dirtyComparableState() !== initialDirtySnapshot,
+});
+
 const submit = () => {
     // Ensure times are in HH:mm before submitting
     internMaterialIssue.start_time = normalizeTime(internMaterialIssue.start_time) || "";
@@ -1641,6 +1730,18 @@ const isImageFile = (filename) => {
     const extension = filename.split('.').pop()?.toLowerCase();
     const imageExtensions = ['png', 'jpe', 'jpeg', 'jpg', 'gif', 'bmp', 'ico', 'tiff', 'tif', 'svg', 'svgz'];
     return imageExtensions.includes(extension);
+};
+
+const isPdfFileName = (filename) => (filename || '').split('.').pop()?.toLowerCase() === 'pdf';
+
+// Bild-/PDF-Vorschau für gespeicherte Anhänge (Abnahme MAT-03 Ref. 1.16)
+const attachmentPreview = ref(null);
+const openAttachmentPreview = (file) => {
+    attachmentPreview.value = {
+        src: '/storage/' + file.file_path,
+        name: file.original_name,
+        type: isPdfFileName(file.original_name) ? 'pdf' : 'image',
+    };
 };
 
 // Helper function to create preview URL for file objects

@@ -36,6 +36,7 @@
 import { computed, ref } from 'vue'
 import axios from 'axios'
 import { useI18n } from 'vue-i18n'
+import { uploadErrorMessage } from '@/Composeables/UseUploadErrorMessage.js'
 import { IconFile, IconTrash, IconUpload, IconLoader2 } from '@tabler/icons-vue'
 
 const { t } = useI18n()
@@ -80,7 +81,7 @@ const onSelect = async (event) => {
         emit('update:modelValue', data.path)
     } catch (e) {
         const messages = e?.response?.data?.errors?.file
-        error.value = Array.isArray(messages) ? messages[0] : t('Upload failed')
+        error.value = Array.isArray(messages) ? messages[0] : uploadErrorMessage(e, t)
     } finally {
         busy.value = false
         if (inputRef.value) {

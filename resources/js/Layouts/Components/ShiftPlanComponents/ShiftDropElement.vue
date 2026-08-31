@@ -1,6 +1,53 @@
 <template>
     <div class="w-full group/shift duration-300 ease-in-out cursor-pointer" :data-shift-id="shift?.id">
+        <!-- Kompaktkarte für Zoom < 100 %: schlanke Pille, aber mit voller Drag&Drop-Logik
+             (Zuweisung per Drop ging in der reinen Anzeige-Pille verloren — Abnahme DP-07). -->
         <div
+            v-if="compact"
+            class="flex items-center justify-between gap-x-1 px-1 py-0.5 text-[10px] cursor-pointer select-none"
+            :title="`${resolvedCraft.abbreviation ?? ''} ${shift.start} - ${shift.end} (${computedUsedWorkerCount}/${computedMaxWorkerCount})`"
+            @dragover="onDragOver"
+            @drop="onDrop"
+            @click="handleClickEvent"
+        >
+            <span class="flex items-center gap-x-1 min-w-0">
+                <PropertyIcon
+                    v-if="shift.isCommitted"
+                    name="IconLock"
+                    class="size-3 shrink-0 text-black"
+                    :stroke-width="2"
+                />
+                <!-- Nur Startzeit — die volle Zeitspanne steht im title-Tooltip und im Modal -->
+                <span class="truncate">
+                    {{ resolvedCraft.abbreviation }} {{ shift.start }}
+                </span>
+            </span>
+            <span class="flex items-center shrink-0 tabular-nums">
+                ({{ computedUsedWorkerCount }}/{{ computedMaxWorkerCount }})
+                <!-- Eingeplante Person nicht (mehr) verfügbar: Warndreieck statt Besetzungs-Punkt,
+                     rot bei festgeschriebener Schicht -->
+                <svg
+                    v-if="unavailableWorkers.length"
+                    class="ml-1 h-2.5 w-2.5 shrink-0"
+                    :class="shift.isCommitted ? 'text-danger' : 'text-warning'"
+                    fill="currentColor" viewBox="0 0 20 20"
+                >
+                    <title>{{ unavailableWorkersTooltip }}</title>
+                    <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+                </svg>
+                <span
+                    v-else
+                    class="ml-1 inline-block h-2 w-2 rounded-full"
+                    :class="{
+                        'bg-danger': (computedUsedWorkerCount === 0 && computedMaxWorkerCount !== 0) || computedUsedWorkerCount > computedMaxWorkerCount,
+                        'bg-warning': computedUsedWorkerCount !== 0 && computedUsedWorkerCount < computedMaxWorkerCount,
+                        'bg-success': computedUsedWorkerCount === computedMaxWorkerCount
+                    }"
+                ></span>
+            </span>
+        </div>
+        <div
+            v-else
             :class="[
               'px-1',
               (highlightMode && hasAnyHighlightSelection && !matchesAnyHighlight) ? 'opacity-30' : '',
@@ -79,7 +126,7 @@
             </div>
         </div>
 
-        <div class="w-full px-1" v-if="usePage().props.auth.user.calendar_settings?.show_qualifications">
+        <div class="w-full px-1" v-if="!compact && usePage().props.auth.user.calendar_settings?.show_qualifications">
             <div class="w-full flex flex-row flex-wrap text-[10px] text-text-subtle">
                 <div
                     v-for="(row) in computedShiftsQualificationsWithWorkerCount"
@@ -113,7 +160,7 @@
 
         </div>
 
-        <div v-if="usePage().props.auth.user.calendar_settings?.shift_notes" class="px-1 text-sm/5 font-bold text-text-subtle">
+        <div v-if="!compact && usePage().props.auth.user.calendar_settings?.shift_notes" class="px-1 text-sm/5 font-bold text-text-subtle">
             {{ shift.description }}
         </div>
     </div>
@@ -170,6 +217,7 @@ const props = defineProps<{
     userForMultiEdit?: any
     highlightedShiftId?: number | string | null
     shiftQualifications: Array<{ id: number; icon?: any }>
+    compact?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -502,6 +550,8 @@ function canPlanShifts(): boolean {
 function onDragOver(event: DragEvent) {
     if (!canPlanShifts()) return
     event.preventDefault()
+    // Sichtbarer Maus-Indikator, dass hier gedroppt werden kann
+    if (event.dataTransfer) event.dataTransfer.dropEffect = 'copy'
 }
 
 function onDrop(event: DragEvent) {

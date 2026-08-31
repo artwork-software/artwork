@@ -61,6 +61,18 @@
 
                 <div class="mb-4 pb-4 border-b-2 border-dashed border-border">
                     <div class="flex flex-wrap items-center gap-2 mt-3">
+                        <div v-if="staffingFilterContext && showOnlyNotFullyStaffed" class="group block cursor-pointer shrink-0 bg-accent-50 w-fit px-2 py-1.5 rounded-full border border-accent-200">
+                            <div class="flex items-center">
+                                <div class="mx-2">
+                                    <p class="text-accent-600 text-xs group-hover:text-accent-700">{{ $t('Only show shifts that are not fully staffed') }}</p>
+                                </div>
+                                <div class="flex items-center">
+                                    <button type="button" @click="showOnlyNotFullyStaffed = false">
+                                        <IconX class="size-4 text-accent-600 hover:text-danger" />
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
                         <div v-for="(filter, index) in activeFilters" class="group block cursor-pointer shrink-0 bg-accent-50  w-fit px-2 py-1.5 rounded-full border border-accent-200">
                             <div class="flex items-center">
                                 <div class="mx-2">
@@ -145,6 +157,41 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- Schichtfilter: Besetzungsfilter — schreibt das Schichtplan-Setting
+                     show_only_not_fully_staffed_shifts (gleiche Wahrheit wie das
+                     Anzeigeeinstellungs-Modal), kein user_filters-Eintrag -->
+                <div v-if="staffingFilterContext" class="py-1">
+                    <div class="flex items-center gap-x-1.5 text-text-inverse bg-surface-inverse rounded-lg px-4 py-2 font-lexend shadow text-sm">
+                        {{ $t('shiftFilters') }}
+                    </div>
+                    <div class="mt-2 rounded-lg bg-surface border border-border-subtle w-full shadow-raised px-4 py-3">
+                        <div class="flex gap-3">
+                            <div class="flex h-6 shrink-0 items-center">
+                                <div class="group grid size-4 grid-cols-1">
+                                    <input
+                                        v-model="showOnlyNotFullyStaffed"
+                                        id="filter_show_only_not_fully_staffed_shifts"
+                                        aria-describedby="filter_show_only_not_fully_staffed_shifts-description"
+                                        name="filter_show_only_not_fully_staffed_shifts"
+                                        type="checkbox"
+                                        class="col-start-1 row-start-1 appearance-none rounded-sm border border-border bg-white checked:border-accent-600 checked:bg-accent-600 indeterminate:border-accent-600 indeterminate:bg-accent-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-600 disabled:border-border disabled:bg-surface-sunken disabled:checked:bg-surface-sunken forced-colors:appearance-auto"
+                                    />
+                                    <svg class="pointer-events-none col-start-1 row-start-1 size-3.5 self-center justify-self-center stroke-white group-has-disabled:stroke-border-strong" viewBox="0 0 14 14" fill="none">
+                                        <path class="opacity-0 group-has-checked:opacity-100" d="M3 8L6 11L11 3.5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                        <path class="opacity-0 group-has-indeterminate:opacity-100" d="M3 7H11" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                    </svg>
+                                </div>
+                            </div>
+                            <div class="text-sm/6">
+                                <label for="filter_show_only_not_fully_staffed_shifts" class="font-medium text-text">{{ $t('Only show shifts that are not fully staffed') }}</label>
+                                <p id="filter_show_only_not_fully_staffed_shifts-description" class="text-text-subtle text-xs">
+                                    {{ $t('Only displays shifts where at least one position still has capacity for additional staff.') }}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -167,6 +214,7 @@
 import TinyPageHeadline from "@/Components/Headlines/TinyPageHeadline.vue";
 import {computed, onMounted, ref} from "vue";
 import {router, useForm, usePage} from "@inertiajs/vue3";
+import axios from "axios";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
 import {IconChevronDown, IconX} from "@tabler/icons-vue";
@@ -235,6 +283,40 @@ const isShiftFilterContext = computed(() =>
     props.filterType === 'project_shift_filter' ||
     props.inShiftPlan
 );
+
+// Besetzungsfilter nur in Dienstplan-Wochen-/Tagesansicht: das Setting liegt auf
+// user_shift_plan_settings bzw. user_shift_plan_daily_settings und wird von
+// ShiftPlan.vue/ShiftPlanDailyView.vue ausgewertet
+const staffingFilterContext = computed(() =>
+    props.filterType === 'shift_filter' || props.filterType === 'shift_daily_filter'
+);
+
+const currentShiftPlanSettings = computed(() => {
+    const pageProps = usePage().props;
+    // Spiegel von calendarSettings in ShiftPlan.vue (gleiche Fallback-Kette)
+    return props.filterType === 'shift_daily_filter'
+        ? (pageProps.shift_plan_daily_settings ?? pageProps.shift_plan_settings ?? pageProps.auth.user.calendar_settings)
+        : (pageProps.shift_plan_settings ?? pageProps.auth.user.calendar_settings);
+});
+
+const showOnlyNotFullyStaffed = ref(false);
+
+const persistStaffingFilterIfChanged = async () => {
+    if (!staffingFilterContext.value) {
+        return;
+    }
+    const current = !!currentShiftPlanSettings.value?.show_only_not_fully_staffed_shifts;
+    if (current === showOnlyNotFullyStaffed.value) {
+        return;
+    }
+    // Gleicher Endpunkt wie das Anzeigeeinstellungs-Modal; Request::only() im Backend
+    // übernimmt nur mitgesendete Felder, die übrigen Settings bleiben unberührt
+    await axios.patch(route('user.calendar_settings.update', usePage().props.auth.user.id), {
+        is_shift_plan: true,
+        is_daily_view: props.filterType === 'shift_daily_filter',
+        show_only_not_fully_staffed_shifts: showOnlyNotFullyStaffed.value,
+    });
+};
 
 const filteredOptionsByCategories = computed(() => {
     let roomFilters = Object.keys(props.filterOptions).filter(key => key.includes('room'));
@@ -330,6 +412,7 @@ const resetFilter = () => {
             })
         })
     })
+    showOnlyNotFullyStaffed.value = false;
 
     applyFilter();
 }
@@ -343,7 +426,9 @@ const extractCheckedIds = (filterGroup) => {
     return result;
 };
 
-const applyFilter = () => {
+const applyFilter = async () => {
+    await persistStaffingFilterIfChanged();
+
     const data = {
         filter_type: props.filterType,
     };
@@ -430,6 +515,7 @@ const restoreFilterState = () => {
 
 onMounted(() => {
     restoreFilterState();
+    showOnlyNotFullyStaffed.value = !!currentShiftPlanSettings.value?.show_only_not_fully_staffed_shifts;
 });
 </script>
 

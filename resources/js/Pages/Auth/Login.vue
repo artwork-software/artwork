@@ -28,24 +28,18 @@
                             <div class="space-y-4">
                                 <BaseInput
                                     id="email"
+                                    ref="emailInput"
                                     v-model="form.email"
                                     :label="$t('Email') + '*'"
                                     autocomplete="email"
                                     required
                                 />
 
-                                <!-- Passwort mit Toggle -->
-                                <div>
-                                    <div class="flex items-center justify-end">
-                                        <button
-                                            type="button"
-                                            @click="showPassword = !showPassword"
-                                            class="text-xs font-medium text-accent-600 hover:text-accent-700 focus:outline-none focus:underline"
-                                        >
-                                            {{ showPassword ? $t('Hide password') : $t('Show password') }}
-                                        </button>
-                                    </div>
-
+                                <!-- Passwort mit Toggle. flex-col-reverse: Der Anzeigen-Toggle steht
+                                     VISUELL über dem Feld, im DOM aber dahinter — so springt Tab von
+                                     der E-Mail direkt ins Passwortfeld statt erst auf den Toggle
+                                     (Abnahme UX-01: „Tabtasten-Navi beim Login sehr durcheinander"). -->
+                                <div class="flex flex-col-reverse">
                                     <div class="mt-1">
                                         <BaseInput
                                             id="password"
@@ -56,6 +50,16 @@
                                             :label="$t('Password') + '*'"
                                             @keydown.enter.prevent="submit"
                                         />
+                                    </div>
+
+                                    <div class="flex items-center justify-end">
+                                        <button
+                                            type="button"
+                                            @click="showPassword = !showPassword"
+                                            class="text-xs font-medium text-accent-600 hover:text-accent-700 focus:outline-none focus:underline"
+                                        >
+                                            {{ showPassword ? $t('Hide password') : $t('Show password') }}
+                                        </button>
                                     </div>
                                 </div>
                             </div>
@@ -151,7 +155,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { Head, Link, useForm, usePage } from '@inertiajs/vue3'
 import Checkbox from "@/Layouts/Components/Checkbox.vue"
 import JetInputError from "@/Jetstream/InputError.vue"
@@ -182,6 +186,12 @@ const rememberCheckbox = ref({
 })
 
 const showPassword = ref(false)
+
+// Direkt lostippen können: Fokus beim Laden auf das E-Mail-Feld (Abnahme UX-01)
+const emailInput = ref<InstanceType<typeof BaseInput> | null>(null)
+onMounted(() => {
+    emailInput.value?.focus?.()
+})
 
 const isDisabled = computed(() =>
     !form.email?.trim() || !form.password?.trim()

@@ -2,6 +2,10 @@
 import { ref, reactive, computed, onMounted, getCurrentInstance, onBeforeUnmount, watch, inject } from 'vue'
 import { usePage, router } from '@inertiajs/vue3'
 import axios from 'axios'
+import { uploadErrorMessage } from '@/Composeables/UseUploadErrorMessage.js'
+import { useTranslation } from '@/Composeables/Translation.js'
+
+const $t = useTranslation()
 import MultiAlertComponent from '@/Components/Alerts/MultiAlertComponent.vue'
 import ConfirmDeleteModal from '@/Layouts/Components/ConfirmDeleteModal.vue'
 import InfoButtonComponent from '@/Pages/Projects/Tab/Components/InfoButtonComponent.vue'
@@ -172,7 +176,7 @@ async function uploadDocumentToProject(file: File) {
         })
     } catch (error: any) {
         if (error?.response?.data?.errors) documentForm.errors = error.response.data.errors
-        else uploadDocumentFeedback.value = 'Upload failed'
+        else uploadDocumentFeedback.value = uploadErrorMessage(error, $t)
         throw error
     }
 }

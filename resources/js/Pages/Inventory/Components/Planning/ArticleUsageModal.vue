@@ -101,15 +101,24 @@
             <div class="rounded-2xl border border-border-subtle bg-white shadow-sm">
                 <div
                     class="border-b border-border-subtle bg-gradient-to-r from-accent-50 via-accent-50/60 to-transparent px-5 py-3 rounded-t-2xl">
-                    <h3 class="text-sm font-semibold text-text flex items-center gap-2">
-                        <span class="inline-block size-2 rounded-full bg-accent-600"></span>
-                        <template v-if="props.detailsForModal.date">
-                            {{ $t('usage_on_by') }} {{ formatDate(props.detailsForModal.date) }}
-                        </template>
-                        <template v-else>
-                            {{ $t('usage_in_period') }} {{ formatDate(props.detailsForModal.start_date) }} - {{ formatDate(props.detailsForModal.end_date) }}
-                        </template>
-                    </h3>
+                    <div class="flex items-center justify-between gap-3">
+                        <h3 class="text-sm font-semibold text-text flex items-center gap-2">
+                            <span class="inline-block size-2 rounded-full bg-accent-600"></span>
+                            <template v-if="props.detailsForModal.date">
+                                {{ $t('usage_on_by') }} {{ formatDate(props.detailsForModal.date) }}
+                            </template>
+                            <template v-else>
+                                {{ $t('usage_in_period') }} {{ formatDate(props.detailsForModal.start_date) }} - {{ formatDate(props.detailsForModal.end_date) }}
+                            </template>
+                        </h3>
+                        <!-- Abnahme MAT-06 Ref. 1.39: Artikel direkt einer NEUEN Ausgabe zuweisen -->
+                        <BaseUIButton
+                            :label="$t('New material issue with this article')"
+                            use-translation
+                            is-add-button
+                            @click="showNewIssueModal = true"
+                        />
+                    </div>
                 </div>
                 <div class="p-5">
                     <!-- Tabs -->
@@ -173,13 +182,22 @@
             </div>
         </div>
     </ArtworkBaseModal>
+
+    <!-- Neue Materialausgabe mit vorbelegtem Artikel + Zeitraum (Abnahme MAT-06 Ref. 1.39) -->
+    <IssueOfMaterialModal
+        v-if="showNewIssueModal"
+        :issue-of-material="prefilledIssueOfMaterial"
+        :is-extern-or-intern="false"
+        @close="showNewIssueModal = false"
+        @saved="onNewIssueSaved"
+    />
 </template>
 
 <script setup>
 import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
 import {TabGroup, TabList, Tab, TabPanels, TabPanel} from '@headlessui/vue'
 import UsageTable from './UsageTable.vue'
-import {computed, ref} from 'vue'
+import {computed, defineAsyncComponent, ref} from 'vue'
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 import axios from 'axios';
 
@@ -199,6 +217,52 @@ const props = defineProps({
 })
 
 const emit = defineEmits(['close', 'refreshData'])
+
+const IssueOfMaterialModal = defineAsyncComponent({
+    loader: () => import('@/Pages/IssueOfMaterial/IssueOfMaterialModal.vue'),
+    delay: 0,
+    timeout: 5000,
+})
+
+const showNewIssueModal = ref(false)
+
+// Neue Ausgabe direkt mit diesem Artikel und dem betrachteten Zeitraum vorbelegen
+const prefilledIssueOfMaterial = computed(() => {
+    const article = props.detailsForModal?.article ?? {}
+    return {
+        id: null,
+        name: '',
+        project_id: null,
+        project: null,
+        start_date: props.detailsForModal?.start_date || props.detailsForModal?.date || '',
+        start_time: '00:00',
+        end_date: props.detailsForModal?.end_date || props.detailsForModal?.date || '',
+        end_time: '23:59',
+        room_id: null,
+        notes: '',
+        responsible_user_ids: [],
+        special_items_done: false,
+        files: [],
+        special_items: [],
+        articles: article.id
+            ? [{
+                id: article.id,
+                name: article.name,
+                description: article.description ?? null,
+                quantity: article.quantity,
+                is_detailed_quantity: article.is_detailed_quantity ?? false,
+                detailed_article_quantities: article.detailed_article_quantities || [],
+                images: article.images || [],
+                pivot: { quantity: 1 },
+            }]
+            : [],
+    }
+})
+
+const onNewIssueSaved = () => {
+    showNewIssueModal.value = false
+    handleDataChanged()
+}
 
 const statusBreakdown = computed(() =>
     (props.detailsForModal?.article?.status || []).filter((status) => (status.value ?? 0) > 0)

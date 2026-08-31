@@ -244,16 +244,21 @@ class ExternalIssueController extends Controller
 
         $pdfContent = $pdf->output();
         $fileName = 'ext._Materialausgabe_Nr._' . $externalIssue->id . '_' . now()->format('Y-m-d') . '.pdf';
-        $storagePath = 'external_material_issues/'
-            . StoredFileName::forGenerated('pdf', (string) $externalIssue->id);
 
-        Storage::disk('public')->put($storagePath, $pdfContent);
+        // Vorschau-Modus (Abnahme MAT-03 Ref. 1.14): PDF nur anzeigen, NICHT speichern
+        // und NICHT als Datei an die Ausgabe hängen — das passiert erst beim finalen Erstellen
+        if (!request()->boolean('preview')) {
+            $storagePath = 'external_material_issues/'
+                . StoredFileName::forGenerated('pdf', (string) $externalIssue->id);
 
-        ExternalIssueFile::create([
-            'external_issue_id' => $externalIssue->id,
-            'file_path' => $storagePath,
-            'original_name' => $fileName,
-        ]);
+            Storage::disk('public')->put($storagePath, $pdfContent);
+
+            ExternalIssueFile::create([
+                'external_issue_id' => $externalIssue->id,
+                'file_path' => $storagePath,
+                'original_name' => $fileName,
+            ]);
+        }
 
         return response($pdfContent, 200, [
             'Content-Type' => 'application/pdf',

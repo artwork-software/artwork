@@ -24,6 +24,7 @@ use Artwork\Modules\Shift\Services\DailyShiftPlanPdfBuilder;
 use Artwork\Modules\User\Enums\UserFilterTypes;
 use Artwork\Modules\User\Models\User;
 use Artwork\Modules\User\Models\UserFilter;
+use Artwork\Modules\User\Policies\UserPolicy;
 use Artwork\Modules\User\Services\UserService;
 use Barryvdh\Snappy\PdfWrapper;
 use Illuminate\Auth\AuthManager;
@@ -936,6 +937,15 @@ class ExportPDFController extends Controller
                 \Artwork\Modules\ServiceProvider\Models\ServiceProvider::query()->findOrFail($modelId),
             default => User::query()->findOrFail($modelId),
         };
+
+        // Gleiche Sichtregel wie die Einsatzplan-Seiten: eigener Plan immer, fremde
+        // (inkl. Freelancer/Dienstleister) nur mit Dienstplan-Sichtrechten.
+        if (
+            !($worker instanceof User && $authUser instanceof User && $authUser->is($worker))
+            && !($authUser instanceof User && UserPolicy::canViewForeignRoster($authUser))
+        ) {
+            abort(Response::HTTP_FORBIDDEN);
+        }
 
         // Monatsliste (je YYYY-MM)
         $startMonth = $request->get('startMonth');

@@ -32,12 +32,14 @@ final class UserOperationPlanAuthorizationTest extends FeatureTestCase
     }
 
     #[Test]
-    public function user_without_own_roster_permission_cannot_view_own_plan(): void
+    public function user_without_any_permission_can_view_own_plan(): void
     {
+        // Eigener Einsatzplan ist immer einsehbar; "can view own roster" gated nur
+        // noch den Menüpunkt "Mein Einsatzplan" im Frontend.
         $user = User::factory()->create();
         $this->actingAs($user);
 
-        $this->get(route('user.operationPlan', $user))->assertForbidden();
+        $this->get(route('user.operationPlan', $user))->assertOk();
     }
 
     #[Test]
@@ -190,14 +192,16 @@ final class UserOperationPlanAuthorizationTest extends FeatureTestCase
     }
 
     #[Test]
-    public function team_manager_can_view_foreign_plans(): void
+    public function team_management_permission_does_not_grant_access_to_foreign_plans(): void
     {
+        // Teammanagement sieht Schichten nicht über andere Rechte — Zugriff auf
+        // fremde Einsatzpläne bewusst entzogen (Kundenregel: nur Dienstplan-Sichtrechte).
         $user = User::factory()->create();
         $other = User::factory()->create();
         $this->givePermission($user, PermissionEnum::TEAM_UPDATE);
         $this->actingAs($user);
 
-        $this->get(route('user.operationPlan', $other))->assertOk();
+        $this->get(route('user.operationPlan', $other))->assertForbidden();
     }
 
     #[Test]
@@ -209,6 +213,135 @@ final class UserOperationPlanAuthorizationTest extends FeatureTestCase
         $this->actingAs($user);
 
         $this->get(route('user.operationPlan', $other))->assertOk();
+    }
+
+    #[Test]
+    public function shift_planner_can_view_foreign_plans(): void
+    {
+        $user = User::factory()->create();
+        $other = User::factory()->create();
+        $this->givePermission($user, PermissionEnum::SHIFT_PLANNER);
+        $this->actingAs($user);
+
+        $this->get(route('user.operationPlan', $other))->assertOk();
+    }
+
+    #[Test]
+    public function shift_plan_viewer_can_view_foreign_plans(): void
+    {
+        $user = User::factory()->create();
+        $other = User::factory()->create();
+        $this->givePermission($user, PermissionEnum::VIEW_SHIFT_PLAN);
+        $this->actingAs($user);
+
+        $this->get(route('user.operationPlan', $other))->assertOk();
+    }
+
+    #[Test]
+    public function profile_shift_plan_tab_is_open_for_own_user_without_permissions(): void
+    {
+        $user = User::factory()->create();
+        $this->actingAs($user);
+
+        $this->get(route('user.edit.shiftplan', $user))->assertOk();
+    }
+
+    #[Test]
+    public function profile_shift_plan_tab_of_foreign_user_requires_roster_permissions(): void
+    {
+        // Kundenmeldung: der Einsatzplan-Tab war über die Nutzer*innenliste für
+        // JEDE eingeloggte Person offen (Route hatte keinerlei Autorisierung).
+        $user = User::factory()->create();
+        $other = User::factory()->create();
+        $this->givePermission($user, PermissionEnum::CAN_VIEW_OWN_ROSTER);
+        $this->actingAs($user);
+
+        $this->get(route('user.edit.shiftplan', $other))->assertForbidden();
+    }
+
+    #[Test]
+    public function profile_shift_plan_tab_of_foreign_user_opens_with_shift_plan_view_permission(): void
+    {
+        $user = User::factory()->create();
+        $other = User::factory()->create();
+        $this->givePermission($user, PermissionEnum::VIEW_SHIFT_PLAN);
+        $this->actingAs($user);
+
+        $this->get(route('user.edit.shiftplan', $other))->assertOk();
+    }
+
+    #[Test]
+    public function freelancer_profile_requires_roster_permissions(): void
+    {
+        // Freelancer-/Dienstleister-Profile enthalten den Einsatzplan und haben
+        // kein "eigen" — Zugriff nur mit Dienstplan-Sichtrechten.
+        $user = User::factory()->create();
+        $freelancer = \Artwork\Modules\Freelancer\Models\Freelancer::factory()->create();
+        $this->actingAs($user);
+
+        $this->get(route('freelancer.show', $freelancer))->assertForbidden();
+
+        $this->givePermission($user, PermissionEnum::VIEW_SHIFT_PLAN);
+        $this->get(route('freelancer.show', $freelancer))->assertOk();
+    }
+
+    #[Test]
+    public function service_provider_profile_requires_roster_permissions(): void
+    {
+        $user = User::factory()->create();
+        $serviceProvider = \Artwork\Modules\ServiceProvider\Models\ServiceProvider::factory()->create();
+        $this->actingAs($user);
+
+        $this->get(route('service_provider.show', $serviceProvider))->assertForbidden();
+
+        $this->givePermission($user, PermissionEnum::SHIFT_PLANNER);
+        $this->get(route('service_provider.show', $serviceProvider))->assertOk();
+    }
+
+    #[Test]
+    public function private_user_info_permission_opens_external_worker_profiles(): void
+    {
+        // Nutzer*innenverwaltungs-Verständnis: Freelancer/Dienstleister sind "User" —
+        // "can view private user info" öffnet deren Profilseiten ebenfalls.
+        $user = User::factory()->create();
+        $freelancer = \Artwork\Modules\Freelancer\Models\Freelancer::factory()->create();
+        $serviceProvider = \Artwork\Modules\ServiceProvider\Models\ServiceProvider::factory()->create();
+        $this->givePermission($user, PermissionEnum::CAN_VIEW_PRIVATE_USER_INFO);
+        $this->actingAs($user);
+
+        $this->get(route('freelancer.show', $freelancer))->assertOk();
+        $this->get(route('service_provider.show', $serviceProvider))->assertOk();
+    }
+
+    #[Test]
+    public function private_user_info_permission_does_not_open_foreign_plans_or_exports(): void
+    {
+        // Die reinen Einsatzplan-Endpunkte bleiben Roster-Rechten vorbehalten.
+        $user = User::factory()->create();
+        $other = User::factory()->create();
+        $this->givePermission($user, PermissionEnum::CAN_VIEW_PRIVATE_USER_INFO);
+        $this->actingAs($user);
+
+        $this->get(route('user.edit.shiftplan', $other))->assertForbidden();
+        $this->get(route('user.operationPlan', $other))->assertForbidden();
+        $this->post(route('user.shiftplan.export.monthly-pdf', $other))->assertForbidden();
+    }
+
+    #[Test]
+    public function monthly_pdf_export_of_foreign_plan_requires_roster_permissions(): void
+    {
+        $user = User::factory()->create();
+        $other = User::factory()->create();
+        $this->actingAs($user);
+
+        $this->post(route('user.shiftplan.export.monthly-pdf', $other))->assertForbidden();
+
+        // type/model_id-Parameter dürfen die Regel nicht umgehen (Freelancer-Export).
+        $freelancer = \Artwork\Modules\Freelancer\Models\Freelancer::factory()->create();
+        $this->post(route('user.shiftplan.export.monthly-pdf', $other), [
+            'type' => 'freelancer',
+            'model_id' => $freelancer->id,
+        ])->assertForbidden();
     }
 
     #[Test]

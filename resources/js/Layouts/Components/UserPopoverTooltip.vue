@@ -233,11 +233,24 @@ export default {
                 return;
             }
 
+            // Freelancer-/Dienstleister-Profile sind backend-seitig mit Dienstplan-
+            // Sichtrechten ODER "can view private user info" erreichbar (Spiegel:
+            // UserPolicy::canViewExternalWorkerProfile).
+            const canViewExternalWorkerProfile = this.hasAdminRole() ||
+                this.can('can plan shifts') ||
+                this.can('can manage workers') ||
+                this.can('can view shift plan') ||
+                this.can('can view private user info');
+
             const type = this.user.type;
             if (type === 'freelancer' || type === 1) {
-                router.visit(route('freelancer.show', {freelancer: this.user.id}));
+                if (canViewExternalWorkerProfile) {
+                    router.visit(route('freelancer.show', {freelancer: this.user.id}));
+                }
             } else if (type === 'service_provider' || type === 2) {
-                router.visit(route('service_provider.show', {serviceProvider: this.user.id}));
+                if (canViewExternalWorkerProfile) {
+                    router.visit(route('service_provider.show', {serviceProvider: this.user.id}));
+                }
             } else {
                 router.visit(route('user.edit.info', {user: this.user.id}));
             }

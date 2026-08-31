@@ -154,6 +154,11 @@
         </div>
         <!-- Form when Source Group -->
         <div v-else class="space-y-4">
+            <!-- Erklärung der Finanzierungsquellengruppe mit Info-Icon (Abnahme PROJ-03) -->
+            <div class="flex items-start gap-x-2 rounded-lg border border-info-border bg-info-surface/70 px-3 py-2 text-xs text-text-muted">
+                <IconInfoCircle stroke-width="1.5" class="mt-0.5 size-4 shrink-0 text-info"/>
+                <span>{{ $t('A funding source group bundles several funding sources so you can keep track of their budgets together. Select below which sources belong to this group — projects and budget items are still linked to the individual sources.') }}</span>
+            </div>
             <BaseInput
                 v-model="createSourceGroupForm.name"
                 id="sourceGroupName"
@@ -234,7 +239,7 @@
 </template>
 
 <script>
-import {IconCirclePlus, IconTrash, IconX} from "@tabler/icons-vue";
+import {IconCirclePlus, IconInfoCircle, IconTrash, IconX} from "@tabler/icons-vue";
 
 import {router, useForm} from "@inertiajs/vue3";
 import Permissions from "@/Mixins/Permissions.vue";
@@ -263,6 +268,7 @@ export default {
         IconX,
         IconTrash,
         IconCirclePlus,
+        IconInfoCircle,
     },
     computed: {
         tabs() {

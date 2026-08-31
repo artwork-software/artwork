@@ -319,6 +319,16 @@ class InventoryArticleController extends Controller
             return response()->json(['error' => $validator->errors()->first()], 422);
         }
 
+        // Bei Einzelinventar ist die Gesamtmenge IMMER die Summe der Einzelbestände
+        // (Abnahme MAT-05 Ref. 1.24) — ein direkter quantity-Write würde die im
+        // Store/Update erzwungene Ableitung umgehen.
+        if ($field === 'quantity' && $inventoryArticle->is_detailed_quantity) {
+            return response()->json(
+                ['error' => 'Quantity is derived from the individual inventory items.'],
+                422
+            );
+        }
+
         $data = [$field => $value];
 
         // Keep category and sub category consistent when either side changes.
@@ -371,6 +381,18 @@ class InventoryArticleController extends Controller
         }
 
         $inventoryDetailedQuantityArticle->update([$field => $value]);
+
+        // Gesamtmenge des Artikels folgt der Summe der Einzelbestände (Abnahme MAT-05
+        // Ref. 1.24) — ohne Neuberechnung bliebe sie nach einem Inline-Save dauerhaft
+        // veraltet, das Gesamtmengen-Feld im Modal ist bewusst nicht mehr editierbar.
+        if ($field === 'quantity') {
+            $article = InventoryArticle::query()->find($inventoryDetailedQuantityArticle->inventory_article_id);
+            if ($article !== null && $article->is_detailed_quantity) {
+                $article->update([
+                    'quantity' => (int) $article->detailedArticleQuantities()->sum('quantity'),
+                ]);
+            }
+        }
 
         return response()->json(['success' => true]);
     }

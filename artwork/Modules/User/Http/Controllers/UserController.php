@@ -931,6 +931,10 @@ class UserController extends Controller
         SessionManager $sessionManager,
         Repository $config
     ): Response|ResponseFactory {
+        // Einsatzplan-Sichtregel (Kundenmeldung: Tab war über die Nutzer*innenliste
+        // für alle offen): eigener Plan immer, fremde nur mit Dienstplan-Sichtrechten.
+        $this->authorize('viewOperationPlan', $user);
+
         $showVacationsAndAvailabilities = $request->get('showVacationsAndAvailabilities');
         $vacationMonth = $request->get('vacationMonth');
         $selectedDate = $showVacationsAndAvailabilities ?
@@ -1815,18 +1819,9 @@ class UserController extends Controller
         SessionManager $sessionManager,
         Repository $config
     ): Response|ResponseFactory {
-        // Eigener Plan braucht "can view own roster"; fremde Pläne nur mit Team-
-        // oder Mitarbeiterverwaltung (Admins passieren via Gate::before).
-        if ($user->id === Auth::user()->id) {
-            if (!Auth::user()->can(PermissionEnum::CAN_VIEW_OWN_ROSTER->value)) {
-                abort(\Illuminate\Http\Response::HTTP_FORBIDDEN);
-            }
-        } elseif (
-            !Auth::user()->can(PermissionEnum::TEAM_UPDATE->value)
-            && !Auth::user()->can(PermissionEnum::MA_MANAGER->value)
-        ) {
-            abort(\Illuminate\Http\Response::HTTP_FORBIDDEN);
-        }
+        // Eigener Plan immer, fremde nur mit Dienstplan-Sichtrechten (UserPolicy;
+        // "can view own roster" gated nur noch den Menüpunkt im Frontend).
+        $this->authorize('viewOperationPlan', $user);
 
         $showVacationsAndAvailabilities = $request->get('showVacationsAndAvailabilities');
         $vacationMonth = $request->get('vacationMonth');

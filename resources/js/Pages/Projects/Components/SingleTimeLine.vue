@@ -119,7 +119,17 @@
 
         <!-- Kommentar -->
         <div class="mt-3">
-            <label class="block mb-1 text-[11px] font-medium text-text-muted">{{ $t('Comment') }}</label>
+            <div class="mb-1 flex items-center gap-x-1">
+                <label class="block text-[11px] font-medium text-text-muted">{{ $t('Comment') }}</label>
+                <!-- Abnahme CAL-01 Ref. 3.23: erklärt, wofür das Feld dient und wo der Text sichtbar wird -->
+                <ToolTipComponent
+                    icon="IconInfoCircle"
+                    icon-size="size-3.5"
+                    direction="top"
+                    :tooltip-text="$t('The description appears next to the time in the schedule of the event (shifts tab) and in the daily view of the shift plan — visible to everyone who can see the schedule.')"
+                    tooltip-css-class="aw-tooltip-wide"
+                />
+            </div>
             <textarea
                 v-model="time.description_without_html"
                 rows="3"
@@ -134,6 +144,7 @@
 
 <script setup>
 import {IconCircleX} from "@tabler/icons-vue";
+import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
 import { ref, computed } from 'vue'
 import { router } from '@inertiajs/vue3'
 

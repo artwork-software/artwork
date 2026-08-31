@@ -169,7 +169,7 @@
                                 :label="$t('Search article, (sub)category...')"
                                 :placeholder="$t('Search article, (sub)category...')"
                             />
-                            <ToolTipComponent @click="showSelectMaterialSetModal = true" :icon="IconParentheses" :tooltip-text="$t('Select material set')" icon-size="size-7" tooltip-width="w-fit whitespace-nowrap" position="top" />
+                            <ToolTipComponent @click="showSelectMaterialSetModal = true" :icon="IconPackages" :tooltip-text="$t('Select material set')" icon-size="size-7" tooltip-width="w-fit whitespace-nowrap" position="top" />
                             <ToolTipComponent @click="showCopyIssueModal = true" :icon="IconCopy" :tooltip-text="$t('Copy material from another material issue')" icon-size="size-7" tooltip-width="w-fit whitespace-nowrap" position="top" />
                             <InventoryFunctionBarFilter @close="reloadArticlesWithNewFilter" />
                         </div>
@@ -376,12 +376,17 @@
                     <div class="rounded-xl border border-border-subtle bg-surface-sunken p-4 max-h-56 min-h-56 overflow-y-auto">
                         <div v-if="props.externMaterialIssue?.files?.length" class="space-y-2">
                             <div v-for="(file, index) in props.externMaterialIssue.files" :key="'existing-' + index" class="flex items-center gap-3 rounded-lg border border-border-subtle bg-white px-3 py-2">
-                                <!-- Thumbnail für Bilddateien -->
-                                <div v-if="isImageFile(file.original_name)" class="shrink-0">
-                                    <div class="overflow-hidden rounded border border-border-subtle shadow-sm" style="width: 40px; height: 40px;">
-                                        <img :src="'/storage/' + file.file_path" :alt="file.original_name" class="block h-full w-full object-cover" @error="(e) => e.target.src = usePage().props.big_logo" />
-                                    </div>
-                                </div>
+                                <!-- Vorschau für Bilder UND PDFs, Klick öffnet den Viewer
+                                     (Abnahme MAT-03 Ref. 1.16, gleiches Muster wie Projekt-Dokumente) -->
+                                <FilePreview
+                                    v-if="isImageFile(file.original_name) || isPdfFileName(file.original_name)"
+                                    :src="'/storage/' + file.file_path"
+                                    :name="file.original_name"
+                                    :type="isPdfFileName(file.original_name) ? 'pdf' : 'image'"
+                                    size="sm"
+                                    class="shrink-0"
+                                    @open="openAttachmentPreview(file)"
+                                />
                                 <div class="min-w-0 flex-1">
                                     <a :href="'/storage/' + file.file_path" target="_blank" download class="truncate text-sm font-medium text-accent-700 hover:underline">
                                         {{ file.original_name }}
@@ -485,6 +490,15 @@
     <ArticleDetailModal :article="articleForDetailModal" v-if="articleForDetailModal" @close="articleForDetailModal = null" :show-button-for-edit-and-delete="false" />
 
     <ArticleUsageModal :details-for-modal="articleForUsageModal" v-if="articleForUsageModal" @close="articleForUsageModal = null" />
+
+    <!-- Bild-/PDF-Viewer für Dateianhänge (Abnahme MAT-03 Ref. 1.16) -->
+    <FileViewerModal
+        v-if="attachmentPreview"
+        :src="attachmentPreview.src"
+        :name="attachmentPreview.name"
+        :type="attachmentPreview.type"
+        @close="attachmentPreview = null"
+    />
 </template>
 
 <script setup>
@@ -508,8 +522,10 @@ import InventoryFunctionBarFilter from "@/Artwork/Filter/InventoryFunctionBarFil
 import axios from "axios";
 import ArticleUsageModal from "@/Pages/Inventory/Components/Planning/ArticleUsageModal.vue";
 import ArticleDetailModal from "@/Pages/Inventory/Components/Article/Modals/ArticleDetailModal.vue";
+import FilePreview from "@/Artwork/Files/FilePreview.vue";
+import FileViewerModal from "@/Artwork/Files/FileViewerModal.vue";
 import Galleria from "primevue/galleria";
-import {IconCircleCheck, IconCirclePlus, IconCopy, IconFile, IconInfoCircle, IconListDetails, IconLoader, IconParentheses, IconTrash, IconWindowMaximize, IconX} from "@tabler/icons-vue";
+import {IconCircleCheck, IconCirclePlus, IconCopy, IconFile, IconInfoCircle, IconListDetails, IconLoader, IconPackages, IconTrash, IconWindowMaximize, IconX} from "@tabler/icons-vue";
 
 const props = defineProps({
     externMaterialIssue: {
@@ -616,14 +632,37 @@ if (!props.externMaterialIssue?.id && selectedProject.value) {
     }
 }
 
+// Merkt sich automatisch aus der Projektauswahl übernommene Werte — beim Wechsel der
+// Projektzuordnung werden nur diese überschrieben (Abnahme Ref. 3.36), manuell
+// geänderte Werte bleiben stehen
+const autoFilled = ref({ name: null, issueDate: null, returnDate: null })
+
+const releaseAutoFilledValues = () => {
+    if (autoFilled.value.name !== null && externMaterialIssueForm.name === autoFilled.value.name) {
+        externMaterialIssueForm.name = ''
+    }
+    if (autoFilled.value.issueDate !== null && externMaterialIssueForm.issue_date === autoFilled.value.issueDate) {
+        externMaterialIssueForm.issue_date = ''
+    }
+    if (autoFilled.value.returnDate !== null && externMaterialIssueForm.return_date === autoFilled.value.returnDate) {
+        externMaterialIssueForm.return_date = ''
+    }
+    autoFilled.value = { name: null, issueDate: null, returnDate: null }
+}
+
 const addProject = (project) => {
     selectedProject.value = project ?? null
     if (!project) return
     externMaterialIssueForm.project_id = project.id ?? null
 
+    // Wechsel der Projektzuordnung: Werte des vorherigen Projekts freigeben,
+    // damit die Vorbelegung unten neu greift
+    releaseAutoFilledValues()
+
     // Name nur setzen, wenn leer
     if (!externMaterialIssueForm.name && project.name) {
         externMaterialIssueForm.name = project.name
+        autoFilled.value.name = project.name
     }
 
     // Zeitraum aus erstem/letztem Termin vorbelegen — nur, wenn die Felder leer sind
@@ -631,9 +670,11 @@ const addProject = (project) => {
     const endDate = project.last_event?.formatted_dates?.end_without_time ?? null
     if (!externMaterialIssueForm.issue_date && startDate) {
         externMaterialIssueForm.issue_date = startDate
+        autoFilled.value.issueDate = startDate
     }
     if (!externMaterialIssueForm.return_date && endDate) {
         externMaterialIssueForm.return_date = endDate
+        autoFilled.value.returnDate = endDate
     }
 }
 
@@ -1033,6 +1074,41 @@ const preventEnterSubmit = (event) => {
     }
 };
 
+// Nutzdaten-Vergleich für die Verwerfen-Rückfrage im Wrapper-Modal (Abnahme Ref. 3.7):
+// bewusst OHNE availableStock/availableStockRequestIsLoading — die schreiben die
+// asynchronen Verfügbarkeits-Requests in die Form-Artikel, form.isDirty wäre damit
+// immer true, ohne dass der User etwas geändert hat
+const dirtyComparableState = () => JSON.stringify({
+    name: externMaterialIssueForm.name,
+    project: externMaterialIssueForm.project_id ?? null,
+    materialValue: externMaterialIssueForm.material_value,
+    issueDate: externMaterialIssueForm.issue_date,
+    returnDate: externMaterialIssueForm.return_date,
+    returnRemarks: externMaterialIssueForm.return_remarks,
+    external: [
+        externMaterialIssueForm.external_name,
+        externMaterialIssueForm.external_address,
+        externMaterialIssueForm.external_email,
+        externMaterialIssueForm.external_phone,
+    ],
+    issuedBy: issueBy.value?.id ?? null,
+    specialItems: (externMaterialIssueForm.special_items ?? []).map((s) => [s.name, s.quantity]),
+    specialItemsDone: externMaterialIssueForm.special_items_done,
+    articles: (externMaterialIssueForm.articles ?? []).map((a) => [a.id, Number(a.quantity)]),
+    newFiles: externMaterialIssueForm.files.length,
+    existingFiles: (externMaterialIssueForm.existing_files ?? []).length,
+})
+
+let initialDirtySnapshot = ''
+onMounted(() => {
+    initialDirtySnapshot = dirtyComparableState()
+})
+
+defineExpose({
+    submit: () => submit(),
+    isDirty: () => dirtyComparableState() !== initialDirtySnapshot,
+})
+
 const submit = () => {
 
     // Create a list of existing file IDs to preserve them during update
@@ -1148,6 +1224,18 @@ const isImageFile = (filename) => {
     const extension = filename.split('.').pop()?.toLowerCase();
     const imageExtensions = ['png', 'jpe', 'jpeg', 'jpg', 'gif', 'bmp', 'ico', 'tiff', 'tif', 'svg', 'svgz'];
     return imageExtensions.includes(extension);
+};
+
+const isPdfFileName = (filename) => (filename || '').split('.').pop()?.toLowerCase() === 'pdf';
+
+// Bild-/PDF-Vorschau für gespeicherte Anhänge (Abnahme MAT-03 Ref. 1.16)
+const attachmentPreview = ref(null);
+const openAttachmentPreview = (file) => {
+    attachmentPreview.value = {
+        src: '/storage/' + file.file_path,
+        name: file.original_name,
+        type: isPdfFileName(file.original_name) ? 'pdf' : 'image',
+    };
 };
 
 // Helper function to create preview URL for file objects

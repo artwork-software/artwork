@@ -132,6 +132,13 @@
         @close="showIssueOfMaterialDetailModal = false"
         :detailed-article="detailedArticle"
     />
+
+    <!-- PDF-Vorschau vor finaler Erstellung (Abnahme MAT-03 Ref. 1.14) -->
+    <IssuePdfPreviewModal
+        v-if="showPrintPreview"
+        :print-url="route('issue-of-material.print', issueOfMaterial.id)"
+        @close="showPrintPreview = false"
+    />
 </template>
 
 <script setup>
@@ -141,6 +148,7 @@ import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
 import IssueOfMaterialModal from "@/Pages/IssueOfMaterial/IssueOfMaterialModal.vue";
 import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
 import DetailModalInternMaterialModal from "@/Pages/IssueOfMaterial/Components/DetailModalInternMaterialModal.vue";
+import IssuePdfPreviewModal from "@/Pages/IssueOfMaterial/Components/IssuePdfPreviewModal.vue";
 import { IconAlertTriangle, IconCheck, IconEdit, IconPrinter, IconTrash } from "@tabler/icons-vue";
 import { computed, ref } from "vue";
 import { router, usePage } from "@inertiajs/vue3";
@@ -186,8 +194,10 @@ const setSpecialItemsDone = () => {
     });
 };
 
+// Erst Vorschau, final erstellt+angehängt wird im Modal (Abnahme MAT-03 Ref. 1.14)
+const showPrintPreview = ref(false);
 const printInternal = () => {
-    window.open(route('issue-of-material.print', props.issueOfMaterial.id), '_blank');
+    showPrintPreview.value = true;
 };
 
 const checkIfStatusOrHasAnySpecialItem = computed(() => {

@@ -583,6 +583,15 @@
         :initial-project-id="Number(project.id)"
         @close="showLogModal = false"
     />
+
+    <!-- PDF-Vorschau vor finaler Erstellung (Abnahme MAT-03 Ref. 1.14) -->
+    <IssuePdfPreviewModal
+        v-if="printPreviewIssue"
+        :print-url="route('issue-of-material.print', printPreviewIssue.id)"
+        :reload-on-create="false"
+        @close="printPreviewIssue = null"
+        @created="onPrintCreated"
+    />
 </template>
 
 <script setup lang="ts">
@@ -597,6 +606,7 @@ import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 import IssueOfMaterialModal from "@/Pages/IssueOfMaterial/IssueOfMaterialModal.vue";
 import SingleExternMaterialIssue from "@/Pages/IssueOfMaterial/Components/SingleExternMaterialIssue.vue";
 import MaterialIssueLogModal from "@/Pages/IssueOfMaterial/Components/MaterialIssueLogModal.vue";
+import IssuePdfPreviewModal from "@/Pages/IssueOfMaterial/Components/IssuePdfPreviewModal.vue";
 import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
 import {can, is} from "laravel-permission-to-vuejs";
 import { router } from '@inertiajs/vue3';
@@ -833,9 +843,13 @@ const openEditIssue = (issue:InternalIssue) => {
     showIssueOfMaterialModal.value = true
 }
 
+// Erst Vorschau, final erstellt+angehängt wird im Modal (Abnahme MAT-03 Ref. 1.14)
+const printPreviewIssue = ref<InternalIssue | null>(null)
 const printIssue = (issue:InternalIssue) => {
-    window.open(route('issue-of-material.print', issue.id), '_blank')
-    // Der Druck legt das PDF serverseitig als Datei an der Ausgabe ab → Liste nachladen
+    printPreviewIssue.value = issue
+}
+const onPrintCreated = () => {
+    // Der finale Druck legt das PDF serverseitig als Datei an der Ausgabe ab → Liste nachladen
     window.setTimeout(fetchMaterials, 3000)
 }
 

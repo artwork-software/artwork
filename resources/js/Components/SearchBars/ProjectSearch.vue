@@ -157,7 +157,8 @@ const filtered = computed(() => projects.value.filter(mustList))
 
 // Zuletzt geöffnete Projekte (gleiche Quelle wie LastedProjects.vue: localStorage "lastedProjects")
 const RECENT_STORAGE_KEY = 'lastedProjects'
-const RECENT_LIMIT = 5
+// Abnahme Ref. 3.37: die 10 zuletzt geöffneten Produktionen anbieten
+const RECENT_LIMIT = 10
 const recentProjects = ref<Project[]>([])
 
 const isShowingRecent = computed(

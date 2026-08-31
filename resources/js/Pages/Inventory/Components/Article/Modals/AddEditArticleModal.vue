@@ -219,9 +219,12 @@
                             :max="10000000"
                             :maxlength="1000000"
                             required
-                            :disabled="detailedAlwaysOne && articleForm.is_detailed_quantity"
+                            :disabled="articleForm.is_detailed_quantity"
                             @focusout="onFieldSave('quantity', articleForm.quantity)"
                         />
+                        <!-- Bei Einzelinventar ist die Gesamtmenge IMMER die Summe der Einzelbestände
+                             und nicht manuell änderbar (Abnahme MAT-05 Ref. 1.24) -->
+                        <p v-if="articleForm.is_detailed_quantity" class="text-xs text-text-subtle mt-1">{{ $t('Calculated automatically from the sum of the individual inventory items') }}</p>
                         <p v-if="fieldStatus.quantity === 'success'" class="text-xs text-success mt-1">{{ $t('Change saved successfully') }}</p>
                         <p v-if="fieldStatus.quantity === 'error'" class="text-xs text-danger mt-1">{{ $t('This field must not be empty') }}</p>
                         <div v-if="articleForm.is_detailed_quantity && calculateTotalQuantity !== articleForm.quantity" class="mt-1 flex items-center gap-x-1">
@@ -273,7 +276,13 @@
                                 <div class="absolute top-0 left-0 w-px h-[90%] bg-border"></div>
                                 <div class="font-lexend text-sm flex items-center text-text-subtle">
                                     <div class="w-5 h-px bg-border"></div>
-                                    <div class="ml-4 text-text">{{ statusValue.name }}</div>
+                                    <!-- Ref. 1.29: der Default-Status („Einsatzbereit") wird visuell hervorgehoben —
+                                         über das default-Flag statt eines Namens-Vergleichs, damit Umbenennung
+                                         und englische Installationen die Hervorhebung nicht verlieren -->
+                                    <div class="ml-4 text-text"
+                                         :class="statusValue.default ? 'font-bold text-base' : ''">
+                                        {{ statusValue.name }}
+                                    </div>
                                 </div>
                             </div>
                             <div>
@@ -1334,6 +1343,7 @@ const articleForm = useForm({
     statusValues: statusList.map(s => ({
         id: s.id,
         name: s.name,
+        default: s.default ?? false,
         value: props.article ? props.article.status_values.find(v => v.id === s.id)?.pivot?.value ?? 0 : 0
     })),
     is_detailed_quantity: props.article?.is_detailed_quantity ?? false,

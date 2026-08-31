@@ -192,10 +192,23 @@ class WorkTimeChangeRequestController extends Controller
         return redirect()->back();
     }
 
+    private function authorizeDecision(WorkTimeChangeRequest $workTimeChangeRequest): void
+    {
+        if ($workTimeChangeRequest->status !== 'pending') {
+            abort(403, 'Only pending requests can be processed');
+        }
+
+        // Berechtigungsregel (Admin/Schichtplaner/Gewerk-Zuordnung) liegt zentral in
+        // WorkTimeChangeRequestPolicy::update — nicht hier duplizieren.
+        $this->authorize('update', $workTimeChangeRequest);
+    }
+
     public function approve(
         WorkTimeChangeRequest $workTimeChangeRequest,
         WorkTimeBookingRepository $repository
     ): \Illuminate\Http\RedirectResponse {
+        $this->authorizeDecision($workTimeChangeRequest);
+
         $shift = $workTimeChangeRequest->shift;
         $user = $workTimeChangeRequest->user;
 
@@ -276,6 +289,8 @@ class WorkTimeChangeRequestController extends Controller
 
     public function decline(WorkTimeChangeRequest $workTimeChangeRequest, Request $request): \Illuminate\Http\RedirectResponse
     {
+        $this->authorizeDecision($workTimeChangeRequest);
+
         $workTimeChangeRequest->update([
             'status' => 'rejected',
             'declined_by' => auth()->id(),

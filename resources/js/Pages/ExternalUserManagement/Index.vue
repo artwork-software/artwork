@@ -96,6 +96,9 @@
                             {{ $t('Synchronized') }}: {{ syncResult[source.id].result.synced }} ·
                             {{ $t('Skipped') }}: {{ syncResult[source.id].result.skipped }}
                         </div>
+                        <div v-if="syncResult[source.id].error" class="mt-1 text-xs break-all opacity-80">
+                            {{ syncResult[source.id].error }}
+                        </div>
                     </div>
 
                     <!-- Group Mappings -->
@@ -267,6 +270,7 @@ export default defineComponent({
                     complete: terminalStatuses.includes(status.status),
                     message: status.message,
                     result: status.result,
+                    error: status.error,
                 };
 
                 if (terminalStatuses.includes(status.status)) {

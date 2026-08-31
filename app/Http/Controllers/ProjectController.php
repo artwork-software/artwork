@@ -285,7 +285,12 @@ class ProjectController extends Controller
         $componentData = Component::whereIn('id', $components->pluck('component_id'))->get()
             ->keyBy('id');
 
-        $pinnedProjects = $this->projectService->pinnedProjects($this->authManager->id());
+        // Bei aktiver Suche keine Pinned-Sektion: Pins ohne Suchtreffer verwirren (Abnahme
+        // PROJ-01); matchende gepinnte Projekte erscheinen dann als normale Treffer in der
+        // Liste (siehe ProjectService::getProjects).
+        $pinnedProjects = trim($request->string('query')->toString()) === ''
+            ? $this->projectService->pinnedProjects($this->authManager->id())
+            : new \Illuminate\Database\Eloquent\Collection();
 
         $pinnedProjectsComponents = $this->mapProjectsToComponents($pinnedProjects, $components, $componentData);
         $projectComponents = $this->mapProjectsToComponents($projects, $components, $componentData);
@@ -419,8 +424,10 @@ class ProjectController extends Controller
                         $projectData->shift_description = $project->shift_description;
                         break;
                     case ProjectTabComponentEnum::PROJECT_BUDGET_DEADLINE->value:
+                        // Übersicht zeigt bewusst NUR das Jahr (Pflichtenheft Ref. 3.24);
+                        // volle Datumsanzeige gibt es weiterhin im Projekt-Tab
                         $projectData->budget_deadline = $project->budget_deadline
-                            ? Carbon::parse($project->budget_deadline)->translatedFormat('D, d F Y')
+                            ? Carbon::parse($project->budget_deadline)->format('Y')
                             : null;
                         break;
                     case ProjectTabComponentEnum::PROJECT_PERIOD->value:

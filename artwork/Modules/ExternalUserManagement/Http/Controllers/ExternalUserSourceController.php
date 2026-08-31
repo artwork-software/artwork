@@ -131,6 +131,7 @@ class ExternalUserSourceController extends Controller
             'status' => 'queued',
             'message' => __('LDAP synchronization was queued.'),
             'result' => null,
+            'error' => null,
             'updated_at' => now()->toIso8601String(),
         ], now()->addDay());
         SyncExternalUserSource::dispatch($externalUserSource);
@@ -147,7 +148,12 @@ class ExternalUserSourceController extends Controller
 
         return response()->json(Cache::get(
             SyncExternalUserSource::statusKey($externalUserSource->id),
-            ['status' => 'idle', 'message' => __('No synchronization is running.'), 'result' => null]
+            [
+                'status' => 'idle',
+                'message' => __('No synchronization is running.'),
+                'result' => null,
+                'error' => null,
+            ]
         ));
     }
 

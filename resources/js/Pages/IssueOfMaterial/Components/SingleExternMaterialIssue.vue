@@ -147,6 +147,13 @@
         @closed="showIssueOfMaterialConfirmDeleteModal = false"
         @delete="deleteIssue"
     />
+
+    <!-- Leihschein-Vorschau vor finaler Erstellung (Abnahme MAT-03 Ref. 1.14) -->
+    <IssuePdfPreviewModal
+        v-if="showPrintPreview"
+        :print-url="route('extern-issue-of-material.print', externMaterialIssue.id)"
+        @close="showPrintPreview = false"
+    />
 </template>
 
 <script setup>
@@ -156,6 +163,7 @@ import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
 import IssueOfMaterialModal from "@/Pages/IssueOfMaterial/IssueOfMaterialModal.vue";
 import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
 import EnterExternalIssueReturnModal from "@/Pages/IssueOfMaterial/Components/EnterExternalIssueReturnModal.vue";
+import IssuePdfPreviewModal from "@/Pages/IssueOfMaterial/Components/IssuePdfPreviewModal.vue";
 import ExternalMaterialIssueDetailModal from "@/Pages/IssueOfMaterial/Components/ExternalMaterialIssueDetailModal.vue";
 import { IconAlertTriangle, IconCheck, IconEdit, IconPrinter, IconReceiptRefund, IconTrash } from "@tabler/icons-vue";
 import { computed, onMounted, ref } from "vue";
@@ -248,8 +256,10 @@ const isOverdue = computed(() => {
     return returnDate.getTime() < Date.now();
 });
 
+// Erst Vorschau, final erstellt+angehängt wird im Modal (Abnahme MAT-03 Ref. 1.14)
+const showPrintPreview = ref(false);
 const printExternal = () => {
-    window.open(route('extern-issue-of-material.print', props.externMaterialIssue.id), '_blank');
+    showPrintPreview.value = true;
 };
 </script>
 

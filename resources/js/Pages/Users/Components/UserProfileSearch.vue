@@ -59,6 +59,7 @@
 <script>
 import { router } from "@inertiajs/vue3";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
+import { usePermission } from "@/Composeables/Permission.js";
 
 export default {
     name: "UserProfileSearch",
@@ -118,19 +119,30 @@ export default {
                 });
         },
         goToUser(user) {
+            const target = this.linkForUser(user);
+            if (!target) {
+                return;
+            }
             this.closeDropdown();
             this.query = '';
             this.results = [];
-            router.get(this.linkForUser(user));
+            router.get(target);
         },
+        // Sichtregel (Spiegel der Backend-Autorisierung): User-Einsatzplan nur mit
+        // Dienstplan-Sichtrechten (sonst Personendaten-Tab); Freelancer-/Dienstleister-
+        // Profile zusätzlich mit "can view private user info", ohne beides nicht anwählbar.
         linkForUser(user) {
+            const { canViewForeignRoster, canViewExternalWorkerProfile } = usePermission(this.$page.props);
             if (user.type === 'freelancer') {
-                return route('freelancer.show', { freelancer: user.id });
+                return canViewExternalWorkerProfile() ? route('freelancer.show', { freelancer: user.id }) : null;
             }
             if (user.type === 'service_provider') {
-                return route('service_provider.show', { serviceProvider: user.id });
+                return canViewExternalWorkerProfile() ? route('service_provider.show', { serviceProvider: user.id }) : null;
             }
-            return route('user.edit.shiftplan', { user: user.id });
+            if (canViewForeignRoster() || user.id === this.$page.props.auth.user.id) {
+                return route('user.edit.shiftplan', { user: user.id });
+            }
+            return route('user.edit.info', { user: user.id });
         },
         onFocus() {
             if (this.query.trim().length > 0) {

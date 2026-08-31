@@ -15,6 +15,8 @@ use Artwork\Modules\Shift\Models\ShiftQualification;
 use Artwork\Modules\Shift\Services\GlobalQualificationService;
 use Artwork\Modules\Shift\Services\ServiceProviderShiftQualificationService;
 use Artwork\Modules\Shift\Services\ShiftQualificationService;
+use Artwork\Modules\User\Models\User;
+use Artwork\Modules\User\Policies\UserPolicy;
 use Artwork\Modules\User\Services\UserService;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\RedirectResponse;
@@ -55,6 +57,13 @@ class ServiceProviderController extends Controller
         ProjectService $projectService,
         ShiftQualificationService $shiftQualificationService
     ): Response {
+        // Dienstleister-Profil (kein "eigen"): Dienstplan-Sichtrechte ODER
+        // "can view private user info" (Admins via Gate::before).
+        $authUser = request()->user();
+        abort_unless(
+            $authUser instanceof User && UserPolicy::canViewExternalWorkerProfile($authUser),
+            \Illuminate\Http\Response::HTTP_FORBIDDEN
+        );
 
         $globalQualifications = $this->globalQualificationService
             ->getAll()->map(function ($qualification) use ($serviceProvider) {

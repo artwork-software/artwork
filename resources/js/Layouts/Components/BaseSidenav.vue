@@ -24,6 +24,7 @@
 
 <script>
 
+import axios from "axios";
 import Permissions from "@/Mixins/Permissions.vue";
 import IconLib from "@/Mixins/IconLib.vue";
 import { Dialog, DialogPanel, DialogTitle, TransitionChild, TransitionRoot } from '@headlessui/vue'
@@ -48,11 +49,14 @@ export default {
     methods: {
         updateShow() {
             this.show = !this.show
-            this.$inertia.patch(route('user.sidebar.update', {user: this.$page.props.auth.user.id}), {
+            // Still per axios persistieren statt per Inertia-Visit: der Visit zeigte den
+            // NProgress-Ladebalken und lud alle Seiten-Props neu (gefühlter Refresh) —
+            // Abnahme-Befund RG-05. Die UI läuft komplett über den lokalen State.
+            this.$page.props.auth.user.is_sidebar_opened = this.show
+            axios.patch(route('user.sidebar.update', {user: this.$page.props.auth.user.id}), {
                 is_sidebar_opened: this.show
-            }, {
-                preserveScroll: true,
-                preserveState: true
+            }).catch(() => {
+                // Anzeige bleibt lokal korrekt; beim nächsten Toggle wird erneut gespeichert.
             })
         }
     }

@@ -106,7 +106,7 @@
 
                 <!-- Name (Avatar + Name + Email) -->
                 <template #cell-name="{ row }">
-                    <Link class="flex items-center" :href="checkLink(row)">
+                    <component :is="checkLink(row) ? Link : 'div'" class="flex items-center" :href="checkLink(row) ?? undefined">
                         <div class="size-11 shrink-0">
                             <img :src="row.profile_photo_url" alt="" class="size-11 rounded-full object-cover" />
                         </div>
@@ -114,7 +114,7 @@
                             <div class="font-medium text-text">{{ row.name }}</div>
                             <div class="mt-1 text-text-subtle">{{ row.email }}</div>
                         </div>
-                    </Link>
+                    </component>
                 </template>
 
                 <!-- Title + Department -->
@@ -319,13 +319,14 @@
                                 />
                                 <div class="min-w-0">
                                     <div class="flex flex-wrap items-center gap-2">
-                                        <Link
-                                            :href="checkLink(user)"
+                                        <component
+                                            :is="checkLink(user) ? Link : 'span'"
+                                            :href="checkLink(user) ?? undefined"
                                             class="truncate text-sm font-medium text-text hover:text-accent-700"
                                         >
                                             {{ user.display_name ?? user.provider_name }}
                                             <span v-if="user.position || user.business">,</span>
-                                        </Link>
+                                        </component>
                                         <p class="truncate text-sm text-text-subtle">
                                             <span v-if="user.business">{{ user.business }}<span v-if="user.position">,</span> </span>
                                             <span v-if="user.position">{{ user.position }}</span>
@@ -552,7 +553,7 @@
 
 <script setup lang="ts">
 import { ref, computed, nextTick, watch } from 'vue'
-import { Link, router } from '@inertiajs/vue3'
+import { Link, router, usePage } from '@inertiajs/vue3'
 import {
     Listbox, ListboxButton, ListboxOption, ListboxOptions,MenuItem
 } from '@headlessui/vue'
@@ -565,6 +566,7 @@ import BaseModal from '@/Components/Modals/BaseModal.vue'
 import UserHeader from '@/Pages/Users/UserHeader.vue'
 import AddUsersModal from '@/Pages/Users/Components/AddUsersModal.vue'
 import { is, can } from 'laravel-permission-to-vuejs'
+import { usePermission } from '@/Composeables/Permission.js'
 import debounce from 'lodash.debounce'
 import { useSortEnumTranslation } from '@/Composeables/SortEnumTranslation.js'
 
@@ -626,11 +628,21 @@ const userObjectsToShow = computed(() => {
 })
 
 /* Links */
+// Sichtregel (Spiegel der Backend-Autorisierung): Freelancer-/Dienstleister-Profile
+// öffnen mit Dienstplan-Sichtrechten ODER "can view private user info"; ohne beides
+// sind die Zeilen nicht verlinkt. User-Einsatzplan nur mit Dienstplan-Sichtrechten.
+const { canViewForeignRoster, canViewExternalWorkerProfile } = usePermission(usePage().props)
 const checkLink = (user) => {
-    if (user.type === 'freelancer') return route('freelancer.show', { freelancer: user.id })
-    if (user.type === 'service_provider') return route('service_provider.show', { serviceProvider: user.id })
-    if (user.user === 'user') return route('user.edit.shiftplan', { user: user.id })
-    return route('user.edit.shiftplan', { user: user.id })
+    if (user.type === 'freelancer') {
+        return canViewExternalWorkerProfile() ? route('freelancer.show', { freelancer: user.id }) : null
+    }
+    if (user.type === 'service_provider') {
+        return canViewExternalWorkerProfile() ? route('service_provider.show', { serviceProvider: user.id }) : null
+    }
+    if (canViewForeignRoster() || user.id === usePage().props.auth.user.id) {
+        return route('user.edit.shiftplan', { user: user.id })
+    }
+    return route('user.edit.info', { user: user.id })
 }
 const getEditHref = (user) => route('user.edit.shiftplan', { user: user.id })
 

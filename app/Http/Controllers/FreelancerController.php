@@ -16,6 +16,8 @@ use Artwork\Modules\Shift\Models\ShiftQualification;
 use Artwork\Modules\Shift\Services\FreelancerShiftQualificationService;
 use Artwork\Modules\Shift\Services\GlobalQualificationService;
 use Artwork\Modules\Shift\Services\ShiftQualificationService;
+use Artwork\Modules\User\Models\User;
+use Artwork\Modules\User\Policies\UserPolicy;
 use Artwork\Modules\User\Services\UserService;
 use Carbon\Carbon;
 use Illuminate\Auth\Access\AuthorizationException;
@@ -70,6 +72,14 @@ class FreelancerController extends Controller
         ProjectService $projectService,
         ShiftQualificationService $shiftQualificationService,
     ): Response {
+        // Freelancer-Profil (kein "eigen"): Dienstplan-Sichtrechte ODER
+        // "can view private user info" (Admins via Gate::before).
+        $authUser = $request->user();
+        abort_unless(
+            $authUser instanceof User && UserPolicy::canViewExternalWorkerProfile($authUser),
+            \Illuminate\Http\Response::HTTP_FORBIDDEN
+        );
+
         $showVacationsAndAvailabilities = $request->get('showVacationsAndAvailabilities');
         $vacationMonth = $request->get('vacationMonth');
         $selectedDate = $showVacationsAndAvailabilities ?

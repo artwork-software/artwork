@@ -60,6 +60,11 @@
                     </div>
                     <div v-else class="py-3">
                         <BaseTextarea is-dark :id="'editTimeLineDescription_' + timeLineForm.id" v-model="timeLineForm.description" label="Comment" />
+                        <!-- Abnahme CAL-01 Ref. 3.23: erklärt, wofür das Feld dient und wo der Text sichtbar wird -->
+                        <div class="mt-1 flex items-start gap-x-1 text-[10px] text-text-subtle" @click.stop>
+                            <IconInfoCircle class="mt-px size-3 shrink-0" stroke-width="1.5" />
+                            <span>{{ $t('The description appears next to the time in the schedule of the event (shifts tab) and in the daily view of the shift plan — visible to everyone who can see the schedule.') }}</span>
+                        </div>
                     </div>
                 </div>
                 <div class="text-xs text-danger mt-2" v-if="helpText">
@@ -91,7 +96,7 @@ import {usePermission} from "@/Composeables/Permission.js";
 import {router, useForm, usePage} from "@inertiajs/vue3";
 import TimeInputComponent from "@/Components/Inputs/TimeInputComponent.vue";
 const {hasAdminRole, can} = usePermission(usePage().props)
-import {IconCircleCheck, IconEdit, IconNote, IconTrash} from '@tabler/icons-vue';
+import {IconCircleCheck, IconEdit, IconInfoCircle, IconNote, IconTrash} from '@tabler/icons-vue';
 import timeline from "@/Pages/Projects/Components/Timeline.vue";
 import {nextTick, ref, watch} from "vue";
 import TextareaComponent from "@/Components/Inputs/TextareaComponent.vue";

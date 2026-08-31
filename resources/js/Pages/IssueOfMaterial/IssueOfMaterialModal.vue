@@ -33,16 +33,17 @@
 
         <div class="px-5 pb-5 pt-2">
             <div v-if="internOrExternal" class="flex flex-col gap-y-4">
-                <ExternMaterialIssueModal :load-article-form-basket="loadArticleFormBasket && !checkIfEditMode" :extern-material-issue="externMaterialIssue" :planning-date="planningDate" :project="isInProjectComponent ? project : null" :first-event="firstEvent" :last-event="lastEvent" @close="$emit('close')" @saved="handleSaved" />
+                <ExternMaterialIssueModal ref="externFormRef" :load-article-form-basket="loadArticleFormBasket && !checkIfEditMode" :extern-material-issue="externMaterialIssue" :planning-date="planningDate" :project="isInProjectComponent ? project : null" :first-event="firstEvent" :last-event="lastEvent" @close="$emit('close')" @saved="handleSaved" />
             </div>
             <div v-else>
-                <CreateInternMaterialIssueModul :load-article-form-basket="loadArticleFormBasket && !checkIfEditMode" :project="project" :issue-of-material="issueOfMaterial" :is-in-project-component="isInProjectComponent" :first-event="firstEvent" :last-event="lastEvent" :planning-date="planningDate" :project-tab-id="projectTabId" @close="$emit('close')" @saved="handleSaved" />
+                <CreateInternMaterialIssueModul ref="internFormRef" :load-article-form-basket="loadArticleFormBasket && !checkIfEditMode" :project="project" :issue-of-material="issueOfMaterial" :is-in-project-component="isInProjectComponent" :first-event="firstEvent" :last-event="lastEvent" :planning-date="planningDate" :project-tab-id="projectTabId" @close="$emit('close')" @saved="handleSaved" />
             </div>
         </div>
 
     </ArtworkBaseModal>
 
-    <!-- Bestätigungsdialog beim Schließen -->
+    <!-- Bestätigungsdialog beim Schließen: erscheint nur bei ungespeicherten Änderungen
+         und bietet Speichern direkt an (Abnahme Ref. 3.7) -->
     <ArtworkBaseModal
         v-if="showDiscardConfirmation"
         @close="showDiscardConfirmation = false"
@@ -50,7 +51,7 @@
         :title="$t('Discard data')"
         :description="$t('Should the entered data be discarded?')"
     >
-        <div class="flex justify-end gap-3 mt-4">
+        <div class="flex items-center justify-between gap-3 mt-4">
             <button
                 type="button"
                 class="inline-flex items-center rounded-lg px-4 py-2 text-sm font-medium text-text-muted hover:bg-surface-sunken transition"
@@ -58,13 +59,22 @@
             >
                 {{ $t('No, continue editing') }}
             </button>
-            <button
-                type="button"
-                class="inline-flex items-center rounded-lg bg-danger px-4 py-2 text-sm font-semibold text-white hover:bg-danger transition"
-                @click="confirmDiscard"
-            >
-                {{ $t('Discard') }}
-            </button>
+            <div class="flex items-center gap-3">
+                <button
+                    type="button"
+                    class="inline-flex items-center rounded-lg bg-danger px-4 py-2 text-sm font-semibold text-white hover:bg-danger transition"
+                    @click="confirmDiscard"
+                >
+                    {{ $t('Discard') }}
+                </button>
+                <button
+                    type="button"
+                    class="inline-flex items-center rounded-lg bg-accent-600 px-4 py-2 text-sm font-semibold text-white hover:bg-accent-700 transition"
+                    @click="saveAndClose"
+                >
+                    {{ $t('Save') }}
+                </button>
+            </div>
         </div>
     </ArtworkBaseModal>
 </template>
@@ -158,8 +168,19 @@ const props = defineProps({
 const internOrExternal = ref(props.isExternOrIntern)
 const showDiscardConfirmation = ref(false)
 
+const internFormRef = ref(null)
+const externFormRef = ref(null)
+const activeFormRef = () => (internOrExternal.value ? externFormRef.value : internFormRef.value)
+
+// Backdrop-Klick/Escape: nur bei ungespeicherten Änderungen nachfragen (Abnahme Ref. 3.7).
+// Vorher fragte ausgerechnet der Edit-Modus NIE nach und verwarf Änderungen kommentarlos.
 const handleClose = () => {
-    if (!checkIfEditMode.value) {
+    const form = activeFormRef()
+    // Solange die async geladene Formular-Komponente nicht gemountet ist, kann der User
+    // nichts geändert haben → direkt schließen. (Der frühere true-Fallback zeigte die
+    // Rückfrage, deren Speichern-Button mangels submit() ein toter Klick war.)
+    const dirty = typeof form?.isDirty === 'function' ? form.isDirty() : false
+    if (dirty) {
         showDiscardConfirmation.value = true
         return
     }
@@ -169,6 +190,13 @@ const handleClose = () => {
 const confirmDiscard = () => {
     showDiscardConfirmation.value = false
     emit('close')
+}
+
+// Speichern aus der Rückfrage: Submit der Formular-Komponente — bei Erfolg emittet sie
+// saved+close, bei Validierungsfehlern bleibt das Modal mit den Fehlermeldungen offen
+const saveAndClose = () => {
+    showDiscardConfirmation.value = false
+    activeFormRef()?.submit?.()
 }
 
 const CreateInternMaterialIssueModul = defineAsyncComponent({

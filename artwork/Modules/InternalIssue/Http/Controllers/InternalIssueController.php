@@ -234,15 +234,20 @@ class InternalIssueController extends Controller
             'int._Materialausgabe_' . $projectPart . 'Nr._' . $internalIssue->id
             . '_' . now()->format('Y-m-d') . '.pdf'
         ) ?? 'materialausgabe.pdf';
-        $storagePath = 'material-issue/' . StoredFileName::forGenerated('pdf', (string) $internalIssue->id);
 
-        Storage::disk('public')->put($storagePath, $pdfContent);
+        // Vorschau-Modus (Abnahme MAT-03 Ref. 1.14): PDF nur anzeigen, NICHT speichern
+        // und NICHT als Datei an die Ausgabe hängen — das passiert erst beim finalen Erstellen
+        if (!request()->boolean('preview')) {
+            $storagePath = 'material-issue/' . StoredFileName::forGenerated('pdf', (string) $internalIssue->id);
 
-        InternalIssueFile::create([
-            'internal_issue_id' => $internalIssue->id,
-            'file_path' => $storagePath,
-            'original_name' => $fileName,
-        ]);
+            Storage::disk('public')->put($storagePath, $pdfContent);
+
+            InternalIssueFile::create([
+                'internal_issue_id' => $internalIssue->id,
+                'file_path' => $storagePath,
+                'original_name' => $fileName,
+            ]);
+        }
 
         return response($pdfContent, 200, [
             'Content-Type' => 'application/pdf',

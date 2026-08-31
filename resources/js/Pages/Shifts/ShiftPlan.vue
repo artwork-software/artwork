@@ -376,17 +376,11 @@
                                                             :class="group.project ? 'hover:bg-info-surface' : 'hover:bg-surface-sunken'"
                                                         >
                                                             <!-- Kompaktkarte < 100 % Zoom: Zeit · Gewerk · Besetzung; Klick öffnet das
-                                                                 Schicht-Modal. Bei Multi-Edit/Highlight bleibt die volle Karte aktiv
-                                                                 (Checkboxen/Drag&Drop/Markierung brauchen sie). -->
-                                                            <CompactShiftInRoom
-                                                                v-if="isCompactShiftZoom && !multiEditMode && !highlightMode"
-                                                                v-memo="[shift, room.__v, isCompactShiftZoom]"
-                                                                :shift="shift"
-                                                                @click-on-edit="openEditShiftModal"
-                                                            />
+                                                                 Schicht-Modal. Rendert über die compact-Prop im ShiftDropElement,
+                                                                 damit Drag&Drop-Zuweisungen auch in der Pille funktionieren. -->
                                                             <SingleShiftInRoom
-                                                                v-else
                                                                 v-memo="[shift, room.__v, multiEditMode, userForMultiEdit, highlightMode, idToHighlight, typeToHighlight, highlightedShiftId, isCompactShiftZoom]"
+                                                                :compact="isCompactShiftZoom && !multiEditMode && !highlightMode"
                                                                 :multiEditMode="multiEditMode"
                                                                 :user-for-multi-edit="userForMultiEdit"
                                                                 :highlightMode="highlightMode"
@@ -1043,7 +1037,6 @@ import {useSyncedHorizontalScroll} from '@/Pages/Shifts/Composables/useSyncedHor
 import HolidayToolTip from "@/Components/ToolTips/HolidayToolTip.vue";
 import SingleEventInShiftPlan from "@/Pages/Shifts/Components/SingleEventInShiftPlan.vue";
 import SingleShiftInRoom from "@/Pages/Shifts/Components/ShiftWithoutEventComponents/SingleShiftInRoom.vue";
-import CompactShiftInRoom from "@/Pages/Shifts/Components/ShiftWithoutEventComponents/CompactShiftInRoom.vue";
 import {useShiftPlanZoom} from "@/Composeables/useShiftPlanZoom.js";
 import {useDayRemarks} from "@/Composeables/useDayRemarks.js";
 import DayRemarkEditModal from "@/Components/Calendar/Elements/DayRemarkEditModal.vue";

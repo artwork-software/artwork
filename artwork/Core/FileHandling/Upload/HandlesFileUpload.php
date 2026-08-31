@@ -19,6 +19,26 @@ trait HandlesFileUpload
         $settings = $this->retrieveSettingsForFileType($type);
 
         $user = Auth::user();
+
+        // Datei hat schon das SERVER-Limit gerissen (PHP upload_max_filesize/post_max_size):
+        // PHP liefert dann keine 413, sondern eine invalide Datei — ohne diesen Check liefe
+        // der Upload später in einen 500 statt in eine verständliche Meldung (Abnahme RG-04).
+        if (!$file->isValid()) {
+            if (in_array($file->getError(), [UPLOAD_ERR_INI_SIZE, UPLOAD_ERR_FORM_SIZE], true)) {
+                throw ValidationException::withMessages([
+                    'file' => __(
+                        'validation.file_upload.server_max_size',
+                        ['size' => \Artwork\Core\FileHandling\ServerUploadLimit::inMegabytes()],
+                        $user?->language
+                    ),
+                ]);
+            }
+
+            throw ValidationException::withMessages([
+                'file' => __('validation.file_upload.failed', [], $user?->language),
+            ]);
+        }
+
         $fileSize = null;
         $fileType = null;
 

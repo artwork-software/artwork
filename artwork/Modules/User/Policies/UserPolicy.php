@@ -32,6 +32,51 @@ class UserPolicy
         return $user->is($targetUser);
     }
 
+    /**
+     * Rechte, die den Blick auf FREMDE Einsatzpläne erlauben — wer den Dienstplan
+     * ohnehin sehen oder planen darf, darf auch die Einzel-Einsatzpläne öffnen.
+     * Eine Quelle für User-/Freelancer-/Dienstleister-Pläne und den PDF-Export;
+     * Frontend-Spiegel: canViewForeignRoster() in Composeables/Permission.js.
+     */
+    public const FOREIGN_ROSTER_PERMISSIONS = [
+        PermissionEnum::SHIFT_PLANNER,
+        PermissionEnum::MA_MANAGER,
+        PermissionEnum::VIEW_SHIFT_PLAN,
+    ];
+
+    public function viewOperationPlan(User $user, User $targetUser): bool
+    {
+        // Der eigene Einsatzplan ist immer einsehbar — "can view own roster" steuert
+        // nur noch die Sichtbarkeit des Menüpunkts "Mein Einsatzplan" im Frontend.
+        if ($user->is($targetUser)) {
+            return true;
+        }
+
+        return self::canViewForeignRoster($user);
+    }
+
+    public static function canViewForeignRoster(User $user): bool
+    {
+        // canAny() läuft pro Recht durchs Gate — Admins passieren via Gate::before.
+        return $user->canAny(
+            array_map(static fn (PermissionEnum $permission) => $permission->value, self::FOREIGN_ROSTER_PERMISSIONS)
+        );
+    }
+
+    /**
+     * Freelancer-/Dienstleister-PROFILSEITEN (freelancer.show/service_provider.show):
+     * zusätzlich zu den Dienstplan-Sichtrechten öffnet auch "can view private user info" —
+     * für Endnutzer sind Freelancer/Dienstleister Teil der Nutzer*innenverwaltung, deren
+     * Kontaktdaten dieses Recht sichtbar macht. Reine Einsatzplan-Endpunkte (PDF-Export,
+     * user.edit.shiftplan) bleiben bewusst Roster-Rechten vorbehalten.
+     * Frontend-Spiegel: canViewExternalWorkerProfile() in Composeables/Permission.js.
+     */
+    public static function canViewExternalWorkerProfile(User $user): bool
+    {
+        return self::canViewForeignRoster($user)
+            || $user->can(PermissionEnum::CAN_VIEW_PRIVATE_USER_INFO->value);
+    }
+
     public function delete(User $user, User $model): bool
     {
         return $user->id === $model->id;

@@ -69,7 +69,7 @@
 
                 <!-- Name (Avatar + Name + Email) -->
                 <template #cell-name="{ row }">
-                    <Link class="flex items-center" :href="checkLink(row)">
+                    <component :is="checkLink(row) ? Link : 'div'" class="flex items-center" :href="checkLink(row) ?? undefined">
                         <div class="size-11 shrink-0">
                             <img :src="row.profile_photo_url" alt="" class="size-11 rounded-full object-cover" />
                         </div>
@@ -86,7 +86,7 @@
                             </div>
                             <div class="mt-1 text-text-subtle">{{ row.email }}</div>
                         </div>
-                    </Link>
+                    </component>
                 </template>
 
                 <!-- Title + Department -->
@@ -228,7 +228,7 @@
 
 <script setup lang="ts">
 import {ref, nextTick, watch} from 'vue'
-import { Link, router } from '@inertiajs/vue3'
+import { Link, router, usePage } from '@inertiajs/vue3'
 import {
     Menu, MenuButton, MenuItem, MenuItems,
 } from '@headlessui/vue'
@@ -242,6 +242,7 @@ import BaseModal from '@/Components/Modals/BaseModal.vue'
 import TeamIconCollection from '@/Layouts/Components/TeamIconCollection.vue'
 import UserHeader from '@/Pages/Users/UserHeader.vue'
 import { is } from 'laravel-permission-to-vuejs'
+import { usePermission } from '@/Composeables/Permission.js'
 import { useSortEnumTranslation } from '@/Composeables/SortEnumTranslation.js'
 import BaseMenuItem from "@/Components/Menu/BaseMenuItem.vue";
 import ToolbarHeader from "@/Artwork/Toolbar/ToolbarHeader.vue";
@@ -276,15 +277,23 @@ const sortBy = ref(props.userUserManagementSetting?.sort_by === null ? undefined
 
 /* Helpers */
 const hasAdminRole = () => is('artwork admin')
+const { canViewForeignRoster, canViewExternalWorkerProfile } = usePermission(usePage().props)
 
+// Einsatzplan-Sichtregel (Spiegel der Backend-Autorisierung): fremde Pläne nur mit
+// Dienstplan-Sichtrechten; ohne Rechte führt der Klick auf den Personendaten-Tab.
+// Freelancer-/Dienstleister-Profile öffnen zusätzlich mit "can view private user info",
+// ganz ohne Rechte sind ihre Zeilen nicht klickbar.
 const checkLink = (user) => {
     if (user.type === 'freelancer') {
-        return route('freelancer.show', { freelancer: user.id })
+        return canViewExternalWorkerProfile() ? route('freelancer.show', { freelancer: user.id }) : null
     }
     if (user.type === 'service_provider') {
-        return route('service_provider.show', { serviceProvider: user.id })
+        return canViewExternalWorkerProfile() ? route('service_provider.show', { serviceProvider: user.id }) : null
     }
-    return route('user.edit.shiftplan', { user: user.id })
+    if (canViewForeignRoster() || user.id === usePage().props.auth.user.id) {
+        return route('user.edit.shiftplan', { user: user.id })
+    }
+    return route('user.edit.info', { user: user.id })
 }
 
 /* Searchbar handlers */

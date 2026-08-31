@@ -151,6 +151,24 @@ export function usePermission(pageProps) {
         return role('artwork admin');
     }
 
+    // Sichtregel für FREMDE Einsatzpläne (User/Freelancer/Dienstleister) — Spiegel
+    // von UserPolicy::canViewForeignRoster() im Backend; der eigene Plan ist immer
+    // sichtbar und braucht diese Prüfung nicht.
+    function canViewForeignRoster() {
+        return hasAdminRole() || canAny([
+            'can plan shifts',
+            'can manage workers',
+            'can view shift plan',
+        ]);
+    }
+
+    // Freelancer-/Dienstleister-PROFILSEITEN öffnen zusätzlich mit "can view private
+    // user info" (Nutzer*innenverwaltungs-Verständnis: auch Externe sind "User") —
+    // Spiegel von UserPolicy::canViewExternalWorkerProfile() im Backend.
+    function canViewExternalWorkerProfile() {
+        return canViewForeignRoster() || can('can view private user info');
+    }
+
     return {
         canSeeComponent,
         canEditComponent,
@@ -158,6 +176,8 @@ export function usePermission(pageProps) {
         role,
         canAny,
         roleAny,
-        hasAdminRole
+        hasAdminRole,
+        canViewForeignRoster,
+        canViewExternalWorkerProfile
     };
 }

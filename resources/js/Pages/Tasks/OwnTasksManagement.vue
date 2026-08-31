@@ -31,14 +31,20 @@
                 :tab_id="null"
             />
 
-            <!-- Money Source Tasks -->
-            <section class="mt-10" v-if="moneySourceTasks.length > 0">
-                <h2 class="text-lg font-semibold mb-2 flex items-center gap-2 cursor-pointer select-none"
-                    @click="showMoneySourceTasks = !showMoneySourceTasks">
-                    <component :is="showMoneySourceTasks ? IconChevronDown : IconChevronRight" class="w-5 h-5" />
+            <!-- Money Source Tasks: bewusst dezent als Unterkategorie und default eingeklappt
+                 (Abnahme FIN-01 Ref. 3.33); erscheint nur, wenn dem User selbst Aufgaben
+                 zugewiesen sind (Backend liefert ausschließlich eigene) -->
+            <section class="mt-8" v-if="moneySourceTasks.length > 0">
+                <button type="button"
+                        class="flex items-center gap-1.5 text-sm font-medium text-text-muted hover:text-text cursor-pointer select-none"
+                        @click="showMoneySourceTasks = !showMoneySourceTasks">
+                    <component :is="showMoneySourceTasks ? IconChevronDown : IconChevronRight" class="w-4 h-4" />
                     {{ $t('Funding source tasks') }}
-                </h2>
-                <div v-if="showMoneySourceTasks" class="rounded-2xl border border-border-subtle bg-white shadow-sm divide-y">
+                    <span class="inline-flex items-center rounded-full bg-surface-sunken px-2 py-0.5 text-xs tabular-nums text-text-subtle ring-1 ring-inset ring-border-subtle">
+                        {{ moneySourceTasks.length }}
+                    </span>
+                </button>
+                <div v-if="showMoneySourceTasks" class="mt-2 rounded-2xl border border-border-subtle bg-white shadow-sm divide-y">
                     <div v-for="task in moneySourceTasks" :key="task.id" class="px-5 py-4">
                         <SingleMoneySourceTask :task="task" />
                     </div>
@@ -76,7 +82,8 @@ const props = defineProps<{
 }>()
 
 const showChecklistEditModal = ref(false)
-const showMoneySourceTasks = ref(true)
+// Default eingeklappt — der Bereich soll die eigentlichen ToDo-Listen nicht dominieren
+const showMoneySourceTasks = ref(false)
 const moneySourceTasks = ref(props.money_source_task ?? [])
 </script>
 

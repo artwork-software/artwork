@@ -10,9 +10,18 @@
         title="How does this area work?"
         :paragraphs="[
             'For each application area you define which file types may be uploaded and how large a file may be. Both limits are enforced server-side on every upload.',
+            'The maximum possible limit is additionally restricted by the server configuration (e.g. nginx client_max_body_size, PHP upload_max_filesize/post_max_size).',
             'Changes are saved automatically.',
         ]"
     />
+    <!-- Transparenz über die Serverobergrenze (Abnahme RG-04): PHP-Limit ist auslesbar,
+         nginx kann zusätzlich begrenzen -->
+    <div v-if="serverUploadLimitMb" class="mt-4 flex items-start gap-x-2 rounded-lg border border-info-border bg-info-surface/70 px-3 py-2 text-xs text-text-muted">
+        <IconInfoCircle stroke-width="1.5" class="mt-0.5 size-4 shrink-0 text-info"/>
+        <span>
+            {{ $t('With the current server settings a maximum of {0} MB per file is possible. If you need larger uploads, ask your IT to raise the server limits first.', [serverUploadLimitMb]) }}
+        </span>
+    </div>
     <div v-for="area in areas" :key="area.name" class="mt-8">
       <h3 class="font-lexend font-semibold text-[clamp(16px,2vw,18px)]/[21px] text-text">{{ $t(area.name) }}</h3>
       <SettingsGuideBanner
@@ -53,13 +62,18 @@
             <SliderInput
                 v-model="area.fileSize"
                 :min="1"
-                :max="150"
+                :max="1024"
                 :step="1"
                 :property="{area: area, fileSize: area.fileSize}"
                 :show-value="true"
                 :label="$t('Max file size in MB')"
                 :method="handleSlideValueUpdate"
             />
+            <!-- Eingestellter Wert liegt über der Serverobergrenze → greift erst nach IT-Anpassung -->
+            <p v-if="serverUploadLimitMb && area.fileSize > serverUploadLimitMb" class="mt-1 flex items-center gap-x-1 text-xs text-warning">
+              <IconAlertTriangle stroke-width="1.5" class="size-4 shrink-0"/>
+              {{ $t('The server currently only accepts up to {0} MB — values above this only take effect after your IT raises the server limits.', [serverUploadLimitMb]) }}
+            </p>
           </div>
         </div>
       </div>
@@ -84,7 +98,7 @@ import {computed, ref} from "vue";
 import {router, usePage} from "@inertiajs/vue3";
 import {useTranslation} from "@/Composeables/Translation.js";
 import TagComponent from "@/Layouts/Components/TagComponent.vue";
-import {IconCheck, IconChevronDown} from "@tabler/icons-vue";
+import {IconAlertTriangle, IconCheck, IconChevronDown, IconInfoCircle} from "@tabler/icons-vue";
 import {Listbox, ListboxButton, ListboxOption, ListboxOptions} from "@headlessui/vue";
 import SliderInput from "@/Components/Form/SliderInput.vue";
 import debounce from "lodash.debounce";
@@ -107,6 +121,9 @@ const $t = useTranslation(),
     });
 
 const areas = ref(props.areas);
+
+// Effektives PHP-Upload-Limit des Servers (shared Inertia-Prop; nginx kann zusätzlich begrenzen)
+const serverUploadLimitMb = computed(() => usePage().props.server_upload_limit_mb ?? null);
 
 const addFileTypeToArea = (area, fileType) => {
   const targetArea = areas.value.find(a => a.name === area.name);

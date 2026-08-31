@@ -327,6 +327,8 @@ return [
         ],
     ],
     'file_upload' => [
+        'server_max_size' => 'The file exceeds the server limit of :size MB. Please choose a smaller file or ask your IT to raise the server limits.',
+        'failed' => 'The upload failed. Please try again.',
         'max_size' => 'The maximum shared file size is currently :size MB, either have an admin increase it or try a smaller file',
         'invalid_file_type' => 'This file format is not released :format, please ask an admin to release it or use another format',
     ],

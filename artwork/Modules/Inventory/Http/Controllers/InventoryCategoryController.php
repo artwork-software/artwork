@@ -164,7 +164,10 @@ class InventoryCategoryController extends Controller
                     ->select('id', 'display_name as name')
                     ->orderBy('display_name')
                     ->get(),
-            'statuses' => InventoryArticleStatus::select('id', 'name', 'color')->orderBy('order')->get(),
+            // order + default mitliefern: Clients sortieren nach `order` (einheitliche
+            // Status-Reihenfolge, Abnahme Ref. 1.29) und defaultStatus() braucht `default`
+            'statuses' => InventoryArticleStatus::select('id', 'name', 'color', 'order', 'default')
+                ->orderBy('order')->get(),
             'countsByStatus' => $this->articleService->getCountsByStatusAggregated(
                 $inventoryCategory,
                 $inventorySubCategory,

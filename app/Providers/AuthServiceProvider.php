@@ -102,6 +102,8 @@ class AuthServiceProvider extends ServiceProvider
             \Artwork\Modules\IndividualTimes\Policies\IndividualTimePolicy::class,
         \Artwork\Modules\Availability\Models\Availability::class =>
             \Artwork\Modules\Availability\Policies\AvailabilityPolicy::class,
+        \Artwork\Modules\WorkTime\Models\WorkTimeChangeRequest::class =>
+            \Artwork\Modules\WorkTime\Policies\WorkTimeChangeRequestPolicy::class,
     ];
 
     public function boot(): void

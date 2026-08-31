@@ -194,30 +194,13 @@ class WorkTimeChangeRequestController extends Controller
 
     private function authorizeDecision(WorkTimeChangeRequest $workTimeChangeRequest): void
     {
-        /** @var User $user */
-        $user = auth()->user();
-
         if ($workTimeChangeRequest->status !== 'pending') {
             abort(403, 'Only pending requests can be processed');
         }
 
-        if ($user->hasRole(RoleEnum::ARTWORK_ADMIN->value)) {
-            return;
-        }
-
-        if (!$user->hasPermissionTo(PermissionEnum::SHIFT_PLANNER->value)) {
-            abort(403, 'Unauthorized');
-        }
-
-        $craft = $workTimeChangeRequest->craft;
-
-        if (
-            $craft &&
-            !$craft->assignable_by_all &&
-            !$craft->craftShiftPlaner->contains('id', $user->id)
-        ) {
-            abort(403, 'Unauthorized');
-        }
+        // Berechtigungsregel (Admin/Schichtplaner/Gewerk-Zuordnung) liegt zentral in
+        // WorkTimeChangeRequestPolicy::update — nicht hier duplizieren.
+        $this->authorize('update', $workTimeChangeRequest);
     }
 
     public function approve(

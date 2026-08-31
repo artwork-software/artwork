@@ -53,15 +53,33 @@ class LdapIdentifier
      */
     public static function toFilterValue(string $attribute, string $value): ?string
     {
-        if (mb_strtolower($attribute) !== 'objectguid' || !self::isGuidValue($value)) {
-            return null;
-        }
+        return match (mb_strtolower($attribute)) {
+            'objectguid' => self::isGuidValue($value) ? self::guidFilterValue($value) : null,
+            // objectSid wird von AD ebenfalls binär verglichen — der kanonische
+            // S-1-5-…-String aus normalize() fände sonst nichts.
+            'objectsid' => Sid::isValid($value) ? self::sidFilterValue($value) : null,
+            default => null,
+        };
+    }
 
+    private static function guidFilterValue(string $value): ?string
+    {
         try {
             return (new Guid($value))->getEncodedHex();
         } catch (InvalidArgumentException) {
             return null;
         }
+    }
+
+    private static function sidFilterValue(string $value): ?string
+    {
+        try {
+            $binary = (new Sid($value))->getBinary();
+        } catch (InvalidArgumentException) {
+            return null;
+        }
+
+        return '\\' . implode('\\', str_split(bin2hex($binary), 2));
     }
 
 

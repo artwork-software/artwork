@@ -47,7 +47,8 @@ class WorkTimeChangeRequestPolicy
             // Check if user is assigned as craft shift planner OR craft is assignable by all
             $craft = $workTimeChangeRequest->craft;
 
-            if ($craft->assignable_by_all) {
+            // Anfrage ohne Gewerk: jede Schichtplaner*in darf entscheiden
+            if ($craft === null || $craft->assignable_by_all) {
                 return true;
             }
 

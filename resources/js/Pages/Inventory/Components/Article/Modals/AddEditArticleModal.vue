@@ -276,9 +276,11 @@
                                 <div class="absolute top-0 left-0 w-px h-[90%] bg-border"></div>
                                 <div class="font-lexend text-sm flex items-center text-text-subtle">
                                     <div class="w-5 h-px bg-border"></div>
-                                    <!-- Ref. 1.29: „Einsatzbereit" wird visuell hervorgehoben -->
+                                    <!-- Ref. 1.29: der Default-Status („Einsatzbereit") wird visuell hervorgehoben —
+                                         über das default-Flag statt eines Namens-Vergleichs, damit Umbenennung
+                                         und englische Installationen die Hervorhebung nicht verlieren -->
                                     <div class="ml-4 text-text"
-                                         :class="(statusValue.name || '').trim().toLowerCase() === 'einsatzbereit' ? 'font-bold text-base' : ''">
+                                         :class="statusValue.default ? 'font-bold text-base' : ''">
                                         {{ statusValue.name }}
                                     </div>
                                 </div>
@@ -1341,6 +1343,7 @@ const articleForm = useForm({
     statusValues: statusList.map(s => ({
         id: s.id,
         name: s.name,
+        default: s.default ?? false,
         value: props.article ? props.article.status_values.find(v => v.id === s.id)?.pivot?.value ?? 0 : 0
     })),
     is_detailed_quantity: props.article?.is_detailed_quantity ?? false,

@@ -236,11 +236,8 @@ export default {
             // Freelancer-/Dienstleister-Profile sind backend-seitig mit Dienstplan-
             // Sichtrechten ODER "can view private user info" erreichbar (Spiegel:
             // UserPolicy::canViewExternalWorkerProfile).
-            const canViewExternalWorkerProfile = this.hasAdminRole() ||
-                this.can('can plan shifts') ||
-                this.can('can manage workers') ||
-                this.can('can view shift plan') ||
-                this.can('can view private user info');
+            const canViewExternalWorkerProfile =
+                usePermission(this.$page.props).canViewExternalWorkerProfile();
 
             const type = this.user.type;
             if (type === 'freelancer' || type === 1) {

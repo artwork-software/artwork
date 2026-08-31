@@ -176,8 +176,10 @@ const activeFormRef = () => (internOrExternal.value ? externFormRef.value : inte
 // Vorher fragte ausgerechnet der Edit-Modus NIE nach und verwarf Änderungen kommentarlos.
 const handleClose = () => {
     const form = activeFormRef()
-    // Fallback: solange die async geladene Formular-Komponente nicht bereit ist, sicherheitshalber fragen
-    const dirty = typeof form?.isDirty === 'function' ? form.isDirty() : true
+    // Solange die async geladene Formular-Komponente nicht gemountet ist, kann der User
+    // nichts geändert haben → direkt schließen. (Der frühere true-Fallback zeigte die
+    // Rückfrage, deren Speichern-Button mangels submit() ein toter Klick war.)
+    const dirty = typeof form?.isDirty === 'function' ? form.isDirty() : false
     if (dirty) {
         showDiscardConfirmation.value = true
         return

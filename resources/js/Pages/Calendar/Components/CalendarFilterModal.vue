@@ -166,30 +166,13 @@
                         {{ $t('shiftFilters') }}
                     </div>
                     <div class="mt-2 rounded-lg bg-surface border border-border-subtle w-full shadow-raised px-4 py-3">
-                        <div class="flex gap-3">
-                            <div class="flex h-6 shrink-0 items-center">
-                                <div class="group grid size-4 grid-cols-1">
-                                    <input
-                                        v-model="showOnlyNotFullyStaffed"
-                                        id="filter_show_only_not_fully_staffed_shifts"
-                                        aria-describedby="filter_show_only_not_fully_staffed_shifts-description"
-                                        name="filter_show_only_not_fully_staffed_shifts"
-                                        type="checkbox"
-                                        class="col-start-1 row-start-1 appearance-none rounded-sm border border-border bg-white checked:border-accent-600 checked:bg-accent-600 indeterminate:border-accent-600 indeterminate:bg-accent-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-600 disabled:border-border disabled:bg-surface-sunken disabled:checked:bg-surface-sunken forced-colors:appearance-auto"
-                                    />
-                                    <svg class="pointer-events-none col-start-1 row-start-1 size-3.5 self-center justify-self-center stroke-white group-has-disabled:stroke-border-strong" viewBox="0 0 14 14" fill="none">
-                                        <path class="opacity-0 group-has-checked:opacity-100" d="M3 8L6 11L11 3.5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-                                        <path class="opacity-0 group-has-indeterminate:opacity-100" d="M3 7H11" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-                                    </svg>
-                                </div>
-                            </div>
-                            <div class="text-sm/6">
-                                <label for="filter_show_only_not_fully_staffed_shifts" class="font-medium text-text">{{ $t('Only show shifts that are not fully staffed') }}</label>
-                                <p id="filter_show_only_not_fully_staffed_shifts-description" class="text-text-subtle text-xs">
-                                    {{ $t('Only displays shifts where at least one position still has capacity for additional staff.') }}
-                                </p>
-                            </div>
-                        </div>
+                        <BaseCheckbox
+                            v-model="showOnlyNotFullyStaffed"
+                            id="filter_show_only_not_fully_staffed_shifts"
+                            name="filter_show_only_not_fully_staffed_shifts"
+                            :label="$t('Only show shifts that are not fully staffed')"
+                            :description="$t('Only displays shifts where at least one position still has capacity for additional staff.')"
+                        />
                     </div>
                 </div>
             </div>
@@ -216,6 +199,7 @@ import {computed, onMounted, ref} from "vue";
 import {router, useForm, usePage} from "@inertiajs/vue3";
 import axios from "axios";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
+import BaseCheckbox from "@/Artwork/Inputs/BaseCheckbox.vue";
 import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
 import {IconChevronDown, IconX} from "@tabler/icons-vue";
 import BasePageTitle from "@/Artwork/Titles/BasePageTitle.vue";

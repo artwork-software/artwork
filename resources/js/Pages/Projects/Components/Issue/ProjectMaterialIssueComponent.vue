@@ -588,6 +588,7 @@
     <IssuePdfPreviewModal
         v-if="printPreviewIssue"
         :print-url="route('issue-of-material.print', printPreviewIssue.id)"
+        :reload-on-create="false"
         @close="printPreviewIssue = null"
         @created="onPrintCreated"
     />

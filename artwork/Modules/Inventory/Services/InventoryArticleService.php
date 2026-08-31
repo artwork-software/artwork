@@ -380,7 +380,9 @@ class InventoryArticleService
      */
     private function resolveArticleQuantity(\Illuminate\Http\Request $request): int
     {
-        if (!$request->boolean('is_detailed_quantity')) {
+        // Fehlt der Array-Key komplett (Partial-Request), darf die Summe 0 die
+        // gespeicherte Menge nicht überschreiben — dann gilt der quantity-Wert.
+        if (!$request->boolean('is_detailed_quantity') || !$request->has('detailed_article_quantities')) {
             return $request->integer('quantity');
         }
 

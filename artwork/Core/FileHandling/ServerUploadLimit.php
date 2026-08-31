@@ -12,10 +12,29 @@ final class ServerUploadLimit
 {
     public static function inMegabytes(): int
     {
-        return (int) floor(min(
-            self::iniToBytes(ini_get('upload_max_filesize')),
-            self::iniToBytes(ini_get('post_max_size')),
-        ) / 1048576);
+        return self::fromIniValues(ini_get('upload_max_filesize'), ini_get('post_max_size'));
+    }
+
+    /**
+     * 0 bedeutet: kein bekanntes Limit (beide Direktiven unbegrenzt) — die Anzeigen
+     * im Frontend blenden ihre Hinweise dann aus.
+     */
+    public static function fromIniValues(string|false $uploadMaxFilesize, string|false $postMaxSize): int
+    {
+        $limitBytes = min(
+            self::iniToBytes($uploadMaxFilesize),
+            self::iniToBytes($postMaxSize),
+        );
+
+        // Unbegrenzt: PHP_FLOAT_MAX darf nie zu int gecastet werden (E_WARNING
+        // "not representable as an int" → ErrorException auf jedem Request).
+        if ($limitBytes >= PHP_FLOAT_MAX) {
+            return 0;
+        }
+
+        // Sub-1-MB-Limits nicht auf das falsy 0 abrunden — Meldungen zeigten sonst
+        // "Server-Obergrenze von 0 MB" bzw. das Frontend hielte das Limit für unbekannt.
+        return max(1, (int) floor($limitBytes / 1048576));
     }
 
     private static function iniToBytes(string|false $value): float

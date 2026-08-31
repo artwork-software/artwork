@@ -142,9 +142,11 @@ class LdapApi implements ExternalUserManagementApi
 
         return $query->get()->map(function (LdapUser $ldapUser) use ($source, $connectionName, $identifierAttribute) {
             $identifier = $this->getIdentifierValue($ldapUser, $identifierAttribute);
-            $email = $this->getAttributeValue($ldapUser, 'mail');
-            $firstName = $this->getAttributeValue($ldapUser, 'givenName') ?? '';
-            $lastName = $this->getAttributeValue($ldapUser, 'sn') ?? '';
+            // safeString wie im Verbindungstest: ein binäres Attribut (ungültiges UTF-8)
+            // darf weder json_encode() noch die utf8mb4-Spalten des Sync-Ziels sprengen.
+            $email = $this->getSafeAttributeValue($ldapUser, 'mail');
+            $firstName = $this->getSafeAttributeValue($ldapUser, 'givenName') ?? '';
+            $lastName = $this->getSafeAttributeValue($ldapUser, 'sn') ?? '';
 
             // Hole Gruppenmitgliedschaften
             $groups = $this->fetchUserGroupsFromLdapUser($ldapUser, $source, $connectionName);
@@ -156,13 +158,13 @@ class LdapApi implements ExternalUserManagementApi
                 'last_name' => $lastName,
                 'groups' => $groups,
                 'meta_data' => [
-                    'distinguished_name' => $ldapUser->getDn(),
-                    'sam_account_name' => $this->getAttributeValue($ldapUser, 'sAMAccountName'),
-                    'user_principal_name' => $this->getAttributeValue($ldapUser, 'userPrincipalName'),
-                    'display_name' => $this->getAttributeValue($ldapUser, 'displayName'),
-                    'department' => $this->getAttributeValue($ldapUser, 'department'),
-                    'title' => $this->getAttributeValue($ldapUser, 'title'),
-                    'telephone' => $this->getAttributeValue($ldapUser, 'telephoneNumber'),
+                    'distinguished_name' => LdapIdentifier::safeString($ldapUser->getDn()),
+                    'sam_account_name' => $this->getSafeAttributeValue($ldapUser, 'sAMAccountName'),
+                    'user_principal_name' => $this->getSafeAttributeValue($ldapUser, 'userPrincipalName'),
+                    'display_name' => $this->getSafeAttributeValue($ldapUser, 'displayName'),
+                    'department' => $this->getSafeAttributeValue($ldapUser, 'department'),
+                    'title' => $this->getSafeAttributeValue($ldapUser, 'title'),
+                    'telephone' => $this->getSafeAttributeValue($ldapUser, 'telephoneNumber'),
                 ],
             ];
         });
@@ -197,10 +199,10 @@ class LdapApi implements ExternalUserManagementApi
             ->take($limit)
             ->map(fn (LdapUser $ldapUser): array => [
                 'identifier' => $this->getIdentifierValue($ldapUser, $identifierAttribute),
-                'email' => LdapIdentifier::safeString($this->getAttributeValue($ldapUser, 'mail')),
-                'first_name' => LdapIdentifier::safeString($this->getAttributeValue($ldapUser, 'givenName')) ?? '',
-                'last_name' => LdapIdentifier::safeString($this->getAttributeValue($ldapUser, 'sn')) ?? '',
-                'display_name' => LdapIdentifier::safeString($this->getAttributeValue($ldapUser, 'displayName')),
+                'email' => $this->getSafeAttributeValue($ldapUser, 'mail'),
+                'first_name' => $this->getSafeAttributeValue($ldapUser, 'givenName') ?? '',
+                'last_name' => $this->getSafeAttributeValue($ldapUser, 'sn') ?? '',
+                'display_name' => $this->getSafeAttributeValue($ldapUser, 'displayName'),
                 'dn' => LdapIdentifier::safeString($ldapUser->getDn()),
             ])
             ->values()
@@ -348,16 +350,18 @@ class LdapApi implements ExternalUserManagementApi
 
         return [
             'identifier' => $this->getIdentifierValue($user, $identifierAttribute),
-            'email' => $this->getAttributeValue($user, 'mail'),
-            'first_name' => $this->getAttributeValue($user, 'givenName') ?? '',
-            'last_name' => $this->getAttributeValue($user, 'sn') ?? '',
+            // safeString wie im Verbindungstest — der Login-Pfad schreibt dieselben
+            // Felder in json_encode()/utf8mb4-Spalten wie der Sync.
+            'email' => $this->getSafeAttributeValue($user, 'mail'),
+            'first_name' => $this->getSafeAttributeValue($user, 'givenName') ?? '',
+            'last_name' => $this->getSafeAttributeValue($user, 'sn') ?? '',
             'groups' => $this->fetchUserGroupsFromLdapUser($user, $source, $connectionName),
             'email_verified' => true,
             'meta_data' => [
-                'distinguished_name' => $user->getDn(),
-                'sam_account_name' => $this->getAttributeValue($user, 'sAMAccountName'),
-                'user_principal_name' => $this->getAttributeValue($user, 'userPrincipalName'),
-                'display_name' => $this->getAttributeValue($user, 'displayName'),
+                'distinguished_name' => LdapIdentifier::safeString($user->getDn()),
+                'sam_account_name' => $this->getSafeAttributeValue($user, 'sAMAccountName'),
+                'user_principal_name' => $this->getSafeAttributeValue($user, 'userPrincipalName'),
+                'display_name' => $this->getSafeAttributeValue($user, 'displayName'),
             ],
         ];
     }
@@ -434,6 +438,17 @@ class LdapApi implements ExternalUserManagementApi
     private function getIdentifierValue(LdapUser $ldapUser, string $attribute): ?string
     {
         return LdapIdentifier::normalize($attribute, $this->getAttributeValue($ldapUser, $attribute));
+    }
+
+    /**
+     * Attributwert für Anzeige/Persistenz: binäre Werte (ungültiges UTF-8) werden
+     * hex-kodiert, damit json_encode() und die utf8mb4-Spalten sie überleben.
+     * NICHT für den Identifier verwenden — der braucht den Rohwert für die
+     * GUID-/SID-Normalisierung in LdapIdentifier::normalize().
+     */
+    private function getSafeAttributeValue(LdapUser $ldapUser, string $attribute): ?string
+    {
+        return LdapIdentifier::safeString($this->getAttributeValue($ldapUser, $attribute));
     }
 
     private function getAttributeValue(LdapUser $ldapUser, string $attribute): ?string

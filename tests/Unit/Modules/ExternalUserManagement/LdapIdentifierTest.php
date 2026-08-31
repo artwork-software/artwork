@@ -106,6 +106,18 @@ final class LdapIdentifierTest extends TestCase
     }
 
     #[Test]
+    public function theSidFilterValueIsEscapedHexForActiveDirectory(): void
+    {
+        // Auch objectSid vergleicht AD binaer – der kanonische S-1-5-…-String aus
+        // normalize() muss fuer den Filter in die escapte Hex-Form zurueck.
+        $this->assertSame(
+            '\\' . implode('\\', str_split(self::BINARY_SID_HEX, 2)),
+            LdapIdentifier::toFilterValue('objectSid', self::STRING_SID)
+        );
+        $this->assertNull(LdapIdentifier::toFilterValue('objectSid', 'not-a-sid'));
+    }
+
+    #[Test]
     public function textualAttributesGetNoSpecialFilterValue(): void
     {
         // null bedeutet: normales where() mit dem unveraenderten Wert.

@@ -272,7 +272,9 @@ class ProjectService
                 // deshalb aus der Liste ausgeschlossen. Bei aktiver SUCHE zeigt die Übersicht
                 // keine Pinned-Sektion (Abnahme PROJ-01: Pins ohne Treffer verwirren) — dann
                 // müssen matchende gepinnte Projekte als normale Treffer erscheinen.
-                ->when($search === '', function (Builder $builder): void {
+                // trim() wie in ProjectController::index — sonst zeigt eine reine
+                // Leerzeichen-Suche gepinnte Projekte doppelt (Sektion UND Liste)
+                ->when(trim($search) === '', function (Builder $builder): void {
                     $builder->where(function (Builder $builder): void {
                         $builder->whereJsonDoesntContain('pinned_by_users', Auth::id())
                             ->orWhereNull('pinned_by_users');

@@ -40,6 +40,12 @@ const props = defineProps({
         type: String,
         required: true,
     },
+    // false, wenn der Parent das Nachladen selbst übernimmt (@created-Handler) —
+    // sonst liefen Voll-Props-Reload und gezielter Fetch doppelt
+    reloadOnCreate: {
+        type: Boolean,
+        default: true,
+    },
 })
 
 const emit = defineEmits(['close', 'created'])
@@ -51,7 +57,11 @@ const createFinal = () => {
     window.open(props.printUrl, '_blank')
     emit('created')
     emit('close')
-    // Datei-Anhänge der Zeile aktualisieren (das PDF hängt jetzt an der Ausgabe)
-    setTimeout(() => router.reload({ preserveScroll: true }), 1500)
+    // Datei-Anhänge der Zeile aktualisieren (das PDF hängt jetzt an der Ausgabe).
+    // 3 s statt 1,5 s: wkhtmltopdf braucht bei großen Leihscheinen länger, sonst
+    // feuert der Reload vor dem Anlegen der Datei und die Liste bleibt stale.
+    if (props.reloadOnCreate) {
+        setTimeout(() => router.reload({ preserveScroll: true }), 3000)
+    }
 }
 </script>

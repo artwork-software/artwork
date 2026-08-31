@@ -40,6 +40,11 @@
                     {{ $t('The times must be entered in the format HH:MM or HH.MM. If the time is not displayed in the preview, it is not formatted correctly.')}}
                 </span>
             </div>
+            <!-- Abnahme CAL-01 Ref. 3.23: erklärt, wofür die Beschreibung dient und wo sie sichtbar wird -->
+            <div class="my-2 flex items-start gap-x-1.5 text-xs text-text-subtle">
+                <IconInfoCircle class="mt-px size-4 shrink-0" stroke-width="1.5" />
+                <span>{{ $t('The description appears next to the time in the schedule of the event (shifts tab) and in the daily view of the shift plan — visible to everyone who can see the schedule.') }}</span>
+            </div>
 
             <BasePageTitle
                 :title="$t('Preview')"
@@ -78,6 +83,7 @@ import TinyPageHeadline from "@/Components/Headlines/TinyPageHeadline.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import BaseTextarea from "@/Artwork/Inputs/BaseTextarea.vue";
 import BasePageTitle from "@/Artwork/Titles/BasePageTitle.vue";
+import {IconInfoCircle} from "@tabler/icons-vue";
 import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 import axios from "axios";

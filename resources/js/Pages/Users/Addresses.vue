@@ -630,8 +630,9 @@ const userObjectsToShow = computed(() => {
 /* Links */
 // Sichtregel (Spiegel der Backend-Autorisierung): Freelancer-/Dienstleister-Profile
 // öffnen mit Dienstplan-Sichtrechten ODER "can view private user info"; ohne beides
-// sind die Zeilen nicht verlinkt. User-Einsatzplan nur mit Dienstplan-Sichtrechten.
-const { canViewForeignRoster, canViewExternalWorkerProfile } = usePermission(usePage().props)
+// sind die Zeilen nicht verlinkt. User-Einsatzplan nur mit Dienstplan-Sichtrechten,
+// der eigene nur mit "can view own roster".
+const { canViewOwnRoster, canViewForeignRoster, canViewExternalWorkerProfile } = usePermission(usePage().props)
 const checkLink = (user) => {
     if (user.type === 'freelancer') {
         return canViewExternalWorkerProfile() ? route('freelancer.show', { freelancer: user.id }) : null
@@ -639,7 +640,7 @@ const checkLink = (user) => {
     if (user.type === 'service_provider') {
         return canViewExternalWorkerProfile() ? route('service_provider.show', { serviceProvider: user.id }) : null
     }
-    if (canViewForeignRoster() || user.id === usePage().props.auth.user.id) {
+    if (canViewForeignRoster() || (user.id === usePage().props.auth.user.id && canViewOwnRoster())) {
         return route('user.edit.shiftplan', { user: user.id })
     }
     return route('user.edit.info', { user: user.id })

@@ -1,10 +1,11 @@
 <template>
     <div ref="rowRootEl" class="print:w-full group w-full">
-        <!-- Row-Wrapper mit modernem Card-Look + kontextabhängigen Outlines -->
-        <div class="flex items-center gap-4 bg-white/70 backdrop-blur transition px-3 py-2 rounded-lg"
-            :class="[ event?.isNew ? 'outline-2 outline-special-pink outline-dashed' : '',
-                lastEditEventIds.includes(event.id)
-                  ? 'outline-2 outline-accent-600 outline-dashed' : '',
+        <!-- Row-Wrapper mit modernem Card-Look + kontextabhängiger Markierung.
+             Markierung liegt komplett INNERHALB der Karte (Tönung + Innenkontur via
+             negativem outline-offset): die Kartenkanten aller Zeilen bleiben auf der
+             gemeinsamen Ankerlinie, kein Rahmen ragt links über unmarkierte Zeilen hinaus. -->
+        <div class="flex items-center gap-4 backdrop-blur transition px-3 py-2 rounded-lg"
+            :class="[ rowMarkerClass,
                 (event.isSelectedForMultiEdit && effectiveMultiEdit) ? 'ring-2 ring-success-border' : ''
               ]"
         >
@@ -479,6 +480,18 @@ const effectiveMultiEdit = computed(() => injectedMultiEdit ? injectedMultiEdit.
 
 // Sammel-Gate für alle Bearbeitungen einer Zeile: Tab-Schreibrecht UND Event-Berechtigung.
 const canEditRow = computed(() => props.canEditComponent !== false && props.hasPermission);
+
+// Genau EINE bg-Utility pro Zustand (statt bedingter Klassen zusätzlich zu bg-white/70,
+// deren Gewinner von der CSS-Reihenfolge abhinge). "Neu" gewinnt vor "zuletzt bearbeitet".
+const rowMarkerClass = computed(() => {
+    if (props.event?.isNew) {
+        return 'bg-special-pink-surface/60 outline-2 -outline-offset-2 outline-special-pink-border';
+    }
+    if (props.lastEditEventIds.includes(props.event?.id)) {
+        return 'bg-accent-50/80 outline-2 -outline-offset-2 outline-accent-200';
+    }
+    return 'bg-white/70';
+});
 
 const showMenu = ref(false);
 const dayString = ref(null);

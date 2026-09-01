@@ -264,8 +264,14 @@
                     <div class="flex flex-wrap items-start justify-between gap-3">
                         <div class="min-w-0 flex-1">
                             <div class="flex items-center gap-2">
+                                <PropertyIcon
+                                    v-if="moneySource.is_group && moneySource.icon"
+                                    :name="moneySource.icon"
+                                    class="h-5 w-5 shrink-0 text-text"
+                                    stroke-width="1.5"
+                                />
                                 <img
-                                    v-if="moneySource.is_group"
+                                    v-else-if="moneySource.is_group"
                                     src="/Svgs/IconSvgs/icon_group_red.svg"
                                     class="h-5 w-5"
                                     alt="groupIcon"
@@ -466,6 +472,7 @@ import MoneySourceHistoryComponent from "@/Layouts/Components/MoneySourceHistory
 import {can, is} from "laravel-permission-to-vuejs";
 import ToolbarHeader from "@/Artwork/Toolbar/ToolbarHeader.vue";
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
+import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 
 defineOptions({ name: 'MoneySourceIndex' })
 

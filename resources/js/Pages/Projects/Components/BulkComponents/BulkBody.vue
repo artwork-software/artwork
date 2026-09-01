@@ -19,13 +19,16 @@
                 classes="!items-center"
             />
         </div>
-        <!-- Function Bar -->
+        <!-- Function Bar: der Sticky-Wrapper muss vollbreit und opak sein — die Pille selbst
+             ist schmaler als der darunter klebende Spaltenkopf, sonst scrollen die Zeilen
+             links/rechts neben ihr sichtbar durch. -->
         <div
             v-if="!isInModal"
             ref="bulkFunctionBarEl"
-            class="sticky glassy rounded-2xl top-(--project-header-height) z-30 print:hidden bg-white/95 backdrop-blur-xl shadow-raised border-b border-border-subtle/80 w-fit mx-auto"
+            class="sticky top-(--project-header-height) z-30 print:hidden w-full bg-surface"
         >
-            <div class="flex items-center justify-start gap-x-4 py-2 px-3 print:hidden">
+            <div class="glassy rounded-2xl bg-white/95 backdrop-blur-xl shadow-raised border-b border-border-subtle/80 w-fit mx-auto">
+            <div class="flex items-center justify-start gap-x-4 py-2 px-3">
                 <MultiEditSwitch
                     :multi-edit="multiEdit"
                     :room-mode="false"
@@ -125,7 +128,7 @@
                     </MenuItem>
                 </BaseMenu>
             </div>
-
+            </div>
         </div>
         <!-- Header + Events (horizontal scroll container)
              Nicht-Modal: feste Maximalhöhe → dieser Container wird zum echten vertikalen
@@ -142,7 +145,7 @@
             <!-- w-full + min-w-max: füllt den Viewport, wenn Platz da ist (Spalten wachsen
                  per flex-grow mit), fällt bei Platzmangel auf Inhaltsbreite + horizontalen
                  Scroll zurück. -->
-            <div class="w-full min-w-max mx-auto">
+            <div class="w-full min-w-max">
                 <!-- Spaltenkopf: sticky nur innerhalb dieses Containers. Scrollt zusätzlich das
                      Dokument (Function-Bar klebt dann unterm ProjectHeader), wandert die
                      Container-Oberkante hinter die Function-Bar — der top-Offset schiebt den
@@ -164,7 +167,7 @@
                         <div class="flex items-center gap-2" role="listitem">
                             <span
                                 aria-hidden="true"
-                                class="h-4 w-10 rounded-full border-2 border-dashed border-accent-500/70 bg-accent-50/40"
+                                class="h-4 w-10 rounded-full border border-accent-200 bg-accent-50"
                             ></span>
                             <span class="uppercase tracking-wide font-medium">
                                 {{ $t('Last edited events') }}
@@ -175,7 +178,7 @@
                         <div class="flex items-center gap-2" role="listitem">
                             <span
                                 aria-hidden="true"
-                                class="h-4 w-10 rounded-full border-2 border-dashed border-special-pink/70 bg-special-pink-surface/40"
+                                class="h-4 w-10 rounded-full border border-special-pink-border bg-special-pink-surface"
                             ></span>
                             <span class="uppercase tracking-wide font-medium">
                                 {{ $t('Most recently created events') }}

@@ -151,9 +151,15 @@ export function usePermission(pageProps) {
         return role('artwork admin');
     }
 
+    // Sichtregel für den EIGENEN Einsatzplan — Spiegel des Own-Zweigs von
+    // UserPolicy::viewOperationPlan() im Backend: "can view own roster" ODER
+    // Dienstplan-Sichtrechte (wer fremde Pläne sieht, sieht auch den eigenen).
+    function canViewOwnRoster() {
+        return hasAdminRole() || can('can view own roster') || canViewForeignRoster();
+    }
+
     // Sichtregel für FREMDE Einsatzpläne (User/Freelancer/Dienstleister) — Spiegel
-    // von UserPolicy::canViewForeignRoster() im Backend; der eigene Plan ist immer
-    // sichtbar und braucht diese Prüfung nicht.
+    // von UserPolicy::canViewForeignRoster() im Backend.
     function canViewForeignRoster() {
         return hasAdminRole() || canAny([
             'can plan shifts',
@@ -177,6 +183,7 @@ export function usePermission(pageProps) {
         canAny,
         roleAny,
         hasAdminRole,
+        canViewOwnRoster,
         canViewForeignRoster,
         canViewExternalWorkerProfile
     };

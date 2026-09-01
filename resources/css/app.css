@@ -341,6 +341,17 @@
         @apply w-full max-w-none px-4 sm:px-6 md:px-6 lg:px-8 xl:px-8 2xl:px-8 mt-5 pb-20;
     }
 
+    /* Linksverankerte Projektseiten (Designkonzept „Ankerlinie = Seitenkante"):
+       -page = volle Breite mit Seitenpadding (Kopfzeile), -column = an derselben
+       Ankerlinie hängende Inhaltsspalte mit 1536px-Deckel. Werkzeug-Komponenten
+       (Kalender/Schichten/Budget/Terminliste) laufen ohne Wrapper vollbreit. */
+    .artwork-anchored-page {
+        @apply w-full max-w-none px-4 sm:px-6 md:px-6 lg:px-8 xl:px-8 2xl:px-8;
+    }
+    .artwork-anchored-column {
+        @apply w-full max-w-[96rem] px-4 sm:px-6 md:px-6 lg:px-8 xl:px-8 2xl:px-8;
+    }
+
     .background-color {
         @apply bg-white;
     }

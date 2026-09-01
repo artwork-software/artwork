@@ -29,14 +29,13 @@
             <div v-else class="w-full flex" ref="descriptionWrapRef">
                 <BaseTextarea
                     :disabled="!canEditComponent"
-                    :label="data.data.placeholder"
+                    :placeholder="data.data.placeholder"
                     ref="descriptionRef"
                     :rows="5"
                     :bg-color="inSidebar ? '!bg-surface-inverse !border-white/10 !w-80' : 'bg-white'"
                     class="w-full"
                     :class="inSidebar ? '!w-80' : 'w-full'"
                     :id="'component-' + data.id"
-                    :show-label="false"
                     no-margin-top
                     @focusout="updateTextData()"
                     v-model="text"

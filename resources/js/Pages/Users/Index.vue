@@ -277,12 +277,12 @@ const sortBy = ref(props.userUserManagementSetting?.sort_by === null ? undefined
 
 /* Helpers */
 const hasAdminRole = () => is('artwork admin')
-const { canViewForeignRoster, canViewExternalWorkerProfile } = usePermission(usePage().props)
+const { canViewOwnRoster, canViewForeignRoster, canViewExternalWorkerProfile } = usePermission(usePage().props)
 
 // Einsatzplan-Sichtregel (Spiegel der Backend-Autorisierung): fremde Pläne nur mit
-// Dienstplan-Sichtrechten; ohne Rechte führt der Klick auf den Personendaten-Tab.
-// Freelancer-/Dienstleister-Profile öffnen zusätzlich mit "can view private user info",
-// ganz ohne Rechte sind ihre Zeilen nicht klickbar.
+// Dienstplan-Sichtrechten, der eigene nur mit "can view own roster"; ohne Rechte
+// führt der Klick auf den Personendaten-Tab. Freelancer-/Dienstleister-Profile öffnen
+// zusätzlich mit "can view private user info", ganz ohne Rechte sind ihre Zeilen nicht klickbar.
 const checkLink = (user) => {
     if (user.type === 'freelancer') {
         return canViewExternalWorkerProfile() ? route('freelancer.show', { freelancer: user.id }) : null
@@ -290,7 +290,7 @@ const checkLink = (user) => {
     if (user.type === 'service_provider') {
         return canViewExternalWorkerProfile() ? route('service_provider.show', { serviceProvider: user.id }) : null
     }
-    if (canViewForeignRoster() || user.id === usePage().props.auth.user.id) {
+    if (canViewForeignRoster() || (user.id === usePage().props.auth.user.id && canViewOwnRoster())) {
         return route('user.edit.shiftplan', { user: user.id })
     }
     return route('user.edit.info', { user: user.id })

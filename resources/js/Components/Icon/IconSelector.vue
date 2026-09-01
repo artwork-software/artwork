@@ -4,13 +4,13 @@
         <PopoverButton
             id="iconSelectorButton"
             class="size-10 inline-flex items-center justify-center rounded-full ring-1 ring-border-subtle bg-white hover:ring-accent-200 hover:shadow-sm transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-600"
+            @click="openPanel"
         >
             <ToolTipComponent
                 :icon="selectedIcon"
                 icon-size="size-7"
                 :tooltip-text="$t('Select an icon')"
                 direction="bottom"
-                @click="openPanel"
             />
         </PopoverButton>
 

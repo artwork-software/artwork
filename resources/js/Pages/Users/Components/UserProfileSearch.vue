@@ -129,17 +129,18 @@ export default {
             router.get(target);
         },
         // Sichtregel (Spiegel der Backend-Autorisierung): User-Einsatzplan nur mit
-        // Dienstplan-Sichtrechten (sonst Personendaten-Tab); Freelancer-/Dienstleister-
-        // Profile zusätzlich mit "can view private user info", ohne beides nicht anwählbar.
+        // Dienstplan-Sichtrechten, der eigene nur mit "can view own roster" (sonst
+        // Personendaten-Tab); Freelancer-/Dienstleister-Profile zusätzlich mit
+        // "can view private user info", ohne beides nicht anwählbar.
         linkForUser(user) {
-            const { canViewForeignRoster, canViewExternalWorkerProfile } = usePermission(this.$page.props);
+            const { canViewOwnRoster, canViewForeignRoster, canViewExternalWorkerProfile } = usePermission(this.$page.props);
             if (user.type === 'freelancer') {
                 return canViewExternalWorkerProfile() ? route('freelancer.show', { freelancer: user.id }) : null;
             }
             if (user.type === 'service_provider') {
                 return canViewExternalWorkerProfile() ? route('service_provider.show', { serviceProvider: user.id }) : null;
             }
-            if (canViewForeignRoster() || user.id === this.$page.props.auth.user.id) {
+            if (canViewForeignRoster() || (user.id === this.$page.props.auth.user.id && canViewOwnRoster())) {
                 return route('user.edit.shiftplan', { user: user.id });
             }
             return route('user.edit.info', { user: user.id });

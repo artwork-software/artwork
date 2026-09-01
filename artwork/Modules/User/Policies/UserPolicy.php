@@ -46,9 +46,9 @@ class UserPolicy
 
     public function viewOperationPlan(User $user, User $targetUser): bool
     {
-        // Der eigene Einsatzplan ist immer einsehbar — "can view own roster" steuert
-        // nur noch die Sichtbarkeit des Menüpunkts "Mein Einsatzplan" im Frontend.
-        if ($user->is($targetUser)) {
+        // Eigener Einsatzplan nur mit "can view own roster" — wer fremde Pläne sehen
+        // darf, sieht auch den eigenen (Dienstplan-Sichtrechte schließen ihn ein).
+        if ($user->is($targetUser) && $user->can(PermissionEnum::CAN_VIEW_OWN_ROSTER->value)) {
             return true;
         }
 

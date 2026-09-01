@@ -166,7 +166,8 @@ class MoneySourceController extends Controller
             'funding_end_date' => $request->funding_end_date,
             'source_name' => $request->source_name,
             'description' => $request->description,
-            'is_group' => $request->is_group
+            'is_group' => $request->is_group,
+            'icon' => $request->is_group ? $request->icon : null
         ]);
 
         $moneySource->users()->sync(collect($request->users));
@@ -433,6 +434,7 @@ class MoneySourceController extends Controller
                 ]),
                 'description' => $moneySource->description,
                 'is_group' => $moneySource->is_group,
+                'icon' => $moneySource->icon,
                 'created_at' => $moneySource->created_at,
                 'updated_at' => $moneySource->updated_at,
                 'tasks' => MoneySourceTask::with('money_source_task_users')
@@ -508,6 +510,7 @@ class MoneySourceController extends Controller
             'source_name' => $request->source_name,
             'description' => $request->description,
             'is_group' => $request->is_group,
+            'icon' => $request->is_group ? $request->icon : null,
             'group_id' => $request->group_id,
             'funding_start_date' => $request->funding_start_date,
             'funding_end_date' => $request->funding_end_date,
@@ -640,6 +643,7 @@ class MoneySourceController extends Controller
             'source_name' => $moneySource->source_name,
             'description' => $moneySource->description,
             'is_group' => $moneySource->is_group,
+            'icon' => $moneySource->icon,
             'group_id' => $moneySource->group_id,
             'users' => $moneySource->users
         ]);

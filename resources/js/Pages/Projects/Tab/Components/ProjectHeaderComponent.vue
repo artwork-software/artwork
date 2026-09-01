@@ -22,7 +22,7 @@
         <div ref="stickyHeaderEl" class="sticky top-0 z-40 w-full inset-x-0 ">
             <!-- Glassy background layer -->
             <div class="bg-white/80 backdrop-blur supports-backdrop-filter:backdrop-blur border-b border-border-subtle/70">
-                <div class="artwork-container pb-0! py-3">
+                <div class="artwork-anchored-page py-3">
                     <div class="flex items-center justify-between gap-3">
                         <!-- Left: Switcher trigger -->
                         <div class="min-w-0 flex items-center gap-3">
@@ -62,16 +62,17 @@
                                         />
                                     </div>
 
-                                    <div class="truncate text-[12px] text-text-muted">
+                                    <div v-show="!isCondensed" class="truncate text-[12px] text-text-muted" :title="stickySublineFull || undefined">
                                         <span v-if="stickySubline">{{ stickySubline }}</span>
                                         <span v-else class="text-text-subtle">{{ $t('No appointments within this project yet') }}</span>
                                     </div>
                                 </div>
                             </button>
+                        </div>
 
-
-
-                            <div class="flex items-center text-[13px] text-text-muted" v-if="headerObject.project_history.length > 0">
+                        <!-- Right: Meta + Actions -->
+                        <div class="flex items-center gap-2 shrink-0">
+                            <div class="hidden lg:flex items-center text-[13px] text-text-muted whitespace-nowrap" v-if="headerObject.project_history.length > 0">
                                 <span>{{ $t('last modified') }}:</span>
                                 <UserPopoverTooltip
                                     :user="headerObject.project_history[0]?.changer"
@@ -85,14 +86,17 @@
                                     <PropertyIcon name="IconChevronRight" class="-mr-0.5 h-4 w-4" aria-hidden="true" />
                                     {{ $t('View history') }}
                                 </button>
+                                <div class="ml-3 h-5 w-px bg-border-subtle" aria-hidden="true"></div>
                             </div>
-
-                        </div>
-
-
-
-                        <!-- Right: Actions -->
-                        <div class="flex items-center gap-2 shrink-0">
+                            <ToolTipComponent
+                                v-if="headerObject.project_history.length > 0"
+                                class="lg:hidden"
+                                :tooltip-text="$t('View history')"
+                                icon="IconHistory"
+                                direction="bottom"
+                                @click="openProjectHistoryModal()"
+                                stroke="2"
+                            />
                             <ToolTipComponent
                                 :tooltip-text="$t('Select print layout')"
                                 icon="IconPrinter"
@@ -140,7 +144,7 @@
                     </div>
 
                     <!-- Compact project list (Group) -->
-                    <div v-if="projectsOfGroup.length > 0" class="mt-1 mb-3">
+                    <div v-if="projectsOfGroup.length > 0" v-show="!isCondensed" class="mt-1 mb-3">
                         <div class="flex items-center gap-2">
                             <div class="text-[11px] font-semibold text-text-subtle shrink-0">
                                 {{ $t('Projects in this group') }}
@@ -169,7 +173,7 @@
                     </div>
 
                     <!-- Project belongs to groups -->
-                    <div v-if="project.groups && project.groups.length > 0" class="mt-1">
+                    <div v-if="project.groups && project.groups.length > 0" v-show="!isCondensed" class="mt-1">
                         <div class="flex items-center gap-2">
                             <div class="text-[11px] font-semibold text-text-subtle shrink-0">
                                 {{ $t('Project is part of project group') }}:
@@ -456,7 +460,7 @@ const hasProjectPeriod = computed(() => {
     return !!(props.headerObject?.firstEventInProject && props.headerObject?.lastEventInProject);
 });
 
-const stickySubline = computed(() => {
+const stickySublineFull = computed(() => {
     if (roomsWithAudienceList.value.length > 0) return roomsWithAudienceList.value.join(", ");
     if (hasProjectPeriod.value) {
         const s = props.headerObject?.firstEventInProject?.start_time || "";
@@ -465,6 +469,28 @@ const stickySubline = computed(() => {
     }
     return "";
 });
+
+// Lange Raumlisten kappen: 3 Räume + „+n", volle Liste per title-Tooltip
+const stickySubline = computed(() => {
+    const rooms = roomsWithAudienceList.value;
+    if (rooms.length > 3) {
+        return `${rooms.slice(0, 3).join(", ")} +${rooms.length - 3}`;
+    }
+    return stickySublineFull.value;
+});
+
+// Beim Scrollen kollabiert der Sticky-Header auf Titelzeile + Tabs.
+// Hysterese (einklappen ab 120px, ausklappen unter 40px), damit der
+// Höhenwechsel des Headers an der Schwelle nicht flackert.
+const isCondensed = ref(false);
+const onWindowScroll = () => {
+    const y = window.scrollY || 0;
+    if (!isCondensed.value && y > 120) {
+        isCondensed.value = true;
+    } else if (isCondensed.value && y < 40) {
+        isCondensed.value = false;
+    }
+};
 
 const formatDateGerman = (dateString) => {
     if (!dateString) return "";
@@ -682,10 +708,13 @@ onMounted(() => {
     }
 
     window.addEventListener('resize', updateHeaderHeight, { passive: true });
+    window.addEventListener('scroll', onWindowScroll, { passive: true });
+    onWindowScroll();
 });
 
 onBeforeUnmount(() => {
     window.removeEventListener('resize', updateHeaderHeight);
+    window.removeEventListener('scroll', onWindowScroll);
 });
 </script>
 

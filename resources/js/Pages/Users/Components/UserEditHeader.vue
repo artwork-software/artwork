@@ -73,8 +73,9 @@ export default {
             show: false,
             tabs: [
                 // Einsatzplan-Sichtregel (Spiegel von UserPolicy::viewOperationPlan):
-                // eigener Plan immer, fremde nur mit Dienstplan-Sichtrechten.
-                { name: 'Operational plan', href: route('user.edit.shiftplan', {user: this.user_to_edit.id}), current: route().current('user.edit.shiftplan'), permission: this.user_to_edit.id === this.$page.props.auth.user.id || usePermission(this.$page.props).canViewForeignRoster(), icon: 'IconCalendarUser'},
+                // eigener Plan nur mit "can view own roster", fremde nur mit
+                // Dienstplan-Sichtrechten.
+                { name: 'Operational plan', href: route('user.edit.shiftplan', {user: this.user_to_edit.id}), current: route().current('user.edit.shiftplan'), permission: this.user_to_edit.id === this.$page.props.auth.user.id ? usePermission(this.$page.props).canViewOwnRoster() : usePermission(this.$page.props).canViewForeignRoster(), icon: 'IconCalendarUser'},
                 //{id: 2, name: 'Conditions', href: route('user.edit.terms', {user: this.user_to_edit.id}), current: route().current('user.edit.terms'), permission: this.$can('can manage workers') || this.hasAdminRole(), icon: 'IconTaxEuro'},
                 {name: 'Personal data', href: route('user.edit.info', {user: this.user_to_edit.id}), current: route().current('user.edit.info'), permission: true, icon: 'IconUser'},
                 {name: 'User permissions', href: route('user.edit.permissions', {user: this.user_to_edit.id}), current: route().current('user.edit.permissions'), permission: this.hasAdminRole(), icon: 'IconLicense'},

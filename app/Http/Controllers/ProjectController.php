@@ -424,10 +424,8 @@ class ProjectController extends Controller
                         $projectData->shift_description = $project->shift_description;
                         break;
                     case ProjectTabComponentEnum::PROJECT_BUDGET_DEADLINE->value:
-                        // Übersicht zeigt bewusst NUR das Jahr (Pflichtenheft Ref. 3.24);
-                        // volle Datumsanzeige gibt es weiterhin im Projekt-Tab
                         $projectData->budget_deadline = $project->budget_deadline
-                            ? Carbon::parse($project->budget_deadline)->format('Y')
+                            ? Carbon::parse($project->budget_deadline)->format('d.m.Y')
                             : null;
                         break;
                     case ProjectTabComponentEnum::PROJECT_PERIOD->value:
@@ -528,8 +526,8 @@ class ProjectController extends Controller
             $period = $relevantPeriods->get($projectId) ?? $fallbackPeriods->get($projectId);
             $periods[$projectId] = $period && $period->first_start && $period->last_end
                 ? [
-                    'first_event_date' => Carbon::parse($period->first_start)->translatedFormat('d.m.Y H:i'),
-                    'last_event_date' => Carbon::parse($period->last_end)->translatedFormat('d.m.Y H:i'),
+                    'first_event_date' => Carbon::parse($period->first_start)->translatedFormat('d.m.Y'),
+                    'last_event_date' => Carbon::parse($period->last_end)->translatedFormat('d.m.Y'),
                 ]
                 : null;
         }

@@ -2445,8 +2445,8 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::group(['prefix' => 'user'], function (): void {
         Route::patch('/{user}/update/checklist/filter', [UserController::class, 'updateChecklistFilter'])
             ->name('user.update.checklist.filter');
-        // Autorisierung im Controller: eigener Plan via "can view own roster",
-        // fremde Pläne via teammanagement/"can manage workers"
+        // Autorisierung im Controller (UserPolicy::viewOperationPlan): eigener Plan
+        // via "can view own roster", fremde Pläne via Dienstplan-Sichtrechte
         Route::get('/{user}/own/operation/plan', [UserController::class, 'operationPlan'])
             ->name('user.operationPlan');
         Route::post('/{user}/toggle/compactMode', [UserController::class, 'compactMode'])
@@ -3165,6 +3165,10 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         // project-print-layout.components.destroy
         Route::delete('/components/{printLayoutComponent}', [ProjectPrintLayoutController::class, 'destroyComponent'])
             ->name('project-print-layout.components.destroy');
+
+        // project-print-layout.components.move
+        Route::patch('/components/{printLayoutComponent}/move', [ProjectPrintLayoutController::class, 'moveComponent'])
+            ->name('project-print-layout.components.move');
 
         // project-print-layout.update
         Route::patch('/{projectPrintLayout}/update', [ProjectPrintLayoutController::class, 'update'])

@@ -69,7 +69,10 @@
                 </div>
                 <!-- Project -->
                 <div class="px-6 pt-2">
-                    <ProjectSearch v-if="!selectedProject" @project-selected="addProject" :get-first-last-event="true" show-recent-projects :label="$t('Project assignment (optional)')" />
+                    <template v-if="!selectedProject">
+                        <ProjectSearch @project-selected="addProject" :get-first-last-event="true" show-recent-projects :label="$t('Project assignment (optional)')" />
+                        <LastedProjects :limit="10" @select="addProjectFromRecent" />
+                    </template>
                     <div v-else class="mt-1">
                         <span class="text-xs font-medium text-text-subtle">{{ $t('Selected project') }}</span>
                         <div class="mt-1 flex items-center justify-between rounded-xl border border-accent-200 bg-accent-50 px-3 py-1">
@@ -556,6 +559,7 @@ import BaseTextarea from "@/Artwork/Inputs/BaseTextarea.vue";
 import ArticleSearchFilterModal from "@/Pages/IssueOfMaterial/Components/ArticleSearchFilterModal.vue";
 import ApplyMaterialSetConfirmModal from "@/Pages/IssueOfMaterial/Components/ApplyMaterialSetConfirmModal.vue";
 import ProjectSearch from "@/Components/SearchBars/ProjectSearch.vue";
+import LastedProjects from "@/Artwork/LastedProjects.vue";
 import FilePreview from "@/Artwork/Files/FilePreview.vue";
 import FileViewerModal from "@/Artwork/Files/FileViewerModal.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
@@ -924,6 +928,29 @@ const releaseAutoFilledValues = () => {
         internMaterialIssue.end_date = '';
     }
     autoFilled.value = { name: null, startDate: null, endDate: null };
+};
+
+// Auswahl aus der "Zuletzt geöffnete Projekte"-Kachelliste: die localStorage-Einträge
+// tragen keine first_event/last_event-Daten — für die Zeitraum-Vorbelegung wie in der
+// ProjectSearch-Schnellauswahl über die reguläre Projektsuche nachladen.
+const addProjectFromRecent = async (project: ProjectLike) => {
+    let toAdd = project;
+    if (project?.name) {
+        try {
+            const {data} = await axios.post(route('project.scoutSearch'), {
+                project_search: project.name,
+                get_first_last_event: true,
+                wantsJson: true,
+            });
+            const match = Array.isArray(data)
+                ? data.find((p: any) => Number(p.id) === Number(project.id))
+                : null;
+            if (match) toAdd = match;
+        } catch {
+            /* Fallback: Rohdaten aus der Schnellauswahl übernehmen */
+        }
+    }
+    addProject(toAdd);
 };
 
 const addProject = (project?: ProjectLike) => {

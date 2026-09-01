@@ -932,7 +932,8 @@ class UserController extends Controller
         Repository $config
     ): Response|ResponseFactory {
         // Einsatzplan-Sichtregel (Kundenmeldung: Tab war über die Nutzer*innenliste
-        // für alle offen): eigener Plan immer, fremde nur mit Dienstplan-Sichtrechten.
+        // für alle offen): eigener Plan nur mit "can view own roster", fremde nur
+        // mit Dienstplan-Sichtrechten.
         $this->authorize('viewOperationPlan', $user);
 
         $showVacationsAndAvailabilities = $request->get('showVacationsAndAvailabilities');
@@ -1819,8 +1820,8 @@ class UserController extends Controller
         SessionManager $sessionManager,
         Repository $config
     ): Response|ResponseFactory {
-        // Eigener Plan immer, fremde nur mit Dienstplan-Sichtrechten (UserPolicy;
-        // "can view own roster" gated nur noch den Menüpunkt im Frontend).
+        // Eigener Plan nur mit "can view own roster", fremde nur mit
+        // Dienstplan-Sichtrechten (UserPolicy::viewOperationPlan).
         $this->authorize('viewOperationPlan', $user);
 
         $showVacationsAndAvailabilities = $request->get('showVacationsAndAvailabilities');

@@ -1,7 +1,7 @@
 <template>
-    <!-- Im Projekt-Tab eigener Innenabstand; auf "Meine ToDo-Listen" liefert der
-         artwork-container das Seitenpadding bereits, sonst steht alles eingerückt -->
-    <div :class="isInOwnTaskManagement ? '' : 'py-10 px-20'">
+    <!-- Seitenpadding liefert in beiden Kontexten der artwork-container der Seite;
+         im Projekt-Tab nur eigener vertikaler Rhythmus -->
+    <div :class="isInOwnTaskManagement ? '' : 'py-4'">
         <div v-if="!isInOwnTaskManagement && loadChecklistsError" class="mb-2 text-xs text-danger">
             {{ loadChecklistsError }}
         </div>

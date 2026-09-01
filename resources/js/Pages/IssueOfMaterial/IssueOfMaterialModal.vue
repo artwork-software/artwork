@@ -6,6 +6,18 @@
         :description="issueOfMaterial?.id ? $t('Edit the details of the issue of material') : $t('Create a new issue of material')"
         classes-in-white-background="!p-0"
     >
+        <!-- Übersichts-PDF direkt aus dem Bearbeiten-Modal erstellen (wie Drucker-Icon in der MA-Übersicht) -->
+        <template #headerActions v-if="checkIfEditMode">
+            <button
+                type="button"
+                class="inline-flex size-7 cursor-pointer items-center justify-center rounded-md bg-white/8 text-text-inverse transition-colors duration-150 motion-reduce:transition-none hover:bg-white/16"
+                :aria-label="$t('Print')"
+                v-tooltip.bottom="{ value: $t('Print'), class: 'aw-tooltip' }"
+                @click="showPrintPreview = true"
+            >
+                <component :is="IconPrinter" class="size-4" stroke-width="1.5" aria-hidden="true"/>
+            </button>
+        </template>
 
         <div class="w-full mb-5 bg-surface-sunken rounded-t-lg p-5" v-if="!checkIfEditMode">
             <div class="w-fit px-5">
@@ -22,7 +34,7 @@
                     <span aria-hidden="true" :class="[internOrExternal ? 'translate-x-7' : 'translate-x-0', 'pointer-events-none inline-block h-5 w-8 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out']" />
                 </Switch>
                 <span class="flex grow flex-col">
-                      <SwitchLabel as="span" class="text-sm/6 font-medium text-text" passive>{{ $t('Borrowing slip') }}</SwitchLabel>
+                      <SwitchLabel as="span" class="text-sm/6 font-medium text-text" passive>{{ $t('External material issue') }}</SwitchLabel>
                       <SwitchDescription as="span" class="text-xs text-text-subtle">
                           {{ $t('Create a borrowing slip for external material issues') }}
                       </SwitchDescription>
@@ -41,6 +53,14 @@
         </div>
 
     </ArtworkBaseModal>
+
+    <!-- PDF-Vorschau vor finaler Erstellung — identisches Verhalten wie das Drucker-Icon
+         in der Übersichts-Zeile (Abnahme MAT-03 Ref. 1.14) -->
+    <IssuePdfPreviewModal
+        v-if="showPrintPreview"
+        :print-url="printUrl"
+        @close="showPrintPreview = false"
+    />
 
     <!-- Bestätigungsdialog beim Schließen: erscheint nur bei ungespeicherten Änderungen
          und bietet Speichern direkt an (Abnahme Ref. 3.7) -->
@@ -80,8 +100,10 @@
 </template>
 <script setup>
 import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
+import IssuePdfPreviewModal from "@/Pages/IssueOfMaterial/Components/IssuePdfPreviewModal.vue";
 import {computed, defineAsyncComponent, ref} from "vue";
 import {Switch, SwitchDescription, SwitchGroup, SwitchLabel} from "@headlessui/vue";
+import {IconPrinter} from "@tabler/icons-vue";
 
 
 const props = defineProps({
@@ -167,6 +189,15 @@ const props = defineProps({
 
 const internOrExternal = ref(props.isExternOrIntern)
 const showDiscardConfirmation = ref(false)
+
+// Übersichts-PDF aus dem Bearbeiten-Modal: gleiche Vorschau + Routen wie die
+// Drucker-Icons in Single(Intern|Extern)MaterialIssue
+const showPrintPreview = ref(false)
+const printUrl = computed(() =>
+    internOrExternal.value
+        ? route('extern-issue-of-material.print', props.externMaterialIssue.id)
+        : route('issue-of-material.print', props.issueOfMaterial.id)
+)
 
 const internFormRef = ref(null)
 const externFormRef = ref(null)

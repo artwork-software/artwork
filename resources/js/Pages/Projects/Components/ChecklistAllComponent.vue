@@ -1,5 +1,6 @@
 <template>
-    <div :class="usePage().props.auth.user.checklist_style !== 'list' ? '-mx-5 py-10 px-20 bg-surface-canvas' : 'ml-14 pt-4 pr-14'" class="print:bg-white print:ml-0 print:mr-0 print:pt-0 print:pr-0 print:px-0 print:py-0">
+    <!-- Seitenpadding liefert der artwork-container der Seite; hier nur vertikaler Rhythmus -->
+    <div class="py-4 print:bg-white print:ml-0 print:mr-0 print:pt-0 print:pr-0 print:px-0 print:py-0">
         <div v-if="loadChecklistsError" class="mb-2 text-xs text-danger">
             {{ loadChecklistsError }}
         </div>

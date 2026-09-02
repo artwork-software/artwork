@@ -934,7 +934,7 @@ class ProjectService
             ->mapWithKeys(fn($user) => [$user => [
                 'access_budget' => false,
                 'is_manager' => true,
-                'can_write' => false,
+                'can_write' => true,
                 'delete_permission' => false
             ]]);
 
@@ -947,7 +947,7 @@ class ProjectService
             ->mapWithKeys(fn($user) => [$user => [
                 'access_budget' => false,
                 'is_manager' => true,
-                'can_write' => false,
+                'can_write' => true,
                 'delete_permission' => false
             ]]);
 
@@ -959,7 +959,7 @@ class ProjectService
         $project->users()->attach($userId, [
             'access_budget' => false,
             'is_manager' => $isManager,
-            'can_write' => false,
+            'can_write' => true,
             'delete_permission' => false
         ]);
     }
@@ -1034,7 +1034,7 @@ class ProjectService
                 $project->users()->attach($userId, [
                     'access_budget' => false,
                     'is_manager' => true,
-                    'can_write' => false,
+                    'can_write' => true,
                     'delete_permission' => false,
                 ]);
             }

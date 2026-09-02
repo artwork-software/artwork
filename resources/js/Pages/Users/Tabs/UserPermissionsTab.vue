@@ -98,6 +98,7 @@
                         v-if="isGroupOpen(groupName)"
                         class="space-y-0.5 border-t border-border-subtle px-6 py-4 sm:px-7 sm:py-6"
                     >
+                        <ProjectPermissionHierarchyBanner v-if="groupName === 'Projects'" class="mb-4" />
                         <div
                             v-for="(permission, i) in group.permissions"
                             :key="i"
@@ -192,6 +193,7 @@ import { useForm, usePage, router } from '@inertiajs/vue3'
 import SvgCollection from '@/Layouts/Components/SvgCollection.vue'
 import ToolTipDefault from '@/Components/ToolTips/ToolTipDefault.vue'
 import BaseModal from '@/Components/Modals/BaseModal.vue'
+import ProjectPermissionHierarchyBanner from '@/Artwork/Guide/ProjectPermissionHierarchyBanner.vue'
 
 const props = defineProps({
     user_to_edit: { type: Object, required: true },

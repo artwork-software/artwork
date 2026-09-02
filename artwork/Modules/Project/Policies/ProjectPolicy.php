@@ -3,6 +3,7 @@
 namespace Artwork\Modules\Project\Policies;
 
 use Artwork\Modules\Permission\Enums\PermissionEnum;
+use Artwork\Modules\Project\Models\Component;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\User\Models\User;
 use Illuminate\Auth\Access\HandlesAuthorization;
@@ -11,13 +12,13 @@ class ProjectPolicy
 {
     use HandlesAuthorization;
 
-    // Globale Rechte, die den Zutritt zu jedem Projekt erlauben (write/management inklusive:
-    // wer alle Projekte bearbeiten/verwalten darf, muss sie auch öffnen können). Wird auch
-    // vom canEnter-Flag der Projektübersicht gelesen (ProjectController::mapProjectsToComponents).
+    // Globale Rechte, die den Zutritt zu jedem Projekt erlauben (write inklusive: wer alle
+    // Projekte bearbeiten darf, muss sie auch öffnen können). "management projects" gehört
+    // bewusst NICHT dazu — es erlaubt nur, im Projektteam als Projektleitung markiert zu werden.
+    // Wird auch vom canEnter-Flag der Projektübersicht gelesen (ProjectController::mapProjectsToComponents).
     public const GLOBAL_ENTER_PERMISSIONS = [
         'view projects',
         'write projects',
-        'management projects',
     ];
 
     public function viewAny(): bool
@@ -78,9 +79,10 @@ class ProjectPolicy
 
     public function update(User $user, Project $project): bool
     {
-        // Deckungsgleich zum Frontend ("Bearbeiten" zeigt sich bei 'write projects' bzw.
-        // Schreibrecht im Projekt-Pivot) – sonst bekämen diese User nach dem Nachrüsten der
-        // Autorisierung einen 403, wo sie vorher bearbeiten konnten.
+        // "Schreibberechtigt im Projekt": globales Schreibrecht, sonst Team-Pivot (Schreibrecht /
+        // Projektleitung), Ersteller:in oder zugewiesene Abteilung. Wird auch als Grundlage für
+        // writeComponent() und das canWriteProject-Flag der Projektseite genutzt. Ein globales
+        // Leserecht oder "Projektleitung sein" reicht bewusst nicht.
         if ($user->can(PermissionEnum::WRITE_PROJECTS->value)) {
             return true;
         }
@@ -102,14 +104,27 @@ class ProjectPolicy
             }
         }
 
-        $isCreator = false;
         foreach ($project->events as $event) {
             if ($event->created_by?->id === $user->id) {
-                $isCreator = true;
+                return true;
             }
         }
 
-        return $user->can(PermissionEnum::PROJECT_MANAGEMENT->value) || $isCreator;
+        return false;
+    }
+
+    /**
+     * Schreiben in eine Tab-Komponente: Schreibrecht im Projekt (update) ist Grundvoraussetzung,
+     * die Komponenten-Einstellung kann es nur weiter einschränken, nie erweitern. Globales
+     * "write projects" übersteuert die Komponenten-Einstellung; Admins passieren via Gate::before.
+     */
+    public function writeComponent(User $user, Project $project, Component $component): bool
+    {
+        if ($user->can(PermissionEnum::WRITE_PROJECTS->value)) {
+            return true;
+        }
+
+        return $this->update($user, $project) && $component->isEditableBy($user);
     }
 
     public function delete(User $user, Project $project): bool

@@ -39,11 +39,17 @@ export default {
             }
         },
         $canEditComponent(component) {
-            // Bearbeiten kommt entweder über das globale "write projects"-Recht oder über die
-            // Komponenten-Einstellung (Spiegel: Component::isEditableBy() im Backend).
+            // Spiegel von ProjectPolicy::writeComponent() (siehe Composeables/Permission.js):
+            // Schreibrecht im Projekt ist Grundvoraussetzung, Komponenten-Einstellung schränkt nur ein.
+            if (this.hasAdminRole() || this.$can('write projects')) {
+                return true;
+            }
+
+            if (!(this.$page.props.headerObject?.canWriteProject ?? false)) {
+                return false;
+            }
+
             if (
-                this.hasAdminRole() ||
-                this.$can('write projects') ||
                 component.permission_type === null ||
                 component.permission_type === 'allSeeAndEdit'
             ) {

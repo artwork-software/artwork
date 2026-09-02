@@ -46,6 +46,7 @@
                             {{ permissions.some(permission => this.permissionPresetForm.permissions.includes(permission.id)) ? $t('Deselect all') : $t('Select all') }}
                         </div>
                     </div>
+                    <ProjectPermissionHierarchyBanner v-if="group === 'Projects'" class="mb-3" />
                     <div class="w-full flex items-center"
                          v-for="(permission) in permissions" :key=permission.id>
                         <div class="w-full flex justify-between items-center my-1">
@@ -85,10 +86,12 @@ import TextToolTip from "@/Layouts/Components/TextToolTip.vue";
 import Label from "@/Jetstream/Label.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import BaseModal from "@/Components/Modals/BaseModal.vue";
+import ProjectPermissionHierarchyBanner from "@/Artwork/Guide/ProjectPermissionHierarchyBanner.vue";
 
 export default defineComponent({
     components: {
         BaseModal,
+        ProjectPermissionHierarchyBanner,
         FormButton,
         Label,
         TextToolTip,

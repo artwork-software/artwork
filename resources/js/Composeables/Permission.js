@@ -72,11 +72,18 @@ export function usePermission(pageProps) {
             return false;
         }
 
-        // Bearbeiten kommt entweder über das globale "write projects"-Recht oder über die
-        // Komponenten-Einstellung (Spiegel: Component::isEditableBy() im Backend).
+        // Spiegel von ProjectPolicy::writeComponent(): globales "write projects" übersteuert alles;
+        // sonst ist Schreibrecht im Projekt (headerObject.canWriteProject, aus ProjectPolicy::update)
+        // Grundvoraussetzung, und die Komponenten-Einstellung kann nur weiter einschränken.
+        if (hasAdminRole() || can('write projects')) {
+            return true;
+        }
+
+        if (!(pageProps?.headerObject?.canWriteProject ?? false)) {
+            return false;
+        }
+
         if (
-            hasAdminRole() ||
-            can('write projects') ||
             component.permission_type === null ||
             component.permission_type === 'allSeeAndEdit'
         ) {

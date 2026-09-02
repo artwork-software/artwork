@@ -390,6 +390,8 @@ const addUserToProjectTeamArray = (userToAdd) => {
 
     users.value.push({
         ...userToAdd,
+        // Neue Teammitglieder starten mit Schreibrecht (Spiegel des DB-Defaults von project_user.can_write)
+        pivot_can_write: userToAdd.pivot_can_write ?? true,
         // Neue Teammitglieder starten mit ihren im Arbeitsprofil hinterlegten Standard-Projektrollen
         pivot_roles: [...(userToAdd.default_project_role_ids ?? userToAdd.pivot_roles ?? [])],
     })

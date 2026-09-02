@@ -2714,6 +2714,9 @@ class ProjectController extends Controller
         $headerObject->projectManagerIds = $project->managerUsers()->pluck('user_id');
         $headerObject->projectWriteIds   = $project->writeUsers()->pluck('user_id');
         $headerObject->projectDeleteIds  = $project->delete_permission_users()->pluck('user_id');
+        // Eine Quelle für "darf in diesem Projekt schreiben" (ProjectPolicy::update); die
+        // Komponenten-Einstellungen im Frontend können das nur weiter einschränken.
+        $headerObject->canWriteProject = $authUser->can('update', $project);
 
         $headerObject->projectCategoryIds = $project->categories()->pluck('category_id');
         $headerObject->projectGenreIds    = $project->genres()->pluck('genre_id');
@@ -3368,10 +3371,9 @@ class ProjectController extends Controller
     public function updateTeam(Request $request, Project $project): JsonResponse|RedirectResponse
     {
         if (!Auth::user()->hasRole(RoleEnum::ARTWORK_ADMIN->value)) {
-            // authorization
+            // authorization ("Projektleitung sein" gibt keine Rechte auf fremde Projekte)
             if (
                 !Auth::user()->canAny([
-                    PermissionEnum::PROJECT_MANAGEMENT->value,
                     PermissionEnum::ADD_EDIT_OWN_PROJECT->value,
                     PermissionEnum::WRITE_PROJECTS->value
                 ]) &&
@@ -4026,11 +4028,10 @@ class ProjectController extends Controller
         Project $project,
         Request $request
     ): JsonResponse|RedirectResponse {
-        // authorization
+        // authorization ("Projektleitung sein" gibt keine Rechte auf fremde Projekte)
         if ($project->users->isNotEmpty() || !Auth::user()->hasRole(RoleEnum::ARTWORK_ADMIN->value)) {
             if (
                 !Auth::user()->canAny([
-                    PermissionEnum::PROJECT_MANAGEMENT->value,
                     PermissionEnum::ADD_EDIT_OWN_PROJECT->value,
                     PermissionEnum::WRITE_PROJECTS->value
                 ]) &&
@@ -4619,24 +4620,20 @@ class ProjectController extends Controller
 
     /**
      * Bearbeitungsregel für Inhalte, deren Edit-UI über die Komponenten-Einstellung
-     * (canEditComponent) gegated ist — nicht über das Projekt-Schreibrecht. Spiegel von
-     * ProjectComponentValueController::update: Projekt-Zutritt + ("write projects" ODER
-     * Komponenten-Einstellung erlaubt es). Ohne Komponenten-Datensatz greift die
-     * Projekt-Bearbeitungsregel als konservativer Fallback.
+     * (canEditComponent) gegated ist: Schreibrecht im Projekt + Komponenten-Einstellung
+     * (ProjectPolicy::writeComponent). Ohne Komponenten-Datensatz greift die
+     * Projekt-Bearbeitungsregel allein.
      */
     private function authorizeProjectComponentEdit(Project $project, ProjectTabComponentEnum $componentType): void
     {
         /** @var User $user */
         $user = Auth::user();
-        abort_unless($user->can('view', $project), 403);
-
-        if ($user->can(PermissionEnum::WRITE_PROJECTS->value)) {
-            return;
-        }
 
         $component = Component::query()->where('type', $componentType->value)->first();
         abort_unless(
-            $component !== null ? $component->isEditableBy($user) : $user->can('update', $project),
+            $component !== null
+                ? $user->can('writeComponent', [$project, $component])
+                : $user->can('update', $project),
             403
         );
     }

@@ -73,7 +73,7 @@
                             <BaseMenuItem white-menu-background title="Edit basic data" @click="openEditProjectModal()" v-if="role('artwork admin') || can('write projects') || checkPermission(project, 'edit')" />
                             <BaseMenuItem white-menu-background title="Undo pinning" :icon="IconPinnedOff" v-if="fullProject.pinned_by_users && fullProject.pinned_by_users.includes($page.props.auth.user.id)" @click="pinProject()" />
                             <BaseMenuItem white-menu-background title="Pin" :icon="IconPin" v-else @click="pinProject()" />
-                            <BaseMenuItem white-menu-background title="Duplicate" :icon="IconCopy" @click="duplicateProject()" v-if="role('artwork admin') || can('write projects') || can('management projects') || checkPermission(project, 'edit')" />
+                            <BaseMenuItem white-menu-background title="Duplicate" :icon="IconCopy" @click="duplicateProject()" v-if="role('artwork admin') || can('write projects') || checkPermission(project, 'edit')" />
                             <BaseMenuItem white-menu-background title="Put in the trash" :icon="IconTrash" @click="openDeleteProjectModal()" v-if="role('artwork admin') || can('delete projects') || checkPermission(project, 'delete')" />
                         </BaseMenu>
                     </div>
@@ -90,7 +90,7 @@
                         <BaseMenuItem white-menu-background title="Edit basic data" @click="openEditProjectModal()" v-if="role('artwork admin') || can('write projects') || checkPermission(project, 'edit')" />
                         <BaseMenuItem white-menu-background title="Undo pinning" :icon="IconPinnedOff" v-if="fullProject.pinned_by_users && fullProject.pinned_by_users.includes($page.props.auth.user.id)" @click="pinProject()" />
                         <BaseMenuItem white-menu-background title="Pin" :icon="IconPin" v-else @click="pinProject()" />
-                        <BaseMenuItem white-menu-background title="Duplicate" :icon="IconCopy" @click="duplicateProject()" v-if="role('artwork admin') || can('write projects') || can('management projects') || checkPermission(project, 'edit')" />
+                        <BaseMenuItem white-menu-background title="Duplicate" :icon="IconCopy" @click="duplicateProject()" v-if="role('artwork admin') || can('write projects') || checkPermission(project, 'edit')" />
                         <BaseMenuItem white-menu-background title="Put in the trash" :icon="IconTrash" @click="openDeleteProjectModal()" v-if="role('artwork admin') || can('delete projects') || checkPermission(project, 'delete')" />
                     </BaseMenu>
                 </div>

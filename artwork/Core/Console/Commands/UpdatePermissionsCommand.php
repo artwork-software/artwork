@@ -47,6 +47,43 @@ class UpdatePermissionsCommand extends Command
                 'tooltipKey' => "Set the availability of the user",
                 'checked' => false
             ],
+            // Projekt-Basisrechte: Texte hier gespiegelt (BaseDataProvider), damit Bestandsinstallationen
+            // beim Update die geschärfte Lesen/Schreiben/Projektleitung-Beschreibung bekommen.
+            [
+                'name' => PermissionEnum::PROJECT_VIEW->value,
+                'name_de' => "Leserechte für alle Projekte",
+                'translation_key' => "Read permissions for all projects",
+                'group' => 'Projects',
+                'tooltipText' => 'Nutzer*in darf alle Projekte öffnen und lesen – Projektdetails wie ' .
+                    'Kalenderbelegungen. Nur lesen: Bearbeiten erfordert Schreibrecht im Projektteam ' .
+                    'oder das globale Schreibrecht.',
+                'tooltipKey' => 'User can open and read all projects including project details and calendar ' .
+                    'bookings. Read only: editing requires write permission in the project team or the ' .
+                    'global write permission.',
+                'checked' => false
+            ],
+            [
+                'name' => PermissionEnum::WRITE_PROJECTS->value,
+                'name_de' => "Schreibrechte für alle Projekte",
+                'translation_key' => "Write permissions for all projects",
+                'group' => 'Projects',
+                'tooltipText' => 'Nutzer*in darf alle Projekte bearbeiten – inklusive aller Tab-Komponenten – ' .
+                    'auch ohne Mitglied im Projektteam zu sein. Komponenten-Einschränkungen gelten nicht.',
+                'tooltipKey' => 'User can edit all projects – including all tab components – even without being ' .
+                    'part of the project team. Component restrictions do not apply.',
+                'checked' => false
+            ],
+            [
+                'name' => PermissionEnum::PROJECT_MANAGEMENT->value,
+                'name_de' => "Projektleitung sein",
+                'translation_key' => "Project management",
+                'group' => 'Projects',
+                'tooltipText' => 'Nutzer*in kann im Projektteam als Projektleitung markiert werden. Gewährt ' .
+                    'keinen Zugriff und kein Schreibrecht auf andere Projekte.',
+                'tooltipKey' => 'User can be marked as project manager in a project team. Does not grant access ' .
+                    'to or write permission for other projects.',
+                'checked' => false
+            ],
             [
                 'name' => PermissionEnum::CREATE_EVENTS_WHEN_CREATING_PROJECT->value,
                 'name_de' => "Termine einrichten bei neuem Projekt",

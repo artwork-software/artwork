@@ -23,7 +23,6 @@
                 <div class="flex items-center">
                     <Link v-if="
                             $can('view projects') ||
-                            $can('management projects') ||
                             $can('write projects') ||
                             $role('artwork admin') ||
                             $role('budget admin') ||
@@ -94,7 +93,7 @@
                         </a>
                     </MenuItem>
                     <MenuItem v-slot="{ active }"
-                              v-if="$role('artwork admin') || $can('write projects') || $can('management projects') || this.checkPermission(project, 'edit')">
+                              v-if="$role('artwork admin') || $can('write projects') || this.checkPermission(project, 'edit')">
                         <a href="#" @click="duplicateProject()"
                            :class="[active ? 'bg-text-inverse/10 text-accent-700' : 'text-text-subtle', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                             <PropertyIcon name="IconCopy" stroke-width="1.5"

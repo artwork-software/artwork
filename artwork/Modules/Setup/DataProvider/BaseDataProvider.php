@@ -19,10 +19,12 @@ class BaseDataProvider implements RoleAndPermissionDataProvider
                 'name_de' => "Leserechte für alle Projekte",
                 'translation_key' => "Read permissions for all projects",
                 'group' => 'Projects',
-                'tooltipText' => 'Nutzer*in darf sämtliche Projekte einsehen –
-                sowohl die Projektdetails als auch die ' .
-                    'Belegungen im Kalender.',
-                'tooltipKey' => "User can view all projects including project details and calendar bookings.",
+                'tooltipText' => 'Nutzer*in darf alle Projekte öffnen und lesen – Projektdetails wie ' .
+                    'Kalenderbelegungen. Nur lesen: Bearbeiten erfordert Schreibrecht im Projektteam ' .
+                    'oder das globale Schreibrecht.',
+                'tooltipKey' => 'User can open and read all projects including project details and calendar ' .
+                    'bookings. Read only: editing requires write permission in the project team or the ' .
+                    'global write permission.',
                 'checked' => false
             ],
             [
@@ -42,9 +44,10 @@ class BaseDataProvider implements RoleAndPermissionDataProvider
                 'name_de' => "Schreibrechte für alle Projekte",
                 'translation_key' => "Write permissions for all projects",
                 'group' => 'Projects',
-                'tooltipText' => 'Nutzer*in hat auf alle Projekte Projektadmin-Rechte, auch wenn er/sie nicht zum ' .
-                    'Projektteam gehört.',
-                'tooltipKey' => "User has project admin rights on all projects, even if not part of the project team.",
+                'tooltipText' => 'Nutzer*in darf alle Projekte bearbeiten – inklusive aller Tab-Komponenten – ' .
+                    'auch ohne Mitglied im Projektteam zu sein. Komponenten-Einschränkungen gelten nicht.',
+                'tooltipKey' => 'User can edit all projects – including all tab components – even without being ' .
+                    'part of the project team. Component restrictions do not apply.',
                 'checked' => false
             ],
             [
@@ -61,8 +64,10 @@ class BaseDataProvider implements RoleAndPermissionDataProvider
                 'name_de' => "Projektleitung sein",
                 'translation_key' => "Project management",
                 'group' => 'Projects',
-                'tooltipText' => 'User darf in Projekten Projektleitung sein.',
-                'tooltipKey' => "User can act as project manager within projects.",
+                'tooltipText' => 'Nutzer*in kann im Projektteam als Projektleitung markiert werden. Gewährt ' .
+                    'keinen Zugriff und kein Schreibrecht auf andere Projekte.',
+                'tooltipKey' => 'User can be marked as project manager in a project team. Does not grant access ' .
+                    'to or write permission for other projects.',
                 'checked' => false
             ],
             [

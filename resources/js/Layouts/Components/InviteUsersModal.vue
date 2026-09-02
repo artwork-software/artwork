@@ -246,6 +246,8 @@
                             </button>
                         </div>
 
+                        <ProjectPermissionHierarchyBanner v-if="groupName === 'Projects'" class="mb-3" />
+
                         <div class="divide-y divide-dashed divide-border-subtle">
                             <div
                                 v-for="perm in group.permissions"
@@ -291,6 +293,7 @@ import { ref, computed, reactive, getCurrentInstance } from 'vue'
 import { useForm, usePage } from '@inertiajs/vue3'
 import ArtworkBaseModal from '@/Artwork/Modals/ArtworkBaseModal.vue'
 import BaseInput from '@/Artwork/Inputs/BaseInput.vue'
+import ProjectPermissionHierarchyBanner from '@/Artwork/Guide/ProjectPermissionHierarchyBanner.vue'
 import JetInputError from '@/Jetstream/InputError.vue'
 import AddButtonSmall from '@/Layouts/Components/General/Buttons/AddButtonSmall.vue'
 import FormButton from '@/Layouts/Components/General/Buttons/FormButton.vue'

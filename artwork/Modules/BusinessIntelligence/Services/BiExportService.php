@@ -514,7 +514,9 @@ class BiExportService
                 // die Anzeige (€ / %) übernimmt columnFormats() im Export
                 'revenue' => $revenue ?? '',
                 'avg_price' => $avgPrice ?? '',
-                'seats_capacity' => $capacity,
+                // 0 heißt "keine Kapazität ermittelbar" (Räume ohne Kapazität, Tag nicht
+                // zugeordnet) → leere Zelle statt einer scheinbar echten 0
+                'seats_capacity' => $capacity > 0 ? $capacity : '',
                 'occupancy_rate' => $occupancy ?? '',
                 'tickets_issued' => $ticketsIssued ?? '',
                 'free_tickets_rate' => $this->biProjectMetricsService->freeTicketsRate($project, $from, $to) ?? '',

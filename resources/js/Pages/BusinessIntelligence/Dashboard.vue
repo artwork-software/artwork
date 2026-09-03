@@ -84,6 +84,23 @@
                 @close="showExportModal = false"
             />
 
+            <!-- Aktiver Zeitraum als Satz: welche Spanne gilt gerade, und womit wird verglichen -->
+            <div class="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-text-muted px-1">
+                <span class="font-medium text-text">{{ $t('Period') }}:</span>
+                <span>{{ periodSentence }}</span>
+                <span class="text-text-subtle" aria-hidden="true">·</span>
+                <span class="font-medium text-text">{{ $t('Comparison') }}:</span>
+                <span>{{ comparisonSentence }}</span>
+            </div>
+
+            <!-- Kein Spielzeitfenster hinterlegt → "Spielzeit" heißt in Wahrheit "alles" -->
+            <div v-if="seasonMissing" class="rounded-2xl border border-warning-border bg-warning-surface px-4 py-3 text-sm text-warning flex items-center justify-between gap-4">
+                <span>{{ $t('No season window is configured, so all periods are evaluated. Set the season under “Communication & Legal” in the tool settings.') }}</span>
+                <Link :href="route('tool.communication-and-legal')" class="shrink-0 font-medium text-warning hover:underline">
+                    {{ $t('Set season window') }}
+                </Link>
+            </div>
+
             <!-- Onboarding hint: BI component not placed in any project tab -->
             <div v-if="!biComponentInTab" class="rounded-2xl border border-warning-border bg-warning-surface px-4 py-3 text-sm text-warning flex items-center justify-between gap-4">
                 <span>{{ $t('The BI component is not yet included in any project tab. Add it in the project settings under "Tab Settings" so BI figures can be entered on projects.') }}</span>
@@ -92,10 +109,13 @@
                 </Link>
             </div>
 
-            <!-- Onboarding hint: no tag linked to event types -->
+            <!-- Onboarding hint: KPI tag(s) not linked to event types → the affected figures stay empty -->
             <div v-if="!tagsLinked" class="rounded-2xl border border-warning-border bg-warning-surface px-4 py-3 text-sm text-warning flex items-center justify-between gap-4">
-                <span>{{ $t('No BI tags are linked to event types yet. Performances and event days will stay at zero until you assign them.') }}</span>
-                <Link :href="route('event_types.management')" class="shrink-0 font-medium text-warning hover:underline">
+                <span class="space-y-0.5">
+                    <span v-if="!kpiTags.performance" class="block">{{ $t('The BI tag “Performance” is not linked to any event type yet — performances and occupancy stay empty until you assign it.') }}</span>
+                    <span v-if="!kpiTags.event_day" class="block">{{ $t('The BI tag “Event day” is not linked to any event type yet — event days stay empty until you assign it.') }}</span>
+                </span>
+                <Link :href="route('event_types.bi_tags')" class="shrink-0 font-medium text-warning hover:underline">
                     {{ $t('Configure BI tags') }}
                 </Link>
             </div>
@@ -170,7 +190,16 @@
                             :key="kpi.key"
                             class="rounded-2xl border border-border-subtle bg-surface-sunken/70 p-4"
                         >
-                            <p class="text-xs text-text-subtle">{{ $t(kpi.label) }}</p>
+                            <p class="text-xs text-text-subtle inline-flex items-center gap-1">
+                                {{ $t(kpi.label) }}
+                                <ToolTipComponent
+                                    v-if="kpi.tooltip"
+                                    direction="bottom"
+                                    :tooltip-text="kpi.tooltip"
+                                    icon="IconInfoCircle"
+                                    icon-size="h-3.5 w-3.5"
+                                />
+                            </p>
                             <p class="text-lg font-semibold mt-1" :class="kpi.value === null ? 'text-text-subtle' : 'text-text'">
                                 {{ kpi.value ?? '–' }}
                             </p>
@@ -229,7 +258,7 @@
                             class="inline-flex items-center gap-1.5 rounded-full bg-accent-50 border border-accent-200 px-3 py-1 text-xs font-medium text-accent-700 hover:bg-accent-100"
                             @click="categoryFilter = null"
                         >
-                            {{ $t('Category (Sector)') }}: {{ categoryFilter }}
+                            {{ $t('Category (Sector)') }}: {{ categoryLabel(categoryFilter) }}
                             <IconX class="size-3.5" />
                         </button>
                         <!-- Zustandsübernahme: exportiert genau die sichtbare Tabelle -->
@@ -272,6 +301,7 @@
                                     </Link>
                                 </td>
                                 <td class="px-3 py-2 text-text-muted">{{ row.category || '—' }}</td>
+                                <!-- Leerwerte: "—" = nichts erfasst (formatInt/formatCurrency liefern das selbst) -->
                                 <td class="px-3 py-2">
                                     <span
                                         v-if="row.visitors_estimated"
@@ -294,7 +324,7 @@
                                     </div>
                                     <span v-else class="text-text-subtle">—</span>
                                 </td>
-                                <td class="px-3 py-2">{{ row.performances }}</td>
+                                <td class="px-3 py-2">{{ formatInt(row.performances) }}</td>
                                 <td class="px-3 py-2">{{ row.contracts_per_performance ?? '—' }}</td>
                                 <td v-if="sageApiEnabled" class="px-3 py-2">{{ row.bookings_per_performance ?? '—' }}</td>
                                 <td class="px-3 py-2">{{ row.tasks_docs_per_production }}</td>
@@ -327,6 +357,11 @@
                         </tbody>
                     </table>
                 </div>
+                <!-- Ampel-Legende: drei Farblogiken in einer Tabelle brauchen eine Erklärung -->
+                <p class="text-xs text-text-subtle mt-3">
+                    {{ $t('Occupancy: green from 90 %, blue from 50 %, yellow below · Attainment: green from 100 %, yellow from 80 %, red below · Costs: green up to plan, yellow up to 120 % of plan, red above.') }}
+                    · {{ $t('Not recorded') }}: —
+                </p>
             </div>
         </div>
     </AppLayout>
@@ -375,6 +410,8 @@ const projects = computed(() => props.dashboard.projects ?? []);
 const monthly = computed(() => props.dashboard.monthly ?? []);
 const dataGaps = computed(() => props.dashboard.data_gaps ?? []);
 const tagsLinked = computed(() => props.dashboard.tags_linked !== false);
+// Je KPI-Tag: ohne Terminart-Zuordnung bleibt die Kennzahl leer (kein Fallback)
+const kpiTags = computed(() => props.dashboard.kpi_tags ?? { performance: true, event_day: true });
 
 const dateFrom = ref(props.dashboard.range?.from ?? '');
 const dateTo = ref(props.dashboard.range?.to ?? '');
@@ -445,6 +482,40 @@ const comparisonLabel = computed(() => {
 // Kurzform an den Delta-Chips: konkreter Zeitraum statt pauschal "Vorjahr"
 const compareShortLabel = computed(() => comparisonLabel.value ?? '');
 
+// --- Zeitraum als Satz (Kopfzeile) ---
+
+const rangeText = (from, to) => {
+    if (!from && !to) return t('All periods');
+    return `${formatRangeDate(from) || '…'} – ${formatRangeDate(to) || '…'}`;
+};
+
+const periodSentence = computed(() => {
+    const range = props.dashboard.range ?? {};
+    const presetLabel = {
+        playing_time: t('Season'),
+        calendar_year: t('Calendar year'),
+        last_12_months: t('Last 12 months'),
+    }[activePreset.value] ?? t('Custom period');
+    return `${presetLabel} (${rangeText(range.from, range.to)})`;
+});
+
+const comparisonSentence = computed(() => {
+    if (!comparisonRange.value) return t('no comparison');
+    const presetLabel = {
+        previous_year: t('Previous year'),
+        previous_period: t('Previous period'),
+        free: t('Custom period'),
+    }[comparePreset.value] ?? t('Comparison period');
+    return `${presetLabel} (${rangeText(comparisonRange.value.from, comparisonRange.value.to)})`;
+});
+
+// "Spielzeit" ohne hinterlegtes Fenster = alle Zeiträume → das muss der Nutzer sehen
+const seasonMissing = computed(() =>
+    activePreset.value === 'playing_time'
+    && !props.dashboard.range?.from
+    && !props.dashboard.range?.to
+);
+
 // Nach einem Reload die effektiv angewandte Spanne in die Inputs spiegeln
 watch(() => props.dashboard.range, (range) => {
     dateFrom.value = range?.from ?? '';
@@ -497,9 +568,10 @@ const onQuickEntrySaved = () => {
 const numberFmt = new Intl.NumberFormat('de-DE');
 const currencyFmt = new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' });
 const percentFmt = new Intl.NumberFormat('de-DE', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
-const formatInt = (v) => numberFmt.format(v ?? 0);
-const formatCurrency = (v) => currencyFmt.format(v ?? 0);
-const formatPercent = (v) => `${percentFmt.format(v ?? 0)} %`;
+// null/undefined = nicht erfasst → "—" statt einer scheinbar echten 0
+const formatInt = (v) => (v === null || v === undefined) ? '—' : numberFmt.format(v);
+const formatCurrency = (v) => (v === null || v === undefined) ? '—' : currencyFmt.format(v);
+const formatPercent = (v) => (v === null || v === undefined) ? '—' : `${percentFmt.format(v)} %`;
 
 // --- Zeitraum-Schnellwahl ---
 
@@ -556,14 +628,21 @@ const relDeltaText = (d) => (d === null ? null : `${percentFmt.format(Math.abs(d
 
 const effortScoreTooltip = computed(() => {
     const w = scoreWeights.value;
-    if (!w) {
-        return t('Weighted proxy for internal effort: 2 × contracts + 1 × bookings + 1.5 × open tasks + 0.5 × documents + 0.1 × effort hours.');
-    }
     const fmt = (v) => numberFmt.format(v);
+    // Einordnung: eine Formel allein sagt nicht, ob 14,5 viel ist
+    const scores = projects.value.map(row => row.effort_score).filter(v => v !== null && v !== undefined);
+    const context = scores.length
+        ? ` ${t('Median of all productions in the period')}: ${fmt(median(scores))} — ${t('higher = more internal effort')}.`
+        : ` ${t('higher = more internal effort')}.`;
+    if (!w) {
+        return t('Weighted proxy for internal effort: 2 × contracts + 1 × bookings + 1.5 × open tasks + 0.5 × documents + 0.1 × effort hours.') + context;
+    }
+    // Sage-Buchungen nur nennen, wenn die Schnittstelle aktiv ist
+    const bookingsPart = sageApiEnabled ? `${fmt(w.bookings)} × ${t('bookings')} + ` : '';
     return `${t('Weighted proxy for internal effort')}: `
-        + `${fmt(w.contracts)} × ${t('contracts')} + ${fmt(w.bookings)} × ${t('bookings')} + `
+        + `${fmt(w.contracts)} × ${t('contracts')} + ${bookingsPart}`
         + `${fmt(w.open_tasks)} × ${t('open tasks')} + ${fmt(w.documents)} × ${t('documents')} + `
-        + `${fmt(w.effort_hours)} × ${t('effort hours')}.`;
+        + `${fmt(w.effort_hours)} × ${t('effort hours')}.` + context;
 });
 
 const kpiTiles = computed(() => {
@@ -573,6 +652,9 @@ const kpiTiles = computed(() => {
     const eventDaysDelta = delta('event_days');
     const performancesDelta = delta('performances');
 
+    const unlinkedTooltip = t('BI tag not linked to any event type — assign it in the event type settings.');
+    const unlinkedNote = t('Tag not assigned');
+
     return [
         {
             key: 'visitors',
@@ -581,7 +663,8 @@ const kpiTiles = computed(() => {
             delta: visitorsDelta,
             deltaText: relDeltaText(visitorsDelta),
             note: kpis.value.visitors_estimated ? t('partly estimated from sold tickets') : null,
-            tooltip: kpis.value.visitors_estimated ? t('Estimated from sold tickets') : null,
+            tooltip: (kpis.value.visitors_estimated ? t('Estimated from sold tickets') + ' · ' : '')
+                + t('Sum of recorded visitors of all productions in the period. Per-event figures count only events in the period, total figures count fully.'),
             planLine: planSummary.value?.visitors_attainment !== null && planSummary.value?.visitors_attainment !== undefined
                 ? `${t('Plan')}: ${formatInt(planSummary.value.plan_visitors)} · ${formatPercent(planSummary.value.visitors_attainment)}`
                 : null,
@@ -592,6 +675,7 @@ const kpiTiles = computed(() => {
             value: formatCurrency(kpis.value.revenue),
             delta: revenueDelta,
             deltaText: relDeltaText(revenueDelta),
+            tooltip: t('Sum of recorded revenue of all productions in the period.'),
             planLine: planSummary.value?.revenue_attainment !== null && planSummary.value?.revenue_attainment !== undefined
                 ? `${t('Plan')}: ${formatCurrency(planSummary.value.plan_revenue)} · ${formatPercent(planSummary.value.revenue_attainment)}`
                 : null,
@@ -602,6 +686,7 @@ const kpiTiles = computed(() => {
             label: 'Costs',
             value: formatCurrency(kpis.value.costs),
             delta: null,
+            tooltip: t('Sum of recorded total costs — only productions that entered costs.'),
             planLine: planSummary.value?.costs_attainment !== null && planSummary.value?.costs_attainment !== undefined
                 ? `${t('Plan')}: ${formatCurrency(planSummary.value.plan_costs)} · ${formatPercent(planSummary.value.costs_attainment)}`
                 : null,
@@ -609,10 +694,12 @@ const kpiTiles = computed(() => {
         {
             key: 'occupancy',
             label: 'Occupancy rate',
-            value: kpis.value.occupancy !== null && kpis.value.occupancy !== undefined ? formatPercent(kpis.value.occupancy) : '—',
+            value: formatPercent(kpis.value.occupancy),
             delta: occupancyDelta,
             deltaText: occupancyDelta !== null ? `${percentFmt.format(Math.abs(occupancyDelta))} ${t('percentage points')}` : null,
-            tooltip: t('Sold tickets ÷ seat capacity of the rooms played in the selected period.'),
+            note: kpiTags.value.performance ? null : unlinkedNote,
+            tooltip: t('Sold tickets ÷ seat capacity of the rooms played in the selected period.')
+                + (kpiTags.value.performance ? '' : ' ' + unlinkedTooltip),
         },
         {
             key: 'event_days',
@@ -620,6 +707,10 @@ const kpiTiles = computed(() => {
             value: formatInt(kpis.value.event_days),
             delta: eventDaysDelta,
             deltaText: relDeltaText(eventDaysDelta),
+            note: kpiTags.value.event_day ? null : unlinkedNote,
+            tooltip: kpiTags.value.event_day
+                ? t('Distinct days with events whose event type carries the BI tag “Event day”.')
+                : unlinkedTooltip,
         },
         {
             key: 'performances',
@@ -627,8 +718,18 @@ const kpiTiles = computed(() => {
             value: formatInt(kpis.value.performances),
             delta: performancesDelta,
             deltaText: relDeltaText(performancesDelta),
+            note: kpiTags.value.performance ? null : unlinkedNote,
+            tooltip: kpiTags.value.performance
+                ? t('Events whose event type carries the BI tag “Performance”.')
+                : unlinkedTooltip,
         },
-        { key: 'project_count', label: 'Productions', value: formatInt(kpis.value.project_count), delta: null },
+        {
+            key: 'project_count',
+            label: 'Productions',
+            value: formatInt(kpis.value.project_count),
+            delta: null,
+            tooltip: t('Productions with at least one event in the period.'),
+        },
     ];
 });
 
@@ -640,13 +741,14 @@ const quotaTiles = computed(() => {
 
     const pct = (v) => (v === null || v === undefined) ? null : formatPercent(v);
 
+    // Absolutwert und zugehörige Quote stehen nebeneinander; jede Kachel nennt ihren Nenner
     return [
-        { key: 'tickets_issued', label: 'Tickets issued', value: formatInt(q.tickets_issued) },
-        { key: 'free', label: 'Free tickets', value: q.free !== null ? formatInt(q.free) : null },
-        { key: 'free_tickets_rate', label: 'Free ticket rate', value: pct(q.free_tickets_rate) },
-        { key: 'reduced_tickets_rate', label: 'Reduced ticket rate', value: pct(q.reduced_tickets_rate) },
-        { key: 'paying_rate', label: 'Paying rate', value: pct(q.paying_rate) },
-        { key: 'reduced', label: 'Reduced tickets', value: q.reduced !== null ? formatInt(q.reduced) : null },
+        { key: 'tickets_issued', label: 'Tickets issued', value: formatInt(q.tickets_issued), tooltip: t('All tickets from the audience categories (full, reduced and free).') },
+        { key: 'free', label: 'Free tickets', value: q.free !== null ? formatInt(q.free) : null, tooltip: t('Tickets in categories with pricing type “free”.') },
+        { key: 'free_tickets_rate', label: 'Free ticket rate', value: pct(q.free_tickets_rate), tooltip: t('Free tickets ÷ all issued tickets.') },
+        { key: 'reduced', label: 'Reduced tickets', value: q.reduced !== null ? formatInt(q.reduced) : null, tooltip: t('Tickets in categories with pricing type “reduced”.') },
+        { key: 'reduced_tickets_rate', label: 'Reduced ticket rate', value: pct(q.reduced_tickets_rate), tooltip: t('Reduced tickets ÷ paid tickets (full + reduced).') },
+        { key: 'paying_rate', label: 'Paying rate', value: pct(q.paying_rate), tooltip: t('Paid tickets (full + reduced) ÷ all issued tickets.') },
     ];
 });
 
@@ -737,6 +839,9 @@ const monthlyOptions = {
 
 const categoryFilter = ref(null);
 
+// Backend liefert '—' als Schlüssel für Projekte ohne Sparte → lesbares Label
+const categoryLabel = (key) => (key === '—' || !key) ? t('Without category') : key;
+
 const categoryChartOptions = computed(() => ({
     responsive: true,
     maintainAspectRatio: false,
@@ -755,15 +860,16 @@ const categoryChartOptions = computed(() => ({
             },
         },
     },
-    onClick: (event, elements, chart) => {
+    onClick: (event, elements) => {
         if (!elements?.length) return;
-        const label = chart.data.labels[elements[0].index];
-        categoryFilter.value = categoryFilter.value === label ? null : label;
+        // Roh-Schlüssel statt Anzeige-Label, damit der Tabellenfilter weiter greift
+        const key = byCategory.value[elements[0].index]?.category ?? null;
+        categoryFilter.value = categoryFilter.value === key ? null : key;
     },
 }));
 
 const revenueChart = computed(() => ({
-    labels: byCategory.value.map(c => c.category),
+    labels: byCategory.value.map(c => categoryLabel(c.category)),
     datasets: [{
         data: byCategory.value.map(c => c.revenue),
         backgroundColor: byCategory.value.map((_, i) => palette[i % palette.length]),
@@ -771,7 +877,7 @@ const revenueChart = computed(() => ({
 }));
 
 const visitorsChart = computed(() => ({
-    labels: byCategory.value.map(c => c.category),
+    labels: byCategory.value.map(c => categoryLabel(c.category)),
     datasets: [{
         label: t('Visitors'),
         data: byCategory.value.map(c => c.visitors),
@@ -798,7 +904,8 @@ const scatterChart = computed(() => {
     const rows = scatterRows.value;
     if (rows.length < 3) return null;
 
-    const outputOf = (row) => outputUsesRevenue.value ? row.revenue : row.visitors;
+    // null (nicht erfasst) als 0 auf der Achse — sonst verschwindet der Punkt
+    const outputOf = (row) => (outputUsesRevenue.value ? row.revenue : row.visitors) ?? 0;
     const effortMedian = median(rows.map(r => r.effort_score));
     const outputMedian = median(rows.map(outputOf));
 

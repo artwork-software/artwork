@@ -30,6 +30,8 @@ final class BiProjectMetricsServiceTest extends UnitTestCase
     {
         parent::setUp();
         $this->service = new BiProjectMetricsService();
+        // DB-los: beide KPI-Tags gelten als Terminarten zugeordnet
+        $this->service->primeLinkedKpiTags(['Vorstellung', 'Veranstaltungstag']);
     }
 
     /**
@@ -350,7 +352,7 @@ final class BiProjectMetricsServiceTest extends UnitTestCase
     }
 
     #[Test]
-    public function performances_counts_tagged_events_with_fallback_to_all(): void
+    public function performances_counts_only_tagged_events_without_fallback(): void
     {
         $tagged = $this->makeEvent(1, '2026-06-10 19:00', null, null, ['Vorstellung']);
         $untagged = $this->makeEvent(2, '2026-06-11 19:00');
@@ -358,11 +360,43 @@ final class BiProjectMetricsServiceTest extends UnitTestCase
         $withTags = $this->makeProject(null, [$tagged, $untagged]);
         self::assertSame(1, $this->service->performances($withTags));
 
-        $withoutTags = $this->makeProject(null, [
+        // Tag zugeordnet, aber dieses Projekt hat keine Vorstellung → echte 0
+        $withoutTaggedEvents = $this->makeProject(null, [
             $this->makeEvent(1, '2026-06-10 19:00'),
             $this->makeEvent(2, '2026-06-11 19:00'),
         ]);
-        self::assertSame(2, $this->service->performances($withoutTags));
+        self::assertSame(0, $this->service->performances($withoutTaggedEvents));
+    }
+
+    #[Test]
+    public function tag_kpis_are_null_and_capacity_zero_while_kpi_tags_are_unlinked(): void
+    {
+        $room = new Room();
+        $room->id = 1;
+        $room->capacity = 200;
+
+        $project = $this->makeProject(null, [
+            $this->makeEvent(1, '2026-06-10 19:00', null, $room, ['Vorstellung', 'Veranstaltungstag']),
+            $this->makeEvent(2, '2026-06-11 19:00', null, $room),
+        ]);
+
+        // Kein Fallback auf "alle Termine": ohne Terminart-Zuordnung bleibt alles leer
+        $this->service->primeLinkedKpiTags([]);
+        self::assertNull($this->service->performances($project));
+        self::assertNull($this->service->eventDays($project));
+        self::assertSame(0, $this->service->seatsCapacity($project));
+        self::assertNull($this->service->occupancyRate(50, $this->service->seatsCapacity($project)));
+
+        $summary = $this->service->summary($project);
+        self::assertFalse($summary['performance_tag_linked']);
+        self::assertFalse($summary['event_day_tag_linked']);
+        self::assertNull($summary['performances']);
+
+        // Nur der Vorstellungs-Tag zugeordnet → Kapazität aus der EINEN Vorstellung
+        $this->service->primeLinkedKpiTags(['Vorstellung']);
+        self::assertSame(1, $this->service->performances($project));
+        self::assertNull($this->service->eventDays($project));
+        self::assertSame(200, $this->service->seatsCapacity($project));
     }
 
     #[Test]

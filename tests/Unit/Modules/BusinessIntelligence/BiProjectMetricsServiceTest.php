@@ -3,6 +3,7 @@
 namespace Tests\Unit\Modules\BusinessIntelligence;
 
 use Artwork\Modules\BusinessIntelligence\Enums\BiVisitorModeEnum;
+use Artwork\Modules\BusinessIntelligence\Models\BiEventTypeTag;
 use Artwork\Modules\BusinessIntelligence\Models\BiProjectData;
 use Artwork\Modules\BusinessIntelligence\Services\BiProjectMetricsService;
 use Artwork\Modules\Event\Models\Event;
@@ -32,6 +33,12 @@ final class BiProjectMetricsServiceTest extends TestCase
             'project_id' => $project->id,
             'room_id' => $room->id,
         ]);
+
+        // Kapazität zählt nur Termine mit BI-Tag "Vorstellung" (kein Fallback auf alle Termine)
+        $tag = BiEventTypeTag::create(['name' => 'Performance', 'name_de' => 'Vorstellung', 'color' => '#22c55e']);
+        $tag->eventTypes()->sync(
+            Event::query()->where('project_id', $project->id)->pluck('event_type_id')->unique()->all()
+        );
 
         $project->load(['biData', 'biRoomCapacities', 'events.room', 'events.event_type.biTags']);
         $capacity = app(BiProjectMetricsService::class)->seatsCapacity(

@@ -5,6 +5,7 @@ namespace Artwork\Modules\BusinessIntelligence\Services;
 use Artwork\Modules\BusinessIntelligence\Enums\BiPricingTypeEnum;
 use Artwork\Modules\BusinessIntelligence\Enums\BiVisitorModeEnum;
 use Artwork\Modules\BusinessIntelligence\Models\BiAudienceCategory;
+use Artwork\Modules\BusinessIntelligence\Models\BiEventTypeTag;
 use Artwork\Modules\BusinessIntelligence\Models\BiProjectData;
 use Artwork\Modules\Project\Models\Project;
 use Carbon\Carbon;
@@ -28,6 +29,19 @@ class BiProjectMetricsService
      * weiter), einmal je Request memoisiert; wichtig für Dashboard-Schleifen.
      */
     private ?Collection $categoriesByIdCache = null;
+
+    /**
+     * Namen (klein geschrieben) der BI-Tags, die mindestens einer Terminart
+     * zugeordnet sind. Steuert, ob die Tag-Kennzahlen (Vorstellungen,
+     * Veranstaltungstage, Kapazität) überhaupt ermittelt werden können.
+     * null = noch nicht geladen.
+     *
+     * @var array<string, true>|null
+     */
+    private ?array $linkedKpiTagNames = null;
+
+    public const PERFORMANCE_TAG = 'Vorstellung';
+    public const EVENT_DAY_TAG = 'Veranstaltungstag';
 
     public function forScope(string $scope): static
     {
@@ -132,6 +146,42 @@ class BiProjectMetricsService
     }
 
     /**
+     * Verknüpfte KPI-Tags vorab setzen (Tests / Aufrufer ohne DB).
+     *
+     * @param array<int, string> $tagNames
+     */
+    public function primeLinkedKpiTags(array $tagNames): void
+    {
+        $this->linkedKpiTagNames = [];
+        foreach ($tagNames as $name) {
+            $this->linkedKpiTagNames[mb_strtolower($name)] = true;
+        }
+    }
+
+    /**
+     * Ist der BI-Tag (Vorstellung / Veranstaltungstag) mindestens einer
+     * Terminart zugeordnet? Ohne Zuordnung gibt es bewusst KEINEN Fallback
+     * auf "alle Termine" — die Kennzahl bleibt null, damit Proben und
+     * Aufbauten nicht still als Vorstellungen gezählt werden.
+     */
+    public function kpiTagLinked(string $name): bool
+    {
+        if ($this->linkedKpiTagNames === null) {
+            $this->linkedKpiTagNames = [];
+            $tags = BiEventTypeTag::query()->has('eventTypes')->get(['name', 'name_de']);
+            foreach ($tags as $tag) {
+                foreach ([$tag->name, $tag->name_de] as $tagName) {
+                    if ($tagName !== null && $tagName !== '') {
+                        $this->linkedKpiTagNames[mb_strtolower($tagName)] = true;
+                    }
+                }
+            }
+        }
+
+        return isset($this->linkedKpiTagNames[mb_strtolower($name)]);
+    }
+
+    /**
      * Full per-project KPI set for the project tab header.
      *
      * @return array<string, mixed>
@@ -161,6 +211,9 @@ class BiProjectMetricsService
             'occupancy' => $this->occupancyRate($soldTickets, $capacity),
             'performances' => $performances,
             'event_days' => $eventDays,
+            // false = Tag keiner Terminart zugeordnet → Kennzahl bleibt null (kein Fallback)
+            'performance_tag_linked' => $this->kpiTagLinked(self::PERFORMANCE_TAG),
+            'event_day_tag_linked' => $this->kpiTagLinked(self::EVENT_DAY_TAG),
             // Kategorien-Aufschlüsselung (null = für diese Rolle nichts erfasst)
             'category_sums' => $categorySums,
             'tickets_issued' => $ticketsIssued,
@@ -175,10 +228,10 @@ class BiProjectMetricsService
             'avg_revenue_per_visitor' => ($revenue !== null && $visitors)
                 ? round($revenue / $visitors, 2)
                 : null,
-            'visitors_per_performance' => ($visitors !== null && $performances > 0)
+            'visitors_per_performance' => ($visitors !== null && $performances !== null && $performances > 0)
                 ? round($visitors / $performances, 1)
                 : null,
-            'revenue_per_event_day' => ($revenue !== null && $eventDays > 0)
+            'revenue_per_event_day' => ($revenue !== null && $eventDays !== null && $eventDays > 0)
                 ? round($revenue / $eventDays, 2)
                 : null,
         ];
@@ -344,26 +397,31 @@ class BiProjectMetricsService
     }
 
     /**
-     * Events tagged "Vorstellung"; falls back to all events when no tag matches.
+     * Events tagged "Vorstellung". null, solange der Tag keiner Terminart
+     * zugeordnet ist (kein Fallback auf alle Termine — Produktentscheidung 03.09.2026).
      */
-    public function performances(Project $project, ?Carbon $from = null, ?Carbon $to = null): int
+    public function performances(Project $project, ?Carbon $from = null, ?Carbon $to = null): ?int
     {
-        $events = $this->eventsInRange($project, $from, $to);
-        $tagged = $events->filter(fn($event) => $this->eventHasTag($event, 'Vorstellung'));
+        if (!$this->kpiTagLinked(self::PERFORMANCE_TAG)) {
+            return null;
+        }
 
-        return $tagged->isNotEmpty() ? $tagged->count() : $events->count();
+        return $this->eventsInRange($project, $from, $to)
+            ->filter(fn($event) => $this->eventHasTag($event, self::PERFORMANCE_TAG))
+            ->count();
     }
 
     /**
-     * Distinct days with events tagged "Veranstaltungstag"; falls back to all events.
+     * Distinct days with events tagged "Veranstaltungstag"; null without tag link.
      */
-    public function eventDays(Project $project, ?Carbon $from = null, ?Carbon $to = null): int
+    public function eventDays(Project $project, ?Carbon $from = null, ?Carbon $to = null): ?int
     {
-        $events = $this->eventsInRange($project, $from, $to);
-        $tagged = $events->filter(fn($event) => $this->eventHasTag($event, 'Veranstaltungstag'));
-        $relevant = $tagged->isNotEmpty() ? $tagged : $events;
+        if (!$this->kpiTagLinked(self::EVENT_DAY_TAG)) {
+            return null;
+        }
 
-        return $relevant
+        return $this->eventsInRange($project, $from, $to)
+            ->filter(fn($event) => $this->eventHasTag($event, self::EVENT_DAY_TAG))
             ->map(fn($event) => $event->start_time?->format('Y-m-d'))
             ->filter()
             ->unique()
@@ -443,9 +501,15 @@ class BiProjectMetricsService
     /**
      * Sum the available capacity per performance. A room used by multiple
      * performances contributes its capacity once for every performance.
+     * 0 (→ Auslastung null), solange der Tag "Vorstellung" keiner Terminart
+     * zugeordnet ist — sonst würden Proben und Aufbauten die Kapazität aufblähen.
      */
     public function seatsCapacity(Project $project, ?Carbon $from = null, ?Carbon $to = null): int
     {
+        if (!$this->kpiTagLinked(self::PERFORMANCE_TAG)) {
+            return 0;
+        }
+
         $overrides = $project->biRoomCapacities->keyBy('room_id');
 
         if ($this->biDataOf($project)?->sold_tickets_mode === BiVisitorModeEnum::TOTAL) {
@@ -454,8 +518,7 @@ class BiProjectMetricsService
         }
 
         $events = ($from || $to) ? $this->eventsInRange($project, $from, $to) : $project->events;
-        $performances = $events->filter(fn ($event) => $this->eventHasTag($event, 'Vorstellung'));
-        $relevantEvents = $performances->isNotEmpty() ? $performances : $events;
+        $relevantEvents = $events->filter(fn ($event) => $this->eventHasTag($event, self::PERFORMANCE_TAG));
 
         return (int) $relevantEvents
             ->filter(static fn ($event): bool => $event->room !== null)

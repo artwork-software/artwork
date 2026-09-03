@@ -33,6 +33,10 @@
                 :label="$t('Productions')"
                 :placeholder="$t('Select productions')"
             />
+            <!-- Produktentscheidung 03.09.2026: Exportrecht = alle Projekte, bewusst dokumentiert -->
+            <p class="-mt-2 text-xs text-text-subtle">
+                {{ $t('The export covers all productions of the house, regardless of your project access.') }}
+            </p>
 
             <div class="flex items-center gap-4">
                 <BaseInput

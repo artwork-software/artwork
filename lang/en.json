@@ -7378,5 +7378,12 @@
     "Two tags carry a key-figure role: the tag for “Performances” (also the capacity basis of the occupancy rate) and the tag for “Event days”. As long as they have no event types assigned, these key figures stay empty — there is no fallback to all events.": "Two tags carry a key-figure role: the tag for “Performances” (also the capacity basis of the occupancy rate) and the tag for “Event days”. As long as they have no event types assigned, these key figures stay empty — there is no fallback to all events.",
     "Used by the BI module as the seat capacity per performance (occupancy rate); projects can override it.": "Used by the BI module as the seat capacity per performance (occupancy rate); projects can override it.",
     "BI key figures": "BI key figures",
-    "Placed in tab": "Placed in tab"
+    "Placed in tab": "Placed in tab",
+    "Evaluation period": "Evaluation period",
+    "applies to all tiles, charts and the table": "applies to all tiles, charts and the table",
+    "Previous season": "Previous season",
+    "Next season": "Next season",
+    "Click a production to open its BI tab and maintain its figures there.": "Click a production to open its BI tab and maintain its figures there.",
+    "Maintain figures in the project": "Maintain figures in the project",
+    "Click a production for the quick entry of totals; per-event figures are maintained in the project’s BI tab (link in the dialog).": "Click a production for the quick entry of totals; per-event figures are maintained in the project’s BI tab (link in the dialog)."
 }

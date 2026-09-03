@@ -7378,5 +7378,12 @@
     "Two tags carry a key-figure role: the tag for “Performances” (also the capacity basis of the occupancy rate) and the tag for “Event days”. As long as they have no event types assigned, these key figures stay empty — there is no fallback to all events.": "Zwei Tags tragen eine Kennzahl-Rolle: der Tag für „Vorstellungen“ (auch Kapazitätsbasis der Auslastung) und der Tag für „Veranstaltungstage“. Solange ihnen keine Terminarten zugeordnet sind, bleiben diese Kennzahlen leer — es gibt keinen Rückfall auf alle Termine.",
     "Used by the BI module as the seat capacity per performance (occupancy rate); projects can override it.": "Wird vom BI-Modul als Platzkapazität je Vorstellung genutzt (Auslastung); Projekte können den Wert überschreiben.",
     "BI key figures": "BI-Kennzahlen",
-    "Placed in tab": "Liegt im Tab"
+    "Placed in tab": "Liegt im Tab",
+    "Evaluation period": "Auswertungszeitraum",
+    "applies to all tiles, charts and the table": "gilt für alle Kacheln, Diagramme und die Tabelle",
+    "Previous season": "Vorherige Spielzeit",
+    "Next season": "Nächste Spielzeit",
+    "Click a production to open its BI tab and maintain its figures there.": "Klick auf eine Produktion öffnet ihren BI-Tab, dort werden die Zahlen gepflegt.",
+    "Maintain figures in the project": "Zahlen im Projekt pflegen",
+    "Click a production for the quick entry of totals; per-event figures are maintained in the project’s BI tab (link in the dialog).": "Klick auf eine Produktion öffnet die Schnellerfassung für Gesamtwerte; Zahlen pro Termin pflegst du im BI-Tab des Projekts (Link im Dialog)."
 }

@@ -10,6 +10,11 @@
             >
                 <template #actions>
                     <div class="flex flex-wrap items-end gap-3">
+                        <!-- Der Zeitraum gilt für die GANZE Ansicht — deshalb ein benannter Block -->
+                        <div class="w-full -mb-1">
+                            <span class="text-[11px] font-semibold uppercase tracking-wide text-text-inverse-muted">{{ $t('Evaluation period') }}</span>
+                            <span class="ml-2 text-[11px] text-text-inverse-muted">{{ $t('applies to all tiles, charts and the table') }}</span>
+                        </div>
                         <div class="flex items-center gap-1.5 pb-2">
                             <button
                                 v-for="preset in rangePresets"
@@ -23,9 +28,44 @@
                                 {{ $t(preset.label) }}
                             </button>
                         </div>
-                        <BaseInput type="date" id="bi_dash_from" v-model="dateFrom" :label="$t('From')" class="w-40 [&_label]:text-text-inverse-muted!" input-classes="bg-white/10! border-white/16! text-text-inverse! [color-scheme:dark]" />
-                        <BaseInput type="date" id="bi_dash_to" v-model="dateTo" :label="$t('To')" class="w-40 [&_label]:text-text-inverse-muted!" input-classes="bg-white/10! border-white/16! text-text-inverse! [color-scheme:dark]" />
-                        <BaseUIButton :label="$t('Apply')" @click="reload()" :disabled="loading" hide-icon on-band />
+
+                        <!-- Spielzeit / Kalenderjahr: mit Pfeilen springen statt Daten tippen -->
+                        <div v-if="showPeriodStepper" class="flex items-center gap-1 pb-1.5">
+                            <button
+                                type="button"
+                                class="inline-flex size-7 items-center justify-center rounded-full bg-white/8 text-text-inverse hover:bg-white/16 transition"
+                                :disabled="loading"
+                                v-tooltip.bottom="{ value: activePreset === 'playing_time' ? $t('Previous season') : $t('Previous year'), appendTo: 'body', class: 'aw-tooltip' }"
+                                @click="shiftPeriod(-1)"
+                            >
+                                <IconChevronLeft class="size-4" />
+                            </button>
+                            <span class="min-w-44 text-center text-sm font-medium text-text-inverse tabular-nums">
+                                {{ periodStepLabel }}
+                                <span class="block text-[11px] font-normal text-text-inverse-muted">{{ rangeText(dateFrom, dateTo) }}</span>
+                            </span>
+                            <button
+                                type="button"
+                                class="inline-flex size-7 items-center justify-center rounded-full bg-white/8 text-text-inverse hover:bg-white/16 transition"
+                                :disabled="loading"
+                                v-tooltip.bottom="{ value: activePreset === 'playing_time' ? $t('Next season') : $t('Next year'), appendTo: 'body', class: 'aw-tooltip' }"
+                                @click="shiftPeriod(1)"
+                            >
+                                <IconChevronRight class="size-4" />
+                            </button>
+                        </div>
+
+                        <!-- Letzte 12 Monate: fester Zeitraum, nur anzeigen -->
+                        <span v-else-if="activePreset === 'last_12_months'" class="pb-2.5 text-sm text-text-inverse tabular-nums">
+                            {{ rangeText(dateFrom, dateTo) }}
+                        </span>
+
+                        <!-- Frei wählen (oder Spielzeit ohne hinterlegtes Fenster): Datumsfelder -->
+                        <template v-else>
+                            <BaseInput type="date" id="bi_dash_from" v-model="dateFrom" :label="$t('From')" class="w-40 [&_label]:text-text-inverse-muted!" input-classes="bg-white/10! border-white/16! text-text-inverse! [color-scheme:dark]" />
+                            <BaseInput type="date" id="bi_dash_to" v-model="dateTo" :label="$t('To')" class="w-40 [&_label]:text-text-inverse-muted!" input-classes="bg-white/10! border-white/16! text-text-inverse! [color-scheme:dark]" />
+                            <BaseUIButton :label="$t('Apply')" @click="reload()" :disabled="loading" hide-icon on-band />
+                        </template>
                         <BaseUIButton
                             v-if="canExportBiData"
                             :label="$t('Excel-Export')"
@@ -198,6 +238,9 @@
                 <p class="text-sm font-medium text-warning mb-1.5">
                     {{ dataGaps.length }} {{ $t('projects with events but no BI figures — they pull every total towards zero.') }}
                 </p>
+                <p class="text-xs text-warning/80 mb-2">
+                    {{ $t('Click a production for the quick entry of totals; per-event figures are maintained in the project’s BI tab (link in the dialog).') }}
+                </p>
                 <div class="flex flex-wrap gap-1.5">
                     <button
                         v-for="gap in visibleGaps"
@@ -330,7 +373,10 @@
             <!-- Drilldown table -->
             <div v-if="showSteering" class="rounded-2xl border border-border-subtle bg-white p-5 shadow-sm">
                 <div class="flex items-center justify-between gap-3 mb-3">
-                    <h4 class="text-sm font-medium text-text-muted">{{ $t('Internal steering (effort vs. output)') }}</h4>
+                    <div>
+                        <h4 class="text-sm font-medium text-text-muted">{{ $t('Internal steering (effort vs. output)') }}</h4>
+                        <p class="text-xs text-text-subtle">{{ $t('Click a production to open its BI tab and maintain its figures there.') }}</p>
+                    </div>
                     <div class="flex items-center gap-2">
                         <!-- Zustandsübernahme: exportiert genau die sichtbare Tabelle -->
                         <button
@@ -369,6 +415,13 @@
                                 <td class="px-3 py-2">
                                     <Link :href="route('projects.tab', { project: row.project_id, projectTab: firstProjectTabId })" class="text-accent-600 hover:underline">
                                         {{ row.project_name }}
+                                    </Link>
+                                    <Link
+                                        :href="route('projects.tab', { project: row.project_id, projectTab: firstProjectTabId })"
+                                        class="ml-1.5 inline-flex align-middle text-text-subtle hover:text-accent-600"
+                                        v-tooltip.top="{ value: $t('Maintain figures in the project'), appendTo: 'body', class: 'aw-tooltip' }"
+                                    >
+                                        <IconPencil class="size-3.5" />
                                     </Link>
                                 </td>
                                 <td class="px-3 py-2 text-text-muted">{{ row.category || '—' }}</td>
@@ -442,7 +495,7 @@
 <script setup>
 import { ref, computed, watch } from 'vue';
 import { router, Link, usePage } from '@inertiajs/vue3';
-import { IconChartHistogram, IconPencil, IconFileExport, IconCircleCheck } from '@tabler/icons-vue';
+import { IconChartHistogram, IconPencil, IconFileExport, IconCircleCheck, IconChevronLeft, IconChevronRight } from '@tabler/icons-vue';
 import BiQuickEntryModal from '@/Pages/Projects/Components/BiComponents/BiQuickEntryModal.vue';
 import BiExportDialog from '@/Pages/Projects/Components/BiComponents/BiExportDialog.vue';
 import BiBudgetExportModal from '@/Pages/Projects/Components/BiComponents/BiBudgetExportModal.vue';
@@ -520,7 +573,37 @@ const dateTo = ref(props.dashboard.range?.to ?? '');
 const loading = ref(false);
 // Ohne explizite URL-Daten gilt serverseitig die Spielzeit → Preset als aktiv markieren
 const initialQuery = new URLSearchParams(window.location.search);
-const activePreset = ref(initialQuery.get('date_from') || initialQuery.get('date_to') ? null : 'playing_time');
+const knownPresets = ['playing_time', 'calendar_year', 'last_12_months', 'free'];
+const activePreset = ref(
+    knownPresets.includes(initialQuery.get('preset'))
+        ? initialQuery.get('preset')
+        : (initialQuery.get('date_from') || initialQuery.get('date_to') ? 'free' : 'playing_time')
+);
+// Wie viele Spielzeiten/Jahre vom Basisfenster entfernt (per Pfeilen)
+const periodOffset = ref(parseInt(initialQuery.get('offset') ?? '0', 10) || 0);
+
+// Basis-Spielzeitfenster aus den Tool-Einstellungen: bei Offset 0 ist es die
+// gelieferte Spanne, sonst die gelieferte Spanne um den Offset zurückgeschoben
+const shiftIsoYears = (iso, years) => {
+    if (!iso) return '';
+    const [y, m, d] = iso.split('-').map(Number);
+    return `${y + years}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+};
+const seasonBase = ref(
+    activePreset.value === 'playing_time' && props.dashboard.range?.from && props.dashboard.range?.to
+        ? { from: shiftIsoYears(props.dashboard.range.from, -periodOffset.value), to: shiftIsoYears(props.dashboard.range.to, -periodOffset.value) }
+        : null
+);
+const showPeriodStepper = computed(() =>
+    (activePreset.value === 'playing_time' && seasonBase.value !== null) || activePreset.value === 'calendar_year'
+);
+const periodStepLabel = computed(() => {
+    if (activePreset.value === 'calendar_year') return String(new Date().getFullYear() + periodOffset.value);
+    if (!dateFrom.value) return t('Season');
+    const fromYear = Number(dateFrom.value.slice(0, 4));
+    const toYear = Number((dateTo.value || dateFrom.value).slice(0, 4));
+    return `${t('Season')} ${fromYear === toYear ? fromYear : `${fromYear}/${String(toYear).slice(-2)}`}`;
+});
 
 // --- Vergleichszeitraum (Default: Vorjahr, serverseitig) ---
 
@@ -594,8 +677,8 @@ const rangeText = (from, to) => {
 const periodSentence = computed(() => {
     const range = props.dashboard.range ?? {};
     const presetLabel = {
-        playing_time: t('Season'),
-        calendar_year: t('Calendar year'),
+        playing_time: showPeriodStepper.value ? periodStepLabel.value : t('Season'),
+        calendar_year: `${t('Calendar year')} ${periodStepLabel.value}`,
         last_12_months: t('Last 12 months'),
     }[activePreset.value] ?? t('Custom period');
     return `${presetLabel} (${rangeText(range.from, range.to)})`;
@@ -622,6 +705,10 @@ const seasonMissing = computed(() =>
 watch(() => props.dashboard.range, (range) => {
     dateFrom.value = range?.from ?? '';
     dateTo.value = range?.to ?? '';
+    // Basisfenster einmal festhalten, sobald die Spielzeit (Offset 0) geladen ist
+    if (activePreset.value === 'playing_time' && periodOffset.value === 0 && range?.from && range?.to) {
+        seasonBase.value = { from: range.from, to: range.to };
+    }
 });
 
 const gapLimit = 8;
@@ -690,24 +777,50 @@ const rangePresets = [
     { key: 'playing_time', label: 'Season (default)' },
     { key: 'calendar_year', label: 'Calendar year' },
     { key: 'last_12_months', label: 'Last 12 months' },
+    { key: 'free', label: 'Free choice' },
 ];
 
-const applyPreset = (preset) => {
+// Daten für Preset + Offset setzen (Spielzeit = Basisfenster ± Jahre, Kalenderjahr = Jahr ± Offset)
+const applyPresetDates = () => {
     const now = new Date();
-    if (preset.key === 'playing_time') {
-        dateFrom.value = '';
-        dateTo.value = '';
-    } else if (preset.key === 'calendar_year') {
-        dateFrom.value = `${now.getFullYear()}-01-01`;
-        dateTo.value = `${now.getFullYear()}-12-31`;
-    } else {
+    const key = activePreset.value;
+    if (key === 'playing_time') {
+        if (seasonBase.value) {
+            dateFrom.value = shiftIsoYears(seasonBase.value.from, periodOffset.value);
+            dateTo.value = shiftIsoYears(seasonBase.value.to, periodOffset.value);
+        } else {
+            // Kein Fenster hinterlegt → Server liefert "alle Zeiträume", Warnbanner erklärt es
+            dateFrom.value = '';
+            dateTo.value = '';
+        }
+    } else if (key === 'calendar_year') {
+        const year = now.getFullYear() + periodOffset.value;
+        dateFrom.value = `${year}-01-01`;
+        dateTo.value = `${year}-12-31`;
+    } else if (key === 'last_12_months') {
         const from = new Date(now);
         from.setFullYear(from.getFullYear() - 1);
         from.setDate(from.getDate() + 1);
         dateFrom.value = isoDate(from);
         dateTo.value = isoDate(now);
     }
+};
+
+const applyPreset = (preset) => {
     activePreset.value = preset.key;
+    periodOffset.value = 0;
+    if (preset.key === 'free') {
+        // Datumsfelder erscheinen, der Nutzer bestätigt mit „Anwenden“
+        return;
+    }
+    applyPresetDates();
+    reload(true);
+};
+
+// Pfeile: eine Spielzeit bzw. ein Kalenderjahr vor oder zurück
+const shiftPeriod = (delta) => {
+    periodOffset.value += delta;
+    applyPresetDates();
     reload(true);
 };
 
@@ -1154,7 +1267,9 @@ const sortedProjects = computed(() => {
 
 const reload = (fromPreset = false) => {
     if (!fromPreset) {
-        activePreset.value = null;
+        // Manuell angewandte Daten = freier Zeitraum
+        activePreset.value = 'free';
+        periodOffset.value = 0;
     }
     loading.value = true;
     reloadError.value = false;
@@ -1162,6 +1277,9 @@ const reload = (fromPreset = false) => {
         date_from: dateFrom.value || null,
         date_to: dateTo.value || null,
         category: pendingCategory || null,
+        // Preset + Offset in der URL, damit Reload/Teilen dieselbe Sicht öffnet
+        preset: activePreset.value,
+        ...(periodOffset.value !== 0 ? { offset: periodOffset.value } : {}),
         ...(view.value === 'steering' ? { view: 'steering' } : {}),
         ...compareParams(),
     }, {

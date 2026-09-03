@@ -27,5 +27,11 @@
     "Second effect: opens the profile pages of freelancers and service providers even without duty roster permissions.": "Zweitwirkung: öffnet die Profilseiten von Freelancer*innen und Dienstleistern auch ohne Dienstplan-Rechte.",
     "Can maintain profiles, contracts and working times and invite people": "Kann Profile, Verträge und Arbeitszeiten pflegen und Personen einladen",
     "Can create and maintain teams": "Kann Teams anlegen und pflegen",
-    "Can see e-mail and phone marked as private": "Kann als privat markierte E-Mail und Telefonnummer sehen"
+    "Can see e-mail and phone marked as private": "Kann als privat markierte E-Mail und Telefonnummer sehen",
+    "External worker administration": "Externe verwalten",
+    "Can create and maintain freelancers and service providers": "Kann Freelancer*innen und Dienstleister anlegen und pflegen",
+    "Button \"Add new Address\" in the address list": "Button „Neue Adresse hinzufügen“ in der Adressliste",
+    "Create, edit and delete freelancers and service providers": "Freelancer*innen und Dienstleister anlegen, bearbeiten und löschen",
+    "Maintain work profiles, crafts, qualifications and absences of external workers": "Arbeitsprofile, Gewerke, Qualifikationen und Abwesenheiten Externer pflegen",
+    "Only external workers – in-house staff and invitations remain part of \"HR administration\", which includes this permission.": "Nur Externe – Inhouse-Kolleg*innen und Einladungen bleiben Teil der „Personalverwaltung“, die dieses Recht einschließt."
 }

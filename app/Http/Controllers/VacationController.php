@@ -88,7 +88,10 @@ class VacationController extends Controller
         // Freelancer sind "Worker": Worker-Manager dürfen deren Urlaube/Verfügbarkeiten anlegen
         // (Frontend gated auf "can manage workers"); Verfügbarkeits-Manager ebenfalls.
         abort_unless(
-            (bool) auth()->user()?->can(\Artwork\Modules\Permission\Enums\PermissionEnum::MA_MANAGER->value)
+            (bool) auth()->user()?->canAny([
+                \Artwork\Modules\Permission\Enums\PermissionEnum::MA_MANAGER->value,
+                \Artwork\Modules\Permission\Enums\PermissionEnum::EXTERNAL_MANAGER->value,
+            ])
                 || (bool) auth()->user()?->can(
                     \Artwork\Modules\Permission\Enums\PermissionEnum::AVAILABILITY_MANAGEMENT->value
                 ),

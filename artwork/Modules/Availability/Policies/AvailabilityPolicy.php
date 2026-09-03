@@ -26,7 +26,10 @@ class AvailabilityPolicy
 
         // Freelancer/ServiceProvider sind "Worker": Worker-Manager dürfen deren Verfügbarkeiten
         // pflegen (das Frontend gated die Bearbeitung genau auf "can manage workers").
-        if ($availability->available_type !== User::class && $user->can(PermissionEnum::MA_MANAGER->value)) {
+        if (
+            $availability->available_type !== User::class
+            && $user->canAny([PermissionEnum::MA_MANAGER->value, PermissionEnum::EXTERNAL_MANAGER->value])
+        ) {
             return true;
         }
 

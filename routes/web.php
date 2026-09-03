@@ -2036,7 +2036,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::patch(
         '/service-provider/{serviceProvider}/workProfile',
         [ServiceProviderController::class, 'updateWorkProfile']
-    )->name('service_provider.update.workProfile')->can('can manage workers');
+    )->name('service_provider.update.workProfile');
     Route::patch(
         '/service-provider/{serviceProvider}/terms',
         [ServiceProviderController::class, 'updateTerms']

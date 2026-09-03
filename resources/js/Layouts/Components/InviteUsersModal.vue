@@ -133,8 +133,8 @@
                 </Disclosure>
             </div>
 
-            <!-- Roles -->
-            <div class="mt-8">
+            <!-- Roles (nur für Admins befüllt, siehe UserController::index) -->
+            <div v-if="rolesLocal.length" class="mt-8">
                 <h3 class="mb-4 text-base font-semibold text-text">{{ $t('Define user permissions') }}</h3>
 
                 <div class="space-y-2">

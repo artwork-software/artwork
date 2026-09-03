@@ -179,7 +179,7 @@ export function usePermission(pageProps) {
     // user info" (Nutzer*innenverwaltungs-Verständnis: auch Externe sind "User") —
     // Spiegel von UserPolicy::canViewExternalWorkerProfile() im Backend.
     function canViewExternalWorkerProfile() {
-        return canViewForeignRoster() || can('can view private user info');
+        return canViewForeignRoster() || canAny(['can view private user info', 'can manage external workers']);
     }
 
     return {

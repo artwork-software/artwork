@@ -26,6 +26,7 @@ enum PermissionEnum : string
     case VIEW_BUDGET_TEMPLATES = 'view budget templates';
     case UPDATE_BUDGET_TEMPLATES = 'edit budget templates';
     case MA_MANAGER = 'can manage workers';
+    case EXTERNAL_MANAGER = 'can manage external workers';
     case SHIFT_PLANNER = 'can plan shifts';
     case GLOBAL_PROJECT_BUDGET_ADMIN = 'can manage global project budgets';
     case VIEW_SHIFT_PLAN = 'can view shift plan';

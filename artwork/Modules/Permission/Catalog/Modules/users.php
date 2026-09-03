@@ -37,9 +37,28 @@ return new PermissionModuleDefinition(
                 'Read and edit conditions and hourly rates of external workers',
             ],
             requires: [$module],
+            implies: [PermissionEnum::EXTERNAL_MANAGER],
             personas: [Persona::HR],
             note: 'Paying out overtime additionally requires "Pay out overtime". '
                 . 'Assigning permissions to other people remains reserved for artwork admins.',
+        ),
+        new PermissionDefinition(
+            name: PermissionEnum::EXTERNAL_MANAGER,
+            title: 'External worker administration',
+            effect: 'Can create and maintain freelancers and service providers',
+            unlocks: [
+                'Button "Add new Address" in the address list',
+                'Tabs "Conditions" and "Work profile" of freelancers and service providers',
+                'Profile pages of freelancers and service providers',
+            ],
+            allows: [
+                'Create, edit and delete freelancers and service providers',
+                'Read and edit conditions and hourly rates of external workers',
+                'Maintain work profiles, crafts, qualifications and absences of external workers',
+            ],
+            requires: [$module],
+            personas: [Persona::HR, Persona::SHIFT_PLANNING],
+            note: 'Only external workers – in-house staff and invitations remain part of "HR administration", which includes this permission.',
         ),
         new PermissionDefinition(
             name: PermissionEnum::TEAM_UPDATE,

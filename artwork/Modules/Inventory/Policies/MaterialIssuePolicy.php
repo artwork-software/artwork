@@ -25,9 +25,23 @@ class MaterialIssuePolicy
         return $user->can(PermissionEnum::INVENTORY_DISPOSITION->value);
     }
 
+    /**
+     * Lesen (Detail, Druckansicht): wer verwalten darf – zusätzlich alle mit Lesezugriff auf das
+     * Projekt der Ausgabe (Projekt-Tab "Materialausgaben" zeigt die Druckansicht auch Lesenden).
+     */
     public function view(User $user, InternalIssue|ExternalIssue $issue): bool
     {
-        return $this->manage($user, $issue);
+        if ($this->manage($user, $issue)) {
+            return true;
+        }
+
+        if ($issue->project_id === null) {
+            return false;
+        }
+
+        $project = Project::query()->find($issue->project_id);
+
+        return $project !== null && $user->can('view', $project);
     }
 
     /**

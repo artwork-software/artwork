@@ -14,6 +14,8 @@ use Artwork\Modules\EventType\Services\EventTypeService;
 use Artwork\Modules\Inventory\Services\ProductBasketService;
 use Artwork\Modules\Notification\Services\NotificationSettingService;
 use Artwork\Modules\Permission\Enums\PermissionEnum;
+use Artwork\Modules\Permission\Models\Permission;
+use Artwork\Modules\Role\Models\Role;
 use Artwork\Modules\Project\Services\ProjectService;
 use Artwork\Modules\Project\Enum\ProjectTabComponentEnum;
 use Artwork\Modules\Project\Services\ProjectTabService;
@@ -94,6 +96,10 @@ class UserService
 
         $this->userRepository->syncDepartments($user, $departmentIds);
 
+        // Einladungen speichern Rechte-/Rollennamen; ein zwischenzeitlich entfallenes Recht darf das
+        // Annehmen nicht mit PermissionDoesNotExist abbrechen (Konto wäre dann halb angelegt).
+        $roles = Role::query()->whereIn('name', $roles)->pluck('name')->all();
+        $permissions = Permission::query()->whereIn('name', $permissions)->pluck('name')->all();
         $user->assignRole(...$roles);
         $user->givePermissionTo(...$permissions);
         $user->forgetCachedShareData();

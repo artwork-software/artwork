@@ -23,7 +23,7 @@ class AddBiEventTypeTagsCommand extends Command
     ];
 
     /**
-     * Terminarten-Namen (Teilstring, case-insensitive), die bei der ERSTEN Anlage
+     * Terminarten-Namen (Wortanfang, case-insensitive), die bei der ERSTEN Anlage
      * der KPI-Tags automatisch zugeordnet werden. Ohne Zuordnung bleiben
      * Vorstellungen/Veranstaltungstage/Auslastung bewusst leer (kein Fallback).
      *
@@ -94,7 +94,8 @@ class AddBiEventTypeTagsCommand extends Command
         $matching = EventType::query()->get(['id', 'name'])->filter(function (EventType $eventType) use ($hints): bool {
             $name = mb_strtolower((string) $eventType->name);
             foreach ($hints as $hint) {
-                if (str_contains($name, $hint)) {
+                // Hint muss am Wortanfang stehen: "Vorstellungen"/"Showcase" ja, "Workshop"/"Roadshow" nein
+                if (preg_match('/(?<![\p{L}\p{N}])' . preg_quote($hint, '/') . '/u', $name) === 1) {
                     return true;
                 }
             }

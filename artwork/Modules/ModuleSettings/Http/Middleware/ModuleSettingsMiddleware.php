@@ -40,10 +40,24 @@ class ModuleSettingsMiddleware
 
     /**
      * Präfixe, die NUR exakt treffen: unter /users liegen auch eigenes Profil und Einsatzplan,
-     * die ohne Personal-Modul weiter erreichbar bleiben müssen.
+     * die ohne Personal-Modul weiter erreichbar bleiben müssen. Unter /projects liegen Projekt-
+     * Endpunkte, die Kalender, Dienstplan, Budget und Inventar querschnittlich nutzen (Suche,
+     * Tabs, Termine) – der Modul-Schalter sperrt dort wie bisher nur die Einstiegsseite.
      */
     private const EXACT_MATCH_ONLY = [
         '/users',
+        '/projects',
+    ];
+
+    /**
+     * Endpunkte unterhalb eines Modul-Präfixes, die andere Module brauchen und deshalb auch bei
+     * abgeschaltetem Modul erreichbar bleiben (sonst 401 im Budget, Projekt-Tab oder Projektteam).
+     */
+    private const CROSS_MODULE_PATTERNS = [
+        '#^/money_sources/search(/|$)#',            // Finanzierungsquellen-Suche in Budget-Zellen
+        '#^/contracts/\d+(/|$)#',                   // Vertrag anzeigen/laden/ändern aus dem Projekt-Tab
+        '#^/crm/contacts-search$#',                 // Kontakt-Suche im Projektteam / Dokumentenanfragen
+        '#^/crm/contacts/\d+/(data|tooltip)$#',     // Kontakt-Popover im Projektteam
     ];
 
     /** @var string[] Settings where even admins are blocked when the module is disabled */
@@ -86,6 +100,13 @@ class ModuleSettingsMiddleware
     public static function resolveSetting(string $path): ?string
     {
         $path = rtrim($path, '/') ?: '/';
+
+        foreach (self::CROSS_MODULE_PATTERNS as $pattern) {
+            if (preg_match($pattern, $path) === 1) {
+                return null;
+            }
+        }
+
         $bestPrefix = null;
 
         foreach (array_keys(self::ROUTE_SETTING_MAPPING) as $prefix) {

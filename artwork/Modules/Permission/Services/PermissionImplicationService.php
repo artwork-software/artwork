@@ -15,8 +15,10 @@ use Spatie\Permission\Models\Role;
  */
 readonly class PermissionImplicationService
 {
-    public function __construct(private PermissionCatalog $catalog)
-    {
+    public function __construct(
+        private PermissionCatalog $catalog,
+        private PermissionChangeLogService $changeLog,
+    ) {
     }
 
     /**
@@ -41,7 +43,7 @@ readonly class PermissionImplicationService
         $touchedUsers = 0;
         $touchedRoles = 0;
 
-        User::query()->with('permissions')->chunkById(200, function (Collection $users) use (&$touchedUsers): void {
+        $handleUsers = function (Collection $users) use (&$touchedUsers): void {
             foreach ($users as $user) {
                 $current = $user->permissions->pluck('name')->all();
                 $expanded = $this->expand($current);
@@ -51,9 +53,14 @@ readonly class PermissionImplicationService
                 }
                 $user->givePermissionTo($missing);
                 $user->forgetCachedShareData();
+                // Ergänzte Stufen sichtbar machen: Verlauf auf der Rechteseite (Quelle "implication")
+                $roles = $user->roles->pluck('name')->all();
+                $after = [...$current, ...array_values($missing)];
+                $this->changeLog->log($user, null, $current, $after, $roles, $roles, 'implication');
                 $touchedUsers++;
             }
-        });
+        };
+        User::query()->with(['permissions', 'roles'])->chunkById(200, $handleUsers);
 
         foreach (Role::query()->with('permissions')->get() as $role) {
             $current = $role->permissions->pluck('name')->all();

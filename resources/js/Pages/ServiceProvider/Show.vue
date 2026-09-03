@@ -242,9 +242,9 @@ export default defineComponent({
             showSuccessModal: false,
             tabs: [
                 { id: 1, name: this.$t('Operational plan'), href: '#', current: false, has_permission: this.$can('can plan shifts') || this.hasAdminRole() },
-                { id: 2, name: this.$t('Conditions'), href: '#', current: false, has_permission: this.$can('can manage workers') || this.hasAdminRole() },
+                { id: 2, name: this.$t('Conditions'), href: '#', current: false, has_permission: this.$can('can manage workers') || this.$can('can manage external workers') || this.hasAdminRole() },
                 { id: 3, name: this.$t('Company data'), href: '#', current: true, has_permission: true },
-                { id: 4, name: this.$t('Work profile'), href: '#', current: false, has_permission: this.$can('can manage workers') || this.hasAdminRole() },
+                { id: 4, name: this.$t('Work profile'), href: '#', current: false, has_permission: this.$can('can manage workers') || this.$can('can manage external workers') || this.hasAdminRole() },
             ],
             currentTab: 3,
             providerData: useForm({
@@ -267,7 +267,7 @@ export default defineComponent({
     },
     computed: {
         checkCanEdit(){
-            return !(this.$can('can manage workers') || this.hasAdminRole());
+            return !(this.$can('can manage workers') || this.$can('can manage external workers') || this.hasAdminRole());
         },
     },
     methods: {
@@ -306,7 +306,7 @@ export default defineComponent({
             this.showSuccessModal = false;
         },
         selectNewPhoto(){
-            if( this.$can('can manage workers') || this.hasAdminRole()){
+            if( this.$can('can manage workers') || this.$can('can manage external workers') || this.hasAdminRole()){
                 this.$refs.photoInput.click();
             }
         },

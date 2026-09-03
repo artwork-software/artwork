@@ -7385,5 +7385,13 @@
     "Next season": "Next season",
     "Click a production to open its BI tab and maintain its figures there.": "Click a production to open its BI tab and maintain its figures there.",
     "Maintain figures in the project": "Maintain figures in the project",
-    "Click a production for the quick entry of totals; per-event figures are maintained in the project’s BI tab (link in the dialog).": "Click a production for the quick entry of totals; per-event figures are maintained in the project’s BI tab (link in the dialog)."
+    "Click a production for the quick entry of totals; per-event figures are maintained in the project’s BI tab (link in the dialog).": "Click a production for the quick entry of totals; per-event figures are maintained in the project’s BI tab (link in the dialog).",
+    "Only artwork admins can assign the admin role.": "Only artwork admins can assign the admin role.",
+    "Export BI data of all projects": "Export BI data of all projects",
+    "External worker administration": "External worker administration",
+    "Can create and maintain freelancers and service providers": "Can create and maintain freelancers and service providers",
+    "Button \"Add new Address\" in the address list": "Button \"Add new Address\" in the address list",
+    "Create, edit and delete freelancers and service providers": "Create, edit and delete freelancers and service providers",
+    "Maintain work profiles, crafts, qualifications and absences of external workers": "Maintain work profiles, crafts, qualifications and absences of external workers",
+    "Only external workers – in-house staff and invitations remain part of \"HR administration\", which includes this permission.": "Only external workers – in-house staff and invitations remain part of \"HR administration\", which includes this permission."
 }

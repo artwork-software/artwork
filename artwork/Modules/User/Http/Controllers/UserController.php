@@ -289,7 +289,11 @@ class UserController extends Controller
             'users' => $users,
             'all_permissions' => Permission::all()->groupBy('group'),
             'departments' => Department::all(),
-            'roles' => Role::all(),
+            // Rollen (= Admin-Rolle) nur für Admins wählbar; Altbestand-Rollen in der DB werden nicht angeboten,
+            // weil StoreInvitationRequest nur RoleEnum akzeptiert.
+            'roles' => $userService->getAuthUser()->hasRole(RoleEnum::ARTWORK_ADMIN->value)
+                ? Role::query()->whereIn('name', array_column(RoleEnum::cases(), 'value'))->get()
+                : [],
             'freelancers' => Freelancer::all(),
             'serviceProviders' => ServiceProvider::query()->without('contacts')->get(),
             'permission_presets' => $permissionPresetService->getPermissionPresets()

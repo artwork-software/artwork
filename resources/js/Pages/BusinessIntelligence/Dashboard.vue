@@ -148,6 +148,11 @@
                 </Link>
             </div>
 
+            <!-- Freier Zeitraum falsch herum: nicht laden, sondern konkret sagen, was fehlt -->
+            <div v-if="rangeError" class="rounded-2xl border border-danger-border bg-danger-surface px-4 py-3 text-sm text-danger">
+                {{ $t('The end date lies before the start date.') }}
+            </div>
+
             <!-- Reload fehlgeschlagen: Zahlen sind die alten -->
             <div v-if="reloadError" class="rounded-2xl border border-danger-border bg-danger-surface px-4 py-3 text-sm text-danger flex items-center justify-between gap-4">
                 <span>{{ $t('The dashboard could not be reloaded — the figures shown are the previous ones.') }}</span>
@@ -563,6 +568,7 @@ const showOverview = computed(() => view.value === 'overview' && !isEmpty.value)
 const showSteering = computed(() => view.value === 'steering' && !isEmpty.value);
 
 const reloadError = ref(false);
+const rangeError = ref(false);
 const savedNotice = ref(null);
 let savedNoticeTimer = null;
 // Je KPI-Tag: ohne Terminart-Zuordnung bleibt die Kennzahl leer (kein Fallback)
@@ -1270,6 +1276,13 @@ const reload = (fromPreset = false) => {
         // Manuell angewandte Daten = freier Zeitraum
         activePreset.value = 'free';
         periodOffset.value = 0;
+    }
+    // Von > Bis würde serverseitig mit 422 abgewiesen und nur als generischer Reload-Fehler erscheinen
+    const invalid = (from, to) => Boolean(from && to && from > to);
+    rangeError.value = invalid(dateFrom.value, dateTo.value)
+        || (comparePreset.value === 'free' && invalid(compareFrom.value, compareTo.value));
+    if (rangeError.value) {
+        return;
     }
     loading.value = true;
     reloadError.value = false;

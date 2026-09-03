@@ -28,6 +28,8 @@ export function useBiExport(routes = {}) {
     const queueSuspect = computed(() => phase.value === 'pending' && elapsedSeconds.value >= 30);
 
     let cancelled = false;
+    // Laufnummer des aktuellen Exports: Antworten/Timer eines abgebrochenen oder ersetzten Laufs werden verworfen
+    let runId = 0;
     let pollTimer = null;
     let clockTimer = null;
 
@@ -51,16 +53,21 @@ export function useBiExport(routes = {}) {
         exportErrorMessage.value = message;
     };
 
-    const pollAndDownload = (token) => new Promise((resolve) => {
+    const pollAndDownload = (token, run) => new Promise((resolve) => {
         let attempts = 0;
         const maxAttempts = 400; // 400 × 1,5 s = 10 Minuten
+        const isStale = () => cancelled || run !== runId;
         const check = async () => {
-            if (cancelled) {
+            if (isStale()) {
                 return resolve(false);
             }
             attempts++;
             try {
                 const { data } = await axios.get(route(routeNames.status, token));
+                // Während des Requests abgebrochen oder neu gestartet: Antwort verwerfen, nicht weiter pollen
+                if (isStale()) {
+                    return resolve(false);
+                }
                 if (data.status === 'ready') {
                     phase.value = 'done';
                     downloadStarted.value = true;
@@ -101,6 +108,7 @@ export function useBiExport(routes = {}) {
      * @returns {Promise<boolean>} true, wenn der Download gestartet wurde
      */
     const runExport = async (config) => {
+        const run = ++runId;
         cancelled = false;
         isExporting.value = true;
         exportError.value = false;
@@ -111,16 +119,25 @@ export function useBiExport(routes = {}) {
         clockTimer = setInterval(() => { elapsedSeconds.value++; }, 1000);
         try {
             const response = await axios.post(route(routeNames.cache), config);
-            return await pollAndDownload(response.data.token);
+            if (run !== runId) {
+                return false;
+            }
+            return await pollAndDownload(response.data.token, run);
         } catch (error) {
+            if (run !== runId) {
+                return false;
+            }
             console.error('BI export error', error);
             fail(extractSaveErrorMessage(error));
             return false;
         } finally {
-            stopTimers();
-            isExporting.value = false;
-            if (phase.value !== 'done') {
-                phase.value = 'idle';
+            // Nur der aktuelle Lauf räumt auf – ein ersetzter Lauf darf den neuen nicht beenden
+            if (run === runId) {
+                stopTimers();
+                isExporting.value = false;
+                if (phase.value !== 'done') {
+                    phase.value = 'idle';
+                }
             }
         }
     };
@@ -128,6 +145,7 @@ export function useBiExport(routes = {}) {
     /** Polling abbrechen — der Job läuft ggf. zu Ende, die Datei räumt der Cleanup-Job weg. */
     const cancel = () => {
         cancelled = true;
+        runId++;
         stopTimers();
         isExporting.value = false;
         phase.value = 'idle';

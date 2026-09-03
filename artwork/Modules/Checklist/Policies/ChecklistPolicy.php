@@ -24,7 +24,8 @@ class ChecklistPolicy
             ])
             || $checklist->user_id === $user->id
             || $this->isSharedWith($user, $checklist)
-            || $this->isAssignedToAnyTask($user, $checklist);
+            || $this->isAssignedToAnyTask($user, $checklist)
+            || $this->canAccessProject($user, $checklist, 'view');
     }
 
     public function create(): bool
@@ -40,7 +41,8 @@ class ChecklistPolicy
             ])
             || $checklist->user_id === $user->id
             || $this->isSharedWith($user, $checklist)
-            || $this->isAssignedToAnyTask($user, $checklist);
+            || $this->isAssignedToAnyTask($user, $checklist)
+            || $this->canAccessProject($user, $checklist, 'update');
     }
 
     public function delete(User $user, Checklist $checklist): bool
@@ -49,7 +51,17 @@ class ChecklistPolicy
                 PermissionEnum::CHECKLIST_SETTINGS_ADMIN->value,
                 PermissionEnum::CHECKLIST_EDIT_PERMISSION->value,
             ])
-            || $checklist->user_id === $user->id;
+            || $checklist->user_id === $user->id
+            || $this->canAccessProject($user, $checklist, 'update');
+    }
+
+    /**
+     * Projekt-Checklisten folgen dem Projektrecht (ProjectPolicy::view/update): globales Schreibrecht,
+     * Team-Schreibrecht, Projektleitung, Ersteller:in und Abteilung – dieselben Quellen wie writeComponent().
+     */
+    private function canAccessProject(User $user, Checklist $checklist, string $ability): bool
+    {
+        return $checklist->project !== null && $user->can($ability, $checklist->project);
     }
 
     private function isSharedWith(User $user, Checklist $checklist): bool

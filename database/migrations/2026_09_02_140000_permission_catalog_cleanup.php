@@ -13,13 +13,14 @@ use Spatie\Permission\PermissionRegistrar;
  * 2. "Globaler Budgetzugriff ohne Dokumenteneinsicht" in "Globaler Budgetzugriff" aufgehen lassen
  * 3. entfallene Rechte löschen (tot, wirkungslos, Altbestand Gewerke-Inventar, externe Konditionen)
  * 4. Presets von Permission-IDs auf Rechte-Namen umstellen
+ * 5. offene Einladungen bereinigen (sonst wirft das Annehmen PermissionDoesNotExist)
  */
 return new class extends Migration
 {
     private const MERGED = [
         // entfallenes Recht => Nachfolger, den die Inhaber bekommen
         'can manage all project budgets without docs' => 'can manage global project budgets',
-        'can edit external users conditions' => 'can manage workers',
+        'can edit external users conditions' => 'can manage external workers',
     ];
 
     private const REMOVED = [
@@ -71,6 +72,23 @@ return new class extends Migration
                 }
             }
             $preset->update(['permissions' => $names]);
+        }
+
+        // 5. offene Einladungen: entfallene Rechte entfernen, zusammengelegte ersetzen
+        foreach (DB::table('invitations')->select(['id', 'permissions'])->get() as $invitation) {
+            $names = json_decode((string) $invitation->permissions, true);
+            if (!is_array($names)) {
+                continue;
+            }
+            $cleaned = array_values(array_diff($names, self::REMOVED));
+            foreach (self::MERGED as $old => $successor) {
+                if (in_array($old, $names, true) && !in_array($successor, $cleaned, true)) {
+                    $cleaned[] = $successor;
+                }
+            }
+            if ($cleaned !== $names) {
+                DB::table('invitations')->where('id', $invitation->id)->update(['permissions' => json_encode($cleaned)]);
+            }
         }
 
         // 3. entfallene Rechte löschen (Pivots hängen per FK CASCADE daran)

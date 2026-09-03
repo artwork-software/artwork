@@ -7385,5 +7385,13 @@
     "Next season": "Nächste Spielzeit",
     "Click a production to open its BI tab and maintain its figures there.": "Klick auf eine Produktion öffnet ihren BI-Tab, dort werden die Zahlen gepflegt.",
     "Maintain figures in the project": "Zahlen im Projekt pflegen",
-    "Click a production for the quick entry of totals; per-event figures are maintained in the project’s BI tab (link in the dialog).": "Klick auf eine Produktion öffnet die Schnellerfassung für Gesamtwerte; Zahlen pro Termin pflegst du im BI-Tab des Projekts (Link im Dialog)."
+    "Click a production for the quick entry of totals; per-event figures are maintained in the project’s BI tab (link in the dialog).": "Klick auf eine Produktion öffnet die Schnellerfassung für Gesamtwerte; Zahlen pro Termin pflegst du im BI-Tab des Projekts (Link im Dialog).",
+    "Only artwork admins can assign the admin role.": "Die Admin-Rolle können nur artwork-Admins vergeben.",
+    "Export BI data of all projects": "BI-Daten aller Projekte exportieren",
+    "External worker administration": "Externe verwalten",
+    "Can create and maintain freelancers and service providers": "Kann Freelancer*innen und Dienstleister anlegen und pflegen",
+    "Button \"Add new Address\" in the address list": "Button „Neue Adresse hinzufügen“ in der Adressliste",
+    "Create, edit and delete freelancers and service providers": "Freelancer*innen und Dienstleister anlegen, bearbeiten und löschen",
+    "Maintain work profiles, crafts, qualifications and absences of external workers": "Arbeitsprofile, Gewerke, Qualifikationen und Abwesenheiten Externer pflegen",
+    "Only external workers – in-house staff and invitations remain part of \"HR administration\", which includes this permission.": "Nur Externe – Inhouse-Kolleg*innen und Einladungen bleiben Teil der „Personalverwaltung“, die dieses Recht einschließt."
 }

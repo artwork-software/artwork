@@ -73,31 +73,32 @@ const tabsMap = computed(() => {
             key: "Trash/Projects",
             name: proxy?.$t ? proxy.$t("Projects") : "Projects",
             href: route("projects.trashed"),
-            available: can('delete projects') || is('artwork admin'),
+            // Routen-Middleware: can access trash (Modul-Rechte entscheiden nicht mehr über den Tab)
+            available: can('can access trash') || is('artwork admin'),
         },
         "Trash/Areas": {
             key: "Trash/Areas",
             name: proxy?.$t ? proxy.$t("Areas") : "Areas",
             href: route("areas.trashed"),
-            available: can('create, delete and update rooms') || is('artwork admin'),
+            available: can('can access trash') || is('artwork admin'),
         },
         "Trash/Rooms": {
             key: "Trash/Rooms",
             name: proxy?.$t ? proxy.$t("Rooms") : "Rooms",
             href: route("rooms.trashed"),
-            available: can('create, delete and update rooms') || is('artwork admin'),
+            available: can('can access trash') || is('artwork admin'),
         },
         "Trash/Events": {
             key: "Trash/Events",
             name: proxy?.$t ? proxy.$t("Events") : "Events",
             href: route("events.trashed"),
-            available: can('create events without request') || is('artwork admin'),
+            available: can('can access trash') || is('artwork admin'),
         },
         "Trash/ProjectSettings": {
             key: "Trash/ProjectSettings",
             name: proxy?.$t ? proxy.$t("Project Settings") : "Project Settings",
             href: route("projects.settings.trashed"),
-            available: can('change project settings') || is('artwork admin'),
+            available: can('can access trash') || is('artwork admin'),
         },
         "Trash/SageNotAssignedData": {
             key: "Trash/SageNotAssignedData",

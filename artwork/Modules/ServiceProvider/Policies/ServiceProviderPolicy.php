@@ -10,13 +10,22 @@ class ServiceProviderPolicy
 {
     use HandlesAuthorization;
 
+    /** Externe pflegen: "Personalverwaltung" oder das eigenständige Recht "Externe verwalten". */
+    public static function canManageExternals(User $user): bool
+    {
+        return $user->canAny([
+            PermissionEnum::MA_MANAGER->value,
+            PermissionEnum::EXTERNAL_MANAGER->value,
+        ]);
+    }
+
     public function updateWorkProfile(User $user): bool
     {
-        return $user->can(PermissionEnum::MA_MANAGER->value);
+        return self::canManageExternals($user);
     }
 
     public function updateTerms(User $user): bool
     {
-        return $user->can(PermissionEnum::MA_MANAGER->value);
+        return self::canManageExternals($user);
     }
 }

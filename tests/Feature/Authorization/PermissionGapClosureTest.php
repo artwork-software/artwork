@@ -279,7 +279,8 @@ final class PermissionGapClosureTest extends FeatureTestCase
     public function module_middleware_matches_sub_paths_by_prefix(): void
     {
         $this->assertSame('projects', ModuleSettingsMiddleware::resolveSetting('/projects'));
-        $this->assertSame('projects', ModuleSettingsMiddleware::resolveSetting('/projects/5/tabs/3'));
+        // Projekt-Unterseiten/-APIs werden von Kalender, Dienstplan und Budget genutzt: nur exakt (s. ReleaseHardeningTest)
+        $this->assertNull(ModuleSettingsMiddleware::resolveSetting('/projects/5/tabs/3'));
         $this->assertSame('inventory', ModuleSettingsMiddleware::resolveSetting('/inventory-management/article/planning'));
         $this->assertSame('inventory', ModuleSettingsMiddleware::resolveSetting('/inventory/articles/trash'));
         $this->assertSame('crm', ModuleSettingsMiddleware::resolveSetting('/crm/contacts/7'));

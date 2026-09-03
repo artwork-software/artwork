@@ -74,7 +74,10 @@ class UserPolicy
     public static function canViewExternalWorkerProfile(User $user): bool
     {
         return self::canViewForeignRoster($user)
-            || $user->can(PermissionEnum::CAN_VIEW_PRIVATE_USER_INFO->value);
+            || $user->canAny([
+                PermissionEnum::CAN_VIEW_PRIVATE_USER_INFO->value,
+                PermissionEnum::EXTERNAL_MANAGER->value,
+            ]);
     }
 
     public function delete(User $user, User $model): bool

@@ -252,7 +252,7 @@
                                 is-add-button
                                 use-translation
                                 icon="IconCalendarMonth"
-                                v-if="!project && can('can create events when creating a project')"
+                                v-if="!project && (can('create events without request') || can('request room occupancy') || can('can see planning calendar') || can('can edit planning calendar'))"
                                 @click="addProject(true)"
                             />
                             <BaseUIButton

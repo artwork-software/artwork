@@ -9,7 +9,6 @@ use Artwork\Modules\Holidays\Seeder\SwissCantoneSeeder;
 use Artwork\Modules\ServiceProvider\Models\ServiceProvider;
 use Artwork\Modules\Inventory\Models\InventoryArticleStatus;
 use Artwork\Modules\ArtistResidency\Enums\TypOfRoom;
-use Artwork\Modules\Inventory\Services\CraftItemMigrationService;
 use Artwork\Modules\Notification\Enums\NotificationEnum;
 use Artwork\Modules\Notification\Enums\NotificationFrequencyEnum;
 use Artwork\Modules\Notification\Models\NotificationSetting;
@@ -32,7 +31,6 @@ class UpdateArtwork extends Command
 
     public function __construct(
         private readonly ProjectManagementBuilderService $projectManagementBuilderService,
-        private readonly CraftItemMigrationService $craftItemMigrationService,
         private readonly SwissCantoneSeeder $swissCantoneSeeder,
         private readonly ConsolidateShiftsSeeder $consolidateShiftsSeeder,
         private readonly PermissionUpdater $sagePermissionUpdater,
@@ -135,6 +133,9 @@ class UpdateArtwork extends Command
     {
         $this->section('Permissions');
         $this->call('artwork:update-permissions');
+        // Rechte-Katalog: Stufenleiter-Implikationen und Rollenbilder-Presets (idempotent)
+        $this->call('db:seed', ['--class' => 'PermissionPresetSeeder', '--force' => true]);
+        $this->call('artwork:permissions:apply-implications');
     }
 
     private function addNewComponents(): void
@@ -247,16 +248,6 @@ class UpdateArtwork extends Command
                 'end_date' => now()->addMonth(),
             ]);
         });
-    }
-
-    private function migrateCraftInventoryItems(): void
-    {
-        $this->section('Craft Item Migration');
-        $result = $this->craftItemMigrationService->migrateCraftItemsToInventoryArticles();
-        $this->info("Migrated: {$result['success_count']} items");
-        if (!empty($result['skipped_count'])) {
-            $this->info("Skipped: {$result['skipped_count']} items");
-        }
     }
 
     private function setupPassport(): void

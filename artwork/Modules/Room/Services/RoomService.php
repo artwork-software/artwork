@@ -94,15 +94,13 @@ readonly class RoomService
         Room $room,
         CarbonPeriod $calendarPeriod,
         ?CalendarFilter $calendarFilter,
-        ?Project $project = null,
-        ?bool $desiresInventorySchedulingResource = false
+        ?Project $project = null
     ): array {
         return app(EventCollectionService::class)->collectEventsForRoom(
             $room,
             $calendarPeriod,
             $calendarFilter,
-            $project,
-            $desiresInventorySchedulingResource
+            $project
         );
     }
 
@@ -259,15 +257,13 @@ readonly class RoomService
         array|Collection $roomsWithEvents,
         CarbonPeriod $calendarPeriod,
         ?CalendarFilter $calendarFilter,
-        ?Project $project = null,
-        ?bool $desiresInventorySchedulingResource = false
+        ?Project $project = null
     ): Collection {
         return app(EventCollectionService::class)->collectEventsForRooms(
             $roomsWithEvents,
             $calendarPeriod,
             $calendarFilter,
-            $project,
-            $desiresInventorySchedulingResource
+            $project
         );
     }
 

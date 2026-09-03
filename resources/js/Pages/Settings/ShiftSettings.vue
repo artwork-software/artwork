@@ -244,16 +244,6 @@
                                           </span>
                                             </p>
 
-                                            <p v-if="element.inventory_planned_by_all" class="leading-5">
-                                                {{ $t('Inventory can be planned by all planners') }}
-                                            </p>
-                                            <p v-else class="leading-5">
-                                                {{ $t('Inventory can only be planned by:') }}
-                                                <span class="text-text">
-                                                {{ (element.craft_inventory_planer || []).map(u => u.full_name).join(', ') || '—' }}
-                                              </span>
-                                            </p>
-
                                             <p class="leading-5 flex items-center gap-1.5">
                                                 <PropertyIcon name="IconBell" class="size-3.5 shrink-0" />
                                                 <span v-if="element.notify_days > 0">
@@ -628,7 +618,7 @@
             :confirm="$t('Close message')"
         />
         <AddEditShiftTimePreset :time-preset="presetToEdit" @closed="closeShiftPresetModal" v-if="showAddShiftPresetModal" />
-        <AddCraftsModal @closed="closeAddCraftModal" v-if="openAddCraftsModal" :craft-to-edit="craftToEdit" :users-with-permission="usersWithPermission" :users-with-inventory-permission="usersWithInventoryPermission" :prop-qualifications="shiftQualifications" />
+        <AddCraftsModal @closed="closeAddCraftModal" v-if="openAddCraftsModal" :craft-to-edit="craftToEdit" :users-with-permission="usersWithPermission" :prop-qualifications="shiftQualifications" />
         <ConfirmDeleteModal :title="confirmDeleteTitle" :description="confirmDeleteDescription" @closed="closedDeleteCraftModal" @delete="submitDelete" v-if="openConfirmDeleteModal" />
     </ShiftSettingsHeader>
 </template>
@@ -738,7 +728,6 @@ export default defineComponent({
         'usersWithPermission',
         'shiftQualifications',
         'shiftTimePresets',
-        'usersWithInventoryPermission',
         'shiftSettings',
         'shiftCommitWorkflowUsers',
         'globalQualifications'

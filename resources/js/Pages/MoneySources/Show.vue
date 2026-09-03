@@ -86,10 +86,11 @@
 
                     <!-- Actions -->
                     <div class="flex flex-wrap gap-2">
-                        <BaseMenu  has-no-offset white-menu-background>
-                            <BaseMenuItem white-menu-background title="Edit" :icon="IconEdit"  @click="openEditMoneySourceModal" />
-                            <BaseMenuItem white-menu-background title="Duplicate" :icon="IconCopy"  @click="duplicateMoneySource(moneySource)" />
-                            <BaseMenuItem white-menu-background  title="Delete" :icon="IconTrash" @click="openDeleteSourceModal(moneySource)" />
+                        <!-- Bedingungen spiegeln MoneySourcePolicy (update / create / delete) -->
+                        <BaseMenu v-if="canManage || canDuplicate || canDelete" has-no-offset white-menu-background>
+                            <BaseMenuItem v-if="canManage" white-menu-background title="Edit" :icon="IconEdit"  @click="openEditMoneySourceModal" />
+                            <BaseMenuItem v-if="canDuplicate" white-menu-background title="Duplicate" :icon="IconCopy"  @click="duplicateMoneySource(moneySource)" />
+                            <BaseMenuItem v-if="canDelete" white-menu-background  title="Delete" :icon="IconTrash" @click="openDeleteSourceModal(moneySource)" />
                         </BaseMenu>
                     </div>
                 </div>
@@ -392,12 +393,25 @@ const competent_member = computed<number[]>(() => {
     ;(props.moneySource?.users ?? []).forEach((u: any) => { if (u.pivot?.competent) ids.push(u.id) })
     return ids
 })
+const isCreator = computed(() => props.moneySource?.creator?.id === authUser.value.id)
+// Spiegel von MoneySourcePolicy::update
 const canManage = computed(() =>
     is('artwork admin') ||
     access_member.value.includes(authUser.value.id) ||
     competent_member.value.includes(authUser.value.id) ||
+    isCreator.value ||
     can('view edit add money_sources') ||
-    can('can edit and delete money sources')
+    can('can edit and delete money sources') ||
+    can('can manage global project budgets')
+)
+// Duplizieren legt eine neue Quelle an → MoneySourcePolicy::create
+const canDuplicate = computed(() => is('artwork admin') || can('view edit add money_sources'))
+// Spiegel von MoneySourcePolicy::delete
+const canDelete = computed(() =>
+    is('artwork admin') ||
+    isCreator.value ||
+    can('can edit and delete money sources') ||
+    can('can manage global project budgets')
 )
 
 /** Formatters */

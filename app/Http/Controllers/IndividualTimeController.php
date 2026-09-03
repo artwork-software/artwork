@@ -74,9 +74,10 @@ class IndividualTimeController extends Controller
             || (bool) auth()->user()?->can(
                 \Artwork\Modules\Permission\Enums\PermissionEnum::AVAILABILITY_MANAGEMENT->value
             )
-            || ($isWorker && (bool) auth()->user()?->can(
-                \Artwork\Modules\Permission\Enums\PermissionEnum::MA_MANAGER->value
-            )),
+            || ($isWorker && (bool) auth()->user()?->canAny([
+                \Artwork\Modules\Permission\Enums\PermissionEnum::MA_MANAGER->value,
+                \Artwork\Modules\Permission\Enums\PermissionEnum::EXTERNAL_MANAGER->value,
+            ])),
             403
         );
 

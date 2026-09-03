@@ -48,6 +48,40 @@ final class BiEventTypeTagControllerTest extends FeatureTestCase
     }
 
     #[Test]
+    public function a_kpi_role_can_be_held_by_only_one_tag(): void
+    {
+        $this->actingAsUserWith(PermissionEnum::EVENT_SETTINGS_UPDATE->value);
+
+        $this->postJson(route('bi.tags.store'), [
+            'name' => 'Performance',
+            'name_de' => 'Vorstellung',
+            'kpi_role' => 'performance',
+        ])->assertCreated();
+
+        // Zweiter Tag mit derselben Rolle → 422, Rolle bleibt eindeutig
+        $this->postJson(route('bi.tags.store'), [
+            'name' => 'Premiere',
+            'name_de' => 'Premiere',
+            'kpi_role' => 'performance',
+        ])->assertUnprocessable()->assertJsonValidationErrors('kpi_role');
+
+        $this->postJson(route('bi.tags.store'), [
+            'name' => 'Whatever',
+            'name_de' => 'Egal',
+            'kpi_role' => 'nonsense',
+        ])->assertUnprocessable()->assertJsonValidationErrors('kpi_role');
+
+        // Umbenennen behält die Rolle — die Kennzahl hängt nicht mehr am Namen
+        $tag = BiEventTypeTag::where('kpi_role', 'performance')->firstOrFail();
+        $this->putJson(route('bi.tags.update', $tag), [
+            'name' => 'Show',
+            'name_de' => 'Aufführung',
+            'kpi_role' => 'performance',
+        ])->assertOk();
+        $this->assertDatabaseHas('bi_event_type_tags', ['id' => $tag->id, 'name_de' => 'Aufführung', 'kpi_role' => 'performance']);
+    }
+
+    #[Test]
     public function user_with_permission_can_update_tag(): void
     {
         $this->actingAsUserWith(PermissionEnum::EVENT_SETTINGS_UPDATE->value);
@@ -99,6 +133,31 @@ final class BiEventTypeTagControllerTest extends FeatureTestCase
         $this->assertDatabaseMissing('bi_event_type_tag_event_type', [
             'bi_event_type_tag_id' => $tag->id,
         ]);
+    }
+
+    #[Test]
+    public function tag_changes_invalidate_the_dashboard_cache(): void
+    {
+        $this->actingAsUserWith(PermissionEnum::EVENT_SETTINGS_UPDATE->value);
+        \Illuminate\Support\Facades\Cache::put('bi_dashboard_version', 10);
+        $eventType = EventType::query()->first() ?? EventType::factory()->create();
+
+        // Ohne Bump zeigt das Dashboard bis zu 10 Minuten „Tag nicht zugeordnet“,
+        // obwohl die Zuordnung längst gespeichert ist
+        $tag = $this->postJson(route('bi.tags.store'), [
+            'name' => 'Performance',
+            'name_de' => 'Vorstellung',
+            'kpi_role' => 'performance',
+        ])->assertCreated()->json();
+        self::assertSame(11, \Illuminate\Support\Facades\Cache::get('bi_dashboard_version'));
+
+        $this->postJson(route('bi.tags.sync-event-types', $tag['id']), [
+            'event_type_ids' => [$eventType->id],
+        ])->assertOk();
+        self::assertSame(12, \Illuminate\Support\Facades\Cache::get('bi_dashboard_version'));
+
+        $this->deleteJson(route('bi.tags.destroy', $tag['id']))->assertNoContent();
+        self::assertSame(13, \Illuminate\Support\Facades\Cache::get('bi_dashboard_version'));
     }
 
     #[Test]

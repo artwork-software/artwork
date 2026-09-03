@@ -2,6 +2,7 @@
 
 namespace Artwork\Modules\InternalIssue\Http\Requests;
 
+use Artwork\Modules\InternalIssue\Models\InternalIssue;
 use Illuminate\Foundation\Http\FormRequest;
 
 class UpdateInternalIssueRequest extends FormRequest
@@ -11,7 +12,9 @@ class UpdateInternalIssueRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return true;
+        $issue = $this->route('internalIssue');
+
+        return $issue instanceof InternalIssue && ($this->user()?->can('update', $issue) ?? false);
     }
 
     /**

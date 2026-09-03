@@ -1,5 +1,6 @@
 <template>
-    <div class="w-full">
+    <!-- class/style bleiben am Wrapper, alle übrigen Attribute/Listener gehen ans innere <input> -->
+    <div class="w-full" :class="attrs.class" :style="attrs.style">
         <!-- Label über dem Feld -->
         <label v-if="label && showLabel" :for="id" class="mb-1 block font-lexend text-xs font-medium text-[#3F424A]">
             <span class="block truncate">
@@ -11,16 +12,19 @@
         <div class="relative">
             <input
                 ref="inputEl"
+                v-bind="inputAttrs()"
                 :id="id"
                 :type="effectiveType"
                 v-model="model"
                 :placeholder="effectivePlaceholder"
                 :disabled="disabled"
                 :required="required"
+                :min="min ?? undefined"
+                :max="max ?? undefined"
                 :step="effectiveType === 'number' ? step : undefined"
-                :inputmode="isTimeProxy ? 'tel' : undefined"
-                :pattern="isTimeProxy ? timePattern : undefined"
-                :autocomplete="isTimeProxy ? 'off' : undefined"
+                :inputmode="isTimeProxy ? 'tel' : attrs.inputmode"
+                :pattern="isTimeProxy ? timePattern : attrs.pattern"
+                :autocomplete="isTimeProxy ? 'off' : attrs.autocomplete"
                 :aria-label="!showLabel && label ? (withoutTranslation ? label : $t(label)) : undefined"
                 :aria-invalid="String(Boolean(error))"
                 :aria-required="String(required)"
@@ -73,10 +77,24 @@
 </template>
 
 <script setup>
-import { computed, ref } from 'vue'
+import { computed, ref, useAttrs } from 'vue'
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 
+/**
+ * Attribute nicht automatisch auf den Wrapper legen: class/style bleiben am Root,
+ * alles andere (data-*, name, autocomplete, aria-*, native Listener wie @focus/@blur/@keydown …)
+ * landet am echten <input>, damit es dort wirkt (z. B. querySelector auf data-Attribute).
+ */
+defineOptions({ inheritAttrs: false })
+
 const emit = defineEmits(['focusout'])
+
+const attrs = useAttrs()
+/** bewusst keine computed: attrs ist nicht reaktiv, daher pro Render neu auswerten */
+const inputAttrs = () => {
+    const { class: _class, style: _style, ...rest } = attrs
+    return rest
+}
 
 /** v-model */
 const model = defineModel({ default: '' })
@@ -96,7 +114,9 @@ const props = defineProps({
     isLarge: { type: Boolean, default: false },
     withoutTranslation: { type: Boolean, default: false },
 
-    step: { type: Number, default: 1 },
+    min: { type: [String, Number], default: null },
+    max: { type: [String, Number], default: null },
+    step: { type: [String, Number], default: 1 },
     showLoading: { type: Boolean, default: false },
     inputClasses: { type: [String, Array, Object], default: '' },
     error: { type: String, default: '' },

@@ -37,14 +37,16 @@
                         </td>
                         <td class="py-2 px-3 text-text-subtle">{{ room.default_capacity ?? '-' }}</td>
                         <td class="py-2 px-3">
-                            <input
+                            <BaseInput
                                 v-if="canEdit"
                                 type="number"
-                                class="w-28 rounded-md border border-border bg-white px-2.5 py-1.5 text-sm shadow-sm focus:border-accent-600 focus:outline-none focus:ring-1 focus:ring-accent-600"
+                                :id="'bi_room_capacity_' + room.id"
+                                :label="$t('Project-specific capacity')"
+                                :show-label="false"
                                 :min="0"
-                                :value="getOverride(room.id)"
-                                placeholder=""
+                                :model-value="getOverride(room.id)"
                                 @change="saveOverride(room.id, $event.target.value)"
+                                class="w-28"
                             />
                             <span v-else class="text-text-muted">{{ getOverride(room.id) ?? '–' }}</span>
                         </td>
@@ -64,6 +66,7 @@ import { Link, usePage } from '@inertiajs/vue3';
 import { IconExternalLink } from '@tabler/icons-vue';
 import { usePermission } from '@/Composeables/Permission.js';
 import ToolTipComponent from '@/Components/ToolTips/ToolTipComponent.vue';
+import BaseInput from '@/Artwork/Inputs/BaseInput.vue';
 import { useBiSaveFeedback } from '@/Composeables/BiSaveFeedback.js';
 
 const props = defineProps({

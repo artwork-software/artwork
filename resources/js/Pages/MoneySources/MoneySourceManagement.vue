@@ -305,8 +305,9 @@
                                     </a>
                                 </MenuItem>
 
+                                <!-- Duplizieren legt eine neue Quelle an → MoneySourcePolicy::create -->
                                 <MenuItem
-                                    v-if="canWriteOrCompetent(moneySource) || can('view edit add money_sources') || can('can edit and delete money sources') || is('artwork admin')"
+                                    v-if="can('view edit add money_sources') || is('artwork admin')"
                                     v-slot="{ active }"
                                 >
                                     <button
@@ -333,8 +334,9 @@
                                     </button>
                                 </MenuItem>
 
+                                <!-- Spiegel von MoneySourcePolicy::delete (Mitglieder dürfen nicht löschen) -->
                                 <MenuItem
-                                    v-if="canWriteOrCompetent(moneySource) || can('can edit and delete money sources') || is('artwork admin')"
+                                    v-if="moneySource.creator_id === $page.props.auth.user.id || can('can edit and delete money sources') || can('can manage global project budgets') || is('artwork admin')"
                                     v-slot="{ active }"
                                 >
                                     <button

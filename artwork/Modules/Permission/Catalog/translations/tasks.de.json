@@ -1,0 +1,11 @@
+{
+    "To-dos": "To-dos",
+    "Every person creates, edits and deletes their own to-do lists without any permission. \"Manage checklist templates\" in the system settings includes this permission.": "Eigene To-do-Listen darf jede Person ohne Recht anlegen, bearbeiten und löschen. „Checklisten-Vorlagen verwalten“ in den Systemeinstellungen enthält dieses Recht.",
+    "Manage all to-do lists": "Alle To-do-Listen verwalten",
+    "Opening every to-do list": "Öffnen jeder To-do-Liste",
+    "\"Delete\" in the menu of other people's lists": "„Löschen“ im Menü fremder Listen",
+    "Change and delete lists of other people": "Fremde Listen ändern und löschen",
+    "Lists shared with the person or containing tasks assigned to them are editable without this permission.": "Listen, die mit der Person geteilt sind oder ihr zugewiesene Aufgaben enthalten, sind auch ohne dieses Recht bearbeitbar.",
+    "Module \"To-dos\" enabled": "Modul „To-dos“ aktiv",
+    "Can edit and delete other people's to-do lists": "Kann fremde To-do-Listen bearbeiten und löschen"
+}

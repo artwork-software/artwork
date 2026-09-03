@@ -375,7 +375,6 @@
                                 v-model="department_query"
                                 :label="$t('Or select teams, who should get access')"
                                 class="w-full"
-                                @focus="department_query = ''"
                             />
                             <div v-if="department_search_results.length > 0" class="absolute rounded-lg z-30 w-full max-h-60 bg-surface-inverse shadow-lg text-base ring-1 ring-black ring-opacity-5 overflow-auto sm:text-sm">
                                 <div class="border-white/10">

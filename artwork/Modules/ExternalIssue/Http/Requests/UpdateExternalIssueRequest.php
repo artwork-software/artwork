@@ -2,6 +2,7 @@
 
 namespace Artwork\Modules\ExternalIssue\Http\Requests;
 
+use Artwork\Modules\ExternalIssue\Models\ExternalIssue;
 use Illuminate\Foundation\Http\FormRequest;
 
 class UpdateExternalIssueRequest extends FormRequest
@@ -11,7 +12,9 @@ class UpdateExternalIssueRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return true;
+        $issue = $this->route('externalIssue');
+
+        return $issue instanceof ExternalIssue && ($this->user()?->can('update', $issue) ?? false);
     }
 
     /**

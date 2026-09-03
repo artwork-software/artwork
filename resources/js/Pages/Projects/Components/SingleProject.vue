@@ -25,7 +25,6 @@
                             $can('view projects') ||
                             $can('write projects') ||
                             $role('artwork admin') ||
-                            $role('budget admin') ||
                             checkPermission(project, 'edit') ||
                             checkPermission(project, 'view')"
                           :href="getEditHref(project)"

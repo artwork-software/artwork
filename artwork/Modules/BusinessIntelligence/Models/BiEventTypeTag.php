@@ -11,10 +11,19 @@ class BiEventTypeTag extends Model
 {
     use HasFactory;
 
+    /** Steuert die Kennzahl "Vorstellungen" (und die Kapazitätsbasis der Auslastung). */
+    public const KPI_ROLE_PERFORMANCE = 'performance';
+
+    /** Steuert die Kennzahl "Veranstaltungstage". */
+    public const KPI_ROLE_EVENT_DAY = 'event_day';
+
+    public const KPI_ROLES = [self::KPI_ROLE_PERFORMANCE, self::KPI_ROLE_EVENT_DAY];
+
     protected $fillable = [
         'name',
         'name_de',
         'color',
+        'kpi_role',
     ];
 
     public function eventTypes(): BelongsToMany

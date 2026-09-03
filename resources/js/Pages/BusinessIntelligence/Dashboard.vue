@@ -10,6 +10,11 @@
             >
                 <template #actions>
                     <div class="flex flex-wrap items-end gap-3">
+                        <!-- Der Zeitraum gilt für die GANZE Ansicht — deshalb ein benannter Block -->
+                        <div class="w-full -mb-1">
+                            <span class="text-[11px] font-semibold uppercase tracking-wide text-text-inverse-muted">{{ $t('Evaluation period') }}</span>
+                            <span class="ml-2 text-[11px] text-text-inverse-muted">{{ $t('applies to all tiles, charts and the table') }}</span>
+                        </div>
                         <div class="flex items-center gap-1.5 pb-2">
                             <button
                                 v-for="preset in rangePresets"
@@ -23,18 +28,53 @@
                                 {{ $t(preset.label) }}
                             </button>
                         </div>
-                        <BaseInput type="date" id="bi_dash_from" v-model="dateFrom" :label="$t('From')" class="w-40 [&_label]:text-text-inverse-muted!" input-classes="bg-white/10! border-white/16! text-text-inverse! [color-scheme:dark]" />
-                        <BaseInput type="date" id="bi_dash_to" v-model="dateTo" :label="$t('To')" class="w-40 [&_label]:text-text-inverse-muted!" input-classes="bg-white/10! border-white/16! text-text-inverse! [color-scheme:dark]" />
-                        <BaseUIButton :label="$t('Apply')" @click="reload()" :disabled="loading" hide-icon on-band />
+
+                        <!-- Spielzeit / Kalenderjahr: mit Pfeilen springen statt Daten tippen -->
+                        <div v-if="showPeriodStepper" class="flex items-center gap-1 pb-1.5">
+                            <button
+                                type="button"
+                                class="inline-flex size-7 items-center justify-center rounded-full bg-white/8 text-text-inverse hover:bg-white/16 transition"
+                                :disabled="loading"
+                                v-tooltip.bottom="{ value: activePreset === 'playing_time' ? $t('Previous season') : $t('Previous year'), appendTo: 'body', class: 'aw-tooltip' }"
+                                @click="shiftPeriod(-1)"
+                            >
+                                <IconChevronLeft class="size-4" />
+                            </button>
+                            <span class="min-w-44 text-center text-sm font-medium text-text-inverse tabular-nums">
+                                {{ periodStepLabel }}
+                                <span class="block text-[11px] font-normal text-text-inverse-muted">{{ rangeText(dateFrom, dateTo) }}</span>
+                            </span>
+                            <button
+                                type="button"
+                                class="inline-flex size-7 items-center justify-center rounded-full bg-white/8 text-text-inverse hover:bg-white/16 transition"
+                                :disabled="loading"
+                                v-tooltip.bottom="{ value: activePreset === 'playing_time' ? $t('Next season') : $t('Next year'), appendTo: 'body', class: 'aw-tooltip' }"
+                                @click="shiftPeriod(1)"
+                            >
+                                <IconChevronRight class="size-4" />
+                            </button>
+                        </div>
+
+                        <!-- Letzte 12 Monate: fester Zeitraum, nur anzeigen -->
+                        <span v-else-if="activePreset === 'last_12_months'" class="pb-2.5 text-sm text-text-inverse tabular-nums">
+                            {{ rangeText(dateFrom, dateTo) }}
+                        </span>
+
+                        <!-- Frei wählen (oder Spielzeit ohne hinterlegtes Fenster): Datumsfelder -->
+                        <template v-else>
+                            <BaseInput type="date" id="bi_dash_from" v-model="dateFrom" :label="$t('From')" class="w-40 [&_label]:text-text-inverse-muted!" input-classes="bg-white/10! border-white/16! text-text-inverse! [color-scheme:dark]" />
+                            <BaseInput type="date" id="bi_dash_to" v-model="dateTo" :label="$t('To')" class="w-40 [&_label]:text-text-inverse-muted!" input-classes="bg-white/10! border-white/16! text-text-inverse! [color-scheme:dark]" />
+                            <BaseUIButton :label="$t('Apply')" @click="reload()" :disabled="loading" hide-icon on-band />
+                        </template>
                         <BaseUIButton
-                            v-if="exportOptions"
+                            v-if="canExportBiData"
                             :label="$t('Excel-Export')"
                             @click="openHeaderExport"
                             hide-icon
                             on-band
                         />
                         <BaseUIButton
-                            v-if="exportOptions"
+                            v-if="canExportBiData"
                             :label="$t('Budget export')"
                             @click="showBudgetExportModal = true"
                             hide-icon
@@ -74,15 +114,110 @@
                 @close="showBudgetExportModal = false"
             />
 
-            <BiDashboardExportModal
-                v-if="showExportModal && exportOptions"
-                :options="exportOptions"
+            <BiExportDialog
+                v-if="showExportModal && canExportBiData"
+                mode="dashboard"
                 :initial-columns="steeringExportPreset?.columns ?? null"
                 :initial-project-ids="steeringExportPreset?.projectIds ?? null"
                 :default-date-from="dateFrom"
                 :default-date-to="dateTo"
+                date-source="dashboard"
                 @close="showExportModal = false"
             />
+
+            <!-- Download-Link nach Ablauf der Datei (Redirect aus bi.export.download) -->
+            <div v-if="exportExpired" class="rounded-2xl border border-warning-border bg-warning-surface px-4 py-3 text-sm text-warning flex items-center justify-between gap-4">
+                <span>{{ $t('This export file has expired — files are kept for 24 hours. Please create the export again.') }}</span>
+                <button type="button" class="shrink-0 font-medium hover:underline" @click="exportExpired = false">{{ $t('Close') }}</button>
+            </div>
+
+            <!-- Aktiver Zeitraum als Satz: welche Spanne gilt gerade, und womit wird verglichen -->
+            <div class="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-text-muted px-1">
+                <span class="font-medium text-text">{{ $t('Period') }}:</span>
+                <span>{{ periodSentence }}</span>
+                <span class="text-text-subtle" aria-hidden="true">·</span>
+                <span class="font-medium text-text">{{ $t('Comparison') }}:</span>
+                <span>{{ comparisonSentence }}</span>
+            </div>
+
+            <!-- Kein Spielzeitfenster hinterlegt → "Spielzeit" heißt in Wahrheit "alles" -->
+            <div v-if="seasonMissing" class="rounded-2xl border border-warning-border bg-warning-surface px-4 py-3 text-sm text-warning flex items-center justify-between gap-4">
+                <span>{{ $t('No season window is configured, so all periods are evaluated. Set the season under “Communication & Legal” in the tool settings.') }}</span>
+                <Link :href="route('tool.communication-and-legal')" class="shrink-0 font-medium text-warning hover:underline">
+                    {{ $t('Set season window') }}
+                </Link>
+            </div>
+
+            <!-- Freier Zeitraum falsch herum: nicht laden, sondern konkret sagen, was fehlt -->
+            <div v-if="rangeError" class="rounded-2xl border border-danger-border bg-danger-surface px-4 py-3 text-sm text-danger">
+                {{ $t('The end date lies before the start date.') }}
+            </div>
+
+            <!-- Reload fehlgeschlagen: Zahlen sind die alten -->
+            <div v-if="reloadError" class="rounded-2xl border border-danger-border bg-danger-surface px-4 py-3 text-sm text-danger flex items-center justify-between gap-4">
+                <span>{{ $t('The dashboard could not be reloaded — the figures shown are the previous ones.') }}</span>
+                <button type="button" class="shrink-0 font-medium hover:underline" @click="reload(true)">{{ $t('Try again') }}</button>
+            </div>
+
+            <!-- Erfolg der Schnellerfassung -->
+            <div v-if="savedNotice" class="rounded-2xl border border-success-border bg-success-surface px-4 py-2.5 text-sm text-success flex items-center gap-2">
+                <IconCircleCheck class="size-4 shrink-0" />
+                <span>{{ savedNotice }}</span>
+            </div>
+
+            <!-- Zwei Sichten: Überblick (Zahlen, Trend, Lücken) und Steuerung (Aufwand vs. Ertrag, Tabelle) -->
+            <div class="flex flex-wrap items-center justify-between gap-3">
+                <div class="flex rounded-lg border border-border-subtle bg-white p-0.5 shadow-sm" role="tablist">
+                    <button
+                        v-for="tab in viewTabs"
+                        :key="tab.key"
+                        type="button"
+                        role="tab"
+                        :aria-selected="view === tab.key"
+                        class="rounded-md px-3.5 py-1.5 text-sm font-medium transition"
+                        :class="view === tab.key ? 'bg-accent-600 text-white' : 'text-text-muted hover:bg-surface-sunken'"
+                        @click="setView(tab.key)"
+                    >
+                        {{ $t(tab.label) }}
+                    </button>
+                </div>
+
+                <!-- Sparten-Filter: wirkt serverseitig auf Kacheln, Charts und Tabelle -->
+                <div v-if="categories.length > 1" class="flex flex-wrap items-center gap-1.5">
+                    <span class="text-xs text-text-subtle mr-1">{{ $t('Category (Sector)') }}:</span>
+                    <button
+                        type="button"
+                        class="rounded-full border px-2.5 py-0.5 text-xs font-medium transition"
+                        :class="!categoryFilter ? 'border-accent-500 bg-accent-500 text-white' : 'border-border-subtle bg-white text-text-muted hover:bg-surface-sunken'"
+                        @click="applyCategory(null)"
+                    >
+                        {{ $t('All categories') }}
+                    </button>
+                    <button
+                        v-for="entry in categories"
+                        :key="entry.category"
+                        type="button"
+                        class="rounded-full border px-2.5 py-0.5 text-xs font-medium transition"
+                        :class="categoryFilter === entry.category ? 'border-accent-500 bg-accent-500 text-white' : 'border-border-subtle bg-white text-text-muted hover:bg-surface-sunken'"
+                        @click="applyCategory(entry.category)"
+                    >
+                        {{ categoryLabel(entry.category) }} <span class="opacity-70">({{ entry.project_count }})</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Während des Reloads bleiben die alten Zahlen sichtbar, aber erkennbar "in Arbeit" -->
+            <div class="space-y-6 transition-opacity" :class="{ 'opacity-50 pointer-events-none': loading }" :aria-busy="loading">
+
+            <!-- Leerzustand: keine Produktion im Zeitraum (ggf. in der Sparte) -->
+            <div v-if="isEmpty" class="rounded-2xl border border-border-subtle bg-white px-6 py-10 text-center shadow-sm">
+                <p class="text-sm font-medium text-text">{{ $t('No productions in this period.') }}</p>
+                <p class="mt-1 text-xs text-text-subtle">{{ $t('Choose another period or category — only productions with at least one event in the period are counted.') }}</p>
+                <div class="mt-4 flex flex-wrap justify-center gap-2">
+                    <BaseUIButton v-if="categoryFilter" :label="$t('All categories')" hide-icon white @click="applyCategory(null)" />
+                    <BaseUIButton v-if="activePreset !== 'playing_time'" :label="$t('Season (default)')" hide-icon white @click="applyPreset(rangePresets[0])" />
+                </div>
+            </div>
 
             <!-- Onboarding hint: BI component not placed in any project tab -->
             <div v-if="!biComponentInTab" class="rounded-2xl border border-warning-border bg-warning-surface px-4 py-3 text-sm text-warning flex items-center justify-between gap-4">
@@ -92,18 +227,24 @@
                 </Link>
             </div>
 
-            <!-- Onboarding hint: no tag linked to event types -->
+            <!-- Onboarding hint: KPI tag(s) not linked to event types → the affected figures stay empty -->
             <div v-if="!tagsLinked" class="rounded-2xl border border-warning-border bg-warning-surface px-4 py-3 text-sm text-warning flex items-center justify-between gap-4">
-                <span>{{ $t('No BI tags are linked to event types yet. Performances and event days will stay at zero until you assign them.') }}</span>
-                <Link :href="route('event_types.management')" class="shrink-0 font-medium text-warning hover:underline">
+                <span class="space-y-0.5">
+                    <span v-if="!kpiTags.performance" class="block">{{ $t('The BI tag “Performance” is not linked to any event type yet — performances and occupancy stay empty until you assign it.') }}</span>
+                    <span v-if="!kpiTags.event_day" class="block">{{ $t('The BI tag “Event day” is not linked to any event type yet — event days stay empty until you assign it.') }}</span>
+                </span>
+                <Link :href="route('event_types.bi_tags')" class="shrink-0 font-medium text-warning hover:underline">
                     {{ $t('Configure BI tags') }}
                 </Link>
             </div>
 
             <!-- Datenlücken: Projekte ohne erfasste BI-Zahlen -->
-            <div v-if="dataGaps.length > 0" class="rounded-2xl border border-warning-border bg-warning-surface px-4 py-3">
+            <div v-if="showOverview && dataGaps.length > 0" class="rounded-2xl border border-warning-border bg-warning-surface px-4 py-3">
                 <p class="text-sm font-medium text-warning mb-1.5">
                     {{ dataGaps.length }} {{ $t('projects with events but no BI figures — they pull every total towards zero.') }}
+                </p>
+                <p class="text-xs text-warning/80 mb-2">
+                    {{ $t('Click a production for the quick entry of totals; per-event figures are maintained in the project’s BI tab (link in the dialog).') }}
                 </p>
                 <div class="flex flex-wrap gap-1.5">
                     <button
@@ -137,7 +278,7 @@
             />
 
             <!-- KPI tiles -->
-            <div>
+            <div v-if="showOverview">
                 <div class="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3">
                     <div v-for="kpi in kpiTiles" :key="kpi.key" class="rounded-2xl border border-border-subtle bg-white p-4 shadow-sm">
                         <p class="text-xs text-text-subtle inline-flex items-center gap-1">
@@ -170,7 +311,16 @@
                             :key="kpi.key"
                             class="rounded-2xl border border-border-subtle bg-surface-sunken/70 p-4"
                         >
-                            <p class="text-xs text-text-subtle">{{ $t(kpi.label) }}</p>
+                            <p class="text-xs text-text-subtle inline-flex items-center gap-1">
+                                {{ $t(kpi.label) }}
+                                <ToolTipComponent
+                                    v-if="kpi.tooltip"
+                                    direction="bottom"
+                                    :tooltip-text="kpi.tooltip"
+                                    icon="IconInfoCircle"
+                                    icon-size="h-3.5 w-3.5"
+                                />
+                            </p>
                             <p class="text-lg font-semibold mt-1" :class="kpi.value === null ? 'text-text-subtle' : 'text-text'">
                                 {{ kpi.value ?? '–' }}
                             </p>
@@ -184,27 +334,29 @@
             </div>
 
             <!-- Monatliche Entwicklung -->
-            <div v-if="monthlyChart" class="rounded-2xl border border-border-subtle bg-white p-5 shadow-sm">
+            <div v-if="showOverview && monthlyChart" class="rounded-2xl border border-border-subtle bg-white p-5 shadow-sm">
                 <h4 class="text-sm font-medium text-text-muted mb-3">{{ $t('Monthly trend (per-event figures)') }}</h4>
                 <BiChart type="bar" :data="monthlyChart" :options="monthlyOptions" height="300px" />
             </div>
 
-            <!-- Charts by category -->
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <!-- Charts by category (Klick auf eine Sparte setzt den Seitenfilter) -->
+            <div v-if="showOverview" class="grid grid-cols-1 lg:grid-cols-2 gap-4">
                 <div class="rounded-2xl border border-border-subtle bg-white p-5 shadow-sm">
-                    <h4 class="text-sm font-medium text-text-muted mb-3">{{ $t('Revenue by category') }}</h4>
+                    <h4 class="text-sm font-medium text-text-muted mb-1">{{ $t('Revenue by category') }}</h4>
+                    <p class="text-xs text-text-subtle mb-3">{{ $t('Click a category to filter the whole dashboard.') }}</p>
                     <BiChart v-if="hasCategoryData" type="doughnut" :data="revenueChart" :options="categoryChartOptions" />
                     <p v-else class="text-sm text-text-subtle py-8 text-center">{{ $t('No data available.') }}</p>
                 </div>
                 <div class="rounded-2xl border border-border-subtle bg-white p-5 shadow-sm">
-                    <h4 class="text-sm font-medium text-text-muted mb-3">{{ $t('Visitors by category') }}</h4>
+                    <h4 class="text-sm font-medium text-text-muted mb-1">{{ $t('Visitors by category') }}</h4>
+                    <p class="text-xs text-text-subtle mb-3">{{ $t('Click a category to filter the whole dashboard.') }}</p>
                     <BiChart v-if="hasCategoryData" type="bar" :data="visitorsChart" :options="categoryChartOptions" />
                     <p v-else class="text-sm text-text-subtle py-8 text-center">{{ $t('No data available.') }}</p>
                 </div>
             </div>
 
             <!-- Aufwand vs. Ertrag -->
-            <div v-if="scatterChart" class="rounded-2xl border border-border-subtle bg-white p-5 shadow-sm">
+            <div v-if="showSteering && scatterChart" class="rounded-2xl border border-border-subtle bg-white p-5 shadow-sm">
                 <div class="flex items-center justify-between gap-3 mb-1">
                     <h4 class="text-sm font-medium text-text-muted">{{ $t('Effort vs. output') }}</h4>
                     <div class="flex flex-wrap items-center gap-3 text-xs text-text-subtle">
@@ -218,23 +370,22 @@
                 <BiChart type="scatter" :data="scatterChart" :options="scatterOptions" height="320px" />
             </div>
 
+            <!-- Steuerung ohne Scatter (unter 3 Produktionen): Hinweis statt stiller Lücke -->
+            <p v-if="showSteering && !scatterChart" class="text-xs text-text-subtle px-1">
+                {{ $t('The effort-vs-output chart appears once at least three productions in the period have figures.') }}
+            </p>
+
             <!-- Drilldown table -->
-            <div class="rounded-2xl border border-border-subtle bg-white p-5 shadow-sm">
+            <div v-if="showSteering" class="rounded-2xl border border-border-subtle bg-white p-5 shadow-sm">
                 <div class="flex items-center justify-between gap-3 mb-3">
-                    <h4 class="text-sm font-medium text-text-muted">{{ $t('Internal steering (effort vs. output)') }}</h4>
+                    <div>
+                        <h4 class="text-sm font-medium text-text-muted">{{ $t('Internal steering (effort vs. output)') }}</h4>
+                        <p class="text-xs text-text-subtle">{{ $t('Click a production to open its BI tab and maintain its figures there.') }}</p>
+                    </div>
                     <div class="flex items-center gap-2">
-                        <button
-                            v-if="categoryFilter"
-                            type="button"
-                            class="inline-flex items-center gap-1.5 rounded-full bg-accent-50 border border-accent-200 px-3 py-1 text-xs font-medium text-accent-700 hover:bg-accent-100"
-                            @click="categoryFilter = null"
-                        >
-                            {{ $t('Category (Sector)') }}: {{ categoryFilter }}
-                            <IconX class="size-3.5" />
-                        </button>
                         <!-- Zustandsübernahme: exportiert genau die sichtbare Tabelle -->
                         <button
-                            v-if="exportOptions"
+                            v-if="canExportBiData"
                             type="button"
                             class="inline-flex items-center gap-1.5 rounded-md border border-border-subtle px-2.5 py-1 text-xs font-medium text-text-muted hover:bg-surface-sunken transition"
                             @click="openSteeringExport"
@@ -270,8 +421,16 @@
                                     <Link :href="route('projects.tab', { project: row.project_id, projectTab: firstProjectTabId })" class="text-accent-600 hover:underline">
                                         {{ row.project_name }}
                                     </Link>
+                                    <Link
+                                        :href="route('projects.tab', { project: row.project_id, projectTab: firstProjectTabId })"
+                                        class="ml-1.5 inline-flex align-middle text-text-subtle hover:text-accent-600"
+                                        v-tooltip.top="{ value: $t('Maintain figures in the project'), appendTo: 'body', class: 'aw-tooltip' }"
+                                    >
+                                        <IconPencil class="size-3.5" />
+                                    </Link>
                                 </td>
                                 <td class="px-3 py-2 text-text-muted">{{ row.category || '—' }}</td>
+                                <!-- Leerwerte: "—" = nichts erfasst (formatInt/formatCurrency liefern das selbst) -->
                                 <td class="px-3 py-2">
                                     <span
                                         v-if="row.visitors_estimated"
@@ -294,7 +453,7 @@
                                     </div>
                                     <span v-else class="text-text-subtle">—</span>
                                 </td>
-                                <td class="px-3 py-2">{{ row.performances }}</td>
+                                <td class="px-3 py-2">{{ formatInt(row.performances) }}</td>
                                 <td class="px-3 py-2">{{ row.contracts_per_performance ?? '—' }}</td>
                                 <td v-if="sageApiEnabled" class="px-3 py-2">{{ row.bookings_per_performance ?? '—' }}</td>
                                 <td class="px-3 py-2">{{ row.tasks_docs_per_production }}</td>
@@ -327,7 +486,13 @@
                         </tbody>
                     </table>
                 </div>
+                <!-- Ampel-Legende: drei Farblogiken in einer Tabelle brauchen eine Erklärung -->
+                <p class="text-xs text-text-subtle mt-3">
+                    {{ $t('Occupancy: green from 90 %, blue from 50 %, yellow below · Attainment: green from 100 %, yellow from 80 %, red below · Costs: green up to plan, yellow up to 120 % of plan, red above.') }}
+                    · {{ $t('Not recorded') }}: —
+                </p>
             </div>
+            </div><!-- /loading-wrapper -->
         </div>
     </AppLayout>
 </template>
@@ -335,9 +500,9 @@
 <script setup>
 import { ref, computed, watch } from 'vue';
 import { router, Link, usePage } from '@inertiajs/vue3';
-import { IconChartHistogram, IconX, IconPencil, IconFileExport } from '@tabler/icons-vue';
+import { IconChartHistogram, IconPencil, IconFileExport, IconCircleCheck, IconChevronLeft, IconChevronRight } from '@tabler/icons-vue';
 import BiQuickEntryModal from '@/Pages/Projects/Components/BiComponents/BiQuickEntryModal.vue';
-import BiDashboardExportModal from '@/Pages/Projects/Components/BiComponents/BiDashboardExportModal.vue';
+import BiExportDialog from '@/Pages/Projects/Components/BiComponents/BiExportDialog.vue';
 import BiBudgetExportModal from '@/Pages/Projects/Components/BiComponents/BiBudgetExportModal.vue';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import ToolbarHeader from '@/Artwork/Toolbar/ToolbarHeader.vue';
@@ -353,12 +518,13 @@ const props = defineProps({
     dashboard: { type: Object, required: true },
     firstProjectTabId: { type: [Number, String], default: null },
     biComponentInTab: { type: Boolean, default: true },
-    // null, wenn der User kein Export-Recht hat → Button bleibt verborgen
-    exportOptions: { type: Object, default: null },
+    // Export-Buttons nur mit Recht; der Dialog lädt seine Optionen selbst
+    canExportBiData: { type: Boolean, default: false },
 });
 
-const exportOptions = computed(() => props.exportOptions);
+const canExportBiData = computed(() => props.canExportBiData);
 const showExportModal = ref(false);
+const exportExpired = ref(new URLSearchParams(window.location.search).get('export') === 'expired');
 const showBudgetExportModal = ref(false);
 
 const firstProjectTabId = computed(() => props.firstProjectTabId);
@@ -374,14 +540,76 @@ const byCategory = computed(() => props.dashboard.by_category ?? []);
 const projects = computed(() => props.dashboard.projects ?? []);
 const monthly = computed(() => props.dashboard.monthly ?? []);
 const dataGaps = computed(() => props.dashboard.data_gaps ?? []);
+const categories = computed(() => props.dashboard.categories ?? []);
 const tagsLinked = computed(() => props.dashboard.tags_linked !== false);
+
+// --- Sichten & Seitenzustand ---
+
+const viewTabs = [
+    { key: 'overview', label: 'Overview' },
+    { key: 'steering', label: 'Steering' },
+];
+const initialQueryForView = new URLSearchParams(window.location.search);
+const view = ref(initialQueryForView.get('view') === 'steering' ? 'steering' : 'overview');
+const setView = (key) => {
+    view.value = key;
+    // Sicht in der URL halten, damit Reload/Teilen dieselbe Sicht öffnet
+    const url = new URL(window.location.href);
+    if (key === 'overview') {
+        url.searchParams.delete('view');
+    } else {
+        url.searchParams.set('view', key);
+    }
+    window.history.replaceState(window.history.state, '', url);
+};
+
+const isEmpty = computed(() => (props.dashboard.kpis?.project_count ?? 0) === 0);
+const showOverview = computed(() => view.value === 'overview' && !isEmpty.value);
+const showSteering = computed(() => view.value === 'steering' && !isEmpty.value);
+
+const reloadError = ref(false);
+const rangeError = ref(false);
+const savedNotice = ref(null);
+let savedNoticeTimer = null;
+// Je KPI-Tag: ohne Terminart-Zuordnung bleibt die Kennzahl leer (kein Fallback)
+const kpiTags = computed(() => props.dashboard.kpi_tags ?? { performance: true, event_day: true });
 
 const dateFrom = ref(props.dashboard.range?.from ?? '');
 const dateTo = ref(props.dashboard.range?.to ?? '');
 const loading = ref(false);
 // Ohne explizite URL-Daten gilt serverseitig die Spielzeit → Preset als aktiv markieren
 const initialQuery = new URLSearchParams(window.location.search);
-const activePreset = ref(initialQuery.get('date_from') || initialQuery.get('date_to') ? null : 'playing_time');
+const knownPresets = ['playing_time', 'calendar_year', 'last_12_months', 'free'];
+const activePreset = ref(
+    knownPresets.includes(initialQuery.get('preset'))
+        ? initialQuery.get('preset')
+        : (initialQuery.get('date_from') || initialQuery.get('date_to') ? 'free' : 'playing_time')
+);
+// Wie viele Spielzeiten/Jahre vom Basisfenster entfernt (per Pfeilen)
+const periodOffset = ref(parseInt(initialQuery.get('offset') ?? '0', 10) || 0);
+
+// Basis-Spielzeitfenster aus den Tool-Einstellungen: bei Offset 0 ist es die
+// gelieferte Spanne, sonst die gelieferte Spanne um den Offset zurückgeschoben
+const shiftIsoYears = (iso, years) => {
+    if (!iso) return '';
+    const [y, m, d] = iso.split('-').map(Number);
+    return `${y + years}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+};
+const seasonBase = ref(
+    activePreset.value === 'playing_time' && props.dashboard.range?.from && props.dashboard.range?.to
+        ? { from: shiftIsoYears(props.dashboard.range.from, -periodOffset.value), to: shiftIsoYears(props.dashboard.range.to, -periodOffset.value) }
+        : null
+);
+const showPeriodStepper = computed(() =>
+    (activePreset.value === 'playing_time' && seasonBase.value !== null) || activePreset.value === 'calendar_year'
+);
+const periodStepLabel = computed(() => {
+    if (activePreset.value === 'calendar_year') return String(new Date().getFullYear() + periodOffset.value);
+    if (!dateFrom.value) return t('Season');
+    const fromYear = Number(dateFrom.value.slice(0, 4));
+    const toYear = Number((dateTo.value || dateFrom.value).slice(0, 4));
+    return `${t('Season')} ${fromYear === toYear ? fromYear : `${fromYear}/${String(toYear).slice(-2)}`}`;
+});
 
 // --- Vergleichszeitraum (Default: Vorjahr, serverseitig) ---
 
@@ -445,10 +673,48 @@ const comparisonLabel = computed(() => {
 // Kurzform an den Delta-Chips: konkreter Zeitraum statt pauschal "Vorjahr"
 const compareShortLabel = computed(() => comparisonLabel.value ?? '');
 
+// --- Zeitraum als Satz (Kopfzeile) ---
+
+const rangeText = (from, to) => {
+    if (!from && !to) return t('All periods');
+    return `${formatRangeDate(from) || '…'} – ${formatRangeDate(to) || '…'}`;
+};
+
+const periodSentence = computed(() => {
+    const range = props.dashboard.range ?? {};
+    const presetLabel = {
+        playing_time: showPeriodStepper.value ? periodStepLabel.value : t('Season'),
+        calendar_year: `${t('Calendar year')} ${periodStepLabel.value}`,
+        last_12_months: t('Last 12 months'),
+    }[activePreset.value] ?? t('Custom period');
+    return `${presetLabel} (${rangeText(range.from, range.to)})`;
+});
+
+const comparisonSentence = computed(() => {
+    if (!comparisonRange.value) return t('no comparison');
+    const presetLabel = {
+        previous_year: t('Previous year'),
+        previous_period: t('Previous period'),
+        free: t('Custom period'),
+    }[comparePreset.value] ?? t('Comparison period');
+    return `${presetLabel} (${rangeText(comparisonRange.value.from, comparisonRange.value.to)})`;
+});
+
+// "Spielzeit" ohne hinterlegtes Fenster = alle Zeiträume → das muss der Nutzer sehen
+const seasonMissing = computed(() =>
+    activePreset.value === 'playing_time'
+    && !props.dashboard.range?.from
+    && !props.dashboard.range?.to
+);
+
 // Nach einem Reload die effektiv angewandte Spanne in die Inputs spiegeln
 watch(() => props.dashboard.range, (range) => {
     dateFrom.value = range?.from ?? '';
     dateTo.value = range?.to ?? '';
+    // Basisfenster einmal festhalten, sobald die Spielzeit (Offset 0) geladen ist
+    if (activePreset.value === 'playing_time' && periodOffset.value === 0 && range?.from && range?.to) {
+        seasonBase.value = { from: range.from, to: range.to };
+    }
 });
 
 const gapLimit = 8;
@@ -488,8 +754,11 @@ const openSteeringExport = () => {
     showExportModal.value = true;
 };
 
-const onQuickEntrySaved = () => {
+const onQuickEntrySaved = (projectName) => {
     quickEntryGap.value = null;
+    savedNotice.value = `${t('Figures saved')}${projectName ? ` — ${projectName}` : ''}.`;
+    clearTimeout(savedNoticeTimer);
+    savedNoticeTimer = setTimeout(() => { savedNotice.value = null; }, 4000);
     // Schreibzugriff hat die Dashboard-Cache-Version gebumpt → Reload liefert frische Zahlen
     reload(true);
 };
@@ -497,9 +766,10 @@ const onQuickEntrySaved = () => {
 const numberFmt = new Intl.NumberFormat('de-DE');
 const currencyFmt = new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' });
 const percentFmt = new Intl.NumberFormat('de-DE', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
-const formatInt = (v) => numberFmt.format(v ?? 0);
-const formatCurrency = (v) => currencyFmt.format(v ?? 0);
-const formatPercent = (v) => `${percentFmt.format(v ?? 0)} %`;
+// null/undefined = nicht erfasst → "—" statt einer scheinbar echten 0
+const formatInt = (v) => (v === null || v === undefined) ? '—' : numberFmt.format(v);
+const formatCurrency = (v) => (v === null || v === undefined) ? '—' : currencyFmt.format(v);
+const formatPercent = (v) => (v === null || v === undefined) ? '—' : `${percentFmt.format(v)} %`;
 
 // --- Zeitraum-Schnellwahl ---
 
@@ -513,24 +783,50 @@ const rangePresets = [
     { key: 'playing_time', label: 'Season (default)' },
     { key: 'calendar_year', label: 'Calendar year' },
     { key: 'last_12_months', label: 'Last 12 months' },
+    { key: 'free', label: 'Free choice' },
 ];
 
-const applyPreset = (preset) => {
+// Daten für Preset + Offset setzen (Spielzeit = Basisfenster ± Jahre, Kalenderjahr = Jahr ± Offset)
+const applyPresetDates = () => {
     const now = new Date();
-    if (preset.key === 'playing_time') {
-        dateFrom.value = '';
-        dateTo.value = '';
-    } else if (preset.key === 'calendar_year') {
-        dateFrom.value = `${now.getFullYear()}-01-01`;
-        dateTo.value = `${now.getFullYear()}-12-31`;
-    } else {
+    const key = activePreset.value;
+    if (key === 'playing_time') {
+        if (seasonBase.value) {
+            dateFrom.value = shiftIsoYears(seasonBase.value.from, periodOffset.value);
+            dateTo.value = shiftIsoYears(seasonBase.value.to, periodOffset.value);
+        } else {
+            // Kein Fenster hinterlegt → Server liefert "alle Zeiträume", Warnbanner erklärt es
+            dateFrom.value = '';
+            dateTo.value = '';
+        }
+    } else if (key === 'calendar_year') {
+        const year = now.getFullYear() + periodOffset.value;
+        dateFrom.value = `${year}-01-01`;
+        dateTo.value = `${year}-12-31`;
+    } else if (key === 'last_12_months') {
         const from = new Date(now);
         from.setFullYear(from.getFullYear() - 1);
         from.setDate(from.getDate() + 1);
         dateFrom.value = isoDate(from);
         dateTo.value = isoDate(now);
     }
+};
+
+const applyPreset = (preset) => {
     activePreset.value = preset.key;
+    periodOffset.value = 0;
+    if (preset.key === 'free') {
+        // Datumsfelder erscheinen, der Nutzer bestätigt mit „Anwenden“
+        return;
+    }
+    applyPresetDates();
+    reload(true);
+};
+
+// Pfeile: eine Spielzeit bzw. ein Kalenderjahr vor oder zurück
+const shiftPeriod = (delta) => {
+    periodOffset.value += delta;
+    applyPresetDates();
     reload(true);
 };
 
@@ -556,14 +852,21 @@ const relDeltaText = (d) => (d === null ? null : `${percentFmt.format(Math.abs(d
 
 const effortScoreTooltip = computed(() => {
     const w = scoreWeights.value;
-    if (!w) {
-        return t('Weighted proxy for internal effort: 2 × contracts + 1 × bookings + 1.5 × open tasks + 0.5 × documents + 0.1 × effort hours.');
-    }
     const fmt = (v) => numberFmt.format(v);
+    // Einordnung: eine Formel allein sagt nicht, ob 14,5 viel ist
+    const scores = projects.value.map(row => row.effort_score).filter(v => v !== null && v !== undefined);
+    const context = scores.length
+        ? ` ${t('Median of all productions in the period')}: ${fmt(median(scores))} — ${t('higher = more internal effort')}.`
+        : ` ${t('higher = more internal effort')}.`;
+    if (!w) {
+        return t('Weighted proxy for internal effort: 2 × contracts + 1 × bookings + 1.5 × open tasks + 0.5 × documents + 0.1 × effort hours.') + context;
+    }
+    // Sage-Buchungen nur nennen, wenn die Schnittstelle aktiv ist
+    const bookingsPart = sageApiEnabled ? `${fmt(w.bookings)} × ${t('bookings')} + ` : '';
     return `${t('Weighted proxy for internal effort')}: `
-        + `${fmt(w.contracts)} × ${t('contracts')} + ${fmt(w.bookings)} × ${t('bookings')} + `
+        + `${fmt(w.contracts)} × ${t('contracts')} + ${bookingsPart}`
         + `${fmt(w.open_tasks)} × ${t('open tasks')} + ${fmt(w.documents)} × ${t('documents')} + `
-        + `${fmt(w.effort_hours)} × ${t('effort hours')}.`;
+        + `${fmt(w.effort_hours)} × ${t('effort hours')}.` + context;
 });
 
 const kpiTiles = computed(() => {
@@ -573,6 +876,9 @@ const kpiTiles = computed(() => {
     const eventDaysDelta = delta('event_days');
     const performancesDelta = delta('performances');
 
+    const unlinkedTooltip = t('BI tag not linked to any event type — assign it in the event type settings.');
+    const unlinkedNote = t('Tag not assigned');
+
     return [
         {
             key: 'visitors',
@@ -581,7 +887,8 @@ const kpiTiles = computed(() => {
             delta: visitorsDelta,
             deltaText: relDeltaText(visitorsDelta),
             note: kpis.value.visitors_estimated ? t('partly estimated from sold tickets') : null,
-            tooltip: kpis.value.visitors_estimated ? t('Estimated from sold tickets') : null,
+            tooltip: (kpis.value.visitors_estimated ? t('Estimated from sold tickets') + ' · ' : '')
+                + t('Sum of recorded visitors of all productions in the period. Per-event figures count only events in the period, total figures count fully.'),
             planLine: planSummary.value?.visitors_attainment !== null && planSummary.value?.visitors_attainment !== undefined
                 ? `${t('Plan')}: ${formatInt(planSummary.value.plan_visitors)} · ${formatPercent(planSummary.value.visitors_attainment)}`
                 : null,
@@ -592,6 +899,7 @@ const kpiTiles = computed(() => {
             value: formatCurrency(kpis.value.revenue),
             delta: revenueDelta,
             deltaText: relDeltaText(revenueDelta),
+            tooltip: t('Sum of recorded revenue of all productions in the period.'),
             planLine: planSummary.value?.revenue_attainment !== null && planSummary.value?.revenue_attainment !== undefined
                 ? `${t('Plan')}: ${formatCurrency(planSummary.value.plan_revenue)} · ${formatPercent(planSummary.value.revenue_attainment)}`
                 : null,
@@ -602,6 +910,7 @@ const kpiTiles = computed(() => {
             label: 'Costs',
             value: formatCurrency(kpis.value.costs),
             delta: null,
+            tooltip: t('Sum of recorded total costs — only productions that entered costs.'),
             planLine: planSummary.value?.costs_attainment !== null && planSummary.value?.costs_attainment !== undefined
                 ? `${t('Plan')}: ${formatCurrency(planSummary.value.plan_costs)} · ${formatPercent(planSummary.value.costs_attainment)}`
                 : null,
@@ -609,10 +918,12 @@ const kpiTiles = computed(() => {
         {
             key: 'occupancy',
             label: 'Occupancy rate',
-            value: kpis.value.occupancy !== null && kpis.value.occupancy !== undefined ? formatPercent(kpis.value.occupancy) : '—',
+            value: formatPercent(kpis.value.occupancy),
             delta: occupancyDelta,
             deltaText: occupancyDelta !== null ? `${percentFmt.format(Math.abs(occupancyDelta))} ${t('percentage points')}` : null,
-            tooltip: t('Sold tickets ÷ seat capacity of the rooms played in the selected period.'),
+            note: kpiTags.value.performance ? null : unlinkedNote,
+            tooltip: t('Sold tickets ÷ seat capacity of the rooms played in the selected period.')
+                + (kpiTags.value.performance ? '' : ' ' + unlinkedTooltip),
         },
         {
             key: 'event_days',
@@ -620,6 +931,10 @@ const kpiTiles = computed(() => {
             value: formatInt(kpis.value.event_days),
             delta: eventDaysDelta,
             deltaText: relDeltaText(eventDaysDelta),
+            note: kpiTags.value.event_day ? null : unlinkedNote,
+            tooltip: kpiTags.value.event_day
+                ? t('Distinct days with events whose event type carries the BI tag “Event day”.')
+                : unlinkedTooltip,
         },
         {
             key: 'performances',
@@ -627,8 +942,27 @@ const kpiTiles = computed(() => {
             value: formatInt(kpis.value.performances),
             delta: performancesDelta,
             deltaText: relDeltaText(performancesDelta),
+            note: kpiTags.value.performance ? null : unlinkedNote,
+            tooltip: kpiTags.value.performance
+                ? t('Events whose event type carries the BI tag “Performance”.')
+                : unlinkedTooltip,
         },
-        { key: 'project_count', label: 'Productions', value: formatInt(kpis.value.project_count), delta: null },
+        {
+            key: 'project_count',
+            label: 'Productions',
+            value: formatInt(kpis.value.project_count),
+            delta: null,
+            tooltip: t('Productions with at least one event in the period.'),
+        },
+        // Erfassungsgrad: die wichtigste Kennzahl für die Belastbarkeit aller anderen
+        {
+            key: 'recorded',
+            label: 'Recorded',
+            value: `${formatInt(Math.max((kpis.value.project_count ?? 0) - dataGaps.value.length, 0))} / ${formatInt(kpis.value.project_count)}`,
+            delta: null,
+            note: dataGaps.value.length > 0 ? `${dataGaps.value.length} ${t('without figures')}` : null,
+            tooltip: t('Productions in the period that have at least one BI figure (or are marked as not relevant). The others pull every total towards zero.'),
+        },
     ];
 });
 
@@ -640,13 +974,14 @@ const quotaTiles = computed(() => {
 
     const pct = (v) => (v === null || v === undefined) ? null : formatPercent(v);
 
+    // Absolutwert und zugehörige Quote stehen nebeneinander; jede Kachel nennt ihren Nenner
     return [
-        { key: 'tickets_issued', label: 'Tickets issued', value: formatInt(q.tickets_issued) },
-        { key: 'free', label: 'Free tickets', value: q.free !== null ? formatInt(q.free) : null },
-        { key: 'free_tickets_rate', label: 'Free ticket rate', value: pct(q.free_tickets_rate) },
-        { key: 'reduced_tickets_rate', label: 'Reduced ticket rate', value: pct(q.reduced_tickets_rate) },
-        { key: 'paying_rate', label: 'Paying rate', value: pct(q.paying_rate) },
-        { key: 'reduced', label: 'Reduced tickets', value: q.reduced !== null ? formatInt(q.reduced) : null },
+        { key: 'tickets_issued', label: 'Tickets issued', value: formatInt(q.tickets_issued), tooltip: t('All tickets from the audience categories (full, reduced and free).') },
+        { key: 'free', label: 'Free tickets', value: q.free !== null ? formatInt(q.free) : null, tooltip: t('Tickets in categories with pricing type “free”.') },
+        { key: 'free_tickets_rate', label: 'Free ticket rate', value: pct(q.free_tickets_rate), tooltip: t('Free tickets ÷ all issued tickets.') },
+        { key: 'reduced', label: 'Reduced tickets', value: q.reduced !== null ? formatInt(q.reduced) : null, tooltip: t('Tickets in categories with pricing type “reduced”.') },
+        { key: 'reduced_tickets_rate', label: 'Reduced ticket rate', value: pct(q.reduced_tickets_rate), tooltip: t('Reduced tickets ÷ paid tickets (full + reduced).') },
+        { key: 'paying_rate', label: 'Paying rate', value: pct(q.paying_rate), tooltip: t('Paid tickets (full + reduced) ÷ all issued tickets.') },
     ];
 });
 
@@ -735,7 +1070,17 @@ const monthlyOptions = {
 
 // --- Kategorie-Charts (klickbar → filtert Tabelle) ---
 
-const categoryFilter = ref(null);
+// Serverseitiger Seitenfilter (Kacheln, Charts, Tabelle) — Wahrheit ist der Payload
+const categoryFilter = computed(() => props.dashboard.category_filter ?? null);
+
+const applyCategory = (key) => {
+    pendingCategory = key;
+    reload(true);
+};
+let pendingCategory = categoryFilter.value;
+
+// Backend liefert '—' als Schlüssel für Projekte ohne Sparte → lesbares Label
+const categoryLabel = (key) => (key === '—' || !key) ? t('Without category') : key;
 
 const categoryChartOptions = computed(() => ({
     responsive: true,
@@ -755,15 +1100,21 @@ const categoryChartOptions = computed(() => ({
             },
         },
     },
-    onClick: (event, elements, chart) => {
+    onHover: (event, elements) => {
+        // Klickbarkeit sichtbar machen
+        const target = event?.native?.target;
+        if (target) target.style.cursor = elements?.length ? 'pointer' : 'default';
+    },
+    onClick: (event, elements) => {
         if (!elements?.length) return;
-        const label = chart.data.labels[elements[0].index];
-        categoryFilter.value = categoryFilter.value === label ? null : label;
+        // Roh-Schlüssel statt Anzeige-Label; Klick auf die aktive Sparte hebt den Filter auf
+        const key = byCategory.value[elements[0].index]?.category ?? null;
+        applyCategory(categoryFilter.value === key ? null : key);
     },
 }));
 
 const revenueChart = computed(() => ({
-    labels: byCategory.value.map(c => c.category),
+    labels: byCategory.value.map(c => categoryLabel(c.category)),
     datasets: [{
         data: byCategory.value.map(c => c.revenue),
         backgroundColor: byCategory.value.map((_, i) => palette[i % palette.length]),
@@ -771,7 +1122,7 @@ const revenueChart = computed(() => ({
 }));
 
 const visitorsChart = computed(() => ({
-    labels: byCategory.value.map(c => c.category),
+    labels: byCategory.value.map(c => categoryLabel(c.category)),
     datasets: [{
         label: t('Visitors'),
         data: byCategory.value.map(c => c.visitors),
@@ -798,7 +1149,8 @@ const scatterChart = computed(() => {
     const rows = scatterRows.value;
     if (rows.length < 3) return null;
 
-    const outputOf = (row) => outputUsesRevenue.value ? row.revenue : row.visitors;
+    // null (nicht erfasst) als 0 auf der Achse — sonst verschwindet der Punkt
+    const outputOf = (row) => (outputUsesRevenue.value ? row.revenue : row.visitors) ?? 0;
     const effortMedian = median(rows.map(r => r.effort_score));
     const outputMedian = median(rows.map(outputOf));
 
@@ -906,10 +1258,8 @@ const sortBy = (key) => {
 };
 
 const sortedProjects = computed(() => {
-    let rows = [...projects.value];
-    if (categoryFilter.value) {
-        rows = rows.filter(row => (row.category || '—') === categoryFilter.value);
-    }
+    // Sparten-Filter greift bereits serverseitig — hier nur noch sortieren
+    const rows = [...projects.value];
     rows.sort((a, b) => {
         const av = a[sortKey.value];
         const bv = b[sortKey.value];
@@ -923,16 +1273,32 @@ const sortedProjects = computed(() => {
 
 const reload = (fromPreset = false) => {
     if (!fromPreset) {
-        activePreset.value = null;
+        // Manuell angewandte Daten = freier Zeitraum
+        activePreset.value = 'free';
+        periodOffset.value = 0;
+    }
+    // Von > Bis würde serverseitig mit 422 abgewiesen und nur als generischer Reload-Fehler erscheinen
+    const invalid = (from, to) => Boolean(from && to && from > to);
+    rangeError.value = invalid(dateFrom.value, dateTo.value)
+        || (comparePreset.value === 'free' && invalid(compareFrom.value, compareTo.value));
+    if (rangeError.value) {
+        return;
     }
     loading.value = true;
+    reloadError.value = false;
     router.get(route('bi.dashboard'), {
         date_from: dateFrom.value || null,
         date_to: dateTo.value || null,
+        category: pendingCategory || null,
+        // Preset + Offset in der URL, damit Reload/Teilen dieselbe Sicht öffnet
+        preset: activePreset.value,
+        ...(periodOffset.value !== 0 ? { offset: periodOffset.value } : {}),
+        ...(view.value === 'steering' ? { view: 'steering' } : {}),
         ...compareParams(),
     }, {
         preserveState: true,
         preserveScroll: true,
+        onError: () => { reloadError.value = true; },
         onFinish: () => { loading.value = false; },
     });
 };

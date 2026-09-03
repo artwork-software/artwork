@@ -101,7 +101,7 @@
                         <button @click="toggleDetail(snapshot.id)" class="text-xs text-text hover:underline print:hidden">
                             {{ expandedId === snapshot.id ? $t('Hide') : $t('Show') }}
                         </button>
-                        <button v-if="canEdit" @click="deleteSnapshot(snapshot.id)" class="text-xs text-danger hover:text-danger print:hidden">
+                        <button v-if="canEdit" @click="snapshotToDelete = snapshot" class="text-xs text-danger hover:text-danger print:hidden">
                             {{ $t('Delete') }}
                         </button>
                     </div>
@@ -119,6 +119,14 @@
             </div>
         </div>
         <p v-else class="text-sm text-text-subtle">{{ $t('No snapshots created yet.') }}</p>
+
+        <ArtworkBaseDeleteModal
+            v-if="snapshotToDelete"
+            :title="$t('Delete snapshot?')"
+            :description="`${snapshotToDelete.name} (${formatDate(snapshotToDelete.snapshot_date)}) — ${$t('This snapshot will be removed permanently.')}`"
+            @close="snapshotToDelete = null"
+            @delete="deleteSnapshot"
+        />
     </div>
 </template>
 
@@ -128,6 +136,7 @@ import { usePage } from '@inertiajs/vue3';
 import BaseInput from '@/Artwork/Inputs/BaseInput.vue';
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 import ArtworkBaseListbox from '@/Artwork/Listbox/ArtworkBaseListbox.vue';
+import ArtworkBaseDeleteModal from '@/Artwork/Modals/ArtworkBaseDeleteModal.vue';
 import BiChart from '@/Artwork/Charts/BiChart.vue';
 import { useTranslation } from '@/Composeables/Translation.js';
 import { useBiSaveFeedback } from '@/Composeables/BiSaveFeedback.js';
@@ -152,8 +161,10 @@ const categoryNameById = computed(() => new Map(
 ));
 
 const newName = ref('');
-const newDate = ref('');
+// Stichtag ist fast immer "heute" → vorbelegen
+const newDate = ref(new Date().toISOString().slice(0, 10));
 const expandedId = ref(null);
+const snapshotToDelete = ref(null);
 const compareId = ref(null);
 
 // Scope-Wahl beim Anlegen: Ist- oder Plan-Datensatz einfrieren
@@ -328,8 +339,10 @@ const createSnapshot = async () => {
     }
 };
 
-const deleteSnapshot = async (snapshotId) => {
-    if (!confirm('Delete this snapshot? This cannot be undone.')) return;
+const deleteSnapshot = async () => {
+    const snapshotId = snapshotToDelete.value?.id;
+    snapshotToDelete.value = null;
+    if (!snapshotId) return;
     const ok = await biSave.run(
         () => axios.delete(route('projects.bi.snapshots.destroy', [props.projectId, snapshotId]))
     );

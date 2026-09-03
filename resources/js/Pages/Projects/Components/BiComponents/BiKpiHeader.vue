@@ -9,6 +9,13 @@
                 <div class="flex items-center gap-1.5">
                     <component :is="kpi.icon" class="size-4 text-text-subtle shrink-0" />
                     <span class="text-xs text-text-subtle truncate">{{ $t(kpi.label) }}</span>
+                    <ToolTipComponent
+                        v-if="kpi.tooltip"
+                        direction="bottom"
+                        :tooltip-text="kpi.tooltip"
+                        icon="IconInfoCircle"
+                        icon-size="h-3.5 w-3.5"
+                    />
                 </div>
                 <p v-if="kpi.notApplicable" class="text-xs text-text-subtle mt-2 italic">
                     {{ $t('Not relevant') }}
@@ -19,6 +26,9 @@
                     </p>
                     <p v-if="kpi.estimated" class="text-[10px] text-accent-600 leading-tight">
                         {{ $t('estimated from sold tickets') }}
+                    </p>
+                    <p v-else-if="kpi.note" class="text-[10px] text-warning leading-tight">
+                        {{ kpi.note }}
                     </p>
                 </template>
             </div>
@@ -57,6 +67,7 @@ import {
     IconMasksTheater,
 } from '@tabler/icons-vue';
 import BiChart from '@/Artwork/Charts/BiChart.vue';
+import ToolTipComponent from '@/Components/ToolTips/ToolTipComponent.vue';
 import { useTranslation } from '@/Composeables/Translation.js';
 
 const t = useTranslation();
@@ -78,6 +89,9 @@ const kpiTiles = computed(() => {
     const s = props.summary;
     const ticketsNa = !!s.sold_tickets_not_applicable;
     const revenueNa = !!s.revenue_not_applicable;
+    // false = BI-Tag "Vorstellung" keiner Terminart zugeordnet → Kennzahl bleibt leer (kein Fallback)
+    const performanceTagLinked = s.performance_tag_linked !== false;
+    const unlinkedTooltip = t('BI tag not linked to any event type — assign it in the event type settings.');
 
     return [
         {
@@ -85,30 +99,41 @@ const kpiTiles = computed(() => {
             value: formatInt(s.visitors),
             estimated: !!s.visitors_estimated,
             notApplicable: !!s.visitors_not_applicable,
+            tooltip: t('Recorded visitors; per-event figures are summed over all events.'),
         },
         {
             key: 'sold_tickets', label: 'Sold tickets', icon: IconTicket,
             value: formatInt(s.sold_tickets),
             notApplicable: ticketsNa,
+            tooltip: t('Recorded sold tickets; without a direct value the sum of full-price and reduced tickets.'),
         },
         {
             key: 'revenue', label: 'Revenue', icon: IconCurrencyEuro,
             value: formatCurrency(s.revenue),
             notApplicable: revenueNa,
+            tooltip: t('Recorded revenue (ticket income) of this production.'),
         },
         {
             key: 'occupancy', label: 'Occupancy rate', icon: IconGauge,
             value: formatPercent(s.occupancy),
             notApplicable: ticketsNa,
+            note: performanceTagLinked ? null : t('Tag not assigned'),
+            tooltip: t('Sold tickets ÷ seat capacity of all performances (room capacity, counted once per performance).')
+                + (performanceTagLinked ? '' : ' ' + unlinkedTooltip),
         },
         {
             key: 'avg_price', label: 'Average ticket price', icon: IconTag,
             value: formatCurrency(s.avg_price),
             notApplicable: ticketsNa || revenueNa,
+            tooltip: t('Revenue ÷ sold tickets.'),
         },
         {
             key: 'performances', label: 'Performances', icon: IconMasksTheater,
             value: formatInt(s.performances),
+            note: performanceTagLinked ? null : t('Tag not assigned'),
+            tooltip: performanceTagLinked
+                ? t('Events whose event type carries the BI tag “Performance”.')
+                : unlinkedTooltip,
         },
     ];
 });
@@ -121,11 +146,12 @@ const quotaTiles = computed(() => {
 
     const noShow = s.no_show_rate;
 
+    // Jede Quote nennt ihren Nenner — die Kacheln sind sonst nicht unterscheidbar
     return [
-        { key: 'tickets_issued', label: 'Tickets issued', value: formatInt(s.tickets_issued) },
-        { key: 'free_tickets_rate', label: 'Free ticket rate', value: formatPercent(s.free_tickets_rate) },
-        { key: 'reduced_tickets_rate', label: 'Reduced ticket rate', value: formatPercent(s.reduced_tickets_rate) },
-        { key: 'paying_rate', label: 'Paying rate', value: formatPercent(s.paying_rate) },
+        { key: 'tickets_issued', label: 'Tickets issued', value: formatInt(s.tickets_issued), tooltip: t('All tickets from the audience categories (full, reduced and free).') },
+        { key: 'free_tickets_rate', label: 'Free ticket rate', value: formatPercent(s.free_tickets_rate), tooltip: t('Free tickets ÷ all issued tickets.') },
+        { key: 'reduced_tickets_rate', label: 'Reduced ticket rate', value: formatPercent(s.reduced_tickets_rate), tooltip: t('Reduced tickets ÷ paid tickets (full + reduced).') },
+        { key: 'paying_rate', label: 'Paying rate', value: formatPercent(s.paying_rate), tooltip: t('Paid tickets (full + reduced) ÷ all issued tickets.') },
         {
             key: 'no_show_rate',
             label: 'No-show rate',
@@ -133,9 +159,9 @@ const quotaTiles = computed(() => {
             value: (noShow !== null && noShow !== undefined && noShow < 0) ? null : formatPercent(noShow),
             tooltip: (noShow !== null && noShow !== undefined && noShow < 0)
                 ? t('More visitors than issued tickets recorded — no-show rate not meaningful.')
-                : null,
+                : t('Issued tickets that were not used: 1 − visitors ÷ issued tickets.'),
         },
-        { key: 'seat_occupancy', label: 'Seat occupancy (incl. free tickets)', value: formatPercent(s.seat_occupancy) },
+        { key: 'seat_occupancy', label: 'Seat occupancy (incl. free tickets)', value: formatPercent(s.seat_occupancy), tooltip: t('Issued tickets (incl. free tickets) ÷ seat capacity.') },
     ];
 });
 

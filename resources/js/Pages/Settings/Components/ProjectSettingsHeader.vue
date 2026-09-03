@@ -92,12 +92,6 @@ export default defineComponent({
                     current: route().current('bi.settings.index'),
                     permission: role('artwork admin') || can('change tool settings')
                 },
-                {
-                    name: this.$t('BI Export'),
-                    href: route('bi.export.index'),
-                    current: route().current('bi.export.index'),
-                    permission: role('artwork admin') || can('can export bi data')
-                },
             ]
         }
     }

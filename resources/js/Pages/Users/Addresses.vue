@@ -86,7 +86,7 @@
                         </MenuItem>
                     </BaseMenu>
 
-                    <BaseUIButton variant="primary" on-band hide-icon v-if="can('can manage workers') || is('artwork admin')" @click="openSelectAddUsersModal = true">
+                    <BaseUIButton variant="primary" on-band hide-icon v-if="can('can manage workers') || can('can manage external workers') || is('artwork admin')" @click="openSelectAddUsersModal = true">
                         <component :is="IconCirclePlus" stroke-width="1" class="size-5" />
                         {{ $t('Add new Address') }}
                     </BaseUIButton>
@@ -239,7 +239,7 @@
 
                 <div class="flex items-center gap-3">
                     <BaseUIButton
-                        v-if="can('can manage workers') || is('artwork admin')"
+                        v-if="can('can manage workers') || can('can manage external workers') || is('artwork admin')"
                         @click="openSelectAddUsersModal = true"
                         type="button"
                         hide-icon
@@ -539,6 +539,7 @@
         :departments="departments"
         :roles="roles"
         :permission_presets="permission_presets"
+        :catalog="catalog"
         :users="users"
         :invited-users="invitedUsers"
     />
@@ -578,6 +579,7 @@ const props = defineProps({
     freelancers: Array,
     serviceProviders: Array,
     permission_presets: Array,
+    catalog: Object,
     invitedUsers: Array,
     memberSortEnums: Array,
     userUserManagementSetting: Object,

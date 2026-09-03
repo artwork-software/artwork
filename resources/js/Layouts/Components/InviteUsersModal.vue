@@ -133,8 +133,8 @@
                 </Disclosure>
             </div>
 
-            <!-- Roles -->
-            <div class="mt-8">
+            <!-- Roles (nur für Admins befüllt, siehe UserController::index) -->
+            <div v-if="rolesLocal.length" class="mt-8">
                 <h3 class="mb-4 text-base font-semibold text-text">{{ $t('Define user permissions') }}</h3>
 
                 <div class="space-y-2">
@@ -159,119 +159,16 @@
                 </div>
             </div>
 
-            <!-- Presets -->
+            <!-- Rechte (Katalog-Editor, kompakt) -->
             <div v-if="!form.roles.includes('artwork admin')" class="mt-8">
-                <button
-                    class="mb-2 flex w-full items-center justify-between rounded-lg bg-white px-3 py-2 text-left text-sm font-medium text-text-muted ring-1 ring-border-subtle hover:bg-surface-sunken"
-                    @click="showPresets = !showPresets"
-                    type="button"
-                >
-                    <span>{{ $t('Permission presets') }}</span>
-                    <component :is="showPresets ? IconChevronUp : IconChevronDown" class="h-4 w-4" />
-                </button>
-
-                <div v-if="showPresets" class="space-y-2">
-                    <div
-                        v-if="presetsLocal.length > 0"
-                        v-for="preset in presetsLocal"
-                        :key="preset.id"
-                        class="flex items-center justify-between rounded-lg border border-border-subtle bg-white px-3 py-2"
-                    >
-                        <label class="flex items-center gap-3 text-sm">
-                            <input
-                                type="checkbox"
-                                class="h-4 w-4 rounded border-border text-accent-600 focus:ring-accent-600"
-                                v-model="preset.checked"
-                                @change="applyPreset(preset)"
-                                :id="`preset-${preset.id}`"
-                                :name="preset.name"
-                            />
-                            <span class="text-text">{{ preset.name }}</span>
-                        </label>
-                    </div>
-                    <div v-else class="text-sm text-text-subtle">
-                        {{ $t('No permission presets have been created yet.') }}
-                    </div>
-                </div>
-            </div>
-
-            <!-- Permissions -->
-            <div v-if="!form.roles.includes('artwork admin')" class="mt-8">
-                <button
-                    class="mb-2 flex w-full items-center justify-between rounded-lg bg-white px-3 py-2 text-left text-sm font-medium text-text-muted ring-1 ring-border-subtle hover:bg-surface-sunken"
-                    @click="showUserPermissions = !showUserPermissions"
-                    type="button"
-                >
-                    <span>{{ $t('User permissions') }}</span>
-                    <component :is="showUserPermissions ? IconChevronUp : IconChevronDown" class="h-4 w-4" />
-                </button>
-
-                <div v-if="showUserPermissions" class="space-y-6">
-                    <!-- Search within permissions -->
-                    <div class="relative">
-                        <input
-                            v-model="permQuery"
-                            type="text"
-                            :placeholder="$t('Search permissions…')"
-                            class="h-9 w-full rounded-lg border border-border bg-white px-9 text-sm text-text placeholder:text-text-subtle transition focus:border-border-strong focus:bg-surface-sunken"
-                        />
-                        <IconSearch class="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-text-subtle" />
-                        <button
-                            v-if="permQuery"
-                            class="absolute right-2 top-1/2 -translate-y-1/2 text-text-subtle hover:text-text-muted"
-                            @click="permQuery = ''"
-                            aria-label="Clear permission search"
-                        >
-                            <IconX class="h-4 w-4" />
-                        </button>
-                    </div>
-
-                    <div
-                        v-for="(group, groupName) in filteredGroupedPermissions"
-                        :key="groupName"
-                        v-show="group.shown && group.permissions.length"
-                        class="rounded-xl border border-border-subtle bg-white p-3"
-                    >
-                        <div class="mb-2 flex items-center justify-between">
-                            <h4 class="text-xs font-semibold uppercase tracking-wide text-text-muted">{{ $t(groupName) }}</h4>
-                            <button
-                                class="text-xs underline text-accent-600 hover:text-accent-700"
-                                @click="toggleWholeGroup(group)"
-                            >
-                                {{
-                                    group.permissions.some(p => p.checked)
-                                        ? $t('Deselect all')
-                                        : $t('Select all')
-                                }}
-                            </button>
-                        </div>
-
-                        <ProjectPermissionHierarchyBanner v-if="groupName === 'Projects'" class="mb-3" />
-
-                        <div class="divide-y divide-dashed divide-border-subtle">
-                            <div
-                                v-for="perm in group.permissions"
-                                :key="perm.name"
-                                class="flex items-center justify-between py-2"
-                            >
-                                <label class="flex items-center gap-3 text-sm">
-                                    <input
-                                        type="checkbox"
-                                        class="h-4 w-4 rounded border-border text-accent-600 focus:ring-accent-600"
-                                        v-model="perm.checked"
-                                        @change="onPermissionToggle(perm)"
-                                        :id="perm.translation_key"
-                                        :name="perm.translation_key"
-                                    />
-                                    <span :class="perm.checked ? 'text-text' : 'text-text-muted'">
-                    {{ $t(perm.translation_key) }}
-                  </span>
-                                </label>
-                                <ToolTipDefault top :tooltip-text="$t(perm.tooltipKey)" />
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                <h3 class="mb-3 text-base font-semibold text-text">{{ $t('User permissions') }}</h3>
+                <PermissionCatalogEditor
+                    v-model="form.permissions"
+                    :catalog="catalog"
+                    :presets="permission_presets"
+                    :show-explainer="false"
+                    compact
+                />
             </div>
 
             <!-- Submit -->
@@ -293,7 +190,7 @@ import { ref, computed, reactive, getCurrentInstance } from 'vue'
 import { useForm, usePage } from '@inertiajs/vue3'
 import ArtworkBaseModal from '@/Artwork/Modals/ArtworkBaseModal.vue'
 import BaseInput from '@/Artwork/Inputs/BaseInput.vue'
-import ProjectPermissionHierarchyBanner from '@/Artwork/Guide/ProjectPermissionHierarchyBanner.vue'
+import PermissionCatalogEditor from '@/Artwork/Permissions/PermissionCatalogEditor.vue'
 import JetInputError from '@/Jetstream/InputError.vue'
 import AddButtonSmall from '@/Layouts/Components/General/Buttons/AddButtonSmall.vue'
 import FormButton from '@/Layouts/Components/General/Buttons/FormButton.vue'
@@ -306,10 +203,11 @@ import { Disclosure, DisclosureButton, DisclosurePanel } from '@headlessui/vue'
 const props = defineProps({
     show: Boolean,
     closeModal: Function,
-    all_permissions: { type: Object, required: true }, // { groupName: [ {id, name, translation_key, tooltipKey}, ... ] }
+    all_permissions: { type: Object, default: () => ({}) }, // veraltet, Katalog ersetzt die Gruppenliste
+    catalog: { type: Object, required: true }, // PermissionCatalogPresenter::present()
     departments: { type: Array, default: () => [] },   // [{id, name, svg_name}]
     roles: { type: Array, default: () => [] },         // [{name, translation_key, tooltipKey}]
-    permission_presets: { type: Array, default: () => [] }, // [{id, name, permissions:[ids]}]
+    permission_presets: { type: Array, default: () => [] }, // [{id, name, permissions:[names]}]
     users: { type: Array, default: () => [] },         // for dedupe email check
     invitedUsers: { type: Array, default: () => [] }
 })
@@ -326,9 +224,6 @@ const emailInput = ref('')
 const helpText = ref('')
 const showInvalidEmailErrorText = ref(false)
 
-const showPresets = ref(true)
-const showUserPermissions = ref(true)
-const permQuery = ref('')
 
 /* Form */
 const form = useForm({
@@ -344,62 +239,9 @@ const errors = computed(() => page.props?.errors || {})
 /* Local copies to avoid mutating props */
 const deptLocal = reactive((props.departments || []).map(d => ({ ...d, checked: false })))
 const rolesLocal = reactive((props.roles || []).map(r => ({ ...r, checked: false })))
-const presetsLocal = reactive((props.permission_presets || []).map(p => ({ ...p, checked: false })))
 
 /* Selected departments (derived) */
 const selectedDepartments = computed(() => deptLocal.filter(d => d.checked))
-
-/* Build permission map and grouped list with checked flags */
-const sageEnabled = computed(() => !!page.props?.sageApiEnabled)
-
-/* Flatten permissions into a map for lookups (id -> name) */
-const permissionIdToName = computed(() => {
-    const map = new Map()
-    Object.values(props.all_permissions || {}).forEach(list => {
-        list.forEach(p => map.set(p.id, p.name))
-    })
-    return map
-})
-
-/* Core grouped permissions with 'checked' bound to form.permissions */
-const groupedPermissions = computed(() => {
-    const groups = {}
-    for (const [groupName, list] of Object.entries(props.all_permissions || {})) {
-        const perms = []
-        list.forEach(p => {
-            if (
-                (p.name === 'can view project sage data' ||
-                 p.name === 'can view global sage data') &&
-                !sageEnabled.value
-            ) {
-                return
-            }
-            perms.push({
-                ...p,
-                checked: form.permissions.includes(p.name)
-            })
-        })
-        groups[groupName] = {
-            shown: perms.length > 0,
-            permissions: perms
-        }
-    }
-    return groups
-})
-
-/* Filter by query inside permissions */
-const filteredGroupedPermissions = computed(() => {
-    const q = permQuery.value.trim().toLowerCase()
-    if (!q) return groupedPermissions.value
-    const out = {}
-    for (const [g, obj] of Object.entries(groupedPermissions.value)) {
-        const filtered = obj.permissions.filter(p =>
-            (p.translation_key || p.name || '').toLowerCase().includes(q)
-        )
-        out[g] = { shown: filtered.length > 0, permissions: filtered }
-    }
-    return out
-})
 
 /* Methods */
 // Add emails (supports comma/space separation)
@@ -489,42 +331,6 @@ function onRoleToggle (role) {
     }
 }
 
-/* Presets */
-function applyPreset (preset) {
-    const namesFromIds = preset.permissions
-        .map(id => permissionIdToName.value.get(id))
-        .filter(Boolean)
-
-    if (preset.checked) {
-        // add all preset permissions
-        form.permissions = Array.from(new Set([...form.permissions, ...namesFromIds]))
-    } else {
-        // remove all preset permissions
-        form.permissions = form.permissions.filter(n => !namesFromIds.includes(n))
-    }
-}
-
-/* Permissions */
-function onPermissionToggle (perm) {
-    if (perm.checked) {
-        if (!form.permissions.includes(perm.name)) form.permissions.push(perm.name)
-    } else {
-        form.permissions = form.permissions.filter(n => n !== perm.name)
-    }
-}
-
-function toggleWholeGroup (group) {
-    const someChecked = group.permissions.some(p => p.checked)
-    if (someChecked) {
-        // uncheck all
-        const names = group.permissions.map(p => p.name)
-        form.permissions = form.permissions.filter(n => !names.includes(n))
-    } else {
-        // check all
-        const toAdd = group.permissions.map(p => p.name)
-        form.permissions = Array.from(new Set([...form.permissions, ...toAdd]))
-    }
-}
 
 /* Submit */
 function submit () {
@@ -541,7 +347,6 @@ function resetAll () {
     emailInput.value = ''
     helpText.value = ''
     showInvalidEmailErrorText.value = false
-    permQuery.value = ''
 
     form.user_emails = []
     form.permissions = []
@@ -550,7 +355,6 @@ function resetAll () {
 
     deptLocal.forEach(d => (d.checked = false))
     rolesLocal.forEach(r => (r.checked = false))
-    presetsLocal.forEach(p => (p.checked = false))
 }
 
 function handleClose (bool) {

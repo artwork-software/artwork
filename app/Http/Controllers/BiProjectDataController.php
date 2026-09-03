@@ -56,11 +56,19 @@ class BiProjectDataController extends Controller
         $timeEfforts = $project->biTimeEfforts()->with('user')->get();
         $snapshots = $project->biSnapshots()->with('creator')->orderByDesc('snapshot_date')->get();
 
+        // Publikumstermin = Terminart trägt den Tag mit KPI-Rolle Vorstellung oder
+        // Veranstaltungstag; die Erfassungstabelle filtert damit Proben/Aufbauten weg
+        $audienceRoles = [BiProjectMetricsService::PERFORMANCE_TAG, BiProjectMetricsService::EVENT_DAY_TAG];
         $projectEvents = $project->events()
-            ->with(['room', 'event_type'])
+            ->with(['room', 'event_type.biTags'])
             ->orderBy('start_time')
             ->get()
-            ->map(function (Event $event) {
+            ->map(function (Event $event) use ($audienceRoles) {
+                $tags = $event->event_type?->biTags ?? collect();
+                $isAudienceEvent = $tags->contains(
+                    fn($tag) => in_array($tag->kpi_role, $audienceRoles, true)
+                );
+
                 return [
                     'id' => $event->id,
                     'name' => $event->eventName ?? $event->event_type?->name ?? '',
@@ -69,6 +77,7 @@ class BiProjectDataController extends Controller
                     'room_name' => $event->room?->name ?? '',
                     'room_id' => $event->room_id,
                     'event_type' => $event->event_type?->name ?? '',
+                    'is_audience_event' => $isAudienceEvent,
                 ];
             });
 

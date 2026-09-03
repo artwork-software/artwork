@@ -10,7 +10,6 @@ enum PermissionEnum : string
     case ADD_EDIT_OWN_PROJECT = 'create and edit own project';
     case WRITE_PROJECTS = 'write projects';
     case PROJECT_BUDGET_VERIFIED_ADD_REMOVE = 'can add and remove verified states';
-    case PROJECT_BUDGET_SEE_DOCS_CONTRACTS = 'can see, edit and delete project contracts and docs';
     case EVENT_REQUEST = 'request room occupancy';
     case CREATE_EVENTS_WITHOUT_REQUEST = 'create events without request';
     case ROOM_UPDATE = 'create, delete and update rooms';
@@ -27,26 +26,21 @@ enum PermissionEnum : string
     case VIEW_BUDGET_TEMPLATES = 'view budget templates';
     case UPDATE_BUDGET_TEMPLATES = 'edit budget templates';
     case MA_MANAGER = 'can manage workers';
+    case EXTERNAL_MANAGER = 'can manage external workers';
     case SHIFT_PLANNER = 'can plan shifts';
     case GLOBAL_PROJECT_BUDGET_ADMIN = 'can manage global project budgets';
-    case GLOBAL_PROJECT_BUDGET_ADMIN_NO_DOCS = 'can manage all project budgets without docs';
     case VIEW_SHIFT_PLAN = 'can view shift plan';
     case CAN_COMMIT_SHIFTS = 'can commit shifts';
-    case EDIT_EXTERNAL_USERS_CONDITIONS = 'can edit external users conditions';
 
     case VIEW_PROJECT_SAGE_DATA = 'can view project sage data';
     case VIEW_GLOBAL_SAGE_DATA = 'can view global sage data';
 
-    case CHECKLIST_USE_PERMISSION = 'can use checklists';
     case CHECKLIST_EDIT_PERMISSION = 'can edit checklist';
 
     case AVAILABILITY_MANAGEMENT = 'can manage availability';
 
-    case CREATE_EVENTS_WHEN_CREATING_PROJECT = 'can create events when creating a project';
 
-    case INVENTORY_STOCK_MANAGE = 'can manage inventory stock';
 
-    case INVENTORY_PLANER = 'can plan inventory';
 
     case INVENTORY_SETTINGS = 'inventory.settings';
 
@@ -106,4 +100,10 @@ enum PermissionEnum : string
     case DAY_REMARKS_EDIT = 'can edit day remarks';
 
     case WEBHOOKS_MANAGE = 'manage webhooks';
+
+    // Eigene Rechte für bisher admin-only Bereiche (Konzept Nutzerrechte, Entscheidung 8)
+    case TRASH_ACCESS = 'can access trash';
+    case CALENDAR_SETTINGS_UPDATE = 'change calendar settings';
+    case MONEY_SOURCE_SETTINGS_UPDATE = 'change money source settings';
+    case BUDGET_SETTINGS_UPDATE = 'change budget settings';
 }

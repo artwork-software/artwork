@@ -91,18 +91,106 @@ final class BiExportControllerTest extends FeatureTestCase
             'event_tag_filter' => [],
         ]);
 
-        self::assertCount(2, $sheets);
+        // Produktionen + Termine + Info
+        self::assertCount(3, $sheets);
 
         [$projectSheet, $eventSheet] = $sheets;
 
-        // Projektblatt: Kopf + eine Zeile pro Projekt
-        self::assertSame($project->name, $projectSheet[1][0]);
+        // Projektblatt: Kopf + eine Zeile pro Projekt; project_id immer vorn
+        self::assertSame(__('Project ID'), $projectSheet[0][0]);
+        self::assertEquals($project->id, $projectSheet[1][0]);
+        self::assertSame($project->name, $projectSheet[1][1]);
         self::assertCount(2, $projectSheet);
 
-        // Terminblatt: Kopf + eine Zeile pro Termin, Projektname in jeder Zeile
+        // Terminblatt: Kopf + eine Zeile pro Termin, IDs + Projektname in jeder Zeile
         self::assertCount(3, $eventSheet);
-        self::assertSame($project->name, $eventSheet[1][0]);
-        self::assertSame($project->name, $eventSheet[2][0]);
+        self::assertEquals($project->id, $eventSheet[1][1]);
+        self::assertSame($project->name, $eventSheet[1][2]);
+        self::assertSame($project->name, $eventSheet[2][2]);
+    }
+
+    #[Test]
+    public function workbook_ends_with_an_info_sheet_describing_the_export(): void
+    {
+        [$project] = $this->createProjectWithTaggedAndUntaggedEvent();
+
+        $sheets = $this->generateWorkbookSheets([
+            'project_ids' => [$project->id],
+            'columns' => ['project_name'],
+            'granularity' => 'projects',
+            'date_from' => '2026-01-01',
+            'date_to' => '2026-12-31',
+            'user_name' => 'Kim Test',
+        ]);
+
+        $info = end($sheets);
+        $labels = array_column($info, 0);
+        $values = array_column($info, 1);
+
+        self::assertContains(__('Created by'), $labels);
+        self::assertSame('Kim Test', $values[array_search(__('Created by'), $labels, true)]);
+        self::assertSame('01.01.2026 – 31.12.2026', $values[array_search(__('Period'), $labels, true)]);
+        self::assertSame(__('Chosen in the export dialog'), $values[array_search(__('Period source'), $labels, true)]);
+    }
+
+    #[Test]
+    public function columns_follow_the_catalog_order_not_the_click_order(): void
+    {
+        $project = Project::factory()->create();
+
+        $sheets = $this->generateWorkbookSheets([
+            'project_ids' => [$project->id],
+            'columns' => ['event_count', 'project_name', 'visitors'],
+            'granularity' => 'projects',
+        ]);
+
+        self::assertSame(
+            [__('Project ID'), __('Project name'), __('Visitors'), __('Events')],
+            $sheets[0][0]
+        );
+    }
+
+    #[Test]
+    public function unknown_columns_are_rejected(): void
+    {
+        $this->actingAsUserWith(PermissionEnum::BI_EXPORT->value);
+
+        $this->postJson(route('bi.export.cache'), [
+            'project_ids' => [Project::factory()->create()->id],
+            'columns' => ['project_name', 'does_not_exist'],
+            'granularity' => 'projects',
+        ])->assertUnprocessable()->assertJsonValidationErrors('columns.1');
+    }
+
+    #[Test]
+    public function booleans_dates_and_ratios_are_exported_as_native_excel_values(): void
+    {
+        $project = Project::factory()->create();
+        \Artwork\Modules\BusinessIntelligence\Models\BiProjectData::create([
+            'project_id' => $project->id,
+            'scope' => 'actual',
+            'is_own_production' => true,
+            'is_co_production' => false,
+            'premiere_date' => '2026-03-15',
+        ]);
+
+        $sheets = $this->generateWorkbookSheets([
+            'project_ids' => [$project->id],
+            'columns' => ['is_own_production', 'is_co_production', 'premiere_date'],
+            'granularity' => 'projects',
+        ]);
+
+        $header = $sheets[0][0];
+        $row = $sheets[0][1];
+        $at = fn (string $label) => $row[array_search(__($label), $header, true)];
+        self::assertTrue($at('Own production'));
+        self::assertFalse($at('Co-production'));
+        // Excel-Serienwert (Tage seit 1900) statt Text
+        self::assertIsNumeric($at('Premiere date'));
+        self::assertSame(
+            '2026-03-15',
+            \PhpOffice\PhpSpreadsheet\Shared\Date::excelToDateTimeObject($at('Premiere date'))->format('Y-m-d')
+        );
     }
 
     #[Test]
@@ -117,9 +205,9 @@ final class BiExportControllerTest extends FeatureTestCase
             'event_tag_filter' => [$tag->id],
         ]);
 
-        self::assertCount(1, $taggedSheets);
+        self::assertCount(2, $taggedSheets);
         self::assertCount(2, $taggedSheets[0]);
-        self::assertSame($taggedEvent->event_type->name, $taggedSheets[0][1][3]);
+        self::assertSame($taggedEvent->event_type->name, $taggedSheets[0][1][$this->eventColumnIndex('event_type')]);
 
         $untaggedSheets = $this->generateWorkbookSheets([
             'project_ids' => [$project->id],
@@ -129,7 +217,7 @@ final class BiExportControllerTest extends FeatureTestCase
         ]);
 
         self::assertCount(2, $untaggedSheets[0]);
-        self::assertSame($untaggedEvent->event_type->name, $untaggedSheets[0][1][3]);
+        self::assertSame($untaggedEvent->event_type->name, $untaggedSheets[0][1][$this->eventColumnIndex('event_type')]);
     }
 
     #[Test]
@@ -153,18 +241,19 @@ final class BiExportControllerTest extends FeatureTestCase
         ]);
 
         $rows = $sheets[0];
+        $typeIndex = $this->eventColumnIndex('event_type');
         $taggedRow = collect($rows)->first(
-            fn (array $row) => $row[3] === $taggedEvent->event_type->name
+            fn (array $row) => $row[$typeIndex] === $taggedEvent->event_type->name
         );
 
         self::assertNotNull($taggedRow);
-        self::assertEquals(120, $taggedRow[7]);
-        self::assertEquals(100, $taggedRow[8]);
-        self::assertEquals(2500.50, $taggedRow[9]);
+        self::assertEquals(120, $taggedRow[$this->eventColumnIndex('visitors')]);
+        self::assertEquals(100, $taggedRow[$this->eventColumnIndex('sold_tickets')]);
+        self::assertEquals(2500.50, $taggedRow[$this->eventColumnIndex('revenue')]);
     }
 
     #[Test]
-    public function dashboard_contains_export_options_only_with_export_permission(): void
+    public function dashboard_exposes_export_permission_and_options_endpoint_requires_it(): void
     {
         CostCenter::create(['name' => 'KT 100']);
 
@@ -172,7 +261,8 @@ final class BiExportControllerTest extends FeatureTestCase
 
         $this->get(route('bi.dashboard'))
             ->assertOk()
-            ->assertInertia(fn ($page) => $page->where('exportOptions', null));
+            ->assertInertia(fn ($page) => $page->where('canExportBiData', false));
+        $this->getJson(route('bi.export.options'))->assertForbidden();
 
         $this->actingAsUserWith([
             PermissionEnum::BI_DASHBOARD->value,
@@ -181,14 +271,44 @@ final class BiExportControllerTest extends FeatureTestCase
 
         $this->get(route('bi.dashboard'))
             ->assertOk()
-            ->assertInertia(
-                fn ($page) => $page
-                    ->has('exportOptions.projects')
-                    ->has('exportOptions.costCenters', 1)
-                    ->has('exportOptions.columns')
-                    ->has('exportOptions.tagColumns')
-                    ->has('exportOptions.presets')
-            );
+            ->assertInertia(fn ($page) => $page->where('canExportBiData', true));
+
+        $this->getJson(route('bi.export.options'))
+            ->assertOk()
+            ->assertJsonStructure([
+                'projects', 'costCenters', 'columns', 'tagColumns', 'presets', 'defaultColumns',
+                'columnGroups' => [['key', 'label', 'default', 'columns']],
+            ])
+            ->assertJsonCount(1, 'costCenters');
+    }
+
+    #[Test]
+    public function presets_can_only_be_changed_by_their_creator_or_an_admin(): void
+    {
+        $this->actingAsUserWith(PermissionEnum::BI_EXPORT->value);
+
+        $created = $this->postJson(route('bi.export.presets.store'), [
+            'name' => 'Leitungssicht',
+            'columns' => ['visitors', 'project_name'],
+        ])->assertOk()->json();
+
+        // Katalogreihenfolge gespeichert, project_id vorn
+        self::assertSame(['project_id', 'project_name', 'visitors'], $created['columns']);
+        self::assertTrue($created['can_manage']);
+
+        // Gleicher Name ist nicht erlaubt
+        $this->postJson(route('bi.export.presets.store'), [
+            'name' => 'Leitungssicht',
+            'columns' => ['visitors'],
+        ])->assertUnprocessable()->assertJsonValidationErrors('name');
+
+        // Andere Person mit Exportrecht: sehen ja, ändern/löschen nein
+        $this->actingAsUserWith(PermissionEnum::BI_EXPORT->value);
+        $this->getJson(route('bi.export.presets.index'))
+            ->assertOk()
+            ->assertJsonPath('0.can_manage', false);
+        $this->putJson(route('bi.export.presets.update', $created['id']), ['name' => 'Neu'])->assertForbidden();
+        $this->deleteJson(route('bi.export.presets.destroy', $created['id']))->assertForbidden();
     }
 
     #[Test]
@@ -203,9 +323,15 @@ final class BiExportControllerTest extends FeatureTestCase
             'granularity' => 'projects',
         ]);
 
-        self::assertCount(1, $sheets);
-        self::assertSame($project->name, $sheets[0][1][0]);
-        self::assertSame('KT 4711', $sheets[0][1][1]);
+        // Info-Blatt hängt immer hinten dran
+        self::assertCount(2, $sheets);
+        self::assertSame($project->name, $sheets[0][1][1]);
+        self::assertSame('KT 4711', $sheets[0][1][2]);
+    }
+
+    private function eventColumnIndex(string $key): int
+    {
+        return array_search($key, array_keys(BiExportService::eventColumnLabelMap()), true);
     }
 
     /**

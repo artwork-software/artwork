@@ -28,7 +28,6 @@
                             v-model="search"
                             label="Search for to-do lists and to-dos"
                             class="w-full"
-                            @focus="search = ''"
                             is-small
                         />
                     </div>

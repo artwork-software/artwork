@@ -37,6 +37,8 @@ class ExternalIssueController extends Controller
      */
     public function searchForCopy(): JsonResponse
     {
+        $this->authorize('viewAny', ExternalIssue::class);
+
         $q = trim((string) request()->input('q', ''));
         $excludeId = (int) request()->input('exclude_id', 0);
 
@@ -57,6 +59,8 @@ class ExternalIssueController extends Controller
 
     public function index()
     {
+        $this->authorize('viewAny', ExternalIssue::class);
+
         $entitiesPerPage = request()?->integer('entitiesPerPage', 10);
 
         // IDs aus CSV/Array robust einlesen
@@ -157,12 +161,16 @@ class ExternalIssueController extends Controller
 
     public function store(StoreExternalIssueRequest $request): \Illuminate\Http\RedirectResponse
     {
+        $this->authorize('create', [ExternalIssue::class, $request->integer('project_id') ?: null]);
+
         $issue = $this->externalIssueService->store($request->validated(), $request->file('files', []));
         return redirect()->route('extern-issue-of-material.index');
     }
 
     public function update(UpdateExternalIssueRequest $request, ExternalIssue $externalIssue): \Illuminate\Http\RedirectResponse
     {
+        $this->authorize('update', $externalIssue);
+
         $issue = $this->externalIssueService->update($externalIssue, $request->validated(), $request->file('files', []));
 
         return redirect()->route('extern-issue-of-material.index');
@@ -170,6 +178,8 @@ class ExternalIssueController extends Controller
 
     public function destroy(ExternalIssue $externalIssue): \Illuminate\Http\RedirectResponse
     {
+        $this->authorize('delete', $externalIssue);
+
         $this->externalIssueService->delete($externalIssue);
 
         return redirect()->route('extern-issue-of-material.index');
@@ -224,6 +234,8 @@ class ExternalIssueController extends Controller
 
     public function setSpecialItemsDone(ExternalIssue $externalIssue): \Illuminate\Http\RedirectResponse
     {
+        $this->authorize('update', $externalIssue);
+
         $externalIssue->update(['special_items_done' => true]);
 
         return redirect()->route('extern-issue-of-material.index');
@@ -231,6 +243,8 @@ class ExternalIssueController extends Controller
 
     public function print(ExternalIssue $externalIssue)
     {
+        $this->authorize('view', $externalIssue);
+
         $externalIssue->load(['articles.category', 'articles.subCategory', 'specialItems.category', 'specialItems.subCategory', 'files', 'issuedBy', 'receivedBy']);
 
         $createdAt = now()->format('d.m.Y');

@@ -31,8 +31,8 @@ class BiProjectMetricsService
     private ?Collection $categoriesByIdCache = null;
 
     /**
-     * Namen (klein geschrieben) der BI-Tags, die mindestens einer Terminart
-     * zugeordnet sind. Steuert, ob die Tag-Kennzahlen (Vorstellungen,
+     * KPI-Rollen (performance / event_day), deren Tag mindestens einer Terminart
+     * zugeordnet ist. Steuert, ob die Tag-Kennzahlen (Vorstellungen,
      * Veranstaltungstage, Kapazität) überhaupt ermittelt werden können.
      * null = noch nicht geladen.
      *
@@ -40,8 +40,9 @@ class BiProjectMetricsService
      */
     private ?array $linkedKpiTagNames = null;
 
-    public const PERFORMANCE_TAG = 'Vorstellung';
-    public const EVENT_DAY_TAG = 'Veranstaltungstag';
+    // Rollen statt Namen: der Tag darf umbenannt werden, ohne die Kennzahl zu verlieren
+    public const PERFORMANCE_TAG = BiEventTypeTag::KPI_ROLE_PERFORMANCE;
+    public const EVENT_DAY_TAG = BiEventTypeTag::KPI_ROLE_EVENT_DAY;
 
     public function forScope(string $scope): static
     {
@@ -146,39 +147,38 @@ class BiProjectMetricsService
     }
 
     /**
-     * Verknüpfte KPI-Tags vorab setzen (Tests / Aufrufer ohne DB).
+     * Verknüpfte KPI-Rollen vorab setzen (Tests / Aufrufer ohne DB).
      *
-     * @param array<int, string> $tagNames
+     * @param array<int, string> $roles z. B. ['performance', 'event_day']
      */
-    public function primeLinkedKpiTags(array $tagNames): void
+    public function primeLinkedKpiTags(array $roles): void
     {
         $this->linkedKpiTagNames = [];
-        foreach ($tagNames as $name) {
-            $this->linkedKpiTagNames[mb_strtolower($name)] = true;
+        foreach ($roles as $role) {
+            $this->linkedKpiTagNames[$role] = true;
         }
     }
 
     /**
-     * Ist der BI-Tag (Vorstellung / Veranstaltungstag) mindestens einer
+     * Ist der Tag mit dieser KPI-Rolle (performance / event_day) mindestens einer
      * Terminart zugeordnet? Ohne Zuordnung gibt es bewusst KEINEN Fallback
      * auf "alle Termine" — die Kennzahl bleibt null, damit Proben und
      * Aufbauten nicht still als Vorstellungen gezählt werden.
      */
-    public function kpiTagLinked(string $name): bool
+    public function kpiTagLinked(string $role): bool
     {
         if ($this->linkedKpiTagNames === null) {
             $this->linkedKpiTagNames = [];
-            $tags = BiEventTypeTag::query()->has('eventTypes')->get(['name', 'name_de']);
-            foreach ($tags as $tag) {
-                foreach ([$tag->name, $tag->name_de] as $tagName) {
-                    if ($tagName !== null && $tagName !== '') {
-                        $this->linkedKpiTagNames[mb_strtolower($tagName)] = true;
-                    }
-                }
+            $roles = BiEventTypeTag::query()
+                ->whereNotNull('kpi_role')
+                ->has('eventTypes')
+                ->pluck('kpi_role');
+            foreach ($roles as $linkedRole) {
+                $this->linkedKpiTagNames[$linkedRole] = true;
             }
         }
 
-        return isset($this->linkedKpiTagNames[mb_strtolower($name)]);
+        return isset($this->linkedKpiTagNames[$role]);
     }
 
     /**
@@ -609,7 +609,8 @@ class BiProjectMetricsService
         return $this->categoriesByIdCache ??= BiAudienceCategory::withTrashed()->get()->keyBy('id');
     }
 
-    private function eventHasTag($event, string $name): bool
+    /** Trägt die Terminart des Termins einen Tag mit dieser KPI-Rolle? */
+    private function eventHasTag($event, string $role): bool
     {
         $tags = $event->event_type?->biTags;
 
@@ -617,10 +618,7 @@ class BiProjectMetricsService
             return false;
         }
 
-        return $tags->contains(
-            fn($tag) => strcasecmp($tag->name_de ?? '', $name) === 0
-                || strcasecmp($tag->name ?? '', $name) === 0
-        );
+        return $tags->contains(fn($tag) => $tag->kpi_role === $role);
     }
 
     /**

@@ -35,7 +35,7 @@ final class BiProjectMetricsServiceTest extends TestCase
         ]);
 
         // Kapazität zählt nur Termine mit BI-Tag "Vorstellung" (kein Fallback auf alle Termine)
-        $tag = BiEventTypeTag::create(['name' => 'Performance', 'name_de' => 'Vorstellung', 'color' => '#22c55e']);
+        $tag = BiEventTypeTag::create(['name' => 'Performance', 'name_de' => 'Vorstellung', 'color' => '#22c55e', 'kpi_role' => 'performance']);
         $tag->eventTypes()->sync(
             Event::query()->where('project_id', $project->id)->pluck('event_type_id')->unique()->all()
         );

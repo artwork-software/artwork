@@ -102,7 +102,7 @@ final class BiDashboardRangeFilterTest extends FeatureTestCase
         $last = $this->createProjectWithEvent('Last Season', '2025-05-12 19:00:00', '2025-05-12 22:00:00');
 
         // Veranstaltungstage zählen nur mit zugeordnetem KPI-Tag (kein Fallback)
-        $tag = BiEventTypeTag::create(['name' => 'Event day', 'name_de' => 'Veranstaltungstag', 'color' => '#6366f1']);
+        $tag = BiEventTypeTag::create(['name' => 'Event day', 'name_de' => 'Veranstaltungstag', 'color' => '#6366f1', 'kpi_role' => 'event_day']);
         $tag->eventTypes()->sync(
             Event::query()->whereIn('project_id', [$current->id, $last->id])->pluck('event_type_id')->unique()->all()
         );

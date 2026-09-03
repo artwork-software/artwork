@@ -31,7 +31,7 @@ final class BiProjectMetricsServiceTest extends UnitTestCase
         parent::setUp();
         $this->service = new BiProjectMetricsService();
         // DB-los: beide KPI-Tags gelten als Terminarten zugeordnet
-        $this->service->primeLinkedKpiTags(['Vorstellung', 'Veranstaltungstag']);
+        $this->service->primeLinkedKpiTags(['performance', 'event_day']);
     }
 
     /**
@@ -134,6 +134,12 @@ final class BiProjectMetricsServiceTest extends UnitTestCase
             $tag = new BiEventTypeTag();
             $tag->name = $name;
             $tag->name_de = $name;
+            // Kennzahl-Steuerung läuft über die Rolle, nicht über den Namen
+            $tag->kpi_role = match (mb_strtolower($name)) {
+                'vorstellung' => BiEventTypeTag::KPI_ROLE_PERFORMANCE,
+                'veranstaltungstag' => BiEventTypeTag::KPI_ROLE_EVENT_DAY,
+                default => null,
+            };
 
             return $tag;
         }));
@@ -393,7 +399,7 @@ final class BiProjectMetricsServiceTest extends UnitTestCase
         self::assertNull($summary['performances']);
 
         // Nur der Vorstellungs-Tag zugeordnet → Kapazität aus der EINEN Vorstellung
-        $this->service->primeLinkedKpiTags(['Vorstellung']);
+        $this->service->primeLinkedKpiTags(['performance']);
         self::assertSame(1, $this->service->performances($project));
         self::assertNull($this->service->eventDays($project));
         self::assertSame(200, $this->service->seatsCapacity($project));

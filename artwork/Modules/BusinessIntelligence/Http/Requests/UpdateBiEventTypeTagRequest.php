@@ -2,7 +2,9 @@
 
 namespace Artwork\Modules\BusinessIntelligence\Http\Requests;
 
+use Artwork\Modules\BusinessIntelligence\Models\BiEventTypeTag;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class UpdateBiEventTypeTagRequest extends FormRequest
 {
@@ -17,6 +19,19 @@ class UpdateBiEventTypeTagRequest extends FormRequest
             'name' => ['required', 'string', 'max:255'],
             'name_de' => ['required', 'string', 'max:255'],
             'color' => ['nullable', 'string', 'max:7'],
+            // Rolle je Kennzahl nur einmal vergebbar (Vorstellungen / Veranstaltungstage)
+            'kpi_role' => [
+                'nullable',
+                Rule::in(BiEventTypeTag::KPI_ROLES),
+                Rule::unique('bi_event_type_tags', 'kpi_role')->ignore($this->route('biEventTypeTag')),
+            ],
+        ];
+    }
+
+    public function messages(): array
+    {
+        return [
+            'kpi_role.unique' => __('Another tag already controls this key figure.'),
         ];
     }
 }

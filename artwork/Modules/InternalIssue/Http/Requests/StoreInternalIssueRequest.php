@@ -2,6 +2,7 @@
 
 namespace Artwork\Modules\InternalIssue\Http\Requests;
 
+use Artwork\Modules\InternalIssue\Models\InternalIssue;
 use Illuminate\Foundation\Http\FormRequest;
 
 class StoreInternalIssueRequest extends FormRequest
@@ -11,7 +12,11 @@ class StoreInternalIssueRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return true;
+        // Autorisierung VOR der Validierung, sonst antwortet ein fehlendes Recht
+        // mit einem Validierungs-Redirect (302) statt 403.
+        $projectId = $this->integer('project_id') ?: null;
+
+        return $this->user()?->can('create', [InternalIssue::class, $projectId]) ?? false;
     }
 
     /**

@@ -69,7 +69,7 @@ class ProjectPolicy
             }
         }
 
-        return $user->can('create_and_edit_projects') ||
+        return $user->can(PermissionEnum::ADD_EDIT_OWN_PROJECT->value) ||
             $project->users->contains($user->id) ||
             $isTeamMember ||
             (bool)$user->projects()?->find($project->id)?->pivot?->is_manager === true ||
@@ -129,12 +129,22 @@ class ProjectPolicy
 
     public function delete(User $user, Project $project): bool
     {
-        $isCreator = false;
+        if ($user->can(PermissionEnum::PROJECT_DELETE->value)) {
+            return true;
+        }
+
+        // Projektteam-Häkchen "Löschen" (project_user.delete_permission) — wurde bisher nur im
+        // Frontend gelesen, die Policy antwortete 403.
+        if ($project->delete_permission_users()->where('users.id', $user->id)->exists()) {
+            return true;
+        }
+
         foreach ($project->events as $event) {
-            if ($event->created_by->id === $user->id) {
-                $isCreator = true;
+            if ($event->created_by?->id === $user->id) {
+                return true;
             }
         }
-        return $user->can(PermissionEnum::PROJECT_DELETE->value) || $isCreator;
+
+        return false;
     }
 }

@@ -4,7 +4,6 @@ namespace Artwork\Modules\Craft\Models;
 
 use Artwork\Core\Database\Models\Model;
 use Artwork\Modules\Freelancer\Models\Freelancer;
-use Artwork\Modules\InventoryManagement\Models\CraftInventoryCategory;
 use Artwork\Modules\ServiceProvider\Models\ServiceProvider;
 use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\Shift\Models\ShiftPlanRequest;
@@ -29,7 +28,6 @@ use Illuminate\Database\Eloquent\Relations\MorphToMany;
  * @property int|null $commit_request_deadline_days
  * @property User[] $users
  * @property Shift[] $shifts
- * @property Collection $inventoryCategories
  * @property bool $universally_applicable
  * @property int $position
  * @property bool $inventory_planned_by_all
@@ -60,7 +58,7 @@ class Craft extends Model
         'inventory_planned_by_all' => 'boolean'
     ];
 
-    protected $with = ['craftShiftPlaner', 'craftInventoryPlaner'];
+    protected $with = ['craftShiftPlaner'];
 
     public function craftShiftPlaner(): BelongsToMany
     {
@@ -90,17 +88,6 @@ class Craft extends Model
             'craft_id',
             'shift_qualification_id'
         );
-    }
-
-    public function inventoryCategories(): HasMany
-    {
-        return $this->hasMany(
-            CraftInventoryCategory::class,
-            'craft_id',
-            'id'
-        )
-            ->orderBy('order')
-            ->select(['id', 'craft_id', 'name', 'order']);
     }
 
     public function users(): MorphToMany

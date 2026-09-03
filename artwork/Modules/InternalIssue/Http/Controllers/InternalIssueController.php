@@ -32,6 +32,8 @@ class InternalIssueController extends Controller
 
     public function index(): \Inertia\Response
     {
+        $this->authorize('viewAny', InternalIssue::class);
+
         $entitiesPerPage = (int) request()->input('entitiesPerPage', 10);
         $q = trim((string) request()->input('q', ''));
 
@@ -134,6 +136,8 @@ class InternalIssueController extends Controller
      */
     public function searchForCopy(): JsonResponse
     {
+        $this->authorize('viewAny', InternalIssue::class);
+
         $q = trim((string) request()->input('q', ''));
         $excludeId = (int) request()->input('exclude_id', 0);
 
@@ -156,6 +160,8 @@ class InternalIssueController extends Controller
 
     public function show(InternalIssue $internalIssue): JsonResponse
     {
+        $this->authorize('view', $internalIssue);
+
         $internalIssue->load([
             'files',
             'articles.images',
@@ -172,6 +178,8 @@ class InternalIssueController extends Controller
 
     public function store(StoreInternalIssueRequest $request): \Illuminate\Http\RedirectResponse
     {
+        $this->authorize('create', [InternalIssue::class, $request->integer('project_id') ?: null]);
+
         $issue = $this->internalIssueService
             ->store($request->validated(), $request->file('files', []));
 
@@ -180,6 +188,8 @@ class InternalIssueController extends Controller
 
     public function update(UpdateInternalIssueRequest $request, InternalIssue $internalIssue): \Illuminate\Http\RedirectResponse
     {
+        $this->authorize('update', $internalIssue);
+
         //dd($request->all());
         $issue = $this->internalIssueService
             ->update($internalIssue, $request->validated(), $request->file('files', []));
@@ -189,6 +199,8 @@ class InternalIssueController extends Controller
 
     public function destroy(InternalIssue $internalIssue): \Illuminate\Http\RedirectResponse
     {
+        $this->authorize('delete', $internalIssue);
+
         $this->internalIssueService
             ->delete($internalIssue);
 
@@ -205,6 +217,8 @@ class InternalIssueController extends Controller
 
     public function print(InternalIssue $internalIssue)
     {
+        $this->authorize('view', $internalIssue);
+
         $internalIssue->load([
             'articles.category',
             'articles.subCategory',
@@ -261,6 +275,8 @@ class InternalIssueController extends Controller
 
     public function setSpecialItemsDone(InternalIssue $internalIssue): \Illuminate\Http\RedirectResponse
     {
+        $this->authorize('update', $internalIssue);
+
         $internalIssue->update(['special_items_done' => true]);
 
         return redirect()->back();

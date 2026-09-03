@@ -312,7 +312,7 @@ const tabs = reactive([
         id: 3,
         name: proxy.$t('Conditions'),
         current: false,
-        has_permission: can('can edit external users conditions') || is('artwork admin'),
+        has_permission: can('can manage workers') || is('artwork admin'),
     },
     {
         id: 4,

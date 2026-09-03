@@ -4,7 +4,6 @@ namespace Artwork\Modules\Event\Services;
 
 use Artwork\Modules\Calendar\Filter\CalendarFilter;
 use Artwork\Modules\Event\Http\Resources\MinimalCalendarEventResource;
-use Artwork\Modules\Event\Http\Resources\MinimalInventorySchedulingEventResource;
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Event\Repositories\EventRepository;
 use Artwork\Modules\Project\Models\Project;
@@ -30,8 +29,7 @@ class EventCollectionService
         array|SupportCollection $roomsWithEvents,
         CarbonPeriod $calendarPeriod,
         ?UserFilter $calendarFilter,
-        ?Project $project = null,
-        ?bool $desiresInventorySchedulingResource = false
+        ?Project $project = null
     ): SupportCollection {
         $roomEvents = collect();
 
@@ -41,8 +39,7 @@ class EventCollectionService
                     room: $room,
                     calendarPeriod: $calendarPeriod,
                     calendarFilter: $calendarFilter,
-                    project: $project,
-                    desiresInventorySchedulingResource: $desiresInventorySchedulingResource
+                    project: $project
                 )
             );
         }
@@ -54,8 +51,7 @@ class EventCollectionService
         Room $room,
         CarbonPeriod $calendarPeriod,
         ?UserFilter $calendarFilter,
-        ?Project $project = null,
-        ?bool $desiresInventorySchedulingResource = false
+        ?Project $project = null
     ): array {
         $eventsForRoom = RoomService::fillPeriodWithEmptyEventData($room, $calendarPeriod);
         $actualEvents  = [];
@@ -83,9 +79,7 @@ class EventCollectionService
         foreach ($actualEvents as $key => $value) {
             $eventsForRoom[$key] = [
                 'roomId' => $room->getAttribute('id'),
-                'events' => $desiresInventorySchedulingResource
-                    ? MinimalInventorySchedulingEventResource::collection($value)->resolve()
-                    : MinimalCalendarEventResource::collection($value)->resolve()
+                'events' => MinimalCalendarEventResource::collection($value)->resolve()
             ];
         }
 

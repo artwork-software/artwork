@@ -95,6 +95,8 @@ class RoomController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
+        $this->authorize('create', Room::class);
+
         // varchar(7)-Spalte: ungültige Werte würden im Strict-Mode einen SQL-Fehler (500) werfen
         $request->validate(['color' => ['nullable', 'regex:/^#[0-9a-fA-F]{6}$/']]);
 
@@ -141,6 +143,8 @@ class RoomController extends Controller
 
     public function getMoveRooms(): Response|ResponseFactory
     {
+        $this->authorize('viewAny', Room::class);
+
         return inertia('Rooms/RoomReorderManagement', [
             'rooms' => Room::orderBy('position')->orderBy('id')->get()
         ]);
@@ -148,6 +152,8 @@ class RoomController extends Controller
 
     public function updateOrderNew(Request $request): RedirectResponse
     {
+        $this->authorize('viewAny', Room::class);
+
         foreach ($request->rooms as $room) {
             Room::findOrFail($room['id'])->update(['position' => $room['position']]);
         }
@@ -157,6 +163,8 @@ class RoomController extends Controller
 
     public function updateRoomUsers(Room $room, UpdateRoomUserRequest $request): RedirectResponse
     {
+        $this->authorize('update', $room);
+
         $affectedUserIds = $room->users()->pluck('users.id')->all();
 
         $room->users()->detach();
@@ -182,6 +190,8 @@ class RoomController extends Controller
         Request $request,
         Room $room
     ): RedirectResponse {
+        $this->authorize('update', $room);
+
         // varchar(7)-Spalte: ungültige Werte würden im Strict-Mode einen SQL-Fehler (500) werfen
         $request->validate(['color' => ['nullable', 'regex:/^#[0-9a-fA-F]{6}$/']]);
 
@@ -245,6 +255,8 @@ class RoomController extends Controller
 
     public function duplicate(Room $room): RedirectResponse
     {
+        $this->authorize('create', Room::class);
+
         $this->roomService->duplicateByRoomModel($room);
 
         return Redirect::route('areas.management');
@@ -252,6 +264,8 @@ class RoomController extends Controller
 
     public function updateOrder(Request $request): RedirectResponse
     {
+        $this->authorize('viewAny', Room::class);
+
         foreach ($request->rooms as $room) {
             Room::findOrFail($room['id'])->update(['order' => $room['order']]);
         }
@@ -261,6 +275,8 @@ class RoomController extends Controller
 
     public function getTrashed(Request $request): Response|ResponseFactory
     {
+        $this->authorize('viewAny', Room::class);
+
         $search = trim((string) $request->input('search', ''));
         $perPage = (int) $request->input('entitiesPerPage', 25);
 
@@ -294,6 +310,8 @@ class RoomController extends Controller
 
     public function destroy(Room $room): RedirectResponse
     {
+        $this->authorize('delete', Room::class);
+
         $room->delete();
 
         return Redirect::route('areas.management');
@@ -301,6 +319,8 @@ class RoomController extends Controller
 
     public function forceDelete(int $id): RedirectResponse
     {
+        $this->authorize('forceDelete', Room::class);
+
         $room = Room::onlyTrashed()->findOrFail($id);
         $room->forceDelete();
         return Redirect::route('rooms.trashed');
@@ -308,6 +328,8 @@ class RoomController extends Controller
 
     public function forceDeleteAll(): RedirectResponse
     {
+        $this->authorize('forceDelete', Room::class);
+
         Room::onlyTrashed()->each(function ($room) {
             $room->forceDelete();
         });
@@ -316,6 +338,8 @@ class RoomController extends Controller
 
     public function restore(int $id): RedirectResponse
     {
+        $this->authorize('restore', Room::class);
+
         $room = Room::onlyTrashed()->findOrFail($id);
         $room->restore();
 

@@ -19,7 +19,6 @@ use Artwork\Modules\GlobalNotification\Models\GlobalNotification;
 use Artwork\Modules\IndividualTimes\Models\Traits\HasIndividualTimes;
 use Artwork\Modules\Inventory\Models\InventoryTag;
 use Artwork\Modules\Inventory\Models\ProductBasket;
-use Artwork\Modules\InventoryManagement\Models\InventoryManagementUserFilter;
 use Artwork\Modules\MoneySource\Models\MoneySource;
 use Artwork\Modules\MoneySource\Models\MoneySourceTask;
 use Artwork\Modules\MoneySource\Models\MoneySourceUserPivot;
@@ -156,8 +155,6 @@ use Spatie\Permission\Traits\HasRoles;
  * @property boolean $is_freelancer
  * @property string $sort_type_shift_tab
  * @property int $drawer_height
- * @property int $inventory_sort_column_id
- * @property int $inventory_sort_direction
  * @property boolean $inventory_grid_layout
  * @property boolean $inventory_hide_images
  * @property boolean $checklist_has_projects
@@ -263,8 +260,6 @@ class User extends Model implements
         'is_freelancer',
         'sort_type_shift_tab',
         'drawer_height',
-        'inventory_sort_column_id',
-        'inventory_sort_direction',
         'inventory_grid_layout',
         'inventory_hide_images',
         'checklist_has_projects',
@@ -725,15 +720,6 @@ class User extends Model implements
     {
         return $this->hasPermissionTo(PermissionEnum::PROJECT_MANAGEMENT->value)
             || $this->hasRole(RoleEnum::ARTWORK_ADMIN->value);
-    }
-
-    public function inventoryManagementFilter(): HasOne
-    {
-        return $this->hasOne(
-            InventoryManagementUserFilter::class,
-            'user_id',
-            'id'
-        );
     }
 
     public function projectFilterAndSortSetting(): HasOne

@@ -23,7 +23,7 @@
                             <BaseMenuItem icon="IconListDetails" title="Mark all tasks as unfinished" white-menu-background v-if="checkIfAllTasksChecked && checklist.tasks.length > 0" @click="doneOrUndoneAllTasks(false)"/>
                             <BaseMenuItem icon="IconFilePlus" title="Save as template" white-menu-background  @click="createTemplateFromChecklist"/>
                             <BaseMenuItem icon="IconCopy" title="Duplicate" white-menu-background  @click="duplicateChecklist"/>
-                            <BaseMenuItem icon="IconTrash" title="Delete" white-menu-background  @click="showDeleteChecklistModal = true" v-if="can('can use checklists') && checklist.user_id === usePage().props.auth.user.id || can('can edit checklist') || isAdmin || checklist.user_id === usePage().props.auth.user.id"/>
+                            <BaseMenuItem icon="IconTrash" title="Delete" white-menu-background  @click="showDeleteChecklistModal = true" v-if="can('can edit checklist') || can('admin checklistTemplates') || isAdmin || checklist.user_id === usePage().props.auth.user.id"/>
                         </BaseMenu>
                     </div>
                 </div>

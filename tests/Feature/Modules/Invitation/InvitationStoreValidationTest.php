@@ -78,12 +78,12 @@ final class InvitationStoreValidationTest extends FeatureTestCase
 
         $this->postJson(route('invitations.store'), [
             'user_emails' => ['invitee@example.com'],
-            'roles' => [RoleEnum::USER->value],
+            'roles' => [RoleEnum::ARTWORK_ADMIN->value],
             'permissions' => [PermissionEnum::PROJECT_VIEW->value],
         ])->assertRedirect(route('users'));
 
         $invitation = Invitation::query()->where('email', 'invitee@example.com')->firstOrFail();
-        $this->assertSame([RoleEnum::USER->value], $invitation->roles);
+        $this->assertSame([RoleEnum::ARTWORK_ADMIN->value], $invitation->roles);
         $this->assertSame([PermissionEnum::PROJECT_VIEW->value], $invitation->permissions);
         $this->mailService->shouldHaveReceived('sendInvitationCreated')->once();
     }

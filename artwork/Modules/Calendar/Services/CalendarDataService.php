@@ -53,8 +53,7 @@ readonly class CalendarDataService
         $calendarFilter,
         User $user,
         $project = null,
-        $room = null,
-        $desiresInventorySchedulingResource = null
+        $room = null
     ): array {
 
         // Create the calendar period

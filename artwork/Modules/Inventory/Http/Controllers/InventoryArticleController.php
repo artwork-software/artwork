@@ -124,6 +124,7 @@ class InventoryArticleController extends Controller
      */
     public function update(UpdateInventoryArticleRequest $request, InventoryArticle $inventoryArticle)
     {
+        $this->authorizeTagAccess($inventoryArticle);
         $this->inventoryArticleService->update($inventoryArticle, $request);
     }
 
@@ -132,6 +133,7 @@ class InventoryArticleController extends Controller
      */
     public function destroy(InventoryArticle $inventoryArticle)
     {
+        $this->authorizeTagAccess($inventoryArticle);
         $this->inventoryArticleService->delete($inventoryArticle);
     }
 
@@ -299,6 +301,7 @@ class InventoryArticleController extends Controller
 
     public function updateField(Request $request, InventoryArticle $inventoryArticle)
     {
+        $this->authorizeTagAccess($inventoryArticle);
         $fieldRules = [
             'name' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
@@ -474,5 +477,26 @@ class InventoryArticleController extends Controller
                 $validated['date']
             ),
         ]);
+    }
+
+    /**
+     * Tag-Freigaben ("eingeschränkte Tags") wurden bisher nur im ArticleDetailModal geprüft;
+     * hier serverseitig nachgezogen. Admins passieren via Gate::before-Äquivalent (Rolle).
+     */
+    private function authorizeTagAccess(InventoryArticle $inventoryArticle): void
+    {
+        /** @var \Artwork\Modules\User\Models\User $user */
+        $user = $this->authManager->user();
+
+        if ($user->hasRole(\Artwork\Modules\Role\Enums\RoleEnum::ARTWORK_ADMIN->value)) {
+            return;
+        }
+
+        abort_unless(
+            app(\Artwork\Modules\Inventory\Services\InventoryTagPermissionService::class)
+                ->userCanEditArticle($user, $inventoryArticle),
+            403,
+            'Dieser Artikel ist über eingeschränkte Tags geschützt.'
+        );
     }
 }

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Artwork\Modules\Permission\Http\Requests\StorePermissionPresetRequest;
 use Artwork\Modules\Permission\Http\Requests\UpdatePermissionPresetRequest;
 use Artwork\Modules\Permission\Models\PermissionPreset;
+use Artwork\Modules\Permission\Services\PermissionCatalogPresenter;
 use Artwork\Modules\Permission\Services\PermissionPresetService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Log;
@@ -24,10 +25,25 @@ class PermissionPresetController extends Controller
         return Inertia::render(
             'PermissionPresets/Index',
             [
-                'permission_presets' => $this->permissionPresetService->getPermissionPresets(),
-                'available_permissions' => $this->permissionPresetService->getAvailablePermissions(),
+                'permission_presets' => $this->permissionPresetService->getPermissionPresets()
+                    ->map(static fn (PermissionPreset $preset): array => [
+                        'id' => $preset->id,
+                        'name' => $preset->name,
+                        'permissions' => $preset->permissionNames(),
+                    ])->values(),
+                'catalog' => app(PermissionCatalogPresenter::class)->present(),
             ]
         );
+    }
+
+    /**
+     * Nur-Lese-Referenz "Rechte erklärt": alle Module und Rechte mit Wirkungskarten, druckbar.
+     */
+    public function reference(): Response
+    {
+        return Inertia::render('PermissionPresets/Reference', [
+            'catalog' => app(PermissionCatalogPresenter::class)->present(),
+        ]);
     }
 
     public function store(StorePermissionPresetRequest $request): RedirectResponse

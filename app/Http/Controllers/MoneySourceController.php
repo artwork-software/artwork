@@ -121,6 +121,8 @@ class MoneySourceController extends Controller
 
     public function store(Request $request, LoggerInterface $logger): RedirectResponse
     {
+        $this->authorize('create', MoneySource::class);
+
         foreach ($request->users as $requestUser) {
             $user = User::find($requestUser['user_id']);
             if ($user === null) {
@@ -483,6 +485,8 @@ class MoneySourceController extends Controller
 
     public function update(Request $request, MoneySource $moneySource): void
     {
+        $this->authorize('update', $moneySource);
+
         $oldName = $moneySource->name;
         $oldDescription = $moneySource->description;
 
@@ -584,6 +588,8 @@ class MoneySourceController extends Controller
 
     public function updateUsers(Request $request, MoneySource $moneySource): void
     {
+        $this->authorize('update', $moneySource);
+
         $moneySource->users()->sync(collect($request->users));
         $tasks = $moneySource->moneySourceTasks()->get();
         foreach ($tasks as $task) {
@@ -593,6 +599,8 @@ class MoneySourceController extends Controller
 
     public function destroy(MoneySource $moneySource): RedirectResponse
     {
+        $this->authorize('delete', $moneySource);
+
         $beforeSubMoneySources = MoneySource::where('group_id', $moneySource->id)->get();
         foreach ($beforeSubMoneySources as $beforeSubMoneySource) {
             $beforeSubMoneySource->update(['group_id' => null]);
@@ -634,6 +642,8 @@ class MoneySourceController extends Controller
 
     public function duplicate(MoneySource $moneySource): RedirectResponse
     {
+        $this->authorize('create', MoneySource::class);
+
         $user = Auth::user();
         $newMoneySource = $user->money_sources()->create([
             'name' => '(Kopie) ' . $moneySource->name,
@@ -753,11 +763,15 @@ class MoneySourceController extends Controller
 
     public function updateProjects(MoneySource $moneySource, Request $request): void
     {
+        $this->authorize('update', $moneySource);
+
         $moneySource->projects()->sync($request->linkedProjectIds);
     }
 
     public function syncCategories(MoneySource $moneySource, Request $request): void
     {
+        $this->authorize('update', $moneySource);
+
         $moneySource->categories()->sync($request->categoryIds);
     }
 }

@@ -20,6 +20,9 @@ use Artwork\Modules\Invitation\Models\Invitation;
 use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Artwork\Modules\Permission\Models\Permission;
 use Artwork\Modules\Permission\Services\PermissionPresetService;
+use Artwork\Modules\Permission\Services\PermissionCatalogPresenter;
+use Artwork\Modules\Permission\Services\PermissionChangeLogService;
+use Artwork\Modules\Permission\Services\PermissionImplicationService;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Models\ProjectFile;
 use Artwork\Modules\Project\Models\ProjectRole;
@@ -289,7 +292,13 @@ class UserController extends Controller
             'roles' => Role::all(),
             'freelancers' => Freelancer::all(),
             'serviceProviders' => ServiceProvider::query()->without('contacts')->get(),
-            'permission_presets' => $permissionPresetService->getPermissionPresets(),
+            'permission_presets' => $permissionPresetService->getPermissionPresets()
+                ->map(static fn ($preset): array => [
+                    'id' => $preset->id,
+                    'name' => $preset->name,
+                    'permissions' => $preset->permissionNames(),
+                ])->values(),
+            'catalog' => app(PermissionCatalogPresenter::class)->present(),
             'invitedUsers' => Invitation::all(),
             'userSortEnumNames' => array_map(
                 static function (UserSortEnum $enum): string {
@@ -384,7 +393,8 @@ class UserController extends Controller
             ),
             'userUserManagementSetting' => $userUserManagementSettingService
                 ->getFromUser($userService->getAuthUser())
-                ->getAttribute('settings')
+                ->getAttribute('settings'),
+            'catalog' => app(PermissionCatalogPresenter::class)->present(),
         ]);
     }
 
@@ -583,6 +593,7 @@ class UserController extends Controller
 
     public function shiftUserInfoWorktimes(User $user): JsonResponse
     {
+        $this->authorizeHourAccountAccess($user);
         $startInput = request()->input('start');
         $endInput = request()->input('end');
         $start = $startInput ? Carbon::parse($startInput) : Carbon::now()->startOfMonth();
@@ -664,7 +675,26 @@ class UserController extends Controller
 
     public function shiftUserInfoOvertime(User $user): JsonResponse
     {
+        $this->authorizeHourAccountAccess($user);
+
         return response()->json($this->buildOvertimePayload($user));
+    }
+
+    /**
+     * Das Info-Fenster im Dienstplan umging bisher "Stundenkonten sehen" (Konzept Nutzerrechte 6.2 F):
+     * fremde Arbeitszeiten/Überstunden nur mit diesem Recht oder Personalverwaltung. Admins via Gate::before.
+     */
+    private function authorizeHourAccountAccess(User $user): void
+    {
+        $viewer = Auth::user();
+        abort_unless(
+            $viewer->id === $user->id
+            || $viewer->canAny([
+                PermissionEnum::CAN_VIEW_SHIFT_WORKER_HOURS->value,
+                PermissionEnum::MA_MANAGER->value,
+            ]),
+            403
+        );
     }
 
     public function editUserOvertime(User $user): Response|ResponseFactory
@@ -975,12 +1005,33 @@ class UserController extends Controller
         ]);
     }
 
-    public function editUserPermissions(User $user): Response|ResponseFactory
-    {
+    public function editUserPermissions(
+        User $user,
+        PermissionCatalogPresenter $catalogPresenter,
+        PermissionPresetService $permissionPresetService
+    ): Response|ResponseFactory {
         return inertia('Users/UserPermissionsPage', [
             'user_to_edit' => new UserShowResource($user),
             'available_roles' => Role::all(),
-            "all_permissions" => Permission::all()->groupBy('group'),
+            'catalog' => $catalogPresenter->present($user),
+            'permission_presets' => $permissionPresetService->getPermissionPresets()
+                ->map(static fn ($preset): array => [
+                    'id' => $preset->id,
+                    'name' => $preset->name,
+                    'permissions' => $preset->permissionNames(),
+                ])->values(),
+            'permission_history' => app(PermissionChangeLogService::class)->historyFor($user),
+            // "Rechte wie Person …": Kolleg*innen mit ihren Rechten (nur Name + Rechte, keine Kontaktdaten)
+            'colleagues' => User::query()
+                ->where('id', '!=', $user->id)
+                ->orderBy('last_name')->orderBy('first_name')
+                ->with('permissions:id,name')
+                ->get(['id', 'first_name', 'last_name'])
+                ->map(static fn (User $colleague): array => [
+                    'id' => $colleague->id,
+                    'name' => trim($colleague->first_name . ' ' . $colleague->last_name),
+                    'permissions' => $colleague->permissions->pluck('name')->values()->all(),
+                ])->values(),
             'currentTab' => 'permissions',
         ]);
     }
@@ -1019,7 +1070,7 @@ class UserController extends Controller
 
     public function updateUserPhoto(User $user, Request $request): void
     {
-        if ($user->id !== Auth::user()->id && !Auth::user()->can(PermissionEnum::TEAM_UPDATE->value)) {
+        if ($user->id !== Auth::user()->id && !Auth::user()->can(PermissionEnum::MA_MANAGER->value)) {
             abort(\Illuminate\Http\Response::HTTP_FORBIDDEN);
         }
 
@@ -1030,7 +1081,7 @@ class UserController extends Controller
 
     public function deleteUserPhoto(User $user): void
     {
-        if ($user->id !== Auth::user()->id && !Auth::user()->can(PermissionEnum::TEAM_UPDATE->value)) {
+        if ($user->id !== Auth::user()->id && !Auth::user()->can(PermissionEnum::MA_MANAGER->value)) {
             abort(\Illuminate\Http\Response::HTTP_FORBIDDEN);
         }
 
@@ -1100,7 +1151,7 @@ class UserController extends Controller
 
     public function updateUserDetails(Request $request, User $user): RedirectResponse
     {
-        if ($user->id !== Auth::user()->id && !Auth::user()->can(PermissionEnum::TEAM_UPDATE->value)) {
+        if ($user->id !== Auth::user()->id && !Auth::user()->can(PermissionEnum::MA_MANAGER->value)) {
             abort(\Illuminate\Http\Response::HTTP_FORBIDDEN);
         }
 
@@ -1126,7 +1177,7 @@ class UserController extends Controller
             'high_contrast' => $request->get('high_contrast')
         ]);
 
-        if (Auth::user()->can(PermissionEnum::TEAM_UPDATE->value)) {
+        if (Auth::user()->canAny([PermissionEnum::TEAM_UPDATE->value, PermissionEnum::MA_MANAGER->value])) {
             $user->departments()->sync(
                 collect($request->departments)
                     ->map(function ($department) {
@@ -1146,7 +1197,7 @@ class UserController extends Controller
     public function updateChatPopupSettings(Request $request, User $user): void
     {
         // gleiche Berechtigungslogik wie bei updateUserDetails
-        if ($user->id !== Auth::user()->id && !Auth::user()->can(PermissionEnum::TEAM_UPDATE->value)) {
+        if ($user->id !== Auth::user()->id && !Auth::user()->can(PermissionEnum::MA_MANAGER->value)) {
             abort(\Illuminate\Http\Response::HTTP_FORBIDDEN);
         }
 
@@ -1165,13 +1216,15 @@ class UserController extends Controller
         //only add permissions which are also existing to the array which gets synced with user
         $availablePermissions = PermissionEnum::cases();
         $permissionsToGrant = [];
-        foreach ($request->permissions as $permissionToGrant) {
+        foreach ($request->permissions ?? [] as $permissionToGrant) {
             foreach ($availablePermissions as $availablePermission) {
                 if ($availablePermission->value === $permissionToGrant) {
                     $permissionsToGrant[] = $permissionToGrant;
                 }
             }
         }
+        // Stufenleiter: das stärkste Recht setzt die kleineren Stufen (Backend-Implikation, Konzept Nutzerrechte)
+        $permissionsToGrant = app(PermissionImplicationService::class)->expand($permissionsToGrant);
 
         //only add roles which are also existing to the array which gets synced with user
         $availableRoles = RoleEnum::cases();
@@ -1184,10 +1237,24 @@ class UserController extends Controller
             }
         }
 
+        $permissionsBefore = $user->permissions()->pluck('name')->all();
+        $rolesBefore = $user->getRoleNames()->all();
+
         $user->syncPermissions($permissionsToGrant);
         $user->syncRoles($rolesToGrant);
         // Gecachte Inertia-Share-Daten sofort invalidieren statt auf den 5-Min.-TTL zu warten
         $user->forgetCachedShareData();
+
+        // Änderungsverlauf: wer hat wann was vergeben/entzogen
+        app(PermissionChangeLogService::class)->log(
+            $user,
+            Auth::user(),
+            $permissionsBefore,
+            $permissionsToGrant,
+            $rolesBefore,
+            $rolesToGrant,
+            $request->input('source')
+        );
 
         return Redirect::back();
     }
@@ -1479,10 +1546,6 @@ class UserController extends Controller
 
             if ($user->inventoryArticlePlanFilter) {
                 $user->inventoryArticlePlanFilter->delete();
-            }
-
-            if ($user->inventoryManagementFilter) {
-                $user->inventoryManagementFilter->delete();
             }
 
             if ($user->projectFilterAndSortSetting) {
@@ -1944,11 +2007,6 @@ class UserController extends Controller
     public function updateUserOverviewHeight(User $user, Request $request): void
     {
         $user->update($request->only('drawer_height'));
-    }
-
-    public function updateInventorySortColumn(User $user, Request $request): void
-    {
-        $user->update($request->only('inventory_sort_column_id', 'inventory_sort_direction'));
     }
 
     public function updateChecklistFilter(User $user, Request $request): void

@@ -2,6 +2,7 @@
 
 namespace Artwork\Modules\ExternalIssue\Http\Requests;
 
+use Artwork\Modules\ExternalIssue\Models\ExternalIssue;
 use Illuminate\Foundation\Http\FormRequest;
 
 class StoreExternalIssueRequest extends FormRequest
@@ -11,7 +12,11 @@ class StoreExternalIssueRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return true;
+        // Autorisierung VOR der Validierung, sonst antwortet ein fehlendes Recht
+        // mit einem Validierungs-Redirect (302) statt 403.
+        $projectId = $this->integer('project_id') ?: null;
+
+        return $this->user()?->can('create', [ExternalIssue::class, $projectId]) ?? false;
     }
 
     /**

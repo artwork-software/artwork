@@ -37,7 +37,7 @@ class WorkTimeOverviewExportService
         }
 
         $crafts = Craft::query()
-            ->without(['craftShiftPlaner', 'craftInventoryPlaner'])
+            ->without(['craftShiftPlaner'])
             ->with([
                 'users' => fn ($query) => $query
                     ->without('shiftQualifications')

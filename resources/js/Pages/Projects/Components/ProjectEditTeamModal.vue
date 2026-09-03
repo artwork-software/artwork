@@ -7,6 +7,15 @@
         @close="closeModal"
     >
         <div class="">
+            <SettingsGuideBanner
+                variant="static"
+                icon="IconShieldLock"
+                class="mb-4"
+                title="Rights in the project team apply to this project only"
+                :paragraphs="[
+                    'Write, project management, budget and delete here apply only to this project. House-wide permissions for all projects are managed under user rights.'
+                ]"
+            />
             <!-- Suche -->
             <div class="relative">
                 <BaseInput
@@ -257,6 +266,7 @@ import Permissions from '@/Mixins/Permissions.vue'
 import IconLib from '@/Mixins/IconLib.vue'
 
 import ArtworkBaseModal from '@/Artwork/Modals/ArtworkBaseModal.vue'
+import SettingsGuideBanner from '@/Artwork/Guide/SettingsGuideBanner.vue'
 import BaseUIButton from '@/Artwork/Buttons/BaseUIButton.vue'
 import BaseInput from '@/Artwork/Inputs/BaseInput.vue'
 import ProjectTeamPermissionsDropdown from '@/Pages/Projects/Components/ProjectTeamPermissionsDropdown.vue'

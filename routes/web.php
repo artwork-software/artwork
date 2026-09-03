@@ -35,7 +35,6 @@ use App\Http\Controllers\ContractModuleController;
 use App\Http\Controllers\ContractTypeController;
 use App\Http\Controllers\DocumentRequestController;
 use App\Http\Controllers\CraftController;
-use App\Http\Controllers\CraftInventoryItemEventController;
 use App\Http\Controllers\CurrencyController;
 use App\Http\Controllers\DayRemarkController;
 use App\Http\Controllers\DayServiceController;
@@ -141,19 +140,10 @@ use Artwork\Modules\Inventory\Http\Controllers\InventoryArticleController;
 use Artwork\Modules\Inventory\Http\Controllers\InventoryArticlePropertiesController;
 use Artwork\Modules\Inventory\Http\Controllers\InventoryArticleStatusController;
 use Artwork\Modules\Inventory\Http\Controllers\InventoryCategoryController;
-use Artwork\Modules\Inventory\Http\Controllers\InventoryController;
 use Artwork\Modules\Inventory\Http\Controllers\InventorySubCategoryController;
 use Artwork\Modules\Inventory\Http\Controllers\InventoryTagController;
 use Artwork\Modules\Inventory\Http\Controllers\InventoryTagGroupController;
 use Artwork\Modules\Inventory\Http\Controllers\InventoryUserFilterController;
-use Artwork\Modules\InventoryManagement\Http\Controllers\CraftInventoryCategoryController;
-use Artwork\Modules\InventoryManagement\Http\Controllers\CraftInventoryFilterController;
-use Artwork\Modules\InventoryManagement\Http\Controllers\CraftInventoryGroupController;
-use Artwork\Modules\InventoryManagement\Http\Controllers\CraftInventoryGroupFolderController;
-use Artwork\Modules\InventoryManagement\Http\Controllers\CraftInventoryItemCellController;
-use Artwork\Modules\InventoryManagement\Http\Controllers\CraftInventoryItemController;
-use Artwork\Modules\InventoryManagement\Http\Controllers\CraftsInventoryColumnController;
-use Artwork\Modules\InventoryManagement\Http\Controllers\InventoryManagementExportController;
 use Artwork\Modules\Invitation\Http\Controller\InvitationController;
 use Artwork\Modules\Crm\Http\Controllers\CrmContactController;
 use Artwork\Modules\Crm\Http\Controllers\CrmContactTypeController;
@@ -172,7 +162,6 @@ use Artwork\Modules\ExternalAccess\Http\Controllers\ExternalInvitationController
 use Artwork\Modules\Manufacturer\Http\Controllers\ManufacturerController;
 use Artwork\Modules\MaterialSet\Http\Controllers\MaterialSetController;
 use Artwork\Modules\ModuleSettings\Http\Controller\ModuleSettingsController;
-use Artwork\Modules\MoneySource\Http\Middleware\CanEditMoneySource;
 use Artwork\Modules\Project\Http\Controllers\ProjectRoleMatrixExportController;
 use Artwork\Modules\Project\Http\Middleware\CanEditProject;
 use Artwork\Modules\Budget\Http\Middleware\EnsureUserCanAccessProjectBudget;
@@ -385,7 +374,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
             ->name('tool.mail.update');
         Route::post('/mail/test', [MailSettingsController::class, 'test'])
             ->name('tool.mail.test');
-        Route::group(['namespace' => 'System', 'prefix' => 'system'], function (): void {
+        Route::group(['namespace' => 'System', 'prefix' => 'system', 'middleware' => 'can:change tool settings'], function (): void {
             Route::get('/file-settings', [FileSettingsController::class, 'index'])
                 ->name('tool.file-settings.index');
             Route::put('/file-settings', [FileSettingsController::class, 'store'])
@@ -417,10 +406,6 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
             WebhookEndpointController::class,
             'redeliver'
         ])->name('webhooks.deliveries.redeliver');
-    });
-
-    Route::group(['middleware' => CanEditMoneySource::class], function (): void {
-        Route::delete('/money_sources/{moneySource}', [MoneySourceController::class, 'destroy']);
     });
 
     Route::group(['middleware' => ['can:view edit add money_sources']], function (): void {
@@ -634,7 +619,8 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::get('/events/{event}/project-assignment-impact', [ProjectDayAssignmentController::class, 'rescheduleImpact'])
         ->name('events.project-assignment-impact')
         ->can('can view shift plan');
-    Route::get('/trashedProjects', [ProjectController::class, 'getTrashed'])->name('projects.trashed');
+    Route::get('/trashedProjects', [ProjectController::class, 'getTrashed'])
+        ->middleware('can:can access trash')->name('projects.trashed');
     Route::get('/projects/users_departments/search', [ProjectController::class, 'searchDepartmentsAndUsers'])
         ->name('users_departments.search');
     Route::get('/projects/create', [ProjectController::class, 'create'])->name('projects.create');
@@ -803,14 +789,16 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         ->name('link_list_templates.destroy');
 
     //TaskTemplates
-    Route::get('/task_templates/create', [TaskTemplateController::class, 'create'])->name('task_templates.create');
-    Route::post('/task_templates', [TaskTemplateController::class, 'store'])->name('task_templates.store');
-    Route::put('/task_templates/order', [TaskTemplateController::class, 'updateOrder'])->name('task_templates.order');
-    Route::get('/task_templates/{task_template}/edit', [TaskTemplateController::class, 'edit']);
-    Route::patch('/task_templates/{task_template}', [TaskTemplateController::class, 'update'])
-        ->name('task_templates.update');
-    Route::delete('/task_templates/{task_template}', [TaskTemplateController::class, 'destroy'])
-        ->name('task_templates.destroy');
+    Route::group(['middleware' => 'can:admin checklistTemplates'], function (): void {
+        Route::get('/task_templates/create', [TaskTemplateController::class, 'create'])->name('task_templates.create');
+        Route::post('/task_templates', [TaskTemplateController::class, 'store'])->name('task_templates.store');
+        Route::put('/task_templates/order', [TaskTemplateController::class, 'updateOrder'])->name('task_templates.order');
+        Route::get('/task_templates/{task_template}/edit', [TaskTemplateController::class, 'edit']);
+        Route::patch('/task_templates/{task_template}', [TaskTemplateController::class, 'update'])
+            ->name('task_templates.update');
+        Route::delete('/task_templates/{task_template}', [TaskTemplateController::class, 'destroy'])
+            ->name('task_templates.destroy');
+    });
 
 
 
@@ -866,7 +854,8 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
 
     //Areas
     Route::get('/areas', [AreaController::class, 'index'])->name('areas.management');
-    Route::get('/trashedAreas', [AreaController::class, 'getTrashed'])->name('areas.trashed');
+    Route::get('/trashedAreas', [AreaController::class, 'getTrashed'])
+        ->middleware('can:can access trash')->name('areas.trashed');
     Route::post('/areas', [AreaController::class, 'store'])->name('areas.store');
     Route::post('/areas/{area}/duplicate', [AreaController::class, 'duplicate'])->name('areas.duplicate');
     Route::patch('/areas/{area}', [AreaController::class, 'update'])->name('areas.update');
@@ -883,7 +872,8 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
 
     //Rooms
     Route::post('/rooms', [RoomController::class, 'store'])->name('rooms.store');
-    Route::get('/trashedRooms', [RoomController::class, 'getTrashed'])->name('rooms.trashed');
+    Route::get('/trashedRooms', [RoomController::class, 'getTrashed'])
+        ->middleware('can:can access trash')->name('rooms.trashed');
     Route::get('/rooms/free', [RoomController::class, 'getAllDayFree'])->name('rooms.free');
     Route::post('/rooms/{room}/duplicate', [RoomController::class, 'duplicate'])->name('rooms.duplicate');
     Route::get('/rooms/{room}', [RoomController::class, 'show'])
@@ -947,7 +937,8 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::get('/events/requests', function () {
         return redirect()->route('event-verifications.index');
     })->name('events.requests');
-    Route::get('/trashedEvents', [EventController::class, 'getTrashed'])->name('events.trashed');
+    Route::get('/trashedEvents', [EventController::class, 'getTrashed'])
+        ->middleware('can:can access trash')->name('events.trashed');
 
     // Event Api
     Route::post('/events', [EventController::class, 'storeEvent'])->name('events.store');
@@ -1128,7 +1119,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
             ->name('holiday.batch-update');
 
 
-        Route::group(['prefix' => 'event-status'], function (): void {
+        Route::group(['prefix' => 'event-status', 'middleware' => 'can:change event settings'], function (): void {
             Route::get('/', [EventStatusController::class, 'index'])
                 ->name('event_status.management');
 
@@ -1153,7 +1144,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
                 ->name('event_status.delete');
         });
 
-        Route::group(['prefix' => 'event_properties'], function (): void {
+        Route::group(['prefix' => 'event_properties', 'middleware' => 'can:change event settings'], function (): void {
             Route::get('/', [EventPropertyController::class, 'index'])
                 ->name('event_settings.event_properties.index');
             Route::post('/', [EventPropertyController::class, 'store'])
@@ -1167,10 +1158,12 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
 
     //EventTypes
 
-    Route::post('/event_types', [EventTypeController::class, 'store'])->name('event_types.store');
-    Route::get('/event_types/{event_type}', [EventTypeController::class, 'show'])->name('event_types.show');
-    Route::patch('/event_types/{event_type}', [EventTypeController::class, 'update'])->name('event_types.update');
-    Route::delete('/event_types/{event_type}', [EventTypeController::class, 'destroy']);
+    Route::group(['middleware' => 'can:change event settings'], function (): void {
+        Route::post('/event_types', [EventTypeController::class, 'store'])->name('event_types.store');
+        Route::get('/event_types/{event_type}', [EventTypeController::class, 'show'])->name('event_types.show');
+        Route::patch('/event_types/{event_type}', [EventTypeController::class, 'update'])->name('event_types.update');
+        Route::delete('/event_types/{event_type}', [EventTypeController::class, 'destroy'])->name('event_types.destroy');
+    });
 
     // notification
     Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
@@ -1202,6 +1195,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
 
     // Money Sources
     Route::get('/settings/money_sources', [MoneySourceController::class, 'showSettings'])
+        ->middleware('can:change money source settings')
         ->name('money_sources.settings');
     Route::get('/money_sources/search/money_source', [MoneySourceController::class, 'search'])
         ->name('money_sources.search');
@@ -1215,7 +1209,8 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::post('/money_sources/{moneySource}/duplicate', [MoneySourceController::class, 'duplicate'])
         ->name('money_sources.duplicate');
     Route::post('/money_sources/{moneySource}/pin', [MoneySourceController::class, 'pin'])->name('money_sources.pin');
-    Route::delete('/money_sources/{moneySource}', [MoneySourceController::class, 'destroy']);
+    Route::delete('/money_sources/{moneySource}', [MoneySourceController::class, 'destroy'])
+        ->name('money_sources.destroy');
     Route::post('/money_sources/{moneySource}/categories', [MoneySourceController::class, 'syncCategories'])
         ->name('money_sources.categories.sync');
 
@@ -1248,7 +1243,9 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
 
     //DocumentRequests
     Route::get('/document-requests', [DocumentRequestController::class, 'index'])->name('document-requests.index');
-    Route::post('/document-requests', [DocumentRequestController::class, 'store'])->name('document-requests.store');
+    Route::post('/document-requests', [DocumentRequestController::class, 'store'])
+        ->middleware('can:can create document requests')
+        ->name('document-requests.store');
     Route::patch('/document-requests/{documentRequest}', [DocumentRequestController::class, 'update'])
         ->middleware('can:can edit document requests')
         ->name('document-requests.update');
@@ -1571,13 +1568,17 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
             Route::post(
                 '/verified/main-position/request',
                 [ProjectController::class, 'verifiedRequestMainPosition']
-            )->name('project.budget.verified.main-position.request');
+            )->name('project.budget.verified.main-position.request')
+                ->middleware('can:can add and remove verified states');
             Route::post('/verified/sub-position/request', [ProjectController::class, 'verifiedRequestSubPosition'])
-                ->name('project.budget.verified.sub-position.request');
+                ->name('project.budget.verified.sub-position.request')
+                ->middleware('can:can add and remove verified states');
             Route::post('/verified/take-back/position', [ProjectController::class, 'takeBackVerification'])
-                ->name('project.budget.take-back.verification');
+                ->name('project.budget.take-back.verification')
+                ->middleware('can:can add and remove verified states');
             Route::post('/verified/remove/position', [ProjectController::class, 'removeVerification'])
-                ->name('project.budget.remove.verification');
+                ->name('project.budget.remove.verification')
+                ->middleware('can:can add and remove verified states');
             Route::post('/template/{table}/create', [BudgetTemplateController::class, 'store'])
                 ->name('project.budget.template.create');
             Route::post('/template/{table}/use', [BudgetTemplateController::class, 'useTemplate'])
@@ -1610,20 +1611,28 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
             Route::patch('/column-color/change', [ProjectController::class, 'changeColumnColor'])
                 ->name('project.budget.column-color.change');
             Route::patch('/verified/main-position', [ProjectController::class, 'verifiedMainPosition'])
-                ->name('project.budget.verified.main-position');
+                ->name('project.budget.verified.main-position')
+                ->middleware('can:can add and remove verified states');
             Route::patch('/verified/sub-position', [ProjectController::class, 'verifiedSubPosition'])
-                ->name('project.budget.verified.sub-position');
-            Route::patch('/lock/column', [ProjectController::class, 'lockColumn'])->name('project.budget.lock.column');
+                ->name('project.budget.verified.sub-position')
+                ->middleware('can:can add and remove verified states');
+            Route::patch('/lock/column', [ProjectController::class, 'lockColumn'])->name('project.budget.lock.column')
+                ->middleware('can:can add and remove verified states');
             Route::patch('/unlock/column', [ProjectController::class, 'unlockColumn'])
-                ->name('project.budget.unlock.column');
+                ->name('project.budget.unlock.column')
+                ->middleware('can:can add and remove verified states');
             Route::patch('/fix/sub-position', [ProjectController::class, 'fixSubPosition'])
-                ->name('project.budget.fix.sub-position');
+                ->name('project.budget.fix.sub-position')
+                ->middleware('can:can add and remove verified states');
             Route::patch('/unfix/sub-position', [ProjectController::class, 'unfixSubPosition'])
-                ->name('project.budget.unfix.sub-position');
+                ->name('project.budget.unfix.sub-position')
+                ->middleware('can:can add and remove verified states');
             Route::patch('/fix/main-position', [ProjectController::class, 'fixMainPosition'])
-                ->name('project.budget.fix.main-position');
+                ->name('project.budget.fix.main-position')
+                ->middleware('can:can add and remove verified states');
             Route::patch('/unfix/main-position', [ProjectController::class, 'unfixMainPosition'])
-                ->name('project.budget.unfix.main-position');
+                ->name('project.budget.unfix.main-position')
+                ->middleware('can:can add and remove verified states');
             Route::patch('/column/{column}/commented', [ProjectController::class, 'updateCommentedStatusOfColumn'])
                 ->name('project.budget.column.update.commented');
             Route::patch('/columns/update-orders', [TableColumnOrderController::class, 'updateTableColumnOrders'])
@@ -1708,11 +1717,14 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     // Budget Settings
     Route::group(['prefix' => 'budget-settings'], function (): void {
         Route::get('/general', [BudgetGeneralController::class, 'index'])
+            ->middleware('can:change budget settings')
             ->name('budget-settings.general');
         Route::patch('/general/{budgetColumnSetting}', [BudgetGeneralController::class, 'update'])
+            ->middleware('can:change budget settings')
             ->name('budget-settings.general.update');
 
         Route::get('/account-management', [BudgetAccountManagementController::class, 'index'])
+            ->middleware('can:change budget settings')
             ->name('budget-settings.account-management');
         Route::patch(
             '/account-management/updateGlobalSetting',
@@ -1916,6 +1928,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
 
     // Project Settings
     Route::get('/trashedProjects/settings', [ProjectController::class, 'getTrashedSettings'])
+        ->middleware('can:can access trash')
         ->name('projects.settings.trashed');
     Route::delete('/trashedProjects/settings/force-all', [ProjectController::class, 'forceDeleteAllSettings'])
         ->name('projects.settings.force.all');
@@ -2274,8 +2287,12 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         ->name('shift.multi.edit.save')
         ->can('can plan shifts');
 
+    Route::get('/permissions/reference', [PermissionPresetController::class, 'reference'])
+        ->middleware('can:can manage workers')
+        ->name('permissions.reference');
     Route::resource('permission-presets', PermissionPresetController::class)
-        ->only(['index', 'store', 'update', 'destroy']);
+        ->only(['index', 'store', 'update', 'destroy'])
+        ->middleware('role:artwork admin');
 
     Route::post('/shift-qualifications/reorder', [ShiftQualificationController::class, 'reorder'])
         ->name('shift-qualifications.reorder')
@@ -2311,12 +2328,12 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     });
 
     Route::group(['prefix' => 'settings'], function (): void {
-        Route::group(['prefix' => 'tab'], function (): void {
+        // lightweight list of tabs for client-side selection (OwnTasks checklist creation) — bewusst ohne Settings-Recht
+        Route::get('tab/list', [ProjectTabController::class, 'list'])
+            ->name('tab.list');
+        Route::group(['prefix' => 'tab', 'middleware' => 'can:change project settings'], function (): void {
             Route::get('index', [ProjectTabController::class, 'index'])
                 ->name('tab.index');
-            // lightweight list of tabs for client-side selection (OwnTasks checklist creation)
-            Route::get('list', [ProjectTabController::class, 'list'])
-                ->name('tab.list');
             Route::post('/{projectTab}/update/component/order', [ProjectTabController::class,
                 'updateComponentOrder'])
                 ->name('tab.update.component.order');
@@ -2380,17 +2397,17 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
             Route::patch('/{projectTab}/update/default', [ProjectTabController::class, 'updateDefault'])
                 ->name('tab.update.default');
         });
-        Route::group(['prefix' => 'component'], function (): void {
+        // project.tab.component.update — Projektwerte einer Komponente schreiben: Projektrecht, kein Settings-Recht
+        Route::patch('component/{project}/{component}/update', [ProjectComponentValueController::class,
+            'update'])
+            ->name('project.tab.component.update');
+        Route::group(['prefix' => 'component', 'middleware' => 'can:change project settings'], function (): void {
             // index
             Route::get('index', [ComponentController::class, 'index'])
                 ->name('component.index');
             // component.show - lazy load single component with relations
             Route::get('/{component}', [ComponentController::class, 'show'])
                 ->name('component.show');
-            // project.tab.component.update
-            Route::patch('/{project}/{component}/update', [ProjectComponentValueController::class,
-                'update'])
-                ->name('project.tab.component.update');
             //component.store
             Route::post('/store', [ComponentController::class, 'store'])
                 ->name('component.store');
@@ -2435,7 +2452,9 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         });
 
         Route::group(['prefix' => 'calendar'], function (): void {
-            Route::get('/', [CalendarController::class, 'settingIndex'])->name('calendar.settings');
+            Route::get('/', [CalendarController::class, 'settingIndex'])
+                ->middleware('can:change calendar settings')
+                ->name('calendar.settings');
 
             // post: calendar-settings.store
             Route::post('/store', [CalendarController::class, 'storeSettings'])->name('calendar-settings.store');
@@ -2495,9 +2514,6 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
             ]
         )->name('user.update.shift_tab_sort');
 
-
-        Route::patch('/user/{user}/inventory/sort', [UserController::class, 'updateInventorySortColumn'])
-            ->name('user.update.inventory.sort');
 
         //user.calendar.go.to.stepper
         Route::patch('/{user}/calendar/go/to/stepper', [UserController::class, 'calendarGoToStepper'])
@@ -2617,6 +2633,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
 
         // get inventory.articles.trash
         Route::get('/articles/trash', [InventoryArticleController::class, 'indexTrash'])
+            ->middleware('can:' . PermissionEnum::INVENTORY_DELETE->value)
             ->name('inventory.articles.trash');
 
         // delete articles.forceDelete
@@ -2706,7 +2723,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
 
     // CRM Routes
     Route::group(['prefix' => 'crm'], function (): void {
-        Route::get('/', [CrmController::class, 'index'])->name('crm.index');
+        Route::get('/', [CrmController::class, 'index'])->middleware('can:can view crm')->name('crm.index');
 
         // Import routes (before contacts to avoid {crmContact} param conflict)
         Route::get('/import', [CrmImportController::class, 'showUpload'])->name('crm.import');
@@ -2741,7 +2758,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
             ->middleware('can:can view crm')->name('crm.contacts.mask');
         Route::get('/contacts/{crmContact}/data', [CrmContactController::class, 'getData'])->name('crm.contacts.data');
         Route::get('/contacts/{crmContact}/tooltip', [CrmContactController::class, 'tooltipInfo'])->name('crm.contacts.tooltip');
-        Route::get('/contacts/{crmContact}', [CrmController::class, 'show'])->name('crm.contacts.show');
+        Route::get('/contacts/{crmContact}', [CrmController::class, 'show'])->middleware('can:can view crm')->name('crm.contacts.show');
         // Frontend gated die Kontakt-Aktionen auf 'can view crm' (Seitenzugang); Backend daran
         // angleichen, um keine Lese-CRM-User auszusperren. Schützt weiterhin Nicht-CRM-User
         // vor gefälschten Requests. Strenger ('crm manager') wäre eine Produktentscheidung.
@@ -2841,10 +2858,6 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
             ->middleware('can:' . PermissionEnum::INVENTORY_DISPOSITION->value)
             ->name('inventory-management.article.planning');
 
-        Route::get('/', [InventoryController::class, 'inventory'])
-            ->middleware('can:' . PermissionEnum::INVENTORY_STOCK_MANAGE->value)
-            ->name('inventory-management.inventory');
-
         Route::group(
             ['prefix' => 'settings', 'middleware' => 'can:' . PermissionEnum::INVENTORY_SETTINGS->value],
             function (): void {
@@ -2908,186 +2921,6 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
             Route::delete('/categories/{inventoryCategory}/destroy', [InventoryCategoryController::class, 'destroy'])
                 ->name('inventory-management.settings.categories.delete');
         });
-
-        Route::group(
-            ['prefix' => 'inventory', 'middleware' => 'can:' . PermissionEnum::INVENTORY_STOCK_MANAGE->value],
-            function (): void {
-            Route::group(['prefix' => 'column'], function (): void {
-                Route::post(
-                    '/create',
-                    [CraftsInventoryColumnController::class, 'create']
-                )->name('inventory-management.inventory.column.create');
-                Route::post(
-                    '/duplicate',
-                    [CraftsInventoryColumnController::class, 'duplicate']
-                )->name('inventory-management.inventory.column.duplicate');
-                Route::patch(
-                    '/{craftsInventoryColumn}/name',
-                    [CraftsInventoryColumnController::class, 'updateName']
-                )->name('inventory-management.inventory.column.update.name');
-                Route::patch(
-                    '/{craftsInventoryColumn}/select-options',
-                    [CraftsInventoryColumnController::class, 'updateTypeOptions']
-                )->name('inventory-management.inventory.column.update.type_options');
-                Route::patch(
-                    '/{craftsInventoryColumn}/background_color',
-                    [CraftsInventoryColumnController::class, 'updateBackgroundColor']
-                )->name('inventory-management.inventory.column.update.background_color');
-                Route::delete(
-                    '/{craftsInventoryColumn}',
-                    [CraftsInventoryColumnController::class, 'forceDelete']
-                )->name('inventory-management.inventory.column.delete');
-            });
-            Route::group(['prefix' => 'columns'], function (): void {
-                Route::patch(
-                    '/reorder',
-                    [CraftsInventoryColumnController::class, 'reorderColumns']
-                )->name('inventory-management.inventory.columns.reorder');
-            });
-            Route::group(['prefix' => 'category'], function (): void {
-                Route::post(
-                    '/create',
-                    [CraftInventoryCategoryController::class, 'create']
-                )->name('inventory-management.inventory.category.create');
-                Route::patch(
-                    '/{craftInventoryCategory}/name',
-                    [CraftInventoryCategoryController::class, 'updateName']
-                )->name('inventory-management.inventory.category.update.name');
-                Route::patch(
-                    '/{craftInventoryCategory}/order',
-                    [CraftInventoryCategoryController::class, 'updateOrder']
-                )->name('inventory-management.inventory.category.update.order');
-                Route::delete(
-                    '/{craftInventoryCategory}',
-                    [CraftInventoryCategoryController::class, 'forceDelete']
-                )->name('inventory-management.inventory.category.delete');
-            });
-            Route::group(['prefix' => 'group'], function (): void {
-                Route::post(
-                    '/create',
-                    [CraftInventoryGroupController::class, 'create']
-                )->name('inventory-management.inventory.group.create');
-                Route::patch(
-                    '/{craftInventoryGroup}/name',
-                    [CraftInventoryGroupController::class, 'updateName']
-                )->name('inventory-management.inventory.group.update.name');
-                Route::patch(
-                    '/{craftInventoryGroup}/order',
-                    [CraftInventoryGroupController::class, 'updateOrder']
-                )->name('inventory-management.inventory.group.update.order');
-                Route::delete(
-                    '/{craftInventoryGroup}',
-                    [CraftInventoryGroupController::class, 'forceDelete']
-                )->name('inventory-management.inventory.group.delete');
-            });
-            Route::group(['prefix' => 'folder'], function (): void {
-                Route::post(
-                    '/create',
-                    [CraftInventoryGroupFolderController::class, 'create']
-                )->name('inventory-management.inventory.folder.create');
-                Route::delete(
-                    '/{craftInventoryGroupFolder}',
-                    [CraftInventoryGroupFolderController::class, 'destroy']
-                )->name('inventory-management.inventory.folder.delete');
-                // update name of folder
-                Route::patch(
-                    '/{craftInventoryGroupFolder}/name',
-                    [CraftInventoryGroupFolderController::class, 'update']
-                )->name('inventory-management.inventory.folder.update.name');
-                // PATCH inventory-management.inventory.folder.update.order
-                Route::patch(
-                    '/inventory/folder/update/order',
-                    [CraftInventoryGroupFolderController::class, 'updateOrder']
-                )->name('inventory-management.inventory.folder.update.order');
-            });
-            Route::group(['prefix' => 'item'], function (): void {
-                Route::post(
-                    '/create',
-                    [CraftInventoryItemController::class, 'create']
-                )->name('inventory-management.inventory.item.create');
-                Route::patch(
-                    '/{craftInventoryItem}/add/folder',
-                    [CraftInventoryItemController::class, 'addItemToFolder']
-                )->name('inventory-management.inventory.item.add.to.folder');
-                Route::patch(
-                    '/{craftInventoryItem}/add/group',
-                    [CraftInventoryItemController::class, 'addItemToGroup']
-                )->name('inventory-management.inventory.item.add.to.group');
-                Route::patch(
-                    '/{craftInventoryItem}/order',
-                    [CraftInventoryItemController::class, 'updateOrder']
-                )->name('inventory-management.inventory.item.update.order');
-                Route::delete(
-                    '/{craftInventoryItem}',
-                    [CraftInventoryItemController::class, 'forceDelete']
-                )->name('inventory-management.inventory.item.delete');
-            });
-            Route::group(['prefix' => 'cells'], function (): void {
-                Route::patch(
-                    '/{craftInventoryItemCell}/cell-value',
-                    [CraftInventoryItemCellController::class, 'updateCellValue']
-                )->name('inventory-management.inventory.item-cell.update.cell-value');
-                Route::post(
-                    '/{craftInventoryItemCell}/cell-value/upload',
-                    [CraftInventoryItemCellController::class, 'updateCellValueUpload']
-                )->name('inventory-management.inventory.item-cell.update.cell-value.upload');
-                Route::get(
-                    '/{craftInventoryItemCell}/cell-value/download',
-                    [CraftInventoryItemCellController::class, 'getDownloadCellValueUpload']
-                )->name('inventory-management.inventory.item-cell.download');
-                Route::delete(
-                    '/{craftInventoryItemCell}/cell-value/delete',
-                    [CraftInventoryItemCellController::class, 'removeUploadedFile']
-                )->name('inventory-management.inventory.item-cell.update.cell-value.delete.file');
-            });
-            Route::group(['prefix' => 'export'], function (): void {
-                Route::post(
-                    '/data',
-                    [InventoryManagementExportController::class, 'saveExportDataInCache']
-                )->name('inventory-management.inventory.export.saveExportDataInCache');
-                Route::group(['prefix' => 'create/{cacheToken}'], function (): void {
-                    Route::get(
-                        '/xlsx',
-                        [InventoryManagementExportController::class, 'downloadXlsx']
-                    )->name('inventory-management.inventory.export.download-xlsx');
-                    Route::get(
-                        '/pdf',
-                        [InventoryManagementExportController::class, 'downloadPdf']
-                    )->name('inventory-management.inventory.export.download-pdf');
-                });
-            });
-            Route::patch('/filter', [CraftInventoryFilterController::class, 'updateOrCreate'])
-                ->name('inventory-management.inventory.filter.update');
-        });
-
-        Route::group(
-            ['middleware' => 'can:' . PermissionEnum::INVENTORY_PLANER->value],
-            function (): void {
-            // inventory.dropItemToEvent
-            Route::post('/inventory/dropItemToEvent/{item}/{event}', [InventoryController::class, 'dropItemToEvent'])
-                ->name('inventory.dropItemToEvent');
-
-            // inventory.events.destroy
-            Route::delete(
-                '/inventory/events/{craftInventoryItemEvent}',
-                [CraftInventoryItemEventController::class, 'destroy']
-            )
-                ->name('inventory.events.destroy');
-
-            // patch inventory.updateEvent
-            Route::patch(
-                '/inventory/updateEvent/{craftInventoryItemEvent}',
-                [CraftInventoryItemEventController::class, 'update']
-            )
-                ->name('inventory.updateEvent');
-
-            // post inventory.multi.events.store
-            Route::post(
-                '/inventory/multi/events/store',
-                [CraftInventoryItemEventController::class, 'storeMultiple']
-            )
-                ->name('inventory.multi.events.store');
-        });
     });
 
     Route::group(['prefix' => 'searching'], function (): void {
@@ -3134,7 +2967,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         )->name('export.download-calendar-xlsx');
     });
 
-    Route::group(['prefix' => 'project-management-builder'], function (): void {
+    Route::group(['prefix' => 'project-management-builder', 'middleware' => 'can:change project settings'], function (): void {
         Route::get('/', [ProjectManagementBuilderController::class, 'index'])
             ->name('project-management-builder.index');
 
@@ -3151,7 +2984,11 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
             ->name('project-management-builder.destroy');
     });
 
-    Route::group(['prefix' => 'project-print-layout'], function (): void {
+    // Druckansicht eines Projekts — Projektzugang statt Settings-Recht
+    Route::get('/project-print-layout/print/{project}/{projectPrintLayout}', [ProjectPrintLayoutController::class, 'show'])
+        ->middleware(CanViewProject::class)
+        ->name('project-print-layout.show');
+    Route::group(['prefix' => 'project-print-layout', 'middleware' => 'can:change project settings'], function (): void {
         Route::get('/', [ProjectPrintLayoutController::class, 'index'])
             ->name('project-print-layout.index');
 
@@ -3179,8 +3016,6 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
             ->name('project-print-layout.update.header.note');
 
         // project.print.layout
-        Route::get('/print/{project}/{projectPrintLayout}', [ProjectPrintLayoutController::class, 'show'])
-            ->name('project-print-layout.show');
 
         // project-print-layout.destroy
         Route::delete('/destroy/{projectPrintLayout}', [ProjectPrintLayoutController::class, 'destroy'])

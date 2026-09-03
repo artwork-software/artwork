@@ -48,7 +48,7 @@
                         </MenuItem>
                     </BaseMenu>
 
-                    <BaseUIButton v-if="hasAdminRole()" variant="primary" on-band hide-icon @click="addingUser = true">
+                    <BaseUIButton v-if="hasAdminRole() || can('can manage workers')" variant="primary" on-band hide-icon @click="addingUser = true">
                         <component :is="IconCirclePlus" stroke-width="1" class="size-5" />
                         {{ $t('Invite new users') }}
                     </BaseUIButton>
@@ -170,6 +170,7 @@
         :departments="departments"
         :roles="roles"
         :permission_presets="permission_presets"
+        :catalog="catalog"
         :users="users"
         :invited-users="invitedUsers"
     />
@@ -255,6 +256,7 @@ const props = defineProps({
     freelancers: Array,
     serviceProviders: Array,
     permission_presets: Array,
+    catalog: Object,
     invitedUsers: Array,
     userSortEnumNames: Array,
     userUserManagementSetting: Object,
@@ -277,7 +279,7 @@ const sortBy = ref(props.userUserManagementSetting?.sort_by === null ? undefined
 
 /* Helpers */
 const hasAdminRole = () => is('artwork admin')
-const { canViewOwnRoster, canViewForeignRoster, canViewExternalWorkerProfile } = usePermission(usePage().props)
+const { can, canViewOwnRoster, canViewForeignRoster, canViewExternalWorkerProfile } = usePermission(usePage().props)
 
 // Einsatzplan-Sichtregel (Spiegel der Backend-Autorisierung): fremde Pläne nur mit
 // Dienstplan-Sichtrechten, der eigene nur mit "can view own roster"; ohne Rechte

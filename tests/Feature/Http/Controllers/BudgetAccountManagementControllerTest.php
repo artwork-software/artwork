@@ -39,7 +39,8 @@ final class BudgetAccountManagementControllerTest extends FeatureTestCase
     #[Test]
     public function user_with_global_budget_permission_can_view_account_management(): void
     {
-        $this->actingAsUserWith(PermissionEnum::GLOBAL_PROJECT_BUDGET_ADMIN->value);
+        // Budget-Einstellungen brauchen seit dem Rechte-Katalog das eigene Recht "Budget settings"
+        $this->actingAsUserWith([PermissionEnum::GLOBAL_PROJECT_BUDGET_ADMIN->value, PermissionEnum::BUDGET_SETTINGS_UPDATE->value]);
 
         $response = $this->get(route('budget-settings.account-management'));
 

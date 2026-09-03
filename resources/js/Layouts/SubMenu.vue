@@ -494,7 +494,7 @@ const { locale } = useI18n();
 const props = defineProps({})
 const computedBudgetRoute = computed(() => {
     let desiredBudgetRoute = route('budget-settings.general');
-    if (can('view budget templates') && can('can manage global project budgets | can manage all project budgets without docs')
+    if (can('view budget templates') && can('can manage global project budgets')
     ) {
         desiredBudgetRoute = route('budget-settings.templates');
     }
@@ -567,7 +567,7 @@ const navigation = ref([
                 href: route('planning-event-calendar.index'),
                 icon: 'IconCalendarCog',
                 current: route().current('planning-event-calendar.index'),
-                has_permission: usePage().props.module_settings['planning_calendar'] !== false && (can('can see planning calendar') || is('artwork admin')),
+                has_permission: usePage().props.module_settings['planning_calendar'] !== false && (can('can see planning calendar') || can('can edit planning calendar') || is('artwork admin')),
             },
             {
                 name: 'Event Verifications',
@@ -607,7 +607,7 @@ const navigation = ref([
                 href: route('user.operationPlan', usePage().props.auth.user.id),
                 icon: 'IconCalendarUser',
                 current: route().current('user.operationPlan'),
-                has_permission: moduleIsVisible('shift_plan') && (can('can view own roster') || is('artwork admin')),
+                has_permission: moduleIsVisible('shift_plan') && (can('can view own roster') || can('can view shift plan') || can('can plan shifts') || can('can manage workers') || is('artwork admin')),
             },
             /* routes to old page, now we have new shift templates in shift-admin-settings, maybe build in link to new page in admin settings or just leave it out
             {
@@ -778,7 +778,7 @@ const navigation = ref([
         isMenu: true,
         showToolTipForItem: false,
         prefetch: false,
-        has_permission: can('change tool settings | create, delete and update rooms | change project settings | change event settings | admin checklistTemplates | set.create_edit | set.delete | shift.settings_view_edit | crm manager | inventory.settings') || is('artwork admin'),
+        has_permission: can('change tool settings | create, delete and update rooms | change project settings | change event settings | change calendar settings | change money source settings | change budget settings | admin checklistTemplates | set.create_edit | set.delete | shift.settings_view_edit | crm manager | inventory.settings') || is('artwork admin'),
         subMenus: [
             {
                 name: 'Tool Settings',
@@ -841,7 +841,7 @@ const navigation = ref([
                 href: route('calendar.settings'),
                 icon: 'IconCalendarMonth',
                 current: route().current('calendar.settings'),
-                has_permission: is('artwork admin')
+                has_permission: can('change calendar settings') || is('artwork admin')
             },
             {
                 name: 'Events',
@@ -862,14 +862,14 @@ const navigation = ref([
                 href: route('money_sources.settings'),
                 icon: 'IconCurrencyEuro',
                 current: route().current('money_sources.settings'),
-                has_permission: is('artwork admin')
+                has_permission: can('change money source settings') || is('artwork admin')
             },
             {
                 name: 'Budget',
                 href: computedBudgetRoute,
                 icon: 'IconMoneybag',
                 current: route().current('tool.branding'),
-                has_permission: is('artwork admin')
+                has_permission: can('change budget settings') || is('artwork admin')
             },
         ]
     },
@@ -880,7 +880,7 @@ const navigation = ref([
         current: route().current('projects.trashed'),
         isMenu: false,
         showToolTipForItem: false,
-        has_permission: is('artwork admin'),
+        has_permission: can('can access trash') || is('artwork admin'),
         prefetch: false,
     },
 ])

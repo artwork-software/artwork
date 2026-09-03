@@ -66,18 +66,22 @@ final class PermissionPresetServiceTest extends TestCase
     #[Test]
     public function update_from_request_modifies_preset(): void
     {
+        // Presets speichern Rechte-NAMEN; unbekannte Namen werden verworfen, implizierte Rechte ergänzt
+        // (Stufenleiter: "write projects" enthält "view projects").
+        Permission::findOrCreate('view projects', 'web');
+        Permission::findOrCreate('write projects', 'web');
         $preset = PermissionPreset::factory()->create(['name' => 'Old', 'permissions' => ['old']]);
 
         $request = UpdatePermissionPresetRequest::create('/test', 'PUT', [
             'name' => 'New',
-            'permissions' => ['new1', 'new2'],
+            'permissions' => ['write projects', 'unknown permission'],
         ]);
 
         $this->service->updateFromRequest($request, $preset);
 
         $fresh = $preset->fresh();
         $this->assertSame('New', $fresh->name);
-        $this->assertSame(['new1', 'new2'], $fresh->permissions);
+        $this->assertEqualsCanonicalizing(['write projects', 'view projects'], $fresh->permissions);
     }
 
     #[Test]

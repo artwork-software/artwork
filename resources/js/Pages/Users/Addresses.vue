@@ -539,6 +539,7 @@
         :departments="departments"
         :roles="roles"
         :permission_presets="permission_presets"
+        :catalog="catalog"
         :users="users"
         :invited-users="invitedUsers"
     />
@@ -578,6 +579,7 @@ const props = defineProps({
     freelancers: Array,
     serviceProviders: Array,
     permission_presets: Array,
+    catalog: Object,
     invitedUsers: Array,
     memberSortEnums: Array,
     userUserManagementSetting: Object,

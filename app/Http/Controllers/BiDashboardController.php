@@ -20,7 +20,7 @@ class BiDashboardController extends Controller
     public function index(Request $request): Response
     {
         abort_unless(
-            $request->user()->can(PermissionEnum::BI_DASHBOARD->value) || $request->user()->hasRole('admin'),
+            $request->user()->can(PermissionEnum::BI_DASHBOARD->value) || $request->user()->hasRole(\Artwork\Modules\Role\Enums\RoleEnum::ARTWORK_ADMIN->value),
             403
         );
 
@@ -46,7 +46,7 @@ class BiDashboardController extends Controller
         $biTab = $this->projectTabService->findFirstProjectTabWithBusinessIntelligenceComponent();
 
         $canExport = $request->user()->can(PermissionEnum::BI_EXPORT->value)
-            || $request->user()->hasRole('admin');
+            || $request->user()->hasRole(\Artwork\Modules\Role\Enums\RoleEnum::ARTWORK_ADMIN->value);
 
         return Inertia::render('BusinessIntelligence/Dashboard', [
             'dashboard' => $data,

@@ -26,7 +26,6 @@ class CraftController extends Controller
             'notify_days',
             'commit_request_deadline_days',
             'universally_applicable',
-            'inventory_planned_by_all'
         ]));
 
         if (!$craftStoreRequest->assignable_by_all) {
@@ -34,13 +33,6 @@ class CraftController extends Controller
                 'assignable_by_all' => false,
             ]);
             $craft->craftShiftPlaner()->sync($craftStoreRequest->users);
-        }
-
-        if (!$craftStoreRequest->inventory_planned_by_all) {
-            $craft->update([
-                'inventory_planned_by_all' => false,
-            ]);
-            $craft->craftInventoryPlaner()->sync($craftStoreRequest->users_for_inventory);
         }
 
 

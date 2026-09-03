@@ -1261,7 +1261,6 @@ export default {
                 this.$canAny(
                     [
                         'can manage global project budgets',
-                        'can manage all project budgets without docs'
                     ]
                 );
         },

@@ -70,9 +70,10 @@ final class UserPhotoAuthorizationTest extends FeatureTestCase
     }
 
     #[Test]
-    public function team_manager_can_update_and_delete_other_users_photo(): void
+    public function hr_administrator_can_update_and_delete_other_users_photo(): void
     {
-        $this->actingAsUserWith(PermissionEnum::TEAM_UPDATE->value);
+        // Profilbearbeitung fremder Personen liegt seit dem Rechte-Katalog bei "Personalverwaltung"
+        $this->actingAsUserWith(PermissionEnum::MA_MANAGER->value);
         $other = User::factory()->create();
 
         $this->post(route('user.update.photo', $other), ['photo' => UploadedFile::fake()->create('avatar.jpg')])

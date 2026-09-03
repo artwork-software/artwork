@@ -22,6 +22,15 @@ use Artwork\Modules\Checklist\Models\ChecklistTemplate;
 use Artwork\Modules\Checklist\Policies\ChecklistTemplatePolicy;
 use Artwork\Modules\Contract\Models\Contract;
 use Artwork\Modules\Contract\Policies\ContractPolicy;
+use Artwork\Modules\Contract\Models\ContractModule;
+use Artwork\Modules\Contract\Policies\ContractModulePolicy;
+use Artwork\Modules\ExternalIssue\Models\ExternalIssue;
+use Artwork\Modules\InternalIssue\Models\InternalIssue;
+use Artwork\Modules\Inventory\Policies\MaterialIssuePolicy;
+use Artwork\Modules\MoneySource\Models\MoneySource;
+use Artwork\Modules\MoneySource\Policies\MoneySourcePolicy;
+use Artwork\Modules\Room\Models\Room;
+use Artwork\Modules\Room\Policies\RoomPolicy;
 use Artwork\Modules\Department\Models\Department;
 use Artwork\Modules\Department\Policies\DepartmentPolicy;
 use Artwork\Modules\Event\Models\Event;
@@ -80,6 +89,11 @@ class AuthServiceProvider extends ServiceProvider
         TaskTemplate::class => TaskTemplatePolicy::class,
         Area::class => AreaPolicy::class,
         Contract::class => ContractPolicy::class,
+        ContractModule::class => ContractModulePolicy::class,
+        MoneySource::class => MoneySourcePolicy::class,
+        Room::class => RoomPolicy::class,
+        InternalIssue::class => MaterialIssuePolicy::class,
+        ExternalIssue::class => MaterialIssuePolicy::class,
         Freelancer::class => FreelancerPolicy::class,
         ServiceProviderModel::class => ServiceProviderPolicy::class,
         GeneralSettings::class => GeneralSettingsPolicy::class,

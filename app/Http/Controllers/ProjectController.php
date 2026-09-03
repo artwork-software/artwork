@@ -2954,7 +2954,7 @@ class ProjectController extends Controller
                 'managingFreelancers',
                 'managingServiceProviders',
                 'qualifications'
-            ])->without(['craftShiftPlaner', 'craftInventoryPlaner'])->get(),
+            ])->without(['craftShiftPlaner'])->get(),
             // Step 2: Tags/TagGroups entfernt - werden nicht im ShiftTab verwendet
             // Step 3: History entfernt - wird per API geladen (/projects/{project}/history)
             'personalFilters' => $filterService->getPersonalFilter($user, UserFilterTypes::PROJECT_SHIFT_FILTER->value),

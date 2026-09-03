@@ -51,7 +51,6 @@ use Artwork\Modules\Freelancer\Http\Resources\FreelancerShiftPlanResource;
 use Artwork\Modules\Freelancer\Services\FreelancerService;
 use Artwork\Modules\GeneralSettings\Services\GeneralSettingsService;
 use Artwork\Modules\GlobalNotification\Services\GlobalNotificationService;
-use Artwork\Modules\InventoryScheduling\Services\CraftInventoryItemEventService;
 use Artwork\Modules\Notification\Enums\NotificationEnum;
 use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Artwork\Modules\Role\Enums\RoleEnum;
@@ -136,7 +135,6 @@ class EventController extends Controller
         private readonly ProjectTabService $projectTabService,
         private readonly ChangeService $changeService,
         private readonly SchedulingService $schedulingService,
-        private readonly CraftInventoryItemEventService $craftInventoryItemEventService,
         private readonly RoomService $roomService,
         private readonly AuthManager $authManager,
         private readonly Redirector $redirector,
@@ -444,7 +442,7 @@ class EventController extends Controller
             'crafts' => fn () => $userCalendarSettings?->work_shifts
                 ? Craft::query()
                     ->select(['id', 'name', 'abbreviation', 'color', 'universally_applicable', 'position'])
-                    ->without(['craftShiftPlaner', 'craftInventoryPlaner'])
+                    ->without(['craftShiftPlaner'])
                     ->orderBy('position')
                     ->get()
                 : [],
@@ -537,6 +535,14 @@ class EventController extends Controller
     {
         /** @var User $user */
         $user = $this->authManager->user();
+        // Bisher nur im Menü versteckt; Admins passieren via Gate::before.
+        abort_unless(
+            $user->canAny([
+                PermissionEnum::CAN_SEE_PLANNING_CALENDAR->value,
+                PermissionEnum::CAN_EDIT_PLANNING_CALENDAR->value,
+            ]),
+            403
+        );
         $isDailyView = (bool) $user->getAttribute('calendar_daily_view');
 
         if ($isDailyView) {
@@ -697,7 +703,7 @@ class EventController extends Controller
             'crafts' => fn () => $userCalendarSettings?->work_shifts
                 ? Craft::query()
                     ->select(['id', 'name', 'abbreviation', 'color', 'universally_applicable', 'position'])
-                    ->without(['craftShiftPlaner', 'craftInventoryPlaner'])
+                    ->without(['craftShiftPlaner'])
                     ->orderBy('position')
                     ->get()
                 : [],
@@ -963,7 +969,7 @@ class EventController extends Controller
                     'managingServiceProviders:id,provider_name,profile_image',
                     'qualifications:id,name,icon,available',
                 ])
-                ->without(['craftShiftPlaner', 'craftInventoryPlaner'])
+                ->without(['craftShiftPlaner'])
                 ->orderBy('position')
                 ->get(),
             'eventTypes' => EventType::all(),
@@ -2315,8 +2321,6 @@ class EventController extends Controller
             app(\Artwork\Modules\Shift\Services\ShiftService::class)->save($shift);
         }
 
-        $this->craftInventoryItemEventService->updateEventTimesInInventory($event);
-
         // Projektzuordnungen (Re-Materialisierung/Auflösung bei Zeitraum-Änderung)
         // laufen zentral über den ProjectDayAssignmentEventObserver.
 
@@ -3219,8 +3223,6 @@ class EventController extends Controller
             $projectTabService
         );
 
-        $this->craftInventoryItemEventService->deleteAllEventsFromInventory($event);
-
         //return true;
     }
 
@@ -3259,8 +3261,6 @@ class EventController extends Controller
             $notificationService,
             $projectTabService
         );
-
-        $this->craftInventoryItemEventService->deleteAllEventsFromInventory($event);
     }
 
     /**
@@ -3367,9 +3367,6 @@ class EventController extends Controller
                 $notificationService,
                 $projectTabService
             );
-
-            // Check and delete from inventory if needed
-            $this->craftInventoryItemEventService->deleteAllEventsFromInventory($seriesEvent);
         }
     }
 

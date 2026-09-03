@@ -27,14 +27,14 @@
                         <BaseInput type="date" id="bi_dash_to" v-model="dateTo" :label="$t('To')" class="w-40 [&_label]:text-text-inverse-muted!" input-classes="bg-white/10! border-white/16! text-text-inverse! [color-scheme:dark]" />
                         <BaseUIButton :label="$t('Apply')" @click="reload()" :disabled="loading" hide-icon on-band />
                         <BaseUIButton
-                            v-if="exportOptions"
+                            v-if="canExportBiData"
                             :label="$t('Excel-Export')"
                             @click="openHeaderExport"
                             hide-icon
                             on-band
                         />
                         <BaseUIButton
-                            v-if="exportOptions"
+                            v-if="canExportBiData"
                             :label="$t('Budget export')"
                             @click="showBudgetExportModal = true"
                             hide-icon
@@ -74,15 +74,22 @@
                 @close="showBudgetExportModal = false"
             />
 
-            <BiDashboardExportModal
-                v-if="showExportModal && exportOptions"
-                :options="exportOptions"
+            <BiExportDialog
+                v-if="showExportModal && canExportBiData"
+                mode="dashboard"
                 :initial-columns="steeringExportPreset?.columns ?? null"
                 :initial-project-ids="steeringExportPreset?.projectIds ?? null"
                 :default-date-from="dateFrom"
                 :default-date-to="dateTo"
+                date-source="dashboard"
                 @close="showExportModal = false"
             />
+
+            <!-- Download-Link nach Ablauf der Datei (Redirect aus bi.export.download) -->
+            <div v-if="exportExpired" class="rounded-2xl border border-warning-border bg-warning-surface px-4 py-3 text-sm text-warning flex items-center justify-between gap-4">
+                <span>{{ $t('This export file has expired — files are kept for 24 hours. Please create the export again.') }}</span>
+                <button type="button" class="shrink-0 font-medium hover:underline" @click="exportExpired = false">{{ $t('Close') }}</button>
+            </div>
 
             <!-- Aktiver Zeitraum als Satz: welche Spanne gilt gerade, und womit wird verglichen -->
             <div class="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-text-muted px-1">
@@ -327,7 +334,7 @@
                     <div class="flex items-center gap-2">
                         <!-- Zustandsübernahme: exportiert genau die sichtbare Tabelle -->
                         <button
-                            v-if="exportOptions"
+                            v-if="canExportBiData"
                             type="button"
                             class="inline-flex items-center gap-1.5 rounded-md border border-border-subtle px-2.5 py-1 text-xs font-medium text-text-muted hover:bg-surface-sunken transition"
                             @click="openSteeringExport"
@@ -437,7 +444,7 @@ import { ref, computed, watch } from 'vue';
 import { router, Link, usePage } from '@inertiajs/vue3';
 import { IconChartHistogram, IconPencil, IconFileExport, IconCircleCheck } from '@tabler/icons-vue';
 import BiQuickEntryModal from '@/Pages/Projects/Components/BiComponents/BiQuickEntryModal.vue';
-import BiDashboardExportModal from '@/Pages/Projects/Components/BiComponents/BiDashboardExportModal.vue';
+import BiExportDialog from '@/Pages/Projects/Components/BiComponents/BiExportDialog.vue';
 import BiBudgetExportModal from '@/Pages/Projects/Components/BiComponents/BiBudgetExportModal.vue';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import ToolbarHeader from '@/Artwork/Toolbar/ToolbarHeader.vue';
@@ -453,12 +460,13 @@ const props = defineProps({
     dashboard: { type: Object, required: true },
     firstProjectTabId: { type: [Number, String], default: null },
     biComponentInTab: { type: Boolean, default: true },
-    // null, wenn der User kein Export-Recht hat → Button bleibt verborgen
-    exportOptions: { type: Object, default: null },
+    // Export-Buttons nur mit Recht; der Dialog lädt seine Optionen selbst
+    canExportBiData: { type: Boolean, default: false },
 });
 
-const exportOptions = computed(() => props.exportOptions);
+const canExportBiData = computed(() => props.canExportBiData);
 const showExportModal = ref(false);
+const exportExpired = ref(new URLSearchParams(window.location.search).get('export') === 'expired');
 const showBudgetExportModal = ref(false);
 
 const firstProjectTabId = computed(() => props.firstProjectTabId);

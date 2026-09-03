@@ -3691,7 +3691,8 @@ Route::middleware(['auth'])->prefix('bi/dashboard')->group(function () {
 });
 
 Route::middleware(['auth'])->prefix('bi/export')->group(function () {
-    Route::get('/', [BiExportController::class, 'index'])->name('bi.export.index');
+    // Optionen für den gemeinsamen Export-Dialog (Projekt-Tab + Dashboard)
+    Route::get('/options', [BiExportController::class, 'options'])->name('bi.export.options');
     Route::post('/cache', [BiExportController::class, 'cacheExportConfiguration'])->name('bi.export.cache');
     Route::get('/status/{cacheToken}', [BiExportController::class, 'status'])
         ->middleware('can:can export bi data')->name('bi.export.status');
@@ -3713,6 +3714,8 @@ Route::middleware(['auth'])->prefix('bi/export')->group(function () {
 
     Route::get('/presets', [BiExportPresetController::class, 'index'])->name('bi.export.presets.index');
     Route::post('/presets', [BiExportPresetController::class, 'store'])->name('bi.export.presets.store');
+    Route::put('/presets/{biExportPreset}', [BiExportPresetController::class, 'update'])
+        ->name('bi.export.presets.update');
     Route::delete('/presets/{biExportPreset}', [BiExportPresetController::class, 'destroy'])
         ->name('bi.export.presets.destroy');
 });

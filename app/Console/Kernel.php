@@ -3,6 +3,7 @@
 namespace App\Console;
 
 use Artwork\Core\Console\Commands\CalculateDailyWorkingHoursOfUsers;
+use Artwork\Core\Console\Commands\CleanupBiExportsCommand;
 use Artwork\Core\Console\Commands\CreateMoneySourceExpirationReminderNotificationsCommand;
 use Artwork\Core\Console\Commands\DeleteExpiredNotificationsForAllCommand;
 use Artwork\Core\Console\Commands\ImportHolidaysCommand;
@@ -58,6 +59,8 @@ class Kernel extends ConsoleKernel
         $schedule->command(NotifyShiftPlanRequestDeadlineReached::class)->dailyAt('07:15')->runInBackground();
         $schedule->command(DeleteExpiredNotificationsForAllCommand::class)->everyFiveMinutes()->runInBackground();
         $schedule->command(SendNotificationsEmailSummariesCommand::class)->dailyAt('9:00');
+        // BI-Exportdateien bleiben für Re-Downloads liegen und werden nach 24 h entfernt
+        $schedule->command(CleanupBiExportsCommand::class)->dailyAt('03:30')->runInBackground();
         $schedule->command(CalculateDailyWorkingHoursOfUsers::class)->dailyAt('23:59')->runInBackground();
         // DP-18: spielzeitbezogene Kennzahlen nach der Arbeitszeitberechnung tracken (Tag ist dann abgeschlossen)
         $schedule->command(TrackShiftKpisCommand::class)->dailyAt('00:30')->runInBackground();

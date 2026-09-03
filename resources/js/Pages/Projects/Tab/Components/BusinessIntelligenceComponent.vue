@@ -291,14 +291,14 @@
             </div>
             </template>
 
-            <BiExportModal
+            <BiExportDialog
                 v-if="showExportModal"
-                :project="project"
-                :tag-counts="tagCounts"
-                :bi-custom-fields="biCustomFields"
-                :audience-categories="audienceCategories"
+                mode="project"
+                :project-id="project.id"
+                :project-name="project.name"
                 :default-date-from="projectPeriod?.from ?? null"
                 :default-date-to="projectPeriod?.to ?? null"
+                date-source="project"
                 @close="showExportModal = false"
             />
 
@@ -339,7 +339,7 @@ import BiDerivedValuesSection from "@/Pages/Projects/Components/BiComponents/BiD
 import BiTimeEffortSection from "@/Pages/Projects/Components/BiComponents/BiTimeEffortSection.vue";
 import BiSnapshotSection from "@/Pages/Projects/Components/BiComponents/BiSnapshotSection.vue";
 import BiCustomFieldsSection from "@/Pages/Projects/Components/BiComponents/BiCustomFieldsSection.vue";
-import BiExportModal from "@/Pages/Projects/Components/BiComponents/BiExportModal.vue";
+import BiExportDialog from "@/Pages/Projects/Components/BiComponents/BiExportDialog.vue";
 import BiPlanComparisonCard from "@/Pages/Projects/Components/BiComponents/BiPlanComparisonCard.vue";
 import BiPeriodComparisonCard from "@/Pages/Projects/Components/BiComponents/BiPeriodComparisonCard.vue";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";

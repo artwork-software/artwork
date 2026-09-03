@@ -1,9 +1,13 @@
-import { ref, onBeforeUnmount, getCurrentInstance } from 'vue';
+import { ref, computed, onBeforeUnmount, getCurrentInstance } from 'vue';
+import { extractSaveErrorMessage } from '@/Composeables/BiSaveFeedback.js';
 
 /**
  * Gemeinsamer BI-Export-Ablauf: Konfiguration cachen, Job-Status pollen,
- * fertige Datei herunterladen. Genutzt vom Projekt-Export-Modal und der
- * Export-Einstellungsseite.
+ * fertige Datei herunterladen. Genutzt vom Export-Dialog (Projekt-Tab +
+ * Dashboard) und vom Budget-Export.
+ *
+ * Sichtbarer Wartezustand: elapsedSeconds, phase ('pending' = wartet auf einen
+ * Worker, 'running' = Datei wird erstellt), cancel() bricht das Polling ab.
  */
 export function useBiExport(routes = {}) {
     const routeNames = {
@@ -14,23 +18,42 @@ export function useBiExport(routes = {}) {
 
     const isExporting = ref(false);
     const exportError = ref(false);
+    // Konkreter Grund (Validierung, Job-Fehler, abgelaufen) — null = generischer Text
+    const exportErrorMessage = ref(null);
+    const elapsedSeconds = ref(0);
+    const phase = ref('idle'); // idle | pending | running | done
+    const downloadStarted = ref(false);
+
+    // Nach 30 s ohne Worker-Reaktion ist die Warteschlange das wahrscheinlichste Problem
+    const queueSuspect = computed(() => phase.value === 'pending' && elapsedSeconds.value >= 30);
 
     let cancelled = false;
     let pollTimer = null;
+    let clockTimer = null;
 
-    // Poll stoppen, wenn die nutzende Komponente (Modal) verschwindet.
+    const stopTimers = () => {
+        if (pollTimer) clearTimeout(pollTimer);
+        if (clockTimer) clearInterval(clockTimer);
+        pollTimer = null;
+        clockTimer = null;
+    };
+
+    // Poll stoppen, wenn die nutzende Komponente (Dialog) verschwindet.
     if (getCurrentInstance()) {
         onBeforeUnmount(() => {
             cancelled = true;
-            if (pollTimer) {
-                clearTimeout(pollTimer);
-            }
+            stopTimers();
         });
     }
 
+    const fail = (message = null) => {
+        exportError.value = true;
+        exportErrorMessage.value = message;
+    };
+
     const pollAndDownload = (token) => new Promise((resolve) => {
         let attempts = 0;
-        const maxAttempts = 200;
+        const maxAttempts = 400; // 400 × 1,5 s = 10 Minuten
         const check = async () => {
             if (cancelled) {
                 return resolve(false);
@@ -39,23 +62,32 @@ export function useBiExport(routes = {}) {
             try {
                 const { data } = await axios.get(route(routeNames.status, token));
                 if (data.status === 'ready') {
+                    phase.value = 'done';
+                    downloadStarted.value = true;
                     window.location.href = route(routeNames.download, token);
                     return resolve(true);
                 }
-                if (data.status === 'failed' || data.status === 'unknown') {
-                    exportError.value = true;
+                if (data.status === 'running') {
+                    phase.value = 'running';
+                }
+                if (data.status === 'failed') {
+                    fail(data.message ?? null);
+                    return resolve(false);
+                }
+                if (data.status === 'expired' || data.status === 'unknown') {
+                    fail(null);
                     return resolve(false);
                 }
             } catch (error) {
                 // 4xx/5xx vom Status-Endpoint sind nicht transient (403, Token weg) – sofort abbrechen.
                 if (error?.response?.status) {
-                    exportError.value = true;
+                    fail(extractSaveErrorMessage(error));
                     return resolve(false);
                 }
                 // Netzwerkfehler: weiter pollen, bis das Versuchsbudget erschöpft ist.
             }
             if (attempts >= maxAttempts) {
-                exportError.value = true;
+                fail(null);
                 return resolve(false);
             }
             pollTimer = setTimeout(check, 1500);
@@ -69,19 +101,47 @@ export function useBiExport(routes = {}) {
      * @returns {Promise<boolean>} true, wenn der Download gestartet wurde
      */
     const runExport = async (config) => {
+        cancelled = false;
         isExporting.value = true;
         exportError.value = false;
+        exportErrorMessage.value = null;
+        downloadStarted.value = false;
+        elapsedSeconds.value = 0;
+        phase.value = 'pending';
+        clockTimer = setInterval(() => { elapsedSeconds.value++; }, 1000);
         try {
             const response = await axios.post(route(routeNames.cache), config);
             return await pollAndDownload(response.data.token);
         } catch (error) {
             console.error('BI export error', error);
-            exportError.value = true;
+            fail(extractSaveErrorMessage(error));
             return false;
         } finally {
+            stopTimers();
             isExporting.value = false;
+            if (phase.value !== 'done') {
+                phase.value = 'idle';
+            }
         }
     };
 
-    return { isExporting, exportError, runExport };
+    /** Polling abbrechen — der Job läuft ggf. zu Ende, die Datei räumt der Cleanup-Job weg. */
+    const cancel = () => {
+        cancelled = true;
+        stopTimers();
+        isExporting.value = false;
+        phase.value = 'idle';
+    };
+
+    return {
+        isExporting,
+        exportError,
+        exportErrorMessage,
+        elapsedSeconds,
+        phase,
+        queueSuspect,
+        downloadStarted,
+        runExport,
+        cancel,
+    };
 }

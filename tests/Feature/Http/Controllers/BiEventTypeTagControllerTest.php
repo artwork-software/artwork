@@ -136,6 +136,31 @@ final class BiEventTypeTagControllerTest extends FeatureTestCase
     }
 
     #[Test]
+    public function tag_changes_invalidate_the_dashboard_cache(): void
+    {
+        $this->actingAsUserWith(PermissionEnum::EVENT_SETTINGS_UPDATE->value);
+        \Illuminate\Support\Facades\Cache::put('bi_dashboard_version', 10);
+        $eventType = EventType::query()->first() ?? EventType::factory()->create();
+
+        // Ohne Bump zeigt das Dashboard bis zu 10 Minuten „Tag nicht zugeordnet“,
+        // obwohl die Zuordnung längst gespeichert ist
+        $tag = $this->postJson(route('bi.tags.store'), [
+            'name' => 'Performance',
+            'name_de' => 'Vorstellung',
+            'kpi_role' => 'performance',
+        ])->assertCreated()->json();
+        self::assertSame(11, \Illuminate\Support\Facades\Cache::get('bi_dashboard_version'));
+
+        $this->postJson(route('bi.tags.sync-event-types', $tag['id']), [
+            'event_type_ids' => [$eventType->id],
+        ])->assertOk();
+        self::assertSame(12, \Illuminate\Support\Facades\Cache::get('bi_dashboard_version'));
+
+        $this->deleteJson(route('bi.tags.destroy', $tag['id']))->assertNoContent();
+        self::assertSame(13, \Illuminate\Support\Facades\Cache::get('bi_dashboard_version'));
+    }
+
+    #[Test]
     public function user_with_permission_can_delete_tag(): void
     {
         $this->actingAsUserWith(PermissionEnum::EVENT_SETTINGS_UPDATE->value);

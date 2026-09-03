@@ -35,9 +35,11 @@ class BiDashboardService
         ?string $to = null,
         ?string $compareFrom = null,
         ?string $compareTo = null,
-        bool $noCompare = false
+        bool $noCompare = false,
+        ?string $category = null
     ): array {
         [$rangeFrom, $rangeTo] = $this->resolveDateRange($from, $to);
+        $category = ($category !== null && $category !== '') ? $category : null;
 
         // Vergleichszeitraum: explizit gewählt, sonst Vorjahr (Default);
         // 'kein Vergleich' unterdrückt den zweiten Lauf komplett.
@@ -60,13 +62,22 @@ class BiDashboardService
             . ($rangeTo?->toDateString() ?? 'null')
             . '_c' . ($comparisonFrom?->toDateString() ?? 'null')
             . '_' . ($comparisonTo?->toDateString() ?? 'null')
+            . '_cat' . ($category !== null ? md5($category) : 'all')
             . '_v' . Cache::get('bi_dashboard_version', 0);
 
         return Cache::remember(
             $cacheKey,
             now()->addMinutes(10),
-            function () use ($rangeFrom, $rangeTo, $comparisonFrom, $comparisonTo): array {
-                $projects = $this->loadProjects();
+            function () use ($rangeFrom, $rangeTo, $comparisonFrom, $comparisonTo, $category): array {
+                $allProjects = $this->loadProjects();
+                // Sparten-Liste immer aus dem ungefilterten Zeitraum-Bestand, damit der
+                // Filter auch bei aktiver Sparte umschaltbar bleibt
+                $categories = $this->categoryOptions($this->projectsInRange($allProjects, $rangeFrom, $rangeTo));
+                $projects = $category !== null
+                    ? $allProjects
+                        ->filter(fn(Project $project): bool => ($this->mainCategory($project) ?? '—') === $category)
+                        ->values()
+                    : $allProjects;
 
                 $current = $this->aggregate($projects, $rangeFrom, $rangeTo);
                 // Vergleich nur über datumsfilterbare Werte: TOTAL-Modus-Kennzahlen sind
@@ -109,6 +120,8 @@ class BiDashboardService
                         $comparisonTo
                     ),
                     'data_gaps' => $this->findDataGaps($projects, $rangeFrom, $rangeTo),
+                    'category_filter' => $category,
+                    'categories' => $categories,
                     // Beide KPI-Tags müssen Terminarten haben, sonst bleiben
                     // Vorstellungen/Veranstaltungstage/Auslastung leer (kein Fallback)
                     'tags_linked' => $this->metricsService->kpiTagLinked(BiProjectMetricsService::PERFORMANCE_TAG)
@@ -690,6 +703,38 @@ class BiDashboardService
 
             return BiDerivedValuesService::EFFORT_HOURS[$bucket] ?? 0;
         });
+    }
+
+    /**
+     * Sparten mit Projektanzahl ('—' = ohne Sparte), alphabetisch, '—' zuletzt.
+     *
+     * @param Collection<int, Project> $projects
+     * @return array<int, array{category: string, project_count: int}>
+     */
+    private function categoryOptions(Collection $projects): array
+    {
+        $counts = [];
+        foreach ($projects as $project) {
+            $key = $this->mainCategory($project) ?? '—';
+            $counts[$key] = ($counts[$key] ?? 0) + 1;
+        }
+
+        $keys = array_keys($counts);
+        usort($keys, static function (string $a, string $b): int {
+            if ($a === '—') {
+                return 1;
+            }
+            if ($b === '—') {
+                return -1;
+            }
+
+            return strcasecmp($a, $b);
+        });
+
+        return array_map(
+            static fn(string $key): array => ['category' => $key, 'project_count' => $counts[$key]],
+            $keys
+        );
     }
 
     private function mainCategory(Project $project): ?string

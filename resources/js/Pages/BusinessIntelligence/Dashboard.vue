@@ -101,6 +101,72 @@
                 </Link>
             </div>
 
+            <!-- Reload fehlgeschlagen: Zahlen sind die alten -->
+            <div v-if="reloadError" class="rounded-2xl border border-danger-border bg-danger-surface px-4 py-3 text-sm text-danger flex items-center justify-between gap-4">
+                <span>{{ $t('The dashboard could not be reloaded — the figures shown are the previous ones.') }}</span>
+                <button type="button" class="shrink-0 font-medium hover:underline" @click="reload(true)">{{ $t('Try again') }}</button>
+            </div>
+
+            <!-- Erfolg der Schnellerfassung -->
+            <div v-if="savedNotice" class="rounded-2xl border border-success-border bg-success-surface px-4 py-2.5 text-sm text-success flex items-center gap-2">
+                <IconCircleCheck class="size-4 shrink-0" />
+                <span>{{ savedNotice }}</span>
+            </div>
+
+            <!-- Zwei Sichten: Überblick (Zahlen, Trend, Lücken) und Steuerung (Aufwand vs. Ertrag, Tabelle) -->
+            <div class="flex flex-wrap items-center justify-between gap-3">
+                <div class="flex rounded-lg border border-border-subtle bg-white p-0.5 shadow-sm" role="tablist">
+                    <button
+                        v-for="tab in viewTabs"
+                        :key="tab.key"
+                        type="button"
+                        role="tab"
+                        :aria-selected="view === tab.key"
+                        class="rounded-md px-3.5 py-1.5 text-sm font-medium transition"
+                        :class="view === tab.key ? 'bg-accent-600 text-white' : 'text-text-muted hover:bg-surface-sunken'"
+                        @click="setView(tab.key)"
+                    >
+                        {{ $t(tab.label) }}
+                    </button>
+                </div>
+
+                <!-- Sparten-Filter: wirkt serverseitig auf Kacheln, Charts und Tabelle -->
+                <div v-if="categories.length > 1" class="flex flex-wrap items-center gap-1.5">
+                    <span class="text-xs text-text-subtle mr-1">{{ $t('Category (Sector)') }}:</span>
+                    <button
+                        type="button"
+                        class="rounded-full border px-2.5 py-0.5 text-xs font-medium transition"
+                        :class="!categoryFilter ? 'border-accent-500 bg-accent-500 text-white' : 'border-border-subtle bg-white text-text-muted hover:bg-surface-sunken'"
+                        @click="applyCategory(null)"
+                    >
+                        {{ $t('All categories') }}
+                    </button>
+                    <button
+                        v-for="entry in categories"
+                        :key="entry.category"
+                        type="button"
+                        class="rounded-full border px-2.5 py-0.5 text-xs font-medium transition"
+                        :class="categoryFilter === entry.category ? 'border-accent-500 bg-accent-500 text-white' : 'border-border-subtle bg-white text-text-muted hover:bg-surface-sunken'"
+                        @click="applyCategory(entry.category)"
+                    >
+                        {{ categoryLabel(entry.category) }} <span class="opacity-70">({{ entry.project_count }})</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Während des Reloads bleiben die alten Zahlen sichtbar, aber erkennbar "in Arbeit" -->
+            <div class="space-y-6 transition-opacity" :class="{ 'opacity-50 pointer-events-none': loading }" :aria-busy="loading">
+
+            <!-- Leerzustand: keine Produktion im Zeitraum (ggf. in der Sparte) -->
+            <div v-if="isEmpty" class="rounded-2xl border border-border-subtle bg-white px-6 py-10 text-center shadow-sm">
+                <p class="text-sm font-medium text-text">{{ $t('No productions in this period.') }}</p>
+                <p class="mt-1 text-xs text-text-subtle">{{ $t('Choose another period or category — only productions with at least one event in the period are counted.') }}</p>
+                <div class="mt-4 flex flex-wrap justify-center gap-2">
+                    <BaseUIButton v-if="categoryFilter" :label="$t('All categories')" hide-icon white @click="applyCategory(null)" />
+                    <BaseUIButton v-if="activePreset !== 'playing_time'" :label="$t('Season (default)')" hide-icon white @click="applyPreset(rangePresets[0])" />
+                </div>
+            </div>
+
             <!-- Onboarding hint: BI component not placed in any project tab -->
             <div v-if="!biComponentInTab" class="rounded-2xl border border-warning-border bg-warning-surface px-4 py-3 text-sm text-warning flex items-center justify-between gap-4">
                 <span>{{ $t('The BI component is not yet included in any project tab. Add it in the project settings under "Tab Settings" so BI figures can be entered on projects.') }}</span>
@@ -121,7 +187,7 @@
             </div>
 
             <!-- Datenlücken: Projekte ohne erfasste BI-Zahlen -->
-            <div v-if="dataGaps.length > 0" class="rounded-2xl border border-warning-border bg-warning-surface px-4 py-3">
+            <div v-if="showOverview && dataGaps.length > 0" class="rounded-2xl border border-warning-border bg-warning-surface px-4 py-3">
                 <p class="text-sm font-medium text-warning mb-1.5">
                     {{ dataGaps.length }} {{ $t('projects with events but no BI figures — they pull every total towards zero.') }}
                 </p>
@@ -157,7 +223,7 @@
             />
 
             <!-- KPI tiles -->
-            <div>
+            <div v-if="showOverview">
                 <div class="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3">
                     <div v-for="kpi in kpiTiles" :key="kpi.key" class="rounded-2xl border border-border-subtle bg-white p-4 shadow-sm">
                         <p class="text-xs text-text-subtle inline-flex items-center gap-1">
@@ -213,27 +279,29 @@
             </div>
 
             <!-- Monatliche Entwicklung -->
-            <div v-if="monthlyChart" class="rounded-2xl border border-border-subtle bg-white p-5 shadow-sm">
+            <div v-if="showOverview && monthlyChart" class="rounded-2xl border border-border-subtle bg-white p-5 shadow-sm">
                 <h4 class="text-sm font-medium text-text-muted mb-3">{{ $t('Monthly trend (per-event figures)') }}</h4>
                 <BiChart type="bar" :data="monthlyChart" :options="monthlyOptions" height="300px" />
             </div>
 
-            <!-- Charts by category -->
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <!-- Charts by category (Klick auf eine Sparte setzt den Seitenfilter) -->
+            <div v-if="showOverview" class="grid grid-cols-1 lg:grid-cols-2 gap-4">
                 <div class="rounded-2xl border border-border-subtle bg-white p-5 shadow-sm">
-                    <h4 class="text-sm font-medium text-text-muted mb-3">{{ $t('Revenue by category') }}</h4>
+                    <h4 class="text-sm font-medium text-text-muted mb-1">{{ $t('Revenue by category') }}</h4>
+                    <p class="text-xs text-text-subtle mb-3">{{ $t('Click a category to filter the whole dashboard.') }}</p>
                     <BiChart v-if="hasCategoryData" type="doughnut" :data="revenueChart" :options="categoryChartOptions" />
                     <p v-else class="text-sm text-text-subtle py-8 text-center">{{ $t('No data available.') }}</p>
                 </div>
                 <div class="rounded-2xl border border-border-subtle bg-white p-5 shadow-sm">
-                    <h4 class="text-sm font-medium text-text-muted mb-3">{{ $t('Visitors by category') }}</h4>
+                    <h4 class="text-sm font-medium text-text-muted mb-1">{{ $t('Visitors by category') }}</h4>
+                    <p class="text-xs text-text-subtle mb-3">{{ $t('Click a category to filter the whole dashboard.') }}</p>
                     <BiChart v-if="hasCategoryData" type="bar" :data="visitorsChart" :options="categoryChartOptions" />
                     <p v-else class="text-sm text-text-subtle py-8 text-center">{{ $t('No data available.') }}</p>
                 </div>
             </div>
 
             <!-- Aufwand vs. Ertrag -->
-            <div v-if="scatterChart" class="rounded-2xl border border-border-subtle bg-white p-5 shadow-sm">
+            <div v-if="showSteering && scatterChart" class="rounded-2xl border border-border-subtle bg-white p-5 shadow-sm">
                 <div class="flex items-center justify-between gap-3 mb-1">
                     <h4 class="text-sm font-medium text-text-muted">{{ $t('Effort vs. output') }}</h4>
                     <div class="flex flex-wrap items-center gap-3 text-xs text-text-subtle">
@@ -247,20 +315,16 @@
                 <BiChart type="scatter" :data="scatterChart" :options="scatterOptions" height="320px" />
             </div>
 
+            <!-- Steuerung ohne Scatter (unter 3 Produktionen): Hinweis statt stiller Lücke -->
+            <p v-if="showSteering && !scatterChart" class="text-xs text-text-subtle px-1">
+                {{ $t('The effort-vs-output chart appears once at least three productions in the period have figures.') }}
+            </p>
+
             <!-- Drilldown table -->
-            <div class="rounded-2xl border border-border-subtle bg-white p-5 shadow-sm">
+            <div v-if="showSteering" class="rounded-2xl border border-border-subtle bg-white p-5 shadow-sm">
                 <div class="flex items-center justify-between gap-3 mb-3">
                     <h4 class="text-sm font-medium text-text-muted">{{ $t('Internal steering (effort vs. output)') }}</h4>
                     <div class="flex items-center gap-2">
-                        <button
-                            v-if="categoryFilter"
-                            type="button"
-                            class="inline-flex items-center gap-1.5 rounded-full bg-accent-50 border border-accent-200 px-3 py-1 text-xs font-medium text-accent-700 hover:bg-accent-100"
-                            @click="categoryFilter = null"
-                        >
-                            {{ $t('Category (Sector)') }}: {{ categoryLabel(categoryFilter) }}
-                            <IconX class="size-3.5" />
-                        </button>
                         <!-- Zustandsübernahme: exportiert genau die sichtbare Tabelle -->
                         <button
                             v-if="exportOptions"
@@ -363,6 +427,7 @@
                     · {{ $t('Not recorded') }}: —
                 </p>
             </div>
+            </div><!-- /loading-wrapper -->
         </div>
     </AppLayout>
 </template>
@@ -370,7 +435,7 @@
 <script setup>
 import { ref, computed, watch } from 'vue';
 import { router, Link, usePage } from '@inertiajs/vue3';
-import { IconChartHistogram, IconX, IconPencil, IconFileExport } from '@tabler/icons-vue';
+import { IconChartHistogram, IconPencil, IconFileExport, IconCircleCheck } from '@tabler/icons-vue';
 import BiQuickEntryModal from '@/Pages/Projects/Components/BiComponents/BiQuickEntryModal.vue';
 import BiDashboardExportModal from '@/Pages/Projects/Components/BiComponents/BiDashboardExportModal.vue';
 import BiBudgetExportModal from '@/Pages/Projects/Components/BiComponents/BiBudgetExportModal.vue';
@@ -409,7 +474,36 @@ const byCategory = computed(() => props.dashboard.by_category ?? []);
 const projects = computed(() => props.dashboard.projects ?? []);
 const monthly = computed(() => props.dashboard.monthly ?? []);
 const dataGaps = computed(() => props.dashboard.data_gaps ?? []);
+const categories = computed(() => props.dashboard.categories ?? []);
 const tagsLinked = computed(() => props.dashboard.tags_linked !== false);
+
+// --- Sichten & Seitenzustand ---
+
+const viewTabs = [
+    { key: 'overview', label: 'Overview' },
+    { key: 'steering', label: 'Steering' },
+];
+const initialQueryForView = new URLSearchParams(window.location.search);
+const view = ref(initialQueryForView.get('view') === 'steering' ? 'steering' : 'overview');
+const setView = (key) => {
+    view.value = key;
+    // Sicht in der URL halten, damit Reload/Teilen dieselbe Sicht öffnet
+    const url = new URL(window.location.href);
+    if (key === 'overview') {
+        url.searchParams.delete('view');
+    } else {
+        url.searchParams.set('view', key);
+    }
+    window.history.replaceState(window.history.state, '', url);
+};
+
+const isEmpty = computed(() => (props.dashboard.kpis?.project_count ?? 0) === 0);
+const showOverview = computed(() => view.value === 'overview' && !isEmpty.value);
+const showSteering = computed(() => view.value === 'steering' && !isEmpty.value);
+
+const reloadError = ref(false);
+const savedNotice = ref(null);
+let savedNoticeTimer = null;
 // Je KPI-Tag: ohne Terminart-Zuordnung bleibt die Kennzahl leer (kein Fallback)
 const kpiTags = computed(() => props.dashboard.kpi_tags ?? { performance: true, event_day: true });
 
@@ -559,8 +653,11 @@ const openSteeringExport = () => {
     showExportModal.value = true;
 };
 
-const onQuickEntrySaved = () => {
+const onQuickEntrySaved = (projectName) => {
     quickEntryGap.value = null;
+    savedNotice.value = `${t('Figures saved')}${projectName ? ` — ${projectName}` : ''}.`;
+    clearTimeout(savedNoticeTimer);
+    savedNoticeTimer = setTimeout(() => { savedNotice.value = null; }, 4000);
     // Schreibzugriff hat die Dashboard-Cache-Version gebumpt → Reload liefert frische Zahlen
     reload(true);
 };
@@ -730,6 +827,15 @@ const kpiTiles = computed(() => {
             delta: null,
             tooltip: t('Productions with at least one event in the period.'),
         },
+        // Erfassungsgrad: die wichtigste Kennzahl für die Belastbarkeit aller anderen
+        {
+            key: 'recorded',
+            label: 'Recorded',
+            value: `${formatInt(Math.max((kpis.value.project_count ?? 0) - dataGaps.value.length, 0))} / ${formatInt(kpis.value.project_count)}`,
+            delta: null,
+            note: dataGaps.value.length > 0 ? `${dataGaps.value.length} ${t('without figures')}` : null,
+            tooltip: t('Productions in the period that have at least one BI figure (or are marked as not relevant). The others pull every total towards zero.'),
+        },
     ];
 });
 
@@ -837,7 +943,14 @@ const monthlyOptions = {
 
 // --- Kategorie-Charts (klickbar → filtert Tabelle) ---
 
-const categoryFilter = ref(null);
+// Serverseitiger Seitenfilter (Kacheln, Charts, Tabelle) — Wahrheit ist der Payload
+const categoryFilter = computed(() => props.dashboard.category_filter ?? null);
+
+const applyCategory = (key) => {
+    pendingCategory = key;
+    reload(true);
+};
+let pendingCategory = categoryFilter.value;
 
 // Backend liefert '—' als Schlüssel für Projekte ohne Sparte → lesbares Label
 const categoryLabel = (key) => (key === '—' || !key) ? t('Without category') : key;
@@ -860,11 +973,16 @@ const categoryChartOptions = computed(() => ({
             },
         },
     },
+    onHover: (event, elements) => {
+        // Klickbarkeit sichtbar machen
+        const target = event?.native?.target;
+        if (target) target.style.cursor = elements?.length ? 'pointer' : 'default';
+    },
     onClick: (event, elements) => {
         if (!elements?.length) return;
-        // Roh-Schlüssel statt Anzeige-Label, damit der Tabellenfilter weiter greift
+        // Roh-Schlüssel statt Anzeige-Label; Klick auf die aktive Sparte hebt den Filter auf
         const key = byCategory.value[elements[0].index]?.category ?? null;
-        categoryFilter.value = categoryFilter.value === key ? null : key;
+        applyCategory(categoryFilter.value === key ? null : key);
     },
 }));
 
@@ -1013,10 +1131,8 @@ const sortBy = (key) => {
 };
 
 const sortedProjects = computed(() => {
-    let rows = [...projects.value];
-    if (categoryFilter.value) {
-        rows = rows.filter(row => (row.category || '—') === categoryFilter.value);
-    }
+    // Sparten-Filter greift bereits serverseitig — hier nur noch sortieren
+    const rows = [...projects.value];
     rows.sort((a, b) => {
         const av = a[sortKey.value];
         const bv = b[sortKey.value];
@@ -1033,13 +1149,17 @@ const reload = (fromPreset = false) => {
         activePreset.value = null;
     }
     loading.value = true;
+    reloadError.value = false;
     router.get(route('bi.dashboard'), {
         date_from: dateFrom.value || null,
         date_to: dateTo.value || null,
+        category: pendingCategory || null,
+        ...(view.value === 'steering' ? { view: 'steering' } : {}),
         ...compareParams(),
     }, {
         preserveState: true,
         preserveScroll: true,
+        onError: () => { reloadError.value = true; },
         onFinish: () => { loading.value = false; },
     });
 };

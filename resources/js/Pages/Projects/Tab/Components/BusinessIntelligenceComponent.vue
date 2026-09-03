@@ -53,7 +53,7 @@
                 <div v-if="!planData" class="rounded-xl border border-border-subtle bg-white p-6 shadow-sm">
                     <h4 class="text-sm font-semibold text-text mb-1">{{ $t('Record plan values') }}</h4>
                     <p class="text-xs text-text-subtle mb-4 max-w-2xl">
-                        {{ $t('Plan values hold the expected visitors, tickets and revenue for this project. Once actuals come in, the plan-vs-actual comparison appears in the actual view.') }}
+                        {{ $t('Plan values hold the expected visitors, tickets, revenue and costs for this project. Once actuals come in, the plan-vs-actual comparison appears in the actual view.') }}
                     </p>
                     <div class="flex flex-wrap gap-2">
                         <BaseUIButton :label="$t('Start empty')" hide-icon @click="initializePlan('empty')" />
@@ -92,11 +92,16 @@
                 </div>
 
                 <template v-else>
+                    <!-- KPI-Kopf erst, wenn es Planwerte gibt — sechs "–"-Kacheln wirken wie ein Fehler -->
                     <BiKpiHeader
+                        v-if="planHasValues"
                         :summary="planMetricsSummary ?? {}"
                         :event-data="planEventData"
                         :project-events="projectEvents"
                     />
+                    <p v-else class="mb-4 text-xs text-text-subtle">
+                        {{ $t('No plan values yet — enter them below; the plan-vs-actual comparison appears in the actual view once values exist.') }}
+                    </p>
 
                     <BiSectionCard :title="$t('Audience & revenue')" :icon="IconUsers">
                         <BiAudienceRevenueSection
@@ -123,30 +128,11 @@
             </template>
 
             <!-- ================= IST-ANSICHT ================= -->
+            <!-- Reihenfolge (Paket B): erst erfassen, dann auswerten -->
             <template v-else>
-            <!-- Kennzahlen auf einen Blick -->
-            <BiKpiHeader
-                :summary="metricsSummary"
-                :event-data="eventData"
-                :project-events="projectEvents"
-            />
-
-            <!-- Plan-Ist-Gegenüberstellung, sobald Planwerte existieren -->
-            <BiPlanComparisonCard
-                v-if="hasPlan"
-                :plan-comparison="planComparison"
-                :event-data="eventData"
-                :plan-event-data="planEventData"
-                :project-events="projectEvents"
-            />
-
-            <!-- Freier Zeitraumvergleich (A vs. B) auf Projektebene -->
-            <div class="mb-6">
-                <BiPeriodComparisonCard
-                    :project-id="project.id"
-                    :project-period="projectPeriod"
-                />
-            </div>
+            <p v-if="!canEditComponent" class="mb-4 text-xs text-text-subtle print:hidden">
+                {{ $t('Read-only view — you can see the figures but not change them.') }}
+            </p>
 
             <!-- Datenqualität: was fehlt für belastbare Auswertungen? -->
             <div
@@ -191,7 +177,8 @@
                 </span>
             </div>
 
-            <div class="space-y-4">
+            <!-- Erfassung zuerst: Publikum & Einnahmen -->
+            <div class="mb-6">
                 <BiSectionCard ref="audienceCard" :title="$t('Audience & revenue')" :icon="IconUsers" :completeness="audienceCompleteness">
                     <BiAudienceRevenueSection
                         :bi-data="biData"
@@ -208,7 +195,34 @@
                         @updated="fetchData"
                     />
                 </BiSectionCard>
+            </div>
 
+            <!-- Kennzahlen auf einen Blick -->
+            <BiKpiHeader
+                :summary="metricsSummary"
+                :event-data="eventData"
+                :project-events="projectEvents"
+            />
+
+            <!-- Plan-Ist-Gegenüberstellung, sobald Planwerte existieren -->
+            <BiPlanComparisonCard
+                v-if="hasPlan"
+                :plan-comparison="planComparison"
+                :event-data="eventData"
+                :plan-event-data="planEventData"
+                :project-events="projectEvents"
+            />
+
+            <!-- Freier Zeitraumvergleich (A vs. B) — nur sinnvoll mit Pro-Termin-Werten,
+                 im Gesamt-Modus wären A und B immer identisch -->
+            <div v-if="hasPerEventData" class="mb-6">
+                <BiPeriodComparisonCard
+                    :project-id="project.id"
+                    :project-period="projectPeriod"
+                />
+            </div>
+
+            <div class="space-y-4">
                 <BiSectionCard :title="$t('Production data')" :icon="IconMasksTheater">
                     <BiCoreDataSection
                         :bi-data="biData"
@@ -288,7 +302,11 @@
                 @close="showExportModal = false"
             />
 
-            <BiSaveIndicator :status="saveFeedback.status.value" />
+            <BiSaveIndicator
+                :status="saveFeedback.status.value"
+                :error-message="saveFeedback.errorMessage.value"
+                @dismiss="saveFeedback.dismiss()"
+            />
         </template>
     </div>
 </template>
@@ -358,6 +376,21 @@ const planAudienceCategoryValues = ref([]);
 const budgetSuggestions = ref(null);
 
 const hasPlan = computed(() => !!planComparison.value?.has_plan || !!planData.value);
+
+// Plan-Ansicht: gibt es überhaupt schon einen Planwert (sonst Hinweis statt leerer KPI-Kopf)?
+const planHasValues = computed(() => {
+    const s = planMetricsSummary.value ?? {};
+    const d = planData.value ?? {};
+    return ['visitors', 'sold_tickets', 'revenue'].some(key => s[key] !== null && s[key] !== undefined)
+        || (d.costs_total !== null && d.costs_total !== undefined);
+});
+
+// Zeitraumvergleich nur, wenn mindestens eine Kennzahl pro Termin erfasst wird
+const hasPerEventData = computed(() => {
+    const d = biData.value;
+    if (!d) return false;
+    return ['visitor_mode', 'sold_tickets_mode', 'revenue_mode'].some(mode => d[mode] === 'per_event');
+});
 
 const showPlanCopySearch = ref(false);
 const planCopyQuery = ref('');

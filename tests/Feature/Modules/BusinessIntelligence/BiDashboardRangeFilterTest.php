@@ -120,6 +120,30 @@ final class BiDashboardRangeFilterTest extends FeatureTestCase
     }
 
     #[Test]
+    public function category_filter_narrows_every_aggregate_but_keeps_the_category_list(): void
+    {
+        $this->createProjectWithEvent('Uncategorised', '2026-05-10 19:00:00', '2026-05-10 22:00:00', 40);
+
+        $service = app(BiDashboardService::class);
+
+        // Sparten-Liste kommt aus dem ungefilterten Bestand ('—' = ohne Sparte)
+        $unfiltered = $service->getDashboardData('2026-05-01', '2026-05-31', noCompare: true);
+        $this->assertNull($unfiltered['category_filter']);
+        $this->assertSame([['category' => '—', 'project_count' => 1]], $unfiltered['categories']);
+
+        $filtered = $service->getDashboardData('2026-05-01', '2026-05-31', noCompare: true, category: 'Oper');
+        $this->assertSame('Oper', $filtered['category_filter']);
+        $this->assertSame([], $filtered['projects']);
+        $this->assertSame(0, $filtered['kpis']['project_count']);
+        $this->assertSame([], $filtered['data_gaps']);
+        // Liste bleibt, damit man die Sparte wieder wechseln kann
+        $this->assertSame([['category' => '—', 'project_count' => 1]], $filtered['categories']);
+
+        $none = $service->getDashboardData('2026-05-01', '2026-05-31', noCompare: true, category: '—');
+        $this->assertSame(['Uncategorised'], $this->projectNames($none));
+    }
+
+    #[Test]
     public function unlinked_kpi_tags_leave_performances_and_event_days_empty(): void
     {
         $this->createProjectWithEvent('Rehearsal Only', '2026-05-10 19:00:00', '2026-05-10 22:00:00');

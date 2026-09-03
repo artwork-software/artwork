@@ -34,6 +34,8 @@ class BiDashboardController extends Controller
             'compare_from' => ['nullable', 'date'],
             'compare_to' => ['nullable', 'date', 'after_or_equal:compare_from'],
             'compare' => ['nullable', 'in:none'],
+            // Sparten-Filter als echter Seitenfilter (Kacheln, Charts, Tabelle)
+            'category' => ['nullable', 'string', 'max:255'],
         ]);
 
         $data = $this->biDashboardService->getDashboardData(
@@ -41,7 +43,8 @@ class BiDashboardController extends Controller
             $validated['date_to'] ?? null,
             $validated['compare_from'] ?? null,
             $validated['compare_to'] ?? null,
-            ($validated['compare'] ?? null) === 'none'
+            ($validated['compare'] ?? null) === 'none',
+            $validated['category'] ?? null
         );
 
         $biTab = $this->projectTabService->findFirstProjectTabWithBusinessIntelligenceComponent();

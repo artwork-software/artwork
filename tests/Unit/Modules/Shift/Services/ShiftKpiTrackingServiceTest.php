@@ -193,6 +193,61 @@ final class ShiftKpiTrackingServiceTest extends TestCase
         $this->assertSame(2.5, $service->grantedVacationUnitsForUser($user, $yearStart, $yearEnd, includePlanned: true));
     }
 
+    /**
+     * Kennzahl "Freie Tage in den ersten 26 Wochen der Spielzeit": Fenster = Spielzeitbeginn +
+     * 26 Wochen (182 Tage inkl.), unabhängig von einer Vertragszuweisung. Gezählt wird
+     * differenziell über freie Samstage, weil leere Arbeitstage laut Muster ebenfalls GFT sind.
+     */
+    #[Test]
+    public function days_off_in_the_first_26_weeks_are_counted_from_the_season_start(): void
+    {
+        $user = $this->userWithWeekdayPattern(); // bewusst OHNE Vertragszuweisung
+        $service = $this->service();
+
+        $baseline = $service->computeForUser($user->fresh(), $this->seasonStart, $this->seasonEnd);
+        $this->assertSame(
+            ['start' => '2025-08-01', 'end' => '2026-01-29'],
+            $baseline['days_off_first_26_weeks_window']
+        );
+
+        // Samstag vor Spielzeitbeginn und Samstag nach Fensterende: zählen nicht
+        $this->vacation($user, '2025-07-26', 'FREE_WORK');
+        $this->vacation($user, '2026-01-31', 'FREE_WORK');
+        $unchanged = $service->computeForUser($user->fresh(), $this->seasonStart, $this->seasonEnd);
+        $this->assertSame(
+            $baseline['days_off_first_26_weeks_count'],
+            $unchanged['days_off_first_26_weeks_count']
+        );
+
+        // Samstag im Fenster (ganzer freier Tag) + halber freier Samstag im Fenster: +1,5
+        $this->vacation($user, '2025-09-06', 'FREE_WORK');
+        $this->vacation($user, '2026-01-24', 'FREE_WORK', false, 'morning');
+        $inside = $service->computeForUser($user->fresh(), $this->seasonStart, $this->seasonEnd);
+        $this->assertSame(
+            $baseline['days_off_first_26_weeks_count'] + 1.5,
+            $inside['days_off_first_26_weeks_count']
+        );
+    }
+
+    #[Test]
+    public function days_off_window_follows_the_playing_time_window_and_is_null_without_it(): void
+    {
+        $settings = app(\Artwork\Modules\GeneralSettings\Models\GeneralSettings::class);
+        $settings->playing_time_window_start = '';
+        $settings->playing_time_window_end = '';
+        $settings->save();
+
+        $this->assertNull($this->service()->getDaysOffFirst26WeeksWindow());
+
+        $settings->playing_time_window_start = '2026-09-01';
+        $settings->playing_time_window_end = '2027-08-31';
+        $settings->save();
+
+        [$from, $to] = app(ShiftKpiTrackingService::class)->getDaysOffFirst26WeeksWindow();
+        $this->assertSame('2026-09-01', $from->toDateString());
+        $this->assertSame('2027-03-01', $to->toDateString());
+    }
+
     #[Test]
     public function season_bounds_are_null_when_the_playing_time_window_is_not_configured(): void
     {

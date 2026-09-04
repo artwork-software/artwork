@@ -59,6 +59,30 @@ class ShiftKpiTrackingService
     }
 
     /**
+     * Fenster der Kennzahl "Freie Tage in den ersten 26 Wochen der Spielzeit":
+     * Spielzeitbeginn bis einschließlich Spielzeitbeginn + 26 Wochen − 1 Tag (182 Tage,
+     * z. B. 01.09.2026 – 01.03.2027). Bezug ist die Spielzeit aus den Einstellungen,
+     * NICHT der Vertragsbeginn (Entscheidung PO). Ohne konfigurierte Spielzeit: null.
+     *
+     * @return array{0: Carbon, 1: Carbon}|null
+     */
+    public function getDaysOffFirst26WeeksWindow(?Carbon $seasonStart = null): ?array
+    {
+        if ($seasonStart === null) {
+            $bounds = $this->getSeasonBounds();
+            if ($bounds === null) {
+                return null;
+            }
+            [$seasonStart] = $bounds;
+        }
+
+        $from = $seasonStart->copy()->startOfDay();
+        $to = $from->copy()->addWeeks(26)->subDay()->endOfDay();
+
+        return [$from, $to];
+    }
+
+    /**
      * Kalendarischer Mittelpunkt der Spielzeit -> trennt 1. und 2. Hälfte.
      */
     public function getSeasonMidpoint(Carbon $start, Carbon $end): Carbon
@@ -81,16 +105,13 @@ class ShiftKpiTrackingService
         $yearStart = Carbon::create($year, 1, 1)->startOfDay();
         $yearEnd = Carbon::create($year, 12, 31)->endOfDay();
 
-        $validFrom = $this->contractSettings->assignFor($user)?->valid_from;
-        $validFrom = $validFrom ? Carbon::parse($validFrom)->startOfDay() : null;
+        // 26-Wochen-Fenster ab Spielzeitbeginn (kann über das Spielzeitende hinausragen, wenn die
+        // Spielzeit kürzer als 26 Wochen ist)
+        [$window26From, $window26To] = $this->getDaysOffFirst26WeeksWindow($seasonStart);
 
         // Gemeinsamer Klassifizierungsbereich (Superset aus Spielzeit + Kalenderjahr + 26-Wochen-Fenster).
         $rangeFrom = $seasonStart->copy()->min($yearStart);
-        $rangeTo = $seasonEnd->copy()->max($yearEnd);
-        if ($validFrom) {
-            $rangeFrom = $rangeFrom->min($validFrom);
-            $rangeTo = $rangeTo->max($validFrom->copy()->addWeeks(26));
-        }
+        $rangeTo = $seasonEnd->copy()->max($yearEnd)->max($window26To);
 
         $days = $this->classifyDays($user, $rangeFrom, $rangeTo);
 
@@ -112,11 +133,8 @@ class ShiftKpiTrackingService
         // --- Gewährte halbe freie Tage je Hälfte ---
         [$halfH1, $halfH2] = $this->grantedHalfFreeDaysPerHalf($days, $seasonStart, $seasonEnd, $midpoint);
 
-        // --- Freie Tage in den ersten 26 Wochen ---
-        $daysOff26 = 0.0;
-        if ($validFrom) {
-            $daysOff26 = $this->freeDayUnitsInRange($days, $validFrom, $validFrom->copy()->addWeeks(26));
-        }
+        // --- Freie Tage in den ersten 26 Wochen der Spielzeit ---
+        $daysOff26 = $this->freeDayUnitsInRange($days, $window26From, $window26To);
 
         // --- Urlaub Kalenderjahr (gewährt) ---
         $grantedVacation = $this->grantedVacationDaysInRange($days, $yearStart, $yearEnd);
@@ -135,6 +153,11 @@ class ShiftKpiTrackingService
             'granted_half_free_days_half1' => $halfH1,
             'granted_half_free_days_half2' => $halfH2,
             'days_off_first_26_weeks_count' => $daysOff26,
+            // Konkretes Zählfenster für die Anzeige (Tooltip "01.09.2026 – 01.03.2027")
+            'days_off_first_26_weeks_window' => [
+                'start' => $window26From->toDateString(),
+                'end' => $window26To->toDateString(),
+            ],
             'granted_vacation_days_year' => $grantedVacation,
             // Zielwerte ("X") + Aktiv-Flags: Zuweisung vor Vorlage (für die Anzeige im Modal)
             'targets' => $this->extractTargets($user),

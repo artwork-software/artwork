@@ -27,6 +27,7 @@ class WorkingHourService
         private WorkingHourCacheService $workingHourCacheService,
         private WorkTimeCalculationService $workTimeCalculationService,
         private SpecialDayService $specialDayService,
+        private ContractSettingsResolver $contractSettings,
     ) {
     }
 
@@ -202,8 +203,9 @@ class WorkingHourService
             $userData['violations'] = $violationsByUser->get($user->id, collect());
             $userData['compensation_day_offs'] = $compensationDaysByUser->get($user->id, collect());
             // contract.userContract ist in loadWorkerRelations eager geladen — kein activeWorkContract()
-            // (das würde pro User zwei Queries feuern)
-            $userData['compensation_period'] = $user->contract?->userContract?->compensation_period ?? 0;
+            // (das würde pro User zwei Queries feuern). Zuweisung vor Vorlage, 0 auf der Zuweisung =
+            // nicht gesetzt (siehe ContractSettingsResolver::compensationPeriod)
+            $userData['compensation_period'] = $this->contractSettings->compensationPeriod($user);
 
             $usersWithPlannedWorkingHours[] = $userData;
         }

@@ -1449,6 +1449,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
             ->name('project.download.keyVisual');
 
         Route::get('/{project}/exports/shifts-personal-plan', ProjectShiftPersonalPlanExportController::class)
+            ->can('can view shift plan')
             ->name('projects.exports.shifts-personal-plan');
 
         // POST
@@ -1457,8 +1458,10 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
 
         Route::post('/timeline/add/{event}', [ProjectController::class, 'addTimeLineRow'])->name('add.timeline.row');
         Route::post('/timeline/update/magic/{event}', [ShiftController::class, 'updateTimeLine'])
+            ->can('can plan shifts')
             ->name('edit.timeline.event');
         Route::post('/timeline/add/magic/{event}', [ShiftController::class, 'addTimeLine'])
+            ->can('can plan shifts')
             ->name('create.timeline.event');
         Route::post('/sums/money-source', [SumDetailsController::class, 'store'])
             ->name('project.sum.money.source.store');
@@ -2171,6 +2174,12 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         )->middleware('shift-settings-area:general,edit')
             ->name('shift.settings.update.shift-confirmation');
 
+        Route::patch(
+            'shift-settings/updateNightTimes',
+            [ShiftSettingsController::class, 'updateNightTimes']
+        )->middleware('shift-settings-area:general,edit')
+            ->name('shift.settings.update.night-times');
+
         Route::post('shift/add/craft', [CraftController::class, 'store'])->middleware('shift-settings-area:general,edit')->name('craft.store');
         Route::patch('shift/update/craft/{craft}', [CraftController::class, 'update'])->middleware('shift-settings-area:general,edit')->name('craft.update');
         Route::delete('shift/delete/craft/{craft}', [CraftController::class, 'destroy'])->middleware('shift-settings-area:general,edit')->name('craft.delete');
@@ -2279,7 +2288,8 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::post('/calendar/export/season-schedule-pdf', \App\Http\Controllers\SeasonSchedulePdfExportController::class)
         ->name('calendar.export.season-schedule-pdf');
     Route::post('/shift-plan/export/pdf', [ExportPDFController::class, 'createShiftPlanPDF'])
-        ->name('shift.plan.export.pdf');
+        ->name('shift.plan.export.pdf')
+        ->can('can view shift plan');
     Route::post('/shift-plan/export/worker-matrix-pdf', WorkerShiftPlanPdfExportController::class)
         ->name('shift.plan.export.worker-matrix.pdf')
         ->can('can view shift plan');
@@ -2595,6 +2605,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         '/day-service/{dayService}/attach/{dayServiceable}',
         [DayServiceController::class, 'attachDayServiceable']
     )
+        ->can('can plan shifts')
         ->name('day-service.attach');
 
 
@@ -2867,6 +2878,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         '/day-service/remove/{dayServiceable}',
         [DayServiceController::class, 'removeDayServiceable']
     )
+        ->can('can plan shifts')
         ->name('remove.day.service.from.user');
 
     Route::group(['prefix' => 'inventory-management'], function (): void {
@@ -3432,6 +3444,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         Route::group(['prefix' => 'exports'], function (): void {
             // pdf Shift plan exprot
             Route::get('/pdf/{project}/{privacyMode}/shift-plan', [ExportPDFController::class, 'exportDailyViewShiftPlanInProject'])
+                ->can('can view shift plan')
                 ->name('projects.exports.shift-plan');
         });
     });
@@ -3480,6 +3493,7 @@ Route::get(
 // /shift/check-collisions — liefert Zuweisungs-/Zeitdaten beliebiger Worker, daher zwingend hinter Auth
 Route::middleware(['auth:sanctum', 'verified'])
     ->post('/shift/check-collisions', [ShiftController::class, 'checkCollisions'])
+    ->can('can plan shifts')
     ->name('shift.check-collisions');
 
 Route::get('/generate-avatar-image/{letters}', [\Artwork\Modules\User\Http\Controllers\UserController::class, 'createAvatarImage'])

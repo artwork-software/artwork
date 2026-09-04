@@ -275,7 +275,7 @@ enum NotificationEnum: string
             self::NOTIFICATION_SHIFT_CHANGED => "Find out whether your shifts have been changed, you have been reassigned or deleted from a shift.",
             self::NOTIFICATION_SHIFT_OWN_INFRINGEMENT => "Find out whether your shift planning collides with legal regulations, e.g. if you have been scheduled for too long at a time or too few breaks.",
             self::NOTIFICATION_SHIFT_INFRINGEMENT => "Find out whether your shift planning for others collides with legal regulations, e.g. if you have scheduled one user for too long at a time or with too few breaks.",
-            self::NOTIFICATION_SHIFT_LOCKED => "Find out whether shift schedules conflict with legal regulations,e.g. employees have been scheduled with too few breaks.",
+            self::NOTIFICATION_SHIFT_LOCKED => "Find out when a shift schedule has been committed or a commitment has been lifted.",
             self::NOTIFICATION_SHIFT_AVAILABLE => "Find out if someone has made changes to your availability.",
             self::NOTIFICATION_SHIFT_CONFLICT => "Find out if an employee has a new availability or you need to fill someone new.",
             self::NOTIFICATION_SHIFT_OPEN_DEMAND => "Find out if there are any open demands for your shifts.",

@@ -169,9 +169,9 @@ class FreelancerController extends Controller
     {
         $this->authorize('updateTerms', Freelancer::class);
 
-        $freelancer->update($request->only([
-            'salary_per_hour',
-            'salary_description',
+        $freelancer->update($request->validate([
+            'salary_per_hour' => 'nullable|integer|min:0|max:100000',
+            'salary_description' => 'nullable|string|max:5000',
         ]));
 
         $freelancer->syncToCrm();
@@ -244,8 +244,13 @@ class FreelancerController extends Controller
         return Redirect::back();
     }
 
+    /**
+     * @throws AuthorizationException
+     */
     public function assignCraftsBulk(Freelancer $freelancer, Request $request): RedirectResponse
     {
+        $this->authorize('updateWorkProfile', Freelancer::class);
+
         $craftIds = $request->get('craftIds', []);
         $freelancer->assignedCrafts()->syncWithoutDetaching($craftIds);
 

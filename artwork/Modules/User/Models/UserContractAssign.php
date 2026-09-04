@@ -61,16 +61,9 @@ class UserContractAssign extends Model
         'overtime_compensation_period',
         'free_sundays_per_season',
         'days_off_first_26_weeks',
-        'work_time_pattern_id',
-        'monday',
-        'tuesday',
-        'wednesday',
-        'thursday',
-        'friday',
-        'saturday',
-        'sunday',
-        'valid_from',
-        'valid_until',
+        // Arbeitszeitmuster-Felder (work_time_pattern_id, monday..sunday, valid_from, valid_until)
+        // gehören zu user_work_times und sind hier KEINE Spalten – UserContractAssignController
+        // trennt sie vor dem Update ab. Nicht wieder in $fillable aufnehmen.
         // Spielzeitbezogene Infodaten (DP-18)
         'free_sundays_per_season_active',
         'days_off_first_26_weeks_active',

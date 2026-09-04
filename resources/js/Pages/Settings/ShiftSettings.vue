@@ -112,17 +112,43 @@
                         </span>
                         <SwitchIconTooltip
                             v-model="shiftCommitWorkflow"
-                            :tooltip-text="$t('Duty roster release workflow')"
+                            :tooltip-text="workflowSwitchDisabled
+                                ? $t('Add at least one approver before enabling the workflow.')
+                                : $t('Duty roster release workflow')"
+                            :disabled="workflowSwitchDisabled"
                             size="md"
                             @change="changeShiftCommitWorkflow"
                             icon="IconCheck"
                         />
                     </div>
 
+                    <AlertComponent
+                        v-if="!shiftCommitWorkflow && !hasWorkflowUsers"
+                        type="info"
+                        show-icon
+                        icon-size="w-4 h-4"
+                        class="mt-4"
+                        :text="$t('Add at least one approver before enabling the workflow.')"
+                    />
+                    <AlertComponent
+                        v-if="shiftCommitWorkflow && !hasWorkflowUsers"
+                        type="warning"
+                        show-icon
+                        icon-size="w-4 h-4"
+                        class="mt-4"
+                        :text="$t('The workflow is active. Without an approver, requests will go nowhere.')"
+                    />
+                    <AlertComponent
+                        v-if="$page.props.errors?.shift_commit_workflow"
+                        type="error"
+                        show-icon
+                        icon-size="w-4 h-4"
+                        class="mt-4"
+                        :text="$page.props.errors.shift_commit_workflow"
+                    />
 
-
-                    <div v-if="shiftCommitWorkflow">
-                        <div class="mt-5 w-1/2">
+                    <div>
+                        <div v-if="canEditGeneralSettings" class="mt-5 w-1/2">
                             <UserSearch
                                 :label="$t('Select users who can confirm the shift commit requests')"
                                 @user-selected="addUserToWorkflow"
@@ -140,7 +166,7 @@
                                         <div class="mx-2">
                                             <p class="text-sm/5 font-semibold text-text group-hover:text-text">{{ object.user.full_name }}</p>
                                         </div>
-                                        <div class="flex items-center">
+                                        <div v-if="canEditGeneralSettings" class="flex items-center">
                                             <button type="button" @click="removeUserFormShiftWorkFlow(object.id)">
                                                 <PropertyIcon name="IconX" class="h-4 w-4 text-text-subtle hover:text-danger" />
                                             </button>
@@ -154,6 +180,46 @@
                 </div>
             </div>
 
+
+            <div class="my-10">
+                <div class="rounded-lg bg-surface border border-border-subtle w-full shadow-raised p-5">
+                    <BasePageTitle
+                        :title="$t('Night work period')"
+                        :description="$t('Hours in this window are booked as night hours. ArbZG: 23–6 h, TVöD: 21–6 h.')"
+                    />
+                    <form class="mt-4 flex flex-wrap items-end gap-4" @submit.prevent="saveNightTimes">
+                        <div class="w-40">
+                            <BaseInput
+                                id="start_night_time"
+                                v-model="nightTimesForm.start_night_time"
+                                type="time"
+                                label="Night hours from"
+                                :disabled="!canEditGeneralSettings"
+                                :error="nightTimesForm.errors.start_night_time"
+                                required
+                            />
+                        </div>
+                        <div class="w-40">
+                            <BaseInput
+                                id="end_night_time"
+                                v-model="nightTimesForm.end_night_time"
+                                type="time"
+                                label="Night hours until"
+                                :disabled="!canEditGeneralSettings"
+                                :error="nightTimesForm.errors.end_night_time"
+                                required
+                            />
+                        </div>
+                        <BaseUIButton
+                            v-if="canEditGeneralSettings"
+                            type="submit"
+                            label="Save"
+                            use-translation
+                            :disabled="nightTimesForm.processing || !nightTimesForm.start_night_time || !nightTimesForm.end_night_time"
+                        />
+                    </form>
+                </div>
+            </div>
 
             <div class="rounded-lg bg-surface border border-border-subtle w-full shadow-raised p-5">
                 <div class="flex items-center justify-between gap-x-3">
@@ -620,6 +686,12 @@
         <AddEditShiftTimePreset :time-preset="presetToEdit" @closed="closeShiftPresetModal" v-if="showAddShiftPresetModal" />
         <AddCraftsModal @closed="closeAddCraftModal" v-if="openAddCraftsModal" :craft-to-edit="craftToEdit" :users-with-permission="usersWithPermission" :prop-qualifications="shiftQualifications" />
         <ConfirmDeleteModal :title="confirmDeleteTitle" :description="confirmDeleteDescription" @closed="closedDeleteCraftModal" @delete="submitDelete" v-if="openConfirmDeleteModal" />
+        <NotificationToast
+            v-model:show="nightTimesToast.visible"
+            :title="nightTimesToast.title"
+            :description="nightTimesToast.description"
+            :type="nightTimesToast.type"
+        />
     </ShiftSettingsHeader>
 </template>
 <script>
@@ -669,12 +741,16 @@ import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 import GlobalQualificationsSettingsCard from "@/Pages/Settings/ShiftSettingsComponents/GlobalQualificationsSettingsCard.vue";
 import SettingsGuideBanner from "@/Artwork/Guide/SettingsGuideBanner.vue";
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
+import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
+import NotificationToast from "@/Artwork/Feedback/NotificationToast.vue";
 import {can, is} from 'laravel-permission-to-vuejs';
 
 export default defineComponent({
     name: "ShiftSettings",
     mixins: [IconLib],
     components: {
+        BaseInput,
+        NotificationToast,
         GlobalQualificationsSettingsCard,
         SettingsGuideBanner,
         ToolTipComponent,
@@ -730,11 +806,17 @@ export default defineComponent({
         'shiftTimePresets',
         'shiftSettings',
         'shiftCommitWorkflowUsers',
-        'globalQualifications'
+        'globalQualifications',
+        'nightTimes'
     ],
     data(){
         return {
             shiftCommitWorkflow: usePage().props.shiftCommitWorkflow,
+            nightTimesForm: useForm({
+                start_night_time: this.nightTimes?.start_night_time ?? '22:00',
+                end_night_time: this.nightTimes?.end_night_time ?? '06:00'
+            }),
+            nightTimesToast: { visible: false, title: '', description: '', type: 'success' },
             selectedEventType: null,
             openAddCraftsModal: false,
             craftToEdit: null,
@@ -753,6 +835,7 @@ export default defineComponent({
             userForWorkflowForm: useForm({
                 users: []
             }),
+            workflowUserToDelete: null,
             deleteType: ''
         }
     },
@@ -761,6 +844,14 @@ export default defineComponent({
             return !usePage().props.shift_settings_access?.granular_permissions_enabled
                 || is('artwork admin')
                 || can('shift.settings.general.edit');
+        },
+        hasWorkflowUsers() {
+            return (this.shiftCommitWorkflowUsers?.length ?? 0) > 0;
+        },
+        // Aktivieren nur mit Genehmiger:in (Backend lehnt sonst mit 422 ab);
+        // Deaktivieren bleibt immer möglich.
+        workflowSwitchDisabled() {
+            return !this.canEditGeneralSettings || (!this.shiftCommitWorkflow && !this.hasWorkflowUsers);
         },
         relevantEventTypes(){
             const types = [];
@@ -823,6 +914,19 @@ export default defineComponent({
         },
 
         removeUserFormShiftWorkFlow(objectId){
+            // Letzte Genehmiger:in bei aktivem Workflow: Anfragen liefen danach ins Leere.
+            if (this.shiftCommitWorkflow && this.shiftCommitWorkflowUsers?.length === 1) {
+                this.confirmDeleteTitle = this.$t('Remove last approver?');
+                this.confirmDeleteDescription = this.$t('The workflow is active. Without an approver, requests will go nowhere.');
+                this.deleteType = 'workflowUser';
+                this.workflowUserToDelete = objectId;
+                this.openConfirmDeleteModal = true;
+                return;
+            }
+
+            this.deleteWorkflowUser(objectId);
+        },
+        deleteWorkflowUser(objectId){
             this.$inertia.delete(route('shift.settings.remove.shift-commit-workflow-user', objectId), {
                 preserveScroll: true,
                 preserveState: false,
@@ -831,12 +935,27 @@ export default defineComponent({
             });
         },
         changeShiftCommitWorkflow(){
-            console.log(this.shiftCommitWorkflow)
             this.$inertia.patch(route('shift.settings.update.shift-commit-workflow'), {
                 shift_commit_workflow: this.shiftCommitWorkflow
             }, {
                 preserveScroll: true,
-                preserveState: false
+                preserveState: false,
+                onError: () => {
+                    // Backend hat abgelehnt (z. B. keine Genehmiger:in) — Schalter zurücksetzen
+                    this.shiftCommitWorkflow = usePage().props.shiftCommitWorkflow;
+                }
+            });
+        },
+        saveNightTimes(){
+            this.nightTimesForm.patch(route('shift.settings.update.night-times'), {
+                preserveScroll: true,
+                onSuccess: () => {
+                    this.nightTimesToast.title = this.$t('Night work period');
+                    this.nightTimesToast.description = this.$page.props.flash?.success?.shift_night_times
+                        ?? this.$t('The night work period has been saved.');
+                    this.nightTimesToast.type = 'success';
+                    this.nightTimesToast.visible = true;
+                }
             });
         },
         openAddEditShiftPresetModal(shiftTimePreset){
@@ -945,6 +1064,12 @@ export default defineComponent({
             if (this.deleteType === 'preset') {
                 this.deleteShiftTimePreset(this.shiftTimePresetToDelete);
                 this.closeDeleteShiftTimePresetModal();
+            }
+            if (this.deleteType === 'workflowUser') {
+                this.deleteWorkflowUser(this.workflowUserToDelete);
+                this.openConfirmDeleteModal = false;
+                this.deleteType = '';
+                this.workflowUserToDelete = null;
             }
         },
         reorderShiftQualifications() {

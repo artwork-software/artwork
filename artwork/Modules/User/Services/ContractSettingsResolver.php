@@ -79,6 +79,28 @@ class ContractSettingsResolver
         return (float) $this->value($user, $key, $default);
     }
 
+    /**
+     * Ersatzfrei-Frist in Tagen: Zuweisung vor Vorlage.
+     *
+     * Die Spalte user_contract_assigns.compensation_period ist NOT NULL DEFAULT 0 – eine 0 auf der
+     * Zuweisung bedeutet daher "nicht gesetzt" (nicht "0 Tage Frist") und fällt auf die Vorlage
+     * zurück. Einzige Stelle, an der diese Sonderregel gilt; alle Leser der Frist gehen hier durch.
+     */
+    public function compensationPeriod(User $user): int
+    {
+        $assign = $this->assignFor($user);
+        if ($assign === null) {
+            return 0;
+        }
+
+        $assigned = (int) ($assign->getAttribute('compensation_period') ?? 0);
+        if ($assigned > 0) {
+            return $assigned;
+        }
+
+        return (int) ($this->templateFor($user)?->getAttribute('compensation_period') ?? 0);
+    }
+
     public function flush(): void
     {
         $this->assignCache = [];

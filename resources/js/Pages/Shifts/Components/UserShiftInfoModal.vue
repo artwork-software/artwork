@@ -78,7 +78,7 @@
                                         <ToolTipComponent
                                             icon="IconInfoCircle"
                                             icon-size="w-3.5 h-3.5"
-                                            :tooltip-text="$t(row.rule)"
+                                            :tooltip-text="row.ruleParams ? $t(row.rule, row.ruleParams) : $t(row.rule)"
                                             direction="top"
                                             classes="text-text-subtle"
                                         />
@@ -447,10 +447,11 @@ const seasonRows = computed(() => {
         },
         {
             label: 'Days off in the first 26 weeks',
-            rule: 'From the start of the contract assignment: full free day = 1, half free day = 0.5.',
+            rule: 'Within the first 26 weeks of the season ({0}): full free day = 1, half free day = 0.5.',
+            ruleParams: [formatDateRange(k.days_off_first_26_weeks_window)],
             h1: null,
             h2: null,
-            total: fmtIstX(k.days_off_first_26_weeks_count, t.days_off_first_26_weeks),
+            total: k.days_off_first_26_weeks_window ? fmtIstX(k.days_off_first_26_weeks_count, t.days_off_first_26_weeks) : null,
             targetActive: targetActive(t.days_off_first_26_weeks),
         },
         {
@@ -560,6 +561,12 @@ const formatDate = (value) => {
     const day = String(date.getDate()).padStart(2, '0')
     const month = String(date.getMonth() + 1).padStart(2, '0')
     return `${day}.${month}.${date.getFullYear()}`
+}
+
+// Zählfenster "01.09.2026 – 01.03.2027" (Spielzeitbeginn + 26 Wochen); ohne Fenster "–"
+const formatDateRange = (window) => {
+    if (!window || !window.start || !window.end) return '–'
+    return `${formatDate(window.start)} – ${formatDate(window.end)}`
 }
 
 const formatDateTime = (value) => {

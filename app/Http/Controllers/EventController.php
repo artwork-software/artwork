@@ -49,6 +49,7 @@ use Artwork\Modules\EventType\Models\EventType;
 use Artwork\Modules\Filter\Services\FilterService;
 use Artwork\Modules\Freelancer\Http\Resources\FreelancerShiftPlanResource;
 use Artwork\Modules\Freelancer\Services\FreelancerService;
+use Artwork\Modules\GeneralSettings\Models\GeneralSettings;
 use Artwork\Modules\GeneralSettings\Services\GeneralSettingsService;
 use Artwork\Modules\GlobalNotification\Services\GlobalNotificationService;
 use Artwork\Modules\Notification\Enums\NotificationEnum;
@@ -1644,9 +1645,15 @@ class EventController extends Controller
         }
     }
 
-    public function changeCommitShifts(Request $request, Shift $shift): void
+    public function changeCommitShifts(Request $request, Shift $shift, GeneralSettings $generalSettings): void
     {
         $committed = $request->boolean('commit');
+
+        // Bei aktivem Freigabe-Workflow läuft die Festschreibung ausschließlich über
+        // Anfragen (ShiftPlanRequest) — das Aufheben bleibt direkt möglich.
+        if ($committed && $generalSettings->shift_commit_workflow_enabled) {
+            abort(422, __('While the approval workflow is active, shifts can only be committed via a request.'));
+        }
 
         $shift->update([
             'is_committed' => $committed,

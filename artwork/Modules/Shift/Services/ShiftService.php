@@ -256,7 +256,7 @@ class ShiftService
         $this->notificationService->setProjectId($shift->event?->project?->id);
         $this->notificationService->setEventId($shift->event?->id);
         $this->notificationService->setShiftId($shift->id);
-        foreach (User::role(RoleEnum::ARTWORK_ADMIN->value)->get() as $authUser) {
+        foreach ($this->infringementRecipients($shift) as $authUser) {
             $notificationTitle = __('notification.shift.short_break', [], $authUser->language);
             $broadcastMessage = [
                 'id' => Str::uuid()->toString(),
@@ -280,6 +280,30 @@ class ShiftService
             $this->notificationService->setNotificationTo($authUser);
             $this->notificationService->createNotification();
         }
+    }
+
+    /**
+     * Empfänger der Pausen-/Ruhezeit-Warnung: Planer:innen des Gewerks
+     * (craftShiftPlaner), sonst Gewerksverantwortliche (managingUsers);
+     * ohne Gewerk bzw. ohne beides bleiben Admins der letzte Fallback.
+     *
+     * @return Collection<int, User>
+     */
+    private function infringementRecipients(Shift $shift): Collection
+    {
+        $craft = $shift->craft;
+
+        if ($craft !== null) {
+            $planners = $craft->craftShiftPlaner()->get();
+            if ($planners->isEmpty()) {
+                $planners = $craft->managingUsers()->get();
+            }
+            if ($planners->isNotEmpty()) {
+                return $planners->unique('id')->values();
+            }
+        }
+
+        return User::role(RoleEnum::ARTWORK_ADMIN->value)->get();
     }
 
     public function save(Shift $shift): Shift

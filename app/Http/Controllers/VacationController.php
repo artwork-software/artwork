@@ -58,6 +58,8 @@ class VacationController extends Controller
         );
 
         if ($createVacationRequest->type === 'vacation') {
+            // Art der Abwesenheit kommt aus dem Request (vacation_type: OFF_WORK = Urlaub, Default |
+            // NOT_AVAILABLE = nicht verfügbar, soll-neutral) – Auflösung im VacationService::create
             $this->vacationService->create(
                 $user,
                 $createVacationRequest,
@@ -144,6 +146,14 @@ class VacationController extends Controller
         User $user
     ): void {
         $this->authorizeAvailabilityStatusChange();
+        // Unbekannter Status waere sonst ein ValueError (500) beim Enum-Mapping
+        $request->validate([
+            'day' => ['required', 'date'],
+            'checked.type' => ['required', 'string', \Illuminate\Validation\Rule::in(array_map(
+                static fn (VacationEnum $case): string => $case->value,
+                VacationEnum::cases()
+            ))],
+        ]);
 
         $day = Carbon::parse($request->day)->format('Y-m-d');
         $checked = $request->get('checked');
@@ -232,6 +242,14 @@ class VacationController extends Controller
         Freelancer $freelancer
     ): void {
         $this->authorizeAvailabilityStatusChange();
+        // Unbekannter Status waere sonst ein ValueError (500) beim Enum-Mapping
+        $request->validate([
+            'day' => ['required', 'date'],
+            'checked.type' => ['required', 'string', \Illuminate\Validation\Rule::in(array_map(
+                static fn (VacationEnum $case): string => $case->value,
+                VacationEnum::cases()
+            ))],
+        ]);
 
         $day = Carbon::parse($request->day)->format('Y-m-d');
         $checked = $request->get('checked');
@@ -302,6 +320,14 @@ class VacationController extends Controller
         ServiceProvider $serviceProvider
     ): void {
         $this->authorizeAvailabilityStatusChange();
+        // Unbekannter Status waere sonst ein ValueError (500) beim Enum-Mapping
+        $request->validate([
+            'day' => ['required', 'date'],
+            'checked.type' => ['required', 'string', \Illuminate\Validation\Rule::in(array_map(
+                static fn (VacationEnum $case): string => $case->value,
+                VacationEnum::cases()
+            ))],
+        ]);
 
         $day = Carbon::parse($request->day)->format('Y-m-d');
         $checked = $request->get('checked');

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Settings\ShiftSettings;
 use Artwork\Modules\Craft\Models\Craft;
 use Artwork\Modules\EventType\Models\EventType;
+use Artwork\Modules\GeneralSettings\Models\GeneralSettings;
 use Artwork\Modules\GeneralSettings\Services\GeneralSettingsService;
 use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Artwork\Modules\Permission\Services\ShiftSettingsPermissionService;
@@ -31,9 +32,16 @@ class ShiftSettingsController extends Controller
     ) {
     }
 
-    public function index(ShiftQualificationService $shiftQualificationService, ShiftSettings $shiftSettings): Response
-    {
+    public function index(
+        ShiftQualificationService $shiftQualificationService,
+        ShiftSettings $shiftSettings,
+        GeneralSettings $generalSettings
+    ): Response {
         return $this->responseFactory->render('Settings/ShiftSettings', [
+            'nightTimes' => [
+                'start_night_time' => substr((string) $generalSettings->start_night_time, 0, 5),
+                'end_night_time' => substr((string) $generalSettings->end_night_time, 0, 5),
+            ],
             'crafts' => Craft::query()
                 ->with('managingUsers', 'managingFreelancers', 'managingServiceProviders', 'qualifications')
                 ->orderBy('position')
@@ -152,6 +160,27 @@ class ShiftSettingsController extends Controller
         $shiftSettings->save();
 
         return $this->redirector->back();
+    }
+
+    /**
+     * Nachtarbeitszeitraum (GeneralSettings start_night_time/end_night_time):
+     * Stunden in diesem Fenster bucht der WorkTimeBookingService als Nachtstunden.
+     */
+    public function updateNightTimes(Request $request, GeneralSettings $generalSettings): RedirectResponse
+    {
+        $validated = $request->validate([
+            'start_night_time' => ['required', 'date_format:H:i'],
+            'end_night_time' => ['required', 'date_format:H:i', 'different:start_night_time'],
+        ]);
+
+        $generalSettings->start_night_time = $validated['start_night_time'];
+        $generalSettings->end_night_time = $validated['end_night_time'];
+        $generalSettings->save();
+
+        return $this->redirector->back()->with(
+            'success',
+            ['shift_night_times' => __('The night work period has been saved.')]
+        );
     }
 
     public function saveWarningMultipleAssignments(Request $request): void

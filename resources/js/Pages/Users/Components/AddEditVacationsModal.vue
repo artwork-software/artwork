@@ -60,6 +60,21 @@
                                     </button>
                                 </div>
 
+                                <!-- Art der Abwesenheit: Urlaub (soll-wirksam) oder Nicht verfügbar (soll-neutral) -->
+                                <div v-if="entry.type === 'vacation'" class="mb-4">
+                                    <ArtworkBaseListbox
+                                        v-model="selectedVacationType"
+                                        :items="vacationTypeOptions"
+                                        by="id"
+                                        option-key="id"
+                                        option-label="name"
+                                        use-translations
+                                        :label="$t('Type of absence')"
+                                        :placeholder="$t('Please select')"
+                                        :enable-search="false"
+                                    />
+                                </div>
+
                                 <!-- Zeitraum -->
                                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-1">
                                     <div>
@@ -179,6 +194,7 @@ import { Dialog, DialogPanel, DialogTitle, TransitionChild, TransitionRoot } fro
 import {IconRepeat, IconX} from "@tabler/icons-vue"
 import BaseButton from '@/Layouts/Components/General/Buttons/BaseButton.vue'
 import BaseInput from '@/Artwork/Inputs/BaseInput.vue'
+import ArtworkBaseListbox from '@/Artwork/Listbox/ArtworkBaseListbox.vue'
 
 const props = defineProps({
     user: { type: Object, required: true },
@@ -198,8 +214,20 @@ const { proxy } = getCurrentInstance()
 const open = ref(true)
 const isEdit = computed(() => !!props.editEntry)
 
+// Selbst erfassbare Abwesenheitsarten (Backend: Rule::in, Default OFF_WORK); FREE_WORK ist Planungssache
+const VACATION_TYPES = ['OFF_WORK', 'NOT_AVAILABLE']
+const DEFAULT_VACATION_TYPE = 'OFF_WORK'
+const vacationTypeOptions = [
+    { id: 'OFF_WORK', name: 'Vacation' },
+    { id: 'NOT_AVAILABLE', name: 'Not available' },
+]
+const initialVacationType = VACATION_TYPES.includes(props.editEntry?.vacationType)
+    ? props.editEntry.vacationType
+    : DEFAULT_VACATION_TYPE
+
 const entry = reactive({
     type: props.editEntry?.type === 'available' ? 'available' : (props.editEntry ? 'vacation' : 'available'),
+    vacation_type: initialVacationType,
     start_date: props.editEntry?.startDate ?? props.initialStart ?? '',
     end_date: props.editEntry?.kind === 'weekly'
         ? (props.editEntry?.startDate ?? '')
@@ -210,6 +238,14 @@ const entry = reactive({
     repeat_weekly: props.editEntry?.kind === 'weekly',
     repeat_until: props.editEntry?.kind === 'weekly' ? (props.editEntry?.seriesEndDate ?? null) : null,
     comment: props.editEntry?.comment ?? null,
+})
+
+// Listbox arbeitet mit Options-Objekten, das Formular mit dem Wert
+const selectedVacationType = computed({
+    get: () => vacationTypeOptions.find((option) => option.id === entry.vacation_type) ?? vacationTypeOptions[0],
+    set: (option) => {
+        entry.vacation_type = option?.id ?? DEFAULT_VACATION_TYPE
+    },
 })
 
 const isRange = computed(() => !!entry.start_date && !!entry.end_date && entry.end_date > entry.start_date)
@@ -302,6 +338,8 @@ const buildPayload = () => {
     return {
         date: entry.start_date,
         type: entry.type,
+        // nur bei Abwesenheit relevant; Verfügbarkeiten ignorieren das Feld
+        vacation_type: entry.type === 'vacation' ? entry.vacation_type : null,
         full_day: entry.full_day,
         start_time: entry.full_day ? null : entry.start_time,
         end_time: entry.full_day ? null : entry.end_time,
@@ -343,6 +381,7 @@ const save = (keepOpen) => {
 
 const resetForm = () => {
     entry.type = 'available'
+    entry.vacation_type = DEFAULT_VACATION_TYPE
     entry.start_date = props.initialStart || ''
     entry.end_date = props.initialEnd || props.initialStart || ''
     entry.full_day = true

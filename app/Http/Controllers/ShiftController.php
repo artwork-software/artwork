@@ -11,7 +11,9 @@ use Artwork\Modules\Event\Services\EventService;
 use Artwork\Modules\Event\Services\EventTimelineService;
 use Artwork\Modules\Freelancer\Models\Freelancer;
 use Artwork\Modules\Freelancer\Services\FreelancerService;
+use Artwork\Modules\Craft\Models\Craft;
 use Artwork\Modules\GeneralSettings\Models\GeneralSettings;
+use Artwork\Modules\Shift\Models\ShiftCommitWorkflowUser;
 use Artwork\Modules\IndividualTimes\Events\IndividualTimeChanged;
 use Artwork\Modules\IndividualTimes\Models\IndividualTime;
 use Artwork\Modules\IndividualTimes\Services\IndividualTimeService;
@@ -52,6 +54,7 @@ use Artwork\Modules\Vacation\Models\VacationConflict;
 use Artwork\Modules\Vacation\Services\VacationConflictService;
 use Artwork\Modules\Vacation\Services\VacationService;
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -61,6 +64,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 
 class ShiftController extends Controller
 {
@@ -218,10 +222,12 @@ class ShiftController extends Controller
                 $this->notificationService->createNotification();
             }
 
-            $craft = $shift->craft()->first();
+            // Nur Planer:innen des Gewerks (Fallback: Gewerksverantwortliche) — nicht alle
+            // Gewerksmitglieder; bereits benachrichtigte Schichtbesetzung wird ausgelassen.
+            $notifiedUserIds = $shift->users()->pluck('users.id')->all();
 
             /** @var User $craftUser */
-            foreach ($craft->users()->get() as $craftUser) {
+            foreach ($this->craftPlannersToNotify($shift->craft()->first(), $notifiedUserIds) as $craftUser) {
                 if (Auth::id() !== $craftUser->id) {
                     $notificationTitle = __(
                         'notification.shift.locked_changes',
@@ -705,7 +711,7 @@ class ShiftController extends Controller
                     $notificationDescription = [
                         1 => [
                             'type' => 'string',
-                            'title' => __('notification.shift.concerns_shift', [], $user->language)
+                            'title' => __('notification.keyWords.concerns_shift', [], $user->language)
                                 . $shift->time_span_label,
                             'href' => null
                         ],
@@ -719,9 +725,11 @@ class ShiftController extends Controller
                 }
             }
 
-            $craft = $shift->craft()->first();
+            // Nur Planer:innen des Gewerks (Fallback: Gewerksverantwortliche) — nicht alle
+            // Gewerksmitglieder; bereits benachrichtigte Schichtbesetzung wird ausgelassen.
+            $notifiedUserIds = $shift->users()->pluck('users.id')->all();
 
-            foreach ($craft->users()->get() as $craftUser) {
+            foreach ($this->craftPlannersToNotify($shift->craft()->first(), $notifiedUserIds) as $craftUser) {
                 if (Auth::id() !== $craftUser->id) {
                     $notificationTitle = __(
                         'notification.shift.deleted_where_locked',
@@ -740,7 +748,7 @@ class ShiftController extends Controller
                     $notificationDescription = [
                         1 => [
                             'type' => 'string',
-                            'title' => __('notification.shift.concerns_shift', [], $craftUser->language) .
+                            'title' => __('notification.keyWords.concerns_shift', [], $craftUser->language) .
                                 $shift->time_span_label,
                             'href' => null
                         ],
@@ -2119,9 +2127,45 @@ class ShiftController extends Controller
         }
     }
 
+    /**
+     * Planer:innen eines Gewerks für Benachrichtigungen nach Festschreibung:
+     * craftShiftPlaner, sonst managingUsers; ohne Gewerk leer. $excludeUserIds
+     * verhindert Doppel-Benachrichtigungen an bereits informierte Personen.
+     *
+     * @param int[] $excludeUserIds
+     * @return Collection<int, User>
+     */
+    private function craftPlannersToNotify(?Craft $craft, array $excludeUserIds = []): Collection
+    {
+        if ($craft === null) {
+            return new Collection();
+        }
+
+        $planners = $craft->craftShiftPlaner()->get();
+        if ($planners->isEmpty()) {
+            $planners = $craft->managingUsers()->get();
+        }
+
+        return $planners
+            ->reject(static fn (User $user): bool => in_array($user->id, $excludeUserIds, true))
+            ->unique('id')
+            ->values();
+    }
+
     public function updateWorkflowSettings(Request $request): RedirectResponse
     {
-        $this->generalSettings->shift_commit_workflow_enabled = $request->input('shift_commit_workflow');
+        $enabled = $request->boolean('shift_commit_workflow');
+
+        // Ohne Genehmiger:in laufen Freigabe-Anfragen ins Leere — Aktivieren erst,
+        // wenn mindestens eine Person eingetragen ist (422 per ValidationException,
+        // damit Inertia die Meldung als Feldfehler zurückspielt).
+        if ($enabled && !ShiftCommitWorkflowUser::query()->exists()) {
+            throw ValidationException::withMessages([
+                'shift_commit_workflow' => __('Please add at least one person as approver first.'),
+            ]);
+        }
+
+        $this->generalSettings->shift_commit_workflow_enabled = $enabled;
         $this->generalSettings->save();
 
         return back();

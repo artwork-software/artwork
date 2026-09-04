@@ -13,6 +13,7 @@ use Artwork\Modules\Shift\Repositories\ShiftRuleRepository;
 use Artwork\Modules\Shift\Repositories\ShiftRuleViolationRepository;
 use Artwork\Modules\User\Models\User;
 use Artwork\Modules\User\Models\UserContract;
+use Artwork\Modules\User\Services\ContractSettingsResolver;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Support\Collection;
@@ -25,6 +26,7 @@ class ShiftRuleService
         private readonly CompensationDayOffRepository $compensationDayOffRepository,
         private readonly ShiftRuleCheckFactory $ruleCheckFactory,
         private readonly ShiftRuleRevalidationService $revalidationService,
+        private readonly ContractSettingsResolver $contractSettings,
     ) {
     }
 
@@ -541,7 +543,8 @@ class ShiftRuleService
                 ->getGrantedForUser($user->id),
             'unprocessedViolations' => $this->shiftRuleViolationRepository
                 ->getUnprocessedViolationsForUser($user->id),
-            'compensationPeriod' => $user->activeWorkContract()?->compensation_period ?? 0,
+            // Zuweisung vor Vorlage (0 auf der Zuweisung = nicht gesetzt), siehe ContractSettingsResolver
+            'compensationPeriod' => $this->contractSettings->compensationPeriod($user),
         ];
     }
 

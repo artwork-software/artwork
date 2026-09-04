@@ -10,6 +10,7 @@ use Artwork\Modules\User\Models\User;
 use Artwork\Modules\User\Models\UserContract;
 use Carbon\Carbon;
 use Inertia\Testing\AssertableInertia;
+use Maatwebsite\Excel\Facades\Excel;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\Concerns\CreatesShiftRuleFixtures;
 use Tests\Feature\FeatureTestCase;
@@ -194,9 +195,195 @@ final class ShiftRuleControllerTest extends FeatureTestCase
     {
         $this->actingAsUserWith(PermissionEnum::SHIFT_PLANNER->value);
 
+        // Ohne Regel ist ein Titel Pflicht ("Sonstiges (ohne Regel)")
         $this->post(route('shift-rule-violations.manual.store'), [
             'reason' => 'ohne Person und Regel',
-        ])->assertSessionHasErrors(['user_id', 'shift_rule_id', 'violation_date']);
+        ])->assertSessionHasErrors(['user_id', 'title', 'violation_date']);
+    }
+
+    // --- manueller Verstoß ohne Regel ("Sonstiges") ----------------------------------------
+
+    #[Test]
+    public function manual_violation_without_rule_is_created_with_a_title(): void
+    {
+        $planner = $this->actingAsUserWith(PermissionEnum::SHIFT_PLANNER->value);
+        $user = User::factory()->create();
+
+        $this->post(route('shift-rule-violations.manual.store'), [
+            'user_id' => $user->id,
+            'shift_rule_id' => null,
+            'title' => 'Fehlende Pause',
+            'violation_date' => Carbon::now()->addDays(2)->toDateString(),
+            'reason' => 'Manuell erfasst',
+            'severity' => 'error',
+        ])->assertRedirect()->assertSessionHasNoErrors();
+
+        $this->assertDatabaseHas('shift_rule_violations', [
+            'user_id' => $user->id,
+            'shift_rule_id' => null,
+            'title' => 'Fehlende Pause',
+            'is_manual' => 1,
+            'severity' => 'error',
+            'created_by_user_id' => $planner->id,
+        ]);
+
+        $violation = ShiftRuleViolation::where('user_id', $user->id)->firstOrFail();
+        $this->assertSame('Fehlende Pause', $violation->getDisplayName());
+        $this->assertNull($violation->shiftRule);
+    }
+
+    #[Test]
+    public function manual_violation_without_rule_requires_a_title_of_at_most_120_characters(): void
+    {
+        $this->actingAsUserWith(PermissionEnum::SHIFT_PLANNER->value);
+        $user = User::factory()->create();
+
+        $this->post(route('shift-rule-violations.manual.store'), [
+            'user_id' => $user->id,
+            'shift_rule_id' => 0,
+            'title' => '',
+            'violation_date' => Carbon::now()->toDateString(),
+        ])->assertSessionHasErrors(['title']);
+
+        $this->post(route('shift-rule-violations.manual.store'), [
+            'user_id' => $user->id,
+            'shift_rule_id' => null,
+            'title' => str_repeat('x', 121),
+            'violation_date' => Carbon::now()->toDateString(),
+        ])->assertSessionHasErrors(['title']);
+    }
+
+    #[Test]
+    public function manual_violation_without_rule_is_listed_with_its_title_and_survives_auto_resolution(): void
+    {
+        $this->actingAsUserWith(PermissionEnum::SHIFT_PLANNER->value);
+        [$user, $contract] = $this->userWithContract();
+        $this->ruleForContract($contract, 'maxWorkingHoursOnDay', 8.0);
+        $date = Carbon::now()->addDays(3);
+
+        $violation = ShiftRuleViolation::create([
+            'user_id' => $user->id,
+            'shift_rule_id' => null,
+            'title' => 'Sonstiges',
+            'violation_date' => $date->toDateString(),
+            'severity' => 'warning',
+            'status' => 'active',
+            'is_manual' => true,
+        ]);
+
+        // Automatische Auflösung darf manuelle Verstöße (auch ohne Regel) nie löschen
+        app(\Artwork\Modules\Shift\Services\ShiftRuleService::class)
+            ->validateRulesForUser($user, $date->copy(), $date->copy());
+        $this->assertDatabaseHas('shift_rule_violations', ['id' => $violation->id]);
+
+        $response = $this->getJson(route('shift-rule-violations.date-range', [
+            'start_date' => $date->toDateString(),
+            'end_date' => $date->toDateString(),
+            'user_ids' => [$user->id],
+        ]));
+        $response->assertOk();
+        $payload = $response->json("{$user->id}.{$date->toDateString()}.0");
+        $this->assertSame('Sonstiges', $payload['title']);
+        $this->assertNull($payload['shift_rule']);
+    }
+
+    #[Test]
+    public function processing_a_violation_requires_the_planner_permission(): void
+    {
+        $violation = $this->activeViolation();
+        $this->actingAsUserWith([]);
+
+        $this->put(
+            route('shift-rule-violations.process', ['violation' => $violation->id]),
+            $this->processPayload()
+        )->assertForbidden();
+    }
+
+    // --- Ersatzfrei-Dashboard: Filter + Export ----------------------------------------------
+
+    private function compensationDay(User $user, Carbon $deadline, bool $granted = false): CompensationDayOff
+    {
+        return CompensationDayOff::create([
+            'user_id' => $user->id,
+            'violation_id' => null,
+            'value' => 1.0,
+            'deadline' => $deadline->toDateString(),
+            'reason' => 'Test',
+            'granted_date' => $granted ? $deadline->copy()->subDay()->toDateString() : null,
+            'granted_at' => $granted ? now() : null,
+        ]);
+    }
+
+    #[Test]
+    public function dashboard_filters_by_person_deadline_and_status(): void
+    {
+        $this->actingAsUserWith(PermissionEnum::SHIFT_PLANNER->value);
+        $anna = User::factory()->create(['first_name' => 'Anna', 'last_name' => 'Filter']);
+        $ben = User::factory()->create(['first_name' => 'Ben', 'last_name' => 'Filter']);
+        $this->compensationDay($anna, Carbon::now()->addDays(10));            // offen
+        $this->compensationDay($anna, Carbon::now()->addDays(40), true);      // gewährt
+        $this->compensationDay($ben, Carbon::now()->subDays(5));              // überfällig (offen)
+        $this->compensationDay($ben, Carbon::now()->addDays(20));             // offen
+
+        // Person
+        $this->get(route('compensation-day-offs.dashboard', ['user_id' => $anna->id]))
+            ->assertOk()
+            ->assertInertia(fn (AssertableInertia $page) => $page
+                ->component('CompensationDays/Index')
+                ->has('openCompensations', 1)
+                ->has('grantedCompensations', 1)
+                ->has('overdueCompensations', 0)
+                ->where('filters.user_id', $anna->id)
+                ->has('users', 2));
+
+        // Zeitraum (Frist)
+        $this->get(route('compensation-day-offs.dashboard', [
+            'deadline_from' => Carbon::now()->addDays(15)->toDateString(),
+            'deadline_to' => Carbon::now()->addDays(25)->toDateString(),
+        ]))
+            ->assertOk()
+            ->assertInertia(fn (AssertableInertia $page) => $page
+                ->has('openCompensations', 1)
+                ->where('openCompensations.0.user_id', $ben->id)
+                ->has('grantedCompensations', 0));
+
+        // Status
+        $this->get(route('compensation-day-offs.dashboard', ['status' => 'overdue']))
+            ->assertOk()
+            ->assertInertia(fn (AssertableInertia $page) => $page
+                ->has('overdueCompensations', 1)
+                ->has('openCompensations', 0)
+                ->has('grantedCompensations', 0)
+                ->where('filters.status', 'overdue'));
+
+        $this->get(route('compensation-day-offs.dashboard', ['status' => 'granted']))
+            ->assertOk()
+            ->assertInertia(fn (AssertableInertia $page) => $page
+                ->has('grantedCompensations', 1)
+                ->has('openCompensations', 0));
+    }
+
+    #[Test]
+    public function dashboard_export_downloads_the_filtered_workbook(): void
+    {
+        Excel::fake();
+        $this->actingAsUserWith(PermissionEnum::SHIFT_PLANNER->value);
+        $user = User::factory()->create();
+        $this->compensationDay($user, Carbon::now()->addDays(10));
+
+        $this->get(route('compensation-day-offs.export', ['user_id' => $user->id, 'status' => 'open']))
+            ->assertOk();
+
+        Excel::assertDownloaded('Ersatzfreie_Tage_' . Carbon::today()->format('Y-m-d') . '.xlsx');
+    }
+
+    #[Test]
+    public function dashboard_export_requires_the_planner_permission(): void
+    {
+        $this->actingAsUserWith([]);
+
+        $this->get(route('compensation-day-offs.export'))->assertForbidden();
+        $this->get(route('compensation-day-offs.dashboard'))->assertForbidden();
     }
 
     #[Test]

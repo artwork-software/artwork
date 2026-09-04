@@ -2,6 +2,7 @@
 
 namespace Artwork\Modules\User\Models;
 
+use Artwork\Modules\Shift\Services\ShiftRuleRevalidationService;
 use Database\Factories\UserContractAssignFactory;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -30,6 +31,23 @@ class UserContractAssign extends Model
     protected static function newFactory(): Factory
     {
         return UserContractAssignFactory::new();
+    }
+
+    /**
+     * Vertragszuweisung erstellt/geändert/gelöscht: Regeln der Person neu prüfen (Queue-Job,
+     * nach Commit). Der Cron sieht nur 14 Tage — Vertragswechsel gelten aber für alle geplanten Schichten.
+     */
+    protected static function booted(): void
+    {
+        static::saved(function (UserContractAssign $assign): void {
+            if ($assign->wasRecentlyCreated || $assign->wasChanged()) {
+                app(ShiftRuleRevalidationService::class)->revalidateForUsers([(int) $assign->user_id]);
+            }
+        });
+
+        static::deleted(function (UserContractAssign $assign): void {
+            app(ShiftRuleRevalidationService::class)->revalidateForUsers([(int) $assign->user_id]);
+        });
     }
 
     protected $fillable = [

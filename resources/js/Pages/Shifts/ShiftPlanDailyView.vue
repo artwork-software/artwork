@@ -69,6 +69,22 @@
                             @click="openAddShiftForRoomAndDay(null, null)"
                         />
 
+                        <!-- Zähler-Chip "N offene Verstöße" (wie Wochenansicht): Klick aktiviert den Personenfilter der Tagesansicht -->
+                        <button
+                            v-if="!props.isInProjectView && (openViolationsCount > 0 || showOnlyUsersWithOpenViolations)"
+                            type="button"
+                            class="ui-button text-xs gap-1.5"
+                            :class="showOnlyUsersWithOpenViolations ? '!bg-accent-50 !border-accent-200/80 !text-accent-700' : '!text-warning'"
+                            :title="showOnlyUsersWithOpenViolations
+                                ? $t('Only people with open rule violations are shown')
+                                : $t('Show only people with open rule violations')"
+                            :disabled="showOnlyUsersWithOpenViolations"
+                            @click="activateOpenViolationsFilter"
+                        >
+                            <IconAlertTriangle class="size-4" stroke-width="1.5" />
+                            {{ $t('{n} open violations', { n: openViolationsCount }) }}
+                        </button>
+
                         <SwitchIconTooltip
                             v-if="!props.project"
                             v-model="dailyViewMode"
@@ -702,6 +718,7 @@ import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 import {
     IconAlertSquareRounded,
+    IconAlertTriangle,
     IconCalendar,
     IconCalendarWeek,
     IconCalendarMonth,
@@ -1621,6 +1638,7 @@ const initializeDailyShiftPlan = async () => {
         })
 
         if (batchData.lookups) mergeLookups(batchData.lookups)
+        openViolationsByUser.value = batchData.openViolationsByUser ?? {}
         shiftPlanCopy.value = (batchData.rooms ?? []).filter(Boolean)
         triggerRef(shiftPlanCopy)
         return
@@ -1642,6 +1660,67 @@ watch(() => props.shiftPlan, (v) => {
     shiftPlanCopy.value = Array.isArray(v) ? v : Object.values(v ?? {})
     triggerRef(shiftPlanCopy)
 })
+
+/**
+ * Personenfilter "nur Personen mit offenen Regelverstößen" (user_filters-Flag der Tagesansicht,
+ * Filter-Typ shift_daily_filter; gesetzt im Filter-Modal oder über den Zähler-Chip).
+ * Die Tagesansicht hat keine Personenzeilen: gefiltert werden Schichten, in denen mindestens eine
+ * eingeplante Person (User) am Schichttag einen offenen Verstoß hat. Verstöße kommen als
+ * user_id => { 'Y-m-d': Anzahl } mit dem Batch-Payload (openViolationsByUser).
+ */
+const openViolationsByUser = ref<Record<string, Record<string, number>>>({})
+const showOnlyUsersWithOpenViolations = computed(() => !!(user_filtersResolved.value as any)?.show_only_users_with_open_violations)
+
+/** Content-Tagesschlüssel "DD.MM.YYYY" -> "YYYY-MM-DD" */
+function isoDayKey(dayKey: string): string {
+    if (/^\d{4}-\d{2}-\d{2}$/.test(dayKey)) return dayKey
+    const parts = String(dayKey).split('.')
+    return parts.length === 3 ? `${parts[2]}-${parts[1]}-${parts[0]}` : dayKey
+}
+
+function openViolationsOfUserOnDay(userId: any, isoDay: string): number {
+    return Number(openViolationsByUser.value?.[String(userId)]?.[isoDay] ?? 0)
+}
+
+function shiftUserWorkers(shift: any): any[] {
+    const workers = Array.isArray(shift?.workers) ? shift.workers : Object.values(shift?.workers ?? {})
+    return workers.filter((w: any) => w && (w.type === 'user' || w.type === 0 || w.type === undefined))
+}
+
+function shiftHasWorkerWithOpenViolation(shift: any, isoDay: string): boolean {
+    return shiftUserWorkers(shift).some((w: any) => openViolationsOfUserOnDay(w.id, isoDay) > 0)
+}
+
+/** Zähler-Chip: offene Verstöße der in den angezeigten Schichten eingeplanten Personen (je Person/Tag einmal) */
+const openViolationsCount = computed(() => {
+    const seen = new Set<string>()
+    let total = 0
+    for (const room of (shiftPlanCopy.value || [])) {
+        const content = room?.content || {}
+        const shiftsById = room?.shiftsById || {}
+        for (const dayKey of Object.keys(content)) {
+            const isoDay = isoDayKey(dayKey)
+            for (const id of (content[dayKey]?.shiftIds ?? [])) {
+                for (const worker of shiftUserWorkers(shiftsById[id])) {
+                    const key = `${worker.id}|${isoDay}`
+                    if (seen.has(key)) continue
+                    seen.add(key)
+                    total += openViolationsOfUserOnDay(worker.id, isoDay)
+                }
+            }
+        }
+    }
+    return total
+})
+
+function activateOpenViolationsFilter() {
+    if (!authUserId.value) return
+    router.patch(
+        route('update.user.calendar.filter.open-violations', authUserId.value),
+        { filter_type: 'shift_daily_filter', show_only_users_with_open_violations: true },
+        { preserveScroll: true, preserveState: false },
+    )
+}
 
 /**
  * Craft filter set
@@ -1670,6 +1749,7 @@ function rebuildFilteredShiftsIndex() {
     const posMap = craftPositionMap.value
     const settings = page.props.shift_plan_daily_settings ?? page.props.shift_plan_settings ?? page.props.auth?.user?.calendar_settings
     const showOnlyNotFullyStaffed = (settings as any)?.show_only_not_fully_staffed_shifts
+    const onlyOpenViolations = showOnlyUsersWithOpenViolations.value
 
     const getShiftCraftId = (s: any): number | null => {
         return s?.craftId ?? s?.craft_id ?? s?.craft?.id ?? null
@@ -1713,6 +1793,12 @@ function rebuildFilteredShiftsIndex() {
                 })
             }
 
+            // Personenfilter: nur Schichten mit mindestens einer Person mit offenem Verstoß am Tag
+            if (onlyOpenViolations) {
+                const isoDay = isoDayKey(dayKey)
+                shifts = shifts.filter((shift: any) => shiftHasWorkerWithOpenViolation(shift, isoDay))
+            }
+
             shifts.sort((a: any, b: any) => {
                 const cmp = (a.start ?? '').toString().localeCompare((b.start ?? '').toString())
                 if (cmp !== 0) return cmp
@@ -1728,7 +1814,7 @@ function rebuildFilteredShiftsIndex() {
 
 let _shiftsRebuildTimer: ReturnType<typeof setTimeout> | null = null
 let _shiftsFirstRun = true
-watch([shiftPlanCopy, craftIdSet, craftPositionMap], () => {
+watch([shiftPlanCopy, craftIdSet, craftPositionMap, showOnlyUsersWithOpenViolations, openViolationsByUser], () => {
     if (_shiftsFirstRun) {
         _shiftsFirstRun = false
         rebuildFilteredShiftsIndex()

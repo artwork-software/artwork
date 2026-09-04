@@ -2,7 +2,6 @@
 
 namespace Artwork\Modules\Shift\RuleChecks;
 
-use Artwork\Modules\Holidays\Services\SpecialDayService;
 use Artwork\Modules\Shift\Models\ShiftRule;
 use Artwork\Modules\User\Models\User;
 use Carbon\Carbon;
@@ -25,11 +24,10 @@ class WorkOnHolidayCheck extends AbstractRuleCheck
     {
         $violations = collect();
 
-        /** @var SpecialDayService $specialDayService */
-        $specialDayService = app(SpecialDayService::class);
+        $specialDayService = $this->specialDayService();
 
         // Erst die (billigen) Sondertage des Zeitraums holen, dann nur für diese Tage Schichten laden.
-        $specialDays = $specialDayService->specialDaysBetween($startDate, $endDate);
+        $specialDays = $this->getSpecialDaysBetween($startDate, $endDate);
         if ($specialDays === []) {
             return $violations;
         }
@@ -55,8 +53,8 @@ class WorkOnHolidayCheck extends AbstractRuleCheck
                 'holiday_name' => $holidayName,
                 'for_holiday' => true,
                 'entitlement' => 'replacement_rest_day',
-                'shift_start' => Carbon::parse($shift->start_date)->setTimeFromTimeString($shift->start)
-                    ->format('Y-m-d H:i:s'),
+                // effektiver Beginn der Person (Pivot-Zeit vor Schichtzeit)
+                'shift_start' => $this->shiftInterval($shift)['start']->format('Y-m-d H:i:s'),
             ]));
         }
 

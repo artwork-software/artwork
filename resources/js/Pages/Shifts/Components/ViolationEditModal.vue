@@ -7,24 +7,30 @@
     >
         <div class="space-y-5 text-sm">
             <!-- Rule info box -->
+            <!-- Ohne Regel (manuell "Sonstiges"): Titel statt Regelname, Warn-Token statt Regelfarbe, kein Messwert -->
             <div
                 class="rounded-xl border px-4 py-3"
-                :style="{
-                    borderColor: violation.shift_rule?.warning_color || '#ff0000',
-                    backgroundColor: (violation.shift_rule?.warning_color || '#ff0000') + '10',
-                }"
+                :class="violation.shift_rule ? '' : 'border-warning-border bg-warning-surface'"
+                :style="violation.shift_rule ? {
+                    borderColor: violation.shift_rule.warning_color || '#ff0000',
+                    backgroundColor: (violation.shift_rule.warning_color || '#ff0000') + '10',
+                } : null"
             >
                 <div class="flex items-start gap-3">
                     <span
                         class="mt-0.5 inline-block h-3 w-3 rounded-full shrink-0"
-                        :style="{ backgroundColor: violation.shift_rule?.warning_color || '#ff0000' }"
+                        :class="violation.shift_rule ? '' : 'bg-warning'"
+                        :style="violation.shift_rule ? { backgroundColor: violation.shift_rule.warning_color || '#ff0000' } : null"
                     ></span>
                     <div>
                         <h4 class="font-semibold text-text">
-                            {{ violation.shift_rule?.name }}
+                            {{ violation.shift_rule?.name || violation.title || $t('Rule violation') }}
                         </h4>
-                        <p class="mt-0.5 text-xs text-text-muted">
-                            {{ violation.shift_rule?.description }}
+                        <p v-if="violation.shift_rule?.description" class="mt-0.5 text-xs text-text-muted">
+                            {{ violation.shift_rule.description }}
+                        </p>
+                        <p v-else-if="!violation.shift_rule" class="mt-0.5 text-xs text-text-muted">
+                            {{ $t('Manual violation without rule') }}
                         </p>
                         <p v-if="measure" class="mt-1 text-xs font-medium text-text">
                             {{ measure }}
@@ -357,7 +363,8 @@ const historyEntries = ref([]);
 const historyMeta = ref(null);
 
 const isHolidayViolation = computed(() => !!props.violation.violation_data?.for_holiday);
-const measure = computed(() => formatViolationMeasure(props.violation, t));
+// Messwert nur bei Verstößen mit Regel (manuelle ohne Regel haben keine violation_data)
+const measure = computed(() => (props.violation.shift_rule ? formatViolationMeasure(props.violation, t) : ''));
 
 // Frist-Standard: Regel (default_compensation_deadline_days), sonst Vertrags-compensation_period
 const defaultDeadlineSource = computed(() =>

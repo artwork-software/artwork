@@ -22,6 +22,8 @@ class ShiftRuleViolation extends Model implements WorkflowSubject
         'shift_rule_id',
         'shift_id',
         'user_id',
+        // Manuelle Verstöße ohne Regel ("Sonstiges"): eigener Titel statt Regelname
+        'title',
         'violation_date',
         'violation_data',
         'severity',
@@ -52,7 +54,7 @@ class ShiftRuleViolation extends Model implements WorkflowSubject
         return LogOptions::defaults()
             ->useLogName('shift_rule_violation')
             ->logOnly([
-                'shift_rule_id', 'user_id', 'violation_date', 'status',
+                'shift_rule_id', 'title', 'user_id', 'violation_date', 'status',
                 'resolved_at', 'resolved_by', 'reason', 'ignore_reason',
                 'compensation_days', 'compensation_deadline',
             ])
@@ -139,6 +141,14 @@ class ShiftRuleViolation extends Model implements WorkflowSubject
     public function getViolationMessage(): string
     {
         return $this->shiftRule?->description ?? 'Rule violation detected';
+    }
+
+    /**
+     * Anzeigename: Regelname, sonst (manueller Verstoß ohne Regel) der eigene Titel.
+     */
+    public function getDisplayName(): string
+    {
+        return $this->shiftRule?->name ?: ($this->title ?: __('Rule violation'));
     }
 
     public function getWarningColor(): string

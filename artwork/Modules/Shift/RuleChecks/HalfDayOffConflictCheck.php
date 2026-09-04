@@ -3,7 +3,6 @@
 namespace Artwork\Modules\Shift\RuleChecks;
 
 use Artwork\Modules\Shift\Models\ShiftRule;
-use Artwork\Modules\Shift\Repositories\CompensationDayOffRepository;
 use Artwork\Modules\User\Models\User;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
@@ -17,6 +16,9 @@ use Illuminate\Support\Collection;
  *   - only morning HFT + shift  -> violation when the shift starts before T (must start >= T)
  *   - only afternoon HFT + shift -> violation when the shift ends after T (must end <= T)
  *   - morning AND afternoon HFT + any shift -> always a violation (whole day off)
+ *
+ * Shift start/end are the person's EFFECTIVE times (pivot times from shift_workers, else shift times)
+ * including individual times on that day.
  */
 class HalfDayOffConflictCheck extends AbstractRuleCheck
 {
@@ -24,16 +26,12 @@ class HalfDayOffConflictCheck extends AbstractRuleCheck
     {
         $violations = collect();
 
-        $repository = app(CompensationDayOffRepository::class);
-
         // Decode the decimal-hour threshold (e.g. 14.5 -> 14:30).
         $thresholdHour = (int) floor($rule->individual_number_value);
         $thresholdMinute = (int) round(($rule->individual_number_value - $thresholdHour) * 60);
 
         // Preload all granted halves for the whole range once and group by date (avoids a per-day query).
-        $halvesByDate = $repository
-            ->getGrantedHalvesForUserInRange($user->id, $startDate->format('Y-m-d'), $endDate->format('Y-m-d'))
-            ->groupBy(fn ($half): string => Carbon::parse($half->granted_date)->format('Y-m-d'));
+        $halvesByDate = $this->getGrantedHalvesByDate($user, $startDate, $endDate);
 
         foreach (CarbonPeriod::create($startDate, $endDate) as $date) {
             $halves = $halvesByDate->get($date->format('Y-m-d')) ?? collect();

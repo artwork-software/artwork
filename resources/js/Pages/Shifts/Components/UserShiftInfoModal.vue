@@ -21,7 +21,7 @@
                         'whitespace-nowrap border-b-2 px-1 py-2 text-sm font-medium'
                     ]"
                 >
-                    {{ $t(tab.label) }}
+                    {{ $t(tab.label) }}<span v-if="tab.key === 'overtime' && overtimeRuleInactive"> ({{ $t('inactive') }})</span>
                 </button>
             </nav>
         </div>
@@ -71,7 +71,7 @@
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-border-subtle">
-                            <tr v-for="row in seasonRows" :key="row.label">
+                            <tr v-for="row in visibleSeasonRows" :key="row.label" :class="row.targetActive ? '' : 'text-text-subtle'">
                                 <td class="py-2 pr-4 text-text">
                                     <div class="flex items-center gap-1.5">
                                         <span>{{ $t(row.label) }}</span>
@@ -97,6 +97,20 @@
                         </tbody>
                     </table>
                 </div>
+                <!-- Kennzahlen ohne aktiven Zielwert im Vertrag sind standardmäßig ausgeblendet (Zustand pro Browser) -->
+                <p v-if="allSeasonTargetsInactive" class="text-xs text-text-subtle">
+                    {{ $t('No target values are stored for this contract.') }}
+                </p>
+                <button
+                    v-else-if="hiddenSeasonRowCount > 0 || showInactiveKpis"
+                    type="button"
+                    class="text-xs text-accent-600 hover:text-accent-700 underline underline-offset-2"
+                    @click="toggleInactiveKpis"
+                >
+                    {{ showInactiveKpis
+                        ? $t('Hide key figures without target value')
+                        : $t('Show {n} more key figures without target value', { n: hiddenSeasonRowCount }) }}
+                </button>
                 <p class="text-[11px] text-text-subtle">
                     {{ $t('Format "actual / X" – X is the contract target. "–" means not applicable / not activated. The season is configured in the tool settings under "Communication & Legal".') }}
                 </p>
@@ -345,6 +359,35 @@ const fmtIstX = (ist, target) => {
     return `${ist}`
 }
 
+// Zielwert im Vertrag aktiv? (fehlender Zielwert-Eintrag = kein Vertrag -> als aktiv behandeln, damit nichts verschwindet)
+const targetActive = (target) => !(target && target.active === false)
+
+// Kennzahlen ohne Zielwert ausblenden: Zustand pro Browser (localStorage, try/catch wegen Private Mode/Quota)
+const INACTIVE_KPIS_STORAGE_KEY = 'artwork.user-shift-info.show-inactive-kpis'
+const readShowInactiveKpis = () => {
+    try {
+        return window.localStorage?.getItem(INACTIVE_KPIS_STORAGE_KEY) === '1'
+    } catch (e) {
+        return false
+    }
+}
+const showInactiveKpis = ref(readShowInactiveKpis())
+const toggleInactiveKpis = () => {
+    showInactiveKpis.value = !showInactiveKpis.value
+    try {
+        window.localStorage?.setItem(INACTIVE_KPIS_STORAGE_KEY, showInactiveKpis.value ? '1' : '0')
+    } catch (e) {
+        // Speicherung ist nur Komfort – ohne localStorage gilt der Zustand für dieses Fenster
+    }
+}
+
+// Überstunden-Tab: Regel inaktiv -> Label "(inaktiv)"; Season-Payload liefert das Flag vorab, der Overtime-Payload bestätigt es
+const overtimeRuleInactive = computed(() => {
+    if (data.value.overtime && typeof data.value.overtime.rule_active === 'boolean') return !data.value.overtime.rule_active
+    if (data.value.season && typeof data.value.season.overtime_rule_active === 'boolean') return !data.value.season.overtime_rule_active
+    return false
+})
+
 const seasonRows = computed(() => {
     const d = data.value.season
     if (!d || !d.kpis) return []
@@ -359,6 +402,7 @@ const seasonRows = computed(() => {
             h1: fmtIstX(k.free_sundays_sat_mon_half1, tSatMon),
             h2: fmtIstX(k.free_sundays_sat_mon_half2, tSatMon),
             total: null,
+            targetActive: targetActive(tSatMon),
         },
         {
             label: '1.5-day combinations',
@@ -366,6 +410,7 @@ const seasonRows = computed(() => {
             h1: fmtIstX(k.one_and_half_combos_half1, tCombos),
             h2: fmtIstX(k.one_and_half_combos_half2, tCombos),
             total: null,
+            targetActive: targetActive(tCombos),
         },
         {
             label: 'Granted half free days',
@@ -373,6 +418,8 @@ const seasonRows = computed(() => {
             h1: k.granted_half_free_days_half1,
             h2: k.granted_half_free_days_half2,
             total: null,
+            // Reine Zählgröße ohne Vertragsziel: immer anzeigen
+            targetActive: true,
         },
         {
             label: 'Free Sundays + Saturdays per season',
@@ -380,6 +427,7 @@ const seasonRows = computed(() => {
             h1: null,
             h2: null,
             total: fmtIstX(k.free_sundays_and_saturdays_season, t.free_sundays_and_saturdays_per_season),
+            targetActive: targetActive(t.free_sundays_and_saturdays_per_season),
         },
         {
             label: 'Free Sundays per season',
@@ -387,6 +435,7 @@ const seasonRows = computed(() => {
             h1: null,
             h2: null,
             total: fmtIstX(k.free_sundays_per_season, t.free_sundays_per_season),
+            targetActive: targetActive(t.free_sundays_per_season),
         },
         {
             label: 'Free Sundays per calendar year',
@@ -394,6 +443,7 @@ const seasonRows = computed(() => {
             h1: null,
             h2: null,
             total: fmtIstX(k.free_sundays_calendar_year, t.free_sundays_per_calendar_year),
+            targetActive: targetActive(t.free_sundays_per_calendar_year),
         },
         {
             label: 'Days off in the first 26 weeks',
@@ -401,6 +451,7 @@ const seasonRows = computed(() => {
             h1: null,
             h2: null,
             total: fmtIstX(k.days_off_first_26_weeks_count, t.days_off_first_26_weeks),
+            targetActive: targetActive(t.days_off_first_26_weeks),
         },
         {
             label: 'Granted vacation days (calendar year)',
@@ -408,8 +459,30 @@ const seasonRows = computed(() => {
             h1: null,
             h2: null,
             total: `${k.granted_vacation_days_year}${t.annual_vacation_days ? ' / ' + t.annual_vacation_days.value : ''}`,
+            targetActive: targetActive(t.annual_vacation_days),
         },
     ]
+})
+
+// Nur abschaltbare Vertragsziele zählen für "alle inaktiv" (Urlaubsanspruch ist immer aktiv, Zählgrößen haben kein Ziel)
+const seasonRowsWithTarget = computed(() => {
+    const t = data.value.season?.kpis?.targets || {}
+    const keys = [
+        'free_sundays_sat_mon_per_half', 'one_and_half_day_combinations', 'free_sundays_and_saturdays_per_season',
+        'free_sundays_per_season', 'free_sundays_per_calendar_year', 'days_off_first_26_weeks',
+    ]
+    return keys.filter((key) => t[key] !== undefined)
+})
+const allSeasonTargetsInactive = computed(() => {
+    const t = data.value.season?.kpis?.targets || {}
+    const keys = seasonRowsWithTarget.value
+    return keys.length > 0 && keys.every((key) => t[key]?.active === false)
+})
+const hiddenSeasonRowCount = computed(() => seasonRows.value.filter((row) => !row.targetActive).length)
+const visibleSeasonRows = computed(() => {
+    // Alle inaktiv: alles anzeigen (mit Hinweis) statt leerer Tabelle
+    if (allSeasonTargetsInactive.value || showInactiveKpis.value) return seasonRows.value
+    return seasonRows.value.filter((row) => row.targetActive)
 })
 
 const weekDiff = (days) => {

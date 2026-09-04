@@ -470,9 +470,10 @@
                             <div class="flex items-center gap-2 text-xs text-text-muted">
                                 <span
                                     class="inline-block h-2.5 w-2.5 rounded-full"
-                                    :style="{ backgroundColor: violation.shift_rule?.warning_color || '#ff0000' }"
+                                    :class="violation.shift_rule ? '' : 'bg-warning'"
+                                    :style="violation.shift_rule ? { backgroundColor: violation.shift_rule.warning_color || '#ff0000' } : null"
                                 ></span>
-                                <span class="font-medium">{{ violation.shift_rule?.name }}</span>
+                                <span class="font-medium">{{ violation.shift_rule?.name || violation.title || t('Rule violation') }}</span>
                                 <span
                                     :class="violation.severity === 'error' ? 'bg-danger-surface text-danger' : 'bg-warning-surface text-warning'"
                                     class="inline-flex px-1.5 py-0.5 text-[10px] font-medium rounded-full"
@@ -518,7 +519,7 @@
                         </div>
                         <div class="text-xs text-special-teal">
                             <span class="font-medium">{{ t('Compensation day off for:') }}</span>
-                            {{ compDay.violation?.shift_rule?.name || t('Manual') }}
+                            {{ compDay.violation?.shift_rule?.name || compDay.violation?.title || t('Manual') }}
                         </div>
                         <div v-if="compDay.granted_by_user" class="text-xs text-special-teal mt-0.5">
                             <span class="font-medium">{{ t('Assigned by') }}:</span>

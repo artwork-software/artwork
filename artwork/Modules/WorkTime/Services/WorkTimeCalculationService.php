@@ -385,12 +385,24 @@ class WorkTimeCalculationService
     }
 
     /**
-     * AZK-Badge-Format mit Vorzeichen: "+10:30 h" / "−2:00 h".
+     * AZK-Badge-Format mit Vorzeichen: "+10:30 h" / "−2:00 h" (echtes Minus U+2212).
      */
     public static function formatSignedHours(int $minutes): string
     {
         $abs = abs($minutes);
         $sign = $minutes < 0 ? "\u{2212}" : '+';
+
+        return sprintf('%s%d:%02d h', $sign, intdiv($abs, 60), $abs % 60);
+    }
+
+    /**
+     * Unsigniertes Stundenformat "38:00 h" (Geplant/Soll im Dienstplan); negative Werte
+     * erhalten ein echtes Minus (U+2212), nie ein Plus.
+     */
+    public static function formatHours(int $minutes): string
+    {
+        $abs = abs($minutes);
+        $sign = $minutes < 0 ? "\u{2212}" : '';
 
         return sprintf('%s%d:%02d h', $sign, intdiv($abs, 60), $abs % 60);
     }
@@ -422,9 +434,23 @@ class WorkTimeCalculationService
     }
 
     /**
+     * Individualzeiten je Tag, 'Y-m-d' => Minuten (nur Tage im Zeitraum).
+     *
+     * Einträge MIT Uhrzeiten werden wie Schichten tageweise zugeschnitten (Tagesgrenze exklusiv
+     * 24:00, Pause einmal am ersten Tag) – eine Über-Mitternacht-Zeit 22:00–04:00 zählt also nicht
+     * mehr an beiden Tagen voll, sondern 2 h am ersten und 4 h am zweiten Tag.
+     *
+     * Einträge OHNE Uhrzeiten (full_day bzw. fehlende Zeiten) tragen ihre Dauer nur in
+     * `working_time_minutes`; dieser Wert bezieht sich laut Model auf den ganzen Eintrag, nicht
+     * auf einen Tag. Bei mehrtägigen Einträgen wird er deshalb gleichmäßig auf die Tage verteilt
+     * (Rest minutenweise auf die ersten Tage), damit die Summe über alle Tage dem Eintrag entspricht.
+     * Eintägige Einträge bleiben in beiden Fällen unverändert.
+     *
+     * Öffentlich, damit die Regelprüfung dieselbe Tageszuordnung nutzen kann.
+     *
      * @return array<string, int>
      */
-    private function individualMinutesPerDay(User|Freelancer|ServiceProvider $entity, Carbon $start, Carbon $end): array
+    public function individualMinutesPerDay(User|Freelancer|ServiceProvider $entity, Carbon $start, Carbon $end): array
     {
         $individualTimes = $entity->relationLoaded('individualTimes')
             ? $entity->individualTimes
@@ -434,18 +460,76 @@ class WorkTimeCalculationService
 
         $startKey = $start->toDateString();
         $endKey = $end->toDateString();
+        $rangeStartTimestamp = strtotime($startKey . ' 00:00:00');
+        // Tagesgrenze exklusiv um 24:00 (wie shiftMinutesPerDay)
+        $rangeEndTimestamp = strtotime($endKey . ' 00:00:00') + 86400;
         $result = [];
 
         foreach ($individualTimes as $individualTime) {
+            $days = [];
             foreach (($individualTime->days_of_individual_time ?? []) as $day) {
-                if ($day === null || !is_scalar($day)) {
+                if ($day !== null && is_scalar($day)) {
+                    $days[] = (string) $day;
+                }
+            }
+            if ($days === []) {
+                continue;
+            }
+
+            $hasTimes = !(bool) ($individualTime->full_day ?? false)
+                && !empty($individualTime->start_time)
+                && !empty($individualTime->end_time)
+                && !empty($individualTime->start_date)
+                && !empty($individualTime->end_date);
+
+            if ($hasTimes) {
+                $timeStartTs = strtotime(
+                    self::dateOnly($individualTime->start_date) . ' ' . self::timeOnly($individualTime->start_time)
+                );
+                $timeEndTs = strtotime(
+                    self::dateOnly($individualTime->end_date) . ' ' . self::timeOnly($individualTime->end_time)
+                );
+
+                if ($timeStartTs !== false && $timeEndTs !== false && $timeEndTs > $timeStartTs) {
+                    if ($timeEndTs <= $rangeStartTimestamp || $timeStartTs >= $rangeEndTimestamp) {
+                        continue;
+                    }
+
+                    $breakMinutes = max(0, (int) ($individualTime->break_minutes ?? 0));
+                    // Pause nur am ersten Tag des Eintrags – auch wenn der vor dem Zeitraum liegt
+                    $entryFirstDay = date('Y-m-d', $timeStartTs);
+                    $dayTs = strtotime(date('Y-m-d', max($timeStartTs, $rangeStartTimestamp)));
+                    $lastDayTs = strtotime(date('Y-m-d', min($timeEndTs - 1, $rangeEndTimestamp - 1)));
+
+                    while ($dayTs <= $lastDayTs) {
+                        $dateStr = date('Y-m-d', $dayTs);
+                        $workStart = max($timeStartTs, $dayTs);
+                        $workEnd = min($timeEndTs, $dayTs + 86400);
+                        if ($workStart < $workEnd) {
+                            $duration = intdiv($workEnd - $workStart, 60);
+                            if ($dateStr === $entryFirstDay) {
+                                $duration -= $breakMinutes;
+                            }
+                            $result[$dateStr] = ($result[$dateStr] ?? 0) + max(0, $duration);
+                        }
+                        $dayTs += 86400;
+                    }
+
                     continue;
                 }
-                $dayKey = (string) $day;
+            }
+
+            // Ohne (gültige) Uhrzeiten: working_time_minutes gleichmäßig auf die Tage des Eintrags verteilen
+            $totalMinutes = max(0, (int) ($individualTime->working_time_minutes ?? 0));
+            $dayCount = count($days);
+            $perDay = intdiv($totalMinutes, $dayCount);
+            $remainder = $totalMinutes % $dayCount;
+
+            foreach ($days as $index => $dayKey) {
                 if ($dayKey < $startKey || $dayKey > $endKey) {
                     continue;
                 }
-                $result[$dayKey] = ($result[$dayKey] ?? 0) + max(0, (int) ($individualTime->working_time_minutes ?? 0));
+                $result[$dayKey] = ($result[$dayKey] ?? 0) + $perDay + ($index < $remainder ? 1 : 0);
             }
         }
 

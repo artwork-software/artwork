@@ -269,6 +269,8 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     // Compensation Day Offs routes
     Route::group(['prefix' => 'compensation-day-offs', 'middleware' => 'can:can plan shifts'], function (): void {
         Route::get('/dashboard', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'compensationDashboard'])->name('compensation-day-offs.dashboard');
+        // Excel-Export der gefilterten Dashboard-Liste — exakt dieselben Rechte wie das Dashboard (can plan shifts)
+        Route::get('/export', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'exportCompensationDays'])->name('compensation-day-offs.export');
         Route::post('/{compensationDayOff}/grant', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'grantCompensationDay'])->name('compensation-day-offs.grant');
         Route::post('/{compensationDayOff}/check', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'checkCompensationDay'])->name('compensation-day-offs.check');
         Route::post('/{compensationDayOff}/revoke', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'revokeCompensationDay'])->name('compensation-day-offs.revoke');
@@ -1101,8 +1103,15 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         Route::get('/event_types/bi-tags', [EventTypeController::class, 'biTags'])
             ->name('event_types.bi_tags')
             ->can('change event settings');
+        // Feiertagsseite: Termin-Einstellungen ODER Dienstplanung (read-only + Sondertag-Häkchen);
+        // Spatie-"permission"-Middleware = ODER-Verknüpfung, geht über canAny() (Admin via Gate::before)
         Route::get('/holiday', [HolidayController::class, 'index'])
+            ->middleware('permission:change event settings|can plan shifts')
             ->name('holiday.management');
+        // Nur das Sondertag-Flag (Dienstplaner:innen); Anlegen/Bearbeiten/Löschen bleiben bei "change event settings"
+        Route::patch('/holiday/{holiday}/special-day', [HolidayController::class, 'updateTreatAsSpecialDay'])
+            ->can('can plan shifts')
+            ->name('holiday.special-day.update');
         Route::post('/holiday/api', [HolidayController::class, 'create'])
             ->can('change event settings')
             ->name('holiday.api.call');
@@ -2957,8 +2966,10 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         Route::delete('/delete-chat/{chat}', [ChatController::class, 'destroy'])->name('chat-system.delete-chat');
     });
 
+    // Alt-Resource (EditHolidayModal nutzt holidays.update): gleiche Rechte wie der settings/holiday-Block
     Route::resource('holidays', HolidayController::class)
-        ->only(['index', 'store', 'update', 'destroy', 'show']);
+        ->only(['index', 'store', 'update', 'destroy', 'show'])
+        ->middleware('can:change event settings');
 
     Route::group(['prefix' => 'export'], function (): void {
         Route::post(

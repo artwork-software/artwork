@@ -67,6 +67,14 @@ class WorkingHourService
     }
 
     /**
+     * Unsigniertes Dienstplan-Format "38:00 h".
+     */
+    public function formatHours(int $minutes): string
+    {
+        return WorkTimeCalculationService::formatHours($minutes);
+    }
+
+    /**
      * Zusatzdaten für das Stundenkonto-Badge einer Person (nur wenn Stunden sichtbar sind).
      *
      * @return array{workTimeBalance: string|null, workTimeBalanceFormatted: string|null, workTimeBalanceMinutes: int|null}
@@ -244,7 +252,9 @@ class WorkingHourService
 
     /**
      * Wochenwerte aus den Tages-Breakdowns; behält die Keys daily_target/planned/difference/isMinus
-     * (ShiftPlan.vue) und liefert zusätzlich die Rohminuten.
+     * ("2h 0m", Freelancer-/Dienstleister-Ansichten, Tests) und liefert zusätzlich die Rohminuten
+     * sowie die *_formatted-Keys im einheitlichen Dienstplan-Format "H:MM h" (signiert bei der
+     * Differenz), die ShiftPlan.vue in der KW-Spalte rendert.
      *
      * @param array<string, array<string, mixed>> $breakdown 'Y-m-d' => Tageswerte
      * @return array<string, mixed>
@@ -284,6 +294,9 @@ class WorkingHourService
             'planned_minutes' => $totalPlannedMinutes,
             'difference_minutes' => $differenceInMinutes,
             'difference_signed' => $this->formatSignedHours($differenceInMinutes),
+            'planned_formatted' => $this->formatHours($totalPlannedMinutes),
+            'daily_target_formatted' => $this->formatHours($totalExpectedMinutes),
+            'difference_formatted' => $this->formatSignedHours($differenceInMinutes),
             'special_days' => $specialDays,
             'reduced_days' => $reducedDays,
         ];

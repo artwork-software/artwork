@@ -2,7 +2,6 @@
 
 namespace Artwork\Modules\Shift\RuleChecks;
 
-use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\Shift\Models\ShiftRule;
 use Artwork\Modules\User\Models\User;
 use Carbon\Carbon;
@@ -16,7 +15,8 @@ use Illuminate\Support\Collection;
  * different group). When a user works two shifts on the same day whose shift groups differ,
  * the rest time (end of the earlier shift -> start of the later shift) must be at least
  * $rule->individual_number_value hours. Overlapping or directly adjacent shifts (0 hours rest)
- * therefore always produce a violation.
+ * therefore always produce a violation. Gerechnet wird mit den effektiven Zeiten der Person
+ * (Pivot-Zeit aus shift_workers, sonst Schichtzeit).
  */
 class RestTimeBetweenShiftGroupsCheck extends AbstractRuleCheck
 {
@@ -24,28 +24,28 @@ class RestTimeBetweenShiftGroupsCheck extends AbstractRuleCheck
     {
         $violations = collect();
 
-        // Preload all shift-group shifts for the whole range once and group by start date
-        // (avoids a per-day query). Only shifts that actually belong to a shift group are relevant.
-        $shiftsByDate = Shift::whereHas('users', function ($query) use ($user): void {
-            $query->where('users.id', $user->id);
-        })
-            ->whereNotNull('shift_group_id')
-            ->whereDate('start_date', '>=', $startDate->format('Y-m-d'))
-            ->whereDate('start_date', '<=', $endDate->format('Y-m-d'))
-            ->with('shiftGroup')
-            ->orderBy('start')
-            ->get()
-            ->groupBy(fn (Shift $shift): string => Carbon::parse($shift->start_date)->format('Y-m-d'));
+        // Effektive Arbeitsintervalle der Person (Pivot-Zeit vor Schichtzeit), nur Schichten mit
+        // Schichtgruppe; einmal für den ganzen Zeitraum geladen und nach effektivem Starttag gruppiert.
+        $intervalsByDate = [];
+        foreach ($this->getWorkIntervals($user, $startDate, $endDate, false) as $interval) {
+            if ($interval['group_id'] === null) {
+                continue;
+            }
+            $intervalsByDate[$interval['start_key']][] = $interval;
+        }
 
         foreach (CarbonPeriod::create($startDate, $endDate) as $date) {
-            $shifts = $shiftsByDate->get($date->format('Y-m-d')) ?? collect();
-            $violations = $violations->concat($this->checkShiftGroupRestForDay($rule, $user, $date, $shifts));
+            $intervals = $intervalsByDate[$date->toDateString()] ?? [];
+            $violations = $violations->concat($this->checkShiftGroupRestForDay($rule, $user, $date, $intervals));
         }
 
         return $violations;
     }
 
-    private function checkShiftGroupRestForDay(ShiftRule $rule, User $user, Carbon $date, Collection $shifts): Collection
+    /**
+     * @param list<array<string, mixed>> $intervals effektive Schichtintervalle, die an diesem Tag beginnen
+     */
+    private function checkShiftGroupRestForDay(ShiftRule $rule, User $user, Carbon $date, array $intervals): Collection
     {
         $violations = collect();
 
@@ -53,18 +53,16 @@ class RestTimeBetweenShiftGroupsCheck extends AbstractRuleCheck
         $dayEnd = $date->copy()->endOfDay();
 
         $segments = [];
-        foreach ($shifts as $shift) {
-            $start = Carbon::parse($shift->start_date)->setTimeFromTimeString($shift->start);
-            $end = Carbon::parse($shift->end_date)->setTimeFromTimeString($shift->end);
+        foreach ($intervals as $interval) {
             // clip to day
-            $segStart = $start->greaterThan($dayStart) ? $start : $dayStart;
-            $segEnd = $end->lessThan($dayEnd) ? $end : $dayEnd;
+            $segStart = $interval['start']->greaterThan($dayStart) ? $interval['start']->copy() : $dayStart->copy();
+            $segEnd = $interval['end']->lessThan($dayEnd) ? $interval['end']->copy() : $dayEnd->copy();
             if ($segStart < $segEnd) {
                 $segments[] = [
                     'start' => $segStart,
                     'end' => $segEnd,
-                    'shift' => $shift,
-                    'group_id' => $shift->shift_group_id,
+                    'shift' => $interval['shift'],
+                    'group_id' => $interval['group_id'],
                 ];
             }
         }
@@ -74,11 +72,8 @@ class RestTimeBetweenShiftGroupsCheck extends AbstractRuleCheck
         }
 
         // Sort segments by start time
-        usort($segments, function ($a, $b) {
-            if ($a['start']->eq($b['start'])) {
-                return 0;
-            }
-            return $a['start']->lt($b['start']) ? -1 : 1;
+        usort($segments, static function (array $a, array $b): int {
+            return $a['start']->getTimestamp() <=> $b['start']->getTimestamp();
         });
 
         // Check rest time between consecutive shifts whose shift groups differ.

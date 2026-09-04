@@ -52,7 +52,9 @@
                     :selected-days="rejectState.selectedDays"
                     :shift-selections="rejectState.shiftSelections"
                     :is-comparison-focus="highlightedRowKey === row.key"
+                    :can-edit-violations="canEditViolations"
                     @open-history="openHistoryDrawer"
+                    @open-violation="openViolationEditModal"
                 />
 
                 <div v-if="!rows.length" class="text-center text-sm text-text-subtle">
@@ -108,6 +110,14 @@
             @confirm="confirmReject"
             @close="cancelReject"
         />
+
+        <!-- Regelverstoß aus der Prüfansicht bearbeiten (gleicher Payload wie im Hauptplan) -->
+        <ViolationEditModal
+            v-if="canEditViolations && selectedViolation"
+            :violation="selectedViolation"
+            @close="selectedViolation = null"
+            @updated="handleViolationUpdated"
+        />
     </AppLayout>
 </template>
 
@@ -123,6 +133,7 @@ import ShiftPlanRequestWeekNavigator from './components/ShiftPlanRequestWeekNavi
 import ShiftHistoryDrawer from './components/ShiftHistoryDrawer.vue';
 import RejectShiftPlanRequestModal from './components/RejectShiftPlanRequestModal.vue';
 import AcceptShiftPlanRequestModal from './components/AcceptShiftPlanRequestModal.vue';
+import ViolationEditModal from '@/Pages/Shifts/Components/ViolationEditModal.vue';
 import {useShiftPlanRequest} from './components/useShiftPlanRequest.js';
 import {useI18n} from 'vue-i18n';
 import {useShiftPlanRequestWeekNavigation} from './components/useShiftPlanRequestWeekNavigation.js';
@@ -139,9 +150,24 @@ const props = defineProps({
     isMyRequest: {type: Boolean, required: false, default: false},
     navigation: {type: Object, default: () => ({previous: null, next: null})},
     shiftQualifications: {type: Array, default: () => []},
-    // user_id => { 'YYYY-MM-DD' => [ShiftRuleViolation, …] } — Warnungen gibt es nur für User
+    // user_id => { 'YYYY-MM-DD' => [ShiftRuleViolation, …] } — Regelverstöße gibt es nur für User
     shiftRuleViolations: {type: Object, default: () => ({})},
+    // Verstöße aus der Prüfansicht bearbeiten: can plan shifts + Regeln bearbeiten (serverseitig ermittelt)
+    canEditViolations: {type: Boolean, default: false},
 });
+
+const selectedViolation = ref(null);
+
+function openViolationEditModal(violation) {
+    if (!props.canEditViolations) return;
+    selectedViolation.value = violation;
+}
+
+// Nach Speichern/Ignorieren: nur die Verstöße neu laden (Inertia partial reload), Marker aktualisieren sich
+function handleViolationUpdated() {
+    selectedViolation.value = null;
+    router.reload({only: ['shiftRuleViolations'], preserveScroll: true});
+}
 
 const requestShowUrl = (id) => route(
     props.isMyRequest ? 'shift-plan-requests.my.show' : 'shift-plan-requests.show',

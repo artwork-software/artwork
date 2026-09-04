@@ -9,7 +9,11 @@ class StoreShiftRuleRequest extends FormRequest
 {
     public function rules(): array
     {
-        $typesWithoutValue = implode(',', ShiftRuleService::ruleTypesWithoutValue());
+        // Ohne Wert (Sonntag/Sondertag/HFT an Sondertag) oder mit optionalem Wert (leer = Vertragsziel)
+        $typesWithoutValue = implode(',', array_merge(
+            ShiftRuleService::ruleTypesWithoutValue(),
+            ShiftRuleService::ruleTypesWithOptionalValue()
+        ));
 
         return [
             'name' => 'required|string|max:255',
@@ -36,6 +40,13 @@ class StoreShiftRuleRequest extends FormRequest
     {
         // Für Typen ohne Wert kommt vom Formular ggf. 0/''/null — nicht an min:0.1 scheitern lassen.
         if (in_array($this->input('trigger_type'), ShiftRuleService::ruleTypesWithoutValue(), true)) {
+            $this->merge(['individual_number_value' => null]);
+        }
+        // Optionaler Wert: leer/0 bedeutet "Zielwert aus dem Vertrag"
+        if (
+            in_array($this->input('trigger_type'), ShiftRuleService::ruleTypesWithOptionalValue(), true)
+            && (float) $this->input('individual_number_value') <= 0
+        ) {
             $this->merge(['individual_number_value' => null]);
         }
     }

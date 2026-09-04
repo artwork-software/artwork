@@ -79,4 +79,23 @@ final class MaxConsecutiveWorkingDaysCheckTest extends TestCase
 
         $this->assertCount(0, $violations);
     }
+
+    #[Test]
+    public function pivot_dates_of_the_person_override_the_shift_dates(): void
+    {
+        $user = User::factory()->create();
+        $monday = $this->futureWeekday(Carbon::MONDAY);
+        // Mo–Mi Schichten; die Donnerstagsschicht ist laut Pivot für die Person auf Freitag verschoben
+        for ($i = 0; $i < 3; $i++) {
+            $this->shiftFor($user, $monday->copy()->addDays($i));
+        }
+        $thursdayShift = $this->shiftFor($user, $monday->copy()->addDays(3));
+        $friday = $monday->copy()->addDays(4);
+        $this->setPivotTimes($thursdayShift, $user, '08:00:00', '16:00:00', $friday, $friday);
+
+        $violations = $this->check->check($this->rule(3), $user, $monday->copy(), $monday->copy()->addDays(4));
+
+        // Do ist frei -> Serie Mo–Mi (3) bricht ab, Fr beginnt neu: kein Verstoß
+        $this->assertCount(0, $violations);
+    }
 }

@@ -102,6 +102,42 @@ final class WorkTimeCalculationServiceTest extends TestCase
         ]);
     }
 
+    /**
+     * Individualzeit MIT Uhrzeiten (working_time_minutes wie der IndividualTimeService: Dauer minus Pause).
+     */
+    private function timedIndividualTime(
+        User $user,
+        string $startDate,
+        string $startTime,
+        string $endDate,
+        string $endTime,
+        int $break = 0
+    ): void {
+        $total = (int) Carbon::parse("{$startDate} {$startTime}")->diffInMinutes(Carbon::parse("{$endDate} {$endTime}"));
+        $user->individualTimes()->create([
+            'title' => 'Einsatz',
+            'start_date' => $startDate,
+            'end_date' => $endDate,
+            'start_time' => $startTime,
+            'end_time' => $endTime,
+            'full_day' => false,
+            'working_time_minutes' => max(0, $total - $break),
+            'break_minutes' => $break,
+        ]);
+    }
+
+    private function multiDayIndividualTimeWithoutTimes(User $user, string $startDate, string $endDate, int $minutes): void
+    {
+        $user->individualTimes()->create([
+            'title' => 'Einsatz',
+            'start_date' => $startDate,
+            'end_date' => $endDate,
+            'full_day' => true,
+            'working_time_minutes' => $minutes,
+            'break_minutes' => 0,
+        ]);
+    }
+
     private function shift(User $user, string $startDate, string $startTime, string $endDate, string $endTime, int $break = 0): void
     {
         $shift = Shift::factory()->create([
@@ -423,5 +459,95 @@ final class WorkTimeCalculationServiceTest extends TestCase
         $this->assertSame('+10:30 h', WorkTimeCalculationService::formatSignedHours(630));
         $this->assertSame("\u{2212}2:00 h", WorkTimeCalculationService::formatSignedHours(-120));
         $this->assertSame('+0:00 h', WorkTimeCalculationService::formatSignedHours(0));
+    }
+
+    /**
+     * Einheitliches Dienstplan-Format: unsigniert "H:MM h" (Geplant/Soll), negative Werte mit echtem Minus.
+     */
+    #[Test]
+    public function unsigned_hours_format_for_planned_and_target(): void
+    {
+        $this->assertSame('38:00 h', WorkTimeCalculationService::formatHours(2280));
+        $this->assertSame('41:30 h', WorkTimeCalculationService::formatHours(2490));
+        $this->assertSame('0:00 h', WorkTimeCalculationService::formatHours(0));
+        $this->assertSame('0:05 h', WorkTimeCalculationService::formatHours(5));
+        $this->assertSame("\u{2212}1:30 h", WorkTimeCalculationService::formatHours(-90));
+        $this->assertStringNotContainsString('+', WorkTimeCalculationService::formatHours(90));
+    }
+
+    /**
+     * Über-Mitternacht-Individualzeit 22:00–04:00 mit 30 min Pause: bisher wurde working_time_minutes
+     * beiden Tagen voll zugeschrieben (doppelt). Jetzt tageweise: Tag 1 = 120 − 30 = 90, Tag 2 = 240.
+     */
+    #[Test]
+    public function individual_time_over_midnight_is_split_per_day_with_the_break_on_the_first_day(): void
+    {
+        $user = $this->user();
+        $this->timedIndividualTime($user, self::TUESDAY, '22:00', '2026-07-22', '04:00', 30);
+
+        $perDay = $this->service()->individualMinutesPerDay($user, Carbon::parse(self::TUESDAY), Carbon::parse('2026-07-22'));
+
+        $this->assertSame(90, $perDay[self::TUESDAY]);
+        $this->assertSame(240, $perDay['2026-07-22']);
+        $this->assertArrayNotHasKey('2026-07-23', $perDay);
+
+        // Breakdown (Ist) folgt derselben Zuordnung: Summe = working_time_minutes (330), nichts doppelt
+        $range = $this->service()->breakdownForRange($user, Carbon::parse(self::TUESDAY), Carbon::parse('2026-07-22'));
+        $this->assertSame(90, $range[self::TUESDAY]['individual_minutes']);
+        $this->assertSame(240, $range['2026-07-22']['individual_minutes']);
+        $this->assertSame(330, $range[self::TUESDAY]['actual'] + $range['2026-07-22']['actual']);
+    }
+
+    #[Test]
+    public function individual_time_over_midnight_only_counts_the_part_inside_the_requested_range(): void
+    {
+        $user = $this->user();
+        $this->timedIndividualTime($user, self::TUESDAY, '22:00', '2026-07-22', '04:00', 30);
+
+        // Nur der zweite Tag angefragt: 240 Minuten, die Pause gehört zum (nicht angefragten) ersten Tag
+        $perDay = $this->service()->individualMinutesPerDay($user, Carbon::parse('2026-07-22'), Carbon::parse('2026-07-22'));
+        $this->assertSame(['2026-07-22' => 240], $perDay);
+
+        // Nur der erste Tag angefragt: 90 Minuten
+        $perDay = $this->service()->individualMinutesPerDay($user, Carbon::parse(self::TUESDAY), Carbon::parse(self::TUESDAY));
+        $this->assertSame([self::TUESDAY => 90], $perDay);
+    }
+
+    /**
+     * Mehrtägiger Eintrag OHNE Uhrzeiten: working_time_minutes gilt für den Eintrag und wird
+     * gleichmäßig verteilt (Rest minutenweise auf die ersten Tage).
+     */
+    #[Test]
+    public function multi_day_individual_time_without_times_is_distributed_evenly_over_its_days(): void
+    {
+        $user = $this->user();
+        $this->multiDayIndividualTimeWithoutTimes($user, self::TUESDAY, '2026-07-23', 301);
+
+        $perDay = $this->service()->individualMinutesPerDay($user, Carbon::parse('2026-07-20'), Carbon::parse('2026-07-26'));
+
+        $this->assertSame(101, $perDay[self::TUESDAY]);
+        $this->assertSame(100, $perDay['2026-07-22']);
+        $this->assertSame(100, $perDay['2026-07-23']);
+        $this->assertSame(301, array_sum($perDay));
+        $this->assertArrayNotHasKey('2026-07-24', $perDay);
+    }
+
+    /**
+     * Eintägige Einträge (Kachel, Info-Fenster, Nachtbuchung) bleiben identisch: full_day mit
+     * working_time_minutes sowie Eintrag mit Uhrzeiten und Pause liefern dieselben Minuten wie bisher.
+     */
+    #[Test]
+    public function single_day_individual_times_are_unchanged(): void
+    {
+        $user = $this->user();
+        $this->individualTime($user, self::TUESDAY, 120);
+        $this->timedIndividualTime($user, '2026-07-22', '08:00', '2026-07-22', '12:30', 30);
+
+        $perDay = $this->service()->individualMinutesPerDay($user, Carbon::parse(self::TUESDAY), Carbon::parse('2026-07-22'));
+
+        $this->assertSame(120, $perDay[self::TUESDAY]);
+        $this->assertSame(240, $perDay['2026-07-22']);
+        $this->assertSame(120, $this->service()->actualMinutes($user, Carbon::parse(self::TUESDAY)));
+        $this->assertSame(240, $this->service()->actualMinutes($user, Carbon::parse('2026-07-22')));
     }
 }

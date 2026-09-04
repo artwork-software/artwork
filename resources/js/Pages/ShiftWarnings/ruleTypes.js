@@ -4,9 +4,10 @@
  * Formatierung des Messwerts aus violation_data ("9,5 h von max. 8 h").
  *
  * Labels/Hinweise sind Übersetzungsschlüssel (englisch) — im Template über $t() auflösen.
- * valueKind: 'hours' | 'days' | 'time' | 'none'
+ * valueKind: 'hours' | 'days' | 'count' | 'time' | 'none'
  *   - hours: Zahl mit Suffix "h"
  *   - days:  Zahl mit Suffix "Tage"
+ *   - count: Anzahl (z. B. Sonntage); mit optional: true darf der Wert leer bleiben (Ziel aus dem Vertrag)
  *   - time:  Uhrzeit-Picker (HH:MM), intern Dezimalstunde (14.5 = 14:30)
  *   - none:  kein Zahlenwert (Feld ausblenden)
  */
@@ -82,6 +83,19 @@ export const RULE_TYPES = {
         valueKind: 'none',
         hint: 'Creates a rule violation for every special day (public holiday flagged as special day, contract switch active) on which the person has a shift. The violation documents the entitlement to a replacement rest day. No value required.',
     },
+    overtimeDeadline: {
+        label: 'Overtime reduction deadline',
+        valueKind: 'days',
+        placeholder: '14',
+        hint: 'Warns before open overtime expires. Value = number of days before the reduction deadline from which a rule violation is created; after the deadline the violation becomes an error. Applies to people whose contract has the overtime rule active. The violation has no shift — it appears on the deadline day.',
+    },
+    minFreeSundaysPerSeasonHalf: {
+        label: 'Minimum free Sundays with Saturday/Monday per season half',
+        valueKind: 'count',
+        optional: true,
+        placeholder: '3',
+        hint: 'Checks per season half whether the person can still reach the minimum number of free Sundays with a free Saturday or Monday. Value = minimum number; leave empty to use the target from the contract. A violation is created on the last Sunday of the half when the target is no longer reachable. Requires the season (playing time window) in the tool settings.',
+    },
 }
 
 /** Typen für die Auswahl beim Anlegen (Alias ausgeblendet) */
@@ -97,6 +111,11 @@ export function ruleTypeValueKind(type) {
 
 export function ruleTypeNeedsValue(type) {
     return ruleTypeValueKind(type) !== 'none'
+}
+
+/** Wert darf leer bleiben (Ziel aus dem Vertrag) */
+export function ruleTypeValueOptional(type) {
+    return !!RULE_TYPES[type]?.optional
 }
 
 /** Dezimalstunde -> "HH:MM" (14.5 -> "14:30") */
@@ -136,11 +155,28 @@ export function formatRuleValue(rule, t) {
             return `${formatNumber(value)} h`
         case 'days':
             return `${formatNumber(value)} ${t('Days')}`
+        case 'count':
+            return Number(value) > 0 ? formatNumber(value) : t('From contract')
         case 'time':
             return decimalHourToTime(value)
         default:
             return '–'
     }
+}
+
+/** Minuten -> "3:30 h" */
+export function formatMinutesAsHours(minutes) {
+    const total = Math.max(0, Math.round(Number(minutes) || 0))
+    const h = Math.floor(total / 60)
+    const m = total % 60
+    return `${h}:${String(m).padStart(2, '0')} h`
+}
+
+/** "YYYY-MM-DD" -> "DD.MM.YYYY" */
+function formatDateDe(value) {
+    if (!value) return ''
+    const [y, m, d] = String(value).slice(0, 10).split('-')
+    return y && m && d ? `${d}.${m}.${y}` : String(value)
 }
 
 /**
@@ -153,13 +189,31 @@ export function formatViolationMeasure(violation, t) {
     const data = violation?.violation_data
     if (!data || typeof data !== 'object') return ''
 
+    const ofMax = (actual, max) => t('{actual} of max. {max}', { actual, max })
+    const ofMin = (actual, min) => t('{actual} of min. {min}', { actual, min })
+
     if (data.type === 'compensation_deadline_expired') {
         return t('Compensation deadline expired')
     }
+    if (data.type === 'overtime_deadline' || data.remaining_minutes !== undefined) {
+        // "3:30 h offen, Frist 30.10.2026" (+ überfällig / noch n Tage)
+        const parts = [t('{hours} open, deadline {date}', {
+            hours: formatMinutesAsHours(data.remaining_minutes),
+            date: formatDateDe(data.deadline),
+        })]
+        if (data.days_left !== undefined) {
+            parts.push(Number(data.days_left) < 0 ? t('Deadline expired') : t('{days} days left', { days: data.days_left }))
+        }
+        return parts.join(', ')
+    }
+    if (data.type === 'min_free_sundays_per_season_half' || data.half !== undefined) {
+        // "1. Hälfte: 1 von min. 3 freien Sonntagen, noch 1 möglich"
+        const half = Number(data.half) === 2 ? t('2nd half') : t('1st half')
+        const base = `${half}: ${ofMin(String(data.have ?? 0), `${data.target ?? ''} ${t('free Sundays')}`)}`
+        return data.completed ? base : `${base}, ${t('{count} still possible', { count: data.possible ?? 0 })}`
+    }
 
     const type = violation?.shift_rule?.trigger_type ?? violation?.trigger_type
-    const ofMax = (actual, max) => t('{actual} of max. {max}', { actual, max })
-    const ofMin = (actual, min) => t('{actual} of min. {min}', { actual, min })
 
     if (data.planned_hours !== undefined && data.max_allowed !== undefined) {
         return ofMax(`${formatNumber(data.planned_hours)} h`, `${formatNumber(data.max_allowed)} h`)

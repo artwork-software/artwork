@@ -32,13 +32,29 @@ class UpdateShiftRuleRequest extends FormRequest
         if (!$this->ruleTypeNeedsValue()) {
             $this->merge(['individual_number_value' => null]);
         }
+        // Optionaler Wert: leer/0 bedeutet "Zielwert aus dem Vertrag"
+        if ($this->ruleTypeHasOptionalValue() && (float) $this->input('individual_number_value') <= 0) {
+            $this->merge(['individual_number_value' => null]);
+        }
+    }
+
+    private function triggerType(): ?string
+    {
+        $rule = $this->route('shiftRule');
+
+        return $rule instanceof ShiftRule ? $rule->trigger_type : null;
     }
 
     private function ruleTypeNeedsValue(): bool
     {
-        $rule = $this->route('shiftRule');
-        $triggerType = $rule instanceof ShiftRule ? $rule->trigger_type : null;
+        $triggerType = $this->triggerType();
 
-        return !in_array($triggerType, ShiftRuleService::ruleTypesWithoutValue(), true);
+        return !in_array($triggerType, ShiftRuleService::ruleTypesWithoutValue(), true)
+            && !$this->ruleTypeHasOptionalValue();
+    }
+
+    private function ruleTypeHasOptionalValue(): bool
+    {
+        return in_array($this->triggerType(), ShiftRuleService::ruleTypesWithOptionalValue(), true);
     }
 }

@@ -220,6 +220,16 @@
                                                         {{ $t('Germany-wide') }}
                                                     </div>
                                                 </div>
+                                                <!-- Einstieg in die Feiertagsseite (Sondertag-Häkchen) – nur mit passendem Recht -->
+                                                <div v-if="canManageSpecialDays" class="pt-1">
+                                                    <Link
+                                                        :href="route('holiday.management')"
+                                                        class="inline-flex items-center gap-1 text-[10px] font-medium text-white underline underline-offset-2 hover:text-white/80"
+                                                    >
+                                                        <PropertyIcon name="IconCalendarStar" class="h-3 w-3" />
+                                                        {{ $t('Manage special days') }}
+                                                    </Link>
+                                                </div>
                                             </div>
                                         </HolidayToolTip>
                                     </div>
@@ -230,14 +240,18 @@
                                         class="shrink-0"
                                         v-tooltip.top="{ value: specialDayTooltip(day), class: 'aw-tooltip', appendTo: 'body' }"
                                     >
-                                        <!-- Nur Icon, damit das Datum auch in schmalen Spalten lesbar bleibt; Name + Erklaerung im Tooltip, Eintrag in der Legende -->
-                                        <span
+                                        <!-- Nur Icon, damit das Datum auch in schmalen Spalten lesbar bleibt; Name + Erklaerung im Tooltip, Eintrag in der Legende.
+                                             Mit Recht (Termin-Einstellungen oder Dienstplanung) ist der Marker der Einstieg "Sondertage verwalten" -->
+                                        <component
+                                            :is="canManageSpecialDays ? Link : 'span'"
+                                            :href="canManageSpecialDays ? route('holiday.management') : undefined"
                                             class="inline-flex items-center gap-0.5 rounded-full bg-warning-surface text-warning border border-warning-border px-1 py-0.5 text-[9px] font-semibold"
-                                            :aria-label="$t('Special Day')"
+                                            :class="canManageSpecialDays ? 'hover:bg-warning-surface/80 cursor-pointer' : ''"
+                                            :aria-label="canManageSpecialDays ? $t('Manage special days') : $t('Special Day')"
                                         >
                                             <PropertyIcon name="IconCalendarStar" class="h-3 w-3" />
                                             <span class="sr-only">{{ $t('Special Day') }}</span>
-                                        </span>
+                                        </component>
                                     </div>
                                 </div>
                               </div>
@@ -851,15 +865,16 @@
                                         v-if="day.isExtraRow"
                                         class="shiftCell flex h-full items-center justify-center overflow-hidden rounded-lg p-2 text-center text-white"
                                         :class="[kwWorkflowStatusClass(row, day), cellWrapperClass(row, day)]"
-                                        :title="kwWorkflowStatusTitle(row, day)"
+                                        :title="kwCellTitle(row, day)"
                                     >
+                                        <!-- Einheitliches Stundenformat "H:MM h" (signiert) wie das AZK-Badge; Fallback auf das alte "2h 0m" -->
                                         <div
                                             class="font-lexend text-xs"
                                             :class="row.worker?.weeklyWorkingHours?.[day.weekNumber]
                                                 ? (row.worker.weeklyWorkingHours[day.weekNumber].isMinus ? 'text-danger-surface' : 'text-success-surface')
                                                 : 'text-white/60'"
                                         >
-                                            {{ row.worker?.weeklyWorkingHours?.[day.weekNumber]?.difference ?? '–' }}
+                                            {{ row.worker?.weeklyWorkingHours?.[day.weekNumber]?.difference_formatted ?? row.worker?.weeklyWorkingHours?.[day.weekNumber]?.difference ?? '–' }}
                                         </div>
                                     </div>
 
@@ -1735,9 +1750,15 @@ const specialDayNameByKey = computed(() => {
     }
     return map
 })
+/** Feiertagsseite (Sondertag-Häkchen) öffnen dürfen: Termin-Einstellungen ODER Dienstplanung (Spiegel der Route-Middleware) */
+const canManageSpecialDays = computed(() => {
+    const proxy = instance?.proxy as any
+    return !!(proxy?.is?.('artwork admin') || proxy?.can?.('change event settings') || proxy?.can?.('can plan shifts'))
+})
 const specialDayTooltip = (day: any) => {
     const name = specialDayNameByKey.value.get(day?.fullDay) ?? ''
-    return `${$t('Special Day')}${name ? ' – ' + name : ''}: ${$t('Special day: without work the daily target is reduced to 0 or by the weekday average (three-month mode), if the contract has the special day rule active. Hours worked count normally.')}`
+    const base = `${$t('Special Day')}${name ? ' – ' + name : ''}: ${$t('Special day: without work the daily target is reduced to 0 or by the weekday average (three-month mode), if the contract has the special day rule active. Hours worked count normally.')}`
+    return canManageSpecialDays.value ? `${base} ${$t('Click: manage special days.')}` : base
 }
 
 const dayTintLight = (day: any) => dayTintByKey.value.get(day?.fullDay)?.light ?? null
@@ -2911,6 +2932,20 @@ function kwWorkflowStatusClass(row: any, day: any): string {
         default:
             return 'bg-white/10'
     }
+}
+
+/** Tooltip der KW-Zelle: "Geplant 38:00 h · Soll 41:30 h · Differenz −3:30 h" (+ Freigabe-Status) */
+function kwHoursTooltip(row: any, day: any): string {
+    const week = row?.worker?.weeklyWorkingHours?.[day?.weekNumber]
+    if (!week) return ''
+    const planned = week.planned_formatted ?? week.planned
+    const target = week.daily_target_formatted ?? week.daily_target
+    const difference = week.difference_formatted ?? week.difference
+    return `${$t('Planned')} ${planned} · ${$t('Target')} ${target} · ${$t('Difference')} ${difference}`
+}
+
+function kwCellTitle(row: any, day: any): string {
+    return [kwHoursTooltip(row, day), kwWorkflowStatusTitle(row, day)].filter(Boolean).join('\n')
 }
 
 function kwWorkflowStatusTitle(row: any, day: any): string {

@@ -2,19 +2,48 @@
 
 namespace Artwork\Modules\Shift\RuleChecks;
 
-use Artwork\Modules\Holidays\Models\Holiday;
+use Artwork\Modules\Holidays\Services\SpecialDayService;
 use Artwork\Modules\IndividualTimes\Models\IndividualTime;
 use Artwork\Modules\Shift\Contracts\ShiftRuleCheckInterface;
 use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\Shift\Models\ShiftRule;
 use Artwork\Modules\Shift\Models\ShiftRuleViolation;
+use Artwork\Modules\Shift\Repositories\CompensationDayOffRepository;
 use Artwork\Modules\User\Models\User;
 use Artwork\Modules\WorkTime\Services\WorkTimeCalculationService;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
 
+/**
+ * Basis aller Regelprüfungen.
+ *
+ * Personenzeiten: Überall gelten die EFFEKTIVEN Zeiten der Person — die Pivot-Zeiten aus
+ * shift_workers (start_date/end_date/start_time/end_time), falls gesetzt, sonst die Schichtzeiten;
+ * individuelle Zeiten zählen zusätzlich. Gemeinsame Quelle ist getWorkIntervals() ("effektive
+ * Arbeitsintervalle der Person"), aus der Tagesbeginn, Tagesende, Tagesstunden und Ruhezeiten
+ * abgeleitet werden.
+ *
+ * Datenkontext: Setzt der ShiftRuleService einen ShiftRuleCheckContext, arbeiten alle Helfer auf den
+ * dort einmal geladenen Daten. Ohne Kontext (Unit-Tests, Einzelaufrufe) fragen sie direkt ab.
+ */
 abstract class AbstractRuleCheck implements ShiftRuleCheckInterface
 {
+    protected ?ShiftRuleCheckContext $context = null;
+
+    private ?SpecialDayService $specialDayServiceInstance = null;
+
+    public function setContext(?ShiftRuleCheckContext $context): void
+    {
+        $this->context = $context;
+        // Sondertag-Cache nicht über Läufe hinweg halten (Feiertage können sich ändern).
+        $this->specialDayServiceInstance = null;
+    }
+
+    public function getContext(): ?ShiftRuleCheckContext
+    {
+        return $this->context;
+    }
+
     /**
      * Geplante Arbeitsstunden einer Person an einem Tag = Schichten (mit personenindividuellen
      * Pivot-Zeiten, Pause einmal am ersten Schichttag) PLUS individuelle Zeiten (netto, Pause am
@@ -23,8 +52,13 @@ abstract class AbstractRuleCheck implements ShiftRuleCheckInterface
     protected function getPlannedWorkingHoursForDay(User $user, Carbon $date): float
     {
         $dayKey = $date->toDateString();
-        $shiftMinutes = (int) (app(WorkTimeCalculationService::class)
-            ->shiftMinutesPerDay($user, $date->copy(), $date->copy())[$dayKey] ?? 0);
+
+        if ($this->context !== null && $this->context->covers($date, $date)) {
+            $shiftMinutes = (int) ($this->context->shiftMinutesPerDay()[$dayKey] ?? 0);
+        } else {
+            $shiftMinutes = (int) (app(WorkTimeCalculationService::class)
+                ->shiftMinutesPerDay($user, $date->copy(), $date->copy())[$dayKey] ?? 0);
+        }
 
         return ($shiftMinutes + $this->getIndividualTimeMinutesForDay($user, $date)) / 60.0;
     }
@@ -38,13 +72,8 @@ abstract class AbstractRuleCheck implements ShiftRuleCheckInterface
         $dayStart = $date->copy()->startOfDay();
         $dayEnd = $date->copy()->startOfDay()->addDay();
 
-        $individualTimes = $user->individualTimes()
-            ->whereDate('start_date', '<=', $date)
-            ->whereDate('end_date', '>=', $date)
-            ->get();
-
         $totalMinutes = 0;
-        foreach ($individualTimes as $it) {
+        foreach ($this->getIndividualTimesForRange($user, $date, $date) as $it) {
             $itStart = Carbon::parse($it->start_date)->startOfDay();
             $itEnd = Carbon::parse($it->end_date)->startOfDay();
 
@@ -86,36 +115,325 @@ abstract class AbstractRuleCheck implements ShiftRuleCheckInterface
         return [$startDate->copy()->startOfDay(), $endDate->copy()->startOfDay()];
     }
 
+    // ------------------------------------------------------------------
+    // Datenzugriff: Kontext, sonst Direktabfrage
+    // ------------------------------------------------------------------
+
     /**
-     * Schicht der Person, die genau an diesem Tag beginnt (Schichttag = start_date; Über-Mitternacht-
-     * Schichten zählen nur am Starttag). Im Gegensatz zu getShiftForUserOnDate() ohne Folgetage.
+     * Schichten der Person, die den Zeitraum berühren (Schicht- ODER Pivot-Zeitraum), mit Pivot.
+     *
+     * @return Collection<int, Shift>
+     */
+    protected function getShiftsForRange(User $user, Carbon $from, Carbon $to): Collection
+    {
+        $fromKey = $from->toDateString();
+        $toKey = $to->toDateString();
+
+        if ($this->context !== null && $this->context->covers($from, $to)) {
+            return $this->context->shifts()->filter(function (Shift $shift) use ($fromKey, $toKey): bool {
+                [$startKey, $endKey] = $this->effectiveShiftDateKeys($shift);
+                return $startKey <= $toKey && $endKey >= $fromKey;
+            })->values();
+        }
+
+        return $user->shifts()
+            ->with('shiftGroup')
+            ->where(function ($query) use ($fromKey, $toKey): void {
+                $query->where(function ($sub) use ($fromKey, $toKey): void {
+                    $sub->whereDate('shifts.start_date', '<=', $toKey)
+                        ->whereDate('shifts.end_date', '>=', $fromKey);
+                })->orWhere(function ($sub) use ($fromKey, $toKey): void {
+                    $sub->whereDate('shift_workers.start_date', '<=', $toKey)
+                        ->whereDate('shift_workers.end_date', '>=', $fromKey);
+                });
+            })
+            ->orderBy('shifts.start_date')
+            ->orderBy('shifts.start')
+            ->get()
+            ->filter(function (Shift $shift) use ($fromKey, $toKey): bool {
+                // Effektiver (Pivot-)Zeitraum muss den Bereich wirklich berühren.
+                [$startKey, $endKey] = $this->effectiveShiftDateKeys($shift);
+                return $startKey <= $toKey && $endKey >= $fromKey;
+            })
+            ->values();
+    }
+
+    /**
+     * @return Collection<int, IndividualTime>
+     */
+    protected function getIndividualTimesForRange(User $user, Carbon $from, Carbon $to): Collection
+    {
+        $fromKey = $from->toDateString();
+        $toKey = $to->toDateString();
+
+        if ($this->context !== null && $this->context->covers($from, $to)) {
+            return $this->context->individualTimes()->filter(
+                fn (IndividualTime $it): bool => (string) $it->start_date <= $toKey && (string) $it->end_date >= $fromKey
+            )->values();
+        }
+
+        return $user->individualTimes()
+            ->whereDate('start_date', '<=', $toKey)
+            ->whereDate('end_date', '>=', $fromKey)
+            ->orderBy('start_date')
+            ->get();
+    }
+
+    /**
+     * Gewährte halbe Ersatzfreitage der Person im Zeitraum, gruppiert nach granted_date.
+     *
+     * @return Collection<string, Collection>
+     */
+    protected function getGrantedHalvesByDate(User $user, Carbon $from, Carbon $to): Collection
+    {
+        $fromKey = $from->toDateString();
+        $toKey = $to->toDateString();
+
+        if ($this->context !== null && $this->context->covers($from, $to)) {
+            return $this->context->grantedHalvesByDate()
+                ->filter(fn ($halves, string $dateKey): bool => $dateKey >= $fromKey && $dateKey <= $toKey);
+        }
+
+        return app(CompensationDayOffRepository::class)
+            ->getGrantedHalvesForUserInRange($user->id, $fromKey, $toKey)
+            ->groupBy(fn ($half): string => Carbon::parse($half->granted_date)->format('Y-m-d'));
+    }
+
+    /**
+     * Sondertage im Zeitraum ('Y-m-d' => Name).
+     *
+     * @return array<string, string>
+     */
+    protected function getSpecialDaysBetween(Carbon $from, Carbon $to): array
+    {
+        if ($this->context !== null && $this->context->covers($from, $to)) {
+            $fromKey = $from->toDateString();
+            $toKey = $to->toDateString();
+
+            return array_filter(
+                $this->context->specialDays(),
+                fn (string $dateKey): bool => $dateKey >= $fromKey && $dateKey <= $toKey,
+                ARRAY_FILTER_USE_KEY
+            );
+        }
+
+        return $this->specialDayService()->specialDaysBetween($from, $to);
+    }
+
+    protected function specialDayService(): SpecialDayService
+    {
+        if ($this->context !== null) {
+            return $this->context->specialDayService();
+        }
+
+        return $this->specialDayServiceInstance ??= app(SpecialDayService::class);
+    }
+
+    // ------------------------------------------------------------------
+    // Effektive Arbeitsintervalle der Person
+    // ------------------------------------------------------------------
+
+    /**
+     * Effektive Datumsgrenzen einer Schicht für die Person: Pivot-Datum vor Schichtdatum.
+     *
+     * @return array{0: string, 1: string} ['Y-m-d' Start, 'Y-m-d' Ende]
+     */
+    protected function effectiveShiftDateKeys(Shift $shift): array
+    {
+        $pivot = $shift->pivot ?? null;
+        $start = $pivot?->start_date ?: $shift->start_date;
+        $end = $pivot?->end_date ?: $shift->end_date;
+
+        return [
+            Carbon::parse((string) $start)->toDateString(),
+            Carbon::parse((string) ($end ?: $start))->toDateString(),
+        ];
+    }
+
+    /**
+     * Effektives Arbeitsintervall der Person für eine Schicht (Pivot-Zeit vor Schichtzeit).
+     *
+     * @return array{start: Carbon, end: Carbon, start_key: string, end_key: string, source: string,
+     *               shift: Shift, individual_time: null, break_minutes: int, group_id: int|null}|null
+     */
+    protected function shiftInterval(Shift $shift): ?array
+    {
+        $pivot = $shift->pivot ?? null;
+        [$startKey, $endKey] = $this->effectiveShiftDateKeys($shift);
+        $startTime = $pivot?->start_time ?: $shift->start;
+        $endTime = $pivot?->end_time ?: $shift->end;
+
+        if (!$startTime || !$endTime) {
+            return null;
+        }
+
+        $start = Carbon::parse($startKey)->setTimeFromTimeString((string) $startTime);
+        $end = Carbon::parse($endKey)->setTimeFromTimeString((string) $endTime);
+        if ($end->lessThanOrEqualTo($start)) {
+            // Zeit-only-Angabe über Mitternacht ohne Folgedatum
+            $end->addDay();
+            $endKey = $end->toDateString();
+        }
+
+        return [
+            'start' => $start,
+            'end' => $end,
+            'start_key' => $startKey,
+            'end_key' => $endKey,
+            'source' => 'shift',
+            'shift' => $shift,
+            'individual_time' => null,
+            'break_minutes' => (int) ($shift->break_minutes ?? 0),
+            'group_id' => $shift->shift_group_id,
+        ];
+    }
+
+    /**
+     * @return array{start: Carbon, end: Carbon, start_key: string, end_key: string, source: string,
+     *               shift: null, individual_time: IndividualTime, break_minutes: int, group_id: null}
+     */
+    protected function individualTimeInterval(IndividualTime $it): array
+    {
+        $startKey = Carbon::parse((string) $it->start_date)->toDateString();
+        $endKey = Carbon::parse((string) ($it->end_date ?: $it->start_date))->toDateString();
+
+        $start = Carbon::parse($startKey);
+        $end = Carbon::parse($endKey);
+        $start->setTimeFromTimeString($it->start_time ? (string) $it->start_time : '00:00:00');
+        if ($it->end_time) {
+            $end->setTimeFromTimeString((string) $it->end_time);
+        } else {
+            $end->setTime(23, 59, 59);
+        }
+
+        return [
+            'start' => $start,
+            'end' => $end,
+            'start_key' => $startKey,
+            'end_key' => $endKey,
+            'source' => 'individual',
+            'shift' => null,
+            'individual_time' => $it,
+            'break_minutes' => (int) ($it->break_minutes ?? 0),
+            'group_id' => null,
+        ];
+    }
+
+    /**
+     * Effektive Arbeitsintervalle der Person, die den Zeitraum berühren — Schichten (Pivot-Zeit,
+     * sonst Schichtzeit) plus individuelle Zeiten, sortiert nach Beginn.
+     *
+     * @return list<array{start: Carbon, end: Carbon, start_key: string, end_key: string, source: string,
+     *               shift: Shift|null, individual_time: IndividualTime|null, break_minutes: int, group_id: int|null}>
+     */
+    protected function getWorkIntervals(User $user, Carbon $from, Carbon $to, bool $includeIndividualTimes = true): array
+    {
+        $intervals = [];
+        foreach ($this->getShiftsForRange($user, $from, $to) as $shift) {
+            $interval = $this->shiftInterval($shift);
+            if ($interval !== null) {
+                $intervals[] = $interval;
+            }
+        }
+        if ($includeIndividualTimes) {
+            foreach ($this->getIndividualTimesForRange($user, $from, $to) as $it) {
+                $intervals[] = $this->individualTimeInterval($it);
+            }
+        }
+
+        usort($intervals, static function (array $a, array $b): int {
+            return $a['start']->getTimestamp() <=> $b['start']->getTimestamp();
+        });
+
+        return $intervals;
+    }
+
+    /**
+     * Intervalle, die an diesem Tag BEGINNEN (Schichttag = effektiver Starttag).
+     *
+     * @return list<array<string, mixed>>
+     */
+    protected function getWorkIntervalsStartingOn(User $user, Carbon $date, bool $includeIndividualTimes = true): array
+    {
+        $dayKey = $date->toDateString();
+
+        return array_values(array_filter(
+            $this->getWorkIntervals($user, $date, $date, $includeIndividualTimes),
+            static fn (array $interval): bool => $interval['start_key'] === $dayKey
+        ));
+    }
+
+    /**
+     * Schicht der Person, die genau an diesem Tag beginnt (effektiver Starttag der Person; Über-
+     * Mitternacht-Schichten zählen nur am Starttag). Im Gegensatz zu getShiftForUserOnDate() ohne Folgetage.
      */
     protected function getShiftStartingOnDate(User $user, Carbon $date): ?Shift
     {
-        return Shift::whereHas('users', function ($query) use ($user): void {
-            $query->where('users.id', $user->id);
-        })
-            ->whereDate('start_date', $date)
-            ->orderBy('start')
-            ->first();
+        $intervals = $this->getWorkIntervalsStartingOn($user, $date, false);
+
+        return $intervals[0]['shift'] ?? null;
     }
 
+    /**
+     * Erste Schicht der Person, deren effektiver Zeitraum den Tag berührt (inkl. Folgetage).
+     */
     protected function getShiftForUserOnDate(User $user, Carbon $date): ?Shift
     {
-        return Shift::whereHas('users', function ($query) use ($user): void {
-            $query->where('users.id', $user->id);
-        })
-            ->whereDate('start_date', '<=', $date)
-            ->whereDate('end_date', '>=', $date)
-            ->first();
+        $intervals = $this->getWorkIntervals($user, $date, $date, false);
+
+        return $intervals[0]['shift'] ?? null;
     }
+
+    /**
+     * Frühester Arbeitsbeginn der Person an diesem Tag (Schicht mit Pivot-Zeit oder individuelle Zeit,
+     * die an diesem Tag beginnt).
+     */
+    protected function getEarliestShiftStartOfDay(User $user, Carbon $date): ?Carbon
+    {
+        $earliest = null;
+        foreach ($this->getWorkIntervalsStartingOn($user, $date) as $interval) {
+            if ($earliest === null || $interval['start']->lt($earliest)) {
+                $earliest = $interval['start']->copy();
+            }
+        }
+
+        return $earliest;
+    }
+
+    /**
+     * Spätestes Arbeitsende der Person, das diesem Tag zuzurechnen ist: Intervalle, die an diesem Tag
+     * enden, oder an diesem Tag beginnen und über Mitternacht gehen.
+     */
+    protected function getLatestShiftEndOfDay(User $user, Carbon $date): ?Carbon
+    {
+        $dayKey = $date->toDateString();
+        $latest = null;
+
+        foreach ($this->getWorkIntervals($user, $date, $date) as $interval) {
+            $endsToday = $interval['end_key'] === $dayKey;
+            $startsTodayPastMidnight = $interval['start_key'] === $dayKey && $interval['end_key'] > $dayKey;
+            if (!$endsToday && !$startsTodayPastMidnight) {
+                continue;
+            }
+            if ($latest === null || $interval['end']->gt($latest)) {
+                $latest = $interval['end']->copy();
+            }
+        }
+
+        return $latest;
+    }
+
+    // ------------------------------------------------------------------
+    // Verstöße anlegen
+    // ------------------------------------------------------------------
 
     protected function createViolation(
         ShiftRule $rule,
         Shift $shift,
         User $user,
         Carbon $date,
-        array $violationData
+        array $violationData,
+        string $severity = 'warning'
     ): ShiftRuleViolation {
         // Check if violation already exists for this combination
         $existingViolation = ShiftRuleViolation::where([
@@ -130,6 +448,7 @@ abstract class AbstractRuleCheck implements ShiftRuleCheckInterface
             if ($existingViolation->status === 'active') {
                 $existingViolation->update([
                     'violation_data' => $violationData,
+                    'severity' => $severity,
                 ]);
             }
             return $existingViolation;
@@ -142,21 +461,22 @@ abstract class AbstractRuleCheck implements ShiftRuleCheckInterface
             'user_id' => $user->id,
             'violation_date' => $date->format('Y-m-d'),
             'violation_data' => $violationData,
-            'severity' => 'warning',
+            'severity' => $severity,
             'status' => 'active'
         ]);
     }
 
     protected function isSpecialDay(Carbon $date): bool
     {
-        return Holiday::isSpecialDay($date);
+        return $this->specialDayService()->isSpecialDay($date);
     }
 
     protected function createViolationWithoutShift(
         ShiftRule $rule,
         User $user,
         Carbon $date,
-        array $violationData
+        array $violationData,
+        string $severity = 'warning'
     ): ShiftRuleViolation {
         // Dedupe on (rule, user, date) for shift-less violations.
         $existingViolation = ShiftRuleViolation::where([
@@ -169,6 +489,7 @@ abstract class AbstractRuleCheck implements ShiftRuleCheckInterface
             if ($existingViolation->status === 'active') {
                 $existingViolation->update([
                     'violation_data' => $violationData,
+                    'severity' => $severity,
                 ]);
             }
             return $existingViolation;
@@ -180,11 +501,15 @@ abstract class AbstractRuleCheck implements ShiftRuleCheckInterface
             'user_id' => $user->id,
             'violation_date' => $date->format('Y-m-d'),
             'violation_data' => $violationData,
-            'severity' => 'warning',
+            'severity' => $severity,
             'status' => 'active'
         ]);
     }
 
+    /**
+     * Ruhezeit zwischen mehreren Arbeitsintervallen der Person am selben Tag (effektive Zeiten,
+     * auf den Tag zugeschnitten). Verstoß, wenn das FOLGENDE Intervall eine Schicht ist.
+     */
     protected function checkRestTimeBetweenShiftsOnSameDay(
         ShiftRule $rule,
         User $user,
@@ -195,41 +520,17 @@ abstract class AbstractRuleCheck implements ShiftRuleCheckInterface
         $dayStart = $date->copy()->startOfDay();
         $dayEnd = $date->copy()->endOfDay();
 
-        // Build a list of work segments (shifts + individual times) on this date
         $segments = [];
-
-        // Shifts
-        $shifts = Shift::whereHas('users', function ($query) use ($user): void {
-            $query->where('users.id', $user->id);
-        })
-            ->whereDate('start_date', $date)
-            ->orderBy('start')
-            ->get();
-        foreach ($shifts as $shift) {
-            $start = Carbon::parse($shift->start_date)->setTimeFromTimeString($shift->start);
-            $end = Carbon::parse($shift->end_date)->setTimeFromTimeString($shift->end);
-            // clip to day
-            $segStart = $start->greaterThan($dayStart) ? $start : $dayStart;
-            $segEnd = $end->lessThan($dayEnd) ? $end : $dayEnd;
+        foreach ($this->getWorkIntervalsStartingOn($user, $date) as $interval) {
+            $segStart = $interval['start']->greaterThan($dayStart) ? $interval['start']->copy() : $dayStart->copy();
+            $segEnd = $interval['end']->lessThan($dayEnd) ? $interval['end']->copy() : $dayEnd->copy();
             if ($segStart < $segEnd) {
-                $segments[] = ['start' => $segStart, 'end' => $segEnd, 'type' => 'shift', 'shift' => $shift];
-            }
-        }
-
-        // Individual times
-        $individualTimes = $user->individualTimes()
-            ->whereDate('start_date', $date)
-            ->orderByRaw('COALESCE(start_time, "00:00:00")')
-            ->get();
-        foreach ($individualTimes as $it) {
-            $itStart = Carbon::parse($it->start_date);
-            $itEnd = Carbon::parse($it->end_date);
-            $itStart->setTimeFromTimeString($it->start_time ?: '00:00:00');
-            $itEnd->setTimeFromTimeString($it->end_time ?: '23:59:59');
-            $segStart = $itStart->greaterThan($dayStart) ? $itStart : $dayStart;
-            $segEnd = $itEnd->lessThan($dayEnd) ? $itEnd : $dayEnd;
-            if ($segStart < $segEnd) {
-                $segments[] = ['start' => $segStart, 'end' => $segEnd, 'type' => 'it', 'shift' => null];
+                $segments[] = [
+                    'start' => $segStart,
+                    'end' => $segEnd,
+                    'type' => $interval['source'] === 'shift' ? 'shift' : 'it',
+                    'shift' => $interval['shift'],
+                ];
             }
         }
 
@@ -237,12 +538,8 @@ abstract class AbstractRuleCheck implements ShiftRuleCheckInterface
             return $violations;
         }
 
-        // Sort segments by start time
-        usort($segments, function ($a, $b) {
-            if ($a['start']->eq($b['start'])) {
-                return 0;
-            }
-            return $a['start']->lt($b['start']) ? -1 : 1;
+        usort($segments, static function (array $a, array $b): int {
+            return $a['start']->getTimestamp() <=> $b['start']->getTimestamp();
         });
 
         // Check rest time between consecutive segments; create violation when the NEXT segment is a shift
@@ -293,79 +590,10 @@ abstract class AbstractRuleCheck implements ShiftRuleCheckInterface
      */
     protected function isHoliday(Carbon $date): bool
     {
-        return app(\Artwork\Modules\Holidays\Services\SpecialDayService::class)->isSundayOrSpecialDay($date);
-    }
-
-    protected function getEarliestShiftStartOfDay(User $user, Carbon $date): ?Carbon
-    {
-        // Earliest shift start on this date
-        $shift = Shift::whereHas('users', function ($query) use ($user): void {
-            $query->where('users.id', $user->id);
-        })
-            ->whereDate('start_date', $date)
-            ->orderBy('start')
-            ->first();
-        $earliest = $shift ? Carbon::parse($shift->start_date)->setTimeFromTimeString($shift->start) : null;
-
-        // Earliest individual time start on this date
-        $it = $user->individualTimes()
-            ->whereDate('start_date', $date)
-            ->orderByRaw('COALESCE(start_time, "00:00:00")')
-            ->first();
-        if ($it) {
-            $itStart = Carbon::parse($it->start_date);
-            $itStart->setTimeFromTimeString($it->start_time ?: '00:00:00');
-            $earliest = $earliest ? $earliest->min($itStart) : $itStart;
+        if ($this->context !== null && $this->context->covers($date, $date)) {
+            return $date->isSunday() || isset($this->context->specialDays()[$date->toDateString()]);
         }
 
-        return $earliest;
-    }
-
-    protected function getLatestShiftEndOfDay(User $user, Carbon $date): ?Carbon
-    {
-        // Find latest shift end relevant for this date
-        $shift = Shift::whereHas('users', function ($query) use ($user): void {
-            $query->where('users.id', $user->id);
-        })
-            ->where(function ($query) use ($date): void {
-                $query->whereDate('end_date', $date)
-                    ->orWhere(function ($q) use ($date): void {
-                        $q->whereDate('start_date', $date)
-                            ->whereRaw('end_date > start_date'); // Shift goes past midnight
-                    });
-            })
-            ->orderByDesc('end_date')
-            ->orderByDesc('end')
-            ->first();
-
-        $latest = null;
-        if ($shift) {
-            if ($shift->start_date === $shift->end_date) {
-                $latest = Carbon::parse($date->format('Y-m-d'))->setTimeFromTimeString($shift->end);
-            } else {
-                $latest = Carbon::parse($shift->end_date)->setTimeFromTimeString($shift->end);
-            }
-        }
-
-        // Consider IndividualTimes ending on this date or starting on this date and spanning into next day
-        $it = $user->individualTimes()
-            ->where(function ($q) use ($date): void {
-                $q->whereDate('end_date', $date)
-                    ->orWhere(function ($qq) use ($date): void {
-                        $qq->whereDate('start_date', $date)
-                            ->whereRaw('end_date > start_date');
-                    });
-            })
-            ->orderByDesc('end_date')
-            ->orderByRaw('COALESCE(end_time, "23:59:59") DESC')
-            ->first();
-
-        if ($it) {
-            $itEndDate = Carbon::parse($it->end_date);
-            $itEndDate->setTimeFromTimeString($it->end_time ?: '23:59:59');
-            $latest = $latest ? $latest->max($itEndDate) : $itEndDate;
-        }
-
-        return $latest;
+        return $this->specialDayService()->isSundayOrSpecialDay($date);
     }
 }

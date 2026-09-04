@@ -14,6 +14,7 @@ use Artwork\Modules\Shift\Models\ShiftPlanRequest;
 use Artwork\Modules\Shift\Models\ShiftPlanRequestChange;
 use Artwork\Modules\Shift\Models\ShiftsQualifications;
 use Artwork\Modules\Shift\Models\ShiftQualification;
+use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Artwork\Modules\Shift\Models\ShiftRuleViolation;
 use Artwork\Modules\IndividualTimes\Models\IndividualTime;
 use Artwork\Modules\Notification\Enums\NotificationEnum;
@@ -122,22 +123,46 @@ class ShiftPlanRequestController extends Controller
     }
 
     /**
-     * Schichtwarnungen (ShiftRuleViolations) der Craft-User im Wochenzeitraum, gruppiert
-     * nach User-ID und Datum — für die Warn-Icons in der Freigabeansicht. Violations
-     * existieren derzeit nur für User, nicht für Freelancer/Dienstleister.
+     * Regelverstöße (ShiftRuleViolations) der Craft-User im Wochenzeitraum, gruppiert
+     * nach User-ID und Datum — für die Marker in der Prüfansicht. Der Payload entspricht dem des
+     * Hauptplans (WorkingHourService), damit das ViolationEditModal aus der Prüfansicht heraus
+     * dieselben Felder vorfindet. Violations existieren derzeit nur für User, nicht für
+     * Freelancer/Dienstleister.
      *
      * @param \Illuminate\Support\Collection<int, int> $userIds
      * @return \Illuminate\Support\Collection<int, \Illuminate\Support\Collection<string, mixed>>
      */
+    /**
+     * Darf die angemeldete Person Regelverstöße aus der Prüfansicht heraus bearbeiten? Spiegelt die
+     * Middleware `can:can plan shifts` + `shift-settings-area:rules,edit` (im einfachen Modus reicht
+     * das Schichteinstellungs-Recht, im granularen Modus zusätzlich "Regeln bearbeiten").
+     */
+    private function canEditViolations(): bool
+    {
+        $user = auth()->user();
+        if (!$user || !$user->can(PermissionEnum::SHIFT_PLANNER->value)) {
+            return false;
+        }
+        if (!$user->can(PermissionEnum::SHIFT_SETTINGS_VIEW_EDIT->value)) {
+            return false;
+        }
+        if (!app(\App\Settings\ShiftSettings::class)->granular_permissions_enabled) {
+            return true;
+        }
+
+        return $user->can(PermissionEnum::SHIFT_SETTINGS_RULES_EDIT->value);
+    }
+
     private function loadShiftRuleViolationsForUsers(
         \Illuminate\Support\Collection $userIds,
         Carbon $start,
         Carbon $end
     ): \Illuminate\Support\Collection {
         return ShiftRuleViolation::query()
-            // violation_data/severity: Tooltip der Prüfansicht zeigt Messwert und Grenze
-            ->select(['id', 'shift_rule_id', 'user_id', 'violation_date', 'status', 'severity', 'violation_data'])
-            ->with(['shiftRule:id,name,description,warning_color,trigger_type'])
+            ->with([
+                'shiftRule:id,name,description,warning_color,trigger_type,default_compensation_days,default_compensation_deadline_days',
+                'resolvedByUser:id,first_name,last_name',
+            ])
             ->whereIn('user_id', $userIds)
             ->whereBetween('violation_date', [$start->toDateString(), $end->toDateString()])
             ->whereIn('status', ['active', 'resolved'])
@@ -434,6 +459,7 @@ class ShiftPlanRequestController extends Controller
             'navigation' => $this->buildRequestNavigation($shiftPlanRequest),
             'shiftQualifications' => ShiftQualification::query()->get(['id', 'name']),
             'shiftRuleViolations' => $this->loadShiftRuleViolationsForUsers($craftUserIds, $start, $end),
+            'canEditViolations' => $this->canEditViolations(),
             'craftWorkers' => [
                 'users' => $craftUsers->map(fn ($u) => [
                     'id' => $u->id,
@@ -1535,6 +1561,7 @@ class ShiftPlanRequestController extends Controller
             ),
             'shiftQualifications' => ShiftQualification::query()->get(['id', 'name']),
             'shiftRuleViolations' => $this->loadShiftRuleViolationsForUsers($craftUserIds, $start, $end),
+            'canEditViolations' => $this->canEditViolations(),
             'craftWorkers' => [
                 'users' => $craftUsers->map(fn ($u) => [
                     'id' => $u->id,

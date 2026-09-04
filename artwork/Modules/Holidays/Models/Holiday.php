@@ -17,11 +17,21 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
  * @property Subdivision[]|Collection $subdivisions
  * @property string|null $remote_identifier
  * @property bool $from_api
+ * @property string $type public|school|custom
  * @property Carbon $created_at
  * @property Carbon $updated_at
  */
 class Holiday extends Model
 {
+    /** Gesetzlicher Feiertag (OpenHolidays "Public") – Sondertag-Default: ja */
+    public const TYPE_PUBLIC = 'public';
+    /** Schulferien (OpenHolidays "School") – Sondertag-Default: nein */
+    public const TYPE_SCHOOL = 'school';
+    /** Manuell angelegter Eintrag */
+    public const TYPE_CUSTOM = 'custom';
+
+    public const TYPES = [self::TYPE_PUBLIC, self::TYPE_SCHOOL, self::TYPE_CUSTOM];
+
     protected $table = 'holidays';
 
     protected $fillable = [
@@ -32,6 +42,7 @@ class Holiday extends Model
         'country',
         'remote_identifier',
         'from_api',
+        'type',
         'yearly',
         'color',
         'treatAsSpecialDay',
@@ -43,6 +54,7 @@ class Holiday extends Model
         'date' => 'date:Y-m-d',
         'end_date' => 'date:Y-m-d',
         'from_api' => 'boolean',
+        'type' => 'string',
         'yearly' => 'boolean',
         'treatAsSpecialDay' => 'boolean',
     ];
@@ -68,6 +80,24 @@ class Holiday extends Model
     public static function isSpecialDay(Carbon|string $date): bool
     {
         return app(\Artwork\Modules\Holidays\Services\SpecialDayService::class)->isSpecialDay($date);
+    }
+
+    /**
+     * Typ normalisieren (unbekannte Werte -> custom).
+     */
+    public static function normalizeType(?string $type): string
+    {
+        $type = strtolower(trim((string) $type));
+
+        return in_array($type, self::TYPES, true) ? $type : self::TYPE_CUSTOM;
+    }
+
+    /**
+     * Sondertag-Default je Typ: nur gesetzliche Feiertage sind standardmäßig Sondertage.
+     */
+    public static function defaultTreatAsSpecialDayFor(?string $type): bool
+    {
+        return self::normalizeType($type) === self::TYPE_PUBLIC;
     }
 
     /**

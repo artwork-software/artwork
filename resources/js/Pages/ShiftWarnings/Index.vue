@@ -164,22 +164,22 @@
                         />
 
                         <!-- Wert je Regeltyp: Stunden / Tage / Uhrzeit / kein Wert -->
-                        <div v-if="valueKind === 'hours' || valueKind === 'days'">
+                        <div v-if="valueKind === 'hours' || valueKind === 'days' || valueKind === 'count'">
                             <div class="flex items-end gap-2">
                                 <div class="grow">
                                     <BaseInput
                                         v-model="form.individual_number_value"
-                                        :label="valueKind === 'hours' ? $t('Value (hours)') : $t('Value (days)')"
-                                        required
+                                        :label="valueLabel"
+                                        :required="!valueOptional"
                                         type="number"
-                                        :min="valueKind === 'hours' ? 0.5 : 1"
+                                        :min="valueOptional ? 0 : (valueKind === 'hours' ? 0.5 : 1)"
                                         :step="valueKind === 'hours' ? 0.5 : 1"
                                         :placeholder="valuePlaceholder"
                                         id="individual_number_value"
                                     />
                                 </div>
                                 <span class="mb-2 text-sm text-text-subtle whitespace-nowrap">
-                                    {{ valueKind === 'hours' ? 'h' : $t('Days') }}
+                                    {{ valueUnit }}
                                 </span>
                             </div>
                             <p class="mt-1 text-xs text-text-subtle">{{ valueHelpText }}</p>
@@ -404,6 +404,7 @@ import {
     formatRuleValue,
     ruleTypeLabelKey,
     ruleTypeValueKind,
+    ruleTypeValueOptional,
     timeToDecimalHour,
 } from "@/Pages/ShiftWarnings/ruleTypes.js";
 
@@ -449,7 +450,30 @@ const triggerTypeHint = computed(() => {
 })
 
 const valueKind = computed(() => (form.trigger_type ? ruleTypeValueKind(form.trigger_type) : 'none'))
+const valueOptional = computed(() => ruleTypeValueOptional(form.trigger_type))
 const valuePlaceholder = computed(() => RULE_TYPES[form.trigger_type]?.placeholder ?? '')
+
+const valueLabel = computed(() => {
+    switch (valueKind.value) {
+        case 'hours':
+            return $t('Value (hours)')
+        case 'count':
+            return $t('Value (count)')
+        default:
+            return $t('Value (days)')
+    }
+})
+
+const valueUnit = computed(() => {
+    switch (valueKind.value) {
+        case 'hours':
+            return 'h'
+        case 'count':
+            return $t('Sundays')
+        default:
+            return $t('Days')
+    }
+})
 
 const valueHelpText = computed(() => {
     switch (valueKind.value) {
@@ -457,6 +481,8 @@ const valueHelpText = computed(() => {
             return $t('Hours, half hours allowed (e.g. 8 or 10.5).')
         case 'days':
             return $t('Whole days.')
+        case 'count':
+            return $t('Whole number. Leave empty or 0 to use the target from the contract (free Sundays with Saturday/Monday per season half).')
         case 'time':
             return $t('Time of day as HH:MM — a morning off requires the shift to start at or after this time, an afternoon off requires it to end at or before.')
         default:

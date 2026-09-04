@@ -1,6 +1,14 @@
 <template>
     <AppLayout :title="$t('Public holidays & school vacations via interface')">
-        <EventSettingHeader>
+        <!-- Ohne Termin-Einstellungsrecht (reine Dienstplanung) ohne Event-Settings-Tabs: die Tabs führen sonst auf 403-Seiten -->
+        <component :is="canManage ? EventSettingHeader : 'div'" :class="canManage ? '' : 'artwork-container'">
+
+            <div v-if="!canManage" class="mb-4">
+                <BasePageTitle
+                    :title="$t('Public holidays & school holidays')"
+                    :description="$t('Read-only view: you can mark holidays as special days for shift planning. Creating, editing and importing entries requires the event settings permission.')"
+                />
+            </div>
 
             <SettingsGuideBanner
                 storage-key="settings-guide.event.holidays"
@@ -12,7 +20,7 @@
             />
 
             <!-- Länderwahl -->
-            <fieldset class="my-4 bg-white rounded-2xl border border-border-subtle/70 shadow-sm p-5">
+            <fieldset v-if="canManage" class="my-4 bg-white rounded-2xl border border-border-subtle/70 shadow-sm p-5">
                 <label class="block text-sm/6 font-semibold text-text dark:text-white mb-2">
                     {{ $t('Choose a country') }}
                 </label>
@@ -44,8 +52,8 @@
             </fieldset>
 
 
-            <!-- Intro / Hero -->
-            <section>
+            <!-- Intro / Hero (Import + manuelles Anlegen nur mit Termin-Einstellungsrecht) -->
+            <section v-if="canManage">
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
 
                     <!-- API Import Card -->
@@ -317,6 +325,24 @@
                                     <BaseInput type="date" id="end" v-model="customHolidayForm.end_date" label="End-Time" />
                                 </div>
 
+                                <!-- Typ: gesetzlich / Schulferien / eigener Eintrag; steuert den Sondertag-Default -->
+                                <div class="md:col-span-2">
+                                    <ArtworkBaseListbox
+                                        v-model="customHolidayType"
+                                        :items="holidayTypeOptions"
+                                        by="id"
+                                        option-key="id"
+                                        option-label="name"
+                                        use-translations
+                                        :label="$t('Holiday type')"
+                                        :placeholder="$t('Please select')"
+                                        :enable-search="false"
+                                    />
+                                    <p class="mt-1 text-xs text-text-subtle">
+                                        {{ $t('School holidays are not special days by default; statutory public holidays are.') }}
+                                    </p>
+                                </div>
+
                                 <div class="md:col-span-2">
                                     <SwitchGroup as="div" class="flex items-center cursor-pointer">
                                         <SwitchLabel
@@ -350,26 +376,18 @@
                                 </div>
 
                                 <div class="md:col-span-2">
-                                    <div class="relative flex items-start mt-4">
-                                        <div class="flex h-6 items-center">
-                                            <input
-                                                id="treatAsSpecialDay"
-                                                v-model="customHolidayForm.treatAsSpecialDay"
-                                                type="checkbox"
-                                                class="input-checklist"
-                                            />
-                                        </div>
-                                        <div class="ml-3 text-sm/6 flex">
-                                            <label for="treatAsSpecialDay" class="text-sm font-medium">
-                                                {{ $t('Treat as special day') }}
-                                            </label>
-                                            <ToolTipComponent
-                                                :icon="IconInfoCircle"
-                                                icon-size="h-4 w-4 ml-2"
-                                                :tooltip-text="$t('A holiday treated as a special day reduces the daily target of a person to 0 (or by the weekday average in three-month mode) if no work was done on that day and the contract has the special day rule active. Hours worked on a special day count normally. School vacations are never special days.')"
-                                                direction="bottom"
-                                            />
-                                        </div>
+                                    <div class="flex items-start mt-4 gap-2">
+                                        <BaseCheckbox
+                                            id="treatAsSpecialDay"
+                                            v-model="customHolidayForm.treatAsSpecialDay"
+                                            :label="$t('Treat as special day')"
+                                        />
+                                        <ToolTipComponent
+                                            :icon="IconInfoCircle"
+                                            icon-size="h-4 w-4"
+                                            :tooltip-text="$t('A holiday treated as a special day reduces the daily target of a person to 0 (or by the weekday average in three-month mode) if no work was done on that day and the contract has the special day rule active. Hours worked on a special day count normally. School vacations are never special days.')"
+                                            direction="bottom"
+                                        />
                                     </div>
                                 </div>
 
@@ -392,6 +410,7 @@
                 <div class="bg-white rounded-2xl border border-border-subtle/70 shadow-sm">
                     <div class="p-4 sm:p-6 lg:p-8">
                         <SettingsGuideBanner
+                            v-if="canManage"
                             class="mb-4"
                             variant="static"
                             title="Imported entries"
@@ -400,6 +419,33 @@
                                 'Imported public holidays are marked as special day, school vacations are not — check the Special Day column after every import.',
                             ]"
                         />
+                        <SettingsGuideBanner
+                            v-else
+                            class="mb-4"
+                            variant="static"
+                            title="Special days for shift planning"
+                            :paragraphs="[
+                                'Tick \'Special Day\' to reduce the daily target of people with an active special day rule on that day. Changes are saved immediately.',
+                                'School holidays are not special days by default; statutory public holidays are.',
+                            ]"
+                        />
+                        <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+                            <!-- Filter nach Typ (serverseitig, bleibt in der Pagination erhalten) -->
+                            <div class="w-full sm:w-64">
+                                <ArtworkBaseListbox
+                                    v-model="typeFilterOption"
+                                    :items="holidayTypeFilterOptions"
+                                    by="id"
+                                    option-key="id"
+                                    option-label="name"
+                                    use-translations
+                                    :label="$t('Filter by type')"
+                                    :placeholder="$t('All types')"
+                                    :enable-search="false"
+                                    is-small
+                                />
+                            </div>
+                        </div>
                         <div class="flex items-center justify-between mb-4">
                             <transition
                                 enter-active-class="duration-300 ease-out"
@@ -418,7 +464,7 @@
                                 </div>
                             </transition>
 
-                            <div v-if="Object.keys(changedHolidays).length > 0" class="flex items-center gap-2">
+                            <div v-if="canManage && Object.keys(changedHolidays).length > 0" class="flex items-center gap-2">
                                 <span class="text-sm text-danger">
                                     {{ $t('You have unsaved changes') }}
                                 </span>
@@ -440,6 +486,9 @@
                                         {{ $t('until')}}
                                     </th>
                                     <th scope="col" class="px-3 py-3.5 text-sm font-semibold text-text">
+                                        {{ $t('Type') }}
+                                    </th>
+                                    <th scope="col" class="px-3 py-3.5 text-sm font-semibold text-text">
                                         {{ $t('Federal states') }}
                                     </th>
                                     <th scope="col" class="px-3 py-3.5 text-sm font-semibold text-text">
@@ -454,7 +503,7 @@
                                                 <ToolTipComponent
                                                     :icon="IconInfoCircle"
                                                     icon-size="h-4 w-4 ml-2"
-                                                    :tooltip-text="$t('A holiday treated as a special day reduces the daily target of a person to 0 (or by the weekday average in three-month mode) if no work was done on that day and the contract has the special day rule active. Hours worked on a special day count normally. School vacations are never special days.')"
+                                                    :tooltip-text="$t('A holiday treated as a special day reduces the daily target of a person to 0 (or by the weekday average in three-month mode) if no work was done on that day and the contract has the special day rule active. Hours worked on a special day count normally.') + ' ' + $t('School holidays are not special days by default; statutory public holidays are.')"
                                                     direction="bottom"
                                                 />
                                             </span>
@@ -473,6 +522,11 @@
                                     <td class="whitespace-nowrap px-3 py-4 text-sm text-text-muted">
                                         {{ holiday.casted_date.end_date }}
                                     </td>
+                                    <td class="whitespace-nowrap px-3 py-4 text-sm">
+                                        <BaseChip :variant="holidayTypeVariant(holiday.type)">
+                                            {{ $t(holidayTypeLabel(holiday.type)) }}
+                                        </BaseChip>
+                                    </td>
                                     <td class="px-3 py-4 text-sm text-text-muted">
                                         <div v-if="holiday.subdivisions.length > 0" class="max-w-xl">
                                             {{ holiday.subdivisions.map((person) => person.name).join(', ') }}
@@ -488,15 +542,17 @@
                                         {{ holiday.yearly ? $t('Yes') : $t('No') }}
                                     </td>
                                     <td class="whitespace-nowrap px-3 py-4 text-sm">
-                                        <input
-                                            type="checkbox"
-                                            :checked="getHolidayTreatAsSpecialDay(holiday)"
-                                            @change="updateTreatAsSpecialDay(holiday.id, $event.target.checked)"
-                                            class="input-checklist"
+                                        <!-- Manager: Sammeln + "Änderungen speichern"; reine Dienstplanung: sofort einzeln speichern -->
+                                        <BaseCheckbox
+                                            :id="`treat-as-special-day-${holiday.id}`"
+                                            :model-value="getHolidayTreatAsSpecialDay(holiday)"
+                                            :disabled="!canToggleSpecialDay || savingSpecialDayIds.has(holiday.id)"
+                                            :aria-label="$t('Treat as special day')"
+                                            @update:model-value="updateTreatAsSpecialDay(holiday.id, $event)"
                                         />
                                     </td>
                                     <td class="whitespace-nowrap py-4 pl-3 pr-4 sm:pr-6">
-                                        <div class="flex items-center justify-end gap-3">
+                                        <div v-if="canManage" class="flex items-center justify-end gap-3">
                                             <ToolTipComponent
                                                 v-if="!holiday.from_api"
                                                 @click="editHoliday(holiday)"
@@ -556,8 +612,16 @@
                 @close="closeEditHolidayModal"
                 :holiday-to-edit="holidayToEdit"
                 :sub-divisions="subdivisions"
+                :holiday-type-options="holidayTypeOptions"
             />
-        </EventSettingHeader>
+
+            <NotificationToast
+                v-model:show="specialDayToast.visible"
+                :title="specialDayToast.title"
+                :description="specialDayToast.description"
+                :type="specialDayToast.type"
+            />
+        </component>
     </AppLayout>
 </template>
 
@@ -565,7 +629,8 @@
 import AppLayout from "@/Layouts/AppLayout.vue";
 import EventSettingHeader from "@/Pages/Settings/EventSettingComponents/EventSettingHeader.vue";
 import AlertComponent from "@/Components/Alerts/AlertComponent.vue";
-import {computed, reactive, ref} from "vue";
+import {computed, reactive, ref, watch} from "vue";
+import axios from "axios";
 import {
     Listbox,
     ListboxButton,
@@ -573,7 +638,11 @@ import {
     ListboxOptions, Switch, SwitchGroup, SwitchLabel
 } from "@headlessui/vue";
 import ColorPickerComponent from "@/Components/Globale/ColorPickerComponent.vue";
-import {router, useForm} from "@inertiajs/vue3";
+import {router, useForm, usePage} from "@inertiajs/vue3";
+import {usePermission} from "@/Composeables/Permission.js";
+import ArtworkBaseListbox from "@/Artwork/Listbox/ArtworkBaseListbox.vue";
+import BaseChip from "@/Artwork/Chips/BaseChip.vue";
+import NotificationToast from "@/Artwork/Feedback/NotificationToast.vue";
 import AddButtonBig from "@/Layouts/Components/General/Buttons/AddButtonBig.vue";
 import BasePaginator from "@/Components/Paginate/BasePaginator.vue";
 import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
@@ -589,8 +658,28 @@ import SettingsGuideBanner from "@/Artwork/Guide/SettingsGuideBanner.vue";
 const props = defineProps({
     holidays: { type: Object, required: true },
     subdivisions: { type: Array, required: true }, // Array statt Object
-    settings: { type: Object, required: true }
+    settings: { type: Object, required: true },
+    typeFilter: { type: String, required: false, default: null },
+    holidayTypes: { type: Array, required: false, default: () => ['public', 'school', 'custom'] },
 })
+
+// Rechte: Termin-Einstellungen = volle Verwaltung; "can plan shifts" = read-only + Sondertag-Häkchen
+const { can, hasAdminRole } = usePermission(usePage().props)
+const canManage = computed(() => hasAdminRole() || can('change event settings'))
+const canToggleSpecialDay = computed(() => canManage.value || can('can plan shifts'))
+
+// Feiertagstypen (Spiegel von Holiday::TYPES); Sondertag-Default = gesetzlicher Feiertag
+const HOLIDAY_TYPE_META = {
+    public: { label: 'Statutory public holiday', variant: 'accent' },
+    school: { label: 'School vacations', variant: 'neutral' },
+    custom: { label: 'Custom entry', variant: 'warning' },
+}
+const holidayTypeOptions = (props.holidayTypes ?? []).map((id) => ({ id, name: HOLIDAY_TYPE_META[id]?.label ?? id }))
+const holidayTypeFilterOptions = [{ id: '', name: 'All types' }, ...holidayTypeOptions]
+const holidayTypeLabel = (type) => HOLIDAY_TYPE_META[type]?.label ?? HOLIDAY_TYPE_META.custom.label
+const holidayTypeVariant = (type) => HOLIDAY_TYPE_META[type]?.variant ?? 'neutral'
+
+const typeFilterOption = ref(holidayTypeFilterOptions.find((o) => o.id === (props.typeFilter ?? '')) ?? holidayTypeFilterOptions[0])
 
 const page = ref(route().params.page ?? 1)
 const perPage = ref(route().params.entitiesPerPage ?? 10);
@@ -625,6 +714,21 @@ const customHolidayForm = useForm({
     from_api: false,
     yearly: false,
     treatAsSpecialDay: false,
+    type: 'custom',
+})
+
+// Typ-Listbox (Objekt) <-> Formularfeld (String); Typwechsel setzt den Sondertag-Default
+const customHolidayType = ref(holidayTypeOptions.find((o) => o.id === 'custom') ?? holidayTypeOptions[0] ?? null)
+watch(customHolidayType, (option) => {
+    const type = option?.id ?? 'custom'
+    customHolidayForm.type = type
+    customHolidayForm.treatAsSpecialDay = type === 'public'
+})
+
+// Typ-Filter -> serverseitig neu laden (Seite 1)
+watch(typeFilterOption, (option, previous) => {
+    if ((option?.id ?? '') === (previous?.id ?? '')) return
+    applyFiltersAndSort()
 })
 
 // Länderwahl & Suche
@@ -734,6 +838,7 @@ const applyFiltersAndSort = (resetPage = true) => {
             page: resetPage ? 1 : page.value,
             entitiesPerPage: perPage.value,
             query: route().params.query,
+            type: typeFilterOption.value?.id || undefined,
         },
         { preserveScroll: true, preserveState: true }
     );
@@ -749,6 +854,7 @@ const storeCustomHoliday = () => {
         preserveState: true,
         onSuccess: () => {
             customHolidayForm.reset();
+            customHolidayType.value = holidayTypeOptions.find((o) => o.id === 'custom') ?? holidayTypeOptions[0] ?? null;
             showCustomHolidaySaved.value = true;
             setTimeout(() => { showCustomHolidaySaved.value = false }, 5000)
             applyFiltersAndSort();
@@ -778,12 +884,53 @@ const getHolidayTreatAsSpecialDay = (holiday) => {
     return holiday.treatAsSpecialDay;
 }
 
-const updateTreatAsSpecialDay = (id, checked) => {
+// Sofort-Speichern (nur Flag) für Dienstplaner:innen ohne Termin-Einstellungsrecht
+const savingSpecialDayIds = ref(new Set());
+const specialDayToast = reactive({ visible: false, title: '', description: '', type: 'success' });
+
+const showSpecialDayToast = (title, description, type = 'success') => {
+    specialDayToast.title = title;
+    specialDayToast.description = description;
+    specialDayToast.type = type;
+    specialDayToast.visible = true;
+}
+
+const updateTreatAsSpecialDay = async (id, checked) => {
+    if (!canToggleSpecialDay.value) return;
+
+    if (canManage.value) {
+        // Bisheriges Verhalten: sammeln und mit "Änderungen speichern" als Batch sichern
+        changedHolidays.value[id] = checked;
+        return;
+    }
+
+    // Optimistisch anzeigen; bei Fehler auf den Serverstand (holiday.treatAsSpecialDay) zurückfallen
     changedHolidays.value[id] = checked;
+    savingSpecialDayIds.value = new Set([...savingSpecialDayIds.value, id]);
+
+    try {
+        const { data } = await axios.patch(route('holiday.special-day.update', id), { treatAsSpecialDay: checked });
+        changedHolidays.value[id] = !!data?.treatAsSpecialDay;
+        showSpecialDayToast(
+            'Saved',
+            checked ? 'Marked as special day.' : 'No longer marked as special day.'
+        );
+    } catch (e) {
+        delete changedHolidays.value[id];
+        showSpecialDayToast(
+            'Saving failed',
+            e?.response?.status === 403 ? 'You do not have permission to change this.' : 'Please try again.',
+            'danger'
+        );
+    } finally {
+        const next = new Set(savingSpecialDayIds.value);
+        next.delete(id);
+        savingSpecialDayIds.value = next;
+    }
 }
 
 const saveChanges = () => {
-    if (Object.keys(changedHolidays.value).length === 0) return;
+    if (!canManage.value || Object.keys(changedHolidays.value).length === 0) return;
 
     router.post(route('holiday.batch-update'), {
         holidays: changedHolidays.value

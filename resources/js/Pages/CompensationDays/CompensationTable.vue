@@ -67,7 +67,7 @@
                                 class="inline-block h-2 w-2 rounded-full"
                                 :style="{ backgroundColor: item.violation.shift_rule.warning_color || '#ff0000' }"
                             ></span>
-                            {{ item.violation?.shift_rule?.name || $t('Manual') }}
+                            {{ item.violation?.shift_rule?.name || item.violation?.title || $t('Manual') }}
                         </div>
                     </td>
                     <td class="px-3 py-2.5 text-text-muted max-w-[200px] truncate">

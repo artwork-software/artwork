@@ -47,7 +47,10 @@ class HolidayImport
                 0,
                 $holiday['id'],
                 true,
-                '#333'
+                '#333',
+                // Nur gesetzliche Feiertage ("Public") sind Sondertage; Schulferien nie.
+                HolidayService::isSpecialDayType($holiday['type'] ?? null),
+                HolidayService::typeFromApi($holiday['type'] ?? null)
             );
         }
     }

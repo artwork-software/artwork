@@ -9,18 +9,79 @@
                 :search-enabled="false"
             />
 
-            <!-- Craft filter -->
-            <div class="mt-6 flex items-center gap-3">
-                <label class="text-xs font-medium text-text-subtle">{{ $t('Craft') }}:</label>
-                <SearchableSelect
-                    v-model="selectedCraft"
-                    :options="crafts"
-                    value-key="id"
-                    :label-key="craft => craft.abbreviation ? `${craft.name} (${craft.abbreviation})` : craft.name"
-                    :empty-option="{ label: 'All crafts', value: null }"
-                    :placeholder="$t('All crafts')"
-                    @change="onCraftChange"
+            <!-- Filter: Gewerk, Person, Frist von–bis, Status — in der URL gehalten (Query) -->
+            <div class="mt-6 flex flex-wrap items-end gap-3">
+                <div class="min-w-[12rem]">
+                    <label class="block text-xs font-medium text-text-subtle mb-1">{{ $t('Craft') }}</label>
+                    <SearchableSelect
+                        v-model="filterState.craft_id"
+                        :options="crafts"
+                        value-key="id"
+                        :label-key="craft => craft.abbreviation ? `${craft.name} (${craft.abbreviation})` : craft.name"
+                        :empty-option="{ label: 'All crafts', value: null }"
+                        :placeholder="$t('All crafts')"
+                        @change="applyFilters"
+                    />
+                </div>
+                <div class="min-w-[12rem]">
+                    <label class="block text-xs font-medium text-text-subtle mb-1">{{ $t('Person') }}</label>
+                    <SearchableSelect
+                        v-model="filterState.user_id"
+                        :options="users"
+                        value-key="id"
+                        :label-key="user => `${user.last_name}, ${user.first_name}`"
+                        :empty-option="{ label: 'All persons', value: null }"
+                        :placeholder="$t('All persons')"
+                        @change="applyFilters"
+                    />
+                </div>
+                <div class="w-40">
+                    <BaseInput
+                        id="deadline_from"
+                        v-model="filterState.deadline_from"
+                        type="date"
+                        :label="$t('Deadline from')"
+                        no-margin-top
+                        @change="applyFilters"
+                    />
+                </div>
+                <div class="w-40">
+                    <BaseInput
+                        id="deadline_to"
+                        v-model="filterState.deadline_to"
+                        type="date"
+                        :label="$t('Deadline until')"
+                        no-margin-top
+                        @change="applyFilters"
+                    />
+                </div>
+                <div class="min-w-[10rem]">
+                    <label class="block text-xs font-medium text-text-subtle mb-1">{{ $t('Status') }}</label>
+                    <SearchableSelect
+                        v-model="filterState.status"
+                        :options="statusOptions"
+                        value-key="value"
+                        label-key="label"
+                        translate-option-labels
+                        :empty-option="{ label: 'All statuses', value: null }"
+                        :placeholder="$t('All statuses')"
+                        @change="applyFilters"
+                    />
+                </div>
+                <BaseUIButton
+                    v-if="hasActiveFilters"
+                    :label="$t('Reset filters')"
+                    is-cancel-button
+                    @click="resetFilters"
                 />
+                <!-- Export: dieselben Rechte wie das Dashboard (can plan shifts) -->
+                <a
+                    v-if="can('can plan shifts') || hasAdminRole()"
+                    :href="exportUrl"
+                    class="ml-auto"
+                >
+                    <BaseUIButton :label="$t('Export as Excel')" :icon="IconFileSpreadsheet" />
+                </a>
             </div>
 
             <!-- Summary cards -->
@@ -187,18 +248,22 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue';
-import { router } from '@inertiajs/vue3';
+import { ref, reactive, computed } from 'vue';
+import { router, usePage } from '@inertiajs/vue3';
 import { useI18n } from 'vue-i18n';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import ToolbarHeader from '@/Artwork/Toolbar/ToolbarHeader.vue';
 import SearchableSelect from '@/Artwork/Listbox/SearchableSelect.vue';
+import BaseInput from '@/Artwork/Inputs/BaseInput.vue';
+import BaseUIButton from '@/Artwork/Buttons/BaseUIButton.vue';
 import GrantCompensationDayModal from '@/Pages/Shifts/Components/GrantCompensationDayModal.vue';
 import DeleteCompensationDayModal from '@/Pages/Shifts/Components/DeleteCompensationDayModal.vue';
 import CompensationTable from '@/Pages/CompensationDays/CompensationTable.vue';
-import { IconCalendarOff } from '@tabler/icons-vue';
+import { usePermission } from '@/Composeables/Permission.js';
+import { IconCalendarOff, IconFileSpreadsheet } from '@tabler/icons-vue';
 
 const { t } = useI18n();
+const { can, hasAdminRole } = usePermission(usePage().props);
 
 const props = defineProps({
     openCompensations: { type: Array, default: () => [] },
@@ -207,26 +272,63 @@ const props = defineProps({
     stats: { type: Object, default: () => ({}) },
     recentActivity: { type: Object, default: () => ({ data: [], total: 0, current_page: 1, last_page: 1, links: [] }) },
     crafts: { type: Array, default: () => [] },
+    users: { type: Array, default: () => [] },
     selectedCraftId: { type: Number, default: null },
+    filters: { type: Object, default: () => ({}) },
 });
 
-const selectedCraft = ref(props.selectedCraftId);
+// Filterzustand aus der URL (Backend gibt die validierten Filter zurück)
+const filterState = reactive({
+    craft_id: props.filters?.craft_id ?? props.selectedCraftId ?? null,
+    user_id: props.filters?.user_id ?? null,
+    deadline_from: props.filters?.deadline_from ?? '',
+    deadline_to: props.filters?.deadline_to ?? '',
+    status: props.filters?.status ?? null,
+});
+
+const statusOptions = [
+    { value: 'open', label: 'Open' },
+    { value: 'granted', label: 'Granted' },
+    { value: 'overdue', label: 'Overdue' },
+];
+
+const hasActiveFilters = computed(() =>
+    !!(filterState.craft_id || filterState.user_id || filterState.deadline_from || filterState.deadline_to || filterState.status)
+);
+
+function filterParams() {
+    const params = {};
+    if (filterState.craft_id) params.craft_id = filterState.craft_id;
+    if (filterState.user_id) params.user_id = filterState.user_id;
+    if (filterState.deadline_from) params.deadline_from = filterState.deadline_from;
+    if (filterState.deadline_to) params.deadline_to = filterState.deadline_to;
+    if (filterState.status) params.status = filterState.status;
+    return params;
+}
+
+function applyFilters() {
+    router.get(route('compensation-day-offs.dashboard'), filterParams(), {
+        preserveState: true,
+        preserveScroll: true,
+    });
+}
+
+function resetFilters() {
+    filterState.craft_id = null;
+    filterState.user_id = null;
+    filterState.deadline_from = '';
+    filterState.deadline_to = '';
+    filterState.status = null;
+    applyFilters();
+}
+
+const exportUrl = computed(() => route('compensation-day-offs.export', filterParams()));
+
 const showGrantModal = ref(false);
 const grantUserId = ref(null);
 const grantUserName = ref('');
 const showDeleteModal = ref(false);
 const selectedCompDayToDelete = ref(null);
-
-function onCraftChange() {
-    const params = {};
-    if (selectedCraft.value) {
-        params.craft_id = selectedCraft.value;
-    }
-    router.get(route('compensation-day-offs.dashboard'), params, {
-        preserveState: true,
-        preserveScroll: true,
-    });
-}
 
 const paginationLinks = computed(() => {
     return (props.recentActivity.links || []).filter(link => {
@@ -237,11 +339,9 @@ const paginationLinks = computed(() => {
 
 function goToPage(url) {
     if (!url) return;
-    // Preserve craft_id when paginating
+    // Filter beim Blättern beibehalten
     const pageUrl = new URL(url);
-    if (selectedCraft.value) {
-        pageUrl.searchParams.set('craft_id', selectedCraft.value);
-    }
+    Object.entries(filterParams()).forEach(([key, value]) => pageUrl.searchParams.set(key, value));
     router.get(pageUrl.toString(), {}, {
         preserveState: true,
         preserveScroll: true,

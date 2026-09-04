@@ -10,8 +10,8 @@ use Illuminate\Support\Collection;
 
 /**
  * Sonntagsarbeit: ein Verstoß (severity warning) für jeden Sonntag im Zeitraum, an dem die
- * Person eine Schicht hat. Schichttag = start_date, bei Schichten über Mitternacht zählt also
- * der Starttag. $rule->individual_number_value wird nicht verwendet.
+ * Person eine Schicht hat. Schichttag = effektiver Starttag der Person (Pivot-Datum, sonst
+ * start_date), bei Schichten über Mitternacht zählt also der Starttag. $rule->individual_number_value wird nicht verwendet.
  */
 class WorkOnSundayCheck extends AbstractRuleCheck
 {
@@ -32,8 +32,8 @@ class WorkOnSundayCheck extends AbstractRuleCheck
             $violations->push($this->createViolation($rule, $shift, $user, $date, [
                 'day' => $date->toDateString(),
                 'weekday' => 'sunday',
-                'shift_start' => Carbon::parse($shift->start_date)->setTimeFromTimeString($shift->start)
-                    ->format('Y-m-d H:i:s'),
+                // effektiver Beginn der Person (Pivot-Zeit vor Schichtzeit)
+                'shift_start' => $this->shiftInterval($shift)['start']->format('Y-m-d H:i:s'),
             ]));
         }
 

@@ -25,13 +25,21 @@ class HolidayController extends Controller
 
     public function index(Request $request): \Inertia\Response
     {
+        $typeFilter = (string) $request->input('type', '');
+        if (!in_array($typeFilter, Holiday::TYPES, true)) {
+            $typeFilter = null;
+        }
+
         return inertia('Settings/Holidays/Index', [
             'holidays' => $this->holidayService->getAll(
                 $request->integer('entitiesPerPage', 10),
-                ['subdivisions']
+                ['subdivisions'],
+                $typeFilter
             ),
             'subdivisions' => Subdivision::all()->toArray(),
             'settings' => app(HolidaySettings::class),
+            'typeFilter' => $typeFilter,
+            'holidayTypes' => Holiday::TYPES,
         ]);
     }
 
@@ -49,15 +57,20 @@ class HolidayController extends Controller
     public function store(HolidayRequest $request): void
     {
         $selected = $request->collect('selectedSubdivisions')->pluck('id')->toArray();
+        $type = Holiday::normalizeType($request->input('type'));
         $this->holidayService->create(
             name: $request->input('name'),
             subdivision: $selected,
             date: Carbon::parse($request->input('date')),
-            endDate: Carbon::parse($request->input('end_date')),
+            endDate: Carbon::parse($request->input('end_date') ?: $request->input('date')),
             countryCode: 'DE',
             yearly: $request->boolean('yearly'),
             color: $request->input('color'),
-            treatAsSpecialDay: $request->boolean('treatAsSpecialDay')
+            // Ohne explizite Angabe gilt der Typ-Default (nur gesetzliche Feiertage sind Sondertage)
+            treatAsSpecialDay: $request->has('treatAsSpecialDay')
+                ? $request->boolean('treatAsSpecialDay')
+                : Holiday::defaultTreatAsSpecialDayFor($type),
+            type: $type
         );
     }
 
@@ -65,8 +78,30 @@ class HolidayController extends Controller
     {
         $subdivisions = $request->collect('selectedSubdivisions')->pluck('id')->toArray();
         $holiday->fill($request->only(['name', 'date', 'end_date', 'yearly', 'color', 'treatAsSpecialDay']));
+        if ($request->filled('type')) {
+            $holiday->type = Holiday::normalizeType($request->input('type'));
+        }
         $holiday->subdivisions()->sync($subdivisions);
         $holiday->save();
+    }
+
+    /**
+     * Nur das Sondertag-Flag eines Eintrags ändern (Dienstplaner:innen mit "can plan shifts").
+     * Name/Datum/Typ bleiben unberührt; das Flag ist die einzige Wahrheit für den SpecialDayService.
+     */
+    public function updateTreatAsSpecialDay(Request $request, Holiday $holiday): JsonResponse
+    {
+        $validated = $request->validate([
+            'treatAsSpecialDay' => ['required', 'boolean'],
+        ]);
+
+        $holiday->treatAsSpecialDay = (bool) $validated['treatAsSpecialDay'];
+        $holiday->save();
+
+        return response()->json([
+            'id' => $holiday->id,
+            'treatAsSpecialDay' => (bool) $holiday->treatAsSpecialDay,
+        ]);
     }
 
     public function batchUpdateTreatAsSpecialDay(Request $request): void
@@ -122,7 +157,8 @@ class HolidayController extends Controller
                 $color,
                 // DP-04: Nur gesetzliche Feiertage (OpenHolidays type "Public") sind Sondertage;
                 // Schulferien ("School") senken das Tagessoll nie.
-                HolidayService::isSpecialDayType($holiday['type'] ?? null)
+                HolidayService::isSpecialDayType($holiday['type'] ?? null),
+                HolidayService::typeFromApi($holiday['type'] ?? null)
             );
         }
     }

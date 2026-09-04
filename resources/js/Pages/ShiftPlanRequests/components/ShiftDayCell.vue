@@ -6,28 +6,34 @@
         <div v-if="day.rejection_reason" class="text-[10px] text-danger font-bold leading-tight mb-1 px-1 border-b border-danger-border pb-1">
             {{ day.rejection_reason }}
         </div>
-        <!-- Schichtwarnungen (ShiftRuleViolations) des Users an diesem Tag — Markup analog ShiftPlanCell -->
+        <!-- Regelverstöße (ShiftRuleViolations) des Users an diesem Tag — Markup analog ShiftPlanCell.
+             Mit Bearbeitungsrecht (can plan shifts + Regeln bearbeiten) öffnet der Klick das ViolationEditModal,
+             sonst gibt es nur den Tooltip. -->
         <div v-if="violations.length" class="flex items-center justify-end gap-0.5 px-0.5">
-            <div
+            <component
+                :is="canEditViolations ? 'button' : 'div'"
                 v-for="violation in violations"
                 :key="violation.id"
+                :type="canEditViolations ? 'button' : null"
                 class="h-4 w-4 flex items-center justify-center"
+                :class="canEditViolations ? 'cursor-pointer rounded hover:bg-surface-sunken' : ''"
                 :title="violationTooltip(violation)"
+                @click.stop="canEditViolations && $emit('open-violation', violation)"
             >
                 <!-- Bearbeitet (resolved): Warndreieck in Warnfarbe MIT grünem Haken-Badge -->
                 <span v-if="violation.status === 'resolved'" class="relative inline-flex h-3.5 w-3.5">
-                    <svg class="h-3.5 w-3.5" :style="{ color: violation.shift_rule?.warning_color || '#ff0000' }" fill="currentColor" viewBox="0 0 20 20">
+                    <svg class="h-3.5 w-3.5" :class="violationColorClass(violation)" :style="violationColorStyle(violation)" fill="currentColor" viewBox="0 0 20 20">
                         <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
                     </svg>
                     <svg class="absolute -bottom-1 -right-1 h-2.5 w-2.5 rounded-full bg-white text-success" fill="currentColor" viewBox="0 0 20 20">
                         <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
                     </svg>
                 </span>
-                <!-- Offener Verstoß: Warndreieck in Warnfarbe -->
-                <svg v-else class="h-3.5 w-3.5" :style="{ color: violation.shift_rule?.warning_color || '#ff0000' }" fill="currentColor" viewBox="0 0 20 20">
+                <!-- Offener Verstoß: Warndreieck in Warnfarbe (ohne Regel: text-warning) -->
+                <svg v-else class="h-3.5 w-3.5" :class="violationColorClass(violation)" :style="violationColorStyle(violation)" fill="currentColor" viewBox="0 0 20 20">
                     <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
                 </svg>
-            </div>
+            </component>
         </div>
         <template v-if="entries && entries.length">
             <div v-for="entry in entries"
@@ -114,9 +120,14 @@ import {formatViolationMeasure} from '@/Pages/ShiftWarnings/ruleTypes.js';
 
 const {t} = useI18n();
 
-/** Tooltip: Regelname · Status · Messwert und Grenze (gleiche Formatierung wie ShiftPlanCell) */
+/** Farbe: Regelfarbe, ohne Regel (manuell "Sonstiges") der Warn-Token */
+const violationColorStyle = (violation) =>
+    (violation.shift_rule ? { color: violation.shift_rule.warning_color || '#ff0000' } : null);
+const violationColorClass = (violation) => (violation.shift_rule ? '' : 'text-warning');
+
+/** Tooltip: Regelname/Titel · Status · Messwert und Grenze (gleiche Formatierung wie ShiftPlanCell) */
 const violationTooltip = (violation) => {
-    const parts = [violation.shift_rule?.name || t('Rule violation')];
+    const parts = [violation.shift_rule?.name || violation.title || t('Rule violation')];
     parts.push(violation.status === 'resolved' ? t('Processed') : t('Open'));
     const measure = formatViolationMeasure(violation, t);
     if (measure) parts.push(measure);
@@ -131,8 +142,11 @@ const props = defineProps({
     dayDate: { type: String, required: true },
     day: { type: Object, default: () => ({}) },
     selectedDays: { type: Object, required: true },
-    shiftSelections: { type: Object, required: true }
+    shiftSelections: { type: Object, required: true },
+    /** Verstoß-Marker klickbar (öffnet das Bearbeiten-Modal) — nur mit Bearbeitungsrecht */
+    canEditViolations: { type: Boolean, default: false },
 });
+defineEmits(['open-history', 'open-violation']);
 const isSelectedDay = computed(() => !!props.selectedDays[props.dayDate]);
 const entryCardClass = (entry) => {
     let base = entry.has_changes_after_commit ? 'border border-danger-border bg-danger-surface/70 shadow-none hover:border-danger-border' : 'bg-white shadow-sm hover:ring-1 hover:ring-accent-200';

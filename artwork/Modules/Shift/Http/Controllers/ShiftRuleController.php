@@ -34,11 +34,54 @@ class ShiftRuleController extends Controller
     ) {
     }
 
+    /**
+     * Filter des Dashboards aus der Query: Gewerk, Person, Frist von–bis, Status (open|granted|overdue).
+     *
+     * @return array{craft_id: int|null, user_id: int|null, deadline_from: string|null, deadline_to: string|null, status: string|null}
+     */
+    private function dashboardFilters(Request $request): array
+    {
+        $validated = $request->validate([
+            'craft_id' => 'nullable|integer',
+            'user_id' => 'nullable|integer',
+            'deadline_from' => 'nullable|date_format:Y-m-d',
+            'deadline_to' => 'nullable|date_format:Y-m-d|after_or_equal:deadline_from',
+            'status' => 'nullable|in:open,granted,overdue',
+        ]);
+
+        return [
+            'craft_id' => !empty($validated['craft_id']) ? (int) $validated['craft_id'] : null,
+            'user_id' => !empty($validated['user_id']) ? (int) $validated['user_id'] : null,
+            'deadline_from' => $validated['deadline_from'] ?? null,
+            'deadline_to' => $validated['deadline_to'] ?? null,
+            'status' => $validated['status'] ?? null,
+        ];
+    }
+
+    /**
+     * Gefilterte Listen (überfällig/offen/gewährt). Bei Statusfilter sind die anderen Listen leer;
+     * "offen" enthält auch überfällige Einträge (überfällig = offen mit abgelaufener Frist).
+     *
+     * @return array{overdue: \Illuminate\Database\Eloquent\Collection, open: \Illuminate\Database\Eloquent\Collection, granted: \Illuminate\Database\Eloquent\Collection}
+     */
+    private function dashboardLists(CompensationDayOffRepository $repository, array $filters): array
+    {
+        $status = $filters['status'];
+        $empty = new \Illuminate\Database\Eloquent\Collection();
+
+        return [
+            'overdue' => in_array($status, [null, 'overdue', 'open'], true) ? $repository->getAllOverdue($filters) : $empty,
+            'open' => in_array($status, [null, 'open'], true) ? $repository->getAllOpen($filters) : $empty,
+            'granted' => in_array($status, [null, 'granted'], true) ? $repository->getAllGranted($filters) : $empty,
+        ];
+    }
+
     public function compensationDashboard(Request $request): Response
     {
         $compensationDayOffRepository = app(CompensationDayOffRepository::class);
 
-        $craftId = $request->integer('craft_id') ?: null;
+        $filters = $this->dashboardFilters($request);
+        $lists = $this->dashboardLists($compensationDayOffRepository, $filters);
 
         $recentActivity = \Spatie\Activitylog\Models\Activity::query()
             ->whereIn('log_name', ['compensation_day_off', 'shift_rule_violation'])
@@ -63,14 +106,33 @@ class ShiftRuleController extends Controller
             ->get();
 
         return Inertia::render('CompensationDays/Index', [
-            'openCompensations' => $compensationDayOffRepository->getAllOpen($craftId),
-            'grantedCompensations' => $compensationDayOffRepository->getAllGranted($craftId),
-            'overdueCompensations' => $compensationDayOffRepository->getAllOverdue($craftId),
-            'stats' => $compensationDayOffRepository->getDashboardStats($craftId),
+            'openCompensations' => $lists['open'],
+            'grantedCompensations' => $lists['granted'],
+            'overdueCompensations' => $lists['overdue'],
+            'stats' => $compensationDayOffRepository->getDashboardStats($filters),
             'recentActivity' => $recentActivity,
             'crafts' => $crafts,
-            'selectedCraftId' => $craftId,
+            'users' => $compensationDayOffRepository->getUsersWithEntries(),
+            'selectedCraftId' => $filters['craft_id'],
+            'filters' => $filters,
         ]);
+    }
+
+    /**
+     * Excel-Export der gefilterten Ersatzfrei-Liste — gleiche Filter und dieselben Rechte wie das Dashboard.
+     */
+    public function exportCompensationDays(Request $request): \Symfony\Component\HttpFoundation\BinaryFileResponse
+    {
+        $filters = $this->dashboardFilters($request);
+        $lists = $this->dashboardLists(app(CompensationDayOffRepository::class), $filters);
+
+        // "offen" enthält bereits die überfälligen Einträge -> nur bei reinem Überfällig-Filter separat.
+        $items = $filters['status'] === 'overdue'
+            ? $lists['overdue']
+            : $lists['open']->concat($lists['granted']);
+
+        return (new \Artwork\Modules\Shift\Exports\CompensationDaysExcelExport(collect($items)))
+            ->download(sprintf('Ersatzfreie_Tage_%s.xlsx', Carbon::today()->format('Y-m-d')));
     }
 
     public function index(): Response
@@ -304,7 +366,9 @@ class ShiftRuleController extends Controller
 
         $this->shiftRuleService->createManualViolation([
             'user_id' => $validated['user_id'],
-            'shift_rule_id' => $validated['shift_rule_id'],
+            // "Sonstiges (ohne Regel)": shift_rule_id null, Titel Pflicht (Request)
+            'shift_rule_id' => $validated['shift_rule_id'] ?? null,
+            'title' => !empty($validated['shift_rule_id']) ? null : ($validated['title'] ?? null),
             'violation_date' => $validated['violation_date'],
             'reason' => $validated['reason'] ?? null,
             'severity' => $validated['severity'] ?? 'warning',

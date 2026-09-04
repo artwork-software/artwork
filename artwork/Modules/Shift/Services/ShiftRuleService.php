@@ -7,6 +7,7 @@ use Artwork\Modules\Shift\Models\ShiftRule;
 use Artwork\Modules\Shift\Models\ShiftRuleViolation;
 use Artwork\Modules\Shift\Repositories\CompensationDayOffRepository;
 use Artwork\Modules\Shift\RuleChecks\AbstractRuleCheck;
+use Artwork\Modules\Shift\RuleChecks\ShiftRuleCheckContext;
 use Spatie\Activitylog\Models\Activity;
 use Artwork\Modules\Shift\Repositories\ShiftRuleRepository;
 use Artwork\Modules\Shift\Repositories\ShiftRuleViolationRepository;
@@ -23,6 +24,7 @@ class ShiftRuleService
         private readonly ShiftRuleViolationRepository $shiftRuleViolationRepository,
         private readonly CompensationDayOffRepository $compensationDayOffRepository,
         private readonly ShiftRuleCheckFactory $ruleCheckFactory,
+        private readonly ShiftRuleRevalidationService $revalidationService,
     ) {
     }
 
@@ -48,6 +50,9 @@ class ShiftRuleService
             $rule->usersToNotify()->sync($userIds);
         }
 
+        // Neue Regel: Personen der zugeordneten Verträge neu prüfen (auch jenseits der 14-Tage-Cron-Sicht).
+        $this->revalidationService->revalidateForContracts($contractIds ?? []);
+
         return $rule;
     }
 
@@ -57,22 +62,49 @@ class ShiftRuleService
         ?array $contractIds = null,
         ?array $userIds = null
     ): ShiftRule {
+        $previousContractIds = $rule->contracts()->pluck('user_contracts.id')->all();
+
         $this->shiftRuleRepository->update($rule, $attributes);
 
         $rule->contracts()->sync($contractIds ?? []);
         $rule->usersToNotify()->sync($userIds ?? []);
 
+        // Geänderter Wert/Status oder geänderte Vertragszuordnung: alte UND neue Verträge neu prüfen.
+        $this->revalidationService->revalidateForContracts(array_merge($previousContractIds, $contractIds ?? []));
+
         return $rule;
     }
 
+    /**
+     * Regel löschen (Soft Delete — die FK-Kaskade greift daher NICHT): ihre aktiven automatischen
+     * Verstöße werden hier entfernt, bearbeitete/ignorierte und manuelle bleiben als Historie.
+     * Die betroffenen Personen werden anschließend neu geprüft.
+     */
     public function deleteRule(ShiftRule $rule): bool
     {
-        return $this->shiftRuleRepository->delete($rule);
+        $contractIds = $rule->contracts()->pluck('user_contracts.id')->all();
+
+        ShiftRuleViolation::query()
+            ->where('shift_rule_id', $rule->id)
+            ->where('status', 'active')
+            ->where('is_manual', false)
+            ->get()
+            ->each->delete();
+
+        $deleted = $this->shiftRuleRepository->delete($rule);
+
+        $this->revalidationService->revalidateForContracts($contractIds);
+
+        return $deleted;
     }
 
     public function syncContractsForRule(ShiftRule $rule, array $contractIds): void
     {
+        $previousContractIds = $rule->contracts()->pluck('user_contracts.id')->all();
+
         $rule->contracts()->sync($contractIds);
+
+        $this->revalidationService->revalidateForContracts(array_merge($previousContractIds, $contractIds));
     }
 
     public function syncUsersForRule(ShiftRule $rule, array $userIds): void
@@ -83,6 +115,8 @@ class ShiftRuleService
     public function updateContractAssignments(UserContract $contract, array $ruleIds): void
     {
         $contract->shiftRules()->sync($ruleIds);
+
+        $this->revalidationService->revalidateForContracts([$contract->id]);
     }
 
     public function getActiveViolations(): EloquentCollection
@@ -288,6 +322,11 @@ class ShiftRuleService
      * Regelprüfung für eine Person im Zeitraum. Nach dem Lauf werden automatische Verstöße, die der Lauf
      * NICHT (neu) erzeugt oder bestätigt hat, gelöscht (siehe removeStaleViolations). Ohne Vertrag bzw.
      * ohne zugeordnete Regeln gelten alle automatischen aktiven Verstöße im Zeitraum als veraltet.
+     *
+     * Batching: Schichten (mit Pivot-Zeiten), Individualzeiten, Ersatzfreitage und Sondertage werden
+     * einmal je Person und Lauf in einen ShiftRuleCheckContext geladen (Rand: Rückblick für "Tage in
+     * Folge", Wochenfenster, Vortag für Ruhezeiten) und an alle Checks gereicht — die Zahl der Abfragen
+     * je Person ist damit unabhängig von der Tagesanzahl.
      */
     public function validateRulesForUser(
         User $user,
@@ -299,23 +338,43 @@ class ShiftRuleService
         $activeContract = $user->activeWorkContract();
         $rules = $activeContract ? $this->getRulesForContract($activeContract) : collect();
 
+        $context = ShiftRuleCheckContext::forRange(
+            $user,
+            $startDate,
+            $endDate,
+            $this->lookbackDaysFor($rules),
+            7
+        );
+
         // Je Regel das Fenster, das der Check tatsächlich beurteilt hat (Standard: der Zeitraum).
         $coveredRangeByRule = [];
+        $checksWithContext = [];
 
-        foreach ($rules as $rule) {
-            if (!$this->ruleCheckFactory->has($rule->trigger_type)) {
-                // Unbekannter Regeltyp (z. B. Altbestand): weder prüfen noch aufräumen.
-                $coveredRangeByRule[$rule->id] = null;
-                continue;
+        try {
+            foreach ($rules as $rule) {
+                if (!$this->ruleCheckFactory->has($rule->trigger_type)) {
+                    // Unbekannter Regeltyp (z. B. Altbestand): weder prüfen noch aufräumen.
+                    $coveredRangeByRule[$rule->id] = null;
+                    continue;
+                }
+
+                $check = $this->ruleCheckFactory->create($rule->trigger_type);
+                if ($check instanceof AbstractRuleCheck) {
+                    $check->setContext($context);
+                    $checksWithContext[] = $check;
+                }
+
+                $ruleViolations = $check->check($rule, $user, $startDate, $endDate);
+                $violations = $violations->concat($ruleViolations);
+
+                $coveredRangeByRule[$rule->id] = $check instanceof AbstractRuleCheck
+                    ? $check->getCoveredRange($rule, $startDate, $endDate)
+                    : [$startDate->copy()->startOfDay(), $endDate->copy()->startOfDay()];
             }
-
-            $ruleViolations = $this->checkRuleForUser($rule, $user, $startDate, $endDate);
-            $violations = $violations->concat($ruleViolations);
-
-            $check = $this->ruleCheckFactory->create($rule->trigger_type);
-            $coveredRangeByRule[$rule->id] = $check instanceof AbstractRuleCheck
-                ? $check->getCoveredRange($rule, $startDate, $endDate)
-                : [$startDate->copy()->startOfDay(), $endDate->copy()->startOfDay()];
+        } finally {
+            foreach ($checksWithContext as $check) {
+                $check->setContext(null);
+            }
         }
 
         $this->removeStaleViolations(
@@ -330,6 +389,24 @@ class ShiftRuleService
     }
 
     /**
+     * Rückblick des Kontexts: "Tage in Folge" zählt eine laufende Serie vor dem Prüfzeitraum mit —
+     * Regelwert + 1 Tage (mind. 7); längere Serien fallen im Check auf Direktabfragen zurück.
+     *
+     * @param Collection<int, ShiftRule> $rules
+     */
+    private function lookbackDaysFor(Collection $rules): int
+    {
+        $lookback = 7;
+        foreach ($rules as $rule) {
+            if ($rule->trigger_type === 'maxConsecWorkingDays') {
+                $lookback = max($lookback, (int) ceil((float) $rule->individual_number_value) + 1);
+            }
+        }
+
+        return min($lookback, 62);
+    }
+
+    /**
      * Automatische Auflösung: löscht Verstöße der Person, die
      *  (a) status = active,
      *  (b) is_manual = false,
@@ -339,6 +416,9 @@ class ShiftRuleService
      *  (f) in diesem Lauf nicht erzeugt/bestätigt wurden ($keptViolationIds).
      * Verstöße zu Regeln, die der Person nicht mehr zugeordnet sind (oder ohne Vertrag), werden im
      * gesamten Zeitraum gelöscht. Bearbeitete (resolved) und ignorierte Verstöße bleiben unberührt.
+     * Manuelle Verstöße (auch ohne Regel) werden nie angefasst.
+     *
+     * Eine Abfrage über die Vereinigung aller Fenster, Zuordnung je Regel im Speicher.
      *
      * @param array<int, int> $keptViolationIds
      * @param array<int, array{0: Carbon, 1: Carbon}|null> $coveredRangeByRule
@@ -350,34 +430,50 @@ class ShiftRuleService
         array $keptViolationIds,
         array $coveredRangeByRule
     ): void {
-        $baseQuery = fn () => ShiftRuleViolation::query()
-            ->where('user_id', $user->id)
-            ->where('status', 'active')
-            ->where('is_manual', false)
-            ->whereNull('parent_violation_id')
-            ->whereDoesntHave('compensationDayOffs')
-            ->when($keptViolationIds !== [], fn ($q) => $q->whereNotIn('id', $keptViolationIds));
-
-        // Regeln, die geprüft wurden: nur im abgedeckten Fenster aufräumen.
-        foreach ($coveredRangeByRule as $ruleId => $range) {
+        $overallFrom = $startDate->copy()->startOfDay();
+        $overallTo = $endDate->copy()->startOfDay();
+        foreach ($coveredRangeByRule as $range) {
             if ($range === null) {
                 continue;
             }
-            [$from, $to] = $range;
-            $baseQuery()
-                ->where('shift_rule_id', $ruleId)
-                ->whereBetween('violation_date', [$from->toDateString(), $to->toDateString()])
-                ->get()
-                ->each->delete();
+            $overallFrom = $overallFrom->min($range[0]);
+            $overallTo = $overallTo->max($range[1]);
         }
 
-        // Regeln, die der Person nicht (mehr) zugeordnet sind: im gesamten Zeitraum aufräumen.
-        $checkedRuleIds = array_keys($coveredRangeByRule);
-        $baseQuery()
-            ->when($checkedRuleIds !== [], fn ($q) => $q->whereNotIn('shift_rule_id', $checkedRuleIds))
-            ->whereBetween('violation_date', [$startDate->toDateString(), $endDate->toDateString()])
-            ->get()
-            ->each->delete();
+        $candidates = ShiftRuleViolation::query()
+            ->where('user_id', $user->id)
+            ->where('status', 'active')
+            ->where('is_manual', false)
+            ->whereNotNull('shift_rule_id')
+            ->whereNull('parent_violation_id')
+            ->whereDoesntHave('compensationDayOffs')
+            ->when($keptViolationIds !== [], fn ($q) => $q->whereNotIn('id', $keptViolationIds))
+            ->whereBetween('violation_date', [$overallFrom->toDateString(), $overallTo->toDateString()])
+            ->get();
+
+        $runFrom = $startDate->toDateString();
+        $runTo = $endDate->toDateString();
+
+        foreach ($candidates as $violation) {
+            $dateKey = $violation->violation_date->toDateString();
+
+            if (array_key_exists($violation->shift_rule_id, $coveredRangeByRule)) {
+                // Regel wurde geprüft: nur im abgedeckten Fenster aufräumen.
+                $range = $coveredRangeByRule[$violation->shift_rule_id];
+                if ($range === null) {
+                    continue;
+                }
+                if ($dateKey >= $range[0]->toDateString() && $dateKey <= $range[1]->toDateString()) {
+                    $violation->delete();
+                }
+                continue;
+            }
+
+            // Regel ist der Person nicht (mehr) zugeordnet: im gesamten Zeitraum aufräumen.
+            if ($dateKey >= $runFrom && $dateKey <= $runTo) {
+                $violation->delete();
+            }
+        }
     }
 
     public function checkRuleForUser(
@@ -463,6 +559,8 @@ class ShiftRuleService
             'minDaysBeforeCommit',
             'workOnSunday',
             'workOnHoliday',
+            'overtimeDeadline',
+            'minFreeSundaysPerSeasonHalf',
         ];
     }
 
@@ -476,12 +574,26 @@ class ShiftRuleService
         return ['halfDayOffOnSpecialDay', 'workOnSunday', 'workOnHoliday'];
     }
 
+    /**
+     * Regeltypen mit OPTIONALEM Zahlenwert: leer/0 = Zielwert aus dem Vertrag (z. B. freie Sonntage je
+     * Spielzeithälfte aus free_sundays_sat_mon_per_half).
+     *
+     * @return array<int, string>
+     */
+    public static function ruleTypesWithOptionalValue(): array
+    {
+        return ['minFreeSundaysPerSeasonHalf'];
+    }
+
     public function mapViolationsToArray(Collection $violations): Collection
     {
         return $violations->map(function ($violation) {
             return [
                 'id' => $violation->id,
                 'rule_name' => $violation->shiftRule?->name,
+                // Manuelle Verstöße ohne Regel tragen einen eigenen Titel
+                'title' => $violation->title,
+                'display_name' => $violation->getDisplayName(),
                 'user_name' => $violation->user->first_name . ' ' . $violation->user->last_name,
                 'violation_date' => $violation->violation_date,
                 'message' => $violation->getViolationMessage(),

@@ -8,6 +8,8 @@ use Artwork\Modules\Shift\RuleChecks\HalfDayOffOnSpecialDayCheck;
 use Artwork\Modules\Shift\RuleChecks\MaxConsecutiveWorkingDaysCheck;
 use Artwork\Modules\Shift\RuleChecks\MaxWorkingHoursOnDayCheck;
 use Artwork\Modules\Shift\RuleChecks\MinDaysBeforeCommitCheck;
+use Artwork\Modules\Shift\RuleChecks\MinFreeSundaysPerSeasonHalfCheck;
+use Artwork\Modules\Shift\RuleChecks\OvertimeDeadlineCheck;
 use Artwork\Modules\Shift\RuleChecks\RestTimeBeforeHolidayCheck;
 use Artwork\Modules\Shift\RuleChecks\RestTimeBeforeWorkdayCheck;
 use Artwork\Modules\Shift\RuleChecks\RestTimeBetweenShiftGroupsCheck;
@@ -40,6 +42,8 @@ class ShiftRuleCheckFactory
         $this->register(new MinDaysBeforeCommitCheck());
         $this->register(new WorkOnSundayCheck());
         $this->register(new WorkOnHolidayCheck());
+        $this->register(new OvertimeDeadlineCheck());
+        $this->register(new MinFreeSundaysPerSeasonHalfCheck());
     }
 
     public function has(string $triggerType): bool

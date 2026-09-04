@@ -2,7 +2,6 @@
 
 namespace Artwork\Modules\Shift\RuleChecks;
 
-use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\Shift\Models\ShiftRule;
 use Artwork\Modules\User\Models\User;
 use Carbon\Carbon;

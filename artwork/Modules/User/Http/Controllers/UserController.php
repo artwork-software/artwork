@@ -562,6 +562,8 @@ class UserController extends Controller
             // Zählregel: abgeschlossene Tage der Spielzeit (bis gestern); Anzeige = aktueller Stand
             'counted_until' => Carbon::yesterday()->toDateString(),
             'snapshot_recalculated_at' => $snapshot?->recalculated_at,
+            // Für das Tab-Label "Überstunden (inaktiv)" bereits beim ersten Laden verfügbar
+            'overtime_rule_active' => (bool) ($user->contract?->overtime_rule_active ?? false),
         ]);
     }
 

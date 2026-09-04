@@ -4,6 +4,7 @@ namespace Tests\Feature\Http\Controllers;
 
 use Artwork\Modules\Holidays\Models\Holiday;
 use Artwork\Modules\Holidays\Models\Subdivision;
+use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Illuminate\Support\Facades\Http;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\Feature\FeatureTestCase;
@@ -168,11 +169,220 @@ final class HolidayControllerTest extends FeatureTestCase
             'remote_identifier' => 'public-1',
             'treatAsSpecialDay' => true,
             'from_api' => true,
+            'type' => Holiday::TYPE_PUBLIC,
         ]);
         $this->assertDatabaseHas('holidays', [
             'remote_identifier' => 'school-1',
             'treatAsSpecialDay' => false,
             'from_api' => true,
+            'type' => Holiday::TYPE_SCHOOL,
         ]);
+    }
+
+    private function holiday(string $name = 'X', bool $special = false, string $type = Holiday::TYPE_CUSTOM): Holiday
+    {
+        return Holiday::query()->forceCreate([
+            'name' => $name,
+            'date' => '2026-01-01',
+            'end_date' => '2026-01-01',
+            'yearly' => false,
+            'color' => '#abcdef',
+            'treatAsSpecialDay' => $special,
+            'type' => $type,
+        ]);
+    }
+
+    /**
+     * Manuell angelegte Einträge speichern den gewählten Typ; ohne explizites Häkchen gilt der
+     * Typ-Default (nur gesetzliche Feiertage sind Sondertage).
+     */
+    #[Test]
+    public function store_persists_the_type_and_defaults_the_special_day_flag_by_type(): void
+    {
+        $this->actingAsAdmin();
+
+        $this->post(route('holiday.store'), [
+            'name' => 'Hausfeiertag',
+            'date' => '2026-03-01',
+            'end_date' => '2026-03-01',
+            'yearly' => false,
+            'color' => '#abcdef',
+            'type' => Holiday::TYPE_PUBLIC,
+            'selectedSubdivisions' => [],
+        ])->assertOk();
+
+        $this->assertDatabaseHas('holidays', [
+            'name' => 'Hausfeiertag',
+            'type' => Holiday::TYPE_PUBLIC,
+            'treatAsSpecialDay' => true,
+            'from_api' => false,
+        ]);
+
+        $this->post(route('holiday.store'), [
+            'name' => 'Hausferien',
+            'date' => '2026-03-02',
+            'end_date' => '2026-03-06',
+            'yearly' => false,
+            'color' => '#abcdef',
+            'type' => Holiday::TYPE_SCHOOL,
+            'selectedSubdivisions' => [],
+        ])->assertOk();
+
+        $this->assertDatabaseHas('holidays', [
+            'name' => 'Hausferien',
+            'type' => Holiday::TYPE_SCHOOL,
+            'treatAsSpecialDay' => false,
+        ]);
+
+        // Unbekannter Typ -> custom
+        $this->post(route('holiday.store'), [
+            'name' => 'Sonstiges',
+            'date' => '2026-03-07',
+            'end_date' => '2026-03-07',
+            'yearly' => false,
+            'color' => '#abcdef',
+            'type' => 'bogus',
+            'selectedSubdivisions' => [],
+        ])->assertSessionHasErrors('type');
+    }
+
+    #[Test]
+    public function management_page_is_forbidden_without_event_settings_or_shift_planning_permission(): void
+    {
+        $this->actingAsUserWith([]);
+
+        $this->get(route('holiday.management'))->assertForbidden();
+    }
+
+    #[Test]
+    public function shift_planner_can_view_management_page_read_only(): void
+    {
+        $this->actingAsUserWith(PermissionEnum::SHIFT_PLANNER->value);
+        $this->holiday('Neujahr', true, Holiday::TYPE_PUBLIC);
+
+        $this->get(route('holiday.management'))
+            ->assertOk()
+            ->assertInertia(fn ($page) => $page
+                ->component('Settings/Holidays/Index')
+                ->where('typeFilter', null)
+                // Test-DB kann weitere (geseedete) Einträge enthalten: nur den eigenen prüfen
+                ->where('holidays.data', fn ($data) => $data->contains(
+                    fn ($row) => $row['name'] === 'Neujahr' && $row['type'] === Holiday::TYPE_PUBLIC
+                )));
+    }
+
+    #[Test]
+    public function event_settings_permission_can_view_management_page(): void
+    {
+        $this->actingAsUserWith(PermissionEnum::EVENT_SETTINGS_UPDATE->value);
+
+        $this->get(route('holiday.management'))->assertOk();
+    }
+
+    #[Test]
+    public function management_page_filters_by_type(): void
+    {
+        $this->actingAsAdmin();
+        $this->holiday('Neujahr', true, Holiday::TYPE_PUBLIC);
+        $this->holiday('Sommerferien', false, Holiday::TYPE_SCHOOL);
+
+        $this->get(route('holiday.management', ['type' => Holiday::TYPE_SCHOOL, 'entitiesPerPage' => 100]))
+            ->assertOk()
+            ->assertInertia(fn ($page) => $page
+                ->where('typeFilter', Holiday::TYPE_SCHOOL)
+                ->where('holidays.data', fn ($data) => $data->contains(fn ($row) => $row['name'] === 'Sommerferien')
+                    && $data->every(fn ($row) => $row['type'] === Holiday::TYPE_SCHOOL)));
+
+        // Unbekannter Typ -> kein Filter
+        $this->get(route('holiday.management', ['type' => 'bogus']))
+            ->assertOk()
+            ->assertInertia(fn ($page) => $page->where('typeFilter', null));
+    }
+
+    /**
+     * Dienstplaner:innen dürfen NUR das Sondertag-Flag ändern – alles andere bleibt unberührt.
+     */
+    #[Test]
+    public function shift_planner_can_toggle_only_the_special_day_flag(): void
+    {
+        $this->actingAsUserWith(PermissionEnum::SHIFT_PLANNER->value);
+        $holiday = $this->holiday('Sommerferien', false, Holiday::TYPE_SCHOOL);
+
+        $this->patchJson(route('holiday.special-day.update', $holiday), [
+            'treatAsSpecialDay' => true,
+            'name' => 'Umbenannt',
+            'type' => Holiday::TYPE_PUBLIC,
+        ])
+            ->assertOk()
+            ->assertJson(['id' => $holiday->id, 'treatAsSpecialDay' => true]);
+
+        $fresh = $holiday->fresh();
+        $this->assertTrue($fresh->treatAsSpecialDay);
+        $this->assertSame('Sommerferien', $fresh->name);
+        $this->assertSame(Holiday::TYPE_SCHOOL, $fresh->type);
+
+        $this->patchJson(route('holiday.special-day.update', $holiday), ['treatAsSpecialDay' => false])
+            ->assertOk();
+        $this->assertFalse($holiday->fresh()->treatAsSpecialDay);
+    }
+
+    #[Test]
+    public function special_day_endpoint_validates_the_flag(): void
+    {
+        $this->actingAsUserWith(PermissionEnum::SHIFT_PLANNER->value);
+        $holiday = $this->holiday();
+
+        $this->patchJson(route('holiday.special-day.update', $holiday), [])
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors('treatAsSpecialDay');
+    }
+
+    #[Test]
+    public function special_day_endpoint_is_forbidden_without_shift_planning_permission(): void
+    {
+        $this->actingAsUserWith([]);
+        $holiday = $this->holiday('X', false);
+
+        $this->patchJson(route('holiday.special-day.update', $holiday), ['treatAsSpecialDay' => true])
+            ->assertForbidden();
+
+        $this->assertFalse($holiday->fresh()->treatAsSpecialDay);
+    }
+
+    #[Test]
+    public function shift_planner_cannot_use_batch_update_store_update_or_delete(): void
+    {
+        $this->actingAsUserWith(PermissionEnum::SHIFT_PLANNER->value);
+        $holiday = $this->holiday('X', false);
+
+        $this->post(route('holiday.batch-update'), ['holidays' => [$holiday->id => true]])
+            ->assertForbidden();
+        $this->assertFalse($holiday->fresh()->treatAsSpecialDay);
+
+        $this->post(route('holiday.store'), [
+            'name' => 'Neu',
+            'date' => '2026-03-01',
+            'end_date' => '2026-03-01',
+            'yearly' => false,
+            'selectedSubdivisions' => [],
+        ])->assertForbidden();
+
+        $this->patch(route('holiday.update', $holiday), [
+            'name' => 'Umbenannt',
+            'date' => '2026-01-01',
+            'end_date' => '2026-01-01',
+            'yearly' => false,
+            'selectedSubdivisions' => [],
+        ])->assertForbidden();
+        $this->patch(route('holidays.update', $holiday), [
+            'name' => 'Umbenannt',
+            'date' => '2026-01-01',
+            'end_date' => '2026-01-01',
+            'yearly' => false,
+            'selectedSubdivisions' => [],
+        ])->assertForbidden();
+
+        $this->delete(route('holiday.delete', $holiday))->assertForbidden();
+        $this->assertDatabaseHas('holidays', ['id' => $holiday->id, 'name' => 'X']);
     }
 }

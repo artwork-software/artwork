@@ -124,7 +124,7 @@ class BudgetGeneralController extends Controller
                 // WICHTIG: überall wo die Models SoftDeletes haben -> withTrashed()
                 'columns' => $withTrashed,
 
-                'mainPositions' => $withTrashed,
+                'mainPositions' => $withTrashedPos,
                 'mainPositions.verified' => $withTrashed,
 
                 'mainPositions.subPositions' => $withTrashedPos,

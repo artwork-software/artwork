@@ -76,6 +76,45 @@ final class BudgetManagementAccountServiceTest extends TestCase
     }
 
     #[Test]
+    public function search_matches_second_word_of_title(): void
+    {
+        // "Technik Personal" muss über "Personal" gefunden werden (Substring, nicht Präfix).
+        BudgetManagementAccount::factory()->create([
+            'account_number' => '04000',
+            'title' => 'Technik Personal',
+            'is_account_for_revenue' => false,
+        ]);
+        BudgetManagementAccount::factory()->create([
+            'account_number' => '04100',
+            'title' => 'Technik Material',
+            'is_account_for_revenue' => false,
+        ]);
+
+        $result = $this->service->searchByRequest(
+            Request::create('/?search=Personal&is_account_for_revenue=0', 'GET')
+        );
+
+        $titles = $result->pluck('title')->all();
+        $this->assertContains('Technik Personal', $titles);
+        $this->assertNotContains('Technik Material', $titles);
+    }
+
+    #[Test]
+    public function search_is_limited_to_fifty_results(): void
+    {
+        BudgetManagementAccount::factory()->count(55)->create([
+            'title' => 'Massenkonto',
+            'is_account_for_revenue' => false,
+        ]);
+
+        $result = $this->service->searchByRequest(
+            Request::create('/?search=Massenkonto&is_account_for_revenue=0', 'GET')
+        );
+
+        $this->assertCount(50, $result);
+    }
+
+    #[Test]
     public function soft_delete_zeroes_kto_cells_by_column_position_even_if_id_order_is_swapped(): void
     {
         $project = Project::factory()->create();

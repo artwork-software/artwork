@@ -69,8 +69,14 @@
                                     </div>
                                 </div>
                             </div>
-                            <div v-if="entry.is_special_day" class="text-xs text-warning bg-warning-surface px-2 py-0.5 rounded inline-block mt-2">
-                                {{ $t('Special Day') }}
+                            <div v-if="entry.is_special_day" class="text-xs text-warning bg-warning-surface border border-warning-border px-2 py-0.5 rounded inline-flex items-center gap-1 mt-2">
+                                {{ $t('Special Day') }}<template v-if="entry.special_day_name">: {{ entry.special_day_name }}</template>
+                            </div>
+                            <div v-if="entry.is_sick" class="text-xs text-text-muted bg-surface-sunken border border-border-subtle px-2 py-0.5 rounded inline-block mt-2 ml-1">
+                                {{ $t('Sick') }}
+                            </div>
+                            <div v-if="entry.is_vacation" class="text-xs text-text-muted bg-surface-sunken border border-border-subtle px-2 py-0.5 rounded inline-block mt-2 ml-1">
+                                {{ $t('Vacation') }}<template v-if="entry.vacation_factor < 1"> ({{ $t('Half day') }})</template>
                             </div>
                             <div v-if="entry.is_compensation_day_off" class="text-xs text-special-teal bg-special-teal-surface px-2 py-0.5 rounded inline-block mt-2">
                                 <span v-for="(comp, idx) in entry.compensation_day_off_info" :key="idx">
@@ -141,9 +147,17 @@
                                 ></div>
                             </div>
                             <div class="flex flex-wrap gap-3 text-xs text-text-muted mt-1">
-                                <div>
+                                <div class="flex items-center gap-1">
                                     <strong>{{ $t('Daily target') }}: </strong>{{ entry.daily_target_hours }}h
                                     <span v-if="entry.is_compensation_day_off" class="text-special-teal text-[10px] ml-1">({{ $t('Compensation day off') }})</span>
+                                    <ToolTipComponent
+                                        v-if="reductionTooltip(entry)"
+                                        icon="IconInfoCircle"
+                                        icon-size="w-3.5 h-3.5"
+                                        :tooltip-text="reductionTooltip(entry)"
+                                        direction="top"
+                                        :classes="entry.reduction_reason === 'special_day' ? 'text-warning' : 'text-text-subtle'"
+                                    />
                                 </div>
                                 <div><strong>{{ $t('Planned') }}: </strong>
                                     <span v-if="!entry.worked_hours">{{ entry.planned_hours }}h</span>
@@ -183,6 +197,10 @@ import WorkTimeTimerComponent from "@/Pages/Users/Components/WorkTimeTimerCompon
 import {IconAlarmPlus} from "@tabler/icons-vue";
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 import DateRangeControl from "@/Artwork/DateRange/DateRangeControl.vue";
+import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
+import {useTranslation} from "@/Composeables/Translation.js";
+
+const $t = useTranslation();
 
 const props = defineProps({
     userToEdit: {
@@ -281,6 +299,50 @@ const weeklySums = computed(() => {
 
     return sums;
 });
+
+const weekdayName = (value) => {
+    const date = new Date(value);
+    return isNaN(date.getTime()) ? '' : date.toLocaleDateString('de-DE', { weekday: 'long' });
+}
+
+const formatDayMonth = (value) => {
+    const date = new Date(value);
+    if (isNaN(date.getTime())) return value;
+    return `${String(date.getDate()).padStart(2, '0')}.${String(date.getMonth() + 1).padStart(2, '0')}.`;
+}
+
+/**
+ * Tooltip am Tagessoll: Minderungsgrund (Sondertag / Ersatzfreier Tag, ggf. Dreimonatsdurchschnitt),
+ * Sondertag ohne Wirkung (Arbeit bzw. Regel inaktiv) sowie Krank/Urlaub (soll-neutral).
+ */
+const reductionTooltip = (entry) => {
+    const parts = [];
+    if (entry.is_special_day) {
+        parts.push(`${$t('Special Day')}: ${entry.special_day_name ?? ''}`.trim());
+        if (!entry.special_day_counts) {
+            parts.push($t('Special day rule inactive for this contract – normal daily target'));
+        } else if (!entry.reduction_reason) {
+            parts.push($t('Work on special day – no target reduction'));
+        }
+    }
+    if (entry.reduction_reason === 'compensation_day') {
+        parts.push($t('Substitute day off'));
+    }
+    if (entry.reduction_reason && entry.target_reduction > 0) {
+        let text = `${$t('Target')} −${entry.target_reduction_formatted} h`;
+        if (entry.reference_period) {
+            text += ` · Ø ${weekdayName(entry.date)} ${formatDayMonth(entry.reference_period.start)}–${formatDayMonth(entry.reference_period.end)}`;
+        }
+        parts.push(text);
+    }
+    if (entry.is_sick) {
+        parts.push(`${$t('Sick')}: ${$t('actual = target')}`);
+    }
+    if (entry.is_vacation) {
+        parts.push(`${$t('Vacation')}${entry.vacation_factor < 1 ? ` (${$t('Half day')})` : ''}: ${$t('actual = target')}`);
+    }
+    return parts.join(' · ');
+}
 
 // Helper function to convert minutes to HH:MM format
 const convertMinutesToHoursAndMinutes = (minutes) => {

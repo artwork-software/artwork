@@ -3,6 +3,8 @@
 namespace Tests\Feature\Http\Controllers;
 
 use Artwork\Modules\Holidays\Models\Holiday;
+use Artwork\Modules\Holidays\Models\Subdivision;
+use Illuminate\Support\Facades\Http;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\Feature\FeatureTestCase;
 
@@ -114,5 +116,63 @@ final class HolidayControllerTest extends FeatureTestCase
 
         $response->assertOk();
         $this->assertDatabaseMissing('holidays', ['id' => $holiday->id]);
+    }
+
+    /**
+     * DP-04: Import setzt treatAsSpecialDay nur für gesetzliche Feiertage (type "Public"),
+     * Schulferien ("School") bleiben ohne Flag.
+     */
+    #[Test]
+    public function api_import_flags_only_public_holidays_as_special_days(): void
+    {
+        $this->actingAsAdmin();
+        $subdivision = Subdivision::create([
+            'name' => 'Hessen',
+            'code' => 'HE',
+            'country_code' => 'DE',
+        ]);
+
+        $holiday = static fn (string $id, string $name, string $type, string $start, string $end): array => [
+            'id' => $id,
+            'startDate' => $start,
+            'endDate' => $end,
+            'type' => $type,
+            'name' => [['language' => 'DE', 'text' => $name]],
+            'regionalScope' => 'Regional',
+            'temporalScope' => 'FullDay',
+            'nationwide' => false,
+            'subdivisions' => [['code' => 'DE-HE', 'shortName' => 'HE']],
+        ];
+
+        Http::fake(function ($request) use ($holiday) {
+            if (str_contains($request->url(), 'SchoolHolidays')) {
+                return Http::response([
+                    $holiday('school-1', 'Sommerferien', 'School', '2026-07-06', '2026-08-14'),
+                ]);
+            }
+
+            return Http::response([
+                $holiday('public-1', 'Tag der Deutschen Einheit', 'Public', '2026-10-03', '2026-10-03'),
+            ]);
+        });
+
+        $response = $this->post(route('holiday.api.call'), [
+            'selectedSubdivisions' => [['id' => $subdivision->id, 'code' => 'HE']],
+            'public_holidays' => true,
+            'school_holidays' => true,
+            'color' => '#abcdef',
+        ]);
+
+        $response->assertOk();
+        $this->assertDatabaseHas('holidays', [
+            'remote_identifier' => 'public-1',
+            'treatAsSpecialDay' => true,
+            'from_api' => true,
+        ]);
+        $this->assertDatabaseHas('holidays', [
+            'remote_identifier' => 'school-1',
+            'treatAsSpecialDay' => false,
+            'from_api' => true,
+        ]);
     }
 }

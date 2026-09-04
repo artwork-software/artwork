@@ -368,6 +368,12 @@
                                             class="max-w-xs"
                                             @input="markBreakAsManuallyEdited(individual_time)"
                                         />
+                                        <LegalBreakHint
+                                            :break-minutes="individual_time.break_minutes"
+                                            :legal-minutes="legalBreakFor(individual_time)"
+                                            :has-times="hasBreakRelevantTimes(individual_time)"
+                                            @reset="resetBreakToLegal(individual_time)"
+                                        />
                                         <p class="text-[11px] text-text-subtle mt-1.5 leading-snug">
                                             {{ t('This time will be deducted from the working hours when calculating the daily working time.') }}
                                         </p>
@@ -977,7 +983,9 @@ import AddManualViolationModal from '@/Pages/Shifts/Components/AddManualViolatio
 import ViolationEditModal from '@/Pages/Shifts/Components/ViolationEditModal.vue';
 import GrantCompensationDayModal from '@/Pages/Shifts/Components/GrantCompensationDayModal.vue';
 import { IconCirclePlus, IconTrash } from '@tabler/icons-vue';
-import { useLegalBreak } from '@/Composeables/useLegalBreak';
+import { legalBreakMinutesFor } from '@/Composeables/useLegalBreak';
+import { toBreakNumber } from '@/Composeables/useAutoBreak';
+import LegalBreakHint from '@/Components/Inputs/LegalBreakHint.vue';
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 import { usePermission } from '@/Composeables/Permission.js';
 import { colorForProjectId, formatAssignmentDate } from '@/Composeables/UseProjectDayAssignments.js';
@@ -1241,10 +1249,47 @@ const shiftPlanComment = ref(
 // Track manual edits for break_minutes per individual time
 const manualBreakEdits = ref(new Map());
 
+// Schlüssel pro Zeile: bei neuen Zeilen bewusst ohne Uhrzeiten, sonst würde jede
+// Zeitänderung den Manuell-Marker verlieren.
+function breakEditKey(individualTime) {
+    return individualTime.id || individualTime._breakKey || (individualTime._breakKey = `new-${Math.random().toString(36).slice(2)}`);
+}
+
 // Function to mark break time as manually edited
 function markBreakAsManuallyEdited(individualTime) {
-    const timeKey = individualTime.id || `${individualTime.start_date}-${individualTime.start_time}-${individualTime.end_time}`;
-    manualBreakEdits.value.set(timeKey, true);
+    manualBreakEdits.value.set(breakEditKey(individualTime), true);
+}
+
+function hasBreakRelevantTimes(individualTime) {
+    return Boolean(individualTime.start_time) && Boolean(individualTime.end_time) && !individualTime.full_day;
+}
+
+// Gesetzliche Mindestpause (ArbZG) für eine Zeile
+function legalBreakFor(individualTime) {
+    return hasBreakRelevantTimes(individualTime)
+        ? legalBreakMinutesFor(individualTime.start_time, individualTime.end_time)
+        : 0;
+}
+
+function resetBreakToLegal(individualTime) {
+    individualTime.break_minutes = legalBreakFor(individualTime);
+    manualBreakEdits.value.delete(breakEditKey(individualTime));
+}
+
+// Auto-Pause: leeres Feld befüllen bzw. nicht-manuelle Werte auf das Minimum anheben;
+// manuelle Werte werden nie still überschrieben (Hinweis + Zurücksetzen unter dem Feld).
+function syncBreakToLegal(individualTime) {
+    if (!hasBreakRelevantTimes(individualTime)) return;
+    const legal = legalBreakFor(individualTime);
+    const current = toBreakNumber(individualTime.break_minutes);
+    if (current === null) {
+        individualTime.break_minutes = legal;
+        return;
+    }
+    if (manualBreakEdits.value.get(breakEditKey(individualTime))) return;
+    if (current < legal) {
+        individualTime.break_minutes = legal;
+    }
 }
 
 // IndividualTimes gefiltert nach Tag
@@ -1425,29 +1470,16 @@ watch(
 
             if (!individualTime) return;
 
-            const timeKey = individualTime.id || `${individualTime.start_date}-${individualTime.start_time}-${individualTime.end_time}`;
-
             // Check if start_time or end_time actually changed
             const timesChanged = oldTime && (
                 newTime.start_time !== oldTime.start_time ||
                 newTime.end_time !== oldTime.end_time
             );
 
-            // Only recalculate break_minutes when times actually changed
+            // Only recalculate break_minutes when times actually changed;
+            // manuelle Werte bleiben stehen (Hinweis + Zurücksetzen unter dem Feld).
             if (timesChanged) {
-                // Reset manual edit flag when times change
-                manualBreakEdits.value.delete(timeKey);
-
-                // Auto-calculate break_minutes if times are set
-                if (individualTime.start_time && individualTime.end_time) {
-                    const startRef = computed(() => individualTime.start_time);
-                    const endRef = computed(() => individualTime.end_time);
-                    const { breakMinutes } = useLegalBreak(startRef, endRef);
-
-                    if (breakMinutes.value !== individualTime.break_minutes) {
-                        individualTime.break_minutes = breakMinutes.value;
-                    }
-                }
+                syncBreakToLegal(individualTime);
             }
         });
     },

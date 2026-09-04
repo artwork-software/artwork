@@ -1,7 +1,9 @@
 <script lang="ts" setup>
-import { ref, reactive, watch, computed } from 'vue'
+import { ref, reactive, watch, computed, toRef } from 'vue'
 import { useForm } from '@inertiajs/vue3'
 import { useI18n } from 'vue-i18n'
+import { useAutoBreak } from '@/Composeables/useAutoBreak'
+import LegalBreakHint from '@/Components/Inputs/LegalBreakHint.vue'
 
 // Artwork / UI
 import ArtworkBaseModal from '@/Artwork/Modals/ArtworkBaseModal.vue'
@@ -90,6 +92,14 @@ const form = useForm({
     shift_qualifications: normalizePresetQualifications(props.preset),
 })
 
+// Auto-Pause nach ArbZG (leeres Feld befüllen, nicht-manuelle Werte anheben,
+// manuelle Werte nie still überschreiben).
+const autoBreak = useAutoBreak(
+    toRef(form, 'start_time'),
+    toRef(form, 'end_time'),
+    toRef(form, 'break_duration')
+)
+
 // Falls das Preset (z. B. asynchron) später kommt/ändert: nachziehen
 watch(
     () => props.preset,
@@ -98,7 +108,7 @@ watch(
         form.name = val?.name ?? ''
         form.start_time = normalizeTimeToHHMM(val?.start_time ?? '')
         form.end_time = normalizeTimeToHHMM(val?.end_time ?? '')
-        form.break_duration = val?.break_duration ?? 0
+        autoBreak.applyExternalValue(val?.break_duration ?? 0)
         form.craft_id = val?.craft_id ?? ''
         form.description = val?.description ?? ''
         form.shift_qualifications = normalizePresetQualifications(val)
@@ -178,14 +188,23 @@ function closeModal() {
                         <BaseInput v-model="form.end_time" :label="$t('End-Time')" type="time" id="end_time" :step="60" required />
                     </div>
 
-                    <BaseInput
-                        v-model="form.break_duration"
-                        :label="$t('Break duration (minutes)')"
-                        id="break_duration"
-                        type="number"
-                        min="0"
-                        class="w-full"
-                    />
+                    <div class="w-full">
+                        <BaseInput
+                            v-model="form.break_duration"
+                            :label="$t('Break duration (minutes)')"
+                            id="break_duration"
+                            type="number"
+                            min="0"
+                            class="w-full"
+                            @input="autoBreak.markManual()"
+                        />
+                        <LegalBreakHint
+                            :break-minutes="form.break_duration"
+                            :legal-minutes="autoBreak.legalMinutes.value"
+                            :has-times="autoBreak.hasTimes.value"
+                            @reset="autoBreak.resetToLegal()"
+                        />
+                    </div>
 
                     <SelectComponent
                         id="addShiftCraftSelectComponent"

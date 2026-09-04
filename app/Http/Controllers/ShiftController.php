@@ -33,6 +33,7 @@ use Artwork\Modules\Shift\Models\ShiftFreelancer;
 use Artwork\Modules\Shift\Models\ShiftServiceProvider;
 use Artwork\Modules\Shift\Models\ShiftWorker;
 use Artwork\Modules\Shift\Models\Shift;
+use Artwork\Modules\Shift\Services\LegalBreakCalculator;
 use Artwork\Modules\Shift\Services\ShiftChangeRecorder;
 use Artwork\Modules\Shift\Services\ShiftCountService;
 use Artwork\Modules\Shift\Services\ShiftFreelancerService;
@@ -417,7 +418,12 @@ class ShiftController extends Controller
         $shift->end_date = Carbon::parse($end)->format('Y-m-d');
         $shift->start = Carbon::parse($start)->format('H:i:s');
         $shift->end = Carbon::parse($end)->format('H:i:s');
-        $shift->break_minutes = $request->get('break_minutes');
+        // Ohne Pause → gesetzliche Mindestpause; ein gesetzter Wert (auch 0) bleibt.
+        $shift->break_minutes = LegalBreakCalculator::resolveBreakMinutes(
+            $request->get('break_minutes'),
+            $shift->start,
+            $shift->end
+        );
 
         $this->shiftService->save($shift);
     }
@@ -993,6 +999,29 @@ class ShiftController extends Controller
             ));
         }
 
+        // Multi-Edit loest sonst keine Regelpruefung aus: nach allen Zu-/Abweisungen einmal
+        // den betroffenen Zeitraum neu pruefen, damit Verstoesse sofort erscheinen bzw. verschwinden.
+        if ((int) $validated['userType'] === 0) {
+            $touchedShiftIds = array_values(array_unique(array_merge(
+                array_map('intval', $shiftsToHandle['removeFromShift']),
+                array_map(static fn (array $entry): int => (int) $entry['shiftId'], $shiftsToHandle['assignToShift'])
+            )));
+            $user = User::find($validated['userTypeId']);
+            if ($user instanceof User && $touchedShiftIds !== []) {
+                $bounds = Shift::withTrashed()
+                    ->whereIn('id', $touchedShiftIds)
+                    ->selectRaw('MIN(start_date) as min_start, MAX(end_date) as max_end')
+                    ->first();
+                if ($bounds?->min_start && $bounds?->max_end) {
+                    $this->revalidateShiftRules(
+                        [$user],
+                        Carbon::parse($bounds->min_start),
+                        Carbon::parse($bounds->max_end)
+                    );
+                }
+            }
+        }
+
         return true;
     }
 
@@ -1465,7 +1494,10 @@ class ShiftController extends Controller
                         $time['title'],
                         $time['start_time'],
                         $time['end_time'],
-                        $day
+                        $day,
+                        isset($time['break_minutes']) && $time['break_minutes'] !== ''
+                            ? (int) $time['break_minutes']
+                            : null
                     );
                 }
 
@@ -1590,9 +1622,16 @@ class ShiftController extends Controller
         ]);
 
         $shift = DB::transaction(function () use ($request, $shiftsQualificationsService) {
+            $data = $request->all();
+            // Ohne Pause → gesetzliche Mindestpause; ein gesetzter Wert (auch 0) bleibt.
+            $data['break_minutes'] = LegalBreakCalculator::resolveBreakMinutes(
+                $data['break_minutes'] ?? null,
+                $data['start'] ?? null,
+                $data['end'] ?? null
+            );
             $shift = $this->shiftService->createShiftWithoutEventAutomatic(
                 craftId: $request->craft_id,
-                data: $request->all(),
+                data: $data,
                 day: $request->string('day'),
             );
             $shift->shift_uuid = Str::uuid();
@@ -1902,7 +1941,12 @@ class ShiftController extends Controller
                 $data = [
                     'start' => $request->get('start'),
                     'end' => $request->get('end'),
-                    'break_minutes' => $request->get('break_minutes'),
+                    // Ohne Pause → gesetzliche Mindestpause; ein gesetzter Wert (auch 0) bleibt.
+                    'break_minutes' => LegalBreakCalculator::resolveBreakMinutes(
+                        $request->get('break_minutes'),
+                        $request->get('start'),
+                        $request->get('end')
+                    ),
                     'description' => $request->get('description'),
                     'room_id' => $roomAndDate['roomId'],
                     'project_id' => $request->get('project_id'),

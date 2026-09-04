@@ -72,7 +72,9 @@ class BudgetTemplateController extends Controller
                 'table' => Table::where('is_template', true)
                     ->with([
                         'columns',
-                        'mainPositions',
+                        'mainPositions' => function ($query) {
+                            return $query->orderBy('position');
+                        },
                         'mainPositions.verified',
                         'mainPositions.subPositions' => function ($query) {
                             return $query->orderBy('position');

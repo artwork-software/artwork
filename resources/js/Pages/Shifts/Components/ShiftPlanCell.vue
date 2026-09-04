@@ -71,7 +71,7 @@
         </div>
 
         <!-- Violation indicators -->
-        <div v-if="violationsToday.length || unavailableAssignmentConflict" class="absolute top-0.5 right-0.5 flex items-center gap-0.5">
+        <div v-if="openViolations.length || resolvedViolations.length || unavailableAssignmentConflict" class="absolute top-0.5 right-0.5 flex items-center gap-0.5">
             <!-- Eingeplant, aber nicht verfügbar (z.B. nachträglich krank gemeldet).
                  Rot, wenn eine betroffene Schicht festgeschrieben ist. -->
             <div
@@ -85,25 +85,37 @@
                     <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
                 </svg>
             </div>
+            <!--
+                Regelverstöße: maximal zwei Marker je Zelle statt ein Icon je Verstoß.
+                (1) Offene Verstöße: Warndreieck in der Regelfarbe des ersten offenen Verstoßes, Zahl bei mehreren.
+                (2) Bearbeitete Verstöße: dezenter Chip mit Haken + Zahl. Ignorierte werden nicht gezeigt.
+                Kein @click.stop: der Klick blubbert zum Zellen-Wrapper und öffnet dasselbe Tagesmodal.
+            -->
             <div
-                v-for="violation in violationsToday"
-                :key="violation.id"
-                class="h-4 w-4 flex items-center justify-center"
-                :title="(violation.shift_rule?.name || '') + ': ' + (violation.shift_rule?.description || '')"
+                v-if="openViolations.length"
+                class="h-4 flex items-center justify-center gap-0.5 cursor-pointer"
+                :title="openViolationsTooltip"
             >
-                <!-- Bearbeitet (resolved): Warndreieck in Warnfarbe MIT grünem Haken-Badge -->
-                <span v-if="violation.status === 'resolved'" class="relative inline-flex h-3.5 w-3.5">
-                    <svg class="h-3.5 w-3.5" :style="{ color: violation.shift_rule?.warning_color || '#ff0000' }" fill="currentColor" viewBox="0 0 20 20">
-                        <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
-                    </svg>
-                    <svg class="absolute -bottom-1 -right-1 h-2.5 w-2.5 rounded-full bg-white text-success" fill="currentColor" viewBox="0 0 20 20">
-                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
-                    </svg>
-                </span>
-                <!-- Offener/ignorierter Verstoß: Warndreieck in Warnfarbe -->
-                <svg v-else class="h-3.5 w-3.5" :style="{ color: violation.shift_rule?.warning_color || '#ff0000' }" fill="currentColor" viewBox="0 0 20 20">
+                <svg class="h-3.5 w-3.5" :style="{ color: openViolations[0].shift_rule?.warning_color || '#ff0000' }" fill="currentColor" viewBox="0 0 20 20">
                     <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
                 </svg>
+                <span
+                    v-if="openViolations.length > 1"
+                    class="text-[9px] font-semibold leading-none rounded-full bg-white/90 px-1 py-px"
+                    :style="{ color: openViolations[0].shift_rule?.warning_color || '#ff0000' }"
+                >
+                    {{ openViolations.length }}
+                </span>
+            </div>
+            <div
+                v-if="resolvedViolations.length"
+                class="h-4 flex items-center gap-0.5 rounded-full bg-surface-sunken text-text-subtle px-1 cursor-pointer"
+                :title="resolvedViolationsTooltip"
+            >
+                <svg class="h-2.5 w-2.5" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                </svg>
+                <span class="text-[9px] font-semibold leading-none">{{ resolvedViolations.length }}</span>
             </div>
         </div>
     </div>
@@ -114,6 +126,7 @@ import { computed } from 'vue'
 import { usePage } from '@inertiajs/vue3'
 import { useI18n } from 'vue-i18n'
 import { assignmentStripStyle, assignmentLabel } from '@/Composeables/UseProjectDayAssignments.js'
+import { formatViolationMeasure } from '@/Pages/ShiftWarnings/ruleTypes.js'
 
 const { t } = useI18n()
 
@@ -370,6 +383,26 @@ const violationsToday = computed(() => {
     if (!violations) return []
     return Array.isArray(violations) ? violations : Object.values(violations)
 })
+
+/** Offene (active) und bearbeitete (resolved) Verstöße getrennt; ignorierte werden in der Zelle nicht gezeigt */
+const openViolations = computed(() => violationsToday.value.filter(v => v?.status === 'active'))
+const resolvedViolations = computed(() => violationsToday.value.filter(v => v?.status === 'resolved'))
+
+/** Tooltip je Verstoß: Regelname, Status, formatierter Messwert ("9,5 h von max. 8 h") */
+function violationTooltipLine(violation) {
+    const parts = [violation.shift_rule?.name || t('Rule violation')]
+    parts.push(violation.status === 'resolved' ? t('Processed') : t('Open'))
+    const measure = formatViolationMeasure(violation, t)
+    if (measure) parts.push(measure)
+    return parts.join(' · ')
+}
+
+const openViolationsTooltip = computed(() =>
+    [t('Open rule violations'), ...openViolations.value.map(violationTooltipLine)].join('\n')
+)
+const resolvedViolationsTooltip = computed(() =>
+    [t('Processed rule violations'), ...resolvedViolations.value.map(violationTooltipLine)].join('\n')
+)
 
 /**
  * Eingeplant, aber nicht verfügbar: Person hat am Tag eine Schicht UND einen

@@ -67,6 +67,59 @@ final class ShiftModuleWave4RegressionTest extends FeatureTestCase
     }
 
     #[Test]
+    public function exactly_nine_hours_with_thirty_minute_break_is_no_infringement(): void
+    {
+        // 540-min-Grenzfall: exakt 9h braucht nur 30 min (45 min erst ab 9:01);
+        // vorher war 540 in keinem Intervall (> 360 && < 540 || > 540) und wurde nie geprüft.
+        $shift = Shift::factory()->create([
+            'start_date' => '2026-05-06',
+            'end_date' => '2026-05-06',
+            'start' => '08:00:00',
+            'end' => '17:00:00',
+            'break_minutes' => 30,
+        ]);
+
+        $this->assertFalse($shift->infringement);
+
+        $shift->break_minutes = 15;
+        $this->assertTrue($shift->infringement);
+    }
+
+    #[Test]
+    public function one_minute_over_nine_hours_requires_forty_five_minute_break(): void
+    {
+        $shift = Shift::factory()->create([
+            'start_date' => '2026-05-06',
+            'end_date' => '2026-05-06',
+            'start' => '08:00:00',
+            'end' => '17:01:00',
+            'break_minutes' => 30,
+        ]);
+
+        $this->assertTrue($shift->infringement);
+
+        $shift->break_minutes = 45;
+        $this->assertFalse($shift->infringement);
+    }
+
+    #[Test]
+    public function exactly_six_hours_requires_no_break(): void
+    {
+        $shift = Shift::factory()->create([
+            'start_date' => '2026-05-06',
+            'end_date' => '2026-05-06',
+            'start' => '08:00:00',
+            'end' => '14:00:00',
+            'break_minutes' => 0,
+        ]);
+
+        $this->assertFalse($shift->infringement);
+
+        $shift->end = '14:01:00';
+        $this->assertTrue($shift->infringement);
+    }
+
+    #[Test]
     public function time_span_label_uses_shift_date_not_today(): void
     {
         $shift = Shift::factory()->create([

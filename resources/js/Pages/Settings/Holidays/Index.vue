@@ -7,7 +7,7 @@
                 title="How does this area work?"
                 :paragraphs="[
                     'Public holidays and school vacations appear coloured in the calendar, the planning calendar and the shift plan — import them via the interface or create them manually.',
-                    'Days marked as special day set the target working time to zero: every hour worked on such a day counts as overtime.',
+                    'Special days reduce the daily target to 0 or by the weekday average (three-month mode), provided the contract has the special day rule active and no work was done on that day. School vacations are not special days.',
                 ]"
             />
 
@@ -366,7 +366,7 @@
                                             <ToolTipComponent
                                                 :icon="IconInfoCircle"
                                                 icon-size="h-4 w-4 ml-2"
-                                                :tooltip-text="$t('A holiday, which is treated as a special day, is not counted as a normal working day for the shifts. This means that artwork will set the needed workhours for this day to zero regardless of the working-contract. Thus every worked hour on this day will be counted as overtime.')"
+                                                :tooltip-text="$t('A holiday treated as a special day reduces the daily target of a person to 0 (or by the weekday average in three-month mode) if no work was done on that day and the contract has the special day rule active. Hours worked on a special day count normally. School vacations are never special days.')"
                                                 direction="bottom"
                                             />
                                         </div>
@@ -397,7 +397,7 @@
                             title="Imported entries"
                             :paragraphs="[
                                 'Entries imported via the interface cannot be edited here and are replaced each time the import runs again.',
-                                'Imported entries are marked as special day by default — check the Special Day column after every import.',
+                                'Imported public holidays are marked as special day, school vacations are not — check the Special Day column after every import.',
                             ]"
                         />
                         <div class="flex items-center justify-between mb-4">
@@ -454,7 +454,7 @@
                                                 <ToolTipComponent
                                                     :icon="IconInfoCircle"
                                                     icon-size="h-4 w-4 ml-2"
-                                                    :tooltip-text="$t('A holiday, which is treated as a special day, is not counted as a normal working day for the shifts. This means that artwork will set the needed workhours for this day to zero regardless of the working-contract. Thus every worked hour on this day will be counted as overtime.')"
+                                                    :tooltip-text="$t('A holiday treated as a special day reduces the daily target of a person to 0 (or by the weekday average in three-month mode) if no work was done on that day and the contract has the special day rule active. Hours worked on a special day count normally. School vacations are never special days.')"
                                                     direction="bottom"
                                                 />
                                             </span>

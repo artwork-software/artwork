@@ -8,6 +8,8 @@ use Illuminate\Database\Eloquent\Collection;
 
 class BudgetManagementAccountRepository extends BaseRepository
 {
+    public const SEARCH_RESULT_LIMIT = 50;
+
     public function getAllOrderedByIsAccountForRevenue(): Collection
     {
         return BudgetManagementAccount::query()->orderBy('is_account_for_revenue')->get();
@@ -25,6 +27,9 @@ class BudgetManagementAccountRepository extends BaseRepository
         return BudgetManagementAccount::query()
             ->byAccountNumberOrTitle($search)
             ->isAccountForRevenue($isAccountForRevenue)
+            ->orderBy('account_number')
+            // Trefferlimit: das Frontend zeigt bei 50 Treffern "Suche verfeinern".
+            ->limit(self::SEARCH_RESULT_LIMIT)
             ->get();
     }
 }

@@ -7,6 +7,7 @@ use Artwork\Modules\Shift\Events\MultiShiftCreateInShiftPlan;
 use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\Shift\Models\SingleShiftPreset;
 use Artwork\Modules\Shift\Models\ShiftQualification;
+use Artwork\Modules\Shift\Services\LegalBreakCalculator;
 use Artwork\Modules\Shift\Services\ShiftService;
 use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
@@ -80,7 +81,12 @@ class ShiftController extends Controller
                     'start'          => $startTime,
                     'end'            => $endTime,
 
-                    'break_minutes'  => (int) ($preset->break_duration ?? 0),
+                    // Vorlage ohne Pause → gesetzliche Mindestpause (ArbZG); 0 bleibt 0.
+                    'break_minutes'  => LegalBreakCalculator::resolveBreakMinutes(
+                        $preset->break_duration,
+                        $startTime,
+                        $endTime
+                    ),
                     'description'    => $preset->description,
 
                     // Shift defaults

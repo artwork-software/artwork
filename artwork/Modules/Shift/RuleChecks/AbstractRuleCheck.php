@@ -9,69 +9,95 @@ use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\Shift\Models\ShiftRule;
 use Artwork\Modules\Shift\Models\ShiftRuleViolation;
 use Artwork\Modules\User\Models\User;
+use Artwork\Modules\WorkTime\Services\WorkTimeCalculationService;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
 
 abstract class AbstractRuleCheck implements ShiftRuleCheckInterface
 {
+    /**
+     * Geplante Arbeitsstunden einer Person an einem Tag = Schichten (mit personenindividuellen
+     * Pivot-Zeiten, Pause einmal am ersten Schichttag) PLUS individuelle Zeiten (netto, Pause am
+     * ersten Tag). 5 h Schicht + 6 h individuelle Zeit reißen damit ein Tagesmaximum von 10 h.
+     */
     protected function getPlannedWorkingHoursForDay(User $user, Carbon $date): float
     {
-        // Sum minutes from shifts overlapping this date
-        $shifts = Shift::whereHas('users', function ($query) use ($user): void {
-            $query->where('users.id', $user->id);
-        })
-            ->whereDate('start_date', '<=', $date)
-            ->whereDate('end_date', '>=', $date)
-            ->get();
+        $dayKey = $date->toDateString();
+        $shiftMinutes = (int) (app(WorkTimeCalculationService::class)
+            ->shiftMinutesPerDay($user, $date->copy(), $date->copy())[$dayKey] ?? 0);
 
+        return ($shiftMinutes + $this->getIndividualTimeMinutesForDay($user, $date)) / 60.0;
+    }
+
+    /**
+     * Minuten aus individuellen Zeiten, die den Tag berühren (auf den Tag zugeschnitten);
+     * die Pause wird nur am ersten Tag des Eintrags abgezogen.
+     */
+    protected function getIndividualTimeMinutesForDay(User $user, Carbon $date): int
+    {
         $dayStart = $date->copy()->startOfDay();
-        $dayEnd = $date->copy()->endOfDay();
+        $dayEnd = $date->copy()->startOfDay()->addDay();
 
-        $totalMinutes = 0;
-        foreach ($shifts as $shift) {
-            $start = Carbon::parse($shift->start_date)->setTimeFromTimeString($shift->start);
-            $end = Carbon::parse($shift->end_date)->setTimeFromTimeString($shift->end);
-            $breakMinutes = $shift->break_minutes ?? 0;
-
-            // Clip to the day window
-            $segStart = $start->greaterThan($dayStart) ? $start : $dayStart;
-            $segEnd = $end->lessThan($dayEnd) ? $end : $dayEnd;
-
-            // Only subtract break from the first day-segment of a multi-day shift
-            $applyBreak = $date->isSameDay(Carbon::parse($shift->start_date)) ? $breakMinutes : 0;
-            $minutes = max(0, $segStart->diffInMinutes($segEnd) - $applyBreak);
-            $totalMinutes += $minutes;
-        }
-
-        // Add minutes from IndividualTimes overlapping this date
         $individualTimes = $user->individualTimes()
             ->whereDate('start_date', '<=', $date)
             ->whereDate('end_date', '>=', $date)
             ->get();
 
+        $totalMinutes = 0;
         foreach ($individualTimes as $it) {
-            $itStart = Carbon::parse($it->start_date);
-            $itEnd = Carbon::parse($it->end_date);
+            $itStart = Carbon::parse($it->start_date)->startOfDay();
+            $itEnd = Carbon::parse($it->end_date)->startOfDay();
 
             if (!empty($it->start_time)) {
-                $itStart->setTimeFromTimeString($it->start_time);
-            } else {
-                $itStart->startOfDay();
+                $itStart->setTimeFromTimeString((string) $it->start_time);
             }
             if (!empty($it->end_time)) {
-                $itEnd->setTimeFromTimeString($it->end_time);
+                $itEnd->setTimeFromTimeString((string) $it->end_time);
             } else {
-                $itEnd->endOfDay();
+                $itEnd->addDay();
             }
 
             $segStart = $itStart->greaterThan($dayStart) ? $itStart : $dayStart;
             $segEnd = $itEnd->lessThan($dayEnd) ? $itEnd : $dayEnd;
+            if ($segStart->greaterThanOrEqualTo($segEnd)) {
+                continue;
+            }
 
-            $minutes = max(0, $segStart->diffInMinutes($segEnd));
-            $totalMinutes += $minutes;
+            $minutes = $segStart->diffInMinutes($segEnd);
+            if ($date->isSameDay(Carbon::parse($it->start_date))) {
+                $minutes -= (int) ($it->break_minutes ?? 0);
+            }
+            $totalMinutes += max(0, $minutes);
         }
 
-        return $totalMinutes / 60.0;
+        return $totalMinutes;
+    }
+
+    /**
+     * Zeitraum, für den dieser Check im Lauf [$startDate, $endDate] verbindlich Verstöße erzeugt bzw.
+     * bestätigt hat. ShiftRuleService löscht nach dem Lauf nur innerhalb dieses Fensters nicht mehr
+     * bestätigte automatische Verstöße. Standard: der übergebene Zeitraum. Checks, die einen
+     * abweichenden Zeitraum abdecken (z. B. MinDaysBeforeCommit: heute bis heute+n), überschreiben.
+     *
+     * @return array{0: Carbon, 1: Carbon}|null null = dieser Lauf hat nichts verbindlich abgedeckt
+     */
+    public function getCoveredRange(ShiftRule $rule, Carbon $startDate, Carbon $endDate): ?array
+    {
+        return [$startDate->copy()->startOfDay(), $endDate->copy()->startOfDay()];
+    }
+
+    /**
+     * Schicht der Person, die genau an diesem Tag beginnt (Schichttag = start_date; Über-Mitternacht-
+     * Schichten zählen nur am Starttag). Im Gegensatz zu getShiftForUserOnDate() ohne Folgetage.
+     */
+    protected function getShiftStartingOnDate(User $user, Carbon $date): ?Shift
+    {
+        return Shift::whereHas('users', function ($query) use ($user): void {
+            $query->where('users.id', $user->id);
+        })
+            ->whereDate('start_date', $date)
+            ->orderBy('start')
+            ->first();
     }
 
     protected function getShiftForUserOnDate(User $user, Carbon $date): ?Shift
@@ -261,58 +287,13 @@ abstract class AbstractRuleCheck implements ShiftRuleCheckInterface
         return !$date->isSunday() && !$this->isHoliday($date);
     }
 
+    /**
+     * Sonntag oder Sondertag. Sondertag = Feiertag mit gesetztem Flag "als Sondertag behandeln"
+     * (zentrale Definition im SpecialDayService); Schulferien ohne Flag zählen nicht.
+     */
     protected function isHoliday(Carbon $date): bool
     {
-        // Check if it's Sunday or check against holiday database
-        if ($date->isSunday()) {
-            return true;
-        }
-
-        $query = Holiday::query();
-
-        // Check for holidays that match the exact date
-        $exactDateMatch = $query->where('date', '<=', $date->format('Y-m-d'))
-            ->where('end_date', '>=', $date->format('Y-m-d'))
-            ->exists();
-
-        if ($exactDateMatch) {
-            return true;
-        }
-
-        // Check for yearly recurring holidays
-        $yearlyHolidays = Holiday::where('yearly', true)->get();
-
-        foreach ($yearlyHolidays as $holiday) {
-            if (!$holiday->date || !$holiday->end_date) {
-                continue;
-            }
-
-            $holidayStart = Carbon::parse($holiday->date);
-            $holidayEnd = Carbon::parse($holiday->end_date);
-
-            // Create dates for this year with the same month/day as the holiday
-            $thisYearStart = Carbon::create(
-                $date->year,
-                $holidayStart->month,
-                $holidayStart->day
-            );
-            $thisYearEnd = Carbon::create(
-                $date->year,
-                $holidayEnd->month,
-                $holidayEnd->day
-            );
-
-            // Handle end date in next year (e.g. Dec 31 - Jan 2)
-            if ($thisYearEnd->lt($thisYearStart)) {
-                $thisYearEnd->addYear();
-            }
-
-            if ($date->between($thisYearStart, $thisYearEnd)) {
-                return true;
-            }
-        }
-
-        return false;
+        return app(\Artwork\Modules\Holidays\Services\SpecialDayService::class)->isSundayOrSpecialDay($date);
     }
 
     protected function getEarliestShiftStartOfDay(User $user, Carbon $date): ?Carbon

@@ -22,7 +22,13 @@ class TrackShiftKpisCommand extends Command
     {
         $this->info('Tracking shift KPIs...');
 
-        [$seasonStart, $seasonEnd] = $service->getSeasonBounds();
+        $bounds = $service->getSeasonBounds();
+        if ($bounds === null) {
+            $this->warn('Playing time window is not configured (Tool settings > Communication & Legal) – skipping.');
+
+            return self::SUCCESS;
+        }
+        [$seasonStart, $seasonEnd] = $bounds;
 
         $users = User::query()
             ->where('can_work_shifts', true)

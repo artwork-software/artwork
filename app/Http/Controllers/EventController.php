@@ -5063,9 +5063,11 @@ class EventController extends Controller
             || ($workerType === 'user' && $workerId === $viewer->id);
 
         if ($workerType === 'user') {
-            $additionalData['workTimeBalance'] = $showHours
-                ? $this->workingHourService->convertMinutesInHours($worker->work_time_balance ?? 0)
-                : null;
+            // workTimeBalance (Altformat) + workTimeBalanceFormatted/-Minutes (AZK-Badge mit Vorzeichen)
+            $additionalData = array_merge(
+                $additionalData,
+                $this->workingHourService->workTimeBalanceData($worker, $showHours)
+            );
         }
 
         $additionalData['weeklyWorkingHours'] = $showHours

@@ -56,7 +56,7 @@ const props = defineProps({
             description: '',
             free_full_days_per_week: 0,
             free_half_days_per_week: 0,
-            special_day_rule_active: false,
+            special_day_rule_active: true,
             compensation_period: 0,
             free_sundays_per_season: 0,
             days_off_first_26_weeks: 0.00

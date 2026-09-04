@@ -3,6 +3,7 @@
 namespace Artwork\Modules\IndividualTimes\Services;
 
 use Artwork\Modules\IndividualTimes\Models\IndividualTimeSeries;
+use Artwork\Modules\Shift\Services\LegalBreakCalculator;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 use Carbon\Carbon;
@@ -83,7 +84,10 @@ class IndividualTimeSeriesService
                 $fullDay = (bool) ($data['full_day'] ?? false);
                 $startTime = $fullDay ? null : ($data['start_time'] ?? null);
                 $endTime = $fullDay ? null : ($data['end_time'] ?? null);
-                $breakMinutes = $data['break_minutes'] ?? 0;
+                // Ohne Pause → gesetzliche Mindestpause (ArbZG); ein gesetzter Wert (auch 0) bleibt.
+                $breakMinutes = ($startTime && $endTime)
+                    ? LegalBreakCalculator::resolveBreakMinutes($data['break_minutes'] ?? null, $startTime, $endTime)
+                    : (int) ($data['break_minutes'] ?? 0);
                 if ($startTime && $endTime) {
                     $startTimeConverted = \Illuminate\Support\Carbon::parse($date->toDateString() . ' ' . $startTime);
                     $endTimeConverted = \Illuminate\Support\Carbon::parse($date->toDateString() . ' ' . $endTime);

@@ -46,6 +46,15 @@ class HolidayService
         );
     }
 
+    /**
+     * OpenHolidays-Typ, der beim Import als Sondertag gilt: nur "Public" (gesetzlicher Feiertag).
+     * Schulferien ("School"), Bank-/optionale Feiertage bleiben ohne Flag.
+     */
+    public static function isSpecialDayType(?string $type): bool
+    {
+        return strcasecmp((string) $type, 'Public') === 0;
+    }
+
     public function getAllImported(): Collection
     {
         return $this->holidayRepository->findAllBy('from_api', true);

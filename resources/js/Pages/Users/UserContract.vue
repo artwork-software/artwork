@@ -138,7 +138,7 @@
                             v-model="userContractForm.special_day_rule_active"
                             id="special_day_rule_active"
                             :label="$t('Special Day Rule Active')"
-                            :description="$t('If this is active, the special day rule will be applied to this contract. This means that on special days, the rules for free days may differ from the regular rules.')"
+                            :description="$t('Active: special days reduce the daily target of this person. Inactive: special days do not count, every day has the normal daily target (e.g. contracts where public holidays do not matter).')"
                         />
                         <p v-if="userContractForm.errors.special_day_rule_active" class="text-danger mt-0.5 text-xs">{{ userContractForm.errors.special_day_rule_active }}</p>
                     </div>
@@ -273,7 +273,7 @@ const props = defineProps({
             user_contract_id: null,
             free_full_days_per_week: 0,
             free_half_days_per_week: 0,
-            special_day_rule_active: false,
+            special_day_rule_active: true,
             compensation_period: 0,
             free_sundays_per_season: 0,
             days_off_first_26_weeks: 0.00
@@ -308,7 +308,7 @@ const userContractForm = useForm({
     user_contract_id: props.contract?.user_contract_id,
     free_full_days_per_week: props.contract?.free_full_days_per_week,
     free_half_days_per_week: props.contract?.free_half_days_per_week,
-    special_day_rule_active: props.contract?.special_day_rule_active ?? false,
+    special_day_rule_active: props.contract?.special_day_rule_active ?? true,
     compensation_period: props.contract?.compensation_period,
     overtime_rule_active: props.contract?.overtime_rule_active ?? false,
     overtime_compensation_period: props.contract?.overtime_compensation_period,
@@ -332,7 +332,7 @@ const removeContract = () => {
     userContractForm.user_contract_id = null;
     userContractForm.free_full_days_per_week = 0;
     userContractForm.free_half_days_per_week = 0;
-    userContractForm.special_day_rule_active = false;
+    userContractForm.special_day_rule_active = true;
     userContractForm.compensation_period = 0;
     userContractForm.overtime_rule_active = false;
     userContractForm.overtime_compensation_period = null;

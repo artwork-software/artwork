@@ -12,6 +12,8 @@ use Artwork\Modules\Shift\RuleChecks\RestTimeBeforeHolidayCheck;
 use Artwork\Modules\Shift\RuleChecks\RestTimeBeforeWorkdayCheck;
 use Artwork\Modules\Shift\RuleChecks\RestTimeBetweenShiftGroupsCheck;
 use Artwork\Modules\Shift\RuleChecks\WeeklyMaxHoursCheck;
+use Artwork\Modules\Shift\RuleChecks\WorkOnHolidayCheck;
+use Artwork\Modules\Shift\RuleChecks\WorkOnSundayCheck;
 use InvalidArgumentException;
 
 class ShiftRuleCheckFactory
@@ -36,6 +38,13 @@ class ShiftRuleCheckFactory
         $this->register(new HalfDayOffConflictCheck());
         $this->register(new HalfDayOffOnSpecialDayCheck());
         $this->register(new MinDaysBeforeCommitCheck());
+        $this->register(new WorkOnSundayCheck());
+        $this->register(new WorkOnHolidayCheck());
+    }
+
+    public function has(string $triggerType): bool
+    {
+        return isset($this->checks[$triggerType]);
     }
 
     public function register(ShiftRuleCheckInterface $check): void

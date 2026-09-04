@@ -59,10 +59,20 @@
                     </div>
                 </div>
                 <div>
-                    <NumberComponent id="shift-break-minutes-input"
-                                     :label="$t('Length of break in minutes*')"
-                                     v-model="shiftForm.break_minutes"
-                                     @change="validateShiftBreak()"
+                    <BaseInput id="shift-break-minutes-input"
+                               type="number"
+                               :label="$t('Length of break in minutes*')"
+                               v-model="shiftForm.break_minutes"
+                               :min="0"
+                               :max="1000"
+                               @input="autoBreak.markManual()"
+                               @change="validateShiftBreak()"
+                    />
+                    <LegalBreakHint
+                        :break-minutes="shiftForm.break_minutes"
+                        :legal-minutes="autoBreak.legalMinutes.value"
+                        :has-times="autoBreak.hasTimes.value"
+                        @reset="autoBreak.resetToLegal(); validateShiftBreak()"
                     />
                 </div>
                 <div>
@@ -148,7 +158,10 @@
 </template>
 <script>
 import {IconCheck, IconChevronDown, IconCirclePlus, IconX} from "@tabler/icons-vue";
-import {defineComponent, reactive} from 'vue'
+import {defineComponent, reactive, toRef} from 'vue'
+import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
+import LegalBreakHint from "@/Components/Inputs/LegalBreakHint.vue";
+import {useAutoBreak} from "@/Composeables/useAutoBreak";
 import Permissions from "@/Mixins/Permissions.vue";
 import {
     Dialog,
@@ -178,6 +191,8 @@ export default defineComponent({
     name: "AddEditShiftPresetModal",
     mixins: [Permissions],
     components: {
+        BaseInput,
+        LegalBreakHint,
         BaseUIButton,
         TextareaComponent,
         ModalHeader,
@@ -203,18 +218,30 @@ export default defineComponent({
         Listbox
     },
     props: ['crafts', 'presetShift', 'edit', 'presetId', 'shiftQualifications'],
+    setup(props) {
+        // Formular im setup, damit das Auto-Pausen-Composable (ArbZG) die Felder
+        // reaktiv beobachten kann; in data() stünde es dem Composable nicht zur Verfügung.
+        const shiftForm = useForm({
+            id: props.presetShift ? props.presetShift.id : null,
+            start: props.presetShift ? props.presetShift.start : null,
+            end: props.presetShift ? props.presetShift.end : null,
+            break_minutes: props.presetShift ? props.presetShift.break_minutes : null,
+            craft_id: props.presetShift ? props.presetShift.craft.id : null,
+            description: props.presetShift ? props.presetShift.description : '',
+            presetShiftsQualifications: []
+        });
+
+        const autoBreak = useAutoBreak(
+            toRef(shiftForm, 'start'),
+            toRef(shiftForm, 'end'),
+            toRef(shiftForm, 'break_minutes')
+        );
+
+        return { shiftForm, autoBreak };
+    },
     data(){
         return {
             open: true,
-            shiftForm: useForm({
-                id: this.presetShift ? this.presetShift.id : null,
-                start: this.presetShift ? this.presetShift.start : null,
-                end: this.presetShift ? this.presetShift.end : null,
-                break_minutes: this.presetShift ? this.presetShift.break_minutes : null,
-                craft_id: this.presetShift ? this.presetShift.craft.id : null,
-                description: this.presetShift ? this.presetShift.description : '',
-                presetShiftsQualifications: []
-            }),
             selectedCraft: this.presetShift ? this.presetShift.craft : null,
             validationMessages: {
                 warnings: {
@@ -315,6 +342,13 @@ export default defineComponent({
             this.validationMessages.errors.break_length = [];
 
             let hasErrors = false;
+
+            // ArbZG-Grenzen (> 6h → 30 min, > 9h → 45 min) inkl. Über-Mitternacht
+            if (this.autoBreak.isBelowMinimum.value) {
+                this.validationMessages.warnings.break_length.push(
+                    this.$t('The break is below the legal minimum ({0} min)', [this.autoBreak.legalMinutes.value])
+                );
+            }
 
             //check errors
             if (this.shiftForm.break_minutes === null || this.shiftForm.break_minutes === '') {

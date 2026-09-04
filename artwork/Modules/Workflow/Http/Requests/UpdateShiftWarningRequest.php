@@ -26,7 +26,6 @@ class UpdateShiftWarningRequest extends FormRequest
             'description' => 'nullable|string',
             'individual_number_value' => 'required|numeric|min:0',
             'warning_color' => 'required|string|regex:/^#[a-fA-F0-9]{6}$/',
-            'notify_on_violation' => 'boolean',
             'contract_ids' => 'array',
             'contract_ids.*' => 'exists:user_contracts,id',
             'user_ids' => 'array',

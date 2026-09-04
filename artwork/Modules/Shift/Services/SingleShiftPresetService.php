@@ -16,6 +16,13 @@ class SingleShiftPresetService
     {
         $qualifications = $data['shift_qualifications'] ?? [];
         unset($data['shift_qualifications']);
+        // Vorlage ohne Pause → gesetzliche Mindestpause (ArbZG); 0 bleibt 0.
+        // Die Spalte ist NOT NULL, ein null-Insert liefe sonst in einen DB-Fehler.
+        $data['break_duration'] = LegalBreakCalculator::resolveBreakMinutes(
+            $data['break_duration'] ?? null,
+            $data['start_time'] ?? null,
+            $data['end_time'] ?? null
+        );
         $preset = $this->repository->create($data);
         if (!empty($qualifications)) {
             $syncData = [];
@@ -31,6 +38,13 @@ class SingleShiftPresetService
     {
         $qualifications = $data['shift_qualifications'] ?? null;
         unset($data['shift_qualifications']);
+        if (array_key_exists('break_duration', $data) && $data['break_duration'] === null) {
+            // Leeres Pausenfeld beim Bearbeiten → gesetzliche Mindestpause (ArbZG).
+            $data['break_duration'] = LegalBreakCalculator::minimumBreakMinutesBetween(
+                $data['start_time'] ?? $preset->start_time,
+                $data['end_time'] ?? $preset->end_time
+            );
+        }
         $preset = $this->repository->update($preset, $data);
         if ($qualifications !== null) {
             $syncData = [];

@@ -3,21 +3,26 @@
 namespace Artwork\Modules\WorkTime\Services;
 
 use Artwork\Modules\GeneralSettings\Models\GeneralSettings;
-use Artwork\Modules\Holidays\Models\Holiday;
 use Artwork\Modules\User\Models\User;
 use Artwork\Modules\User\Models\UserWorkTime;
 use Artwork\Modules\User\Services\WorkingHourCacheService;
-use Artwork\Modules\User\Services\ThreeMonthAverageTargetService;
 use Artwork\Modules\WorkTime\Repositories\WorkTimeBookingRepository;
 use Carbon\Carbon;
 
+/**
+ * Nächtliche Buchung des Arbeitszeitkontos (ein Datensatz je User und Tag).
+ *
+ * Soll und Ist kommen ausschließlich aus dem WorkTimeCalculationService (Sondertage,
+ * Ersatzfreie Tage, Krank/Urlaub, Dreimonatsdurchschnitt). Hier bleibt nur die
+ * Nachtstunden-Ermittlung und die atomare Buchung inkl. Saldo-Delta.
+ */
 class WorkTimeBookingService
 {
     public function __construct(
         protected GeneralSettings $settings,
         protected WorkTimeBookingRepository $repository,
         protected WorkingHourCacheService $workingHourCacheService,
-        protected ThreeMonthAverageTargetService $threeMonthAverageTargetService,
+        protected WorkTimeCalculationService $workTimeCalculationService,
     ) {
     }
 
@@ -28,7 +33,6 @@ class WorkTimeBookingService
         $users = $this->repository->getWorkShiftUsers();
         $today = now()->startOfDay();
         $weekdayIndex = $today->dayOfWeek;
-        $weekdayName = $this->getWeekdayName($weekdayIndex);
 
         foreach ($users as $user) {
             $workTimeEntry = $this->getActiveUserWorkTime($user);
@@ -37,79 +41,24 @@ class WorkTimeBookingService
                 continue;
             }
 
-            $pattern = $workTimeEntry->workTimePattern;
-            $plannedTime = $pattern
-                ? $pattern->{$weekdayName}
-                : $workTimeEntry->{$weekdayName};
+            // Bestehende Buchung des Tages (Re-Run) darf nicht als Ist zurückfließen -> use_bookings=false
+            $context = $this->workTimeCalculationService->buildContext($user, $today, $today, [
+                'use_bookings' => false,
+            ]);
+            $breakdown = $this->workTimeCalculationService->dayBreakdown($user, $today, $context);
 
-            $wantedMinutes = $plannedTime
-                ? $today->diffInMinutes($plannedTime)
-                : 0;
+            $wantedMinutes = (int) $breakdown['target'];
+            $workedMinutes = (int) $breakdown['actual'];
+            $nightMinutes = $breakdown['is_sick'] && $breakdown['sick_factor'] >= 1.0
+                ? 0 // Krankheit zählt keine Nachtzeit
+                : $this->calculateNightMinutes($today, $user);
 
-            $workedTimes = $this->calculateShiftMinutes($today, $user);
-
-            $isHoliday = $this->repository->isHoliday($today);
-
-            // Sondertage senken das Soll unabhängig davon, ob gearbeitet wurde:
-            // Arbeit am Feiertag erzeugt Plus-Stunden, die ein regulärer
-            // Ausgleichstag (volles Soll, keine Arbeit) später wieder abbaut.
-            if ($isHoliday) {
-                if ($user->activeWorkContract()?->use_three_month_average_for_target_reduction) {
-                    $wantedMinutes = max(0, $wantedMinutes - $this->threeMonthAverageTargetService
-                        ->averageMinutesFor($user, $today, $wantedMinutes));
-                } else {
-                    $wantedMinutes = 0;
-                }
-            }
-
-            // DP-18 Stufe 2: Nur Ausgleichstage für Sondertage (for_holiday) senken das Tagessoll.
-            // Nicht-Holiday-Ausgleichstage lassen das Soll bestehen -> der freie Tag erzeugt ein
-            // Minus-Delta = Überstundenabbau.
-            // Nicht an einem Feiertag: dort hat der Feiertagszweig oben das Soll
-            // bereits gesenkt — eine zweite Reduktion wäre doppelt.
-            $holidayCompValue = $isHoliday ? 0.0 : (float) \Artwork\Modules\Shift\Models\CompensationDayOff::query()
-                ->where('user_id', $user->id)
-                ->where('for_holiday', true)
-                ->whereNotNull('granted_date')
-                ->whereDate('granted_date', $today->toDateString())
-                ->sum('value');
-            if ($holidayCompValue > 0) {
-                $reductionMinutes = $this->threeMonthAverageTargetService->reductionMinutesFor(
-                    $user,
-                    $today,
-                    min(1.0, $holidayCompValue),
-                    $wantedMinutes
-                );
-                $wantedMinutes = max(0, $wantedMinutes - $reductionMinutes);
-            }
-            $workTimeBalanceChange = $this->calculateWorkTimeBalanceChange(
-                $workedTimes['total'],
-                $wantedMinutes
-            );
+            $workTimeBalanceChange = $this->calculateWorkTimeBalanceChange($workedMinutes, $wantedMinutes);
 
             $previousBooking = $this->repository->getPreviousBooking($user, $today, $weekdayIndex);
             $delta = $previousBooking
                 ? $workTimeBalanceChange - $previousBooking->work_time_balance_change
                 : $workTimeBalanceChange;
-
-            // Neue Logik für Krankheitstage
-            $vacation = $user->vacations()->byDate($today)->first();
-            if ($vacation && $vacation->type === 'NOT_AVAILABLE') {
-                $plannedMinutes = $this->calculateShiftMinutes($today, $user)['total'];
-
-                if ($plannedMinutes > $wantedMinutes) {
-                    $workedTimes['total'] = $plannedMinutes;
-                    $workTimeBalanceChange = $plannedMinutes - $wantedMinutes;
-                } else {
-                    $workedTimes['total'] = 0;
-                    $workTimeBalanceChange = 0;
-                }
-            } else {
-                $workTimeBalanceChange = $this->calculateWorkTimeBalanceChange(
-                    $workedTimes['total'],
-                    $wantedMinutes
-                );
-            }
 
             // Buchung UND Saldo-Anpassung atomar in einer Transaktion (vorher war das
             // Balance-Update separat danach -> bei Worker-Crash dazwischen blieb der Saldo
@@ -117,9 +66,9 @@ class WorkTimeBookingService
             $this->repository->storeBookingAndUpdateBalanceInTransaction($user, $today, $weekdayIndex, [
                 'name' => "daily_work_time_booking_{$today->toDateString()}",
                 'wanted_working_hours' => $wantedMinutes,
-                'worked_hours' => $workedTimes['total'],
-                'nightly_working_hours' => $workedTimes['night'],
-                'is_special_day' => false,
+                'worked_hours' => $workedMinutes,
+                'nightly_working_hours' => $nightMinutes,
+                'is_special_day' => (bool) $breakdown['is_special_day'],
                 'work_time_balance_change' => $workTimeBalanceChange,
             ], $delta);
 
@@ -130,22 +79,11 @@ class WorkTimeBookingService
         }
     }
 
-    private function getWeekdayName(int $day): string
-    {
-        return [
-            0 => 'sunday', 1 => 'monday', 2 => 'tuesday',
-            3 => 'wednesday', 4 => 'thursday', 5 => 'friday', 6 => 'saturday'
-        ][$day] ?? 'unknown';
-    }
-
     /**
-     * @param Carbon $day
-     * @param User $user
-     * @return int[]
+     * Nachtminuten (Schichten + Individualzeiten) im Nachtfenster der GeneralSettings.
      */
-    private function calculateShiftMinutes(Carbon $day, User $user): array
+    private function calculateNightMinutes(Carbon $day, User $user): int
     {
-        $total = 0;
         $night = 0;
 
         $nightStartTime = $this->settings->start_night_time;
@@ -160,76 +98,59 @@ class WorkTimeBookingService
         $night2Start = $day->copy()->addDay()->startOfDay();
         $night2End = $day->copy()->addDay()->setTimeFromTimeString($nightEndTime);
 
+        $overlap = static function (Carbon $start, Carbon $end) use (
+            $dayStart,
+            $dayEnd,
+            $night1Start,
+            $night1End,
+            $night2Start,
+            $night2End
+        ): int {
+            $workStart = max($start, $dayStart);
+            $workEnd = min($end, $dayEnd);
+            if (!$workStart->lt($workEnd)) {
+                return 0;
+            }
+
+            $minutes = 0;
+            $nightOverlap1Start = max($workStart, $night1Start);
+            $nightOverlap1End = min($workEnd, $night1End);
+            if ($nightOverlap1Start->lt($nightOverlap1End)) {
+                $minutes += $nightOverlap1Start->diffInMinutes($nightOverlap1End);
+            }
+
+            $nightOverlap2Start = max($workStart, $night2Start);
+            $nightOverlap2End = min($workEnd, $night2End);
+            if ($nightOverlap2Start->lt($nightOverlap2End)) {
+                $minutes += $nightOverlap2Start->diffInMinutes($nightOverlap2End);
+            }
+
+            return $minutes;
+        };
+
         foreach ($user->shifts as $shift) {
             $pivot = $shift->pivot;
+            if (!$pivot?->start_date || !$pivot?->start_time || !$pivot?->end_date || !$pivot?->end_time) {
+                continue;
+            }
 
             $start = Carbon::parse($pivot->start_date)->setTimeFrom(Carbon::parse($pivot->start_time));
             $end = Carbon::parse($pivot->end_date)->setTimeFrom(Carbon::parse($pivot->end_time));
-            $break = (int)($shift->break_minutes ?? 0);
-
-            $workStart = max($start, $dayStart);
-            $workEnd = min($end, $dayEnd);
-
-            if ($workStart->lt($workEnd)) {
-                $duration = $workStart->diffInMinutes($workEnd);
-                // Bei mehrtägigen Schichten: Pause nur am ersten Tag der Schicht abziehen
-                $shiftStartDay = $start->copy()->startOfDay();
-                $isFirstDayOfShift = $day->copy()->startOfDay()->equalTo($shiftStartDay);
-                if ($isFirstDayOfShift) {
-                    $duration -= $break;
-                }
-                $total += max(0, $duration);
-
-                $nightOverlap1Start = max($workStart, $night1Start);
-                $nightOverlap1End = min($workEnd, $night1End);
-                if ($nightOverlap1Start->lt($nightOverlap1End)) {
-                    $night += $nightOverlap1Start->diffInMinutes($nightOverlap1End);
-                }
-
-                $nightOverlap2Start = max($workStart, $night2Start);
-                $nightOverlap2End = min($workEnd, $night2End);
-                if ($nightOverlap2Start->lt($nightOverlap2End)) {
-                    $night += $nightOverlap2Start->diffInMinutes($nightOverlap2End);
-                }
-            }
+            $night += $overlap($start, $end);
         }
 
-        // Add individual times to the calculation
         foreach ($user->individualTimes as $individualTime) {
-            // Check if the individual time is for the current day
-            if (in_array($day->toDateString(), $individualTime->days_of_individual_time ?? [])) {
-                // working_time_minutes already has break_minutes deducted
-                $total += (int)($individualTime->working_time_minutes ?? 0);
-
-                // Calculate night hours for individual times if they have specific times
-                if ($individualTime->start_time && $individualTime->end_time && !$individualTime->full_day) {
-                    $start = Carbon::parse($individualTime->start_date . ' ' . $individualTime->start_time);
-                    $end = Carbon::parse($individualTime->end_date . ' ' . $individualTime->end_time);
-
-                    $workStart = max($start, $dayStart);
-                    $workEnd = min($end, $dayEnd);
-
-                    if ($workStart->lt($workEnd)) {
-                        $nightOverlap1Start = max($workStart, $night1Start);
-                        $nightOverlap1End = min($workEnd, $night1End);
-                        if ($nightOverlap1Start->lt($nightOverlap1End)) {
-                            $night += $nightOverlap1Start->diffInMinutes($nightOverlap1End);
-                        }
-
-                        $nightOverlap2Start = max($workStart, $night2Start);
-                        $nightOverlap2End = min($workEnd, $night2End);
-                        if ($nightOverlap2Start->lt($nightOverlap2End)) {
-                            $night += $nightOverlap2Start->diffInMinutes($nightOverlap2End);
-                        }
-                    }
-                }
+            if (!in_array($day->toDateString(), $individualTime->days_of_individual_time ?? [], true)) {
+                continue;
+            }
+            if ($individualTime->start_time && $individualTime->end_time && !$individualTime->full_day) {
+                $start = Carbon::parse($individualTime->start_date . ' ' . $individualTime->start_time);
+                $end = Carbon::parse($individualTime->end_date . ' ' . $individualTime->end_time);
+                $night += $overlap($start, $end);
             }
         }
 
-        return [
-            'total' => (int) round($total),
-            'night' => (int) round($night)
-        ];
+        return (int) round($night);
     }
 
     private function calculateWorkTimeBalanceChange(int $workedHours, int $wantedWorkHours): int

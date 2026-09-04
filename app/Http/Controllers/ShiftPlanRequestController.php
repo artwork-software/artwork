@@ -135,8 +135,9 @@ class ShiftPlanRequestController extends Controller
         Carbon $end
     ): \Illuminate\Support\Collection {
         return ShiftRuleViolation::query()
-            ->select(['id', 'shift_rule_id', 'user_id', 'violation_date', 'status'])
-            ->with(['shiftRule:id,name,description,warning_color'])
+            // violation_data/severity: Tooltip der Prüfansicht zeigt Messwert und Grenze
+            ->select(['id', 'shift_rule_id', 'user_id', 'violation_date', 'status', 'severity', 'violation_data'])
+            ->with(['shiftRule:id,name,description,warning_color,trigger_type'])
             ->whereIn('user_id', $userIds)
             ->whereBetween('violation_date', [$start->toDateString(), $end->toDateString()])
             ->whereIn('status', ['active', 'resolved'])

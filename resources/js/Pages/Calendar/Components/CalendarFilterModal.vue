@@ -73,6 +73,18 @@
                                 </div>
                             </div>
                         </div>
+                        <div v-if="staffingFilterContext && showOnlyUsersWithOpenViolations" class="group block cursor-pointer shrink-0 bg-accent-50 w-fit px-2 py-1.5 rounded-full border border-accent-200">
+                            <div class="flex items-center">
+                                <div class="mx-2">
+                                    <p class="text-accent-600 text-xs group-hover:text-accent-700">{{ $t('Only show people with open rule violations') }}</p>
+                                </div>
+                                <div class="flex items-center">
+                                    <button type="button" @click="showOnlyUsersWithOpenViolations = false">
+                                        <IconX class="size-4 text-accent-600 hover:text-danger" />
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
                         <div v-for="(filter, index) in activeFilters" class="group block cursor-pointer shrink-0 bg-accent-50  w-fit px-2 py-1.5 rounded-full border border-accent-200">
                             <div class="flex items-center">
                                 <div class="mx-2">
@@ -165,13 +177,21 @@
                     <div class="flex items-center gap-x-1.5 text-text-inverse bg-surface-inverse rounded-lg px-4 py-2 font-lexend shadow text-sm">
                         {{ $t('shiftFilters') }}
                     </div>
-                    <div class="mt-2 rounded-lg bg-surface border border-border-subtle w-full shadow-raised px-4 py-3">
+                    <div class="mt-2 rounded-lg bg-surface border border-border-subtle w-full shadow-raised px-4 py-3 space-y-3">
                         <BaseCheckbox
                             v-model="showOnlyNotFullyStaffed"
                             id="filter_show_only_not_fully_staffed_shifts"
                             name="filter_show_only_not_fully_staffed_shifts"
                             :label="$t('Only show shifts that are not fully staffed')"
                             :description="$t('Only displays shifts where at least one position still has capacity for additional staff.')"
+                        />
+                        <!-- Personenfilter: user_filters-Flag (eigener Endpunkt), Auswertung in ShiftPlan.vue -->
+                        <BaseCheckbox
+                            v-model="showOnlyUsersWithOpenViolations"
+                            id="filter_show_only_users_with_open_violations"
+                            name="filter_show_only_users_with_open_violations"
+                            :label="$t('Only show people with open rule violations')"
+                            :description="$t('Hides people without an open rule violation in the displayed period.')"
                         />
                     </div>
                 </div>
@@ -285,6 +305,24 @@ const currentShiftPlanSettings = computed(() => {
 
 const showOnlyNotFullyStaffed = ref(false);
 
+// Personenfilter "nur Personen mit offenen Regelverstößen": liegt auf user_filters (Flag), wird über
+// einen eigenen Endpunkt gesetzt, damit die übrigen Filterwerte unberührt bleiben
+const showOnlyUsersWithOpenViolations = ref(false);
+
+const persistOpenViolationsFilterIfChanged = async () => {
+    if (!staffingFilterContext.value) {
+        return;
+    }
+    const current = !!props.user_filters?.show_only_users_with_open_violations;
+    if (current === showOnlyUsersWithOpenViolations.value) {
+        return;
+    }
+    await axios.patch(route('update.user.calendar.filter.open-violations', usePage().props.auth.user.id), {
+        filter_type: props.filterType,
+        show_only_users_with_open_violations: showOnlyUsersWithOpenViolations.value,
+    });
+};
+
 const persistStaffingFilterIfChanged = async () => {
     if (!staffingFilterContext.value) {
         return;
@@ -397,6 +435,7 @@ const resetFilter = () => {
         })
     })
     showOnlyNotFullyStaffed.value = false;
+    showOnlyUsersWithOpenViolations.value = false;
 
     applyFilter();
 }
@@ -412,6 +451,7 @@ const extractCheckedIds = (filterGroup) => {
 
 const applyFilter = async () => {
     await persistStaffingFilterIfChanged();
+    await persistOpenViolationsFilterIfChanged();
 
     const data = {
         filter_type: props.filterType,
@@ -500,6 +540,7 @@ const restoreFilterState = () => {
 onMounted(() => {
     restoreFilterState();
     showOnlyNotFullyStaffed.value = !!currentShiftPlanSettings.value?.show_only_not_fully_staffed_shifts;
+    showOnlyUsersWithOpenViolations.value = !!props.user_filters?.show_only_users_with_open_violations;
 });
 </script>
 

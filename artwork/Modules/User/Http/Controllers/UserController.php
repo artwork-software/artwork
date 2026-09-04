@@ -64,8 +64,8 @@ use Artwork\Modules\User\Models\UserContract;
 use Artwork\Modules\User\Models\UserContractAssign;
 use Artwork\Modules\User\Models\UserWorkTimePattern;
 use Artwork\Modules\User\Services\UserService;
-use Artwork\Modules\User\Services\ThreeMonthAverageTargetService;
 use Artwork\Modules\User\Services\UserUserManagementSettingService;
+use Artwork\Modules\WorkTime\Services\WorkTimeCalculationService;
 use Artwork\Modules\WorkTime\Models\WorkTimeBooking;
 use Carbon\Carbon;
 use Illuminate\Auth\Access\AuthorizationException;
@@ -102,7 +102,7 @@ class UserController extends Controller
         protected AuthManager $auth,
         protected GlobalQualificationService $qualificationService,
         private readonly ShiftRuleService $shiftRuleService,
-        private readonly ThreeMonthAverageTargetService $threeMonthAverageTargetService,
+        private readonly WorkTimeCalculationService $workTimeCalculationService,
     ) {
         $this->authorizeResource(User::class, 'user');
     }
@@ -488,14 +488,6 @@ class UserController extends Controller
 
         $workTimes = $this->getPlannedWorkSchedule($start, $end, $user);
 
-
-        // Flach durch alle Tage iterieren
-        $flatDays = collect($workTimes)->flatten(1);
-
-
-        $totalWorkedMinutes = $flatDays->sum('worked_hours');
-        $totalWantedMinutes = $flatDays->sum('wantedHours');
-
         return inertia('Users/UserWorkTimes', [
             'userToEdit' => new UserShowResource($user),
             'workTimes' => $workTimes,
@@ -503,10 +495,7 @@ class UserController extends Controller
                 'start' => $start->toDateString(),
                 'end' => $end->toDateString(),
             ],
-            'totals' => [
-                'worked' => $this->convertMinutesToHoursAndMinutes($totalWorkedMinutes),
-                'wanted' => $this->convertMinutesToHoursAndMinutes($totalWantedMinutes, true),
-            ]
+            'totals' => $this->scheduleTotals($workTimes),
         ]);
     }
 
@@ -547,7 +536,15 @@ class UserController extends Controller
      */
     public function shiftUserInfoSeason(User $user, ShiftKpiTrackingService $service): JsonResponse
     {
-        [$seasonStart, $seasonEnd] = $service->getSeasonBounds();
+        $bounds = $service->getSeasonBounds();
+        if ($bounds === null) {
+            // Leere/ungültige Spielzeit-Einstellung -> Hinweis statt Carbon::parse('')-Absturz
+            return response()->json([
+                'error' => true,
+                'message' => __('The playing time window is not configured. Set it under Tool settings > Communication & Legal.'),
+            ], 422);
+        }
+        [$seasonStart, $seasonEnd] = $bounds;
         $kpis = $service->computeForUser($user, $seasonStart, $seasonEnd);
 
         $snapshot = UserShiftKpiSnapshot::query()
@@ -562,6 +559,8 @@ class UserController extends Controller
                 'start' => $seasonStart->toDateString(),
                 'end' => $seasonEnd->toDateString(),
             ],
+            // Zählregel: abgeschlossene Tage der Spielzeit (bis gestern); Anzeige = aktueller Stand
+            'counted_until' => Carbon::yesterday()->toDateString(),
             'snapshot_recalculated_at' => $snapshot?->recalculated_at,
         ]);
     }
@@ -571,23 +570,32 @@ class UserController extends Controller
         return response()->json($this->shiftRuleService->getCompensationDataForUser($user));
     }
 
-    public function shiftUserInfoVacation(User $user): JsonResponse
+    /**
+     * Urlaub im Kalenderjahr INKLUSIVE geplanter Tage (Spielzeit-Tab zählt nur bis gestern).
+     * Zählregel identisch zum KPI-Dienst: ganzer Tag = 1, halber Tag = 0,5.
+     */
+    public function shiftUserInfoVacation(User $user, ShiftKpiTrackingService $service): JsonResponse
     {
         $year = Carbon::now()->year;
+        $yearStart = Carbon::create($year, 1, 1)->startOfDay();
+        $yearEnd = Carbon::create($year, 12, 31)->endOfDay();
+
         $vacations = $user->vacations()
             ->where('type', 'OFF_WORK')
-            ->whereYear('date', $year)
+            ->whereBetween('date', [$yearStart->toDateString(), $yearEnd->toDateString()])
             ->orderBy('date')
             ->get(['id', 'date', 'full_day', 'day_part', 'comment']);
 
-        $granted = 0.0;
-        foreach ($vacations as $vacation) {
-            $granted += $vacation->full_day ? 1.0 : 0.5;
-        }
-        $entitlement = (int) (optional($user->activeWorkContract())->annual_vacation_days ?? 0);
+        $granted = $service->grantedVacationUnitsForUser($user, $yearStart, $yearEnd, includePlanned: true);
+        $entitlement = $service->annualVacationEntitlement($user);
 
         return response()->json([
             'year' => $year,
+            'period' => [
+                'start' => $yearStart->toDateString(),
+                'end' => $yearEnd->toDateString(),
+            ],
+            'includes_planned' => true,
             'entitlement' => $entitlement,
             'granted' => $granted,
             'remaining' => $entitlement - $granted,
@@ -598,15 +606,17 @@ class UserController extends Controller
     public function shiftUserInfoWorktimes(User $user): JsonResponse
     {
         $this->authorizeHourAccountAccess($user);
-        $startInput = request()->input('start');
-        $endInput = request()->input('end');
-        $start = $startInput ? Carbon::parse($startInput) : Carbon::now()->startOfMonth();
-        $end = $endInput ? Carbon::parse($endInput) : Carbon::now()->endOfMonth();
+        $start = $this->parseDateOrDefault(request()->input('start'), Carbon::now()->startOfMonth())->startOfDay();
+        $end = $this->parseDateOrDefault(request()->input('end'), $start->copy()->endOfMonth())->startOfDay();
+        if ($end->lessThan($start)) {
+            $end = $start->copy()->endOfMonth();
+        }
+        // Zeitraum begrenzen (Modal-Monatsnavigation): max. ein Jahr
+        if ($start->diffInDays($end) > 366) {
+            $end = $start->copy()->addYear();
+        }
 
         $workTimes = $this->getPlannedWorkSchedule($start, $end, $user);
-        $flatDays = collect($workTimes)->flatten(1);
-        $totalWorkedMinutes = (int) $flatDays->sum('worked_hours');
-        $totalWantedMinutes = (int) $flatDays->sum('wantedHours');
 
         return response()->json([
             'workTimes' => $workTimes,
@@ -614,11 +624,30 @@ class UserController extends Controller
                 'start' => $start->toDateString(),
                 'end' => $end->toDateString(),
             ],
-            'totals' => [
-                'worked' => $this->convertMinutesToHoursAndMinutes($totalWorkedMinutes),
-                'wanted' => $this->convertMinutesToHoursAndMinutes($totalWantedMinutes, true),
-            ],
+            'totals' => $this->scheduleTotals($workTimes),
         ]);
+    }
+
+    /**
+     * @param array<string, array<string, array<string, mixed>>> $workTimes
+     * @return array<string, mixed>
+     */
+    private function scheduleTotals(array $workTimes): array
+    {
+        $flatDays = collect($workTimes)->flatten(1);
+        $totalWorkedMinutes = (int) $flatDays->sum('worked_hours');
+        $totalWantedMinutes = (int) $flatDays->sum('wantedHours');
+        $difference = $totalWorkedMinutes - $totalWantedMinutes;
+
+        return [
+            'worked' => $this->convertMinutesToHoursAndMinutes($totalWorkedMinutes),
+            'wanted' => $this->convertMinutesToHoursAndMinutes($totalWantedMinutes, true),
+            'worked_minutes' => $totalWorkedMinutes,
+            'wanted_minutes' => $totalWantedMinutes,
+            'difference_minutes' => $difference,
+            'difference' => $this->convertMinutesToHoursAndMinutes($difference),
+            'difference_signed' => WorkTimeCalculationService::formatSignedHours($difference),
+        ];
     }
 
     /**
@@ -730,27 +759,21 @@ class UserController extends Controller
     }
 
     /**
-     * @param Carbon $start
-     * @param Carbon $end
-     * @param User $user
-     * @return array<string, array<string, mixed>>
+     * Ist-Stunden je Tag, gruppiert nach KW. Tageswerte kommen ausschließlich aus dem
+     * WorkTimeCalculationService (Soll/Ist, Sondertage, Ersatzfreie Tage, Krank/Urlaub).
+     *
+     * @return array<string, array<string, array<string, mixed>>>
      */
     private function getPlannedWorkSchedule(Carbon $start, Carbon $end, User $user): array
     {
         $schedule = [];
+        $locale = session('locale', config('app.fallback_locale'));
 
         $bookings = $user->workTimeBookings()
             ->with('booker')
             ->whereBetween('booking_day', [$start->toDateString(), $end->toDateString()])
             ->get()
-            ->groupBy(fn($b) => $b->booking_day->toDateString());
-
-        $individualTimes = $user->individualTimes()
-            ->individualByDateRange($start->toDateString(), $end->toDateString())
-            ->get()
-            ->flatMap(fn($t) => collect($t->days_of_individual_time)->mapWithKeys(
-                fn($day) => [$day => $t->working_time_minutes ?? 0]
-            ));
+            ->groupBy(fn ($b) => $b->booking_day->toDateString());
 
         $compensationDayOffs = CompensationDayOff::where('user_id', $user->id)
             ->whereNotNull('granted_date')
@@ -759,47 +782,33 @@ class UserController extends Controller
             ->get()
             ->groupBy(fn ($d) => $d->granted_date->toDateString());
 
-        $current = $start->copy();
+        // Relationen für den Zeitraum gezielt laden (kein $user->shifts über alle Jahre)
+        $user->setRelation(
+            'shifts',
+            $user->shifts()
+                ->where('shifts.start_date', '<=', $end->toDateString())
+                ->where('shifts.end_date', '>=', $start->toDateString())
+                ->get()
+        );
+        $breakdowns = $this->workTimeCalculationService->breakdownForRange($user, $start, $end, [
+            'holiday_comp_days' => $compensationDayOffs->flatten(1)->where('for_holiday', true),
+        ]);
+        $user->unsetRelation('shifts');
 
-        while ($current->lte($end)) {
+        $current = $start->copy()->startOfDay();
+        $last = $end->copy()->startOfDay();
+
+        while ($current->lte($last)) {
             $dateKey = $current->toDateString();
             $weekday = strtolower($current->format('l'));
             $weekKey = "KW" . $current->isoWeek();
-
-            $userWorkTime = $user->workTimes()
-                ->where(function ($q) use ($current): void {
-                    $q->whereNull('valid_from')->orWhere('valid_from', '<=', $current);
-                })
-                ->where(function ($q) use ($current): void {
-                    $q->whereNull('valid_until')->orWhere('valid_until', '>=', $current);
-                })
-                ->orderByDesc('valid_from')
-                ->first();
-
-            $patternTime = $userWorkTime?->{$weekday};
-            $dailyTargetMinutes = 0;
-            if ($patternTime instanceof Carbon) {
-                $dailyTargetMinutes = $patternTime->hour * 60 + $patternTime->minute;
-            }
+            $day = $breakdowns[$dateKey];
 
             $compensationInfo = null;
             if (isset($compensationDayOffs[$dateKey])) {
-                $dayCompDays = $compensationDayOffs[$dateKey];
-                // DP-18 Stufe 2: Nur Ausgleichstage für Sondertage (for_holiday) senken das Tagessoll.
-                // Nicht-Holiday-Ausgleichstage lassen das Soll bestehen -> Minus-Delta = Überstundenabbau.
-                // Die Senkung gilt unabhängig von geleisteter Arbeit (Arbeit = Plus-Stunden).
-                $holidayCompValue = (float) $dayCompDays->where('for_holiday', true)->sum('value');
-                if ($holidayCompValue > 0) {
-                    $dailyTargetMinutes = max(0, $dailyTargetMinutes - $this->threeMonthAverageTargetService
-                        ->reductionMinutesFor(
-                            $user,
-                            $current,
-                            min(1.0, $holidayCompValue),
-                            $dailyTargetMinutes
-                        ));
-                }
-                $compensationInfo = $dayCompDays->map(fn ($d) => [
+                $compensationInfo = $compensationDayOffs[$dateKey]->map(fn ($d) => [
                     'value' => (float) $d->value,
+                    'for_holiday' => (bool) $d->for_holiday,
                     'rule_name' => $d->violation?->shiftRule?->name,
                     'granted_by' => $d->grantedByUser
                         ? $d->grantedByUser->first_name . ' ' . $d->grantedByUser->last_name
@@ -807,79 +816,53 @@ class UserController extends Controller
                 ])->values()->toArray();
             }
 
-            $workedMinutes = 0;
-            $nightlyMinutes = 0;
-            $balanceChange = 0;
             $comments = [];
-            $isSpecialDay = false;
-
-            if (isset($bookings[$dateKey])) {
-                foreach ($bookings[$dateKey] as $booking) {
-                    $workedMinutes += $booking->worked_hours;
-                    $nightlyMinutes += $booking->nightly_working_hours;
-                    $balanceChange += $booking->work_time_balance_change;
-                    $isSpecialDay = $isSpecialDay || $booking->is_special_day;
-
-                    if ($booking->comment) {
-                        $comments[] = [
-                            'text' => $booking->comment,
-                            'user' => $booking->booker,
-                            'date' => $booking->created_at->locale(session('locale', config('app.fallback_locale')))
-                                ->isoFormat('D. MMMM YYYY'),
-                            'work_time_change' => $this->convertMinutesToHoursAndMinutes(
-                                $booking->work_time_balance_change
-                            ),
-                        ];
-                    }
-                }
-            } else {
-                // Wenn kein Booking, dann prüfen ob Krankheit
-                $vacation = $user->vacations()->byDate($current)->first();
-                if ($vacation && $vacation->type === 'NOT_AVAILABLE') {
-                    $plannedShiftMinutes = $this->getPlannedShiftMinutesForDay($user, $current);
-
-                    if ($plannedShiftMinutes > $dailyTargetMinutes) {
-                        $workedMinutes = $plannedShiftMinutes;
-                        $balanceChange = $plannedShiftMinutes - $dailyTargetMinutes;
-                    } else {
-                        $workedMinutes = 0;
-                        $balanceChange = 0;
-                    }
-
-                    $nightlyMinutes = 0; // Krankheit zählt keine Nachtzeit
-                } else {
-                    $workedMinutes += $this->getPlannedShiftMinutesForDay($user, $current);
-
-                    if ($individualTimes->has($dateKey)) {
-                        $workedMinutes += $individualTimes[$dateKey];
-                    }
-
-                    // Calculate balance change: on work-free days (dailyTargetMinutes = 0),
-                    // no negative balance should be calculated
-                    if ($dailyTargetMinutes === 0) {
-                        // Work-free day: only count actual worked time as positive balance
-                        $balanceChange = $workedMinutes;
-                    } else {
-                        // Regular day: calculate difference between worked and target
-                        $balanceChange = $workedMinutes - $dailyTargetMinutes;
-                    }
+            foreach ($bookings[$dateKey] ?? [] as $booking) {
+                if ($booking->comment) {
+                    $comments[] = [
+                        'text' => $booking->comment,
+                        'user' => $booking->booker,
+                        'date' => $booking->created_at->locale($locale)->isoFormat('D. MMMM YYYY'),
+                        'work_time_change' => $this->convertMinutesToHoursAndMinutes(
+                            $booking->work_time_balance_change
+                        ),
+                    ];
                 }
             }
+
+            $workedMinutes = (int) $day['actual'];
+            $dailyTargetMinutes = (int) $day['target'];
+            $balanceChange = (int) $day['balance'];
+            $nightlyMinutes = (int) $day['nightly_minutes'];
 
             $entry = [
                 'weekday' => $weekday,
                 'date' => $dateKey,
-                'formatted_date' => $current->locale(session('locale', config('app.fallback_locale')))
-                    ->isoFormat('dddd, D. MMMM YYYY'),
+                'formatted_date' => $current->locale($locale)->isoFormat('dddd, D. MMMM YYYY'),
                 'planned_minutes' => $workedMinutes,
                 'planned_hours' => $this->convertMinutesToHoursAndMinutes($workedMinutes, true),
                 'daily_target_minutes' => $dailyTargetMinutes,
                 'daily_target_hours' => $this->convertMinutesToHoursAndMinutes($dailyTargetMinutes, true),
+                'base_target_minutes' => (int) $day['base_target'],
                 'wantedHours' => $dailyTargetMinutes,
                 'worked_hours' => $workedMinutes,
                 'nightly_working_hours' => $nightlyMinutes,
                 'work_time_balance_change' => $balanceChange,
-                'is_special_day' => $isSpecialDay,
+                'has_booking' => (bool) $day['has_booking'],
+                'is_special_day' => (bool) $day['is_special_day'],
+                'special_day_name' => $day['special_day_name'],
+                'special_day_counts' => (bool) $day['special_day_counts'],
+                'target_reduction' => (int) $day['target_reduction'],
+                'target_reduction_formatted' => $this->convertMinutesToHoursAndMinutes((int) $day['target_reduction'], true),
+                'reduction_reason' => $day['reduction_reason'],
+                'reference_period' => $day['reference_period'],
+                'reference_weekday_average' => $day['reference_weekday_average'],
+                'reference_weekday_average_formatted' => $day['reference_weekday_average'] !== null
+                    ? $this->convertMinutesToHoursAndMinutes((int) $day['reference_weekday_average'], true)
+                    : null,
+                'is_sick' => (bool) $day['is_sick'],
+                'is_vacation' => (bool) $day['is_vacation'],
+                'vacation_factor' => (float) $day['vacation_factor'],
                 'is_compensation_day_off' => $compensationInfo !== null,
                 'compensation_day_off_info' => $compensationInfo,
                 'comments' => $comments,
@@ -895,46 +878,6 @@ class UserController extends Controller
 
         return $schedule;
     }
-
-
-    private function getPlannedShiftMinutesForDay(User $user, Carbon $day): int
-    {
-        $total = 0;
-
-        $dayStart = $day->copy()->startOfDay();
-        $dayEnd = $day->copy()->endOfDay()->addMillisecond();
-
-        foreach ($user->shifts as $shift) {
-            $pivot = $shift->pivot;
-
-            $shiftStart = Carbon::parse($pivot->start_date)->setTimeFrom(Carbon::parse($pivot->start_time));
-            $shiftEnd = Carbon::parse($pivot->end_date)->setTimeFrom(Carbon::parse($pivot->end_time));
-
-            // Nur Schichten berücksichtigen, die an diesem Tag aktiv sind
-            if ($shiftStart->gt($dayEnd) || $shiftEnd->lt($dayStart)) {
-                continue;
-            }
-
-            $breakMinutes = (int)($shift->break_minutes ?? 0);
-
-            $workStart = max($shiftStart, $dayStart);
-            $workEnd = min($shiftEnd, $dayEnd);
-
-            if ($workStart->lt($workEnd)) {
-                $duration = $workStart->diffInMinutes($workEnd);
-                // Bei mehrtägigen Schichten: Pause nur am ersten Tag der Schicht abziehen
-                $shiftStartDay = $shiftStart->copy()->startOfDay();
-                $isFirstDayOfShift = $day->copy()->startOfDay()->equalTo($shiftStartDay);
-                if ($isFirstDayOfShift) {
-                    $duration -= $breakMinutes;
-                }
-                $total += max(0, $duration);
-            }
-        }
-
-        return (int)round($total);
-    }
-
 
     private function convertMinutesToHoursAndMinutes(int $inputMinutes, bool $forcePositive = false): string
     {

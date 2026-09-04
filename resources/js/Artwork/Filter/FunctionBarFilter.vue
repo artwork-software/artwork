@@ -78,6 +78,11 @@ const checkIfAnyFilterIsActive = computed(() => {
             return value.length > 0;
         }
 
+        // Boolesche Filter (z. B. show_only_users_with_open_violations): nur "an" zählt als aktiv
+        if (typeof value === 'boolean' || value === 0 || value === 1) {
+            return !!value;
+        }
+
         return value !== null && value !== '';
     });
 });

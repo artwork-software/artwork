@@ -249,7 +249,6 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         Route::get('/pending', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'getPendingViolations'])->name('shift-rules.pending');
 
         // Parameterized routes come last
-        Route::get('/{shiftRule}', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'show'])->name('shift-rules.show');
         Route::put('/{shiftRule}', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'update'])->middleware('shift-settings-area:rules,edit')->name('shift-rules.update');
         Route::delete('/{shiftRule}', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'destroy'])->middleware('shift-settings-area:rules,edit')->name('shift-rules.destroy');
         Route::post('/{shiftRule}/contracts', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'assignContracts'])->middleware('shift-settings-area:rules,edit')->name('shift-rules.contracts.assign');
@@ -263,6 +262,8 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         Route::post('/{violation}/resolve', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'resolveViolation'])->name('shift-rule-violations.resolve');
         Route::post('/{violation}/ignore', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'ignoreViolation'])->name('shift-rule-violations.ignore');
         Route::put('/{violation}/process', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'processViolation'])->name('shift-rule-violations.process');
+        // DP-17 Verlauf: gleiche Rechte wie das Bearbeiten (can plan shifts)
+        Route::get('/{violation}/history', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'violationHistory'])->name('shift-rules.violations.history');
     });
 
     // Compensation Day Offs routes
@@ -1264,12 +1265,19 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::patch('money_source/task/{moneySourceTask}/undone', [MoneySourceTaskController::class, 'markAsUnDone'])
         ->name('money_source.task.undone');
     Route::post('/money_source/task', [MoneySourceTaskController::class, 'store'])->name('money_source.task.add');
+    Route::get('/money_source/task', [MoneySourceTaskController::class, 'index'])->name('money_source.task.index');
+    Route::delete('money_source/task/{moneySourceTask}', [MoneySourceTaskController::class, 'destroy'])
+        ->name('money_source.task.destroy');
     Route::delete('/user/{user}/calendar/filter/reset', [UserCalendarFilterController::class, 'reset'])
         ->name('reset.user.calendar.filter');
     Route::delete('/user/{user}/calendar/shift/filter/reset', [UserShiftCalendarFilterController::class, 'reset'])
         ->name('reset.user.shift.calendar.filter');
     Route::patch('/user/{user}/calendar/filter/update', [UserFilterController::class, 'update'])
         ->name('update.user.calendar.filter');
+    // Schichtplan-Personenfilter "nur Personen mit offenen Regelverstößen" (user_filters-Flag, eigener
+    // Endpunkt, damit die übrigen Filterwerte unberührt bleiben)
+    Route::patch('/user/{user}/calendar/filter/open-violations', [UserFilterController::class, 'updateOpenViolationsFilter'])
+        ->name('update.user.calendar.filter.open-violations');
     Route::patch('/user/{user}/shift/calendar/filter/update', [UserShiftCalendarFilterController::class, 'update'])
         ->name('update.user.shift.calendar.filter');
     Route::patch('/user/{user}/calendar/filter/date/update', [UserCalendarFilterController::class, 'updateDates'])

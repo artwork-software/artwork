@@ -1071,6 +1071,7 @@ readonly class EventService
                 end_date: $holiday->end_date?->format('Y-m-d'),
                 color: $holiday->color,
                 subdivisions: $holiday->subdivisions->pluck('name')->toArray(),
+                treatAsSpecialDay: (bool) $holiday->treatAsSpecialDay,
             );
         }
 
@@ -1126,6 +1127,7 @@ readonly class EventService
             end_date: $holiday->end_date->format('Y-m-d'),
             color: $holiday->color,
             subdivisions: $holiday->subdivisions->pluck('name')->toArray(),
+                treatAsSpecialDay: (bool) $holiday->treatAsSpecialDay,
         ));
     }
 

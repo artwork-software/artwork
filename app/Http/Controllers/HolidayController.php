@@ -120,7 +120,9 @@ class HolidayController extends Controller
                 $holiday['id'],
                 true,
                 $color,
-                true // Set treatAsSpecialDay to true by default
+                // DP-04: Nur gesetzliche Feiertage (OpenHolidays type "Public") sind Sondertage;
+                // Schulferien ("School") senken das Tagessoll nie.
+                HolidayService::isSpecialDayType($holiday['type'] ?? null)
             );
         }
     }

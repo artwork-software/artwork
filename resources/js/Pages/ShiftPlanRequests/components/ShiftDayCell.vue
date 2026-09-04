@@ -12,7 +12,7 @@
                 v-for="violation in violations"
                 :key="violation.id"
                 class="h-4 w-4 flex items-center justify-center"
-                :title="(violation.shift_rule?.name || '') + ': ' + (violation.shift_rule?.description || '')"
+                :title="violationTooltip(violation)"
             >
                 <!-- Bearbeitet (resolved): Warndreieck in Warnfarbe MIT grünem Haken-Badge -->
                 <span v-if="violation.status === 'resolved'" class="relative inline-flex h-3.5 w-3.5">
@@ -109,6 +109,21 @@
 <script setup>
 import { IconAlertTriangle, IconClock, IconLock, IconMapPin, IconNote, IconTrash } from '@tabler/icons-vue';
 import {computed} from 'vue';
+import {useI18n} from 'vue-i18n';
+import {formatViolationMeasure} from '@/Pages/ShiftWarnings/ruleTypes.js';
+
+const {t} = useI18n();
+
+/** Tooltip: Regelname · Status · Messwert und Grenze (gleiche Formatierung wie ShiftPlanCell) */
+const violationTooltip = (violation) => {
+    const parts = [violation.shift_rule?.name || t('Rule violation')];
+    parts.push(violation.status === 'resolved' ? t('Processed') : t('Open'));
+    const measure = formatViolationMeasure(violation, t);
+    if (measure) parts.push(measure);
+    if (violation.shift_rule?.description) parts.push(violation.shift_rule.description);
+    return parts.join(' · ');
+};
+
 const props = defineProps({
     entries: { type: Array, default: () => [] },
     violations: { type: Array, default: () => [] },

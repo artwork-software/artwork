@@ -3,7 +3,8 @@ import { ref, reactive, computed, watch, onMounted, toRef, nextTick, inject } fr
 import { router, useForm, usePage } from '@inertiajs/vue3'
 import axios from 'axios'
 import { useI18n } from 'vue-i18n'
-import { useLegalBreak} from "@/Composeables/useLegalBreak";
+import { useAutoBreak } from "@/Composeables/useAutoBreak";
+import LegalBreakHint from "@/Components/Inputs/LegalBreakHint.vue";
 // Artwork / UI
 import ArtworkBaseModal from '@/Artwork/Modals/ArtworkBaseModal.vue'
 import BaseInput from '@/Artwork/Inputs/BaseInput.vue'
@@ -340,9 +341,12 @@ const initialShiftSnapshot = ref<null | {
     qualifications: Array<{ id: number, value: number | '' }>
 }>(null)
 
-const { breakMinutes } = useLegalBreak(
+// Auto-Pause nach ArbZG: leeres Feld befüllen, nicht-manuelle Werte auf das Minimum
+// anheben, manuelle Werte nie still überschreiben (Hinweis + Zurücksetzen unter dem Feld).
+const autoBreak = useAutoBreak(
     toRef(shiftForm, 'start'),
     toRef(shiftForm, 'end'),
+    toRef(shiftForm, 'break_minutes'),
     {
         allowCrossMidnight: true,
         roundToMinutes: 1,
@@ -545,19 +549,6 @@ watch(selectedCraft, () => {
 }, { immediate: true, deep: true })
 
 
-watch(breakMinutes, (v) => {
-    // nur überschreiben, wenn Start/Ende gefüllt sind
-    if (shiftForm.start && shiftForm.end && !shiftForm.break_minutes) {
-        shiftForm.break_minutes = v
-    }
-
-    // if v is greater than 0 and shiftForm.break_minutes is less than v, set shiftForm.break_minutes to v
-    if (typeof v === 'number' && v > 0 && (typeof shiftForm.break_minutes !== 'number' || shiftForm.break_minutes < v)) {
-        shiftForm.break_minutes = v
-    }
-
-}, { immediate: true, deep: true })
-
 // Automatische Anpassung des Enddatums basierend auf Start-/Endzeit
 watch([() => shiftForm.start, () => shiftForm.end], ([startTime, endTime]) => {
     if (!startTime || !endTime || !shiftForm.start_date) return
@@ -651,9 +642,12 @@ async function takeShiftPreset(preset: any) {
     const et = toHHMM(preset.end_time)
     shiftForm.start = st ?? shiftForm.start
     shiftForm.end = et ?? shiftForm.end
-    shiftForm.break_minutes = typeof preset.break_duration === 'number'
-        ? preset.break_duration
-        : (shiftForm.break_minutes ?? 0)
+    // Vorlagenwert ist keine manuelle Eingabe: unter dem Minimum wird er angehoben.
+    autoBreak.applyExternalValue(
+        typeof preset.break_duration === 'number'
+            ? preset.break_duration
+            : (shiftForm.break_minutes ?? 0)
+    )
 
     // Gewerk
     const targetCraft = props.crafts?.find(c => c.id === preset.craft_id) ?? null
@@ -692,7 +686,7 @@ function resetShiftPresetSelection({ alsoFields = false }: { alsoFields?: boolea
         const s = initialShiftSnapshot.value
         shiftForm.start = s.start
         shiftForm.end = s.end
-        shiftForm.break_minutes = s.break_minutes
+        autoBreak.applyExternalValue(s.break_minutes)
         selectedCraft.value = s.craft
         shiftForm.description = s.description
         // Qualis zurücksetzen
@@ -709,7 +703,7 @@ function resetShiftPresetSelection({ alsoFields = false }: { alsoFields?: boolea
 function takeTimePreset(preset) {
     shiftForm.start = toHHMM(preset.start_time)
     shiftForm.end = toHHMM(preset.end_time)
-    shiftForm.break_minutes = preset.break_time
+    autoBreak.applyExternalValue(preset.break_time)
     ;(props.shiftTimePresets || []).forEach((p) => { p.active = p.id === preset.id })
 }
 
@@ -803,14 +797,13 @@ function validateShiftBreak() {
     validationMessages.warnings.break_length = []
     validationMessages.errors.break_length = []
 
-    const shiftStartDateTime = new Date(`${shiftForm.start_date}T${shiftForm.start}`)
-    const shiftEndDateTime = new Date(`${shiftForm.end_date}T${shiftForm.end}`)
-    const shiftStartDateTimeMilliseconds = shiftStartDateTime.getTime();
-    const shiftEndDateTimeMilliseconds = shiftEndDateTime.getTime();
     let hasErrors = false
 
-    if (((shiftEndDateTimeMilliseconds - shiftStartDateTimeMilliseconds) / 60000) > 360 && shiftForm.break_minutes < 30) {
-        validationMessages.warnings.break_length.push($t('The break is shorter than required by law!'))
+    // ArbZG-Grenzen (> 6h → 30 min, > 9h → 45 min) inkl. Über-Mitternacht aus dem Composable.
+    if (autoBreak.isBelowMinimum.value) {
+        validationMessages.warnings.break_length.push(
+            $t('The break is below the legal minimum ({0} min)', [autoBreak.legalMinutes.value])
+        )
     }
 
     if (shiftForm.break_minutes === null || shiftForm.break_minutes === '') {
@@ -1457,7 +1450,14 @@ const lockOrUnlockShift = (commit = false) => {
                                 :min="0"
                                 :max="1000"
                                 required
+                                @input="autoBreak.markManual()"
                                 @change="validateShiftBreak()"
+                            />
+                            <LegalBreakHint
+                                :break-minutes="shiftForm.break_minutes"
+                                :legal-minutes="autoBreak.legalMinutes.value"
+                                :has-times="autoBreak.hasTimes.value"
+                                @reset="autoBreak.resetToLegal(); validateShiftBreak()"
                             />
                         </div>
 

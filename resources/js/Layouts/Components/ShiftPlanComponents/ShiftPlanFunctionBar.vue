@@ -220,6 +220,8 @@
                             :filter-type="isDailyView ? 'shift_daily_filter' : 'shift_filter'"
                         />
 
+                        <ShiftPlanLegendPopover />
+
                         <ToolTipComponent v-if="can('can commit shifts') || hasAdminRole()" direction="bottom"
                                           :tooltip-text="commitShiftsTooltip" icon="IconCalendarCheck" icon-size="h-5 w-5" classes-button="ui-button"
                                           @click="commitAllShifts()"/>
@@ -249,6 +251,8 @@
                             :crafts="crafts"
                             :filter-type="isDailyView ? 'shift_daily_filter' : 'shift_filter'"
                         />
+
+                        <ShiftPlanLegendPopover />
 
                         <BaseMenu tooltip-direction="bottom" show-custom-icon icon="IconList" translation-key="More options" has-no-offset>
                             <template v-if="!isDailyView">
@@ -366,6 +370,7 @@ import {usePermission} from "@/Composeables/Permission.js";
 import ShiftCommitDateSelectModal from "@/Pages/Shifts/Components/ShiftCommitDateSelectModal.vue";
 import FunctionBarFilter from "@/Artwork/Filter/FunctionBarFilter.vue";
 import FunctionBarSetting from "@/Artwork/Filter/FunctionBarSetting.vue";
+import ShiftPlanLegendPopover from "@/Layouts/Components/ShiftPlanComponents/ShiftPlanLegendPopover.vue";
 import CalendarAboSettingModal from "@/Pages/Shifts/Components/CalendarAboSettingModal.vue";
 import CalendarAboInfoModal from "@/Pages/Shifts/Components/CalendarAboInfoModal.vue";
 import SwitchIconTooltip from "@/Artwork/Toggles/SwitchIconTooltip.vue";

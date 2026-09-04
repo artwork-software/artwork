@@ -95,6 +95,21 @@
                     </template>
 
                     <template #moreButtons>
+                        <!-- Zähler-Chip "N offene Verstöße": Klick aktiviert den Personenfilter -->
+                        <button
+                            v-if="openViolationsCount > 0 || showOnlyUsersWithOpenViolations"
+                            type="button"
+                            class="ui-button text-xs gap-1.5"
+                            :class="showOnlyUsersWithOpenViolations ? '!bg-accent-50 !border-accent-200/80 !text-accent-700' : '!text-warning'"
+                            :title="showOnlyUsersWithOpenViolations
+                                ? $t('Only people with open rule violations are shown')
+                                : $t('Show only people with open rule violations')"
+                            :disabled="showOnlyUsersWithOpenViolations"
+                            @click="activateOpenViolationsFilter"
+                        >
+                            <IconAlertTriangle class="size-4" stroke-width="1.5" />
+                            {{ $t('{n} open violations', { n: openViolationsCount }) }}
+                        </button>
                         <SwitchIconTooltip v-model="dailyViewMode" :tooltip-text="$t('Switch between weekly and daily view')" size="md"
                                            @change="changeDailyViewMode" icon="IconCalendarWeek"/>
                         <SwitchIconTooltip v-if="can('can plan shifts') || is('artwork admin')" v-model="multiEditModeCalendar" :tooltip-text="$t('Multi-edit: select multiple shifts to edit them together.')" size="md"
@@ -207,6 +222,22 @@
                                                 </div>
                                             </div>
                                         </HolidayToolTip>
+                                    </div>
+
+                                    <!-- Sondertag-Badge (DP-04): Feiertag mit Flag treatAsSpecialDay -->
+                                    <div
+                                        v-if="specialDayNameByKey.get(day.fullDay)"
+                                        class="shrink-0"
+                                        v-tooltip.top="{ value: specialDayTooltip(day), class: 'aw-tooltip', appendTo: 'body' }"
+                                    >
+                                        <!-- Nur Icon, damit das Datum auch in schmalen Spalten lesbar bleibt; Name + Erklaerung im Tooltip, Eintrag in der Legende -->
+                                        <span
+                                            class="inline-flex items-center gap-0.5 rounded-full bg-warning-surface text-warning border border-warning-border px-1 py-0.5 text-[9px] font-semibold"
+                                            :aria-label="$t('Special Day')"
+                                        >
+                                            <PropertyIcon name="IconCalendarStar" class="h-3 w-3" />
+                                            <span class="sr-only">{{ $t('Special Day') }}</span>
+                                        </span>
                                     </div>
                                 </div>
                               </div>
@@ -761,7 +792,8 @@
                                     <DragElement
                                         v-if="!highlightMode && !multiEditMode"
                                         :item="row.worker.element"
-                                        :work-time-balance="row.worker.workTimeBalance"
+                                        :work-time-balance="row.worker.workTimeBalanceFormatted ?? row.worker.workTimeBalance"
+                                        :work-time-balance-minutes="row.worker.workTimeBalanceMinutes"
                                         :type="row.worker.type"
                                         :color="row.craft.color"
                                         :craft="row.craft"
@@ -772,11 +804,14 @@
                                     <MultiEditUserCell
                                         v-else-if="multiEditMode && !highlightMode"
                                         :item="row.worker.element"
-                                        :work-time-balance="row.worker.workTimeBalance"
+                                        :work-time-balance="row.worker.workTimeBalanceFormatted ?? row.worker.workTimeBalance"
+                                        :work-time-balance-minutes="row.worker.workTimeBalanceMinutes"
                                         :type="row.worker.type"
                                         :userForMultiEdit="userForMultiEdit"
                                         :multiEditMode="multiEditMode"
+                                        :enable-info-modal="true"
                                         @addUserToMultiEdit="addUserToMultiEdit"
+                                        @open-user-info-modal="openUserInfoModal"
                                         :color="row.craft.color"
                                         :craft-id="row.craft.id"
                                         :craft="row.craft"
@@ -787,9 +822,12 @@
                                         v-else
                                         :highlighted-user="idToHighlight ? (idToHighlight === row.worker.element.id && row.worker.type === typeToHighlight) : false"
                                         :item="row.worker.element"
-                                        :work-time-balance="row.worker.workTimeBalance"
+                                        :work-time-balance="row.worker.workTimeBalanceFormatted ?? row.worker.workTimeBalance"
+                                        :work-time-balance-minutes="row.worker.workTimeBalanceMinutes"
                                         :type="row.worker.type"
+                                        :enable-info-modal="true"
                                         @highlightShiftsOfUser="highlightShiftsOfUser"
+                                        @open-user-info-modal="openUserInfoModal"
                                         :color="row.craft.color"
                                         :is-managing-craft="row.worker.element.managing_craft_ids.includes(row.craft.id)"
                                     />
@@ -1002,6 +1040,7 @@ import 'vue-virtual-scroller/dist/vue-virtual-scroller.css'
 import Permissions from '@/Mixins/Permissions.vue'
 import axios from 'axios'
 import {Link, router, usePage} from '@inertiajs/vue3'
+import {IconAlertTriangle} from '@tabler/icons-vue'
 import ShiftPlanFunctionBar from '@/Layouts/Components/ShiftPlanComponents/ShiftPlanFunctionBar.vue'
 import ShiftHeader from '@/Pages/Shifts/ShiftHeader.vue'
 import {MenuItem} from '@headlessui/vue'
@@ -1685,6 +1724,21 @@ const dayTintByKey = computed(() => {
     }
     return map
 })
+
+// Sondertage (DP-04) je Tag einmal vorberechnet: Name des ersten Feiertags mit treatAsSpecialDay
+const specialDayNameByKey = computed(() => {
+    const map = new Map<string, string>()
+    for (const d of (days.value ?? [])) {
+        if (!d || d.isExtraRow || !d.fullDay) continue
+        const special = (d.holidays ?? []).find((h: any) => h?.treatAsSpecialDay)
+        if (special) map.set(d.fullDay, special.name ?? '')
+    }
+    return map
+})
+const specialDayTooltip = (day: any) => {
+    const name = specialDayNameByKey.value.get(day?.fullDay) ?? ''
+    return `${$t('Special Day')}${name ? ' – ' + name : ''}: ${$t('Special day: without work the daily target is reduced to 0 or by the weekday average (three-month mode), if the contract has the special day rule active. Hours worked count normally.')}`
+}
 
 const dayTintLight = (day: any) => dayTintByKey.value.get(day?.fullDay)?.light ?? null
 const dayTintDark = (day: any) => dayTintByKey.value.get(day?.fullDay)?.dark ?? null
@@ -3237,6 +3291,8 @@ const dropWorkers = computed<any[]>(() => {
             element: user.user,
             type: 0,
             workTimeBalance: user.workTimeBalance,
+            workTimeBalanceFormatted: user.workTimeBalanceFormatted ?? null,
+            workTimeBalanceMinutes: user.workTimeBalanceMinutes ?? null,
             vacations: user.vacations,
             assigned_craft_ids: user.user.assigned_craft_ids ?? [],
             availabilities: user.availabilities,
@@ -3294,10 +3350,60 @@ const dropWorkers = computed<any[]>(() => {
  * Map: craftId -> Worker[]
  * statt für jeden Craft erneut über ALLE Worker zu loopen
  */
+/** Tages-Schlüssel (YYYY-MM-DD) des angezeigten Zeitraums */
+const displayedDayKeys = computed<Set<string>>(() => {
+    const keys = new Set<string>()
+    for (const d of days.value ?? []) {
+        if (d?.isExtraRow || !d?.withoutFormat) continue
+        keys.add(d.withoutFormat)
+    }
+    return keys
+})
+
+/** Offene Regelverstöße einer Person im angezeigten Zeitraum zählen (Verstöße hängen je Tag am Worker) */
+function countOpenViolationsOfWorker(worker: any): number {
+    const byDay = worker?.violations
+    if (!byDay || typeof byDay !== 'object') return 0
+    let count = 0
+    for (const dayKey of Object.keys(byDay)) {
+        if (!displayedDayKeys.value.has(dayKey)) continue
+        const list = Array.isArray(byDay[dayKey]) ? byDay[dayKey] : Object.values(byDay[dayKey] ?? {})
+        for (const violation of list) {
+            if (violation?.status === 'active') count++
+        }
+    }
+    return count
+}
+
+/** Personenfilter "nur Personen mit offenen Regelverstößen" (user_filters-Flag, Schichtplan-Filter-Modal) */
+const showOnlyUsersWithOpenViolations = computed(() => !!props.user_filters?.show_only_users_with_open_violations)
+
+/** Zähler-Chip in der Funktionsleiste: offene Verstöße über alle sichtbaren Personen und Tage */
+const openViolationsCount = computed(() => {
+    let total = 0
+    for (const worker of dropWorkers.value) {
+        total += countOpenViolationsOfWorker(worker)
+    }
+    return total
+})
+
+function activateOpenViolationsFilter() {
+    router.patch(
+        route('update.user.calendar.filter.open-violations', authUser.value.id),
+        { filter_type: 'shift_filter', show_only_users_with_open_violations: true },
+        { preserveScroll: true, preserveState: false },
+    )
+}
+
 const craftWorkersMap = computed<Map<number, any[]>>(() => {
     const map = new Map<number, any[]>()
 
+    const onlyOpenViolations = showOnlyUsersWithOpenViolations.value
+
     for (const worker of dropWorkers.value) {
+        // Personenzeilen ohne offenen Regelverstoß im Zeitraum ausblenden
+        if (onlyOpenViolations && countOpenViolationsOfWorker(worker) === 0) continue
+
         const craftIds: number[] = worker.assigned_craft_ids ?? []
         for (const craftId of craftIds) {
             if (!map.has(craftId)) {

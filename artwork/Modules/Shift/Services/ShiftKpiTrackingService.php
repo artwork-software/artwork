@@ -4,6 +4,8 @@ namespace Artwork\Modules\Shift\Services;
 
 use Artwork\Modules\GeneralSettings\Models\GeneralSettings;
 use Artwork\Modules\User\Models\User;
+use Artwork\Modules\User\Services\ContractSettingsResolver;
+use Artwork\Modules\WorkTime\Services\WorkTimeCalculationService;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
 use Illuminate\Support\Facades\DB;
@@ -21,19 +23,37 @@ use Illuminate\Support\Facades\DB;
  */
 class ShiftKpiTrackingService
 {
-    public function __construct(private readonly GeneralSettings $generalSettings)
-    {
+    public function __construct(
+        private readonly GeneralSettings $generalSettings,
+        private readonly ContractSettingsResolver $contractSettings,
+        private readonly WorkTimeCalculationService $workTimeCalculationService,
+    ) {
     }
 
     /**
      * Spielzeit-Fenster aus den GeneralSettings (Toolsettings > Kommunikation & Rechtliches).
+     * null, wenn die Spielzeit nicht (oder ungültig) konfiguriert ist – Aufrufer zeigen einen Hinweis.
      *
-     * @return array{0: Carbon, 1: Carbon}
+     * @return array{0: Carbon, 1: Carbon}|null
      */
-    public function getSeasonBounds(): array
+    public function getSeasonBounds(): ?array
     {
-        $start = Carbon::parse($this->generalSettings->playing_time_window_start)->startOfDay();
-        $end = Carbon::parse($this->generalSettings->playing_time_window_end)->endOfDay();
+        $startRaw = trim((string) ($this->generalSettings->playing_time_window_start ?? ''));
+        $endRaw = trim((string) ($this->generalSettings->playing_time_window_end ?? ''));
+        if ($startRaw === '' || $endRaw === '') {
+            return null;
+        }
+
+        try {
+            $start = Carbon::parse($startRaw)->startOfDay();
+            $end = Carbon::parse($endRaw)->endOfDay();
+        } catch (\Throwable) {
+            return null;
+        }
+
+        if ($end->lt($start)) {
+            return null;
+        }
 
         return [$start, $end];
     }
@@ -61,8 +81,7 @@ class ShiftKpiTrackingService
         $yearStart = Carbon::create($year, 1, 1)->startOfDay();
         $yearEnd = Carbon::create($year, 12, 31)->endOfDay();
 
-        $contract = $user->activeWorkContract();
-        $validFrom = optional($user->contract()->first())->valid_from;
+        $validFrom = $this->contractSettings->assignFor($user)?->valid_from;
         $validFrom = $validFrom ? Carbon::parse($validFrom)->startOfDay() : null;
 
         // Gemeinsamer Klassifizierungsbereich (Superset aus Spielzeit + Kalenderjahr + 26-Wochen-Fenster).
@@ -117,54 +136,101 @@ class ShiftKpiTrackingService
             'granted_half_free_days_half2' => $halfH2,
             'days_off_first_26_weeks_count' => $daysOff26,
             'granted_vacation_days_year' => $grantedVacation,
-            // Zielwerte ("X") + Aktiv-Flags aus dem Vertrag (für die Anzeige im Modal)
-            'targets' => $this->extractTargets($contract),
+            // Zielwerte ("X") + Aktiv-Flags: Zuweisung vor Vorlage (für die Anzeige im Modal)
+            'targets' => $this->extractTargets($user),
+            'counted_until' => Carbon::yesterday()->toDateString(),
         ];
     }
 
-    private function extractTargets(?object $contract): array
+    /**
+     * Zielwerte "Ist / X": Feld auf der Zuweisung gesetzt (nicht null) -> Zuweisung, sonst Vorlage.
+     *
+     * @return array<string, array{active: bool, value: int|float}>
+     */
+    public function extractTargets(User $user): array
     {
-        if (!$contract) {
+        if ($this->contractSettings->assignFor($user) === null) {
             return [];
         }
 
+        $c = $this->contractSettings;
+
         return [
             'free_sundays_per_season' => [
-                'active' => (bool) $contract->free_sundays_per_season_active,
-                'value' => (int) $contract->free_sundays_per_season,
+                'active' => $c->bool($user, 'free_sundays_per_season_active'),
+                'value' => $c->int($user, 'free_sundays_per_season'),
             ],
             'days_off_first_26_weeks' => [
-                'active' => (bool) $contract->days_off_first_26_weeks_active,
-                'value' => (float) $contract->days_off_first_26_weeks,
+                'active' => $c->bool($user, 'days_off_first_26_weeks_active'),
+                'value' => $c->float($user, 'days_off_first_26_weeks'),
             ],
             'free_sundays_sat_mon_per_half' => [
-                'active' => (bool) $contract->free_sundays_sat_mon_per_half_active,
-                'value' => (int) $contract->free_sundays_sat_mon_per_half,
+                'active' => $c->bool($user, 'free_sundays_sat_mon_per_half_active'),
+                'value' => $c->int($user, 'free_sundays_sat_mon_per_half'),
             ],
             'free_sundays_and_saturdays_per_season' => [
-                'active' => (bool) $contract->free_sundays_and_saturdays_per_season_active,
-                'value' => (int) $contract->free_sundays_and_saturdays_per_season,
+                'active' => $c->bool($user, 'free_sundays_and_saturdays_per_season_active'),
+                'value' => $c->int($user, 'free_sundays_and_saturdays_per_season'),
             ],
             'free_sundays_per_calendar_year' => [
-                'active' => (bool) $contract->free_sundays_per_calendar_year_active,
-                'value' => (int) $contract->free_sundays_per_calendar_year,
+                'active' => $c->bool($user, 'free_sundays_per_calendar_year_active'),
+                'value' => $c->int($user, 'free_sundays_per_calendar_year'),
             ],
             'one_and_half_day_combinations' => [
-                'active' => (bool) $contract->one_and_half_day_combinations_active,
-                'value' => (int) $contract->one_and_half_day_combinations,
+                'active' => $c->bool($user, 'one_and_half_day_combinations_active'),
+                'value' => $c->int($user, 'one_and_half_day_combinations'),
             ],
             'annual_vacation_days' => [
                 'active' => true,
-                'value' => (int) $contract->annual_vacation_days,
+                'value' => $this->annualVacationEntitlement($user),
             ],
         ];
+    }
+
+    public function annualVacationEntitlement(User $user): int
+    {
+        return $this->contractSettings->int($user, 'annual_vacation_days');
+    }
+
+    /**
+     * Gewährte Urlaubstage (OFF_WORK) im Bereich, ganzer Tag = 1, halber Tag = 0,5 (max. 1 je Tag).
+     * includePlanned=false zählt nur abgeschlossene Tage (bis gestern) – wie die Spielzeit-Kennzahlen.
+     */
+    public function grantedVacationUnitsForUser(User $user, Carbon $from, Carbon $to, bool $includePlanned = false): float
+    {
+        $from = $from->copy()->startOfDay();
+        $to = $to->copy()->endOfDay();
+        if (!$includePlanned) {
+            $to = $to->min(Carbon::yesterday()->endOfDay());
+        }
+        if ($to->lt($from)) {
+            return 0.0;
+        }
+
+        $units = [];
+        $vacations = $user->vacations()
+            ->where('type', 'OFF_WORK')
+            ->whereBetween('date', [$from->toDateString(), $to->toDateString()])
+            ->get(['date', 'full_day']);
+        foreach ($vacations as $vacation) {
+            $key = Carbon::parse($vacation->date)->toDateString();
+            $units[$key] = min(1.0, ($units[$key] ?? 0.0) + ($vacation->full_day ? 1.0 : 0.5));
+        }
+
+        return (float) array_sum($units);
     }
 
     /**
      * Klassifiziert jeden abgeschlossenen Tag (< heute) im Bereich.
      *
+     * Zählregeln (Anzeige im Info-Fenster):
+     *  - Ganzer freier Tag (GFT): FREE_WORK ganztägig, gewährter Ersatzfreier Tag (Wert >= 1),
+     *    beide Halbtage frei oder ein leerer Arbeitstag laut Muster ohne Schicht/Individualzeit/Eintrag.
+     *  - Halber freier Tag: genau ein freier Halbtag (Vormittag XOR Nachmittag) oder Ersatzfrei-Halbtag.
+     *  - Urlaub (OFF_WORK): ganzer Tag = 1, halber Tag = 0,5.
+     *
      * @return array<string, array{occupied: bool, gft: bool, halfMorning: bool, halfAfternoon: bool,
-     *                              grantedHalf: bool, offWork: bool, notAvailable: bool}>
+     *                              grantedHalf: bool, offWork: bool, offWorkUnits: float, notAvailable: bool}>
      */
     private function classifyDays(User $user, Carbon $from, Carbon $to): array
     {
@@ -224,27 +290,29 @@ class ShiftKpiTrackingService
             $compByDate[Carbon::parse($c->granted_date)->toDateString()][] = $c;
         }
 
-        // Geplante Arbeitstage aus dem aktiven Arbeitszeitmuster (für "leerer Tag = GFT").
+        // Geplante Arbeitstage aus dem zum Datum gültigen Arbeitszeitmuster (für "leerer Tag = GFT").
         // Ein Tag ohne Schicht zählt nur dann als ganzer freier Tag, wenn an diesem Wochentag
         // laut Muster überhaupt gearbeitet würde – sonst wäre jeder ohnehin freie Tag ein GFT.
-        $workingWeekdays = $this->getWorkingWeekdays($user);
+        $workingWeekdaysByDate = $this->getWorkingWeekdays($user, $from, $to);
 
         $result = [];
         foreach (CarbonPeriod::create($from, $to) as $day) {
             $key = $day->toDateString();
             $occupiedDay = isset($occupied[$key]);
-            $isWorkingWeekday = $workingWeekdays[$day->dayOfWeek] ?? false;
+            $isWorkingWeekday = $workingWeekdaysByDate[$key] ?? false;
 
             $halfMorning = false;
             $halfAfternoon = false;
             $freeFull = false;
             $offWork = false;
+            $offWorkUnits = 0.0;
             $notAvailable = false;
 
             foreach ($vacByDate[$key] ?? [] as $v) {
                 $type = $v->type;
                 if ($type === 'OFF_WORK') {
                     $offWork = true;
+                    $offWorkUnits = min(1.0, $offWorkUnits + ($v->full_day ? 1.0 : 0.5));
                 } elseif ($type === 'NOT_AVAILABLE') {
                     $notAvailable = true;
                 } elseif ($type === 'FREE_WORK') {
@@ -285,6 +353,7 @@ class ShiftKpiTrackingService
                 'halfAfternoon' => $halfAfternoon && !$gft,
                 'grantedHalf' => $grantedHalf,
                 'offWork' => $offWork,
+                'offWorkUnits' => $offWorkUnits,
                 'notAvailable' => $notAvailable,
             ];
         }
@@ -293,26 +362,16 @@ class ShiftKpiTrackingService
     }
 
     /**
-     * @return array<int, bool> Carbon-Wochentag-Index (0=So..6=Sa) => ist Arbeitstag laut Muster
+     * Je Datum: ist laut dem an diesem Tag gültigen Arbeitszeitmuster ein Arbeitstag?
+     * Ohne Muster gilt die Fünftagewoche (Mo–Fr) aus dem WorkTimeCalculationService.
+     *
+     * @return array<string, bool> 'Y-m-d' => Arbeitstag
      */
-    private function getWorkingWeekdays(User $user): array
+    private function getWorkingWeekdays(User $user, Carbon $from, Carbon $to): array
     {
-        $pattern = $user->workTimes()->orderByDesc('valid_from')->first();
-        if (!$pattern) {
-            return [];
-        }
-        $map = [
-            0 => 'sunday',
-            1 => 'monday',
-            2 => 'tuesday',
-            3 => 'wednesday',
-            4 => 'thursday',
-            5 => 'friday',
-            6 => 'saturday',
-        ];
         $result = [];
-        foreach ($map as $idx => $name) {
-            $result[$idx] = $pattern->{$name} !== null;
+        foreach ($this->workTimeCalculationService->baseTargetsForRange($user, $from, $to) as $date => $minutes) {
+            $result[$date] = $minutes > 0;
         }
 
         return $result;
@@ -484,15 +543,11 @@ class ShiftKpiTrackingService
      */
     private function grantedVacationDaysInRange(array $days, Carbon $from, Carbon $to): float
     {
-        // OFF_WORK wird in classifyDays nur als Flag geführt; für die Tage-Zählung lesen wir die
-        // tatsächlichen Vacation-Einträge dort über das offWork-Flag + full_day-Info nicht ab.
-        // Daher hier separat: ganze vs. halbe Urlaubstage anhand offWork + day_part nicht verfügbar
-        // -> wir zählen offWork-Tage als 1 (ganztägig), halbe Urlaubstage werden über day_part erfasst.
         $units = 0.0;
         foreach (CarbonPeriod::create($from->copy()->startOfDay(), $to->copy()->startOfDay()) as $day) {
             $key = $day->toDateString();
             if (($days[$key]['offWork'] ?? false) === true) {
-                $units += 1.0;
+                $units += (float) ($days[$key]['offWorkUnits'] ?? 1.0);
             }
         }
 

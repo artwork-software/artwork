@@ -78,7 +78,13 @@ class ShiftRuleController extends Controller
         return Inertia::render('ShiftWarnings/Index', [
             'rules' => $this->shiftRuleService->getAllWithRelations(),
             'availableRuleTypes' => $this->shiftRuleService->getAvailableRuleTypes(),
-            'contracts' => UserContract::all()
+            'contracts' => UserContract::all(),
+            // Auswahl "Benachrichtigen" (usersToNotify) — nur Name und ID
+            'users' => User::query()
+                ->select(['id', 'first_name', 'last_name'])
+                ->orderBy('last_name')
+                ->orderBy('first_name')
+                ->get(),
         ]);
     }
 
@@ -91,7 +97,8 @@ class ShiftRuleController extends Controller
                 'name' => $validated['name'],
                 'description' => $validated['description'] ?? '',
                 'trigger_type' => $validated['trigger_type'],
-                'individual_number_value' => $validated['individual_number_value'],
+                // Regeltypen ohne Zahlenwert (Sonntag/Sondertag/HFT an Sondertag): Spalte ist NOT NULL -> 0
+                'individual_number_value' => $this->numberValueFor($validated['trigger_type'], $validated),
                 'warning_color' => $validated['warning_color'],
                 'default_compensation_days' => $validated['default_compensation_days'] ?? null,
                 'default_compensation_deadline_days' => $validated['default_compensation_deadline_days'] ?? null,
@@ -102,7 +109,7 @@ class ShiftRuleController extends Controller
         );
 
         return redirect()->back()->with('flash', [
-            'message' => 'Rule successfully created'
+            'message' => __('Rule successfully created')
         ]);
     }
 
@@ -115,7 +122,7 @@ class ShiftRuleController extends Controller
             [
                 'name' => $validated['name'],
                 'description' => $validated['description'] ?? '',
-                'individual_number_value' => $validated['individual_number_value'],
+                'individual_number_value' => $this->numberValueFor($shiftRule->trigger_type, $validated),
                 'warning_color' => $validated['warning_color'],
                 'default_compensation_days' => $validated['default_compensation_days'] ?? null,
                 'default_compensation_deadline_days' => $validated['default_compensation_deadline_days'] ?? null,
@@ -125,8 +132,17 @@ class ShiftRuleController extends Controller
         );
 
         return redirect()->back()->with('flash', [
-            'message' => 'Rule successfully updated'
+            'message' => __('Rule successfully updated')
         ]);
+    }
+
+    private function numberValueFor(string $triggerType, array $validated): float
+    {
+        if (in_array($triggerType, ShiftRuleService::ruleTypesWithoutValue(), true)) {
+            return 0.0;
+        }
+
+        return (float) ($validated['individual_number_value'] ?? 0);
     }
 
     public function destroy(ShiftRule $shiftRule): RedirectResponse
@@ -134,7 +150,7 @@ class ShiftRuleController extends Controller
         $this->shiftRuleService->deleteRule($shiftRule);
 
         return redirect()->back()->with('flash', [
-            'message' => 'Rule successfully deleted'
+            'message' => __('Rule successfully deleted')
         ]);
     }
 
@@ -153,11 +169,15 @@ class ShiftRuleController extends Controller
         $this->shiftRuleService->updateContractAssignments($contract, $request->validated()['rule_ids'] ?? []);
 
         return redirect()->back()->with('flash', [
-            'message' => 'Rule assignments successfully updated'
+            'message' => __('Rule assignments successfully updated')
         ]);
     }
 
-    public function validateRules(ValidateShiftRulesRequest $request): Response
+    /**
+     * Regelprüfung für einen Zeitraum (optional eine Person) anstoßen. API-Endpunkt: liefert JSON,
+     * keine Inertia-Seite (kein Frontend rendert das Ergebnis mehr).
+     */
+    public function validateRules(ValidateShiftRulesRequest $request): JsonResponse
     {
         $validated = $request->validated();
 
@@ -166,16 +186,13 @@ class ShiftRuleController extends Controller
             $endDate = Carbon::parse($validated['end_date']);
 
             if (!empty($validated['user_id'])) {
-                $user = User::find($validated['user_id']);
+                $user = User::findOrFail($validated['user_id']);
                 $violations = $this->shiftRuleService->validateRulesForUser($user, $startDate, $endDate);
             } else {
                 $violations = $this->shiftRuleService->validateShiftRulesForDateRange($startDate, $endDate);
             }
 
-            return Inertia::render('ShiftWarnings/Index', [
-                'rules' => $this->shiftRuleService->getAllWithRelations(),
-                'availableRuleTypes' => $this->shiftRuleService->getAvailableRuleTypes(),
-                'contracts' => UserContract::all(),
+            return new JsonResponse([
                 'violations' => $this->shiftRuleService->mapViolationsToArray($violations),
                 'violationsCount' => $violations->count(),
                 'dateRange' => [
@@ -184,12 +201,9 @@ class ShiftRuleController extends Controller
                 ]
             ]);
         } catch (\Exception $e) {
-            return Inertia::render('ShiftWarnings/Index', [
-                'rules' => $this->shiftRuleService->getAllWithRelations(),
-                'availableRuleTypes' => $this->shiftRuleService->getAvailableRuleTypes(),
-                'contracts' => UserContract::all(),
+            return new JsonResponse([
                 'error' => 'Error validating rules: ' . $e->getMessage()
-            ]);
+            ], 422);
         }
     }
 
@@ -212,18 +226,11 @@ class ShiftRuleController extends Controller
             );
 
             return redirect()->back()->with('flash', [
-                'message' => 'Status successfully updated'
+                'message' => __('Status successfully updated')
             ]);
         } catch (\Exception $e) {
             return redirect()->back()->with('error', 'Error updating status: ' . $e->getMessage());
         }
-    }
-
-    public function show(ShiftRule $shiftRule): Response
-    {
-        return Inertia::render('ShiftRules/Show', [
-            'rule' => $shiftRule->load(['usersToNotify', 'contracts'])
-        ]);
     }
 
     public function assignContracts(AssignContractsToRuleRequest $request, ShiftRule $shiftRule): RedirectResponse
@@ -231,7 +238,7 @@ class ShiftRuleController extends Controller
         $this->shiftRuleService->syncContractsForRule($shiftRule, $request->validated()['contract_ids']);
 
         return redirect()->back()->with('flash', [
-            'message' => 'Contracts successfully assigned'
+            'message' => __('Contracts successfully assigned')
         ]);
     }
 
@@ -240,7 +247,7 @@ class ShiftRuleController extends Controller
         $this->shiftRuleService->syncUsersForRule($shiftRule, $request->validated()['user_ids']);
 
         return redirect()->back()->with('flash', [
-            'message' => 'Users successfully assigned'
+            'message' => __('Users successfully assigned')
         ]);
     }
 
@@ -249,7 +256,7 @@ class ShiftRuleController extends Controller
         $this->shiftRuleService->resolveViolation($violation, auth()->id());
 
         return redirect()->back()->with('flash', [
-            'message' => 'Rule violation successfully resolved'
+            'message' => __('Rule violation successfully resolved')
         ]);
     }
 
@@ -262,7 +269,32 @@ class ShiftRuleController extends Controller
         $this->shiftRuleService->ignoreViolation($violation, auth()->id(), $validated['ignore_reason']);
 
         return redirect()->back()->with('flash', [
-            'message' => 'Rule violation successfully ignored'
+            'message' => __('Rule violation successfully ignored')
+        ]);
+    }
+
+    /**
+     * DP-17 Verlauf: Activity-Log des Verstoßes und seiner Ersatzfreitage plus Genehmigungsvermerk
+     * (bearbeitet/ignoriert von … am …) und ob eine Nachbearbeitung noch möglich ist.
+     */
+    public function violationHistory(ShiftRuleViolation $violation): JsonResponse
+    {
+        $violation->loadMissing(['resolvedByUser:id,first_name,last_name']);
+
+        return new JsonResponse([
+            'violation' => [
+                'id' => $violation->id,
+                'status' => $violation->status,
+                'resolved_at' => $violation->resolved_at?->toIso8601String(),
+                'resolved_by_user' => $violation->resolvedByUser ? [
+                    'first_name' => $violation->resolvedByUser->first_name,
+                    'last_name' => $violation->resolvedByUser->last_name,
+                ] : null,
+                'has_granted_compensation' => $this->shiftRuleService->hasGrantedCompensation($violation),
+                'can_reprocess' => $violation->status === 'resolved'
+                    && !$this->shiftRuleService->hasGrantedCompensation($violation),
+            ],
+            'entries' => $this->shiftRuleService->getViolationHistory($violation),
         ]);
     }
 
@@ -282,14 +314,25 @@ class ShiftRuleController extends Controller
         ]);
 
         return redirect()->back()->with('flash', [
-            'message' => 'Rule violation successfully created'
+            'message' => __('Rule violation successfully created')
         ]);
     }
 
+    /**
+     * Verstoß bearbeiten (Ersatzfreitage buchen). DP-17: auch ein bereits bearbeiteter Verstoß darf
+     * nachbearbeitet werden, solange keiner seiner Ersatzfreitage gewährt wurde — sonst 422.
+     */
     public function processViolation(ProcessViolationRequest $request, ShiftRuleViolation $violation): RedirectResponse
     {
-        if ($violation->status !== 'active') {
-            return redirect()->back()->with('error', 'Violation is not active.');
+        if (!in_array($violation->status, ['active', 'resolved'], true)) {
+            return redirect()->back()->with('error', __('Violation is not active.'));
+        }
+
+        if ($violation->status === 'resolved' && $this->shiftRuleService->hasGrantedCompensation($violation)) {
+            abort(
+                422,
+                __('This rule violation cannot be edited anymore: a compensation day has already been granted.')
+            );
         }
 
         $validated = $request->validated();
@@ -301,16 +344,25 @@ class ShiftRuleController extends Controller
             ]);
         }
 
-        $this->shiftRuleService->processViolation($violation, [
+        $attributes = [
             'compensation_days' => $validated['compensation_days'],
             'compensation_deadline' => $validated['compensation_deadline'],
             'compensation_reason' => $validated['compensation_reason'] ?? null,
             'for_holiday' => $validated['for_holiday'] ?? false,
             'half_day_period' => $validated['half_day_period'] ?? null,
-        ], auth()->id());
+        ];
+
+        if ($violation->status === 'resolved') {
+            $this->shiftRuleService->reprocessViolation($violation, $attributes, auth()->id());
+        } else {
+            $this->shiftRuleService->processViolation($violation, $attributes, auth()->id());
+        }
+
+        app(\Artwork\Modules\User\Services\WorkingHourCacheService::class)
+            ->forgetForEntity('user', $violation->user_id);
 
         return redirect()->back()->with('flash', [
-            'message' => 'Rule violation successfully processed'
+            'message' => __('Rule violation successfully processed')
         ]);
     }
 
@@ -402,7 +454,7 @@ class ShiftRuleController extends Controller
         }
 
         return redirect()->back()->with('flash', [
-            'message' => 'Compensation day successfully granted'
+            'message' => __('Compensation day successfully granted')
         ]);
     }
 
@@ -517,7 +569,7 @@ class ShiftRuleController extends Controller
             ->forgetForEntity('user', $compensationDayOff->user_id);
 
         return redirect()->back()->with('flash', [
-            'message' => 'Compensation day revoked successfully'
+            'message' => __('Compensation day revoked successfully')
         ]);
     }
 
@@ -544,7 +596,7 @@ class ShiftRuleController extends Controller
             ->forgetForEntity('user', $userId);
 
         return redirect()->back()->with('flash', [
-            'message' => 'Compensation day successfully deleted'
+            'message' => __('Compensation day successfully deleted')
         ]);
     }
 
@@ -659,7 +711,7 @@ class ShiftRuleController extends Controller
         ]);
 
         return redirect()->back()->with('flash', [
-            'message' => 'Compensation day created successfully'
+            'message' => __('Compensation day created successfully')
         ]);
     }
 }

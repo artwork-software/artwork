@@ -66,7 +66,7 @@
                         <div class="text-sm/6">
                             <label for="candidates" class="font-medium text-text">{{ $t('Special Day Rule Active')}}</label>
                             <p id="candidates-description" class="text-text-subtle">
-                                {{ $t('If this is active, the special day rule will be applied to this contract. This means that on special days, the rules for free days may differ from the regular rules.') }}
+                                {{ $t('Active: special days reduce the daily target of this person. Inactive: special days do not count, every day has the normal daily target (e.g. contracts where public holidays do not matter).') }}
                             </p>
                         </div>
                     </div>
@@ -226,7 +226,7 @@ const props = defineProps({
             description: '',
             free_full_days_per_week: 0,
             free_half_days_per_week: 0,
-            special_day_rule_active: false,
+            special_day_rule_active: true,
             compensation_period: 0,
             use_three_month_average_for_target_reduction: false,
             free_sundays_per_season: 0,

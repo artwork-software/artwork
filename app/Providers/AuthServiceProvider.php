@@ -28,7 +28,9 @@ use Artwork\Modules\ExternalIssue\Models\ExternalIssue;
 use Artwork\Modules\InternalIssue\Models\InternalIssue;
 use Artwork\Modules\Inventory\Policies\MaterialIssuePolicy;
 use Artwork\Modules\MoneySource\Models\MoneySource;
+use Artwork\Modules\MoneySource\Models\MoneySourceTask;
 use Artwork\Modules\MoneySource\Policies\MoneySourcePolicy;
+use Artwork\Modules\MoneySource\Policies\MoneySourceTaskPolicy;
 use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\Room\Policies\RoomPolicy;
 use Artwork\Modules\Department\Models\Department;
@@ -91,6 +93,7 @@ class AuthServiceProvider extends ServiceProvider
         Contract::class => ContractPolicy::class,
         ContractModule::class => ContractModulePolicy::class,
         MoneySource::class => MoneySourcePolicy::class,
+        MoneySourceTask::class => MoneySourceTaskPolicy::class,
         Room::class => RoomPolicy::class,
         InternalIssue::class => MaterialIssuePolicy::class,
         ExternalIssue::class => MaterialIssuePolicy::class,

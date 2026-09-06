@@ -1,41 +1,41 @@
 <template>
     <ArtworkBaseModal
-        title="Request Work Time Change"
-        description="Submit a request to change work time for a user"
+        :title="$t('Request work time change')"
+        :description="$t('Submit a request to change work time for a user')"
         @close="$emit('close')"
     >
         <form @submit.prevent="submit" class="space-y-6">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
                 <div>
-                    <label class="block font-medium text-text-muted font-lexend">Datum</label>
+                    <label class="block font-medium text-text-muted font-lexend">{{ $t('Date') }}</label>
                     <div class="mt-1 text-text">{{ shiftDate }}</div>
                 </div>
 
                 <div class="flex gap-6">
                     <div class="flex-1">
-                        <label class="block font-medium text-text-muted font-lexend">Beginn</label>
+                        <label class="block font-medium text-text-muted font-lexend">{{ $t('Start') }}</label>
                         <div class="mt-1 text-text">{{ normalizeTime(shift.start) }}</div>
                     </div>
                     <div class="flex-1">
-                        <label class="block font-medium text-text-muted font-lexend">Ende</label>
+                        <label class="block font-medium text-text-muted font-lexend">{{ $t('End') }}</label>
                         <div class="mt-1 text-text">{{ normalizeTime(shift.end) }}</div>
                     </div>
                 </div>
 
                 <div>
-                    <label class="block font-medium text-text-muted font-lexend">Raum</label>
+                    <label class="block font-medium text-text-muted font-lexend">{{ $t('Room') }}</label>
                     <div class="mt-1 text-text">{{ shift.roomName ?? shift?.room?.name ?? '-' }}</div>
                 </div>
 
                 <div>
-                    <label class="block font-medium text-text-muted font-lexend">Firma</label>
+                    <label class="block font-medium text-text-muted font-lexend">{{ $t('Craft') }}</label>
                     <div class="mt-1 text-text" v-if="craft?.id">{{ craft.name }} [{{ craft.abbreviation }}]</div>
                     <div class="mt-1 text-text" v-else>-</div>
                 </div>
             </div>
 
             <div v-if="craft?.id">
-                <label class="block font-medium text-text-muted mb-1 font-lexend">Zuständige Personen</label>
+                <label class="block font-medium text-text-muted mb-1 font-lexend">{{ $t('Responsible persons') }}</label>
                 <ul class="space-y-2">
                     <li v-for="person in craft.craft_shift_planer" :key="person.id" class="flex items-center space-x-3 bg-surface-sunken p-3 rounded-lg shadow border border-border-subtle">
                         <UserPopoverTooltip :user="person" width="10" height="10" />
@@ -49,11 +49,11 @@
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <div>
-                    <BaseInput id="shift_start" v-model="requestForm.request_start_time" type="time" label="Neuer Beginn" />
+                    <BaseInput id="shift_start" v-model="requestForm.request_start_time" type="time" :label="$t('New start')" />
                 </div>
 
                 <div>
-                    <BaseInput id="shift_end" v-model="requestForm.request_end_time" type="time" label="Neues Ende" />
+                    <BaseInput id="shift_end" v-model="requestForm.request_end_time" type="time" :label="$t('New end')" />
                 </div>
 
             </div>
@@ -62,7 +62,7 @@
                 <BaseTextarea
                     v-model="requestForm.request_comment"
                     rows="3"
-                    label="Kommentar zur Anfrage"
+                    :label="$t('Comment on the request')"
                     id="description"
                     required
                 />
@@ -70,7 +70,7 @@
 
             <div class="mt-4 flex justify-between gap-4">
                 <BaseUIButton type="button" @click="$emit('close')" :label="$t('Cancel')" is-cancel-button />
-                <BaseUIButton type="submit" is-add-button :label="$t('Submit Request')" />
+                <BaseUIButton type="submit" is-add-button :label="$t('Submit Request')" :processing="requestForm.processing" />
             </div>
         </form>
     </ArtworkBaseModal>
@@ -100,7 +100,9 @@ const props = defineProps({
     }
 });
 
-const emit = defineEmits(["close"]);
+// 'submitted' feuert nach erfolgreichem Absenden (vor 'close'), damit die
+// Einsatzplan-Karte den Badge „Zeitanpassung angefragt" sofort zeigen kann.
+const emit = defineEmits(["close", "submitted"]);
 
 function normalizeTime(val) {
     if (!val || typeof val !== 'string') return val
@@ -127,7 +129,9 @@ const requestForm = useForm({
 
 const  submit = () => {
     requestForm.post(route('shifts.requestWorkTimeChange'), {
+        preserveScroll: true,
         onSuccess: () => {
+            emit('submitted');
             emit('close');
         },
         onError: (errors) => {

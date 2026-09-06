@@ -1,7 +1,9 @@
 <template>
     <ArtworkBaseModal
-        :title="$t('Key figures') + (userName ? ': ' + userName : '')"
-        :description="$t('Season-related key figures. Data is loaded per tab on demand.')"
+        :title="selfView ? $t('My key figures') : ($t('Key figures') + (userName ? ': ' + userName : ''))"
+        :description="selfView
+            ? $t('Your season-related key figures. Data is loaded per tab on demand.')
+            : $t('Season-related key figures. Data is loaded per tab on demand.')"
         modal-size="sm:max-w-4xl"
         is-in-shift-plan
         @close="$emit('closed')"
@@ -259,7 +261,44 @@
             <!-- 5) Überstunden -->
             <div v-else-if="activeTab === 'overtime' && data.overtime">
                 <div class="overflow-x-auto">
-                    <UserOvertimePanel :user-id="userId" :data="data.overtime" />
+                    <UserOvertimePanel :user-id="userId" :data="data.overtime" :read-only="selfView" />
+                </div>
+            </div>
+
+            <!-- 6) Regelverstöße (nur Selbstansicht, nur lesend) -->
+            <div v-else-if="activeTab === 'violations' && data.violations" class="space-y-3">
+                <p class="text-xs text-text-subtle">
+                    {{ $t('Open rule violations concerning you. Planners process them in the shift plan.') }}
+                </p>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full text-sm">
+                        <thead>
+                            <tr class="text-left text-xs uppercase tracking-wide text-text-subtle">
+                                <th class="py-2 pr-4 font-medium">{{ $t('Date') }}</th>
+                                <th class="py-2 px-2 font-medium">{{ $t('Rule') }}</th>
+                                <th class="py-2 px-2 font-medium">{{ $t('Status') }}</th>
+                                <th class="py-2 pl-2 font-medium">{{ $t('Measured value') }}</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-border-subtle">
+                            <tr v-for="v in violationRows" :key="v.id">
+                                <td class="py-2 pr-4 whitespace-nowrap">{{ v.date }}</td>
+                                <td class="py-2 px-2 text-text">{{ v.name }}</td>
+                                <td class="py-2 px-2">
+                                    <span
+                                        class="inline-flex items-center rounded-full border px-2 py-0.5 text-[11px] font-semibold"
+                                        :class="v.statusClass"
+                                    >
+                                        {{ v.statusLabel }}
+                                    </span>
+                                </td>
+                                <td class="py-2 pl-2 text-text-muted">{{ v.measure || '–' }}</td>
+                            </tr>
+                            <tr v-if="!violationRows.length">
+                                <td colspan="4" class="py-4 text-center text-text-subtle">{{ $t('No open rule violations.') }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
@@ -276,35 +315,75 @@ import BaseUIButton from '@/Artwork/Buttons/BaseUIButton.vue'
 import SimpleDayTable from '@/Pages/Shifts/Components/UserShiftInfoSimpleDayTable.vue'
 import UserOvertimePanel from '@/Pages/Shifts/Components/UserOvertimePanel.vue'
 import { useTranslation } from '@/Composeables/Translation.js'
+import { formatViolationMeasure } from '@/Pages/ShiftWarnings/ruleTypes.js'
 
 const $t = useTranslation()
 
 const props = defineProps({
     userId: { type: Number, required: true },
     userName: { type: String, default: '' },
+    /**
+     * Selbstansicht ("Meine Zahlen" im eigenen Einsatzplan): nutzt die
+     * Selbstzugriffs-Endpunkte (user.shift-info.*), blendet Bearbeiten-Aktionen
+     * (Überstunden auszahlen) aus und zeigt den Tab "Regelverstöße".
+     */
+    selfView: { type: Boolean, default: false },
 })
 
 defineEmits(['closed'])
 
-const tabs = [
-    { key: 'season', label: 'Season-related data' },
-    { key: 'compensation', label: 'Substitute days off' },
-    { key: 'vacation', label: 'Vacation' },
-    { key: 'worktimes', label: 'Actual hours' },
-    { key: 'overtime', label: 'Overtime' },
-]
+// Ziggy: route().has() – defensiv gekapselt, falls die Routenliste (noch) nicht geladen ist
+const routeExists = (name) => {
+    try {
+        return typeof route === 'function' && route().has(name)
+    } catch (e) {
+        return false
+    }
+}
 
-const activeTab = ref('season')
-const loading = ref({ season: false, compensation: false, vacation: false, worktimes: false, overtime: false })
-const data = ref({ season: null, compensation: null, vacation: null, worktimes: null, overtime: null })
+/**
+ * Routen je Tab. In der Selbstansicht werden die Selbstzugriffs-Routen
+ * (user.shift-info.*, Recht "can view own roster") bevorzugt; existieren sie
+ * (noch) nicht, greifen die Planer-Routen (shift.user-info.*, KPI-Recht).
+ */
+const resolveRoute = (key) => {
+    const self = `user.shift-info.${key}`
+    const planner = `shift.user-info.${key}`
+    if (props.selfView && routeExists(self)) return self
+    if (routeExists(planner)) return planner
+    return props.selfView ? self : planner
+}
 
 const routes = {
-    season: 'shift.user-info.season',
-    compensation: 'shift.user-info.compensation',
-    vacation: 'shift.user-info.vacation',
-    worktimes: 'shift.user-info.worktimes',
-    overtime: 'shift.user-info.overtime',
+    season: resolveRoute('season'),
+    compensation: resolveRoute('compensation'),
+    vacation: resolveRoute('vacation'),
+    worktimes: resolveRoute('worktimes'),
+    overtime: resolveRoute('overtime'),
+    violations: resolveRoute('violations'),
 }
+
+// Tab "Regelverstöße": nur Selbstansicht und nur, wenn der Endpunkt existiert;
+// antwortet er mit 404, wird der Tab wieder ausgeblendet.
+const violationsAvailable = ref(props.selfView && routeExists(routes.violations))
+
+const tabs = computed(() => {
+    const list = [
+        { key: 'season', label: 'Season-related data' },
+        { key: 'compensation', label: 'Substitute days off' },
+        { key: 'vacation', label: 'Vacation' },
+        { key: 'worktimes', label: 'Actual hours' },
+        { key: 'overtime', label: 'Overtime' },
+    ]
+    if (violationsAvailable.value) {
+        list.push({ key: 'violations', label: 'Rule violations' })
+    }
+    return list
+})
+
+const activeTab = ref('season')
+const loading = ref({ season: false, compensation: false, vacation: false, worktimes: false, overtime: false, violations: false })
+const data = ref({ season: null, compensation: null, vacation: null, worktimes: null, overtime: null, violations: null })
 
 // Ist-Stunden: Monatsnavigation (Default laufender Monat)
 const worktimesMonth = ref(new Date(new Date().getFullYear(), new Date().getMonth(), 1))
@@ -328,15 +407,62 @@ const load = async (tab, force = false) => {
         const res = await axios.get(route(routes[tab], { user: props.userId }), { params: requestParams(tab) })
         data.value[tab] = res.data && typeof res.data === 'object' ? res.data : { error: true }
     } catch (e) {
+        const status = e?.response?.status
+        // Endpunkt für Verstöße (noch) nicht vorhanden → Tab ausblenden statt Fehler zeigen
+        if (tab === 'violations' && status === 404) {
+            violationsAvailable.value = false
+            data.value.violations = null
+            if (activeTab.value === 'violations') activeTab.value = 'season'
+            return
+        }
         const payload = e?.response?.data
         data.value[tab] = {
             error: true,
-            message: payload?.message ?? (e?.response?.status === 403 ? $t('You do not have permission to view this data.') : null),
+            message: payload?.message ?? (status === 403 ? $t('You do not have permission to view this data.') : null),
         }
     } finally {
         loading.value[tab] = false
     }
 }
+
+/**
+ * Verstöße defensiv normalisieren: der Endpunkt kann ein Array oder
+ * { violations: [...] } liefern; Felder wie im Hauptplan (ShiftRuleViolation).
+ */
+const violationStatusMeta = (status) => {
+    switch (status) {
+        case 'resolved':
+            return { label: $t('Processed'), cls: 'bg-success-surface text-success border-success-border' }
+        case 'ignored':
+            return { label: $t('Ignored'), cls: 'bg-surface-sunken text-text-muted border-border' }
+        default:
+            return { label: $t('Open'), cls: 'bg-warning-surface text-warning border-warning-border' }
+    }
+}
+
+const violationRows = computed(() => {
+    const raw = data.value.violations
+    const list = Array.isArray(raw) ? raw : (Array.isArray(raw?.violations) ? raw.violations : (Array.isArray(raw?.data) ? raw.data : []))
+    return list
+        .filter((v) => v && typeof v === 'object')
+        .map((v, index) => {
+            const meta = violationStatusMeta(v.status)
+            let measure = ''
+            try {
+                measure = formatViolationMeasure(v, $t)
+            } catch (e) {
+                measure = ''
+            }
+            return {
+                id: v.id ?? index,
+                date: formatDate(v.violation_date ?? v.date ?? null),
+                name: v.shift_rule?.name || v.rule_name || v.title || $t('Rule violation'),
+                statusLabel: meta.label,
+                statusClass: meta.cls,
+                measure,
+            }
+        })
+})
 
 const reload = (tab) => load(tab, true)
 

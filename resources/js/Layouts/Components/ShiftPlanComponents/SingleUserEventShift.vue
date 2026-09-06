@@ -111,6 +111,30 @@
                 </div>
             </div>
 
+            <!-- Hinweis-Badges im eigenen Einsatzplan: Zusage nach Zeitänderung zurückgesetzt /
+                 offene Zeitanpassungs-Anfrage zu dieser Schicht -->
+            <div
+                v-if="confirmationResetInfo || hasPendingTimeChangeRequest"
+                class="flex flex-wrap items-center gap-1.5 border-b border-border-subtle pb-2"
+            >
+                <span
+                    v-if="confirmationResetInfo"
+                    class="inline-flex items-center gap-1 rounded-full border border-warning-border bg-warning-surface px-2 py-0.5 text-[11px] font-semibold text-warning"
+                    v-tooltip.bottom="{ value: confirmationResetInfo.tooltip, class: 'aw-tooltip' }"
+                >
+                    <PropertyIcon name="IconAlertTriangle" class="h-3.5 w-3.5" stroke-width="2" />
+                    {{ $t('Time changed – please confirm again') }}
+                </span>
+                <span
+                    v-if="hasPendingTimeChangeRequest"
+                    class="inline-flex items-center gap-1 rounded-full border border-border bg-surface-sunken px-2 py-0.5 text-[11px] font-semibold text-text-muted"
+                    v-tooltip.bottom="{ value: $t('Your request for a time change is still pending with the planners.'), class: 'aw-tooltip' }"
+                >
+                    <PropertyIcon name="IconClockEdit" class="h-3.5 w-3.5" stroke-width="2" />
+                    {{ $t('Time change requested') }}
+                </span>
+            </div>
+
             <!-- Hinweis an vorläufigen Karten im eigenen Einsatzplan: Zu-/Absage erst nach Festschreibung -->
             <div
                 v-if="showPendingCommitHint"
@@ -131,6 +155,9 @@
                         :class="ownConfirmationInfo.accepted
                             ? 'bg-success-surface text-success border border-success-border'
                             : 'bg-danger-surface text-danger border border-danger-border'"
+                        v-tooltip.bottom="ownConfirmationInfo.accepted
+                            ? null
+                            : { value: $t('You remain scheduled until the plan is changed.'), class: 'aw-tooltip' }"
                     >
                         <PropertyIcon :name="ownConfirmationInfo.accepted ? 'IconCheck' : 'IconX'" class="h-3.5 w-3.5" stroke-width="2.5" />
                         {{ ownConfirmationInfo.accepted
@@ -258,6 +285,7 @@
             start_of_shift: shift.start_of_shift ?? (shift._day ? formatDateDMYForModal(shift._day) : null)
         }"
         @close="showRequestWorkTimeChangeModal = false"
+        @submitted="locallyRequestedTimeChange = true"
     />
 </template>
 
@@ -274,6 +302,10 @@ import { usePermission } from "@/Composeables/Permission.js";
 import {useShiftPlanLookups} from "@/Composeables/useShiftPlanLookups.js";
 import ShiftConfirmationResponseModal from '@/Layouts/Components/ShiftPlanComponents/ShiftConfirmationResponseModal.vue'
 import { useShiftWorkerConfirmation } from '@/Composeables/useShiftWorkerConfirmation.js'
+import { useTranslation } from '@/Composeables/Translation.js'
+import dayjs from 'dayjs'
+
+const translate = useTranslation()
 
 // Toast nur laden, wenn tatsächlich eine Zu-/Absage gesendet wurde (viele Karten pro Seite)
 const NotificationToast = defineAsyncComponent({
@@ -292,7 +324,14 @@ const props = defineProps({
     project: { type: [Object, null], required: false, default: null },
     eventType: { type: [Object, null], required: false, default: null },
     firstProjectShiftTabId: { type: Number, required: true },
-    userToEditId: { type: Number, required: true }
+    userToEditId: { type: Number, required: true },
+    /**
+     * Optional: offene Zeitanpassungs-Anfrage der eigenen Person zu dieser Schicht
+     * (true oder Request-Objekt). Alternativ liest die Karte
+     * shift.pending_work_time_change_request, shift.work_time_change_requests[]
+     * oder page.props.pendingWorkTimeChangeRequests[] (shift_id/status/user_id).
+     */
+    pendingWorkTimeChangeRequest: { type: [Boolean, Object], required: false, default: null },
 })
 
 const { resolveCraft } = useShiftPlanLookups();
@@ -349,6 +388,56 @@ const showOwnConfirmationControls = computed(() =>
 const ownConfirmationInfo = computed(() =>
     props.shift.is_committed ? getConfirmationInfo(ownWorker.value) : null
 )
+
+// (1) Zusage nach Zeitänderung zurückgesetzt: ShiftWorkerConfirmationService::resetConfirmation
+// nullt alle confirmation_*-Felder – ein zurückgesetzter Status ist im Pivot daher nicht
+// von "nie beantwortet" zu unterscheiden. Der Badge erwartet deshalb ein Backend-Feld
+// pivot.confirmation_reset_at (Zeitstempel) bzw. pivot.confirmation_reset (bool).
+const confirmationResetInfo = computed(() => {
+    const pivot = ownWorker.value?.pivot
+    if (!confirmationEnabled() || !props.shift.is_committed || !pivot || pivot.confirmation_status) return null
+    const resetAt = pivot.confirmation_reset_at ?? null
+    const resetFlag = pivot.confirmation_reset === true || pivot.confirmation_was_reset === true
+    if (!resetAt && !resetFlag) return null
+    const date = resetAt ? dayjs(resetAt).format('DD.MM.YYYY') : null
+    return {
+        date,
+        tooltip: date
+            ? translate('The time of this shift was changed on {date}. Your previous reply was reset.', { date })
+            : translate('The time of this shift was changed. Your previous reply was reset.'),
+    }
+})
+
+// (2) Offene Zeitanpassungs-Anfrage der eigenen Person zu dieser Schicht.
+// Nach dem Absenden im Modal sofort sichtbar (lokales Flag), sonst aus dem Payload.
+const locallyRequestedTimeChange = ref(false)
+const hasPendingTimeChangeRequest = computed(() => {
+    if (!isOwnPlan.value) return false
+    if (locallyRequestedTimeChange.value) return true
+    const explicit = props.pendingWorkTimeChangeRequest
+    if (explicit === true) return true
+    if (explicit && typeof explicit === 'object') return (explicit.status ?? 'pending') === 'pending'
+
+    const shift = props.shift
+    if (shift?.pending_work_time_change_request) return true
+    const me = Number(usePage().props.auth.user.id)
+    const isOwnPending = (r) => r && typeof r === 'object'
+        && (r.status ?? 'pending') === 'pending'
+        && (r.user_id === undefined || r.user_id === null || Number(r.user_id) === me)
+
+    const perShift = Array.isArray(shift?.work_time_change_requests)
+        ? shift.work_time_change_requests
+        : (Array.isArray(shift?.workTimeChangeRequests) ? shift.workTimeChangeRequests : null)
+    if (perShift) return perShift.some(isOwnPending)
+
+    const pageList = usePage().props.pendingWorkTimeChangeRequests
+    if (Array.isArray(pageList)) {
+        return pageList.some((r) => (typeof r === 'object' && r !== null)
+            ? Number(r.shift_id) === Number(shift?.id) && isOwnPending(r)
+            : Number(r) === Number(shift?.id))
+    }
+    return false
+})
 
 const submitResponse = (comment) => {
     const status = responseModalMode.value === 'accept' ? 'accepted' : 'declined'

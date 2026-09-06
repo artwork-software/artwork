@@ -21,6 +21,7 @@ use Artwork\Modules\Notification\Enums\NotificationEnum;
 use Artwork\Modules\Notification\Services\NotificationService;
 use Artwork\Modules\Shift\Models\ShiftCommitWorkflowUser;
 use Artwork\Modules\Shift\Services\ShiftChangeRecorder;
+use Artwork\Modules\Shift\Services\ShiftNotificationLinkService;
 use Artwork\Modules\Shift\Services\ShiftPlanRequestService;
 use Artwork\Modules\User\Models\User;
 use Artwork\Modules\Freelancer\Models\Freelancer;
@@ -137,6 +138,25 @@ class ShiftPlanRequestController extends Controller
      * Middleware `can:can plan shifts` + `shift-settings-area:rules,edit` (im einfachen Modus reicht
      * das Schichteinstellungs-Recht, im granularen Modus zusätzlich "Regeln bearbeiten").
      */
+    /**
+     * True, wenn es für Gewerk/KW/Jahr dieser Anfrage bereits eine andere ausstehende Anfrage gibt
+     * (z. B. nach einem erneuten Einreichen) – dann darf eine abgelehnte nicht nochmal eingereicht werden.
+     */
+    private function hasPendingSuccessor(ShiftPlanRequest $request): bool
+    {
+        if ($request->status !== 'rejected') {
+            return false;
+        }
+
+        return ShiftPlanRequest::query()
+            ->where('craft_id', $request->craft_id)
+            ->where('week_number', $request->week_number)
+            ->where('year', $request->year)
+            ->where('status', 'pending')
+            ->whereKeyNot($request->id)
+            ->exists();
+    }
+
     private function canEditViolations(): bool
     {
         $user = auth()->user();
@@ -319,6 +339,7 @@ class ShiftPlanRequestController extends Controller
 
         $createdCount = 0;
         $updatedCount = 0;
+        $resubmittedCount = 0;
 
         foreach ($craftIds as $craftId) {
             $payload = [
@@ -327,6 +348,16 @@ class ShiftPlanRequestController extends Controller
                 'year' => $data['year'],
                 'requested_by_user_id' => $user->id,
             ];
+
+            // Erneut einreichen nach Ablehnung: gibt es für Gewerk/KW bereits eine abgelehnte
+            // Anfrage, entsteht eine NEUE Anfrage; die abgelehnten Schichten werden über
+            // freeShiftsForRequestQuery (Status rejected/approved gilt als frei) wieder eingesammelt.
+            $hadRejectedRequest = ShiftPlanRequest::query()
+                ->where('craft_id', $payload['craft_id'])
+                ->where('week_number', $payload['week_number'])
+                ->where('year', $payload['year'])
+                ->where('status', 'rejected')
+                ->exists();
 
             // Check-then-create unter Lock auf der Craft-Zeile: zwei gleichzeitige
             // "Alle Schichten festsetzen"-Aufrufe erzeugten sonst zwei pending-Requests
@@ -360,6 +391,9 @@ class ShiftPlanRequestController extends Controller
             if ($shiftPlanRequest->wasRecentlyCreated) {
                 $this->notifyApproversAboutNewRequest($shiftPlanRequest);
                 $createdCount++;
+                if ($hadRejectedRequest) {
+                    $resubmittedCount++;
+                }
             } else {
                 $updatedCount++;
             }
@@ -370,13 +404,15 @@ class ShiftPlanRequestController extends Controller
                 ':created shift plan requests created, :updated existing requests updated.',
                 ['created' => $createdCount, 'updated' => $updatedCount]
             );
+        } elseif ($resubmittedCount > 0) {
+            $message = __('Shift plan request for week :week resubmitted.', ['week' => $data['week_number']]);
         } else {
             $message = $createdCount > 0
                 ? __('Shift plan request created successfully.')
                 : __('Existing shift plan request updated successfully.');
         }
 
-        return back()->with('success', $message);
+        return back()->with('success', $message)->with('resubmitted', $resubmittedCount > 0);
     }
 
 
@@ -460,6 +496,8 @@ class ShiftPlanRequestController extends Controller
             'shiftQualifications' => ShiftQualification::query()->get(['id', 'name']),
             'shiftRuleViolations' => $this->loadShiftRuleViolationsForUsers($craftUserIds, $start, $end),
             'canEditViolations' => $this->canEditViolations(),
+            // Erneut einreichen nur, solange für Gewerk/KW keine ausstehende Anfrage existiert
+            'hasPendingSuccessor' => $this->hasPendingSuccessor($shiftPlanRequest),
             'craftWorkers' => [
                 'users' => $craftUsers->map(fn ($u) => [
                     'id' => $u->id,
@@ -500,7 +538,8 @@ class ShiftPlanRequestController extends Controller
         // Save mitten im Loop fehl, wird auch der Status zurückgerollt (keine
         // "approved"-Anfrage mit halb committeten Schichten).
         $approved = false;
-        $response = DB::transaction(function () use ($shiftPlanRequest, $user, $comment, &$approved) {
+        $committedShiftIds = [];
+        $response = DB::transaction(function () use ($shiftPlanRequest, $user, $comment, &$approved, &$committedShiftIds) {
             // Atomarer Status-Flip nur aus 'pending': verhindert Doppel-Genehmigung und
             // Genehmigen nach Ablehnung (auch bei zwei gleichzeitigen Genehmigern —
             // der zweite wartet auf das Row-Lock und sieht dann flipped = 0).
@@ -536,6 +575,7 @@ class ShiftPlanRequestController extends Controller
                 $shift->current_request_id = null;
                 $shift->committing_user_id = $this->auth->id();
                 $shift->save();
+                $committedShiftIds[] = $shift->id;
 
                 DB::table('shift_workers')
                     ->where('shift_id', $shift->id)
@@ -557,12 +597,88 @@ class ShiftPlanRequestController extends Controller
             );
         });
 
-        // Nach erfolgreichem Commit den Antragsteller informieren
+        // Nach erfolgreichem Commit den Antragsteller informieren — und jede Person,
+        // die in der festgeschriebenen KW/Gewerk eine Schicht hat ("Dienstplan festgeschrieben").
         if ($approved) {
             $this->notifyRequesterAboutDecision($shiftPlanRequest->fresh(), true, $comment);
+            $this->notifyWorkersAboutLockedShiftPlan($shiftPlanRequest->fresh(), $committedShiftIds);
         }
 
         return $response;
+    }
+
+    /**
+     * "Dein Dienstplan {Gewerk} KW n/Jahr wurde festgeschrieben" — genau EINE Notification
+     * (NOTIFICATION_SHIFT_LOCKED) je Person, die mindestens eine der festgeschriebenen
+     * Schichten hat. Personen ohne Schicht in Gewerk/KW bekommen nichts. Link öffnet den
+     * eigenen Einsatzplan auf der KW. Kanäle (Mail/Push) laufen über die Standardmechanik
+     * der NotificationSettings.
+     *
+     * @param array<int, int> $committedShiftIds
+     */
+    private function notifyWorkersAboutLockedShiftPlan(ShiftPlanRequest $shiftPlanRequest, array $committedShiftIds): void
+    {
+        if ($committedShiftIds === []) {
+            return;
+        }
+
+        $userIds = DB::table('shift_workers')
+            ->whereIn('shift_id', $committedShiftIds)
+            ->where('employable_type', User::class)
+            ->whereNull('deleted_at')
+            ->distinct()
+            ->pluck('employable_id');
+
+        if ($userIds->isEmpty()) {
+            return;
+        }
+
+        $shiftPlanRequest->loadMissing('craft');
+
+        [$weekStart, $weekEnd] = $this->helperService->getDateRangeByCalendarWeekAndYear(
+            $shiftPlanRequest->week_number,
+            $shiftPlanRequest->year
+        );
+
+        $notificationService = app(NotificationService::class);
+
+        foreach (User::query()->whereIn('id', $userIds)->get() as $worker) {
+            $notificationTitle = __('notification.shift.locked_craft_week', [
+                'craft' => $shiftPlanRequest->craft?->name ?? '',
+                'week' => $shiftPlanRequest->week_number,
+                'year' => $shiftPlanRequest->year,
+            ], $worker->language);
+
+            $operationPlanLink = ShiftNotificationLinkService::ownOperationPlan($worker, $weekStart, $weekEnd);
+
+            $notificationService->setNotificationTo($worker);
+            $notificationService->setTitle($notificationTitle);
+            $notificationService->setIcon('green');
+            $notificationService->setPriority(3);
+            $notificationService->setNotificationConstEnum(NotificationEnum::NOTIFICATION_SHIFT_LOCKED);
+            $notificationService->setBroadcastMessage([
+                'id' => Str::uuid()->toString(),
+                'type' => 'success',
+                'message' => $notificationTitle,
+            ]);
+            $notificationService->setDescription([
+                0 => [
+                    'type' => 'text',
+                    'title' => __('notification.keyWords.concerns_time_period', [
+                        'start' => $weekStart->format('d.m.Y'),
+                        'end' => $weekEnd->format('d.m.Y'),
+                    ], $worker->language),
+                    'href' => $operationPlanLink,
+                ],
+                1 => [
+                    'type' => 'link',
+                    'title' => __('notification.shift.link_label_own_operation_plan', [], $worker->language),
+                    'href' => $operationPlanLink,
+                ],
+            ]);
+            $notificationService->createNotification();
+            $notificationService->clearNotificationData();
+        }
     }
 
     /**
@@ -638,7 +754,8 @@ class ShiftPlanRequestController extends Controller
             $shiftPlanRequest->delete();
         });
 
-        return back()->with('success', __('Shift plan request deleted successfully.'));
+        // Nicht back(): der Referer zeigt bei Show.vue auf die soeben geloeschte Anfrage (404).
+        return redirect()->route('shift-plan-requests.my.index')->with('success', __('Shift plan request withdrawn.'));
     }
 
     public function reject(\Artwork\Modules\Shift\Models\ShiftPlanRequest $shiftPlanRequest, \Illuminate\Http\Request $request): \Illuminate\Http\RedirectResponse
@@ -1447,6 +1564,7 @@ class ShiftPlanRequestController extends Controller
                     'requested_at' => optional($r->created_at)?->toIso8601String(),
                     'status' => $r->status,
                     'requested_by_name' => $r->requestedBy?->full_name ?? '',
+                    'requested_by_user_id' => $r->requested_by_user_id,
                 ];
             })->values();
 
@@ -1562,6 +1680,8 @@ class ShiftPlanRequestController extends Controller
             'shiftQualifications' => ShiftQualification::query()->get(['id', 'name']),
             'shiftRuleViolations' => $this->loadShiftRuleViolationsForUsers($craftUserIds, $start, $end),
             'canEditViolations' => $this->canEditViolations(),
+            // Erneut einreichen nur, solange für Gewerk/KW keine ausstehende Anfrage existiert
+            'hasPendingSuccessor' => $this->hasPendingSuccessor($shiftPlanRequest),
             'craftWorkers' => [
                 'users' => $craftUsers->map(fn ($u) => [
                     'id' => $u->id,
@@ -2018,6 +2138,16 @@ class ShiftPlanRequestController extends Controller
                     'user' => $shiftPlanRequest->reviewedBy?->full_name ?? '',
                     'comment' => $comment,
                 ], $requester->language),
+                'href' => null,
+            ];
+        }
+
+        // Ablehnung rollt die Schichten der Anfrage auf den Stand vor der Anfrage (_initial)
+        // zurück — das passierte bisher still; die anfragende Person erfährt es jetzt hier.
+        if (!$approved) {
+            $description[] = [
+                'type' => 'text',
+                'title' => __('notification.shift.commit_request_rejected_rollback', [], $requester->language),
                 'href' => null,
             ];
         }

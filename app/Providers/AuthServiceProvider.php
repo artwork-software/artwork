@@ -62,6 +62,8 @@ use Artwork\Modules\ServiceProvider\Models\ServiceProvider as ServiceProviderMod
 use Artwork\Modules\ServiceProvider\Policies\ServiceProviderPolicy;
 use Artwork\Modules\Shift\Models\ShiftCommitWorkflowUser;
 use Artwork\Modules\Shift\Models\ShiftQualification;
+use Artwork\Modules\Shift\Models\ShiftPlanRequest;
+use Artwork\Modules\Shift\Policies\ShiftPlanRequestPolicy;
 use Artwork\Modules\Shift\Policies\ShiftQualificationPolicy;
 use Artwork\Modules\System\ApiManagement\Policies\TokenPolicy;
 use Artwork\Modules\TaskTemplate\Models\TaskTemplate;
@@ -103,6 +105,7 @@ class AuthServiceProvider extends ServiceProvider
         Token::class => TokenPolicy::class,
         WebhookEndpoint::class => WebhookEndpointPolicy::class,
         ShiftQualification::class => ShiftQualificationPolicy::class,
+        ShiftPlanRequest::class => ShiftPlanRequestPolicy::class,
         SageApiSettings::class => SageApiSettingsPolicy::class,
         SageAssignedDataComment::class => SageAssignedDataCommentPolicy::class,
         SageNotAssignedData::class => SageNotAssignedDataPolicy::class,

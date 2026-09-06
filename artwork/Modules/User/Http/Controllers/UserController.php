@@ -37,6 +37,7 @@ use Artwork\Modules\User\Services\WorkingHourCacheService;
 use Artwork\Modules\Shift\Http\Requests\UpdateUserShiftQualificationRequest;
 use Artwork\Modules\Shift\Models\GlobalQualification;
 use Artwork\Modules\Shift\Models\ShiftQualification;
+use Artwork\Modules\Shift\Models\ShiftRuleViolation;
 use Artwork\Modules\Shift\Repositories\ShiftQualificationRepository;
 use Artwork\Modules\Shift\Services\GlobalQualificationService;
 use Artwork\Modules\Shift\Services\ShiftQualificationService;
@@ -573,6 +574,44 @@ class UserController extends Controller
     }
 
     /**
+     * Offene Regelverstöße (status active) der Person — read-only, ohne Bearbeitungsdaten.
+     * Der Kompensations-Tab liefert nur Verstöße OHNE Ersatzfrei-Tage; hier kommen alle
+     * offenen Verstöße (auch mit gewährtem Ersatzfrei), z. B. für "Meine Zahlen".
+     * Formatierung von Datum/Messwert liegt im Frontend.
+     */
+    public function shiftUserInfoViolations(User $user): JsonResponse
+    {
+        $violations = ShiftRuleViolation::query()
+            ->with('shiftRule:id,name,trigger_type,description,warning_color')
+            ->where('user_id', $user->id)
+            ->where('status', 'active')
+            ->orderByDesc('violation_date')
+            ->get()
+            ->map(static fn (ShiftRuleViolation $violation): array => [
+                'id' => $violation->id,
+                'violation_date' => $violation->violation_date?->toDateString(),
+                'display_name' => $violation->getDisplayName(),
+                'rule_name' => $violation->shiftRule?->name,
+                'title' => $violation->title,
+                'trigger_type' => $violation->shiftRule?->trigger_type,
+                'message' => $violation->getViolationMessage(),
+                'status' => $violation->status,
+                'severity' => $violation->severity,
+                'warning_color' => $violation->getWarningColor(),
+                'violation_data' => $violation->violation_data,
+                'is_manual' => (bool) $violation->is_manual,
+                'compensation_days' => $violation->compensation_days,
+                'compensation_deadline' => $violation->compensation_deadline?->toDateString(),
+            ])
+            ->values();
+
+        return response()->json([
+            'violations' => $violations,
+            'count' => $violations->count(),
+        ]);
+    }
+
+    /**
      * Urlaub im Kalenderjahr INKLUSIVE geplanter Tage (Spielzeit-Tab zählt nur bis gestern).
      * Zählregel identisch zum KPI-Dienst: ganzer Tag = 1, halber Tag = 0,5.
      */
@@ -914,6 +953,12 @@ class UserController extends Controller
         // für alle offen): eigener Plan nur mit "can view own roster", fremde nur
         // mit Dienstplan-Sichtrechten.
         $this->authorize('viewOperationPlan', $user);
+
+        // Deep-Link aus Benachrichtigungen (ShiftNotificationLinkService): start_date/end_date
+        // in der URL übernehmen den angezeigten Zeitraum des Einsatzplans. Der Zeitraum hängt am
+        // Filter der EINGELOGGTEN Person (getUserShiftPlanPageDto liest den Auth-User), deshalb
+        // wird genau dieser Filter aktualisiert — wie beim manuellen Blättern im Plan.
+        $this->applyOperationPlanPeriodFromRequest($request, $userService);
 
         $showVacationsAndAvailabilities = $request->get('showVacationsAndAvailabilities');
         $vacationMonth = $request->get('vacationMonth');
@@ -1847,22 +1892,71 @@ class UserController extends Controller
         $userService->shareCalendarAbo('shiftCalendar');
         $selectedPeriodDate->locale($sessionManager->get('locale') ?? $config->get('app.fallback_locale'));
 
+        $pageDto = $userService->getUserShiftPlanPageDto(
+            $user,
+            $calendarService,
+            $eventService,
+            $roomService,
+            $eventTypeService,
+            $projectService,
+            $shiftQualificationService,
+            $selectedPeriodDate,
+            $selectedDate,
+            $request->get('month'),
+            $vacationMonth
+        );
+
+        // Offene Zeitanpassungs-Anfragen der angezeigten Person: Badge "Zeitanpassung angefragt" auf der Karte
+        $pendingWorkTimeChangeRequests = \Artwork\Modules\WorkTime\Models\WorkTimeChangeRequest::query()
+            ->where('user_id', $user->id)
+            ->where('status', 'pending')
+            ->get(['id', 'shift_id', 'status', 'user_id'])
+            ->map(static fn ($requestModel): array => [
+                'id' => $requestModel->id,
+                'shift_id' => $requestModel->shift_id,
+                'status' => $requestModel->status,
+                'user_id' => $requestModel->user_id,
+            ])
+            ->values()
+            ->all();
+
         return Inertia::render(
             'Shifts/UserOperationPlan',
-            $userService->getUserShiftPlanPageDto(
-                $user,
-                $calendarService,
-                $eventService,
-                $roomService,
-                $eventTypeService,
-                $projectService,
-                $shiftQualificationService,
-                $selectedPeriodDate,
-                $selectedDate,
-                $request->get('month'),
-                $vacationMonth
-            )
+            array_merge($pageDto->toArray(), [
+                'pendingWorkTimeChangeRequests' => $pendingWorkTimeChangeRequests,
+            ])
         );
+    }
+
+    private function applyOperationPlanPeriodFromRequest(Request $request, UserService $userService): void
+    {
+        $rawStart = $request->query('start_date');
+        $rawEnd = $request->query('end_date');
+        if (!is_string($rawStart) || $rawStart === '' || !is_string($rawEnd) || $rawEnd === '') {
+            return;
+        }
+
+        try {
+            $start = Carbon::parse($rawStart)->startOfDay();
+            $end = Carbon::parse($rawEnd)->startOfDay();
+        } catch (Throwable) {
+            return;
+        }
+
+        if ($end->lessThan($start)) {
+            [$start, $end] = [$end, $start];
+        }
+        // Gleiche Obergrenze wie der Dienstplan: maximal sechs Monate
+        if ($start->diffInDays($end) > 183) {
+            $end = $start->copy()->addMonths(6);
+        }
+
+        /** @var User $viewer */
+        $viewer = Auth::user();
+        $userService->getUserWorkerShiftPlanFilter($viewer)->update([
+            'start_date' => $start->format('Y-m-d'),
+            'end_date' => $end->format('Y-m-d'),
+        ]);
     }
 
     public function compactMode(User $user, Request $request): void

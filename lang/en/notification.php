@@ -91,6 +91,12 @@ return [
             '(:start_time – :end_time) in craft :craft has been reached. ' .
             'Please submit a shift plan request.',
         'link_label_commit_request_deadline' => 'Go to shift plan',
+        // Commit (workflow approval, direct commit, bulk) — sent to every person with a shift
+        'locked_craft_week' => 'Your shift schedule :craft week :week/:year has been finalized',
+        'link_label_own_operation_plan' => 'Go to my operation plan',
+        'link_label_shift_plan' => 'Go to shift plan',
+        'commit_request_rejected_rollback' =>
+            'The shifts of this request have been reset to their state before the request.',
         'confirmation_accepted' => ':workerName has accepted the shift :craftAbbreviation on :date',
         'confirmation_declined' => ':workerName has declined the shift :craftAbbreviation on :date',
         'confirmation_comment' => 'Comment: :comment',

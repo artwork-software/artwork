@@ -96,6 +96,12 @@ return [
             '(:start_time – :end_time) im Gewerk :craft ist erreicht. ' .
             'Bitte stelle eine Freigabe-Anfrage.',
         'link_label_commit_request_deadline' => 'Gehe zum Dienstplan',
+        // Festschreibung (Workflow-Freigabe, Direkt-Festschreibung, Bulk) — an jede Person mit Schicht
+        'locked_craft_week' => 'Dein Dienstplan :craft KW :week/:year wurde festgeschrieben',
+        'link_label_own_operation_plan' => 'Zu meinem Einsatzplan',
+        'link_label_shift_plan' => 'Zum Dienstplan',
+        'commit_request_rejected_rollback' =>
+            'Die Schichten der Anfrage wurden auf den Stand vor der Anfrage zurückgesetzt.',
     ],
     'event' => [
         'with_adjoining_audience' => 'Termin mit Publikum im Nebenraum',

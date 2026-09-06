@@ -4,18 +4,37 @@ import { useI18n } from 'vue-i18n';
 export function useShiftPlanRequest() {
     const { t } = useI18n();
 
+    // Status-Chip-Klassen (Design-Tokens, einheitlich mit MyIndex/Index)
     const statusClasses = (status) => {
         switch (status) {
             case 'pending':
-                return 'bg-amber-50 text-amber-700 ring-amber-200';
+            case 'review':
+                return 'bg-warning-surface text-warning ring-warning-border';
             case 'approved':
             case 'accepted':
-                return 'bg-emerald-50 text-emerald-700 ring-emerald-200';
+                return 'bg-success-surface text-success ring-success-border';
             case 'rejected':
             case 'denied':
-                return 'bg-rose-50 text-rose-700 ring-rose-200';
+                return 'bg-danger-surface text-danger ring-danger-border';
             default:
-                return 'bg-gray-100 text-gray-600 ring-gray-200';
+                return 'bg-surface-sunken text-text-muted ring-border';
+        }
+    };
+
+    // Status-Label über die vorhandenen Keys pending/approved/rejected
+    const statusLabel = (status) => {
+        switch (status) {
+            case 'pending':
+            case 'review':
+                return t('pending');
+            case 'approved':
+            case 'accepted':
+                return t('approved');
+            case 'rejected':
+            case 'denied':
+                return t('rejected');
+            default:
+                return status ? String(status) : t('Unknown');
         }
     };
 
@@ -431,6 +450,7 @@ export function useShiftPlanRequest() {
     return {
         t,
         statusClasses,
+        statusLabel,
         formatDateTime,
         formatDateShort,
         computeDurationHours,

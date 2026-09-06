@@ -32,6 +32,15 @@
                     {{ $t('Subscribe to shift calendar') }}
                 </div>
             </div>
+            <!-- „Meine Zahlen": nur im eigenen Einsatzplan (Selbstzugriff auf die Kennzahlen) -->
+            <div class="flex items-center" v-if="showMyKeyFigures">
+                <button type="button"
+                        @click="showMyKeyFiguresModal = true"
+                        class="flex items-center gap-x-1 text-sm group cursor-pointer text-text">
+                    <IconChartBar class="h-5 w-5 group-hover:text-accent-600 duration-150 transition-all ease-in-out" stroke-width="1.5" />
+                    {{ $t('My key figures') }}
+                </button>
+            </div>
         </div>
         <div class="flex items-center">
             <ToolTipComponent
@@ -82,6 +91,12 @@
         :date-value="dateValue"
         @close="showExportModal = false"
     />
+    <UserShiftInfoModal
+        v-if="showMyKeyFiguresModal"
+        :user-id="user_to_edit_id"
+        self-view
+        @closed="showMyKeyFiguresModal = false"
+    />
 </template>
 
 <script>
@@ -95,15 +110,23 @@ import IconLib from "@/Mixins/IconLib.vue";
 import CalendarAboSettingModal from "@/Pages/Shifts/Components/CalendarAboSettingModal.vue";
 import CalendarAboInfoModal from "@/Pages/Shifts/Components/CalendarAboInfoModal.vue";
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
-import {IconCalendar, IconChevronDown, IconChevronLeft, IconChevronRight, IconFileTypePdf} from "@tabler/icons-vue";
+import {IconCalendar, IconChartBar, IconChevronDown, IconChevronLeft, IconChevronRight, IconFileTypePdf} from "@tabler/icons-vue";
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
 import UserShiftPlanExportModal from "@/Layouts/Components/ShiftPlanComponents/UserShiftPlanExportModal.vue";
+import {defineAsyncComponent} from "vue";
+
+// Modal erst laden, wenn „Meine Zahlen" geöffnet wird (Einsatzplan-Initial-Load schlank halten)
+const UserShiftInfoModal = defineAsyncComponent({
+    loader: () => import("@/Pages/Shifts/Components/UserShiftInfoModal.vue"),
+});
 
 
 export default {
     name: "UserShiftPlanFunctionBar",
     mixins: [Permissions, IconLib],
     components: {
+        UserShiftInfoModal,
+        IconChartBar,
         UserShiftPlanExportModal,
         ToolTipComponent,
         PropertyIcon,
@@ -135,6 +158,7 @@ export default {
             showCalendarAboSettingModal: false,
             showCalendarAboInfoModal: false,
             showExportModal: false,
+            showMyKeyFiguresModal: false,
         }
     },
     computed: {
@@ -175,6 +199,12 @@ export default {
             if (this.$page.props.auth.user.id) {
                 return this.user_to_edit_id === this.$page.props.auth.user.id;
             }
+        },
+        // „Meine Zahlen": eigene Person + Recht auf den eigenen Einsatzplan
+        showMyKeyFigures() {
+            return this.type === 'user'
+                && !!this.checkIfThisIsMe
+                && (this.$can('can view own roster') || this.hasAdminRole());
         },
     },
     methods: {

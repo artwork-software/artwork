@@ -875,11 +875,16 @@ class EventController extends Controller
         return response()->json($this->shiftPlanService->getAllRoomsContent($request));
     }
 
-    public function viewShiftPlan(?Project $project = null): Response
+    public function viewShiftPlan(Request $request, ?Project $project = null): Response
     {
         /** @var User $user */
         $user = $this->authManager->user();
         $isDailyView = (bool) $user->getAttribute('shift_plan_daily_view');
+
+        // Deep-Link aus Benachrichtigungen (ShiftNotificationLinkService::shiftPlan):
+        // start_date/end_date in der URL werden in den Zeitraum-Filter der Ansicht übernommen,
+        // damit der Dienstplan die betroffene Woche öffnet.
+        $this->applyShiftPlanPeriodFromRequest($request, $user, $isDailyView);
 
         if ($isDailyView) {
             $shiftFilterType = UserFilterTypes::SHIFT_DAILY_FILTER->value;
@@ -1028,6 +1033,38 @@ class EventController extends Controller
             'filterType' => $shiftFilterType,
             'isDailyView' => $isDailyView,
         ]);
+    }
+
+    private function applyShiftPlanPeriodFromRequest(Request $request, User $user, bool $isDailyView): void
+    {
+        $rawStart = $request->query('start_date');
+        $rawEnd = $request->query('end_date');
+        if (!is_string($rawStart) || $rawStart === '' || !is_string($rawEnd) || $rawEnd === '') {
+            return;
+        }
+
+        try {
+            $start = Carbon::parse($rawStart)->startOfDay();
+            $end = Carbon::parse($rawEnd)->startOfDay();
+        } catch (\Throwable) {
+            return;
+        }
+
+        if ($end->lessThan($start)) {
+            [$start, $end] = [$end, $start];
+        }
+        // Tagesansicht zeigt maximal sieben Tage (siehe Begrenzung unten)
+        if ($isDailyView && $start->diffInDays($end) > 7) {
+            $end = $start->copy()->addDays(7);
+        }
+
+        $user->userFilters()->updateOrCreate(
+            ['filter_type' => ($isDailyView ? UserFilterTypes::SHIFT_DAILY_FILTER : UserFilterTypes::SHIFT_FILTER)->value],
+            [
+                'start_date' => $start->format('Y-m-d'),
+                'end_date' => $end->format('Y-m-d'),
+            ]
+        );
     }
 
     public function viewShiftPlanListView(): Response

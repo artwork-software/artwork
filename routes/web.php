@@ -487,21 +487,27 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         ->name('user.edit.compensationDays');
 
     // DP-18: Lazy-Endpoints für das User-Info-Modal im Schichtplan (je Tab)
+    // Autorisierung über UserPolicy::viewShiftKpis: fremde Personen mit "can view shift user kpis",
+    // die eigene Person auch mit "can view own roster" ("Meine Zahlen" im Einsatzplan).
     Route::get('/users/{user}/shift-info/season', [UserController::class, 'shiftUserInfoSeason'])
-        ->can('can view shift user kpis')
+        ->can('viewShiftKpis', 'user')
         ->name('shift.user-info.season');
     Route::get('/users/{user}/shift-info/compensation', [UserController::class, 'shiftUserInfoCompensation'])
-        ->can('can view shift user kpis')
+        ->can('viewShiftKpis', 'user')
         ->name('shift.user-info.compensation');
     Route::get('/users/{user}/shift-info/vacation', [UserController::class, 'shiftUserInfoVacation'])
-        ->can('can view shift user kpis')
+        ->can('viewShiftKpis', 'user')
         ->name('shift.user-info.vacation');
     Route::get('/users/{user}/shift-info/worktimes', [UserController::class, 'shiftUserInfoWorktimes'])
-        ->can('can view shift user kpis')
+        ->can('viewShiftKpis', 'user')
         ->name('shift.user-info.worktimes');
     Route::get('/users/{user}/shift-info/overtime', [UserController::class, 'shiftUserInfoOvertime'])
-        ->can('can view shift user kpis')
+        ->can('viewShiftKpis', 'user')
         ->name('shift.user-info.overtime');
+    // Offene Regelverstöße (status active) read-only, z. B. "Meine Zahlen" im eigenen Einsatzplan
+    Route::get('/users/{user}/shift-info/violations', [UserController::class, 'shiftUserInfoViolations'])
+        ->can('viewShiftKpis', 'user')
+        ->name('shift.user-info.violations');
 
     // DP-18 Stufe 2: Überstunden – User-Detail-Tab + manuelle Auszahlung
     Route::get('/users/{user}/overtime', [UserController::class, 'editUserOvertime'])
@@ -3388,10 +3394,12 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
                 ->name('reject')
                 ->can('approve-shift-plan-requests');
 
-            // Anfrage löschen und zugeordnete Schichten wieder freigeben
+            // Anfrage zurückziehen und zugeordnete Schichten wieder freigeben:
+            // Genehmiger*innen immer, Antragsteller*innen nur die eigene offene Anfrage
+            // (ShiftPlanRequestPolicy::withdraw).
             Route::delete('/{shiftPlanRequest}', [ShiftPlanRequestController::class, 'destroy'])
                 ->name('destroy')
-                ->can('approve-shift-plan-requests');
+                ->can('withdraw', 'shiftPlanRequest');
         });
 
 

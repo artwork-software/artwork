@@ -22,6 +22,7 @@ use Artwork\Modules\Shift\Events\AssignUserToShift;
 use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\Shift\Models\ShiftWorker;
 use Artwork\Modules\Shift\Repositories\ShiftRepository;
+use Artwork\Modules\Shift\Services\ShiftNotificationLinkService;
 use Artwork\Modules\User\Models\User;
 use Artwork\Modules\User\Services\WorkingHourCacheService;
 use Artwork\Modules\Vacation\Services\VacationConflictService;
@@ -270,7 +271,7 @@ class ShiftService
                         ($shift->event?->project?->name ?? __('notification.shift.without_project')) . ' , ' .
                         ($shift->craft?->abbreviation ?? '') . ' ' .
                         $shift->time_span_label,
-                    'href' => null
+                    'href' => ShiftNotificationLinkService::shiftPlanForDate($shift->start_date),
                 ],
             ];
 
@@ -604,6 +605,7 @@ class ShiftService
 
         $firstShift = $shifts->first();
         $lastShift = $shifts->sortBy('end_date')->last();
+        $craftName = Craft::query()->whereKey($craftId)->value('name') ?? '';
 
         $this->notificationService->setIcon('green');
         $this->notificationService->setPriority(3);
@@ -616,11 +618,23 @@ class ShiftService
             $shift->committing_user_id = Auth::id();
             $shift->save();
 
+            // Nur Personen MIT Schicht im Gewerk/Zeitraum — genau eine Notification je Person.
             foreach ($shift->users as $user) {
                 if (!in_array($user->id, $userIdHasGetNotification)) {
                     $userIdHasGetNotification[] = $user->id;
 
-                    $notificationTitle = __('notification.shift.locked');
+                    // "Dein Dienstplan {Gewerk} KW n/Jahr wurde festgeschrieben" — KW aus dem
+                    // Aufruf, sonst aus dem Startdatum des Zeitraums abgeleitet.
+                    $notificationTitle = __('notification.shift.locked_craft_week', [
+                        'craft' => $craftName,
+                        'week' => $weekNumber ?? $startDate->isoWeek(),
+                        'year' => $year ?? $startDate->isoWeekYear(),
+                    ], $user->language);
+                    $operationPlanLink = ShiftNotificationLinkService::ownOperationPlan(
+                        $user,
+                        $startDate->copy()->startOfDay(),
+                        $endDate->copy()->startOfDay()
+                    );
                     $notificationDescription = [
                         1 => [
                             'type' => 'string',
@@ -634,7 +648,12 @@ class ShiftService
                                 ],
                                 $user->language
                             ),
-                            'href' => null
+                            'href' => $operationPlanLink,
+                        ],
+                        2 => [
+                            'type' => 'link',
+                            'title' => __('notification.shift.link_label_own_operation_plan', [], $user->language),
+                            'href' => $operationPlanLink,
                         ],
                     ];
 
@@ -652,6 +671,7 @@ class ShiftService
                 }
             }
         }
+        $this->notificationService->clearNotificationData();
 
         // UpdateEventShiftInShiftPlan ist ShouldBroadcastNow: jeder broadcast() ist ein
         // synchroner HTTP-Call an Reverb + Relation-Loads für das DTO. Deshalb erst nach

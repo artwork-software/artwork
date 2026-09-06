@@ -16,8 +16,14 @@
             <ShiftPlanRequestHeader
                 :request="request"
                 :is-my-request="isMyRequest"
+                :can-withdraw="canWithdraw(request)"
+                :can-resubmit="canResubmit(request) && !hasPendingSuccessor"
+                :processing="processing"
                 @accept="acceptRequest"
                 @start-reject="startReject"
+                @withdraw="withdrawModalOpen = true"
+                @resubmit="resubmit(request)"
+                @go-to-week="goToWeekInShiftPlan(request)"
             />
 
             <ShiftPlanRequestWeekNavigator
@@ -118,6 +124,41 @@
             @close="selectedViolation = null"
             @updated="handleViolationUpdated"
         />
+
+        <!-- Antragsteller*in: Anfrage zurückziehen (Bestätigung) -->
+        <ArtworkBaseModal
+            v-if="withdrawModalOpen"
+            :title="$t('Withdraw request')"
+            :description="weekLabel(request)"
+            @close="withdrawModalOpen = false"
+        >
+            <div class="space-y-4">
+                <BaseAlertComponent
+                    type="warning"
+                    use-translation
+                    message="The shifts of this request are released again and can be resubmitted later."
+                />
+                <div class="flex items-center justify-between">
+                    <BaseUIButton type="button" is-cancel-button :label="$t('Cancel')" @click="withdrawModalOpen = false" />
+                    <BaseUIButton
+                        type="button"
+                        is-delete-button
+                        icon="IconArrowBackUp"
+                        :label="$t('Withdraw request')"
+                        :processing="processing === 'withdraw'"
+                        @click="confirmWithdraw"
+                    />
+                </div>
+            </div>
+        </ArtworkBaseModal>
+
+        <NotificationToast
+            v-if="toast"
+            v-model:show="toastVisible"
+            :title="toast.title"
+            :description="toast.description"
+            :type="toast.type"
+        />
     </AppLayout>
 </template>
 
@@ -134,11 +175,43 @@ import ShiftHistoryDrawer from './components/ShiftHistoryDrawer.vue';
 import RejectShiftPlanRequestModal from './components/RejectShiftPlanRequestModal.vue';
 import AcceptShiftPlanRequestModal from './components/AcceptShiftPlanRequestModal.vue';
 import ViolationEditModal from '@/Pages/Shifts/Components/ViolationEditModal.vue';
+import ArtworkBaseModal from '@/Artwork/Modals/ArtworkBaseModal.vue';
+import BaseAlertComponent from '@/Components/Alerts/BaseAlertComponent.vue';
+import BaseUIButton from '@/Artwork/Buttons/BaseUIButton.vue';
+import NotificationToast from '@/Artwork/Feedback/NotificationToast.vue';
 import {useShiftPlanRequest} from './components/useShiftPlanRequest.js';
+import {useShiftPlanRequestActions} from './components/useShiftPlanRequestActions.js';
 import {useI18n} from 'vue-i18n';
 import {useShiftPlanRequestWeekNavigation} from './components/useShiftPlanRequestWeekNavigation.js';
 
 const {t} = useI18n();
+
+// Antragsteller*in: zurückziehen (pending) / erneut einreichen + zur KW (rejected)
+const {
+    canWithdraw,
+    canResubmit,
+    weekLabel,
+    toast,
+    toastVisible,
+    processing,
+    withdraw,
+    resubmit,
+    goToWeekInShiftPlan,
+} = useShiftPlanRequestActions();
+
+const withdrawModalOpen = ref(false);
+const confirmWithdraw = () => {
+    withdraw(props.request, {
+        onSuccess: () => {
+            withdrawModalOpen.value = false;
+            // Die Anfrage existiert nicht mehr – zurück zur Übersicht der eigenen Anfragen,
+            // sofern das Backend nicht ohnehin dorthin weitergeleitet hat.
+            if (route().current('shift-plan-requests.my.show') || route().current('shift-plan-requests.show')) {
+                router.visit(route('shift-plan-requests.my.index'));
+            }
+        },
+    });
+};
 
 const props = defineProps({
     request: {type: Object, required: true},
@@ -154,6 +227,7 @@ const props = defineProps({
     shiftRuleViolations: {type: Object, default: () => ({})},
     // Verstöße aus der Prüfansicht bearbeiten: can plan shifts + Regeln bearbeiten (serverseitig ermittelt)
     canEditViolations: {type: Boolean, default: false},
+    hasPendingSuccessor: {type: Boolean, default: false},
 });
 
 const selectedViolation = ref(null);

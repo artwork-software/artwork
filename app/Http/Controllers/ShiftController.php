@@ -37,6 +37,7 @@ use Artwork\Modules\Shift\Models\ShiftWorker;
 use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\Shift\Services\LegalBreakCalculator;
 use Artwork\Modules\Shift\Services\ShiftChangeRecorder;
+use Artwork\Modules\Shift\Services\ShiftNotificationLinkService;
 use Artwork\Modules\Shift\Services\ShiftCountService;
 use Artwork\Modules\Shift\Services\ShiftFreelancerService;
 use Artwork\Modules\Shift\Services\ShiftService;
@@ -368,13 +369,20 @@ class ShiftController extends Controller
         );
     }
 
-    private function sendShiftAddedNotificationToUser(Shift $shift, User $user): void
+    /**
+     * Bulk-Festschreibung (updateCommitments): "Dein Dienstplan {Gewerk} KW n/Jahr wurde
+     * festgeschrieben" (NOTIFICATION_SHIFT_LOCKED) — vorher lief hier fälschlich der
+     * Zuweisungs-Text shift_staffing. Link öffnet den eigenen Einsatzplan auf der KW der Schicht.
+     */
+    private function sendShiftLockedNotificationToUser(Shift $shift, User $user): void
     {
+        $shiftDate = $shift->start_date ? Carbon::parse($shift->start_date) : Carbon::now();
         $notificationTitle = __(
-            'notification.shift.shift_staffing',
+            'notification.shift.locked_craft_week',
             [
-                'projectName' => $shift?->event?->project?->name ?? __('notification.shift.without_project'),
-                'craftAbbreviation' => $shift->craft->abbreviation
+                'craft' => $shift->craft?->name ?? '',
+                'week' => $shiftDate->isoWeek(),
+                'year' => $shiftDate->isoWeekYear(),
             ],
             $user->language
         );
@@ -383,14 +391,18 @@ class ShiftController extends Controller
             'type' => 'success',
             'message' => $notificationTitle
         ];
+        $operationPlanLink = ShiftNotificationLinkService::ownOperationPlanForDate($user, $shiftDate);
         $notificationDescription = [
             1 => [
                 'type' => 'string',
                 'title' => __('notification.keyWords.your_shift', [], $user->language) .
-                    Carbon::parse($shift->start)
-                        ->format('d.m.Y H:i') . ' - ' .
-                    Carbon::parse($shift->end)->format('d.m.Y H:i'),
-                'href' => null
+                    $shift->time_span_label,
+                'href' => $operationPlanLink,
+            ],
+            2 => [
+                'type' => 'link',
+                'title' => __('notification.shift.link_label_own_operation_plan', [], $user->language),
+                'href' => $operationPlanLink,
             ],
         ];
 
@@ -398,7 +410,7 @@ class ShiftController extends Controller
         $this->notificationService->setIcon('green');
         $this->notificationService->setPriority(3);
         $this->notificationService
-            ->setNotificationConstEnum(NotificationEnum::NOTIFICATION_SHIFT_CHANGED);
+            ->setNotificationConstEnum(NotificationEnum::NOTIFICATION_SHIFT_LOCKED);
         $this->notificationService->setBroadcastMessage($broadcastMessage);
         $this->notificationService->setDescription($notificationDescription);
         $this->notificationService->setNotificationTo($user);
@@ -470,7 +482,7 @@ class ShiftController extends Controller
                 $users = $shift->users()->get();
                 foreach ($users as $user) {
                     if (!in_array($user->id, $notificationUsers)) {
-                        $this->sendShiftAddedNotificationToUser(
+                        $this->sendShiftLockedNotificationToUser(
                             shift: $shift,
                             user: $user
                         );
@@ -526,7 +538,7 @@ class ShiftController extends Controller
                                             ],
                                             $user->language
                                         ),
-                                        'href' => null
+                                        'href' => ShiftNotificationLinkService::ownOperationPlanForDate($user, $shift->start_date)
                                     ],
                                 ];
 
@@ -574,7 +586,7 @@ class ShiftController extends Controller
                                                 ],
                                                 $user->language
                                             ),
-                                            'href' => null
+                                            'href' => ShiftNotificationLinkService::ownOperationPlanForDate($user, $shift->start_date)
                                         ],
                                     ];
 
@@ -631,7 +643,7 @@ class ShiftController extends Controller
                                             ],
                                             $user->language
                                         ),
-                                        'href' => null
+                                        'href' => ShiftNotificationLinkService::ownOperationPlanForDate($user, $shift->start_date)
                                     ],
                                 ];
 

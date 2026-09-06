@@ -16,8 +16,12 @@
         />
 
         <div class="rounded-lg bg-surface border border-border-subtle w-full shadow-raised p-5">
-            <div v-if="violations.length === 0" class="text-center py-10 text-text-subtle text-sm">
-                {{ $t('No open violations found.') }}
+            <div v-if="violations.length === 0" class="flex flex-col items-center justify-center py-12 text-center">
+                <IconShieldCheck class="h-10 w-10 text-success mb-3" stroke-width="1.5" />
+                <p class="text-sm font-medium text-text">{{ $t('No open violations — all clear.') }}</p>
+                <p class="mt-1 text-xs text-text-subtle max-w-md">
+                    {{ $t('New violations appear here automatically as soon as the rule check detects one in the shift plan.') }}
+                </p>
             </div>
             <div v-else class="overflow-x-auto">
                 <table class="min-w-full divide-y divide-border-subtle">
@@ -103,6 +107,7 @@
 <script setup>
 import { ref } from 'vue'
 import { router } from '@inertiajs/vue3'
+import { IconShieldCheck } from '@tabler/icons-vue'
 import ShiftSettingsHeader from "@/Pages/Settings/Components/ShiftSettingsHeader.vue";
 import SettingsGuideBanner from "@/Artwork/Guide/SettingsGuideBanner.vue";
 import ViolationEditModal from "@/Pages/Shifts/Components/ViolationEditModal.vue";

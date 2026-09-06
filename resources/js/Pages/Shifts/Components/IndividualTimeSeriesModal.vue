@@ -116,7 +116,7 @@
                                 id="series_break_minutes"
                                 v-model.number="form.break_minutes"
                                 type="number"
-                                :label="'Break time (minutes)'"
+                                :label="$t('Break (minutes)')"
                                 :is-small="true"
                                 :min="0"
                                 :step="1"

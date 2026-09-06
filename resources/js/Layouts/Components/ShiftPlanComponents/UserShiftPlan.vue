@@ -6,6 +6,7 @@
                 :type="type"
                 :totalPlannedWorkingHours="totalPlannedWorkingHours"
                 :weeklyWorkingHours="weeklyWorkingHours"
+                :plannedWorkTime="totalWorkTimeInRange"
                 :dateValue="dateValue"
                 :crafts="crafts"
                 @previousTimeRange="goToPrevAssignedDay"
@@ -31,10 +32,9 @@
                 </div>
 
                 <div class="text-xs text-text-muted">
-                    <span>(</span>
-                    <span>{{ totalWorkTimeInRange }}</span>
-                    <span> | {{ totalBreakTimeInRange }}</span>
-                    <span>)</span>
+                    <span>{{ $t('Work') }} {{ totalWorkTimeInRange }} h</span>
+                    <span class="mx-1 text-text-subtle">·</span>
+                    <span>{{ $t('Break') }} {{ totalBreakTimeInRange }} h</span>
                 </div>
             </div>
 
@@ -74,7 +74,9 @@
                             <span class="ml-2 text-xs font-normal text-text-subtle">{{ week.rangeLabel }}</span>
                         </div>
                         <div class="text-xs text-text-muted">
-                            ({{ week.totalWork }} | {{ week.totalBreak }})
+                            <span>{{ $t('Work') }} {{ week.totalWork }} h</span>
+                            <span class="mx-1 text-text-subtle">·</span>
+                            <span>{{ $t('Break') }} {{ week.totalBreak }} h</span>
                         </div>
                     </div>
 

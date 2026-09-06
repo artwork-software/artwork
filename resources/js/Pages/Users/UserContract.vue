@@ -101,6 +101,29 @@
 
         <!-- Manual contract data (no template selected) -->
         <div class="mt-5" v-else>
+            <!-- Leerzustand: ohne Vertrag keine Regelprüfung und keine Spielzeit-Kennzahlen -->
+            <div class="rounded-lg border border-dashed border-warning-border bg-warning-surface px-4 py-4 mb-5">
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                    <div class="flex items-start gap-3">
+                        <component :is="IconFileSearch" class="size-5 shrink-0 text-warning mt-0.5" stroke-width="1.5" />
+                        <div>
+                            <p class="text-sm font-semibold text-text font-lexend">
+                                {{ $t('No contract assigned') }}
+                            </p>
+                            <p class="text-xs text-text-muted mt-0.5">
+                                {{ $t('Without a contract no rule check applies and there are no season figures. Select a contract template, or fill in the values manually below.') }}
+                            </p>
+                        </div>
+                    </div>
+                    <BaseUIButton
+                        class="shrink-0"
+                        :label="$t('Select contract template')"
+                        :icon="IconFileSearch"
+                        is-add-button
+                        @click.stop="showSelectUserContractModal = true"
+                    />
+                </div>
+            </div>
             <form @submit.prevent="submit" class="space-y-4">
                 <div class="rounded-lg bg-surface border border-border-subtle w-full shadow-raised p-5">
                     <h3 class="text-sm font-semibold text-text font-lexend flex items-center gap-2">

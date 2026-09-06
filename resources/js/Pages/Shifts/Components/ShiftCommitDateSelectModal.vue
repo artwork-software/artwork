@@ -1,18 +1,25 @@
 <template>
     <ArtworkBaseModal
-        title="Select Commit Date"
-        description="Select the date for the commit."
+        :title="isShiftCommitWorkflowEnabled ? 'Submit duty roster for approval' : 'Commit duty roster'"
+        :description="isShiftCommitWorkflowEnabled
+            ? 'Select the calendar week and the crafts. One approval request per craft is sent to the approvers.'
+            : 'Select the calendar week and the crafts. All shifts of these crafts in the week are committed and appear in the personal rosters.'"
         @close="$emit('close')"
     >
-        <!-- Hinweis-Box -->
+        <!-- Neutrale Hinweisbox: aktiver Freigabe-Workflow + Genehmiger*innen (shared Prop shiftCommitApprovers) -->
         <div class="mb-4" v-if="isShiftCommitWorkflowEnabled">
-            <div class="bg-warning-surface/80 border border-warning-border text-warning p-4 rounded-xl flex gap-3 items-start">
-                <div class="mt-0.5 h-6 w-6 min-w-6 min-h-6 rounded-full bg-warning-surface flex items-center justify-center text-xs font-semibold">
-                    !
+            <div class="rounded-xl border border-accent-100 bg-accent-50/50 px-4 py-3 flex gap-3 items-start">
+                <PropertyIcon name="IconInfoCircle" class="h-5 w-5 text-accent-600 shrink-0 mt-0.5" :stroke-width="1.5" />
+                <div class="min-w-0 text-xs text-text-muted leading-relaxed space-y-1">
+                    <p>{{ $t('The approval workflow is active: the duty roster is not committed directly but submitted to the approvers. Once released, the shifts are committed automatically.') }}</p>
+                    <p v-if="approverNames.length">
+                        <span class="font-medium text-text">{{ $t('Approvers') }}:</span>
+                        {{ approverNames.join(', ') }}
+                    </p>
+                    <p v-else>
+                        {{ $t('No approvers are set up yet. Ask an administrator to add approvers under Shift settings → Approval workflow.') }}
+                    </p>
                 </div>
-                <p class="text-xs font-lexend leading-relaxed">
-                    {{ $t('Direct approval is currently not possible as the approval workflow is active. Please send a release request to the responsible users.') }}
-                </p>
             </div>
         </div>
 
@@ -174,14 +181,14 @@
             <div class="flex flex-col xs:flex-row gap-2">
                 <BaseUIButton
                     v-if="isShiftCommitWorkflowEnabled"
-                    :label="$t('Request a firm commitment')"
+                    :label="$t('Submit for approval')"
                     is-add-button
                     :processing="newShiftCommitForm.processing"
                     @click="submit"
                 />
                 <BaseUIButton
                     v-else
-                    :label="$t('Lock all shifts')"
+                    :label="$t('Commit duty roster')"
                     is-add-button
                     :processing="newShiftCommitForm.processing"
                     @click="submitWithoutWorkflow"
@@ -199,6 +206,7 @@ import axios from 'axios'
 import ArtworkBaseModal from '@/Artwork/Modals/ArtworkBaseModal.vue'
 import BaseInput from '@/Artwork/Inputs/BaseInput.vue'
 import BaseUIButton from '@/Artwork/Buttons/BaseUIButton.vue'
+import PropertyIcon from '@/Artwork/Icon/PropertyIcon.vue'
 
 const emit = defineEmits(['close'])
 
@@ -236,6 +244,12 @@ const dateRange = ref({
 const isLoadingDateRange = ref(false)
 const dateRangeError = ref(null)
 const isShiftCommitWorkflowEnabled = ref(usePage().props.shiftCommitWorkflow)
+// Genehmiger*innen-Namen aus HandleInertiaRequests (nur bei aktivem Workflow gefüllt)
+const approverNames = computed(() =>
+    (usePage().props.shiftCommitApprovers ?? [])
+        .map((approver) => approver?.name)
+        .filter((name) => typeof name === 'string' && name.trim() !== '')
+)
 const crafts = ref(props.crafts || [])
 const selectedCrafts = ref([])
 const craftError = ref(false)
@@ -313,7 +327,10 @@ const submitToRoute = (routeName) => {
 
     newShiftCommitForm.craft_ids = selectedCrafts.value.map((craft) => craft.id)
 
+    // Erfolgsmeldung kommt als Flash über den globalen Toast im AppLayout
+    // (commit-shift-workflow-request.store liefert sie; shifts.commit derzeit ohne Text).
     newShiftCommitForm.post(route(routeName), {
+        preserveScroll: true,
         onSuccess: () => {
             emit('close')
         },

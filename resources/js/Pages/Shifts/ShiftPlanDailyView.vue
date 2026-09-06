@@ -102,6 +102,9 @@
                             :filter-type="props.isInProjectView ? 'project_shift_filter' : 'shift_daily_filter'"
                         />
 
+                        <!-- Hilfe & Legende (Slide-over), gleiches Panel wie in der Wochenansicht -->
+                        <ShiftPlanHelpPanel />
+
                         <ToolTipComponent
                             direction="right"
                             :tooltip-text="$t('Export')"
@@ -365,6 +368,20 @@
                     </div>
                 </div>
             </section>
+
+            <!-- Leerzustand einmal pro Raster (keine Räume / Stammdaten fehlen / keine Schichten) -->
+            <ShiftPlanEmptyState
+                v-if="dailyPlanLoaded && !emptyStateDismissed"
+                :rooms-count="shiftPlanCopy.length"
+                :crafts-count="craftsResolved?.length ?? 0"
+                :functions-count="shiftQualificationsArray?.length ?? 0"
+                :has-shifts="dailyPlanHasShifts"
+                :filters-active="dailyFiltersActive"
+                :hide-unoccupied-rooms="hideUnoccupiedRooms"
+                @add-shift="openAddShiftForFirstRoomAndDay"
+                @add-from-template="openAddShiftByPresetForFirstRoomAndDay"
+                @dismiss="emptyStateDismissed = true"
+            />
 
             <div
                 v-for="day in daysToRender"
@@ -747,6 +764,8 @@ const ExportModal = defineAsyncComponent(() => import("@/Layouts/Components/Expo
 import HolidayToolTip from "@/Components/ToolTips/HolidayToolTip.vue";
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 import AddShiftsByPresetsAndGroupsModal from "@/Pages/Shifts/Components/AddShiftsByPresetsAndGroupsModal.vue";
+import ShiftPlanHelpPanel from "@/Layouts/Components/ShiftPlanComponents/ShiftPlanHelpPanel.vue";
+import ShiftPlanEmptyState from "@/Layouts/Components/ShiftPlanComponents/ShiftPlanEmptyState.vue";
 import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
 import { formatAssignmentDate, formatAssignmentDateRanges } from "@/Composeables/UseProjectDayAssignments.js";
 import ProjectAssignPersonModal from "@/Pages/Shifts/Components/ProjectAssignPersonModal.vue";
@@ -1641,12 +1660,58 @@ const initializeDailyShiftPlan = async () => {
         openViolationsByUser.value = batchData.openViolationsByUser ?? {}
         shiftPlanCopy.value = (batchData.rooms ?? []).filter(Boolean)
         triggerRef(shiftPlanCopy)
+        emptyStateDismissed.value = false
+        dailyPlanLoaded.value = true
         return
     }
 
     daysLocal.value = withoutExtraRows(enrichDays(props.days ?? []))
     shiftPlanCopy.value = Array.isArray(props.shiftPlan) ? props.shiftPlan : Object.values(props.shiftPlan ?? {})
     triggerRef(shiftPlanCopy)
+    emptyStateDismissed.value = false
+    dailyPlanLoaded.value = true
+}
+
+// --- Leerzustand des Rasters (ShiftPlanEmptyState) ---
+// Erst nach dem Initial-Load anzeigen, sonst blitzt die Karte während Meta/Batch auf.
+const dailyPlanLoaded = ref(false)
+const emptyStateDismissed = ref(false)
+
+/** Gibt es im geladenen Zeitraum mindestens eine Schicht (unabhängig von Anzeige-Filtern)? */
+const dailyPlanHasShifts = computed<boolean>(() => {
+    for (const room of shiftPlanCopy.value || []) {
+        if (room?.shiftsById && Object.keys(room.shiftsById).length > 0) return true
+        const content = room?.content ?? {}
+        for (const key of Object.keys(content)) {
+            const ids = content[key]?.shiftIds
+            if (Array.isArray(ids) && ids.length > 0) return true
+            if (Array.isArray(content[key]?.shifts) && content[key].shifts.length > 0) return true
+        }
+    }
+    return false
+})
+
+/** Aktive Dienstplan-Filter (Räume, Gewerke, Terminarten …) — Hinweis im Leerzustand „keine Räume" */
+const dailyFiltersActive = computed<boolean>(() => {
+    const filters = (props.user_filters ?? {}) as Record<string, any>
+    return Object.values(filters).some((value) => Array.isArray(value) && value.length > 0)
+})
+
+const firstDailyRoom = () => (shiftPlanCopy.value || [])[0] ?? null
+const firstDailyDay = () => (daysLocal.value || []).find((d: any) => !d?.isExtraRow) ?? null
+
+function openAddShiftForFirstRoomAndDay() {
+    const room = firstDailyRoom()
+    const day = firstDailyDay()
+    if (!room || !day) return
+    openAddShiftForRoomAndDay(day.withoutFormat, room.roomId ?? room.id ?? null)
+}
+
+function openAddShiftByPresetForFirstRoomAndDay() {
+    const room = firstDailyRoom()
+    const day = firstDailyDay()
+    if (!room || !day) return
+    openAddShiftByPresetOrGroup(day, room)
 }
 
 watch(() => props.days, (v) => { daysLocal.value = withoutExtraRows(v as any[]) })

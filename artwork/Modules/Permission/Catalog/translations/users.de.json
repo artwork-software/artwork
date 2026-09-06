@@ -7,7 +7,7 @@
     "Tabs \"Work profile\", \"Work Time Pattern\", \"Employment contract\", \"Work Times\" and \"Overtime\" in the person profile": "Tabs „Arbeitsprofil“, „Arbeitszeitmuster“, „Arbeitsvertrag“, „Arbeitszeiten“ und „Überstunden“ im Personenprofil",
     "Creating freelancers and service providers": "Anlegen von Freelancer*innen und Dienstleistern",
     "Tabs \"Conditions\" and \"Work profile\" of freelancers and service providers": "Tabs „Konditionen“ und „Arbeitsprofil“ bei Freelancer*innen und Dienstleistern",
-    "Rosters of other people": "Einsatzpläne anderer Personen",
+    "Rosters of other people": "Dienstpläne anderer Personen",
     "Send and withdraw invitations": "Einladungen versenden und zurückziehen",
     "Edit photo, basic data and team assignment of other people": "Foto, Stammdaten und Team-Zuordnung anderer Personen bearbeiten",
     "Edit work profiles, work time patterns, contracts, working times and overtime": "Arbeitsprofile, Arbeitszeitmuster, Verträge, Arbeitszeiten und Überstunden bearbeiten",
@@ -32,6 +32,6 @@
     "Can create and maintain freelancers and service providers": "Kann Freelancer*innen und Dienstleister anlegen und pflegen",
     "Button \"Add new Address\" in the address list": "Button „Neue Adresse hinzufügen“ in der Adressliste",
     "Create, edit and delete freelancers and service providers": "Freelancer*innen und Dienstleister anlegen, bearbeiten und löschen",
-    "Maintain work profiles, crafts, qualifications and absences of external workers": "Arbeitsprofile, Gewerke, Qualifikationen und Abwesenheiten Externer pflegen",
+    "Maintain work profiles, crafts, qualifications and absences of external workers": "Arbeitsprofile, Gewerke, Funktionen und Abwesenheiten Externer pflegen",
     "Only external workers – in-house staff and invitations remain part of \"HR administration\", which includes this permission.": "Nur Externe – Inhouse-Kolleg*innen und Einladungen bleiben Teil der „Personalverwaltung“, die dieses Recht einschließt."
 }

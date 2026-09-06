@@ -5,7 +5,7 @@
                 <div
                     class="py-1.5 px-1 pr-2 cursor-pointer rounded-l-lg"
                     :style="{ backgroundColor: `${returnCraftColor}` }"
-                    v-tooltip.bottom="{ value: 'Arbeitszeitänderung vornehmen', appendTo: 'body', class: 'aw-tooltip', position: 'bottom', useTranslation: false }"
+                    v-tooltip.bottom="{ value: $t('Adjust working time'), appendTo: 'body', class: 'aw-tooltip', position: 'bottom', useTranslation: false }"
                 >
                     <p class="text-xs text-left font-lexend whitespace-nowrap"><span v-if="prependCraftAbbreviation && craft?.abbreviation" class="font-semibold mr-1">{{ craft.abbreviation }}</span>{{ normalizeTime(person.pivot?.start_time ?? shift.start) }} - {{ normalizeTime(person.pivot?.end_time ?? shift.end) }}</p>
                 </div>
@@ -47,7 +47,7 @@
         <div
             class="py-1.5 px-1 rounded-l-lg"
             :style="{ backgroundColor: `${returnCraftColor}` }"
-            v-tooltip.bottom="{ value: 'Arbeitszeitänderung anfragen', appendTo: 'body', class: 'aw-tooltip', position: 'bottom', useTranslation: false }"
+            v-tooltip.bottom="{ value: $t('Request work time change'), appendTo: 'body', class: 'aw-tooltip', position: 'bottom', useTranslation: false }"
         >
             <p class="text-xs text-left font-lexend whitespace-nowrap"><span v-if="prependCraftAbbreviation && craft?.abbreviation" class="font-semibold mr-1">{{ craft.abbreviation }}</span>{{ normalizeTime(person.pivot?.start_time ?? shift.start) }} - {{ normalizeTime(person.pivot?.end_time ?? shift.end) }}</p>
         </div>

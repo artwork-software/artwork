@@ -1,7 +1,7 @@
 <template>
     <ArtworkBaseModal
-        title="Mehrfacheintrag"
-        description=""
+        :title="$t('Multi-entry')"
+        :description="$t('Apply availability, individual times and a project assignment to all selected days at once.')"
         modal-size="sm:max-w-xl"
         @close="$emit('close', { saved: false })"
     >
@@ -144,6 +144,8 @@
                                 <button
                                     type="button"
                                     class="inline-flex items-center justify-center rounded-md p-1.5 text-text-subtle hover:text-danger hover:bg-danger-surface transition-colors"
+                                    :aria-label="$t('Remove individual time')"
+                                    v-tooltip.bottom="{ value: $t('Remove individual time'), class: 'aw-tooltip' }"
                                     @click="deleteIndividualTimeByIndex(index)"
                                 >
                                     <PropertyIcon name="IconTrash" class="h-4 w-4" stroke-width="1.5" />
@@ -206,6 +208,8 @@
                     <button
                         type="button"
                         class="inline-flex items-center justify-center rounded-md p-1.5 text-text-subtle hover:text-danger hover:bg-danger-surface transition-colors"
+                        :aria-label="$t('Remove project')"
+                        v-tooltip.bottom="{ value: $t('Remove project'), class: 'aw-tooltip' }"
                         @click="selectAssignmentProject(null)"
                     >
                         <PropertyIcon name="IconX" class="h-4 w-4" stroke-width="1.5" />

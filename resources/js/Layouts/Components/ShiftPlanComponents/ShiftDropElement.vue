@@ -220,8 +220,17 @@ const props = defineProps<{
     compact?: boolean
 }>()
 
+/** dropFeedback: String = Fehlermeldung; Objekt = Erfolg nach Zuweisung (Plan zeigt Toast) */
+type DropSuccessFeedback = {
+    kind: 'success'
+    userId: number | string
+    userType: 0 | 1 | 2
+    qualificationName: string
+    isOverbooked: boolean
+}
+
 const emit = defineEmits<{
-    (e: 'dropFeedback', msg: string): void
+    (e: 'dropFeedback', msg: string | DropSuccessFeedback): void
     (e: 'desiresReload', droppedId: number | string, type: 0 | 1 | 2, seriesShiftData?: any): void
     (e: 'handleShiftAndEventForMultiEdit', checked: boolean, shift: any, event: any): void
     (e: 'clickOnEdit', shift: any): void
@@ -791,6 +800,15 @@ function assignUser(user: any, shiftQualificationId: number, isOverbooked: boole
         }
     ).then(() => {
         emit('desiresReload', user.id, user.type, seriesShiftData.value || undefined)
+        // Erfolgsrückmeldung („{Name} zugewiesen: {Funktion}") — der Plan löst den Namen
+        // über seine Personenliste auf (Drag-Payload enthält keinen Namen).
+        emit('dropFeedback', {
+            kind: 'success',
+            userId: user.id,
+            userType: user.type,
+            qualificationName: getShiftQualificationById(shiftQualificationId)?.name ?? '',
+            isOverbooked,
+        })
     }).catch(() => {
         emit('dropFeedback',
             (proxy as any)?.$t?.('Saving failed') ?? 'Saving failed'

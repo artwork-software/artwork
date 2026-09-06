@@ -52,12 +52,24 @@
                 classesButton="ui-button"
             />
         </div>
-        <!--        <div v-if="type !== 'freelancer' && type !== 'service_provider'">-->
-        <!--            {{ $t('Planned/target') }}: {{ totalPlannedWorkingHours.toFixed(1) }} / {{ totalHoursExpectedWork }}-->
-        <!--        </div>-->
-        <!--        <div v-if="type === 'freelancer' || type === 'service_provider'">-->
-        <!--            {{ $t('Planned') }}: {{ totalPlannedWorkingHours?.toFixed(1) }}-->
-        <!--        </div>-->
+    </div>
+    <!-- Geplant/Soll für den gewählten Zeitraum. Das Soll ist die Wochenstundenzahl
+         anteilig auf die Tage des Zeitraums umgerechnet (ohne Urlaub/Feiertage) —
+         deshalb nur angezeigt, wenn Wochenstunden hinterlegt sind. -->
+    <div v-if="plannedWorkTime" class="ml-4 mb-2 text-xs text-text-muted flex items-center gap-1">
+        <span>{{ $t('Planned') }} {{ plannedWorkTime }} h</span>
+        <template v-if="targetWorkTime">
+            <span class="text-text-subtle">·</span>
+            <span>{{ $t('Target') }} {{ targetWorkTime }} h</span>
+            <ToolTipComponent
+                direction="bottom"
+                :tooltip-text="$t('Target: {hours} h per week, pro rata for the selected period (vacation and holidays are not deducted).', { hours: weeklyWorkingHours })"
+                icon="IconInfoCircle"
+                icon-size="h-3.5 w-3.5 text-text-subtle"
+                classes-button=""
+                no-relative
+            />
+        </template>
     </div>
     <CalendarAboSettingModal v-if="showCalendarAboSettingModal" @close="closeCalendarAboSettingModal"
                              :crafts="crafts"/>
@@ -112,6 +124,7 @@ export default {
         'weeklyWorkingHours',
         'type',
         'totalPlannedWorkingHours',
+        'plannedWorkTime',
         'crafts',
         'user_to_edit_id'
     ],
@@ -140,6 +153,23 @@ export default {
 
             // Calculate the total number of hours that need to be worked
             return (totalDays * hoursPerDay).toFixed(1);
+        },
+        // Soll als HH:MM: Wochenstunden × Tage/7 — nur für User mit hinterlegten Wochenstunden
+        targetWorkTime() {
+            const weekly = Number(this.weeklyWorkingHours)
+            if (this.type !== 'user' || !weekly || weekly <= 0 || !Array.isArray(this.dateValue) || this.dateValue.length < 2) {
+                return null
+            }
+            const startDate = new Date(`${this.dateValue[0]}T00:00:00`)
+            const endDate = new Date(`${this.dateValue[1]}T00:00:00`)
+            if (Number.isNaN(startDate.getTime()) || Number.isNaN(endDate.getTime()) || endDate < startDate) {
+                return null
+            }
+            const totalDays = Math.round((endDate - startDate) / (1000 * 60 * 60 * 24)) + 1
+            const minutes = Math.round(totalDays * (weekly / 7) * 60)
+            const h = Math.floor(minutes / 60)
+            const m = minutes % 60
+            return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`
         },
         checkIfThisIsMe() {
             if (this.$page.props.auth.user.id) {

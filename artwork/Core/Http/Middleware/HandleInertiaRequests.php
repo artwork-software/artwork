@@ -171,6 +171,23 @@ class HandleInertiaRequests extends Middleware
                 || ($user && $user->hasRole(RoleEnum::ARTWORK_ADMIN->value))
             );
 
+        // Genehmiger*innen des Freigabe-Workflows (Namen) für den Festschreib-Dialog
+        // („Dienstplan zur Freigabe einreichen"); nur bei aktivem Workflow abgefragt.
+        $shiftCommitApprovers = ($shiftCommitWorkflowEnabled && $user)
+            ? ShiftCommitWorkflowUser::query()
+                ->with('user:id,first_name,last_name')
+                ->get()
+                ->map(static fn (ShiftCommitWorkflowUser $workflowUser): ?array => $workflowUser->user
+                    ? [
+                        'id' => $workflowUser->user->id,
+                        'name' => trim($workflowUser->user->first_name . ' ' . $workflowUser->user->last_name),
+                    ]
+                    : null)
+                ->filter()
+                ->values()
+                ->all()
+            : [];
+
         // Drei exists()-Queries pro Request vermeiden — Ergebnis ändert sich selten, 5 Minuten cachen
         $canSeeIncomingRequests = $user
             ? Cache::remember(
@@ -287,6 +304,7 @@ class HandleInertiaRequests extends Middleware
                 'canSeeShiftPlanReview'        => $canSeeShiftPlanReview,
                 'canSeeShiftPlanChangeList'    => $canSeeShiftPlanChangeList,
                 'canSeeShiftPlanRequestedPlans' => $canSeeShiftPlanRequestedPlans,
+                'shiftCommitApprovers'          => $shiftCommitApprovers,
                 'canSeeEventVerifications'      => $canSeeEventVerifications,
                 'canSeeIncomingRequests'         => $canSeeIncomingRequests,
                 'canViewBiDashboard'             => $canViewBiDashboard,

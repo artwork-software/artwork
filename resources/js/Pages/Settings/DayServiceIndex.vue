@@ -50,19 +50,23 @@
                         </div>
                     </div>
 
-                    <div class="flex items-center gap-2">
-                        <div class="flex items-center gap-x-2">
-                            <IconEdit class="h-6 w-6 cursor-pointer flex items-center" @click="editDayService(ds)" />
-                            <IconTrash class="h-6 w-6 cursor-pointer flex items-center text-danger" @click="openDeleteDayServiceModal(ds)" />
-                        </div>
-
-                        <button
-                            type="button"
-                            class="inline-flex items-center justify-center rounded-full p-1.5 text-text-subtle transition hover:bg-surface-sunken hover:text-text-muted focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border"
+                    <div class="flex items-center gap-1">
+                        <ToolTipComponent
+                            direction="bottom"
+                            :tooltip-text="$t('Edit')"
+                            :icon="IconEdit"
+                            icon-size="h-5 w-5"
+                            classes-button="ui-button"
                             @click="editDayService(ds)"
-                        >
-                            <IconEdit class="size-5" />
-                        </button>
+                        />
+                        <ToolTipComponent
+                            direction="bottom"
+                            :tooltip-text="$t('Delete')"
+                            :icon="IconTrash"
+                            icon-size="h-5 w-5 text-danger"
+                            classes-button="ui-button"
+                            @click="openDeleteDayServiceModal(ds)"
+                        />
                     </div>
                 </div>
             </div>
@@ -107,6 +111,7 @@ import { IconCirclePlus, IconEdit, IconTrash } from '@tabler/icons-vue'
 import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
 import {router} from "@inertiajs/vue3";
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
+import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
 import SettingsGuideBanner from "@/Artwork/Guide/SettingsGuideBanner.vue";
 
 defineOptions({ name: 'DayServiceIndex' })

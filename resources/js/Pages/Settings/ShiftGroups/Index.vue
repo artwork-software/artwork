@@ -37,8 +37,13 @@
                 <BaseUIButton @click="showCreateOrUpdateShiftGroupModal = true" label="New shift group" use-translation is-add-button />
             </div>
             <div class="mt-5">
-                <div class="mb-5 text-sm/5 font-bold text-text-subtle" v-if="shiftGroups.length === 0">
-                    {{$t('No shift groups found.')}}
+                <div v-if="shiftGroups.length === 0" class="flex flex-col items-center justify-center py-12 text-center">
+                    <IconStack2 class="h-10 w-10 text-text-subtle mb-3" stroke-width="1.5" />
+                    <p class="text-sm font-medium text-text">{{ $t('No shift groups found.') }}</p>
+                    <p class="mt-1 text-xs text-text-subtle max-w-md">
+                        {{ $t('Shift groups categorise shifts, e.g. for filtering and evaluations. Create the first group to get started.') }}
+                    </p>
+                    <BaseUIButton class="mt-4" @click="showCreateOrUpdateShiftGroupModal = true" label="New shift group" use-translation is-add-button />
                 </div>
                 <ul v-else role="list" class="w-full">
                     <li v-for="(shiftGroup) in shiftGroups"
@@ -68,7 +73,7 @@ import BasePageTitle from "@/Artwork/Titles/BasePageTitle.vue";
 import SingleShiftGroup from "@/Pages/Settings/ShiftGroups/Components/SingleShiftGroup.vue";
 import {ref} from "vue";
 import CreateOrUpdateShiftGroupModal from "@/Pages/Settings/ShiftGroups/Components/CreateOrUpdateShiftGroupModal.vue";
-import {IconCheck, IconX} from "@tabler/icons-vue";
+import {IconCheck, IconStack2, IconX} from "@tabler/icons-vue";
 import SwitchIconTooltip from "@/Artwork/Toggles/SwitchIconTooltip.vue";
 import SettingsGuideBanner from "@/Artwork/Guide/SettingsGuideBanner.vue";
 import {router, usePage} from "@inertiajs/vue3";

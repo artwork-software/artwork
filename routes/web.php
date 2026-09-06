@@ -2563,6 +2563,13 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
             [UserShiftCalendarAboController::class, 'update']
         )->name('user.shift.calendar.abo.update');
 
+        // user.shift.calendar.abo.renew — Widerruf: neuer Feed-Token, alter Link wird ungültig
+        // (Besitzer-Prüfung im Controller, wie beim Update-Request)
+        Route::delete(
+            '/shift/calendar/abo/{userShiftCalendarAbo}/renew',
+            [UserShiftCalendarAboController::class, 'destroy']
+        )->name('user.shift.calendar.abo.renew');
+
         // save user calendar abo
         Route::post(
             '/calendar/abo/create',

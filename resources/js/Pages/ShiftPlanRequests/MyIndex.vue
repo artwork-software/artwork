@@ -1,16 +1,16 @@
 <template>
-    <AppLayout :title="isPlanner ? $t('Requested duty rosters') : $t('Meine Dienstplananfragen')">
+    <AppLayout :title="isPlanner ? $t('Requested duty rosters') : $t('My approval requests')">
         <div class="px-4 py-6 sm:px-6 lg:px-8 max-w-7xl mx-auto space-y-6">
             <!-- Header -->
             <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                     <h1 class="text-xl font-semibold text-text">
-                        {{ isPlanner ? $t('Shift plan requests') : $t('Meine Dienstplananfragen') }}
+                        {{ isPlanner ? $t('Shift plan requests') : $t('My approval requests') }}
                     </h1>
                     <p class="mt-1 text-sm text-text-subtle max-w-2xl">
                         {{ isPlanner
                             ? $t('Here you can see all shift plan requests grouped by craft.')
-                            : $t('Hier siehst du alle deine angefragten Dienstpläne, gruppiert nach Gewerken.')
+                            : $t('Here you can see all duty rosters you requested, grouped by craft.')
                         }}
                     </p>
                 </div>
@@ -23,7 +23,7 @@
                 class="rounded-2xl border border-dashed border-border-subtle bg-white p-8 text-center"
             >
                 <p class="text-sm text-text-subtle">
-                    {{ $t('Du hast keine Dienstplananfragen.') }}
+                    {{ $t('You have no approval requests.') }}
                 </p>
             </div>
 
@@ -51,10 +51,10 @@
                                 </h2>
                                 <p class="text-xs text-text-subtle">
                                     <span v-if="craft.assignable_by_all">
-                                        {{ $t('Zuweisbar von allen Planer:innen') }}
+                                        {{ $t('Assignable by all planners') }}
                                     </span>
                                     <span v-else>
-                                        {{ $t('Eingeschränkte Zuweisung') }}
+                                        {{ $t('Restricted assignment') }}
                                     </span>
                                 </p>
                             </div>
@@ -64,7 +64,7 @@
                             <span
                                 class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium bg-surface-sunken text-text-muted"
                             >
-                                {{ $t('Anfragen') }}: {{ craft.shift_plan_requests.length }}
+                                {{ $t('Requests') }}: {{ craft.shift_plan_requests.length }}
                             </span>
                         </div>
                     </div>
@@ -95,7 +95,7 @@
                                             </span>
                                         </div>
                                         <p class="mt-0.5 text-xs text-text-subtle">
-                                            {{ $t('Angefragt am') }}:
+                                            {{ $t('Requested on') }}:
                                             {{ formatDateTime(request.requested_at) }}
                                         </p>
                                         <p v-if="isPlanner && request.requested_by_name" class="text-xs text-text-subtle">
@@ -118,7 +118,7 @@
                             v-else
                             class="px-4 py-6 text-center text-xs text-text-subtle"
                         >
-                            {{ $t('Keine Dienstplananfragen für dieses Gewerk.') }}
+                            {{ $t('No approval requests for this craft.') }}
                         </div>
                     </div>
                 </div>
@@ -147,13 +147,13 @@ const props = defineProps({
 const statusLabel = (status) => {
     switch (status) {
         case "pending":
-            return t('Prüfung ausstehend');
+            return t('pending');
         case "approved":
         case "accepted":
-            return t('Angenommen');
+            return t('approved');
         case "rejected":
         case "denied":
-            return t('Abgelehnt');
+            return t('rejected');
         default:
             return status;
     }

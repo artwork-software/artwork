@@ -1046,7 +1046,7 @@ class ShiftController extends Controller
         ChangeService $changeService,
     ): bool|RedirectResponse {
         if (!auth()->user()?->can('can plan shifts') && !auth()->user()?->hasRole('artwork admin')) {
-            abort(403);
+            abort(403, __('You need the permission "Plan shifts" for this.'));
         }
 
         // Ohne Validierung führte eine fehlende/unbekannte Qualifikations- oder
@@ -1059,7 +1059,10 @@ class ShiftController extends Controller
 
         $isOverbooked = $request->boolean('isOverbooked');
         if ($isOverbooked && !app(\App\Settings\ShiftSettings::class)->allow_shift_overbooking) {
-            abort(403, 'Shift overbooking is not enabled for this instance.');
+            abort(
+                403,
+                __('Overbooking is not active in this organisation. Admins can enable it under Shift settings → Overbooking.')
+            );
         }
 
         $isShiftTab = $request->boolean('isShiftTab');
@@ -1990,6 +1993,16 @@ class ShiftController extends Controller
         });
 
         broadcast(new MultiShiftCreateInShiftPlan($createdShifts));
+
+        // Rückmeldung mit Anzahl für den globalen Flash-Toast (Inertia leitet bei leerer
+        // Antwort per onEmptyResponse zurück; die Flash-Nachricht überlebt den Redirect).
+        $createdCount = $createdShifts->count();
+        $request->session()->flash(
+            'success',
+            $createdCount === 1
+                ? __('1 shift created.')
+                : __(':count shifts created.', ['count' => $createdCount])
+        );
     }
 
     public function updateIndividualShiftTime(Request $request)
@@ -2098,7 +2111,7 @@ class ShiftController extends Controller
         $isOwnPivot = $pivot->employable_type === User::class
             && (int) $pivot->employable_id === (int) $authUser?->id;
         if (!$isOwnPivot && !$authUser?->can(PermissionEnum::SHIFT_PLANNER->value)) {
-            abort(403);
+            abort(403, __('You need the permission "Plan shifts" for this.'));
         }
 
         $beforeDescription = $pivot->short_description;

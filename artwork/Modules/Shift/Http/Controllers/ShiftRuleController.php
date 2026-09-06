@@ -23,6 +23,7 @@ use Artwork\Modules\User\Models\UserContract;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -291,7 +292,16 @@ class ShiftRuleController extends Controller
                 'message' => __('Status successfully updated')
             ]);
         } catch (\Exception $e) {
-            return redirect()->back()->with('error', 'Error updating status: ' . $e->getMessage());
+            // Rohe Exception-Texte gehören ins Log, nicht in die Oberfläche
+            Log::error('Shift rule violation status update failed', [
+                'violation_id' => $violationId,
+                'exception' => $e,
+            ]);
+
+            return redirect()->back()->with(
+                'error',
+                __('The violation could not be processed. Please reload the page and try again.')
+            );
         }
     }
 
@@ -389,7 +399,10 @@ class ShiftRuleController extends Controller
     public function processViolation(ProcessViolationRequest $request, ShiftRuleViolation $violation): RedirectResponse
     {
         if (!in_array($violation->status, ['active', 'resolved'], true)) {
-            return redirect()->back()->with('error', __('Violation is not active.'));
+            return redirect()->back()->with(
+                'error',
+                __('This violation has already been processed or ignored. Open it from the history to see details.')
+            );
         }
 
         if ($violation->status === 'resolved' && $this->shiftRuleService->hasGrantedCompensation($violation)) {
@@ -404,7 +417,7 @@ class ShiftRuleController extends Controller
         $days = (float) $validated['compensation_days'];
         if (round($days * 2) !== (float) ($days * 2)) {
             return redirect()->back()->withErrors([
-                'compensation_days' => 'Compensation days must be in 0.5 increments.',
+                'compensation_days' => __('Compensation days are entered in half days (0.5; 1; 1.5 …).'),
             ]);
         }
 
@@ -482,7 +495,7 @@ class ShiftRuleController extends Controller
 
             if (!$secondHalf) {
                 throw \Illuminate\Validation\ValidationException::withMessages([
-                    'half_day_period' => 'Für "Beides" werden zwei offene halbe freie Tage benötigt.',
+                    'half_day_period' => __('"Both" requires two open half days off. Create the second half day first via "Grant compensation day".'),
                 ]);
             }
 

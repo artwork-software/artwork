@@ -140,7 +140,7 @@ class ShiftRuleViolation extends Model implements WorkflowSubject
 
     public function getViolationMessage(): string
     {
-        return $this->shiftRule?->description ?? 'Rule violation detected';
+        return $this->shiftRule?->description ?? __('Rule violation');
     }
 
     /**

@@ -515,7 +515,7 @@ class ShiftPlanRequestController extends Controller
                 ]);
 
             if ($flipped === 0) {
-                return back()->with('error', __('Shift plan request has already been processed.'));
+                return back()->with('error', __('This release request has already been decided. You can see the current status under "My release requests".'));
             }
 
             $shiftPlanRequest->refresh();
@@ -594,7 +594,7 @@ class ShiftPlanRequestController extends Controller
         // Nur offene Anfragen können zurückgezogen werden — genehmigte/abgelehnte
         // Anfragen sind Historie und dürfen nicht mehr entfernt werden.
         if ($shiftPlanRequest->status !== 'pending') {
-            return back()->with('error', __('Shift plan request has already been processed.'));
+            return back()->with('error', __('This release request has already been decided. You can see the current status under "My release requests".'));
         }
 
         DB::transaction(function () use ($shiftPlanRequest): void {
@@ -680,7 +680,7 @@ class ShiftPlanRequestController extends Controller
                 ]);
 
             if ($flipped === 0) {
-                return back()->with('error', __('Shift plan request has already been processed.'));
+                return back()->with('error', __('This release request has already been decided. You can see the current status under "My release requests".'));
             }
 
             $shiftPlanRequest->refresh();
@@ -1600,7 +1600,7 @@ class ShiftPlanRequestController extends Controller
         // voellig andere Schicht laden und die Feld-Reverts dort anwenden.
         if ($shiftChange->subject_type !== Shift::class) {
             return back()->withErrors([
-                'message' => 'Only shift changes can be reverted.',
+                'message' => __('Only shift changes can be reverted.'),
             ]);
         }
 
@@ -1608,7 +1608,7 @@ class ShiftPlanRequestController extends Controller
         // Change aus Request A ueber die URL von Request B revertieren.
         if ((int) $shiftChange->shift_plan_request_id !== (int) $shiftPlanRequest->id) {
             return back()->withErrors([
-                'message' => 'The specified change does not belong to the provided shift plan request.',
+                'message' => __('This change does not belong to this release request. Please reload the page.'),
             ]);
         }
 
@@ -1617,7 +1617,7 @@ class ShiftPlanRequestController extends Controller
 
         if (! $shift) {
             return back()->withErrors([
-                'message' => 'The shift associated with this change could not be found.',
+                'message' => __('The shift belonging to this change no longer exists.'),
             ]);
         }
 
@@ -1629,7 +1629,7 @@ class ShiftPlanRequestController extends Controller
 
         if (! $belongsToRequest) {
             return back()->withErrors([
-                'message' => 'The specified change does not belong to the provided shift plan request.',
+                'message' => __('This change does not belong to this release request. Please reload the page.'),
             ]);
         }
 
@@ -1637,7 +1637,7 @@ class ShiftPlanRequestController extends Controller
 
         if (! is_array($fieldChanges) || empty($fieldChanges)) {
             return back()->withErrors([
-                'message' => 'No field changes found to revert.',
+                'message' => __('There is nothing to revert for this change.'),
             ]);
         }
 

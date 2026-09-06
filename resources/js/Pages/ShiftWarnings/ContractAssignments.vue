@@ -12,6 +12,13 @@
                 <p class="mt-1 text-xs text-text-subtle max-w-md">
                     {{ $t('Create contracts in the \'Contracts\' tab first — rules are assigned per contract.') }}
                 </p>
+                <BaseUIButton
+                    class="mt-4"
+                    :label="$t('Go to contracts')"
+                    icon="IconFileDescription"
+                    is-add-button
+                    @click="router.visit(route('user-contract-settings.index'))"
+                />
             </div>
 
             <div v-else class="overflow-x-auto">
@@ -178,7 +185,7 @@
 
 <script setup>
 import { ref, defineAsyncComponent } from 'vue'
-import { Link, useForm } from '@inertiajs/vue3'
+import { Link, router, useForm } from '@inertiajs/vue3'
 import { useI18n } from 'vue-i18n'
 import { IconFileDescription } from '@tabler/icons-vue'
 import ShiftSettingsHeader from '@/Pages/Settings/Components/ShiftSettingsHeader.vue'

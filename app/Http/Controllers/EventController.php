@@ -1634,7 +1634,8 @@ class EventController extends Controller
             $craftIds = [$request->get('craft_id')];
         }
 
-        foreach (array_unique(array_map('intval', array_filter($craftIds))) as $craftId) {
+        $craftIds = array_unique(array_map('intval', array_filter($craftIds)));
+        foreach ($craftIds as $craftId) {
             $this->shiftService->commitShiftsByDate(
                 $start,
                 $end,
@@ -1643,6 +1644,13 @@ class EventController extends Controller
                 $request->filled('year') ? (int) $request->year : null
             );
         }
+
+        // Rueckmeldung fuer den globalen Flash-Toast (Block 2): vorher schloss das Modal ohne jede Meldung.
+        $request->session()->flash('success', trans_choice(
+            'Duty roster committed for calendar week :week (:count craft).|Duty roster committed for calendar week :week (:count crafts).',
+            count($craftIds),
+            ['week' => (int) $request->week_number, 'count' => count($craftIds)]
+        ));
     }
 
     public function changeCommitShifts(Request $request, Shift $shift, GeneralSettings $generalSettings): void

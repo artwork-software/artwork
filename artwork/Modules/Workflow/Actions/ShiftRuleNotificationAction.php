@@ -69,7 +69,11 @@ class ShiftRuleNotificationAction implements WorkflowAction
         $rule = $violation->shiftRule;
         $violationData = $violation->violation_data;
         
-        return "Regelverstoß erkannt: {$rule->name} am {$violation->violation_date}. " . 
-               ($violationData['message'] ?? 'Details siehe Schichtplan.');
+        return __('Rule violation detected: :rule on :date.', [
+                'rule' => $rule?->name ?? __('Rule violation'),
+                'date' => $violation->violation_date instanceof \DateTimeInterface
+                    ? $violation->violation_date->format('d.m.Y')
+                    : (string) $violation->violation_date,
+            ]) . ' ' . ($violationData['message'] ?? __('See the shift plan for details.'));
     }
 }

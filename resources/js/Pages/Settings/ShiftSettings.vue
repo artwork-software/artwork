@@ -600,6 +600,9 @@
                     :title="$t('Shifts in shift plan subscription')"
                     :description="$t('When a user subscribes to their own shift plan, the following shifts should appear:')"
                 />
+                <p class="text-xs text-text-muted">
+                    {{ $t('If the option is active, shifts that are not yet committed also appear in the calendar subscription, marked with [vorläufig]. They can still change.') }}
+                </p>
                 <SwitchGroup as="div" class="flex flex-row items-center gap-x-2 cursor-pointer mt-4">
                     <SwitchLabel as="span" class="text-sm">
                         <span class="flex items-center gap-x-1">

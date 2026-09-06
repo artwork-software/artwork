@@ -31,7 +31,7 @@
                                     <div class="ml-4 flex shrink-0">
                                         <button type="button" @click="hideNotice"
                                                 class="inline-flex rounded-md text-text-subtle hover:text-text-muted focus:outline-2 focus:outline-offset-2 focus:outline-accent-600">
-                                            <span class="sr-only">Close</span>
+                                            <span class="sr-only">{{ $t('Close') }}</span>
                                             <PropertyIcon name="IconX" class="size-5" aria-hidden="true"/>
                                         </button>
                                     </div>
@@ -52,7 +52,7 @@
                             {{ showCalendarWarning }}
                         </p>
                         <button type="button" class="-m-1.5 flex-none p-1.5">
-                            <span class="sr-only">Dismiss</span>
+                            <span class="sr-only">{{ $t('Dismiss') }}</span>
                             <PropertyIcon name="IconX" class="size-5 text-white" aria-hidden="true"
                                           @click="showCalendarWarning = ''"/>
                         </button>
@@ -121,9 +121,23 @@
 
             <div class="z-40 min-h-0" :style="{ '--dynamic-height': showUserOverview ? windowHeight + 'px' : '100%' }">
                 <div
-                    class="min-h-0 h-[calc(var(--dynamic-height))]"
+                    class="min-h-0 h-[calc(var(--dynamic-height))] relative"
                     :class="[isFullscreen ? '' : '']"
                 >
+                    <!-- Leerzustand einmal pro Raster (keine Räume / Stammdaten fehlen / keine Schichten) -->
+                    <ShiftPlanEmptyState
+                        v-if="shiftPlanLoaded && !emptyStateDismissed && !multiEditModeCalendar"
+                        overlay
+                        :rooms-count="shiftPlanArrayRef.length"
+                        :crafts-count="craftsResolved?.length ?? 0"
+                        :functions-count="shiftQualifications?.length ?? 0"
+                        :has-shifts="planHasShifts"
+                        :filters-active="planFiltersActive"
+                        :hide-unoccupied-rooms="!!calendarSettings?.hide_unoccupied_rooms"
+                        @add-shift="openAddShiftForFirstCell"
+                        @add-from-template="openAddShiftByPresetForFirstCell"
+                        @dismiss="emptyStateDismissed = true"
+                    />
                     <Virtual2DGridWithHeader
                         ref="shiftGridRef"
                         class="h-full"
@@ -947,6 +961,7 @@
         :show="showShiftsQualificationsAssignmentModal"
         :user="userForMultiEdit"
         :shifts="showShiftsQualificationsAssignmentModalShifts"
+        :rooms="shiftPlanArrayRef"
         @close="closeShiftsQualificationsAssignmentModal"
     />
     <CellMultiEditModal
@@ -1057,6 +1072,7 @@ import axios from 'axios'
 import {Link, router, usePage} from '@inertiajs/vue3'
 import {IconAlertTriangle} from '@tabler/icons-vue'
 import ShiftPlanFunctionBar from '@/Layouts/Components/ShiftPlanComponents/ShiftPlanFunctionBar.vue'
+import ShiftPlanEmptyState from '@/Layouts/Components/ShiftPlanComponents/ShiftPlanEmptyState.vue'
 import ShiftHeader from '@/Pages/Shifts/ShiftHeader.vue'
 import {MenuItem} from '@headlessui/vue'
 import BaseFilter from '@/Layouts/Components/BaseFilter.vue'
@@ -1604,6 +1620,50 @@ const openAddShiftByPresetOrGroup = (day, roomId) => {
 
 
     showAddShiftByPresetOrGroupModal.value = true
+}
+
+// --- Leerzustand des Rasters (ShiftPlanEmptyState) ---
+// Erst nach dem Initial-Load anzeigen, sonst blitzt die Karte während Meta/Batch auf.
+const shiftPlanLoaded = ref(false)
+const emptyStateDismissed = ref(false)
+
+const firstPlanDay = computed(() => (days.value ?? []).find((d: any) => !d?.isExtraRow) ?? null)
+
+/** Gibt es im geladenen Zeitraum mindestens eine Schicht (unabhängig von Anzeige-Filtern)? */
+const planHasShifts = computed<boolean>(() => {
+    for (const room of shiftPlanArrayRef.value) {
+        // __v lesen, damit Broadcast-Mutationen (bumpRoomVersion) den Zustand aktualisieren
+        void room?.__v
+        if (room?.shiftsById && Object.keys(room.shiftsById).length > 0) return true
+        const content = room?.content ?? {}
+        for (const key of Object.keys(content)) {
+            const cell = content[key]
+            if (Array.isArray(cell?.shifts) && cell.shifts.length > 0) return true
+            const ids = cell?.shiftIds ?? cell?.shift_ids ?? cell?.shiftIDs
+            if (Array.isArray(ids) && ids.length > 0) return true
+        }
+    }
+    return false
+})
+
+/** Aktive Dienstplan-Filter (Räume, Gewerke, Terminarten …) — Hinweis im Leerzustand „keine Räume" */
+const planFiltersActive = computed<boolean>(() => {
+    const filters = (props.user_filters ?? {}) as Record<string, any>
+    return Object.values(filters).some((value) => Array.isArray(value) && value.length > 0)
+})
+
+function openAddShiftForFirstCell() {
+    const room = shiftPlanArrayRef.value[0]
+    const day = firstPlanDay.value
+    if (!room || !day) return
+    openAddShiftForRoomAndDay(day.withoutFormat, room.roomId ?? room.room_id ?? room.id)
+}
+
+function openAddShiftByPresetForFirstCell() {
+    const room = shiftPlanArrayRef.value[0]
+    const day = firstPlanDay.value
+    if (!room || !day) return
+    openAddShiftByPresetOrGroup(day, room)
 }
 
 const shiftPlanArrayRef = computed<any[]>(() => normalizeShiftPlan(newShiftPlanData.value))
@@ -2693,6 +2753,9 @@ async function initializeShiftPlan() {
     const initialCurrentDay = pickInitialCurrentDay(days.value)
     currentDayOnView.value = initialCurrentDay
     currentDayRef.value = initialCurrentDay
+
+    emptyStateDismissed.value = false
+    shiftPlanLoaded.value = true
 }
 
 
@@ -3780,7 +3843,42 @@ function checkIfEventHasShiftsToDisplay(event: any) {
     return shifts.length > 0
 }
 
-function showDropFeedback(feedback: string) {
+/** Anzeigename einer Person aus der geladenen Personenliste (Drag-Payload trägt keinen Namen) */
+function resolveWorkerDisplayName(id: number | string | undefined, type: 0 | 1 | 2 | undefined): string {
+    if (id == null || type == null) return ''
+    const numericId = Number(id)
+    let element: any = null
+    if (type === 0) {
+        element = (usersForShiftsResolved.value ?? []).find((x: any) => Number(x?.user?.id) === numericId)?.user
+    } else if (type === 1) {
+        element = (freelancersForShiftsResolved.value ?? []).find((x: any) => Number(x?.freelancer?.id) === numericId)?.freelancer
+    } else {
+        element = (serviceProvidersForShiftsResolved.value ?? []).find((x: any) => Number(x?.service_provider?.id) === numericId)?.service_provider
+    }
+    if (!element) return $t('Person')
+    const name = element.full_name
+        ?? element.display_name
+        ?? element.provider_name
+        ?? element.name
+        ?? `${element.first_name ?? ''} ${element.last_name ?? ''}`.trim()
+    return name || $t('Person')
+}
+
+/**
+ * Rückmeldung nach Drag & Drop aus dem ShiftDropElement.
+ * String = Fehlermeldung (rote Leiste wie bisher); Objekt = Erfolg über den Plan-Notice-Toast
+ * („{Name} zugewiesen: {Funktion}"). Rückgängig folgt in Block 5.
+ */
+function showDropFeedback(feedback: string | { kind: 'success' | 'error' | 'info'; userId?: number | string; userType?: 0 | 1 | 2; qualificationName?: string; isOverbooked?: boolean }) {
+    if (feedback && typeof feedback === 'object') {
+        const name = resolveWorkerDisplayName(feedback.userId, feedback.userType)
+        const fn = feedback.qualificationName || $t('Function')
+        const message = feedback.isOverbooked
+            ? $t('{name} assigned: {fn} (overbooked)', {name, fn})
+            : $t('{name} assigned: {fn}', {name, fn})
+        showNotice(feedback.kind ?? 'success', 'Assigned', message)
+        return
+    }
     dropFeedback.value = feedback
     setTimeout(() => {
         dropFeedback.value = null

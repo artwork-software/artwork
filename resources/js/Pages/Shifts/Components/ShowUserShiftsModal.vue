@@ -2,7 +2,7 @@
     <ArtworkBaseModal
         :title="`${day.dayString} ${day.fullDay}`"
         description=""
-        modal-size="max-w-4xl"
+        modal-size="max-w-6xl"
         @close="closeModal"
     >
         <div class="space-y-7 text-sm">
@@ -73,8 +73,9 @@
                 </div>
             </section>
 
-            <div class="">
-                <div class="space-y-6">
+            <div class="grid grid-cols-1 gap-6 lg:grid-cols-12 lg:gap-8">
+                <!-- Linke Spalte: Einsatz (Schichten, Projekte, individuelle Zeiten) -->
+                <div class="space-y-6 lg:col-span-7">
                     <!-- Schichten an diesem Tag -->
                     <section class="space-y-3">
                         <div class="flex items-center justify-between">
@@ -439,119 +440,8 @@
                     </section>
                 </div>
 
-                <!-- Regelverstöße -->
-                <section v-if="(can('can plan shifts') || hasAdminRole()) && user.type === 0" class="space-y-3 mt-6">
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <h3 class="text-xs font-semibold tracking-wide text-text-subtle uppercase">
-                                {{ t('Rule violations') }}
-                            </h3>
-                            <p class="text-[11px] text-text-subtle mt-0.5">
-                                {{ t('Rule violations for this person on this day.') }}
-                            </p>
-                        </div>
-                        <button
-                            type="button"
-                            class="hidden sm:inline-flex items-center gap-1 rounded-full border border-border-subtle bg-white px-2.5 py-1 text-[11px] text-text-muted hover:border-accent-700 hover:text-accent-700 transition-colors"
-                            @click="showAddViolationModal = true"
-                        >
-                            <PropertyIcon name="IconCirclePlus" class="h-3.5 w-3.5" stroke-width="2" />
-                            <span>{{ t('Add rule violation') }}</span>
-                        </button>
-                    </div>
-
-                    <div v-if="violationsForDay.length" class="space-y-2">
-                        <div
-                            v-for="violation in violationsForDay"
-                            :key="violation.id"
-                            class="flex items-center justify-between rounded-lg border border-border-subtle bg-white px-3 py-2 cursor-pointer hover:bg-surface-sunken/80 transition-colors"
-                            @click="openViolationEditModal(violation)"
-                        >
-                            <div class="flex items-center gap-2 text-xs text-text-muted">
-                                <span
-                                    class="inline-block h-2.5 w-2.5 rounded-full"
-                                    :class="violation.shift_rule ? '' : 'bg-warning'"
-                                    :style="violation.shift_rule ? { backgroundColor: violation.shift_rule.warning_color || '#ff0000' } : null"
-                                ></span>
-                                <span class="font-medium">{{ violation.shift_rule?.name || violation.title || t('Rule violation') }}</span>
-                                <span
-                                    :class="violation.severity === 'error' ? 'bg-danger-surface text-danger' : 'bg-warning-surface text-warning'"
-                                    class="inline-flex px-1.5 py-0.5 text-[10px] font-medium rounded-full"
-                                >
-                                    {{ violation.severity === 'error' ? t('Error') : t('Warning') }}
-                                </span>
-                            </div>
-                            <div class="flex items-center gap-2">
-                                <span v-if="violation.is_manual" class="text-[10px] text-text-subtle">
-                                    {{ t('Manual violation') }}
-                                </span>
-                                <span v-if="violation.compensation_days" class="text-[10px] text-success">
-                                    {{ violation.compensation_days }} {{ t('Days') }}
-                                </span>
-                                <PropertyIcon name="IconChevronRight" class="h-3.5 w-3.5 text-text-subtle" />
-                            </div>
-                        </div>
-                    </div>
-                    <div
-                        v-else
-                        class="flex items-center gap-2 rounded-xl border border-dashed border-border-subtle bg-surface-sunken/60 px-3 py-3 text-xs text-text-subtle"
-                    >
-                        <span class="inline-block h-1.5 w-1.5 rounded-full bg-border"></span>
-                        <span>{{ t('No rule violations for this day.') }}</span>
-                    </div>
-                </section>
-
-                <!-- Compensation day off info -->
-                <section v-if="compensationDayForDate.length && (can('can plan shifts') || hasAdminRole())" class="mt-5">
-                    <div
-                        v-for="compDay in compensationDayForDate"
-                        :key="compDay.id"
-                        class="rounded-xl border border-special-teal-border bg-special-teal-surface px-4 py-3 mb-2"
-                    >
-                        <div class="flex items-center gap-2 mb-1">
-                            <span class="inline-block h-2 w-2 rounded-full bg-special-teal"></span>
-                            <span class="text-xs font-semibold text-special-teal">
-                                {{ compDay.value >= 1.0 ? t('Compensation day off') : t('Half compensation day off') }}
-                                <template v-if="compDay.half_day_period === 'morning' || compDay.half_day_period === 'afternoon'">
-                                    ({{ compDay.half_day_period === 'morning' ? t('Morning') : t('Afternoon') }})
-                                </template>
-                            </span>
-                        </div>
-                        <div class="text-xs text-special-teal">
-                            <span class="font-medium">{{ t('Compensation day off for:') }}</span>
-                            {{ compDay.violation?.shift_rule?.name || compDay.violation?.title || t('Manual') }}
-                        </div>
-                        <div v-if="compDay.granted_by_user" class="text-xs text-special-teal mt-0.5">
-                            <span class="font-medium">{{ t('Assigned by') }}:</span>
-                            {{ compDay.granted_by_user.first_name }} {{ compDay.granted_by_user.last_name }}
-                        </div>
-                        <button
-                            type="button"
-                            class="mt-1 text-[11px] text-special-teal hover:text-special-teal underline"
-                            @click="revokeCompensationDay(compDay.id)"
-                        >
-                            {{ t('Revoke') }}
-                        </button>
-                    </div>
-                </section>
-
-                <!-- Grant compensation day button -->
-                <section
-                    v-if="!compensationDayForDate.length && user.type === 0 && (can('can plan shifts') || hasAdminRole())"
-                    class="mt-3"
-                >
-                    <button
-                        type="button"
-                        class="inline-flex items-center gap-1 rounded-full border border-special-teal-border bg-white px-2.5 py-1 text-[11px] text-special-teal hover:border-special-teal hover:text-special-teal transition-colors"
-                        @click="showGrantCompensationModal = true"
-                    >
-                        <PropertyIcon name="IconCalendarPlus" class="h-3.5 w-3.5" stroke-width="2" />
-                        <span>{{ t('Grant compensation day') }}</span>
-                    </button>
-                </section>
-
-                <!-- Rechte Spalte: Availability + Kommentar -->
-                <div class="space-y-6 mt-5">
+                <!-- Rechte Spalte: Person & Tag (Verfügbarkeit, Kommentar, Regelverstöße, Ersatzfrei, registrierte Verfügbarkeiten) -->
+                <div class="space-y-6 lg:col-span-5">
                     <!-- Info: Availability locked by compensation day -->
                     <section
                         v-if="compensationDayForDate.length && (user.type === 0 || user.type === 1)"
@@ -677,6 +567,116 @@
                             :show-label="false"
                             no-margin-top
                         />
+                    </section>
+
+                    <!-- Regelverstöße -->
+                    <section v-if="(can('can plan shifts') || hasAdminRole()) && user.type === 0" class="space-y-3">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <h3 class="text-xs font-semibold tracking-wide text-text-subtle uppercase">
+                                    {{ t('Rule violations') }}
+                                </h3>
+                                <p class="text-[11px] text-text-subtle mt-0.5">
+                                    {{ t('Rule violations for this person on this day.') }}
+                                </p>
+                            </div>
+                            <button
+                                type="button"
+                                class="hidden sm:inline-flex items-center gap-1 rounded-full border border-border-subtle bg-white px-2.5 py-1 text-[11px] text-text-muted hover:border-accent-700 hover:text-accent-700 transition-colors"
+                                @click="showAddViolationModal = true"
+                            >
+                                <PropertyIcon name="IconCirclePlus" class="h-3.5 w-3.5" stroke-width="2" />
+                                <span>{{ t('Add rule violation') }}</span>
+                            </button>
+                        </div>
+
+                        <div v-if="violationsForDay.length" class="space-y-2">
+                            <div
+                                v-for="violation in violationsForDay"
+                                :key="violation.id"
+                                class="flex items-center justify-between rounded-lg border border-border-subtle bg-white px-3 py-2 cursor-pointer hover:bg-surface-sunken/80 transition-colors"
+                                @click="openViolationEditModal(violation)"
+                            >
+                                <div class="flex items-center gap-2 text-xs text-text-muted">
+                                    <span
+                                        class="inline-block h-2.5 w-2.5 rounded-full"
+                                        :class="violation.shift_rule ? '' : 'bg-warning'"
+                                        :style="violation.shift_rule ? { backgroundColor: violation.shift_rule.warning_color || '#ff0000' } : null"
+                                    ></span>
+                                    <span class="font-medium">{{ violation.shift_rule?.name || violation.title || t('Rule violation') }}</span>
+                                    <span
+                                        :class="violation.severity === 'error' ? 'bg-danger-surface text-danger' : 'bg-warning-surface text-warning'"
+                                        class="inline-flex px-1.5 py-0.5 text-[10px] font-medium rounded-full"
+                                    >
+                                        {{ violation.severity === 'error' ? t('Error') : t('Warning') }}
+                                    </span>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <span v-if="violation.is_manual" class="text-[10px] text-text-subtle">
+                                        {{ t('Manual violation') }}
+                                    </span>
+                                    <span v-if="violation.compensation_days" class="text-[10px] text-success">
+                                        {{ violation.compensation_days }} {{ t('Days') }}
+                                    </span>
+                                    <PropertyIcon name="IconChevronRight" class="h-3.5 w-3.5 text-text-subtle" />
+                                </div>
+                            </div>
+                        </div>
+                        <div
+                            v-else
+                            class="flex items-center gap-2 rounded-xl border border-dashed border-border-subtle bg-surface-sunken/60 px-3 py-3 text-xs text-text-subtle"
+                        >
+                            <span class="inline-block h-1.5 w-1.5 rounded-full bg-border"></span>
+                            <span>{{ t('No rule violations for this day.') }}</span>
+                        </div>
+                    </section>
+
+                    <!-- Compensation day off info -->
+                    <section v-if="compensationDayForDate.length && (can('can plan shifts') || hasAdminRole())">
+                        <div
+                            v-for="compDay in compensationDayForDate"
+                            :key="compDay.id"
+                            class="rounded-xl border border-special-teal-border bg-special-teal-surface px-4 py-3 mb-2"
+                        >
+                            <div class="flex items-center gap-2 mb-1">
+                                <span class="inline-block h-2 w-2 rounded-full bg-special-teal"></span>
+                                <span class="text-xs font-semibold text-special-teal">
+                                    {{ compDay.value >= 1.0 ? t('Compensation day off') : t('Half compensation day off') }}
+                                    <template v-if="compDay.half_day_period === 'morning' || compDay.half_day_period === 'afternoon'">
+                                        ({{ compDay.half_day_period === 'morning' ? t('Morning') : t('Afternoon') }})
+                                    </template>
+                                </span>
+                            </div>
+                            <div class="text-xs text-special-teal">
+                                <span class="font-medium">{{ t('Compensation day off for:') }}</span>
+                                {{ compDay.violation?.shift_rule?.name || compDay.violation?.title || t('Manual') }}
+                            </div>
+                            <div v-if="compDay.granted_by_user" class="text-xs text-special-teal mt-0.5">
+                                <span class="font-medium">{{ t('Assigned by') }}:</span>
+                                {{ compDay.granted_by_user.first_name }} {{ compDay.granted_by_user.last_name }}
+                            </div>
+                            <button
+                                type="button"
+                                class="mt-1 text-[11px] text-special-teal hover:text-special-teal underline"
+                                @click="revokeCompensationDay(compDay.id)"
+                            >
+                                {{ t('Revoke') }}
+                            </button>
+                        </div>
+                    </section>
+
+                    <!-- Grant compensation day button -->
+                    <section
+                        v-if="!compensationDayForDate.length && user.type === 0 && (can('can plan shifts') || hasAdminRole())"
+                    >
+                        <button
+                            type="button"
+                            class="inline-flex items-center gap-1 rounded-full border border-special-teal-border bg-white px-2.5 py-1 text-[11px] text-special-teal hover:border-special-teal hover:text-special-teal transition-colors"
+                            @click="showGrantCompensationModal = true"
+                        >
+                            <PropertyIcon name="IconCalendarPlus" class="h-3.5 w-3.5" stroke-width="2" />
+                            <span>{{ t('Grant compensation day') }}</span>
+                        </button>
                     </section>
 
                     <!-- Registrierte Verfügbarkeiten -->

@@ -89,6 +89,18 @@
                 :class="confirmationInfo.accepted ? 'text-success' : 'text-danger'"
                 v-tooltip.bottom="{ value: getConfirmationTooltip(person, $t), appendTo: 'body', class: 'aw-tooltip', position: 'bottom', useTranslation: false }"
             />
+            <!-- „Ersatz suchen" direkt neben dem Absage-Status (nur Planer*innen) -->
+            <ToolTipComponent
+                v-if="canSearchReplacement"
+                icon="IconReplaceUser"
+                icon-size="size-4"
+                :stroke="1.75"
+                black-icon
+                classes-button=""
+                :tooltip-text="$t('Find replacement for {name}', { name: person.name || person.full_name || person.provider_name || '' })"
+                direction="bottom"
+                @click="showReplacementModal = true"
+            />
             <ToolTipComponent
                 :icon="findShiftQualification(person.pivot?.shift_qualification_id)?.icon"
                 :tooltip-text="findShiftQualification(person.pivot?.shift_qualification_id)?.name || ''"
@@ -221,6 +233,15 @@
         @close="proxyResponseMode = null"
         @submit="proxyRespond"
     />
+
+    <ShiftReplacementModal
+        v-if="showReplacementModal"
+        :shift="shift"
+        :worker="person"
+        :shift-qualifications="shiftQualifications"
+        @close="showReplacementModal = false"
+        @replaced="onReplaced"
+    />
 </template>
 
 <script setup>
@@ -250,6 +271,7 @@ import BaseMenuItem from "@/Components/Menu/BaseMenuItem.vue";
 import {useShiftPlanLookups} from "@/Composeables/useShiftPlanLookups.js";
 import {useI18n} from "vue-i18n";
 import ShiftConfirmationResponseModal from "@/Layouts/Components/ShiftPlanComponents/ShiftConfirmationResponseModal.vue";
+import ShiftReplacementModal from "@/Pages/Shifts/Components/ShiftReplacementModal.vue";
 import {useShiftWorkerConfirmation} from "@/Composeables/useShiftWorkerConfirmation.js";
 
 const { resolveCraft } = useShiftPlanLookups();
@@ -585,6 +607,23 @@ const proxyRespond = (comment) => {
     const status = proxyResponseMode.value === 'accept' ? 'accepted' : 'declined';
     proxyResponseMode.value = null;
     respondToShift(props.person.pivot.id, status, comment);
+};
+
+// ----- „Ersatz suchen" nach Absage -----
+const showReplacementModal = ref(false);
+
+const canSearchReplacement = computed(() =>
+    !!confirmationInfo.value
+    && !confirmationInfo.value.accepted
+    && !!props.person?.pivot?.id
+    && (can('can plan shifts') || is('artwork admin'))
+);
+
+// Tausch ist serverseitig erledigt (Broadcasts aktualisieren die Kacheln);
+// Props nachladen, damit die Tagesansicht die neue Besetzung ohne Vollreload zeigt.
+const onReplaced = () => {
+    showReplacementModal.value = false;
+    router.reload({ preserveScroll: true, preserveState: true });
 };
 </script>
 

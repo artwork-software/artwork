@@ -1468,6 +1468,17 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         Route::post('/{shift}/assign', [ShiftController::class, 'assignToShift'])
             ->name('shift.assignUserByType');
 
+        // „Ersatz suchen" nach Absage: Kandidat*innen + Tausch in einer Transaktion
+        Route::get('/{shift}/replacement-candidates', [ShiftController::class, 'replacementCandidates'])
+            ->can('can plan shifts')
+            ->name('shift.replacement-candidates');
+        Route::post('/{shift}/replace-worker', [ShiftController::class, 'replaceWorker'])
+            ->can('can plan shifts')
+            ->name('shift.replace-worker');
+        // Vorabprüfung vor dem Drop (Überschneidung/Urlaub/nicht verfügbar), nur Warnung
+        Route::post('/shift/assignment-preflight', [ShiftController::class, 'assignmentPreflight'])
+            ->name('shift.assignment-preflight');
+
         Route::post('/timeline/add/{event}', [ProjectController::class, 'addTimeLineRow'])->name('add.timeline.row');
         Route::post('/timeline/update/magic/{event}', [ShiftController::class, 'updateTimeLine'])
             ->can('can plan shifts')
@@ -1508,6 +1519,13 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
             ->can('can plan shifts');
         Route::post('/bulk-duplicate', [ShiftController::class, 'bulkDuplicate'])
             ->name('shifts.multi.duplicate')
+            ->can('can plan shifts');
+        // „Woche kopieren": Schichten einer KW in bis zu 8 Ziel-KWs (ohne Personen, nicht festgeschrieben)
+        Route::get('/copy-week/preview', [ShiftController::class, 'copyWeekPreview'])
+            ->name('shifts.copy-week.preview')
+            ->can('can plan shifts');
+        Route::post('/copy-week', [ShiftController::class, 'copyWeek'])
+            ->name('shifts.copy-week')
             ->can('can plan shifts');
         Route::delete('/timeline/delete/{timeline}', [ProjectController::class, 'deleteTimeLineRow'])
             ->name('delete.timeline.row');

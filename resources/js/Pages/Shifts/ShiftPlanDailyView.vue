@@ -85,14 +85,7 @@
                             {{ $t('{n} open violations', { n: openViolationsCount }) }}
                         </button>
 
-                        <SwitchIconTooltip
-                            v-if="!props.project"
-                            v-model="dailyViewMode"
-                            :tooltip-text="$t('Switch between weekly and daily view')"
-                            size="md"
-                            @change="changeDailyViewMode"
-                            :icon="IconCalendarWeek"
-                        />
+                        <ShiftPlanViewSwitch v-if="!props.project" current="day" />
 
                         <FunctionBarFilter
                             :user_filters="user_filtersResolved"
@@ -750,7 +743,7 @@ import { useShiftCalendarListener } from "@/Composeables/Listener/useShiftCalend
 import { provideShiftPlanLookups } from "@/Composeables/useShiftPlanLookups.js";
 import FunctionBarFilter from "@/Artwork/Filter/FunctionBarFilter.vue";
 import FunctionBarSetting from "@/Artwork/Filter/FunctionBarSetting.vue";
-import SwitchIconTooltip from "@/Artwork/Toggles/SwitchIconTooltip.vue";
+import ShiftPlanViewSwitch from "@/Layouts/Components/ShiftPlanComponents/ShiftPlanViewSwitch.vue";
 import axios from "axios";
 import { enrichDays } from "@/Composeables/calendarDateUtils.js";
 import { useDayRemarks } from "@/Composeables/useDayRemarks.js";
@@ -2094,16 +2087,8 @@ const eventComponentClosed = () => {
 }
 
 /**
- * Daily view mode
+ * Daily view mode (Umschalter Woche|Tag|Liste: ShiftPlanViewSwitch)
  */
-const changeDailyViewMode = () => {
-    router.patch(
-        route("user.update.daily_view", page.props.auth.user.id),
-        { daily_view: dailyViewMode.value, context: 'shift_plan' },
-        { preserveScroll: false, preserveState: false }
-    )
-}
-
 const changeDailyViewModeValue = (newValue: boolean, onSuccessCallback?: () => void) => {
     dailyViewMode.value = newValue
     router.patch(

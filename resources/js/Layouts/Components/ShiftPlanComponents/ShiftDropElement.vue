@@ -24,6 +24,16 @@
             </span>
             <span class="flex items-center shrink-0 tabular-nums">
                 ({{ computedUsedWorkerCount }}/{{ computedMaxWorkerCount }})
+                <!-- Absage einer eingeplanten Person: rotes Icon, Klick öffnet „Ersatz suchen" -->
+                <button
+                    v-if="declinedWorkers.length"
+                    type="button"
+                    class="ml-1 shrink-0 text-danger"
+                    :title="declinedWorkersTooltip"
+                    @click.stop="openReplacement(declinedWorkers[0])"
+                >
+                    <PropertyIcon name="IconCircleX" class="h-2.5 w-2.5" :stroke-width="2.5" />
+                </button>
                 <!-- Eingeplante Person nicht (mehr) verfügbar: Warndreieck statt Besetzungs-Punkt,
                      rot bei festgeschriebener Schicht -->
                 <svg
@@ -101,6 +111,33 @@
 
                     <div v-if="!showRoom" class="ml-0.5 flex items-center justify-end" :class="multiEditMode ? 'text-[10px]' : 'text-[10px]'">
                         ({{ computedUsedWorkerCount }}/{{ computedMaxWorkerCount }})
+                        <!-- Abgesagte Zuweisung(en): rotes „Abgesagt"-Icon (Tooltip: Name, Datum, Kommentar)
+                             + Icon-Button „Ersatz suchen" je abgesagter Person (nur mit Planungsrecht) -->
+                        <template v-if="declinedWorkers.length">
+                            <ToolTipComponent
+                                icon="IconCircleX"
+                                icon-size="h-3.5 w-3.5"
+                                :stroke="2"
+                                icon-color="text-danger"
+                                :tooltip-text="declinedWorkersTooltip"
+                                direction="top"
+                                classes-button="ml-1"
+                            />
+                            <template v-if="canPlanShifts()">
+                                <ToolTipComponent
+                                    v-for="declinedWorker in declinedWorkers"
+                                    :key="'replace-' + declinedWorker.type + '-' + declinedWorker.id"
+                                    icon="IconReplaceUser"
+                                    icon-size="h-3.5 w-3.5"
+                                    :stroke="2"
+                                    black-icon
+                                    :tooltip-text="$t('Find replacement for {name}', { name: workerDisplayName(declinedWorker) })"
+                                    direction="top"
+                                    classes-button="ml-0.5"
+                                    @click.stop="openReplacement(declinedWorker)"
+                                />
+                            </template>
+                        </template>
                         <!-- Eingeplante Person nicht (mehr) verfügbar: Warndreieck statt Besetzungs-Punkt.
                              Rot bei festgeschriebener Schicht (akuter Konflikt), sonst gelb. -->
                         <svg v-if="unavailableWorkers.length"
@@ -178,6 +215,26 @@
         :dropped-user="showMultipleShiftQualificationSlotsAvailableModalDroppedUser"
         @close="closeMultipleShiftQualificationSlotsAvailableModal"
     />
+
+    <!-- Vorabprüfung (Überschneidung/Urlaub/nicht verfügbar): nur Warnung, Zuweisung bleibt möglich -->
+    <AssignmentConflictModal
+        v-if="showAssignmentConflictModal && pendingAssignment"
+        :conflicts="pendingAssignment.preflight?.conflicts ?? []"
+        :person-name="pendingAssignment.preflight?.person?.name ?? ''"
+        :shift="pendingAssignment.preflight?.shift ?? {}"
+        @cancel="cancelPendingAssignment"
+        @confirm="confirmPendingAssignment"
+    />
+
+    <!-- „Ersatz suchen" nach Absage (Kunden-Entscheidung Block 5C) -->
+    <ShiftReplacementModal
+        v-if="replacementWorker"
+        :shift="shift"
+        :worker="replacementWorker"
+        :shift-qualifications="shiftQualifications"
+        @close="replacementWorker = null"
+        @replaced="onWorkerReplaced"
+    />
 </template>
 
 <script setup lang="ts">
@@ -187,12 +244,15 @@ import axios from 'axios'
 
 import ChooseUserSeriesShift from '@/Pages/Projects/Components/ChooseUserSeriesShift.vue'
 import MultipleShiftQualificationSlotsAvailable from '@/Pages/Projects/Components/MultipleShiftQualificationSlotsAvailable.vue'
+import AssignmentConflictModal from '@/Layouts/Components/ShiftPlanComponents/AssignmentConflictModal.vue'
 // Mixins weiterverwenden (liefert z.B. $can / hasAdminRole o.ä.)
 import IconLib from '@/Mixins/IconLib.vue'
 import Permissions from '@/Mixins/Permissions.vue'
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
 import {useShiftPlanLookups} from "@/Composeables/useShiftPlanLookups.js";
+import ShiftReplacementModal from '@/Pages/Shifts/Components/ShiftReplacementModal.vue'
+import {useShiftWorkerConfirmation} from '@/Composeables/useShiftWorkerConfirmation.js'
 
 // In <script setup> können Optionen inkl. Mixins gesetzt werden
 defineOptions({
@@ -336,6 +396,67 @@ const unavailableWorkersTooltip = computed(() => {
 })
 
 const allowOverbooking = computed(() => !!(page.props as any).allow_shift_overbooking)
+
+/* ---------------- „Ersatz suchen" nach Absage ---------------- */
+const { getConfirmationInfo, getConfirmationTooltip } = useShiftWorkerConfirmation()
+
+// Zuweisungen mit Absage (pivot.confirmation_status === 'declined'); leer, wenn das Feature aus ist.
+const declinedWorkers = computed(() => shiftWorkers.value.filter((w: any) => {
+    const info = getConfirmationInfo(w)
+    return !!info && !info.accepted
+}))
+
+function workerDisplayName(worker: any): string {
+    return worker?.name
+        || worker?.full_name
+        || `${worker?.first_name ?? ''} ${worker?.last_name ?? ''}`.trim()
+        || worker?.provider_name
+        || ''
+}
+
+const declinedWorkersTooltip = computed(() => {
+    const $t = (proxy as any)?.$t ?? ((s: string) => s)
+    const label = $t('Declined')
+    const lines = declinedWorkers.value
+        .map((w: any) => getConfirmationTooltip(w, $t))
+        .filter(Boolean)
+    return lines.length ? `${label}: ${lines.join(' | ')}` : label
+})
+
+const replacementWorker = ref<any | null>(null)
+
+function openReplacement(worker: any) {
+    if (!canPlanShifts() || !worker?.pivot?.id) return
+    replacementWorker.value = worker
+}
+
+// Nach erfolgreichem Tausch: Kachel sofort aktualisieren (Server liefert die neue Worker-Liste),
+// beide Personenzeilen im Plan nachladen, Erfolgs-Toast wie beim Drag&Drop.
+function onWorkerReplaced(payload: { workers?: any[] | null, removed: any, replacement: any }) {
+    replacementWorker.value = null
+    if (Array.isArray(payload?.workers) && props.shift) {
+        props.shift.workers = payload.workers
+    }
+
+    const toNumericType = (type: string): 0 | 1 | 2 =>
+        type === 'user' ? 0 : type === 'freelancer' ? 1 : 2
+
+    if (payload?.removed?.id != null) {
+        emit('desiresReload', payload.removed.id, toNumericType(payload.removed.type))
+    }
+    if (payload?.replacement?.id != null) {
+        emit('desiresReload', payload.replacement.id, toNumericType(payload.replacement.type))
+        emit('dropFeedback', {
+            kind: 'success',
+            userId: payload.replacement.id,
+            userType: toNumericType(payload.replacement.type),
+            qualificationName: payload.replacement.qualification_name
+                ?? getShiftQualificationById(payload.removed?.pivot?.shift_qualification_id)?.name
+                ?? '',
+            isOverbooked: false,
+        })
+    }
+}
 
 const computedShiftsQualificationsWithWorkerCount = computed(() => {
     const rows: Array<{ shift_qualification_id: number, maxWorkerCount: number, workerCount: number, regularWorkerCount: number }> = []
@@ -653,8 +774,61 @@ function closeMultipleShiftQualificationSlotsAvailableModal(user?: any, selected
     showMultipleShiftQualificationSlotsAvailableModalDroppedUser.value = null
 
     if (user && selectedShiftQualificationId) {
-        assignUser(user, selectedShiftQualificationId, !!isOverbooked)
+        runPreflightThenAssign(user, selectedShiftQualificationId, !!isOverbooked)
     }
+}
+
+/* ---------------- Vorabprüfung vor der Zuweisung ---------------- */
+// Reihenfolge: erst Slot-Wahl (Modal oben), dann Preflight, dann Assign — so wird nur einmal gefragt.
+// Bei Serien (seriesShiftData) prüft der Preflight nur die gedroppte Schicht.
+const showAssignmentConflictModal = ref(false)
+const pendingAssignment = ref<{
+    user: any
+    shiftQualificationId: number
+    isOverbooked: boolean
+    preflight: any
+} | null>(null)
+
+function employableTypeKey(userType: number | string): string {
+    const map: Record<string, string> = { 0: 'user', 1: 'freelancer', 2: 'service_provider' }
+    return map[String(userType)] ?? 'user'
+}
+
+async function runPreflightThenAssign(user: any, shiftQualificationId: number, isOverbooked: boolean) {
+    let preflight: any = null
+    try {
+        const { data } = await axios.post(route('shift.assignment-preflight'), {
+            shift_id: props.shift.id,
+            employable_type: employableTypeKey(user.type),
+            employable_id: user.id,
+        })
+        preflight = data
+    } catch {
+        // Preflight ist nur eine Warnung — bei Netz-/Serverfehler nicht blockieren
+        preflight = null
+    }
+
+    const conflicts = Array.isArray(preflight?.conflicts) ? preflight.conflicts : []
+    if (conflicts.length === 0) {
+        assignUser(user, shiftQualificationId, isOverbooked)
+        return
+    }
+
+    pendingAssignment.value = { user, shiftQualificationId, isOverbooked, preflight }
+    showAssignmentConflictModal.value = true
+}
+
+function cancelPendingAssignment() {
+    showAssignmentConflictModal.value = false
+    pendingAssignment.value = null
+}
+
+function confirmPendingAssignment() {
+    const pending = pendingAssignment.value
+    showAssignmentConflictModal.value = false
+    pendingAssignment.value = null
+    if (!pending) return
+    assignUser(pending.user, pending.shiftQualificationId, pending.isOverbooked)
 }
 
 function saveUser() {
@@ -749,7 +923,7 @@ function saveUser() {
     // Auto-Zuweisung nur bei genau einer regulären Option ohne Überbuchungs-Alternative.
     // Sobald eine Überbuchung im Spiel ist, muss das Auswahlmodal erscheinen.
     if (qualificationsWithAvailableSlots.length === 1 && overbookableQualifications.length === 0) {
-        assignUser(user, qualificationsWithAvailableSlots[0].id)
+        runPreflightThenAssign(user, qualificationsWithAvailableSlots[0].id, false)
         return
     }
 

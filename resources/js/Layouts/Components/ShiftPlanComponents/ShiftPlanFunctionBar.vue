@@ -162,6 +162,17 @@
 
                     </slot>
 
+                    <!-- „Woche kopieren": Schichten einer KW in Folgewochen anlegen (nur Planer*innen, nur Wochengrid) -->
+                    <ToolTipComponent
+                        v-if="!isDailyView && (can('can plan shifts') || hasAdminRole())"
+                        direction="bottom"
+                        :tooltip-text="$t('Copy week')"
+                        icon="IconCopy"
+                        icon-size="h-5 w-5"
+                        classes-button="ui-button"
+                        @click="showCopyWeekModal = true"
+                    />
+
                     <!-- ab 2xl: alle Funktionen als einzelne Buttons -->
                     <div class="hidden 2xl:flex items-center gap-x-3">
                         <!-- Kompaktmodus-Hinweis: unter 100 % zeigen Schichtkarten nur Zeit·Gewerk·Besetzung,
@@ -344,6 +355,13 @@
         :enums="shiftPlanExportTabs"
         :configuration="shiftPlanExportConfiguration"
     />
+
+    <CopyWeekModal
+        v-if="showCopyWeekModal"
+        :date-value="dateValue"
+        :crafts="crafts"
+        @closed="showCopyWeekModal = false"
+    />
 </template>
 
 <script setup>
@@ -390,6 +408,14 @@ const ExportModal = defineAsyncComponent({
     delay: 200,
     timeout: 3000,
 });
+
+// „Woche kopieren" (lazy: nur Planer*innen öffnen es)
+const CopyWeekModal = defineAsyncComponent({
+    loader: () => import('@/Layouts/Components/ShiftPlanComponents/CopyWeekModal.vue'),
+    delay: 200,
+    timeout: 3000,
+});
+const showCopyWeekModal = ref(false);
 
 // Schichtplan-Spaltenzoom (reaktiv, debounced persistiert)
 const {

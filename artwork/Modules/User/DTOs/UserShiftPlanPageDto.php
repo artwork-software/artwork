@@ -41,7 +41,6 @@ class UserShiftPlanPageDto extends BaseDto
 
     public EloquentCollection|Closure|null $crafts = null;
 
-    public EloquentCollection|Closure|null $shifts = null;
 
     public int|Closure|null $firstProjectShiftTabId = null;
 
@@ -164,12 +163,6 @@ class UserShiftPlanPageDto extends BaseDto
         return $this;
     }
 
-    public function setShifts(EloquentCollection|Closure|null $shifts): self
-    {
-        $this->shifts = $shifts;
-
-        return $this;
-    }
 
     public function setFirstProjectShiftTabId(int|Closure|null $firstProjectShiftTabId): self
     {
@@ -258,10 +251,6 @@ class UserShiftPlanPageDto extends BaseDto
         return $this->crafts;
     }
 
-    public function getShifts(): EloquentCollection|Closure|null
-    {
-        return $this->shifts;
-    }
 
     public function getFirstProjectShiftTabId(): int|Closure|null
     {
@@ -287,7 +276,6 @@ class UserShiftPlanPageDto extends BaseDto
             'daysWithData' => $this->getDaysWithData(),
             'totalPlannedWorkingHours' => $this->getTotalPlannedWorkingHours(),
             'crafts' => $this->getCrafts(),
-            'shifts' => $this->getShifts(),
             'firstProjectShiftTabId' => $this->getFirstProjectShiftTabId(),
             'projectAssignments' => $this->getProjectAssignments(),
             'projectWishes' => $this->getProjectWishes(),

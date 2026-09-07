@@ -254,10 +254,6 @@ class UserService
             ->setVacationSelectCalendar(
                 static fn() => $calendarService->createVacationAndAvailabilityPeriodCalendar($vacationMonth)
             )
-            ->setShifts(fn() => $this->getUserShiftsOrderedByStartAscending(
-                $user,
-                $this->shouldHideUncommittedShiftsInOwnRoster($user)
-            ))
             ->setVacations(
                 tap(
                     $this->getUserVacationsByMonthOrderedByDateAsc($user, $calendarMonth),

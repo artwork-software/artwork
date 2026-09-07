@@ -51,7 +51,6 @@ export default {
         'vacations',
         'calendarData',
         'dateToShow',
-        'shifts',
         'vacationSelectCalendar',
         'createShowDate',
         'showVacationsAndAvailabilitiesDate',

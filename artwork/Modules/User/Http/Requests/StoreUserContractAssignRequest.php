@@ -22,7 +22,10 @@ class StoreUserContractAssignRequest extends FormRequest
     public function rules(): array
     {
         return [
+            // Arbeitszeit-Historie: bestehenden user_work_times-Satz bearbeiten
             'id' => 'nullable|integer|exists:user_work_times,id',
+            // Vertrags-Historie: bestehenden user_contract_assigns-Zeitraum bearbeiten
+            'assign_id' => 'nullable|integer|exists:user_contract_assigns,id',
             'user_contract_id' => 'nullable|integer|exists:user_contracts,id',
             'free_full_days_per_week' => 'nullable|integer|min:0',
             'free_half_days_per_week' => 'nullable|integer|min:0',
@@ -52,6 +55,7 @@ class StoreUserContractAssignRequest extends FormRequest
             'friday' => 'nullable|string',
             'saturday' => 'nullable|string',
             'sunday' => 'nullable|string',
+            // Gültigkeit – gilt für den Vertragszeitraum UND den Arbeitszeit-Satz derselben Anfrage
             'valid_from' => 'nullable|date',
             'valid_until' => 'nullable|date|after_or_equal:valid_from'
         ];

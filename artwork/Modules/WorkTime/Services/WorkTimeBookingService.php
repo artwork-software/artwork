@@ -47,6 +47,12 @@ class WorkTimeBookingService
             ]);
             $breakdown = $this->workTimeCalculationService->dayBreakdown($user, $today, $context);
 
+            // Ohne gültiges Muster ist das Soll unbekannt: keine Buchung (kein Fallback auf 0 Soll,
+            // sonst würde jede Arbeit als Überstunde verbucht)
+            if ($breakdown['target'] === null || !empty($breakdown['target_unknown'])) {
+                continue;
+            }
+
             $wantedMinutes = (int) $breakdown['target'];
             $workedMinutes = (int) $breakdown['actual'];
             $nightMinutes = $breakdown['is_sick'] && $breakdown['sick_factor'] >= 1.0

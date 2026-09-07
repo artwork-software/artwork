@@ -103,6 +103,94 @@ abstract class AbstractRuleCheck implements ShiftRuleCheckInterface
     }
 
     /**
+     * Geplante Netto-Minuten je Kalendertag für einen längeren Zeitraum ('Y-m-d' => Minuten), gleiche
+     * Semantik wie getPlannedWorkingHoursForDay() (Tagesgrenze, Pause einmal am ersten Tag des Eintrags).
+     *
+     * Liegt der Zeitraum im Kontext, werden dessen Tageswerte genutzt. Außerhalb (z. B. 24-Wochen-Fenster
+     * des Wochendurchschnitts) werden die Arbeitsintervalle EINMAL geladen und tageweise zugeschnitten —
+     * statt einer Abfrage je Tag.
+     *
+     * @return array<string, int>
+     */
+    protected function getPlannedMinutesPerDay(User $user, Carbon $from, Carbon $to): array
+    {
+        $minutesPerDay = [];
+        $cursor = $from->copy()->startOfDay();
+        $last = $to->copy()->startOfDay();
+        while ($cursor->lte($last)) {
+            $minutesPerDay[$cursor->toDateString()] = 0;
+            $cursor->addDay();
+        }
+
+        if ($this->context !== null && $this->context->covers($from, $to)) {
+            $shiftMinutes = $this->context->shiftMinutesPerDay();
+            foreach (array_keys($minutesPerDay) as $dayKey) {
+                $minutesPerDay[$dayKey] = (int) ($shiftMinutes[$dayKey] ?? 0)
+                    + $this->getIndividualTimeMinutesForDay($user, Carbon::parse($dayKey));
+            }
+
+            return $minutesPerDay;
+        }
+
+        $rangeStart = $from->copy()->startOfDay();
+        $rangeEnd = $to->copy()->startOfDay()->addDay();
+
+        foreach ($this->getWorkIntervals($user, $from, $to) as $interval) {
+            $intervalStart = $interval['start']->copy();
+            $intervalEnd = $interval['end']->copy();
+            if ($interval['source'] === 'individual' && !$interval['individual_time']?->end_time) {
+                // Ganztägig ohne Endzeit: bis 24:00 statt 23:59:59 (wie getIndividualTimeMinutesForDay)
+                $intervalEnd = Carbon::parse($interval['end_key'])->startOfDay()->addDay();
+            }
+
+            $firstDayKey = $interval['start_key'];
+            $day = $intervalStart->copy()->startOfDay();
+            while ($day->lt($intervalEnd) && $day->lt($rangeEnd)) {
+                $dayKey = $day->toDateString();
+                $dayStart = $day->copy();
+                $dayEnd = $day->copy()->addDay();
+
+                if (isset($minutesPerDay[$dayKey]) && $dayEnd->gt($rangeStart)) {
+                    $segStart = $intervalStart->greaterThan($dayStart) ? $intervalStart : $dayStart;
+                    $segEnd = $intervalEnd->lessThan($dayEnd) ? $intervalEnd : $dayEnd;
+                    if ($segStart->lt($segEnd)) {
+                        $minutes = $segStart->diffInMinutes($segEnd);
+                        if ($dayKey === $firstDayKey) {
+                            $minutes -= $interval['break_minutes'];
+                        }
+                        $minutesPerDay[$dayKey] += max(0, $minutes);
+                    }
+                }
+
+                $day->addDay();
+            }
+        }
+
+        return $minutesPerDay;
+    }
+
+    /**
+     * Kalendertage ('Y-m-d' => true), die die Person im Zeitraum durch Schichten (effektive Pivot-Zeiten,
+     * Über-Mitternacht-Schichten belegen beide Tage) oder individuelle Zeiten belegt hat.
+     *
+     * @return array<string, true>
+     */
+    protected function getOccupiedDayKeys(User $user, Carbon $from, Carbon $to): array
+    {
+        $occupied = [];
+        foreach ($this->getWorkIntervals($user, $from, $to) as $interval) {
+            $cursor = Carbon::parse($interval['start_key']);
+            $last = Carbon::parse($interval['end_key']);
+            while ($cursor->lte($last)) {
+                $occupied[$cursor->toDateString()] = true;
+                $cursor->addDay();
+            }
+        }
+
+        return $occupied;
+    }
+
+    /**
      * Zeitraum, für den dieser Check im Lauf [$startDate, $endDate] verbindlich Verstöße erzeugt bzw.
      * bestätigt hat. ShiftRuleService löscht nach dem Lauf nur innerhalb dieses Fensters nicht mehr
      * bestätigte automatische Verstöße. Standard: der übergebene Zeitraum. Checks, die einen

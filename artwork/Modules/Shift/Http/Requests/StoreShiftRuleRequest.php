@@ -14,6 +14,7 @@ class StoreShiftRuleRequest extends FormRequest
             ShiftRuleService::ruleTypesWithoutValue(),
             ShiftRuleService::ruleTypesWithOptionalValue()
         ));
+        $typesWithPeriodWeeks = implode(',', ShiftRuleService::ruleTypesWithPeriodWeeks());
 
         return [
             'name' => 'required|string|max:255',
@@ -25,6 +26,14 @@ class StoreShiftRuleRequest extends FormRequest
                 'required_unless:trigger_type,' . $typesWithoutValue,
                 'numeric',
                 'min:0.1',
+            ],
+            // Ausgleichszeitraum in Wochen — Pflicht beim Wochendurchschnitt (averageWeeklyHours)
+            'period_weeks' => [
+                'nullable',
+                'required_if:trigger_type,' . $typesWithPeriodWeeks,
+                'integer',
+                'min:2',
+                'max:104',
             ],
             'warning_color' => 'required|string',
             'default_compensation_days' => 'nullable|numeric|min:0.5',
@@ -48,6 +57,10 @@ class StoreShiftRuleRequest extends FormRequest
             && (float) $this->input('individual_number_value') <= 0
         ) {
             $this->merge(['individual_number_value' => null]);
+        }
+        // Zeitraum nur beim Wochendurchschnitt; für andere Typen ignorieren
+        if (!in_array($this->input('trigger_type'), ShiftRuleService::ruleTypesWithPeriodWeeks(), true)) {
+            $this->merge(['period_weeks' => null]);
         }
     }
 }

@@ -521,7 +521,9 @@ class ShiftRuleService
 
         $users = User::query()
             ->where(function ($query) use ($usersWithStaleCandidates): void {
-                $query->whereHas('contract')
+                // Alle Personen mit irgendeinem Vertragszeitraum (auch künftig beginnende),
+                // die Prüfung je Tag löst den dann gültigen Vertrag auf.
+                $query->whereHas('contractAssigns')
                     ->orWhereIn('id', $usersWithStaleCandidates);
             })
             ->get();
@@ -564,7 +566,21 @@ class ShiftRuleService
             'workOnHoliday',
             'overtimeDeadline',
             'minFreeSundaysPerSeasonHalf',
+            'minFreeSundaysPerYear',
+            'averageWeeklyHours',
+            'nightWorkMaxHours',
+            'minFreeDaysPerWeek',
         ];
+    }
+
+    /**
+     * Regeltypen mit Ausgleichszeitraum in Wochen (shift_rules.period_weeks, Pflicht beim Anlegen).
+     *
+     * @return array<int, string>
+     */
+    public static function ruleTypesWithPeriodWeeks(): array
+    {
+        return ['averageWeeklyHours'];
     }
 
     /**
@@ -578,14 +594,15 @@ class ShiftRuleService
     }
 
     /**
-     * Regeltypen mit OPTIONALEM Zahlenwert: leer/0 = Zielwert aus dem Vertrag (z. B. freie Sonntage je
-     * Spielzeithälfte aus free_sundays_sat_mon_per_half).
+     * Regeltypen mit OPTIONALEM Zahlenwert: leer/0 = Zielwert aus dem Vertrag (freie Sonntage je
+     * Spielzeithälfte aus free_sundays_sat_mon_per_half, freie Tage je Woche aus free_full_days_per_week)
+     * bzw. gesetzlicher Standard (freie Sonntage je Jahr: 15).
      *
      * @return array<int, string>
      */
     public static function ruleTypesWithOptionalValue(): array
     {
-        return ['minFreeSundaysPerSeasonHalf'];
+        return ['minFreeSundaysPerSeasonHalf', 'minFreeSundaysPerYear', 'minFreeDaysPerWeek'];
     }
 
     public function mapViolationsToArray(Collection $violations): Collection

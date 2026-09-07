@@ -258,23 +258,25 @@ class WorkingHourService
      * sowie die *_formatted-Keys im einheitlichen Dienstplan-Format "H:MM h" (signiert bei der
      * Differenz), die ShiftPlan.vue in der KW-Spalte rendert.
      *
+     * Liegt in der Woche mindestens ein Tag ohne gültiges Arbeitszeitmuster, ist das Soll unbekannt:
+     * target_unknown = true, days_without_pattern > 0, alle Soll-/Differenz-Keys null, isMinus false.
+     * Die KW-Zelle zeigt dann "–" mit Hinweis statt einer Zahl.
+     *
      * @param array<string, array<string, mixed>> $breakdown 'Y-m-d' => Tageswerte
      * @return array<string, mixed>
      */
     private function buildWeekData(array $breakdown, Carbon $actualStart, Carbon $actualEnd): array
     {
-        $totalPlannedMinutes = 0;
-        $totalExpectedMinutes = 0;
         $specialDays = 0;
         $reducedDays = 0;
+        $days = [];
 
         $current = $actualStart->copy()->startOfDay();
         $last = $actualEnd->copy()->startOfDay();
         while ($current->lte($last)) {
             $day = $breakdown[$current->toDateString()] ?? null;
             if ($day !== null) {
-                $totalPlannedMinutes += (int) $day['actual'];
-                $totalExpectedMinutes += (int) $day['target'];
+                $days[] = $day;
                 if ($day['is_special_day']) {
                     $specialDays++;
                 }
@@ -285,20 +287,26 @@ class WorkingHourService
             $current->addDay();
         }
 
-        $differenceInMinutes = $totalPlannedMinutes - $totalExpectedMinutes;
+        $summary = WorkTimeCalculationService::summarizeRange($days);
+        $totalPlannedMinutes = $summary['actual'];
+        $totalExpectedMinutes = $summary['target'];
+        $differenceInMinutes = $summary['balance'];
+        $unknown = $summary['target_unknown'];
 
         return [
-            'daily_target' => $this->convertMinutesInHours($totalExpectedMinutes, true),
+            'daily_target' => $unknown ? null : $this->convertMinutesInHours($totalExpectedMinutes, true),
             'planned' => $this->convertMinutesInHours($totalPlannedMinutes, true),
-            'difference' => $this->convertMinutesInHours($differenceInMinutes),
-            'isMinus' => $differenceInMinutes < 0,
+            'difference' => $unknown ? null : $this->convertMinutesInHours($differenceInMinutes),
+            'isMinus' => !$unknown && $differenceInMinutes < 0,
             'target_minutes' => $totalExpectedMinutes,
             'planned_minutes' => $totalPlannedMinutes,
             'difference_minutes' => $differenceInMinutes,
-            'difference_signed' => $this->formatSignedHours($differenceInMinutes),
+            'difference_signed' => $unknown ? null : $this->formatSignedHours($differenceInMinutes),
             'planned_formatted' => $this->formatHours($totalPlannedMinutes),
-            'daily_target_formatted' => $this->formatHours($totalExpectedMinutes),
-            'difference_formatted' => $this->formatSignedHours($differenceInMinutes),
+            'daily_target_formatted' => $unknown ? null : $this->formatHours($totalExpectedMinutes),
+            'difference_formatted' => $unknown ? null : $this->formatSignedHours($differenceInMinutes),
+            'target_unknown' => $unknown,
+            'days_without_pattern' => $summary['days_without_pattern'],
             'special_days' => $specialDays,
             'reduced_days' => $reducedDays,
         ];

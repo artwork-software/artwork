@@ -5,7 +5,7 @@
             <UserShiftPlanFunctionBar
                 :type="type"
                 :totalPlannedWorkingHours="totalPlannedWorkingHours"
-                :weeklyWorkingHours="weeklyWorkingHours"
+                :work-time-target="workTimeTarget"
                 :plannedWorkTime="totalWorkTimeInRange"
                 :dateValue="dateValue"
                 :crafts="crafts"
@@ -401,7 +401,8 @@ const props = defineProps({
     daysWithData: { type: Object, required: false, default: null }, // optional – sonst aus $page.props
     crafts: { type: Array, required: true },
     type: { type: String, required: true },
-    weeklyWorkingHours: { type: [Number, String], required: false, default: null },
+    // Soll/Ist des Zeitraums aus dem Backend (statt Wochenstunden/7); null = kein Soll (Externe)
+    workTimeTarget: { type: Object, required: false, default: null },
     totalPlannedWorkingHours: { type: String, required: false, default: null },
     dateValue: { type: Array, required: true }, // [start, end] im ISO-Format YYYY-MM-DD
     firstProjectShiftTabId: { type: Number, required: true },

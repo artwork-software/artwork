@@ -20,6 +20,12 @@ use Illuminate\Support\Facades\DB;
  * Sequenzabhängige Kennzahlen (1,5-Tage-Kombinationen) werden NICHT tagesweise inkrementiert,
  * sondern über eine geordnete Tagesliste mit Sliding-Window berechnet. Es fließen nur
  * abgeschlossene Tage (Datum < heute) ein.
+ *
+ * NV-Bühne-Zielwerte aus dem Vertrag (Block 4): free_full_days_per_week ("Ganze freie Tage") und
+ * free_half_days_per_week ("Gewährte halbe freie Tage") sind Zielwerte je Spielzeithälfte:
+ * Ziel = Vertragswert × Wochen der Hälfte (Wochen = Tage/7 auf eine Nachkommastelle, Ziel gerundet).
+ * "Ganzer freier Tag" = Kalendertag ohne Schicht (effektive Pivot-Zeiten, Schicht über Mitternacht
+ * belegt beide Tage) und ohne individuelle Zeit.
  */
 class ShiftKpiTrackingService
 {
@@ -89,7 +95,9 @@ class ShiftKpiTrackingService
     {
         $midTimestamp = (int) (($start->getTimestamp() + $end->getTimestamp()) / 2);
 
-        return Carbon::createFromTimestamp($midTimestamp)->startOfDay();
+        // Zeitzone des Spielzeitbeginns beibehalten: ohne sie entstand ein UTC-Mitternachtspunkt,
+        // der in Europe/Berlin eine Stunde neben der Tagesgrenze lag (Hälften um einen Tag verschoben).
+        return Carbon::createFromTimestamp($midTimestamp, $start->getTimezone())->startOfDay();
     }
 
     /**
@@ -133,6 +141,10 @@ class ShiftKpiTrackingService
         // --- Gewährte halbe freie Tage je Hälfte ---
         [$halfH1, $halfH2] = $this->grantedHalfFreeDaysPerHalf($days, $seasonStart, $seasonEnd, $midpoint);
 
+        // --- Ganze freie Tage (ohne Schicht, ohne individuelle Zeit) je Hälfte ---
+        [$fullFreeH1, $fullFreeH2] = $this->fullFreeDaysPerHalf($days, $seasonStart, $seasonEnd, $midpoint);
+        $halves = $this->seasonHalves($seasonStart, $seasonEnd, $midpoint);
+
         // --- Freie Tage in den ersten 26 Wochen der Spielzeit ---
         $daysOff26 = $this->freeDayUnitsInRange($days, $window26From, $window26To);
 
@@ -152,6 +164,10 @@ class ShiftKpiTrackingService
             'one_and_half_combos_half2' => $combosH2,
             'granted_half_free_days_half1' => $halfH1,
             'granted_half_free_days_half2' => $halfH2,
+            'full_free_days_half1' => $fullFreeH1,
+            'full_free_days_half2' => $fullFreeH2,
+            // Länge der Spielzeithälften (Basis der Wochen-Ziele "Vertragswert × Wochen")
+            'season_halves' => $halves,
             'days_off_first_26_weeks_count' => $daysOff26,
             // Konkretes Zählfenster für die Anzeige (Tooltip "01.09.2026 – 01.03.2027")
             'days_off_first_26_weeks_window' => [
@@ -160,7 +176,7 @@ class ShiftKpiTrackingService
             ],
             'granted_vacation_days_year' => $grantedVacation,
             // Zielwerte ("X") + Aktiv-Flags: Zuweisung vor Vorlage (für die Anzeige im Modal)
-            'targets' => $this->extractTargets($user),
+            'targets' => $this->extractTargets($user, $halves),
             'counted_until' => Carbon::yesterday()->toDateString(),
         ];
     }
@@ -168,17 +184,33 @@ class ShiftKpiTrackingService
     /**
      * Zielwerte "Ist / X": Feld auf der Zuweisung gesetzt (nicht null) -> Zuweisung, sonst Vorlage.
      *
-     * @return array<string, array{active: bool, value: int|float}>
+     * Die Wochenwerte free_full_days_per_week / free_half_days_per_week werden mit den Wochen der
+     * Spielzeithälften (seasonHalves()) zu Zielen je Hälfte hochgerechnet (target_half1/target_half2);
+     * ohne Vertragswert (0) sind sie inaktiv -> Zeile im Modal eingeklappt.
+     *
+     * @param array{half1: array{weeks: float}, half2: array{weeks: float}}|null $halves
+     * @return array<string, array<string, mixed>>
      */
-    public function extractTargets(User $user): array
+    public function extractTargets(User $user, ?array $halves = null): array
     {
         if ($this->contractSettings->assignFor($user) === null) {
             return [];
         }
 
         $c = $this->contractSettings;
+        $weeklyTarget = static function (int $perWeek) use ($halves): array {
+            $target = ['active' => $perWeek > 0, 'value' => $perWeek];
+            if ($halves !== null) {
+                $target['target_half1'] = (int) round($perWeek * (float) ($halves['half1']['weeks'] ?? 0));
+                $target['target_half2'] = (int) round($perWeek * (float) ($halves['half2']['weeks'] ?? 0));
+            }
+
+            return $target;
+        };
 
         return [
+            'free_full_days_per_week' => $weeklyTarget($c->int($user, 'free_full_days_per_week')),
+            'free_half_days_per_week' => $weeklyTarget($c->int($user, 'free_half_days_per_week')),
             'free_sundays_per_season' => [
                 'active' => $c->bool($user, 'free_sundays_per_season_active'),
                 'value' => $c->int($user, 'free_sundays_per_season'),
@@ -386,7 +418,8 @@ class ShiftKpiTrackingService
 
     /**
      * Je Datum: ist laut dem an diesem Tag gültigen Arbeitszeitmuster ein Arbeitstag?
-     * Ohne Muster gilt die Fünftagewoche (Mo–Fr) aus dem WorkTimeCalculationService.
+     * Ohne gültiges Muster ist das Soll unbekannt (null) -> kein Arbeitstag, d. h. ein leerer Tag
+     * ohne Muster zählt nicht als "leerer Arbeitstag = GFT".
      *
      * @return array<string, bool> 'Y-m-d' => Arbeitstag
      */
@@ -394,10 +427,69 @@ class ShiftKpiTrackingService
     {
         $result = [];
         foreach ($this->workTimeCalculationService->baseTargetsForRange($user, $from, $to) as $date => $minutes) {
-            $result[$date] = $minutes > 0;
+            $result[$date] = $minutes !== null && $minutes > 0;
         }
 
         return $result;
+    }
+
+    /**
+     * Spielzeithälften: Hälfte 1 = Spielzeitbeginn bis Tag vor dem Mittelpunkt, Hälfte 2 = Mittelpunkt
+     * bis Spielzeitende. Wochen = Tage/7 mit einer Nachkommastelle (Basis der Vertrags-Wochenziele).
+     *
+     * @return array{half1: array{start: string, end: string, days: int, weeks: float},
+     *               half2: array{start: string, end: string, days: int, weeks: float}}
+     */
+    public function seasonHalves(Carbon $seasonStart, Carbon $seasonEnd, ?Carbon $midpoint = null): array
+    {
+        $start = $seasonStart->copy()->startOfDay();
+        $end = $seasonEnd->copy()->startOfDay();
+        // Mittelpunkt wie in computeForUser (Spielzeitende = Tagesende), damit beide Wege dieselben Hälften liefern
+        $mid = ($midpoint ?? $this->getSeasonMidpoint($start, $seasonEnd->copy()->endOfDay()))->copy()->startOfDay();
+
+        $half1Days = max(0, (int) round($start->diffInDays($mid, false)));
+        $half2Days = max(0, (int) round($mid->diffInDays($end, false)) + 1);
+
+        return [
+            'half1' => [
+                'start' => $start->toDateString(),
+                'end' => $mid->copy()->subDay()->toDateString(),
+                'days' => $half1Days,
+                'weeks' => round($half1Days / 7, 1),
+            ],
+            'half2' => [
+                'start' => $mid->toDateString(),
+                'end' => $end->toDateString(),
+                'days' => $half2Days,
+                'weeks' => round($half2Days / 7, 1),
+            ],
+        ];
+    }
+
+    /**
+     * Ganze freie Tage je Hälfte: abgeschlossene Kalendertage ohne Schicht (Pivot-Zeiten, Schicht
+     * über Mitternacht belegt beide Tage) und ohne individuelle Zeit. Urlaubs-/Abwesenheitseinträge
+     * spielen keine Rolle (Definition Block 4).
+     *
+     * @return array{0: int, 1: int}
+     */
+    private function fullFreeDaysPerHalf(array $days, Carbon $from, Carbon $to, Carbon $midpoint): array
+    {
+        $h1 = 0;
+        $h2 = 0;
+        foreach (CarbonPeriod::create($from->copy()->startOfDay(), $to->copy()->startOfDay()) as $day) {
+            $key = $day->toDateString();
+            if (!isset($days[$key]) || ($days[$key]['occupied'] ?? true) === true) {
+                continue;
+            }
+            if ($day->lt($midpoint)) {
+                $h1++;
+            } else {
+                $h2++;
+            }
+        }
+
+        return [$h1, $h2];
     }
 
     private function isGft(array $days, string $key): bool

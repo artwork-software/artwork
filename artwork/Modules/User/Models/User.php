@@ -789,9 +789,55 @@ class User extends Model implements
             ->first();
     }
 
+    /**
+     * Alle Vertragszeiträume der Person (Historie), ältester zuerst; valid_from null = offen ab Beginn.
+     */
+    public function contractAssigns(): HasMany
+    {
+        return $this->hasMany(UserContractAssign::class, 'user_id', 'id')
+            ->orderByRaw('valid_from IS NULL DESC')
+            ->orderBy('valid_from')
+            ->orderBy('id');
+    }
+
+    /**
+     * Am Stichtag gültiger Vertragszeitraum (Default heute). Bei Überlappung gewinnt der jüngste
+     * valid_from. Nutzt die geladene Historie (contractAssigns), sonst eine Abfrage.
+     */
+    public function contractAssignFor(?Carbon $date = null): ?UserContractAssign
+    {
+        $day = ($date ?? Carbon::today())->copy()->startOfDay();
+
+        if ($this->relationLoaded('contractAssigns')) {
+            return $this->contractAssigns
+                ->filter(fn (UserContractAssign $assign): bool => $assign->coversDate($day))
+                ->sortByDesc(fn (UserContractAssign $assign): string => $assign->valid_from?->toDateString() ?? '')
+                ->first();
+        }
+
+        return $this->newContractAssignQuery()
+            ->validOn($day)
+            ->orderByDesc('valid_from')
+            ->orderByDesc('id')
+            ->first();
+    }
+
+    /**
+     * Abwärtskompatibel: der HEUTE gültige Vertragszeitraum als HasOne (auch für with('contract'),
+     * whereHas('contract'), $user->contract). Eager-Load: die Sortierung gilt für die gesamte Abfrage,
+     * Eloquent nimmt je Person den ersten Treffer = jüngster valid_from (NULL sortiert bei DESC zuletzt).
+     */
     public function contract(): HasOne
     {
-        return $this->hasOne(UserContractAssign::class, 'user_id', 'id');
+        return $this->hasOne(UserContractAssign::class, 'user_id', 'id')
+            ->validOn(Carbon::today())
+            ->orderByDesc('valid_from')
+            ->orderByDesc('id');
+    }
+
+    private function newContractAssignQuery(): \Illuminate\Database\Eloquent\Builder
+    {
+        return UserContractAssign::query()->with('userContract')->where('user_id', $this->id);
     }
 
     public function workTimeBookings(): HasMany
@@ -831,9 +877,9 @@ class User extends Model implements
         ];
     }
 
-    public function activeWorkContract()
+    public function activeWorkContract(?Carbon $date = null)
     {
-        $contractAssign = $this->contract()->first();
+        $contractAssign = $this->contractAssignFor($date);
         return $contractAssign?->userContract;
     }
 

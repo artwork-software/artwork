@@ -237,6 +237,8 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::group(['prefix' => 'shift-rules', 'middleware' => ['can:can plan shifts', 'shift-settings-area:rules,view']], function (): void {
         Route::get('/', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'index'])->name('shift-rules.index');
         Route::post('/', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'store'])->middleware('shift-settings-area:rules,edit')->name('shift-rules.store');
+        // Gesetzliche Standardregeln (ArbZG) anlegen — gleiche Rechte wie das normale Anlegen
+        Route::post('/defaults', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'storeDefaults'])->middleware('shift-settings-area:rules,edit')->name('shift-rules.defaults.store');
 
         // Specific routes must come before parameterized routes
         // Wird auch vom Schichtplaner-Workflow (ShowUserShiftsModal) genutzt — nur "can plan shifts" nötig
@@ -473,6 +475,10 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         ->name('user.edit.permissions');
     Route::get('/users/{user}/workProfile', [UserController::class, 'editUserWorkProfile'])->can('can manage workers')
         ->name('user.edit.workProfile');
+    // Tab "Vertrag & Arbeitszeit" (seit 2026-09 ein Tab statt zwei); die alten Routen bleiben als Redirect
+    Route::get('/users/{user}/contract-and-work-time', [UserController::class, 'editContractAndWorkTime'])
+        ->can('can manage workers')
+        ->name('user.edit.contract-and-work-time');
     Route::get('/users/{user}/work-time-pattern', [UserController::class, 'editUserWorkTime'])
         ->can('can manage workers')
         ->name('user.edit.work-time-pattern');
@@ -3234,6 +3240,12 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
             '/work-time-pattern/{user}/update-user',
             [\Artwork\Modules\User\Http\Controllers\UserContractAssignController::class, 'store']
         )->middleware('can:can manage workers')->name('shift.work-time-pattern.update-user');
+
+        // Arbeitszeit-Satz (Historie) der Person entfernen — gleiche Gate wie update-user
+        Route::delete(
+            '/work-time-pattern/{user}/work-time/{workTime}',
+            [\Artwork\Modules\User\Http\Controllers\UserContractAssignController::class, 'destroyWorkTime']
+        )->middleware('can:can manage workers')->name('shift.work-time-pattern.work-time.destroy');
     });
 
     // group user contracts
@@ -3260,6 +3272,12 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
             '/contract/{user}/update-user',
             [\Artwork\Modules\User\Http\Controllers\UserContractAssignController::class, 'store']
         )->middleware('can:can manage workers')->name('user-contract-settings.update-user');
+
+        // Vertragszeitraum (Historie) der Person entfernen — gleiche Gate wie update-user
+        Route::delete(
+            '/contract/{user}/assign/{assign}',
+            [\Artwork\Modules\User\Http\Controllers\UserContractAssignController::class, 'destroyAssign']
+        )->middleware('can:can manage workers')->name('user-contract-settings.assign.destroy');
     });
 
     // users.worktimes.store

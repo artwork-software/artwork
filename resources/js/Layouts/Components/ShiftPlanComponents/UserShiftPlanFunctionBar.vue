@@ -62,22 +62,42 @@
             />
         </div>
     </div>
-    <!-- Geplant/Soll für den gewählten Zeitraum. Das Soll ist die Wochenstundenzahl
-         anteilig auf die Tage des Zeitraums umgerechnet (ohne Urlaub/Feiertage) —
-         deshalb nur angezeigt, wenn Wochenstunden hinterlegt sind. -->
+    <!-- Geplant/Soll für den gewählten Zeitraum. Das Soll kommt aus dem Backend
+         (WorkTimeCalculationService, Arbeitszeitmuster inkl. Sondertage); ohne gültiges
+         Muster an mindestens einem Tag ist es unbekannt -> "–" + Badge "Arbeitszeitmuster fehlt". -->
     <div v-if="plannedWorkTime" class="ml-4 mb-2 text-xs text-text-muted flex items-center gap-1">
         <span>{{ $t('Planned') }} {{ plannedWorkTime }} h</span>
-        <template v-if="targetWorkTime">
+        <template v-if="showTarget">
             <span class="text-text-subtle">·</span>
-            <span>{{ $t('Target') }} {{ targetWorkTime }} h</span>
+            <span v-if="!targetUnknown">{{ $t('Target') }} {{ targetWorkTime }} h</span>
+            <span v-else class="inline-flex items-center gap-1">
+                {{ $t('Target') }} –
+                <ToolTipComponent
+                    direction="bottom"
+                    :tooltip-text="$t('No work time pattern stored')"
+                    icon="IconInfoCircle"
+                    icon-size="h-3.5 w-3.5 text-text-subtle"
+                    classes-button=""
+                    no-relative
+                />
+            </span>
             <ToolTipComponent
+                v-if="!targetUnknown"
                 direction="bottom"
-                :tooltip-text="$t('Target: {hours} h per week, pro rata for the selected period (vacation and holidays are not deducted).', { hours: weeklyWorkingHours })"
+                :tooltip-text="$t('Target according to the work time pattern valid in the selected period (special days reduce the target, vacation and sick days are target-neutral).')"
                 icon="IconInfoCircle"
                 icon-size="h-3.5 w-3.5 text-text-subtle"
                 classes-button=""
                 no-relative
             />
+            <span
+                v-if="targetUnknown"
+                class="ml-1 inline-flex items-center gap-1 rounded-full border border-warning-border bg-warning-surface px-2 py-0.5 text-[11px] font-semibold text-warning"
+                v-tooltip.bottom="{ value: missingPatternTooltip, appendTo: 'body', class: 'aw-tooltip', position: 'bottom' }"
+            >
+                <IconAlertTriangle class="h-3.5 w-3.5" stroke-width="1.5" />
+                {{ $t('Work time pattern missing') }}
+            </span>
         </template>
     </div>
     <CalendarAboSettingModal v-if="showCalendarAboSettingModal" @close="closeCalendarAboSettingModal"
@@ -110,7 +130,7 @@ import IconLib from "@/Mixins/IconLib.vue";
 import CalendarAboSettingModal from "@/Pages/Shifts/Components/CalendarAboSettingModal.vue";
 import CalendarAboInfoModal from "@/Pages/Shifts/Components/CalendarAboInfoModal.vue";
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
-import {IconCalendar, IconChartBar, IconChevronDown, IconChevronLeft, IconChevronRight, IconFileTypePdf} from "@tabler/icons-vue";
+import {IconAlertTriangle, IconCalendar, IconChartBar, IconChevronDown, IconChevronLeft, IconChevronRight, IconFileTypePdf} from "@tabler/icons-vue";
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
 import UserShiftPlanExportModal from "@/Layouts/Components/ShiftPlanComponents/UserShiftPlanExportModal.vue";
 import {defineAsyncComponent} from "vue";
@@ -126,6 +146,7 @@ export default {
     mixins: [Permissions, IconLib],
     components: {
         UserShiftInfoModal,
+        IconAlertTriangle,
         IconChartBar,
         UserShiftPlanExportModal,
         ToolTipComponent,
@@ -144,7 +165,9 @@ export default {
     },
     props: [
         'dateValue',
-        'weeklyWorkingHours',
+        // Soll/Ist des angezeigten Zeitraums aus dem Backend (UserController::operationPlanTargetSummary):
+        // { target_minutes, target_formatted, target_unknown, days_without_pattern, days, ... } oder null
+        'workTimeTarget',
         'type',
         'totalPlannedWorkingHours',
         'plannedWorkTime',
@@ -162,38 +185,23 @@ export default {
         }
     },
     computed: {
-        totalHoursExpectedWork() {
-            const startDate = new Date(this.dateValue[0]);
-            const endDate = new Date(this.dateValue[1]);
-
-            // Calculate the time difference in milliseconds between the two dates
-            const timeDifference = endDate - startDate;
-
-            // Calculate the total number of days in the date range (add 1 to include both start and end dates)
-            const totalDays = Math.ceil(timeDifference / (1000 * 60 * 60 * 24)) + 1;
-
-            // Calculate the average number of hours worked per day
-            const hoursPerDay = this.weeklyWorkingHours / 7;
-
-            // Calculate the total number of hours that need to be worked
-            return (totalDays * hoursPerDay).toFixed(1);
+        // Soll nur für User (Externe haben kein Soll) und nur, wenn das Backend etwas geliefert hat
+        showTarget() {
+            return this.type === 'user' && !!this.workTimeTarget && typeof this.workTimeTarget === 'object'
         },
-        // Soll als HH:MM: Wochenstunden × Tage/7 — nur für User mit hinterlegten Wochenstunden
+        targetUnknown() {
+            return this.showTarget && this.workTimeTarget.target_unknown === true
+        },
+        // Soll als HH:MM aus dem Backend (Arbeitszeitmuster für den Zeitraum)
         targetWorkTime() {
-            const weekly = Number(this.weeklyWorkingHours)
-            if (this.type !== 'user' || !weekly || weekly <= 0 || !Array.isArray(this.dateValue) || this.dateValue.length < 2) {
-                return null
-            }
-            const startDate = new Date(`${this.dateValue[0]}T00:00:00`)
-            const endDate = new Date(`${this.dateValue[1]}T00:00:00`)
-            if (Number.isNaN(startDate.getTime()) || Number.isNaN(endDate.getTime()) || endDate < startDate) {
-                return null
-            }
-            const totalDays = Math.round((endDate - startDate) / (1000 * 60 * 60 * 24)) + 1
-            const minutes = Math.round(totalDays * (weekly / 7) * 60)
-            const h = Math.floor(minutes / 60)
-            const m = minutes % 60
-            return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`
+            if (!this.showTarget || this.targetUnknown) return null
+            return this.workTimeTarget.target_formatted ?? null
+        },
+        missingPatternTooltip() {
+            const days = Number(this.workTimeTarget?.days_without_pattern ?? 0)
+            return days > 0
+                ? this.$t('No work time pattern is stored for {n} day(s) in this period – the target cannot be calculated.', { n: days })
+                : this.$t('No work time pattern stored')
         },
         checkIfThisIsMe() {
             if (this.$page.props.auth.user.id) {

@@ -882,9 +882,10 @@
                                         :title="kwCellTitle(row, day)"
                                     >
                                         <!-- Einheitliches Stundenformat "H:MM h" (signiert) wie das AZK-Badge; Fallback auf das alte "2h 0m" -->
+                                        <!-- target_unknown: kein Arbeitszeitmuster in der Woche -> "–" (Tooltip über kwCellTitle) -->
                                         <div
                                             class="font-lexend text-xs"
-                                            :class="row.worker?.weeklyWorkingHours?.[day.weekNumber]
+                                            :class="row.worker?.weeklyWorkingHours?.[day.weekNumber] && !row.worker.weeklyWorkingHours[day.weekNumber].target_unknown
                                                 ? (row.worker.weeklyWorkingHours[day.weekNumber].isMinus ? 'text-danger-surface' : 'text-success-surface')
                                                 : 'text-white/60'"
                                         >
@@ -3002,6 +3003,10 @@ function kwHoursTooltip(row: any, day: any): string {
     const week = row?.worker?.weeklyWorkingHours?.[day?.weekNumber]
     if (!week) return ''
     const planned = week.planned_formatted ?? week.planned
+    if (week.target_unknown) {
+        // Soll unbekannt: mindestens ein Tag der Woche ohne gültiges Arbeitszeitmuster
+        return `${$t('Planned')} ${planned} · ${$t('Target')} – · ${$t('No work time pattern stored')}`
+    }
     const target = week.daily_target_formatted ?? week.daily_target
     const difference = week.difference_formatted ?? week.difference
     return `${$t('Planned')} ${planned} · ${$t('Target')} ${target} · ${$t('Difference')} ${difference}`

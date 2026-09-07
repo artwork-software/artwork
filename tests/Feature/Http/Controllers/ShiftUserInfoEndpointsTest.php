@@ -4,6 +4,7 @@ namespace Tests\Feature\Http\Controllers;
 
 use Artwork\Modules\GeneralSettings\Models\GeneralSettings;
 use Artwork\Modules\User\Models\User;
+use Artwork\Modules\User\Models\UserWorkTime;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\Feature\FeatureTestCase;
 
@@ -53,7 +54,21 @@ final class ShiftUserInfoEndpointsTest extends FeatureTestCase
     public function worktimes_endpoint_honours_start_and_end_parameters(): void
     {
         $this->actingAsAdmin();
-        $user = User::factory()->create(['can_work_shifts' => true, 'weekly_working_hours' => 40]);
+        $user = User::factory()->create(['can_work_shifts' => true]);
+        // Soll kommt ausschließlich aus dem Arbeitszeitmuster (Block 4): Mo–Fr 8 h
+        UserWorkTime::query()->insert([
+            'user_id' => $user->id,
+            'monday' => '08:00',
+            'tuesday' => '08:00',
+            'wednesday' => '08:00',
+            'thursday' => '08:00',
+            'friday' => '08:00',
+            'valid_from' => '2026-01-01',
+            'valid_until' => null,
+            'is_active' => true,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
 
         $response = $this->getJson(route('shift.user-info.worktimes', [
             'user' => $user->id,
@@ -68,8 +83,10 @@ final class ShiftUserInfoEndpointsTest extends FeatureTestCase
 
         $days = collect($response->json('workTimes'))->flatten(1)->keyBy('date');
         $this->assertCount(30, $days);
-        $this->assertSame(480, $days['2026-06-01']['daily_target_minutes']); // Montag, 40h/5
-        $this->assertSame(0, $days['2026-06-06']['daily_target_minutes']);   // Samstag
+        $this->assertSame(480, $days['2026-06-01']['daily_target_minutes']); // Montag laut Muster
+        $this->assertSame(0, $days['2026-06-06']['daily_target_minutes']);   // Samstag (Muster ohne Zeit)
+        $this->assertFalse($days['2026-06-01']['target_unknown']);
+        $this->assertFalse($response->json('totals.target_unknown'));
         $this->assertArrayHasKey('reduction_reason', $days['2026-06-01']);
     }
 

@@ -17,6 +17,10 @@ class UpdateShiftRuleRequest extends FormRequest
             'individual_number_value' => $this->ruleTypeNeedsValue()
                 ? 'required|numeric|min:0.1'
                 : 'nullable|numeric',
+            // Ausgleichszeitraum in Wochen — Pflicht beim Wochendurchschnitt (averageWeeklyHours)
+            'period_weeks' => $this->ruleTypeHasPeriodWeeks()
+                ? 'required|integer|min:2|max:104'
+                : 'nullable|integer',
             'warning_color' => 'required|string',
             'default_compensation_days' => 'nullable|numeric|min:0.5',
             'default_compensation_deadline_days' => 'nullable|integer|min:1',
@@ -35,6 +39,9 @@ class UpdateShiftRuleRequest extends FormRequest
         // Optionaler Wert: leer/0 bedeutet "Zielwert aus dem Vertrag"
         if ($this->ruleTypeHasOptionalValue() && (float) $this->input('individual_number_value') <= 0) {
             $this->merge(['individual_number_value' => null]);
+        }
+        if (!$this->ruleTypeHasPeriodWeeks()) {
+            $this->merge(['period_weeks' => null]);
         }
     }
 
@@ -56,5 +63,10 @@ class UpdateShiftRuleRequest extends FormRequest
     private function ruleTypeHasOptionalValue(): bool
     {
         return in_array($this->triggerType(), ShiftRuleService::ruleTypesWithOptionalValue(), true);
+    }
+
+    private function ruleTypeHasPeriodWeeks(): bool
+    {
+        return in_array($this->triggerType(), ShiftRuleService::ruleTypesWithPeriodWeeks(), true);
     }
 }

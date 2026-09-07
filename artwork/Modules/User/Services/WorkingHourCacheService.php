@@ -14,7 +14,9 @@ class WorkingHourCacheService
     // v2: Wochenwerte kommen seit 09/2026 aus dem WorkTimeCalculationService (anderes Soll/Ist) —
     // neuer Präfix, damit alte Einträge (bis zu 7 Tage TTL) nicht weiter ausgeliefert werden.
     // v3: Wochen-Payload um planned_formatted/daily_target_formatted/difference_formatted ergänzt
-    private const PREFIX = 'working_hours_v3:';
+    // v4: Soll ohne Arbeitszeitmuster ist unbekannt (target_unknown/days_without_pattern statt
+    //     weekly_working_hours/5) — alte Wochenwerte dürfen nicht weiter ausgeliefert werden
+    private const PREFIX = 'working_hours_v4:';
 
     public function getWeeklyData(string $type, int $id, int $year, int $week): ?array
     {

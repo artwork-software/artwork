@@ -18,7 +18,8 @@ use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
 /**
- * Soll/Ist-Regeln (TVöD als Referenz): Fünftagewoche ohne Muster, Muster zum Datum,
+ * Soll/Ist-Regeln (TVöD als Referenz): Soll nur aus dem Muster zum Datum (ohne Muster unbekannt,
+ * siehe WorkTimeTargetUnknownTest),
  * Sondertage nur ohne Arbeit und nur mit aktiver Vertragsregel, Schulferien nie,
  * Krank/Urlaub soll-neutral, Buchung schlägt Schichten, Pause einmal am ersten Schichttag.
  */
@@ -188,15 +189,17 @@ final class WorkTimeCalculationServiceTest extends TestCase
         ]);
     }
 
+    /**
+     * Block 4: kein Fallback mehr auf weekly_working_hours / 5 – ohne Muster ist das Soll unbekannt.
+     */
     #[Test]
-    public function target_without_pattern_is_weekly_hours_divided_by_five_on_weekdays_and_zero_on_weekends(): void
+    public function target_without_pattern_is_unknown_regardless_of_weekly_hours(): void
     {
         $user = $this->user(39.0);
 
-        $this->assertSame(468, $this->service()->targetMinutes($user, Carbon::parse('2026-07-20'))); // Montag 7:48 h
-        $this->assertSame(468, $this->service()->targetMinutes($user, Carbon::parse('2026-07-24'))); // Freitag
-        $this->assertSame(0, $this->service()->targetMinutes($user, Carbon::parse('2026-07-25'))); // Samstag
-        $this->assertSame(0, $this->service()->targetMinutes($user, Carbon::parse('2026-07-26'))); // Sonntag
+        $this->assertNull($this->service()->targetMinutes($user, Carbon::parse('2026-07-20'))); // Montag
+        $this->assertNull($this->service()->targetMinutes($user, Carbon::parse('2026-07-25'))); // Samstag
+        $this->assertTrue($this->service()->dayBreakdown($user, Carbon::parse('2026-07-20'))['target_unknown']);
     }
 
     #[Test]
@@ -442,6 +445,9 @@ final class WorkTimeCalculationServiceTest extends TestCase
     public function breakdown_for_range_covers_every_day_of_the_period(): void
     {
         $user = $this->user(40.0);
+        $this->workTime($user, [
+            'monday' => '08:00', 'tuesday' => '08:00', 'wednesday' => '08:00', 'thursday' => '08:00', 'friday' => '08:00',
+        ]);
 
         $range = $this->service()->breakdownForRange($user, Carbon::parse('2026-07-20'), Carbon::parse('2026-07-26'));
 

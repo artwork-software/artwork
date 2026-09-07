@@ -40,21 +40,42 @@
                     ]"
                 />
 
-                <div>
-                    <BaseInput
-                        v-model="userContractForm.free_full_days_per_week"
-                        label="Free Full Days Per Week"
-                        type="number"
-                        id="free_full_days_per_week" />
-                    <p v-if="userContractForm.errors.free_full_days_per_week" class="text-danger mt-0.5 text-xs"></p>
+                <!-- Beide Wochenwerte sind Zielwerte der Kennzahlen (Ganze/halbe freie Tage je Spielzeithälfte) -->
+                <div class="flex items-start gap-2">
+                    <div class="grow">
+                        <BaseInput
+                            v-model="userContractForm.free_full_days_per_week"
+                            label="Free Full Days Per Week"
+                            type="number"
+                            id="free_full_days_per_week" />
+                        <p v-if="userContractForm.errors.free_full_days_per_week" class="text-danger mt-0.5 text-xs"></p>
+                    </div>
+                    <ToolTipComponent
+                        direction="left"
+                        :tooltip-text="$t('Used as key-figure target: full free days per week × weeks of the season half = target for \'Full free days\' in the key figures (0 = no target).')"
+                        icon="IconInfoCircle"
+                        icon-size="h-4 w-4"
+                        classes="text-text-subtle"
+                        classes-button="mt-3"
+                    />
                 </div>
-                <div>
-                    <BaseInput
-                        v-model="userContractForm.free_half_days_per_week"
-                        label="Free Half Days Per Week"
-                        type="number"
-                        id="free_half_days_per_week" />
-                    <p v-if="userContractForm.errors.free_half_days_per_week" class="text-danger mt-0.5 text-xs"></p>
+                <div class="flex items-start gap-2">
+                    <div class="grow">
+                        <BaseInput
+                            v-model="userContractForm.free_half_days_per_week"
+                            label="Free Half Days Per Week"
+                            type="number"
+                            id="free_half_days_per_week" />
+                        <p v-if="userContractForm.errors.free_half_days_per_week" class="text-danger mt-0.5 text-xs"></p>
+                    </div>
+                    <ToolTipComponent
+                        direction="left"
+                        :tooltip-text="$t('Used as key-figure target: free half days per week × weeks of the season half = target for \'Granted half free days\' in the key figures (0 = no target).')"
+                        icon="IconInfoCircle"
+                        icon-size="h-4 w-4"
+                        classes="text-text-subtle"
+                        classes-button="mt-3"
+                    />
                 </div>
                 <div>
                     <div class="flex gap-3">
@@ -214,6 +235,7 @@ import BaseAlertComponent from "@/Components/Alerts/BaseAlertComponent.vue";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 import BaseTextarea from "@/Artwork/Inputs/BaseTextarea.vue";
 import SettingsGuideBanner from "@/Artwork/Guide/SettingsGuideBanner.vue";
+import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
 import {useForm} from "@inertiajs/vue3";
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 

@@ -5,6 +5,7 @@ namespace Tests\Feature\Http\Controllers;
 use Artwork\Modules\Craft\Models\Craft;
 use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Artwork\Modules\User\Models\User;
+use Artwork\Modules\User\Models\UserWorkTime;
 use Artwork\Modules\WorkTime\Services\WorkTimeCalculationService;
 use PHPUnit\Framework\Attributes\Test;
 use Spatie\Permission\Models\Permission;
@@ -27,8 +28,22 @@ final class ShiftPlanWeeklyHoursFormatTest extends FeatureTestCase
 
         $this->viewer = User::factory()->create([
             'can_work_shifts' => true,
-            'weekly_working_hours' => 40,
             'work_time_balance' => 0,
+        ]);
+        // Soll kommt ausschließlich aus dem Arbeitszeitmuster (Block 4); ohne Muster wäre die
+        // KW-Zelle "–" (target_unknown) und die Formatprüfungen liefen ins Leere
+        UserWorkTime::query()->insert([
+            'user_id' => $this->viewer->id,
+            'monday' => '08:00',
+            'tuesday' => '08:00',
+            'wednesday' => '08:00',
+            'thursday' => '08:00',
+            'friday' => '08:00',
+            'valid_from' => '2000-01-01',
+            'valid_until' => null,
+            'is_active' => true,
+            'created_at' => now(),
+            'updated_at' => now(),
         ]);
         $this->craft = Craft::factory()->create();
         $this->viewer->assignedCrafts()->attach($this->craft->id);
@@ -81,5 +96,7 @@ final class ShiftPlanWeeklyHoursFormatTest extends FeatureTestCase
         );
         $this->assertSame('0:00 h', $week['planned_formatted']);
         $this->assertSame($week['difference_minutes'] < 0, $week['isMinus']);
+        $this->assertFalse($week['target_unknown']);
+        $this->assertSame(0, $week['days_without_pattern']);
     }
 }

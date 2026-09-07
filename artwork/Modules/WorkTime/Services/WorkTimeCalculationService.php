@@ -17,7 +17,9 @@ use Carbon\Carbon;
  *
  * Soll (TVöD als Referenz):
  *  - Arbeitszeitmuster, das zum Datum gültig ist (valid_from/valid_until); Wochentag ohne Zeit = 0.
- *  - Ohne Muster: weekly_working_hours / 5 an Mo–Fr, 0 an Sa/So (Fünftagewoche).
+ *  - Ohne gültiges Muster ist das Soll UNBEKANNT (null, Flag target_unknown) – es gibt keinen
+ *    Fallback mehr auf users.weekly_working_hours (Entscheidung Block 4: das Arbeitszeitmuster ist
+ *    die einzige Quelle für das Soll). Externe (Freelancer/Dienstleister) haben kein Soll (0).
  *  - Sondertag (Feiertag mit Flag treatAsSpecialDay) OHNE Arbeit und aktiver Sondertag-Regel im
  *    Vertrag: Soll 0 bzw. im Dreimonatsmodus Soll minus Wochentagsdurchschnitt. Arbeit am
  *    Sondertag = keine Minderung. Schulferien tragen das Flag nicht und senken das Soll nie.
@@ -29,6 +31,10 @@ use Carbon\Carbon;
  *  - Tag mit Nachtbuchung (work_time_bookings): worked_hours der Buchung (keine Doppelzählung).
  *  - Sonst Schichtminuten (Pause einmal am ersten Schichttag) plus Individualzeiten.
  *  - Krank/Urlaub sind soll-neutral: ganzer Tag -> Ist = Soll; Halbtag -> Arbeit + 0,5 · Soll.
+ *    Bei unbekanntem Soll bleibt nur die tatsächliche Arbeit als Ist (kein Neutralanteil).
+ *
+ * Aggregate über Zeiträume (Woche/Monat/Spielzeit) über summarizeRange(): sobald ein Tag ohne
+ * Muster im Zeitraum liegt, sind Soll und Differenz null und target_unknown = true.
  */
 class WorkTimeCalculationService
 {
@@ -56,7 +62,10 @@ class WorkTimeCalculationService
     // Öffentliche API
     // ------------------------------------------------------------------
 
-    public function targetMinutes(User|Freelancer|ServiceProvider $entity, Carbon $day, ?array $context = null): int
+    /**
+     * Tagessoll in Minuten; null = kein gültiges Arbeitszeitmuster (Soll unbekannt).
+     */
+    public function targetMinutes(User|Freelancer|ServiceProvider $entity, Carbon $day, ?array $context = null): ?int
     {
         return $this->dayBreakdown($entity, $day, $context)['target'];
     }
@@ -94,8 +103,49 @@ class WorkTimeCalculationService
     }
 
     /**
+     * Summen über Tages-Breakdowns (z. B. aus breakdownForRange). Soll/Differenz sind null, sobald
+     * mindestens ein Tag ohne gültiges Muster enthalten ist (target_unknown), Ist wird immer summiert.
+     *
+     * @param iterable<array<string, mixed>> $breakdowns
      * @return array{
-     *     date: string, target: int, actual: int, base_target: int, balance: int,
+     *     target: int|null, actual: int, balance: int|null, target_unknown: bool,
+     *     days_without_pattern: int, days: int, known_target: int
+     * }
+     */
+    public static function summarizeRange(iterable $breakdowns): array
+    {
+        $target = 0;
+        $actual = 0;
+        $daysWithoutPattern = 0;
+        $days = 0;
+
+        foreach ($breakdowns as $day) {
+            $days++;
+            $actual += (int) ($day['actual'] ?? 0);
+            if (($day['target'] ?? null) === null || !empty($day['target_unknown'])) {
+                $daysWithoutPattern++;
+                continue;
+            }
+            $target += (int) $day['target'];
+        }
+
+        $unknown = $daysWithoutPattern > 0;
+
+        return [
+            'target' => $unknown ? null : $target,
+            'actual' => $actual,
+            'balance' => $unknown ? null : $actual - $target,
+            'target_unknown' => $unknown,
+            'days_without_pattern' => $daysWithoutPattern,
+            'days' => $days,
+            'known_target' => $target,
+        ];
+    }
+
+    /**
+     * @return array{
+     *     date: string, target: int|null, actual: int, base_target: int|null, balance: int|null,
+     *     target_unknown: bool,
      *     work_minutes: int, shift_minutes: int, individual_minutes: int, nightly_minutes: int,
      *     is_special_day: bool, special_day_name: string|null, special_day_counts: bool,
      *     target_reduction: int, reduction_reason: string|null,
@@ -126,7 +176,11 @@ class WorkTimeCalculationService
 
         $isSpecialDay = array_key_exists($key, $context['special_days'] ?? []);
         $specialDayName = $isSpecialDay ? ($context['special_days'][$key] ?? null) : null;
-        $specialDayCounts = $isSpecialDay && (bool) ($context['special_day_rule_active'] ?? false);
+        // Vertragshistorie: der Sondertag-Schalter gilt je Tag (Resolver cached je Person/Tag),
+        // nur an Sondertagen überhaupt auflösen.
+        $specialDayCounts = $isSpecialDay
+            && $entity instanceof User
+            && $this->specialDayService->specialDayRuleActiveFor($entity, $day);
         $threeMonthMode = (bool) ($context['three_month_mode'] ?? false);
 
         $reduction = 0;
@@ -134,7 +188,7 @@ class WorkTimeCalculationService
         $referencePeriod = null;
         $referenceAverage = null;
 
-        if ($entity instanceof User && $baseTarget > 0) {
+        if ($entity instanceof User && $baseTarget !== null && $baseTarget > 0) {
             if ($specialDayCounts) {
                 // Nur Sondertage OHNE Arbeit senken das Soll; geleistete Stunden zählen normal.
                 if ($workMinutes === 0) {
@@ -168,10 +222,14 @@ class WorkTimeCalculationService
             }
         }
 
-        $target = max(0, $baseTarget - $reduction);
+        $targetUnknown = $baseTarget === null;
+        $target = $targetUnknown ? null : max(0, $baseTarget - $reduction);
 
         if ($booking !== null) {
             $actual = (int) $booking['worked'];
+        } elseif ($targetUnknown) {
+            // Ohne Soll ist der soll-neutrale Anteil (Krank/Urlaub) nicht bestimmbar: nur echte Arbeit
+            $actual = $workMinutes;
         } elseif ($neutralFactor >= 1.0) {
             $actual = $target;
         } elseif ($neutralFactor > 0.0) {
@@ -185,7 +243,8 @@ class WorkTimeCalculationService
             'target' => $target,
             'actual' => $actual,
             'base_target' => $baseTarget,
-            'balance' => $actual - $target,
+            'balance' => $targetUnknown ? null : $actual - $target,
+            'target_unknown' => $targetUnknown,
             'work_minutes' => $workMinutes,
             'shift_minutes' => $shiftMinutes,
             'individual_minutes' => $individualMinutes,
@@ -237,13 +296,11 @@ class WorkTimeCalculationService
             'special_days' => $isUser
                 ? ($options['special_days'] ?? $this->specialDayService->specialDaysBetween($start, $end))
                 : [],
-            'special_day_rule_active' => $isUser && $this->specialDayService->specialDayRuleActiveFor($entity),
             'three_month_mode' => $isUser && $this->threeMonthAverageTargetService->usesThreeMonthAverage($entity),
             'patterns' => $isUser ? $this->patternsPerDay($entity, $start, $end) : [],
             'holiday_comp' => $isUser
                 ? $this->holidayCompensationPerDay($entity, $start, $end, $options['holiday_comp_days'] ?? null)
                 : [],
-            'weekly_working_hours' => (float) ($entity->getAttribute('weekly_working_hours') ?? 0),
         ];
     }
 
@@ -340,15 +397,15 @@ class WorkTimeCalculationService
     }
 
     /**
-     * Nur das Basis-Tagessoll je Tag (Muster bzw. Fünftagewoche), ohne Schichten/Buchungen zu laden.
+     * Nur das Basis-Tagessoll je Tag aus dem Muster, ohne Schichten/Buchungen zu laden.
+     * null = an diesem Tag gilt kein Arbeitszeitmuster (Soll unbekannt).
      *
-     * @return array<string, int> 'Y-m-d' => Minuten
+     * @return array<string, int|null> 'Y-m-d' => Minuten
      */
     public function baseTargetsForRange(User $user, Carbon $start, Carbon $end): array
     {
         $context = [
             'patterns' => $this->patternsPerDay($user, $start, $end),
-            'weekly_working_hours' => (float) ($user->getAttribute('weekly_working_hours') ?? 0),
         ];
         $result = [];
         $cursor = $start->copy()->startOfDay();
@@ -363,25 +420,93 @@ class WorkTimeCalculationService
 
     /**
      * Basis-Tagessoll (vor Sondertag-/Ausgleichstag-Minderung).
+     *
+     * User: Minuten des am Tag gültigen Musters, null ohne Muster (Soll unbekannt – kein
+     * Fallback auf weekly_working_hours). Externe haben kein Soll: 0.
      */
-    public function baseTargetMinutes(User|Freelancer|ServiceProvider $entity, Carbon $day, ?array $context = null): int
-    {
+    public function baseTargetMinutes(
+        User|Freelancer|ServiceProvider $entity,
+        Carbon $day,
+        ?array $context = null
+    ): ?int {
+        if (!$entity instanceof User) {
+            return 0;
+        }
+
         $key = $day->toDateString();
         $weekday = self::WEEKDAYS[$day->dayOfWeek];
 
-        if ($entity instanceof User) {
-            $patterns = $context !== null && array_key_exists('patterns', $context)
-                ? $context['patterns']
-                : $this->patternsPerDay($entity, $day, $day);
-            $pattern = $patterns[$key] ?? null;
-            if ($pattern instanceof UserWorkTime) {
-                return self::patternDayMinutes($pattern, $weekday);
-            }
+        $patterns = $context !== null && array_key_exists('patterns', $context)
+            ? $context['patterns']
+            : $this->patternsPerDay($entity, $day, $day);
+        $pattern = $patterns[$key] ?? null;
+        if ($pattern instanceof UserWorkTime) {
+            return self::patternDayMinutes($pattern, $weekday);
         }
 
-        $weekly = (float) ($context['weekly_working_hours'] ?? ($entity->getAttribute('weekly_working_hours') ?? 0));
+        return null;
+    }
 
-        return $day->isWeekday() ? (int) round($weekly * 60 / 5) : 0;
+    /**
+     * Wochenstunden eines Musters (Summe der sieben Wochentage, Vorlagenreferenz berücksichtigt).
+     */
+    public static function weeklyPatternMinutes(UserWorkTime $workTime): int
+    {
+        $minutes = 0;
+        foreach (self::WEEKDAYS as $weekday) {
+            $minutes += self::patternDayMinutes($workTime, $weekday);
+        }
+
+        return $minutes;
+    }
+
+    /**
+     * Wochenstunden laut dem am Stichtag (Default heute) gültigen Arbeitszeitmuster, z. B. 38.5;
+     * null ohne gültiges Muster. Ersetzt die frühere Spalte users.weekly_working_hours.
+     */
+    public function currentWeeklyHours(User $user, ?Carbon $day = null): ?float
+    {
+        $day = ($day ?? Carbon::today())->startOfDay();
+        $pattern = $this->patternForDate($user, $day);
+        if ($pattern === null) {
+            return null;
+        }
+
+        return round(self::weeklyPatternMinutes($pattern) / 60, 2);
+    }
+
+    /**
+     * IDs der übergebenen User, für die am Stichtag ein Arbeitszeitmuster gilt – EINE Query für
+     * alle IDs (Personalverwaltung: Warn-Badge "Arbeitszeitmuster fehlt" ohne N+1).
+     *
+     * @param array<int, int> $userIds
+     * @return array<int, true> user_id => true
+     */
+    public function userIdsWithPatternOn(array $userIds, ?Carbon $day = null): array
+    {
+        $userIds = array_values(array_unique(array_map('intval', $userIds)));
+        if ($userIds === []) {
+            return [];
+        }
+        $dateKey = ($day ?? Carbon::today())->toDateString();
+
+        $ids = UserWorkTime::query()
+            ->whereIn('user_id', $userIds)
+            ->where(function ($q) use ($dateKey): void {
+                $q->whereNull('valid_from')->orWhere('valid_from', '<=', $dateKey);
+            })
+            ->where(function ($q) use ($dateKey): void {
+                $q->whereNull('valid_until')->orWhere('valid_until', '>=', $dateKey);
+            })
+            ->distinct()
+            ->pluck('user_id');
+
+        $result = [];
+        foreach ($ids as $id) {
+            $result[(int) $id] = true;
+        }
+
+        return $result;
     }
 
     /**

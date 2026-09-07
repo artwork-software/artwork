@@ -485,6 +485,94 @@ final class ShiftRuleControllerTest extends FeatureTestCase
         $this->assertDatabaseHas('shift_rules', ['name' => 'Sonntagsarbeit', 'trigger_type' => 'workOnSunday', 'individual_number_value' => 0]);
     }
 
+    // --- period_weeks (Wochendurchschnitt) --------------------------------------------------
+
+    #[Test]
+    public function average_weekly_hours_rule_requires_a_period_between_2_and_104_weeks(): void
+    {
+        $this->actingAsAdmin();
+        $payload = [
+            'name' => 'Wochendurchschnitt',
+            'description' => 'Ø über Ausgleichszeitraum',
+            'trigger_type' => 'averageWeeklyHours',
+            'individual_number_value' => 48,
+            'warning_color' => '#ff6b6b',
+        ];
+
+        $this->post(route('shift-rules.store'), $payload)->assertSessionHasErrors('period_weeks');
+        $this->post(route('shift-rules.store'), $payload + ['period_weeks' => 1])->assertSessionHasErrors('period_weeks');
+        $this->post(route('shift-rules.store'), $payload + ['period_weeks' => 105])->assertSessionHasErrors('period_weeks');
+        $this->assertDatabaseMissing('shift_rules', ['trigger_type' => 'averageWeeklyHours']);
+
+        $this->post(route('shift-rules.store'), $payload + ['period_weeks' => 24])
+            ->assertRedirect()->assertSessionHasNoErrors();
+        $this->assertDatabaseHas('shift_rules', [
+            'trigger_type' => 'averageWeeklyHours',
+            'individual_number_value' => 48,
+            'period_weeks' => 24,
+        ]);
+    }
+
+    #[Test]
+    public function period_weeks_is_ignored_for_other_rule_types(): void
+    {
+        $this->actingAsAdmin();
+
+        $this->post(route('shift-rules.store'), [
+            'name' => 'Tagesmaximum',
+            'description' => 'max. Stunden',
+            'trigger_type' => 'maxWorkingHoursOnDay',
+            'individual_number_value' => 10,
+            'period_weeks' => 24,
+            'warning_color' => '#ff6b6b',
+        ])->assertRedirect()->assertSessionHasNoErrors();
+
+        $this->assertDatabaseHas('shift_rules', ['trigger_type' => 'maxWorkingHoursOnDay', 'period_weeks' => null]);
+    }
+
+    #[Test]
+    public function updating_an_average_weekly_hours_rule_keeps_requiring_the_period(): void
+    {
+        $this->actingAsAdmin();
+        $rule = ShiftRule::factory()->create([
+            'trigger_type' => 'averageWeeklyHours',
+            'individual_number_value' => 48.0,
+            'period_weeks' => 24,
+        ]);
+        $payload = [
+            'name' => 'Wochendurchschnitt',
+            'description' => 'geändert',
+            'individual_number_value' => 44,
+            'warning_color' => '#ff6b6b',
+        ];
+
+        $this->put(route('shift-rules.update', $rule), $payload)->assertSessionHasErrors('period_weeks');
+
+        $this->put(route('shift-rules.update', $rule), $payload + ['period_weeks' => 12])
+            ->assertRedirect()->assertSessionHasNoErrors();
+        $rule->refresh();
+        $this->assertSame(12, $rule->period_weeks);
+        $this->assertEqualsWithDelta(44.0, $rule->individual_number_value, 0.001);
+    }
+
+    #[Test]
+    public function rules_with_optional_value_can_be_created_without_a_number(): void
+    {
+        $this->actingAsAdmin();
+
+        foreach (['minFreeSundaysPerYear', 'minFreeDaysPerWeek'] as $type) {
+            $this->post(route('shift-rules.store'), [
+                'name' => $type,
+                'description' => 'Wert aus Standard/Vertrag',
+                'trigger_type' => $type,
+                'individual_number_value' => null,
+                'warning_color' => '#ff6b6b',
+            ])->assertRedirect()->assertSessionHasNoErrors();
+
+            $this->assertDatabaseHas('shift_rules', ['trigger_type' => $type, 'individual_number_value' => 0]);
+        }
+    }
+
     #[Test]
     public function rule_with_value_still_requires_the_number(): void
     {

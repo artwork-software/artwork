@@ -19,6 +19,8 @@ class ShiftRule extends Model
         'description',
         'trigger_type',
         'individual_number_value',
+        // Ausgleichszeitraum in Wochen — nur für den Regeltyp averageWeeklyHours, sonst null
+        'period_weeks',
         'warning_color',
         'default_compensation_days',
         'default_compensation_deadline_days',
@@ -27,6 +29,7 @@ class ShiftRule extends Model
 
     protected $casts = [
         'individual_number_value' => 'float',
+        'period_weeks' => 'integer',
         'default_compensation_days' => 'float',
         'default_compensation_deadline_days' => 'integer',
         'is_active' => 'boolean'

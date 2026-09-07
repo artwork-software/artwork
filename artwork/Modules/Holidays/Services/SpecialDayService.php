@@ -4,7 +4,7 @@ namespace Artwork\Modules\Holidays\Services;
 
 use Artwork\Modules\Holidays\Models\Holiday;
 use Artwork\Modules\User\Models\User;
-use Artwork\Modules\User\Models\UserContractAssign;
+use Artwork\Modules\User\Services\ContractSettingsResolver;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
 
@@ -27,8 +27,12 @@ class SpecialDayService
     /** @var array<string, bool> */
     private array $dateCache = [];
 
-    /** @var array<int, bool> */
+    /** @var array<string, bool> Cache je "userId|Y-m-d" (Vertragshistorie: Schalter kann je Tag abweichen) */
     private array $userRuleCache = [];
+
+    public function __construct(private readonly ContractSettingsResolver $contractSettings)
+    {
+    }
 
     public function isSpecialDay(Carbon|string $date): bool
     {
@@ -85,32 +89,27 @@ class SpecialDayService
     }
 
     /**
-     * Gilt die Sondertag-Regel für diese Person? Zuweisung (per-User) vor Vertragsvorlage,
+     * Gilt die Sondertag-Regel für diese Person am Stichtag (Default heute)? Zuweisung (per-User)
+     * vor Vertragsvorlage (ContractSettingsResolver, löst den am Tag gültigen Vertragszeitraum auf);
      * ohne Vertrag zählen Sondertage.
      */
-    public function specialDayRuleActiveFor(User $user): bool
+    public function specialDayRuleActiveFor(User $user, Carbon|string|null $date = null): bool
     {
-        if (array_key_exists($user->id, $this->userRuleCache)) {
-            return $this->userRuleCache[$user->id];
+        $day = $date === null
+            ? Carbon::today()
+            : ($date instanceof Carbon ? $date->copy()->startOfDay() : Carbon::parse($date)->startOfDay());
+        $key = $user->id . '|' . $day->toDateString();
+
+        if (array_key_exists($key, $this->userRuleCache)) {
+            return $this->userRuleCache[$key];
         }
 
-        $assign = $user->relationLoaded('contract')
-            ? $user->contract
-            : UserContractAssign::query()->where('user_id', $user->id)->first();
-
-        if ($assign === null) {
-            return $this->userRuleCache[$user->id] = true;
-        }
-
-        if ($assign->special_day_rule_active !== null) {
-            return $this->userRuleCache[$user->id] = (bool) $assign->special_day_rule_active;
-        }
-
-        return $this->userRuleCache[$user->id] = (bool) ($assign->userContract?->special_day_rule_active ?? true);
+        return $this->userRuleCache[$key] = $this->contractSettings
+            ->bool($user, 'special_day_rule_active', true, $day);
     }
 
     /**
-     * Sondertag UND die Person hat die Sondertag-Regel aktiv.
+     * Sondertag UND die Person hat die Sondertag-Regel an diesem Tag aktiv.
      */
     public function countsAsSpecialDayForUser(User $user, Carbon|string $date): bool
     {
@@ -118,7 +117,7 @@ class SpecialDayService
             return false;
         }
 
-        return $this->specialDayRuleActiveFor($user);
+        return $this->specialDayRuleActiveFor($user, $date);
     }
 
     public function flush(): void

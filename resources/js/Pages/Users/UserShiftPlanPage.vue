@@ -2,7 +2,7 @@
     <UserEditHeader :current-tab="currentTab" :user_to_edit="user_to_edit">
         <UserShiftPlan type="user"
                        :totalPlannedWorkingHours="totalPlannedWorkingHours"
-                       :weeklyWorkingHours="user_to_edit.weekly_working_hours"
+                       :work-time-target="workTimeTarget"
                        :date-value="dateValue"
                        :whole-week-date-period="wholeWeekDatePeriod"
                        :events-with-total-planned-working-hours="eventsWithTotalPlannedWorkingHours"
@@ -70,7 +70,8 @@ export default {
         'availabilities',
         'shiftQualifications',
         'firstProjectShiftTabId',
-        'projectWishes'
+        'projectWishes',
+        'workTimeTarget'
     ],
     data() {
         return {

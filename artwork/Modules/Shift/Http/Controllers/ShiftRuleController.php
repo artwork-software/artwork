@@ -7,6 +7,7 @@ use Artwork\Modules\Shift\Http\Requests\AssignContractsToRuleRequest;
 use Artwork\Modules\Shift\Http\Requests\AssignUsersToRuleRequest;
 use Artwork\Modules\Shift\Http\Requests\GetViolationsForDateRangeRequest;
 use Artwork\Modules\Shift\Http\Requests\ProcessViolationRequest;
+use Artwork\Modules\Shift\Http\Requests\StoreLegalDefaultShiftRulesRequest;
 use Artwork\Modules\Shift\Http\Requests\StoreManualViolationRequest;
 use Artwork\Modules\Shift\Http\Requests\StoreShiftRuleRequest;
 use Artwork\Modules\Shift\Http\Requests\UpdateContractAssignmentsRequest;
@@ -16,8 +17,10 @@ use Artwork\Modules\Shift\Http\Requests\ValidateShiftRulesRequest;
 use Artwork\Modules\Shift\Models\CompensationDayOff;
 use Artwork\Modules\Shift\Models\ShiftRuleViolation;
 use Artwork\Modules\Shift\Repositories\CompensationDayOffRepository;
+use Artwork\Modules\Shift\Services\ShiftRuleRevalidationService;
 use Artwork\Modules\Shift\Services\ShiftRuleService;
 use Artwork\Modules\Shift\Models\ShiftRule;
+use Artwork\Modules\Shift\Support\LegalDefaultShiftRules;
 use Artwork\Modules\User\Models\User;
 use Artwork\Modules\User\Models\UserContract;
 use Carbon\Carbon;
@@ -141,6 +144,8 @@ class ShiftRuleController extends Controller
         return Inertia::render('ShiftWarnings/Index', [
             'rules' => $this->shiftRuleService->getAllWithRelations(),
             'availableRuleTypes' => $this->shiftRuleService->getAvailableRuleTypes(),
+            // Gesetzliche Standardregeln (ArbZG) — einzige Definitionsquelle, keine Kopie im Frontend
+            'legalDefaultRules' => LegalDefaultShiftRules::all(),
             'contracts' => UserContract::all(),
             // Auswahl "Benachrichtigen" (usersToNotify) — nur Name und ID
             'users' => User::query()
@@ -162,6 +167,7 @@ class ShiftRuleController extends Controller
                 'trigger_type' => $validated['trigger_type'],
                 // Regeltypen ohne Zahlenwert (Sonntag/Sondertag/HFT an Sondertag): Spalte ist NOT NULL -> 0
                 'individual_number_value' => $this->numberValueFor($validated['trigger_type'], $validated),
+                'period_weeks' => $this->periodWeeksFor($validated['trigger_type'], $validated),
                 'warning_color' => $validated['warning_color'],
                 'default_compensation_days' => $validated['default_compensation_days'] ?? null,
                 'default_compensation_deadline_days' => $validated['default_compensation_deadline_days'] ?? null,
@@ -171,9 +177,65 @@ class ShiftRuleController extends Controller
             $validated['user_ids'] ?? null
         );
 
-        return redirect()->back()->with('flash', [
-            'message' => __('Rule successfully created')
-        ]);
+        return redirect()->back()->with('success', __('Rule successfully created'));
+    }
+
+    /**
+     * "Gesetzliche Standardregeln anlegen" (ArbZG): legt die gewählten Standardregeln als ganz normale
+     * Regeln an und ordnet sie den gewählten Vertragsvorlagen zu. Idempotent: existiert bereits eine
+     * (nicht gelöschte) Regel mit gleichem Typ und Wert (beim Wochendurchschnitt auch gleichem Zeitraum),
+     * wird sie nicht erneut angelegt, sondern nur den noch fehlenden Vorlagen zugeordnet.
+     * Neuprüfung einmal für alle betroffenen Vorlagen (wie beim normalen Anlegen).
+     */
+    public function storeDefaults(StoreLegalDefaultShiftRulesRequest $request): RedirectResponse
+    {
+        $validated = $request->validated();
+        $contractIds = array_values(array_unique(array_map('intval', $validated['contract_ids'] ?? [])));
+
+        $existingRules = ShiftRule::query()->get();
+
+        $created = 0;
+        $alreadyExisting = 0;
+        $newlyAssignedContractIds = [];
+
+        foreach ($validated['rules'] as $key) {
+            $definition = LegalDefaultShiftRules::find($key);
+            if ($definition === null) {
+                continue;
+            }
+
+            $rule = $existingRules->first(
+                static fn (ShiftRule $candidate): bool => LegalDefaultShiftRules::matches($candidate, $definition)
+            );
+
+            if ($rule === null) {
+                // Ohne Vorlagen anlegen (keine Neuprüfung je Regel) — Zuordnung und EINE Neuprüfung unten
+                $rule = $this->shiftRuleService->createRule(LegalDefaultShiftRules::attributesFor($definition));
+                $existingRules->push($rule);
+                $created++;
+                $missingContractIds = $contractIds;
+            } else {
+                $alreadyExisting++;
+                $assigned = $rule->contracts()->pluck('user_contracts.id')->map(fn ($id) => (int) $id)->all();
+                $missingContractIds = array_values(array_diff($contractIds, $assigned));
+            }
+
+            if ($missingContractIds !== []) {
+                $rule->contracts()->syncWithoutDetaching($missingContractIds);
+                $newlyAssignedContractIds = array_merge($newlyAssignedContractIds, $missingContractIds);
+            }
+        }
+
+        $newlyAssignedContractIds = array_values(array_unique($newlyAssignedContractIds));
+        if ($newlyAssignedContractIds !== []) {
+            app(ShiftRuleRevalidationService::class)->revalidateForContracts($newlyAssignedContractIds);
+        }
+
+        return redirect()->back()->with('success', __(':created rules created, :existing already existed, :assigned contract templates assigned', [
+                'created' => $created,
+                'existing' => $alreadyExisting,
+                'assigned' => count($newlyAssignedContractIds),
+        ]));
     }
 
     public function update(UpdateShiftRuleRequest $request, ShiftRule $shiftRule): RedirectResponse
@@ -186,6 +248,7 @@ class ShiftRuleController extends Controller
                 'name' => $validated['name'],
                 'description' => $validated['description'] ?? '',
                 'individual_number_value' => $this->numberValueFor($shiftRule->trigger_type, $validated),
+                'period_weeks' => $this->periodWeeksFor($shiftRule->trigger_type, $validated),
                 'warning_color' => $validated['warning_color'],
                 'default_compensation_days' => $validated['default_compensation_days'] ?? null,
                 'default_compensation_deadline_days' => $validated['default_compensation_deadline_days'] ?? null,
@@ -194,9 +257,7 @@ class ShiftRuleController extends Controller
             $validated['user_ids'] ?? null
         );
 
-        return redirect()->back()->with('flash', [
-            'message' => __('Rule successfully updated')
-        ]);
+        return redirect()->back()->with('success', __('Rule successfully updated'));
     }
 
     private function numberValueFor(string $triggerType, array $validated): float
@@ -208,13 +269,23 @@ class ShiftRuleController extends Controller
         return (float) ($validated['individual_number_value'] ?? 0);
     }
 
+    /**
+     * Ausgleichszeitraum in Wochen nur für Regeltypen mit Zeitraum (Wochendurchschnitt), sonst null.
+     */
+    private function periodWeeksFor(string $triggerType, array $validated): ?int
+    {
+        if (!in_array($triggerType, ShiftRuleService::ruleTypesWithPeriodWeeks(), true)) {
+            return null;
+        }
+
+        return (int) ($validated['period_weeks'] ?? 0) ?: null;
+    }
+
     public function destroy(ShiftRule $shiftRule): RedirectResponse
     {
         $this->shiftRuleService->deleteRule($shiftRule);
 
-        return redirect()->back()->with('flash', [
-            'message' => __('Rule successfully deleted')
-        ]);
+        return redirect()->back()->with('success', __('Rule successfully deleted'));
     }
 
     public function contractAssignments(): Response
@@ -231,9 +302,7 @@ class ShiftRuleController extends Controller
     ): RedirectResponse {
         $this->shiftRuleService->updateContractAssignments($contract, $request->validated()['rule_ids'] ?? []);
 
-        return redirect()->back()->with('flash', [
-            'message' => __('Rule assignments successfully updated')
-        ]);
+        return redirect()->back()->with('success', __('Rule assignments successfully updated'));
     }
 
     /**
@@ -288,9 +357,7 @@ class ShiftRuleController extends Controller
                 auth()->id()
             );
 
-            return redirect()->back()->with('flash', [
-                'message' => __('Status successfully updated')
-            ]);
+            return redirect()->back()->with('success', __('Status successfully updated'));
         } catch (\Exception $e) {
             // Rohe Exception-Texte gehören ins Log, nicht in die Oberfläche
             Log::error('Shift rule violation status update failed', [
@@ -309,27 +376,21 @@ class ShiftRuleController extends Controller
     {
         $this->shiftRuleService->syncContractsForRule($shiftRule, $request->validated()['contract_ids']);
 
-        return redirect()->back()->with('flash', [
-            'message' => __('Contracts successfully assigned')
-        ]);
+        return redirect()->back()->with('success', __('Contracts successfully assigned'));
     }
 
     public function assignUsers(AssignUsersToRuleRequest $request, ShiftRule $shiftRule): RedirectResponse
     {
         $this->shiftRuleService->syncUsersForRule($shiftRule, $request->validated()['user_ids']);
 
-        return redirect()->back()->with('flash', [
-            'message' => __('Users successfully assigned')
-        ]);
+        return redirect()->back()->with('success', __('Users successfully assigned'));
     }
 
     public function resolveViolation(Request $request, ShiftRuleViolation $violation): RedirectResponse
     {
         $this->shiftRuleService->resolveViolation($violation, auth()->id());
 
-        return redirect()->back()->with('flash', [
-            'message' => __('Rule violation successfully resolved')
-        ]);
+        return redirect()->back()->with('success', __('Rule violation successfully resolved'));
     }
 
     public function ignoreViolation(Request $request, ShiftRuleViolation $violation): RedirectResponse
@@ -340,9 +401,7 @@ class ShiftRuleController extends Controller
 
         $this->shiftRuleService->ignoreViolation($violation, auth()->id(), $validated['ignore_reason']);
 
-        return redirect()->back()->with('flash', [
-            'message' => __('Rule violation successfully ignored')
-        ]);
+        return redirect()->back()->with('success', __('Rule violation successfully ignored'));
     }
 
     /**
@@ -387,9 +446,7 @@ class ShiftRuleController extends Controller
             'created_by_user_id' => auth()->id(),
         ]);
 
-        return redirect()->back()->with('flash', [
-            'message' => __('Rule violation successfully created')
-        ]);
+        return redirect()->back()->with('success', __('Rule violation successfully created'));
     }
 
     /**
@@ -438,9 +495,7 @@ class ShiftRuleController extends Controller
         app(\Artwork\Modules\User\Services\WorkingHourCacheService::class)
             ->forgetForEntity('user', $violation->user_id);
 
-        return redirect()->back()->with('flash', [
-            'message' => __('Rule violation successfully processed')
-        ]);
+        return redirect()->back()->with('success', __('Rule violation successfully processed'));
     }
 
     public function grantCompensationDay(Request $request, CompensationDayOff $compensationDayOff): JsonResponse|RedirectResponse
@@ -530,9 +585,7 @@ class ShiftRuleController extends Controller
             $this->shiftRuleService->validateRulesForUser($compensationDayOff->user, $day->copy(), $day->copy());
         }
 
-        return redirect()->back()->with('flash', [
-            'message' => __('Compensation day successfully granted')
-        ]);
+        return redirect()->back()->with('success', __('Compensation day successfully granted'));
     }
 
     /**
@@ -633,7 +686,7 @@ class ShiftRuleController extends Controller
     public function revokeCompensationDay(CompensationDayOff $compensationDayOff): RedirectResponse
     {
         if (!$compensationDayOff->isGranted()) {
-            return redirect()->back()->with('flash', ['error' => 'Compensation day is not granted.']);
+            return redirect()->back()->with('error', 'Compensation day is not granted.');
         }
 
         $compensationDayOff->update([
@@ -645,9 +698,7 @@ class ShiftRuleController extends Controller
         app(\Artwork\Modules\User\Services\WorkingHourCacheService::class)
             ->forgetForEntity('user', $compensationDayOff->user_id);
 
-        return redirect()->back()->with('flash', [
-            'message' => __('Compensation day revoked successfully')
-        ]);
+        return redirect()->back()->with('success', __('Compensation day revoked successfully'));
     }
 
     public function deleteCompensationDay(Request $request, CompensationDayOff $compensationDayOff): RedirectResponse
@@ -672,9 +723,7 @@ class ShiftRuleController extends Controller
         app(\Artwork\Modules\User\Services\WorkingHourCacheService::class)
             ->forgetForEntity('user', $userId);
 
-        return redirect()->back()->with('flash', [
-            'message' => __('Compensation day successfully deleted')
-        ]);
+        return redirect()->back()->with('success', __('Compensation day successfully deleted'));
     }
 
     public function getUserWeekSchedule(Request $request, User $user): JsonResponse
@@ -787,8 +836,6 @@ class ShiftRuleController extends Controller
             'half_day_period' => $isHalfDay ? ($validated['half_day_period'] ?? null) : null,
         ]);
 
-        return redirect()->back()->with('flash', [
-            'message' => __('Compensation day created successfully')
-        ]);
+        return redirect()->back()->with('success', __('Compensation day created successfully'));
     }
 }

@@ -14,9 +14,11 @@ use Artwork\Modules\Shift\Http\Requests\UpdateContractAssignmentsRequest;
 use Artwork\Modules\Shift\Http\Requests\UpdateShiftRuleRequest;
 use Artwork\Modules\Shift\Http\Requests\UpdateViolationStatusRequest;
 use Artwork\Modules\Shift\Http\Requests\ValidateShiftRulesRequest;
+use Artwork\Modules\Shift\Exports\ShiftRuleViolationsExcelExport;
 use Artwork\Modules\Shift\Models\CompensationDayOff;
 use Artwork\Modules\Shift\Models\ShiftRuleViolation;
 use Artwork\Modules\Shift\Repositories\CompensationDayOffRepository;
+use Artwork\Modules\Shift\Repositories\ShiftRuleViolationRepository;
 use Artwork\Modules\Shift\Services\ShiftRuleRevalidationService;
 use Artwork\Modules\Shift\Services\ShiftRuleService;
 use Artwork\Modules\Shift\Models\ShiftRule;
@@ -33,6 +35,11 @@ use Inertia\Response;
 
 class ShiftRuleController extends Controller
 {
+    private const DASHBOARD_PER_PAGE = 25;
+
+    /** Sammelaktion "Ignorieren": Obergrenze je Aufruf */
+    public const BULK_IGNORE_LIMIT = 200;
+
     public function __construct(
         private readonly ShiftRuleService $shiftRuleService
     ) {
@@ -85,13 +92,34 @@ class ShiftRuleController extends Controller
         $compensationDayOffRepository = app(CompensationDayOffRepository::class);
 
         $filters = $this->dashboardFilters($request);
-        $lists = $this->dashboardLists($compensationDayOffRepository, $filters);
+
+        // Die drei Listen serverseitig paginiert (je 25) mit eigenen Seitenparametern, damit sie
+        // unabhängig blättern; bei Statusfilter bleiben die anderen Listen leer (wie zuvor).
+        $status = $filters['status'];
+        $emptyPage = fn (string $pageName) => new \Illuminate\Pagination\LengthAwarePaginator(
+            [],
+            0,
+            self::DASHBOARD_PER_PAGE,
+            1,
+            ['path' => $request->url(), 'pageName' => $pageName]
+        );
+        $lists = [
+            'overdue' => in_array($status, [null, 'overdue', 'open'], true)
+                ? $compensationDayOffRepository->paginateDashboardList('overdue', $filters, self::DASHBOARD_PER_PAGE, 'overdue_page')
+                : $emptyPage('overdue_page'),
+            'open' => in_array($status, [null, 'open'], true)
+                ? $compensationDayOffRepository->paginateDashboardList('open', $filters, self::DASHBOARD_PER_PAGE, 'open_page')
+                : $emptyPage('open_page'),
+            'granted' => in_array($status, [null, 'granted'], true)
+                ? $compensationDayOffRepository->paginateDashboardList('granted', $filters, self::DASHBOARD_PER_PAGE, 'granted_page')
+                : $emptyPage('granted_page'),
+        ];
 
         $recentActivity = \Spatie\Activitylog\Models\Activity::query()
             ->whereIn('log_name', ['compensation_day_off', 'shift_rule_violation'])
             ->with('causer')
             ->latest()
-            ->paginate(15)
+            ->paginate(15, ['*'], 'activity_page')
             ->through(fn ($a) => [
                 'id' => $a->id,
                 'description' => $a->description,
@@ -339,13 +367,107 @@ class ShiftRuleController extends Controller
         }
     }
 
-    public function getPendingViolations(): Response
+    /**
+     * Filter der Verstoßliste/-exports aus der Query. Status-Default: aktiv; Zeitraum optional
+     * (Liste: ohne Zeitraum = alle aktiven; Export: Pflicht, siehe exportViolations()).
+     *
+     * @return array{
+     *     craft_ids: array<int, int>, user_id: int|null, shift_rule_id: int|null, severity: string|null,
+     *     status: string, date_from: string|null, date_to: string|null, sort: string
+     * }
+     */
+    private function violationFilters(Request $request): array
     {
-        $violations = $this->shiftRuleService->getActiveViolations();
+        $validated = $request->validate([
+            'craft_id' => 'nullable|array',
+            'craft_id.*' => 'integer',
+            'user_id' => 'nullable|integer',
+            'shift_rule_id' => 'nullable|integer',
+            'severity' => 'nullable|in:warning,error',
+            'status' => 'nullable|in:active,resolved,ignored,all',
+            'date_from' => 'nullable|date_format:Y-m-d',
+            'date_to' => 'nullable|date_format:Y-m-d|after_or_equal:date_from',
+            'sort' => 'nullable|in:asc,desc',
+            'per_page' => 'nullable|integer|in:25,50,100',
+        ]);
+
+        return [
+            'craft_ids' => array_values(array_filter(array_map('intval', (array) ($validated['craft_id'] ?? [])))),
+            'user_id' => !empty($validated['user_id']) ? (int) $validated['user_id'] : null,
+            'shift_rule_id' => !empty($validated['shift_rule_id']) ? (int) $validated['shift_rule_id'] : null,
+            'severity' => $validated['severity'] ?? null,
+            'status' => $validated['status'] ?? 'active',
+            'date_from' => $validated['date_from'] ?? null,
+            'date_to' => $validated['date_to'] ?? null,
+            'sort' => $validated['sort'] ?? 'desc',
+        ];
+    }
+
+    /**
+     * Liste "Offene Verstöße": serverseitig paginiert (25/50/100, Default 50) mit Filtern Gewerke,
+     * Person, Regel, Schwere, Status (Default aktiv), Zeitraum und Sortierung; Zähler-Chips (aktiv
+     * gesamt / Fehler / Warnungen) über alle Seiten, unabhängig vom Statusfilter.
+     */
+    public function getPendingViolations(Request $request): Response
+    {
+        $filters = $this->violationFilters($request);
+        $perPage = (int) $request->query('per_page', 50);
+        $perPage = in_array($perPage, [25, 50, 100], true) ? $perPage : 50;
 
         return Inertia::render('ShiftWarnings/Violations', [
-            'violations' => $this->shiftRuleService->mapViolationsToArray($violations),
+            'violations' => $this->shiftRuleService->paginateViolations($filters, $perPage, $filters['sort']),
+            'counters' => $this->shiftRuleService->getViolationCounters($filters),
+            'filters' => $filters,
+            'perPage' => $perPage,
+            'crafts' => \Artwork\Modules\Craft\Models\Craft::query()
+                ->select('id', 'name', 'abbreviation', 'color')
+                ->orderBy('name')
+                ->get(),
+            'rules' => ShiftRule::query()->select('id', 'name', 'trigger_type')->orderBy('name')->get(),
+            'users' => $this->shiftRuleService->getUsersWithViolations(),
+            'bulkIgnoreLimit' => self::BULK_IGNORE_LIMIT,
         ]);
+    }
+
+    /**
+     * Sammelaktion "Ignorieren": Auswahl (max. 200 IDs) mit Grund in einer Transaktion ignorieren —
+     * dieselbe Logik wie das Ignorieren je Verstoß.
+     */
+    public function bulkIgnoreViolations(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'ids' => 'required|array|min:1|max:' . self::BULK_IGNORE_LIMIT,
+            'ids.*' => 'integer',
+            'ignore_reason' => 'required|string|max:500',
+        ]);
+
+        $count = $this->shiftRuleService->ignoreViolations(
+            $validated['ids'],
+            auth()->id(),
+            $validated['ignore_reason']
+        );
+
+        return redirect()->back()->with('success', __(':count violations ignored.', ['count' => $count]));
+    }
+
+    /**
+     * Excel-Export der Verstöße (Filter wie die Liste, Zeitraum Pflicht — Default aktueller Monat).
+     * Dateiname verstoesse_YYYY-MM-DD_bis_YYYY-MM-DD.xlsx, Query wird in Chunks gelesen.
+     */
+    public function exportViolations(Request $request): \Symfony\Component\HttpFoundation\BinaryFileResponse
+    {
+        $filters = $this->violationFilters($request);
+        $filters['date_from'] = $filters['date_from'] ?? Carbon::today()->startOfMonth()->toDateString();
+        $filters['date_to'] = $filters['date_to'] ?? Carbon::today()->endOfMonth()->toDateString();
+
+        $export = new ShiftRuleViolationsExcelExport(
+            app(ShiftRuleViolationRepository::class),
+            $filters,
+            $filters['sort'],
+            $request->user()?->language ?? app()->getLocale()
+        );
+
+        return $export->download(sprintf('verstoesse_%s_bis_%s.xlsx', $filters['date_from'], $filters['date_to']));
     }
 
     public function updateViolationStatus(UpdateViolationStatusRequest $request, int $violationId): RedirectResponse

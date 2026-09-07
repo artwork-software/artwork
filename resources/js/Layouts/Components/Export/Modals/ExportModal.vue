@@ -85,6 +85,24 @@
                                              :preselected-filters="configuration[exportTabEnums.PDF_SEASON_SCHEDULE_EXPORT]?.user_filters ?? null"
                                              :preselected-date-range="configuration[exportTabEnums.PDF_SEASON_SCHEDULE_EXPORT]?.date_range ?? null"/>
                 </template>
+                <template v-else-if="tab === exportTabEnums.EXCEL_SHIFT_RULE_VIOLATIONS_EXPORT">
+                    <ExcelShiftRuleViolationsExport v-if="activeTab === exportTabEnums.EXCEL_SHIFT_RULE_VIOLATIONS_EXPORT"
+                                                    :crafts="configuration[exportTabEnums.EXCEL_SHIFT_RULE_VIOLATIONS_EXPORT]?.crafts ?? []"
+                                                    :preselected-filters="configuration[exportTabEnums.EXCEL_SHIFT_RULE_VIOLATIONS_EXPORT]?.filters ?? null"
+                                                    @close="close()"/>
+                </template>
+                <template v-else-if="tab === exportTabEnums.EXCEL_SHIFT_HISTORY_EXPORT">
+                    <ExcelShiftHistoryExport v-if="activeTab === exportTabEnums.EXCEL_SHIFT_HISTORY_EXPORT"
+                                             :crafts="configuration[exportTabEnums.EXCEL_SHIFT_HISTORY_EXPORT]?.crafts ?? []"
+                                             :preselected-filters="configuration[exportTabEnums.EXCEL_SHIFT_HISTORY_EXPORT]?.filters ?? null"
+                                             @close="close()"/>
+                </template>
+                <template v-else-if="tab === exportTabEnums.EXCEL_COMMITTED_SHIFT_CHANGES_EXPORT">
+                    <ExcelCommittedShiftChangesExport v-if="activeTab === exportTabEnums.EXCEL_COMMITTED_SHIFT_CHANGES_EXPORT"
+                                                      :crafts="configuration[exportTabEnums.EXCEL_COMMITTED_SHIFT_CHANGES_EXPORT]?.crafts ?? []"
+                                                      :preselected-filters="configuration[exportTabEnums.EXCEL_COMMITTED_SHIFT_CHANGES_EXPORT]?.filters ?? null"
+                                                      @close="close()"/>
+                </template>
                 <template v-else>
                     {{ throwUndefinedEnumUsed() }}
                 </template>
@@ -135,6 +153,15 @@ const exportTabEnums = useExportTabEnums(),
     ),
     PdfSeasonScheduleExport = defineAsyncComponent(
         () => import("@/Layouts/Components/Export/Tabs/PdfSeasonScheduleExport.vue")
+    ),
+    ExcelShiftRuleViolationsExport = defineAsyncComponent(
+        () => import("@/Layouts/Components/Export/Tabs/ExcelShiftRuleViolationsExport.vue")
+    ),
+    ExcelShiftHistoryExport = defineAsyncComponent(
+        () => import("@/Layouts/Components/Export/Tabs/ExcelShiftHistoryExport.vue")
+    ),
+    ExcelCommittedShiftChangesExport = defineAsyncComponent(
+        () => import("@/Layouts/Components/Export/Tabs/ExcelCommittedShiftChangesExport.vue")
     ),
     props = defineProps({
         enums: {

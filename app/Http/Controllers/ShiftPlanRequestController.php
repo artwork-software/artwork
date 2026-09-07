@@ -8,6 +8,7 @@ use Artwork\Core\Services\HelperService;
 use Artwork\Modules\Craft\Models\Craft;
 use Artwork\Modules\Shift\Events\UpdateEventShiftInShiftPlan;
 use Artwork\Modules\Shift\Events\UpdateShiftInShiftPlan;
+use Artwork\Modules\Shift\Exports\Support\CommittedShiftChangePresenter;
 use Artwork\Modules\Shift\Models\CommittedShiftChange;
 use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\Shift\Models\ShiftPlanRequest;
@@ -1257,135 +1258,9 @@ class ShiftPlanRequestController extends Controller
 
         // Nur die Datensätze der aktuellen Seite transformieren (through behält die
         // Paginator-Metadaten/Links bei).
-        $paginator->through(function (CommittedShiftChange $change) {
-            $fieldChanges = $change->field_changes ?? [];
-
-            $assignment = $fieldChanges['assignment'] ?? null;
-
-            $affectedName       = null;
-            $profilePictureUrl  = null;
-            $beforeLabel        = null;
-            $afterLabel         = null;
-
-            // Fall 1: User-Zuweisung / Entfernen -> Daten aus assignment
-            if ($assignment) {
-                $affectedName      = $assignment['user_name']           ?? null;
-                $profilePictureUrl = $assignment['profile_picture_url'] ?? null;
-                $beforeLabel       = $assignment['before_label']        ?? null;
-                $afterLabel        = $assignment['after_label']         ?? null;
-            } else {
-                // Fall 2: reine Schicht-Änderung (start/end/break …)
-                $shift = $change->shift;
-
-                if ($shift) {
-                    $date = optional($shift->start_date)?->format('d.m.Y')
-                        ?? optional($shift->end_date)?->format('d.m.Y');
-
-                    // Werte aus field_changes können als volle Datetime ("2026-06-20 14:30:00"),
-                    // als "HH:MM:SS", als "HH:MM" oder als Platzhalter ("null"/leer) vorliegen.
-                    // Einheitlich auf "HH:MM" normalisieren (bzw. null), damit das Datum nicht
-                    // doppelt im Label erscheint und Platzhalter den Fallback unten auslösen.
-                    $toTime = static function ($value): ?string {
-                        if ($value === null || $value === '' || $value === 'null') {
-                            return null;
-                        }
-                        if ($value instanceof \Carbon\Carbon) {
-                            return $value->format('H:i');
-                        }
-                        $str = (string) $value;
-                        if (preg_match('/^(\d{1,2}):(\d{2})/', $str, $m)) {
-                            return sprintf('%02d:%s', (int) $m[1], $m[2]);
-                        }
-                        try {
-                            return \Carbon\Carbon::parse($str)->format('H:i');
-                        } catch (\Throwable $e) {
-                            return null;
-                        }
-                    };
-
-                    // Zeiten zuerst aus field_changes lesen
-                    $beforeStart = $toTime($fieldChanges['start']['old'] ?? null);
-                    $beforeEnd   = $toTime($fieldChanges['end']['old']   ?? null);
-                    $afterStart  = $toTime($fieldChanges['start']['new'] ?? null);
-                    $afterEnd    = $toTime($fieldChanges['end']['new']   ?? null);
-
-                    // Falls dort nichts steht, auf aktuelle Shift-Werte zurückfallen
-                    if (! $beforeStart && $shift->start) {
-                        $beforeStart = $shift->start instanceof \Carbon\Carbon
-                            ? $shift->start->format('H:i')
-                            : (string) $shift->start;
-                    }
-
-                    if (! $beforeEnd && $shift->end) {
-                        $beforeEnd = $shift->end instanceof \Carbon\Carbon
-                            ? $shift->end->format('H:i')
-                            : (string) $shift->end;
-                    }
-
-                    if (! $afterStart && $shift->start) {
-                        $afterStart = $shift->start instanceof \Carbon\Carbon
-                            ? $shift->start->format('H:i')
-                            : (string) $shift->start;
-                    }
-
-                    if (! $afterEnd && $shift->end) {
-                        $afterEnd = $shift->end instanceof \Carbon\Carbon
-                            ? $shift->end->format('H:i')
-                            : (string) $shift->end;
-                    }
-
-                    // Fallback-Werte (aus den Shift-Spalten) ebenfalls normalisieren.
-                    $beforeStart = $toTime($beforeStart);
-                    $beforeEnd   = $toTime($beforeEnd);
-                    $afterStart  = $toTime($afterStart);
-                    $afterEnd    = $toTime($afterEnd);
-
-                    // BEFORE-Label bauen
-                    if ($date && $beforeStart && $beforeEnd) {
-                        $beforeLabel = sprintf('%s %s - %s', $date, $beforeStart, $beforeEnd);
-                    } elseif ($beforeStart && $beforeEnd) {
-                        $beforeLabel = sprintf('%s - %s', $beforeStart, $beforeEnd);
-                    } elseif ($beforeEnd) {
-                        $beforeLabel = $beforeEnd;
-                    }
-
-                    // AFTER-Label bauen
-                    if ($date && $afterStart && $afterEnd) {
-                        $afterLabel = sprintf('%s %s - %s', $date, $afterStart, $afterEnd);
-                    } elseif ($afterStart && $afterEnd) {
-                        $afterLabel = sprintf('%s - %s', $afterStart, $afterEnd);
-                    } elseif ($afterEnd) {
-                        $afterLabel = $afterEnd;
-                    }
-
-                    // „Betroffene Entität“ für reine Schicht-Änderung sinnvoll benennen
-                    $craftAbbr = optional($shift->craft)->abbreviation;
-                    $affectedName = $craftAbbr
-                        ? sprintf('%s – %s', $craftAbbr, $date)
-                        : ($date ?: null);
-                }
-            }
-
-            return [
-                'id'                     => $change->id,
-                'change_type'            => $change->change_type,
-
-                'affected_name'          => $affectedName,
-                'profile_picture_url'    => $profilePictureUrl,
-
-                'before_label'           => $beforeLabel,
-                'after_label'            => $afterLabel,
-
-                'changed_by_name'        => optional($change->changedBy)->full_name,
-                'changed_at'             => optional($change->changed_at)?->toIso8601String(),
-                'changed_at_formatted'   => optional($change->changed_at)?->format('d.m.Y H:i'),
-
-                'acknowledged_at'        => optional($change->acknowledged_at)?->toIso8601String(),
-                'acknowledged'           => ! is_null($change->acknowledged_at),
-
-                'field_changes'          => $fieldChanges,
-            ];
-        });
+        $paginator->through(
+            fn (CommittedShiftChange $change) => CommittedShiftChangePresenter::present($change)
+        );
 
         return Inertia::render('ShiftPlanRequests/Changes', [
             'allCrafts'    => $allCrafts,
@@ -1510,6 +1385,48 @@ class ShiftPlanRequestController extends Controller
 
 
     /**
+     * Excel-Export der Änderungsübersicht mit denselben Filtern wie die Liste (Gewerk, Status all|open|ack,
+     * Personensuche, Intern/Extern) plus optionalem Zeitraum (changed_at). Gleiche Rechte wie changes().
+     */
+    public function exportChanges(Request $request): \Symfony\Component\HttpFoundation\BinaryFileResponse
+    {
+        $validated = $request->validate([
+            'craft_id' => ['nullable', 'integer', 'exists:crafts,id'],
+            'filter' => ['nullable', 'string', \Illuminate\Validation\Rule::in(['all', 'open', 'ack'])],
+            'search' => ['nullable', 'string', 'max:200'],
+            'worker_type' => ['nullable', 'string', \Illuminate\Validation\Rule::in(['all', 'internal', 'external'])],
+            'date_from' => ['nullable', 'date_format:Y-m-d'],
+            'date_to' => ['nullable', 'date_format:Y-m-d', 'after_or_equal:date_from'],
+        ]);
+
+        $craft = !empty($validated['craft_id']) ? Craft::find($validated['craft_id']) : null;
+        $filter = $validated['filter'] ?? 'all';
+        $dateFrom = $validated['date_from'] ?? null;
+        $dateTo = $validated['date_to'] ?? null;
+
+        $query = $this->committedShiftChangesBaseQuery(
+            $craft,
+            trim((string) ($validated['search'] ?? '')),
+            $validated['worker_type'] ?? 'all'
+        )
+            ->when($filter === 'open', fn ($q) => $q->whereNull('acknowledged_at'))
+            ->when($filter === 'ack', fn ($q) => $q->whereNotNull('acknowledged_at'))
+            ->when($dateFrom, fn ($q) => $q->whereDate('changed_at', '>=', $dateFrom))
+            ->when($dateTo, fn ($q) => $q->whereDate('changed_at', '<=', $dateTo));
+
+        $export = new \Artwork\Modules\Shift\Exports\CommittedShiftChangesExcelExport(
+            $query,
+            $request->user()?->language ?? app()->getLocale()
+        );
+
+        $suffix = $dateFrom || $dateTo
+            ? ($dateFrom ?? 'anfang') . '_bis_' . ($dateTo ?? now()->toDateString())
+            : now()->format('Y-m-d');
+
+        return $export->download(sprintf('aenderungen_%s.xlsx', $suffix));
+    }
+
+    /**
      * Nachträgliche Zustimmung zu einer Änderung.
      */
     public function acknowledge(CommittedShiftChange $change): \Illuminate\Http\RedirectResponse
@@ -1523,7 +1440,12 @@ class ShiftPlanRequestController extends Controller
         return back()->with('success', __('Änderung wurde bestätigt.'));
     }
 
-    public function requests(): \Inertia\Response
+    /**
+     * "Meine Freigabe-Anfragen" / "Angefragte Dienstpläne": eine flache, serverseitig paginierte Liste
+     * (25 je Seite, KW absteigend) mit Filtern Status (Default alle), Gewerk und "nur eigene Anfragen".
+     * Sichtbarkeit wie zuvor: Admins alles, sonst eigene Anfragen + Anfragen zuständiger Gewerke.
+     */
+    public function requests(Request $request): \Inertia\Response
     {
         $user = User::find($this->auth->id());
         $isAdmin = $user->hasRole(RoleEnum::ARTWORK_ADMIN->value);
@@ -1534,45 +1456,85 @@ class ShiftPlanRequestController extends Controller
             ->orWhereHas('craftShiftPlaner', fn ($q) => $q->where('user_id', $user->id))
             ->pluck('id');
 
-        if ($isAdmin) {
-            $shiftPlanRequests = ShiftPlanRequest::with(['craft', 'requestedBy'])
-                ->orderByDesc('created_at')
-                ->get();
-        } else {
-            $shiftPlanRequests = ShiftPlanRequest::with(['craft', 'requestedBy'])
-                ->where(function ($q) use ($user, $accessibleCraftIds) {
-                    $q->where('requested_by_user_id', $user->id)
-                      ->orWhereIn('craft_id', $accessibleCraftIds);
-                })
-                ->orderByDesc('created_at')
-                ->get();
-        }
+        $validated = $request->validate([
+            'status' => ['nullable', 'string', \Illuminate\Validation\Rule::in(['all', 'pending', 'approved', 'rejected'])],
+            'craft_id' => ['nullable', 'integer'],
+            'only_mine' => ['nullable', 'boolean'],
+            'per_page' => ['nullable', 'integer', 'min:1', 'max:100'],
+        ]);
 
-        // Group requests by craft and build a simple crafts collection that includes shift_plan_requests
-        $grouped = $shiftPlanRequests->groupBy(fn ($r) => $r->craft->id ?? 0);
+        $status = $validated['status'] ?? 'all';
+        $craftId = !empty($validated['craft_id']) ? (int) $validated['craft_id'] : null;
+        $onlyMine = (bool) ($validated['only_mine'] ?? false);
+        $perPage = (int) ($validated['per_page'] ?? 25);
 
-        $crafts = $grouped->map(function ($requests) {
-            $first = $requests->first();
-            $craft = $first->craft;
+        $baseQuery = ShiftPlanRequest::query()
+            ->when(!$isAdmin, function ($q) use ($user, $accessibleCraftIds): void {
+                $q->where(function ($inner) use ($user, $accessibleCraftIds): void {
+                    $inner->where('requested_by_user_id', $user->id)
+                        ->orWhereIn('craft_id', $accessibleCraftIds);
+                });
+            });
 
-            // attach a simpler array expected by the frontend
-            $craft->shift_plan_requests = $requests->map(function ($r) {
-                return [
-                    'id' => $r->id,
-                    'week_number' => $r->week_number,
-                    'year' => $r->year,
-                    'requested_at' => optional($r->created_at)?->toIso8601String(),
-                    'status' => $r->status,
-                    'requested_by_name' => $r->requestedBy?->full_name ?? '',
-                    'requested_by_user_id' => $r->requested_by_user_id,
-                ];
-            })->values();
+        // Gewerke für den Filter: nur solche, in denen die Person überhaupt Anfragen sehen kann.
+        $craftIdsWithRequests = (clone $baseQuery)->distinct()->pluck('craft_id');
+        $crafts = Craft::query()
+            ->whereIn('id', $craftIdsWithRequests)
+            ->orderBy('name')
+            ->get(['id', 'name', 'abbreviation', 'color']);
 
-            return $craft;
-        })->values();
+        $paginator = (clone $baseQuery)
+            ->with(['craft:id,name,abbreviation,color', 'requestedBy:id,first_name,last_name'])
+            ->when($status !== 'all', fn ($q) => $q->where('status', $status))
+            ->when($craftId, fn ($q) => $q->where('craft_id', $craftId))
+            ->when($onlyMine, fn ($q) => $q->where('requested_by_user_id', $user->id))
+            ->orderByDesc('year')
+            ->orderByDesc('week_number')
+            ->orderByDesc('created_at')
+            ->paginate($perPage)
+            ->withQueryString();
+
+        // "Erneut einreichen" nur, wenn für Gewerk/KW keine andere ausstehende Anfrage existiert —
+        // über alle Seiten hinweg, deshalb serverseitig in einer Abfrage.
+        $pageItems = collect($paginator->items());
+        $pendingSiblings = ShiftPlanRequest::query()
+            ->where('status', 'pending')
+            ->whereIn('craft_id', $pageItems->pluck('craft_id')->unique()->all())
+            ->get(['id', 'craft_id', 'week_number', 'year']);
+
+        $paginator->through(function (ShiftPlanRequest $r) use ($pendingSiblings) {
+            return [
+                'id' => $r->id,
+                'craft_id' => $r->craft_id,
+                'craft' => $r->craft ? [
+                    'id' => $r->craft->id,
+                    'name' => $r->craft->name,
+                    'abbreviation' => $r->craft->abbreviation,
+                    'color' => $r->craft->color,
+                ] : null,
+                'week_number' => $r->week_number,
+                'year' => $r->year,
+                'requested_at' => optional($r->created_at)?->toIso8601String(),
+                'status' => $r->status,
+                'requested_by_name' => $r->requestedBy?->full_name ?? '',
+                'requested_by_user_id' => $r->requested_by_user_id,
+                'has_pending_sibling' => $pendingSiblings->contains(
+                    fn ($other) => $other->id !== $r->id
+                        && (int) $other->craft_id === (int) $r->craft_id
+                        && (int) $other->week_number === (int) $r->week_number
+                        && (int) $other->year === (int) $r->year
+                ),
+            ];
+        });
 
         return Inertia::render('ShiftPlanRequests/MyIndex', [
+            'requests' => $paginator,
             'crafts' => $crafts,
+            'filters' => [
+                'status' => $status,
+                'craft_id' => $craftId,
+                'only_mine' => $onlyMine,
+            ],
             'isPlanner' => $isAdmin || $isShiftPlanner || $accessibleCraftIds->isNotEmpty(),
         ]);
     }

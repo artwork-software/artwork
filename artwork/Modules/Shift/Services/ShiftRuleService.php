@@ -126,6 +126,41 @@ class ShiftRuleService
         return $this->shiftRuleViolationRepository->getActiveWithRelations();
     }
 
+    /**
+     * Seite der gefilterten Verstöße (Liste "Offene Verstöße"), Einträge bereits fürs Frontend gemappt.
+     */
+    public function paginateViolations(array $filters, int $perPage, string $sortDirection = 'desc'): \Illuminate\Contracts\Pagination\LengthAwarePaginator
+    {
+        return $this->shiftRuleViolationRepository
+            ->paginateFiltered($filters, $perPage, $sortDirection)
+            ->withQueryString()
+            ->through(fn (ShiftRuleViolation $violation) => $this->mapViolationToArray($violation));
+    }
+
+    /**
+     * @return array{total: int, error: int, warning: int}
+     */
+    public function getViolationCounters(array $filters): array
+    {
+        return $this->shiftRuleViolationRepository->countActiveBySeverity($filters);
+    }
+
+    public function getUsersWithViolations(): Collection
+    {
+        return $this->shiftRuleViolationRepository->getUsersWithViolations();
+    }
+
+    /**
+     * Sammelaktion "Ignorieren" (max. 200 IDs je Aufruf, siehe Controller); liefert die Anzahl der
+     * tatsächlich ignorierten (vorher aktiven) Verstöße.
+     *
+     * @param array<int, int> $ids
+     */
+    public function ignoreViolations(array $ids, ?int $userId, string $ignoreReason): int
+    {
+        return $this->shiftRuleViolationRepository->ignoreMany($ids, $userId, $ignoreReason);
+    }
+
     public function getViolationsForDateRange(
         string $startDate,
         string $endDate,
@@ -607,45 +642,66 @@ class ShiftRuleService
 
     public function mapViolationsToArray(Collection $violations): Collection
     {
-        return $violations->map(function ($violation) {
-            return [
-                'id' => $violation->id,
-                'rule_name' => $violation->shiftRule?->name,
-                // Manuelle Verstöße ohne Regel tragen einen eigenen Titel
-                'title' => $violation->title,
-                'display_name' => $violation->getDisplayName(),
-                'user_name' => $violation->user->first_name . ' ' . $violation->user->last_name,
-                'violation_date' => $violation->violation_date,
-                'message' => $violation->getViolationMessage(),
-                'severity' => $violation->severity,
-                'warning_color' => $violation->getWarningColor(),
-                'violation_data' => $violation->violation_data ?? null,
-                'status' => $violation->status ?? null,
-                'is_manual' => $violation->is_manual ?? false,
-                'reason' => $violation->reason,
-                'compensation_days' => $violation->compensation_days,
-                'compensation_deadline' => $violation->compensation_deadline,
-                'compensation_reason' => $violation->compensation_reason,
-                'ignore_reason' => $violation->ignore_reason,
-                'resolved_at' => $violation->resolved_at?->toIso8601String(),
-                'updated_at' => $violation->updated_at?->toIso8601String(),
-                'resolved_by_user' => $violation->resolvedByUser ? [
-                    'first_name' => $violation->resolvedByUser->first_name,
-                    'last_name' => $violation->resolvedByUser->last_name,
-                ] : null,
-                'shift_rule' => $violation->shiftRule ? [
-                    'name' => $violation->shiftRule->name,
-                    'trigger_type' => $violation->shiftRule->trigger_type,
-                    'description' => $violation->shiftRule->description,
-                    'warning_color' => $violation->shiftRule->warning_color,
-                    'default_compensation_days' => $violation->shiftRule->default_compensation_days,
-                    'default_compensation_deadline_days' => $violation->shiftRule->default_compensation_deadline_days,
-                ] : null,
-                'created_by_user' => $violation->createdByUser ? [
-                    'first_name' => $violation->createdByUser->first_name,
-                    'last_name' => $violation->createdByUser->last_name,
-                ] : null,
-            ];
-        })->values();
+        return $violations->map(fn ($violation) => $this->mapViolationToArray($violation))->values();
+    }
+
+    /**
+     * Frontend-Shape eines einzelnen Verstoßes (Liste, Prüfansicht, Export-Vorschau).
+     *
+     * @return array<string, mixed>
+     */
+    public function mapViolationToArray(ShiftRuleViolation $violation): array
+    {
+        return [
+            'id' => $violation->id,
+            // Schicht-Kontext (Datum, Zeit, Raum) für Liste und Export
+            'shift' => $violation->shift ? [
+                'id' => $violation->shift->id,
+                'start_date' => $violation->shift->start_date?->format('Y-m-d'),
+                'end_date' => $violation->shift->end_date?->format('Y-m-d'),
+                'start' => $violation->shift->start,
+                'end' => $violation->shift->end,
+                'room' => $violation->shift->room?->name,
+                'craft' => $violation->shift->craft?->abbreviation ?? $violation->shift->craft?->name,
+            ] : null,
+            'user_crafts' => $violation->user?->relationLoaded('assignedCrafts')
+                ? $violation->user->assignedCrafts->pluck('name')->values()->all()
+                : [],
+            'rule_name' => $violation->shiftRule?->name,
+            // Manuelle Verstöße ohne Regel tragen einen eigenen Titel
+            'title' => $violation->title,
+            'display_name' => $violation->getDisplayName(),
+            'user_name' => $violation->user->first_name . ' ' . $violation->user->last_name,
+            'violation_date' => $violation->violation_date,
+            'message' => $violation->getViolationMessage(),
+            'severity' => $violation->severity,
+            'warning_color' => $violation->getWarningColor(),
+            'violation_data' => $violation->violation_data ?? null,
+            'status' => $violation->status ?? null,
+            'is_manual' => $violation->is_manual ?? false,
+            'reason' => $violation->reason,
+            'compensation_days' => $violation->compensation_days,
+            'compensation_deadline' => $violation->compensation_deadline,
+            'compensation_reason' => $violation->compensation_reason,
+            'ignore_reason' => $violation->ignore_reason,
+            'resolved_at' => $violation->resolved_at?->toIso8601String(),
+            'updated_at' => $violation->updated_at?->toIso8601String(),
+            'resolved_by_user' => $violation->resolvedByUser ? [
+                'first_name' => $violation->resolvedByUser->first_name,
+                'last_name' => $violation->resolvedByUser->last_name,
+            ] : null,
+            'shift_rule' => $violation->shiftRule ? [
+                'name' => $violation->shiftRule->name,
+                'trigger_type' => $violation->shiftRule->trigger_type,
+                'description' => $violation->shiftRule->description,
+                'warning_color' => $violation->shiftRule->warning_color,
+                'default_compensation_days' => $violation->shiftRule->default_compensation_days,
+                'default_compensation_deadline_days' => $violation->shiftRule->default_compensation_deadline_days,
+            ] : null,
+            'created_by_user' => $violation->createdByUser ? [
+                'first_name' => $violation->createdByUser->first_name,
+                'last_name' => $violation->createdByUser->last_name,
+            ] : null,
+        ];
     }
 }

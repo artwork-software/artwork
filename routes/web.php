@@ -249,6 +249,8 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         Route::put('/contracts/{contract}/assignments', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'updateContractAssignments'])->middleware('shift-settings-area:rules,edit')->name('shift-rules.contracts.assignments.update');
         Route::post('/validate', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'validateRules'])->middleware('shift-settings-area:rules,edit')->name('shift-rules.validate');
         Route::get('/pending', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'getPendingViolations'])->name('shift-rules.pending');
+        // Excel-Export der Verstöße — gleiche Rechte wie die Liste (vor /{shiftRule} registrieren)
+        Route::get('/violations/export', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'exportViolations'])->name('shift-rules.violations.export');
 
         // Parameterized routes come last
         Route::put('/{shiftRule}', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'update'])->middleware('shift-settings-area:rules,edit')->name('shift-rules.update');
@@ -260,6 +262,8 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     // Shift Rule Violations routes
     Route::group(['prefix' => 'shift-rule-violations', 'middleware' => 'can:can plan shifts'], function (): void {
         Route::post('/manual', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'storeManualViolation'])->name('shift-rule-violations.manual.store');
+        // Sammelaktion "Ignorieren" (max. 200 IDs je Aufruf, gleiche Ignore-Logik wie je Verstoß)
+        Route::post('/bulk-ignore', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'bulkIgnoreViolations'])->name('shift-rule-violations.bulk-ignore');
         Route::get('/date-range', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'getViolationsForDateRange'])->name('shift-rule-violations.date-range');
         Route::post('/{violation}/resolve', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'resolveViolation'])->name('shift-rule-violations.resolve');
         Route::post('/{violation}/ignore', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'ignoreViolation'])->name('shift-rule-violations.ignore');
@@ -1014,6 +1018,11 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
 
     Route::get('/shifts/list-view', [EventController::class, 'viewShiftPlanListView'])
         ->name('shifts.plan.list-view')
+        ->can('can view shift plan');
+
+    // Wochenstatus: Gewerke × KW (Festschreibung, Anfragen, Änderungen, Verstöße, Besetzung, Frist)
+    Route::get('/shifts/week-status', [\Artwork\Modules\Shift\Http\Controllers\ShiftWeekStatusController::class, 'index'])
+        ->name('shifts.week-status')
         ->can('can view shift plan');
 
     Route::get('/shifts/workers', [EventController::class, 'getShiftPlanWorkers'])
@@ -2367,6 +2376,11 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         ->name('shift.history.index')
         ->can('can view shift plan');
 
+    // Excel-Export des Schichtverlaufs — gleiche Filter und Rechte wie das Modal
+    Route::get('/shift-history/export', [ShiftHistoryController::class, 'export'])
+        ->name('shift-history.export')
+        ->can('can view shift plan');
+
     Route::get('/event/standard-values', [EventController::class, 'standardEventValues'])
         ->name('event.standard.values');
 
@@ -3451,6 +3465,13 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         '/committed-shift-changes/acknowledge-all',
         [ShiftPlanRequestController::class, 'acknowledgeAll']
     )->name('committed-shift-changes.acknowledge-all')
+        ->can('approve-shift-plan-requests');
+
+    // Excel-Export der Änderungsübersicht (Filter wie die Liste, optional Zeitraum)
+    Route::get(
+        '/committed-shift-changes/export',
+        [ShiftPlanRequestController::class, 'exportChanges']
+    )->name('committed-shift-changes.export')
         ->can('approve-shift-plan-requests');
 
     Route::patch('/shift-plan-requests/{shiftPlanRequest}/change/{shiftChange}/revert', [App\Http\Controllers\ShiftPlanRequestController::class, 'revertChange'])

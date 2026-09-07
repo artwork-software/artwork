@@ -330,9 +330,10 @@ final class ShiftRuleControllerTest extends FeatureTestCase
             ->assertOk()
             ->assertInertia(fn (AssertableInertia $page) => $page
                 ->component('CompensationDays/Index')
-                ->has('openCompensations', 1)
-                ->has('grantedCompensations', 1)
-                ->has('overdueCompensations', 0)
+                // Listen sind serverseitig paginiert (data/total)
+                ->has('openCompensations.data', 1)
+                ->has('grantedCompensations.data', 1)
+                ->has('overdueCompensations.data', 0)
                 ->where('filters.user_id', $anna->id)
                 ->has('users', 2));
 
@@ -343,24 +344,24 @@ final class ShiftRuleControllerTest extends FeatureTestCase
         ]))
             ->assertOk()
             ->assertInertia(fn (AssertableInertia $page) => $page
-                ->has('openCompensations', 1)
-                ->where('openCompensations.0.user_id', $ben->id)
-                ->has('grantedCompensations', 0));
+                ->has('openCompensations.data', 1)
+                ->where('openCompensations.data.0.user_id', $ben->id)
+                ->has('grantedCompensations.data', 0));
 
         // Status
         $this->get(route('compensation-day-offs.dashboard', ['status' => 'overdue']))
             ->assertOk()
             ->assertInertia(fn (AssertableInertia $page) => $page
-                ->has('overdueCompensations', 1)
-                ->has('openCompensations', 0)
-                ->has('grantedCompensations', 0)
+                ->has('overdueCompensations.data', 1)
+                ->has('openCompensations.data', 0)
+                ->has('grantedCompensations.data', 0)
                 ->where('filters.status', 'overdue'));
 
         $this->get(route('compensation-day-offs.dashboard', ['status' => 'granted']))
             ->assertOk()
             ->assertInertia(fn (AssertableInertia $page) => $page
-                ->has('grantedCompensations', 1)
-                ->has('openCompensations', 0));
+                ->has('grantedCompensations.data', 1)
+                ->has('openCompensations.data', 0));
     }
 
     #[Test]

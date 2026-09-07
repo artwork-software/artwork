@@ -113,6 +113,34 @@ class CompensationDayOffRepository extends BaseRepository
             ->get();
     }
 
+    /**
+     * Seite einer Dashboard-Liste (open|overdue|granted) mit eigenem Seitenparameter, damit die drei
+     * Listen unabhängig blättern. Sortierung wie die ungepaginierten Listenmethoden.
+     */
+    public function paginateDashboardList(
+        string $status,
+        int|array|null $filters,
+        int $perPage,
+        string $pageName
+    ): \Illuminate\Contracts\Pagination\LengthAwarePaginator {
+        $relations = $status === 'granted'
+            ? array_merge(self::DASHBOARD_RELATIONS, ['grantedByUser'])
+            : self::DASHBOARD_RELATIONS;
+
+        $query = $this->applyDashboardFilters(
+            CompensationDayOff::with($relations),
+            $this->normalizeFilters($filters)
+        );
+
+        $query = match ($status) {
+            'granted' => $query->granted()->orderByDesc('granted_at'),
+            'overdue' => $query->overdue()->orderBy('deadline'),
+            default => $query->open()->orderBy('deadline'),
+        };
+
+        return $query->orderByDesc('id')->paginate($perPage, ['*'], $pageName)->withQueryString();
+    }
+
     public function getDashboardStats(int|array|null $filters = null): array
     {
         $filters = $this->normalizeFilters($filters);

@@ -653,6 +653,13 @@ const navigation = ref([
                 has_permission: usePage().props.canSeeShiftPlanRequestedPlans,
             },
             {
+                name: 'Week status',
+                href: route('shifts.week-status'),
+                icon: 'IconTableOptions',
+                current: route().current('shifts.week-status'),
+                has_permission: can('can view shift plan') || is('artwork admin'),
+            },
+            {
                 name: 'Compensation days overview',
                 href: route('compensation-day-offs.dashboard'),
                 icon: 'IconCalendarOff',

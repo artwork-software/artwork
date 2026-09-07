@@ -103,15 +103,15 @@
                 </div>
             </div>
 
-            <!-- Overdue table -->
-            <section v-if="overdueCompensations.length" class="mt-8">
+            <!-- Overdue table (serverseitig paginiert, eigener Seitenparameter) -->
+            <section v-if="overdueCompensations.total" class="mt-8">
                 <h3 class="text-sm font-semibold text-text-muted mb-3 flex items-center gap-2">
                     <span class="inline-block h-2 w-2 rounded-full bg-danger"></span>
                     {{ $t('Overdue compensation days') }}
-                    <span class="text-xs font-normal text-text-subtle">({{ overdueCompensations.length }})</span>
+                    <span class="text-xs font-normal text-text-subtle">({{ overdueCompensations.total }})</span>
                 </h3>
                 <CompensationTable
-                    :items="overdueCompensations"
+                    :items="overdueCompensations.data"
                     show-user
                     :show-grant="true"
                     :show-delete="true"
@@ -119,6 +119,7 @@
                     @grant="openGrantModal"
                     @delete="openDeleteModal"
                 />
+                <ListPagination :paginator="overdueCompensations" page-name="overdue_page" @page="(page) => goToListPage('overdue_page', page)" />
             </section>
 
             <!-- Open table -->
@@ -126,18 +127,22 @@
                 <h3 class="text-sm font-semibold text-text-muted mb-3 flex items-center gap-2">
                     <span class="inline-block h-2 w-2 rounded-full bg-accent-600"></span>
                     {{ $t('Open compensation days') }}
-                    <span class="text-xs font-normal text-text-subtle">({{ openCompensations.length }})</span>
+                    <span class="text-xs font-normal text-text-subtle">({{ openCompensations.total }})</span>
                 </h3>
-                <CompensationTable
-                    v-if="openCompensations.length"
-                    :items="openCompensations"
-                    show-user
-                    :show-grant="true"
-                    :show-delete="true"
-                    @grant="openGrantModal"
-                    @delete="openDeleteModal"
-                />
-                <div v-else class="text-xs text-text-subtle italic py-3">{{ $t('No open compensation days.') }}</div>
+                <template v-if="openCompensations.total">
+                    <CompensationTable
+                        :items="openCompensations.data"
+                        show-user
+                        :show-grant="true"
+                        :show-delete="true"
+                        @grant="openGrantModal"
+                        @delete="openDeleteModal"
+                    />
+                    <ListPagination :paginator="openCompensations" page-name="open_page" @page="(page) => goToListPage('open_page', page)" />
+                </template>
+                <div v-else class="text-xs text-text-subtle italic py-3">
+                    {{ hasActiveFilters ? $t('No open compensation days match the current filters.') : $t('No open compensation days.') }}
+                </div>
             </section>
 
             <!-- Granted table -->
@@ -145,19 +150,23 @@
                 <h3 class="text-sm font-semibold text-text-muted mb-3 flex items-center gap-2">
                     <span class="inline-block h-2 w-2 rounded-full bg-success"></span>
                     {{ $t('Granted compensation days') }}
-                    <span class="text-xs font-normal text-text-subtle">({{ grantedCompensations.length }})</span>
+                    <span class="text-xs font-normal text-text-subtle">({{ grantedCompensations.total }})</span>
                 </h3>
-                <CompensationTable
-                    v-if="grantedCompensations.length"
-                    :items="grantedCompensations"
-                    show-user
-                    show-granted-info
-                    :show-revoke="true"
-                    :show-delete="true"
-                    @revoke="revokeCompensationDay"
-                    @delete="openDeleteModal"
-                />
-                <div v-else class="text-xs text-text-subtle italic py-3">{{ $t('No granted compensation days.') }}</div>
+                <template v-if="grantedCompensations.total">
+                    <CompensationTable
+                        :items="grantedCompensations.data"
+                        show-user
+                        show-granted-info
+                        :show-revoke="true"
+                        :show-delete="true"
+                        @revoke="revokeCompensationDay"
+                        @delete="openDeleteModal"
+                    />
+                    <ListPagination :paginator="grantedCompensations" page-name="granted_page" @page="(page) => goToListPage('granted_page', page)" />
+                </template>
+                <div v-else class="text-xs text-text-subtle italic py-3">
+                    {{ hasActiveFilters ? $t('No granted compensation days match the current filters.') : $t('No granted compensation days.') }}
+                </div>
             </section>
 
             <!-- Recent activity (paginated) -->
@@ -259,6 +268,7 @@ import BaseUIButton from '@/Artwork/Buttons/BaseUIButton.vue';
 import GrantCompensationDayModal from '@/Pages/Shifts/Components/GrantCompensationDayModal.vue';
 import DeleteCompensationDayModal from '@/Pages/Shifts/Components/DeleteCompensationDayModal.vue';
 import CompensationTable from '@/Pages/CompensationDays/CompensationTable.vue';
+import ListPagination from '@/Pages/CompensationDays/ListPagination.vue';
 import { usePermission } from '@/Composeables/Permission.js';
 import { IconCalendarOff, IconFileSpreadsheet } from '@tabler/icons-vue';
 
@@ -266,9 +276,10 @@ const { t } = useI18n();
 const { can, hasAdminRole } = usePermission(usePage().props);
 
 const props = defineProps({
-    openCompensations: { type: Array, default: () => [] },
-    grantedCompensations: { type: Array, default: () => [] },
-    overdueCompensations: { type: Array, default: () => [] },
+    // Laravel-Paginatoren (data, total, links, …) mit eigenen Seitenparametern open_page/overdue_page/granted_page
+    openCompensations: { type: Object, default: () => ({ data: [], total: 0, links: [], last_page: 1 }) },
+    grantedCompensations: { type: Object, default: () => ({ data: [], total: 0, links: [], last_page: 1 }) },
+    overdueCompensations: { type: Object, default: () => ({ data: [], total: 0, links: [], last_page: 1 }) },
     stats: { type: Object, default: () => ({}) },
     recentActivity: { type: Object, default: () => ({ data: [], total: 0, current_page: 1, last_page: 1, links: [] }) },
     crafts: { type: Array, default: () => [] },
@@ -310,6 +321,35 @@ function applyFilters() {
     router.get(route('compensation-day-offs.dashboard'), filterParams(), {
         preserveState: true,
         preserveScroll: true,
+        replace: true,
+    });
+}
+
+// Seitenparameter der anderen Listen aus der aktuellen URL beibehalten, nur einen ändern
+const LIST_PAGE_PARAMS = ['open_page', 'overdue_page', 'granted_page', 'activity_page'];
+function currentListPages() {
+    const params = {};
+    try {
+        const search = new URLSearchParams(window.location.search);
+        LIST_PAGE_PARAMS.forEach((key) => {
+            const value = search.get(key);
+            if (value && Number(value) > 1) params[key] = Number(value);
+        });
+    } catch (e) {
+        // ohne window (SSR) keine Seitenparameter
+    }
+    return params;
+}
+
+function goToListPage(pageName, page) {
+    router.get(route('compensation-day-offs.dashboard'), {
+        ...filterParams(),
+        ...currentListPages(),
+        [pageName]: page,
+    }, {
+        preserveState: true,
+        preserveScroll: true,
+        replace: true,
     });
 }
 
@@ -341,7 +381,7 @@ function goToPage(url) {
     if (!url) return;
     // Filter beim Blättern beibehalten
     const pageUrl = new URL(url);
-    Object.entries(filterParams()).forEach(([key, value]) => pageUrl.searchParams.set(key, value));
+    Object.entries({ ...currentListPages(), ...filterParams() }).forEach(([key, value]) => pageUrl.searchParams.set(key, value));
     router.get(pageUrl.toString(), {}, {
         preserveState: true,
         preserveScroll: true,

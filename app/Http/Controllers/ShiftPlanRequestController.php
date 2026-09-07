@@ -1404,6 +1404,9 @@ class ShiftPlanRequestController extends Controller
         $dateFrom = $validated['date_from'] ?? null;
         $dateTo = $validated['date_to'] ?? null;
 
+        // Zeitraum-Deckel für den Export: höchstens ein Jahr
+        \Artwork\Modules\Shift\Support\ExportPeriodLimit::assertWithinLimit($dateFrom, $dateTo);
+
         $query = $this->committedShiftChangesBaseQuery(
             $craft,
             trim((string) ($validated['search'] ?? '')),

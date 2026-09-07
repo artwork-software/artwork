@@ -3,6 +3,7 @@
 namespace Artwork\Modules\Shift\Services;
 
 use Artwork\Modules\Shift\Models\Shift;
+use Artwork\Modules\Shift\Support\ExportPeriodLimit;
 use Artwork\Modules\User\Models\User;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Carbon;
@@ -17,6 +18,7 @@ class ShiftHistoryQueryService
 {
     /**
      * Filter aus Query-Parametern (craftId, shiftId, start_date, end_date, search, sort).
+     * Wirft ValidationException (422), wenn der Zeitraum länger als ein Jahr ist.
      *
      * @param array<string, mixed> $params
      * @return array{
@@ -35,6 +37,9 @@ class ShiftHistoryQueryService
         $endDate = !empty($params['end_date'])
             ? Carbon::parse((string) $params['end_date'], $timezone)->endOfDay()
             : $now->copy()->endOfMonth()->endOfDay();
+
+        // Zeitraum-Deckel (Modal + Excel-Export): höchstens ein Jahr, sonst 422
+        ExportPeriodLimit::assertWithinLimit($startDate, $endDate, 'end_date');
 
         return [
             'craft_id' => max(0, (int) ($params['craftId'] ?? 0)),

@@ -28,6 +28,9 @@
                         no-margin-top
                     />
                 </div>
+                <p class="text-xs text-text-subtle">
+                    {{ $t('Exports are limited to a period of one year.') }}
+                </p>
                 <p v-if="rangeInvalid" class="text-xs text-danger">
                     {{ $t('Please select a valid period (from ≤ to).') }}
                 </p>

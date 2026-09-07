@@ -110,6 +110,25 @@ final class MinFreeDaysPerWeekCheckTest extends TestCase
     }
 
     #[Test]
+    public function a_zero_on_the_assignment_falls_back_to_the_template_value(): void
+    {
+        // Zuweisung 0 (NOT NULL DEFAULT 0 = nicht gesetzt), Vorlage 2 → Ziel 2
+        [$user] = $this->userWithContract(
+            ['free_full_days_per_week' => 2],
+            ['free_full_days_per_week' => 0]
+        );
+        $monday = $this->futureWeekday(Carbon::MONDAY);
+        for ($i = 0; $i < 6; $i++) {
+            $this->shiftFor($user, $monday->copy()->addDays($i));
+        }
+
+        $violations = $this->check->check($this->rule(0.0), $user, $monday->copy(), $monday->copy()->addDays(6));
+
+        $this->assertCount(1, $violations);
+        $this->assertSame(2, $violations->first()->violation_data['target']);
+    }
+
+    #[Test]
     public function without_rule_value_and_without_contract_value_the_rule_does_not_apply(): void
     {
         [$user] = $this->userWithContract(

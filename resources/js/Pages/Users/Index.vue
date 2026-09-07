@@ -242,11 +242,10 @@ import { Link, router, usePage } from '@inertiajs/vue3'
 import {
     Menu, MenuButton, MenuItem, MenuItems,
 } from '@headlessui/vue'
-import {IconAlertTriangle, IconCheck, IconChevronDown, IconCirclePlus, IconEdit, IconGeometry, IconSearch, IconTrash, IconUsers, IconX} from "@tabler/icons-vue"
+import {IconAlertTriangle, IconCheck, IconChevronDown, IconCirclePlus, IconEdit, IconTrash, IconUsers} from "@tabler/icons-vue"
 import debounce from 'lodash.debounce'
 import InviteUsersModal from '@/Layouts/Components/InviteUsersModal.vue'
 import SuccessModal from '@/Layouts/Components/General/SuccessModal.vue'
-import FormButton from '@/Layouts/Components/General/Buttons/FormButton.vue'
 import BaseMenu from '@/Components/Menu/BaseMenu.vue'
 import BaseModal from '@/Components/Modals/BaseModal.vue'
 import TeamIconCollection from '@/Layouts/Components/TeamIconCollection.vue'

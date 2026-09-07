@@ -1,7 +1,13 @@
 import { ref } from 'vue';
 import { router, usePage } from '@inertiajs/vue3';
 import axios from 'axios';
-import { isoWeekToDateRange, toDmy } from '@/Helper/IsoWeek.js';
+import { isoWeekToDateRange } from '@/Helper/IsoWeek.js';
+import {
+    canResubmitRequest,
+    canWithdrawRequest,
+    isRequesterOf,
+    shiftPlanRequestWeekLabel,
+} from './shiftPlanRequestHelpers.js';
 
 /**
  * Aktionen der antragstellenden Person an einer Freigabe-Anfrage:
@@ -17,21 +23,11 @@ export function useShiftPlanRequestActions() {
 
     const authUserId = () => Number(page.props?.auth?.user?.id);
 
-    // requested_by_user_id fehlt in manchen Listen-Payloads (my.index) → assumeOwn erlaubt
-    // dem Aufrufer, die Zugehörigkeit aus dem Kontext zu setzen (z. B. „nur eigene Anfragen").
-    const isRequester = (request, assumeOwn = false) => {
-        if (!request) return false;
-        if (request.requested_by_user_id !== undefined && request.requested_by_user_id !== null) {
-            return Number(request.requested_by_user_id) === authUserId();
-        }
-        if (request.requested_by?.id !== undefined) {
-            return Number(request.requested_by.id) === authUserId();
-        }
-        return assumeOwn;
-    };
-
-    const canWithdraw = (request, assumeOwn = false) => request?.status === 'pending' && isRequester(request, assumeOwn);
-    const canResubmit = (request, assumeOwn = false) => request?.status === 'rejected' && isRequester(request, assumeOwn);
+    // Reine Logik in shiftPlanRequestHelpers.js (Node-testbar); hier nur an die eingeloggte Person gebunden.
+    // assumeOwn: requested_by_user_id fehlt in manchen Listen-Payloads (my.index) → Zugehörigkeit aus Kontext.
+    const isRequester = (request, assumeOwn = false) => isRequesterOf(request, authUserId(), assumeOwn);
+    const canWithdraw = (request, assumeOwn = false) => canWithdrawRequest(request, authUserId(), assumeOwn);
+    const canResubmit = (request, assumeOwn = false) => canResubmitRequest(request, authUserId(), assumeOwn);
 
     const toast = ref(null);
     const toastVisible = ref(false);
@@ -43,11 +39,7 @@ export function useShiftPlanRequestActions() {
     // 'withdraw' | 'resubmit' | 'goto' | null — für processing-Zustand der Buttons
     const processing = ref(null);
 
-    const weekLabel = (request) => {
-        const range = isoWeekToDateRange(request?.week_number, request?.year);
-        if (!range) return `KW ${request?.week_number ?? '–'} / ${request?.year ?? '–'}`;
-        return `KW ${request.week_number} / ${request.year} (${toDmy(range.monday)} – ${toDmy(range.sunday)})`;
-    };
+    const weekLabel = (request) => shiftPlanRequestWeekLabel(request);
 
     const withdraw = (request, { onSuccess = null } = {}) => {
         if (!request?.id || processing.value) return;

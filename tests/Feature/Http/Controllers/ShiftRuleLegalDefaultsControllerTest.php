@@ -133,6 +133,53 @@ final class ShiftRuleLegalDefaultsControllerTest extends FeatureTestCase
     }
 
     #[Test]
+    public function an_inactive_rule_of_the_same_kind_is_reactivated_instead_of_duplicated(): void
+    {
+        $this->actingAsAdmin();
+        [$user, $contractA] = $this->userWithContract();
+        $contractB = UserContract::factory()->create();
+        ShiftRule::query()->whereIn('trigger_type', collect(LegalDefaultShiftRules::all())->pluck('trigger_type'))->update(['deleted_at' => now()]);
+
+        // Deaktivierte Regel gleichen Typs/Werts, bereits Vorlage A zugeordnet
+        $inactive = ShiftRule::factory()->inactive()->create([
+            'name' => 'Altes Tagesmaximum',
+            'trigger_type' => 'maxWorkingHoursOnDay',
+            'individual_number_value' => 10.0,
+        ]);
+        $inactive->contracts()->sync([$contractA->id]);
+        $before = ShiftRule::query()->count();
+        Bus::fake();
+
+        $this->post(route('shift-rules.defaults.store'), [
+            'rules' => ['dailyMax'],
+            'contract_ids' => [$contractA->id, $contractB->id],
+        ])->assertRedirect()->assertSessionHasNoErrors()->assertSessionHas('success');
+
+        // Keine Dublette: reaktiviert, umbenannter Name bleibt, fehlende Vorlage B ergänzt
+        $this->assertSame($before, ShiftRule::query()->count());
+        $this->assertSame(1, ShiftRule::query()->where('trigger_type', 'maxWorkingHoursOnDay')->count());
+        $inactive->refresh();
+        $this->assertTrue($inactive->is_active);
+        $this->assertSame('Altes Tagesmaximum', $inactive->name);
+        $this->assertEqualsCanonicalizing(
+            [$contractA->id, $contractB->id],
+            $inactive->contracts()->pluck('user_contracts.id')->map(fn ($id) => (int) $id)->all()
+        );
+
+        // Reaktivierung prüft auch die schon zugeordnete Vorlage A neu (Regel war bisher stumm)
+        Bus::assertDispatched(
+            RevalidateShiftRulesJob::class,
+            fn (RevalidateShiftRulesJob $job): bool => in_array($user->id, $job->userIds, true)
+        );
+
+        // matches(): inaktiv zählt nur mit $requireActive = false
+        $definition = LegalDefaultShiftRules::find('dailyMax');
+        $fresh = ShiftRule::factory()->inactive()->create(['trigger_type' => 'maxWorkingHoursOnDay', 'individual_number_value' => 10.0]);
+        $this->assertFalse(LegalDefaultShiftRules::matches($fresh, $definition));
+        $this->assertTrue(LegalDefaultShiftRules::matches($fresh, $definition, false));
+    }
+
+    #[Test]
     public function unknown_rule_keys_and_unknown_contracts_are_rejected(): void
     {
         $this->actingAsAdmin();

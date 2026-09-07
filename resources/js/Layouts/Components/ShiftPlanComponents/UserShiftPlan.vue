@@ -357,7 +357,7 @@
  * - Gruppierung nach Raum (inkl. "Ohne Raum")
  */
 
-import { computed, defineAsyncComponent, ref, watch, onMounted } from 'vue'
+import { computed, defineAsyncComponent, ref, watch } from 'vue'
 import { router, Link, usePage } from '@inertiajs/vue3'
 import UserShiftPlanFunctionBar from '@/Layouts/Components/ShiftPlanComponents/UserShiftPlanFunctionBar.vue'
 import SingleUserShift from '@/Layouts/Components/ShiftPlanComponents/SingleUserEventShift.vue'

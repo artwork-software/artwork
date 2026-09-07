@@ -2,17 +2,18 @@
     <ArtworkBaseModal @close="close()" description="" modal-size="max-w-4xl" :title="activeTab">
         <div class="p-3">
             <ul class="tab-container mb-4">
-                <li v-if="props.enums.length > 1"
-                    v-for="(tab) in props.enums"
-                    @click="activeTab = tab"
-                    :class="[activeTab === tab ? 'bg-accent-50 text-accent-700 ring-1 ring-inset ring-accent-600/20'
-                : 'text-text-muted hover:text-text hover:bg-surface-sunken',
-              'inline-flex items-center gap-2 rounded-xl px-3 py-2 text-xs font-medium cursor-pointer'
-            ]">
-                    {{ $t(tab) }}
-                </li>
+                <template v-for="(tab) in props.enums" :key="tab">
+                    <li v-if="props.enums.length > 1"
+                        @click="activeTab = tab"
+                        :class="[activeTab === tab ? 'bg-accent-50 text-accent-700 ring-1 ring-inset ring-accent-600/20'
+                    : 'text-text-muted hover:text-text hover:bg-surface-sunken',
+                  'inline-flex items-center gap-2 rounded-xl px-3 py-2 text-xs font-medium cursor-pointer'
+                ]">
+                        {{ $t(tab) }}
+                    </li>
+                </template>
             </ul>
-            <template v-for="(tab) in props.enums">
+            <template v-for="(tab) in props.enums" :key="tab">
                 <template v-if="tab === exportTabEnums.PDF_CALENDAR_EXPORT">
                     <PdfCalendarExport v-if="activeTab === exportTabEnums.PDF_CALENDAR_EXPORT"
                                        @close="close()"
@@ -112,7 +113,6 @@
 </template>
 
 <script setup>
-import BaseModal from "@/Components/Modals/BaseModal.vue";
 import {defineAsyncComponent, ref} from "vue";
 import {useExportTabEnums} from "@/Layouts/Components/Export/Enums/ExportTabEnum.js";
 import {useTranslation} from "@/Composeables/Translation.js";

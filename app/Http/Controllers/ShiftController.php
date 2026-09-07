@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\SaveShiftMultiEditRequest;
+use Artwork\Core\Services\HelperService;
 use Artwork\Modules\Availability\Models\AvailabilitiesConflict;
 use Artwork\Modules\Availability\Services\AvailabilityConflictService;
 use Artwork\Modules\Change\Services\ChangeService;
@@ -12,6 +13,7 @@ use Artwork\Modules\Event\Services\EventTimelineService;
 use Artwork\Modules\Freelancer\Models\Freelancer;
 use Artwork\Modules\Freelancer\Services\FreelancerService;
 use Artwork\Modules\Craft\Models\Craft;
+use Artwork\Modules\Craft\Services\CraftScopeService;
 use Artwork\Modules\GeneralSettings\Models\GeneralSettings;
 use Artwork\Modules\Shift\Models\ShiftCommitWorkflowUser;
 use Artwork\Modules\IndividualTimes\Events\IndividualTimeChanged;
@@ -860,18 +862,35 @@ class ShiftController extends Controller
     /**
      * Vorschau für „Woche kopieren": Anzahl der Quellschichten der KW (optional nach Gewerken/Räumen).
      */
-    public function copyWeekPreview(Request $request, ShiftWeekCopyService $shiftWeekCopyService): JsonResponse
-    {
+    public function copyWeekPreview(
+        Request $request,
+        ShiftWeekCopyService $shiftWeekCopyService,
+        CraftScopeService $craftScopeService
+    ): JsonResponse {
         $validated = $request->validate([
             'source_week' => ['required', 'integer', 'min:1', 'max:53'],
             'source_year' => ['required', 'integer', 'min:2000', 'max:2100'],
-            'craft_ids' => ['nullable', 'array'],
-            'craft_ids.*' => ['integer'],
-            'room_ids' => ['nullable', 'array'],
-            'room_ids.*' => ['integer'],
+            'craft_ids' => ['nullable', 'array', 'max:100'],
+            'craft_ids.*' => ['integer', 'exists:crafts,id'],
+            'room_ids' => ['nullable', 'array', 'max:100'],
+            'room_ids.*' => ['integer', 'exists:rooms,id'],
         ]);
 
-        $craftIds = array_values(array_map('intval', $validated['craft_ids'] ?? []));
+        // KW 53 gibt es nur in 53-Wochen-Jahren — sonst würde Carbon still in KW 1 des Folgejahres rollen
+        if (!HelperService::isoWeekExists((int) $validated['source_week'], (int) $validated['source_year'])) {
+            throw ValidationException::withMessages([
+                'source_week' => __('Calendar week :week does not exist in :year.', [
+                    'week' => (int) $validated['source_week'],
+                    'year' => (int) $validated['source_year'],
+                ]),
+            ]);
+        }
+
+        // Gewerke auf die planbare Menge der Person zuschneiden (leer = genau diese Menge; Admin = alle)
+        $craftIds = $craftScopeService->restrictToPlannable(
+            $request->user(),
+            array_values(array_map('intval', $validated['craft_ids'] ?? []))
+        );
         $roomIds = array_values(array_map('intval', $validated['room_ids'] ?? []));
         [$monday, $sunday] = ShiftWeekCopyService::weekBounds(
             (int) $validated['source_week'],
@@ -881,7 +900,7 @@ class ShiftController extends Controller
         $count = $shiftWeekCopyService->sourceShifts(
             (int) $validated['source_week'],
             (int) $validated['source_year'],
-            $craftIds === [] ? null : $craftIds,
+            $craftIds,
             $roomIds === [] ? null : $roomIds
         )->count();
 
@@ -891,6 +910,8 @@ class ShiftController extends Controller
             'year' => (int) $validated['source_year'],
             'start' => $monday->format('d.m.Y'),
             'end' => $sunday->format('d.m.Y'),
+            // Deckel Quellschichten × Zielwochen je Aufruf (Dialog sperrt den Button vorab)
+            'max_operations' => ShiftWeekCopyService::MAX_COPY_OPERATIONS,
         ]);
     }
 
@@ -898,15 +919,19 @@ class ShiftController extends Controller
      * „Woche kopieren": Schichten der Quell-KW in 1–8 Ziel-KWs neu anlegen (ohne Personen,
      * nicht festgeschrieben; belegte Zielzeiten werden übersprungen). Je Zielwoche eine Transaktion.
      */
-    public function copyWeek(CopyShiftWeekRequest $request, ShiftWeekCopyService $shiftWeekCopyService): JsonResponse
-    {
+    public function copyWeek(
+        CopyShiftWeekRequest $request,
+        ShiftWeekCopyService $shiftWeekCopyService,
+        CraftScopeService $craftScopeService
+    ): JsonResponse {
         $sourceWeek = (int) $request->input('source_week');
         $sourceYear = (int) $request->input('source_year');
 
+        // Nur planbare Gewerke der Person kopieren (Admin: alle); fremde IDs fallen stillschweigend weg
         $sourceShifts = $shiftWeekCopyService->sourceShifts(
             $sourceWeek,
             $sourceYear,
-            $request->craftIds(),
+            $craftScopeService->restrictToPlannable($request->user(), $request->craftIds()),
             $request->roomIds()
         );
 
@@ -916,9 +941,21 @@ class ShiftController extends Controller
             ]);
         }
 
+        // Deckel je Aufruf: Quellschichten × Zielwochen (je Kopie mehrere Inserts + Activity-Log)
+        $targets = $request->targets();
+        $operations = $sourceShifts->count() * count($targets);
+        if ($operations > ShiftWeekCopyService::MAX_COPY_OPERATIONS) {
+            throw ValidationException::withMessages([
+                'targets' => __(
+                    'Too many shifts to copy (:count, maximum :max). Please select fewer crafts or target weeks.',
+                    ['count' => $operations, 'max' => ShiftWeekCopyService::MAX_COPY_OPERATIONS]
+                ),
+            ]);
+        }
+
         $results = [];
         $createdShiftIds = [];
-        foreach ($request->targets() as $target) {
+        foreach ($targets as $target) {
             $result = $shiftWeekCopyService->copyToWeek(
                 $sourceShifts,
                 $sourceWeek,
@@ -1471,6 +1508,8 @@ class ShiftController extends Controller
             ]);
         }
 
+        // Vorabprüfung für eine schnelle Fehlermeldung; die maßgebliche Prüfung (mit Zeilensperre auf der
+        // abgesagten Zuweisung, 409 wenn sie inzwischen weg ist) läuft in ShiftReplacementService::replace().
         $alreadyAssigned = ShiftWorker::withoutTrashed()
             ->byEmployableIdAndShiftId($replacementClass, (int) $replacement->id, $shift->id)
             ->exists();
@@ -1517,7 +1556,8 @@ class ShiftController extends Controller
             $this->revalidateShiftRules(
                 $usersToRevalidate,
                 Carbon::parse($shift->start_date),
-                Carbon::parse($shift->end_date)
+                // end_date kann leer sein (eintägige Altbestände) → Starttag statt "heute"
+                Carbon::parse($shift->end_date ?: $shift->start_date)
             );
         }
 
@@ -1570,6 +1610,10 @@ class ShiftController extends Controller
         }
     }
 
+    /**
+     * Abgesagte Zuweisung der Schicht (404, wenn sie nicht/nicht mehr zur Schicht gehört). Ungesperrt –
+     * beim Ersetzen lädt ShiftReplacementService::replace() den Satz in der Transaktion mit lockForUpdate neu.
+     */
     private function findReplacementPivot(Shift $shift, int $shiftWorkerId): ShiftWorker
     {
         $pivot = ShiftWorker::withoutTrashed()

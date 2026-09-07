@@ -167,4 +167,18 @@ final class CommittedShiftChangesExportTest extends FeatureTestCase
         // 3 Chunks à (1 Hauptquery + 6 Eager-Loads) — kein N+1 je Zeile
         $this->assertLessThan(30, $queries, "Export brauchte {$queries} Queries für 1100 Zeilen");
     }
+
+
+    #[Test]
+    public function export_rejects_periods_longer_than_one_year(): void
+    {
+        $this->actingAsAdmin();
+
+        $this->getJson(route('committed-shift-changes.export', [
+            'date_from' => '2025-01-01',
+            'date_to' => '2026-01-03',
+        ]))
+            ->assertStatus(422)
+            ->assertJsonValidationErrors(['date_to']);
+    }
 }

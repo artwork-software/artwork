@@ -2,7 +2,10 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import {
     aggregateStaffing,
+    aggregateStaffingByRoom,
     countShiftStaffing,
+    createRoomStaffingMemo,
+    mergeStaffing,
     shiftCraftId,
     staffingKey,
     staffingLevel,
@@ -84,4 +87,66 @@ test('staffingOpen never goes negative', () => {
     assert.equal(staffingOpen({ required: 12, staffed: 9 }), 3);
     assert.equal(staffingOpen({ required: 2, staffed: 5 }), 0);
     assert.equal(staffingOpen(null), 0);
+});
+
+test('mergeStaffing sums partial maps without mutating them', () => {
+    const a = new Map([[staffingKey(1, '07.09.2026'), { required: 2, staffed: 1 }]]);
+    const b = new Map([
+        [staffingKey(1, '07.09.2026'), { required: 1, staffed: 1 }],
+        [staffingKey(2, '07.09.2026'), { required: 4, staffed: 0 }],
+    ]);
+
+    const merged = mergeStaffing([a, null, b]);
+
+    assert.deepEqual(merged.get(staffingKey(1, '07.09.2026')), { required: 3, staffed: 2 });
+    assert.deepEqual(merged.get(staffingKey(2, '07.09.2026')), { required: 4, staffed: 0 });
+    assert.deepEqual(a.get(staffingKey(1, '07.09.2026')), { required: 2, staffed: 1 }, 'input must stay untouched');
+});
+
+test('aggregateStaffingByRoom recomputes only the room whose version changed', () => {
+    const shift = (craftId, value, staffed) => ({
+        craftId,
+        shifts_qualifications: [{ shift_qualification_id: 1, value }],
+        workers: Array.from({ length: staffed }, () => worker(1)),
+    });
+    const roomA = { roomId: 1, __v: 0, content: { '07.09.2026': { shifts: [shift(1, 2, 1)] } } };
+    const roomB = { roomId: 2, __v: 0, content: { '07.09.2026': { shifts: [shift(1, 3, 3)] } } };
+    const memo = createRoomStaffingMemo();
+    const run = () => aggregateStaffingByRoom(
+        [roomA, roomB].map((room) => ({
+            room,
+            version: room.__v,
+            entries: () => Object.entries(room.content).map(([dateKey, cell]) => ({ dateKey, weekNumber: 37, shifts: cell.shifts })),
+        })),
+        memo,
+    );
+
+    const first = run();
+    assert.deepEqual(first.get(staffingKey(1, '07.09.2026')), { required: 5, staffed: 4 });
+    assert.equal(memo.computeCalls, 2, 'initial run aggregates every room');
+
+    // unveränderte Versionen → kein Raum wird neu berechnet
+    run();
+    assert.equal(memo.computeCalls, 2);
+
+    // Broadcast für Raum B (bumpRoomVersion) → nur Raum B neu
+    roomB.content['07.09.2026'].shifts = [shift(1, 3, 1)];
+    roomB.__v += 1;
+    const second = run();
+    assert.equal(memo.computeCalls, 3, 'only the changed room is aggregated again');
+    assert.deepEqual(second.get(staffingKey(1, '07.09.2026')), { required: 5, staffed: 2 });
+
+    // clear() (Zeitraum-/Zoomwechsel) → alle Räume neu
+    memo.clear();
+    run();
+    assert.equal(memo.computeCalls, 5);
+
+    // Neues Raum-Objekt (Plan neu geladen) mit gleicher id/Version darf keinen alten Eintrag treffen
+    const roomAReloaded = { ...roomA, content: { '07.09.2026': { shifts: [shift(1, 9, 0)] } } };
+    const third = aggregateStaffingByRoom(
+        [{ room: roomAReloaded, version: roomAReloaded.__v, entries: () => [{ dateKey: '07.09.2026', weekNumber: 37, shifts: roomAReloaded.content['07.09.2026'].shifts }] }],
+        memo,
+    );
+    assert.equal(memo.computeCalls, 6);
+    assert.deepEqual(third.get(staffingKey(1, '07.09.2026')), { required: 9, staffed: 0 });
 });

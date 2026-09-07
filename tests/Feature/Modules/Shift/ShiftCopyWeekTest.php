@@ -2,13 +2,18 @@
 
 namespace Tests\Feature\Modules\Shift;
 
+use Artwork\Core\Services\HelperService;
 use Artwork\Modules\Craft\Models\Craft;
+use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\Shift\Models\GlobalQualification;
 use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\Shift\Models\ShiftGroup;
+use Artwork\Modules\Shift\Models\ShiftPlanRequest;
 use Artwork\Modules\Shift\Models\ShiftQualification;
 use Artwork\Modules\Shift\Models\ShiftWorker;
+use Artwork\Modules\Shift\Services\ShiftNotificationLinkService;
+use Artwork\Modules\Shift\Services\ShiftWeekCopyService;
 use Artwork\Modules\User\Models\User;
 use Illuminate\Support\Str;
 use PHPUnit\Framework\Attributes\Test;
@@ -357,5 +362,226 @@ final class ShiftCopyWeekTest extends FeatureTestCase
         ]))
             ->assertSuccessful()
             ->assertJsonPath('count', 1);
+    }
+
+
+    // ---------------------------------------------------------------------------------------
+    // Härtung: Gewerks-Scoping (nur planbare Gewerke) und gesperrte Zielwochen
+    // ---------------------------------------------------------------------------------------
+
+    #[Test]
+    public function non_admin_planner_only_copies_plannable_crafts(): void
+    {
+        $user = $this->actingAsUserWith(PermissionEnum::SHIFT_PLANNER->value);
+        $ownCraft = Craft::factory()->create(['assignable_by_all' => false]);
+        $ownCraft->craftShiftPlaner()->attach($user->id);
+        $foreignCraft = Craft::factory()->create(['assignable_by_all' => false]);
+
+        $this->makeShift(['craft_id' => $ownCraft->id, 'start' => '08:00:00', 'end' => '12:00:00']);
+        $this->makeShift(['craft_id' => $foreignCraft->id, 'start' => '13:00:00', 'end' => '17:00:00']);
+
+        // Ohne Filter: genau die planbare Menge (nur das eigene Gewerk)
+        $this->copyWeek([['week' => 38, 'year' => 2026]])
+            ->assertOk()
+            ->assertJsonPath('source.count', 1)
+            ->assertJsonPath('targets.0.created', 1);
+
+        $this->assertSame(1, Shift::query()->whereDate('start_date', '2026-09-16')->count());
+        $this->assertSame(
+            0,
+            Shift::query()->where('craft_id', $foreignCraft->id)->whereDate('start_date', '2026-09-16')->count()
+        );
+
+        // Fremdes Gewerk explizit angefragt → stillschweigend herausgefiltert → keine Quellschichten
+        $this->copyWeek([['week' => 39, 'year' => 2026]], ['craft_ids' => [$foreignCraft->id]])
+            ->assertStatus(422)
+            ->assertJsonValidationErrors(['source_week']);
+    }
+
+    #[Test]
+    public function copy_week_preview_scopes_crafts_and_validates_ids(): void
+    {
+        $user = $this->actingAsUserWith(PermissionEnum::SHIFT_PLANNER->value);
+        $ownCraft = Craft::factory()->create(['assignable_by_all' => false]);
+        $ownCraft->craftShiftPlaner()->attach($user->id);
+        $foreignCraft = Craft::factory()->create(['assignable_by_all' => false]);
+        $this->makeShift(['craft_id' => $ownCraft->id]);
+        $this->makeShift(['craft_id' => $foreignCraft->id, 'start' => '18:00:00', 'end' => '20:00:00']);
+
+        $this->getJson(route('shifts.copy-week.preview', ['source_week' => 37, 'source_year' => 2026]))
+            ->assertOk()
+            ->assertJsonPath('count', 1);
+
+        $this->getJson(route('shifts.copy-week.preview', [
+            'source_week' => 37,
+            'source_year' => 2026,
+            'craft_ids' => [999999],
+            'room_ids' => [999999],
+        ]))
+            ->assertStatus(422)
+            ->assertJsonValidationErrors(['craft_ids.0', 'room_ids.0']);
+    }
+
+    #[Test]
+    public function skips_crafts_whose_target_week_is_already_committed(): void
+    {
+        $this->actingAsAdmin();
+        $otherCraft = Craft::factory()->create();
+        $this->makeShift();
+        $this->makeShift(['craft_id' => $otherCraft->id, 'start' => '18:00:00', 'end' => '22:00:00']);
+        // Ziel-KW 38: festgeschriebene Schicht des Quell-Gewerks zu anderer Zeit
+        $this->makeShift(['start_date' => '2026-09-14', 'end_date' => '2026-09-14', 'start' => '10:00:00', 'end' => '11:00:00', 'is_committed' => true]);
+
+        $response = $this->copyWeek([['week' => 38, 'year' => 2026]])
+            ->assertOk()
+            ->assertJsonPath('targets.0.created', 1)
+            ->assertJsonPath('targets.0.skipped', 1)
+            ->assertJsonPath('targets.0.skipped_shifts.0.reason', ShiftWeekCopyService::SKIP_REASON_COMMITTED);
+
+        $this->assertSame($this->craft->abbreviation, $response->json('targets.0.skipped_shifts.0.craft'));
+        $this->assertSame(
+            0,
+            Shift::query()->where('craft_id', $this->craft->id)->whereDate('start_date', '2026-09-16')->count()
+        );
+        $this->assertSame(
+            1,
+            Shift::query()->where('craft_id', $otherCraft->id)->whereDate('start_date', '2026-09-16')->count()
+        );
+    }
+
+    #[Test]
+    public function skips_crafts_with_pending_request_for_target_week(): void
+    {
+        $this->actingAsAdmin();
+        $this->makeShift();
+        ShiftPlanRequest::factory()->create([
+            'craft_id' => $this->craft->id,
+            'week_number' => 38,
+            'year' => 2026,
+            'status' => 'pending',
+        ]);
+        // Bereits entschiedene Anfrage sperrt NICHT (KW 39)
+        ShiftPlanRequest::factory()->create([
+            'craft_id' => $this->craft->id,
+            'week_number' => 39,
+            'year' => 2026,
+            'status' => 'approved',
+        ]);
+
+        $this->copyWeek([['week' => 38, 'year' => 2026], ['week' => 39, 'year' => 2026]])
+            ->assertOk()
+            ->assertJsonPath('targets.0.created', 0)
+            ->assertJsonPath('targets.0.skipped', 1)
+            ->assertJsonPath('targets.0.skipped_shifts.0.reason', ShiftWeekCopyService::SKIP_REASON_REQUESTED)
+            ->assertJsonPath('targets.1.created', 1)
+            ->assertJsonPath('targets.1.skipped', 0);
+
+        $this->assertSame(0, Shift::query()->whereDate('start_date', '2026-09-16')->count());
+        $this->assertSame(1, Shift::query()->whereDate('start_date', '2026-09-23')->count());
+    }
+
+    #[Test]
+    public function week_bounds_know_52_and_53_week_years(): void
+    {
+        $this->assertSame(52, HelperService::isoWeeksInYear(2025));
+        $this->assertSame(53, HelperService::isoWeeksInYear(2026));
+        $this->assertTrue(HelperService::isoWeekExists(53, 2026));
+        $this->assertFalse(HelperService::isoWeekExists(53, 2025));
+        $this->assertFalse(HelperService::isoWeekExists(0, 2026));
+
+        // KW 53/2026 = 28.12.2026–03.01.2027 (kein Überrollen in KW 1/2027)
+        [$monday, $sunday] = ShiftWeekCopyService::weekBounds(53, 2026);
+        $this->assertSame('2026-12-28', $monday->toDateString());
+        $this->assertSame('2027-01-03', $sunday->toDateString());
+
+        // Nicht existierende KW 53/2025 wird auf die letzte KW des Jahres gedeckelt statt in KW 1/2026 zu rutschen
+        [$monday] = ShiftWeekCopyService::weekBounds(53, 2025);
+        $this->assertSame('2025-12-22', $monday->toDateString());
+
+        // Link-/Helper-Fallback identisch (letzte existierende KW), regulär unverändert
+        [$linkStart, $linkEnd] = ShiftNotificationLinkService::weekRangeForCalendarWeek(53, 2025);
+        $this->assertSame('2025-12-22', $linkStart->toDateString());
+        $this->assertSame('2025-12-28', $linkEnd->toDateString());
+        [$helperStart, $helperEnd] = app(HelperService::class)->getDateRangeByCalendarWeekAndYear(53, 2025);
+        $this->assertSame('2025-12-22', $helperStart->toDateString());
+        $this->assertSame('2025-12-28', $helperEnd->toDateString());
+        [$helperStart] = app(HelperService::class)->getDateRangeByCalendarWeekAndYear(53, 2026);
+        $this->assertSame('2026-12-28', $helperStart->toDateString());
+    }
+
+    #[Test]
+    public function rejects_week_53_in_a_52_week_year_as_source_or_target(): void
+    {
+        $this->actingAsAdmin();
+        $this->makeShift();
+
+        // Quelle KW 53/2025 existiert nicht → 422 (vorher: still KW 1/2026 gelesen)
+        $this->copyWeek([['week' => 2, 'year' => 2026]], ['source_week' => 53, 'source_year' => 2025])
+            ->assertStatus(422)
+            ->assertJsonValidationErrors(['source_week']);
+
+        // Ziel KW 53/2025 existiert nicht → 422
+        $this->copyWeek([['week' => 53, 'year' => 2025]])
+            ->assertStatus(422)
+            ->assertJsonValidationErrors(['targets.0']);
+
+        // Vorschau lehnt ebenfalls ab
+        $this->getJson(route('shifts.copy-week.preview', ['source_week' => 53, 'source_year' => 2025]))
+            ->assertStatus(422)
+            ->assertJsonValidationErrors(['source_week']);
+
+        $this->assertSame(1, Shift::query()->count());
+    }
+
+    #[Test]
+    public function copies_into_week_53_of_a_53_week_year(): void
+    {
+        $this->actingAsAdmin();
+        $this->makeShift();
+
+        // KW 37/2026 (Mi 09.09.) → KW 53/2026 (Mi 30.12.2026)
+        $this->copyWeek([['week' => 53, 'year' => 2026]])
+            ->assertSuccessful()
+            ->assertJsonPath('targets.0.week', 53)
+            ->assertJsonPath('targets.0.created', 1);
+
+        $this->assertSame(1, Shift::query()->whereDate('start_date', '2026-12-30')->count());
+
+        $this->getJson(route('shifts.copy-week.preview', ['source_week' => 53, 'source_year' => 2026]))
+            ->assertOk()
+            ->assertJsonPath('count', 1)
+            ->assertJsonPath('start', '28.12.2026')
+            ->assertJsonPath('end', '03.01.2027')
+            ->assertJsonPath('max_operations', ShiftWeekCopyService::MAX_COPY_OPERATIONS);
+    }
+
+    #[Test]
+    public function rejects_more_than_the_copy_operation_cap_per_call(): void
+    {
+        $this->actingAsAdmin();
+        // 63 Quellschichten × 8 Zielwochen = 504 > 500; 63 × 7 = 441 ist erlaubt
+        for ($i = 0; $i < 63; $i++) {
+            $hour = 6 + intdiv($i, 4);
+            $minute = ($i % 4) * 15;
+            $this->makeShift([
+                'start' => sprintf('%02d:%02d:00', $hour, $minute),
+                'end' => sprintf('%02d:%02d:00', $hour + 2, $minute),
+            ]);
+        }
+
+        $targets = [];
+        for ($week = 38; $week <= 45; $week++) {
+            $targets[] = ['week' => $week, 'year' => 2026];
+        }
+
+        $this->copyWeek($targets)
+            ->assertStatus(422)
+            ->assertJsonValidationErrors(['targets']);
+        $this->assertSame(63, Shift::query()->count());
+
+        $this->copyWeek(array_slice($targets, 0, 7))
+            ->assertSuccessful()
+            ->assertJsonPath('targets.6.created', 63);
+        $this->assertSame(63 * 8, Shift::query()->count());
     }
 }

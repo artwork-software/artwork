@@ -200,7 +200,7 @@
                     <BaseMenuItem
                         white-menu-background
                         :icon="IconTrash"
-                        title="User von Schicht entfernen"
+                        title="Delete user from shift"
                         @click="deleteUserFromShift(person)"
                     />
                     <!-- Proxy-Erfassung: Zu-/Absage für Externe (kein Login) -->
@@ -261,7 +261,7 @@ import {Float} from "@headlessui-float/vue";
 import {router, usePage} from "@inertiajs/vue3";
 import axios from "axios";
 import RequestWorkTimeChangeModal from "@/Pages/Shifts/Components/RequestWorkTimeChangeModal.vue";
-import {computed, ref, onMounted, onBeforeUnmount, watch, nextTick} from "vue";
+import {computed, ref, onMounted, onBeforeUnmount} from "vue";
 import {IconDeviceFloppy, IconNote, IconChevronDown, IconTrash, IconCircleCheck, IconCircleX} from "@tabler/icons-vue";
 import {can, is} from "laravel-permission-to-vuejs";
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";

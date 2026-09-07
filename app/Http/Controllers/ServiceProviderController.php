@@ -216,7 +216,11 @@ class ServiceProviderController extends Controller
     {
         $this->authorize('updateWorkProfile', ServiceProvider::class);
 
-        $craftsToAssign = Craft::whereIn('id', $request->get('craftIds'))->get();
+        $validated = $request->validate([
+            'craftIds' => ['nullable', 'array', 'max:100'],
+            'craftIds.*' => ['integer', 'exists:crafts,id'],
+        ]);
+        $craftsToAssign = Craft::whereIn('id', $validated['craftIds'] ?? [])->get();
 
         foreach ($craftsToAssign as $craft) {
             if (!$serviceProvider->assignedCrafts->contains($craft)) {

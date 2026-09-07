@@ -42,15 +42,11 @@
 
 <script setup>
 
-import TabComponent from "@/Components/Tabs/TabComponent.vue";
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 import ShiftSettingsHeader from "@/Pages/Settings/Components/ShiftSettingsHeader.vue";
 import {ref} from "vue";
 import CreateOrUpdateWorkTimePatternModal
     from "@/Pages/Settings/WorkTimePattern/Components/CreateOrUpdateWorkTimePatternModal.vue";
-import BaseMenu from "@/Components/Menu/BaseMenu.vue";
-import BaseMenuItem from "@/Components/Menu/BaseMenuItem.vue";
-import SingleWorkTimePattern from "@/Pages/Settings/WorkTimePattern/Components/SingleWorkTimePattern.vue";
 import CreateOrUpdateUserContractModal
     from "@/Pages/Settings/UserContractSettings/Components/CreateOrUpdateUserContractModal.vue";
 import SingleUserContractTemplate

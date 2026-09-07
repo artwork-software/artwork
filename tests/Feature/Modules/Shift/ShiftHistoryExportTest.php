@@ -186,4 +186,20 @@ final class ShiftHistoryExportTest extends FeatureTestCase
         // 3 Chunks à (1 Hauptquery + causer-Eager-Load) + einmalige Schicht-Lookups — kein N+1 je Zeile
         $this->assertLessThan(20, $queries, "Export brauchte {$queries} Queries für 1100 Zeilen");
     }
+
+
+    #[Test]
+    public function export_rejects_periods_longer_than_one_year(): void
+    {
+        $this->actingAsUserWith(PermissionEnum::VIEW_SHIFT_PLAN->value);
+
+        $this->getJson(route('shift-history.export', ['start_date' => '2025-01-01', 'end_date' => '2026-01-03']))
+            ->assertStatus(422)
+            ->assertJsonValidationErrors(['end_date']);
+
+        // Genau ein Jahr (366 Tage) bleibt erlaubt
+        Excel::fake();
+        $this->get(route('shift-history.export', ['start_date' => '2025-01-01', 'end_date' => '2026-01-02']))
+            ->assertOk();
+    }
 }

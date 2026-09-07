@@ -158,7 +158,7 @@
 
                         <div>
                             <div v-if="shiftCommitWorkflowUsers?.length > 0" class="flex flex-wrap items-center gap-4 mt-3">
-                                <div v-for="(object, index) in shiftCommitWorkflowUsers" class="group block shrink-0 bg-white w-fit pr-3 rounded-full border border-border-subtle">
+                                <div v-for="(object, index) in shiftCommitWorkflowUsers" :key="object.user.id" class="group block shrink-0 bg-white w-fit pr-3 rounded-full border border-border-subtle">
                                     <div class="flex items-center">
                                         <div>
                                             <img class="inline-block size-9 rounded-full object-cover" :src="object.user.profile_photo_url" alt="" />
@@ -406,7 +406,7 @@
                     <div class="flex items-center gap-2">
                         <BaseUIButton
                             @click="openShiftQualificationModal('create')"
-                            label="Neue Qualifikation"
+                            label="New qualification"
                             use-translation
                             is-add-button
                         />
@@ -446,7 +446,7 @@
                         <BaseUIButton
                             @click="openShiftQualificationModal('create')"
                             size="sm"
-                            label="Neue Qualifikation"
+                            label="New qualification"
                             use-translation
                             is-add-button
                         />

@@ -276,14 +276,14 @@ class UserController extends Controller
                 ->get()
         )->resolve();
 
-        // Warn-Badge "Arbeitszeitmuster fehlt" (Personalverwaltung): zwei konstante Queries für alle
-        // gelisteten Personen (Schichtarbeitende + heute gültige Muster), kein N+1. Nur Personen,
-        // die Schichten arbeiten, brauchen ein Muster (Soll gilt nur im Dienstplan).
-        $listedUserIds = array_map('intval', array_column($users, 'id'));
-        $shiftWorkerIds = $listedUserIds === []
-            ? []
-            : User::query()->whereIn('id', $listedUserIds)->where('can_work_shifts', true)->pluck('id')
-                ->map(static fn ($id): int => (int) $id)->all();
+        // Warn-Badge "Arbeitszeitmuster fehlt" (Personalverwaltung): eine konstante Query für die heute
+        // gültigen Muster aller gelisteten Schichtarbeitenden, kein N+1. Das Flag can_work_shifts kommt
+        // aus den bereits geladenen Modellen (MinimalUserIndexResource), nicht aus einer zweiten Query.
+        // Nur Personen, die Schichten arbeiten, brauchen ein Muster (Soll gilt nur im Dienstplan).
+        $shiftWorkerIds = array_values(array_map(
+            static fn (array $listedUser): int => (int) $listedUser['id'],
+            array_filter($users, static fn (array $listedUser): bool => (bool) ($listedUser['can_work_shifts'] ?? false))
+        ));
         $userIdsWithPattern = $this->workTimeCalculationService->userIdsWithPatternOn($shiftWorkerIds);
         $shiftWorkerLookup = array_flip($shiftWorkerIds);
         foreach ($users as &$listedUser) {
@@ -1108,9 +1108,8 @@ class UserController extends Controller
         $this->authorize('viewOperationPlan', $user);
 
         // Deep-Link aus Benachrichtigungen (ShiftNotificationLinkService): start_date/end_date
-        // in der URL übernehmen den angezeigten Zeitraum des Einsatzplans. Der Zeitraum hängt am
-        // Filter der EINGELOGGTEN Person (getUserShiftPlanPageDto liest den Auth-User), deshalb
-        // wird genau dieser Filter aktualisiert — wie beim manuellen Blättern im Plan.
+        // in der URL bestimmen den angezeigten Zeitraum des Einsatzplans — nur für diesen Request
+        // (Override im UserService), der gespeicherte Filter der eingeloggten Person bleibt unverändert.
         $this->applyOperationPlanPeriodFromRequest($request, $userService);
 
         $showVacationsAndAvailabilities = $request->get('showVacationsAndAvailabilities');
@@ -1518,7 +1517,11 @@ class UserController extends Controller
     {
         $this->authorize('updateWorkProfile', User::class);
 
-        $craftIds = $request->get('craftIds', []);
+        $validated = $request->validate([
+            'craftIds' => ['array', 'max:100'],
+            'craftIds.*' => ['integer', 'exists:crafts,id'],
+        ]);
+        $craftIds = $validated['craftIds'] ?? [];
 
         $validCraftIds = Craft::whereIn('id', $craftIds)->pluck('id')->toArray();
 
@@ -2107,12 +2110,9 @@ class UserController extends Controller
             $end = $start->copy()->addMonths(6);
         }
 
-        /** @var User $viewer */
-        $viewer = Auth::user();
-        $userService->getUserWorkerShiftPlanFilter($viewer)->update([
-            'start_date' => $start->format('Y-m-d'),
-            'end_date' => $end->format('Y-m-d'),
-        ]);
+        // Nur für diesen Request (Härtung): der gespeicherte Filter der eingeloggten Person
+        // bleibt unverändert, getUserShiftPlanPageDto liest den Override aus dem Service.
+        $userService->overrideWorkerShiftPlanPeriod($start, $end);
     }
 
     public function compactMode(User $user, Request $request): void

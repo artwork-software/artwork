@@ -2,6 +2,7 @@
 
 namespace Artwork\Modules\Shift\Services;
 
+use Artwork\Core\Services\HelperService;
 use Artwork\Modules\User\Models\User;
 use Carbon\Carbon;
 use Carbon\CarbonInterface;
@@ -32,12 +33,15 @@ final class ShiftNotificationLinkService
     }
 
     /**
-     * Montag–Sonntag einer ISO-Kalenderwoche.
+     * Montag–Sonntag einer ISO-Kalenderwoche. Eine nicht existierende KW (z. B. 53 in einem
+     * 52-Wochen-Jahr) fällt auf die letzte KW des Jahres zurück, damit der Link nicht still in
+     * KW 1 des Folgejahres landet (Carbon::setISODate rollt sonst über).
      *
      * @return array{0: Carbon, 1: Carbon}
      */
     public static function weekRangeForCalendarWeek(int $week, int $year): array
     {
+        $week = max(1, min($week, HelperService::isoWeeksInYear($year)));
         $carbon = Carbon::now()->setISODate($year, $week);
 
         return [

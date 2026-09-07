@@ -114,11 +114,14 @@ class ShiftAssignmentPreflightService
      */
     public static function resolvePivotInterval(ShiftWorker $pivot, Shift $shift): ?array
     {
+        // `?:` statt `??`: leere Pivot-Zeiten ('' / null) fallen auf die Schichtzeit zurück;
+        // fehlendes Schicht-Enddatum (eintägige Altbestände) = Startdatum, wie COALESCE(end_date, start_date)
+        // in der Suche nach anderen Zuweisungen.
         return self::resolveInterval(
-            $pivot->start_date ?? $shift->start_date,
-            $pivot->start_time ?? $shift->start,
-            $pivot->end_date ?? $shift->end_date,
-            $pivot->end_time ?? $shift->end,
+            $pivot->start_date ?: $shift->start_date,
+            $pivot->start_time ?: $shift->start,
+            $pivot->end_date ?: ($shift->end_date ?: $shift->start_date),
+            $pivot->end_time ?: $shift->end,
         );
     }
 
@@ -164,8 +167,9 @@ class ShiftAssignmentPreflightService
             ->where('employable_id', $worker->getKey())
             ->where('shift_id', '!=', $shift->id)
             ->whereHas('shift', function ($query) use ($scopeStart, $scopeEnd): void {
-                $query->where('start_date', '<=', $scopeEnd)
-                    ->where('end_date', '>=', $scopeStart);
+                // end_date kann leer sein (eintägige Altbestände) → dann zählt start_date als Ende
+                $query->where('shifts.start_date', '<=', $scopeEnd)
+                    ->whereRaw('COALESCE(shifts.end_date, shifts.start_date) >= ?', [$scopeStart]);
             })
             ->get();
 

@@ -109,6 +109,17 @@ class AverageWeeklyHoursCheck extends AbstractRuleCheck
         ];
     }
 
+    /**
+     * Datenfenster: das rollierende Fenster reicht period_weeks - 1 Wochen vor den ersten Montag zurück.
+     */
+    public function getContextRange(ShiftRule $rule, Carbon $startDate, Carbon $endDate): ?array
+    {
+        return [
+            $startDate->copy()->startOfWeek(Carbon::MONDAY)->startOfDay()->subWeeks(self::periodWeeksFor($rule) - 1),
+            $endDate->copy()->endOfWeek(Carbon::SUNDAY)->startOfDay(),
+        ];
+    }
+
     public static function periodWeeksFor(ShiftRule $rule): int
     {
         $weeks = (int) ($rule->period_weeks ?? 0);

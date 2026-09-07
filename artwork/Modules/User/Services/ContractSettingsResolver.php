@@ -9,8 +9,18 @@ use Carbon\Carbon;
 
 /**
  * Liest Vertragswerte "Zuweisung vor Vorlage":
- * Ist das Feld auf der Zuweisung (user_contract_assigns) gesetzt (nicht null), gilt die Zuweisung,
+ * Ist das Feld auf der Zuweisung (user_contract_assigns) gesetzt, gilt die Zuweisung,
  * sonst der Wert der Vertragsvorlage (user_contracts), sonst der Default.
+ *
+ * "Gesetzt" heißt je Spaltentyp:
+ *  - nullable Spalten (z. B. overtime_compensation_period): nicht null.
+ *  - numerische NOT-NULL-DEFAULT-0-Spalten der Zuweisung (ZERO_MEANS_UNSET_ON_ASSIGN): ungleich 0.
+ *    Eine 0 kann dort nicht von "nie eingetragen" unterschieden werden und fällt deshalb auf die
+ *    Vorlage zurück (Vorlage 0 bleibt 0). Auf der Vorlage selbst ist 0 ein echter Wert.
+ *  - Bool-Spalten (special_day_rule_active, overtime_rule_active, *_active; NOT NULL DEFAULT 0):
+ *    die Zuweisung gilt IMMER – false auf der Zuweisung ist nicht von "nicht gesetzt" unterscheidbar,
+ *    das UI spiegelt beim Wählen einer Vorlage deren Schalter ohnehin auf die Zuweisung. Ein
+ *    Rückfall auf die Vorlage bräuchte eine nullable Spalte (bewusst nicht in der Härtung geändert).
  *
  * Gilt für Zielwerte (DP-18 "Ist / X"), Dreimonatsflag, Sondertag-Regel und Überstundenregel.
  *
@@ -20,6 +30,23 @@ use Carbon\Carbon;
  */
 class ContractSettingsResolver
 {
+    /**
+     * Numerische Spalten der Zuweisung, die NOT NULL DEFAULT 0 sind (Schema user_contract_assigns):
+     * 0 = "nicht gesetzt" → Vorlage. overtime_compensation_period ist nullable und gehört NICHT hierher.
+     */
+    public const ZERO_MEANS_UNSET_ON_ASSIGN = [
+        'free_full_days_per_week',
+        'free_half_days_per_week',
+        'compensation_period',
+        'free_sundays_per_season',
+        'days_off_first_26_weeks',
+        'free_sundays_sat_mon_per_half',
+        'free_sundays_and_saturdays_per_season',
+        'free_sundays_per_calendar_year',
+        'one_and_half_day_combinations',
+        'annual_vacation_days',
+    ];
+
     /** @var array<string, UserContractAssign|null> Cache je "userId|Y-m-d" */
     private array $assignCache = [];
 
@@ -95,25 +122,12 @@ class ContractSettingsResolver
     }
 
     /**
-     * Ersatzfrei-Frist in Tagen: Zuweisung vor Vorlage.
-     *
-     * Die Spalte user_contract_assigns.compensation_period ist NOT NULL DEFAULT 0 – eine 0 auf der
-     * Zuweisung bedeutet daher "nicht gesetzt" (nicht "0 Tage Frist") und fällt auf die Vorlage
-     * zurück. Einzige Stelle, an der diese Sonderregel gilt; alle Leser der Frist gehen hier durch.
+     * Ersatzfrei-Frist in Tagen: Zuweisung vor Vorlage (0 auf der Zuweisung = nicht gesetzt, siehe
+     * ZERO_MEANS_UNSET_ON_ASSIGN – dieselbe Regel gilt seit der Härtung für alle NOT-NULL-DEFAULT-0-Spalten).
      */
     public function compensationPeriod(User $user, ?Carbon $date = null): int
     {
-        $assign = $this->assignFor($user, $date);
-        if ($assign === null) {
-            return 0;
-        }
-
-        $assigned = (int) ($assign->getAttribute('compensation_period') ?? 0);
-        if ($assigned > 0) {
-            return $assigned;
-        }
-
-        return (int) ($this->templateFor($user, $date)?->getAttribute('compensation_period') ?? 0);
+        return $this->int($user, 'compensation_period', 0, $date);
     }
 
     public function flush(): void
@@ -123,6 +137,20 @@ class ContractSettingsResolver
 
     private static function hasValue(UserContractAssign|UserContract $model, string $key): bool
     {
-        return array_key_exists($key, $model->getAttributes()) && $model->getAttribute($key) !== null;
+        if (!array_key_exists($key, $model->getAttributes())) {
+            return false;
+        }
+
+        $value = $model->getAttribute($key);
+        if ($value === null) {
+            return false;
+        }
+
+        // Zuweisung: 0 in NOT-NULL-DEFAULT-0-Zahlenspalten ist "nicht gesetzt" → Vorlage greift.
+        if ($model instanceof UserContractAssign && in_array($key, self::ZERO_MEANS_UNSET_ON_ASSIGN, true)) {
+            return (float) $value != 0.0;
+        }
+
+        return true;
     }
 }

@@ -468,9 +468,14 @@ function filterParams() {
     return params
 }
 
+// Teil-Reload: Filter-Stammdaten (crafts/rules/users) sind Closure-Props des Controllers und werden
+// nur beim Erstaufruf geladen; Paginierung/Filterwechsel holen nur Liste, Zähler und Filterzustand.
+const LIST_PROPS = ['violations', 'counters', 'filters', 'perPage']
+
 function visit(extra = {}) {
     clearSelection()
     router.get(route('shift-rules.pending'), { ...filterParams(), ...extra }, {
+        only: LIST_PROPS,
         preserveState: true,
         preserveScroll: true,
         replace: true,
@@ -502,6 +507,7 @@ function changePerPage(perPage) {
     const allowed = [25, 50, 100].includes(Number(perPage)) ? Number(perPage) : 25
     clearSelection()
     router.get(route('shift-rules.pending'), { ...filterParams(), per_page: allowed, page: 1 }, {
+        only: LIST_PROPS,
         preserveState: true,
         preserveScroll: true,
         replace: true,
@@ -628,11 +634,11 @@ function ignoreViolation(violation) {
 
 function onViolationUpdated() {
     selectedViolation.value = null
-    router.reload()
+    router.reload({ only: LIST_PROPS })
 }
 
 function onViolationIgnored() {
     violationToIgnore.value = null
-    router.reload()
+    router.reload({ only: LIST_PROPS })
 }
 </script>

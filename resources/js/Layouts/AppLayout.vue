@@ -5,7 +5,7 @@
     </Head>
     <div class="artwork relative">
         <div v-if="pushNotifications.length > 0" class="absolute top-16 right-5">
-            <div v-for="pushNotification in pushNotifications" :id="pushNotification.id"
+            <div v-for="pushNotification in pushNotifications" :key="pushNotification.id" :id="pushNotification.id"
                  class="my-2 z-50 flex relative w-full max-w-xs rounded-lg border border-border-subtle bg-surface shadow-overlay"
                  role="alert">
                 <div class="flex p-4">

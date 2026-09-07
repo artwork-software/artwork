@@ -116,7 +116,7 @@
                             @endforeach
                             @if($presenter::hasDeepLink($entryDescription))
                                 <a href="{{ $presenter::primaryLink($entryDescription) }}" class="notification-link">
-                                    Direkt in {{ $page_title }} öffnen
+                                    {{ __('Open directly in :app', ['app' => $page_title]) }}
                                 </a>
                             @endif
                         </div>

@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Http\Controllers;
 
+use Artwork\Modules\Craft\Models\Craft;
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Freelancer\Models\Freelancer;
 use Artwork\Modules\IndividualTimes\Models\IndividualTime;
@@ -180,5 +181,27 @@ final class FreelancerControllerTest extends FeatureTestCase
         $fl = Freelancer::factory()->create();
         $this->delete(route('freelancer.destroy', $fl))
             ->assertRedirect(route('login'));
+    }
+
+
+    #[Test]
+    public function assign_crafts_bulk_validates_craft_ids(): void
+    {
+        $this->actingAsAdmin();
+        $freelancer = Freelancer::factory()->create();
+
+        $this->patchJson(route('freelancer.assign.crafts.bulk', $freelancer), ['craftIds' => [999999]])
+            ->assertStatus(422)
+            ->assertJsonValidationErrors(['craftIds.0']);
+
+        $this->patchJson(route('freelancer.assign.crafts.bulk', $freelancer), ['craftIds' => 'nope'])
+            ->assertStatus(422)
+            ->assertJsonValidationErrors(['craftIds']);
+
+        $craft = Craft::factory()->create();
+        $this->patch(route('freelancer.assign.crafts.bulk', $freelancer), ['craftIds' => [$craft->id]])
+            ->assertRedirect();
+
+        $this->assertTrue($freelancer->fresh()->assignedCrafts->contains($craft));
     }
 }

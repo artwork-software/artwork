@@ -19,8 +19,10 @@ use Artwork\Modules\Shift\Models\CompensationDayOff;
 use Artwork\Modules\Shift\Models\ShiftRuleViolation;
 use Artwork\Modules\Shift\Repositories\CompensationDayOffRepository;
 use Artwork\Modules\Shift\Repositories\ShiftRuleViolationRepository;
+use Artwork\Modules\Shift\Services\ShiftRuleNotificationRecipientService;
 use Artwork\Modules\Shift\Services\ShiftRuleRevalidationService;
 use Artwork\Modules\Shift\Services\ShiftRuleService;
+use Artwork\Modules\Shift\Support\ExportPeriodLimit;
 use Artwork\Modules\Shift\Models\ShiftRule;
 use Artwork\Modules\Shift\Support\LegalDefaultShiftRules;
 use Artwork\Modules\User\Models\User;
@@ -175,9 +177,11 @@ class ShiftRuleController extends Controller
             // Gesetzliche Standardregeln (ArbZG) — einzige Definitionsquelle, keine Kopie im Frontend
             'legalDefaultRules' => LegalDefaultShiftRules::all(),
             'contracts' => UserContract::all(),
-            // Auswahl "Benachrichtigen" (usersToNotify) — nur Name und ID
-            'users' => User::query()
-                ->select(['id', 'first_name', 'last_name'])
+            // Auswahl "Benachrichtigen" (usersToNotify) — nur Name und ID, nur Personen mit
+            // Dienstplan-Sicht-/Planungsrecht oder Admin (gleicher Filter wie beim Versand)
+            'users' => app(ShiftRuleNotificationRecipientService::class)
+                ->eligibleUsersQuery()
+                ->select(['users.id', 'users.first_name', 'users.last_name'])
                 ->orderBy('last_name')
                 ->orderBy('first_name')
                 ->get(),
@@ -232,8 +236,12 @@ class ShiftRuleController extends Controller
                 continue;
             }
 
+            // Aktive gleichartige Regel vor inaktiver: eine deaktivierte Regel wird reaktiviert
+            // (zählt als "bereits vorhanden"), statt daneben eine Dublette anzulegen.
             $rule = $existingRules->first(
                 static fn (ShiftRule $candidate): bool => LegalDefaultShiftRules::matches($candidate, $definition)
+            ) ?? $existingRules->first(
+                static fn (ShiftRule $candidate): bool => LegalDefaultShiftRules::matches($candidate, $definition, false)
             );
 
             if ($rule === null) {
@@ -246,6 +254,13 @@ class ShiftRuleController extends Controller
                 $alreadyExisting++;
                 $assigned = $rule->contracts()->pluck('user_contracts.id')->map(fn ($id) => (int) $id)->all();
                 $missingContractIds = array_values(array_diff($contractIds, $assigned));
+
+                if (!$rule->is_active) {
+                    $rule->is_active = true;
+                    $rule->save();
+                    // Reaktiviert: auch die schon zugeordneten Vorlagen neu prüfen (Regel war bisher stumm)
+                    $newlyAssignedContractIds = array_merge($newlyAssignedContractIds, $assigned);
+                }
             }
 
             if ($missingContractIds !== []) {
@@ -379,10 +394,10 @@ class ShiftRuleController extends Controller
     private function violationFilters(Request $request): array
     {
         $validated = $request->validate([
-            'craft_id' => 'nullable|array',
-            'craft_id.*' => 'integer',
-            'user_id' => 'nullable|integer',
-            'shift_rule_id' => 'nullable|integer',
+            'craft_id' => 'nullable|array|max:100',
+            'craft_id.*' => 'integer|exists:crafts,id',
+            'user_id' => 'nullable|integer|exists:users,id',
+            'shift_rule_id' => 'nullable|integer|exists:shift_rules,id',
             'severity' => 'nullable|in:warning,error',
             'status' => 'nullable|in:active,resolved,ignored,all',
             'date_from' => 'nullable|date_format:Y-m-d',
@@ -390,6 +405,9 @@ class ShiftRuleController extends Controller
             'sort' => 'nullable|in:asc,desc',
             'per_page' => 'nullable|integer|in:25,50,100',
         ]);
+
+        // Zeitraum-Deckel (Liste + Export): höchstens ein Jahr
+        ExportPeriodLimit::assertWithinLimit($validated['date_from'] ?? null, $validated['date_to'] ?? null);
 
         return [
             'craft_ids' => array_values(array_filter(array_map('intval', (array) ($validated['craft_id'] ?? [])))),
@@ -419,12 +437,16 @@ class ShiftRuleController extends Controller
             'counters' => $this->shiftRuleService->getViolationCounters($filters),
             'filters' => $filters,
             'perPage' => $perPage,
-            'crafts' => \Artwork\Modules\Craft\Models\Craft::query()
+            // Filter-Stammdaten als Closure-Props: beim Erstaufruf enthalten, bei Teil-Reloads der Seite
+            // (Paginierung/Filter mit only: [...]) nicht ausgewertet. Bewusst NICHT Inertia::optional(),
+            // das würde die Props auch beim Erstaufruf weglassen.
+            'crafts' => static fn () => \Artwork\Modules\Craft\Models\Craft::query()
                 ->select('id', 'name', 'abbreviation', 'color')
+                ->without(['craftShiftPlaner'])
                 ->orderBy('name')
                 ->get(),
-            'rules' => ShiftRule::query()->select('id', 'name', 'trigger_type')->orderBy('name')->get(),
-            'users' => $this->shiftRuleService->getUsersWithViolations(),
+            'rules' => static fn () => ShiftRule::query()->select('id', 'name', 'trigger_type')->orderBy('name')->get(),
+            'users' => fn () => $this->shiftRuleService->getUsersWithViolations(),
             'bulkIgnoreLimit' => self::BULK_IGNORE_LIMIT,
         ]);
     }
@@ -435,9 +457,10 @@ class ShiftRuleController extends Controller
      */
     public function bulkIgnoreViolations(Request $request): RedirectResponse
     {
+        // ignoreMany() zählt nur Verstöße mit Status active (fremde/erledigte IDs bleiben unberührt)
         $validated = $request->validate([
             'ids' => 'required|array|min:1|max:' . self::BULK_IGNORE_LIMIT,
-            'ids.*' => 'integer',
+            'ids.*' => 'integer|exists:shift_rule_violations,id',
             'ignore_reason' => 'required|string|max:500',
         ]);
 

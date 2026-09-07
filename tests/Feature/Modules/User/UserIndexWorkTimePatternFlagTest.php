@@ -98,14 +98,37 @@ final class UserIndexWorkTimePatternFlagTest extends FeatureTestCase
         );
     }
 
+    #[Test]
+    public function the_flag_is_read_from_the_listed_models_instead_of_a_second_query(): void
+    {
+        $this->actingAsUserWith(PermissionEnum::MA_MANAGER->value);
+        User::factory()->count(3)->create(['can_work_shifts' => true]);
+
+        $queries = $this->loggedQueries(fn () => $this->get(route('users'))->assertOk());
+
+        $flagQueries = array_values(array_filter(
+            $queries,
+            static fn (string $sql): bool => str_contains($sql, '`can_work_shifts` = ?')
+        ));
+        $this->assertSame([], $flagQueries, 'can_work_shifts wird per Extra-Query statt aus den geladenen Modellen gelesen');
+    }
+
     private function countQueries(callable $callback): int
+    {
+        return count($this->loggedQueries($callback));
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    private function loggedQueries(callable $callback): array
     {
         DB::flushQueryLog();
         DB::enableQueryLog();
         $callback();
-        $count = count(DB::getQueryLog());
+        $queries = array_column(DB::getQueryLog(), 'query');
         DB::disableQueryLog();
 
-        return $count;
+        return $queries;
     }
 }

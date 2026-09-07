@@ -192,4 +192,32 @@ final class ShiftRuleViolationsExportTest extends FeatureTestCase
         // 3 Chunks à (1 Hauptquery + 9 Eager-Loads) — kein N+1 je Zeile
         $this->assertLessThan(40, $queries, "Export brauchte {$queries} Queries für 1200 Zeilen");
     }
+
+
+    #[Test]
+    public function export_rejects_periods_longer_than_one_year(): void
+    {
+        $this->planner();
+
+        $this->getJson(route('shift-rules.violations.export', [
+            'date_from' => '2025-01-01',
+            'date_to' => '2026-01-03',
+        ]))
+            ->assertStatus(422)
+            ->assertJsonValidationErrors(['date_to']);
+    }
+
+    #[Test]
+    public function violation_filters_validate_referenced_ids(): void
+    {
+        $this->planner();
+
+        $this->getJson(route('shift-rules.violations.export', [
+            'user_id' => 999999,
+            'shift_rule_id' => 999999,
+            'craft_id' => [999999],
+        ]))
+            ->assertStatus(422)
+            ->assertJsonValidationErrors(['user_id', 'shift_rule_id', 'craft_id.0']);
+    }
 }

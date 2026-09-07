@@ -251,8 +251,11 @@ class FreelancerController extends Controller
     {
         $this->authorize('updateWorkProfile', Freelancer::class);
 
-        $craftIds = $request->get('craftIds', []);
-        $freelancer->assignedCrafts()->syncWithoutDetaching($craftIds);
+        $validated = $request->validate([
+            'craftIds' => ['nullable', 'array', 'max:100'],
+            'craftIds.*' => ['integer', 'exists:crafts,id'],
+        ]);
+        $freelancer->assignedCrafts()->syncWithoutDetaching($validated['craftIds'] ?? []);
 
         return Redirect::back();
     }

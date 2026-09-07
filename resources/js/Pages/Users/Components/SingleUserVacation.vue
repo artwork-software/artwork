@@ -193,7 +193,6 @@ const deleteEntry = () => {
             'vacations',
             'availabilities',
             'createShowDate',
-            'user_to_edit_whole_week_date_period_vacations',
             'freelancer_to_edit_whole_week_date_period_vacations',
         ],
         onFinish: () => {

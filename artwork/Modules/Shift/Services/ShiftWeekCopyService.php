@@ -2,7 +2,9 @@
 
 namespace Artwork\Modules\Shift\Services;
 
+use Artwork\Core\Services\HelperService;
 use Artwork\Modules\Shift\Models\Shift;
+use Artwork\Modules\Shift\Models\ShiftPlanRequest;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
@@ -15,10 +17,22 @@ use Illuminate\Support\Facades\DB;
  * Qualifikationen. NICHT kopiert werden Personen, Festschreibung, Workflow-Status,
  * Serien-Kennung (shift_uuid) und Termin-Bezug (event_id). Ist im Zielraum am Zieltag bereits
  * eine Schicht mit gleichem Gewerk und gleicher Start-/Endzeit vorhanden, wird die Quellschicht
- * übersprungen.
+ * übersprungen. Ebenso übersprungen: Gewerke, deren Ziel-KW bereits festgeschriebene Schichten
+ * hat oder für die eine offene Freigabe-Anfrage (pending) besteht (Grund im Ergebnis).
  */
 class ShiftWeekCopyService
 {
+    /** Gründe für übersprungene Quellschichten (skipped_shifts[].reason) */
+    public const SKIP_REASON_OCCUPIED = 'occupied';
+    public const SKIP_REASON_COMMITTED = 'committed';
+    public const SKIP_REASON_REQUESTED = 'requested';
+
+    /**
+     * Deckel je Aufruf: Quellschichten (nach Gewerks-/Raumfilter) × Zielwochen. Darüber lehnt der
+     * Controller mit 422 ab; die Vorschau liefert den Wert mit, damit der Dialog vorher warnt.
+     */
+    public const MAX_COPY_OPERATIONS = 500;
+
     public function __construct(
         private readonly ShiftsQualificationsService $shiftsQualificationsService,
     ) {
@@ -27,10 +41,15 @@ class ShiftWeekCopyService
     /**
      * Montag 00:00 und Sonntag 23:59:59 der ISO-Kalenderwoche.
      *
+     * Erwartet eine existierende KW (HelperService::isoWeekExists); Request und Vorschau prüfen das
+     * vorher, sonst würde Carbon eine KW 53 in einem 52-Wochen-Jahr still in KW 1 des Folgejahres
+     * überrollen. Hier wird deshalb auf die letzte existierende KW des Jahres gedeckelt.
+     *
      * @return array{0: Carbon, 1: Carbon}
      */
     public static function weekBounds(int $week, int $year): array
     {
+        $week = max(1, min($week, HelperService::isoWeeksInYear($year)));
         $monday = Carbon::now()->setISODate($year, $week, 1)->startOfDay();
 
         return [$monday, $monday->copy()->addDays(6)->endOfDay()];
@@ -69,7 +88,7 @@ class ShiftWeekCopyService
      *     created: int,
      *     skipped: int,
      *     shift_ids: array<int, int>,
-     *     skipped_shifts: array<int, array{date: string, room: string|null, start: string|null, end: string|null, craft: string|null}>
+     *     skipped_shifts: array<int, array{date: string, room: string|null, start: string|null, end: string|null, craft: string|null, reason: string}>
      * }
      */
     public function copyToWeek(
@@ -101,12 +120,36 @@ class ShiftWeekCopyService
             ])
             ->all();
 
+        // Gesperrte Zielwochen je Gewerk: bereits festgeschriebene Schichten des Gewerks in der
+        // Ziel-KW ODER eine offene Freigabe-Anfrage (pending) für Gewerk/KW → Quellschichten dieses
+        // Gewerks werden übersprungen (Grund im Ergebnis), nichts wird angelegt.
+        $committedCraftIds = Shift::query()
+            ->whereDate('start_date', '>=', $targetMonday->toDateString())
+            ->whereDate('start_date', '<=', $targetSunday->toDateString())
+            ->where('is_committed', true)
+            ->distinct()
+            ->pluck('craft_id')
+            ->map(static fn ($id): int => (int) $id)
+            ->flip()
+            ->all();
+        $requestedCraftIds = ShiftPlanRequest::query()
+            ->where('week_number', $targetWeek)
+            ->where('year', $targetYear)
+            ->where('status', 'pending')
+            ->distinct()
+            ->pluck('craft_id')
+            ->map(static fn ($id): int => (int) $id)
+            ->flip()
+            ->all();
+
         $sourceShifts->loadMissing(['room:id,name', 'craft:id,name,abbreviation']);
 
         return DB::transaction(function () use (
             $sourceShifts,
             $dayOffset,
             $occupied,
+            $committedCraftIds,
+            $requestedCraftIds,
             $targetWeek,
             $targetYear
         ): array {
@@ -127,13 +170,23 @@ class ShiftWeekCopyService
                     $source->end
                 );
 
-                if (isset($occupied[$key])) {
+                $skipReason = null;
+                if (isset($committedCraftIds[(int) $source->craft_id])) {
+                    $skipReason = self::SKIP_REASON_COMMITTED;
+                } elseif (isset($requestedCraftIds[(int) $source->craft_id])) {
+                    $skipReason = self::SKIP_REASON_REQUESTED;
+                } elseif (isset($occupied[$key])) {
+                    $skipReason = self::SKIP_REASON_OCCUPIED;
+                }
+
+                if ($skipReason !== null) {
                     $skipped[] = [
                         'date' => Carbon::parse($newStartDate)->format('d.m.Y'),
                         'room' => $source->room?->name,
                         'start' => $source->start,
                         'end' => $source->end,
                         'craft' => $source->craft?->abbreviation ?? $source->craft?->name,
+                        'reason' => $skipReason,
                     ];
                     continue;
                 }

@@ -31,7 +31,7 @@
                                     class="inline-flex items-center justify-center rounded-full p-1.5 text-text-subtle hover:text-text-muted hover:bg-surface-sunken transition"
                                     @click="closeModal"
                                 >
-                                    <span class="sr-only">Close</span>
+                                    <span class="sr-only">{{ $t('Close') }}</span>
                                     <IconX class="h-6 w-6" aria-hidden="true" />
                                 </button>
                             </DialogTitle>
@@ -329,7 +329,6 @@ const AVAILABILITY_PROPS = [
     'vacations',
     'availabilities',
     'createShowDate',
-    'user_to_edit_whole_week_date_period_vacations',
     'freelancer_to_edit_whole_week_date_period_vacations',
 ]
 

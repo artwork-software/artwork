@@ -32,7 +32,7 @@
                         <li v-for="(skipped, index) in target.skipped_shifts" :key="'skipped-' + index">
                             {{ skipped.date }} · {{ skipped.room ?? '—' }} · {{ skipped.start }}–{{ skipped.end }}
                             <span v-if="skipped.craft">· {{ skipped.craft }}</span>
-                            <span class="text-text-subtle">— {{ $t('target time already occupied') }}</span>
+                            <span class="text-text-subtle">— {{ skipReasonLabel(skipped.reason) }}</span>
                         </li>
                     </ul>
                 </li>
@@ -194,7 +194,12 @@
             </div>
 
             <div class="flex items-center justify-between gap-2 pt-1">
-                <span v-if="submitDisabledReason" class="text-xs text-text-subtle">{{ submitDisabledReason }}</span>
+                <span
+                    v-if="submitDisabledReason"
+                    class="text-xs"
+                    :class="exceedsLimit ? 'text-warning' : 'text-text-subtle'"
+                    :role="exceedsLimit ? 'alert' : undefined"
+                >{{ submitDisabledReason }}</span>
                 <span v-else></span>
                 <div class="flex items-center gap-2">
                     <BaseUIButton type="button" hide-icon @click="$emit('closed', false)">
@@ -264,6 +269,13 @@ const mondayOfIsoWeek = (year, week) => {
 }
 const isoWeeksInYear = (year) => isoWeekInfo(atNoon(new Date(year, 11, 28))).week
 const formatDisplay = (d) => `${pad(d.getDate())}.${pad(d.getMonth() + 1)}.${d.getFullYear()}`
+// Grund je übersprungener Quellschicht (Backend: skipped_shifts[].reason)
+const skipReasonLabel = (reason) => {
+    if (reason === 'committed') return $t('skipped: target week already committed for this craft')
+    if (reason === 'requested') return $t('skipped: target week already requested for approval for this craft')
+    return $t('target time already occupied')
+}
+
 const weekRangeLabel = (year, week) => {
     const monday = mondayOfIsoWeek(year, week)
     return `${formatDisplay(monday)} – ${formatDisplay(addDays(monday, 6))}`
@@ -376,6 +388,11 @@ const craftIdsPayload = computed(() =>
 // ---------- Vorschau ----------
 const previewCount = ref(null)
 const previewLoading = ref(false)
+// Deckel Quellschichten × Zielwochen je Aufruf (Backend: ShiftWeekCopyService::MAX_COPY_OPERATIONS,
+// kommt mit der Vorschau; 500 ist nur der Startwert bis zur ersten Antwort)
+const maxOperations = ref(500)
+const plannedOperations = computed(() => (previewCount.value ?? 0) * selectedTargets.value.length)
+const exceedsLimit = computed(() => previewCount.value !== null && plannedOperations.value > maxOperations.value)
 let previewTimer = null
 let previewRequestSeq = 0
 async function loadPreview() {
@@ -389,7 +406,10 @@ async function loadPreview() {
                 craft_ids: craftIdsPayload.value ?? undefined,
             },
         })
-        if (seq === previewRequestSeq) previewCount.value = data?.count ?? null
+        if (seq === previewRequestSeq) {
+            previewCount.value = data?.count ?? null
+            if (Number(data?.max_operations) > 0) maxOperations.value = Number(data.max_operations)
+        }
     } catch {
         if (seq === previewRequestSeq) previewCount.value = null
     } finally {
@@ -416,11 +436,18 @@ const canSubmit = computed(() =>
     selectedTargets.value.length > 0
     && selectedCrafts.value.length > 0
     && previewCount.value !== 0
+    && !exceedsLimit.value
 )
 const submitDisabledReason = computed(() => {
     if (selectedTargets.value.length === 0) return $t('Select at least one target week.')
     if (selectedCrafts.value.length === 0) return $t('Select at least one craft.')
     if (previewCount.value === 0) return $t('The source week contains no shifts.')
+    if (exceedsLimit.value) {
+        return $t(
+            'Too many shifts to copy ({0}, maximum {1}). Please select fewer crafts or target weeks.',
+            [plannedOperations.value, maxOperations.value]
+        )
+    }
     return ''
 })
 

@@ -13,11 +13,15 @@ use Illuminate\Support\Collection;
  * Nachtarbeit-Tagesmaximum (ArbZG § 6 Abs. 2, vereinfacht).
  *
  * Nachtfenster = GeneralSettings start_night_time–end_night_time (Standard 22:00–06:00, über Mitternacht).
- * Ein Kalendertag gilt als Nachtarbeitstag, wenn die Person an diesem Tag mindestens 2 Stunden innerhalb
- * des Nachtfensters arbeitet (Fenster auf den Kalendertag zugeschnitten: 00:00–06:00 und 22:00–24:00).
- * An solchen Tagen darf die gesamte geplante Arbeit (Netto wie MaxWorkingHoursOnDayCheck: Pause am
- * ersten Schichttag, Tagesgrenze) höchstens Wert Stunden betragen ($rule->individual_number_value,
- * leer = 8). Die Nachtminuten werden brutto (ohne Pausenabzug) gezählt.
+ *
+ * Geprüft wird je Arbeitsintervall (Schicht mit effektiven Pivot-Zeiten bzw. individuelle Zeit) und je
+ * Tag – ein Intervall wird dabei vollständig dem Tag zugerechnet, an dem es BEGINNT (wie
+ * WorkTimeBookingService::calculateNightMinutes), auch wenn es über Mitternacht läuft:
+ *  - Ein einzelnes Intervall mit mindestens 2 Stunden im Nachtfenster darf netto (Dauer minus Pause)
+ *    höchstens Wert Stunden lang sein (20:00–06:00 = 10 h → Verstoß).
+ *  - Mehrere Intervalle desselben Starttags zusammen: mindestens 2 Nachtstunden in Summe und mehr als
+ *    Wert Stunden netto in Summe → Verstoß (deckt den Einzelfall mit ab, deshalb genau EIN Verstoß je Tag).
+ * Wert = $rule->individual_number_value, leer = 8. Nachtminuten brutto (ohne Pausenabzug).
  */
 class NightWorkMaxHoursCheck extends AbstractRuleCheck
 {
@@ -34,12 +38,22 @@ class NightWorkMaxHoursCheck extends AbstractRuleCheck
         [$nightStart, $nightEnd] = $this->nightWindow();
 
         foreach (CarbonPeriod::create($startDate, $endDate) as $date) {
-            $nightMinutes = $this->nightMinutesOnDay($user, $date, $nightStart, $nightEnd);
-            if ($nightMinutes < self::NIGHT_WORK_THRESHOLD_MINUTES) {
+            $dayNightMinutes = 0;
+            $dayNetMinutes = 0;
+            $shift = null;
+
+            // Intervalle, die an diesem Tag beginnen – über Mitternacht laufende zählen ganz zum Starttag.
+            foreach ($this->getWorkIntervalsStartingOn($user, $date) as $interval) {
+                $dayNightMinutes += $this->nightMinutesOfInterval($interval['start'], $interval['end'], $nightStart, $nightEnd);
+                $dayNetMinutes += max(0, $interval['start']->diffInMinutes($interval['end']) - $interval['break_minutes']);
+                $shift ??= $interval['shift'];
+            }
+
+            if ($dayNightMinutes < self::NIGHT_WORK_THRESHOLD_MINUTES) {
                 continue;
             }
 
-            $plannedHours = $this->getPlannedWorkingHoursForDay($user, $date);
+            $plannedHours = round($dayNetMinutes / 60.0, 2);
             if ($plannedHours <= $maxHours) {
                 continue;
             }
@@ -47,11 +61,10 @@ class NightWorkMaxHoursCheck extends AbstractRuleCheck
             $data = [
                 'type' => 'night_work_max_hours',
                 'planned_hours' => $plannedHours,
-                'night_hours' => round($nightMinutes / 60.0, 2),
+                'night_hours' => round($dayNightMinutes / 60.0, 2),
                 'max_allowed' => $maxHours,
                 'night_window' => $nightStart . '–' . $nightEnd,
             ];
-            $shift = $this->getShiftForUserOnDate($user, $date);
             $violations->push($shift
                 ? $this->createViolation($rule, $shift, $user, $date, $data)
                 : $this->createViolationWithoutShift($rule, $user, $date, $data));
@@ -61,43 +74,50 @@ class NightWorkMaxHoursCheck extends AbstractRuleCheck
     }
 
     /**
-     * Minuten der Person innerhalb des Nachtfensters am Kalendertag (alle Intervalle, die den Tag berühren,
-     * auf den Tag zugeschnitten).
+     * Minuten eines Arbeitsintervalls innerhalb des Nachtfensters – über alle berührten Kalendertage
+     * (auch über Mitternacht), ohne Zuschnitt auf einen Tag.
      */
-    private function nightMinutesOnDay(User $user, Carbon $date, string $nightStart, string $nightEnd): int
+    private function nightMinutesOfInterval(Carbon $workStart, Carbon $workEnd, string $nightStart, string $nightEnd): int
     {
-        $dayStart = $date->copy()->startOfDay();
-        $dayEnd = $dayStart->copy()->addDay();
-
-        $segments = [];
-        $startAt = $dayStart->copy()->setTimeFromTimeString($nightStart);
-        $endAt = $dayStart->copy()->setTimeFromTimeString($nightEnd);
-        if ($startAt->lt($endAt)) {
-            // Fenster ohne Mitternacht (z. B. 20:00–23:00)
-            $segments[] = [$startAt, $endAt];
-        } else {
-            // Über Mitternacht: früher Morgen des Tages + Abend des Tages
-            $segments[] = [$dayStart->copy(), $endAt];
-            $segments[] = [$startAt, $dayEnd->copy()];
+        if ($workStart->gte($workEnd)) {
+            return 0;
         }
 
         $minutes = 0;
-        foreach ($this->getWorkIntervals($user, $date, $date) as $interval) {
-            $workStart = $interval['start']->greaterThan($dayStart) ? $interval['start'] : $dayStart;
-            $workEnd = $interval['end']->lessThan($dayEnd) ? $interval['end'] : $dayEnd;
-            if ($workStart->gte($workEnd)) {
-                continue;
-            }
-            foreach ($segments as [$segStart, $segEnd]) {
+        $day = $workStart->copy()->startOfDay();
+        $lastDay = $workEnd->copy()->startOfDay();
+        while ($day->lte($lastDay)) {
+            foreach ($this->nightSegmentsOfDay($day, $nightStart, $nightEnd) as [$segStart, $segEnd]) {
                 $overlapStart = $workStart->greaterThan($segStart) ? $workStart : $segStart;
                 $overlapEnd = $workEnd->lessThan($segEnd) ? $workEnd : $segEnd;
                 if ($overlapStart->lt($overlapEnd)) {
                     $minutes += $overlapStart->diffInMinutes($overlapEnd);
                 }
             }
+            $day->addDay();
         }
 
         return $minutes;
+    }
+
+    /**
+     * Nachtfenster-Abschnitte eines Kalendertags: ohne Mitternacht ein Abschnitt (z. B. 20:00–23:00),
+     * über Mitternacht früher Morgen (00:00–Ende) und Abend (Beginn–24:00).
+     *
+     * @return list<array{0: Carbon, 1: Carbon}>
+     */
+    private function nightSegmentsOfDay(Carbon $dayStart, string $nightStart, string $nightEnd): array
+    {
+        $startAt = $dayStart->copy()->setTimeFromTimeString($nightStart);
+        $endAt = $dayStart->copy()->setTimeFromTimeString($nightEnd);
+        if ($startAt->lt($endAt)) {
+            return [[$startAt, $endAt]];
+        }
+
+        return [
+            [$dayStart->copy(), $endAt],
+            [$startAt, $dayStart->copy()->addDay()],
+        ];
     }
 
     /**

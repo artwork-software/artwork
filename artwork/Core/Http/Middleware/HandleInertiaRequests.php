@@ -172,8 +172,13 @@ class HandleInertiaRequests extends Middleware
             );
 
         // Genehmiger*innen des Freigabe-Workflows (Namen) für den Festschreib-Dialog
-        // („Dienstplan zur Freigabe einreichen"); nur bei aktivem Workflow abgefragt.
-        $shiftCommitApprovers = ($shiftCommitWorkflowEnabled && $user)
+        // („Dienstplan zur Freigabe einreichen"); nur bei aktivem Workflow und nur für
+        // Personen, die selbst festschreiben dürfen (einziger Konsument: ShiftCommitDateSelectModal).
+        $canCommitShifts = $user && (
+            $user->hasRole(RoleEnum::ARTWORK_ADMIN->value)
+            || $user->can(PermissionEnum::CAN_COMMIT_SHIFTS->value)
+        );
+        $shiftCommitApprovers = ($shiftCommitWorkflowEnabled && $canCommitShifts)
             ? ShiftCommitWorkflowUser::query()
                 ->with('user:id,first_name,last_name')
                 ->get()

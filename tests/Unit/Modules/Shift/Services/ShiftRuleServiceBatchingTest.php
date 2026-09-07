@@ -88,6 +88,50 @@ final class ShiftRuleServiceBatchingTest extends TestCase
         );
     }
 
+    /**
+     * Durchschnitts-Wochenstunden über 24 Wochen: der Rückblick liegt weit vor dem Prüfzeitraum. Der Kontext
+     * muss dieses Fenster umfassen (contextWindowFor), sonst fällt der Check auf Direktabfragen zurück —
+     * die Regel darf gegenüber dem Lauf ohne sie keine zusätzlichen Abfragen kosten und die Query-Zahl
+     * bleibt unabhängig von der Tagesanzahl.
+     */
+    #[Test]
+    public function average_weekly_hours_rule_over_24_weeks_is_served_from_the_context(): void
+    {
+        $user = $this->prepareUser();
+        $service = app(ShiftRuleService::class);
+        $start = $this->futureWeekday(Carbon::MONDAY);
+        // Arbeit im Rückblick, damit der Check wirklich Daten aus dem Fenster liest
+        $this->shiftFor($user, $start->copy()->subWeeks(10));
+        $this->shiftFor($user, $start->copy()->subWeeks(20));
+
+        $withoutRule = $this->countQueries(
+            fn () => $service->validateRulesForUser($user, $start->copy(), $start->copy()->addDays(13))
+        );
+
+        $contract = $user->activeWorkContract();
+        $this->ruleForContract($contract, 'averageWeeklyHours', 48.0, ['period_weeks' => 24]);
+        $user->refresh();
+
+        $threeDays = $this->countQueries(
+            fn () => $service->validateRulesForUser($user, $start->copy(), $start->copy()->addDays(2))
+        );
+        $fourteenDays = $this->countQueries(
+            fn () => $service->validateRulesForUser($user, $start->copy(), $start->copy()->addDays(13))
+        );
+
+        $this->assertLessThanOrEqual(
+            $withoutRule + 1,
+            $fourteenDays,
+            "24-Wochen-Regel kostet zusätzliche Abfragen (Kontextfenster zu klein?): ohne = {$withoutRule}, mit = {$fourteenDays}"
+        );
+        $this->assertLessThanOrEqual(
+            $threeDays + 2,
+            $fourteenDays,
+            "Queries wachsen mit der Tagesanzahl: 3 Tage = {$threeDays}, 14 Tage = {$fourteenDays}"
+        );
+        $this->assertLessThanOrEqual(self::MAX_QUERIES_PER_USER, $fourteenDays);
+    }
+
     #[Test]
     public function context_and_direct_queries_produce_the_same_violations(): void
     {

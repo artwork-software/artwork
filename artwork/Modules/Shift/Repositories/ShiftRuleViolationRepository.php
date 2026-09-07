@@ -39,10 +39,18 @@ class ShiftRuleViolationRepository extends BaseRepository
         return [
             'shiftRule:id,name,description,trigger_type,warning_color,default_compensation_days,default_compensation_deadline_days',
             'user:id,first_name,last_name',
-            'user.assignedCrafts:id,name,abbreviation',
+            // Craft lädt per $with immer craftShiftPlaner, Room immer admins + creator — für die Liste
+            // unnötig (Muster ShiftWeekStatusController::visibleCrafts), deshalb abgeschaltet.
+            'user.assignedCrafts' => static fn ($query) => $query
+                ->select(['crafts.id', 'crafts.name', 'crafts.abbreviation'])
+                ->without(['craftShiftPlaner']),
             'shift:id,start_date,end_date,start,end,room_id,craft_id',
-            'shift.room:id,name',
-            'shift.craft:id,name,abbreviation',
+            'shift.room' => static fn ($query) => $query
+                ->select(['id', 'name'])
+                ->without(['admins', 'creator']),
+            'shift.craft' => static fn ($query) => $query
+                ->select(['id', 'name', 'abbreviation'])
+                ->without(['craftShiftPlaner']),
             'createdByUser:id,first_name,last_name',
             'resolvedByUser:id,first_name,last_name',
             'compensationDayOffs:id,violation_id,granted_at,granted_date',
@@ -74,10 +82,15 @@ class ShiftRuleViolationRepository extends BaseRepository
             )
             ->when(
                 $craftIds !== [],
-                fn (Builder $q) => $q->whereHas(
-                    'user.assignedCrafts',
-                    fn (Builder $c) => $c->whereIn('crafts.id', $craftIds)
-                )
+                // Gewerksfilter: Verstoß zählt zum Gewerk, wenn das Gewerk der SCHICHT passt ODER die
+                // Person dem Gewerk angehört (Verstöße an Fremdgewerk-Schichten sonst unsichtbar).
+                fn (Builder $q) => $q->where(function (Builder $w) use ($craftIds): void {
+                    $w->whereHas('shift', fn (Builder $s) => $s->whereIn('shifts.craft_id', $craftIds))
+                        ->orWhereHas(
+                            'user.assignedCrafts',
+                            fn (Builder $c) => $c->whereIn('crafts.id', $craftIds)
+                        );
+                })
             )
             ->when(!empty($filters['user_id']), fn (Builder $q) => $q->where('user_id', (int) $filters['user_id']))
             ->when(

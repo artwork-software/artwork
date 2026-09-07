@@ -320,7 +320,7 @@
     <!-- kein w-full: zusammen mit ml-4 ragte die Zeile 16px über den Viewport hinaus
          und erzeugte einen Seiten-Scrollbalken -->
     <div class="mb-1 mx-4 flex flex-wrap items-center gap-1">
-        <BaseFilterTag v-for="activeFilter in activeFilters" :filter="activeFilter" @removeFilter="removeFilter"/>
+        <BaseFilterTag v-for="(activeFilter, index) in activeFilters" :key="`${activeFilter.id}-${index}`" :filter="activeFilter" @removeFilter="removeFilter"/>
     </div>
     <ConfirmDeleteModal
         v-if="showConfirmCommitModal"
@@ -365,7 +365,6 @@
 </template>
 
 <script setup>
-import Button from "@/Jetstream/Button.vue";
 import {
     Menu,
     MenuButton,

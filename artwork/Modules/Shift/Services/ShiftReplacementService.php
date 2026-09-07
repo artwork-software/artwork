@@ -23,6 +23,8 @@ use Illuminate\Auth\AuthManager;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
+use Symfony\Component\HttpKernel\Exception\ConflictHttpException;
 
 /**
  * „Ersatz suchen" nach einer Absage: schlägt freie Personen mit passender
@@ -220,6 +222,14 @@ class ShiftReplacementService
      * Tauscht die abgesagte Zuweisung gegen die Ersatzperson — atomar über die
      * bestehenden Remove-/Assign-Pfade (Verlauf, Festschreibungs-Änderungen,
      * Notifications „entfernt"/„zugewiesen", Konfliktprüfungen).
+     *
+     * Die maßgebliche Prüfung läuft INNERHALB der Transaktion: die abgesagte Zuweisung wird mit
+     * Zeilensperre (lockForUpdate) frisch geladen – ist sie inzwischen weg (zweiter, paralleler
+     * „Ersetzen"-Klick), bricht der Aufruf mit 409 ab statt eine zweite Ersatzperson einzutragen;
+     * ebenso 422, wenn die Ersatzperson der Schicht inzwischen schon zugewiesen wurde.
+     *
+     * @throws ConflictHttpException wenn die abgesagte Zuweisung nicht mehr existiert
+     * @throws ValidationException wenn die Ersatzperson bereits zugewiesen ist
      */
     public function replace(
         Shift $shift,
@@ -251,6 +261,31 @@ class ShiftReplacementService
             $availabilityConflictService,
             $changeService
         ): ShiftWorker {
+            // Pivot gesperrt neu laden: nur die erste Transaktion sieht die Zuweisung noch.
+            $locked = ShiftWorker::withoutTrashed()
+                ->whereKey($declined->id)
+                ->where('shift_id', $shift->id)
+                ->lockForUpdate()
+                ->first();
+            if ($locked === null) {
+                throw new ConflictHttpException(__('The assignment no longer exists.'));
+            }
+            $locked->setRelation('shift', $shift);
+            if ($declined->relationLoaded('employable')) {
+                $locked->setRelation('employable', $declined->employable);
+            }
+            $declined = $locked;
+
+            $alreadyAssigned = ShiftWorker::withoutTrashed()
+                ->byEmployableIdAndShiftId($replacement->getMorphClass(), (int) $replacement->getKey(), $shift->id)
+                ->lockForUpdate()
+                ->exists();
+            if ($alreadyAssigned) {
+                throw ValidationException::withMessages([
+                    'replacement_id' => __('This person is already assigned to the shift.'),
+                ]);
+            }
+
             $this->shiftWorkerService->removeFromShift(
                 $declined,
                 true,
@@ -421,8 +456,9 @@ class ShiftReplacementService
             ->with(['shift.craft' => fn ($q) => $q->without('craftShiftPlaner')])
             ->where('shift_id', '!=', $shift->id)
             ->whereHas('shift', function ($q) use ($scopeStart, $scopeEnd): void {
-                $q->where('start_date', '<=', $scopeEnd)
-                    ->where('end_date', '>=', $scopeStart);
+                // end_date kann leer sein (eintägige Altbestände) → dann zählt start_date als Ende
+                $q->where('shifts.start_date', '<=', $scopeEnd)
+                    ->whereRaw('COALESCE(shifts.end_date, shifts.start_date) >= ?', [$scopeStart]);
             })
             ->where(function ($q) use ($userIds, $freelancerIds): void {
                 $this->applyMorphFilter($q, 'employable_type', 'employable_id', $userIds, $freelancerIds);

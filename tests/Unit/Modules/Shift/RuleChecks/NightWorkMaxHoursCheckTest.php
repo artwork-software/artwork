@@ -12,8 +12,9 @@ use Tests\Concerns\CreatesShiftRuleFixtures;
 use Tests\TestCase;
 
 /**
- * Nachtarbeit-Tagesmaximum: Kalendertage mit mindestens 2 h im Nachtfenster (22:00–06:00) dürfen
- * insgesamt höchstens Wert Stunden Arbeit haben (Netto, Tagesgrenze).
+ * Nachtarbeit-Tagesmaximum: Arbeitsintervalle werden ihrem Starttag zugerechnet (auch über Mitternacht);
+ * hat ein Tag mindestens 2 h im Nachtfenster (22:00–06:00), darf die Arbeit dieses Tages netto höchstens
+ * Wert Stunden betragen – eine einzelne Schicht 20:00–06:00 (10 h) reißt die Grenze also allein.
  */
 final class NightWorkMaxHoursCheckTest extends TestCase
 {
@@ -50,17 +51,17 @@ final class NightWorkMaxHoursCheckTest extends TestCase
     {
         $user = User::factory()->create();
         $day = $this->futureWeekday(Carbon::TUESDAY);
-        // 13:00–01:00: am Tag selbst 11 h, davon 22:00–24:00 = 2 h Nacht
+        // 13:00–01:00: 12 h ganz dem Starttag zugerechnet, davon 22:00–01:00 = 3 h Nacht
         $shift = $this->shiftFor($user, $day, '13:00:00', '01:00:00', [], $day->copy()->addDay());
 
-        $violations = $this->check->check($this->rule(8.0), $user, $day->copy(), $day->copy());
+        $violations = $this->check->check($this->rule(8.0), $user, $day->copy(), $day->copy()->addDay());
 
         $this->assertCount(1, $violations);
         $violation = $violations->first();
         $this->assertSame($shift->id, $violation->shift_id);
         $this->assertSame($day->toDateString(), $violation->violation_date->toDateString());
-        $this->assertEqualsWithDelta(11.0, $violation->violation_data['planned_hours'], 0.01);
-        $this->assertEqualsWithDelta(2.0, $violation->violation_data['night_hours'], 0.01);
+        $this->assertEqualsWithDelta(12.0, $violation->violation_data['planned_hours'], 0.01);
+        $this->assertEqualsWithDelta(3.0, $violation->violation_data['night_hours'], 0.01);
         $this->assertEqualsWithDelta(8.0, $violation->violation_data['max_allowed'], 0.01);
         $this->assertSame('22:00–06:00', $violation->violation_data['night_window']);
     }
@@ -94,11 +95,44 @@ final class NightWorkMaxHoursCheckTest extends TestCase
     }
 
     #[Test]
-    public function early_morning_night_hours_count_for_the_following_calendar_day(): void
+    public function a_single_night_shift_longer_than_the_maximum_is_a_violation(): void
     {
         $user = User::factory()->create();
         $day = $this->futureWeekday(Carbon::TUESDAY);
-        // 21:00–06:00 (9 h): Tag 1 = 3 h (1 h Nacht), Tag 2 = 6 h (6 h Nacht); plus Tag 2 08:00–11:00 -> Tag 2 = 9 h > 8 h
+        // 20:00–06:00 = 10 h netto in EINER Schicht (8 h Nacht) – vorher durch den Tagesschnitt
+        // (4 h + 6 h) unsichtbar
+        $shift = $this->shiftFor($user, $day, '20:00:00', '06:00:00', [], $day->copy()->addDay());
+
+        $violations = $this->check->check($this->rule(8.0), $user, $day->copy(), $day->copy()->addDay());
+
+        $this->assertCount(1, $violations);
+        $violation = $violations->first();
+        $this->assertSame($shift->id, $violation->shift_id);
+        $this->assertSame($day->toDateString(), $violation->violation_date->toDateString());
+        $this->assertEqualsWithDelta(10.0, $violation->violation_data['planned_hours'], 0.01);
+        $this->assertEqualsWithDelta(8.0, $violation->violation_data['night_hours'], 0.01);
+    }
+
+    #[Test]
+    public function the_break_is_deducted_from_the_net_length_of_a_night_shift(): void
+    {
+        $user = User::factory()->create();
+        $day = $this->futureWeekday(Carbon::TUESDAY);
+        // 20:00–05:00 = 9 h brutto, 60 min Pause → 8 h netto → kein Verstoß
+        $this->shiftFor($user, $day, '20:00:00', '05:00:00', ['break_minutes' => 60], $day->copy()->addDay());
+
+        $violations = $this->check->check($this->rule(8.0), $user, $day->copy(), $day->copy()->addDay());
+
+        $this->assertCount(0, $violations);
+    }
+
+    #[Test]
+    public function a_shift_past_midnight_is_attributed_to_its_start_day(): void
+    {
+        $user = User::factory()->create();
+        $day = $this->futureWeekday(Carbon::TUESDAY);
+        // 21:00–06:00 (9 h, 8 h Nacht) zählt ganz zu Tag 1 → Tag 1 = 9 h > 8 h;
+        // Tag 2 08:00–11:00 (3 h, keine Nacht) bleibt für sich unter der Schwelle
         $this->shiftFor($user, $day, '21:00:00', '06:00:00', [], $day->copy()->addDay());
         $this->shiftFor($user, $day->copy()->addDay(), '08:00:00', '11:00:00');
 
@@ -106,9 +140,25 @@ final class NightWorkMaxHoursCheckTest extends TestCase
 
         $this->assertCount(1, $violations);
         $violation = $violations->first();
-        $this->assertSame($day->copy()->addDay()->toDateString(), $violation->violation_date->toDateString());
+        $this->assertSame($day->toDateString(), $violation->violation_date->toDateString());
         $this->assertEqualsWithDelta(9.0, $violation->violation_data['planned_hours'], 0.01);
-        $this->assertEqualsWithDelta(6.0, $violation->violation_data['night_hours'], 0.01);
+        $this->assertEqualsWithDelta(8.0, $violation->violation_data['night_hours'], 0.01);
+    }
+
+    #[Test]
+    public function several_shifts_starting_on_the_same_day_are_summed(): void
+    {
+        $user = User::factory()->create();
+        $day = $this->futureWeekday(Carbon::TUESDAY);
+        // 06:00–12:00 (6 h, keine Nacht) + 21:00–00:00 (3 h, 2 h Nacht) → Tag 9 h mit 2 h Nacht → Verstoß
+        $this->shiftFor($user, $day, '06:00:00', '12:00:00');
+        $this->shiftFor($user, $day, '21:00:00', '00:00:00', [], $day->copy()->addDay());
+
+        $violations = $this->check->check($this->rule(8.0), $user, $day->copy(), $day->copy()->addDay());
+
+        $this->assertCount(1, $violations);
+        $this->assertEqualsWithDelta(9.0, $violations->first()->violation_data['planned_hours'], 0.01);
+        $this->assertEqualsWithDelta(2.0, $violations->first()->violation_data['night_hours'], 0.01);
     }
 
     #[Test]

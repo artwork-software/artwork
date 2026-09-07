@@ -93,7 +93,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, defineProps, defineEmits, reactive, toRefs, watch } from 'vue'
+import { computed, reactive, watch } from 'vue'
 import ArtworkBaseModal from '@/Artwork/Modals/ArtworkBaseModal.vue'
 import BaseUIButton from '@/Artwork/Buttons/BaseUIButton.vue'
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";

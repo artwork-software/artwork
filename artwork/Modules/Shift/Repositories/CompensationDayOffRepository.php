@@ -141,18 +141,37 @@ class CompensationDayOffRepository extends BaseRepository
         return $query->orderByDesc('id')->paginate($perPage, ['*'], $pageName)->withQueryString();
     }
 
+    /**
+     * Kennzahlen des Dashboards (Anzahl + Summe je offen/gewährt/überfällig) in EINER Abfrage:
+     * die Filter sind für alle sechs Werte identisch, die Statusbedingungen entsprechen den Scopes
+     * open()/granted()/overdue() des Modells (überfällig = offen mit Frist vor jetzt).
+     */
     public function getDashboardStats(int|array|null $filters = null): array
     {
         $filters = $this->normalizeFilters($filters);
-        $scoped = fn () => $this->applyDashboardFilters(CompensationDayOff::query(), $filters);
+        $now = now()->toDateTimeString();
+        $t = (new CompensationDayOff())->getTable();
+
+        $row = $this->applyDashboardFilters(CompensationDayOff::query(), $filters)
+            ->selectRaw(
+                "SUM(CASE WHEN {$t}.granted_at IS NULL THEN 1 ELSE 0 END) AS open_count, "
+                . "SUM(CASE WHEN {$t}.granted_at IS NOT NULL THEN 1 ELSE 0 END) AS granted_count, "
+                . "SUM(CASE WHEN {$t}.granted_at IS NULL AND {$t}.deadline < ? THEN 1 ELSE 0 END) AS overdue_count, "
+                . "SUM(CASE WHEN {$t}.granted_at IS NULL THEN {$t}.value ELSE 0 END) AS open_value, "
+                . "SUM(CASE WHEN {$t}.granted_at IS NOT NULL THEN {$t}.value ELSE 0 END) AS granted_value, "
+                . "SUM(CASE WHEN {$t}.granted_at IS NULL AND {$t}.deadline < ? THEN {$t}.value ELSE 0 END) AS overdue_value",
+                [$now, $now]
+            )
+            ->toBase()
+            ->first();
 
         return [
-            'open' => $scoped()->open()->count(),
-            'granted' => $scoped()->granted()->count(),
-            'overdue' => $scoped()->overdue()->count(),
-            'open_value' => (float) $scoped()->open()->sum('value'),
-            'granted_value' => (float) $scoped()->granted()->sum('value'),
-            'overdue_value' => (float) $scoped()->overdue()->sum('value'),
+            'open' => (int) ($row->open_count ?? 0),
+            'granted' => (int) ($row->granted_count ?? 0),
+            'overdue' => (int) ($row->overdue_count ?? 0),
+            'open_value' => (float) ($row->open_value ?? 0),
+            'granted_value' => (float) ($row->granted_value ?? 0),
+            'overdue_value' => (float) ($row->overdue_value ?? 0),
         ];
     }
 

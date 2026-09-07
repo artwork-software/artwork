@@ -338,6 +338,50 @@ final class ContractAssignHistoryTest extends FeatureTestCase
     }
 
     #[Test]
+    public function updating_a_work_time_pattern_without_validity_keeps_its_validity(): void
+    {
+        $this->actingAsUserWith(PermissionEnum::MA_MANAGER->value);
+        [$user] = $this->userWithOpenAssign(30);
+        $workTime = $user->workTimes()->create([
+            'monday' => '08:00',
+            'tuesday' => '08:00',
+            'wednesday' => '08:00',
+            'thursday' => '08:00',
+            'friday' => '08:00',
+            'saturday' => '00:00',
+            'sunday' => '00:00',
+            'valid_from' => '2026-02-01',
+            'valid_until' => '2026-12-31',
+        ]);
+
+        // Muster-Update per id OHNE valid_from/valid_until → Gültigkeit bleibt (vorher: heute / null)
+        $this->patch(route('shift.work-time-pattern.update-user', $user), [
+            'id' => $workTime->id,
+            'monday' => '06:00',
+            'friday' => '04:00',
+        ])->assertRedirect()->assertSessionHas('success');
+
+        $workTime->refresh();
+        $this->assertSame('06:00', $workTime->monday->format('H:i'));
+        $this->assertSame('04:00', $workTime->friday->format('H:i'));
+        $this->assertSame('2026-02-01', $workTime->valid_from->toDateString());
+        $this->assertSame('2026-12-31', $workTime->valid_until->toDateString());
+        $this->assertSame(1, $user->workTimes()->count());
+
+        // Mit Gültigkeit in der Anfrage wird sie weiterhin übernommen
+        $this->patch(route('shift.work-time-pattern.update-user', $user), [
+            'id' => $workTime->id,
+            'monday' => '06:00',
+            'valid_from' => '2026-03-01',
+            'valid_until' => null,
+        ])->assertRedirect()->assertSessionHas('success');
+
+        $workTime->refresh();
+        $this->assertSame('2026-03-01', $workTime->valid_from->toDateString());
+        $this->assertNull($workTime->valid_until);
+    }
+
+    #[Test]
     public function work_time_endpoint_with_validity_does_not_touch_the_contract_history(): void
     {
         $this->actingAsUserWith(PermissionEnum::MA_MANAGER->value);

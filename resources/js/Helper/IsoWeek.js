@@ -28,14 +28,32 @@ export function mondayOfIsoWeek1(year) {
 }
 
 /**
+ * Anzahl der ISO-Kalenderwochen eines Jahres (52 oder 53): der 28. Dezember liegt immer in der letzten KW.
+ * @param {number} year
+ * @returns {number}
+ */
+export function isoWeeksInYear(year) {
+    const dec28 = new Date(year, 11, 28)
+    const weekday = dec28.getDay() || 7
+    // Donnerstag derselben ISO-Woche bestimmt das ISO-Jahr; Abstand zum Montag der KW 1 in Wochen
+    const thursday = new Date(dec28.getFullYear(), dec28.getMonth(), dec28.getDate() + (4 - weekday))
+    const week1Monday = mondayOfIsoWeek1(thursday.getFullYear())
+    return Math.round((thursday - week1Monday) / (7 * 86400000)) + 1
+}
+
+/**
  * @param {number|string} week ISO-Kalenderwoche (1–53)
  * @param {number|string} year ISO-Jahr (das Jahr, zu dem die KW gehört – nicht zwingend das Kalenderjahr des Montags)
  * @returns {{start: string, end: string, monday: Date, sunday: Date}|null} null bei ungültiger Eingabe
+ *   (auch KW 53 in einem 52-Wochen-Jahr — z. B. 2025 hat 52, 2026 hat 53 Wochen)
  */
 export function isoWeekToDateRange(week, year) {
     const w = Number(week)
     const y = Number(year)
     if (!Number.isInteger(w) || !Number.isInteger(y) || w < 1 || w > 53 || y < 1970 || y > 9999) {
+        return null
+    }
+    if (w > isoWeeksInYear(y)) {
         return null
     }
 

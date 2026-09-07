@@ -375,13 +375,8 @@ class ShiftRuleService
         $activeContract = $user->activeWorkContract();
         $rules = $activeContract ? $this->getRulesForContract($activeContract) : collect();
 
-        $context = ShiftRuleCheckContext::forRange(
-            $user,
-            $startDate,
-            $endDate,
-            $this->lookbackDaysFor($rules),
-            7
-        );
+        [$daysBefore, $daysAfter] = $this->contextWindowFor($rules, $startDate, $endDate);
+        $context = ShiftRuleCheckContext::forRange($user, $startDate, $endDate, $daysBefore, $daysAfter);
 
         // Je Regel das Fenster, das der Check tatsächlich beurteilt hat (Standard: der Zeitraum).
         $coveredRangeByRule = [];
@@ -425,22 +420,60 @@ class ShiftRuleService
         return $violations;
     }
 
+    /** Deckel für den Rand des Datenkontexts in beide Richtungen (Tage). */
+    private const MAX_CONTEXT_MARGIN_DAYS = 53 * 7;
+
     /**
-     * Rückblick des Kontexts: "Tage in Folge" zählt eine laufende Serie vor dem Prüfzeitraum mit —
-     * Regelwert + 1 Tage (mind. 7); längere Serien fallen im Check auf Direktabfragen zurück.
+     * Rand des Datenkontexts (Tage vor/nach dem Prüfzeitraum), so dass jeder aktive Check seine Daten aus
+     * dem einmal geladenen Kontext bedienen kann statt je Person/Tag auf Direktabfragen zurückzufallen:
+     *  - getContextRange() je Regel (volle Wochen, period_weeks-Rückblick der Durchschnitts-Wochenstunden,
+     *    Jahres-/Spielzeitfenster der Sonntagsregeln) plus ein Tag Rand für Vor-/Folgetag (Ruhezeiten,
+     *    Nachtarbeit über Mitternacht, freie Tage),
+     *  - "Tage in Folge": Regelwert + 1 Tage zurück (laufende Serie vor dem Zeitraum),
+     *  - mindestens 7 Tage (Wochenfenster), höchstens 53 Wochen je Richtung.
      *
      * @param Collection<int, ShiftRule> $rules
+     * @return array{0: int, 1: int} [Tage zurück, Tage voraus]
      */
-    private function lookbackDaysFor(Collection $rules): int
+    private function contextWindowFor(Collection $rules, Carbon $startDate, Carbon $endDate): array
     {
-        $lookback = 7;
+        $start = $startDate->copy()->startOfDay();
+        $end = $endDate->copy()->startOfDay();
+        $daysBefore = 7;
+        $daysAfter = 7;
+
         foreach ($rules as $rule) {
             if ($rule->trigger_type === 'maxConsecWorkingDays') {
-                $lookback = max($lookback, (int) ceil((float) $rule->individual_number_value) + 1);
+                $daysBefore = max($daysBefore, (int) ceil((float) $rule->individual_number_value) + 1);
+            }
+
+            if (!$this->ruleCheckFactory->has($rule->trigger_type)) {
+                continue;
+            }
+            $check = $this->ruleCheckFactory->create($rule->trigger_type);
+            if (!$check instanceof AbstractRuleCheck) {
+                continue;
+            }
+
+            $range = $check->getContextRange($rule, $startDate, $endDate);
+            if ($range === null) {
+                continue;
+            }
+            [$from, $to] = $range;
+            $from = $from->copy()->startOfDay();
+            $to = $to->copy()->startOfDay();
+            if ($from->lt($start)) {
+                $daysBefore = max($daysBefore, $from->diffInDays($start) + 1);
+            }
+            if ($to->gt($end)) {
+                $daysAfter = max($daysAfter, $end->diffInDays($to) + 1);
             }
         }
 
-        return min($lookback, 62);
+        return [
+            min($daysBefore, self::MAX_CONTEXT_MARGIN_DAYS),
+            min($daysAfter, self::MAX_CONTEXT_MARGIN_DAYS),
+        ];
     }
 
     /**

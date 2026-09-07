@@ -176,11 +176,14 @@ class WorkTimeCalculationService
 
         $isSpecialDay = array_key_exists($key, $context['special_days'] ?? []);
         $specialDayName = $isSpecialDay ? ($context['special_days'][$key] ?? null) : null;
-        // Vertragshistorie: der Sondertag-Schalter gilt je Tag (Resolver cached je Person/Tag),
-        // nur an Sondertagen überhaupt auflösen.
+        // Vertragshistorie: der Sondertag-Schalter gilt je Tag – aus dem Kontext (buildContext), sonst
+        // (fremder Kontext ohne den Schlüssel) über den SpecialDayService; nur an Sondertagen auflösen.
         $specialDayCounts = $isSpecialDay
             && $entity instanceof User
-            && $this->specialDayService->specialDayRuleActiveFor($entity, $day);
+            && (
+                $context['special_day_rule'][$key]
+                ?? $this->specialDayService->specialDayRuleActiveFor($entity, $day)
+            );
         $threeMonthMode = (bool) ($context['three_month_mode'] ?? false);
 
         $reduction = 0;
@@ -286,6 +289,10 @@ class WorkTimeCalculationService
         $useBookings = (bool) ($options['use_bookings'] ?? true);
         $isUser = $entity instanceof User;
 
+        $specialDays = $isUser
+            ? ($options['special_days'] ?? $this->specialDayService->specialDaysBetween($start, $end))
+            : [];
+
         return [
             'start' => $start->toDateString(),
             'end' => $end->toDateString(),
@@ -293,9 +300,10 @@ class WorkTimeCalculationService
             'individual_minutes' => $this->individualMinutesPerDay($entity, $start, $end),
             'bookings' => $isUser && $useBookings ? $this->bookingsPerDay($entity, $start, $end) : [],
             'absences' => $this->absencesPerDay($entity, $start, $end),
-            'special_days' => $isUser
-                ? ($options['special_days'] ?? $this->specialDayService->specialDaysBetween($start, $end))
-                : [],
+            'special_days' => $specialDays,
+            // Sondertag-Schalter je Sondertag aus der EINMAL geladenen Vertragshistorie (kein Query je Tag,
+            // kein prozessweiter Resolver-Cache nötig → unkritisch unter Octane/Swoole)
+            'special_day_rule' => $isUser ? $this->specialDayRulePerDay($entity, array_keys($specialDays)) : [],
             'three_month_mode' => $isUser && $this->threeMonthAverageTargetService->usesThreeMonthAverage($entity),
             'patterns' => $isUser ? $this->patternsPerDay($entity, $start, $end) : [],
             'holiday_comp' => $isUser
@@ -535,6 +543,30 @@ class WorkTimeCalculationService
     // ------------------------------------------------------------------
     // Vorab-Laden
     // ------------------------------------------------------------------
+
+    /**
+     * Sondertag-Schalter (special_day_rule_active, Zuweisung vor Vorlage des am Tag gültigen Zeitraums)
+     * je Sondertag, 'Y-m-d' => bool. Die Historie wird einmal mitgeladen (contractAssigns.userContract);
+     * die Auflösung je Tag läuft danach rein im Speicher (User::contractAssignFor auf der geladenen Relation).
+     *
+     * @param list<string> $dayKeys
+     * @return array<string, bool>
+     */
+    private function specialDayRulePerDay(User $user, array $dayKeys): array
+    {
+        if ($dayKeys === []) {
+            return [];
+        }
+
+        $user->loadMissing('contractAssigns.userContract');
+
+        $result = [];
+        foreach ($dayKeys as $dayKey) {
+            $result[$dayKey] = $this->specialDayService->specialDayRuleActiveFor($user, Carbon::parse($dayKey));
+        }
+
+        return $result;
+    }
 
     private function contextCovers(array $context, string $dateKey): bool
     {

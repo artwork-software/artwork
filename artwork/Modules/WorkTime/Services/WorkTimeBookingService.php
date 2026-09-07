@@ -96,63 +96,65 @@ class WorkTimeBookingService
         $nightEndTime = $this->settings->end_night_time;
 
         $dayStart = $day->copy()->startOfDay();
-        $dayEnd = $day->copy()->endOfDay()->addSecond();
+        $nextDayStart = $day->copy()->addDay()->startOfDay();
 
-        $night1Start = $day->copy()->setTimeFromTimeString($nightStartTime);
-        $night1End = $day->copy()->endOfDay();
+        // Nachtfenster rund um den Tag:
+        //  0: Tag 00:00 – Nachtende (Frühschicht / Ausläufer der eigenen Nacht)
+        //  1: Nachtbeginn – 24:00
+        //  2: Folgetag 00:00 – Nachtende (nur für Arbeit, die an diesem Tag BEGINNT –
+        //     sonst würde eine Schicht über Mitternacht an beiden Tagen gezählt)
+        $windows = [
+            [$dayStart->copy(), $day->copy()->setTimeFromTimeString($nightEndTime)],
+            [$day->copy()->setTimeFromTimeString($nightStartTime), $nextDayStart->copy()],
+            [$nextDayStart->copy(), $day->copy()->addDay()->setTimeFromTimeString($nightEndTime)],
+        ];
 
-        $night2Start = $day->copy()->addDay()->startOfDay();
-        $night2End = $day->copy()->addDay()->setTimeFromTimeString($nightEndTime);
-
-        $overlap = static function (Carbon $start, Carbon $end) use (
-            $dayStart,
-            $dayEnd,
-            $night1Start,
-            $night1End,
-            $night2Start,
-            $night2End
-        ): int {
-            $workStart = max($start, $dayStart);
-            $workEnd = min($end, $dayEnd);
+        $overlap = static function (Carbon $start, Carbon $end, Carbon $clipStart, Carbon $clipEnd) use ($windows): int {
+            $workStart = max($start, $clipStart);
+            $workEnd = min($end, $clipEnd);
             if (!$workStart->lt($workEnd)) {
                 return 0;
             }
 
             $minutes = 0;
-            $nightOverlap1Start = max($workStart, $night1Start);
-            $nightOverlap1End = min($workEnd, $night1End);
-            if ($nightOverlap1Start->lt($nightOverlap1End)) {
-                $minutes += $nightOverlap1Start->diffInMinutes($nightOverlap1End);
-            }
-
-            $nightOverlap2Start = max($workStart, $night2Start);
-            $nightOverlap2End = min($workEnd, $night2End);
-            if ($nightOverlap2Start->lt($nightOverlap2End)) {
-                $minutes += $nightOverlap2Start->diffInMinutes($nightOverlap2End);
+            foreach ($windows as [$windowStart, $windowEnd]) {
+                $overlapStart = max($workStart, $windowStart);
+                $overlapEnd = min($workEnd, $windowEnd);
+                if ($overlapStart->lt($overlapEnd)) {
+                    $minutes += $overlapStart->diffInMinutes($overlapEnd);
+                }
             }
 
             return $minutes;
         };
+
+        $dayKey = $day->toDateString();
+        $shiftClipEnd = $windows[2][1];
 
         foreach ($user->shifts as $shift) {
             $pivot = $shift->pivot;
             if (!$pivot?->start_date || !$pivot?->start_time || !$pivot?->end_date || !$pivot?->end_time) {
                 continue;
             }
+            // Schichten werden ihrem Starttag zugerechnet (inkl. Anteil nach Mitternacht)
+            if (Carbon::parse($pivot->start_date)->toDateString() !== $dayKey) {
+                continue;
+            }
 
             $start = Carbon::parse($pivot->start_date)->setTimeFrom(Carbon::parse($pivot->start_time));
             $end = Carbon::parse($pivot->end_date)->setTimeFrom(Carbon::parse($pivot->end_time));
-            $night += $overlap($start, $end);
+            $night += $overlap($start, $end, $dayStart, $shiftClipEnd);
         }
 
         foreach ($user->individualTimes as $individualTime) {
-            if (!in_array($day->toDateString(), $individualTime->days_of_individual_time ?? [], true)) {
+            if (!in_array($dayKey, $individualTime->days_of_individual_time ?? [], true)) {
                 continue;
             }
             if ($individualTime->start_time && $individualTime->end_time && !$individualTime->full_day) {
+                // Individuelle Zeiten werden je Kalendertag zugeschnitten (der Folgetag zählt seinen Anteil selbst)
                 $start = Carbon::parse($individualTime->start_date . ' ' . $individualTime->start_time);
                 $end = Carbon::parse($individualTime->end_date . ' ' . $individualTime->end_time);
-                $night += $overlap($start, $end);
+                $night += $overlap($start, $end, $dayStart, $nextDayStart);
             }
         }
 

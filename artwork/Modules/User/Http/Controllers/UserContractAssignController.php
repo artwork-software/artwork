@@ -70,7 +70,9 @@ class UserContractAssignController extends Controller
 
         $validFrom = self::dateOrNull($data['valid_from'] ?? null);
         $validUntil = self::dateOrNull($data['valid_until'] ?? null);
-        $hasValidity = $request->exists('valid_from') || $request->exists('valid_until');
+        $hasValidFrom = $request->exists('valid_from');
+        $hasValidUntil = $request->exists('valid_until');
+        $hasValidity = $hasValidFrom || $hasValidUntil;
 
         // Kein ->filter(): false/0/null sind gueltige Werte (Regel deaktivieren,
         // Vertrag entfernen via user_contract_id = null, Felder auf 0 setzen).
@@ -91,6 +93,8 @@ class UserContractAssignController extends Controller
                 $validFrom,
                 $validUntil,
                 $hasValidity,
+                $hasValidFrom,
+                $hasValidUntil,
                 &$retroactive
             ): void {
                 if ($assignId !== null || !empty($contractData)) {
@@ -106,7 +110,15 @@ class UserContractAssignController extends Controller
                 }
 
                 if ($this->hasWorkTimeData($workTimeData)) {
-                    $workTime = $this->saveWorkTimePeriod($user, $workTimeId, $workTimeData, $validFrom, $validUntil);
+                    $workTime = $this->saveWorkTimePeriod(
+                        $user,
+                        $workTimeId,
+                        $workTimeData,
+                        $validFrom,
+                        $validUntil,
+                        $hasValidFrom,
+                        $hasValidUntil
+                    );
                     $retroactive = $retroactive
                         || ($workTime->valid_from !== null && $workTime->valid_from->lt(Carbon::today()));
                 }
@@ -252,19 +264,32 @@ class UserContractAssignController extends Controller
         ?int $workTimeId,
         array $workTimeData,
         ?Carbon $validFrom,
-        ?Carbon $validUntil
+        ?Carbon $validUntil,
+        bool $hasValidFrom = true,
+        bool $hasValidUntil = true
     ): UserWorkTime {
         $workTimeData['user_id'] = $user->id;
-        $workTimeData['valid_from'] = ($validFrom ?? Carbon::today())->toDateString();
-        $workTimeData['valid_until'] = $validUntil?->toDateString();
 
         if ($workTimeId !== null) {
             /** @var UserWorkTime $workTime */
             $workTime = $user->workTimes()->whereKey($workTimeId)->firstOrFail();
+
+            // Bestehenden Satz bearbeiten: Gültigkeit nur anfassen, wenn sie in der Anfrage steht –
+            // ein reines Muster-Update darf valid_from nicht auf "heute" und valid_until nicht auf null setzen.
+            if ($hasValidFrom) {
+                $workTimeData['valid_from'] = ($validFrom ?? Carbon::today())->toDateString();
+            }
+            if ($hasValidUntil) {
+                $workTimeData['valid_until'] = $validUntil?->toDateString();
+            }
+
             $workTime->fill($workTimeData)->save();
 
             return $workTime;
         }
+
+        $workTimeData['valid_from'] = ($validFrom ?? Carbon::today())->toDateString();
+        $workTimeData['valid_until'] = $validUntil?->toDateString();
 
         return $user->workTimes()->updateOrCreate(
             ['user_id' => $user->id, 'valid_from' => $workTimeData['valid_from']],
@@ -274,12 +299,17 @@ class UserContractAssignController extends Controller
 
     /**
      * 422, wenn sich [$from, $until] mit einem anderen Zeitraum der Person überschneidet.
+     *
+     * Läuft innerhalb der Transaktion von store(): die Zeiträume der Person werden mit lockForUpdate
+     * gelesen, damit zwei parallele Anfragen nicht beide "keine Überschneidung" sehen und je einen
+     * überlappenden Zeitraum anlegen.
      */
     private function assertNoOverlap(User $user, ?Carbon $from, ?Carbon $until, ?int $ignoreId): void
     {
         $conflict = $user->contractAssigns()
             ->when($ignoreId !== null, fn ($query) => $query->whereKeyNot($ignoreId))
             ->with('userContract')
+            ->lockForUpdate()
             ->get()
             ->first(fn (UserContractAssign $other): bool => $other->overlaps($from, $until));
 

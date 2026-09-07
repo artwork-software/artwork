@@ -107,6 +107,86 @@ final class ContractSettingsResolverDateTest extends TestCase
     }
 
     #[Test]
+    public function zero_in_not_null_default_columns_of_the_assignment_falls_back_to_the_template(): void
+    {
+        $user = User::factory()->create();
+        $template = $this->template('Vorlage', [
+            'free_full_days_per_week' => 2,
+            'free_half_days_per_week' => 1,
+            'annual_vacation_days' => 30,
+            'free_sundays_per_calendar_year' => 15,
+            'days_off_first_26_weeks' => 4.5,
+            'compensation_period' => 30,
+        ]);
+        $this->assign($user, $template, [
+            'valid_from' => null,
+            'valid_until' => null,
+            'free_full_days_per_week' => 0,   // 0 = nicht gesetzt → Vorlage 2
+            'free_half_days_per_week' => 3,   // gesetzt → Zuweisung gewinnt
+            'annual_vacation_days' => 0,      // → Vorlage 30
+            'free_sundays_per_calendar_year' => 0,
+            'days_off_first_26_weeks' => 0,
+            'compensation_period' => 0,
+        ]);
+
+        $resolver = app(ContractSettingsResolver::class);
+
+        $this->assertSame(2, $resolver->int($user, 'free_full_days_per_week'));
+        $this->assertSame(3, $resolver->int($user, 'free_half_days_per_week'));
+        $this->assertSame(30, $resolver->int($user, 'annual_vacation_days'));
+        $this->assertSame(15, $resolver->int($user, 'free_sundays_per_calendar_year'));
+        $this->assertEqualsWithDelta(4.5, $resolver->float($user, 'days_off_first_26_weeks'), 0.001);
+        $this->assertSame(30, $resolver->compensationPeriod($user));
+        $this->assertSame(30, $resolver->int($user, 'compensation_period'));
+
+        foreach (['free_full_days_per_week', 'annual_vacation_days', 'compensation_period'] as $key) {
+            $this->assertContains($key, ContractSettingsResolver::ZERO_MEANS_UNSET_ON_ASSIGN);
+        }
+    }
+
+    #[Test]
+    public function zero_on_the_template_stays_zero_and_the_default_applies_only_without_contract(): void
+    {
+        $user = User::factory()->create();
+        $template = $this->template('Null-Vorlage', ['free_full_days_per_week' => 0, 'annual_vacation_days' => 0]);
+        $this->assign($user, $template, ['valid_from' => null, 'valid_until' => null, 'free_full_days_per_week' => 0]);
+
+        $resolver = app(ContractSettingsResolver::class);
+
+        // Vorlage ist die letzte Stufe: dort ist 0 ein echter Wert (kein Default 7)
+        $this->assertSame(0, $resolver->int($user, 'free_full_days_per_week', 7));
+        $this->assertSame(0, $resolver->int($user, 'annual_vacation_days', 7));
+
+        // ohne Vertragszeitraum greift der Default
+        $this->assertSame(7, $resolver->int(User::factory()->create(), 'free_full_days_per_week', 7));
+    }
+
+    #[Test]
+    public function nullable_and_boolean_columns_keep_their_rules(): void
+    {
+        $user = User::factory()->create();
+        $template = $this->template('Vorlage', [
+            'overtime_rule_active' => true,
+            'overtime_compensation_period' => 45,
+            'special_day_rule_active' => true,
+        ]);
+        $this->assign($user, $template, [
+            'valid_from' => null,
+            'valid_until' => null,
+            'overtime_rule_active' => false,       // Bool: Zuweisung gilt immer (false ≠ "nicht gesetzt")
+            'overtime_compensation_period' => null, // nullable: null → Vorlage
+            'special_day_rule_active' => false,
+        ]);
+
+        $resolver = app(ContractSettingsResolver::class);
+
+        $this->assertSame(45, $resolver->int($user, 'overtime_compensation_period'));
+        $this->assertFalse($resolver->bool($user, 'overtime_rule_active', true));
+        $this->assertFalse($resolver->bool($user, 'special_day_rule_active', true));
+        $this->assertNotContains('overtime_compensation_period', ContractSettingsResolver::ZERO_MEANS_UNSET_ON_ASSIGN);
+    }
+
+    #[Test]
     public function the_cache_is_keyed_by_person_and_date(): void
     {
         $user = User::factory()->create();

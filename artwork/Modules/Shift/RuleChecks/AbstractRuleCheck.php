@@ -203,6 +203,19 @@ abstract class AbstractRuleCheck implements ShiftRuleCheckInterface
         return [$startDate->copy()->startOfDay(), $endDate->copy()->startOfDay()];
     }
 
+    /**
+     * Datenfenster, das der Check aus dem ShiftRuleCheckContext bedienen können muss (Schichten,
+     * Individualzeiten, Ersatzfreitage, Sondertage). Standard: das beurteilte Fenster (getCoveredRange).
+     * Checks mit größerem Rückblick (z. B. Durchschnitts-Wochenstunden) erweitern es; Checks, die keine
+     * Kontextdaten lesen, liefern null, damit der Kontext nicht unnötig groß geladen wird.
+     *
+     * @return array{0: Carbon, 1: Carbon}|null
+     */
+    public function getContextRange(ShiftRule $rule, Carbon $startDate, Carbon $endDate): ?array
+    {
+        return $this->getCoveredRange($rule, $startDate, $endDate);
+    }
+
     // ------------------------------------------------------------------
     // Datenzugriff: Kontext, sonst Direktabfrage
     // ------------------------------------------------------------------

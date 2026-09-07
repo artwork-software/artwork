@@ -269,7 +269,7 @@
                             </div>
                             <ColorPickerComponent
                                 v-model="form.warning_color"
-                                label="Warnfarbe"
+                                :label="$t('Warning color')"
                                 class="!w-full"
                                 :color="form.warning_color"
                                 @updateColor="addColor"

@@ -164,14 +164,20 @@ final class LegalDefaultShiftRules
     }
 
     /**
-     * Idempotenz: Eine bestehende Regel gilt als "dieselbe", wenn Typ und Wert übereinstimmen
+     * Idempotenz: Eine bestehende AKTIVE Regel gilt als "dieselbe", wenn Typ und Wert übereinstimmen
      * (beim Wochendurchschnitt zusätzlich der Zeitraum in Wochen). Name/Farbe spielen keine Rolle —
      * umbenannte Standardregeln werden nicht erneut angelegt.
      *
+     * Inaktive Regeln zählen NICHT als vorhanden ($requireActive = true, Standard): der Controller sucht
+     * sie mit $requireActive = false gesondert und reaktiviert sie, statt eine Dublette anzulegen.
+     *
      * @param array<string, mixed> $definition
      */
-    public static function matches(ShiftRule $rule, array $definition): bool
+    public static function matches(ShiftRule $rule, array $definition, bool $requireActive = true): bool
     {
+        if ($requireActive && !$rule->is_active) {
+            return false;
+        }
         if ($rule->trigger_type !== $definition['trigger_type']) {
             return false;
         }

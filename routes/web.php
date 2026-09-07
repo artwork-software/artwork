@@ -1486,6 +1486,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
             ->name('shift.replace-worker');
         // Vorabprüfung vor dem Drop (Überschneidung/Urlaub/nicht verfügbar), nur Warnung
         Route::post('/shift/assignment-preflight', [ShiftController::class, 'assignmentPreflight'])
+            ->can('can plan shifts')
             ->name('shift.assignment-preflight');
 
         Route::post('/timeline/add/{event}', [ProjectController::class, 'addTimeLineRow'])->name('add.timeline.row');

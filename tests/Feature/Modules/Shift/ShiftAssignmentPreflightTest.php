@@ -5,6 +5,7 @@ namespace Tests\Feature\Modules\Shift;
 use Artwork\Modules\Freelancer\Models\Freelancer;
 use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\Shift\Models\ShiftQualification;
+use Artwork\Modules\Shift\Models\ShiftWorker;
 use Artwork\Modules\Shift\Services\ShiftAssignmentPreflightService;
 use Artwork\Modules\User\Models\User;
 use Artwork\Modules\Vacation\Enums\Vacation as VacationType;
@@ -88,6 +89,55 @@ final class ShiftAssignmentPreflightTest extends FeatureTestCase
             'start_time' => '17:00',
             'end_time' => '20:00',
         ]);
+
+        $this->assertSame(
+            [ShiftAssignmentPreflightService::TYPE_OVERLAP],
+            $this->conflictTypes($this->preflight($target, $worker)->assertOk())
+        );
+    }
+
+    #[Test]
+    public function empty_pivot_times_fall_back_to_the_shift_times(): void
+    {
+        $this->actingAsUserWith('can plan shifts');
+        $worker = User::factory()->create();
+        $target = $this->createShift('2026-09-14', '10:00', '18:00');
+
+        // Zuweisung ohne eigene Zeiten (Pivot start_/end_time und -date leer) → Schichtzeit 12–20 gilt
+        $other = $this->createShift('2026-09-14', '12:00', '20:00');
+        $this->assign($other, $worker, [
+            'start_date' => null,
+            'end_date' => null,
+            'start_time' => null,
+            'end_time' => null,
+        ]);
+
+        $pivot = ShiftWorker::query()->where('shift_id', $other->id)->firstOrFail();
+        [$start, $end] = ShiftAssignmentPreflightService::resolvePivotInterval($pivot, $other);
+        $this->assertSame('2026-09-14 12:00', $start->format('Y-m-d H:i'));
+        $this->assertSame('2026-09-14 20:00', $end->format('Y-m-d H:i'));
+
+        $this->assertSame(
+            [ShiftAssignmentPreflightService::TYPE_OVERLAP],
+            $this->conflictTypes($this->preflight($target, $worker)->assertOk())
+        );
+    }
+
+    #[Test]
+    public function shifts_without_end_date_are_found_via_their_start_date(): void
+    {
+        $this->actingAsUserWith('can plan shifts');
+        $worker = User::factory()->create();
+        $target = $this->createShift('2026-09-14', '10:00', '18:00');
+
+        // Altbestand: end_date leer → COALESCE(end_date, start_date) hält die Schicht im Suchfenster
+        $legacy = Shift::factory()->create([
+            'start_date' => '2026-09-14',
+            'end_date' => null,
+            'start' => '16:00',
+            'end' => '20:00',
+        ]);
+        $this->assign($legacy, $worker, ['start_time' => null, 'end_time' => null]);
 
         $this->assertSame(
             [ShiftAssignmentPreflightService::TYPE_OVERLAP],

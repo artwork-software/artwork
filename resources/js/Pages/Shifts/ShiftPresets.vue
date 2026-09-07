@@ -72,7 +72,7 @@
         </div>
         <div class="w-full px-5 min-h-screen">
             <div v-if="filteredShiftPresets.length > 0">
-                <div v-for="preset in filteredShiftPresets">
+                <div v-for="preset in filteredShiftPresets" :key="preset.id">
                     <SingleShiftPreset :preset="preset"
                                        :crafts="crafts"
                                        :event_types="event_types"

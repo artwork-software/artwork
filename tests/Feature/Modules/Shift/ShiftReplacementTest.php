@@ -9,15 +9,20 @@ use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\Shift\Models\ShiftQualification;
 use Artwork\Modules\Shift\Models\ShiftWorker;
+use Artwork\Modules\Availability\Services\AvailabilityConflictService;
+use Artwork\Modules\Change\Services\ChangeService;
+use Artwork\Modules\Notification\Services\NotificationService;
 use Artwork\Modules\Shift\Notifications\ShiftNotification;
 use Artwork\Modules\Shift\Services\ShiftReplacementService;
 use Artwork\Modules\User\Models\User;
 use Artwork\Modules\Vacation\Enums\Vacation as VacationType;
 use Artwork\Modules\Vacation\Models\Vacation;
+use Artwork\Modules\Vacation\Services\VacationConflictService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
 use PHPUnit\Framework\Attributes\Test;
 use Spatie\Activitylog\Models\Activity;
+use Symfony\Component\HttpKernel\Exception\ConflictHttpException;
 use Tests\Feature\FeatureTestCase;
 
 /**
@@ -348,6 +353,58 @@ final class ShiftReplacementTest extends FeatureTestCase
             ->assertJsonValidationErrors(['replacement_id']);
 
         $this->assertDatabaseHas('shift_workers', ['id' => $declinedPivot->id, 'deleted_at' => null]);
+    }
+
+    #[Test]
+    public function a_second_replacement_of_the_same_declined_assignment_is_rejected_with_409(): void
+    {
+        $this->actingAsUserWith(PermissionEnum::SHIFT_PLANNER->value);
+        [$shift, $craft, $qualification, $declinedPivot] = $this->declinedShift();
+        $first = $this->candidate($craft, $qualification, ['first_name' => 'Erste', 'last_name' => 'Ersatz']);
+        $second = $this->candidate($craft, $qualification, ['first_name' => 'Zweite', 'last_name' => 'Ersatz']);
+
+        $service = app(ShiftReplacementService::class);
+        $replace = fn (User $replacement) => $service->replace(
+            $shift,
+            $declinedPivot,
+            $replacement,
+            $qualification->id,
+            (string) $craft->abbreviation,
+            app(NotificationService::class),
+            app(VacationConflictService::class),
+            app(AvailabilityConflictService::class),
+            app(ChangeService::class)
+        );
+
+        $replace($first);
+
+        // Zweiter Aufruf mit demselben (inzwischen entfernten) Pivot – wie ein paralleler zweiter Klick,
+        // der die Vorabprüfung des Controllers noch passiert hat: die Transaktion lädt den Satz gesperrt
+        // neu, findet ihn nicht mehr und bricht mit 409 ab statt eine zweite Ersatzperson einzutragen.
+        try {
+            $replace($second);
+            $this->fail('Zweites Ersetzen derselben Zuweisung muss mit 409 abbrechen.');
+        } catch (ConflictHttpException $e) {
+            $this->assertSame(409, $e->getStatusCode());
+        }
+
+        $active = ShiftWorker::withoutTrashed()->where('shift_id', $shift->id)->get();
+        $this->assertCount(1, $active);
+        $this->assertSame($first->id, (int) $active->first()->employable_id);
+        $this->assertDatabaseMissing('shift_workers', [
+            'shift_id' => $shift->id,
+            'employable_id' => $second->id,
+            'employable_type' => User::class,
+            'deleted_at' => null,
+        ]);
+
+        // Über HTTP kennt der Controller den entfernten Satz gar nicht mehr (404) – keine zweite Ersatzperson
+        $this->postJson(route('shift.replace-worker', $shift), [
+            'shift_worker_id' => $declinedPivot->id,
+            'replacement_type' => 'user',
+            'replacement_id' => $second->id,
+        ])->assertNotFound();
+        $this->assertSame(1, ShiftWorker::withoutTrashed()->where('shift_id', $shift->id)->count());
     }
 
     #[Test]

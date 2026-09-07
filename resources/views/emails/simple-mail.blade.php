@@ -67,7 +67,7 @@
         @endforeach
         <a href="{{ $primaryLink }}" class="notification-link">
             @if($hasDeepLink)
-                Direkt in {{ $pageTitle }} öffnen
+                {{ __('Open directly in :app', ['app' => $pageTitle]) }}
             @else
                 alle Benachrichtigungen im {{ $pageTitle }} ansehen
             @endif

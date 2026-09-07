@@ -7963,5 +7963,23 @@
     "No open work time change requests.": "Keine offenen Zeitanpassungs-Anfragen.",
     "Only my requests": "Nur eigene Anfragen",
     "Here you can see all shift plan requests, newest calendar week first.": "Hier siehst du alle Dienstplan-Anfragen, neueste Kalenderwoche zuerst.",
-    "Here you can see all duty rosters you requested, newest calendar week first.": "Hier siehst du alle von dir angefragten Dienstpläne, neueste Kalenderwoche zuerst."
+    "Here you can see all duty rosters you requested, newest calendar week first.": "Hier siehst du alle von dir angefragten Dienstpläne, neueste Kalenderwoche zuerst.",
+    "Open directly in :app": "Direkt in :app öffnen",
+    "Delete provider": "Dienstleister*in löschen",
+    "New qualification": "Neue Funktion",
+    "Close sidebar": "Seitenleiste schließen",
+    "Open sidebar": "Seitenleiste öffnen",
+    "You are not allowed to commit this craft.": "Du darfst dieses Gewerk nicht festschreiben.",
+    "The period may cover at most one year.": "Der Zeitraum darf höchstens ein Jahr umfassen.",
+    "Exports are limited to a period of one year.": "Exporte sind auf einen Zeitraum von höchstens einem Jahr begrenzt.",
+    "skipped: target week already committed for this craft": "übersprungen: Zielwoche für dieses Gewerk bereits festgeschrieben",
+    "skipped: target week already requested for approval for this craft": "übersprungen: Zielwoche für dieses Gewerk bereits zur Freigabe angefragt",
+    "_comment": "H4b: neue Übersetzungsschlüssel (lang/de.json + lang/en.json). Backend-Keys mit :platzhalter (__()), Frontend-Keys mit {0}/{1} ($t mit Listen-Parametern).",
+    "backend": {
+        "Calendar week :week does not exist in :year.": "Kalenderwoche :week existiert im Jahr :year nicht.",
+        "Too many shifts to copy (:count, maximum :max). Please select fewer crafts or target weeks.": "Zu viele Schichten zum Kopieren (:count, maximal :max). Bitte weniger Gewerke oder Zielwochen wählen."
+    },
+    "frontend": {
+        "Too many shifts to copy ({0}, maximum {1}). Please select fewer crafts or target weeks.": "Zu viele Schichten zum Kopieren ({0}, maximal {1}). Bitte weniger Gewerke oder Zielwochen wählen."
+    }
 }

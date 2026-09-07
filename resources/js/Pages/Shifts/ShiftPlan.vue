@@ -871,17 +871,13 @@
                                 <!-- Gewerks-Row: Besetzung „besetzt/Bedarf" je Tag, in der KW-Spalte die Wochensumme;
                                      Klick setzt Filter „nur nicht voll besetzte" + Gewerksfilter (zweiter Klick zurück) -->
                                 <div v-else-if="row.kind === 'craft'" class="flex h-full w-full items-center justify-center" :class="day.isExtraRow ? 'pl-2' : ''">
-                                    <button
-                                        v-if="craftStaffingFor(row.craft.id, day)"
-                                        type="button"
-                                        class="inline-flex items-center gap-x-1 rounded-full px-2 py-0.5 font-lexend text-[10px] font-semibold tabular-nums transition-colors duration-150 hover:ring-1 hover:ring-white/40"
-                                        :class="[craftStaffingClass(craftStaffingFor(row.craft.id, day)), isCraftStaffingFilterActive(row.craft.id) ? 'ring-1 ring-white/70' : '']"
-                                        :title="craftStaffingTitle(craftStaffingFor(row.craft.id, day), day)"
-                                        :aria-pressed="isCraftStaffingFilterActive(row.craft.id)"
-                                        @click.stop="toggleCraftStaffingFilter(row.craft.id)"
-                                    >
-                                        {{ craftStaffingFor(row.craft.id, day).staffed }}/{{ craftStaffingFor(row.craft.id, day).required }}
-                                    </button>
+                                    <!-- Besetzung EINMAL je Zelle nachschlagen; Ampelklasse/Tooltip rechnet die Pille nur bei Prop-Änderung -->
+                                    <CraftStaffingPill
+                                        :count="craftStaffingFor(row.craft.id, day)"
+                                        :active="isCraftStaffingFilterActive(row.craft.id)"
+                                        :week-number="day.isExtraRow ? day.weekNumber : null"
+                                        @toggle="toggleCraftStaffingFilter(row.craft.id)"
+                                    />
                                 </div>
 
                                 <!-- Funktionsgruppen-Row: keine Zellen -->
@@ -1111,11 +1107,12 @@ import dayjs from 'dayjs'
 import debounce from 'lodash.debounce'
 import ToolTipComponent from '@/Components/ToolTips/ToolTipComponent.vue'
 import {useShiftCalendarListener} from '@/Composeables/Listener/useShiftCalendarListener.js'
-import {enrichDays, getDaysInRange, computeShiftFormattedDates, computeEventFormattedDates, clearDayPropsCache} from '@/Composeables/calendarDateUtils.js'
+import {enrichDays, clearDayPropsCache} from '@/Composeables/calendarDateUtils.js'
 import {provideShiftPlanLookups} from '@/Composeables/useShiftPlanLookups.js'
 import SwitchIconTooltip from '@/Artwork/Toggles/SwitchIconTooltip.vue'
 import ShiftPlanViewSwitch from '@/Layouts/Components/ShiftPlanComponents/ShiftPlanViewSwitch.vue'
-import {aggregateStaffing, staffingKey, weekStaffingKey, staffingLevel, staffingOpen} from '@/Helper/shiftStaffing.js'
+import {aggregateStaffingByRoom, createRoomStaffingMemo, staffingKey, weekStaffingKey} from '@/Helper/shiftStaffing.js'
+import CraftStaffingPill from '@/Layouts/Components/ShiftPlanComponents/CraftStaffingPill.vue'
 import PropertyIcon from '@/Artwork/Icon/PropertyIcon.vue'
 import ArtworkBaseModal from '@/Artwork/Modals/ArtworkBaseModal.vue'
 import BaseUIButton from '@/Artwork/Buttons/BaseUIButton.vue'
@@ -2070,6 +2067,9 @@ const groupedShiftsCache = new Map<string, ShiftGroup[]>()
 const roomDayEventsCache = new Map<string, any[]>()
 const roomDayShiftsCache = new Map<string, any[]>()
 const cellProjectGroupsCache = new Map<string, any[]>()
+// Besetzungs-Teilergebnis je Raum (craftStaffingByKey) — hier deklariert, weil der
+// immediate-Watcher unten es beim Setup bereits leert (sonst TDZ-Fehler)
+const roomStaffingMemo = createRoomStaffingMemo()
 
 // Die Keys enthalten room.__v und akkumulieren zwischen den Komplett-Clears (z. B. bei
 // vielen Websocket-Updates in einer langen Sitzung) — Obergrenze gegen Memory-Wachstum
@@ -2379,6 +2379,8 @@ watch(
         roomDayEventsCache.clear()
         roomDayShiftsCache.clear()
         cellProjectGroupsCache.clear()
+        // Besetzungs-Memo je Raum: Tagesspalten (Zeitraum) bzw. Zoom geändert
+        roomStaffingMemo.clear()
         if (expandDays.value) {
             measureBaselineMetrics()
         } else {
@@ -3055,10 +3057,12 @@ function getDayServicesForCell(worker: any, day: any) {
 
 
 // --- Besetzungsübersicht je Gewerk (Kopfzeile der Personenleiste) ---
-// EINMAL über alle Raum×Tag-Zellen aggregiert (keyed craftId+Tag bzw. craftId+KW);
-// liest room.__v, damit Broadcast-Mutationen (bumpRoomVersion) neu rechnen.
+// Teilergebnis JE RAUM (keyed craftId+Tag bzw. craftId+KW) im Memo unter room.__v;
+// das Computed liest __v aller Räume (damit Broadcasts/bumpRoomVersion es anstoßen),
+// aggregiert aber nur den geänderten Raum neu und summiert die Teilergebnisse.
 // Bewusst ungefiltert (nicht getRoomDayShifts): der Filter „nur nicht voll
 // besetzte" darf die Bedarfszahlen nicht verfälschen.
+// Memo-Clear bei Zeitraum-/Zoomwechsel: siehe Cache-Watcher (cellSummaryCache & Co.).
 function rawRoomDayShifts(room: any, dayKey: string): any[] {
     const cell = room?.content?.[dayKey]
     if (!cell) return []
@@ -3072,42 +3076,27 @@ function rawRoomDayShifts(room: any, dayKey: string): any[] {
 
 const craftStaffingByKey = computed<Map<string, { required: number; staffed: number }>>(() => {
     const dayList = (days.value ?? []).filter((d: any) => !d?.isExtraRow)
-    const entries: Array<{ dateKey: string; weekNumber: any; shifts: any[] }> = []
-    for (const room of shiftPlanArrayRef.value) {
-        void room?.__v
-        for (const day of dayList) {
-            const shifts = rawRoomDayShifts(room, day.fullDay)
-            if (shifts.length === 0) continue
-            entries.push({ dateKey: day.fullDay, weekNumber: day.weekNumber, shifts })
-        }
-    }
-    return aggregateStaffing(entries)
+    return aggregateStaffingByRoom(
+        shiftPlanArrayRef.value.filter(Boolean).map((room: any) => ({
+            room,
+            version: room.__v ?? 0,
+            entries: () => {
+                const entries: Array<{ dateKey: string; weekNumber: any; shifts: any[] }> = []
+                for (const day of dayList) {
+                    const shifts = rawRoomDayShifts(room, day.fullDay)
+                    if (shifts.length === 0) continue
+                    entries.push({ dateKey: day.fullDay, weekNumber: day.weekNumber, shifts })
+                }
+                return entries
+            },
+        })),
+        roomStaffingMemo,
+    )
 })
 
 function craftStaffingFor(craftId: number, day: any) {
     const key = day?.isExtraRow ? weekStaffingKey(craftId, day.weekNumber) : staffingKey(craftId, day?.fullDay)
     return craftStaffingByKey.value.get(key) ?? null
-}
-
-const staffingLevelClass: Record<string, string> = {
-    none: 'bg-white/10 text-white/50',
-    low: 'bg-danger/25 text-danger-surface',
-    partial: 'bg-warning/25 text-warning-surface',
-    full: 'bg-success/25 text-success-surface',
-}
-
-function craftStaffingClass(count: { required: number; staffed: number } | null) {
-    return staffingLevelClass[staffingLevel(count)]
-}
-
-function craftStaffingTitle(count: { required: number; staffed: number } | null, day: any) {
-    if (!count || count.required === 0) return $t('No demand')
-    const base = $t('Demand {required} slots, staffed {staffed}, open {open}', {
-        required: count.required,
-        staffed: count.staffed,
-        open: staffingOpen(count),
-    })
-    return day?.isExtraRow ? `KW ${day.weekNumber}: ${base}` : base
 }
 
 /** Ist der Klick-Filter (nur nicht voll besetzte + genau dieses Gewerk) aktiv? */

@@ -86,6 +86,15 @@ class OvertimeDeadlineCheck extends AbstractRuleCheck
         ];
     }
 
+    /**
+     * Liest nur user_overtimes, keine Schichten/Individualzeiten — der Datenkontext muss dafür nicht
+     * um den Zwei-Jahres-Rückblick erweitert werden.
+     */
+    public function getContextRange(ShiftRule $rule, Carbon $startDate, Carbon $endDate): ?array
+    {
+        return null;
+    }
+
     private function overtimeRuleActiveFor(User $user): bool
     {
         $resolver = app(ContractSettingsResolver::class);

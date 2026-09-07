@@ -4,6 +4,7 @@ namespace Artwork\Modules\Shift\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use Artwork\Modules\Craft\Models\Craft;
+use Artwork\Modules\Craft\Services\CraftScopeService;
 use Artwork\Modules\GeneralSettings\Models\GeneralSettings;
 use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Artwork\Modules\Role\Enums\RoleEnum;
@@ -27,6 +28,7 @@ class ShiftWeekStatusController extends Controller
     public function __construct(
         private readonly ShiftWeekStatusService $shiftWeekStatusService,
         private readonly GeneralSettings $generalSettings,
+        private readonly CraftScopeService $craftScopeService,
     ) {
     }
 
@@ -117,13 +119,7 @@ class ShiftWeekStatusController extends Controller
             ->orderBy('position')
             ->orderBy('name');
 
-        if (! $user->hasRole(RoleEnum::ARTWORK_ADMIN->value)) {
-            $query->where(function ($sub) use ($user): void {
-                $sub->where('assignable_by_all', true)
-                    ->orWhereHas('craftShiftPlaner', fn ($planers) => $planers->where('user_id', $user->id));
-            });
-        }
-
-        return $query->get();
+        // Gleiches Scoping wie Festschreibung und „Woche kopieren" (CraftScopeService)
+        return $this->craftScopeService->applyPlannableScope($query, $user)->get();
     }
 }

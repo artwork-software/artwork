@@ -7963,5 +7963,18 @@
     "No open work time change requests.": "No open work time change requests.",
     "Only my requests": "Only my requests",
     "Here you can see all shift plan requests, newest calendar week first.": "Here you can see all shift plan requests, newest calendar week first.",
-    "Here you can see all duty rosters you requested, newest calendar week first.": "Here you can see all duty rosters you requested, newest calendar week first."
+    "Here you can see all duty rosters you requested, newest calendar week first.": "Here you can see all duty rosters you requested, newest calendar week first.",
+    "Open directly in :app": "Open directly in :app",
+    "Delete provider": "Delete provider",
+    "New qualification": "New qualification",
+    "Close sidebar": "Close sidebar",
+    "Open sidebar": "Open sidebar",
+    "You are not allowed to commit this craft.": "You are not allowed to commit this craft.",
+    "The period may cover at most one year.": "The period may cover at most one year.",
+    "Exports are limited to a period of one year.": "Exports are limited to a period of one year.",
+    "skipped: target week already committed for this craft": "skipped: target week already committed for this craft",
+    "skipped: target week already requested for approval for this craft": "skipped: target week already requested for approval for this craft",
+    "_comment": "_comment",
+    "backend": "backend",
+    "frontend": "frontend"
 }

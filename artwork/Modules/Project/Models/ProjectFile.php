@@ -21,8 +21,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
  * @property int|null $tab_id
  * @property bool $is_budget_document Budget-Dokument mit Freigabeliste (nur Freigegebene und Admins)
  * @property string $deleted_at
- * @property string $created_at
- * @property string $updated_at
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
  */
 class ProjectFile extends Model
 {
@@ -113,11 +113,16 @@ class ProjectFile extends Model
         $this->storedFileSizeResolved = true;
 
         try {
-            $this->storedFileSizeInBytes = Storage::fileSize('project_files/' . $this->basename);
+            $this->storedFileSizeInBytes = Storage::fileSize($this->storagePath());
         } catch (FilesystemException) {
             return null;
         }
 
         return $this->storedFileSizeInBytes;
+    }
+
+    public function storagePath(): string
+    {
+        return 'project_files/' . $this->basename;
     }
 }

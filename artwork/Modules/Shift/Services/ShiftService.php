@@ -70,16 +70,24 @@ class ShiftService
         return $this->shiftRepository->getById($shiftId);
     }
 
-    public function createShiftWithoutEventAutomatic(int $craftId, array $data, string $day): Shift|Model
+    /**
+     * Ende ≤ Beginn = über Mitternacht (08:00–08:00 = 24 h), wie Schichtvorlagen und individuelle
+     * Zeit: die Schicht endet am Folgetag — die eine Definition dieser Regel für alle Schreibpfade.
+     */
+    public function endDateFor(Carbon $day, Carbon $start, Carbon $end): string
+    {
+        return $end->lte($start)
+            ? $day->copy()->addDay()->format('Y-m-d')
+            : $day->format('Y-m-d');
+    }
+
+    public function createShiftWithoutEventAutomatic(int $craftId, array $data, string $day): Shift
     {
         $start = Carbon::parse($data['start']);
         $end = Carbon::parse($data['end']);
 
         $startDate = Carbon::parse($day)->format('Y-m-d');
-        // Ende ≤ Beginn = über Mitternacht (08:00–08:00 = 24 h), wie Schichtvorlagen und individuelle Zeit
-        $endDate = $end->lte($start)
-            ? Carbon::parse($day)->copy()->addDay()->format('Y-m-d')
-            : $startDate;
+        $endDate = $this->endDateFor(Carbon::parse($day), $start, $end);
 
         $shift = new Shift([
             'start_date' => $startDate,
@@ -121,10 +129,7 @@ class ShiftService
         $end = Carbon::parse($data['end']);
         $startDate = Carbon::parse($data['start_date']);
 
-        // Ende ≤ Beginn = über Mitternacht (08:00–08:00 = 24 h), wie Schichtvorlagen und individuelle Zeit
-        $endDate = $end->lte($start)
-            ? $startDate->copy()->addDay()->format('Y-m-d')
-            : $startDate->format('Y-m-d');
+        $endDate = $this->endDateFor($startDate, $start, $end);
 
         $shift = new Shift([
             'start_date' => $startDate->format('Y-m-d'),

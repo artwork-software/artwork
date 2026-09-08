@@ -213,6 +213,103 @@ enum ProjectTabComponentEnum: string
         return array_map(static fn (self $case): string => $case->value, self::PRINTABLE);
     }
 
+    /**
+     * Custom (user-configurable) value components the app renders from
+     * the stored project value.
+     */
+    private const APP_CUSTOM = [
+        self::CHECKBOX,
+        self::TEXT_FIELD,
+        self::DROPDOWN,
+        self::TEXT_AREA,
+        self::TITLE,
+        self::LINK,
+        self::LINK_LIST,
+        self::SEPARATOR,
+        self::DISCLOSURE_COMPONENT,
+    ];
+
+    /**
+     * System components with a read-only app rendering; their `value`
+     * payload is built server-side by AppSystemComponentService. The
+     * remaining system types (budget table, documents, BI, …) stay web-only —
+     * they need dedicated designs to be usable on a phone.
+     */
+    private const APP_SYSTEM = [
+        self::PROJECT_TITLE,
+        self::PROJECT_STATUS,
+        self::PROJECT_TEAM,
+        self::PROJECT_ATTRIBUTES,
+        self::PROJECT_PERIOD,
+        self::GENERAL_SHIFT_INFORMATION,
+        self::SHIFT_CONTACT_PERSONS,
+        self::PROJECT_BUDGET_DEADLINE,
+        self::BUDGET_INFORMATIONS,
+        self::CALENDAR,
+        self::BULK_EDIT,
+        self::SHIFT_TAB,
+        self::CHECKLIST,
+        self::CHECKLIST_ALL,
+        self::COMMENT_TAB,
+        self::COMMENT_ALL_TAB,
+        self::PROJECT_DOCUMENTS,
+        self::PROJECT_ALL_DOCUMENTS,
+    ];
+
+    /**
+     * Component types the app may write values for. Layout-only types
+     * (Title, Separator, Disclosure) carry no project value.
+     */
+    private const APP_WRITABLE = [
+        self::CHECKBOX,
+        self::TEXT_FIELD,
+        self::DROPDOWN,
+        self::TEXT_AREA,
+        self::LINK,
+        self::LINK_LIST,
+    ];
+
+    /**
+     * Stable domain names of the component types on the app wire. The enum
+     * values are web-internal class names (BulkBody, BudgetInformations, …) —
+     * the app contract speaks kebab-case domain vocabulary instead.
+     * CALENDAR and BULK_EDIT render identically in the app and share one name.
+     */
+    private const APP_WIRE_TYPES = [
+        self::TITLE->value => 'title',
+        self::TEXT_FIELD->value => 'text-field',
+        self::TEXT_AREA->value => 'text-area',
+        self::LINK->value => 'link',
+        self::CHECKBOX->value => 'checkbox',
+        self::DROPDOWN->value => 'dropdown',
+        self::LINK_LIST->value => 'link-list',
+        self::SEPARATOR->value => 'separator',
+        self::DISCLOSURE_COMPONENT->value => 'disclosure',
+        self::PROJECT_TITLE->value => 'project-title',
+        self::PROJECT_STATUS->value => 'project-state',
+        self::PROJECT_TEAM->value => 'project-team',
+        self::PROJECT_ATTRIBUTES->value => 'project-attributes',
+        self::PROJECT_PERIOD->value => 'project-period',
+        self::GENERAL_SHIFT_INFORMATION->value => 'shift-information',
+        self::SHIFT_CONTACT_PERSONS->value => 'shift-contacts',
+        self::PROJECT_BUDGET_DEADLINE->value => 'budget-deadline',
+        self::BUDGET_INFORMATIONS->value => 'budget-information',
+        self::CALENDAR->value => 'calendar',
+        self::BULK_EDIT->value => 'calendar',
+        self::SHIFT_TAB->value => 'shifts',
+        self::CHECKLIST->value => 'checklist',
+        self::CHECKLIST_ALL->value => 'checklist-all',
+        self::COMMENT_TAB->value => 'comments',
+        self::COMMENT_ALL_TAB->value => 'comments-all',
+        self::PROJECT_DOCUMENTS->value => 'documents',
+        self::PROJECT_ALL_DOCUMENTS->value => 'documents-all',
+    ];
+
+    public function appWireType(): string
+    {
+        return self::APP_WIRE_TYPES[$this->value] ?? $this->value;
+    }
+
     public function isExternallyReadable(): bool
     {
         return in_array($this, self::EXTERNALLY_READABLE, true);
@@ -221,6 +318,33 @@ enum ProjectTabComponentEnum: string
     public function isExternallyWritable(): bool
     {
         return in_array($this, self::EXTERNALLY_WRITABLE, true);
+    }
+
+    public function isAppReadable(): bool
+    {
+        return in_array($this, self::APP_CUSTOM, true) || in_array($this, self::APP_SYSTEM, true);
+    }
+
+    public function isAppSystem(): bool
+    {
+        return in_array($this, self::APP_SYSTEM, true);
+    }
+
+    public function isAppWritable(): bool
+    {
+        return in_array($this, self::APP_WRITABLE, true);
+    }
+
+    /**
+     * Enum string values of all app-readable component types.
+     * @return array<int, string>
+     */
+    public static function appReadableValues(): array
+    {
+        return array_map(
+            static fn (self $case): string => $case->value,
+            [...self::APP_CUSTOM, ...self::APP_SYSTEM],
+        );
     }
 
     /**

@@ -5,12 +5,18 @@ namespace Artwork\Modules\Project\Policies;
 use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Artwork\Modules\Project\Models\Component;
 use Artwork\Modules\Project\Models\Project;
+use Artwork\Modules\Project\Services\ProjectComponentVisibilityService;
 use Artwork\Modules\User\Models\User;
 use Illuminate\Auth\Access\HandlesAuthorization;
 
 class ProjectPolicy
 {
     use HandlesAuthorization;
+
+    public function __construct(
+        private readonly ProjectComponentVisibilityService $projectComponentVisibilityService,
+    ) {
+    }
 
     // Globale Rechte, die den Zutritt zu jedem Projekt erlauben (write inklusive: wer alle
     // Projekte bearbeiten darf, muss sie auch öffnen können). "management projects" gehört
@@ -109,6 +115,16 @@ class ProjectPolicy
         // Schreibzugriff auf beliebige Projekte. (Der frühere Zweig las events.created_by, das es
         // nicht gibt, und war damit nie aktiv.)
         return false;
+    }
+
+    /**
+     * Sehen einer Tab-Komponente (die App-API baut die Tab-Payload serverseitig); Admins und
+     * "write projects" sehen alle Komponenten, wie im Web.
+     */
+    public function viewComponent(User $user, Project $project, Component $component): bool
+    {
+        return $this->view($user, $project)
+            && $this->projectComponentVisibilityService->canSeeComponent($user, $component);
     }
 
     /**

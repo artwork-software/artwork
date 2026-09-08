@@ -1097,18 +1097,8 @@ class EventController extends Controller
         $user = $this->authManager->user();
 
         $shiftFilterType = UserFilterTypes::SHIFT_LIST_VIEW_FILTER->value;
-        $userCalendarFilter = $user->userFilters()->firstOrCreate(
-            ['filter_type' => $shiftFilterType],
-            [
-                'start_date' => Carbon::now()->startOfMonth()->format('Y-m-d'),
-                'end_date' => Carbon::now()->endOfMonth()->format('Y-m-d'),
-            ]
-        );
-
-        $listViewSettings = $user->shift_list_view_settings;
-        if ($listViewSettings === null) {
-            $listViewSettings = $user->shift_list_view_settings()->create();
-        }
+        $userCalendarFilter = $this->shiftListViewService->filterFor($user);
+        $listViewSettings = $this->shiftListViewService->settingsFor($user);
 
         $startDate = $userCalendarFilter->start_date
             ? Carbon::parse($userCalendarFilter->start_date)
@@ -1453,13 +1443,7 @@ class EventController extends Controller
         }
 
         if (!$roomId) {
-            // Kalender und Planungskalender sind getrennt berechtigt: geplante Termine direkt (ohne Raum)
-            // anlegen darf nur "Im Planungskalender fest planen", reguläre nur "Termine fest planen".
-            $canCreateWithoutRoom = $isPlanning
-                ? $user->can(PermissionEnum::CAN_PLAN_FIXED_IN_PLANNING_CALENDAR->value)
-                : $user->can(PermissionEnum::CREATE_EVENTS_WITHOUT_REQUEST->value);
-
-            if (!$canCreateWithoutRoom) {
+            if (!$user->can('bookWithoutRoom', [Event::class, $isPlanning])) {
                 if ($user->can(PermissionEnum::EVENT_REQUEST->value)) {
                     throw ValidationException::withMessages([
                         'roomId' => $alwaysDirectBooking
@@ -1505,25 +1489,11 @@ class EventController extends Controller
      */
     private function roomBookingRights(User $user, Room $room, bool $isPlanning): array
     {
-        if ($user->hasRole(RoleEnum::ARTWORK_ADMIN->value)) {
-            return ['canBookDirectly' => true, 'canRequest' => true];
-        }
-
-        $isRoomAdmin = $room->admins()->where('user_id', $user->id)->exists();
-        $hasGlobalCreate = $user->can(PermissionEnum::CREATE_EVENTS_WITHOUT_REQUEST->value);
-        $canPlanFixed = $isPlanning && $user->can(PermissionEnum::CAN_PLAN_FIXED_IN_PLANNING_CALENDAR->value);
-        // Direktbuchung: reguläre Termine über "Termine fest planen", geplante Termine NUR über
-        // "Im Planungskalender fest planen" (getrennte Berechtigung, keine Implikation).
-        $canBookDirectly = ($isPlanning ? $canPlanFixed : $hasGlobalCreate)
-            || $isRoomAdmin
-            || $room->everyone_can_book;
-        $canRequest = $hasGlobalCreate
-            || $isRoomAdmin
-            || $room->everyone_can_book
-            || $user->can(PermissionEnum::EVENT_REQUEST->value)
-            || $room->requestableBy()->where('user_id', $user->id)->exists();
-
-        return ['canBookDirectly' => $canBookDirectly, 'canRequest' => $canRequest];
+        // Die Regeln selbst stehen in EventPolicy::book (gemeinsam mit der App-API); Admins via Gate::before.
+        return [
+            'canBookDirectly' => $user->can('book', [Event::class, $room, false, $isPlanning]),
+            'canRequest' => $user->can('book', [Event::class, $room, true, $isPlanning]),
+        ];
     }
 
     public function commitShifts(CommitShiftsRequest $request, GeneralSettings $generalSettings): void

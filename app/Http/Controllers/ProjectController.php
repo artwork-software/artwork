@@ -115,6 +115,7 @@ use Artwork\Modules\Project\Services\ProjectFileService;
 use Artwork\Modules\Project\Services\ProjectService;
 use Artwork\Modules\Project\Services\ProjectSettingsService;
 use Artwork\Modules\Project\Services\ProjectStateService;
+use Artwork\Modules\Project\Services\ProjectTeamService;
 use Artwork\Modules\Project\Models\ProjectManagementBuilder;
 use Artwork\Modules\Project\Services\ProjectManagementBuilderService;
 use Artwork\Modules\Project\Services\ProjectPrintLayoutService;
@@ -123,7 +124,6 @@ use Artwork\Modules\Project\Models\Component;
 use Artwork\Modules\Project\Models\ComponentInTab;
 use Artwork\Modules\Project\Models\ProjectTab;
 use Artwork\Modules\Project\Services\ProjectTabService;
-use Artwork\Modules\Project\Events\ProjectTeamUpdated;
 use Artwork\Modules\Role\Enums\RoleEnum;
 use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\Room\Services\RoomService;
@@ -3647,18 +3647,16 @@ class ProjectController extends Controller
 
 
 
-    public function updateTeam(Request $request, Project $project): JsonResponse|RedirectResponse
-    {
+    public function updateTeam(
+        Request $request,
+        Project $project,
+        ProjectTeamService $projectTeamService
+    ): JsonResponse|RedirectResponse {
         // Team setzen = Schreibrecht im Projekt. Vorher genügte "eigene Projekte anlegen" für jedes
         // fremde Projekt – samt Selbstvergabe von Budgetzugriff und Schreibrecht.
         if (Gate::denies('update', $project)) {
             return response()->json(['error' => 'Not authorized to assign users to a project.'], 403);
         }
-
-        $projectManagerBefore = $project->managerUsers()->get();
-        $projectBudgetAccessBefore = $project->access_budget()->get();
-        $projectUsers = $project->users()->get();
-        $oldProjectDepartments = $project->departments()->get();
 
         // only persist role ids that actually exist; anything else would linger
         // in the project_user.roles JSON forever (role deletion can't clean it up)
@@ -3672,60 +3670,38 @@ class ProjectController extends Controller
 
                 $pivotData['roles'] = $validRoleIds->intersect($pivotData['roles'] ?? [])->values()->all();
 
-                // Projektleitung hat laut ProjectPolicy::update immer Schreibrecht — Pivot spiegelt das,
-                // damit Listen/Exports (writeUsers) nicht vom Frontend-Häkchen abhängen
-                if (!empty($pivotData['is_manager'])) {
-                    $pivotData['can_write'] = true;
-                }
-
-                return $pivotData;
+                return ProjectTeamService::withManagerWriteRight($pivotData);
             }
         );
 
-        $project->users()->sync($assignedUsers);
-        $project->departments()->sync(collect($request->assigned_departments)->pluck('id'));
-
-        // CRM-Kontakte im Team nur synchronisieren, wenn das globale Setting aktiv ist und der
-        // Payload den Key enthält — sonst würden bestehende Verknüpfungen still gelöscht
-        if (
-            app(ProjectCreateSettings::class)->crm_contacts_in_team
-            && $request->has('assigned_crm_contact_ids')
-        ) {
-            $assignedCrmContacts = collect($request->assigned_crm_contact_ids)->map(
-                static function ($pivotData) use ($validRoleIds) {
-                    if (!is_array($pivotData)) {
-                        return $pivotData;
-                    }
-
-                    return [
-                        'roles' => $validRoleIds->intersect($pivotData['roles'] ?? [])->values()->all(),
-                    ];
-                }
-            );
-
-            $project->teamCrmContacts()->sync($assignedCrmContacts);
-        }
-
-        $newProjectDepartments = $project->departments()->get();
-        $projectUsersAfter = $project->users()->get();
-        $projectManagerAfter = $project->managerUsers()->get();
-        $projectBudgetAccessAfter = $project->access_budget()->get();
-
-        // history functions
-        $this->checkDepartmentChanges($project->id, $oldProjectDepartments, $newProjectDepartments);
-        // Get and check project admins, managers and users after update
-        $this->createNotificationProjectMemberChanges(
+        $projectTeamService->applyRosterChange(
             $project,
-            $projectManagerBefore,
-            $projectUsers,
-            $projectUsersAfter,
-            $projectManagerAfter,
-            $projectBudgetAccessBefore,
-            $projectBudgetAccessAfter
-        );
+            static function (Project $project) use ($assignedUsers, $validRoleIds, $request): void {
+                $project->users()->sync($assignedUsers);
+                $project->departments()->sync(collect($request->assigned_departments)->pluck('id'));
 
-        // Broadcast team update event
-        broadcast(new ProjectTeamUpdated($project->id));
+                // CRM-Kontakte im Team nur synchronisieren, wenn das globale Setting aktiv ist und der
+                // Payload den Key enthält — sonst würden bestehende Verknüpfungen still gelöscht
+                if (
+                    app(ProjectCreateSettings::class)->crm_contacts_in_team
+                    && $request->has('assigned_crm_contact_ids')
+                ) {
+                    $assignedCrmContacts = collect($request->assigned_crm_contact_ids)->map(
+                        static function ($pivotData) use ($validRoleIds) {
+                            if (!is_array($pivotData)) {
+                                return $pivotData;
+                            }
+
+                            return [
+                                'roles' => $validRoleIds->intersect($pivotData['roles'] ?? [])->values()->all(),
+                            ];
+                        }
+                    );
+
+                    $project->teamCrmContacts()->sync($assignedCrmContacts);
+                }
+            }
+        );
 
         return Redirect::back();
     }
@@ -4019,43 +3995,6 @@ class ProjectController extends Controller
         }
     }
 
-    private function checkDepartmentChanges($projectId, $oldDepartments, $newDepartments): void
-    {
-        $oldDepartmentIds = [];
-        $newDepartmentIds = [];
-        $oldDepartmentNames = [];
-        foreach ($oldDepartments as $oldDepartment) {
-            $oldDepartmentIds[] = $oldDepartment->id;
-            $oldDepartmentNames[$oldDepartment->id] = $oldDepartment->name;
-        }
-
-        foreach ($newDepartments as $newDepartment) {
-            $newDepartmentIds[] = $newDepartment->id;
-            if (!in_array($newDepartment->id, $oldDepartmentIds)) {
-                $this->changeService->saveFromBuilder(
-                    $this->changeService
-                        ->createBuilder()
-                        ->setModelClass(Project::class)
-                        ->setModelId($projectId)
-                        ->setTranslationKey('Department added to project team')
-                        ->setTranslationKeyPlaceholderValues([$newDepartment->name])
-                );
-            }
-        }
-
-        foreach ($oldDepartmentIds as $oldDepartmentId) {
-            if (!in_array($oldDepartmentId, $newDepartmentIds)) {
-                $this->changeService->saveFromBuilder(
-                    $this->changeService
-                        ->createBuilder()
-                        ->setModelClass(Project::class)
-                        ->setModelId($projectId)
-                        ->setTranslationKey('Department removed from project team')
-                        ->setTranslationKeyPlaceholderValues([$oldDepartmentNames[$oldDepartmentId]])
-                );
-            }
-        }
-    }
 
     private function checkProjectDescriptionChanges($projectId, $oldDescription, $newDescription): void
     {
@@ -4092,212 +4031,6 @@ class ProjectController extends Controller
         $this->setPublicChangesNotification($projectId);
     }
 
-    //@todo: fix phpcs error - refactor function because complexity exceeds allowed maximum
-    //phpcs:ignore Generic.Metrics.CyclomaticComplexity.MaxExceeded
-    private function createNotificationProjectMemberChanges(
-        Project $project,
-        $projectManagerBefore,
-        $projectUsers,
-        $projectUsersAfter,
-        $projectManagerAfter,
-        $projectBudgetAccessBefore,
-        $projectBudgetAccessAfter
-    ): void {
-        $userIdsBefore = [];
-        $managerIdsBefore = [];
-        $budgetIdsBefore = [];
-        $userIdsAfter = [];
-        $managerIdsAfter = [];
-        $budgetIdsAfter = [];
-
-        foreach ($projectUsers as $projectUser) {
-            $userIdsBefore[$projectUser->id] = $projectUser->id;
-        }
-
-        foreach ($projectManagerBefore as $managerBefore) {
-            $managerIdsBefore[$managerBefore->id] = $managerBefore->id;
-            if (in_array($managerBefore->id, $userIdsBefore)) {
-                unset($userIdsBefore[$managerBefore->id]);
-            }
-        }
-        foreach ($projectBudgetAccessBefore as $budgetBefore) {
-            $budgetIdsBefore[$budgetBefore->id] = $budgetBefore->id;
-            if (in_array($budgetBefore->id, $userIdsBefore)) {
-                unset($userIdsBefore[$budgetBefore->id]);
-            }
-        }
-        foreach ($projectUsersAfter as $projectUserAfter) {
-            $userIdsAfter[$projectUserAfter->id] = $projectUserAfter->id;
-        }
-
-        foreach ($projectManagerAfter as $managerAfter) {
-            $managerIdsAfter[$managerAfter->id] = $managerAfter->id;
-            // if added a new project manager, send notification to this user
-            if (!in_array($managerAfter->id, $managerIdsBefore)) {
-                $notificationTitle = __('notification.project.leader.add', [
-                    'project' => $project->name
-                ], $managerAfter->language);
-                $broadcastMessage = [
-                    'id' => Str::uuid()->toString(),
-                    'type' => 'success',
-                    'message' => $notificationTitle
-                ];
-                $this->notificationService->setTitle($notificationTitle);
-                $this->notificationService->setIcon('green');
-                $this->notificationService->setPriority(3);
-                $this->notificationService->setNotificationConstEnum(NotificationEnum::NOTIFICATION_PROJECT);
-                $this->notificationService->setBroadcastMessage($broadcastMessage);
-                $this->notificationService->setProjectId($project->id);
-                $this->notificationService->setNotificationTo($managerAfter);
-                $this->notificationService->createNotification();
-            }
-            if (in_array($managerAfter->id, $userIdsAfter)) {
-                unset($userIdsAfter[$managerAfter->id]);
-            }
-        }
-
-        foreach ($projectBudgetAccessAfter as $budgetAfter) {
-            $budgetIdsAfter[$budgetAfter->id] = $budgetAfter->id;
-            // if added a new project manager, send notification to this user
-            if (!in_array($budgetAfter->id, $budgetIdsBefore)) {
-                $notificationTitle = __('notification.project.budget.add', [
-                    'project' => $project->name
-                ], $budgetAfter->language);
-                $broadcastMessage = [
-                    'id' => Str::uuid()->toString(),
-                    'type' => 'success',
-                    'message' => $notificationTitle
-                ];
-                $this->notificationService->setTitle($notificationTitle);
-                $this->notificationService->setIcon('green');
-                $this->notificationService->setPriority(3);
-                $this->notificationService->setNotificationConstEnum(NotificationEnum::NOTIFICATION_BUDGET_MONEY_SOURCE_AUTH_CHANGED);
-                $this->notificationService->setBroadcastMessage($broadcastMessage);
-                $this->notificationService->setProjectId($project->id);
-                $this->notificationService->setNotificationTo($budgetAfter);
-                $this->notificationService->createNotification();
-            }
-            if (in_array($budgetAfter->id, $userIdsAfter)) {
-                unset($userIdsAfter[$budgetAfter->id]);
-            }
-        }
-
-        foreach ($managerIdsBefore as $managerBefore) {
-            if (!in_array($managerBefore, $managerIdsAfter)) {
-                $user = User::find($managerBefore);
-                if ($user === null) {
-                    continue;
-                }
-                $notificationTitle = __('notification.project.leader.remove', [
-                    'project' => $project->name
-                ], $user->language);
-                $broadcastMessage = [
-                    'id' => Str::uuid()->toString(),
-                    'type' => 'error',
-                    'message' => $notificationTitle
-                ];
-                $this->notificationService->setTitle($notificationTitle);
-                $this->notificationService->setIcon('red');
-                $this->notificationService->setPriority(2);
-                $this->notificationService->setNotificationConstEnum(NotificationEnum::NOTIFICATION_PROJECT);
-                $this->notificationService->setBroadcastMessage($broadcastMessage);
-                $this->notificationService->setProjectId($project->id);
-                $this->notificationService->setNotificationTo($user);
-                $this->notificationService->createNotification();
-            }
-        }
-        foreach ($budgetIdsBefore as $budgetBefore) {
-            if (!in_array($budgetBefore, $budgetIdsAfter)) {
-                $user = User::find($budgetBefore);
-                if ($user === null) {
-                    continue;
-                }
-                $notificationTitle = __('notification.project.budget.remove', [
-                    'project' => $project->name
-                ], $user->language);
-                $broadcastMessage = [
-                    'id' => Str::uuid()->toString(),
-                    'type' => 'error',
-                    'message' => $notificationTitle
-                ];
-                $this->notificationService->setTitle($notificationTitle);
-                $this->notificationService->setIcon('red');
-                $this->notificationService->setPriority(2);
-                $this->notificationService->setNotificationConstEnum(NotificationEnum::NOTIFICATION_BUDGET_MONEY_SOURCE_AUTH_CHANGED);
-                $this->notificationService->setBroadcastMessage($broadcastMessage);
-                $this->notificationService->setProjectId($project->id);
-                $this->notificationService->setNotificationTo($user);
-                $this->notificationService->createNotification();
-            }
-        }
-        foreach ($userIdsAfter as $userIdAfter) {
-            if (!in_array($userIdAfter, $userIdsBefore)) {
-                $user = User::find($userIdAfter);
-                if ($user === null) {
-                    continue;
-                }
-                $notificationTitle = __('notification.project.member.add', [
-                    'project' => $project->name
-                ], $user->language);
-                $broadcastMessage = [
-                    'id' => Str::uuid()->toString(),
-                    'type' => 'success',
-                    'message' => $notificationTitle
-                ];
-                $this->notificationService->setTitle($notificationTitle);
-                $this->notificationService->setIcon('green');
-                $this->notificationService->setPriority(3);
-                $this->notificationService->setNotificationConstEnum(NotificationEnum::NOTIFICATION_PROJECT);
-                $this->notificationService->setBroadcastMessage($broadcastMessage);
-                $this->notificationService->setProjectId($project->id);
-                $this->notificationService->setNotificationTo($user);
-                $this->notificationService->createNotification();
-
-                $this->changeService->saveFromBuilder(
-                    $this->changeService
-                        ->createBuilder()
-                        ->setModelClass(Project::class)
-                        ->setModelId($project->id)
-                        ->setTranslationKey('User added to project team')
-                        ->setTranslationKeyPlaceholderValues([$user->first_name . ' ' . $user->last_name])
-                );
-            }
-        }
-        foreach ($userIdsBefore as $userIdBefore) {
-            if (!in_array($userIdBefore, $userIdsAfter)) {
-                $user = User::find($userIdBefore);
-                if ($user === null) {
-                    continue;
-                }
-                $notificationTitle = __('notification.project.member.remove', [
-                    'project' => $project->name
-                ], $user->language);
-                $broadcastMessage = [
-                    'id' => Str::uuid()->toString(),
-                    'type' => 'success',
-                    'message' => $notificationTitle
-                ];
-                $this->notificationService->setTitle($notificationTitle);
-                $this->notificationService->setIcon('red');
-                $this->notificationService->setPriority(2);
-                $this->notificationService->setNotificationConstEnum(NotificationEnum::NOTIFICATION_PROJECT);
-                $this->notificationService->setBroadcastMessage($broadcastMessage);
-                $this->notificationService->setProjectId($project->id);
-                $this->notificationService->setNotificationTo($user);
-                $this->notificationService->createNotification();
-
-                $this->changeService->saveFromBuilder(
-                    $this->changeService
-                        ->createBuilder()
-                        ->setType('public_changes')
-                        ->setModelClass(Project::class)
-                        ->setModelId($project->id)
-                        ->setTranslationKey('User removed from project team')
-                        ->setTranslationKeyPlaceholderValues([$user->first_name . ' ' . $user->last_name])
-                );
-            }
-        }
-    }
 
     public function duplicate(
         Project $project,

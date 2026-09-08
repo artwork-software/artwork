@@ -2,13 +2,11 @@
 
 namespace App\Http\Controllers;
 
-use Artwork\Modules\Project\Events\UpdateProjectComponentData;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Models\Component;
 use Artwork\Modules\Project\Models\ProjectComponentValue;
-use Artwork\Modules\Project\Services\ProjectComponentValueNormalizer;
+use Artwork\Modules\Project\Services\ProjectComponentValueService;
 use Artwork\Modules\Project\Services\ProjectComponentVisibilityService;
-use Artwork\Modules\Shift\Support\SafeBroadcast;
 use Artwork\Modules\User\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -16,36 +14,9 @@ use Illuminate\Support\Facades\Auth;
 
 class ProjectComponentValueController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index(): void
-    {
-        //
-    }
-
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create(): void
-    {
-        //
-    }
-
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request): void
-    {
-        //
-    }
-
-    /**
-     * Display the specified resource.
-     */
-    public function show(ProjectComponentValue $projectComponentValue): void
-    {
-        //
+    public function __construct(
+        private readonly ProjectComponentValueService $componentValueService,
+    ) {
     }
 
     /**
@@ -73,17 +44,6 @@ class ProjectComponentValueController extends Controller
     }
 
     /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(ProjectComponentValue $projectComponentValue): void
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    /**
      * Gibt den gespeicherten Wert im Format von project_value zurück: der Speichernde übernimmt ihn
      * lokal (der Broadcast geht toOthers und trägt nur Kennungen).
      */
@@ -92,7 +52,6 @@ class ProjectComponentValueController extends Controller
         Project $project,
         Component $component,
         ProjectComponentVisibilityService $visibilityService,
-        ProjectComponentValueNormalizer $normalizer,
     ): JsonResponse {
         /** @var \Artwork\Modules\User\Models\User $user */
         $user = $request->user();
@@ -105,32 +64,14 @@ class ProjectComponentValueController extends Controller
 
         $request->validate(['data' => ['present', 'nullable', 'array']]);
 
-        // Gleiche Typprüfung wie beim externen Zugriff (ExternalComponentValueService)
-        $valueInput = $normalizer->normalize($component, $request->input('data'));
-
-        // Unique-Index (project_id, component_id): parallele Autosaves erzeugen keine Duplikate mehr.
-        $value = ProjectComponentValue::query()->updateOrCreate(
-            ['project_id' => $project->id, 'component_id' => $component->id],
-            ['data' => $valueInput]
+        // toOthers: ein eigenes Nachladen könnte inzwischen weiter Getipptes überschreiben.
+        $value = $this->componentValueService->updateValue(
+            $project,
+            $component,
+            $request->input('data'),
+            toOthers: true,
         );
 
-        // Nur bei echter Änderung senden (Fokuswechsel ohne Änderung erzeugten sonst je Feld einen
-        // Broadcast und bei jedem Betrachter einen Nachlade-Request). toOthers: der Speichernde
-        // übernimmt die Antwort; ein eigenes Nachladen könnte inzwischen weiter Getipptes überschreiben.
-        if ($value->wasRecentlyCreated || $value->wasChanged('data')) {
-            // SafeBroadcast: ein WebSocket-Ausfall macht den bereits gespeicherten Wert nicht zur 500
-            // (Checkbox/DropDown würden sonst zurückspringen und Nutzer:innen wiederholen)
-            SafeBroadcast::send(new UpdateProjectComponentData($value, $project->id), toOthers: true);
-        }
-
         return response()->json(['project_value' => $value]);
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(ProjectComponentValue $projectComponentValue): void
-    {
-        //
     }
 }

@@ -6,21 +6,17 @@ use Artwork\Modules\ExternalAccess\Exceptions\ComponentNotExternallyWritableExce
 use Artwork\Modules\ExternalAccess\Exceptions\ComponentNotInTabException;
 use Artwork\Modules\ExternalAccess\Models\ExternalAccess;
 use Artwork\Modules\Project\Enum\ProjectTabComponentEnum;
-use Artwork\Modules\Project\Events\UpdateProjectComponentData;
 use Artwork\Modules\Project\Models\Component;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Models\ProjectComponentValue;
 use Artwork\Modules\Project\Models\ProjectTab;
-use Artwork\Modules\Project\Services\ProjectComponentValueNormalizer;
-use Artwork\Modules\Shift\Support\SafeBroadcast;
-use Illuminate\Database\DatabaseManager;
+use Artwork\Modules\Project\Services\ProjectComponentValueService;
 
 class ExternalComponentValueService
 {
     public function __construct(
         private readonly ExternalScopeResolver $scopeResolver,
-        private readonly DatabaseManager $db,
-        private readonly ProjectComponentValueNormalizer $normalizer,
+        private readonly ProjectComponentValueService $componentValueService,
     ) {
     }
 
@@ -44,48 +40,19 @@ class ExternalComponentValueService
             throw new ComponentNotInTabException($component, $tab);
         }
 
-        // Gleiche Typprüfung wie intern (ProjectComponentValueController)
-        $newData = $this->normalizer->normalize($component, $data);
-
-        $valueChanged = false;
-        $value = $this->db->transaction(function () use ($external, $project, $component, $newData, &$valueChanged) {
-            $previousValue = ProjectComponentValue::query()
-                ->where('project_id', $project->id)
-                ->where('component_id', $component->id)
-                ->lockForUpdate()
-                ->first();
-
-            $oldData = $previousValue?->data;
-
-            if ($previousValue === null) {
-                $value = ProjectComponentValue::create([
-                    'project_id' => $project->id,
-                    'component_id' => $component->id,
-                    'data' => $newData,
-                ]);
-            } else {
-                $previousValue->update(['data' => $newData]);
-                $value = $previousValue;
-            }
-
-            $this->logExternalEdit(
+        $value = $this->componentValueService->updateValue(
+            $project,
+            $component,
+            $data,
+            fn (ProjectComponentValue $value, ?array $oldData) => $this->logExternalEdit(
                 external: $external,
                 project: $project,
                 component: $component,
                 value: $value,
                 oldData: $oldData,
-                newData: $newData,
-            );
-
-            $valueChanged = $previousValue === null || $value->wasChanged('data');
-
-            return $value;
-        });
-
-        // Nach dem Commit und nur bei echter Änderung: interne Clients laden den Wert daraufhin nach
-        if ($valueChanged) {
-            $this->broadcastUpdate($value, $project);
-        }
+                newData: $value->data,
+            ),
+        );
 
         // Keine Benachrichtigung pro Feld: Einladende werden erst beim expliziten
         // "Daten absenden" (ExternalTabSubmissionService) gesammelt informiert.
@@ -113,14 +80,5 @@ class ExternalComponentValueService
                 'user_agent' => request()->userAgent(),
             ])
             ->log('component_value_updated');
-    }
-
-    private function broadcastUpdate(ProjectComponentValue $value, Project $project): void
-    {
-        // Re-use the existing event so internal users viewing the same tab receive
-        // the update in parallel. Channel auth (routes/channels.php) uses the web
-        // guard, so external users cannot subscribe to these channels themselves.
-        // Abgesichert: ein WebSocket-Ausfall macht die bereits gespeicherte Änderung nicht zur 500
-        SafeBroadcast::send(new UpdateProjectComponentData($value, $project->id));
     }
 }

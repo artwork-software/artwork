@@ -14,6 +14,10 @@ use Illuminate\Database\Eloquent\Relations\MorphPivot;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Auth;
 
+/**
+ * @property int|null $shift_qualification_id
+ * @property bool $is_overbooked
+ */
 class ShiftWorker extends MorphPivot
 {
     use SoftDeletes;

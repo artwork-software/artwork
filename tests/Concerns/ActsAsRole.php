@@ -6,6 +6,7 @@ use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Artwork\Modules\Role\Enums\RoleEnum;
 use Artwork\Modules\User\Models\User;
 use Database\Seeders\RolesAndPermissionsSeeder;
+use Laravel\Passport\Passport;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 
@@ -32,6 +33,22 @@ trait ActsAsRole
 
     protected function actingAsUserWith(string|array $permissions, ?User $user = null): User
     {
+        $user = $this->userWithPermissions($permissions, $user);
+        $this->actingAs($user);
+
+        return $user;
+    }
+
+    protected function actingAsApiUserWith(string|array $permissions = [], ?User $user = null): User
+    {
+        $user = $this->userWithPermissions($permissions, $user);
+        Passport::actingAs($user, ['app']);
+
+        return $user;
+    }
+
+    private function userWithPermissions(string|array $permissions, ?User $user): User
+    {
         $this->ensureRolesAndPermissionsSeeded();
         $user = $user ?? User::factory()->create();
 
@@ -40,8 +57,6 @@ trait ActsAsRole
             Permission::findOrCreate($name, 'web');
             $user->givePermissionTo($name);
         }
-
-        $this->actingAs($user);
 
         return $user;
     }

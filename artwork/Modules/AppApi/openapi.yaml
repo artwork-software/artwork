@@ -1,0 +1,1465 @@
+openapi: 3.0.3
+info:
+  title: Artwork App API
+  description: |
+    Contract of the artwork app API (`/api/app/v1`), consumed by the artwork app.
+    Maintained by hand: the app generates its client from this file and
+    `tests/Feature/AppApi/AppContractTest.php` validates every endpoint against it.
+
+    The machine API (`/api/v1`) is documented separately — see `artwork:export-openapi`.
+
+    ## Authentication
+
+    `POST /api/app/v1/auth/login` issues a Passport personal access token with the `app`
+    scope. Every other endpoint expects it as `Authorization: Bearer {token}`; download
+    links are signed URLs and need no token.
+  version: 1.0.0
+  contact:
+    name: Artwork Support
+servers:
+  - url: https://ihre-artwork-domain.de
+    description: Artwork instance
+security:
+  - bearerAuth: []
+paths:
+  /api/app/v1/auth/login:
+    post:
+      tags: [App]
+      operationId: appLogin
+      summary: Log in and receive an app API token
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/AppLoginRequest' }
+      responses:
+        '200':
+          description: Token issued
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AppLoginResponse' }
+        '401':
+          description: Invalid credentials
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+        '422':
+          description: Two-factor code required or invalid
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AppTwoFactorRequiredResponse' }
+  /api/app/v1/me:
+    get:
+      tags: [App]
+      operationId: appMe
+      summary: The authenticated user
+      responses:
+        '200':
+          description: User payload
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AppMeResponse' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+  /api/app/v1/auth/logout:
+    post:
+      tags: [App]
+      operationId: appLogout
+      summary: Revoke the current token
+      responses:
+        '204': { description: Token revoked }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+  /api/app/v1/dashboard:
+    get:
+      tags: [App]
+      operationId: appDashboard
+      summary: Home screen payload
+      responses:
+        '200':
+          description: Dashboard blocks
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AppDashboardResponse' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+  /api/app/v1/shift-plan:
+    get:
+      tags: [App]
+      operationId: appShiftPlan
+      summary: The user's own shift plan for a date range
+      parameters:
+        - { $ref: '#/components/parameters/RangeStart' }
+        - { $ref: '#/components/parameters/RangeEnd' }
+      responses:
+        '200':
+          description: Days with shifts and totals
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AppShiftPlanResponse' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+  /api/app/v1/shift-plan/shifts/{shift}:
+    get:
+      tags: [App]
+      operationId: appShiftPlanShift
+      summary: A single shift of the user's own plan (deeplinks)
+      parameters:
+        - { name: shift, in: path, required: true, schema: { type: integer } }
+      responses:
+        '200':
+          description: The shift in the plan-day shape
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AppShiftPlanShiftResponse' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /api/app/v1/calendar:
+    get:
+      tags: [App]
+      operationId: appCalendar
+      summary: Room occupancy calendar for a date range
+      parameters:
+        - { $ref: '#/components/parameters/RangeStart' }
+        - { $ref: '#/components/parameters/RangeEnd' }
+      responses:
+        '200':
+          description: Days with events
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AppCalendarResponse' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+  /api/app/v1/shift-list:
+    get:
+      tags: [App]
+      operationId: appShiftList
+      summary: Dienstplan list view (day → room → shifts) for a date range
+      parameters:
+        - { $ref: '#/components/parameters/RangeStart' }
+        - { $ref: '#/components/parameters/RangeEnd' }
+      responses:
+        '200':
+          description: Days with rooms and staffing counts
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AppShiftListResponse' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+  /api/app/v1/projects:
+    get:
+      tags: [App]
+      operationId: appProjects
+      summary: Projects the user may view
+      responses:
+        '200':
+          description: Project list
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AppProjectsResponse' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+  /api/app/v1/projects/{project}:
+    get:
+      tags: [App]
+      operationId: appProject
+      summary: Project header (state, team, tabs)
+      parameters:
+        - { $ref: '#/components/parameters/ProjectId' }
+      responses:
+        '200':
+          description: Project detail
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AppProjectResponse' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /api/app/v1/projects/{project}/tabs/{projectTab}:
+    get:
+      tags: [App]
+      operationId: appProjectTab
+      summary: One tab's component tree with values
+      parameters:
+        - { $ref: '#/components/parameters/ProjectId' }
+        - { name: projectTab, in: path, required: true, schema: { type: integer } }
+      responses:
+        '200':
+          description: Tab components
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AppProjectTabResponse' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /api/app/v1/projects/{project}/tabs/{projectTab}/components/{component}:
+    patch:
+      tags: [App]
+      operationId: appUpdateComponentValue
+      summary: Update a custom component's value
+      parameters:
+        - { $ref: '#/components/parameters/ProjectId' }
+        - { name: projectTab, in: path, required: true, schema: { type: integer } }
+        - { name: component, in: path, required: true, schema: { type: integer } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/AppComponentValueUpdateRequest' }
+      responses:
+        '200':
+          description: Stored value
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AppComponentValueResponse' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+  /api/app/v1/projects/{project}/events:
+    post:
+      tags: [App]
+      operationId: appCreateEvent
+      summary: Create an event in the project
+      parameters:
+        - { $ref: '#/components/parameters/ProjectId' }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/AppEventRequestBody' }
+      responses:
+        '201':
+          description: Created event
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AppEventResponse' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+  /api/app/v1/projects/{project}/events/{event}:
+    get:
+      tags: [App]
+      operationId: appEvent
+      summary: One event with the editor's picker options
+      parameters:
+        - { $ref: '#/components/parameters/ProjectId' }
+        - { name: event, in: path, required: true, schema: { type: integer } }
+      responses:
+        '200':
+          description: Event with options
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AppEventShowResponse' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    patch:
+      tags: [App]
+      operationId: appUpdateEvent
+      summary: Update an event
+      parameters:
+        - { $ref: '#/components/parameters/ProjectId' }
+        - { name: event, in: path, required: true, schema: { type: integer } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/AppEventRequestBody' }
+      responses:
+        '200':
+          description: Updated event
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AppEventResponse' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+  /api/app/v1/projects/{project}/shifts:
+    post:
+      tags: [App]
+      operationId: appCreateShift
+      summary: Create a shift in the project
+      parameters:
+        - { $ref: '#/components/parameters/ProjectId' }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/AppShiftRequestBody' }
+      responses:
+        '201':
+          description: Created shift
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AppShiftResponse' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+  /api/app/v1/projects/{project}/shifts/{shift}:
+    get:
+      tags: [App]
+      operationId: appShift
+      summary: One shift with the editor's picker options
+      parameters:
+        - { $ref: '#/components/parameters/ProjectId' }
+        - { $ref: '#/components/parameters/ShiftId' }
+      responses:
+        '200':
+          description: Shift with options
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AppShiftShowResponse' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    patch:
+      tags: [App]
+      operationId: appUpdateShift
+      summary: Update a shift
+      parameters:
+        - { $ref: '#/components/parameters/ProjectId' }
+        - { $ref: '#/components/parameters/ShiftId' }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/AppShiftRequestBody' }
+      responses:
+        '200':
+          description: Updated shift
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AppShiftResponse' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+    delete:
+      tags: [App]
+      operationId: appDeleteShift
+      summary: Delete a shift (assignments cascade)
+      parameters:
+        - { $ref: '#/components/parameters/ProjectId' }
+        - { $ref: '#/components/parameters/ShiftId' }
+      responses:
+        '204': { description: Deleted }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /api/app/v1/projects/{project}/shifts/{shift}/workers:
+    get:
+      tags: [App]
+      operationId: appShiftWorkers
+      summary: Assignable workers for the shift's craft
+      parameters:
+        - { $ref: '#/components/parameters/ProjectId' }
+        - { $ref: '#/components/parameters/ShiftId' }
+        - { $ref: '#/components/parameters/PickerQuery' }
+      responses:
+        '200':
+          description: Candidate workers (max 30 — narrow with q)
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AppWorkersResponse' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    post:
+      tags: [App]
+      operationId: appAssignWorker
+      summary: Assign a worker to the shift
+      parameters:
+        - { $ref: '#/components/parameters/ProjectId' }
+        - { $ref: '#/components/parameters/ShiftId' }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/AppWorkerAssignRequest' }
+      responses:
+        '201':
+          description: Assigned; fresh shift returned
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AppShiftResponse' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409':
+          description: Function fully staffed — repeat with overbook=true to confirm
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+    delete:
+      tags: [App]
+      operationId: appRemoveWorker
+      summary: Remove a worker from the shift
+      parameters:
+        - { $ref: '#/components/parameters/ProjectId' }
+        - { $ref: '#/components/parameters/ShiftId' }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/AppWorkerRemoveRequest' }
+      responses:
+        '200':
+          description: Removed; fresh shift returned
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AppShiftResponse' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+  /api/app/v1/projects/{project}/comments:
+    post:
+      tags: [App]
+      operationId: appCreateComment
+      summary: Add a project comment
+      parameters:
+        - { $ref: '#/components/parameters/ProjectId' }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/AppCommentRequest' }
+      responses:
+        '201':
+          description: Created comment
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AppCommentResponse' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+  /api/app/v1/projects/{project}/checklists/{checklist}/tasks:
+    post:
+      tags: [App]
+      operationId: appCreateTask
+      summary: Add a task to a checklist
+      parameters:
+        - { $ref: '#/components/parameters/ProjectId' }
+        - { name: checklist, in: path, required: true, schema: { type: integer } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/AppTaskRequest' }
+      responses:
+        '201':
+          description: Created task
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AppTaskResponse' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+  /api/app/v1/projects/{project}/tasks/{task}/done:
+    patch:
+      tags: [App]
+      operationId: appToggleTask
+      summary: Toggle a task done/undone
+      parameters:
+        - { $ref: '#/components/parameters/ProjectId' }
+        - { name: task, in: path, required: true, schema: { type: integer } }
+      responses:
+        '200':
+          description: Updated task
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AppTaskResponse' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /api/app/v1/projects/{project}/team/candidates:
+    get:
+      tags: [App]
+      operationId: appTeamCandidates
+      summary: Users not yet on the project team
+      parameters:
+        - { $ref: '#/components/parameters/ProjectId' }
+        - { $ref: '#/components/parameters/PickerQuery' }
+      responses:
+        '200':
+          description: Candidates (max 30 — narrow with q)
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AppCandidatesResponse' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+  /api/app/v1/projects/{project}/team:
+    post:
+      tags: [App]
+      operationId: appAddTeamMember
+      summary: Add a user to the project team
+      parameters:
+        - { $ref: '#/components/parameters/ProjectId' }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/AppTeamStoreRequest' }
+      responses:
+        '201':
+          description: Added; full roster returned
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AppTeamResponse' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+  /api/app/v1/projects/{project}/team/{user}:
+    patch:
+      tags: [App]
+      operationId: appUpdateTeamMember
+      summary: Update a team member's rights
+      parameters:
+        - { $ref: '#/components/parameters/ProjectId' }
+        - { name: user, in: path, required: true, schema: { type: integer } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/AppTeamRightsRequest' }
+      responses:
+        '200':
+          description: Updated; full roster returned
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AppTeamResponse' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    delete:
+      tags: [App]
+      operationId: appRemoveTeamMember
+      summary: Remove a user from the project team
+      parameters:
+        - { $ref: '#/components/parameters/ProjectId' }
+        - { name: user, in: path, required: true, schema: { type: integer } }
+      responses:
+        '200':
+          description: Removed; full roster returned
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AppTeamResponse' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /api/app/v1/files/{projectFile}:
+    get:
+      tags: [App]
+      operationId: appDownloadFile
+      summary: Download a project file via a short-lived signed URL
+      security: []
+      parameters:
+        - { name: projectFile, in: path, required: true, schema: { type: integer } }
+        - { name: signature, in: query, required: true, schema: { type: string } }
+        - { name: expires, in: query, required: true, schema: { type: string } }
+      responses:
+        '200':
+          description: File contents
+          content:
+            application/octet-stream:
+              schema: { type: string, format: binary }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Personal access token from `/auth/login`, sent as `Bearer {token}`
+  responses:
+    Forbidden:
+      description: Forbidden - Insufficient permissions
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            message: "Sie haben keine Berechtigung, auf diese Ressource zuzugreifen."
+    NotFound:
+      description: Not Found - Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            message: "Die angeforderte Ressource wurde nicht gefunden."
+    Unauthenticated:
+      description: Missing or invalid token
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    ValidationError:
+      description: Validation failed
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [message]
+            properties:
+              message: { type: string }
+              errors:
+                type: object
+                additionalProperties:
+                  type: array
+                  items: { type: string }
+  parameters:
+    RangeStart:
+      name: start
+      in: query
+      required: false
+      description: Y-m-d; defaults to the current week. Max range 62 days.
+      schema: { type: string, format: date }
+    RangeEnd:
+      name: end
+      in: query
+      required: false
+      description: Y-m-d; required with start, must not lie before it.
+      schema: { type: string, format: date }
+    ProjectId:
+      name: project
+      in: path
+      required: true
+      schema: { type: integer }
+    ShiftId:
+      name: shift
+      in: path
+      required: true
+      schema: { type: integer }
+    PickerQuery:
+      name: q
+      in: query
+      required: false
+      description: Case-insensitive name filter; responses cap at 30 entries.
+      schema: { type: string }
+  schemas:
+    Error:
+      type: object
+      properties:
+        message:
+          type: string
+          description: Error message
+      required:
+        - message
+    AppUser:
+      type: object
+      required: [id, name, email, permissions]
+      properties:
+        id: { type: integer }
+        name: { type: string }
+        email: { type: string }
+        permissions:
+          type: object
+          required: [can_view_shift_plan]
+          properties:
+            can_view_shift_plan: { type: boolean }
+    AppLoginRequest:
+      type: object
+      required: [email, password, device_name]
+      properties:
+        email: { type: string, format: email }
+        password: { type: string }
+        device_name: { type: string, maxLength: 255 }
+        code: { type: string, nullable: true, description: TOTP code when 2FA is enabled }
+        recovery_code: { type: string, nullable: true }
+    AppLoginResponse:
+      type: object
+      required: [token, user]
+      properties:
+        token: { type: string }
+        user: { $ref: '#/components/schemas/AppUser' }
+    AppTwoFactorRequiredResponse:
+      type: object
+      required: [message, two_factor_required]
+      properties:
+        message: { type: string }
+        two_factor_required: { type: boolean }
+        errors:
+          type: object
+          additionalProperties:
+            type: array
+            items: { type: string }
+    AppMeResponse:
+      type: object
+      required: [user]
+      properties:
+        user: { $ref: '#/components/schemas/AppUser' }
+    AppIdName:
+      type: object
+      required: [id, name]
+      properties:
+        id: { type: integer }
+        name: { type: string }
+    AppCraft:
+      type: object
+      required: [id, name, abbreviation, color]
+      properties:
+        id: { type: integer }
+        name: { type: string }
+        abbreviation: { type: string }
+        color: { type: string }
+    AppEventType:
+      type: object
+      required: [id, name, abbreviation, hex_code]
+      properties:
+        id: { type: integer }
+        name: { type: string }
+        abbreviation: { type: string }
+        hex_code: { type: string }
+    AppColorHoliday:
+      type: object
+      required: [name, color]
+      properties:
+        name: { type: string }
+        color: { type: string, nullable: true }
+    AppColleague:
+      type: object
+      required: [id, type, name]
+      properties:
+        id: { type: integer }
+        type: { type: string, enum: [user, freelancer, service_provider] }
+        name: { type: string }
+    AppPlanShift:
+      type: object
+      required: [id, name, start, end, break_minutes, description, is_committed, in_workflow, planned_working_hours, craft, event, project, room, colleagues]
+      properties:
+        id: { type: integer }
+        name: { type: string, nullable: true }
+        start: { type: string, example: '18:00' }
+        end: { type: string, example: '23:00' }
+        break_minutes: { type: integer }
+        description: { type: string, nullable: true }
+        is_committed: { type: boolean }
+        in_workflow: { type: boolean }
+        planned_working_hours: { type: string, example: '04:30', description: Always zero-padded HH:mm }
+        craft:
+          anyOf: [{ $ref: '#/components/schemas/AppCraft' }]
+          nullable: true
+        event:
+          anyOf: [{ $ref: '#/components/schemas/AppIdName' }]
+          nullable: true
+        project:
+          anyOf: [{ $ref: '#/components/schemas/AppIdName' }]
+          nullable: true
+        room:
+          anyOf: [{ $ref: '#/components/schemas/AppIdName' }]
+          nullable: true
+        colleagues:
+          type: array
+          items: { $ref: '#/components/schemas/AppColleague' }
+    AppIndividualTime:
+      type: object
+      required: [id, title, start_time, end_time, full_day]
+      properties:
+        id: { type: integer }
+        title: { type: string, nullable: true }
+        start_time: { type: string, nullable: true }
+        end_time: { type: string, nullable: true }
+        full_day: { type: boolean }
+    AppDayService:
+      type: object
+      required: [id, name, icon, hex_color]
+      properties:
+        id: { type: integer }
+        name: { type: string }
+        icon: { type: string, nullable: true }
+        hex_color: { type: string, nullable: true }
+    AppDayComment:
+      type: object
+      required: [id, comment, date]
+      properties:
+        id: { type: integer }
+        comment: { type: string, nullable: true }
+        date: { type: string, nullable: true }
+    AppShiftPlanDay:
+      type: object
+      required: [date, total_work_time, total_break_time, shifts, individual_times, day_services, holidays, comments]
+      properties:
+        date: { type: string, format: date }
+        total_work_time: { type: string, example: '07:30', description: Always zero-padded HH:mm }
+        total_break_time: { type: string, example: '00:30' }
+        shifts:
+          type: array
+          items: { $ref: '#/components/schemas/AppPlanShift' }
+        individual_times:
+          type: array
+          items: { $ref: '#/components/schemas/AppIndividualTime' }
+        day_services:
+          type: array
+          items: { $ref: '#/components/schemas/AppDayService' }
+        holidays:
+          type: array
+          items:
+            type: object
+            required: [name]
+            properties:
+              id: { type: integer, nullable: true }
+              name: { type: string }
+        comments:
+          type: array
+          items: { $ref: '#/components/schemas/AppDayComment' }
+    AppShiftPlanTotals:
+      type: object
+      required: [work_time, shift_count]
+      properties:
+        work_time: { type: string, example: '32:00' }
+        shift_count: { type: integer }
+    AppShiftPlanResponse:
+      type: object
+      required: [start, end, days, totals]
+      properties:
+        start: { type: string, format: date }
+        end: { type: string, format: date }
+        days:
+          type: array
+          items: { $ref: '#/components/schemas/AppShiftPlanDay' }
+        totals: { $ref: '#/components/schemas/AppShiftPlanTotals' }
+    AppShiftPlanShiftResponse:
+      type: object
+      required: [date, shift]
+      properties:
+        date: { type: string, format: date }
+        shift: { $ref: '#/components/schemas/AppPlanShift' }
+    AppDashboardEvent:
+      type: object
+      required: [id, name, start_time, end_time, event_type, project, room]
+      properties:
+        id: { type: integer }
+        name: { type: string, nullable: true }
+        start_time: { type: string, nullable: true }
+        end_time: { type: string, nullable: true }
+        event_type:
+          anyOf: [{ $ref: '#/components/schemas/AppEventType' }]
+          nullable: true
+        project:
+          anyOf: [{ $ref: '#/components/schemas/AppIdName' }]
+          nullable: true
+        room:
+          anyOf: [{ $ref: '#/components/schemas/AppIdName' }]
+          nullable: true
+    AppDashboardTask:
+      type: object
+      required: [id, name, description, deadline, checklist_name, project_name]
+      properties:
+        id: { type: integer }
+        name: { type: string }
+        description: { type: string, nullable: true }
+        deadline: { type: string, nullable: true }
+        checklist_name: { type: string, nullable: true }
+        project_name: { type: string, nullable: true }
+    AppTimelineRow:
+      type: object
+      required: [type, shift, event]
+      properties:
+        type: { type: string, enum: [shift, event] }
+        shift:
+          anyOf: [{ $ref: '#/components/schemas/AppPlanShift' }]
+          nullable: true
+        event:
+          anyOf: [{ $ref: '#/components/schemas/AppDashboardEvent' }]
+          nullable: true
+    AppDashboardResponse:
+      type: object
+      required: [date, today, events_today, timeline, tasks, unread_notifications]
+      properties:
+        date: { type: string, format: date }
+        today: { $ref: '#/components/schemas/AppShiftPlanDay' }
+        events_today:
+          type: array
+          items: { $ref: '#/components/schemas/AppDashboardEvent' }
+        next_shift:
+          anyOf: [{ $ref: '#/components/schemas/AppPlanShift' }]
+          nullable: true
+        timeline:
+          type: array
+          items: { $ref: '#/components/schemas/AppTimelineRow' }
+        tasks:
+          type: array
+          items: { $ref: '#/components/schemas/AppDashboardTask' }
+        unread_notifications: { type: integer }
+    AppCalendarEvent:
+      type: object
+      required: [id, name, description, start, end, all_day, event_type, project, room, status_color]
+      properties:
+        id: { type: integer }
+        name: { type: string, nullable: true }
+        description: { type: string, nullable: true }
+        start: { type: string }
+        end: { type: string }
+        all_day: { type: boolean }
+        event_type:
+          anyOf: [{ $ref: '#/components/schemas/AppEventType' }]
+          nullable: true
+        project:
+          anyOf: [{ $ref: '#/components/schemas/AppIdName' }]
+          nullable: true
+        room:
+          anyOf: [{ $ref: '#/components/schemas/AppIdName' }]
+          nullable: true
+        status_color: { type: string, nullable: true }
+    AppCalendarDay:
+      type: object
+      required: [date, holidays, events]
+      properties:
+        date: { type: string, format: date }
+        holidays:
+          type: array
+          items: { $ref: '#/components/schemas/AppColorHoliday' }
+        events:
+          type: array
+          items: { $ref: '#/components/schemas/AppCalendarEvent' }
+    AppCalendarResponse:
+      type: object
+      required: [start, end, days]
+      properties:
+        start: { type: string, format: date }
+        end: { type: string, format: date }
+        days:
+          type: array
+          items: { $ref: '#/components/schemas/AppCalendarDay' }
+    AppListWorker:
+      type: object
+      required: [id, type, name, is_unavailable]
+      properties:
+        id: { type: integer }
+        type: { type: string, enum: [user, freelancer, service_provider] }
+        name: { type: string }
+        is_unavailable: { type: boolean }
+    AppListShift:
+      type: object
+      required: [id, start, end, break_minutes, description, is_committed, in_workflow, craft, project, required_count, assigned_count, open_count, workers]
+      properties:
+        id: { type: integer }
+        start: { type: string }
+        end: { type: string }
+        break_minutes: { type: integer }
+        description: { type: string, nullable: true }
+        is_committed: { type: boolean }
+        in_workflow: { type: boolean }
+        craft:
+          anyOf: [{ $ref: '#/components/schemas/AppCraft' }]
+          nullable: true
+        project:
+          anyOf: [{ $ref: '#/components/schemas/AppIdName' }]
+          nullable: true
+        required_count: { type: integer }
+        assigned_count: { type: integer }
+        open_count: { type: integer }
+        workers:
+          type: array
+          items: { $ref: '#/components/schemas/AppListWorker' }
+    AppListRoom:
+      type: object
+      required: [id, name, shifts]
+      properties:
+        id: { type: integer, nullable: true, description: null for shifts without a room }
+        name: { type: string, nullable: true }
+        shifts:
+          type: array
+          items: { $ref: '#/components/schemas/AppListShift' }
+    AppListDay:
+      type: object
+      required: [date, holidays, rooms, open_count]
+      properties:
+        date: { type: string, format: date }
+        holidays:
+          type: array
+          items: { $ref: '#/components/schemas/AppColorHoliday' }
+        rooms:
+          type: array
+          items: { $ref: '#/components/schemas/AppListRoom' }
+        open_count: { type: integer }
+    AppShiftListResponse:
+      type: object
+      required: [start, end, days]
+      properties:
+        start: { type: string, format: date }
+        end: { type: string, format: date }
+        days:
+          type: array
+          items: { $ref: '#/components/schemas/AppListDay' }
+    AppProjectState:
+      type: object
+      required: [id, name, color]
+      properties:
+        id: { type: integer }
+        name: { type: string }
+        color: { type: string, nullable: true, description: 'Hex color (#rrggbb) or null' }
+    AppProjectListItem:
+      type: object
+      required: [id, name, is_group, state, team_count]
+      properties:
+        id: { type: integer }
+        name: { type: string }
+        is_group: { type: boolean }
+        state:
+          anyOf: [{ $ref: '#/components/schemas/AppProjectState' }]
+          nullable: true
+        team_count: { type: integer }
+    AppProjectsResponse:
+      type: object
+      required: [projects]
+      properties:
+        projects:
+          type: array
+          items: { $ref: '#/components/schemas/AppProjectListItem' }
+    AppRole:
+      type: object
+      required: [id, name]
+      properties:
+        id: { type: integer }
+        name: { type: string }
+    AppTeamMember:
+      type: object
+      required: [id, name, is_manager, can_write, access_budget, roles]
+      properties:
+        id: { type: integer }
+        name: { type: string }
+        is_manager: { type: boolean }
+        can_write: { type: boolean }
+        access_budget: { type: boolean }
+        roles:
+          type: array
+          items: { $ref: '#/components/schemas/AppRole' }
+    AppProjectDetail:
+      type: object
+      required: [id, name, is_group, artists, state, team, can_edit_team, project_roles, tabs]
+      properties:
+        id: { type: integer }
+        name: { type: string }
+        is_group: { type: boolean }
+        artists: { type: string, nullable: true }
+        state:
+          anyOf: [{ $ref: '#/components/schemas/AppProjectState' }]
+          nullable: true
+        team:
+          type: array
+          items: { $ref: '#/components/schemas/AppTeamMember' }
+        can_edit_team: { type: boolean }
+        project_roles:
+          type: array
+          items: { $ref: '#/components/schemas/AppRole' }
+        tabs:
+          type: array
+          items: { $ref: '#/components/schemas/AppIdName' }
+    AppProjectResponse:
+      type: object
+      required: [project]
+      properties:
+        project: { $ref: '#/components/schemas/AppProjectDetail' }
+    AppTabComponentChild:
+      type: object
+      required: [component_id, type, name, data, value, is_writable]
+      properties:
+        component_id: { type: integer }
+        type:
+          type: string
+          description: >-
+            Kebab-case domain name. Custom: title, text-field, text-area, link,
+            checkbox, dropdown, link-list, separator, disclosure. System:
+            project-title, project-state, project-team, project-attributes,
+            project-period, shift-information, shift-contacts, budget-deadline,
+            budget-information, calendar, shifts, checklist, checklist-all,
+            comments, comments-all, documents, documents-all.
+        name: { type: string, nullable: true }
+        data:
+          type: object
+          nullable: true
+          additionalProperties: true
+        value:
+          type: object
+          nullable: true
+          additionalProperties: true
+          description: >-
+            Custom components carry the stored value ('text' keys are plain
+            text). System components carry a server-built payload — see the
+            App*Value schemas for the shape per type.
+        is_writable: { type: boolean }
+    AppTabComponent:
+      allOf:
+        - { $ref: '#/components/schemas/AppTabComponentChild' }
+        - type: object
+          required: [note, children]
+          properties:
+            note: { type: string, nullable: true }
+            children:
+              type: array
+              items: { $ref: '#/components/schemas/AppTabComponentChild' }
+    AppProjectTabResponse:
+      type: object
+      required: [tab, components]
+      properties:
+        tab: { $ref: '#/components/schemas/AppIdName' }
+        components:
+          type: array
+          items: { $ref: '#/components/schemas/AppTabComponent' }
+    AppComponentValueUpdateRequest:
+      type: object
+      required: [data]
+      properties:
+        data:
+          type: object
+          additionalProperties: true
+          description: Plain text in 'text' keys — the server owns the storage format.
+    AppComponentValueResponse:
+      type: object
+      required: [component_id]
+      properties:
+        component_id: { type: integer }
+        value:
+          type: object
+          nullable: true
+          additionalProperties: true
+    AppEvent:
+      type: object
+      required: [id, name, start, end, all_day, event_type, room, status_color, can_edit]
+      properties:
+        id: { type: integer }
+        name: { type: string, nullable: true }
+        start: { type: string }
+        end: { type: string }
+        all_day: { type: boolean }
+        event_type:
+          anyOf: [{ $ref: '#/components/schemas/AppEventType' }]
+          nullable: true
+        room:
+          anyOf: [{ $ref: '#/components/schemas/AppIdName' }]
+          nullable: true
+        status_color: { type: string, nullable: true }
+        can_edit: { type: boolean }
+    AppEventRequestBody:
+      type: object
+      required: [start, end, all_day, event_type_id]
+      properties:
+        name: { type: string, nullable: true, maxLength: 255 }
+        start: { type: string }
+        end: { type: string }
+        all_day: { type: boolean }
+        room_id: { type: integer, nullable: true }
+        event_type_id: { type: integer }
+    AppEventResponse:
+      type: object
+      required: [event]
+      properties:
+        event: { $ref: '#/components/schemas/AppEvent' }
+    AppEventShowResponse:
+      type: object
+      required: [event, rooms, event_types]
+      properties:
+        event: { $ref: '#/components/schemas/AppEvent' }
+        rooms:
+          type: array
+          items: { $ref: '#/components/schemas/AppIdName' }
+        event_types:
+          type: array
+          items: { $ref: '#/components/schemas/AppEventType' }
+    AppShiftWorker:
+      type: object
+      required: [id, type, name, qualification_id, is_overbooked]
+      properties:
+        id: { type: integer }
+        type: { type: string, enum: [user, freelancer, service_provider] }
+        name: { type: string }
+        qualification_id: { type: integer, nullable: true }
+        is_overbooked: { type: boolean }
+    AppQualificationSlot:
+      type: object
+      required: [id, name, required, assigned, overbooked]
+      properties:
+        id: { type: integer }
+        name: { type: string, nullable: true }
+        required: { type: integer }
+        assigned: { type: integer, description: Regular bookings only }
+        overbooked: { type: integer }
+    AppProjectShift:
+      type: object
+      required: [id, date, end_date, start, end, break_minutes, description, craft, room, event, is_committed, required_count, assigned_count, workers, qualifications]
+      properties:
+        id: { type: integer }
+        date: { type: string, format: date, nullable: true }
+        end_date: { type: string, format: date, nullable: true }
+        start: { type: string }
+        end: { type: string }
+        break_minutes: { type: integer }
+        description: { type: string, nullable: true }
+        craft:
+          anyOf: [{ $ref: '#/components/schemas/AppCraft' }]
+          nullable: true
+        room:
+          anyOf: [{ $ref: '#/components/schemas/AppIdName' }]
+          nullable: true
+        event: { type: string, nullable: true, description: Event name }
+        is_committed: { type: boolean }
+        required_count: { type: integer }
+        assigned_count: { type: integer }
+        workers:
+          type: array
+          items: { $ref: '#/components/schemas/AppShiftWorker' }
+        qualifications:
+          type: array
+          items: { $ref: '#/components/schemas/AppQualificationSlot' }
+    AppShiftRequestBody:
+      type: object
+      required: [day, start, end, break_minutes, craft_id, qualifications]
+      properties:
+        day: { type: string, format: date }
+        start: { type: string, example: '18:00' }
+        end: { type: string, example: '23:00' }
+        break_minutes: { type: integer, minimum: 0, maximum: 1440 }
+        description: { type: string, nullable: true, maxLength: 1000 }
+        craft_id: { type: integer }
+        room_id: { type: integer, nullable: true }
+        qualifications:
+          type: array
+          items:
+            type: object
+            required: [shift_qualification_id, value]
+            properties:
+              shift_qualification_id: { type: integer }
+              value: { type: integer, minimum: 0, maximum: 99 }
+    AppShiftResponse:
+      type: object
+      required: [shift]
+      properties:
+        shift: { $ref: '#/components/schemas/AppProjectShift' }
+    AppShiftShowResponse:
+      type: object
+      required: [shift, overbooking_allowed, crafts, rooms, shift_qualifications]
+      properties:
+        shift: { $ref: '#/components/schemas/AppProjectShift' }
+        overbooking_allowed: { type: boolean }
+        crafts:
+          type: array
+          items: { $ref: '#/components/schemas/AppCraft' }
+        rooms:
+          type: array
+          items: { $ref: '#/components/schemas/AppIdName' }
+        shift_qualifications:
+          type: array
+          items: { $ref: '#/components/schemas/AppIdName' }
+    AppWorkerOption:
+      type: object
+      required: [id, type, name]
+      properties:
+        id: { type: integer }
+        type: { type: string, enum: [user, freelancer, service_provider] }
+        name: { type: string }
+    AppWorkersResponse:
+      type: object
+      required: [workers, has_more]
+      properties:
+        workers:
+          type: array
+          items: { $ref: '#/components/schemas/AppWorkerOption' }
+        has_more: { type: boolean }
+    AppWorkerAssignRequest:
+      type: object
+      required: [worker_id, worker_type, shift_qualification_id]
+      properties:
+        worker_id: { type: integer }
+        worker_type: { type: string, enum: [user, freelancer, service_provider] }
+        shift_qualification_id: { type: integer }
+        overbook: { type: boolean, description: Explicit confirmation to overbook a full function }
+    AppWorkerRemoveRequest:
+      type: object
+      required: [worker_id, worker_type]
+      properties:
+        worker_id: { type: integer }
+        worker_type: { type: string, enum: [user, freelancer, service_provider] }
+    AppComment:
+      type: object
+      required: [id, text, author, date]
+      properties:
+        id: { type: integer }
+        text: { type: string, nullable: true, description: Plain text }
+        author: { type: string, nullable: true }
+        date: { type: string, nullable: true }
+    AppCommentRequest:
+      type: object
+      required: [text]
+      properties:
+        text: { type: string, maxLength: 5000 }
+        tab_id: { type: integer, nullable: true }
+    AppCommentResponse:
+      type: object
+      required: [comment]
+      properties:
+        comment: { $ref: '#/components/schemas/AppComment' }
+    AppTask:
+      type: object
+      required: [id, name, done, deadline]
+      properties:
+        id: { type: integer }
+        name: { type: string }
+        done: { type: boolean }
+        deadline: { type: string, nullable: true }
+    AppTaskRequest:
+      type: object
+      required: [name]
+      properties:
+        name: { type: string, maxLength: 255 }
+        deadline: { type: string, nullable: true }
+    AppTaskResponse:
+      type: object
+      required: [task]
+      properties:
+        task: { $ref: '#/components/schemas/AppTask' }
+    AppCandidatesResponse:
+      type: object
+      required: [users, has_more]
+      properties:
+        users:
+          type: array
+          items: { $ref: '#/components/schemas/AppIdName' }
+        has_more: { type: boolean }
+    AppTeamRightsRequest:
+      type: object
+      properties:
+        is_manager: { type: boolean }
+        can_write: { type: boolean }
+        access_budget: { type: boolean }
+        roles:
+          type: array
+          items: { type: integer }
+    AppTeamStoreRequest:
+      allOf:
+        - type: object
+          required: [user_id]
+          properties:
+            user_id: { type: integer }
+        - { $ref: '#/components/schemas/AppTeamRightsRequest' }
+    AppTeamResponse:
+      type: object
+      required: [team]
+      properties:
+        team:
+          type: array
+          items: { $ref: '#/components/schemas/AppTeamMember' }
+    AppChecklist:
+      type: object
+      required: [id, name, private, can_edit, tasks]
+      properties:
+        id: { type: integer }
+        name: { type: string }
+        private: { type: boolean }
+        can_edit: { type: boolean }
+        tasks:
+          type: array
+          items: { $ref: '#/components/schemas/AppTask' }
+    AppFile:
+      type: object
+      required: [id, name, created_at, url]
+      properties:
+        id: { type: integer }
+        name: { type: string }
+        created_at: { type: string, nullable: true }
+        url: { type: string, description: Short-lived signed download URL }
+    AppCalendarTabValue:
+      type: object
+      required: [days, rooms, event_types]
+      properties:
+        days:
+          type: array
+          items:
+            type: object
+            required: [date, events]
+            properties:
+              date: { type: string, format: date }
+              events:
+                type: array
+                items: { $ref: '#/components/schemas/AppEvent' }
+        rooms:
+          type: array
+          items: { $ref: '#/components/schemas/AppIdName' }
+        event_types:
+          type: array
+          items: { $ref: '#/components/schemas/AppEventType' }
+    AppShiftTabValue:
+      type: object
+      required: [days, overbooking_allowed, crafts, rooms, shift_qualifications]
+      properties:
+        days:
+          type: array
+          items:
+            type: object
+            required: [date, shifts]
+            properties:
+              date: { type: string, format: date }
+              shifts:
+                type: array
+                items: { $ref: '#/components/schemas/AppProjectShift' }
+        overbooking_allowed: { type: boolean }
+        crafts:
+          type: array
+          items: { $ref: '#/components/schemas/AppCraft' }
+        rooms:
+          type: array
+          items: { $ref: '#/components/schemas/AppIdName' }
+        shift_qualifications:
+          type: array
+          items: { $ref: '#/components/schemas/AppIdName' }
+    AppChecklistTabValue:
+      type: object
+      required: [checklists]
+      properties:
+        checklists:
+          type: array
+          items: { $ref: '#/components/schemas/AppChecklist' }
+    AppCommentTabValue:
+      type: object
+      required: [comments]
+      properties:
+        comments:
+          type: array
+          items: { $ref: '#/components/schemas/AppComment' }
+    AppFilesValue:
+      type: object
+      required: [files]
+      properties:
+        files:
+          type: array
+          items: { $ref: '#/components/schemas/AppFile' }
+    AppAttributesValue:
+      type: object
+      required: [categories, genres, sectors]
+      properties:
+        categories: { type: array, items: { type: string } }
+        genres: { type: array, items: { type: string } }
+        sectors: { type: array, items: { type: string } }
+    AppPeriodValue:
+      type: object
+      required: [first, last]
+      properties:
+        first: { type: string, nullable: true }
+        last: { type: string, nullable: true }
+    AppNamesValue:
+      type: object
+      required: [names]
+      properties:
+        names: { type: array, items: { type: string } }
+    AppTextValue:
+      type: object
+      required: [text]
+      properties:
+        text: { type: string, nullable: true, description: Plain text }
+    AppBudgetDeadlineValue:
+      type: object
+      required: [date]
+      properties:
+        date: { type: string, format: date, nullable: true }
+    AppBudgetInfoValue:
+      type: object
+      required: [cost_center, description, gema]
+      properties:
+        cost_center: { type: string, nullable: true }
+        description: { type: string, nullable: true }
+        gema: { type: boolean }

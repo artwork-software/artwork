@@ -29,6 +29,7 @@
     "SSO": "SSO",
     "SSO only": "Nur SSO",
     "Recommended: the bind sends the password in clear text – use SSL (LDAPS) or StartTLS.": "Empfohlen: Beim Bind wird das Passwort im Klartext übertragen – SSL (LDAPS) oder StartTLS nutzen.",
+    "A valid two-factor authentication code is required.": "Ein gültiger Code für die Zwei-Faktor-Authentifizierung ist erforderlich.",
     "Filter name": "Filtername",
     "The image \"{0}\" has an unsupported format – allowed are JPG, PNG, GIF, WEBP, BMP and SVG.": "Das Bild \"{0}\" hat ein nicht unterstütztes Format – erlaubt sind JPG, PNG, GIF, WEBP, BMP und SVG.",
     "The image \"{0}\" has an unsupported format – allowed are JPG, PNG, GIF, WEBP, BMP, SVG and HEIC.": "Das Bild \"{0}\" hat ein nicht unterstütztes Format – erlaubt sind JPG, PNG, GIF, WEBP, BMP, SVG und HEIC.",

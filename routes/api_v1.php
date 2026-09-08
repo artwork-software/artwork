@@ -13,7 +13,7 @@ use Laravel\Passport\Http\Middleware\CheckToken;
 | Versionierte Schnittstelle für externe Systeme (derzeit: der Ticketshop).
 | Registriert in RouteServiceProvider mit Präfix api/v1 und der Middleware-Gruppe api.machine.
 |
-| Reihenfolge der Middleware ist bedeutsam: auth:api muss vor throttle:machine-api und vor der
+| Reihenfolge der Middleware ist bedeutsam: auth:api muss vor throttle:api-token und vor der
 | Scope-Prüfung laufen, sonst ist der Token beim Bilden des Rate-Limit-Schlüssels noch nicht
 | aufgelöst und das Limit fiele auf die IP zurück.
 |
@@ -23,7 +23,7 @@ use Laravel\Passport\Http\Middleware\CheckToken;
 |
 */
 
-Route::middleware(['auth:api', 'throttle:machine-api'])->group(function (): void {
+Route::middleware(['auth:api', 'throttle:api-token'])->group(function (): void {
     Route::middleware(CheckToken::using('inventory:read'))->group(function (): void {
         Route::get('/inventory', [InventoryCategoryApiController::class, 'index'])
             ->name('api.v1.inventory.index');

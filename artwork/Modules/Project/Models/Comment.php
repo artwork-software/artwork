@@ -20,8 +20,8 @@ use Illuminate\Support\Str;
  * @property int $money_source_file_id
  * @property int $contract_id
  * @property int $user_id
- * @property string $created_at
- * @property string $updated_at
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
  *
  * @property-read Project $project
  */

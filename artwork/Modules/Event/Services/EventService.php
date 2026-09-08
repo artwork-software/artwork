@@ -888,17 +888,22 @@ readonly class EventService
                     'shifts.shiftsQualifications',
                 ]
             )
-            ->whereHas(
-                'shifts.' . $relationToFind,
-                function (Builder $builder) use ($modelId): void {
+            // Nach Schichtdatum filtern, nicht nach Terminzeit: Die Schicht zählt zum
+            // Tag ihres Beginns, auch wenn der Termin selbst außerhalb des Zeitraums
+            // liegt oder über Mitternacht hinausläuft.
+            ->whereHas('shifts', function (Builder $query) use (
+                $relationToFind,
+                $modelId,
+                $startDate,
+                $endDate,
+            ): void {
+                $query->whereHas($relationToFind, function (Builder $builder) use ($modelId): void {
                     $builder->whereKey($modelId);
-                }
-            )
-            // Überlappung statt vollständiger Enthaltung: Termine, die über
-            // Mitternacht (und damit über das Zeitraum-Ende) hinauslaufen,
-            // dürfen nicht komplett herausfallen.
-            ->where('start_time', '<=', $endDate->copy()->endOfDay())
-            ->where('end_time', '>=', $startDate->copy()->startOfDay())
+                })->whereBetween('start_date', [
+                    $startDate->toDateString(),
+                    $endDate->toDateString(),
+                ]);
+            })
             ->orderBy('start_time')
             ->orderBy('end_time')
             ->get();

@@ -406,6 +406,7 @@ import BaseInput from '@/Artwork/Inputs/BaseInput.vue'
 import PropertyIcon from '@/Artwork/Icon/PropertyIcon.vue'
 import BaseUIButton from '@/Artwork/Buttons/BaseUIButton.vue'
 import { useTranslation } from '@/Composeables/Translation.js'
+import { isoWeekOf, isoWeeksInYear, mondayOfIsoWeek, toYmd } from '@/Helper/IsoWeek.js'
 
 const $t = useTranslation()
 const emits = defineEmits<{ (e: 'close'): void }>()
@@ -517,26 +518,9 @@ const toggleAllCrafts = () => {
 // --- Period selection (date / calendar week) -----------------------------
 const periodMode = ref('date')
 
-const isoWeekOf = (date: Date): { week: number, year: number } => {
-    const target = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()))
-    const dayNumber = (target.getUTCDay() + 6) % 7
-    target.setUTCDate(target.getUTCDate() - dayNumber + 3)
-    const isoYear = target.getUTCFullYear()
-    const firstThursday = new Date(Date.UTC(isoYear, 0, 4))
-    const firstDayNumber = (firstThursday.getUTCDay() + 6) % 7
-    firstThursday.setUTCDate(firstThursday.getUTCDate() - firstDayNumber + 3)
-    const week = 1 + Math.round((target.getTime() - firstThursday.getTime()) / (7 * 24 * 3600 * 1000))
-    return { week, year: isoYear }
-}
-const isoWeeksInYear = (year: number) => isoWeekOf(new Date(year, 11, 28)).week
-const isoWeekMonday = (year: number, week: number): Date => {
-    const jan4 = new Date(year, 0, 4)
-    const monday = new Date(jan4)
-    monday.setDate(jan4.getDate() - ((jan4.getDay() + 6) % 7) + (week - 1) * 7)
-    return monday
-}
-const toDateString = (date: Date) =>
-    `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
+// ISO-Wochenrechnung zentral in @/Helper/IsoWeek.js (isoWeekOf, isoWeeksInYear, mondayOfIsoWeek, toYmd)
+const isoWeekMonday = (year: number, week: number): Date => mondayOfIsoWeek(week, year)
+const toDateString = (date: Date) => toYmd(date)
 
 const initialStart = config.startDate ? new Date(config.startDate) : new Date()
 const initialEnd = config.endDate ? new Date(config.endDate) : initialStart

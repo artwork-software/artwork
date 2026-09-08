@@ -1499,17 +1499,8 @@ class ShiftController extends Controller
             ]);
         }
 
-        // Vorabprüfung für eine schnelle Fehlermeldung; die maßgebliche Prüfung (mit Zeilensperre auf der
-        // abgesagten Zuweisung, 409 wenn sie inzwischen weg ist) läuft in ShiftReplacementService::replace().
-        $alreadyAssigned = ShiftWorker::withoutTrashed()
-            ->byEmployableIdAndShiftId($replacementClass, (int) $replacement->id, $shift->id)
-            ->exists();
-
-        if ($alreadyAssigned) {
-            throw ValidationException::withMessages([
-                'replacement_id' => __('This person is already assigned to the shift.'),
-            ]);
-        }
+        // „Bereits zugewiesen" prüft ShiftReplacementService::replace() unter Zeilensperre (422 mit derselben
+        // Meldung, 409 wenn die abgesagte Zuweisung inzwischen weg ist) — keine ungesperrte Vorabprüfung hier.
 
         $shift->loadMissing('craft');
 

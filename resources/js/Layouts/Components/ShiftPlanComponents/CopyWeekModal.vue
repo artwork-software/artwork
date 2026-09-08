@@ -233,6 +233,7 @@ import BaseCheckbox from '@/Artwork/Inputs/BaseCheckbox.vue'
 import BaseChip from '@/Artwork/Chips/BaseChip.vue'
 import ArtworkBaseListbox from '@/Artwork/Listbox/ArtworkBaseListbox.vue'
 import ToolTipComponent from '@/Components/ToolTips/ToolTipComponent.vue'
+import { isoWeekOf, isoWeeksInYear, mondayOfIsoWeek as mondayOfIsoWeekStart, toDmy } from '@/Helper/IsoWeek.js'
 
 const { t: $t } = useI18n()
 
@@ -247,28 +248,17 @@ const emit = defineEmits(['closed'])
 
 // ---------- ISO-Kalenderwochen-Helfer (lokale Zeit, mittags gegen DST-Kanten) ----------
 const DAY_MS = 86400000
-const pad = (n) => String(n).padStart(2, '0')
 const atNoon = (d) => new Date(d.getFullYear(), d.getMonth(), d.getDate(), 12)
 const addDays = (d, n) => atNoon(new Date(d.getTime() + n * DAY_MS))
 const fromIso = (s) => {
     const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(s ?? ''))
     return m ? atNoon(new Date(+m[1], +m[2] - 1, +m[3])) : atNoon(new Date())
 }
-const isoWeekInfo = (d) => {
-    const t = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()))
-    const day = t.getUTCDay() || 7
-    t.setUTCDate(t.getUTCDate() + 4 - day)
-    const yearStart = new Date(Date.UTC(t.getUTCFullYear(), 0, 1))
-    return { week: Math.ceil(((t - yearStart) / DAY_MS + 1) / 7), year: t.getUTCFullYear() }
-}
-/** Montag der ISO-KW: 4. Januar liegt immer in KW 1 */
-const mondayOfIsoWeek = (year, week) => {
-    const jan4 = atNoon(new Date(year, 0, 4))
-    const jan4Weekday = (jan4.getDay() + 6) % 7
-    return addDays(jan4, -jan4Weekday + (week - 1) * 7)
-}
-const isoWeeksInYear = (year) => isoWeekInfo(atNoon(new Date(year, 11, 28))).week
-const formatDisplay = (d) => `${pad(d.getDate())}.${pad(d.getMonth() + 1)}.${d.getFullYear()}`
+// ISO-Wochenrechnung zentral in @/Helper/IsoWeek.js (Node-Tests); hier nur auf 12:00 normalisiert,
+// damit addDays über DST-Wechsel hinweg tagesgenau bleibt.
+const isoWeekInfo = (d) => isoWeekOf(d)
+const mondayOfIsoWeek = (year, week) => atNoon(mondayOfIsoWeekStart(week, year))
+const formatDisplay = (d) => toDmy(d)
 // Grund je übersprungener Quellschicht (Backend: skipped_shifts[].reason)
 const skipReasonLabel = (reason) => {
     if (reason === 'committed') return $t('skipped: target week already committed for this craft')

@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { isoWeekToDateRange, isoWeeksInYear, mondayOfIsoWeek1, toDmy, toYmd } from '../../resources/js/Helper/IsoWeek.js';
+import { isoWeekOf, isoWeekToDateRange, isoWeeksInYear, mondayOfIsoWeek, mondayOfIsoWeek1, toDmy, toYmd } from '../../resources/js/Helper/IsoWeek.js';
 
 test('isoWeeksInYear knows 52- and 53-week years', () => {
     assert.equal(isoWeeksInYear(2020), 53);
@@ -58,3 +58,20 @@ test('display format helper uses DD.MM.YYYY', () => {
 function pick(range) {
     return { start: range.start, end: range.end };
 }
+
+test('isoWeekOf assigns year-boundary days to the ISO year of their Thursday', () => {
+    assert.deepEqual(isoWeekOf(new Date(2026, 0, 1)), { week: 1, year: 2026 });
+    assert.deepEqual(isoWeekOf(new Date(2027, 0, 1)), { week: 53, year: 2026 });
+    assert.deepEqual(isoWeekOf(new Date(2025, 11, 29)), { week: 1, year: 2026 });
+    assert.deepEqual(isoWeekOf(new Date(2021, 0, 3)), { week: 53, year: 2020 });
+    assert.deepEqual(isoWeekOf(new Date(2026, 8, 8)), { week: 37, year: 2026 });
+});
+
+test('mondayOfIsoWeek matches the start of isoWeekToDateRange and round-trips through isoWeekOf', () => {
+    for (const [week, year] of [[1, 2026], [37, 2026], [53, 2026], [52, 2025], [53, 2020]]) {
+        const monday = mondayOfIsoWeek(week, year);
+        assert.equal(toYmd(monday), isoWeekToDateRange(week, year).start);
+        assert.equal(monday.getDay(), 1);
+        assert.deepEqual(isoWeekOf(monday), { week, year });
+    }
+});

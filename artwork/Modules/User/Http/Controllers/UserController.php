@@ -26,7 +26,6 @@ use Artwork\Modules\Permission\Services\PermissionImplicationService;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Models\ProjectFile;
 use Artwork\Modules\Project\Models\ProjectRole;
-use Artwork\Modules\Project\Services\ProjectService;
 use Artwork\Modules\Role\Enums\RoleEnum;
 use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\Room\Services\RoomService;
@@ -1093,12 +1092,9 @@ class UserController extends Controller
         Request $request,
         User $user,
         UserService $userService,
-        ShiftQualificationService $shiftQualificationService,
         CalendarService $calendarService,
         EventService $eventService,
-        RoomService $roomService,
         EventTypeService $eventTypeService,
-        ProjectService $projectService,
         SessionManager $sessionManager,
         Repository $config
     ): Response|ResponseFactory {
@@ -1129,10 +1125,7 @@ class UserController extends Controller
             $user,
             $calendarService,
             $eventService,
-            $roomService,
             $eventTypeService,
-            $projectService,
-            $shiftQualificationService,
             $selectedPeriodDate,
             $selectedDate,
             $request->get('month'),
@@ -2025,12 +2018,9 @@ class UserController extends Controller
         Request $request,
         User $user,
         UserService $userService,
-        ShiftQualificationService $shiftQualificationService,
         CalendarService $calendarService,
         EventService $eventService,
-        RoomService $roomService,
         EventTypeService $eventTypeService,
-        ProjectService $projectService,
         SessionManager $sessionManager,
         Repository $config
     ): Response|ResponseFactory {
@@ -2053,10 +2043,7 @@ class UserController extends Controller
             $user,
             $calendarService,
             $eventService,
-            $roomService,
             $eventTypeService,
-            $projectService,
-            $shiftQualificationService,
             $selectedPeriodDate,
             $selectedDate,
             $request->get('month'),

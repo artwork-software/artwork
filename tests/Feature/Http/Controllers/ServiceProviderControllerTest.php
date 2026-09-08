@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Http\Controllers;
 
+use Artwork\Modules\Craft\Models\Craft;
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\ServiceProvider\Models\ServiceProvider;
 use Artwork\Modules\Shift\Models\Shift;
@@ -120,5 +121,23 @@ final class ServiceProviderControllerTest extends FeatureTestCase
         $sp = ServiceProvider::factory()->create();
         $this->delete(route('service_provider.destroy', $sp))
             ->assertRedirect(route('login'));
+    }
+
+
+    #[Test]
+    public function assign_crafts_bulk_validates_craft_ids(): void
+    {
+        $this->actingAsAdmin();
+        $serviceProvider = ServiceProvider::factory()->create();
+
+        $this->patchJson(route('service_provider.assign.crafts.bulk', $serviceProvider), ['craftIds' => [999999]])
+            ->assertStatus(422)
+            ->assertJsonValidationErrors(['craftIds.0']);
+
+        $craft = Craft::factory()->create();
+        $this->patch(route('service_provider.assign.crafts.bulk', $serviceProvider), ['craftIds' => [$craft->id]])
+            ->assertRedirect();
+
+        $this->assertTrue($serviceProvider->fresh()->assignedCrafts->contains($craft));
     }
 }

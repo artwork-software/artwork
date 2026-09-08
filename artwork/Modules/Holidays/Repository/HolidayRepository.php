@@ -21,7 +21,8 @@ class HolidayRepository extends BaseRepository
         ?string $remote_identifier = null,
         ?bool $from_api = false,
         ?string $color = null,
-        ?bool $treatAsSpecialDay = false
+        ?bool $treatAsSpecialDay = false,
+        ?string $type = null
     ): Holiday {
         $holiday = new Holiday();
         $holiday->fill([
@@ -33,6 +34,7 @@ class HolidayRepository extends BaseRepository
             'country' => $countryCode,
             'remote_identifier' => $remote_identifier,
             'from_api' => $from_api,
+            'type' => Holiday::normalizeType($type),
             'color' => $color,
             'treatAsSpecialDay' => $treatAsSpecialDay,
         ]);
@@ -56,8 +58,16 @@ class HolidayRepository extends BaseRepository
         return Holiday::where($column, $value)->get();
     }
 
-    public function findAll(int $paginate, array $with = []): \Illuminate\Contracts\Pagination\LengthAwarePaginator
-    {
-        return Holiday::query()->with($with)->orderBy('date', 'ASC')->paginate($paginate);
+    public function findAll(
+        int $paginate,
+        array $with = [],
+        ?string $type = null
+    ): \Illuminate\Contracts\Pagination\LengthAwarePaginator {
+        return Holiday::query()
+            ->with($with)
+            ->when($type !== null && $type !== '', static fn ($query) => $query->where('type', $type))
+            ->orderBy('date', 'ASC')
+            ->paginate($paginate)
+            ->withQueryString();
     }
 }

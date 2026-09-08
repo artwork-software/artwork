@@ -122,7 +122,7 @@
                                             class="inline-block h-2 w-2 rounded-full"
                                             :style="{ backgroundColor: dayOff.violation.shift_rule.warning_color || '#ff0000' }"
                                         ></span>
-                                        {{ dayOff.violation?.shift_rule?.name || $t('Manual') }}
+                                        {{ dayOff.violation?.shift_rule?.name || dayOff.violation?.title || $t('Manual') }}
                                     </div>
                                 </td>
                                 <td class="px-3 py-2.5 text-text-muted max-w-[200px] truncate">
@@ -211,7 +211,7 @@
                                             class="inline-block h-2 w-2 rounded-full"
                                             :style="{ backgroundColor: dayOff.violation.shift_rule.warning_color || '#ff0000' }"
                                         ></span>
-                                        {{ dayOff.violation?.shift_rule?.name || $t('Manual') }}
+                                        {{ dayOff.violation?.shift_rule?.name || dayOff.violation?.title || $t('Manual') }}
                                     </div>
                                 </td>
                                 <td class="px-3 py-2.5 text-text-muted max-w-[200px] truncate">
@@ -270,9 +270,10 @@
                                     <div class="flex items-center gap-1.5">
                                         <span
                                             class="inline-block h-2 w-2 rounded-full"
-                                            :style="{ backgroundColor: violation.shift_rule?.warning_color || '#ff0000' }"
+                                            :class="violation.shift_rule ? '' : 'bg-warning'"
+                                            :style="violation.shift_rule ? { backgroundColor: violation.shift_rule.warning_color || '#ff0000' } : null"
                                         ></span>
-                                        {{ violation.shift_rule?.name }}
+                                        {{ violation.shift_rule?.name || violation.title || $t('Rule violation') }}
                                     </div>
                                 </td>
                                 <td class="px-3 py-2.5">

@@ -94,10 +94,9 @@ final class UserOperationPlanAuthorizationTest extends FeatureTestCase
         $response = $this->get(route('user.operationPlan', $user));
 
         $response->assertOk();
-        $this->assertSame([$committedShift->id], collect($response->inertiaProps('shifts'))->pluck('id')->all());
-
-        // daysWithData ist die tatsächliche Datenquelle des Renderings — auch dort
-        // darf die nicht festgeschriebene Schicht nicht auftauchen.
+        // daysWithData ist die einzige Datenquelle des Renderings (die frühere Prop „shifts" mit
+        // allen Schichten der Person entfiel in der Härtung) — die nicht festgeschriebene Schicht
+        // darf dort nicht auftauchen.
         $daysWithDataShiftIds = collect($response->inertiaProps('daysWithData'))
             ->flatMap(static fn(array $day) => collect($day['shifts'])->pluck('id'))
             ->all();
@@ -128,10 +127,11 @@ final class UserOperationPlanAuthorizationTest extends FeatureTestCase
         $response = $this->get(route('user.operationPlan', $user));
 
         $response->assertOk();
-        $this->assertEqualsCanonicalizing(
-            [$committedShift->id, $uncommittedShift->id],
-            collect($response->inertiaProps('shifts'))->pluck('id')->all()
-        );
+        $daysWithDataShiftIds = collect($response->inertiaProps('daysWithData'))
+            ->flatMap(static fn(array $day) => collect($day['shifts'])->pluck('id'))
+            ->all();
+        $this->assertContains($committedShift->id, $daysWithDataShiftIds);
+        $this->assertContains($uncommittedShift->id, $daysWithDataShiftIds);
     }
 
     #[Test]

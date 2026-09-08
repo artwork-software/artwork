@@ -3,6 +3,7 @@
 namespace Artwork\Modules\Vacation\Services;
 
 use Artwork\Modules\Freelancer\Models\Freelancer;
+use Artwork\Modules\Shift\Services\ShiftNotificationLinkService;
 use Artwork\Modules\Notification\Enums\NotificationEnum;
 use Artwork\Modules\Notification\Services\NotificationService;
 use Artwork\Modules\Shift\Models\Shift;
@@ -105,7 +106,7 @@ readonly class VacationConflictService
                             ],
                             $user->language
                         ),
-                        'href' => null
+                        'href' => $user ? ShiftNotificationLinkService::ownOperationPlanForDate($user, $shift->event_start_day) : null
                     ],
                 ];
 
@@ -228,7 +229,7 @@ readonly class VacationConflictService
                         ],
                         $user->language
                     ),
-                    'href' => null
+                    'href' => $user ? ShiftNotificationLinkService::ownOperationPlanForDate($user, $shift->event_start_day) : null
                 ],
             ];
 

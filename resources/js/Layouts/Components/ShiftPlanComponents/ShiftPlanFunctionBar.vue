@@ -162,6 +162,17 @@
 
                     </slot>
 
+                    <!-- „Woche kopieren": Schichten einer KW in Folgewochen anlegen (nur Planer*innen, nur Wochengrid) -->
+                    <ToolTipComponent
+                        v-if="!isDailyView && (can('can plan shifts') || hasAdminRole())"
+                        direction="bottom"
+                        :tooltip-text="$t('Copy week')"
+                        icon="IconCopy"
+                        icon-size="h-5 w-5"
+                        classes-button="ui-button"
+                        @click="showCopyWeekModal = true"
+                    />
+
                     <!-- ab 2xl: alle Funktionen als einzelne Buttons -->
                     <div class="hidden 2xl:flex items-center gap-x-3">
                         <!-- Kompaktmodus-Hinweis: unter 100 % zeigen Schichtkarten nur Zeit·Gewerk·Besetzung,
@@ -220,6 +231,8 @@
                             :filter-type="isDailyView ? 'shift_daily_filter' : 'shift_filter'"
                         />
 
+                        <ShiftPlanHelpPanel />
+
                         <ToolTipComponent v-if="can('can commit shifts') || hasAdminRole()" direction="bottom"
                                           :tooltip-text="commitShiftsTooltip" icon="IconCalendarCheck" icon-size="h-5 w-5" classes-button="ui-button"
                                           @click="commitAllShifts()"/>
@@ -249,6 +262,8 @@
                             :crafts="crafts"
                             :filter-type="isDailyView ? 'shift_daily_filter' : 'shift_filter'"
                         />
+
+                        <ShiftPlanHelpPanel />
 
                         <BaseMenu tooltip-direction="bottom" show-custom-icon icon="IconList" translation-key="More options" has-no-offset>
                             <template v-if="!isDailyView">
@@ -305,7 +320,7 @@
     <!-- kein w-full: zusammen mit ml-4 ragte die Zeile 16px über den Viewport hinaus
          und erzeugte einen Seiten-Scrollbalken -->
     <div class="mb-1 mx-4 flex flex-wrap items-center gap-1">
-        <BaseFilterTag v-for="activeFilter in activeFilters" :filter="activeFilter" @removeFilter="removeFilter"/>
+        <BaseFilterTag v-for="(activeFilter, index) in activeFilters" :key="`${activeFilter.id}-${index}`" :filter="activeFilter" @removeFilter="removeFilter"/>
     </div>
     <ConfirmDeleteModal
         v-if="showConfirmCommitModal"
@@ -340,10 +355,16 @@
         :enums="shiftPlanExportTabs"
         :configuration="shiftPlanExportConfiguration"
     />
+
+    <CopyWeekModal
+        v-if="showCopyWeekModal"
+        :date-value="dateValue"
+        :crafts="crafts"
+        @closed="showCopyWeekModal = false"
+    />
 </template>
 
 <script setup>
-import Button from "@/Jetstream/Button.vue";
 import {
     Menu,
     MenuButton,
@@ -366,6 +387,7 @@ import {usePermission} from "@/Composeables/Permission.js";
 import ShiftCommitDateSelectModal from "@/Pages/Shifts/Components/ShiftCommitDateSelectModal.vue";
 import FunctionBarFilter from "@/Artwork/Filter/FunctionBarFilter.vue";
 import FunctionBarSetting from "@/Artwork/Filter/FunctionBarSetting.vue";
+import ShiftPlanHelpPanel from "@/Layouts/Components/ShiftPlanComponents/ShiftPlanHelpPanel.vue";
 import CalendarAboSettingModal from "@/Pages/Shifts/Components/CalendarAboSettingModal.vue";
 import CalendarAboInfoModal from "@/Pages/Shifts/Components/CalendarAboInfoModal.vue";
 import SwitchIconTooltip from "@/Artwork/Toggles/SwitchIconTooltip.vue";
@@ -385,6 +407,14 @@ const ExportModal = defineAsyncComponent({
     delay: 200,
     timeout: 3000,
 });
+
+// „Woche kopieren" (lazy: nur Planer*innen öffnen es)
+const CopyWeekModal = defineAsyncComponent({
+    loader: () => import('@/Layouts/Components/ShiftPlanComponents/CopyWeekModal.vue'),
+    delay: 200,
+    timeout: 3000,
+});
+const showCopyWeekModal = ref(false);
 
 // Schichtplan-Spaltenzoom (reaktiv, debounced persistiert)
 const {

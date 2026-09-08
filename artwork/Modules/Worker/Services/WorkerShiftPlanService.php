@@ -9,6 +9,7 @@ use Artwork\Modules\Shift\Abstracts\WorkerShiftPlanResource;
 use Artwork\Modules\Shift\Models\CompensationDayOff;
 use Artwork\Modules\Shift\Models\ShiftRuleViolation;
 use Artwork\Modules\User\Models\User;
+use Artwork\Modules\User\Services\ContractSettingsResolver;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\Resources\Json\JsonResource;
@@ -17,6 +18,7 @@ readonly class WorkerShiftPlanService
 {
     public function __construct(
         private WorkerService $workerService,
+        private ContractSettingsResolver $contractSettings,
     ) {
     }
 
@@ -152,7 +154,9 @@ readonly class WorkerShiftPlanService
             ->get()
             ->groupBy(fn ($d) => $d->granted_date->format('Y-m-d'));
 
-        $workerData['compensation_period'] = $worker->activeWorkContract()?->compensation_period ?? 0;
+        // Zuweisung vor Vorlage (0 auf der Zuweisung = nicht gesetzt); contract.userContract ist eager
+        // geladen (loadWorkerRelations), der Resolver nutzt die geladene Relation ohne weitere Query
+        $workerData['compensation_period'] = $this->contractSettings->compensationPeriod($worker);
 
         return $workerData;
     }

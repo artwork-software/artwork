@@ -4,8 +4,10 @@ namespace Artwork\Modules\Shift\Repositories;
 
 use Artwork\Core\Database\Repository\BaseRepository;
 use Artwork\Modules\Shift\Models\ShiftRuleViolation;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Facades\DB;
 
 class ShiftRuleViolationRepository extends BaseRepository
 {
@@ -25,6 +27,158 @@ class ShiftRuleViolationRepository extends BaseRepository
             ->where('status', 'active')
             ->orderBy('violation_date', 'desc')
             ->get();
+    }
+
+    /**
+     * Relationen der Verstoßliste/-exporte: nur die Spalten, die Anzeige und Export lesen.
+     *
+     * @return array<int|string, mixed>
+     */
+    public static function listRelations(): array
+    {
+        return [
+            'shiftRule:id,name,description,trigger_type,warning_color,default_compensation_days,default_compensation_deadline_days',
+            'user:id,first_name,last_name',
+            // Craft lädt per $with immer craftShiftPlaner, Room immer admins + creator — für die Liste
+            // unnötig (Muster ShiftWeekStatusController::visibleCrafts), deshalb abgeschaltet.
+            'user.assignedCrafts' => static fn ($query) => $query
+                ->select(['crafts.id', 'crafts.name', 'crafts.abbreviation'])
+                ->without(['craftShiftPlaner']),
+            'shift:id,start_date,end_date,start,end,room_id,craft_id',
+            'shift.room' => static fn ($query) => $query
+                ->select(['id', 'name'])
+                ->without(['admins', 'creator']),
+            'shift.craft' => static fn ($query) => $query
+                ->select(['id', 'name', 'abbreviation'])
+                ->without(['craftShiftPlaner']),
+            'createdByUser:id,first_name,last_name',
+            'resolvedByUser:id,first_name,last_name',
+            'compensationDayOffs:id,violation_id,granted_at,granted_date',
+        ];
+    }
+
+    /**
+     * Gefilterte Verstoß-Query (Liste "Offene Verstöße" und Excel-Export teilen sich die Filter).
+     *
+     * @param array{
+     *     craft_ids?: array<int, int>|null,
+     *     user_id?: int|null,
+     *     shift_rule_id?: int|null,
+     *     severity?: string|null,
+     *     status?: string|array<int, string>|null,
+     *     date_from?: string|null,
+     *     date_to?: string|null
+     * } $filters
+     */
+    public function filteredQuery(array $filters): Builder
+    {
+        $status = $filters['status'] ?? 'active';
+        $craftIds = array_values(array_filter(array_map('intval', (array) ($filters['craft_ids'] ?? []))));
+
+        return ShiftRuleViolation::query()
+            ->when(
+                $status !== null && $status !== 'all' && $status !== [],
+                fn (Builder $q) => $q->whereIn('status', (array) $status)
+            )
+            ->when(
+                $craftIds !== [],
+                // Gewerksfilter: Verstoß zählt zum Gewerk, wenn das Gewerk der SCHICHT passt ODER die
+                // Person dem Gewerk angehört (Verstöße an Fremdgewerk-Schichten sonst unsichtbar).
+                fn (Builder $q) => $q->where(function (Builder $w) use ($craftIds): void {
+                    $w->whereHas('shift', fn (Builder $s) => $s->whereIn('shifts.craft_id', $craftIds))
+                        ->orWhereHas(
+                            'user.assignedCrafts',
+                            fn (Builder $c) => $c->whereIn('crafts.id', $craftIds)
+                        );
+                })
+            )
+            ->when(!empty($filters['user_id']), fn (Builder $q) => $q->where('user_id', (int) $filters['user_id']))
+            ->when(
+                !empty($filters['shift_rule_id']),
+                fn (Builder $q) => $q->where('shift_rule_id', (int) $filters['shift_rule_id'])
+            )
+            ->when(!empty($filters['severity']), fn (Builder $q) => $q->where('severity', $filters['severity']))
+            ->when(!empty($filters['date_from']), fn (Builder $q) => $q->whereDate('violation_date', '>=', $filters['date_from']))
+            ->when(!empty($filters['date_to']), fn (Builder $q) => $q->whereDate('violation_date', '<=', $filters['date_to']));
+    }
+
+    /**
+     * Seite der gefilterten Verstöße (Datum auf-/absteigend, danach ID absteigend für stabile Seiten).
+     */
+    public function paginateFiltered(array $filters, int $perPage, string $sortDirection = 'desc'): LengthAwarePaginator
+    {
+        $direction = strtolower($sortDirection) === 'asc' ? 'asc' : 'desc';
+
+        return $this->filteredQuery($filters)
+            ->with(self::listRelations())
+            ->orderBy('violation_date', $direction)
+            ->orderByDesc('id')
+            ->paginate($perPage);
+    }
+
+    /**
+     * Zähler-Chips: aktive Verstöße gesamt / Fehler / Warnungen — mit allen Filtern außer Status.
+     *
+     * @return array{total: int, error: int, warning: int}
+     */
+    public function countActiveBySeverity(array $filters): array
+    {
+        $rows = $this->filteredQuery(array_merge($filters, ['status' => 'active']))
+            ->selectRaw('severity, COUNT(*) AS aggregate')
+            ->groupBy('severity')
+            ->pluck('aggregate', 'severity');
+
+        $error = (int) ($rows['error'] ?? 0);
+        $warning = (int) ($rows['warning'] ?? 0);
+
+        return [
+            'total' => (int) $rows->sum(),
+            'error' => $error,
+            'warning' => $warning,
+        ];
+    }
+
+    /**
+     * Personen mit Verstößen (Personenfilter der Liste) — nur ID und Name.
+     */
+    public function getUsersWithViolations(): \Illuminate\Support\Collection
+    {
+        $userIds = ShiftRuleViolation::query()->distinct()->pluck('user_id');
+
+        return \Artwork\Modules\User\Models\User::query()
+            ->whereIn('id', $userIds)
+            ->select(['id', 'first_name', 'last_name'])
+            ->orderBy('last_name')
+            ->orderBy('first_name')
+            ->get();
+    }
+
+    /**
+     * Sammelaktion "Ignorieren": dieselbe Ignore-Logik wie je Verstoß (Status, Zeitpunkt, Person, Grund,
+     * Activity-Log), in EINER Transaktion; nur aktive Verstöße werden angefasst. Liefert die Anzahl.
+     *
+     * @param array<int, int> $ids
+     */
+    public function ignoreMany(array $ids, ?int $userId, ?string $ignoreReason): int
+    {
+        $ids = array_values(array_unique(array_map('intval', $ids)));
+        if ($ids === []) {
+            return 0;
+        }
+
+        return DB::transaction(function () use ($ids, $userId, $ignoreReason): int {
+            $violations = ShiftRuleViolation::query()
+                ->whereIn('id', $ids)
+                ->where('status', 'active')
+                ->lockForUpdate()
+                ->get();
+
+            foreach ($violations as $violation) {
+                $this->ignore($violation, $userId, $ignoreReason);
+            }
+
+            return $violations->count();
+        });
     }
 
     public function getActiveForDateRange(string $startDate, string $endDate, ?array $userIds = null): Collection

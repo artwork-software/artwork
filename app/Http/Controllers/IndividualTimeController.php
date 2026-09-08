@@ -96,7 +96,7 @@ class IndividualTimeController extends Controller
                         $individualTime['start_time'] ?? null,
                         $individualTime['end_time'] ?? null,
                         $individualTime['start_date'],
-                        $individualTime['break_minutes'] ?? 0,
+                        $individualTime['break_minutes'] ?? null,
                     );
                 } else {
                     $this->individualTimeService->createForModel(
@@ -105,7 +105,7 @@ class IndividualTimeController extends Controller
                         $individualTime['start_time'] ?? null,
                         $individualTime['end_time'] ?? null,
                         $individualTime['start_date'],
-                        $individualTime['break_minutes'] ?? 0,
+                        $individualTime['break_minutes'] ?? null,
                     );
                 }
             } else {
@@ -115,7 +115,7 @@ class IndividualTimeController extends Controller
                     $individualTime['start_time'] ?? null,
                     $individualTime['end_time'] ?? null,
                     $individualTime['start_date'],
-                    $individualTime['break_minutes'] ?? 0,
+                    $individualTime['break_minutes'] ?? null,
                 );
             }
         }

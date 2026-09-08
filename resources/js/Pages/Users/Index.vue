@@ -83,6 +83,15 @@
                                 >
                                     {{ $t('SSO') }}
                                 </span>
+                                <!-- Personalverwaltung: Schichtarbeitende ohne heute gültiges Arbeitszeitmuster (Flag aus dem Backend, keine N+1) -->
+                                <span
+                                    v-if="showMissingPatternBadge(row)"
+                                    class="inline-flex items-center gap-1 rounded-full border border-warning-border bg-warning-surface px-2 py-0.5 text-xs font-semibold text-warning"
+                                    v-tooltip.top="{ value: $t('This person works shifts but has no valid work time pattern today – the target hours cannot be calculated.'), appendTo: 'body', class: 'aw-tooltip', position: 'top' }"
+                                >
+                                    <IconAlertTriangle class="size-3.5" stroke-width="1.5" />
+                                    {{ $t('Work time pattern missing') }}
+                                </span>
                             </div>
                             <div class="mt-1 text-text-subtle">{{ row.email }}</div>
                         </div>
@@ -233,11 +242,10 @@ import { Link, router, usePage } from '@inertiajs/vue3'
 import {
     Menu, MenuButton, MenuItem, MenuItems,
 } from '@headlessui/vue'
-import {IconCheck, IconChevronDown, IconCirclePlus, IconEdit, IconGeometry, IconSearch, IconTrash, IconUsers, IconX} from "@tabler/icons-vue"
+import {IconAlertTriangle, IconCheck, IconChevronDown, IconCirclePlus, IconEdit, IconTrash, IconUsers} from "@tabler/icons-vue"
 import debounce from 'lodash.debounce'
 import InviteUsersModal from '@/Layouts/Components/InviteUsersModal.vue'
 import SuccessModal from '@/Layouts/Components/General/SuccessModal.vue'
-import FormButton from '@/Layouts/Components/General/Buttons/FormButton.vue'
 import BaseMenu from '@/Components/Menu/BaseMenu.vue'
 import BaseModal from '@/Components/Modals/BaseModal.vue'
 import TeamIconCollection from '@/Layouts/Components/TeamIconCollection.vue'
@@ -280,6 +288,11 @@ const sortBy = ref(props.userUserManagementSetting?.sort_by === null ? undefined
 /* Helpers */
 const hasAdminRole = () => is('artwork admin')
 const { can, canViewOwnRoster, canViewForeignRoster, canViewExternalWorkerProfile } = usePermission(usePage().props)
+
+// Warn-Badge "Arbeitszeitmuster fehlt": nur für Personalverwaltung/Admins, nur interne Schichtarbeitende
+const showMissingPatternBadge = (user) =>
+    user?.work_time_pattern_missing === true
+    && (hasAdminRole() || can('can manage workers'))
 
 // Einsatzplan-Sichtregel (Spiegel der Backend-Autorisierung): fremde Pläne nur mit
 // Dienstplan-Sichtrechten, der eigene nur mit "can view own roster"; ohne Rechte

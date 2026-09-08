@@ -3,15 +3,23 @@
 namespace Artwork\Modules\Shift\Services;
 
 use Artwork\Modules\Shift\Contracts\ShiftRuleCheckInterface;
+use Artwork\Modules\Shift\RuleChecks\AverageWeeklyHoursCheck;
 use Artwork\Modules\Shift\RuleChecks\HalfDayOffConflictCheck;
 use Artwork\Modules\Shift\RuleChecks\HalfDayOffOnSpecialDayCheck;
 use Artwork\Modules\Shift\RuleChecks\MaxConsecutiveWorkingDaysCheck;
 use Artwork\Modules\Shift\RuleChecks\MaxWorkingHoursOnDayCheck;
 use Artwork\Modules\Shift\RuleChecks\MinDaysBeforeCommitCheck;
+use Artwork\Modules\Shift\RuleChecks\MinFreeDaysPerWeekCheck;
+use Artwork\Modules\Shift\RuleChecks\MinFreeSundaysPerSeasonHalfCheck;
+use Artwork\Modules\Shift\RuleChecks\MinFreeSundaysPerYearCheck;
+use Artwork\Modules\Shift\RuleChecks\NightWorkMaxHoursCheck;
+use Artwork\Modules\Shift\RuleChecks\OvertimeDeadlineCheck;
 use Artwork\Modules\Shift\RuleChecks\RestTimeBeforeHolidayCheck;
 use Artwork\Modules\Shift\RuleChecks\RestTimeBeforeWorkdayCheck;
 use Artwork\Modules\Shift\RuleChecks\RestTimeBetweenShiftGroupsCheck;
 use Artwork\Modules\Shift\RuleChecks\WeeklyMaxHoursCheck;
+use Artwork\Modules\Shift\RuleChecks\WorkOnHolidayCheck;
+use Artwork\Modules\Shift\RuleChecks\WorkOnSundayCheck;
 use InvalidArgumentException;
 
 class ShiftRuleCheckFactory
@@ -36,6 +44,19 @@ class ShiftRuleCheckFactory
         $this->register(new HalfDayOffConflictCheck());
         $this->register(new HalfDayOffOnSpecialDayCheck());
         $this->register(new MinDaysBeforeCommitCheck());
+        $this->register(new WorkOnSundayCheck());
+        $this->register(new WorkOnHolidayCheck());
+        $this->register(new OvertimeDeadlineCheck());
+        $this->register(new MinFreeSundaysPerSeasonHalfCheck());
+        $this->register(new MinFreeSundaysPerYearCheck());
+        $this->register(new AverageWeeklyHoursCheck());
+        $this->register(new NightWorkMaxHoursCheck());
+        $this->register(new MinFreeDaysPerWeekCheck());
+    }
+
+    public function has(string $triggerType): bool
+    {
+        return isset($this->checks[$triggerType]);
     }
 
     public function register(ShiftRuleCheckInterface $check): void

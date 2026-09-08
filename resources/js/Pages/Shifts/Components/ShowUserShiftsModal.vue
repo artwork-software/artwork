@@ -2,7 +2,7 @@
     <ArtworkBaseModal
         :title="`${day.dayString} ${day.fullDay}`"
         description=""
-        modal-size="max-w-4xl"
+        modal-size="max-w-6xl"
         @close="closeModal"
     >
         <div class="space-y-7 text-sm">
@@ -73,8 +73,9 @@
                 </div>
             </section>
 
-            <div class="">
-                <div class="space-y-6">
+            <div class="grid grid-cols-1 gap-6 lg:grid-cols-12 lg:gap-8">
+                <!-- Linke Spalte: Einsatz (Schichten, Projekte, individuelle Zeiten) -->
+                <div class="space-y-6 lg:col-span-7">
                     <!-- Schichten an diesem Tag -->
                     <section class="space-y-3">
                         <div class="flex items-center justify-between">
@@ -368,6 +369,12 @@
                                             class="max-w-xs"
                                             @input="markBreakAsManuallyEdited(individual_time)"
                                         />
+                                        <LegalBreakHint
+                                            :break-minutes="individual_time.break_minutes"
+                                            :legal-minutes="legalBreakFor(individual_time)"
+                                            :has-times="hasBreakRelevantTimes(individual_time)"
+                                            @reset="resetBreakToLegal(individual_time)"
+                                        />
                                         <p class="text-[11px] text-text-subtle mt-1.5 leading-snug">
                                             {{ t('This time will be deducted from the working hours when calculating the daily working time.') }}
                                         </p>
@@ -433,118 +440,8 @@
                     </section>
                 </div>
 
-                <!-- Regelverstöße -->
-                <section v-if="(can('can plan shifts') || hasAdminRole()) && user.type === 0" class="space-y-3 mt-6">
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <h3 class="text-xs font-semibold tracking-wide text-text-subtle uppercase">
-                                {{ t('Rule violations') }}
-                            </h3>
-                            <p class="text-[11px] text-text-subtle mt-0.5">
-                                {{ t('Rule violations for this person on this day.') }}
-                            </p>
-                        </div>
-                        <button
-                            type="button"
-                            class="hidden sm:inline-flex items-center gap-1 rounded-full border border-border-subtle bg-white px-2.5 py-1 text-[11px] text-text-muted hover:border-accent-700 hover:text-accent-700 transition-colors"
-                            @click="showAddViolationModal = true"
-                        >
-                            <PropertyIcon name="IconCirclePlus" class="h-3.5 w-3.5" stroke-width="2" />
-                            <span>{{ t('Add rule violation') }}</span>
-                        </button>
-                    </div>
-
-                    <div v-if="violationsForDay.length" class="space-y-2">
-                        <div
-                            v-for="violation in violationsForDay"
-                            :key="violation.id"
-                            class="flex items-center justify-between rounded-lg border border-border-subtle bg-white px-3 py-2 cursor-pointer hover:bg-surface-sunken/80 transition-colors"
-                            @click="openViolationEditModal(violation)"
-                        >
-                            <div class="flex items-center gap-2 text-xs text-text-muted">
-                                <span
-                                    class="inline-block h-2.5 w-2.5 rounded-full"
-                                    :style="{ backgroundColor: violation.shift_rule?.warning_color || '#ff0000' }"
-                                ></span>
-                                <span class="font-medium">{{ violation.shift_rule?.name }}</span>
-                                <span
-                                    :class="violation.severity === 'error' ? 'bg-danger-surface text-danger' : 'bg-warning-surface text-warning'"
-                                    class="inline-flex px-1.5 py-0.5 text-[10px] font-medium rounded-full"
-                                >
-                                    {{ violation.severity === 'error' ? t('Error') : t('Warning') }}
-                                </span>
-                            </div>
-                            <div class="flex items-center gap-2">
-                                <span v-if="violation.is_manual" class="text-[10px] text-text-subtle">
-                                    {{ t('Manual violation') }}
-                                </span>
-                                <span v-if="violation.compensation_days" class="text-[10px] text-success">
-                                    {{ violation.compensation_days }} {{ t('Days') }}
-                                </span>
-                                <PropertyIcon name="IconChevronRight" class="h-3.5 w-3.5 text-text-subtle" />
-                            </div>
-                        </div>
-                    </div>
-                    <div
-                        v-else
-                        class="flex items-center gap-2 rounded-xl border border-dashed border-border-subtle bg-surface-sunken/60 px-3 py-3 text-xs text-text-subtle"
-                    >
-                        <span class="inline-block h-1.5 w-1.5 rounded-full bg-border"></span>
-                        <span>{{ t('No rule violations for this day.') }}</span>
-                    </div>
-                </section>
-
-                <!-- Compensation day off info -->
-                <section v-if="compensationDayForDate.length && (can('can plan shifts') || hasAdminRole())" class="mt-5">
-                    <div
-                        v-for="compDay in compensationDayForDate"
-                        :key="compDay.id"
-                        class="rounded-xl border border-special-teal-border bg-special-teal-surface px-4 py-3 mb-2"
-                    >
-                        <div class="flex items-center gap-2 mb-1">
-                            <span class="inline-block h-2 w-2 rounded-full bg-special-teal"></span>
-                            <span class="text-xs font-semibold text-special-teal">
-                                {{ compDay.value >= 1.0 ? t('Compensation day off') : t('Half compensation day off') }}
-                                <template v-if="compDay.half_day_period === 'morning' || compDay.half_day_period === 'afternoon'">
-                                    ({{ compDay.half_day_period === 'morning' ? t('Morning') : t('Afternoon') }})
-                                </template>
-                            </span>
-                        </div>
-                        <div class="text-xs text-special-teal">
-                            <span class="font-medium">{{ t('Compensation day off for:') }}</span>
-                            {{ compDay.violation?.shift_rule?.name || t('Manual') }}
-                        </div>
-                        <div v-if="compDay.granted_by_user" class="text-xs text-special-teal mt-0.5">
-                            <span class="font-medium">{{ t('Assigned by') }}:</span>
-                            {{ compDay.granted_by_user.first_name }} {{ compDay.granted_by_user.last_name }}
-                        </div>
-                        <button
-                            type="button"
-                            class="mt-1 text-[11px] text-special-teal hover:text-special-teal underline"
-                            @click="revokeCompensationDay(compDay.id)"
-                        >
-                            {{ t('Revoke') }}
-                        </button>
-                    </div>
-                </section>
-
-                <!-- Grant compensation day button -->
-                <section
-                    v-if="!compensationDayForDate.length && user.type === 0 && (can('can plan shifts') || hasAdminRole())"
-                    class="mt-3"
-                >
-                    <button
-                        type="button"
-                        class="inline-flex items-center gap-1 rounded-full border border-special-teal-border bg-white px-2.5 py-1 text-[11px] text-special-teal hover:border-special-teal hover:text-special-teal transition-colors"
-                        @click="showGrantCompensationModal = true"
-                    >
-                        <PropertyIcon name="IconCalendarPlus" class="h-3.5 w-3.5" stroke-width="2" />
-                        <span>{{ t('Grant compensation day') }}</span>
-                    </button>
-                </section>
-
-                <!-- Rechte Spalte: Availability + Kommentar -->
-                <div class="space-y-6 mt-5">
+                <!-- Rechte Spalte: Person & Tag (Verfügbarkeit, Kommentar, Regelverstöße, Ersatzfrei, registrierte Verfügbarkeiten) -->
+                <div class="space-y-6 lg:col-span-5">
                     <!-- Info: Availability locked by compensation day -->
                     <section
                         v-if="compensationDayForDate.length && (user.type === 0 || user.type === 1)"
@@ -670,6 +567,116 @@
                             :show-label="false"
                             no-margin-top
                         />
+                    </section>
+
+                    <!-- Regelverstöße -->
+                    <section v-if="(can('can plan shifts') || hasAdminRole()) && user.type === 0" class="space-y-3">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <h3 class="text-xs font-semibold tracking-wide text-text-subtle uppercase">
+                                    {{ t('Rule violations') }}
+                                </h3>
+                                <p class="text-[11px] text-text-subtle mt-0.5">
+                                    {{ t('Rule violations for this person on this day.') }}
+                                </p>
+                            </div>
+                            <button
+                                type="button"
+                                class="hidden sm:inline-flex items-center gap-1 rounded-full border border-border-subtle bg-white px-2.5 py-1 text-[11px] text-text-muted hover:border-accent-700 hover:text-accent-700 transition-colors"
+                                @click="showAddViolationModal = true"
+                            >
+                                <PropertyIcon name="IconCirclePlus" class="h-3.5 w-3.5" stroke-width="2" />
+                                <span>{{ t('Add rule violation') }}</span>
+                            </button>
+                        </div>
+
+                        <div v-if="violationsForDay.length" class="space-y-2">
+                            <div
+                                v-for="violation in violationsForDay"
+                                :key="violation.id"
+                                class="flex items-center justify-between rounded-lg border border-border-subtle bg-white px-3 py-2 cursor-pointer hover:bg-surface-sunken/80 transition-colors"
+                                @click="openViolationEditModal(violation)"
+                            >
+                                <div class="flex items-center gap-2 text-xs text-text-muted">
+                                    <span
+                                        class="inline-block h-2.5 w-2.5 rounded-full"
+                                        :class="violation.shift_rule ? '' : 'bg-warning'"
+                                        :style="violation.shift_rule ? { backgroundColor: violation.shift_rule.warning_color || '#ff0000' } : null"
+                                    ></span>
+                                    <span class="font-medium">{{ violation.shift_rule?.name || violation.title || t('Rule violation') }}</span>
+                                    <span
+                                        :class="violation.severity === 'error' ? 'bg-danger-surface text-danger' : 'bg-warning-surface text-warning'"
+                                        class="inline-flex px-1.5 py-0.5 text-[10px] font-medium rounded-full"
+                                    >
+                                        {{ violation.severity === 'error' ? t('Error') : t('Warning') }}
+                                    </span>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <span v-if="violation.is_manual" class="text-[10px] text-text-subtle">
+                                        {{ t('Manual violation') }}
+                                    </span>
+                                    <span v-if="violation.compensation_days" class="text-[10px] text-success">
+                                        {{ violation.compensation_days }} {{ t('Days') }}
+                                    </span>
+                                    <PropertyIcon name="IconChevronRight" class="h-3.5 w-3.5 text-text-subtle" />
+                                </div>
+                            </div>
+                        </div>
+                        <div
+                            v-else
+                            class="flex items-center gap-2 rounded-xl border border-dashed border-border-subtle bg-surface-sunken/60 px-3 py-3 text-xs text-text-subtle"
+                        >
+                            <span class="inline-block h-1.5 w-1.5 rounded-full bg-border"></span>
+                            <span>{{ t('No rule violations for this day.') }}</span>
+                        </div>
+                    </section>
+
+                    <!-- Compensation day off info -->
+                    <section v-if="compensationDayForDate.length && (can('can plan shifts') || hasAdminRole())">
+                        <div
+                            v-for="compDay in compensationDayForDate"
+                            :key="compDay.id"
+                            class="rounded-xl border border-special-teal-border bg-special-teal-surface px-4 py-3 mb-2"
+                        >
+                            <div class="flex items-center gap-2 mb-1">
+                                <span class="inline-block h-2 w-2 rounded-full bg-special-teal"></span>
+                                <span class="text-xs font-semibold text-special-teal">
+                                    {{ compDay.value >= 1.0 ? t('Compensation day off') : t('Half compensation day off') }}
+                                    <template v-if="compDay.half_day_period === 'morning' || compDay.half_day_period === 'afternoon'">
+                                        ({{ compDay.half_day_period === 'morning' ? t('Morning') : t('Afternoon') }})
+                                    </template>
+                                </span>
+                            </div>
+                            <div class="text-xs text-special-teal">
+                                <span class="font-medium">{{ t('Compensation day off for:') }}</span>
+                                {{ compDay.violation?.shift_rule?.name || compDay.violation?.title || t('Manual') }}
+                            </div>
+                            <div v-if="compDay.granted_by_user" class="text-xs text-special-teal mt-0.5">
+                                <span class="font-medium">{{ t('Assigned by') }}:</span>
+                                {{ compDay.granted_by_user.first_name }} {{ compDay.granted_by_user.last_name }}
+                            </div>
+                            <button
+                                type="button"
+                                class="mt-1 text-[11px] text-special-teal hover:text-special-teal underline"
+                                @click="revokeCompensationDay(compDay.id)"
+                            >
+                                {{ t('Revoke') }}
+                            </button>
+                        </div>
+                    </section>
+
+                    <!-- Grant compensation day button -->
+                    <section
+                        v-if="!compensationDayForDate.length && user.type === 0 && (can('can plan shifts') || hasAdminRole())"
+                    >
+                        <button
+                            type="button"
+                            class="inline-flex items-center gap-1 rounded-full border border-special-teal-border bg-white px-2.5 py-1 text-[11px] text-special-teal hover:border-special-teal hover:text-special-teal transition-colors"
+                            @click="showGrantCompensationModal = true"
+                        >
+                            <PropertyIcon name="IconCalendarPlus" class="h-3.5 w-3.5" stroke-width="2" />
+                            <span>{{ t('Grant compensation day') }}</span>
+                        </button>
                     </section>
 
                     <!-- Registrierte Verfügbarkeiten -->
@@ -977,7 +984,9 @@ import AddManualViolationModal from '@/Pages/Shifts/Components/AddManualViolatio
 import ViolationEditModal from '@/Pages/Shifts/Components/ViolationEditModal.vue';
 import GrantCompensationDayModal from '@/Pages/Shifts/Components/GrantCompensationDayModal.vue';
 import { IconCirclePlus, IconTrash } from '@tabler/icons-vue';
-import { useLegalBreak } from '@/Composeables/useLegalBreak';
+import { legalBreakMinutesFor } from '@/Composeables/useLegalBreak';
+import { toBreakNumber } from '@/Composeables/useAutoBreak';
+import LegalBreakHint from '@/Components/Inputs/LegalBreakHint.vue';
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 import { usePermission } from '@/Composeables/Permission.js';
 import { colorForProjectId, formatAssignmentDate } from '@/Composeables/UseProjectDayAssignments.js';
@@ -1241,10 +1250,47 @@ const shiftPlanComment = ref(
 // Track manual edits for break_minutes per individual time
 const manualBreakEdits = ref(new Map());
 
+// Schlüssel pro Zeile: bei neuen Zeilen bewusst ohne Uhrzeiten, sonst würde jede
+// Zeitänderung den Manuell-Marker verlieren.
+function breakEditKey(individualTime) {
+    return individualTime.id || individualTime._breakKey || (individualTime._breakKey = `new-${Math.random().toString(36).slice(2)}`);
+}
+
 // Function to mark break time as manually edited
 function markBreakAsManuallyEdited(individualTime) {
-    const timeKey = individualTime.id || `${individualTime.start_date}-${individualTime.start_time}-${individualTime.end_time}`;
-    manualBreakEdits.value.set(timeKey, true);
+    manualBreakEdits.value.set(breakEditKey(individualTime), true);
+}
+
+function hasBreakRelevantTimes(individualTime) {
+    return Boolean(individualTime.start_time) && Boolean(individualTime.end_time) && !individualTime.full_day;
+}
+
+// Gesetzliche Mindestpause (ArbZG) für eine Zeile
+function legalBreakFor(individualTime) {
+    return hasBreakRelevantTimes(individualTime)
+        ? legalBreakMinutesFor(individualTime.start_time, individualTime.end_time)
+        : 0;
+}
+
+function resetBreakToLegal(individualTime) {
+    individualTime.break_minutes = legalBreakFor(individualTime);
+    manualBreakEdits.value.delete(breakEditKey(individualTime));
+}
+
+// Auto-Pause: leeres Feld befüllen bzw. nicht-manuelle Werte auf das Minimum anheben;
+// manuelle Werte werden nie still überschrieben (Hinweis + Zurücksetzen unter dem Feld).
+function syncBreakToLegal(individualTime) {
+    if (!hasBreakRelevantTimes(individualTime)) return;
+    const legal = legalBreakFor(individualTime);
+    const current = toBreakNumber(individualTime.break_minutes);
+    if (current === null) {
+        individualTime.break_minutes = legal;
+        return;
+    }
+    if (manualBreakEdits.value.get(breakEditKey(individualTime))) return;
+    if (current < legal) {
+        individualTime.break_minutes = legal;
+    }
 }
 
 // IndividualTimes gefiltert nach Tag
@@ -1425,29 +1471,16 @@ watch(
 
             if (!individualTime) return;
 
-            const timeKey = individualTime.id || `${individualTime.start_date}-${individualTime.start_time}-${individualTime.end_time}`;
-
             // Check if start_time or end_time actually changed
             const timesChanged = oldTime && (
                 newTime.start_time !== oldTime.start_time ||
                 newTime.end_time !== oldTime.end_time
             );
 
-            // Only recalculate break_minutes when times actually changed
+            // Only recalculate break_minutes when times actually changed;
+            // manuelle Werte bleiben stehen (Hinweis + Zurücksetzen unter dem Feld).
             if (timesChanged) {
-                // Reset manual edit flag when times change
-                manualBreakEdits.value.delete(timeKey);
-
-                // Auto-calculate break_minutes if times are set
-                if (individualTime.start_time && individualTime.end_time) {
-                    const startRef = computed(() => individualTime.start_time);
-                    const endRef = computed(() => individualTime.end_time);
-                    const { breakMinutes } = useLegalBreak(startRef, endRef);
-
-                    if (breakMinutes.value !== individualTime.break_minutes) {
-                        individualTime.break_minutes = breakMinutes.value;
-                    }
-                }
+                syncBreakToLegal(individualTime);
             }
         });
     },

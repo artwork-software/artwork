@@ -448,6 +448,7 @@
                                                                @openDeleteModal="openDeleteModal"
                                                                @open-error-modal="openErrorModal"
                                                                @budget-updated="handleBudgetUpdated"
+                                                               @order-saved="showOrderSavedToast"
                                                                @budget-patched="applyBudgetPatch"
                                                                :table="table"
                                                                :project="project"
@@ -574,6 +575,7 @@
                                                                @openDeleteModal="openDeleteModal"
                                                                @open-error-modal="openErrorModal"
                                                                @budget-updated="handleBudgetUpdated"
+                                                               @order-saved="showOrderSavedToast"
                                                                @budget-patched="applyBudgetPatch"
                                                                :table="table"
                                                                :project="project"
@@ -693,6 +695,12 @@
             </div>
         </div>
     </div>
+    <NotificationToast
+        v-model:show="orderSavedToastVisible"
+        title="Order saved"
+        type="success"
+        :duration="2500"
+    />
     <ArtworkBaseModal @close="closeSuccessModal" v-if="showSuccessModal" :title="successHeading" :description="successDescription">
         <div class="mx-4">
             <div class="font-lexend font-black text-[clamp(24px,3vw,30px)]/[34px] text-text my-2">
@@ -847,12 +855,14 @@ import axios from "axios";
 import BaseMenuItem from "@/Components/Menu/BaseMenuItem.vue";
 import VerifiedRequestModal from "@/Layouts/Components/VerifiedRequestModal.vue";
 import draggable from 'vuedraggable';
+import NotificationToast from "@/Artwork/Feedback/NotificationToast.vue";
 
 export default {
     name: 'BudgetComponent',
     mixins: [Permissions, CurrencyFloatToStringFormatter],
     components: {
         draggable,
+        NotificationToast,
         BaseMenuItem,
         PropertyIcon,
         ArtworkBaseModal,
@@ -882,6 +892,7 @@ export default {
     },
     data() {
         return {
+            orderSavedToastVisible: false,
             showSumDetailModal: false,
             showBudgetAccessModal: false,
             costsOpened: true,
@@ -1210,8 +1221,18 @@ export default {
                 {
                     preserveScroll: true,
                     preserveState: true,
+                    // Wie Unter-/Zeilen-Reorder: Budget-Daten neu laden + kurzes Feedback.
+                    onSuccess: () => {
+                        this.handleBudgetUpdated();
+                        this.showOrderSavedToast();
+                    },
                 }
             );
+        },
+        showOrderSavedToast() {
+            // Toast erneut auslösen, auch wenn er gerade noch sichtbar ist.
+            this.orderSavedToastVisible = false;
+            this.$nextTick(() => { this.orderSavedToastVisible = true; });
         },
         IconEyeX,
         IconFlagUp,

@@ -11,6 +11,7 @@ use Artwork\Modules\IndividualTimes\Models\IndividualTime;
 use Artwork\Modules\IndividualTimes\Models\IndividualTimeSeries;
 use Artwork\Modules\IndividualTimes\Services\IndividualTimeSeriesService;
 use Artwork\Modules\ServiceProvider\Models\ServiceProvider;
+use Artwork\Modules\Shift\Services\LegalBreakCalculator;
 use Artwork\Modules\User\Models\User;
 use Illuminate\Auth\AuthManager;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
@@ -325,7 +326,10 @@ class IndividualTimeSeriesController extends Controller
                 // Arbeitszeit wie bei Einzelzeit berechnen
                 $startTime = $fullDay ? null : Arr::get($data, 'start_time');
                 $endTime = $fullDay ? null : Arr::get($data, 'end_time');
-                $breakMinutes = Arr::get($data, 'break_minutes', 0);
+                // Ohne Pause → gesetzliche Mindestpause (ArbZG); ein gesetzter Wert (auch 0) bleibt.
+                $breakMinutes = ($startTime && $endTime)
+                    ? LegalBreakCalculator::resolveBreakMinutes(Arr::get($data, 'break_minutes'), $startTime, $endTime)
+                    : (int) Arr::get($data, 'break_minutes', 0);
                 if ($startTime && $endTime) {
                     $startDateForConvert = Carbon::parse($date->toDateString() . ' ' . $startTime);
                     $startTimeConverted = Carbon::parse($date->toDateString() . ' ' . $startTime);

@@ -128,6 +128,61 @@ final class CompensationDayOffRepositoryTest extends TestCase
         $this->assertSame($expected->id, $result->first()->id);
     }
 
+    #[Test]
+    public function get_dashboard_stats_returns_counts_and_sums_per_status_in_a_single_query(): void
+    {
+        $user = User::factory()->create();
+        $other = User::factory()->create();
+        $today = Carbon::now()->startOfDay();
+
+        // offen (Frist in der Zukunft): 1.0 + 0.5
+        $this->entry($user, $today->copy()->addDays(10), 1.0);
+        $this->entry($user, $today->copy()->addDays(12), 0.5);
+        // überfällig (offen, Frist vorbei): 1.0 + 1.0 — zählen auch als offen
+        $this->entry($user, $today->copy()->subDays(3), 1.0);
+        $this->entry($user, $today->copy()->subDays(1), 1.0);
+        // gewährt: 0.5 (Frist vorbei, aber gewährt → nicht überfällig)
+        $this->entry($user, $today->copy()->subDays(5), 0.5, granted: true);
+        // andere Person → über user_id-Filter ausgeschlossen
+        $this->entry($other, $today->copy()->subDays(2), 1.0);
+        $this->entry($other, $today->copy()->addDays(2), 1.0, granted: true);
+
+        \Illuminate\Support\Facades\DB::flushQueryLog();
+        \Illuminate\Support\Facades\DB::enableQueryLog();
+        $stats = $this->repository->getDashboardStats(['user_id' => $user->id]);
+        $queries = count(\Illuminate\Support\Facades\DB::getQueryLog());
+        \Illuminate\Support\Facades\DB::disableQueryLog();
+
+        $this->assertSame(1, $queries, 'Kennzahlen müssen aus einer Abfrage kommen');
+        $this->assertSame(4, $stats['open']);
+        $this->assertSame(1, $stats['granted']);
+        $this->assertSame(2, $stats['overdue']);
+        $this->assertEqualsWithDelta(3.5, $stats['open_value'], 0.001);
+        $this->assertEqualsWithDelta(0.5, $stats['granted_value'], 0.001);
+        $this->assertEqualsWithDelta(2.0, $stats['overdue_value'], 0.001);
+
+        // Ohne Filter (Altaufruf mit null = kein Gewerk): alle Personen
+        $all = $this->repository->getDashboardStats(null);
+        $this->assertSame(5, $all['open']);
+        $this->assertSame(2, $all['granted']);
+        $this->assertSame(3, $all['overdue']);
+
+        // Leerer Filter-Treffer: Nullen statt null
+        $none = $this->repository->getDashboardStats(['user_id' => $user->id + $other->id + 1000]);
+        $this->assertSame(['open' => 0, 'granted' => 0, 'overdue' => 0, 'open_value' => 0.0, 'granted_value' => 0.0, 'overdue_value' => 0.0], $none);
+    }
+
+    private function entry(User $user, Carbon $deadline, float $value, bool $granted = false): CompensationDayOff
+    {
+        return CompensationDayOff::create([
+            'user_id' => $user->id,
+            'value' => $value,
+            'deadline' => $deadline->toDateString(),
+            'granted_date' => $granted ? $deadline->copy()->subDay()->toDateString() : null,
+            'granted_at' => $granted ? Carbon::now() : null,
+        ]);
+    }
+
     private function grantedHalf(User $user, Carbon $date, string $period): CompensationDayOff
     {
         return CompensationDayOff::create([

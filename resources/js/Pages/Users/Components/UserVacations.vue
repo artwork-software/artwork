@@ -161,6 +161,8 @@ const buildEntries = (rows, dataType) => {
     const entries = singles.map((row) => ({
         kind: 'single',
         type: dataType,
+        // Art der Abwesenheit (OFF_WORK | NOT_AVAILABLE | FREE_WORK), bei Verfügbarkeiten null
+        vacationType: dataType === 'vacation' ? (row.type ?? null) : null,
         id: row.id,
         seriesId: null,
         startDate: toDateString(row.date),
@@ -187,6 +189,7 @@ const buildEntries = (rows, dataType) => {
         entries.push({
             kind,
             type: dataType,
+            vacationType: dataType === 'vacation' ? (first.type ?? null) : null,
             id: first.id,
             seriesId: first.series_id,
             startDate,

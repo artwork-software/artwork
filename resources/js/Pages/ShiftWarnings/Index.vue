@@ -4,7 +4,19 @@
         :description="$t('Shift warnings are used to monitor and enforce compliance with labor regulations and internal policies.')"
     >
         <template #actions>
-            <BaseUIButton @click="openCreateModal" label="Create new rule" use-translation is-add-button class="whitespace-nowrap shrink-0" />
+            <div class="flex items-center gap-2 shrink-0">
+                <!-- Gleiche Rechte wie „Regel anlegen" (Route-Middleware rules,edit) -->
+                <BaseUIButton
+                    v-if="legalDefaultRules && legalDefaultRules.length"
+                    @click="openDefaultsModal"
+                    label="Create legal default rules"
+                    use-translation
+                    variant="secondary"
+                    icon="IconScale"
+                    class="whitespace-nowrap"
+                />
+                <BaseUIButton @click="openCreateModal" label="Create new rule" use-translation is-add-button class="whitespace-nowrap" />
+            </div>
         </template>
 
         <SettingsGuideBanner
@@ -13,13 +25,25 @@
             class="mb-6"
             :paragraphs="[
                 'Rules automatically check the shift plan for violations of working time requirements — for example maximum hours, rest times or free days.',
-                'Violations are highlighted in colour in the shift plan and collected in the \'Open violations\' tab, where you can resolve, ignore or compensate them.'
+                'Rule violations are marked in the shift plan and collected in the \'Open violations\' tab, where you can process, ignore or compensate them with substitute days off.'
             ]"
             footnote="A rule only applies to people whose contract is assigned to it."
         />
 
+        <RuleViewSwitch current="rules" class="mb-4" />
+
         <div class="rounded-lg bg-surface border border-border-subtle w-full shadow-raised p-5">
-            <div class="overflow-x-auto">
+            <!-- Leerzustand -->
+            <div v-if="!rules || rules.length === 0" class="flex flex-col items-center justify-center py-12 text-center">
+                <IconShieldCheck class="h-10 w-10 text-text-subtle mb-3" stroke-width="1.5" />
+                <p class="text-sm font-medium text-text">{{ $t('No rules yet') }}</p>
+                <p class="mt-1 text-xs text-text-subtle max-w-md">
+                    {{ $t('Create a rule to have the shift plan checked automatically — e.g. daily maximum hours, rest times or work on Sundays and special days.') }}
+                </p>
+                <BaseUIButton class="mt-4" @click="openCreateModal" label="Create rule" use-translation is-add-button />
+            </div>
+
+            <div v-else class="overflow-x-auto">
                 <table class="min-w-full divide-y divide-border-subtle">
                     <thead class="bg-surface-sunken">
                         <tr>
@@ -43,7 +67,7 @@
                             </th>
                         </tr>
                     </thead>
-                    <tbody class="bg-white divide-y divide-border-subtle">
+                    <tbody class="bg-surface divide-y divide-border-subtle">
                         <tr v-for="rule in rules" :key="rule.id">
                             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-text">
                                 {{ rule.name }}
@@ -52,11 +76,11 @@
                                 {{ formatTriggerType(rule.trigger_type) }}
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-text-subtle">
-                                {{ rule.individual_number_value }}
+                                {{ formatRuleValue(rule, $t) }}
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-text-subtle">
                                 <div
-                                    class="w-6 h-6 rounded-full border"
+                                    class="w-6 h-6 rounded-full border border-border"
                                     :style="{ backgroundColor: rule.warning_color }"
                                 ></div>
                             </td>
@@ -106,7 +130,7 @@
                         </div>
 
                         <div v-if="!editingRule" class="relative">
-                            <Listbox as="div" class="flex relative" v-model="form.trigger_type" id="eventType">
+                            <Listbox as="div" class="flex relative" v-model="form.trigger_type" id="ruleType">
                                 <ListboxButton v-if="form.trigger_type !== ''" class="menu-button">
                                     <div class="flex items-center justify-between w-full">
                                     <span class="truncate items-center flex">
@@ -126,8 +150,8 @@
                                     </span>
                                 </ListboxButton>
                                 <transition leave-active-class="transition ease-in duration-100" leave-from-class="opacity-100" leave-to-class="opacity-0">
-                                    <ListboxOptions class="absolute w-full z-10 mt-16 rounded-lg bg-surface-inverse shadow-lg max-h-32 pr-2 pt-2 pb-2 text-base ring-1 ring-black ring-opacity-5 overflow-y-scroll focus:outline-none sm:text-sm">
-                                        <ListboxOption as="template" class="max-h-8" v-for="type in availableRuleTypes" :key="type" :value="type" v-slot="{ active, selected }">
+                                    <ListboxOptions class="absolute w-full z-10 mt-16 rounded-lg bg-surface-inverse shadow-lg max-h-40 pr-2 pt-2 pb-2 text-base ring-1 ring-black ring-opacity-5 overflow-y-scroll focus:outline-none sm:text-sm">
+                                        <ListboxOption as="template" class="max-h-8" v-for="type in selectableRuleTypes" :key="type" :value="type" v-slot="{ active, selected }">
                                             <li :class="[active ? ' text-white' : 'text-text-subtle', 'group hover:border-l-4 hover:border-l-success cursor-pointer flex justify-between items-center py-2 pl-3 pr-9 text-sm subpixel-antialiased']">
                                                 <div class="flex">
                                             <span :class="[selected ? 'text-sm/5 font-bold text-white' : 'font-normal', 'ml-4 block truncate']">
@@ -151,16 +175,67 @@
                             :paragraphs="[triggerTypeHint]"
                         />
 
-                        <div>
+                        <!-- Wert je Regeltyp: Stunden / Tage / Uhrzeit / kein Wert -->
+                        <div v-if="valueKind === 'hours' || valueKind === 'days' || valueKind === 'count'">
+                            <div class="flex items-end gap-2">
+                                <div class="grow">
+                                    <BaseInput
+                                        v-model="form.individual_number_value"
+                                        :label="valueLabel"
+                                        :required="!valueOptional"
+                                        type="number"
+                                        :min="valueOptional ? 0 : (valueKind === 'hours' ? 0.5 : 1)"
+                                        :step="valueKind === 'hours' ? 0.5 : 1"
+                                        :placeholder="valuePlaceholder"
+                                        id="individual_number_value"
+                                    />
+                                </div>
+                                <span class="mb-2 text-sm text-text-subtle whitespace-nowrap">
+                                    {{ valueUnit }}
+                                </span>
+                            </div>
+                            <p class="mt-1 text-xs text-text-subtle">{{ valueHelpText }}</p>
+                            <p v-if="form.errors.individual_number_value" class="mt-1 text-xs text-danger">
+                                {{ form.errors.individual_number_value }}
+                            </p>
+                        </div>
+
+                        <div v-else-if="valueKind === 'time'">
                             <BaseInput
-                                v-model="form.individual_number_value"
-                                label="Value"
+                                v-model="timeValue"
+                                :label="$t('Time of day')"
                                 required
-                                type="number"
-                                id="individual_number_value"
+                                type="time"
+                                id="individual_number_time"
+                                :placeholder="valuePlaceholder"
                             />
-                            <p v-if="form.trigger_type === 'halfDayOffConflict'" class="mt-1 text-xs text-text-subtle">
-                                {{ $t('Time as a decimal hour (14 = 14:00, 14.5 = 14:30).') }}
+                            <p class="mt-1 text-xs text-text-subtle">{{ valueHelpText }}</p>
+                            <p v-if="form.errors.individual_number_value" class="mt-1 text-xs text-danger">
+                                {{ form.errors.individual_number_value }}
+                            </p>
+                        </div>
+
+                        <!-- Ausgleichszeitraum (nur Wochendurchschnitt) -->
+                        <div v-if="hasPeriodWeeks">
+                            <div class="flex items-end gap-2">
+                                <div class="grow">
+                                    <BaseInput
+                                        v-model.number="form.period_weeks"
+                                        :label="$t('Period (weeks)')"
+                                        required
+                                        type="number"
+                                        :min="2"
+                                        :max="104"
+                                        :step="1"
+                                        :placeholder="periodPlaceholder"
+                                        id="period_weeks"
+                                    />
+                                </div>
+                                <span class="mb-2 text-sm text-text-subtle whitespace-nowrap">{{ $t('Weeks') }}</span>
+                            </div>
+                            <p class="mt-1 text-xs text-text-subtle">{{ periodWeeksHelpText }}</p>
+                            <p v-if="form.errors.period_weeks" class="mt-1 text-xs text-danger">
+                                {{ form.errors.period_weeks }}
                             </p>
                         </div>
 
@@ -194,7 +269,7 @@
                             </div>
                             <ColorPickerComponent
                                 v-model="form.warning_color"
-                                label="Warnfarbe"
+                                :label="$t('Warning color')"
                                 class="!w-full"
                                 :color="form.warning_color"
                                 @updateColor="addColor"
@@ -202,25 +277,8 @@
                         </div>
 
                         <div>
-                            <div class="flex gap-3">
-                                <div class="flex h-6 shrink-0 items-center">
-                                    <div class="group grid size-4 grid-cols-1">
-                                        <input v-model="form.notify_on_violation" id="notify_on_violation" aria-describedby="notify_on_violation-description" name="notify_on_violation" type="checkbox" checked="" class="col-start-1 row-start-1 appearance-none rounded-sm border border-border bg-white checked:border-accent-600 checked:bg-accent-600 indeterminate:border-accent-600 indeterminate:bg-accent-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-600 disabled:border-border disabled:bg-surface-sunken disabled:checked:bg-surface-sunken forced-colors:appearance-auto" />
-                                        <svg class="pointer-events-none col-start-1 row-start-1 size-3.5 self-center justify-self-center stroke-white group-has-disabled:stroke-text-subtle" viewBox="0 0 14 14" fill="none">
-                                            <path class="opacity-0 group-has-checked:opacity-100" d="M3 8L6 11L11 3.5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-                                            <path class="opacity-0 group-has-indeterminate:opacity-100" d="M3 7H11" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-                                        </svg>
-                                    </div>
-                                </div>
-                                <div class="text-sm/6">
-                                    <label for="notify_on_violation" class="font-medium text-text">{{ $t('Notification of rule violation') }}</label>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div>
                             <div class="relative">
-                                <Listbox as="div" class="flex relative" v-model="form.contract_ids" id="eventType" multiple>
+                                <Listbox as="div" class="flex relative" v-model="form.contract_ids" id="contractIds" multiple>
                                     <ListboxButton class="menu-button">
                                         <div class="flex flex-grow text-sm/5 font-bold text-text-subtle text-left subpixel-antialiased">
                                             {{ $t('Assign contracts')}}
@@ -272,6 +330,58 @@
                                 ]"
                             />
                         </div>
+
+                        <!-- Benachrichtigen: Personen, die bei neuen Verstößen informiert werden -->
+                        <div v-if="users && users.length">
+                            <div class="relative">
+                                <Listbox as="div" class="flex relative" v-model="form.user_ids" id="notifyUserIds" multiple>
+                                    <ListboxButton class="menu-button">
+                                        <div class="flex flex-grow text-sm/5 font-bold text-text-subtle text-left subpixel-antialiased">
+                                            {{ $t('Notify on rule violation') }}
+                                        </div>
+                                        <span class="pointer-events-none">
+                                            <IconChevronDown stroke-width="1.5" class="h-5 w-5 text-text" aria-hidden="true"/>
+                                        </span>
+                                    </ListboxButton>
+                                    <transition leave-active-class="transition ease-in duration-100" leave-from-class="opacity-100" leave-to-class="opacity-0">
+                                        <ListboxOptions class="absolute w-full z-10 mt-16 rounded-lg bg-surface-inverse shadow-lg max-h-40 pr-2 pt-2 pb-2 text-base ring-1 ring-black ring-opacity-5 overflow-y-scroll focus:outline-none sm:text-sm">
+                                            <ListboxOption
+                                                as="template"
+                                                class="max-h-8"
+                                                v-for="user in users"
+                                                :key="user.id"
+                                                :value="user.id"
+                                                v-slot="{ active, selected }"
+                                            >
+                                                <li :class="[active ? ' text-white' : 'text-text-subtle', 'group hover:border-l-4 hover:border-l-success cursor-pointer flex justify-between items-center py-2 pl-3 pr-9 text-sm subpixel-antialiased']">
+                                                    <div class="flex">
+                                                        <span :class="[selected ? 'text-sm/5 font-bold text-white' : 'font-normal', 'ml-4 block truncate']">
+                                                            {{ user.first_name }} {{ user.last_name }}
+                                                        </span>
+                                                    </div>
+                                                    <span :class="[active ? ' text-white' : 'text-text-subtle', ' group flex justify-end items-center text-sm subpixel-antialiased']">
+                                                        <IconCheck stroke-width="1.5" v-if="selected" class="h-5 w-5 flex text-success" aria-hidden="true"/>
+                                                    </span>
+                                                </li>
+                                            </ListboxOption>
+                                        </ListboxOptions>
+                                    </transition>
+                                </Listbox>
+                            </div>
+                            <div class="mt-2 flex flex-wrap gap-1">
+                                <span
+                                    v-for="user in selectedNotifyUsers"
+                                    :key="user.id"
+                                    class="inline-flex items-center gap-1 rounded-full bg-surface-sunken px-2 py-0.5 text-xs text-text"
+                                >
+                                    {{ user.first_name }} {{ user.last_name }}
+                                    <button type="button" class="text-text-subtle hover:text-danger" @click="removeNotifyUser(user.id)">
+                                        <IconX class="h-3 w-3" stroke-width="2" />
+                                    </button>
+                                </span>
+                                <span v-if="!selectedNotifyUsers.length" class="text-sm text-text-subtle">{{ $t('Nobody is notified') }}</span>
+                            </div>
+                        </div>
                     </div>
 
                     <div class="mt-6 flex items-center justify-between">
@@ -287,8 +397,122 @@
                             type="submit"
                             variant="primary"
                             hide-icon
+                            :disabled="form.processing"
                         >
                             {{ editingRule ? $t('Update') : $t('Create') }}
+                        </BaseUIButton>
+                    </div>
+                </form>
+            </div>
+        </ArtworkBaseModal>
+
+        <!-- Gesetzliche Standardregeln (ArbZG) anlegen -->
+        <ArtworkBaseModal
+            v-if="showDefaultsModal"
+            @close="closeDefaultsModal"
+            title="Create legal default rules"
+            description="Legal defaults according to the German Working Hours Act (ArbZG)."
+        >
+            <div class="p-5">
+                <form @submit.prevent="saveDefaults">
+                    <SettingsGuideBanner
+                        variant="static"
+                        title="What happens here?"
+                        :paragraphs="[
+                            'The rules below are created with the legal default values of the German Working Hours Act (ArbZG). Afterwards they are ordinary rules: you can rename, adjust or delete them at any time.',
+                            'A rule that already exists with the same type and value is not created again — it is only assigned to the selected contract templates that are still missing.'
+                        ]"
+                    />
+
+                    <div class="mt-4 flex items-center justify-between">
+                        <p class="text-sm font-medium text-text">{{ $t('Rules to create') }}</p>
+                        <button type="button" class="text-xs text-text-subtle underline hover:text-text" @click="toggleAllDefaultRules">
+                            {{ allDefaultRulesSelected ? $t('Deselect all') : $t('Select all') }}
+                        </button>
+                    </div>
+                    <ul class="mt-2 divide-y divide-border-subtle rounded-lg border border-border-subtle">
+                        <li v-for="definition in legalDefaultRules" :key="definition.key" class="px-3 py-2">
+                            <BaseCheckbox
+                                :id="`legal-default-${definition.key}`"
+                                :model-value="defaultsForm.rules.includes(definition.key)"
+                                :description="`${definition.legal_basis} – ${definition.reason}`"
+                                @update:modelValue="(checked) => toggleDefaultRule(definition.key, checked)"
+                            >
+                                <template #label>
+                                    <span class="flex flex-wrap items-baseline gap-x-2">
+                                        <span>{{ definition.name }}</span>
+                                        <span class="text-xs font-normal text-text-subtle">{{ defaultRuleValueText(definition) }}</span>
+                                    </span>
+                                </template>
+                            </BaseCheckbox>
+                        </li>
+                    </ul>
+                    <p v-if="defaultsForm.errors.rules" class="mt-1 text-xs text-danger">{{ defaultsForm.errors.rules }}</p>
+
+                    <div class="mt-4">
+                        <div class="relative">
+                            <Listbox as="div" class="flex relative" v-model="defaultsForm.contract_ids" id="defaultsContractIds" multiple>
+                                <ListboxButton class="menu-button">
+                                    <div class="flex flex-grow text-sm/5 font-bold text-text-subtle text-left subpixel-antialiased">
+                                        {{ $t('Assign contracts') }}
+                                    </div>
+                                    <span class="pointer-events-none">
+                                        <IconChevronDown stroke-width="1.5" class="h-5 w-5 text-text" aria-hidden="true"/>
+                                    </span>
+                                </ListboxButton>
+                                <transition leave-active-class="transition ease-in duration-100" leave-from-class="opacity-100" leave-to-class="opacity-0">
+                                    <ListboxOptions class="absolute w-full z-10 mt-16 rounded-lg bg-surface-inverse shadow-lg max-h-32 pr-2 pt-2 pb-2 text-base ring-1 ring-black ring-opacity-5 overflow-y-scroll focus:outline-none sm:text-sm">
+                                        <ListboxOption
+                                            as="template"
+                                            class="max-h-8"
+                                            v-for="contract in contracts"
+                                            :key="contract.id"
+                                            :value="contract.id"
+                                            v-slot="{ active, selected }"
+                                        >
+                                            <li :class="[active ? ' text-white' : 'text-text-subtle', 'group hover:border-l-4 hover:border-l-success cursor-pointer flex justify-between items-center py-2 pl-3 pr-9 text-sm subpixel-antialiased']">
+                                                <div class="flex">
+                                                    <span :class="[selected ? 'text-sm/5 font-bold text-white' : 'font-normal', 'ml-4 block truncate']">
+                                                        {{ contract.name }}
+                                                    </span>
+                                                </div>
+                                                <span :class="[active ? ' text-white' : 'text-text-subtle', ' group flex justify-end items-center text-sm subpixel-antialiased']">
+                                                    <IconCheck stroke-width="1.5" v-if="selected" class="h-5 w-5 flex text-success" aria-hidden="true"/>
+                                                </span>
+                                            </li>
+                                        </ListboxOption>
+                                    </ListboxOptions>
+                                </transition>
+                            </Listbox>
+                        </div>
+                        <div class="mt-2">
+                            <span v-if="defaultsForm.contract_ids.length > 0" class="text-sm text-text-muted">
+                                {{ defaultsForm.contract_ids.length }} {{ $t('Contract(s) selected') }}
+                            </span>
+                            <span v-else class="text-sm text-text-subtle">{{ $t('No contracts selected') }}</span>
+                        </div>
+                        <p v-if="defaultsForm.errors.contract_ids" class="mt-1 text-xs text-danger">{{ defaultsForm.errors.contract_ids }}</p>
+                        <SettingsGuideBanner
+                            variant="static"
+                            title="Who is covered by this rule?"
+                            class="mt-3"
+                            :paragraphs="[
+                                'Without assigned contracts this rule applies to nobody: only people who have one of the assigned contracts in their user profile are checked.'
+                            ]"
+                        />
+                    </div>
+
+                    <div class="mt-6 flex items-center justify-between">
+                        <BaseUIButton type="button" variant="danger" hide-icon @click="closeDefaultsModal">
+                            {{ $t('Cancel') }}
+                        </BaseUIButton>
+                        <BaseUIButton
+                            type="submit"
+                            variant="primary"
+                            hide-icon
+                            :disabled="defaultsForm.processing || defaultsForm.rules.length === 0"
+                        >
+                            {{ $t('Create selected rules') }}
                         </BaseUIButton>
                     </div>
                 </form>
@@ -314,20 +538,36 @@ import SettingsGuideBanner from "@/Artwork/Guide/SettingsGuideBanner.vue";
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
+import BaseCheckbox from "@/Artwork/Inputs/BaseCheckbox.vue";
 import BaseTextarea from "@/Artwork/Inputs/BaseTextarea.vue";
 import ColorPickerComponent from "@/Components/Globale/ColorPickerComponent.vue";
-import {IconCheck, IconChevronDown} from "@tabler/icons-vue";
+import {IconCheck, IconChevronDown, IconShieldCheck, IconX} from "@tabler/icons-vue";
 import {Listbox, ListboxButton, ListboxOption, ListboxOptions} from "@headlessui/vue";
 import ArtworkBaseDeleteModal from "@/Artwork/Modals/ArtworkBaseDeleteModal.vue";
 import BaseMenu from "@/Components/Menu/BaseMenu.vue";
 import BaseMenuItem from "@/Components/Menu/BaseMenuItem.vue";
+import RuleViewSwitch from "@/Pages/ShiftWarnings/Components/RuleViewSwitch.vue";
+import {
+    RULE_TYPES,
+    SELECTABLE_RULE_TYPES,
+    decimalHourToTime,
+    formatNumber,
+    formatRuleValue,
+    ruleTypeHasPeriodWeeks,
+    ruleTypeLabelKey,
+    ruleTypeValueKind,
+    ruleTypeValueOptional,
+    timeToDecimalHour,
+} from "@/Pages/ShiftWarnings/ruleTypes.js";
 
 const props = defineProps({
     rules: Array,
     availableRuleTypes: Array,
-    contracts: Array
+    contracts: Array,
+    users: { type: Array, default: () => [] },
+    // Gesetzliche Standardregeln (Definitionen aus LegalDefaultShiftRules, keine Kopie hier)
+    legalDefaultRules: { type: Array, default: () => [] },
 })
-
 
 const { t: $t } = useI18n()
 
@@ -339,47 +579,104 @@ const form = useForm({
     name: '',
     description: '',
     trigger_type: '',
-    individual_number_value: 0,
+    individual_number_value: null,
+    period_weeks: null,
     warning_color: '#ff6b6b',
     default_compensation_days: null,
     default_compensation_deadline_days: null,
-    notify_on_violation: false,
     contract_ids: [],
     user_ids: []
 })
 
-const triggerTypeLabels = {
-    'maxWorkingHoursOnDay': 'Daily maximum of hours',
-    'maxConsecWorkingDays': 'Maximum consecutive working days',
-    'weeklyMaxHours': 'Weekly maximum of hours',
-    'maxWorkingHoursOnWeek': 'Weekly maximum of hours',
-    'restTimeBeforeWorkday': 'Rest time before a working day',
-    'restTimeBeforeHoliday': 'Rest time before a Sunday or special day',
-    'restTimeBetweenShiftGroups': 'Rest time between shift groups',
-    'halfDayOffConflict': 'Conflict: half day off / shift',
-    'halfDayOffOnSpecialDay': 'No half day off on special days',
-    'minDaysBeforeCommit': 'Minimum days before binding commitment'
-}
+// Nur Typen anbieten, die das Backend kennt (availableRuleTypes) — in der Reihenfolge aus ruleTypes.js
+const selectableRuleTypes = computed(() => {
+    const backend = props.availableRuleTypes ?? []
+    return SELECTABLE_RULE_TYPES.filter((type) => backend.includes(type))
+})
 
 function formatTriggerType(type) {
-    return triggerTypeLabels[type] ? $t(triggerTypeLabels[type]) : type
+    const key = ruleTypeLabelKey(type)
+    return key ? $t(key) : type
 }
 
-// Context-sensitive explanation per rule type: what is checked and in which unit the "Value" field is interpreted.
-const triggerTypeHints = {
-    'maxWorkingHoursOnDay': 'Checks the total planned working hours of a person per day. Value = maximum number of hours per day.',
-    'maxConsecWorkingDays': 'Checks how many days in a row a person is scheduled without a day off. Value = maximum number of consecutive working days.',
-    'weeklyMaxHours': 'Checks the total planned working hours of a person per week. Value = maximum number of hours per week.',
-    'maxWorkingHoursOnWeek': 'Checks the total planned working hours of a person per week. Value = maximum number of hours per week.',
-    'restTimeBeforeWorkday': 'Checks the rest time between the end of a shift and the start of the next shift before a regular working day. Value = minimum rest time in hours.',
-    'restTimeBeforeHoliday': 'Checks the rest time before a Sunday or special day. Value = minimum rest time in hours.',
-    'restTimeBetweenShiftGroups': 'Checks the rest time between shifts of different shift groups. Value = minimum rest time in hours. Requires maintained shift groups (tab \'shift groups\').',
-    'halfDayOffConflict': 'Checks whether a shift conflicts with a half day off. Value = time of day as a decimal hour (14 = 14:00, 14.5 = 14:30).',
-    'halfDayOffOnSpecialDay': 'Checks that no half day off is planned on a special day. Requires the special-day rule to be active in the assigned contract.',
-    'minDaysBeforeCommit': 'Checks whether there is enough lead time between committing and the start of a shift. Value = minimum number of days before shifts become binding.'
-}
+const triggerTypeHint = computed(() => {
+    const hint = RULE_TYPES[form.trigger_type]?.hint
+    return hint ? $t(hint) : null
+})
 
-const triggerTypeHint = computed(() => triggerTypeHints[form.trigger_type] ?? null)
+const valueKind = computed(() => (form.trigger_type ? ruleTypeValueKind(form.trigger_type) : 'none'))
+const valueOptional = computed(() => ruleTypeValueOptional(form.trigger_type))
+const valuePlaceholder = computed(() => RULE_TYPES[form.trigger_type]?.placeholder ?? '')
+const hasPeriodWeeks = computed(() => ruleTypeHasPeriodWeeks(form.trigger_type))
+const periodPlaceholder = computed(() => RULE_TYPES[form.trigger_type]?.periodPlaceholder ?? '')
+
+// Erklärt, was Wert und Zeitraum beim Wochendurchschnitt steuern — mit den aktuellen Eingaben
+const periodWeeksHelpText = computed(() => $t(
+    'For every week the average of the last {n} weeks is checked. If it exceeds {x} h, a violation is created.',
+    {
+        n: form.period_weeks || periodPlaceholder.value || 'n',
+        x: form.individual_number_value || valuePlaceholder.value || 'x',
+    }
+))
+
+const valueLabel = computed(() => {
+    switch (valueKind.value) {
+        case 'hours':
+            return $t('Value (hours)')
+        case 'count':
+            return $t('Value (count)')
+        default:
+            return $t('Value (days)')
+    }
+})
+
+const valueUnit = computed(() => {
+    switch (valueKind.value) {
+        case 'hours':
+            return 'h'
+        case 'count':
+            return $t('Sundays')
+        default:
+            return $t('Days')
+    }
+})
+
+const valueHelpText = computed(() => {
+    switch (valueKind.value) {
+        case 'hours':
+            return $t('Hours, half hours allowed (e.g. 8 or 10.5).')
+        case 'days':
+            if (form.trigger_type === 'minFreeDaysPerWeek') {
+                return $t('Whole days. Leave empty or 0 to use "free whole days per week" from the contract.')
+            }
+            return $t('Whole days.')
+        case 'count':
+            if (form.trigger_type === 'minFreeSundaysPerYear') {
+                return $t('Whole number. Leave empty or 0 for the legal default of 15 free Sundays per calendar year.')
+            }
+            return $t('Whole number. Leave empty or 0 to use the target from the contract (free Sundays with Saturday/Monday per season half).')
+        case 'time':
+            return $t('Time of day as HH:MM — a morning off requires the shift to start at or after this time, an afternoon off requires it to end at or before.')
+        default:
+            return ''
+    }
+})
+
+// Uhrzeit-Picker (HH:MM) <-> Dezimalstunde im Formular (14:30 <-> 14.5)
+const timeValue = computed({
+    get: () => decimalHourToTime(form.individual_number_value),
+    set: (value) => {
+        form.individual_number_value = timeToDecimalHour(value)
+    },
+})
+
+const selectedNotifyUsers = computed(() =>
+    (props.users ?? []).filter((user) => form.user_ids.includes(user.id))
+)
+
+function removeNotifyUser(userId) {
+    form.user_ids = form.user_ids.filter((id) => id !== userId)
+}
 
 function openCreateModal() {
     editingRule.value = null
@@ -396,13 +693,14 @@ function editRule(rule) {
     form.name = rule.name
     form.description = rule.description || ''
     form.trigger_type = rule.trigger_type
-    form.individual_number_value = rule.individual_number_value
+    form.individual_number_value = ruleTypeValueKind(rule.trigger_type) === 'none' ? null : rule.individual_number_value
+    form.period_weeks = ruleTypeHasPeriodWeeks(rule.trigger_type) ? (rule.period_weeks ?? null) : null
     form.warning_color = rule.warning_color
     form.default_compensation_days = rule.default_compensation_days ?? null
     form.default_compensation_deadline_days = rule.default_compensation_deadline_days ?? null
-    form.notify_on_violation = rule.notify_on_violation || false
     form.contract_ids = rule.contracts ? rule.contracts.map(c => c.id) : []
     form.user_ids = rule.users_to_notify ? rule.users_to_notify.map(u => u.id) : []
+    form.clearErrors()
     showModal.value = true
 }
 
@@ -416,13 +714,14 @@ function resetForm() {
     form.name = ''
     form.description = ''
     form.trigger_type = ''
-    form.individual_number_value = 0
+    form.individual_number_value = null
+    form.period_weeks = null
     form.warning_color = '#ff6b6b'
     form.default_compensation_days = null
     form.default_compensation_deadline_days = null
-    form.notify_on_violation = false
     form.contract_ids = []
     form.user_ids = []
+    form.clearErrors()
 }
 
 function saveRule() {
@@ -430,22 +729,85 @@ function saveRule() {
         ? route('shift-rules.update', editingRule.value.id)
         : route('shift-rules.store')
 
-
-    if(editingRule.value){
-        form.put(url, {
-            preserveScroll: true,
-            onSuccess: () => {
-                closeModal()
-            }
-        })
-    } else {
-        form.post(url, {
-            preserveScroll: true,
-            onSuccess: () => {
-                closeModal()
-            }
-        })
+    const options = {
+        preserveScroll: true,
+        onSuccess: () => {
+            closeModal()
+        }
     }
+
+    // Typen ohne Wert senden null (Backend ignoriert den Wert und speichert 0); Zeitraum nur beim Wochendurchschnitt
+    form.transform((data) => ({
+        ...data,
+        individual_number_value: valueKind.value === 'none' ? null : data.individual_number_value,
+        period_weeks: hasPeriodWeeks.value ? data.period_weeks : null,
+    }))
+
+    if (editingRule.value) {
+        form.put(url, options)
+    } else {
+        form.post(url, options)
+    }
+}
+
+// --- Gesetzliche Standardregeln -------------------------------------------------------------
+
+const showDefaultsModal = ref(false)
+
+const defaultsForm = useForm({
+    rules: [],
+    contract_ids: [],
+})
+
+const allDefaultRulesSelected = computed(() =>
+    props.legalDefaultRules.length > 0 && defaultsForm.rules.length === props.legalDefaultRules.length
+)
+
+function openDefaultsModal() {
+    // Alle Regeln und alle Vorlagen vorbelegt
+    defaultsForm.rules = props.legalDefaultRules.map((definition) => definition.key)
+    defaultsForm.contract_ids = (props.contracts ?? []).map((contract) => contract.id)
+    defaultsForm.clearErrors()
+    showDefaultsModal.value = true
+}
+
+function closeDefaultsModal() {
+    showDefaultsModal.value = false
+}
+
+function toggleDefaultRule(key, checked) {
+    if (checked) {
+        if (!defaultsForm.rules.includes(key)) defaultsForm.rules = [...defaultsForm.rules, key]
+    } else {
+        defaultsForm.rules = defaultsForm.rules.filter((item) => item !== key)
+    }
+}
+
+function toggleAllDefaultRules() {
+    defaultsForm.rules = allDefaultRulesSelected.value
+        ? []
+        : props.legalDefaultRules.map((definition) => definition.key)
+}
+
+/** Wert + ggf. Ersatzruhetag-Voreinstellung einer Standardregel, z. B. "48 h Ø über 24 Wochen" */
+function defaultRuleValueText(definition) {
+    const parts = []
+    const value = formatRuleValue(definition, $t)
+    if (value && value !== '–') parts.push(value)
+    if (definition.default_compensation_days) {
+        parts.push($t('{days} substitute day(s) off within {deadline} days', {
+            days: formatNumber(definition.default_compensation_days),
+            deadline: definition.default_compensation_deadline_days ?? '–',
+        }))
+    }
+    return parts.join(' · ')
+}
+
+function saveDefaults() {
+    defaultsForm.post(route('shift-rules.defaults.store'), {
+        preserveScroll: true,
+        onSuccess: () => closeDefaultsModal(),
+    })
 }
 
 function deleteRule(rule) {

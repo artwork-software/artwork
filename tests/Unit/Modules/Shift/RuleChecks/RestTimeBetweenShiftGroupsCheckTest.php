@@ -112,4 +112,27 @@ final class RestTimeBetweenShiftGroupsCheckTest extends TestCase
 
         $this->assertCount(0, $violations);
     }
+
+    #[Test]
+    public function pivot_times_of_the_person_override_the_shift_times(): void
+    {
+        $user = User::factory()->create();
+        $groupA = ShiftGroup::create(['name' => 'Early']);
+        $groupB = ShiftGroup::create(['name' => 'Late']);
+        // Schicht A endet laut Plan 12:00 (-> 8 h Ruhe bis 20:00 wären ok bei Regel 6 h),
+        // die Person bleibt laut Pivot aber bis 18:00 -> nur 2 h Ruhe zur Schicht B
+        $shiftA = $this->shift($user, '06:00:00', '12:00:00', $groupA->id);
+        $shiftA->users()->updateExistingPivot($user->id, [
+            'start_date' => $this->date->toDateString(),
+            'end_date' => $this->date->toDateString(),
+            'start_time' => '06:00:00',
+            'end_time' => '18:00:00',
+        ]);
+        $this->shift($user, '20:00:00', '23:00:00', $groupB->id);
+
+        $violations = $this->check->check($this->rule(6.0), $user, $this->date->copy(), $this->date->copy());
+
+        $this->assertCount(1, $violations);
+        $this->assertEqualsWithDelta(2.0, $violations->first()->violation_data['rest_hours'], 0.01);
+    }
 }

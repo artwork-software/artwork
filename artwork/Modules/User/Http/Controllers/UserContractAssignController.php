@@ -7,12 +7,43 @@ use Artwork\Modules\User\Http\Requests\StoreUserContractAssignRequest;
 use Artwork\Modules\User\Http\Requests\UpdateUserContractAssignRequest;
 use Artwork\Modules\User\Models\User;
 use Artwork\Modules\User\Models\UserContractAssign;
+use Artwork\Modules\User\Models\UserWorkTime;
 use Artwork\Modules\WorkTime\Services\OvertimeService;
+use Carbon\Carbon;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\ValidationException;
 
+/**
+ * Speichern-Endpunkt des Userprofil-Tabs "Vertrag & Arbeitszeit" (beide Routen
+ * user-contract-settings.update-user und shift.work-time-pattern.update-user landen hier).
+ *
+ * Vertragszuweisung ist eine Historie (user_contract_assigns.valid_from/valid_until):
+ *  - assign_id gesetzt            → diesen Zeitraum bearbeiten (Felder und/oder Gültigkeit)
+ *  - valid_from ohne assign_id    → NEUEN Zeitraum anlegen; der bisher offene Zeitraum
+ *                                   (valid_until null, Beginn vor dem neuen) wird auf valid_from − 1 Tag geschlossen
+ *  - weder noch (Altpfad)         → den heute gültigen Zeitraum aktualisieren bzw. anlegen
+ * Überschneidungen mit anderen Zeiträumen → 422.
+ *
+ * Arbeitszeit (user_work_times) hat ihre eigene Historie: id → Update, sonst updateOrCreate(user_id, valid_from).
+ */
 class UserContractAssignController extends Controller
 {
+    private const WORK_TIME_FIELDS = [
+        'work_time_pattern_id',
+        'monday',
+        'tuesday',
+        'wednesday',
+        'thursday',
+        'friday',
+        'saturday',
+        'sunday',
+    ];
+
+    private const META_FIELDS = ['id', 'assign_id', 'valid_from', 'valid_until'];
+
     /**
      * Display a listing of the resource.
      */
@@ -32,68 +63,64 @@ class UserContractAssignController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(StoreUserContractAssignRequest $request, User $user): \Illuminate\Http\RedirectResponse
+    public function store(StoreUserContractAssignRequest $request, User $user): RedirectResponse
     {
         // Nur freigegebene Felder übernehmen – niemals user_id vom Request
         $data = $request->safe()->except(['user_id']);
 
+        $validFrom = self::dateOrNull($data['valid_from'] ?? null);
+        $validUntil = self::dateOrNull($data['valid_until'] ?? null);
+        $hasValidFrom = $request->exists('valid_from');
+        $hasValidUntil = $request->exists('valid_until');
+        $hasValidity = $hasValidFrom || $hasValidUntil;
+
+        // Kein ->filter(): false/0/null sind gueltige Werte (Regel deaktivieren,
+        // Vertrag entfernen via user_contract_id = null, Felder auf 0 setzen).
+        $contractData = collect($data)->except(array_merge(self::WORK_TIME_FIELDS, self::META_FIELDS))->all();
+        $workTimeData = collect($data)->only(self::WORK_TIME_FIELDS)->all();
+        $assignId = isset($data['assign_id']) ? (int) $data['assign_id'] : null;
+        $workTimeId = isset($data['id']) ? (int) $data['id'] : null;
+
+        $retroactive = false;
+
         try {
-            DB::transaction(function () use ($request, $user, $data): void {
-                // Extract work time pattern related fields
-                $workTimeFields = [
-                    'id',
-                    'work_time_pattern_id',
-                    'monday',
-                    'tuesday',
-                    'wednesday',
-                    'thursday',
-                    'friday',
-                    'saturday',
-                    'sunday',
-                    'valid_from',
-                    'valid_until'
-                ];
-
-                // Don't filter work time data - we need empty strings too
-                $workTimeData = collect($data)->only($workTimeFields)->all();
-                // Kein ->filter(): false/0/null sind gueltige Werte (Regel deaktivieren,
-                // Vertrag entfernen via user_contract_id = null, Felder auf 0 setzen).
-                $contractData = collect($data)->except($workTimeFields)->all();
-
-                // Update or create user contract if there's contract data
-                if (!empty($contractData)) {
-                    $user->contract()->updateOrCreate([], $contractData);
+            DB::transaction(function () use (
+                $user,
+                $contractData,
+                $workTimeData,
+                $assignId,
+                $workTimeId,
+                $validFrom,
+                $validUntil,
+                $hasValidity,
+                $hasValidFrom,
+                $hasValidUntil,
+                &$retroactive
+            ): void {
+                if ($assignId !== null || !empty($contractData)) {
+                    $assign = $this->saveContractPeriod(
+                        $user,
+                        $assignId,
+                        $contractData,
+                        $validFrom,
+                        $validUntil,
+                        $hasValidity
+                    );
+                    $retroactive = $retroactive || self::isRetroactive($assign);
                 }
 
-                // Check if any work time fields are present (excluding 'id')
-                $hasWorkTimeData = collect($workTimeData)
-                    ->except(['id'])
-                    ->filter(fn($value) => !is_null($value))
-                    ->isNotEmpty();
-
-                // Update or create work time pattern if there's work time data
-                if ($hasWorkTimeData) {
-                    $workTimeId = $workTimeData['id'] ?? null;
-                    unset($workTimeData['id']); // Remove id from data array
-                    $workTimeData['user_id'] = $user->id;
-
-                    // Set default date if not provided
-                    if (!isset($workTimeData['valid_from']) || empty($workTimeData['valid_from'])) {
-                        $workTimeData['valid_from'] = now()->toDateString();
-                    }
-
-                    // If id is provided, update that specific record
-                    if ($workTimeId) {
-                        $user->workTimes()->where('id', $workTimeId)->update($workTimeData);
-                    } else {
-                        // Otherwise, find existing work time based on user_id or create new one
-                        $conditions = ['user_id' => $user->id];
-                        if (isset($workTimeData['valid_from'])) {
-                            $conditions['valid_from'] = $workTimeData['valid_from'];
-                        }
-
-                        $user->workTimes()->updateOrCreate($conditions, $workTimeData);
-                    }
+                if ($this->hasWorkTimeData($workTimeData)) {
+                    $workTime = $this->saveWorkTimePeriod(
+                        $user,
+                        $workTimeId,
+                        $workTimeData,
+                        $validFrom,
+                        $validUntil,
+                        $hasValidFrom,
+                        $hasValidUntil
+                    );
+                    $retroactive = $retroactive
+                        || ($workTime->valid_from !== null && $workTime->valid_from->lt(Carbon::today()));
                 }
             });
 
@@ -102,7 +129,10 @@ class UserContractAssignController extends Controller
                 app(OvertimeService::class)->recomputeForUser($user);
             }
 
-            return back()->with('success', __('User contract assigned successfully.'));
+            // Neuprüfung läuft über UserContractAssign::booted() → ShiftRuleRevalidationService (ab valid_from)
+            return back()->with('success', self::successMessage(__('User contract assigned successfully.'), $retroactive));
+        } catch (ValidationException | ModelNotFoundException $e) {
+            throw $e;
         } catch (\Throwable $e) {
             Log::error('Failed to assign user contract', [
                 'user_id' => $user->id,
@@ -113,6 +143,212 @@ class UserContractAssignController extends Controller
                 ->withInput()
                 ->with('error', __('Could not assign user contract. Please try again.'));
         }
+    }
+
+    /**
+     * Einen Vertragszeitraum entfernen (Historie). Der Satz muss zur Person gehören.
+     */
+    public function destroyAssign(User $user, UserContractAssign $assign): RedirectResponse
+    {
+        if ((int) $assign->user_id !== (int) $user->id) {
+            abort(404);
+        }
+
+        $retroactive = self::isRetroactive($assign);
+        $assign->delete();
+
+        return back()->with('success', self::successMessage(__('Contract period removed.'), $retroactive));
+    }
+
+    /**
+     * Flash-Text; bei rückwirkenden Zeiträumen mit Hinweis auf die Neuprüfung festgeschriebener Schichten
+     * (die App teilt nur success/error als Flash – daher im Erfolgstext statt eigenem Kanal).
+     */
+    private static function successMessage(string $base, bool $retroactive): string
+    {
+        if (!$retroactive) {
+            return $base;
+        }
+
+        return $base . ' ' . __(
+            'The period starts in the past. Committed shifts in this period will be re-checked against the shift rules.'
+        );
+    }
+
+    /**
+     * Einen Arbeitszeit-Satz (user_work_times) entfernen. Der Satz muss zur Person gehören.
+     */
+    public function destroyWorkTime(User $user, UserWorkTime $workTime): RedirectResponse
+    {
+        if ((int) $workTime->user_id !== (int) $user->id) {
+            abort(404);
+        }
+
+        $workTime->delete();
+
+        return back()->with('success', __('Work time period removed.'));
+    }
+
+    /**
+     * @param array<string, mixed> $contractData
+     */
+    private function saveContractPeriod(
+        User $user,
+        ?int $assignId,
+        array $contractData,
+        ?Carbon $validFrom,
+        ?Carbon $validUntil,
+        bool $hasValidity
+    ): UserContractAssign {
+        if ($assignId !== null) {
+            /** @var UserContractAssign $assign */
+            $assign = $user->contractAssigns()->whereKey($assignId)->firstOrFail();
+
+            $newFrom = $hasValidity ? $validFrom : $assign->valid_from;
+            $newUntil = $hasValidity ? $validUntil : $assign->valid_until;
+            $this->assertNoOverlap($user, $newFrom, $newUntil, $assign->id);
+
+            $assign->fill($contractData);
+            $assign->valid_from = $newFrom;
+            $assign->valid_until = $newUntil;
+            $assign->save();
+
+            return $assign;
+        }
+
+        if ($validFrom === null) {
+            // Altpfad (ohne Gültigkeitsbeginn): heute gültigen Zeitraum aktualisieren (Gültigkeit unverändert),
+            // sonst anlegen – ohne Historie offen ab Beginn, mit Historie ab heute.
+            $current = $user->contractAssignFor(Carbon::today());
+            if ($current !== null) {
+                $current->fill($contractData)->save();
+
+                return $current;
+            }
+
+            $from = $user->contractAssigns()->exists() ? Carbon::today() : null;
+            $this->assertNoOverlap($user, $from, $validUntil, null);
+
+            return $user->contractAssigns()->create(array_merge($contractData, [
+                'valid_from' => $from,
+                'valid_until' => $validUntil,
+            ]));
+        }
+
+        // Neuer Zeitraum: bisher offenen Zeitraum (Beginn vor dem neuen) einen Tag vorher schließen
+        $closeAt = $validFrom->copy()->subDay();
+        $user->contractAssigns()
+            ->whereNull('valid_until')
+            ->where(function ($query) use ($validFrom): void {
+                $query->whereNull('valid_from')->orWhereDate('valid_from', '<', $validFrom->toDateString());
+            })
+            ->get()
+            ->each(function (UserContractAssign $open) use ($closeAt): void {
+                $open->valid_until = $closeAt;
+                $open->save();
+            });
+
+        $this->assertNoOverlap($user, $validFrom, $validUntil, null);
+
+        return $user->contractAssigns()->create(array_merge($contractData, [
+            'valid_from' => $validFrom,
+            'valid_until' => $validUntil,
+        ]));
+    }
+
+    /**
+     * @param array<string, mixed> $workTimeData
+     */
+    private function saveWorkTimePeriod(
+        User $user,
+        ?int $workTimeId,
+        array $workTimeData,
+        ?Carbon $validFrom,
+        ?Carbon $validUntil,
+        bool $hasValidFrom = true,
+        bool $hasValidUntil = true
+    ): UserWorkTime {
+        $workTimeData['user_id'] = $user->id;
+
+        if ($workTimeId !== null) {
+            /** @var UserWorkTime $workTime */
+            $workTime = $user->workTimes()->whereKey($workTimeId)->firstOrFail();
+
+            // Bestehenden Satz bearbeiten: Gültigkeit nur anfassen, wenn sie in der Anfrage steht –
+            // ein reines Muster-Update darf valid_from nicht auf "heute" und valid_until nicht auf null setzen.
+            if ($hasValidFrom) {
+                $workTimeData['valid_from'] = ($validFrom ?? Carbon::today())->toDateString();
+            }
+            if ($hasValidUntil) {
+                $workTimeData['valid_until'] = $validUntil?->toDateString();
+            }
+
+            $workTime->fill($workTimeData)->save();
+
+            return $workTime;
+        }
+
+        $workTimeData['valid_from'] = ($validFrom ?? Carbon::today())->toDateString();
+        $workTimeData['valid_until'] = $validUntil?->toDateString();
+
+        return $user->workTimes()->updateOrCreate(
+            ['user_id' => $user->id, 'valid_from' => $workTimeData['valid_from']],
+            $workTimeData
+        );
+    }
+
+    /**
+     * 422, wenn sich [$from, $until] mit einem anderen Zeitraum der Person überschneidet.
+     *
+     * Läuft innerhalb der Transaktion von store(): die Zeiträume der Person werden mit lockForUpdate
+     * gelesen, damit zwei parallele Anfragen nicht beide "keine Überschneidung" sehen und je einen
+     * überlappenden Zeitraum anlegen.
+     */
+    private function assertNoOverlap(User $user, ?Carbon $from, ?Carbon $until, ?int $ignoreId): void
+    {
+        $conflict = $user->contractAssigns()
+            ->when($ignoreId !== null, fn ($query) => $query->whereKeyNot($ignoreId))
+            ->with('userContract')
+            ->lockForUpdate()
+            ->get()
+            ->first(fn (UserContractAssign $other): bool => $other->overlaps($from, $until));
+
+        if ($conflict === null) {
+            return;
+        }
+
+        throw ValidationException::withMessages([
+            'valid_from' => __(
+                'The period overlaps with the existing contract period {0} ({1} – {2}). Adjust the dates or edit that period.',
+                [
+                    $conflict->userContract?->name ?? __('individual'),
+                    $conflict->valid_from?->format('d.m.Y') ?? __('open'),
+                    $conflict->valid_until?->format('d.m.Y') ?? __('open'),
+                ]
+            ),
+        ]);
+    }
+
+    /**
+     * @param array<string, mixed> $workTimeData
+     */
+    private function hasWorkTimeData(array $workTimeData): bool
+    {
+        return collect($workTimeData)->filter(fn ($value) => !is_null($value))->isNotEmpty();
+    }
+
+    private static function isRetroactive(UserContractAssign $assign): bool
+    {
+        return $assign->valid_from !== null && $assign->valid_from->copy()->startOfDay()->lt(Carbon::today());
+    }
+
+    private static function dateOrNull(mixed $value): ?Carbon
+    {
+        if ($value === null || $value === '') {
+            return null;
+        }
+
+        return Carbon::parse((string) $value)->startOfDay();
     }
 
     /**

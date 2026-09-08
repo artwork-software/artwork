@@ -237,6 +237,8 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::group(['prefix' => 'shift-rules', 'middleware' => ['can:can plan shifts', 'shift-settings-area:rules,view']], function (): void {
         Route::get('/', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'index'])->name('shift-rules.index');
         Route::post('/', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'store'])->middleware('shift-settings-area:rules,edit')->name('shift-rules.store');
+        // Gesetzliche Standardregeln (ArbZG) anlegen — gleiche Rechte wie das normale Anlegen
+        Route::post('/defaults', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'storeDefaults'])->middleware('shift-settings-area:rules,edit')->name('shift-rules.defaults.store');
 
         // Specific routes must come before parameterized routes
         // Wird auch vom Schichtplaner-Workflow (ShowUserShiftsModal) genutzt — nur "can plan shifts" nötig
@@ -247,9 +249,10 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         Route::put('/contracts/{contract}/assignments', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'updateContractAssignments'])->middleware('shift-settings-area:rules,edit')->name('shift-rules.contracts.assignments.update');
         Route::post('/validate', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'validateRules'])->middleware('shift-settings-area:rules,edit')->name('shift-rules.validate');
         Route::get('/pending', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'getPendingViolations'])->name('shift-rules.pending');
+        // Excel-Export der Verstöße — gleiche Rechte wie die Liste (vor /{shiftRule} registrieren)
+        Route::get('/violations/export', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'exportViolations'])->name('shift-rules.violations.export');
 
         // Parameterized routes come last
-        Route::get('/{shiftRule}', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'show'])->name('shift-rules.show');
         Route::put('/{shiftRule}', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'update'])->middleware('shift-settings-area:rules,edit')->name('shift-rules.update');
         Route::delete('/{shiftRule}', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'destroy'])->middleware('shift-settings-area:rules,edit')->name('shift-rules.destroy');
         Route::post('/{shiftRule}/contracts', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'assignContracts'])->middleware('shift-settings-area:rules,edit')->name('shift-rules.contracts.assign');
@@ -259,15 +262,21 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     // Shift Rule Violations routes
     Route::group(['prefix' => 'shift-rule-violations', 'middleware' => 'can:can plan shifts'], function (): void {
         Route::post('/manual', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'storeManualViolation'])->name('shift-rule-violations.manual.store');
+        // Sammelaktion "Ignorieren" (max. 200 IDs je Aufruf, gleiche Ignore-Logik wie je Verstoß)
+        Route::post('/bulk-ignore', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'bulkIgnoreViolations'])->name('shift-rule-violations.bulk-ignore');
         Route::get('/date-range', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'getViolationsForDateRange'])->name('shift-rule-violations.date-range');
         Route::post('/{violation}/resolve', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'resolveViolation'])->name('shift-rule-violations.resolve');
         Route::post('/{violation}/ignore', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'ignoreViolation'])->name('shift-rule-violations.ignore');
         Route::put('/{violation}/process', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'processViolation'])->name('shift-rule-violations.process');
+        // DP-17 Verlauf: gleiche Rechte wie das Bearbeiten (can plan shifts)
+        Route::get('/{violation}/history', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'violationHistory'])->name('shift-rules.violations.history');
     });
 
     // Compensation Day Offs routes
     Route::group(['prefix' => 'compensation-day-offs', 'middleware' => 'can:can plan shifts'], function (): void {
         Route::get('/dashboard', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'compensationDashboard'])->name('compensation-day-offs.dashboard');
+        // Excel-Export der gefilterten Dashboard-Liste — exakt dieselben Rechte wie das Dashboard (can plan shifts)
+        Route::get('/export', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'exportCompensationDays'])->name('compensation-day-offs.export');
         Route::post('/{compensationDayOff}/grant', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'grantCompensationDay'])->name('compensation-day-offs.grant');
         Route::post('/{compensationDayOff}/check', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'checkCompensationDay'])->name('compensation-day-offs.check');
         Route::post('/{compensationDayOff}/revoke', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'revokeCompensationDay'])->name('compensation-day-offs.revoke');
@@ -470,6 +479,10 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         ->name('user.edit.permissions');
     Route::get('/users/{user}/workProfile', [UserController::class, 'editUserWorkProfile'])->can('can manage workers')
         ->name('user.edit.workProfile');
+    // Tab "Vertrag & Arbeitszeit" (seit 2026-09 ein Tab statt zwei); die alten Routen bleiben als Redirect
+    Route::get('/users/{user}/contract-and-work-time', [UserController::class, 'editContractAndWorkTime'])
+        ->can('can manage workers')
+        ->name('user.edit.contract-and-work-time');
     Route::get('/users/{user}/work-time-pattern', [UserController::class, 'editUserWorkTime'])
         ->can('can manage workers')
         ->name('user.edit.work-time-pattern');
@@ -484,21 +497,27 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         ->name('user.edit.compensationDays');
 
     // DP-18: Lazy-Endpoints für das User-Info-Modal im Schichtplan (je Tab)
+    // Autorisierung über UserPolicy::viewShiftKpis: fremde Personen mit "can view shift user kpis",
+    // die eigene Person auch mit "can view own roster" ("Meine Zahlen" im Einsatzplan).
     Route::get('/users/{user}/shift-info/season', [UserController::class, 'shiftUserInfoSeason'])
-        ->can('can view shift user kpis')
+        ->can('viewShiftKpis', 'user')
         ->name('shift.user-info.season');
     Route::get('/users/{user}/shift-info/compensation', [UserController::class, 'shiftUserInfoCompensation'])
-        ->can('can view shift user kpis')
+        ->can('viewShiftKpis', 'user')
         ->name('shift.user-info.compensation');
     Route::get('/users/{user}/shift-info/vacation', [UserController::class, 'shiftUserInfoVacation'])
-        ->can('can view shift user kpis')
+        ->can('viewShiftKpis', 'user')
         ->name('shift.user-info.vacation');
     Route::get('/users/{user}/shift-info/worktimes', [UserController::class, 'shiftUserInfoWorktimes'])
-        ->can('can view shift user kpis')
+        ->can('viewShiftKpis', 'user')
         ->name('shift.user-info.worktimes');
     Route::get('/users/{user}/shift-info/overtime', [UserController::class, 'shiftUserInfoOvertime'])
-        ->can('can view shift user kpis')
+        ->can('viewShiftKpis', 'user')
         ->name('shift.user-info.overtime');
+    // Offene Regelverstöße (status active) read-only, z. B. "Meine Zahlen" im eigenen Einsatzplan
+    Route::get('/users/{user}/shift-info/violations', [UserController::class, 'shiftUserInfoViolations'])
+        ->can('viewShiftKpis', 'user')
+        ->name('shift.user-info.violations');
 
     // DP-18 Stufe 2: Überstunden – User-Detail-Tab + manuelle Auszahlung
     Route::get('/users/{user}/overtime', [UserController::class, 'editUserOvertime'])
@@ -1001,6 +1020,11 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         ->name('shifts.plan.list-view')
         ->can('can view shift plan');
 
+    // Wochenstatus: Gewerke × KW (Festschreibung, Anfragen, Änderungen, Verstöße, Besetzung, Frist)
+    Route::get('/shifts/week-status', [\Artwork\Modules\Shift\Http\Controllers\ShiftWeekStatusController::class, 'index'])
+        ->name('shifts.week-status')
+        ->can('can view shift plan');
+
     Route::get('/shifts/workers', [EventController::class, 'getShiftPlanWorkers'])
         ->name('shifts.workers')
         ->can('can view shift plan');
@@ -1100,8 +1124,15 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         Route::get('/event_types/bi-tags', [EventTypeController::class, 'biTags'])
             ->name('event_types.bi_tags')
             ->can('change event settings');
+        // Feiertagsseite: Termin-Einstellungen ODER Dienstplanung (read-only + Sondertag-Häkchen);
+        // Spatie-"permission"-Middleware = ODER-Verknüpfung, geht über canAny() (Admin via Gate::before)
         Route::get('/holiday', [HolidayController::class, 'index'])
+            ->middleware('permission:change event settings|can plan shifts')
             ->name('holiday.management');
+        // Nur das Sondertag-Flag (Dienstplaner:innen); Anlegen/Bearbeiten/Löschen bleiben bei "change event settings"
+        Route::patch('/holiday/{holiday}/special-day', [HolidayController::class, 'updateTreatAsSpecialDay'])
+            ->can('can plan shifts')
+            ->name('holiday.special-day.update');
         Route::post('/holiday/api', [HolidayController::class, 'create'])
             ->can('change event settings')
             ->name('holiday.api.call');
@@ -1264,12 +1295,19 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::patch('money_source/task/{moneySourceTask}/undone', [MoneySourceTaskController::class, 'markAsUnDone'])
         ->name('money_source.task.undone');
     Route::post('/money_source/task', [MoneySourceTaskController::class, 'store'])->name('money_source.task.add');
+    Route::get('/money_source/task', [MoneySourceTaskController::class, 'index'])->name('money_source.task.index');
+    Route::delete('money_source/task/{moneySourceTask}', [MoneySourceTaskController::class, 'destroy'])
+        ->name('money_source.task.destroy');
     Route::delete('/user/{user}/calendar/filter/reset', [UserCalendarFilterController::class, 'reset'])
         ->name('reset.user.calendar.filter');
     Route::delete('/user/{user}/calendar/shift/filter/reset', [UserShiftCalendarFilterController::class, 'reset'])
         ->name('reset.user.shift.calendar.filter');
     Route::patch('/user/{user}/calendar/filter/update', [UserFilterController::class, 'update'])
         ->name('update.user.calendar.filter');
+    // Schichtplan-Personenfilter "nur Personen mit offenen Regelverstößen" (user_filters-Flag, eigener
+    // Endpunkt, damit die übrigen Filterwerte unberührt bleiben)
+    Route::patch('/user/{user}/calendar/filter/open-violations', [UserFilterController::class, 'updateOpenViolationsFilter'])
+        ->name('update.user.calendar.filter.open-violations');
     Route::patch('/user/{user}/shift/calendar/filter/update', [UserShiftCalendarFilterController::class, 'update'])
         ->name('update.user.shift.calendar.filter');
     Route::patch('/user/{user}/calendar/filter/date/update', [UserCalendarFilterController::class, 'updateDates'])
@@ -1432,16 +1470,31 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
             ->name('project.download.keyVisual');
 
         Route::get('/{project}/exports/shifts-personal-plan', ProjectShiftPersonalPlanExportController::class)
+            ->can('can view shift plan')
             ->name('projects.exports.shifts-personal-plan');
 
         // POST
         Route::post('/{shift}/assign', [ShiftController::class, 'assignToShift'])
             ->name('shift.assignUserByType');
 
+        // „Ersatz suchen" nach Absage: Kandidat*innen + Tausch in einer Transaktion
+        Route::get('/{shift}/replacement-candidates', [ShiftController::class, 'replacementCandidates'])
+            ->can('can plan shifts')
+            ->name('shift.replacement-candidates');
+        Route::post('/{shift}/replace-worker', [ShiftController::class, 'replaceWorker'])
+            ->can('can plan shifts')
+            ->name('shift.replace-worker');
+        // Vorabprüfung vor dem Drop (Überschneidung/Urlaub/nicht verfügbar), nur Warnung
+        Route::post('/shift/assignment-preflight', [ShiftController::class, 'assignmentPreflight'])
+            ->can('can plan shifts')
+            ->name('shift.assignment-preflight');
+
         Route::post('/timeline/add/{event}', [ProjectController::class, 'addTimeLineRow'])->name('add.timeline.row');
         Route::post('/timeline/update/magic/{event}', [ShiftController::class, 'updateTimeLine'])
+            ->can('can plan shifts')
             ->name('edit.timeline.event');
         Route::post('/timeline/add/magic/{event}', [ShiftController::class, 'addTimeLine'])
+            ->can('can plan shifts')
             ->name('create.timeline.event');
         Route::post('/sums/money-source', [SumDetailsController::class, 'store'])
             ->name('project.sum.money.source.store');
@@ -1476,6 +1529,13 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
             ->can('can plan shifts');
         Route::post('/bulk-duplicate', [ShiftController::class, 'bulkDuplicate'])
             ->name('shifts.multi.duplicate')
+            ->can('can plan shifts');
+        // „Woche kopieren": Schichten einer KW in bis zu 8 Ziel-KWs (ohne Personen, nicht festgeschrieben)
+        Route::get('/copy-week/preview', [ShiftController::class, 'copyWeekPreview'])
+            ->name('shifts.copy-week.preview')
+            ->can('can plan shifts');
+        Route::post('/copy-week', [ShiftController::class, 'copyWeek'])
+            ->name('shifts.copy-week')
             ->can('can plan shifts');
         Route::delete('/timeline/delete/{timeline}', [ProjectController::class, 'deleteTimeLineRow'])
             ->name('delete.timeline.row');
@@ -2154,6 +2214,12 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         )->middleware('shift-settings-area:general,edit')
             ->name('shift.settings.update.shift-confirmation');
 
+        Route::patch(
+            'shift-settings/updateNightTimes',
+            [ShiftSettingsController::class, 'updateNightTimes']
+        )->middleware('shift-settings-area:general,edit')
+            ->name('shift.settings.update.night-times');
+
         Route::post('shift/add/craft', [CraftController::class, 'store'])->middleware('shift-settings-area:general,edit')->name('craft.store');
         Route::patch('shift/update/craft/{craft}', [CraftController::class, 'update'])->middleware('shift-settings-area:general,edit')->name('craft.update');
         Route::delete('shift/delete/craft/{craft}', [CraftController::class, 'destroy'])->middleware('shift-settings-area:general,edit')->name('craft.delete');
@@ -2262,7 +2328,8 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::post('/calendar/export/season-schedule-pdf', \App\Http\Controllers\SeasonSchedulePdfExportController::class)
         ->name('calendar.export.season-schedule-pdf');
     Route::post('/shift-plan/export/pdf', [ExportPDFController::class, 'createShiftPlanPDF'])
-        ->name('shift.plan.export.pdf');
+        ->name('shift.plan.export.pdf')
+        ->can('can view shift plan');
     Route::post('/shift-plan/export/worker-matrix-pdf', WorkerShiftPlanPdfExportController::class)
         ->name('shift.plan.export.worker-matrix.pdf')
         ->can('can view shift plan');
@@ -2308,6 +2375,11 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
 
     Route::get('/shift-history', [ShiftHistoryController::class, 'index'])
         ->name('shift.history.index')
+        ->can('can view shift plan');
+
+    // Excel-Export des Schichtverlaufs — gleiche Filter und Rechte wie das Modal
+    Route::get('/shift-history/export', [ShiftHistoryController::class, 'export'])
+        ->name('shift-history.export')
         ->can('can view shift plan');
 
     Route::get('/event/standard-values', [EventController::class, 'standardEventValues'])
@@ -2536,6 +2608,13 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
             [UserShiftCalendarAboController::class, 'update']
         )->name('user.shift.calendar.abo.update');
 
+        // user.shift.calendar.abo.renew — Widerruf: neuer Feed-Token, alter Link wird ungültig
+        // (Besitzer-Prüfung im Controller, wie beim Update-Request)
+        Route::delete(
+            '/shift/calendar/abo/{userShiftCalendarAbo}/renew',
+            [UserShiftCalendarAboController::class, 'destroy']
+        )->name('user.shift.calendar.abo.renew');
+
         // save user calendar abo
         Route::post(
             '/calendar/abo/create',
@@ -2578,6 +2657,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         '/day-service/{dayService}/attach/{dayServiceable}',
         [DayServiceController::class, 'attachDayServiceable']
     )
+        ->can('can plan shifts')
         ->name('day-service.attach');
 
 
@@ -2850,6 +2930,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         '/day-service/remove/{dayServiceable}',
         [DayServiceController::class, 'removeDayServiceable']
     )
+        ->can('can plan shifts')
         ->name('remove.day.service.from.user');
 
     Route::group(['prefix' => 'inventory-management'], function (): void {
@@ -2949,8 +3030,10 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         Route::delete('/delete-chat/{chat}', [ChatController::class, 'destroy'])->name('chat-system.delete-chat');
     });
 
+    // Alt-Resource (EditHolidayModal nutzt holidays.update): gleiche Rechte wie der settings/holiday-Block
     Route::resource('holidays', HolidayController::class)
-        ->only(['index', 'store', 'update', 'destroy', 'show']);
+        ->only(['index', 'store', 'update', 'destroy', 'show'])
+        ->middleware('can:change event settings');
 
     Route::group(['prefix' => 'export'], function (): void {
         Route::post(
@@ -3190,6 +3273,12 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
             '/work-time-pattern/{user}/update-user',
             [\Artwork\Modules\User\Http\Controllers\UserContractAssignController::class, 'store']
         )->middleware('can:can manage workers')->name('shift.work-time-pattern.update-user');
+
+        // Arbeitszeit-Satz (Historie) der Person entfernen — gleiche Gate wie update-user
+        Route::delete(
+            '/work-time-pattern/{user}/work-time/{workTime}',
+            [\Artwork\Modules\User\Http\Controllers\UserContractAssignController::class, 'destroyWorkTime']
+        )->middleware('can:can manage workers')->name('shift.work-time-pattern.work-time.destroy');
     });
 
     // group user contracts
@@ -3216,6 +3305,12 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
             '/contract/{user}/update-user',
             [\Artwork\Modules\User\Http\Controllers\UserContractAssignController::class, 'store']
         )->middleware('can:can manage workers')->name('user-contract-settings.update-user');
+
+        // Vertragszeitraum (Historie) der Person entfernen — gleiche Gate wie update-user
+        Route::delete(
+            '/contract/{user}/assign/{assign}',
+            [\Artwork\Modules\User\Http\Controllers\UserContractAssignController::class, 'destroyAssign']
+        )->middleware('can:can manage workers')->name('user-contract-settings.assign.destroy');
     });
 
     // users.worktimes.store
@@ -3350,10 +3445,12 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
                 ->name('reject')
                 ->can('approve-shift-plan-requests');
 
-            // Anfrage löschen und zugeordnete Schichten wieder freigeben
+            // Anfrage zurückziehen und zugeordnete Schichten wieder freigeben:
+            // Genehmiger*innen immer, Antragsteller*innen nur die eigene offene Anfrage
+            // (ShiftPlanRequestPolicy::withdraw).
             Route::delete('/{shiftPlanRequest}', [ShiftPlanRequestController::class, 'destroy'])
                 ->name('destroy')
-                ->can('approve-shift-plan-requests');
+                ->can('withdraw', 'shiftPlanRequest');
         });
 
 
@@ -3369,6 +3466,13 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         '/committed-shift-changes/acknowledge-all',
         [ShiftPlanRequestController::class, 'acknowledgeAll']
     )->name('committed-shift-changes.acknowledge-all')
+        ->can('approve-shift-plan-requests');
+
+    // Excel-Export der Änderungsübersicht (Filter wie die Liste, optional Zeitraum)
+    Route::get(
+        '/committed-shift-changes/export',
+        [ShiftPlanRequestController::class, 'exportChanges']
+    )->name('committed-shift-changes.export')
         ->can('approve-shift-plan-requests');
 
     Route::patch('/shift-plan-requests/{shiftPlanRequest}/change/{shiftChange}/revert', [App\Http\Controllers\ShiftPlanRequestController::class, 'revertChange'])
@@ -3413,6 +3517,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         Route::group(['prefix' => 'exports'], function (): void {
             // pdf Shift plan exprot
             Route::get('/pdf/{project}/{privacyMode}/shift-plan', [ExportPDFController::class, 'exportDailyViewShiftPlanInProject'])
+                ->can('can view shift plan')
                 ->name('projects.exports.shift-plan');
         });
     });
@@ -3461,6 +3566,7 @@ Route::get(
 // /shift/check-collisions — liefert Zuweisungs-/Zeitdaten beliebiger Worker, daher zwingend hinter Auth
 Route::middleware(['auth:sanctum', 'verified'])
     ->post('/shift/check-collisions', [ShiftController::class, 'checkCollisions'])
+    ->can('can plan shifts')
     ->name('shift.check-collisions');
 
 Route::get('/generate-avatar-image/{letters}', [\Artwork\Modules\User\Http\Controllers\UserController::class, 'createAvatarImage'])

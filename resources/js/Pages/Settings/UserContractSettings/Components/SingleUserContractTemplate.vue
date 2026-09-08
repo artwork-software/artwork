@@ -8,8 +8,8 @@
                 {{ contract.description }}
             </p>
             <p class="mt-1 flex text-xs/5 text-text-subtle space-x-2">
-                <span class="pr-2"><b>{{ $t('Free Full Days Per Week') }}</b>: {{ contract.free_full_days_per_week }}</span>
-                <span class="px-2"><b>{{ $t('Free Half Days Per Week') }}</b>: {{ contract.free_half_days_per_week }}</span>
+                <span class="pr-2" :title="$t('Key-figure target: × weeks of the season half = target for \'Full free days\'')"><b>{{ $t('Free Full Days Per Week') }}</b>: {{ contract.free_full_days_per_week }}</span>
+                <span class="px-2" :title="$t('Key-figure target: × weeks of the season half = target for \'Granted half free days\'')"><b>{{ $t('Free Half Days Per Week') }}</b>: {{ contract.free_half_days_per_week }}</span>
                 <span class="px-2"><b>{{ $t('Special Day Rule Active') }}</b>: {{ contract.special_day_rule_active ? $t('Yes') : $t('No') }}</span>
                 <span class="px-2"><b>{{ $t('Compensation Period (in days)') }}</b>: {{ contract.compensation_period }}</span>
                 <span class="px-2"><b>{{ $t('Free Sundays Per Season') }}</b>: {{ contract.free_sundays_per_season }}</span>
@@ -56,7 +56,7 @@ const props = defineProps({
             description: '',
             free_full_days_per_week: 0,
             free_half_days_per_week: 0,
-            special_day_rule_active: false,
+            special_day_rule_active: true,
             compensation_period: 0,
             free_sundays_per_season: 0,
             days_off_first_26_weeks: 0.00

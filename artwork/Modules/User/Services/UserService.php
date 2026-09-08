@@ -36,7 +36,6 @@ use Artwork\Modules\User\Models\UserShiftCalendarFilter;
 use Artwork\Modules\User\Services\UserUserManagementSettingService;
 use Artwork\Modules\User\Models\UserWorkerShiftPlanFilter;
 use Carbon\Carbon;
-use Carbon\CarbonPeriod;
 use Illuminate\Auth\AuthManager;
 use Illuminate\Broadcasting\BroadcastManager;
 use Illuminate\Contracts\Auth\StatefulGuard;
@@ -50,6 +49,13 @@ use Throwable;
 
 class UserService
 {
+    /**
+     * Request-lokaler Zeitraum-Override des Einsatzplans (Deep-Link), siehe overrideWorkerShiftPlanPeriod().
+     *
+     * @var array{0: Carbon, 1: Carbon}|null
+     */
+    private ?array $workerShiftPlanPeriodOverride = null;
+
     public function __construct(
         private readonly UserRepository $userRepository,
         private readonly NotificationSettingService $notificationSettingService,
@@ -178,6 +184,12 @@ class UserService
      * @throws ContainerExceptionInterface
      * @throws NotFoundExceptionInterface
      */
+    /**
+     * Payload-Diät: rooms, projects, shiftQualifications, wholeWeekDatePeriod, eventsWithTotalPlannedWorkingHours
+     * und user_to_edit_whole_week_date_period_vacations werden nicht mehr geladen (Frontend liest sie nicht).
+     * $roomService/$projectService/$shiftQualificationService bleiben nur wegen der unveränderten
+     * Aufrufsignatur im UserController in der Parameterliste.
+     */
     public function getUserShiftPlanPageDto(
         User $user,
         CalendarService $calendarService,
@@ -202,14 +214,6 @@ class UserService
         // Derive the displayed calendar month from $month (which is always in sync with the calendar)
         $calendarMonth = Carbon::parse($month)->startOfMonth();
 
-        $requestedPeriod = iterator_to_array(
-            CarbonPeriod::create($requestedStartDate, $requestedEndDate)->map(
-                function (Carbon $date) {
-                    return $date->format('d.m.Y');
-                }
-            )
-        );
-
         $startOfWeek = $requestedStartDate->copy()->startOfWeek();
         $endOfWeek = $requestedEndDate->copy()->endOfWeek();
 
@@ -223,16 +227,6 @@ class UserService
 
         return UserShiftPlanPageDto::newInstance()
             ->setUserToEdit(UserShowResource::make($user))
-            ->setUserToEditWholeWeekDatePeriodVacations(
-                $user->getAttribute('vacations')
-                    ->whereBetween(
-                        'date',
-                        [
-                            $startOfWeek->format('Y-m-d'),
-                            $endOfWeek->format('Y-m-d')
-                        ]
-                    )
-            )
             ->setCrafts(static fn() => Craft::all())
             ->setCurrentTab('shiftplan')
             ->setCalendarData($calendarData)
@@ -245,30 +239,6 @@ class UserService
             )
             ->setShowVacationsAndAvailabilitiesDate($selectedDate->format('Y-m-d'))
             ->setDateValue([$requestedStartDate->format('Y-m-d'), $requestedEndDate->format('Y-m-d')])
-            ->setWholeWeekDatePeriod(
-                iterator_to_array(
-                    CarbonPeriod::create($startOfWeek, $endOfWeek)
-                        ->map(
-                            function (Carbon $date) use ($requestedPeriod) {
-                                return [
-                                    'inRequestedTimeSpan' => in_array(
-                                        $date->format('d.m.Y'),
-                                        $requestedPeriod,
-                                        true
-                                    ),
-                                    'full_day' => $date->format('d.m.Y'),
-                                    'day' => $date->format('d.m.'),
-                                    'day_string' => $date->shortDayName,
-                                    'week_number' => $date->weekOfYear,
-                                    'month_number' => $date->month,
-                                    'is_monday' => $date->isMonday(),
-                                    'is_weekend' => $date->isWeekend(),
-                                    'day_without_format' => $date->format('Y-m-d'),
-                                ];
-                            }
-                    )
-                )
-            )
             ->setDaysWithData(
                 fn() => $eventService->getDaysWithEventsAndTotalPlannedWorkingHours(
                     $user->id,
@@ -278,20 +248,12 @@ class UserService
                     $this->shouldHideUncommittedShiftsInOwnRoster($user)
                 )
             )
-            //->setEventsWithTotalPlannedWorkingHours($eventsWithTotalPlannedWorkingHours)
             //->setTotalPlannedWorkingHours((float)$totalPlannedWorkingHours)
             // Schwere Props als Closures: Inertia wertet sie bei partiellen Reloads
             // (z.B. nach Speichern/Löschen von Verfügbarkeiten) gar nicht erst aus
             ->setVacationSelectCalendar(
                 static fn() => $calendarService->createVacationAndAvailabilityPeriodCalendar($vacationMonth)
             )
-            ->setRooms(static fn() => $roomService->getAllWithoutTrashed())
-            ->setProjects(static fn() => $projectService->getAll())
-            ->setShiftQualifications(static fn() => $shiftQualificationService->getAllOrderedByPosition())
-            ->setShifts(fn() => $this->getUserShiftsOrderedByStartAscending(
-                $user,
-                $this->shouldHideUncommittedShiftsInOwnRoster($user)
-            ))
             ->setVacations(
                 tap(
                     $this->getUserVacationsByMonthOrderedByDateAsc($user, $calendarMonth),
@@ -471,6 +433,18 @@ class UserService
         return [$startDate, $endDate];
     }
 
+    /**
+     * Zeitraum des Einsatzplans für diesen Request überschreiben (Deep-Link start_date/end_date),
+     * ohne den gespeicherten UserWorkerShiftPlanFilter zu verändern.
+     */
+    public function overrideWorkerShiftPlanPeriod(Carbon $start, Carbon $end): void
+    {
+        if ($end->lessThan($start)) {
+            [$start, $end] = [$end, $start];
+        }
+        $this->workerShiftPlanPeriodOverride = [$start->copy()->startOfDay(), $end->copy()->startOfDay()];
+    }
+
     public function getUserWorkerShiftPlanFilter(User $user, array $attributes = []): UserWorkerShiftPlanFilter
     {
         /** @var UserWorkerShiftPlanFilter $userWorkerShiftPlanFilter */
@@ -489,6 +463,14 @@ class UserService
      */
     public function getUserWorkerShiftPlanFilterStartAndEndDatesOrDefault(User $user): array
     {
+        // Deep-Link-Zeitraum (nur für diesen Request, nicht gespeichert) gewinnt vor dem Filter
+        if ($this->workerShiftPlanPeriodOverride !== null) {
+            return [
+                $this->workerShiftPlanPeriodOverride[0]->copy(),
+                $this->workerShiftPlanPeriodOverride[1]->copy(),
+            ];
+        }
+
         $userWorkerShiftPlanFilter = $this->getUserWorkerShiftPlanFilter(
             $user,
             [

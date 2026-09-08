@@ -19,9 +19,9 @@ trait TriggersWorkflows
             ]);
         });
 
-        static::deleted(function ($model) {
-            $model->triggerWorkflow('deleted');
-        });
+        // Kein 'deleted'-Trigger: der Listener ist eine Queue-Klasse und das Event serialisiert das
+        // Model (SerializesModels) - ein bereits geloeschtes Model laesst sich beim Verarbeiten nicht
+        // mehr laden (ModelNotFoundException). Niemand konsumiert 'deleted'.
     }
 
     public function triggerWorkflow(string $triggerType, array $context = []): void

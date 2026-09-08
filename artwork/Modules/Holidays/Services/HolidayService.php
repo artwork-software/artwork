@@ -29,7 +29,8 @@ class HolidayService
         ?string $remote_identifier = null,
         ?bool $from_api = false,
         ?string $color = null,
-        ?bool $treatAsSpecialDay = false
+        ?bool $treatAsSpecialDay = false,
+        ?string $type = null
     ): Holiday {
         return $this->holidayRepository->create(
             name: $name,
@@ -42,8 +43,30 @@ class HolidayService
             remote_identifier: $remote_identifier,
             from_api: $from_api,
             color: $color,
-            treatAsSpecialDay: $treatAsSpecialDay
+            treatAsSpecialDay: $treatAsSpecialDay,
+            type: $type
         );
+    }
+
+    /**
+     * OpenHolidays-Typ -> Feiertagstyp: "Public" -> public, "School" -> school, alles andere
+     * (Bank, Optional, ...) wird wie ein gesetzlicher Feiertag geführt, aber nicht als Sondertag.
+     */
+    public static function typeFromApi(?string $apiType): string
+    {
+        return match (strtolower((string) $apiType)) {
+            'school' => Holiday::TYPE_SCHOOL,
+            default => Holiday::TYPE_PUBLIC,
+        };
+    }
+
+    /**
+     * OpenHolidays-Typ, der beim Import als Sondertag gilt: nur "Public" (gesetzlicher Feiertag).
+     * Schulferien ("School"), Bank-/optionale Feiertage bleiben ohne Flag.
+     */
+    public static function isSpecialDayType(?string $type): bool
+    {
+        return strcasecmp((string) $type, 'Public') === 0;
     }
 
     public function getAllImported(): Collection
@@ -51,9 +74,12 @@ class HolidayService
         return $this->holidayRepository->findAllBy('from_api', true);
     }
 
-    public function getAll(int $paginate, array $with = []): \Illuminate\Contracts\Pagination\LengthAwarePaginator
-    {
-        return $this->holidayRepository->findAll($paginate, $with);
+    public function getAll(
+        int $paginate,
+        array $with = [],
+        ?string $type = null
+    ): \Illuminate\Contracts\Pagination\LengthAwarePaginator {
+        return $this->holidayRepository->findAll($paginate, $with, $type);
     }
 
     public function deleteAllFromApi(): void

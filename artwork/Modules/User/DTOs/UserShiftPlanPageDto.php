@@ -8,11 +8,14 @@ use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Closure;
 use Illuminate\Support\Collection;
 
+/**
+ * Props der Seiten Users/UserShiftPlanPage und Shifts/UserOperationPlan. Bewusst NICHT mehr enthalten
+ * (vom Frontend nicht gelesen, Payload-Diät): wholeWeekDatePeriod, eventsWithTotalPlannedWorkingHours,
+ * rooms, projects, shiftQualifications, user_to_edit_whole_week_date_period_vacations.
+ */
 class UserShiftPlanPageDto extends BaseDto
 {
     public ?UserShowResource $userToEdit = null;
-
-    public ?EloquentCollection $userToEditWholeWeekDatePeriodVacations = null;
 
     public ?string $currentTab = null;
 
@@ -32,23 +35,12 @@ class UserShiftPlanPageDto extends BaseDto
 
     public ?array $dateValue = null;
 
-    public ?array $wholeWeekDatePeriod = null;
-
     public array|Closure|null $daysWithData = null;
-
-    public ?array $eventsWithTotalPlannedWorkingHours = null;
 
     public ?float $totalPlannedWorkingHours = null;
 
-    public EloquentCollection|Closure|null $rooms = null;
-
     public EloquentCollection|Closure|null $crafts = null;
 
-    public EloquentCollection|Closure|null $projects = null;
-
-    public EloquentCollection|Closure|null $shiftQualifications = null;
-
-    public EloquentCollection|Closure|null $shifts = null;
 
     public int|Closure|null $firstProjectShiftTabId = null;
 
@@ -83,13 +75,6 @@ class UserShiftPlanPageDto extends BaseDto
     public function setUserToEdit(?UserShowResource $userToEdit): self
     {
         $this->userToEdit = $userToEdit;
-
-        return $this;
-    }
-
-    public function setUserToEditWholeWeekDatePeriodVacations(?EloquentCollection $vacations): self
-    {
-        $this->userToEditWholeWeekDatePeriodVacations = $vacations;
 
         return $this;
     }
@@ -157,23 +142,9 @@ class UserShiftPlanPageDto extends BaseDto
         return $this;
     }
 
-    public function setWholeWeekDatePeriod(?array $wholeWeekDatePeriod): self
-    {
-        $this->wholeWeekDatePeriod = $wholeWeekDatePeriod;
-
-        return $this;
-    }
-
     public function setDaysWithData(array|Closure|null $daysWithData): self
     {
         $this->daysWithData = $daysWithData;
-
-        return $this;
-    }
-
-    public function setEventsWithTotalPlannedWorkingHours(?array $eventsWithTotalPlannedWorkingHours): self
-    {
-        $this->eventsWithTotalPlannedWorkingHours = $eventsWithTotalPlannedWorkingHours;
 
         return $this;
     }
@@ -185,13 +156,6 @@ class UserShiftPlanPageDto extends BaseDto
         return $this;
     }
 
-    public function setRooms(EloquentCollection|Closure|null $rooms): self
-    {
-        $this->rooms = $rooms;
-
-        return $this;
-    }
-
     public function setCrafts(EloquentCollection|Closure|null $crafts): self
     {
         $this->crafts = $crafts;
@@ -199,26 +163,6 @@ class UserShiftPlanPageDto extends BaseDto
         return $this;
     }
 
-    public function setProjects(EloquentCollection|Closure|null $projects): self
-    {
-        $this->projects = $projects;
-
-        return $this;
-    }
-
-    public function setShiftQualifications(EloquentCollection|Closure|null $shiftQualifications): self
-    {
-        $this->shiftQualifications = $shiftQualifications;
-
-        return $this;
-    }
-
-    public function setShifts(EloquentCollection|Closure|null $shifts): self
-    {
-        $this->shifts = $shifts;
-
-        return $this;
-    }
 
     public function setFirstProjectShiftTabId(int|Closure|null $firstProjectShiftTabId): self
     {
@@ -230,11 +174,6 @@ class UserShiftPlanPageDto extends BaseDto
     public function getUserToEdit(): ?UserShowResource
     {
         return $this->userToEdit;
-    }
-
-    public function getUserToEditWholeWeekDatePeriodVacations(): ?EloquentCollection
-    {
-        return $this->userToEditWholeWeekDatePeriodVacations;
     }
 
     public function getCurrentTab(): ?string
@@ -297,25 +236,9 @@ class UserShiftPlanPageDto extends BaseDto
         return $this->dateValue;
     }
 
-    /**
-     * @return array<int, string>|null
-     */
-    public function getWholeWeekDatePeriod(): ?array
-    {
-        return $this->wholeWeekDatePeriod;
-    }
-
     public function getDaysWithData(): array|Closure|null
     {
         return $this->daysWithData;
-    }
-
-    /**
-     * @return array<string, mixed>|null
-     */
-    public function getEventsWithTotalPlannedWorkingHours(): ?array
-    {
-        return $this->eventsWithTotalPlannedWorkingHours;
     }
 
     public function getTotalPlannedWorkingHours(): ?float
@@ -323,30 +246,11 @@ class UserShiftPlanPageDto extends BaseDto
         return $this->totalPlannedWorkingHours;
     }
 
-    public function getRooms(): EloquentCollection|Closure|null
-    {
-        return $this->rooms;
-    }
-
     public function getCrafts(): EloquentCollection|Closure|null
     {
         return $this->crafts;
     }
 
-    public function getProjects(): EloquentCollection|Closure|null
-    {
-        return $this->projects;
-    }
-
-    public function getShiftQualifications(): EloquentCollection|Closure|null
-    {
-        return $this->shiftQualifications;
-    }
-
-    public function getShifts(): EloquentCollection|Closure|null
-    {
-        return $this->shifts;
-    }
 
     public function getFirstProjectShiftTabId(): int|Closure|null
     {
@@ -360,7 +264,6 @@ class UserShiftPlanPageDto extends BaseDto
     {
         return [
             'user_to_edit' => $this->getUserToEdit(),
-            'user_to_edit_whole_week_date_period_vacations' => $this->getUserToEditWholeWeekDatePeriodVacations(),
             'currentTab' => $this->getCurrentTab(),
             'calendarData' => $this->getCalendarData(),
             'dateToShow' => $this->getDateToShow(),
@@ -370,15 +273,9 @@ class UserShiftPlanPageDto extends BaseDto
             'availabilities' => $this->getAvailabilities(),
             'showVacationsAndAvailabilitiesDate' => $this->getShowVacationsAndAvailabilitiesDate(),
             'dateValue' => $this->getDateValue(),
-            'wholeWeekDatePeriod' => $this->getWholeWeekDatePeriod(),
             'daysWithData' => $this->getDaysWithData(),
-            'eventsWithTotalPlannedWorkingHours' => $this->getEventsWithTotalPlannedWorkingHours(),
             'totalPlannedWorkingHours' => $this->getTotalPlannedWorkingHours(),
-            'rooms' => $this->getRooms(),
             'crafts' => $this->getCrafts(),
-            'projects' => $this->getProjects(),
-            'shiftQualifications' => $this->getShiftQualifications(),
-            'shifts' => $this->getShifts(),
             'firstProjectShiftTabId' => $this->getFirstProjectShiftTabId(),
             'projectAssignments' => $this->getProjectAssignments(),
             'projectWishes' => $this->getProjectWishes(),

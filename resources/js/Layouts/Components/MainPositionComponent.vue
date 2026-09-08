@@ -150,6 +150,7 @@
                                                   @openDeleteModal="openDeleteModal"
                                                   @openSageAssignedDataModal="openSageAssignedDataModal"
                                                   @budget-updated="handleBudgetUpdated"
+                                                  @order-saved="$emit('order-saved')"
                                                   @budget-patched="$emit('budget-patched', $event)"
                                                   :main-position="mainPosition"
                                                   :all-main-positions="table.main_positions"
@@ -256,6 +257,7 @@ export default {
         'openVerifiedModal',
         'budget-updated',
         'budget-patched',
+        'order-saved',
     ],
     data(){
         return{
@@ -368,7 +370,10 @@ export default {
                         {
                             preserveScroll: true,
                             preserveState: true,
-                            onSuccess: () => this.$emit('budget-updated'),
+                            onSuccess: () => {
+                                this.$emit('budget-updated');
+                                this.$emit('order-saved');
+                            },
                         }
                     );
                 });

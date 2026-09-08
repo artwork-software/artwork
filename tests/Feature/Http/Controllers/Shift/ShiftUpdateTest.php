@@ -4,6 +4,7 @@ namespace Tests\Feature\Http\Controllers\Shift;
 
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Shift\Models\Shift;
+use Artwork\Modules\Shift\Models\ShiftCommitWorkflowUser;
 use Artwork\Modules\Shift\Models\ShiftQualification;
 use Artwork\Modules\Shift\Models\ShiftsQualifications;
 use Artwork\Modules\User\Models\User;
@@ -255,6 +256,8 @@ final class ShiftUpdateTest extends FeatureTestCase
     public function admin_can_update_workflow_settings(): void
     {
         $this->actingAsAdmin();
+        // Aktivieren verlangt seit Block 1a mindestens eine Genehmiger:in
+        ShiftCommitWorkflowUser::create(['user_id' => User::factory()->create()->id]);
 
         $response = $this->patch(route('shift.settings.update.shift-commit-workflow'), [
             'shift_commit_workflow' => true,

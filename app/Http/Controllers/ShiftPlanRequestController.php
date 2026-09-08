@@ -8,18 +8,21 @@ use Artwork\Core\Services\HelperService;
 use Artwork\Modules\Craft\Models\Craft;
 use Artwork\Modules\Shift\Events\UpdateEventShiftInShiftPlan;
 use Artwork\Modules\Shift\Events\UpdateShiftInShiftPlan;
+use Artwork\Modules\Shift\Exports\Support\CommittedShiftChangePresenter;
 use Artwork\Modules\Shift\Models\CommittedShiftChange;
 use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\Shift\Models\ShiftPlanRequest;
 use Artwork\Modules\Shift\Models\ShiftPlanRequestChange;
 use Artwork\Modules\Shift\Models\ShiftsQualifications;
 use Artwork\Modules\Shift\Models\ShiftQualification;
+use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Artwork\Modules\Shift\Models\ShiftRuleViolation;
 use Artwork\Modules\IndividualTimes\Models\IndividualTime;
 use Artwork\Modules\Notification\Enums\NotificationEnum;
 use Artwork\Modules\Notification\Services\NotificationService;
 use Artwork\Modules\Shift\Models\ShiftCommitWorkflowUser;
 use Artwork\Modules\Shift\Services\ShiftChangeRecorder;
+use Artwork\Modules\Shift\Services\ShiftNotificationLinkService;
 use Artwork\Modules\Shift\Services\ShiftPlanRequestService;
 use Artwork\Modules\User\Models\User;
 use Artwork\Modules\Freelancer\Models\Freelancer;
@@ -122,21 +125,65 @@ class ShiftPlanRequestController extends Controller
     }
 
     /**
-     * Schichtwarnungen (ShiftRuleViolations) der Craft-User im Wochenzeitraum, gruppiert
-     * nach User-ID und Datum — für die Warn-Icons in der Freigabeansicht. Violations
-     * existieren derzeit nur für User, nicht für Freelancer/Dienstleister.
+     * Regelverstöße (ShiftRuleViolations) der Craft-User im Wochenzeitraum, gruppiert
+     * nach User-ID und Datum — für die Marker in der Prüfansicht. Der Payload entspricht dem des
+     * Hauptplans (WorkingHourService), damit das ViolationEditModal aus der Prüfansicht heraus
+     * dieselben Felder vorfindet. Violations existieren derzeit nur für User, nicht für
+     * Freelancer/Dienstleister.
      *
      * @param \Illuminate\Support\Collection<int, int> $userIds
      * @return \Illuminate\Support\Collection<int, \Illuminate\Support\Collection<string, mixed>>
      */
+    /**
+     * Darf die angemeldete Person Regelverstöße aus der Prüfansicht heraus bearbeiten? Spiegelt die
+     * Middleware `can:can plan shifts` + `shift-settings-area:rules,edit` (im einfachen Modus reicht
+     * das Schichteinstellungs-Recht, im granularen Modus zusätzlich "Regeln bearbeiten").
+     */
+    /**
+     * True, wenn es für Gewerk/KW/Jahr dieser Anfrage bereits eine andere ausstehende Anfrage gibt
+     * (z. B. nach einem erneuten Einreichen) – dann darf eine abgelehnte nicht nochmal eingereicht werden.
+     */
+    private function hasPendingSuccessor(ShiftPlanRequest $request): bool
+    {
+        if ($request->status !== 'rejected') {
+            return false;
+        }
+
+        return ShiftPlanRequest::query()
+            ->where('craft_id', $request->craft_id)
+            ->where('week_number', $request->week_number)
+            ->where('year', $request->year)
+            ->where('status', 'pending')
+            ->whereKeyNot($request->id)
+            ->exists();
+    }
+
+    private function canEditViolations(): bool
+    {
+        $user = auth()->user();
+        if (!$user || !$user->can(PermissionEnum::SHIFT_PLANNER->value)) {
+            return false;
+        }
+        if (!$user->can(PermissionEnum::SHIFT_SETTINGS_VIEW_EDIT->value)) {
+            return false;
+        }
+        if (!app(\App\Settings\ShiftSettings::class)->granular_permissions_enabled) {
+            return true;
+        }
+
+        return $user->can(PermissionEnum::SHIFT_SETTINGS_RULES_EDIT->value);
+    }
+
     private function loadShiftRuleViolationsForUsers(
         \Illuminate\Support\Collection $userIds,
         Carbon $start,
         Carbon $end
     ): \Illuminate\Support\Collection {
         return ShiftRuleViolation::query()
-            ->select(['id', 'shift_rule_id', 'user_id', 'violation_date', 'status'])
-            ->with(['shiftRule:id,name,description,warning_color'])
+            ->with([
+                'shiftRule:id,name,description,warning_color,trigger_type,default_compensation_days,default_compensation_deadline_days',
+                'resolvedByUser:id,first_name,last_name',
+            ])
             ->whereIn('user_id', $userIds)
             ->whereBetween('violation_date', [$start->toDateString(), $end->toDateString()])
             ->whereIn('status', ['active', 'resolved'])
@@ -293,6 +340,7 @@ class ShiftPlanRequestController extends Controller
 
         $createdCount = 0;
         $updatedCount = 0;
+        $resubmittedCount = 0;
 
         foreach ($craftIds as $craftId) {
             $payload = [
@@ -301,6 +349,16 @@ class ShiftPlanRequestController extends Controller
                 'year' => $data['year'],
                 'requested_by_user_id' => $user->id,
             ];
+
+            // Erneut einreichen nach Ablehnung: gibt es für Gewerk/KW bereits eine abgelehnte
+            // Anfrage, entsteht eine NEUE Anfrage; die abgelehnten Schichten werden über
+            // freeShiftsForRequestQuery (Status rejected/approved gilt als frei) wieder eingesammelt.
+            $hadRejectedRequest = ShiftPlanRequest::query()
+                ->where('craft_id', $payload['craft_id'])
+                ->where('week_number', $payload['week_number'])
+                ->where('year', $payload['year'])
+                ->where('status', 'rejected')
+                ->exists();
 
             // Check-then-create unter Lock auf der Craft-Zeile: zwei gleichzeitige
             // "Alle Schichten festsetzen"-Aufrufe erzeugten sonst zwei pending-Requests
@@ -334,6 +392,9 @@ class ShiftPlanRequestController extends Controller
             if ($shiftPlanRequest->wasRecentlyCreated) {
                 $this->notifyApproversAboutNewRequest($shiftPlanRequest);
                 $createdCount++;
+                if ($hadRejectedRequest) {
+                    $resubmittedCount++;
+                }
             } else {
                 $updatedCount++;
             }
@@ -344,13 +405,15 @@ class ShiftPlanRequestController extends Controller
                 ':created shift plan requests created, :updated existing requests updated.',
                 ['created' => $createdCount, 'updated' => $updatedCount]
             );
+        } elseif ($resubmittedCount > 0) {
+            $message = __('Shift plan request for week :week resubmitted.', ['week' => $data['week_number']]);
         } else {
             $message = $createdCount > 0
                 ? __('Shift plan request created successfully.')
                 : __('Existing shift plan request updated successfully.');
         }
 
-        return back()->with('success', $message);
+        return back()->with('success', $message)->with('resubmitted', $resubmittedCount > 0);
     }
 
 
@@ -433,6 +496,9 @@ class ShiftPlanRequestController extends Controller
             'navigation' => $this->buildRequestNavigation($shiftPlanRequest),
             'shiftQualifications' => ShiftQualification::query()->get(['id', 'name']),
             'shiftRuleViolations' => $this->loadShiftRuleViolationsForUsers($craftUserIds, $start, $end),
+            'canEditViolations' => $this->canEditViolations(),
+            // Erneut einreichen nur, solange für Gewerk/KW keine ausstehende Anfrage existiert
+            'hasPendingSuccessor' => $this->hasPendingSuccessor($shiftPlanRequest),
             'craftWorkers' => [
                 'users' => $craftUsers->map(fn ($u) => [
                     'id' => $u->id,
@@ -473,7 +539,8 @@ class ShiftPlanRequestController extends Controller
         // Save mitten im Loop fehl, wird auch der Status zurückgerollt (keine
         // "approved"-Anfrage mit halb committeten Schichten).
         $approved = false;
-        $response = DB::transaction(function () use ($shiftPlanRequest, $user, $comment, &$approved) {
+        $committedShiftIds = [];
+        $response = DB::transaction(function () use ($shiftPlanRequest, $user, $comment, &$approved, &$committedShiftIds) {
             // Atomarer Status-Flip nur aus 'pending': verhindert Doppel-Genehmigung und
             // Genehmigen nach Ablehnung (auch bei zwei gleichzeitigen Genehmigern —
             // der zweite wartet auf das Row-Lock und sieht dann flipped = 0).
@@ -488,7 +555,7 @@ class ShiftPlanRequestController extends Controller
                 ]);
 
             if ($flipped === 0) {
-                return back()->with('error', __('Shift plan request has already been processed.'));
+                return back()->with('error', __('This release request has already been decided. You can see the current status under "My release requests".'));
             }
 
             $shiftPlanRequest->refresh();
@@ -509,6 +576,7 @@ class ShiftPlanRequestController extends Controller
                 $shift->current_request_id = null;
                 $shift->committing_user_id = $this->auth->id();
                 $shift->save();
+                $committedShiftIds[] = $shift->id;
 
                 DB::table('shift_workers')
                     ->where('shift_id', $shift->id)
@@ -530,12 +598,88 @@ class ShiftPlanRequestController extends Controller
             );
         });
 
-        // Nach erfolgreichem Commit den Antragsteller informieren
+        // Nach erfolgreichem Commit den Antragsteller informieren — und jede Person,
+        // die in der festgeschriebenen KW/Gewerk eine Schicht hat ("Dienstplan festgeschrieben").
         if ($approved) {
             $this->notifyRequesterAboutDecision($shiftPlanRequest->fresh(), true, $comment);
+            $this->notifyWorkersAboutLockedShiftPlan($shiftPlanRequest->fresh(), $committedShiftIds);
         }
 
         return $response;
+    }
+
+    /**
+     * "Dein Dienstplan {Gewerk} KW n/Jahr wurde festgeschrieben" — genau EINE Notification
+     * (NOTIFICATION_SHIFT_LOCKED) je Person, die mindestens eine der festgeschriebenen
+     * Schichten hat. Personen ohne Schicht in Gewerk/KW bekommen nichts. Link öffnet den
+     * eigenen Einsatzplan auf der KW. Kanäle (Mail/Push) laufen über die Standardmechanik
+     * der NotificationSettings.
+     *
+     * @param array<int, int> $committedShiftIds
+     */
+    private function notifyWorkersAboutLockedShiftPlan(ShiftPlanRequest $shiftPlanRequest, array $committedShiftIds): void
+    {
+        if ($committedShiftIds === []) {
+            return;
+        }
+
+        $userIds = DB::table('shift_workers')
+            ->whereIn('shift_id', $committedShiftIds)
+            ->where('employable_type', User::class)
+            ->whereNull('deleted_at')
+            ->distinct()
+            ->pluck('employable_id');
+
+        if ($userIds->isEmpty()) {
+            return;
+        }
+
+        $shiftPlanRequest->loadMissing('craft');
+
+        [$weekStart, $weekEnd] = $this->helperService->getDateRangeByCalendarWeekAndYear(
+            $shiftPlanRequest->week_number,
+            $shiftPlanRequest->year
+        );
+
+        $notificationService = app(NotificationService::class);
+
+        foreach (User::query()->whereIn('id', $userIds)->get() as $worker) {
+            $notificationTitle = __('notification.shift.locked_craft_week', [
+                'craft' => $shiftPlanRequest->craft?->name ?? '',
+                'week' => $shiftPlanRequest->week_number,
+                'year' => $shiftPlanRequest->year,
+            ], $worker->language);
+
+            $operationPlanLink = ShiftNotificationLinkService::ownOperationPlan($worker, $weekStart, $weekEnd);
+
+            $notificationService->setNotificationTo($worker);
+            $notificationService->setTitle($notificationTitle);
+            $notificationService->setIcon('green');
+            $notificationService->setPriority(3);
+            $notificationService->setNotificationConstEnum(NotificationEnum::NOTIFICATION_SHIFT_LOCKED);
+            $notificationService->setBroadcastMessage([
+                'id' => Str::uuid()->toString(),
+                'type' => 'success',
+                'message' => $notificationTitle,
+            ]);
+            $notificationService->setDescription([
+                0 => [
+                    'type' => 'text',
+                    'title' => __('notification.keyWords.concerns_time_period', [
+                        'start' => $weekStart->format('d.m.Y'),
+                        'end' => $weekEnd->format('d.m.Y'),
+                    ], $worker->language),
+                    'href' => $operationPlanLink,
+                ],
+                1 => [
+                    'type' => 'link',
+                    'title' => __('notification.shift.link_label_own_operation_plan', [], $worker->language),
+                    'href' => $operationPlanLink,
+                ],
+            ]);
+            $notificationService->createNotification();
+            $notificationService->clearNotificationData();
+        }
     }
 
     /**
@@ -567,7 +711,7 @@ class ShiftPlanRequestController extends Controller
         // Nur offene Anfragen können zurückgezogen werden — genehmigte/abgelehnte
         // Anfragen sind Historie und dürfen nicht mehr entfernt werden.
         if ($shiftPlanRequest->status !== 'pending') {
-            return back()->with('error', __('Shift plan request has already been processed.'));
+            return back()->with('error', __('This release request has already been decided. You can see the current status under "My release requests".'));
         }
 
         DB::transaction(function () use ($shiftPlanRequest): void {
@@ -611,7 +755,8 @@ class ShiftPlanRequestController extends Controller
             $shiftPlanRequest->delete();
         });
 
-        return back()->with('success', __('Shift plan request deleted successfully.'));
+        // Nicht back(): der Referer zeigt bei Show.vue auf die soeben geloeschte Anfrage (404).
+        return redirect()->route('shift-plan-requests.my.index')->with('success', __('Shift plan request withdrawn.'));
     }
 
     public function reject(\Artwork\Modules\Shift\Models\ShiftPlanRequest $shiftPlanRequest, \Illuminate\Http\Request $request): \Illuminate\Http\RedirectResponse
@@ -653,7 +798,7 @@ class ShiftPlanRequestController extends Controller
                 ]);
 
             if ($flipped === 0) {
-                return back()->with('error', __('Shift plan request has already been processed.'));
+                return back()->with('error', __('This release request has already been decided. You can see the current status under "My release requests".'));
             }
 
             $shiftPlanRequest->refresh();
@@ -1113,135 +1258,9 @@ class ShiftPlanRequestController extends Controller
 
         // Nur die Datensätze der aktuellen Seite transformieren (through behält die
         // Paginator-Metadaten/Links bei).
-        $paginator->through(function (CommittedShiftChange $change) {
-            $fieldChanges = $change->field_changes ?? [];
-
-            $assignment = $fieldChanges['assignment'] ?? null;
-
-            $affectedName       = null;
-            $profilePictureUrl  = null;
-            $beforeLabel        = null;
-            $afterLabel         = null;
-
-            // Fall 1: User-Zuweisung / Entfernen -> Daten aus assignment
-            if ($assignment) {
-                $affectedName      = $assignment['user_name']           ?? null;
-                $profilePictureUrl = $assignment['profile_picture_url'] ?? null;
-                $beforeLabel       = $assignment['before_label']        ?? null;
-                $afterLabel        = $assignment['after_label']         ?? null;
-            } else {
-                // Fall 2: reine Schicht-Änderung (start/end/break …)
-                $shift = $change->shift;
-
-                if ($shift) {
-                    $date = optional($shift->start_date)?->format('d.m.Y')
-                        ?? optional($shift->end_date)?->format('d.m.Y');
-
-                    // Werte aus field_changes können als volle Datetime ("2026-06-20 14:30:00"),
-                    // als "HH:MM:SS", als "HH:MM" oder als Platzhalter ("null"/leer) vorliegen.
-                    // Einheitlich auf "HH:MM" normalisieren (bzw. null), damit das Datum nicht
-                    // doppelt im Label erscheint und Platzhalter den Fallback unten auslösen.
-                    $toTime = static function ($value): ?string {
-                        if ($value === null || $value === '' || $value === 'null') {
-                            return null;
-                        }
-                        if ($value instanceof \Carbon\Carbon) {
-                            return $value->format('H:i');
-                        }
-                        $str = (string) $value;
-                        if (preg_match('/^(\d{1,2}):(\d{2})/', $str, $m)) {
-                            return sprintf('%02d:%s', (int) $m[1], $m[2]);
-                        }
-                        try {
-                            return \Carbon\Carbon::parse($str)->format('H:i');
-                        } catch (\Throwable $e) {
-                            return null;
-                        }
-                    };
-
-                    // Zeiten zuerst aus field_changes lesen
-                    $beforeStart = $toTime($fieldChanges['start']['old'] ?? null);
-                    $beforeEnd   = $toTime($fieldChanges['end']['old']   ?? null);
-                    $afterStart  = $toTime($fieldChanges['start']['new'] ?? null);
-                    $afterEnd    = $toTime($fieldChanges['end']['new']   ?? null);
-
-                    // Falls dort nichts steht, auf aktuelle Shift-Werte zurückfallen
-                    if (! $beforeStart && $shift->start) {
-                        $beforeStart = $shift->start instanceof \Carbon\Carbon
-                            ? $shift->start->format('H:i')
-                            : (string) $shift->start;
-                    }
-
-                    if (! $beforeEnd && $shift->end) {
-                        $beforeEnd = $shift->end instanceof \Carbon\Carbon
-                            ? $shift->end->format('H:i')
-                            : (string) $shift->end;
-                    }
-
-                    if (! $afterStart && $shift->start) {
-                        $afterStart = $shift->start instanceof \Carbon\Carbon
-                            ? $shift->start->format('H:i')
-                            : (string) $shift->start;
-                    }
-
-                    if (! $afterEnd && $shift->end) {
-                        $afterEnd = $shift->end instanceof \Carbon\Carbon
-                            ? $shift->end->format('H:i')
-                            : (string) $shift->end;
-                    }
-
-                    // Fallback-Werte (aus den Shift-Spalten) ebenfalls normalisieren.
-                    $beforeStart = $toTime($beforeStart);
-                    $beforeEnd   = $toTime($beforeEnd);
-                    $afterStart  = $toTime($afterStart);
-                    $afterEnd    = $toTime($afterEnd);
-
-                    // BEFORE-Label bauen
-                    if ($date && $beforeStart && $beforeEnd) {
-                        $beforeLabel = sprintf('%s %s - %s', $date, $beforeStart, $beforeEnd);
-                    } elseif ($beforeStart && $beforeEnd) {
-                        $beforeLabel = sprintf('%s - %s', $beforeStart, $beforeEnd);
-                    } elseif ($beforeEnd) {
-                        $beforeLabel = $beforeEnd;
-                    }
-
-                    // AFTER-Label bauen
-                    if ($date && $afterStart && $afterEnd) {
-                        $afterLabel = sprintf('%s %s - %s', $date, $afterStart, $afterEnd);
-                    } elseif ($afterStart && $afterEnd) {
-                        $afterLabel = sprintf('%s - %s', $afterStart, $afterEnd);
-                    } elseif ($afterEnd) {
-                        $afterLabel = $afterEnd;
-                    }
-
-                    // „Betroffene Entität“ für reine Schicht-Änderung sinnvoll benennen
-                    $craftAbbr = optional($shift->craft)->abbreviation;
-                    $affectedName = $craftAbbr
-                        ? sprintf('%s – %s', $craftAbbr, $date)
-                        : ($date ?: null);
-                }
-            }
-
-            return [
-                'id'                     => $change->id,
-                'change_type'            => $change->change_type,
-
-                'affected_name'          => $affectedName,
-                'profile_picture_url'    => $profilePictureUrl,
-
-                'before_label'           => $beforeLabel,
-                'after_label'            => $afterLabel,
-
-                'changed_by_name'        => optional($change->changedBy)->full_name,
-                'changed_at'             => optional($change->changed_at)?->toIso8601String(),
-                'changed_at_formatted'   => optional($change->changed_at)?->format('d.m.Y H:i'),
-
-                'acknowledged_at'        => optional($change->acknowledged_at)?->toIso8601String(),
-                'acknowledged'           => ! is_null($change->acknowledged_at),
-
-                'field_changes'          => $fieldChanges,
-            ];
-        });
+        $paginator->through(
+            fn (CommittedShiftChange $change) => CommittedShiftChangePresenter::present($change)
+        );
 
         return Inertia::render('ShiftPlanRequests/Changes', [
             'allCrafts'    => $allCrafts,
@@ -1366,6 +1385,51 @@ class ShiftPlanRequestController extends Controller
 
 
     /**
+     * Excel-Export der Änderungsübersicht mit denselben Filtern wie die Liste (Gewerk, Status all|open|ack,
+     * Personensuche, Intern/Extern) plus optionalem Zeitraum (changed_at). Gleiche Rechte wie changes().
+     */
+    public function exportChanges(Request $request): \Symfony\Component\HttpFoundation\BinaryFileResponse
+    {
+        $validated = $request->validate([
+            'craft_id' => ['nullable', 'integer', 'exists:crafts,id'],
+            'filter' => ['nullable', 'string', \Illuminate\Validation\Rule::in(['all', 'open', 'ack'])],
+            'search' => ['nullable', 'string', 'max:200'],
+            'worker_type' => ['nullable', 'string', \Illuminate\Validation\Rule::in(['all', 'internal', 'external'])],
+            'date_from' => ['nullable', 'date_format:Y-m-d'],
+            'date_to' => ['nullable', 'date_format:Y-m-d', 'after_or_equal:date_from'],
+        ]);
+
+        $craft = !empty($validated['craft_id']) ? Craft::find($validated['craft_id']) : null;
+        $filter = $validated['filter'] ?? 'all';
+        $dateFrom = $validated['date_from'] ?? null;
+        $dateTo = $validated['date_to'] ?? null;
+
+        // Zeitraum-Deckel für den Export: höchstens ein Jahr
+        \Artwork\Modules\Shift\Support\ExportPeriodLimit::assertWithinLimit($dateFrom, $dateTo);
+
+        $query = $this->committedShiftChangesBaseQuery(
+            $craft,
+            trim((string) ($validated['search'] ?? '')),
+            $validated['worker_type'] ?? 'all'
+        )
+            ->when($filter === 'open', fn ($q) => $q->whereNull('acknowledged_at'))
+            ->when($filter === 'ack', fn ($q) => $q->whereNotNull('acknowledged_at'))
+            ->when($dateFrom, fn ($q) => $q->whereDate('changed_at', '>=', $dateFrom))
+            ->when($dateTo, fn ($q) => $q->whereDate('changed_at', '<=', $dateTo));
+
+        $export = new \Artwork\Modules\Shift\Exports\CommittedShiftChangesExcelExport(
+            $query,
+            $request->user()?->language ?? app()->getLocale()
+        );
+
+        $suffix = $dateFrom || $dateTo
+            ? ($dateFrom ?? 'anfang') . '_bis_' . ($dateTo ?? now()->toDateString())
+            : now()->format('Y-m-d');
+
+        return $export->download(sprintf('aenderungen_%s.xlsx', $suffix));
+    }
+
+    /**
      * Nachträgliche Zustimmung zu einer Änderung.
      */
     public function acknowledge(CommittedShiftChange $change): \Illuminate\Http\RedirectResponse
@@ -1379,7 +1443,12 @@ class ShiftPlanRequestController extends Controller
         return back()->with('success', __('Änderung wurde bestätigt.'));
     }
 
-    public function requests(): \Inertia\Response
+    /**
+     * "Meine Freigabe-Anfragen" / "Angefragte Dienstpläne": eine flache, serverseitig paginierte Liste
+     * (25 je Seite, KW absteigend) mit Filtern Status (Default alle), Gewerk und "nur eigene Anfragen".
+     * Sichtbarkeit wie zuvor: Admins alles, sonst eigene Anfragen + Anfragen zuständiger Gewerke.
+     */
+    public function requests(Request $request): \Inertia\Response
     {
         $user = User::find($this->auth->id());
         $isAdmin = $user->hasRole(RoleEnum::ARTWORK_ADMIN->value);
@@ -1390,44 +1459,85 @@ class ShiftPlanRequestController extends Controller
             ->orWhereHas('craftShiftPlaner', fn ($q) => $q->where('user_id', $user->id))
             ->pluck('id');
 
-        if ($isAdmin) {
-            $shiftPlanRequests = ShiftPlanRequest::with(['craft', 'requestedBy'])
-                ->orderByDesc('created_at')
-                ->get();
-        } else {
-            $shiftPlanRequests = ShiftPlanRequest::with(['craft', 'requestedBy'])
-                ->where(function ($q) use ($user, $accessibleCraftIds) {
-                    $q->where('requested_by_user_id', $user->id)
-                      ->orWhereIn('craft_id', $accessibleCraftIds);
-                })
-                ->orderByDesc('created_at')
-                ->get();
-        }
+        $validated = $request->validate([
+            'status' => ['nullable', 'string', \Illuminate\Validation\Rule::in(['all', 'pending', 'approved', 'rejected'])],
+            'craft_id' => ['nullable', 'integer'],
+            'only_mine' => ['nullable', 'boolean'],
+            'per_page' => ['nullable', 'integer', 'min:1', 'max:100'],
+        ]);
 
-        // Group requests by craft and build a simple crafts collection that includes shift_plan_requests
-        $grouped = $shiftPlanRequests->groupBy(fn ($r) => $r->craft->id ?? 0);
+        $status = $validated['status'] ?? 'all';
+        $craftId = !empty($validated['craft_id']) ? (int) $validated['craft_id'] : null;
+        $onlyMine = (bool) ($validated['only_mine'] ?? false);
+        $perPage = (int) ($validated['per_page'] ?? 25);
 
-        $crafts = $grouped->map(function ($requests) {
-            $first = $requests->first();
-            $craft = $first->craft;
+        $baseQuery = ShiftPlanRequest::query()
+            ->when(!$isAdmin, function ($q) use ($user, $accessibleCraftIds): void {
+                $q->where(function ($inner) use ($user, $accessibleCraftIds): void {
+                    $inner->where('requested_by_user_id', $user->id)
+                        ->orWhereIn('craft_id', $accessibleCraftIds);
+                });
+            });
 
-            // attach a simpler array expected by the frontend
-            $craft->shift_plan_requests = $requests->map(function ($r) {
-                return [
-                    'id' => $r->id,
-                    'week_number' => $r->week_number,
-                    'year' => $r->year,
-                    'requested_at' => optional($r->created_at)?->toIso8601String(),
-                    'status' => $r->status,
-                    'requested_by_name' => $r->requestedBy?->full_name ?? '',
-                ];
-            })->values();
+        // Gewerke für den Filter: nur solche, in denen die Person überhaupt Anfragen sehen kann.
+        $craftIdsWithRequests = (clone $baseQuery)->distinct()->pluck('craft_id');
+        $crafts = Craft::query()
+            ->whereIn('id', $craftIdsWithRequests)
+            ->orderBy('name')
+            ->get(['id', 'name', 'abbreviation', 'color']);
 
-            return $craft;
-        })->values();
+        $paginator = (clone $baseQuery)
+            ->with(['craft:id,name,abbreviation,color', 'requestedBy:id,first_name,last_name'])
+            ->when($status !== 'all', fn ($q) => $q->where('status', $status))
+            ->when($craftId, fn ($q) => $q->where('craft_id', $craftId))
+            ->when($onlyMine, fn ($q) => $q->where('requested_by_user_id', $user->id))
+            ->orderByDesc('year')
+            ->orderByDesc('week_number')
+            ->orderByDesc('created_at')
+            ->paginate($perPage)
+            ->withQueryString();
+
+        // "Erneut einreichen" nur, wenn für Gewerk/KW keine andere ausstehende Anfrage existiert —
+        // über alle Seiten hinweg, deshalb serverseitig in einer Abfrage.
+        $pageItems = collect($paginator->items());
+        $pendingSiblings = ShiftPlanRequest::query()
+            ->where('status', 'pending')
+            ->whereIn('craft_id', $pageItems->pluck('craft_id')->unique()->all())
+            ->get(['id', 'craft_id', 'week_number', 'year']);
+
+        $paginator->through(function (ShiftPlanRequest $r) use ($pendingSiblings) {
+            return [
+                'id' => $r->id,
+                'craft_id' => $r->craft_id,
+                'craft' => $r->craft ? [
+                    'id' => $r->craft->id,
+                    'name' => $r->craft->name,
+                    'abbreviation' => $r->craft->abbreviation,
+                    'color' => $r->craft->color,
+                ] : null,
+                'week_number' => $r->week_number,
+                'year' => $r->year,
+                'requested_at' => optional($r->created_at)?->toIso8601String(),
+                'status' => $r->status,
+                'requested_by_name' => $r->requestedBy?->full_name ?? '',
+                'requested_by_user_id' => $r->requested_by_user_id,
+                'has_pending_sibling' => $pendingSiblings->contains(
+                    fn ($other) => $other->id !== $r->id
+                        && (int) $other->craft_id === (int) $r->craft_id
+                        && (int) $other->week_number === (int) $r->week_number
+                        && (int) $other->year === (int) $r->year
+                ),
+            ];
+        });
 
         return Inertia::render('ShiftPlanRequests/MyIndex', [
+            'requests' => $paginator,
             'crafts' => $crafts,
+            'filters' => [
+                'status' => $status,
+                'craft_id' => $craftId,
+                'only_mine' => $onlyMine,
+            ],
             'isPlanner' => $isAdmin || $isShiftPlanner || $accessibleCraftIds->isNotEmpty(),
         ]);
     }
@@ -1534,6 +1644,9 @@ class ShiftPlanRequestController extends Controller
             ),
             'shiftQualifications' => ShiftQualification::query()->get(['id', 'name']),
             'shiftRuleViolations' => $this->loadShiftRuleViolationsForUsers($craftUserIds, $start, $end),
+            'canEditViolations' => $this->canEditViolations(),
+            // Erneut einreichen nur, solange für Gewerk/KW keine ausstehende Anfrage existiert
+            'hasPendingSuccessor' => $this->hasPendingSuccessor($shiftPlanRequest),
             'craftWorkers' => [
                 'users' => $craftUsers->map(fn ($u) => [
                     'id' => $u->id,
@@ -1572,7 +1685,7 @@ class ShiftPlanRequestController extends Controller
         // voellig andere Schicht laden und die Feld-Reverts dort anwenden.
         if ($shiftChange->subject_type !== Shift::class) {
             return back()->withErrors([
-                'message' => 'Only shift changes can be reverted.',
+                'message' => __('Only shift changes can be reverted.'),
             ]);
         }
 
@@ -1580,7 +1693,7 @@ class ShiftPlanRequestController extends Controller
         // Change aus Request A ueber die URL von Request B revertieren.
         if ((int) $shiftChange->shift_plan_request_id !== (int) $shiftPlanRequest->id) {
             return back()->withErrors([
-                'message' => 'The specified change does not belong to the provided shift plan request.',
+                'message' => __('This change does not belong to this release request. Please reload the page.'),
             ]);
         }
 
@@ -1589,7 +1702,7 @@ class ShiftPlanRequestController extends Controller
 
         if (! $shift) {
             return back()->withErrors([
-                'message' => 'The shift associated with this change could not be found.',
+                'message' => __('The shift belonging to this change no longer exists.'),
             ]);
         }
 
@@ -1601,7 +1714,7 @@ class ShiftPlanRequestController extends Controller
 
         if (! $belongsToRequest) {
             return back()->withErrors([
-                'message' => 'The specified change does not belong to the provided shift plan request.',
+                'message' => __('This change does not belong to this release request. Please reload the page.'),
             ]);
         }
 
@@ -1609,7 +1722,7 @@ class ShiftPlanRequestController extends Controller
 
         if (! is_array($fieldChanges) || empty($fieldChanges)) {
             return back()->withErrors([
-                'message' => 'No field changes found to revert.',
+                'message' => __('There is nothing to revert for this change.'),
             ]);
         }
 
@@ -1990,6 +2103,16 @@ class ShiftPlanRequestController extends Controller
                     'user' => $shiftPlanRequest->reviewedBy?->full_name ?? '',
                     'comment' => $comment,
                 ], $requester->language),
+                'href' => null,
+            ];
+        }
+
+        // Ablehnung rollt die Schichten der Anfrage auf den Stand vor der Anfrage (_initial)
+        // zurück — das passierte bisher still; die anfragende Person erfährt es jetzt hier.
+        if (!$approved) {
+            $description[] = [
+                'type' => 'text',
+                'title' => __('notification.shift.commit_request_rejected_rollback', [], $requester->language),
                 'href' => null,
             ];
         }

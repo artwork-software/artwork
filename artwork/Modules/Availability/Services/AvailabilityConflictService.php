@@ -3,6 +3,7 @@
 namespace Artwork\Modules\Availability\Services;
 
 use Artwork\Modules\Availability\Models\AvailabilitiesConflict;
+use Artwork\Modules\Shift\Services\ShiftNotificationLinkService;
 use Artwork\Modules\Availability\Repositories\AvailabilityConflictRepository;
 use Artwork\Modules\Freelancer\Models\Freelancer;
 use Artwork\Modules\Notification\Enums\NotificationEnum;
@@ -101,7 +102,7 @@ class AvailabilityConflictService
                             ],
                             $user?->language ?? app()->getFallbackLocale()
                         ),
-                        'href' => null
+                        'href' => $user ? ShiftNotificationLinkService::ownOperationPlanForDate($user, $shift->event_start_day) : null
                     ],
                 ];
 
@@ -206,7 +207,7 @@ class AvailabilityConflictService
                         ],
                         $user->language ?? app()->getFallbackLocale()
                     ),
-                    'href' => null
+                    'href' => $user ? ShiftNotificationLinkService::ownOperationPlanForDate($user, $shiftDate) : null
                 ],
             ];
 

@@ -12,6 +12,7 @@
                 @openHistoryModal="showHistoryModal = true"
             >
                 <template #moreButtons>
+                    <ShiftPlanViewSwitch current="list" />
                     <SwitchIconTooltip
                         v-model="multiEditMode"
                         :tooltip-text="$t('Multi-edit: select multiple shifts to edit them together.')"
@@ -555,6 +556,7 @@ import ShiftPlanListViewFunctionBar from '@/Layouts/Components/ShiftPlanComponen
 import BaseMenu from '@/Components/Menu/BaseMenu.vue';
 import BaseMenuItem from '@/Components/Menu/BaseMenuItem.vue';
 import SwitchIconTooltip from '@/Artwork/Toggles/SwitchIconTooltip.vue';
+import ShiftPlanViewSwitch from '@/Layouts/Components/ShiftPlanComponents/ShiftPlanViewSwitch.vue';
 import ToolTipComponent from '@/Components/ToolTips/ToolTipComponent.vue';
 import PropertyIcon from '@/Artwork/Icon/PropertyIcon.vue';
 import ConfirmDeleteModal from '@/Layouts/Components/ConfirmDeleteModal.vue';

@@ -21,6 +21,7 @@ use Artwork\Modules\Shift\Models\ShiftWorker;
 use Artwork\Modules\Shift\Repositories\ShiftRepository;
 use Artwork\Modules\Shift\Repositories\ShiftWorkerRepository;
 use Artwork\Modules\Shift\Repositories\ShiftsQualificationsRepository;
+use Artwork\Modules\Shift\Services\ShiftNotificationLinkService;
 use Artwork\Modules\User\Models\User;
 use Artwork\Modules\User\Services\WorkingHourCacheService;
 use Artwork\Modules\Vacation\Services\VacationConflictService;
@@ -844,7 +845,7 @@ class ShiftWorkerService
                     'type'  => 'string',
                     'title' => __('notification.keyWords.your_shift') .
                         $shift->time_span_label,
-                    'href'  => null,
+                    'href'  => ShiftNotificationLinkService::ownOperationPlanForDate($worker, $shift->start_date),
                 ],
             ]);
             $notificationService->setNotificationTo($worker);
@@ -986,7 +987,7 @@ class ShiftWorkerService
                 'type'  => 'string',
                 'title' => __('notification.keyWords.your_shift') .
                     $shift->time_span_label,
-                'href'  => null,
+                'href'  => ShiftNotificationLinkService::ownOperationPlanForDate($user, $shift->start_date),
             ],
         ]);
         $notificationService->setNotificationTo($user);
@@ -1026,7 +1027,7 @@ class ShiftWorkerService
             1 => [
                 'type'  => 'string',
                 'title' => __('notification.keyWords.concerns', [], $user->language) . $user->getFullNameAttribute(),
-                'href'  => null,
+                'href'  => ShiftNotificationLinkService::ownOperationPlanForDate($user, $shiftBreakCheck->firstShift->event_start_day),
             ],
             2 => [
                 'type'  => 'string',
@@ -1034,7 +1035,7 @@ class ShiftWorkerService
                     'start' => Carbon::parse($shiftBreakCheck->firstShift->event_start_day)->format('d.m.Y'),
                     'end'   => Carbon::parse($shiftBreakCheck->lastShift->event_start_day)->format('d.m.Y'),
                 ], $user->language),
-                'href'  => null,
+                'href'  => ShiftNotificationLinkService::ownOperationPlanForDate($user, $shiftBreakCheck->firstShift->event_start_day),
             ],
         ]);
         $notificationService->setNotificationTo($user);
@@ -1062,7 +1063,7 @@ class ShiftWorkerService
             1 => [
                 'type'  => 'string',
                 'title' => __('notification.keyWords.concerns', [], $planner->language) . $user->getFullNameAttribute(),
-                'href'  => null,
+                'href'  => ShiftNotificationLinkService::shiftPlanForDate($shiftBreakCheck->firstShift->event_start_day),
             ],
             2 => [
                 'type'  => 'string',
@@ -1070,7 +1071,7 @@ class ShiftWorkerService
                     'start' => Carbon::parse($shiftBreakCheck->firstShift->event_start_day)->format('d.m.Y'),
                     'end'   => Carbon::parse($shiftBreakCheck->lastShift->event_start_day)->format('d.m.Y'),
                 ], $planner->language),
-                'href'  => null,
+                'href'  => ShiftNotificationLinkService::shiftPlanForDate($shiftBreakCheck->firstShift->event_start_day),
             ],
         ]);
         $notificationService->setNotificationTo($planner);
@@ -1109,7 +1110,7 @@ class ShiftWorkerService
             1 => [
                 'type'  => 'string',
                 'title' => __('notification.keyWords.concerns', [], $user->language) . $user->getFullNameAttribute(),
-                'href'  => null,
+                'href'  => ShiftNotificationLinkService::ownOperationPlanForDate($user, $shiftCheck->firstShift->first()->event_start_day),
             ],
             2 => [
                 'type'  => 'string',
@@ -1117,7 +1118,7 @@ class ShiftWorkerService
                     'start' => Carbon::parse($shiftCheck->firstShift->first()->event_start_day)->format('d.m.Y'),
                     'end'   => Carbon::parse($shiftCheck->lastShift->first()->event_start_day)->format('d.m.Y'),
                 ], $user->language),
-                'href'  => null,
+                'href'  => ShiftNotificationLinkService::ownOperationPlanForDate($user, $shiftCheck->firstShift->first()->event_start_day),
             ],
         ]);
 
@@ -1152,7 +1153,7 @@ class ShiftWorkerService
             1 => [
                 'type'  => 'string',
                 'title' => __('notification.keyWords.concerns', [], $planner->language) . $user->getFullNameAttribute(),
-                'href'  => null,
+                'href'  => ShiftNotificationLinkService::shiftPlanForDate($shiftCheck->firstShift->first()->event_start_day),
             ],
             2 => [
                 'type'  => 'string',
@@ -1160,7 +1161,7 @@ class ShiftWorkerService
                     'start' => Carbon::parse($shiftCheck->firstShift->first()->event_start_day)->format('d.m.Y'),
                     'end'   => Carbon::parse($shiftCheck->lastShift->first()->event_start_day)->format('d.m.Y'),
                 ], $planner->language),
-                'href'  => null,
+                'href'  => ShiftNotificationLinkService::shiftPlanForDate($shiftCheck->firstShift->first()->event_start_day),
             ],
         ]);
         $notificationService->setNotificationTo($planner);

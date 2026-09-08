@@ -12,21 +12,16 @@ export default {
         'dateValue',
         'daysWithEvents',
         'totalPlannedWorkingHours',
-        'projects',
         'crafts',
-        'rooms',
         'vacations',
         'calendarData',
         'dateToShow',
-        'shifts',
         'vacationSelectCalendar',
         'createShowDate',
         'showVacationsAndAvailabilitiesDate',
         'availabilities',
-        'shiftQualifications',
-        'eventsWithTotalPlannedWorkingHours',
-        'wholeWeekDatePeriod',
-        'firstProjectShiftTabId'
+        'firstProjectShiftTabId',
+        'workTimeTarget'
     ]
 }
 </script>
@@ -36,16 +31,9 @@ export default {
         <div class="mx-5">
             <UserShiftPlan type="user"
                            :totalPlannedWorkingHours="this.totalPlannedWorkingHours"
-                           :weeklyWorkingHours="this.user_to_edit.weekly_working_hours"
+                           :work-time-target="workTimeTarget"
                            :date-value="this.dateValue"
-                           :days-with-events="this.daysWithEvents"
-                           :projects="this.projects"
                            :crafts="this.crafts"
-                           :rooms="this.rooms"
-                           :vacations="this.vacations"
-                           :shift-qualifications="this.shiftQualifications"
-                           :events-with-total-planned-working-hours="eventsWithTotalPlannedWorkingHours"
-                           :whole-week-date-period="wholeWeekDatePeriod"
                            :first-project-shift-tab-id="firstProjectShiftTabId"
                            :user-to-edit-id="user_to_edit.id"
             />

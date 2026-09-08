@@ -39,7 +39,9 @@
                     :day-date="day.date"
                     :selected-days="selectedDays"
                     :shift-selections="shiftSelections"
+                    :can-edit-violations="canEditViolations"
                     @open-history="$emit('open-history', $event)"
+                    @open-violation="$emit('open-violation', $event)"
                 />
             </div>
         </div>
@@ -56,6 +58,7 @@ defineProps({
     selectedDays: {type: Object, required: true},
     shiftSelections: {type: Object, required: true},
     isComparisonFocus: {type: Boolean, default: false},
+    canEditViolations: {type: Boolean, default: false},
 });
-defineEmits(['open-history']);
+defineEmits(['open-history', 'open-violation']);
 </script>

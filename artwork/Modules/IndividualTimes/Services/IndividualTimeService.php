@@ -4,6 +4,7 @@ namespace Artwork\Modules\IndividualTimes\Services;
 
 use Artwork\Modules\IndividualTimes\Models\IndividualTime;
 use Artwork\Modules\IndividualTimes\Repositories\IndividualTimeRepository;
+use Artwork\Modules\Shift\Services\LegalBreakCalculator;
 use Artwork\Modules\User\Services\WorkingHourCacheService;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
@@ -28,9 +29,11 @@ class IndividualTimeService
         ?string $startTime,
         ?string $endTime,
         string $date,
-        ?int $breakMinutes = 0
+        ?int $breakMinutes = null
     ): bool {
         $isFullDay = false;
+        // Ohne Pause → gesetzliche Mindestpause (ArbZG); ein gesetzter Wert (auch 0) bleibt.
+        $breakMinutes = LegalBreakCalculator::resolveBreakMinutes($breakMinutes, $startTime, $endTime);
         if (!method_exists($modelInstance, 'individualTimes')) {
             throw new ModelNotFoundException("Model does not support individual times");
         }
@@ -88,9 +91,11 @@ class IndividualTimeService
         ?string $startTime,
         ?string $endTime,
         string $date,
-        ?int $breakMinutes = 0
+        ?int $breakMinutes = null
     ): IndividualTime {
         $isFullDay = false;
+        // Ohne Pause → gesetzliche Mindestpause (ArbZG); ein gesetzter Wert (auch 0) bleibt.
+        $breakMinutes = LegalBreakCalculator::resolveBreakMinutes($breakMinutes, $startTime, $endTime);
         if (!method_exists($modelInstance, 'individualTimes')) {
             throw new ModelNotFoundException("Model does not support individual times");
         }

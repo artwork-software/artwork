@@ -39,7 +39,8 @@
                     <div class="flex items-center justify-center w-26">
                         <div v-if="!page.props.auth.user.compact_mode && type === 0 && workTimeBalance"
                             class="text-[9px] w-full"
-                            :class="workTimeBalanceClass">
+                            :class="workTimeBalanceClass"
+                            :title="workTimeBalanceTooltip">
                             {{ workTimeBalance }}
                         </div>
                     </div>
@@ -62,7 +63,7 @@
                     v-if="type === 0 && enableInfoModal && (can('can view shift user kpis') || is('artwork admin'))"
                     type="button"
                     class="hover:opacity-70 transition-opacity"
-                    :title="$t('Staff info data')"
+                    :title="$t('Key figures')"
                     @click.stop="emit('openUserInfoModal', item.id)"
                 >
                     <PropertyIcon name="IconInfoCircle" class="w-4 h-4" />
@@ -77,8 +78,8 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue';
 import { usePage } from '@inertiajs/vue3';
+import { useWorkTimeBalanceBadge } from '@/Composeables/useWorkTimeBalanceBadge.js';
 import ToolTipComponent from '@/Components/ToolTips/ToolTipComponent.vue';
 import UserPopoverTooltip from '@/Layouts/Components/UserPopoverTooltip.vue';
 import ServiceProviderPopoverTooltip from '@/Layouts/Components/ServiceProviderPopoverTooltip.vue';
@@ -131,6 +132,7 @@ const props = defineProps<{
     craft?: Craft | null
     isManagingCraft?: boolean
     workTimeBalance?: string | null
+    workTimeBalanceMinutes?: number | null
     enableInfoModal?: boolean
 }>()
 
@@ -139,28 +141,10 @@ const emit = defineEmits<{
 }>()
 
 /**
- * workTimeBalanceClass wie vorher als computed
- * Erwartetes Format: "1h 30m" / "-2h 0m" etc.
+ * AZK-Badge: Farbe aus den Rohminuten (Fallback Textformat), Tooltip
+ * "Stand: Nachtbuchung bis gestern" – geteilt mit HighlightUserCell/MultiEditUserCell.
  */
-const workTimeBalanceClass = computed(() => {
-    const val = props.workTimeBalance
-    if (!val) return 'text-white'
-
-    // Robust gegen Formvarianten: entferne Leerzeichen
-    const compact = val.replace(/\s+/g, '')
-    // Zeige bei negativen Zeiten rot, bei positiven grün, sonst weiß.
-    const sign = compact.startsWith('-') ? -1 : 1
-    // Stunden extrahieren
-    const hMatch = compact.match(/-?\d+(?=h)/i)
-    const mMatch = compact.match(/-?\d+(?=m)/i)
-    const hours = hMatch ? parseInt(hMatch[0], 10) : 0
-    const minutes = mMatch ? parseInt(mMatch[0], 10) : 0
-    const total = sign * (Math.abs(hours) * 60 + Math.abs(minutes))
-
-    if (total > 0) return 'text-success'
-    if (total < 0) return 'text-danger'
-    return 'text-white'
-})
+const { balanceClass: workTimeBalanceClass, balanceTooltip: workTimeBalanceTooltip } = useWorkTimeBalanceBadge(props)
 
 /**
  * onDragStart – identisch zur Options API Version

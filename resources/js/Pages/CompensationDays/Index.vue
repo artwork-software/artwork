@@ -9,18 +9,79 @@
                 :search-enabled="false"
             />
 
-            <!-- Craft filter -->
-            <div class="mt-6 flex items-center gap-3">
-                <label class="text-xs font-medium text-text-subtle">{{ $t('Craft') }}:</label>
-                <SearchableSelect
-                    v-model="selectedCraft"
-                    :options="crafts"
-                    value-key="id"
-                    :label-key="craft => craft.abbreviation ? `${craft.name} (${craft.abbreviation})` : craft.name"
-                    :empty-option="{ label: 'All crafts', value: null }"
-                    :placeholder="$t('All crafts')"
-                    @change="onCraftChange"
+            <!-- Filter: Gewerk, Person, Frist von–bis, Status — in der URL gehalten (Query) -->
+            <div class="mt-6 flex flex-wrap items-end gap-3">
+                <div class="min-w-[12rem]">
+                    <label class="block text-xs font-medium text-text-subtle mb-1">{{ $t('Craft') }}</label>
+                    <SearchableSelect
+                        v-model="filterState.craft_id"
+                        :options="crafts"
+                        value-key="id"
+                        :label-key="craft => craft.abbreviation ? `${craft.name} (${craft.abbreviation})` : craft.name"
+                        :empty-option="{ label: 'All crafts', value: null }"
+                        :placeholder="$t('All crafts')"
+                        @change="applyFilters"
+                    />
+                </div>
+                <div class="min-w-[12rem]">
+                    <label class="block text-xs font-medium text-text-subtle mb-1">{{ $t('Person') }}</label>
+                    <SearchableSelect
+                        v-model="filterState.user_id"
+                        :options="users"
+                        value-key="id"
+                        :label-key="user => `${user.last_name}, ${user.first_name}`"
+                        :empty-option="{ label: 'All persons', value: null }"
+                        :placeholder="$t('All persons')"
+                        @change="applyFilters"
+                    />
+                </div>
+                <div class="w-40">
+                    <BaseInput
+                        id="deadline_from"
+                        v-model="filterState.deadline_from"
+                        type="date"
+                        :label="$t('Deadline from')"
+                        no-margin-top
+                        @change="applyFilters"
+                    />
+                </div>
+                <div class="w-40">
+                    <BaseInput
+                        id="deadline_to"
+                        v-model="filterState.deadline_to"
+                        type="date"
+                        :label="$t('Deadline until')"
+                        no-margin-top
+                        @change="applyFilters"
+                    />
+                </div>
+                <div class="min-w-[10rem]">
+                    <label class="block text-xs font-medium text-text-subtle mb-1">{{ $t('Status') }}</label>
+                    <SearchableSelect
+                        v-model="filterState.status"
+                        :options="statusOptions"
+                        value-key="value"
+                        label-key="label"
+                        translate-option-labels
+                        :empty-option="{ label: 'All statuses', value: null }"
+                        :placeholder="$t('All statuses')"
+                        @change="applyFilters"
+                    />
+                </div>
+                <BaseUIButton
+                    v-if="hasActiveFilters"
+                    :label="$t('Reset filters')"
+                    is-cancel-button
+                    @click="resetFilters"
                 />
+                <!-- Export: dieselben Rechte wie das Dashboard (can plan shifts) -->
+                <a
+                    v-if="can('can plan shifts') || hasAdminRole()"
+                    :href="exportUrl"
+                    class="ml-auto"
+                >
+                    <BaseUIButton :label="$t('Export as Excel')" :icon="IconFileSpreadsheet" />
+                </a>
             </div>
 
             <!-- Summary cards -->
@@ -42,15 +103,15 @@
                 </div>
             </div>
 
-            <!-- Overdue table -->
-            <section v-if="overdueCompensations.length" class="mt-8">
+            <!-- Overdue table (serverseitig paginiert, eigener Seitenparameter) -->
+            <section v-if="overdueCompensations.total" class="mt-8">
                 <h3 class="text-sm font-semibold text-text-muted mb-3 flex items-center gap-2">
                     <span class="inline-block h-2 w-2 rounded-full bg-danger"></span>
                     {{ $t('Overdue compensation days') }}
-                    <span class="text-xs font-normal text-text-subtle">({{ overdueCompensations.length }})</span>
+                    <span class="text-xs font-normal text-text-subtle">({{ overdueCompensations.total }})</span>
                 </h3>
                 <CompensationTable
-                    :items="overdueCompensations"
+                    :items="overdueCompensations.data"
                     show-user
                     :show-grant="true"
                     :show-delete="true"
@@ -58,6 +119,7 @@
                     @grant="openGrantModal"
                     @delete="openDeleteModal"
                 />
+                <ListPagination :paginator="overdueCompensations" page-name="overdue_page" @page="(page) => goToListPage('overdue_page', page)" />
             </section>
 
             <!-- Open table -->
@@ -65,18 +127,22 @@
                 <h3 class="text-sm font-semibold text-text-muted mb-3 flex items-center gap-2">
                     <span class="inline-block h-2 w-2 rounded-full bg-accent-600"></span>
                     {{ $t('Open compensation days') }}
-                    <span class="text-xs font-normal text-text-subtle">({{ openCompensations.length }})</span>
+                    <span class="text-xs font-normal text-text-subtle">({{ openCompensations.total }})</span>
                 </h3>
-                <CompensationTable
-                    v-if="openCompensations.length"
-                    :items="openCompensations"
-                    show-user
-                    :show-grant="true"
-                    :show-delete="true"
-                    @grant="openGrantModal"
-                    @delete="openDeleteModal"
-                />
-                <div v-else class="text-xs text-text-subtle italic py-3">{{ $t('No open compensation days.') }}</div>
+                <template v-if="openCompensations.total">
+                    <CompensationTable
+                        :items="openCompensations.data"
+                        show-user
+                        :show-grant="true"
+                        :show-delete="true"
+                        @grant="openGrantModal"
+                        @delete="openDeleteModal"
+                    />
+                    <ListPagination :paginator="openCompensations" page-name="open_page" @page="(page) => goToListPage('open_page', page)" />
+                </template>
+                <div v-else class="text-xs text-text-subtle italic py-3">
+                    {{ hasActiveFilters ? $t('No open compensation days match the current filters.') : $t('No open compensation days.') }}
+                </div>
             </section>
 
             <!-- Granted table -->
@@ -84,19 +150,23 @@
                 <h3 class="text-sm font-semibold text-text-muted mb-3 flex items-center gap-2">
                     <span class="inline-block h-2 w-2 rounded-full bg-success"></span>
                     {{ $t('Granted compensation days') }}
-                    <span class="text-xs font-normal text-text-subtle">({{ grantedCompensations.length }})</span>
+                    <span class="text-xs font-normal text-text-subtle">({{ grantedCompensations.total }})</span>
                 </h3>
-                <CompensationTable
-                    v-if="grantedCompensations.length"
-                    :items="grantedCompensations"
-                    show-user
-                    show-granted-info
-                    :show-revoke="true"
-                    :show-delete="true"
-                    @revoke="revokeCompensationDay"
-                    @delete="openDeleteModal"
-                />
-                <div v-else class="text-xs text-text-subtle italic py-3">{{ $t('No granted compensation days.') }}</div>
+                <template v-if="grantedCompensations.total">
+                    <CompensationTable
+                        :items="grantedCompensations.data"
+                        show-user
+                        show-granted-info
+                        :show-revoke="true"
+                        :show-delete="true"
+                        @revoke="revokeCompensationDay"
+                        @delete="openDeleteModal"
+                    />
+                    <ListPagination :paginator="grantedCompensations" page-name="granted_page" @page="(page) => goToListPage('granted_page', page)" />
+                </template>
+                <div v-else class="text-xs text-text-subtle italic py-3">
+                    {{ hasActiveFilters ? $t('No granted compensation days match the current filters.') : $t('No granted compensation days.') }}
+                </div>
             </section>
 
             <!-- Recent activity (paginated) -->
@@ -187,46 +257,118 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue';
-import { router } from '@inertiajs/vue3';
+import { ref, reactive, computed } from 'vue';
+import { router, usePage } from '@inertiajs/vue3';
 import { useI18n } from 'vue-i18n';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import ToolbarHeader from '@/Artwork/Toolbar/ToolbarHeader.vue';
 import SearchableSelect from '@/Artwork/Listbox/SearchableSelect.vue';
+import BaseInput from '@/Artwork/Inputs/BaseInput.vue';
+import BaseUIButton from '@/Artwork/Buttons/BaseUIButton.vue';
 import GrantCompensationDayModal from '@/Pages/Shifts/Components/GrantCompensationDayModal.vue';
 import DeleteCompensationDayModal from '@/Pages/Shifts/Components/DeleteCompensationDayModal.vue';
 import CompensationTable from '@/Pages/CompensationDays/CompensationTable.vue';
-import { IconCalendarOff } from '@tabler/icons-vue';
+import ListPagination from '@/Pages/CompensationDays/ListPagination.vue';
+import { usePermission } from '@/Composeables/Permission.js';
+import { IconCalendarOff, IconFileSpreadsheet } from '@tabler/icons-vue';
 
 const { t } = useI18n();
+const { can, hasAdminRole } = usePermission(usePage().props);
 
 const props = defineProps({
-    openCompensations: { type: Array, default: () => [] },
-    grantedCompensations: { type: Array, default: () => [] },
-    overdueCompensations: { type: Array, default: () => [] },
+    // Laravel-Paginatoren (data, total, links, …) mit eigenen Seitenparametern open_page/overdue_page/granted_page
+    openCompensations: { type: Object, default: () => ({ data: [], total: 0, links: [], last_page: 1 }) },
+    grantedCompensations: { type: Object, default: () => ({ data: [], total: 0, links: [], last_page: 1 }) },
+    overdueCompensations: { type: Object, default: () => ({ data: [], total: 0, links: [], last_page: 1 }) },
     stats: { type: Object, default: () => ({}) },
     recentActivity: { type: Object, default: () => ({ data: [], total: 0, current_page: 1, last_page: 1, links: [] }) },
     crafts: { type: Array, default: () => [] },
+    users: { type: Array, default: () => [] },
     selectedCraftId: { type: Number, default: null },
+    filters: { type: Object, default: () => ({}) },
 });
 
-const selectedCraft = ref(props.selectedCraftId);
+// Filterzustand aus der URL (Backend gibt die validierten Filter zurück)
+const filterState = reactive({
+    craft_id: props.filters?.craft_id ?? props.selectedCraftId ?? null,
+    user_id: props.filters?.user_id ?? null,
+    deadline_from: props.filters?.deadline_from ?? '',
+    deadline_to: props.filters?.deadline_to ?? '',
+    status: props.filters?.status ?? null,
+});
+
+const statusOptions = [
+    { value: 'open', label: 'Open' },
+    { value: 'granted', label: 'Granted' },
+    { value: 'overdue', label: 'Overdue' },
+];
+
+const hasActiveFilters = computed(() =>
+    !!(filterState.craft_id || filterState.user_id || filterState.deadline_from || filterState.deadline_to || filterState.status)
+);
+
+function filterParams() {
+    const params = {};
+    if (filterState.craft_id) params.craft_id = filterState.craft_id;
+    if (filterState.user_id) params.user_id = filterState.user_id;
+    if (filterState.deadline_from) params.deadline_from = filterState.deadline_from;
+    if (filterState.deadline_to) params.deadline_to = filterState.deadline_to;
+    if (filterState.status) params.status = filterState.status;
+    return params;
+}
+
+function applyFilters() {
+    router.get(route('compensation-day-offs.dashboard'), filterParams(), {
+        preserveState: true,
+        preserveScroll: true,
+        replace: true,
+    });
+}
+
+// Seitenparameter der anderen Listen aus der aktuellen URL beibehalten, nur einen ändern
+const LIST_PAGE_PARAMS = ['open_page', 'overdue_page', 'granted_page', 'activity_page'];
+function currentListPages() {
+    const params = {};
+    try {
+        const search = new URLSearchParams(window.location.search);
+        LIST_PAGE_PARAMS.forEach((key) => {
+            const value = search.get(key);
+            if (value && Number(value) > 1) params[key] = Number(value);
+        });
+    } catch (e) {
+        // ohne window (SSR) keine Seitenparameter
+    }
+    return params;
+}
+
+function goToListPage(pageName, page) {
+    router.get(route('compensation-day-offs.dashboard'), {
+        ...filterParams(),
+        ...currentListPages(),
+        [pageName]: page,
+    }, {
+        preserveState: true,
+        preserveScroll: true,
+        replace: true,
+    });
+}
+
+function resetFilters() {
+    filterState.craft_id = null;
+    filterState.user_id = null;
+    filterState.deadline_from = '';
+    filterState.deadline_to = '';
+    filterState.status = null;
+    applyFilters();
+}
+
+const exportUrl = computed(() => route('compensation-day-offs.export', filterParams()));
+
 const showGrantModal = ref(false);
 const grantUserId = ref(null);
 const grantUserName = ref('');
 const showDeleteModal = ref(false);
 const selectedCompDayToDelete = ref(null);
-
-function onCraftChange() {
-    const params = {};
-    if (selectedCraft.value) {
-        params.craft_id = selectedCraft.value;
-    }
-    router.get(route('compensation-day-offs.dashboard'), params, {
-        preserveState: true,
-        preserveScroll: true,
-    });
-}
 
 const paginationLinks = computed(() => {
     return (props.recentActivity.links || []).filter(link => {
@@ -237,11 +379,9 @@ const paginationLinks = computed(() => {
 
 function goToPage(url) {
     if (!url) return;
-    // Preserve craft_id when paginating
+    // Filter beim Blättern beibehalten
     const pageUrl = new URL(url);
-    if (selectedCraft.value) {
-        pageUrl.searchParams.set('craft_id', selectedCraft.value);
-    }
+    Object.entries({ ...currentListPages(), ...filterParams() }).forEach(([key, value]) => pageUrl.searchParams.set(key, value));
     router.get(pageUrl.toString(), {}, {
         preserveState: true,
         preserveScroll: true,

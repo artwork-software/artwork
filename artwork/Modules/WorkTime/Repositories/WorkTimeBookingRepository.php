@@ -96,24 +96,10 @@ class WorkTimeBookingRepository
     }
 
     /**
-     * Check if a date is a holiday treated as a special day.
-     *
-     * @param Carbon $day
-     * @return bool
+     * Sondertag-Prüfung (Flag, mehrtägig, jährlich) über den zentralen SpecialDayService.
      */
     public function isHoliday(Carbon $day): bool
     {
-        $formattedDate = $day->toDateString();
-        $monthDay = $day->format('m-d');
-
-        return Holiday::where(function ($query) use ($formattedDate, $monthDay): void {
-            $query->where(function ($q) use ($formattedDate): void {
-                $q->where('yearly', false)
-                    ->whereDate('date', $formattedDate);
-            })->orWhere(function ($q) use ($monthDay): void {
-                $q->where('yearly', true)
-                    ->whereRaw("DATE_FORMAT(date, '%m-%d') = ?", [$monthDay]);
-            });
-        })->where('treatAsSpecialDay', true)->exists();
+        return app(\Artwork\Modules\Holidays\Services\SpecialDayService::class)->isSpecialDay($day);
     }
 }

@@ -314,10 +314,10 @@ return [
     ],
     'invitations' => [
         'user_emails' => [
-            'required' => 'Das Benutzer-E-Mail-Feld ist erforderlich.',
-            'array' => 'Das Benutzer-E-Mail-Feld muss ein Array sein.',
-            'email' => 'Das Benutzer-E-Mail-Feld muss gültige E-Mail-Adressen enthalten.',
-            'unique' => 'Die Benutzer-E-Mail ":user" existiert bereits im System.',
+            'required' => 'Das Nutzer*innen-E-Mail-Feld ist erforderlich.',
+            'array' => 'Das Nutzer*innen-E-Mail-Feld muss ein Array sein.',
+            'email' => 'Das Nutzer*innen-E-Mail-Feld muss gültige E-Mail-Adressen enthalten.',
+            'unique' => 'Die Nutzer*innen-E-Mail ":user" existiert bereits im System.',
         ],
         'permissions' => [
             'array' => 'Das Berechtigungsfeld muss ein Array sein.',

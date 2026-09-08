@@ -112,6 +112,36 @@ final class BudgetManagementCostUnitServiceTest extends TestCase
     }
 
     #[Test]
+    public function search_matches_second_word_of_title(): void
+    {
+        // "Technik Personal" muss über "Personal" gefunden werden (Substring, nicht Präfix).
+        BudgetManagementCostUnit::factory()->create([
+            'cost_unit_number' => '7000',
+            'title' => 'Technik Personal',
+        ]);
+        BudgetManagementCostUnit::factory()->create([
+            'cost_unit_number' => '7100',
+            'title' => 'Technik Material',
+        ]);
+
+        $result = $this->service->searchByRequest(Request::create('/?search=Personal', 'GET'));
+
+        $titles = $result->pluck('title')->all();
+        $this->assertContains('Technik Personal', $titles);
+        $this->assertNotContains('Technik Material', $titles);
+    }
+
+    #[Test]
+    public function search_is_limited_to_fifty_results(): void
+    {
+        BudgetManagementCostUnit::factory()->count(55)->create(['title' => 'Massenkostenstelle']);
+
+        $result = $this->service->searchByRequest(Request::create('/?search=Massenkostenstelle', 'GET'));
+
+        $this->assertCount(50, $result);
+    }
+
+    #[Test]
     public function restore_brings_back_soft_deleted_cost_unit(): void
     {
         $unit = BudgetManagementCostUnit::factory()->create();

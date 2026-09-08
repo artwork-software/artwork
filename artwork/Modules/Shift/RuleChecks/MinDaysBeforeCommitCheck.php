@@ -36,6 +36,22 @@ class MinDaysBeforeCommitCheck extends AbstractRuleCheck
         return $violations;
     }
 
+    /**
+     * Dieser Check prüft unabhängig vom übergebenen Zeitraum immer heute bis heute+n Tage. Nur dort
+     * darf der Service nicht bestätigte Verstöße löschen — ältere Verstöße (Schichttag vorbei) und
+     * spätere (außerhalb der Frist) hat der Lauf nicht beurteilt.
+     */
+    public function getCoveredRange(ShiftRule $rule, Carbon $startDate, Carbon $endDate): ?array
+    {
+        $today = now()->startOfDay();
+        $futureDate = $today->copy()->addDays((int) $rule->individual_number_value);
+
+        $from = $startDate->copy()->startOfDay()->max($today);
+        $to = $endDate->copy()->startOfDay()->min($futureDate);
+
+        return $from->gt($to) ? null : [$from, $to];
+    }
+
     public function getTriggerType(): string
     {
         return 'minDaysBeforeCommit';

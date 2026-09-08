@@ -9,6 +9,7 @@ use Artwork\Modules\Notification\Services\NotificationService;
 use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\Shift\Models\ShiftPlanRequest;
 use Artwork\Modules\Shift\Models\ShiftPlanRequestDeadlineNotification;
+use Artwork\Modules\Shift\Services\ShiftNotificationLinkService;
 use Carbon\CarbonInterface;
 use Illuminate\Console\Command;
 use Illuminate\Support\Str;
@@ -176,7 +177,7 @@ class NotifyShiftPlanRequestDeadlineReached extends Command
                         [],
                         $user->language
                     ),
-                    'href' => route('shifts.plan'),
+                    'href' => ShiftNotificationLinkService::shiftPlan($weekStart, $weekEnd),
                 ],
             ]);
             $notificationService->createNotification();

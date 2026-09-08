@@ -55,6 +55,20 @@ class UserPolicy
         return self::canViewForeignRoster($user);
     }
 
+    /**
+     * Kennzahlen-Endpunkte (shift-info/*): fremde Personen nur mit "can view shift user kpis";
+     * die eigene Person zusätzlich mit "can view own roster" ("Meine Zahlen" im Einsatzplan).
+     * Stundenkonto/Überstunden bleiben zusätzlich über authorizeHourAccountAccess geschützt.
+     */
+    public function viewShiftKpis(User $user, User $targetUser): bool
+    {
+        if ($user->can(PermissionEnum::CAN_VIEW_SHIFT_USER_KPIS->value)) {
+            return true;
+        }
+
+        return $user->is($targetUser) && $user->can(PermissionEnum::CAN_VIEW_OWN_ROSTER->value);
+    }
+
     public static function canViewForeignRoster(User $user): bool
     {
         // canAny() läuft pro Recht durchs Gate — Admins passieren via Gate::before.

@@ -39,7 +39,13 @@
                     </transition>
                 </Listbox>
                 -->
-                <button @click="showAddShiftPresetModal = true" type="button" class="rounded-full bg-accent-600 p-1 mr-1 text-white shadow-sm hover:bg-accent-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-700">
+                <button
+                    @click="showAddShiftPresetModal = true"
+                    type="button"
+                    class="rounded-full bg-accent-600 p-1 mr-1 text-white shadow-sm hover:bg-accent-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-700"
+                    :aria-label="$t('Create a new shift template')"
+                    v-tooltip.bottom="{ value: $t('Create a new shift template'), class: 'aw-tooltip' }"
+                >
                     <IconPlus class="h-4 w-4" aria-hidden="true" />
                 </button>
                 <div v-if="this.$page.props.show_hints" class="flex mt-1">
@@ -66,7 +72,7 @@
         </div>
         <div class="w-full px-5 min-h-screen">
             <div v-if="filteredShiftPresets.length > 0">
-                <div v-for="preset in filteredShiftPresets">
+                <div v-for="preset in filteredShiftPresets" :key="preset.id">
                     <SingleShiftPreset :preset="preset"
                                        :crafts="crafts"
                                        :event_types="event_types"

@@ -353,8 +353,8 @@
     <!-- Bestätigungsmodal: Schicht löschen -->
     <ConfirmationComponent
         v-if="showConfirmDeleteModal && !detailsOnly"
-        titel="Schicht löschen"
-        description="Möchtest du diese Schicht wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden."
+        :titel="$t('Delete shift')"
+        :description="$t('Do you really want to delete this shift?') + ' ' + $t('This action cannot be undone.')"
         @closed="handleConfirmDelete"
     />
 
@@ -364,14 +364,24 @@
         :description="toastDescription"
         :type="toastType"
     />
+
+    <!-- Vorabprüfung (Überschneidung/Urlaub/nicht verfügbar): nur Warnung, Zuweisung bleibt möglich -->
+    <AssignmentConflictModal
+        v-if="showAssignmentConflictModal && pendingAssignment"
+        :conflicts="pendingAssignment.preflight?.conflicts ?? []"
+        :person-name="pendingAssignment.preflight?.person?.name ?? ''"
+        :shift="pendingAssignment.preflight?.shift ?? {}"
+        @cancel="cancelPendingAssignment"
+        @confirm="confirmPendingAssignment"
+    />
 </template>
 
 <script setup>
-import {ref, computed, watch, defineAsyncComponent, onMounted, onBeforeUnmount, reactive, inject} from "vue";
+import {ref, computed, watch, defineAsyncComponent, onMounted, reactive, inject} from "vue";
 import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
 import {Float} from "@headlessui-float/vue";
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
-import {Link, router, usePage} from "@inertiajs/vue3";
+import {router, usePage} from "@inertiajs/vue3";
 import axios from "axios";
 import SingleEntityInShift from "@/Pages/Shifts/DailyViewComponents/SingleEntityInShift.vue";
 import {can, is} from "laravel-permission-to-vuejs";
@@ -389,11 +399,11 @@ import {
     IconHeart,
     IconX
 } from "@tabler/icons-vue";
-import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 import BaseMenu from "@/Components/Menu/BaseMenu.vue";
 import BaseMenuItem from "@/Components/Menu/BaseMenuItem.vue";
 import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
+import AssignmentConflictModal from "@/Layouts/Components/ShiftPlanComponents/AssignmentConflictModal.vue";
 import {useShiftPlanLookups} from "@/Composeables/useShiftPlanLookups.js";
 
 const { resolveCraft, resolveShiftGroup } = useShiftPlanLookups();
@@ -1014,8 +1024,50 @@ const createOnDropElementAndSave = (user, craft, shiftQualificationId, isOverboo
         toastVisible.value = true;
         return;
     }
-    assignUser(droppedUser, shiftQualificationId, user, isOverbooked);
+    runPreflightThenAssign(user, shiftQualificationId, isOverbooked);
 }
+
+/* ---------------- Vorabprüfung vor der Zuweisung ---------------- */
+// Überschneidung/Urlaub/nicht verfügbar serverseitig prüfen; nur Warnung, Zuweisung bleibt möglich.
+// Bei Netz-/Serverfehler wird ohne Rückfrage zugewiesen.
+const showAssignmentConflictModal = ref(false);
+const pendingAssignment = ref(null);
+
+const runPreflightThenAssign = async (user, shiftQualificationId, isOverbooked) => {
+    let preflight = null;
+    try {
+        const { data } = await axios.post(route('shift.assignment-preflight'), {
+            shift_id: props.shift.id,
+            employable_type: user.type === 'freelancer' || user.type === 'service_provider' ? user.type : 'user',
+            employable_id: user.id,
+        });
+        preflight = data;
+    } catch {
+        preflight = null;
+    }
+
+    const conflicts = Array.isArray(preflight?.conflicts) ? preflight.conflicts : [];
+    if (conflicts.length === 0) {
+        assignUser(droppedUser, shiftQualificationId, user, isOverbooked);
+        return;
+    }
+
+    pendingAssignment.value = { user, shiftQualificationId, isOverbooked, preflight };
+    showAssignmentConflictModal.value = true;
+};
+
+const cancelPendingAssignment = () => {
+    showAssignmentConflictModal.value = false;
+    pendingAssignment.value = null;
+};
+
+const confirmPendingAssignment = () => {
+    const pending = pendingAssignment.value;
+    showAssignmentConflictModal.value = false;
+    pendingAssignment.value = null;
+    if (!pending) return;
+    assignUser(droppedUser, pending.shiftQualificationId, pending.user, pending.isOverbooked);
+};
 
 const assignUser = (droppedUser, shiftQualificationId, sourceUser = null, isOverbooked = false) => {
 

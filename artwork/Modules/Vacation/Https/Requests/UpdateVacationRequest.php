@@ -2,7 +2,9 @@
 
 namespace Artwork\Modules\Vacation\Https\Requests;
 
+use Artwork\Modules\Vacation\Enums\Vacation;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 /**
 * @property mixed id
@@ -16,6 +18,7 @@ use Illuminate\Foundation\Http\FormRequest;
  * @property mixed series_repeat_until
  * @property mixed type
  * @property mixed type_before_update
+ * @property mixed vacation_type Art der Abwesenheit: OFF_WORK (Urlaub, Default) | NOT_AVAILABLE
  */
 class UpdateVacationRequest extends FormRequest
 {
@@ -38,6 +41,7 @@ class UpdateVacationRequest extends FormRequest
             'series_repeat_until' => 'nullable|date',
             'type' => 'required|string',
             'type_before_update' => 'required|string',
+            'vacation_type' => ['nullable', 'string', Rule::in(Vacation::selfServiceAbsenceValues())],
         ];
     }
 }

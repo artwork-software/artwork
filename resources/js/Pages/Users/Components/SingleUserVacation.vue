@@ -16,6 +16,16 @@
                         : 'text-danger'">
                         {{ entry.type === 'available' ? $t('Available') : $t('Absent') }}
                     </span>
+                    <!-- Art der Abwesenheit: Urlaub / Nicht verfügbar / Frei -->
+                    <span
+                        v-if="vacationTypeLabel"
+                        class="inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium"
+                        :class="entry.vacationType === 'OFF_WORK'
+                            ? 'border-danger-border bg-danger-surface text-danger'
+                            : 'border-border bg-surface-sunken text-text-muted'"
+                    >
+                        {{ vacationTypeLabel }}
+                    </span>
                     <IconRepeat v-if="entry.kind === 'weekly'" class="h-4 w-4 text-text-subtle" />
                     <span
                         v-if="entry.hasConflicts"
@@ -136,6 +146,14 @@ const dateLabel = computed(() => {
     return props.entry.dateCasted || formatDate(props.entry.startDate)
 })
 
+// Typ-Badge der Abwesenheit; unbekannte/fehlende Typen zeigen kein Badge
+const VACATION_TYPE_LABELS = { OFF_WORK: 'Vacation', NOT_AVAILABLE: 'Not available', FREE_WORK: 'FREE_WORK' }
+const vacationTypeLabel = computed(() => {
+    if (props.entry.type !== 'vacation') return ''
+    const key = VACATION_TYPE_LABELS[props.entry.vacationType]
+    return key ? proxy.$t(key) : ''
+})
+
 const SYSTEM_COMMENTS = ['OFF_WORK', 'NOT_AVAILABLE', 'FREE_WORK']
 const translatedComment = computed(() =>
     SYSTEM_COMMENTS.includes(props.entry.comment) ? proxy.$t(props.entry.comment) : props.entry.comment
@@ -175,7 +193,6 @@ const deleteEntry = () => {
             'vacations',
             'availabilities',
             'createShowDate',
-            'user_to_edit_whole_week_date_period_vacations',
             'freelancer_to_edit_whole_week_date_period_vacations',
         ],
         onFinish: () => {

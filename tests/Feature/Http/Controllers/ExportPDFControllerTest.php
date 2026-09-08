@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Http\Controllers;
 
+use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\User\Enums\UserFilterTypes;
 use Artwork\Modules\User\Models\User;
@@ -58,7 +59,8 @@ final class ExportPDFControllerTest extends FeatureTestCase
     #[Test]
     public function shift_plan_pdf_applies_request_filters_without_persisting_them(): void
     {
-        $user = User::factory()->create();
+        // shift.plan.export.pdf verlangt seit Block 1a 'can view shift plan'
+        $user = $this->actingAsUserWith(PermissionEnum::VIEW_SHIFT_PLAN->value);
         $room = Room::factory()->create(['user_id' => $user->id]);
         $otherRoom = Room::factory()->create(['user_id' => $user->id]);
 
@@ -99,7 +101,8 @@ final class ExportPDFControllerTest extends FeatureTestCase
     #[Test]
     public function shift_plan_pdf_caps_period_at_six_months(): void
     {
-        $user = User::factory()->create();
+        // shift.plan.export.pdf verlangt seit Block 1a 'can view shift plan'
+        $user = $this->actingAsUserWith(PermissionEnum::VIEW_SHIFT_PLAN->value);
         Room::factory()->create(['user_id' => $user->id]);
 
         $this->mockSnappyPdf($capturedViewData);
@@ -121,7 +124,8 @@ final class ExportPDFControllerTest extends FeatureTestCase
     #[Test]
     public function shift_plan_pdf_can_hide_rooms_without_content(): void
     {
-        $user = User::factory()->create();
+        // shift.plan.export.pdf verlangt seit Block 1a 'can view shift plan'
+        $user = $this->actingAsUserWith(PermissionEnum::VIEW_SHIFT_PLAN->value);
         Room::factory()->create(['user_id' => $user->id]);
 
         $this->mockSnappyPdf($capturedViewData);

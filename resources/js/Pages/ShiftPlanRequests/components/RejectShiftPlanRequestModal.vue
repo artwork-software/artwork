@@ -6,6 +6,13 @@
         @close="$emit('close')"
     >
         <div class="space-y-6 text-sm">
+            <!-- Folge der Ablehnung: Schichten werden auf den Stand vor der Anfrage zurückgesetzt -->
+            <BaseAlertComponent
+                type="warning"
+                use-translation
+                message="When rejecting, the shifts of this request are reset to the state before the request."
+            />
+
             <!-- Global Reason -->
             <div>
                 <BaseTextarea
@@ -166,6 +173,7 @@ import ArtworkBaseModal from '@/Artwork/Modals/ArtworkBaseModal.vue';
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 import BaseTextarea from "@/Artwork/Inputs/BaseTextarea.vue";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
+import BaseAlertComponent from "@/Components/Alerts/BaseAlertComponent.vue";
 
 const props = defineProps({
     days: { type: Array, required: true },

@@ -67,6 +67,23 @@
                 <div>
                     <BaseInput type="date" id="end" v-model="customHolidayForm.end_date" label="End-Time" />
                 </div>
+                <!-- Typ: gesetzlich / Schulferien / eigener Eintrag; Typwechsel setzt den Sondertag-Default -->
+                <div class="col-span-2">
+                    <ArtworkBaseListbox
+                        v-model="holidayType"
+                        :items="holidayTypeOptions"
+                        by="id"
+                        option-key="id"
+                        option-label="name"
+                        use-translations
+                        :label="$t('Holiday type')"
+                        :placeholder="$t('Please select')"
+                        :enable-search="false"
+                    />
+                    <p class="mt-1 text-xs text-text-subtle">
+                        {{ $t('School holidays are not special days by default; statutory public holidays are.') }}
+                    </p>
+                </div>
                 <div class="col-span-2">
                     <SwitchGroup as="div" class="flex items-center cursor-pointer">
                         <SwitchLabel as="span" class="mr-3 text-sm" :class="customHolidayForm.yearly ? 'font-bold' : 'text-text-subtle'">
@@ -81,18 +98,12 @@
                     </SwitchGroup>
                 </div>
                 <div class="col-span-2">
-                    <div class="relative flex items-start mt-4">
-                        <div class="flex h-6 items-center">
-                            <input
-                                id="treatAsSpecialDay"
-                                v-model="customHolidayForm.treatAsSpecialDay"
-                                type="checkbox"
-                                class="input-checklist"
-                            />
-                        </div>
-                        <div class="ml-3 text-sm/6">
-                            <label for="treatAsSpecialDay" class="text-sm font-medium">{{ $t('Treat as special day') }}</label>
-                        </div>
+                    <div class="mt-4">
+                        <BaseCheckbox
+                            id="treatAsSpecialDay"
+                            v-model="customHolidayForm.treatAsSpecialDay"
+                            :label="$t('Treat as special day')"
+                        />
                     </div>
                 </div>
                 <div class="col-span-2 flex items-center justify-end">
@@ -107,13 +118,13 @@
 
 import BaseModal from "@/Components/Modals/BaseModal.vue";
 import {Listbox, ListboxButton, ListboxOption, ListboxOptions, Switch, SwitchGroup, SwitchLabel} from "@headlessui/vue";
-import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
 import ColorPickerComponent from "@/Components/Globale/ColorPickerComponent.vue";
-import DateInputComponent from "@/Components/Inputs/DateInputComponent.vue";
 import AddButtonBig from "@/Layouts/Components/General/Buttons/AddButtonBig.vue";
 import {useForm} from "@inertiajs/vue3";
-import {computed, ref} from "vue";
+import {computed, ref, watch} from "vue";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
+import BaseCheckbox from "@/Artwork/Inputs/BaseCheckbox.vue";
+import ArtworkBaseListbox from "@/Artwork/Listbox/ArtworkBaseListbox.vue";
 import {IconCheck, IconChevronDown} from "@tabler/icons-vue";
 
 const props = defineProps({
@@ -124,6 +135,16 @@ const props = defineProps({
     subDivisions: {
         type: Object,
         required: true
+    },
+    // [{id: 'public'|'school'|'custom', name: Übersetzungsschlüssel}]
+    holidayTypeOptions: {
+        type: Array,
+        required: false,
+        default: () => [
+            { id: 'public', name: 'Statutory public holiday' },
+            { id: 'school', name: 'School vacations' },
+            { id: 'custom', name: 'Custom entry' },
+        ]
     }
 })
 
@@ -138,6 +159,18 @@ const customHolidayForm = useForm({
     yearly: props.holidayToEdit.yearly,
     treatAsSpecialDay: props.holidayToEdit.treatAsSpecialDay || false,
     selectedSubdivisions: props.holidayToEdit.subdivisions,
+    type: props.holidayToEdit.type || 'custom',
+})
+
+const holidayType = ref(
+    props.holidayTypeOptions.find((o) => o.id === (props.holidayToEdit.type || 'custom')) ?? props.holidayTypeOptions[0] ?? null
+)
+watch(holidayType, (option, previous) => {
+    const type = option?.id ?? 'custom'
+    if (type === (previous?.id ?? customHolidayForm.type)) return
+    customHolidayForm.type = type
+    // Typwechsel: Sondertag-Default = gesetzlicher Feiertag (kann danach manuell überschrieben werden)
+    customHolidayForm.treatAsSpecialDay = type === 'public'
 })
 
 const storeCustomHoliday = () => {

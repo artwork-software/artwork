@@ -5,7 +5,7 @@
                 <div
                     class="py-1.5 px-1 pr-2 cursor-pointer rounded-l-lg"
                     :style="{ backgroundColor: `${returnCraftColor}` }"
-                    v-tooltip.bottom="{ value: 'Arbeitszeitänderung vornehmen', appendTo: 'body', class: 'aw-tooltip', position: 'bottom', useTranslation: false }"
+                    v-tooltip.bottom="{ value: $t('Adjust working time'), appendTo: 'body', class: 'aw-tooltip', position: 'bottom', useTranslation: false }"
                 >
                     <p class="text-xs text-left font-lexend whitespace-nowrap"><span v-if="prependCraftAbbreviation && craft?.abbreviation" class="font-semibold mr-1">{{ craft.abbreviation }}</span>{{ normalizeTime(person.pivot?.start_time ?? shift.start) }} - {{ normalizeTime(person.pivot?.end_time ?? shift.end) }}</p>
                 </div>
@@ -47,7 +47,7 @@
         <div
             class="py-1.5 px-1 rounded-l-lg"
             :style="{ backgroundColor: `${returnCraftColor}` }"
-            v-tooltip.bottom="{ value: 'Arbeitszeitänderung anfragen', appendTo: 'body', class: 'aw-tooltip', position: 'bottom', useTranslation: false }"
+            v-tooltip.bottom="{ value: $t('Request work time change'), appendTo: 'body', class: 'aw-tooltip', position: 'bottom', useTranslation: false }"
         >
             <p class="text-xs text-left font-lexend whitespace-nowrap"><span v-if="prependCraftAbbreviation && craft?.abbreviation" class="font-semibold mr-1">{{ craft.abbreviation }}</span>{{ normalizeTime(person.pivot?.start_time ?? shift.start) }} - {{ normalizeTime(person.pivot?.end_time ?? shift.end) }}</p>
         </div>
@@ -88,6 +88,18 @@
                 class="size-4 shrink-0"
                 :class="confirmationInfo.accepted ? 'text-success' : 'text-danger'"
                 v-tooltip.bottom="{ value: getConfirmationTooltip(person, $t), appendTo: 'body', class: 'aw-tooltip', position: 'bottom', useTranslation: false }"
+            />
+            <!-- „Ersatz suchen" direkt neben dem Absage-Status (nur Planer*innen) -->
+            <ToolTipComponent
+                v-if="canSearchReplacement"
+                icon="IconReplaceUser"
+                icon-size="size-4"
+                :stroke="1.75"
+                black-icon
+                classes-button=""
+                :tooltip-text="$t('Find replacement for {name}', { name: person.name || person.full_name || person.provider_name || '' })"
+                direction="bottom"
+                @click="showReplacementModal = true"
             />
             <ToolTipComponent
                 :icon="findShiftQualification(person.pivot?.shift_qualification_id)?.icon"
@@ -188,7 +200,7 @@
                     <BaseMenuItem
                         white-menu-background
                         :icon="IconTrash"
-                        title="User von Schicht entfernen"
+                        title="Delete user from shift"
                         @click="deleteUserFromShift(person)"
                     />
                     <!-- Proxy-Erfassung: Zu-/Absage für Externe (kein Login) -->
@@ -221,6 +233,15 @@
         @close="proxyResponseMode = null"
         @submit="proxyRespond"
     />
+
+    <ShiftReplacementModal
+        v-if="showReplacementModal"
+        :shift="shift"
+        :worker="person"
+        :shift-qualifications="shiftQualifications"
+        @close="showReplacementModal = false"
+        @replaced="onReplaced"
+    />
 </template>
 
 <script setup>
@@ -240,7 +261,7 @@ import {Float} from "@headlessui-float/vue";
 import {router, usePage} from "@inertiajs/vue3";
 import axios from "axios";
 import RequestWorkTimeChangeModal from "@/Pages/Shifts/Components/RequestWorkTimeChangeModal.vue";
-import {computed, ref, onMounted, onBeforeUnmount, watch, nextTick} from "vue";
+import {computed, ref, onMounted, onBeforeUnmount} from "vue";
 import {IconDeviceFloppy, IconNote, IconChevronDown, IconTrash, IconCircleCheck, IconCircleX} from "@tabler/icons-vue";
 import {can, is} from "laravel-permission-to-vuejs";
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
@@ -250,6 +271,7 @@ import BaseMenuItem from "@/Components/Menu/BaseMenuItem.vue";
 import {useShiftPlanLookups} from "@/Composeables/useShiftPlanLookups.js";
 import {useI18n} from "vue-i18n";
 import ShiftConfirmationResponseModal from "@/Layouts/Components/ShiftPlanComponents/ShiftConfirmationResponseModal.vue";
+import ShiftReplacementModal from "@/Pages/Shifts/Components/ShiftReplacementModal.vue";
 import {useShiftWorkerConfirmation} from "@/Composeables/useShiftWorkerConfirmation.js";
 
 const { resolveCraft } = useShiftPlanLookups();
@@ -585,6 +607,23 @@ const proxyRespond = (comment) => {
     const status = proxyResponseMode.value === 'accept' ? 'accepted' : 'declined';
     proxyResponseMode.value = null;
     respondToShift(props.person.pivot.id, status, comment);
+};
+
+// ----- „Ersatz suchen" nach Absage -----
+const showReplacementModal = ref(false);
+
+const canSearchReplacement = computed(() =>
+    !!confirmationInfo.value
+    && !confirmationInfo.value.accepted
+    && !!props.person?.pivot?.id
+    && (can('can plan shifts') || is('artwork admin'))
+);
+
+// Tausch ist serverseitig erledigt (Broadcasts aktualisieren die Kacheln);
+// Props nachladen, damit die Tagesansicht die neue Besetzung ohne Vollreload zeigt.
+const onReplaced = () => {
+    showReplacementModal.value = false;
+    router.reload({ preserveScroll: true, preserveState: true });
 };
 </script>
 

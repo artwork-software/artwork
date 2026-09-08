@@ -4,47 +4,47 @@
 return [
     'permission-preset' => [
         'success' => [
-            'create' => 'Rechte-Preset erfolgreich erstellt',
-            'update' => 'Rechte-Preset erfolgreich aktualisiert',
-            'delete' => 'Rechte-Preset erfolgreich gelöscht',
+            'create' => 'Rechte-Vorlage erstellt',
+            'update' => 'Rechte-Vorlage aktualisiert',
+            'delete' => 'Rechte-Vorlage gelöscht',
         ],
         'error' => [
-            'create' => 'Rechte-Preset konnte nicht gespeichert werden. Bitte versuche es erneut',
-            'update' => 'Rechte-Preset konnte nicht aktualisiert werden. Bitte versuche es erneut',
-            'delete' => 'Rechte-Preset konnte nicht gelöscht werden. Bitte versuche es erneut',
+            'create' => 'Rechte-Vorlage konnte nicht gespeichert werden. Bitte versuche es erneut',
+            'update' => 'Rechte-Vorlage konnte nicht aktualisiert werden. Bitte versuche es erneut',
+            'delete' => 'Rechte-Vorlage konnte nicht gelöscht werden. Bitte versuche es erneut',
         ]
     ],
     'branding' => [
-        'update' => 'Branding erfolgreich aktualisiert'
+        'update' => 'Branding aktualisiert'
     ],
     'communication_and_legal' => [
-        'update' => 'Kommunikation & Rechtliches erfolgreich aktualisiert'
+        'update' => 'Kommunikation & Rechtliches aktualisiert'
     ],
     'interfaces' => [
         'failed_to_save' => 'Sage-Schnittstelleneinstellungen konnten nicht aktualisiert werden, bitte erneut versuchen.',
         'connection_test_failed' => 'Sage-Schnittstelleneinstellungen wurden erfolgreich aktualisiert, aber der Verbindungstest ist fehlgeschlagen. Bitte überprüfe die Schnittstelleneinstellungen und stelle sicher, dass die Schnittstelle erreichbar ist.',
-        'saved_successfully' => 'Sage-Schnittstelleneinstellungen erfolgreich aktualisiert.',
-        'import_executed_successfully' => 'Sage-Import wurde erfolgreich ausgeführt.',
+        'saved_successfully' => 'Sage-Schnittstelleneinstellungen aktualisiert',
+        'import_executed_successfully' => 'Sage-Import ausgeführt',
         'import_executed_unsuccessfully' => 'Sage-Import konnte nicht ausgeführt werden, bitte erneut versuchen.',
         'date_range_required' => 'Bitte gib einen Zeitraum (Von-Datum) an.',
         'date_or_ktr_required' => 'Bitte gib mindestens einen KTR oder einen Zeitraum an.',
-        'booking_days_deleted_successfully' => 'Buchungsdaten wurden erfolgreich gelöscht.',
+        'booking_days_deleted_successfully' => 'Buchungsdaten gelöscht',
     ],
     'shift-qualification' => [
         'success' => [
-            'create' => 'Qualifikation erfolgreich gespeichert.',
-            'update' => 'Qualifikation erfolgreich aktualisiert.',
-            'destroy' => 'Qualifikation erfolgreich gelöscht.'
+            'create' => 'Funktion gespeichert',
+            'update' => 'Funktion aktualisiert',
+            'destroy' => 'Funktion gelöscht'
         ],
         'error' => [
-            'create' => 'Qualifikation konnte nicht gespeichert werden, bitte versuche es erneut.',
-            'update' => 'Qualifikation konnte nicht aktualisiert werden, bitte versuche es erneut.',
-            'destroy' => 'Qualifikation konnte nicht gelöscht werden, bitte versuche es erneut.'
+            'create' => 'Funktion konnte nicht gespeichert werden, bitte versuche es erneut.',
+            'update' => 'Funktion konnte nicht aktualisiert werden, bitte versuche es erneut.',
+            'destroy' => 'Funktion konnte nicht gelöscht werden, bitte versuche es erneut.'
         ]
     ],
     'budget-general-setting' => [
         'success' => [
-            'update' => 'Einstellung wurde erfolgreich gespeichert.'
+            'update' => 'Einstellung gespeichert'
         ],
         'error' => [
             'update' => 'Einstellung konnte nicht gespeichert werden, bitte versuche es erneut.'
@@ -53,14 +53,14 @@ return [
     'budget-account-management' => [
         'success' => [
             'account' => [
-                'create' => 'Konto erfolgreich gespeichert.',
-                'update' => 'Konto erfolgreich aktualisiert.',
-                'delete' => 'Konto erfolgreich gelöscht.'
+                'create' => 'Konto gespeichert',
+                'update' => 'Konto aktualisiert',
+                'delete' => 'Konto gelöscht'
             ],
             'cost-unit' => [
-                'create' => 'Kostenstelle erfolgreich gespeichert.',
-                'update' => 'Kostenstelle erfolgreich aktualisiert.',
-                'delete' => 'Kostenstelle erfolgreich gelöscht.'
+                'create' => 'Kostenstelle gespeichert',
+                'update' => 'Kostenstelle aktualisiert',
+                'delete' => 'Kostenstelle gelöscht'
             ]
         ],
         'error' => [
@@ -78,10 +78,10 @@ return [
     ],
     'budget-drag-and-drop' => [
         'success' => [
-            'drop' => 'Budget erfolgreich verschoben.',
-            'restore' => 'Budget erfolgreich wiederhergestellt.',
-            'delete' => 'Budget erfolgreich gelöscht.',
-            'force-delete' => 'Budget erfolgreich endgültig gelöscht.'
+            'drop' => 'Budget verschoben',
+            'restore' => 'Budget wiederhergestellt',
+            'delete' => 'Budget gelöscht',
+            'force-delete' => 'Budget endgültig gelöscht'
         ],
         'error' => [
             'update' => 'Budget konnte nicht aktualisiert werden, bitte versuche es erneut.',
@@ -142,7 +142,7 @@ return [
     ],
     'module-settings' => [
         'success' => [
-            'update' => 'Modul-Sichtbarkeit wurde erfolgreich aktualisiert.'
+            'update' => 'Modul-Sichtbarkeit aktualisiert'
         ]
     ],
     'shift-settings' => [
@@ -152,16 +152,16 @@ return [
     ],
     'external_user_source' => [
         'success' => [
-            'create' => 'Externe Nutzerquelle erfolgreich erstellt',
-            'update' => 'Externe Nutzerquelle erfolgreich aktualisiert',
-            'delete' => 'Externe Nutzerquelle erfolgreich gelöscht'
+            'create' => 'Externe Nutzer*innenquelle erstellt',
+            'update' => 'Externe Nutzer*innenquelle aktualisiert',
+            'delete' => 'Externe Nutzer*innenquelle gelöscht'
         ]
     ],
     'external_user_group_mapping' => [
         'success' => [
-            'create' => 'Gruppen-Mapping erfolgreich erstellt',
-            'update' => 'Gruppen-Mapping erfolgreich aktualisiert',
-            'delete' => 'Gruppen-Mapping erfolgreich gelöscht'
+            'create' => 'Gruppen-Mapping erstellt',
+            'update' => 'Gruppen-Mapping aktualisiert',
+            'delete' => 'Gruppen-Mapping gelöscht'
         ]
     ],
     'oidc' => [

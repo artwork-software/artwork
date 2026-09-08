@@ -73,11 +73,23 @@
             </div>
         </div>
     </div>
-    <div class="invisible group-hover:visible cursor-pointer flex items-center gap-x-2">
-        <button type="button" @click="showRequestWorkTimeChangeModal = true" v-if="user.element.id === usePage().props.auth.user.id && user.type === 0">
+    <!-- Aktionen immer sichtbar, aber dezent — unsichtbare Hover-Buttons sind nicht entdeckbar -->
+    <div class="opacity-60 hover:opacity-100 focus-within:opacity-100 transition-opacity cursor-pointer flex items-center gap-x-2">
+        <button
+            type="button"
+            @click="showRequestWorkTimeChangeModal = true"
+            v-if="user.element.id === usePage().props.auth.user.id && user.type === 0"
+            :aria-label="$t('Request work time change')"
+            v-tooltip.bottom="{ value: $t('Request work time change'), class: 'aw-tooltip' }"
+        >
             <PropertyIcon name="IconClockEdit" class="h-5 w-5 hover:text-accent-600 transition-colors duration-300 ease-in-out cursor-pointer" stroke-width="1.5"/>
         </button>
-        <button type="button" @click="showConfirmDeleteModal = true">
+        <button
+            type="button"
+            @click="showConfirmDeleteModal = true"
+            :aria-label="$t('Delete user from shift')"
+            v-tooltip.bottom="{ value: $t('Delete user from shift'), class: 'aw-tooltip' }"
+        >
             <PropertyIcon name="IconSquareRoundedXFilled" class="h-5 w-5 hover:text-danger transition-colors duration-300 ease-in-out cursor-pointer" stroke-width="1.5"/>
         </button>
     </div>

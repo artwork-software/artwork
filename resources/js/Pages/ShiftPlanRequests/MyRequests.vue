@@ -1,5 +1,5 @@
 <template>
-    <AppLayout :title="$t('Meine Dienstplananfragen')">
+    <AppLayout :title="$t('My approval requests')">
         <div class="px-4 py-6 sm:px-6 lg:px-8 space-y-6">
             <div class="flex items-center gap-3">
                 <Link
@@ -8,7 +8,7 @@
                     :href="route('shifts.approvals.requests')"
                 >
                     <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
-                    <span>{{ $t('Zur Übersicht') }}</span>
+                    <span>{{ $t('Back to overview') }}</span>
                 </Link>
             </div>
 
@@ -16,12 +16,12 @@
             <div class="bg-white shadow sm:rounded-lg">
                 <div class="px-4 py-4 sm:px-6 flex items-start justify-between gap-4">
                     <div>
-                        <h3 class="text-lg font-medium text-text">{{ request?.title || $t('Dienstplananfrage') }}</h3>
+                        <h3 class="text-lg font-medium text-text">{{ request?.title || $t('Approval request') }}</h3>
                         <p class="mt-1 text-sm text-text-subtle">{{ request?.description || '' }}</p>
                         <p class="mt-2 text-xs text-text-subtle">
                             <strong>{{ $t('KW') }}</strong> {{ request.week_number }} / {{ request.year }}
                             <span class="mx-2">•</span>
-                            <strong>{{ $t('Angefragt am') }}</strong>
+                            <strong>{{ $t('Requested on') }}</strong>
                             {{ formatDateTime(request.requested_at) }}
                         </p>
                     </div>
@@ -59,7 +59,7 @@
                 />
 
                 <div v-if="!rows.length" class="text-center text-sm text-text-subtle">
-                    {{ $t('Keine Schichten für diese Anfrage gefunden.') }}
+                    {{ $t('No shifts found for this request.') }}
                 </div>
             </div>
         </div>
@@ -93,11 +93,11 @@ const {computeDurationHours, hasOpenPostCommitChange, hasOpenWorkflowChange} = u
 
 // Status helpers
 const statusLabel = (s) => {
-    if (!s) return t('Unbekannt');
-    if (s === 'pending' || s === 'review') return t('Prüfung ausstehend');
-    if (s === 'accepted' || s === 'approved') return t('Angenommen');
-    if (s === 'rejected') return t('Abgelehnt');
-    return t('Unbekannt');
+    if (!s) return t('Unknown');
+    if (s === 'pending' || s === 'review') return t('pending');
+    if (s === 'accepted' || s === 'approved') return t('approved');
+    if (s === 'rejected') return t('rejected');
+    return t('Unknown');
 };
 const statusClass = (s) => {
     if (s === 'pending' || s === 'review') return 'bg-warning-surface text-warning';

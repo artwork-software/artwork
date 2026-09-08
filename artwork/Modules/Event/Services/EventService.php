@@ -57,6 +57,7 @@ use Artwork\Modules\ServiceProvider\Models\ServiceProvider;
 use Artwork\Modules\ServiceProvider\Services\ServiceProviderService;
 use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\Shift\Models\ShiftFilter;
+use Artwork\Modules\Shift\Models\ShiftQualification;
 use Artwork\Modules\Shift\Models\ShiftRuleViolation;
 use Artwork\Modules\Shift\Services\ShiftFreelancerService;
 use Artwork\Modules\Shift\Services\ShiftService;
@@ -520,14 +521,25 @@ readonly class EventService
         // The frontend (SingleUserEventShift.vue) reads `shift.workers` with a `type` tag and the
         // pivot data to decide colleagues and individual times – the separate relation keys alone
         // would always render "Keine Kolleg*innen".
-        $buildWorkers = function (Shift $shift): array {
-            $tag = function ($workers, string $type) {
+        // Funktionsnamen (shift_qualifications) einmal für alle Karten laden — die
+        // Einsatzplan-Karte zeigt "Funktion: …" aus pivot.shift_qualification_id,
+        // ohne dass pro Worker eine Query nötig ist.
+        $qualificationNames = ShiftQualification::query()->pluck('name', 'id');
+
+        $buildWorkers = function (Shift $shift) use ($qualificationNames): array {
+            $tag = function ($workers, string $type) use ($qualificationNames) {
                 if ($workers === null) {
                     return collect();
                 }
 
-                return $workers->map(function ($worker) use ($type) {
+                return $workers->map(function ($worker) use ($type, $qualificationNames) {
                     $worker->setAttribute('type', $type);
+                    if ($worker->pivot !== null) {
+                        $worker->pivot->setAttribute(
+                            'shift_qualification_name',
+                            $qualificationNames[$worker->pivot->shift_qualification_id] ?? null
+                        );
+                    }
                     return $worker;
                 });
             };
@@ -1071,6 +1083,7 @@ readonly class EventService
                 end_date: $holiday->end_date?->format('Y-m-d'),
                 color: $holiday->color,
                 subdivisions: $holiday->subdivisions->pluck('name')->toArray(),
+                treatAsSpecialDay: (bool) $holiday->treatAsSpecialDay,
             );
         }
 
@@ -1126,6 +1139,7 @@ readonly class EventService
             end_date: $holiday->end_date->format('Y-m-d'),
             color: $holiday->color,
             subdivisions: $holiday->subdivisions->pluck('name')->toArray(),
+                treatAsSpecialDay: (bool) $holiday->treatAsSpecialDay,
         ));
     }
 

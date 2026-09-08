@@ -382,7 +382,7 @@ readonly class CalendarDataService
      */
     private function getHolidaysForRange(Carbon $start, Carbon $end): SupportCollection
     {
-        return Holiday::select(['id','name','date','end_date','color','yearly'])
+        return Holiday::select(['id','name','date','end_date','color','yearly','treatAsSpecialDay'])
             ->where(function (Builder $q) use ($start, $end): void {
                 $q->whereBetween('date', [$start->toDateString(), $end->toDateString()])
                     ->orWhereBetween('end_date', [$start->toDateString(), $end->toDateString()])
@@ -404,6 +404,7 @@ readonly class CalendarDataService
                 end_date: $holiday->end_date->toDateString(),
                 color: $holiday->color,
                 subdivisions: $holiday->subdivisions->pluck('name')->toArray(),
+                treatAsSpecialDay: (bool) $holiday->treatAsSpecialDay,
             ));
     }
 

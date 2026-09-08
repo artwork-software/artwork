@@ -13,6 +13,8 @@ use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\Shift\Models\ShiftQualification;
 use Artwork\Modules\User\Models\User;
 use Artwork\Modules\User\Models\UserShiftCalendarAbo;
+use App\Settings\ShiftSettings;
+use Carbon\Carbon;
 use Illuminate\Support\Str;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\Feature\FeatureTestCase;
@@ -186,8 +188,9 @@ final class UserShiftCalendarAboControllerTest extends FeatureTestCase
             'event_id' => $event->id,
             'craft_id' => Craft::factory(),
             'room_id' => Room::factory(),
-            'start_date' => '2026-07-15',
-            'end_date' => '2026-07-15',
+            // Relativ zu heute: der Feed liefert nur -30 Tage .. +12 Monate
+            'start_date' => now()->addDays(5)->toDateString(),
+            'end_date' => now()->addDays(5)->toDateString(),
             'start' => '08:00',
             'end' => '16:00',
             'is_committed' => true,
@@ -324,6 +327,180 @@ final class UserShiftCalendarAboControllerTest extends FeatureTestCase
         $this->assertSame(30, $calendarAbo->notification_time);
         $this->assertSame('minutes', $calendarAbo->notification_time_unit);
         $this->assertSame($owner->id, $calendarAbo->user_id);
+    }
+
+    // --- Block 2c: vorläufige Schichten, Widerruf, Ladefenster ------------------------------
+
+    #[Test]
+    public function feedMarksUncommittedShiftsAsProvisionalWhenAllShiftsAreShown(): void
+    {
+        $this->setCalendarAboShowAllShifts(true);
+
+        $user = User::factory()->create();
+        $calendarAbo = $this->createCalendarAbo($user);
+        $qualification = ShiftQualification::factory()->create(['name' => 'Operator*in']);
+
+        // Feste Kürzel, damit die SUMMARY-Assertions nicht an ICS-Escaping von Faker-Werten scheitern
+        $committed = $this->createShiftForUser($user, $qualification->id, [
+            'craft_id' => Craft::factory()->create(['name' => 'Licht', 'abbreviation' => 'FIX'])->id,
+            'start_date' => Carbon::now()->addDays(3)->toDateString(),
+            'end_date' => Carbon::now()->addDays(3)->toDateString(),
+            'is_committed' => true,
+            'break_minutes' => 30,
+        ]);
+        $provisional = $this->createShiftForUser($user, $qualification->id, [
+            'craft_id' => Craft::factory()->create(['name' => 'Ton', 'abbreviation' => 'PROV'])->id,
+            'start_date' => Carbon::now()->addDays(4)->toDateString(),
+            'end_date' => Carbon::now()->addDays(4)->toDateString(),
+            'is_committed' => false,
+            'break_minutes' => 45,
+        ]);
+
+        $response = $this->get(route('user-shift-calendar-abo.show', $calendarAbo->calendar_abo_id));
+        $response->assertOk();
+        $ics = str_replace("\r\n ", '', $response->getContent());
+
+        $this->assertStringContainsString('UID:shift-' . $committed->id, $ics);
+        $this->assertStringContainsString('UID:shift-' . $provisional->id, $ics);
+
+        // Genau der vorläufige Termin trägt das Präfix im Titel und den Hinweis in der Beschreibung
+        $this->assertSame(1, substr_count($ics, 'SUMMARY:[vorläufig] '));
+        $this->assertSame(1, substr_count($ics, 'Vorläufig: noch nicht festgeschrieben.'));
+        $this->assertStringContainsString('SUMMARY:[vorläufig] PROV', $ics);
+        $this->assertStringContainsString('SUMMARY:FIX', $ics);
+        $this->assertStringNotContainsString('SUMMARY:[vorläufig] FIX', $ics);
+
+        // Funktion und Pause stehen in der Beschreibung, LAST-MODIFIED ist gesetzt
+        $this->assertStringContainsString('Funktion: Operator*in', $ics);
+        $this->assertStringContainsString('Pause: 30 min', $ics);
+        $this->assertStringContainsString('Pause: 45 min', $ics);
+        $this->assertSame(2, substr_count($ics, 'LAST-MODIFIED:'));
+    }
+
+    #[Test]
+    public function feedOmitsUncommittedShiftsWhenOnlyCommittedShiftsAreShown(): void
+    {
+        $this->setCalendarAboShowAllShifts(false);
+
+        $user = User::factory()->create();
+        $calendarAbo = $this->createCalendarAbo($user);
+        $qualificationId = ShiftQualification::factory()->create()->id;
+
+        $committed = $this->createShiftForUser($user, $qualificationId, [
+            'start_date' => Carbon::now()->addDays(3)->toDateString(),
+            'end_date' => Carbon::now()->addDays(3)->toDateString(),
+            'is_committed' => true,
+        ]);
+        $provisional = $this->createShiftForUser($user, $qualificationId, [
+            'start_date' => Carbon::now()->addDays(4)->toDateString(),
+            'end_date' => Carbon::now()->addDays(4)->toDateString(),
+            'is_committed' => false,
+        ]);
+
+        $response = $this->get(route('user-shift-calendar-abo.show', $calendarAbo->calendar_abo_id));
+        $response->assertOk();
+        $ics = str_replace("\r\n ", '', $response->getContent());
+
+        $this->assertStringContainsString('UID:shift-' . $committed->id, $ics);
+        $this->assertStringNotContainsString('UID:shift-' . $provisional->id, $ics);
+        $this->assertStringNotContainsString('[vorläufig]', $ics);
+    }
+
+    #[Test]
+    public function renewingTheLinkInvalidatesTheOldToken(): void
+    {
+        $owner = User::factory()->create();
+        $calendarAbo = $this->createCalendarAbo($owner);
+        $oldToken = $calendarAbo->calendar_abo_id;
+
+        $this->get(route('user-shift-calendar-abo.show', $oldToken))->assertOk();
+
+        $this->actingAs($owner)
+            ->delete(route('user.shift.calendar.abo.renew', $calendarAbo->id))
+            ->assertRedirect();
+
+        $newToken = $calendarAbo->fresh()->calendar_abo_id;
+        $this->assertNotSame($oldToken, $newToken);
+
+        // Alter Link 404, neuer Link liefert den Feed; Einstellungen bleiben erhalten
+        $this->get(route('user-shift-calendar-abo.show', $oldToken))->assertNotFound();
+        $this->get(route('user-shift-calendar-abo.show', $newToken))->assertOk();
+        $this->assertSame($owner->id, $calendarAbo->fresh()->user_id);
+    }
+
+    #[Test]
+    public function aForeignSubscriptionLinkCannotBeRenewed(): void
+    {
+        $victim = User::factory()->create();
+        $attacker = User::factory()->create();
+        $calendarAbo = $this->createCalendarAbo($victim);
+        $oldToken = $calendarAbo->calendar_abo_id;
+
+        $this->actingAs($attacker)
+            ->delete(route('user.shift.calendar.abo.renew', $calendarAbo->id))
+            ->assertForbidden();
+
+        $this->assertSame($oldToken, $calendarAbo->fresh()->calendar_abo_id);
+    }
+
+    #[Test]
+    public function feedOnlyLoadsShiftsWithinTheLoadingWindow(): void
+    {
+        $this->setCalendarAboShowAllShifts(true);
+
+        $user = User::factory()->create();
+        $calendarAbo = $this->createCalendarAbo($user);
+        $qualificationId = ShiftQualification::factory()->create()->id;
+
+        $tooOld = $this->createShiftForUser($user, $qualificationId, [
+            'start_date' => Carbon::now()->subDays(60)->toDateString(),
+            'end_date' => Carbon::now()->subDays(60)->toDateString(),
+            'is_committed' => true,
+        ]);
+        $recent = $this->createShiftForUser($user, $qualificationId, [
+            'start_date' => Carbon::now()->subDays(10)->toDateString(),
+            'end_date' => Carbon::now()->subDays(10)->toDateString(),
+            'is_committed' => true,
+        ]);
+        $tooFar = $this->createShiftForUser($user, $qualificationId, [
+            'start_date' => Carbon::now()->addMonths(14)->toDateString(),
+            'end_date' => Carbon::now()->addMonths(14)->toDateString(),
+            'is_committed' => true,
+        ]);
+
+        $response = $this->get(route('user-shift-calendar-abo.show', $calendarAbo->calendar_abo_id));
+        $response->assertOk();
+        $ics = str_replace("\r\n ", '', $response->getContent());
+
+        $this->assertStringContainsString('UID:shift-' . $recent->id, $ics);
+        $this->assertStringNotContainsString('UID:shift-' . $tooOld->id, $ics);
+        $this->assertStringNotContainsString('UID:shift-' . $tooFar->id, $ics);
+    }
+
+    private function setCalendarAboShowAllShifts(bool $enabled): void
+    {
+        $settings = app(ShiftSettings::class);
+        $settings->calendar_abo_show_all_shifts = $enabled;
+        $settings->save();
+    }
+
+    /**
+     * @param array<string, mixed> $attributes
+     */
+    private function createShiftForUser(User $user, int $qualificationId, array $attributes): Shift
+    {
+        $shift = Shift::factory()->create(array_merge([
+            'event_id' => Event::factory()->create()->id,
+            'craft_id' => Craft::factory()->create()->id,
+            'room_id' => Room::factory()->create()->id,
+            'start' => '08:00',
+            'end' => '16:00',
+            'break_minutes' => 30,
+        ], $attributes));
+
+        $user->shifts()->attach($shift->id, ['shift_qualification_id' => $qualificationId]);
+
+        return $shift->fresh(['craft']);
     }
 
     /**

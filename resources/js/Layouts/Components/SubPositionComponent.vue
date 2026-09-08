@@ -176,6 +176,10 @@
                                                  class="text-nowrap p-3 cursor-pointer bg-surface-inverse hover:bg-accent-700 text-white">
                                                 {{ $t('No Accounts found') }}
                                             </div>
+                                            <div v-if="cell.accountSearchResults.length >= budgetManagementSearchLimit"
+                                                 class="p-2 text-xs text-warning bg-surface-inverse border-t border-border-subtle">
+                                                {{ $t('More results available - refine your search') }}
+                                            </div>
                                         </div>
                                         <div v-if="cell.costUnitSearchResults" class="absolute w-96 z-20 top-10">
                                             <div v-if="cell.costUnitSearchResults.length > 0"
@@ -202,13 +206,17 @@
                                                  class="text-nowrap p-3 cursor-pointer bg-surface-inverse hover:bg-accent-700 text-white">
                                                 {{ $t('No Cost Units found') }}
                                             </div>
+                                            <div v-if="cell.costUnitSearchResults.length >= budgetManagementSearchLimit"
+                                                 class="p-2 text-xs text-warning bg-surface-inverse border-t border-border-subtle">
+                                                {{ $t('More results available - refine your search') }}
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
                             <div v-else class="group">
                                 <div :class="[row.commented || cell.commented || cell.column.commented ? 'text-sm/5 font-bold text-text-subtle' : '',
-                                    index <= 1 ? 'w-44 max-w-44 justify-start pl-3' : index === 2 ? 'w-72 max-w-72 justify-start pl-3' : 'w-48 max-w-48 pr-2 justify-end',
+                                    index === 0 ? 'w-44 max-w-44 justify-start pl-8' : index === 1 ? 'w-44 max-w-44 justify-start pl-3' : index === 2 ? 'w-72 max-w-72 justify-start pl-3' : 'w-48 max-w-48 pr-2 justify-end',
                                     cell.value < 0 ? 'text-danger' : '', cell.value === '' || cell.value === null ? 'border border-border ' : '']"
                                      class="my-4 h-6 flex items-center cell-button" v-if="!cell.clicked">
                                     <div
@@ -517,10 +525,14 @@ export default {
         'openSubPositionSumDetailModal',
         'openSageAssignedDataModal',
         'budget-updated',
-        'budget-patched'
+        'budget-patched',
+        'order-saved'
     ],
     data() {
         return {
+            // Debounce-Timer der Kontensuche je Zelle (250 ms); Limit = serverseitiges Trefferlimit
+            budgetManagementSearchTimeouts: {},
+            budgetManagementSearchLimit: 50,
             editedCellOriginalValue: null,
             showMenu: null,
             hoveredRow: null,
@@ -713,7 +725,10 @@ export default {
                     {
                         preserveScroll: true,
                         preserveState: true,
-                        onSuccess: () => this.$emit('budget-updated'),
+                        onSuccess: () => {
+                            this.$emit('budget-updated');
+                            this.$emit('order-saved');
+                        },
                     }
                 );
                 });
@@ -1215,10 +1230,22 @@ export default {
             }, 0);
         },
         handleBudgetManagementSearch(index, cell, is_account_for_revenue) {
+            window.clearTimeout(this.budgetManagementSearchTimeouts[cell.id]);
+
             if (cell.searchValue === '') {
                 //return if search input is emptied, reset search results
                 cell.accountSearchResults = null;
                 cell.costUnitSearchResults = null;
+                return;
+            }
+
+            // 250 ms Debounce: sonst ein Request pro Tastendruck (Trefferlimit 50 serverseitig)
+            this.budgetManagementSearchTimeouts[cell.id] = window.setTimeout(() => {
+                this.runBudgetManagementSearch(index, cell, is_account_for_revenue);
+            }, 250);
+        },
+        runBudgetManagementSearch(index, cell, is_account_for_revenue) {
+            if (!cell.clicked || cell.searchValue === '') {
                 return;
             }
 

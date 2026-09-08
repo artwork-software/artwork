@@ -49,6 +49,7 @@ use Artwork\Modules\EventType\Models\EventType;
 use Artwork\Modules\Filter\Services\FilterService;
 use Artwork\Modules\Freelancer\Http\Resources\FreelancerShiftPlanResource;
 use Artwork\Modules\Freelancer\Services\FreelancerService;
+use Artwork\Modules\GeneralSettings\Models\GeneralSettings;
 use Artwork\Modules\GeneralSettings\Services\GeneralSettingsService;
 use Artwork\Modules\GlobalNotification\Services\GlobalNotificationService;
 use Artwork\Modules\Notification\Enums\NotificationEnum;
@@ -73,6 +74,7 @@ use Artwork\Modules\Shift\Services\GlobalQualificationService;
 use Artwork\Modules\Shift\Services\ShiftFreelancerService;
 use Artwork\Modules\Shift\Services\ShiftListViewService;
 use Artwork\Modules\Shift\Services\ShiftGroupService;
+use Artwork\Modules\Shift\Http\Requests\CommitShiftsRequest;
 use Artwork\Modules\Shift\Services\ShiftService;
 use Artwork\Modules\Shift\Services\ShiftServiceProviderService;
 use Artwork\Modules\Shift\Services\ShiftsQualificationsService;
@@ -874,11 +876,16 @@ class EventController extends Controller
         return response()->json($this->shiftPlanService->getAllRoomsContent($request));
     }
 
-    public function viewShiftPlan(?Project $project = null): Response
+    public function viewShiftPlan(Request $request, ?Project $project = null): Response
     {
         /** @var User $user */
         $user = $this->authManager->user();
         $isDailyView = (bool) $user->getAttribute('shift_plan_daily_view');
+
+        // Deep-Link aus Benachrichtigungen (ShiftNotificationLinkService::shiftPlan):
+        // start_date/end_date in der URL öffnen die betroffene Woche — nur für diesen Request
+        // (in-memory auf dem Filter-Modell), der gespeicherte Zeitraum bleibt unverändert.
+        $periodFromQuery = $this->shiftPlanPeriodFromRequest($request, $isDailyView);
 
         if ($isDailyView) {
             $shiftFilterType = UserFilterTypes::SHIFT_DAILY_FILTER->value;
@@ -898,6 +905,13 @@ class EventController extends Controller
                 ?? $user->shift_plan_settings()->firstOrCreate();
         }
 
+        // Deep-Link-Zeitraum nur im Speicher setzen (kein save()): wirkt auf getCalendarDateRange()
+        // und den Prop user_filters, ohne die Datenbank zu verändern.
+        if ($periodFromQuery !== null) {
+            $userCalendarFilter->setAttribute('start_date', $periodFromQuery[0]->format('Y-m-d'));
+            $userCalendarFilter->setAttribute('end_date', $periodFromQuery[1]->format('Y-m-d'));
+        }
+
         $renderViewName = 'Shifts/ShiftPlan';
         $this->userService->shareCalendarAbo('shiftCalendar');
         $this->singleShiftPresetService->shareSingleShiftPresets();
@@ -910,32 +924,38 @@ class EventController extends Controller
         // Ensure start_date <= end_date (can happen when start_date was null and defaulted to today)
         if ($startDate->greaterThan($endDate)) {
             $endDate = $startDate->copy()->addDays($isDailyView ? 0 : 6);
-            $user->userFilters()->updateOrCreate([
-                'filter_type' => $shiftFilterType
-            ], [
-                'end_date' => $endDate->format('Y-m-d')
-            ]);
+            if ($periodFromQuery === null) {
+                $user->userFilters()->updateOrCreate([
+                    'filter_type' => $shiftFilterType
+                ], [
+                    'end_date' => $endDate->format('Y-m-d')
+                ]);
+            }
         }
 
         if ($isDailyView && $startDate->diffInDays($endDate) > 7) {
             $endDate = $startDate->copy()->addDays(7);
             $calendarWarningText = __('calendar.daily_view_info');
-            $user->userFilters()->updateOrCreate([
-                'filter_type' => $shiftFilterType
-            ], [
-                'end_date' => $endDate->format('Y-m-d')
-            ]);
+            if ($periodFromQuery === null) {
+                $user->userFilters()->updateOrCreate([
+                    'filter_type' => $shiftFilterType
+                ], [
+                    'end_date' => $endDate->format('Y-m-d')
+                ]);
+            }
         }
 
         // only allow six months in shift plan view
         if ($startDate->diffInDays($endDate) > 183) {
             $endDate = $startDate->copy()->addMonths(6);
             $calendarWarningText = __('calendar.calendar_limit_six_months');
-            $user->userFilters()->updateOrCreate([
-                'filter_type' => $shiftFilterType
-            ], [
-                'end_date' => $endDate->format('Y-m-d')
-            ]);
+            if ($periodFromQuery === null) {
+                $user->userFilters()->updateOrCreate([
+                    'filter_type' => $shiftFilterType
+                ], [
+                    'end_date' => $endDate->format('Y-m-d')
+                ]);
+            }
         }
 
 
@@ -1027,6 +1047,39 @@ class EventController extends Controller
             'filterType' => $shiftFilterType,
             'isDailyView' => $isDailyView,
         ]);
+    }
+
+    /**
+     * Zeitraum aus den Query-Parametern start_date/end_date (Deep-Link) — NUR für diesen Request,
+     * wird nicht in user_filters gespeichert (Härtung: URL-Parameter dürfen keinen persistenten
+     * Zustand schreiben). Rückgabe null, wenn kein gültiger Zeitraum übergeben wurde.
+     *
+     * @return array{0: Carbon, 1: Carbon}|null
+     */
+    private function shiftPlanPeriodFromRequest(Request $request, bool $isDailyView): ?array
+    {
+        $rawStart = $request->query('start_date');
+        $rawEnd = $request->query('end_date');
+        if (!is_string($rawStart) || $rawStart === '' || !is_string($rawEnd) || $rawEnd === '') {
+            return null;
+        }
+
+        try {
+            $start = Carbon::parse($rawStart)->startOfDay();
+            $end = Carbon::parse($rawEnd)->startOfDay();
+        } catch (\Throwable) {
+            return null;
+        }
+
+        if ($end->lessThan($start)) {
+            [$start, $end] = [$end, $start];
+        }
+        // Tagesansicht zeigt maximal sieben Tage (siehe Begrenzung unten)
+        if ($isDailyView && $start->diffInDays($end) > 7) {
+            $end = $start->copy()->addDays(7);
+        }
+
+        return [$start, $end];
     }
 
     public function viewShiftPlanListView(): Response
@@ -1620,33 +1673,42 @@ class EventController extends Controller
         return $event;
     }
 
-    public function commitShifts(Request $request): void
+    public function commitShifts(CommitShiftsRequest $request, GeneralSettings $generalSettings): void
     {
-        [$start, $end] = $this->helperService->getDateRangeByCalendarWeekAndYear(
-            $request->week_number,
-            $request->year
-        );
-
-        // Mehrfachauswahl im Modal: craft_ids (Array) ODER einzelnes craft_id (Altbestand).
-        $craftIds = $request->input('craft_ids');
-        if (! is_array($craftIds) || $craftIds === []) {
-            $craftIds = [$request->get('craft_id')];
+        // Gleicher Guard wie changeCommitShifts(): bei aktivem Freigabe-Workflow läuft die
+        // Festschreibung ausschließlich über Anfragen (ShiftPlanRequest) — auch für die KW-Sammelaktion.
+        if ($generalSettings->shift_commit_workflow_enabled) {
+            abort(422, __('While the approval workflow is active, shifts can only be committed via a request.'));
         }
 
-        foreach (array_unique(array_map('intval', array_filter($craftIds))) as $craftId) {
-            $this->shiftService->commitShiftsByDate(
-                $start,
-                $end,
-                $craftId,
-                $request->filled('week_number') ? (int) $request->week_number : null,
-                $request->filled('year') ? (int) $request->year : null
-            );
+        $weekNumber = $request->weekNumber();
+        $year = $request->year();
+        [$start, $end] = $this->helperService->getDateRangeByCalendarWeekAndYear($weekNumber, $year);
+
+        // Mehrfachauswahl im Modal: craft_ids (Array) ODER einzelnes craft_id (Altbestand);
+        // Validierung + Gewerks-Scoping (nur planbare Gewerke) im CommitShiftsRequest.
+        $craftIds = $request->craftIds();
+        foreach ($craftIds as $craftId) {
+            $this->shiftService->commitShiftsByDate($start, $end, $craftId, $weekNumber, $year);
         }
+
+        // Rueckmeldung fuer den globalen Flash-Toast (Block 2): vorher schloss das Modal ohne jede Meldung.
+        $request->session()->flash('success', trans_choice(
+            'Duty roster committed for calendar week :week (:count craft).|Duty roster committed for calendar week :week (:count crafts).',
+            count($craftIds),
+            ['week' => $weekNumber, 'count' => count($craftIds)]
+        ));
     }
 
-    public function changeCommitShifts(Request $request, Shift $shift): void
+    public function changeCommitShifts(Request $request, Shift $shift, GeneralSettings $generalSettings): void
     {
         $committed = $request->boolean('commit');
+
+        // Bei aktivem Freigabe-Workflow läuft die Festschreibung ausschließlich über
+        // Anfragen (ShiftPlanRequest) — das Aufheben bleibt direkt möglich.
+        if ($committed && $generalSettings->shift_commit_workflow_enabled) {
+            abort(422, __('While the approval workflow is active, shifts can only be committed via a request.'));
+        }
 
         $shift->update([
             'is_committed' => $committed,
@@ -5063,9 +5125,11 @@ class EventController extends Controller
             || ($workerType === 'user' && $workerId === $viewer->id);
 
         if ($workerType === 'user') {
-            $additionalData['workTimeBalance'] = $showHours
-                ? $this->workingHourService->convertMinutesInHours($worker->work_time_balance ?? 0)
-                : null;
+            // workTimeBalance (Altformat) + workTimeBalanceFormatted/-Minutes (AZK-Badge mit Vorzeichen)
+            $additionalData = array_merge(
+                $additionalData,
+                $this->workingHourService->workTimeBalanceData($worker, $showHours)
+            );
         }
 
         $additionalData['weeklyWorkingHours'] = $showHours

@@ -5,9 +5,11 @@ namespace Artwork\Modules\User\Http\Controllers;
 use App\Http\Controllers\Controller;
 use Artwork\Modules\User\Http\Requests\StoreUserShiftCalendarAboRequest;
 use Artwork\Modules\User\Http\Requests\UpdateUserShiftCalendarAboRequest;
+use Artwork\Modules\Shift\Models\ShiftQualification;
 use Artwork\Modules\User\Models\UserShiftCalendarAbo;
 use Artwork\Modules\User\Services\UserShiftCalendarAboService;
 use Carbon\Carbon;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 use Spatie\IcalendarGenerator\Components\Calendar;
@@ -57,8 +59,15 @@ class UserShiftCalendarAboController extends Controller
         $calendar = Calendar::create('Schichtplan ' . $user->full_name)
             ->refreshInterval(5)
             ->appendProperty(TextProperty::create('METHOD', 'PUBLISH'));
-        // Get all shifts for the user — eager-load relations to avoid N+1 queries
+        // Ladefenster: nur Schichten von -30 Tagen bis +12 Monaten statt aller
+        // Schichten der Person (Feeds werden von Kalender-Clients alle paar Minuten
+        // abgerufen). Pivot-updated_at wird für LAST-MODIFIED mitgeladen.
+        [$windowStart, $windowEnd] = $this->userShiftCalendarAboService->feedWindow();
         $user->load([
+            'shifts' => static function ($query) use ($windowStart, $windowEnd): void {
+                $query->withPivot('updated_at')
+                    ->whereBetween('shifts.start_date', [$windowStart, $windowEnd]);
+            },
             'shifts.event.creator',
             'shifts.event.project',
             'shifts.event.room',
@@ -73,10 +82,20 @@ class UserShiftCalendarAboController extends Controller
         ]);
         $shifts = $this->userShiftCalendarAboService->getFilteredShifts($calendarAbo, $user->shifts);
 
+        // Funktionsnamen einmal batchen (Beschreibung "Funktion: …"), kein Lookup pro Schicht
+        $qualificationNames = ShiftQualification::query()
+            ->whereIn('id', $shifts->pluck('pivot.shift_qualification_id')->filter()->unique())
+            ->pluck('name', 'id');
+
         // Process each shift and add to the calendar
         foreach ($shifts as $shift) {
             if ($this->userShiftCalendarAboService->shouldAddShift($calendarAbo, $shift)) {
-                $this->userShiftCalendarAboService->addShiftToCalendar($calendar, $calendarAbo, $shift);
+                $this->userShiftCalendarAboService->addShiftToCalendar(
+                    $calendar,
+                    $calendarAbo,
+                    $shift,
+                    $qualificationNames
+                );
             }
         }
 
@@ -131,10 +150,19 @@ class UserShiftCalendarAboController extends Controller
     }
 
     /**
-     * Remove the specified resource from storage.
+     * Widerruf des Feed-Links: erzeugt einen neuen Token, der alte Link liefert danach 404.
+     * Nur die Besitzer*in darf ihr eigenes Abo erneuern (wie beim Update-Request).
      */
-    public function destroy(UserShiftCalendarAbo $userShiftCalendarAbo): void
+    public function destroy(UserShiftCalendarAbo $userShiftCalendarAbo): RedirectResponse
     {
-        //
+        abort_unless(
+            $userShiftCalendarAbo->user_id === Auth::id(),
+            403,
+            __('You can only renew your own calendar subscription link.')
+        );
+
+        $this->userShiftCalendarAboService->renewToken($userShiftCalendarAbo);
+
+        return back()->with('success', __('Calendar link renewed. The old link is no longer valid.'));
     }
 }

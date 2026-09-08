@@ -11,7 +11,7 @@
                         <TransitionChild as="template" enter="ease-in-out duration-300" enter-from="opacity-0" enter-to="opacity-100" leave="ease-in-out duration-300" leave-from="opacity-100" leave-to="opacity-0">
                             <div class="absolute top-0 left-full flex w-16 justify-center pt-5">
                                 <button type="button" class="-m-2.5 p-2.5" @click="sidebarOpen = false">
-                                    <span class="sr-only">Close sidebar</span>
+                                    <span class="sr-only">{{ $t('Close sidebar') }}</span>
                                     <component :is="IconX" class="size-6 text-white" aria-hidden="true" />
                                 </button>
                             </div>
@@ -436,7 +436,7 @@
 
     <div class="sticky top-0 z-40 flex items-center gap-x-6 bg-surface px-4 py-4 shadow-raised sm:px-6 lg:hidden">
         <button type="button" class="-m-2.5 p-2.5 text-text lg:hidden" @click="sidebarOpen = true">
-            <span class="sr-only">Open sidebar</span>
+            <span class="sr-only">{{ $t('Open sidebar') }}</span>
             <component :is="IconMenu2" class="size-6" aria-hidden="true" />
         </button>
         <div class="flex-1 text-sm/6 font-semibold text-text">Dashboard</div>
@@ -651,6 +651,13 @@ const navigation = ref([
                 icon: 'IconCalendarCheck',
                 current: route().current('shifts.approvals.requests'),
                 has_permission: usePage().props.canSeeShiftPlanRequestedPlans,
+            },
+            {
+                name: 'Week status',
+                href: route('shifts.week-status'),
+                icon: 'IconTableOptions',
+                current: route().current('shifts.week-status'),
+                has_permission: can('can view shift plan') || is('artwork admin'),
             },
             {
                 name: 'Compensation days overview',

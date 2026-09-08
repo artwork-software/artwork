@@ -2,19 +2,18 @@
     <ArtworkBaseModal
         v-if="show"
         @close="() => close(false)"
-        :title="$t('Qualification assignment')"
-        :description="$t('Shift') + ' ' + getCurrentShiftCount() + '/' + getMaxShiftCount()"
+        :title="$t('Assign function')"
+        :description="modalDescription"
     >
         <div class="mx-4">
             <!-- Header mit Avatar & Frage -->
             <div class="mb-4 text-sm/5 font-bold text-text-subtle">
-                {{ $t('In which qualification should') }}
                 <img
-                    class="inline h-6 w-6 object-cover rounded-full ring-2 ring-white shadow"
+                    class="inline h-6 w-6 object-cover rounded-full ring-2 ring-white shadow mr-1"
                     :src="user?.profile_photo_url"
                     :alt="'Profilfoto ' + (user?.display_name || '')"
                 />
-                {{ $t('{0} be used in the following layer?', user?.display_name) }}
+                {{ $t('In which function should {0} work in this shift?', [user?.display_name]) }}
             </div>
 
             <!-- Progress & Meta -->
@@ -44,15 +43,31 @@
             <!-- Slots / Aktionen -->
             <div class="mt-4 flex flex-col">
                 <div class="grid grid-cols-1 sm:grid-cols-2 w-full gap-3">
-                    <BaseUIButton
+                    <div
                         v-for="slot in currentShiftToAssign?.availableSlots || []"
                         :key="`${slot.id}-${slot.isOverbooked ? 'overbooked' : 'regular'}`"
-                        :label="$t('Insert as {0}', [slot.name]) + (slot.isOverbooked ? ' (' + $t('Overbook') + ')' : '')"
-                        :icon="slot.icon"
-                        is-add-button
-                        :class="{ '!border-warning !border-dashed': slot.isOverbooked }"
-                        @click="handleShift(currentShiftToAssign!.shift.id, slot.id, !!slot.isOverbooked)"
-                    />
+                        class="flex flex-col gap-1"
+                    >
+                        <BaseUIButton
+                            class="w-full"
+                            :label="$t('Insert as {0}', [slot.name]) + (slot.isOverbooked ? ' (' + $t('Overbook') + ')' : '')"
+                            :icon="slot.icon"
+                            is-add-button
+                            :class="{ '!border-warning !border-dashed': slot.isOverbooked }"
+                            @click="handleShift(currentShiftToAssign!.shift.id, slot.id, !!slot.isOverbooked)"
+                        />
+                        <!-- Überbuchen: Platz ist bereits voll besetzt — Info-Tooltip erklärt die Folge -->
+                        <div v-if="slot.isOverbooked" class="flex items-center gap-1 text-[11px] text-warning">
+                            <ToolTipComponent
+                                icon="IconInfoCircle"
+                                icon-size="w-3.5 h-3.5"
+                                classes-button="mt-0"
+                                direction="top"
+                                :tooltip-text="$t('All planned places for this function are already staffed. Overbooking adds the person on top of the planned places; overbooked people are marked in the duty roster and count in addition to the regular places.')"
+                            />
+                            <span>{{ $t('Place already fully staffed') }}</span>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="w-full mt-4">
@@ -78,12 +93,13 @@
 </template>
 
 <script setup lang="ts">
-import { computed, defineProps, defineEmits, reactive, toRefs, watch } from 'vue'
+import { computed, reactive, watch } from 'vue'
 import ArtworkBaseModal from '@/Artwork/Modals/ArtworkBaseModal.vue'
 import BaseUIButton from '@/Artwork/Buttons/BaseUIButton.vue'
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
-import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
+import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
 import {useShiftPlanLookups} from "@/Composeables/useShiftPlanLookups.js";
+import {useTranslation} from "@/Composeables/Translation.js";
 
 type Craft = {
     id: number
@@ -95,8 +111,15 @@ type Shift = {
     id: number
     start: string
     end: string
-    craft: Craft
+    craft?: Craft
+    craftId?: number
+    startDate?: string
+    dayLabel?: string
+    roomId?: number
+    room?: { id?: number; name?: string }
 }
+
+type RoomLike = { id?: number; roomId?: number; name?: string; roomName?: string }
 
 type AvailableSlot = {
     id: number
@@ -115,11 +138,17 @@ type User = {
     display_name: string
 }
 
-const props = defineProps<{
+const props = withDefaults(defineProps<{
     show: boolean
     user: User
     shifts: ShiftToAssign[]
-}>()
+    /** Räume des Plans (roomId/roomName oder id/name) zur Auflösung des Raumnamens im Titel */
+    rooms?: RoomLike[]
+}>(), {
+    rooms: () => [],
+})
+
+const $t = useTranslation()
 
 const emit = defineEmits<{
     (e: 'close', closedForAssignment: boolean, shiftsToAssign: { shiftId: number; shiftQualificationId?: number; isOverbooked?: boolean }[]): void
@@ -143,6 +172,38 @@ const currentShiftToAssign = computed<ShiftToAssign | undefined>(() => {
 })
 
 const isLastShiftToAssign = () => getCurrentShiftCount() === getMaxShiftCount()
+
+/** YYYY-MM-DD → DD.MM.YYYY (Konvention: nie ISO in der Oberfläche) */
+const formatDate = (raw?: string): string => {
+    if (!raw) return ''
+    const m = String(raw).match(/^(\d{4})-(\d{2})-(\d{2})/)
+    return m ? `${m[3]}.${m[2]}.${m[1]}` : String(raw)
+}
+
+const resolveRoomName = (shift?: Shift): string => {
+    if (!shift) return ''
+    if (shift.room?.name) return shift.room.name
+    const roomId = shift.roomId ?? shift.room?.id
+    if (roomId == null) return ''
+    const room = (props.rooms || []).find((r) => Number(r.roomId ?? r.id) === Number(roomId))
+    return room?.roomName ?? room?.name ?? ''
+}
+
+const toHHMM = (value?: string): string => (value ? String(value).slice(0, 5) : '')
+
+/** Untertitel: „Schicht 1/2 · 06.09.2026 · Große Bühne · 10:00–18:00" */
+const modalDescription = computed(() => {
+    const shift = currentShiftToAssign.value?.shift
+    const parts = [`${$t('Shift')} ${getCurrentShiftCount()}/${getMaxShiftCount()}`]
+    if (shift) {
+        const date = formatDate(shift.startDate) || shift.dayLabel || ''
+        if (date) parts.push(date)
+        const room = resolveRoomName(shift)
+        if (room) parts.push(room)
+        if (shift.start && shift.end) parts.push(`${toHHMM(shift.start)}–${toHHMM(shift.end)}`)
+    }
+    return parts.join(' · ')
+})
 
 const progressPercent = computed(() => {
     const max = getMaxShiftCount()

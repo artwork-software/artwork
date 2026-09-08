@@ -31,7 +31,7 @@
                                     <div class="ml-4 flex shrink-0">
                                         <button type="button" @click="hideNotice"
                                                 class="inline-flex rounded-md text-text-subtle hover:text-text-muted focus:outline-2 focus:outline-offset-2 focus:outline-accent-600">
-                                            <span class="sr-only">Close</span>
+                                            <span class="sr-only">{{ $t('Close') }}</span>
                                             <PropertyIcon name="IconX" class="size-5" aria-hidden="true"/>
                                         </button>
                                     </div>
@@ -52,7 +52,7 @@
                             {{ showCalendarWarning }}
                         </p>
                         <button type="button" class="-m-1.5 flex-none p-1.5">
-                            <span class="sr-only">Dismiss</span>
+                            <span class="sr-only">{{ $t('Dismiss') }}</span>
                             <PropertyIcon name="IconX" class="size-5 text-white" aria-hidden="true"
                                           @click="showCalendarWarning = ''"/>
                         </button>
@@ -95,8 +95,22 @@
                     </template>
 
                     <template #moreButtons>
-                        <SwitchIconTooltip v-model="dailyViewMode" :tooltip-text="$t('Switch between weekly and daily view')" size="md"
-                                           @change="changeDailyViewMode" icon="IconCalendarWeek"/>
+                        <!-- Zähler-Chip "N offene Verstöße": Klick aktiviert den Personenfilter -->
+                        <button
+                            v-if="openViolationsCount > 0 || showOnlyUsersWithOpenViolations"
+                            type="button"
+                            class="ui-button text-xs gap-1.5"
+                            :class="showOnlyUsersWithOpenViolations ? '!bg-accent-50 !border-accent-200/80 !text-accent-700' : '!text-warning'"
+                            :title="showOnlyUsersWithOpenViolations
+                                ? $t('Only people with open rule violations are shown')
+                                : $t('Show only people with open rule violations')"
+                            :disabled="showOnlyUsersWithOpenViolations"
+                            @click="activateOpenViolationsFilter"
+                        >
+                            <IconAlertTriangle class="size-4" stroke-width="1.5" />
+                            {{ $t('{n} open violations', { n: openViolationsCount }) }}
+                        </button>
+                        <ShiftPlanViewSwitch current="week" />
                         <SwitchIconTooltip v-if="can('can plan shifts') || is('artwork admin')" v-model="multiEditModeCalendar" :tooltip-text="$t('Multi-edit: select multiple shifts to edit them together.')" size="md"
                                            @change="toggleMultiEditModeCalendar" icon="IconPencil"/>
                     </template>
@@ -106,9 +120,23 @@
 
             <div class="z-40 min-h-0" :style="{ '--dynamic-height': showUserOverview ? windowHeight + 'px' : '100%' }">
                 <div
-                    class="min-h-0 h-[calc(var(--dynamic-height))]"
+                    class="min-h-0 h-[calc(var(--dynamic-height))] relative"
                     :class="[isFullscreen ? '' : '']"
                 >
+                    <!-- Leerzustand einmal pro Raster (keine Räume / Stammdaten fehlen / keine Schichten) -->
+                    <ShiftPlanEmptyState
+                        v-if="shiftPlanLoaded && !emptyStateDismissed && !multiEditModeCalendar"
+                        overlay
+                        :rooms-count="shiftPlanArrayRef.length"
+                        :crafts-count="craftsResolved?.length ?? 0"
+                        :functions-count="shiftQualifications?.length ?? 0"
+                        :has-shifts="planHasShifts"
+                        :filters-active="planFiltersActive"
+                        :hide-unoccupied-rooms="!!calendarSettings?.hide_unoccupied_rooms"
+                        @add-shift="openAddShiftForFirstCell"
+                        @add-from-template="openAddShiftByPresetForFirstCell"
+                        @dismiss="emptyStateDismissed = true"
+                    />
                     <Virtual2DGridWithHeader
                         ref="shiftGridRef"
                         class="h-full"
@@ -205,8 +233,38 @@
                                                         {{ $t('Germany-wide') }}
                                                     </div>
                                                 </div>
+                                                <!-- Einstieg in die Feiertagsseite (Sondertag-Häkchen) – nur mit passendem Recht -->
+                                                <div v-if="canManageSpecialDays" class="pt-1">
+                                                    <Link
+                                                        :href="route('holiday.management')"
+                                                        class="inline-flex items-center gap-1 text-[10px] font-medium text-white underline underline-offset-2 hover:text-white/80"
+                                                    >
+                                                        <PropertyIcon name="IconCalendarStar" class="h-3 w-3" />
+                                                        {{ $t('Manage special days') }}
+                                                    </Link>
+                                                </div>
                                             </div>
                                         </HolidayToolTip>
+                                    </div>
+
+                                    <!-- Sondertag-Badge (DP-04): Feiertag mit Flag treatAsSpecialDay -->
+                                    <div
+                                        v-if="specialDayNameByKey.get(day.fullDay)"
+                                        class="shrink-0"
+                                        v-tooltip.top="{ value: specialDayTooltip(day), class: 'aw-tooltip', appendTo: 'body' }"
+                                    >
+                                        <!-- Nur Icon, damit das Datum auch in schmalen Spalten lesbar bleibt; Name + Erklaerung im Tooltip, Eintrag in der Legende.
+                                             Mit Recht (Termin-Einstellungen oder Dienstplanung) ist der Marker der Einstieg "Sondertage verwalten" -->
+                                        <component
+                                            :is="canManageSpecialDays ? Link : 'span'"
+                                            :href="canManageSpecialDays ? route('holiday.management') : undefined"
+                                            class="inline-flex items-center gap-0.5 rounded-full bg-warning-surface text-warning border border-warning-border px-1 py-0.5 text-[9px] font-semibold"
+                                            :class="canManageSpecialDays ? 'hover:bg-warning-surface/80 cursor-pointer' : ''"
+                                            :aria-label="canManageSpecialDays ? $t('Manage special days') : $t('Special Day')"
+                                        >
+                                            <PropertyIcon name="IconCalendarStar" class="h-3 w-3" />
+                                            <span class="sr-only">{{ $t('Special Day') }}</span>
+                                        </component>
                                     </div>
                                 </div>
                               </div>
@@ -761,7 +819,8 @@
                                     <DragElement
                                         v-if="!highlightMode && !multiEditMode"
                                         :item="row.worker.element"
-                                        :work-time-balance="row.worker.workTimeBalance"
+                                        :work-time-balance="row.worker.workTimeBalanceFormatted ?? row.worker.workTimeBalance"
+                                        :work-time-balance-minutes="row.worker.workTimeBalanceMinutes"
                                         :type="row.worker.type"
                                         :color="row.craft.color"
                                         :craft="row.craft"
@@ -772,11 +831,14 @@
                                     <MultiEditUserCell
                                         v-else-if="multiEditMode && !highlightMode"
                                         :item="row.worker.element"
-                                        :work-time-balance="row.worker.workTimeBalance"
+                                        :work-time-balance="row.worker.workTimeBalanceFormatted ?? row.worker.workTimeBalance"
+                                        :work-time-balance-minutes="row.worker.workTimeBalanceMinutes"
                                         :type="row.worker.type"
                                         :userForMultiEdit="userForMultiEdit"
                                         :multiEditMode="multiEditMode"
+                                        :enable-info-modal="true"
                                         @addUserToMultiEdit="addUserToMultiEdit"
+                                        @open-user-info-modal="openUserInfoModal"
                                         :color="row.craft.color"
                                         :craft-id="row.craft.id"
                                         :craft="row.craft"
@@ -787,9 +849,12 @@
                                         v-else
                                         :highlighted-user="idToHighlight ? (idToHighlight === row.worker.element.id && row.worker.type === typeToHighlight) : false"
                                         :item="row.worker.element"
-                                        :work-time-balance="row.worker.workTimeBalance"
+                                        :work-time-balance="row.worker.workTimeBalanceFormatted ?? row.worker.workTimeBalance"
+                                        :work-time-balance-minutes="row.worker.workTimeBalanceMinutes"
                                         :type="row.worker.type"
+                                        :enable-info-modal="true"
                                         @highlightShiftsOfUser="highlightShiftsOfUser"
+                                        @open-user-info-modal="openUserInfoModal"
                                         :color="row.craft.color"
                                         :is-managing-craft="row.worker.element.managing_craft_ids.includes(row.craft.id)"
                                     />
@@ -803,7 +868,19 @@
                                     <div class="w-full border-t border-white/30"></div>
                                 </div>
 
-                                <!-- Craft-/Funktionsgruppen-Row: keine Zellen -->
+                                <!-- Gewerks-Row: Besetzung „besetzt/Bedarf" je Tag, in der KW-Spalte die Wochensumme;
+                                     Klick setzt Filter „nur nicht voll besetzte" + Gewerksfilter (zweiter Klick zurück) -->
+                                <div v-else-if="row.kind === 'craft'" class="flex h-full w-full items-center justify-center" :class="day.isExtraRow ? 'pl-2' : ''">
+                                    <!-- Besetzung EINMAL je Zelle nachschlagen; Ampelklasse/Tooltip rechnet die Pille nur bei Prop-Änderung -->
+                                    <CraftStaffingPill
+                                        :count="craftStaffingFor(row.craft.id, day)"
+                                        :active="isCraftStaffingFilterActive(row.craft.id)"
+                                        :week-number="day.isExtraRow ? day.weekNumber : null"
+                                        @toggle="toggleCraftStaffingFilter(row.craft.id)"
+                                    />
+                                </div>
+
+                                <!-- Funktionsgruppen-Row: keine Zellen -->
                                 <div v-else-if="row.kind !== 'worker'" class="h-full w-full"></div>
 
                                 <!-- Worker row -->
@@ -813,15 +890,17 @@
                                         v-if="day.isExtraRow"
                                         class="shiftCell flex h-full items-center justify-center overflow-hidden rounded-lg p-2 text-center text-white"
                                         :class="[kwWorkflowStatusClass(row, day), cellWrapperClass(row, day)]"
-                                        :title="kwWorkflowStatusTitle(row, day)"
+                                        :title="kwCellTitle(row, day)"
                                     >
+                                        <!-- Einheitliches Stundenformat "H:MM h" (signiert) wie das AZK-Badge; Fallback auf das alte "2h 0m" -->
+                                        <!-- target_unknown: kein Arbeitszeitmuster in der Woche -> "–" (Tooltip über kwCellTitle) -->
                                         <div
                                             class="font-lexend text-xs"
-                                            :class="row.worker?.weeklyWorkingHours?.[day.weekNumber]
+                                            :class="row.worker?.weeklyWorkingHours?.[day.weekNumber] && !row.worker.weeklyWorkingHours[day.weekNumber].target_unknown
                                                 ? (row.worker.weeklyWorkingHours[day.weekNumber].isMinus ? 'text-danger-surface' : 'text-success-surface')
                                                 : 'text-white/60'"
                                         >
-                                            {{ row.worker?.weeklyWorkingHours?.[day.weekNumber]?.difference ?? '–' }}
+                                            {{ row.worker?.weeklyWorkingHours?.[day.weekNumber]?.difference_formatted ?? row.worker?.weeklyWorkingHours?.[day.weekNumber]?.difference ?? '–' }}
                                         </div>
                                     </div>
 
@@ -894,6 +973,7 @@
         :show="showShiftsQualificationsAssignmentModal"
         :user="userForMultiEdit"
         :shifts="showShiftsQualificationsAssignmentModalShifts"
+        :rooms="shiftPlanArrayRef"
         @close="closeShiftsQualificationsAssignmentModal"
     />
     <CellMultiEditModal
@@ -1002,7 +1082,9 @@ import 'vue-virtual-scroller/dist/vue-virtual-scroller.css'
 import Permissions from '@/Mixins/Permissions.vue'
 import axios from 'axios'
 import {Link, router, usePage} from '@inertiajs/vue3'
+import {IconAlertTriangle} from '@tabler/icons-vue'
 import ShiftPlanFunctionBar from '@/Layouts/Components/ShiftPlanComponents/ShiftPlanFunctionBar.vue'
+import ShiftPlanEmptyState from '@/Layouts/Components/ShiftPlanComponents/ShiftPlanEmptyState.vue'
 import ShiftHeader from '@/Pages/Shifts/ShiftHeader.vue'
 import {MenuItem} from '@headlessui/vue'
 import BaseFilter from '@/Layouts/Components/BaseFilter.vue'
@@ -1025,9 +1107,12 @@ import dayjs from 'dayjs'
 import debounce from 'lodash.debounce'
 import ToolTipComponent from '@/Components/ToolTips/ToolTipComponent.vue'
 import {useShiftCalendarListener} from '@/Composeables/Listener/useShiftCalendarListener.js'
-import {enrichDays, getDaysInRange, computeShiftFormattedDates, computeEventFormattedDates, clearDayPropsCache} from '@/Composeables/calendarDateUtils.js'
+import {enrichDays, clearDayPropsCache} from '@/Composeables/calendarDateUtils.js'
 import {provideShiftPlanLookups} from '@/Composeables/useShiftPlanLookups.js'
 import SwitchIconTooltip from '@/Artwork/Toggles/SwitchIconTooltip.vue'
+import ShiftPlanViewSwitch from '@/Layouts/Components/ShiftPlanComponents/ShiftPlanViewSwitch.vue'
+import {aggregateStaffingByRoom, createRoomStaffingMemo, staffingKey, weekStaffingKey} from '@/Helper/shiftStaffing.js'
+import CraftStaffingPill from '@/Layouts/Components/ShiftPlanComponents/CraftStaffingPill.vue'
 import PropertyIcon from '@/Artwork/Icon/PropertyIcon.vue'
 import ArtworkBaseModal from '@/Artwork/Modals/ArtworkBaseModal.vue'
 import BaseUIButton from '@/Artwork/Buttons/BaseUIButton.vue'
@@ -1552,6 +1637,50 @@ const openAddShiftByPresetOrGroup = (day, roomId) => {
     showAddShiftByPresetOrGroupModal.value = true
 }
 
+// --- Leerzustand des Rasters (ShiftPlanEmptyState) ---
+// Erst nach dem Initial-Load anzeigen, sonst blitzt die Karte während Meta/Batch auf.
+const shiftPlanLoaded = ref(false)
+const emptyStateDismissed = ref(false)
+
+const firstPlanDay = computed(() => (days.value ?? []).find((d: any) => !d?.isExtraRow) ?? null)
+
+/** Gibt es im geladenen Zeitraum mindestens eine Schicht (unabhängig von Anzeige-Filtern)? */
+const planHasShifts = computed<boolean>(() => {
+    for (const room of shiftPlanArrayRef.value) {
+        // __v lesen, damit Broadcast-Mutationen (bumpRoomVersion) den Zustand aktualisieren
+        void room?.__v
+        if (room?.shiftsById && Object.keys(room.shiftsById).length > 0) return true
+        const content = room?.content ?? {}
+        for (const key of Object.keys(content)) {
+            const cell = content[key]
+            if (Array.isArray(cell?.shifts) && cell.shifts.length > 0) return true
+            const ids = cell?.shiftIds ?? cell?.shift_ids ?? cell?.shiftIDs
+            if (Array.isArray(ids) && ids.length > 0) return true
+        }
+    }
+    return false
+})
+
+/** Aktive Dienstplan-Filter (Räume, Gewerke, Terminarten …) — Hinweis im Leerzustand „keine Räume" */
+const planFiltersActive = computed<boolean>(() => {
+    const filters = (props.user_filters ?? {}) as Record<string, any>
+    return Object.values(filters).some((value) => Array.isArray(value) && value.length > 0)
+})
+
+function openAddShiftForFirstCell() {
+    const room = shiftPlanArrayRef.value[0]
+    const day = firstPlanDay.value
+    if (!room || !day) return
+    openAddShiftForRoomAndDay(day.withoutFormat, room.roomId ?? room.room_id ?? room.id)
+}
+
+function openAddShiftByPresetForFirstCell() {
+    const room = shiftPlanArrayRef.value[0]
+    const day = firstPlanDay.value
+    if (!room || !day) return
+    openAddShiftByPresetOrGroup(day, room)
+}
+
 const shiftPlanArrayRef = computed<any[]>(() => normalizeShiftPlan(newShiftPlanData.value))
 
 const shiftRows = computed(() => {
@@ -1685,6 +1814,27 @@ const dayTintByKey = computed(() => {
     }
     return map
 })
+
+// Sondertage (DP-04) je Tag einmal vorberechnet: Name des ersten Feiertags mit treatAsSpecialDay
+const specialDayNameByKey = computed(() => {
+    const map = new Map<string, string>()
+    for (const d of (days.value ?? [])) {
+        if (!d || d.isExtraRow || !d.fullDay) continue
+        const special = (d.holidays ?? []).find((h: any) => h?.treatAsSpecialDay)
+        if (special) map.set(d.fullDay, special.name ?? '')
+    }
+    return map
+})
+/** Feiertagsseite (Sondertag-Häkchen) öffnen dürfen: Termin-Einstellungen ODER Dienstplanung (Spiegel der Route-Middleware) */
+const canManageSpecialDays = computed(() => {
+    const proxy = instance?.proxy as any
+    return !!(proxy?.is?.('artwork admin') || proxy?.can?.('change event settings') || proxy?.can?.('can plan shifts'))
+})
+const specialDayTooltip = (day: any) => {
+    const name = specialDayNameByKey.value.get(day?.fullDay) ?? ''
+    const base = `${$t('Special Day')}${name ? ' – ' + name : ''}: ${$t('Special day: without work the daily target is reduced to 0 or by the weekday average (three-month mode), if the contract has the special day rule active. Hours worked count normally.')}`
+    return canManageSpecialDays.value ? `${base} ${$t('Click: manage special days.')}` : base
+}
 
 const dayTintLight = (day: any) => dayTintByKey.value.get(day?.fullDay)?.light ?? null
 const dayTintDark = (day: any) => dayTintByKey.value.get(day?.fullDay)?.dark ?? null
@@ -1917,6 +2067,9 @@ const groupedShiftsCache = new Map<string, ShiftGroup[]>()
 const roomDayEventsCache = new Map<string, any[]>()
 const roomDayShiftsCache = new Map<string, any[]>()
 const cellProjectGroupsCache = new Map<string, any[]>()
+// Besetzungs-Teilergebnis je Raum (craftStaffingByKey) — hier deklariert, weil der
+// immediate-Watcher unten es beim Setup bereits leert (sonst TDZ-Fehler)
+const roomStaffingMemo = createRoomStaffingMemo()
 
 // Die Keys enthalten room.__v und akkumulieren zwischen den Komplett-Clears (z. B. bei
 // vielen Websocket-Updates in einer langen Sitzung) — Obergrenze gegen Memory-Wachstum
@@ -2226,6 +2379,8 @@ watch(
         roomDayEventsCache.clear()
         roomDayShiftsCache.clear()
         cellProjectGroupsCache.clear()
+        // Besetzungs-Memo je Raum: Tagesspalten (Zeitraum) bzw. Zoom geändert
+        roomStaffingMemo.clear()
         if (expandDays.value) {
             measureBaselineMetrics()
         } else {
@@ -2618,6 +2773,9 @@ async function initializeShiftPlan() {
     const initialCurrentDay = pickInitialCurrentDay(days.value)
     currentDayOnView.value = initialCurrentDay
     currentDayRef.value = initialCurrentDay
+
+    emptyStateDismissed.value = false
+    shiftPlanLoaded.value = true
 }
 
 
@@ -2859,6 +3017,24 @@ function kwWorkflowStatusClass(row: any, day: any): string {
     }
 }
 
+/** Tooltip der KW-Zelle: "Geplant 38:00 h · Soll 41:30 h · Differenz −3:30 h" (+ Freigabe-Status) */
+function kwHoursTooltip(row: any, day: any): string {
+    const week = row?.worker?.weeklyWorkingHours?.[day?.weekNumber]
+    if (!week) return ''
+    const planned = week.planned_formatted ?? week.planned
+    if (week.target_unknown) {
+        // Soll unbekannt: mindestens ein Tag der Woche ohne gültiges Arbeitszeitmuster
+        return `${$t('Planned')} ${planned} · ${$t('Target')} – · ${$t('No work time pattern stored')}`
+    }
+    const target = week.daily_target_formatted ?? week.daily_target
+    const difference = week.difference_formatted ?? week.difference
+    return `${$t('Planned')} ${planned} · ${$t('Target')} ${target} · ${$t('Difference')} ${difference}`
+}
+
+function kwCellTitle(row: any, day: any): string {
+    return [kwHoursTooltip(row, day), kwWorkflowStatusTitle(row, day)].filter(Boolean).join('\n')
+}
+
 function kwWorkflowStatusTitle(row: any, day: any): string {
     switch (kwWorkflowStatus(row, day)) {
         case 'attention':
@@ -2880,11 +3056,74 @@ function getDayServicesForCell(worker: any, day: any) {
 
 
 
-function changeDailyViewMode() {
+// --- Besetzungsübersicht je Gewerk (Kopfzeile der Personenleiste) ---
+// Teilergebnis JE RAUM (keyed craftId+Tag bzw. craftId+KW) im Memo unter room.__v;
+// das Computed liest __v aller Räume (damit Broadcasts/bumpRoomVersion es anstoßen),
+// aggregiert aber nur den geänderten Raum neu und summiert die Teilergebnisse.
+// Bewusst ungefiltert (nicht getRoomDayShifts): der Filter „nur nicht voll
+// besetzte" darf die Bedarfszahlen nicht verfälschen.
+// Memo-Clear bei Zeitraum-/Zoomwechsel: siehe Cache-Watcher (cellSummaryCache & Co.).
+function rawRoomDayShifts(room: any, dayKey: string): any[] {
+    const cell = room?.content?.[dayKey]
+    if (!cell) return []
+    if (Array.isArray(cell.shifts)) return cell.shifts.filter(Boolean)
+    const ids = cell.shiftIds ?? cell.shift_ids ?? cell.shiftIDs ?? []
+    if (Array.isArray(ids) && room?.shiftsById) {
+        return ids.map((id: number) => room.shiftsById[id]).filter(Boolean)
+    }
+    return []
+}
+
+const craftStaffingByKey = computed<Map<string, { required: number; staffed: number }>>(() => {
+    const dayList = (days.value ?? []).filter((d: any) => !d?.isExtraRow)
+    return aggregateStaffingByRoom(
+        shiftPlanArrayRef.value.filter(Boolean).map((room: any) => ({
+            room,
+            version: room.__v ?? 0,
+            entries: () => {
+                const entries: Array<{ dateKey: string; weekNumber: any; shifts: any[] }> = []
+                for (const day of dayList) {
+                    const shifts = rawRoomDayShifts(room, day.fullDay)
+                    if (shifts.length === 0) continue
+                    entries.push({ dateKey: day.fullDay, weekNumber: day.weekNumber, shifts })
+                }
+                return entries
+            },
+        })),
+        roomStaffingMemo,
+    )
+})
+
+function craftStaffingFor(craftId: number, day: any) {
+    const key = day?.isExtraRow ? weekStaffingKey(craftId, day.weekNumber) : staffingKey(craftId, day?.fullDay)
+    return craftStaffingByKey.value.get(key) ?? null
+}
+
+/** Ist der Klick-Filter (nur nicht voll besetzte + genau dieses Gewerk) aktiv? */
+function isCraftStaffingFilterActive(craftId: number): boolean {
+    const craftIds: any[] = props.user_filters?.craft_ids ?? []
+    return !!calendarSettings.value?.show_only_not_fully_staffed_shifts
+        && craftIds.length === 1
+        && Number(craftIds[0]) === Number(craftId)
+}
+
+/** Klick auf die Besetzungszahl: Filter „nur nicht voll besetzte" + Gewerksfilter setzen, zweiter Klick setzt zurück */
+async function toggleCraftStaffingFilter(craftId: number) {
+    const activate = !isCraftStaffingFilterActive(craftId)
+    try {
+        await axios.patch(route('user.calendar_settings.update', { user: authUser.value.id }), {
+            is_shift_plan: true,
+            is_daily_view: false,
+            show_only_not_fully_staffed_shifts: activate,
+        })
+    } catch {
+        dropFeedback.value = $t('Saving failed')
+        return
+    }
     router.patch(
-        route('user.update.daily_view', authUser.value.id),
-        {daily_view: dailyViewMode.value, context: 'shift_plan'},
-        {preserveScroll: false, preserveState: false},
+        route('user.update.show_crafts', { user: authUser.value.id }),
+        { craft_ids: activate ? [craftId] : [] },
+        { preserveScroll: true, preserveState: false },
     )
 }
 
@@ -3237,6 +3476,8 @@ const dropWorkers = computed<any[]>(() => {
             element: user.user,
             type: 0,
             workTimeBalance: user.workTimeBalance,
+            workTimeBalanceFormatted: user.workTimeBalanceFormatted ?? null,
+            workTimeBalanceMinutes: user.workTimeBalanceMinutes ?? null,
             vacations: user.vacations,
             assigned_craft_ids: user.user.assigned_craft_ids ?? [],
             availabilities: user.availabilities,
@@ -3294,10 +3535,60 @@ const dropWorkers = computed<any[]>(() => {
  * Map: craftId -> Worker[]
  * statt für jeden Craft erneut über ALLE Worker zu loopen
  */
+/** Tages-Schlüssel (YYYY-MM-DD) des angezeigten Zeitraums */
+const displayedDayKeys = computed<Set<string>>(() => {
+    const keys = new Set<string>()
+    for (const d of days.value ?? []) {
+        if (d?.isExtraRow || !d?.withoutFormat) continue
+        keys.add(d.withoutFormat)
+    }
+    return keys
+})
+
+/** Offene Regelverstöße einer Person im angezeigten Zeitraum zählen (Verstöße hängen je Tag am Worker) */
+function countOpenViolationsOfWorker(worker: any): number {
+    const byDay = worker?.violations
+    if (!byDay || typeof byDay !== 'object') return 0
+    let count = 0
+    for (const dayKey of Object.keys(byDay)) {
+        if (!displayedDayKeys.value.has(dayKey)) continue
+        const list = Array.isArray(byDay[dayKey]) ? byDay[dayKey] : Object.values(byDay[dayKey] ?? {})
+        for (const violation of list) {
+            if (violation?.status === 'active') count++
+        }
+    }
+    return count
+}
+
+/** Personenfilter "nur Personen mit offenen Regelverstößen" (user_filters-Flag, Schichtplan-Filter-Modal) */
+const showOnlyUsersWithOpenViolations = computed(() => !!props.user_filters?.show_only_users_with_open_violations)
+
+/** Zähler-Chip in der Funktionsleiste: offene Verstöße über alle sichtbaren Personen und Tage */
+const openViolationsCount = computed(() => {
+    let total = 0
+    for (const worker of dropWorkers.value) {
+        total += countOpenViolationsOfWorker(worker)
+    }
+    return total
+})
+
+function activateOpenViolationsFilter() {
+    router.patch(
+        route('update.user.calendar.filter.open-violations', authUser.value.id),
+        { filter_type: 'shift_filter', show_only_users_with_open_violations: true },
+        { preserveScroll: true, preserveState: false },
+    )
+}
+
 const craftWorkersMap = computed<Map<number, any[]>>(() => {
     const map = new Map<number, any[]>()
 
+    const onlyOpenViolations = showOnlyUsersWithOpenViolations.value
+
     for (const worker of dropWorkers.value) {
+        // Personenzeilen ohne offenen Regelverstoß im Zeitraum ausblenden
+        if (onlyOpenViolations && countOpenViolationsOfWorker(worker) === 0) continue
+
         const craftIds: number[] = worker.assigned_craft_ids ?? []
         for (const craftId of craftIds) {
             if (!map.has(craftId)) {
@@ -3639,7 +3930,42 @@ function checkIfEventHasShiftsToDisplay(event: any) {
     return shifts.length > 0
 }
 
-function showDropFeedback(feedback: string) {
+/** Anzeigename einer Person aus der geladenen Personenliste (Drag-Payload trägt keinen Namen) */
+function resolveWorkerDisplayName(id: number | string | undefined, type: 0 | 1 | 2 | undefined): string {
+    if (id == null || type == null) return ''
+    const numericId = Number(id)
+    let element: any = null
+    if (type === 0) {
+        element = (usersForShiftsResolved.value ?? []).find((x: any) => Number(x?.user?.id) === numericId)?.user
+    } else if (type === 1) {
+        element = (freelancersForShiftsResolved.value ?? []).find((x: any) => Number(x?.freelancer?.id) === numericId)?.freelancer
+    } else {
+        element = (serviceProvidersForShiftsResolved.value ?? []).find((x: any) => Number(x?.service_provider?.id) === numericId)?.service_provider
+    }
+    if (!element) return $t('Person')
+    const name = element.full_name
+        ?? element.display_name
+        ?? element.provider_name
+        ?? element.name
+        ?? `${element.first_name ?? ''} ${element.last_name ?? ''}`.trim()
+    return name || $t('Person')
+}
+
+/**
+ * Rückmeldung nach Drag & Drop aus dem ShiftDropElement.
+ * String = Fehlermeldung (rote Leiste wie bisher); Objekt = Erfolg über den Plan-Notice-Toast
+ * („{Name} zugewiesen: {Funktion}"). Rückgängig folgt in Block 5.
+ */
+function showDropFeedback(feedback: string | { kind: 'success' | 'error' | 'info'; userId?: number | string; userType?: 0 | 1 | 2; qualificationName?: string; isOverbooked?: boolean }) {
+    if (feedback && typeof feedback === 'object') {
+        const name = resolveWorkerDisplayName(feedback.userId, feedback.userType)
+        const fn = feedback.qualificationName || $t('Function')
+        const message = feedback.isOverbooked
+            ? $t('{name} assigned: {fn} (overbooked)', {name, fn})
+            : $t('{name} assigned: {fn}', {name, fn})
+        showNotice(feedback.kind ?? 'success', 'Assigned', message)
+        return
+    }
     dropFeedback.value = feedback
     setTimeout(() => {
         dropFeedback.value = null

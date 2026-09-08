@@ -7981,5 +7981,16 @@
     "A holiday treated as a special day reduces the daily target of a person to 0 (or by the weekday average in three-month mode) if no work was done on that day and the contract has the special day rule active. Hours worked on a special day count normally.": "Ein als Sondertag behandelter Feiertag senkt das Tagessoll einer Person auf 0 (bzw. im Dreimonatsmodus um den Wochentagsdurchschnitt), wenn an diesem Tag nicht gearbeitet wurde und der Vertrag die Sondertag-Regel aktiv hat. Gearbeitete Stunden an einem Sondertag zählen normal.",
     "No crafts available for you to commit.": "Es gibt keine Gewerke, die du festschreiben darfst.",
     "{n} recipients without shift-plan permission were removed from this rule.": "{n} Empfänger*innen ohne Dienstplan-Recht wurden aus dieser Regel entfernt.",
-    "The period was limited to one year.": "Der Zeitraum wurde auf ein Jahr begrenzt."
+    "The period was limited to one year.": "Der Zeitraum wurde auf ein Jahr begrenzt.",
+    "Remove filter: only people with open rule violations": "Filter aufheben: nur Personen mit offenen Regelverstößen",
+    "Filter active: only people with open rule violations are shown.": "Filter aktiv: Es werden nur Personen mit offenen Regelverstößen angezeigt.",
+    "No people with open rule violations in this period.": "Keine Personen mit offenen Regelverstößen in diesem Zeitraum.",
+    "Remove filter": "Filter aufheben",
+    "No season is configured – the calendar year is used instead.": "Es ist keine Spielzeit hinterlegt – stattdessen gilt das Kalenderjahr.",
+    "Format \"actual / X\" – X is the contract target. \"–\" means not applicable / not activated. The season is configured in the tool settings under \"Communication & Legal\"; without a season the calendar year applies.": "Format „Ist / X“ – X ist der Vertrags-Zielwert. „–“ bedeutet nicht zutreffend / nicht aktiviert. Die Spielzeit wird in den Tool-Einstellungen unter „Kommunikation & Rechtliches“ konfiguriert; ohne Spielzeit gilt das Kalenderjahr.",
+    "No season is configured – the calendar year {year} is used as the season.": "Es ist keine Spielzeit hinterlegt – als Spielzeit gilt das Kalenderjahr {year}.",
+    "No season is configured – without dates, the calendar year {year} is used as the season.": "Es ist keine Spielzeit hinterlegt – ohne Datum gilt das Kalenderjahr {year} als Spielzeit.",
+    "Without a season window, dashboard and exports use the current calendar year as the season.": "Ohne Spielzeitfenster verwenden Dashboard und Exporte das laufende Kalenderjahr als Spielzeit.",
+    "(from template)": "(Vorlage)",
+    "Not set on this period – the template value applies.": "In diesem Zeitraum nicht gesetzt – es gilt der Wert der Vorlage."
 }

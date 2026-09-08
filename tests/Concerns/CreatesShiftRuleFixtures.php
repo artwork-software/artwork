@@ -166,7 +166,8 @@ trait CreatesShiftRuleFixtures
     }
 
     /**
-     * Spielzeit (playing_time_window) in den GeneralSettings setzen; null/null = nicht konfiguriert.
+     * Spielzeit (playing_time_window) in den GeneralSettings setzen; null/null = nicht konfiguriert
+     * (dann gilt das laufende Kalenderjahr als Spielzeit, siehe SeasonWindowResolver).
      */
     protected function configureSeason(?Carbon $start, ?Carbon $end): void
     {

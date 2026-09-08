@@ -56,7 +56,15 @@
                 <dl class="mt-2 flex flex-wrap gap-x-5 gap-y-1">
                     <div v-for="item in summaryItems" :key="item.label" class="flex items-baseline gap-1">
                         <dt class="text-[11px] text-text-subtle">{{ $t(item.label) }}:</dt>
-                        <dd class="text-xs font-medium text-text">{{ item.value }}</dd>
+                        <dd class="text-xs font-medium text-text">
+                            {{ item.value }}
+                            <!-- 0 auf dem Zeitraum = nicht gesetzt → Vorlagenwert gilt (ContractSettingsResolver) -->
+                            <span v-if="item.inherited"
+                                  class="font-normal text-text-subtle"
+                                  :title="$t('Not set on this period – the template value applies.')">
+                                {{ $t('(from template)') }}
+                            </span>
+                        </dd>
                     </div>
                 </dl>
 
@@ -207,14 +215,24 @@ const formatValue = (key, value) => {
     return value;
 };
 
+// Wirksamer Wert je Feld: Server liefert effective_values (Zuweisung, bei 0 die Vorlage + inherited);
+// ohne diese Angabe (z. B. ohne Vorlage) der rohe Wert der Zuweisung
+const effective = (key) => {
+    const entry = props.assign?.effective_values?.[key];
+    if (entry && typeof entry === 'object') {
+        return { value: entry.value ?? 0, inherited: !!entry.inherited };
+    }
+    return { value: props.assign?.[key] ?? 0, inherited: false };
+};
+
 const summaryItems = computed(() => {
     if (!props.assign) {
         return [];
     }
     const items = [
-        { label: 'Free Full Days Per Week', value: props.assign.free_full_days_per_week ?? 0 },
-        { label: 'Free Half Days Per Week', value: props.assign.free_half_days_per_week ?? 0 },
-        { label: 'Compensation Period (in days)', value: props.assign.compensation_period ?? 0 },
+        { label: 'Free Full Days Per Week', ...effective('free_full_days_per_week') },
+        { label: 'Free Half Days Per Week', ...effective('free_half_days_per_week') },
+        { label: 'Compensation Period (in days)', ...effective('compensation_period') },
         { label: 'Special Day Rule Active', value: yesNo(props.assign.special_day_rule_active) },
         {
             label: 'Overtime rule active',
@@ -225,14 +243,17 @@ const summaryItems = computed(() => {
     ];
     seasonInfoParams
         .filter(param => props.assign[param.activeKey])
-        .forEach(param => items.push({
-            label: param.label,
-            value: param.decimals
-                ? Number(props.assign[param.key] ?? 0).toFixed(param.decimals)
-                : (props.assign[param.key] ?? 0),
-        }));
-    if (Number(props.assign.annual_vacation_days) > 0) {
-        items.push({ label: 'Annual vacation days (per calendar year)', value: props.assign.annual_vacation_days });
+        .forEach(param => {
+            const { value, inherited } = effective(param.key);
+            items.push({
+                label: param.label,
+                value: param.decimals ? Number(value ?? 0).toFixed(param.decimals) : (value ?? 0),
+                inherited,
+            });
+        });
+    const vacation = effective('annual_vacation_days');
+    if (Number(vacation.value) > 0) {
+        items.push({ label: 'Annual vacation days (per calendar year)', ...vacation });
     }
     return items;
 });

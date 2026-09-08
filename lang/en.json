@@ -7981,5 +7981,16 @@
     "A holiday treated as a special day reduces the daily target of a person to 0 (or by the weekday average in three-month mode) if no work was done on that day and the contract has the special day rule active. Hours worked on a special day count normally.": "A holiday treated as a special day reduces the daily target of a person to 0 (or by the weekday average in three-month mode) if no work was done on that day and the contract has the special day rule active. Hours worked on a special day count normally.",
     "No crafts available for you to commit.": "No crafts available for you to commit.",
     "{n} recipients without shift-plan permission were removed from this rule.": "{n} recipients without shift-plan permission were removed from this rule.",
-    "The period was limited to one year.": "The period was limited to one year."
+    "The period was limited to one year.": "The period was limited to one year.",
+    "Remove filter: only people with open rule violations": "Remove filter: only people with open rule violations",
+    "Filter active: only people with open rule violations are shown.": "Filter active: only people with open rule violations are shown.",
+    "No people with open rule violations in this period.": "No people with open rule violations in this period.",
+    "Remove filter": "Remove filter",
+    "No season is configured – the calendar year is used instead.": "No season is configured – the calendar year is used instead.",
+    "Format \"actual / X\" – X is the contract target. \"–\" means not applicable / not activated. The season is configured in the tool settings under \"Communication & Legal\"; without a season the calendar year applies.": "Format \"actual / X\" – X is the contract target. \"–\" means not applicable / not activated. The season is configured in the tool settings under \"Communication & Legal\"; without a season the calendar year applies.",
+    "No season is configured – the calendar year {year} is used as the season.": "No season is configured – the calendar year {year} is used as the season.",
+    "No season is configured – without dates, the calendar year {year} is used as the season.": "No season is configured – without dates, the calendar year {year} is used as the season.",
+    "Without a season window, dashboard and exports use the current calendar year as the season.": "Without a season window, dashboard and exports use the current calendar year as the season.",
+    "(from template)": "(from template)",
+    "Not set on this period – the template value applies.": "Not set on this period – the template value applies."
 }

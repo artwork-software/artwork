@@ -230,14 +230,17 @@ final class ShiftKpiTrackingServiceTest extends TestCase
     }
 
     #[Test]
-    public function days_off_window_follows_the_playing_time_window_and_is_null_without_it(): void
+    public function days_off_window_follows_the_playing_time_window_and_the_calendar_year_without_it(): void
     {
         $settings = app(\Artwork\Modules\GeneralSettings\Models\GeneralSettings::class);
         $settings->playing_time_window_start = '';
         $settings->playing_time_window_end = '';
         $settings->save();
 
-        $this->assertNull($this->service()->getDaysOffFirst26WeeksWindow());
+        // Ohne Spielzeit: Kalenderjahr (Test-Now 2026) -> 01.01.2026 + 26 Wochen - 1 Tag
+        [$from, $to] = $this->service()->getDaysOffFirst26WeeksWindow();
+        $this->assertSame('2026-01-01', $from->toDateString());
+        $this->assertSame('2026-07-01', $to->toDateString());
 
         $settings->playing_time_window_start = '2026-09-01';
         $settings->playing_time_window_end = '2027-08-31';
@@ -249,21 +252,64 @@ final class ShiftKpiTrackingServiceTest extends TestCase
     }
 
     #[Test]
-    public function season_bounds_are_null_when_the_playing_time_window_is_not_configured(): void
+    public function season_bounds_fall_back_to_the_calendar_year_when_the_playing_time_window_is_not_configured(): void
     {
         $settings = app(\Artwork\Modules\GeneralSettings\Models\GeneralSettings::class);
         $settings->playing_time_window_start = '';
         $settings->playing_time_window_end = '';
         $settings->save();
 
-        $this->assertNull($this->service()->getSeasonBounds());
+        $service = $this->service();
+        $this->assertFalse($service->isSeasonConfigured());
 
+        [$start, $end] = $service->getSeasonBounds();
+        $this->assertSame('2026-01-01', $start->toDateString());
+        $this->assertSame('2026-12-31', $end->toDateString());
+
+        $season = $service->getSeason();
+        $this->assertFalse($season['configured']);
+        $this->assertSame('2026-01-01', $season['start']->toDateString());
+        $this->assertSame('2026-12-31', $season['end']->toDateString());
+    }
+
+    #[Test]
+    public function an_invalid_playing_time_window_also_falls_back_to_the_calendar_year(): void
+    {
+        $settings = app(\Artwork\Modules\GeneralSettings\Models\GeneralSettings::class);
+        // Ende vor Beginn -> ungültig -> Kalenderjahr
+        $settings->playing_time_window_start = '2026-07-31';
+        $settings->playing_time_window_end = '2025-08-01';
+        $settings->save();
+
+        $service = $this->service();
+        $this->assertFalse($service->isSeasonConfigured());
+        [$start, $end] = $service->getSeasonBounds();
+        $this->assertSame('2026-01-01', $start->toDateString());
+        $this->assertSame('2026-12-31', $end->toDateString());
+
+        // Nicht parsebar -> ebenfalls Kalenderjahr
+        $settings->playing_time_window_start = 'kein Datum';
+        $settings->playing_time_window_end = '2026-07-31';
+        $settings->save();
+
+        $this->assertFalse(app(ShiftKpiTrackingService::class)->isSeasonConfigured());
+        [$start] = app(ShiftKpiTrackingService::class)->getSeasonBounds();
+        $this->assertSame('2026-01-01', $start->toDateString());
+    }
+
+    #[Test]
+    public function a_valid_playing_time_window_is_used_as_configured(): void
+    {
+        $settings = app(\Artwork\Modules\GeneralSettings\Models\GeneralSettings::class);
         $settings->playing_time_window_start = '2025-08-01';
         $settings->playing_time_window_end = '2026-07-31';
         $settings->save();
 
-        [$start, $end] = app(ShiftKpiTrackingService::class)->getSeasonBounds();
+        $service = app(ShiftKpiTrackingService::class);
+        $this->assertTrue($service->isSeasonConfigured());
+        [$start, $end] = $service->getSeasonBounds();
         $this->assertSame('2025-08-01', $start->toDateString());
         $this->assertSame('2026-07-31', $end->toDateString());
+        $this->assertTrue($service->getSeason()['configured']);
     }
 }

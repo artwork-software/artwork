@@ -55,6 +55,10 @@
                         · {{ $t('Counted until') }} {{ formatDate(data.season.counted_until) }}
                     </span>
                 </p>
+                <!-- Keine Spielzeit in den Tool-Einstellungen → Server rechnet mit dem Kalenderjahr -->
+                <p v-if="data.season.season?.configured === false" class="text-xs text-text-subtle">
+                    {{ $t('No season is configured – the calendar year is used instead.') }}
+                </p>
                 <p class="text-xs text-text-subtle">
                     <template v-if="data.season.snapshot_recalculated_at">
                         {{ $t('Last nightly calculation') }}: {{ formatDateTime(data.season.snapshot_recalculated_at) }} ·
@@ -114,7 +118,7 @@
                         : $t('Show {n} more key figures without target value', { n: hiddenSeasonRowCount }) }}
                 </button>
                 <p class="text-[11px] text-text-subtle">
-                    {{ $t('Format "actual / X" – X is the contract target. "–" means not applicable / not activated. The season is configured in the tool settings under "Communication & Legal".') }}
+                    {{ $t('Format "actual / X" – X is the contract target. "–" means not applicable / not activated. The season is configured in the tool settings under "Communication & Legal"; without a season the calendar year applies.') }}
                 </p>
             </div>
 

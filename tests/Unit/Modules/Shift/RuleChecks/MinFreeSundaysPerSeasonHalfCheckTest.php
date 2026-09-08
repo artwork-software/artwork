@@ -106,14 +106,22 @@ final class MinFreeSundaysPerSeasonHalfCheckTest extends TestCase
     }
 
     #[Test]
-    public function without_configured_season_nothing_happens(): void
+    public function without_configured_season_the_calendar_year_is_the_season(): void
     {
         [$user] = $this->userWithContract();
         $this->configureSeason(null, null);
+        $today = Carbon::today();
 
-        $violations = $this->check->check($this->rule(3), $user, Carbon::today(), Carbon::today()->addDays(14));
+        // Produktentscheidung: ohne Spielzeit-Einstellung gilt das Kalenderjahr – die Prüfung läuft
+        // (keine Exception) und beurteilt das ganze Jahr verbindlich.
+        $covered = $this->check->getCoveredRange($this->rule(3), $today->copy(), $today->copy()->addDays(14));
+        $this->assertSame($today->copy()->startOfYear()->toDateString(), $covered[0]->toDateString());
+        $this->assertSame($today->copy()->endOfYear()->toDateString(), $covered[1]->toDateString());
 
-        $this->assertCount(0, $violations);
+        $violations = $this->check->check($this->rule(3), $user, $today->copy(), $today->copy()->addDays(14));
+        foreach ($violations as $violation) {
+            $this->assertSame($today->year, Carbon::parse($violation->violation_data['half_start'])->year);
+        }
     }
 
     #[Test]

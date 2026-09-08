@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use Artwork\Modules\BusinessIntelligence\Models\BiAudienceCategory;
 use Artwork\Modules\BusinessIntelligence\Models\BiEventTypeTag;
-use Artwork\Modules\GeneralSettings\Models\GeneralSettings;
+use Artwork\Modules\GeneralSettings\Services\SeasonWindowResolver;
 use Artwork\Modules\ModuleSettings\Services\ModuleSettingsService;
 use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Artwork\Modules\Project\Enum\ProjectTabComponentEnum;
@@ -23,7 +23,7 @@ class BiComponentSettingsController extends Controller
     public function __construct(
         private readonly ModuleSettingsService $moduleSettingsService,
         private readonly ProjectTabService $projectTabService,
-        private readonly GeneralSettings $generalSettings
+        private readonly SeasonWindowResolver $seasonWindow
     ) {
     }
 
@@ -76,8 +76,8 @@ class BiComponentSettingsController extends Controller
         $roomsTotal = Room::query()->count();
         $roomsWithCapacity = Room::query()->where('capacity', '>', 0)->count();
 
-        $seasonSet = !empty($this->generalSettings->playing_time_window_start)
-            && !empty($this->generalSettings->playing_time_window_end);
+        // Gleiche Gültigkeitsregel wie Dashboard/Export (SeasonWindowResolver): ungültiges Fenster = nicht gesetzt
+        $seasonSet = $this->seasonWindow->isConfigured();
 
         $dashboardUsers = User::permission(PermissionEnum::BI_DASHBOARD->value)->count();
         $exportUsers = User::permission(PermissionEnum::BI_EXPORT->value)->count();
@@ -143,7 +143,7 @@ class BiComponentSettingsController extends Controller
                 'done' => $seasonSet,
                 'detail' => $seasonSet
                     ? 'Default period for dashboard and exports is set.'
-                    : 'Without a season window, dashboard and exports evaluate all periods.',
+                    : 'Without a season window, dashboard and exports use the current calendar year as the season.',
                 'href' => route('tool.communication-and-legal'),
                 'actionLabel' => 'Open communication & legal',
             ],

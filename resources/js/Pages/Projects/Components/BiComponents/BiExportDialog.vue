@@ -109,8 +109,9 @@
                 </div>
                 <p class="text-xs text-text-subtle">
                     {{ dateHint }}
-                    <span v-if="!dateFrom && !dateTo && !options.seasonFrom && !options.seasonTo" class="text-warning">
-                        {{ $t('No season window is configured — without dates, all events count.') }}
+                    <!-- Kein Spielzeitfenster: ohne Datum gilt serverseitig das Kalenderjahr (Fallback) -->
+                    <span v-if="!dateFrom && !dateTo && !options.seasonFrom && !options.seasonTo" class="text-info">
+                        {{ $t('No season is configured – without dates, the calendar year {year} is used as the season.', { year: options.seasonFallbackYear ?? new Date().getFullYear() }) }}
                     </span>
                 </p>
 

@@ -206,10 +206,38 @@ class ShiftRuleController extends Controller
                 'is_active' => true,
             ],
             $validated['contract_ids'] ?? null,
-            $validated['user_ids'] ?? null
+            $this->eligibleNotificationUserIds($validated['user_ids'] ?? null)
         );
 
         return redirect()->back()->with('success', __('Rule successfully created'));
+    }
+
+    /**
+     * Empfänger*innen „Benachrichtigen" auf berechtigte Personen einschränken (Dienstplan-Sicht-/
+     * Planungsrecht oder Admin, siehe ShiftRuleNotificationRecipientService). Ohne diesen Filter
+     * überlebten nicht (mehr) berechtigte Altzuordnungen jedes Speichern, obwohl der Dialog sie
+     * gar nicht anzeigt — sie würden beim Versand ohnehin übersprungen, hier fallen sie weg.
+     *
+     * @param array<int, int|string>|null $userIds
+     * @return array<int, int>|null null bleibt null (Semantik von createRule/updateRule unverändert)
+     */
+    private function eligibleNotificationUserIds(?array $userIds): ?array
+    {
+        if ($userIds === null) {
+            return null;
+        }
+
+        $ids = array_values(array_unique(array_map('intval', $userIds)));
+        if ($ids === []) {
+            return [];
+        }
+
+        return app(ShiftRuleNotificationRecipientService::class)
+            ->eligibleUsersQuery()
+            ->whereIn('users.id', $ids)
+            ->pluck('users.id')
+            ->map(static fn ($id): int => (int) $id)
+            ->all();
     }
 
     /**
@@ -297,7 +325,7 @@ class ShiftRuleController extends Controller
                 'default_compensation_deadline_days' => $validated['default_compensation_deadline_days'] ?? null,
             ],
             $validated['contract_ids'] ?? null,
-            $validated['user_ids'] ?? null
+            $this->eligibleNotificationUserIds($validated['user_ids'] ?? null)
         );
 
         return redirect()->back()->with('success', __('Rule successfully updated'));
@@ -383,21 +411,29 @@ class ShiftRuleController extends Controller
     }
 
     /**
-     * Filter der Verstoßliste/-exports aus der Query. Status-Default: aktiv; Zeitraum optional
-     * (Liste: ohne Zeitraum = alle aktiven; Export: Pflicht, siehe exportViolations()).
+     * Filter der Verstoßliste/-exports aus der Query. Status-Default: aktiv.
+     *
+     * Liste (Inertia-GET, $forExport = false): darf nicht mit 422 antworten — Inertia würde nur stumm
+     * zurückleiten (die Seite rendert keine Fehler). Deshalb keine exists-Regeln (unbekannte IDs
+     * liefern eine leere Liste) und ein Zeitraum länger als ein Jahr wird auf von + 366 Tage begrenzt
+     * (period_clamped = true, die Seite zeigt einen Hinweis); ohne Zeitraum = alle Einträge des Status.
+     *
+     * Export ($forExport = true): strikt — exists-Regeln und Zeitraum-Deckel mit 422; fehlende Grenzen
+     * werden VOR der Prüfung aufgefüllt (ohne Angabe aktueller Monat, eine Grenze → höchstens ein Jahr),
+     * damit ein Export nie unbegrenzt läuft.
      *
      * @return array{
      *     craft_ids: array<int, int>, user_id: int|null, shift_rule_id: int|null, severity: string|null,
-     *     status: string, date_from: string|null, date_to: string|null, sort: string
+     *     status: string, date_from: string|null, date_to: string|null, sort: string, period_clamped: bool
      * }
      */
-    private function violationFilters(Request $request): array
+    private function violationFilters(Request $request, bool $forExport = false): array
     {
         $validated = $request->validate([
             'craft_id' => 'nullable|array|max:100',
-            'craft_id.*' => 'integer|exists:crafts,id',
-            'user_id' => 'nullable|integer|exists:users,id',
-            'shift_rule_id' => 'nullable|integer|exists:shift_rules,id',
+            'craft_id.*' => $forExport ? 'integer|exists:crafts,id' : 'integer',
+            'user_id' => $forExport ? 'nullable|integer|exists:users,id' : 'nullable|integer',
+            'shift_rule_id' => $forExport ? 'nullable|integer|exists:shift_rules,id' : 'nullable|integer',
             'severity' => 'nullable|in:warning,error',
             'status' => 'nullable|in:active,resolved,ignored,all',
             'date_from' => 'nullable|date_format:Y-m-d',
@@ -406,8 +442,13 @@ class ShiftRuleController extends Controller
             'per_page' => 'nullable|integer|in:25,50,100',
         ]);
 
-        // Zeitraum-Deckel (Liste + Export): höchstens ein Jahr
-        ExportPeriodLimit::assertWithinLimit($validated['date_from'] ?? null, $validated['date_to'] ?? null);
+        if ($forExport) {
+            // Defaults VOR dem Deckel: eine fehlende Grenze macht den Export sonst unbegrenzt
+            [$from, $to] = ExportPeriodLimit::resolveBounds($validated['date_from'] ?? null, $validated['date_to'] ?? null);
+            $period = ['date_from' => $from->toDateString(), 'date_to' => $to->toDateString(), 'period_clamped' => false];
+        } else {
+            $period = ExportPeriodLimit::clampForList($validated['date_from'] ?? null, $validated['date_to'] ?? null);
+        }
 
         return [
             'craft_ids' => array_values(array_filter(array_map('intval', (array) ($validated['craft_id'] ?? [])))),
@@ -415,9 +456,10 @@ class ShiftRuleController extends Controller
             'shift_rule_id' => !empty($validated['shift_rule_id']) ? (int) $validated['shift_rule_id'] : null,
             'severity' => $validated['severity'] ?? null,
             'status' => $validated['status'] ?? 'active',
-            'date_from' => $validated['date_from'] ?? null,
-            'date_to' => $validated['date_to'] ?? null,
+            'date_from' => $period['date_from'],
+            'date_to' => $period['date_to'],
             'sort' => $validated['sort'] ?? 'desc',
+            'period_clamped' => $period['period_clamped'],
         ];
     }
 
@@ -474,14 +516,13 @@ class ShiftRuleController extends Controller
     }
 
     /**
-     * Excel-Export der Verstöße (Filter wie die Liste, Zeitraum Pflicht — Default aktueller Monat).
+     * Excel-Export der Verstöße (Filter wie die Liste, Zeitraum Pflicht — Default aktueller Monat,
+     * höchstens ein Jahr, sonst 422; siehe violationFilters($forExport = true)).
      * Dateiname verstoesse_YYYY-MM-DD_bis_YYYY-MM-DD.xlsx, Query wird in Chunks gelesen.
      */
     public function exportViolations(Request $request): \Symfony\Component\HttpFoundation\BinaryFileResponse
     {
-        $filters = $this->violationFilters($request);
-        $filters['date_from'] = $filters['date_from'] ?? Carbon::today()->startOfMonth()->toDateString();
-        $filters['date_to'] = $filters['date_to'] ?? Carbon::today()->endOfMonth()->toDateString();
+        $filters = $this->violationFilters($request, true);
 
         $export = new ShiftRuleViolationsExcelExport(
             app(ShiftRuleViolationRepository::class),

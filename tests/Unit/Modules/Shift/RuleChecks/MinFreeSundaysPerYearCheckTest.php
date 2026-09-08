@@ -4,6 +4,7 @@ namespace Tests\Unit\Modules\Shift\RuleChecks;
 
 use Artwork\Modules\Shift\Models\ShiftRule;
 use Artwork\Modules\Shift\RuleChecks\MinFreeSundaysPerYearCheck;
+use Artwork\Modules\Shift\RuleChecks\ShiftRuleCheckContext;
 use Carbon\Carbon;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\Concerns\CreatesShiftRuleFixtures;
@@ -148,5 +149,37 @@ final class MinFreeSundaysPerYearCheckTest extends TestCase
 
         $this->assertSame("{$year}-01-01", $from->toDateString());
         $this->assertSame("{$year}-12-31", $to->toDateString());
+    }
+
+    /**
+     * Das Jahresfenster darf den gemeinsamen Datenkontext nicht auf ein Jahr aufblähen (kein
+     * Kontextbeitrag); mit einem schmalen Kontext fällt der Check für das Jahr auf Direktabfragen zurück
+     * und liefert dasselbe Ergebnis wie ohne Kontext.
+     */
+    #[Test]
+    public function context_range_is_null_and_a_narrow_context_does_not_change_the_result(): void
+    {
+        [$user] = $this->userWithContract();
+        $year = $this->nextYear();
+        $yearEnd = Carbon::create($year, 12, 31);
+        $blockedUntil = Carbon::create($year, 12, 10);
+        $this->individualTimeFor($user, Carbon::create($year, 1, 1), null, null, 0, $blockedUntil);
+        $expectedPossible = $this->sundaysBetween($blockedUntil->copy()->addDay(), $yearEnd);
+        $rule = $this->rule(0.0);
+        $start = Carbon::create($year, 3, 1);
+        $end = Carbon::create($year, 3, 14);
+
+        $this->assertNull($this->check->getContextRange($rule, $start->copy(), $end->copy()));
+
+        $this->check->setContext(ShiftRuleCheckContext::forRange($user, $start->copy(), $end->copy()));
+        try {
+            $violations = $this->check->check($rule, $user, $start->copy(), $end->copy());
+        } finally {
+            $this->check->setContext(null);
+        }
+
+        $this->assertCount(1, $violations);
+        $this->assertSame(0, $violations->first()->violation_data['have']);
+        $this->assertSame($expectedPossible, $violations->first()->violation_data['possible']);
     }
 }

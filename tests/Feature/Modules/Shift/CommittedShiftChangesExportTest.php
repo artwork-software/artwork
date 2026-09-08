@@ -181,4 +181,65 @@ final class CommittedShiftChangesExportTest extends FeatureTestCase
             ->assertStatus(422)
             ->assertJsonValidationErrors(['date_to']);
     }
+
+    /**
+     * @return array<int, int>
+     */
+    private function exportedIds(string $filename): array
+    {
+        $ids = [];
+        Excel::assertDownloaded($filename, function (CommittedShiftChangesExcelExport $export) use (&$ids): bool {
+            $ids = $export->query()->pluck('id')->map(fn ($id) => (int) $id)->all();
+
+            return true;
+        });
+
+        return $ids;
+    }
+
+    #[Test]
+    public function export_without_period_is_limited_to_the_current_month(): void
+    {
+        Excel::fake();
+        $this->actingAsAdmin();
+        $monthStart = now()->startOfMonth();
+        $inMonth = $this->makeChange(['changed_at' => $monthStart->copy()->addDays(2)->setTime(10, 0)]);
+        $previousMonth = $this->makeChange(['changed_at' => $monthStart->copy()->subDay()->setTime(10, 0)]);
+
+        $this->get(route('committed-shift-changes.export'))->assertOk();
+
+        $ids = $this->exportedIds(sprintf(
+            'aenderungen_%s_bis_%s.xlsx',
+            $monthStart->toDateString(),
+            now()->endOfMonth()->toDateString()
+        ));
+        $this->assertContains($inMonth->id, $ids);
+        $this->assertNotContains($previousMonth->id, $ids, 'Export ohne Zeitraum ist nicht auf den Monat begrenzt');
+    }
+
+    #[Test]
+    public function export_with_a_single_bound_is_limited_to_one_year(): void
+    {
+        Excel::fake();
+        $this->actingAsAdmin();
+        $inside = $this->makeChange(['changed_at' => '2020-06-01 10:00:00']);
+        $lastDay = $this->makeChange(['changed_at' => '2021-01-01 10:00:00']);
+        $afterCap = $this->makeChange(['changed_at' => '2021-01-02 10:00:00']);
+        $beforeStart = $this->makeChange(['changed_at' => '2019-12-31 10:00:00']);
+
+        // Nur "von": bis = von + 366 Tage
+        $this->get(route('committed-shift-changes.export', ['date_from' => '2020-01-01']))->assertOk();
+        $ids = $this->exportedIds('aenderungen_2020-01-01_bis_2021-01-01.xlsx');
+        $this->assertContains($inside->id, $ids);
+        $this->assertContains($lastDay->id, $ids);
+        $this->assertNotContains($afterCap->id, $ids, 'Export mit nur "von" ist nach oben unbegrenzt');
+        $this->assertNotContains($beforeStart->id, $ids);
+
+        // Nur "bis": von = bis − 366 Tage (2020 ist ein Schaltjahr)
+        $this->get(route('committed-shift-changes.export', ['date_to' => '2021-01-01']))->assertOk();
+        $ids = $this->exportedIds('aenderungen_2020-01-01_bis_2021-01-01.xlsx');
+        $this->assertContains($inside->id, $ids);
+        $this->assertNotContains($beforeStart->id, $ids, 'Export mit nur "bis" ist nach unten unbegrenzt');
+        $this->assertNotContains($afterCap->id, $ids);
+    }
 }

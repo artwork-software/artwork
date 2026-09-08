@@ -208,6 +208,40 @@ final class ShiftRuleViolationsExportTest extends FeatureTestCase
     }
 
     #[Test]
+    public function export_with_a_single_bound_is_limited_to_one_year(): void
+    {
+        Excel::fake();
+        $this->planner();
+        $rule = ShiftRule::factory()->create(['trigger_type' => 'maxWorkingHoursOnDay', 'individual_number_value' => 8]);
+        $user = User::factory()->create();
+        $inside = $this->violation($user, $rule, ['violation_date' => '2026-06-01']);
+        $afterCap = $this->violation($user, $rule, ['violation_date' => '2027-01-03']);
+        $beforeStart = $this->violation($user, $rule, ['violation_date' => '2025-12-29']);
+
+        // Nur "von": bis = von + 366 Tage (Defaults greifen VOR dem Deckel, kein unbegrenzter Export)
+        $this->get(route('shift-rules.violations.export', ['date_from' => '2026-01-01']))->assertOk();
+        Excel::assertDownloaded(
+            'verstoesse_2026-01-01_bis_2027-01-02.xlsx',
+            function (ShiftRuleViolationsExcelExport $export) use ($inside, $afterCap): bool {
+                $ids = $export->query()->pluck('id')->all();
+
+                return in_array($inside->id, $ids, true) && !in_array($afterCap->id, $ids, true);
+            }
+        );
+
+        // Nur "bis": von = bis − 366 Tage
+        $this->get(route('shift-rules.violations.export', ['date_to' => '2026-12-31']))->assertOk();
+        Excel::assertDownloaded(
+            'verstoesse_2025-12-30_bis_2026-12-31.xlsx',
+            function (ShiftRuleViolationsExcelExport $export) use ($inside, $beforeStart): bool {
+                $ids = $export->query()->pluck('id')->all();
+
+                return in_array($inside->id, $ids, true) && !in_array($beforeStart->id, $ids, true);
+            }
+        );
+    }
+
+    #[Test]
     public function violation_filters_validate_referenced_ids(): void
     {
         $this->planner();

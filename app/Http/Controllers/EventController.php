@@ -23,6 +23,7 @@ use Artwork\Modules\Calendar\Services\ShiftCalendarService;
 use Artwork\Modules\Calendar\Services\ShiftPlanService;
 use Artwork\Modules\Change\Services\ChangeService;
 use Artwork\Modules\Craft\Models\Craft;
+use Artwork\Modules\Craft\Services\CraftScopeService;
 use Artwork\Modules\Craft\Services\CraftService;
 use Artwork\Modules\DayService\Services\DayServicesService;
 use Artwork\Modules\Event\Enum\ShiftPlanWorkerSortEnum;
@@ -992,6 +993,10 @@ class EventController extends Controller
                 ->without(['craftShiftPlaner'])
                 ->orderBy('position')
                 ->get(),
+            // Gewerke, die die Person festschreiben/planen darf (CraftScopeService; null = Admin, alle).
+            // Das Festschreibungs-Modal filtert damit seine Gewerksliste — sonst liefe „alle Gewerke
+            // auswählen" bei Nicht-Admins in den 422 aus CommitShiftsRequest.
+            'plannableCraftIds' => static fn (): ?array => app(CraftScopeService::class)->plannableCraftIdsFor($user),
             'eventTypes' => EventType::all(),
             'eventStatuses' => EventStatus::orderBy('order')->get(),
             'event_properties' => EventProperty::all(),

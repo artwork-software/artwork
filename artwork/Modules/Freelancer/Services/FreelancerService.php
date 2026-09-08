@@ -250,7 +250,6 @@ readonly class FreelancerService
                     static fn($vacations) => Vacation::attachSeriesDateBounds($vacations)
                 )
             )
-            ->setShifts(fn() => $this->getShiftsWithEventsOrderedByStart($freelancer))
             ->setAvailabilities(
                 tap(
                     $this->getAvailabilitiesByMonthOrderedByDateAscending($freelancer, $calendarMonth),
@@ -285,11 +284,6 @@ readonly class FreelancerService
     public function getAvailabilitiesByMonthOrderedByDateAscending(int|Freelancer $freelancer, Carbon $monthDate): Collection
     {
         return $this->freelancerRepository->getAvailabilitiesByMonthOrderedByDateAscending($freelancer, $monthDate);
-    }
-
-    public function getShiftsWithEventsOrderedByStart(int|Freelancer $freelancer): Collection
-    {
-        return $this->freelancerRepository->getShiftsWithEventsOrderedByStart($freelancer);
     }
 
     public function searchFreelancers(string $search): SupportCollection

@@ -218,7 +218,6 @@ export default defineComponent({
     },
     props: [
         'serviceProvider',
-        'shifts',
         'dateValue',
         'wholeWeekDatePeriod',
         'eventsWithTotalPlannedWorkingHours',

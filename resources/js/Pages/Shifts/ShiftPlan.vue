@@ -71,6 +71,7 @@
                     @openHistoryModal="openHistoryModal"
                     :user_filters="user_filters"
                     :crafts="craftsResolved"
+                    :plannable-craft-ids="plannableCraftIds"
                     :projectNameUsedForProjectTimePeriod="projectNameUsedForProjectTimePeriod"
                     :firstProjectShiftTabId="firstProjectShiftTabId"
                     @select-go-to-next-mode="selectGoToNextMode"
@@ -1207,6 +1208,8 @@ type ShiftPlanProps = {
     freelancersForShifts?: any[]
     serviceProvidersForShifts?: any[]
     crafts?: any[]
+    // Gewerke, die die Person festschreiben darf (null = Admin, alle) — nur für das Festschreibungs-Modal
+    plannableCraftIds?: number[] | null
     shiftQualifications?: any[]
     dayServices?: any[]
     firstProjectShiftTabId?: number | null
@@ -1237,6 +1240,7 @@ const props = withDefaults(defineProps<ShiftPlanProps>(), {
     freelancersForShifts: () => [],
     serviceProvidersForShifts: () => [],
     crafts: () => [],
+    plannableCraftIds: null,
     shiftQualifications: () => [],
     dayServices: () => [],
     firstProjectShiftTabId: null,

@@ -298,6 +298,58 @@ final class ShiftRuleViolationsListTest extends FeatureTestCase
     }
 
     #[Test]
+    public function list_clamps_periods_longer_than_one_year_instead_of_redirecting(): void
+    {
+        $this->planner();
+        $rule = ShiftRule::factory()->create();
+        $user = User::factory()->create();
+        $inside = $this->violation($user, $rule, ['violation_date' => '2025-06-01']);
+        $beyondCap = $this->violation($user, $rule, ['violation_date' => '2026-03-01']);
+
+        // Inertia-GET: kein 422/Redirect (die Seite rendert keine Fehler), sondern bis = von + 366 Tage
+        $this->get(route('shift-rules.pending', ['date_from' => '2025-01-01', 'date_to' => '2026-06-30']))
+            ->assertOk()
+            ->assertInertia(fn (AssertableInertia $page) => $page
+                ->component('ShiftWarnings/Violations')
+                ->where('filters.date_from', '2025-01-01')
+                ->where('filters.date_to', '2026-01-02')
+                ->where('filters.period_clamped', true)
+                ->has('violations.data', 1)
+                ->where('violations.data.0.id', $inside->id));
+
+        $this->assertSame('active', $beyondCap->fresh()->status);
+
+        // Genau ein Jahr bleibt unangetastet
+        $this->get(route('shift-rules.pending', ['date_from' => '2025-01-01', 'date_to' => '2026-01-02']))
+            ->assertOk()
+            ->assertInertia(fn (AssertableInertia $page) => $page
+                ->where('filters.date_to', '2026-01-02')
+                ->where('filters.period_clamped', false));
+    }
+
+    #[Test]
+    public function list_treats_unknown_ids_as_empty_result_instead_of_redirecting(): void
+    {
+        $this->planner();
+        $rule = ShiftRule::factory()->create();
+        $this->violation(User::factory()->create(), $rule);
+
+        // Veraltete IDs (z. B. gelöschte Person/Regel in einer gespeicherten URL) liefern eine leere Liste
+        $this->get(route('shift-rules.pending', [
+            'user_id' => 999999,
+            'shift_rule_id' => 999999,
+            'craft_id' => [999999],
+        ]))
+            ->assertOk()
+            ->assertInertia(fn (AssertableInertia $page) => $page
+                ->component('ShiftWarnings/Violations')
+                ->where('filters.user_id', 999999)
+                ->where('filters.shift_rule_id', 999999)
+                ->where('filters.craft_ids', [999999])
+                ->has('violations.data', 0));
+    }
+
+    #[Test]
     public function bulk_ignore_ignores_selected_active_violations_with_reason(): void
     {
         $planner = $this->planner();

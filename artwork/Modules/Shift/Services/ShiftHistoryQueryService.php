@@ -18,7 +18,8 @@ class ShiftHistoryQueryService
 {
     /**
      * Filter aus Query-Parametern (craftId, shiftId, start_date, end_date, search, sort).
-     * Wirft ValidationException (422), wenn der Zeitraum länger als ein Jahr ist.
+     * Zeitraum über ExportPeriodLimit::resolveBounds(): ohne Angabe aktueller Monat, eine Grenze →
+     * höchstens ein Jahr ab/bis dahin; länger als ein Jahr → ValidationException (422).
      *
      * @param array<string, mixed> $params
      * @return array{
@@ -28,18 +29,13 @@ class ShiftHistoryQueryService
      */
     public function resolveFilters(array $params): array
     {
-        $timezone = config('app.timezone', 'Europe/Berlin');
-        $now = Carbon::now($timezone);
-
-        $startDate = !empty($params['start_date'])
-            ? Carbon::parse((string) $params['start_date'], $timezone)->startOfDay()
-            : $now->copy()->startOfMonth()->startOfDay();
-        $endDate = !empty($params['end_date'])
-            ? Carbon::parse((string) $params['end_date'], $timezone)->endOfDay()
-            : $now->copy()->endOfMonth()->endOfDay();
-
-        // Zeitraum-Deckel (Modal + Excel-Export): höchstens ein Jahr, sonst 422
-        ExportPeriodLimit::assertWithinLimit($startDate, $endDate, 'end_date');
+        // Zeitraum-Deckel (Modal + Excel-Export): fehlende Grenzen auffüllen, höchstens ein Jahr, sonst 422
+        [$startDate, $endDate] = ExportPeriodLimit::resolveBounds(
+            !empty($params['start_date']) ? (string) $params['start_date'] : null,
+            !empty($params['end_date']) ? (string) $params['end_date'] : null,
+            'end_date',
+            config('app.timezone', 'Europe/Berlin')
+        );
 
         return [
             'craft_id' => max(0, (int) ($params['craftId'] ?? 0)),

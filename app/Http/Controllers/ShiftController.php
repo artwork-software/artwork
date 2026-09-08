@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\SaveShiftMultiEditRequest;
-use Artwork\Core\Services\HelperService;
 use Artwork\Modules\Availability\Models\AvailabilitiesConflict;
 use Artwork\Modules\Availability\Services\AvailabilityConflictService;
 use Artwork\Modules\Change\Services\ChangeService;
@@ -29,6 +28,7 @@ use Artwork\Modules\Shift\Events\AssignUserToShift;
 use Artwork\Modules\Shift\Events\CreatedShiftInShiftPlan;
 use Artwork\Modules\Shift\Events\DestroyShift;
 use Artwork\Modules\Shift\Events\MultiShiftCreateInShiftPlan;
+use Artwork\Modules\Shift\Rules\IsoWeekExists;
 use Artwork\Modules\Shift\Events\RemoveEntityFormShiftEvent;
 use Artwork\Modules\Shift\Events\UpdateEventShiftInShiftPlan;
 use Artwork\Modules\Shift\Events\UpdateShiftInShiftPlan;
@@ -868,23 +868,14 @@ class ShiftController extends Controller
         CraftScopeService $craftScopeService
     ): JsonResponse {
         $validated = $request->validate([
-            'source_week' => ['required', 'integer', 'min:1', 'max:53'],
+            // KW 53 gibt es nur in 53-Wochen-Jahren — sonst würde Carbon still in KW 1 des Folgejahres rollen
+            'source_week' => ['required', 'integer', 'min:1', 'max:53', new IsoWeekExists('source_year')],
             'source_year' => ['required', 'integer', 'min:2000', 'max:2100'],
             'craft_ids' => ['nullable', 'array', 'max:100'],
             'craft_ids.*' => ['integer', 'exists:crafts,id'],
             'room_ids' => ['nullable', 'array', 'max:100'],
             'room_ids.*' => ['integer', 'exists:rooms,id'],
         ]);
-
-        // KW 53 gibt es nur in 53-Wochen-Jahren — sonst würde Carbon still in KW 1 des Folgejahres rollen
-        if (!HelperService::isoWeekExists((int) $validated['source_week'], (int) $validated['source_year'])) {
-            throw ValidationException::withMessages([
-                'source_week' => __('Calendar week :week does not exist in :year.', [
-                    'week' => (int) $validated['source_week'],
-                    'year' => (int) $validated['source_year'],
-                ]),
-            ]);
-        }
 
         // Gewerke auf die planbare Menge der Person zuschneiden (leer = genau diese Menge; Admin = alle)
         $craftIds = $craftScopeService->restrictToPlannable(

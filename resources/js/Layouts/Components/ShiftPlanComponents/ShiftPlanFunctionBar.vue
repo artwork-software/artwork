@@ -334,6 +334,7 @@
     <ShiftCommitDateSelectModal
         :date-array="dateValue"
         :crafts="crafts"
+        :plannable-craft-ids="plannableCraftIds"
         v-if="showShiftCommitDateSelectModal"
         @close="showShiftCommitDateSelectModal = false"
 
@@ -434,6 +435,11 @@ const props = defineProps({
     rooms: Object,
     user_filters: Object,
     crafts: Array,
+    // Gewerke, die die Person festschreiben darf (null = Admin, alle) — Filter für das Festschreibungs-Modal
+    plannableCraftIds: {
+        type: Array,
+        default: null
+    },
     projectNameUsedForProjectTimePeriod: String,
     firstProjectShiftTabId: [Number, String],
     eventTypes: Array,

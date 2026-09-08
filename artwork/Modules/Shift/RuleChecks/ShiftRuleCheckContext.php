@@ -38,6 +38,12 @@ final class ShiftRuleCheckContext
     /** @var array<string, int>|null 'Y-m-d' => Schichtminuten (Pause einmal am ersten Schichttag) */
     private ?array $shiftMinutesPerDay = null;
 
+    /** @var array<string, list<int>>|null effektiver Tag 'Y-m-d' => Positionen in shifts() */
+    private ?array $shiftIndexByDay = null;
+
+    /** @var array<string, list<int>>|null Tag 'Y-m-d' => Positionen in individualTimes() */
+    private ?array $individualTimeIndexByDay = null;
+
     private ?SpecialDayService $specialDayService = null;
 
     public function __construct(
@@ -95,6 +101,134 @@ final class ShiftRuleCheckContext
             ->orderBy('shifts.start_date')
             ->orderBy('shifts.start')
             ->get();
+    }
+
+    /**
+     * Schichten, deren EFFEKTIVER Zeitraum (Pivot-Datum vor Schichtdatum, Über-Mitternacht-Schichten
+     * belegen beide Tage) den Bereich [$fromKey, $toKey] berührt — in der Reihenfolge von shifts().
+     * Bedient aus einem einmal aufgebauten Tagesindex: die effektiven Tage werden je Schicht EINMAL
+     * berechnet, eine Tagesabfrage kostet danach nur noch Array-Zugriffe statt eines Filters über alle
+     * Schichten des Kontexts.
+     *
+     * @return Collection<int, Shift>
+     */
+    public function shiftsBetween(string $fromKey, string $toKey): Collection
+    {
+        $shifts = $this->shifts();
+        $this->shiftIndexByDay ??= $this->buildDayIndex(
+            $shifts->all(),
+            static fn (Shift $shift): array => self::effectiveShiftDateKeys($shift)
+        );
+
+        return $this->pickBetween($shifts, $this->shiftIndexByDay, $fromKey, $toKey);
+    }
+
+    /**
+     * Individualzeiten, die den Bereich [$fromKey, $toKey] berühren — in der Reihenfolge von individualTimes().
+     *
+     * @return Collection<int, \Artwork\Modules\IndividualTimes\Models\IndividualTime>
+     */
+    public function individualTimesBetween(string $fromKey, string $toKey): Collection
+    {
+        $individualTimes = $this->individualTimes();
+        $this->individualTimeIndexByDay ??= $this->buildDayIndex(
+            $individualTimes->all(),
+            static fn ($it): array => [
+                Carbon::parse((string) $it->start_date)->toDateString(),
+                Carbon::parse((string) ($it->end_date ?: $it->start_date))->toDateString(),
+            ]
+        );
+
+        return $this->pickBetween($individualTimes, $this->individualTimeIndexByDay, $fromKey, $toKey);
+    }
+
+    /**
+     * Effektive Datumsgrenzen einer Schicht für die Person: Pivot-Datum vor Schichtdatum.
+     *
+     * @return array{0: string, 1: string} ['Y-m-d' Start, 'Y-m-d' Ende]
+     */
+    public static function effectiveShiftDateKeys(Shift $shift): array
+    {
+        $pivot = $shift->pivot ?? null;
+        $start = $pivot?->start_date ?: $shift->start_date;
+        $end = $pivot?->end_date ?: $shift->end_date;
+
+        return [
+            Carbon::parse((string) $start)->toDateString(),
+            Carbon::parse((string) ($end ?: $start))->toDateString(),
+        ];
+    }
+
+    /**
+     * Tagesindex: jeder Eintrag landet unter jedem Tag seines Zeitraums [startKey, endKey] (Position in
+     * der Ausgangsliste). Verdrehte Grenzen (Ende vor Beginn) zählen nur am Starttag.
+     *
+     * @param list<mixed> $items
+     * @param callable(mixed): array{0: string, 1: string} $dateKeysOf
+     * @return array<string, list<int>>
+     */
+    private function buildDayIndex(array $items, callable $dateKeysOf): array
+    {
+        $index = [];
+        foreach ($items as $position => $item) {
+            [$startKey, $endKey] = $dateKeysOf($item);
+            $index[$startKey][] = $position;
+            if ($endKey <= $startKey) {
+                continue;
+            }
+            $cursor = Carbon::parse($startKey)->addDay();
+            while ($cursor->toDateString() <= $endKey) {
+                $index[$cursor->toDateString()][] = $position;
+                $cursor->addDay();
+            }
+        }
+
+        return $index;
+    }
+
+    /**
+     * Einträge, die im Index unter einem Tag von $fromKey bis $toKey stehen — dedupliziert, in
+     * Ausgangsreihenfolge. Bei sehr großen Bereichen (mehr Tage als Indexeinträge) wird statt der Tage
+     * der Index durchlaufen.
+     *
+     * @param array<string, list<int>> $index
+     */
+    private function pickBetween(Collection $items, array $index, string $fromKey, string $toKey): Collection
+    {
+        if ($toKey < $fromKey || $index === []) {
+            return collect();
+        }
+
+        $positions = [];
+        $from = Carbon::parse($fromKey);
+        $spanDays = (int) $from->diffInDays(Carbon::parse($toKey)) + 1;
+        if ($spanDays <= count($index)) {
+            $cursor = $from;
+            for ($i = 0; $i < $spanDays; $i++) {
+                foreach ($index[$cursor->toDateString()] ?? [] as $position) {
+                    $positions[$position] = true;
+                }
+                $cursor->addDay();
+            }
+        } else {
+            foreach ($index as $dayKey => $dayPositions) {
+                if ($dayKey < $fromKey || $dayKey > $toKey) {
+                    continue;
+                }
+                foreach ($dayPositions as $position) {
+                    $positions[$position] = true;
+                }
+            }
+        }
+
+        if ($positions === []) {
+            return collect();
+        }
+        ksort($positions);
+
+        $all = $items->all();
+
+        return collect(array_map(static fn (int $position) => $all[$position], array_keys($positions)));
     }
 
     /**

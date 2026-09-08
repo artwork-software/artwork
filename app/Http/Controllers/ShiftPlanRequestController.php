@@ -1401,11 +1401,16 @@ class ShiftPlanRequestController extends Controller
 
         $craft = !empty($validated['craft_id']) ? Craft::find($validated['craft_id']) : null;
         $filter = $validated['filter'] ?? 'all';
-        $dateFrom = $validated['date_from'] ?? null;
-        $dateTo = $validated['date_to'] ?? null;
 
-        // Zeitraum-Deckel für den Export: höchstens ein Jahr
-        \Artwork\Modules\Shift\Support\ExportPeriodLimit::assertWithinLimit($dateFrom, $dateTo);
+        // Zeitraum-Deckel für den Export: fehlende Grenzen werden aufgefüllt (ohne Angabe: aktueller
+        // Monat, eine Grenze: höchstens ein Jahr ab/bis dahin), länger als ein Jahr → 422.
+        // Der Export ist damit nie unbegrenzt über die ganze Tabelle.
+        [$from, $to] = \Artwork\Modules\Shift\Support\ExportPeriodLimit::resolveBounds(
+            $validated['date_from'] ?? null,
+            $validated['date_to'] ?? null
+        );
+        $dateFrom = $from->toDateString();
+        $dateTo = $to->toDateString();
 
         $query = $this->committedShiftChangesBaseQuery(
             $craft,
@@ -1414,19 +1419,15 @@ class ShiftPlanRequestController extends Controller
         )
             ->when($filter === 'open', fn ($q) => $q->whereNull('acknowledged_at'))
             ->when($filter === 'ack', fn ($q) => $q->whereNotNull('acknowledged_at'))
-            ->when($dateFrom, fn ($q) => $q->whereDate('changed_at', '>=', $dateFrom))
-            ->when($dateTo, fn ($q) => $q->whereDate('changed_at', '<=', $dateTo));
+            ->whereDate('changed_at', '>=', $dateFrom)
+            ->whereDate('changed_at', '<=', $dateTo);
 
         $export = new \Artwork\Modules\Shift\Exports\CommittedShiftChangesExcelExport(
             $query,
             $request->user()?->language ?? app()->getLocale()
         );
 
-        $suffix = $dateFrom || $dateTo
-            ? ($dateFrom ?? 'anfang') . '_bis_' . ($dateTo ?? now()->toDateString())
-            : now()->format('Y-m-d');
-
-        return $export->download(sprintf('aenderungen_%s.xlsx', $suffix));
+        return $export->download(sprintf('aenderungen_%s_bis_%s.xlsx', $dateFrom, $dateTo));
     }
 
     /**

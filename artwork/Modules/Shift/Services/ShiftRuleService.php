@@ -426,9 +426,10 @@ class ShiftRuleService
     /**
      * Rand des Datenkontexts (Tage vor/nach dem Prüfzeitraum), so dass jeder aktive Check seine Daten aus
      * dem einmal geladenen Kontext bedienen kann statt je Person/Tag auf Direktabfragen zurückzufallen:
-     *  - getContextRange() je Regel (volle Wochen, period_weeks-Rückblick der Durchschnitts-Wochenstunden,
-     *    Jahres-/Spielzeitfenster der Sonntagsregeln) plus ein Tag Rand für Vor-/Folgetag (Ruhezeiten,
-     *    Nachtarbeit über Mitternacht, freie Tage),
+     *  - getContextRange() je Regel (volle Wochen, period_weeks-Rückblick der Durchschnitts-Wochenstunden)
+     *    plus ein Tag Rand für Vor-/Folgetag (Ruhezeiten, Nachtarbeit über Mitternacht, freie Tage);
+     *    null = kein Beitrag (z. B. Jahres-/Spielzeit-Sonntagsregeln und Überstundenfrist, die den
+     *    Kontext sonst auf ein Jahr aufblähen würden — sie fragen ihre Daten direkt ab),
      *  - "Tage in Folge": Regelwert + 1 Tage zurück (laufende Serie vor dem Zeitraum),
      *  - mindestens 7 Tage (Wochenfenster), höchstens 53 Wochen je Richtung.
      *

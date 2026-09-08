@@ -69,13 +69,31 @@ abstract class AbstractRuleCheck implements ShiftRuleCheckInterface
      */
     protected function getIndividualTimeMinutesForDay(User $user, Carbon $date): int
     {
-        $dayStart = $date->copy()->startOfDay();
-        $dayEnd = $date->copy()->startOfDay()->addDay();
-
         $totalMinutes = 0;
+        foreach ($this->getIndividualTimeSegmentsOfDay($user, $date) as $segment) {
+            $totalMinutes += max(0, (int) $segment['start']->diffInMinutes($segment['end']) - $segment['break_minutes']);
+        }
+
+        return $totalMinutes;
+    }
+
+    /**
+     * Individuelle Zeiten, die den Tag berühren, auf den Kalendertag ZUGESCHNITTEN (00:00–24:00 des Tages;
+     * ein Eintrag über Mitternacht liefert am Folgetag seinen Anteil ab 00:00). Ohne Endzeit bis 24:00.
+     * break_minutes ist nur am ersten Tag des Eintrags gesetzt (sonst 0) — Grundlage für
+     * getIndividualTimeMinutesForDay() und die tagesgenaue Nachtarbeit (NightWorkMaxHoursCheck).
+     *
+     * @return list<array{start: Carbon, end: Carbon, individual_time: IndividualTime, break_minutes: int, first_day: bool}>
+     */
+    protected function getIndividualTimeSegmentsOfDay(User $user, Carbon $date): array
+    {
+        $dayStart = $date->copy()->startOfDay();
+        $dayEnd = $dayStart->copy()->addDay();
+
+        $segments = [];
         foreach ($this->getIndividualTimesForRange($user, $date, $date) as $it) {
-            $itStart = Carbon::parse($it->start_date)->startOfDay();
-            $itEnd = Carbon::parse($it->end_date)->startOfDay();
+            $itStart = Carbon::parse((string) $it->start_date)->startOfDay();
+            $itEnd = Carbon::parse((string) ($it->end_date ?: $it->start_date))->startOfDay();
 
             if (!empty($it->start_time)) {
                 $itStart->setTimeFromTimeString((string) $it->start_time);
@@ -86,20 +104,23 @@ abstract class AbstractRuleCheck implements ShiftRuleCheckInterface
                 $itEnd->addDay();
             }
 
-            $segStart = $itStart->greaterThan($dayStart) ? $itStart : $dayStart;
-            $segEnd = $itEnd->lessThan($dayEnd) ? $itEnd : $dayEnd;
+            $segStart = $itStart->greaterThan($dayStart) ? $itStart->copy() : $dayStart->copy();
+            $segEnd = $itEnd->lessThan($dayEnd) ? $itEnd->copy() : $dayEnd->copy();
             if ($segStart->greaterThanOrEqualTo($segEnd)) {
                 continue;
             }
 
-            $minutes = $segStart->diffInMinutes($segEnd);
-            if ($date->isSameDay(Carbon::parse($it->start_date))) {
-                $minutes -= (int) ($it->break_minutes ?? 0);
-            }
-            $totalMinutes += max(0, $minutes);
+            $firstDay = $dayStart->isSameDay(Carbon::parse((string) $it->start_date));
+            $segments[] = [
+                'start' => $segStart,
+                'end' => $segEnd,
+                'individual_time' => $it,
+                'break_minutes' => $firstDay ? (int) ($it->break_minutes ?? 0) : 0,
+                'first_day' => $firstDay,
+            ];
         }
 
-        return $totalMinutes;
+        return $segments;
     }
 
     /**
@@ -231,10 +252,8 @@ abstract class AbstractRuleCheck implements ShiftRuleCheckInterface
         $toKey = $to->toDateString();
 
         if ($this->context !== null && $this->context->covers($from, $to)) {
-            return $this->context->shifts()->filter(function (Shift $shift) use ($fromKey, $toKey): bool {
-                [$startKey, $endKey] = $this->effectiveShiftDateKeys($shift);
-                return $startKey <= $toKey && $endKey >= $fromKey;
-            })->values();
+            // Datumsindex des Kontexts (effektive Tage je Schicht einmal berechnet) statt Filter je Tag.
+            return $this->context->shiftsBetween($fromKey, $toKey);
         }
 
         return $user->shifts()
@@ -268,9 +287,7 @@ abstract class AbstractRuleCheck implements ShiftRuleCheckInterface
         $toKey = $to->toDateString();
 
         if ($this->context !== null && $this->context->covers($from, $to)) {
-            return $this->context->individualTimes()->filter(
-                fn (IndividualTime $it): bool => (string) $it->start_date <= $toKey && (string) $it->end_date >= $fromKey
-            )->values();
+            return $this->context->individualTimesBetween($fromKey, $toKey);
         }
 
         return $user->individualTimes()
@@ -341,14 +358,7 @@ abstract class AbstractRuleCheck implements ShiftRuleCheckInterface
      */
     protected function effectiveShiftDateKeys(Shift $shift): array
     {
-        $pivot = $shift->pivot ?? null;
-        $start = $pivot?->start_date ?: $shift->start_date;
-        $end = $pivot?->end_date ?: $shift->end_date;
-
-        return [
-            Carbon::parse((string) $start)->toDateString(),
-            Carbon::parse((string) ($end ?: $start))->toDateString(),
-        ];
+        return ShiftRuleCheckContext::effectiveShiftDateKeys($shift);
     }
 
     /**

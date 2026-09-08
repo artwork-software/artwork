@@ -42,6 +42,32 @@ export function isoWeeksInYear(year) {
 }
 
 /**
+ * ISO-Kalenderwoche und ISO-Jahr eines Datums (das ISO-Jahr kann am Jahreswechsel vom Kalenderjahr abweichen).
+ * @param {Date} date
+ * @returns {{week: number, year: number}}
+ */
+export function isoWeekOf(date) {
+    // Donnerstag derselben ISO-Woche bestimmt das ISO-Jahr
+    const weekday = date.getDay() || 7
+    const thursday = new Date(date.getFullYear(), date.getMonth(), date.getDate() + (4 - weekday))
+    const year = thursday.getFullYear()
+    const week = Math.round((thursday - mondayOfIsoWeek1(year)) / (7 * 86400000)) + 1
+    return { week, year }
+}
+
+/**
+ * Montag (00:00 lokale Zeit) einer ISO-Kalenderwoche — ohne Existenzprüfung der KW (dafür isoWeekToDateRange).
+ * @param {number} week
+ * @param {number} year ISO-Jahr
+ * @returns {Date}
+ */
+export function mondayOfIsoWeek(week, year) {
+    const monday = mondayOfIsoWeek1(year)
+    monday.setDate(monday.getDate() + (week - 1) * 7)
+    return monday
+}
+
+/**
  * @param {number|string} week ISO-Kalenderwoche (1–53)
  * @param {number|string} year ISO-Jahr (das Jahr, zu dem die KW gehört – nicht zwingend das Kalenderjahr des Montags)
  * @returns {{start: string, end: string, monday: Date, sunday: Date}|null} null bei ungültiger Eingabe
@@ -57,8 +83,7 @@ export function isoWeekToDateRange(week, year) {
         return null
     }
 
-    const monday = mondayOfIsoWeek1(y)
-    monday.setDate(monday.getDate() + (w - 1) * 7)
+    const monday = mondayOfIsoWeek(w, y)
     const sunday = new Date(monday)
     sunday.setDate(monday.getDate() + 6)
 

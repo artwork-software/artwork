@@ -87,6 +87,16 @@ class MinFreeSundaysPerYearCheck extends AbstractRuleCheck
         ];
     }
 
+    /**
+     * Kein Kontextfenster: Das Jahresfenster würde den gemeinsamen Datenkontext für JEDEN Lauf (auch die
+     * synchrone Neuprüfung nach Drag&Drop) auf ein volles Jahr aufblähen. Die Belegungstage des Jahres
+     * holt getOccupiedDayKeys() stattdessen direkt (Fallback ohne Kontextabdeckung, zwei Abfragen je Jahr).
+     */
+    public function getContextRange(ShiftRule $rule, Carbon $startDate, Carbon $endDate): ?array
+    {
+        return null;
+    }
+
     private function targetFor(ShiftRule $rule): int
     {
         $ruleValue = (int) round((float) $rule->individual_number_value);

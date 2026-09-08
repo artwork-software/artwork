@@ -24,8 +24,6 @@ class ShowDto extends BaseDto
 
     public ?Collection $projects = null;
 
-    public ?Collection $shifts = null;
-
     public ?Collection $shiftQualifications = null;
 
     public ?int $firstProjectShiftTabId = null;
@@ -89,13 +87,6 @@ class ShowDto extends BaseDto
     public function setProjects(?Collection $projects): self
     {
         $this->projects = $projects;
-
-        return $this;
-    }
-
-    public function setShifts(?Collection $shifts): self
-    {
-        $this->shifts = $shifts;
 
         return $this;
     }
@@ -177,11 +168,6 @@ class ShowDto extends BaseDto
         return $this->projects;
     }
 
-    public function getShifts(): ?Collection
-    {
-        return $this->shifts;
-    }
-
     public function getShiftQualifications(): ?Collection
     {
         return $this->shiftQualifications;
@@ -219,7 +205,6 @@ class ShowDto extends BaseDto
             'rooms' => $this->getRooms(),
             'eventTypes' => $this->getEventTypes(),
             'projects' => $this->getProjects(),
-            'shifts' => $this->getShifts(),
             'shiftQualifications' => $this->getShiftQualifications(),
             'firstProjectShiftTabId' => $this->getFirstProjectShiftTabId(),
             'daysWithData' => $this->getDaysWithData(),

@@ -7,6 +7,7 @@ use Artwork\Modules\User\Models\User;
 use Artwork\Modules\User\Models\UserWorkTime;
 use Artwork\Modules\User\Services\WorkingHourCacheService;
 use Artwork\Modules\WorkTime\Repositories\WorkTimeBookingRepository;
+use Artwork\Modules\WorkTime\Support\NightWindow;
 use Carbon\Carbon;
 
 /**
@@ -87,49 +88,19 @@ class WorkTimeBookingService
 
     /**
      * Nachtminuten (Schichten + Individualzeiten) im Nachtfenster der GeneralSettings.
+     *
+     * Rechenbasis ist NightWindow::minutesWithin() — dieselbe wie in NightWorkMaxHoursCheck. Zuordnung:
+     * Schichten zählen ganz zu ihrem Starttag (inkl. Anteil nach Mitternacht), individuelle Zeiten werden
+     * je Kalendertag zugeschnitten (der Folgetag zählt seinen Anteil selbst).
      */
     private function calculateNightMinutes(Carbon $day, User $user): int
     {
         $night = 0;
-
-        $nightStartTime = $this->settings->start_night_time;
-        $nightEndTime = $this->settings->end_night_time;
+        $window = NightWindow::fromSettings($this->settings);
 
         $dayStart = $day->copy()->startOfDay();
-        $nextDayStart = $day->copy()->addDay()->startOfDay();
-
-        // Nachtfenster rund um den Tag:
-        //  0: Tag 00:00 – Nachtende (Frühschicht / Ausläufer der eigenen Nacht)
-        //  1: Nachtbeginn – 24:00
-        //  2: Folgetag 00:00 – Nachtende (nur für Arbeit, die an diesem Tag BEGINNT –
-        //     sonst würde eine Schicht über Mitternacht an beiden Tagen gezählt)
-        $windows = [
-            [$dayStart->copy(), $day->copy()->setTimeFromTimeString($nightEndTime)],
-            [$day->copy()->setTimeFromTimeString($nightStartTime), $nextDayStart->copy()],
-            [$nextDayStart->copy(), $day->copy()->addDay()->setTimeFromTimeString($nightEndTime)],
-        ];
-
-        $overlap = static function (Carbon $start, Carbon $end, Carbon $clipStart, Carbon $clipEnd) use ($windows): int {
-            $workStart = max($start, $clipStart);
-            $workEnd = min($end, $clipEnd);
-            if (!$workStart->lt($workEnd)) {
-                return 0;
-            }
-
-            $minutes = 0;
-            foreach ($windows as [$windowStart, $windowEnd]) {
-                $overlapStart = max($workStart, $windowStart);
-                $overlapEnd = min($workEnd, $windowEnd);
-                if ($overlapStart->lt($overlapEnd)) {
-                    $minutes += $overlapStart->diffInMinutes($overlapEnd);
-                }
-            }
-
-            return $minutes;
-        };
-
-        $dayKey = $day->toDateString();
-        $shiftClipEnd = $windows[2][1];
+        $nextDayStart = $dayStart->copy()->addDay();
+        $dayKey = $dayStart->toDateString();
 
         foreach ($user->shifts as $shift) {
             $pivot = $shift->pivot;
@@ -143,7 +114,7 @@ class WorkTimeBookingService
 
             $start = Carbon::parse($pivot->start_date)->setTimeFrom(Carbon::parse($pivot->start_time));
             $end = Carbon::parse($pivot->end_date)->setTimeFrom(Carbon::parse($pivot->end_time));
-            $night += $overlap($start, $end, $dayStart, $shiftClipEnd);
+            $night += $window->minutesWithin($start, $end);
         }
 
         foreach ($user->individualTimes as $individualTime) {
@@ -154,11 +125,14 @@ class WorkTimeBookingService
                 // Individuelle Zeiten werden je Kalendertag zugeschnitten (der Folgetag zählt seinen Anteil selbst)
                 $start = Carbon::parse($individualTime->start_date . ' ' . $individualTime->start_time);
                 $end = Carbon::parse($individualTime->end_date . ' ' . $individualTime->end_time);
-                $night += $overlap($start, $end, $dayStart, $nextDayStart);
+                $night += $window->minutesWithin(
+                    $start->greaterThan($dayStart) ? $start : $dayStart,
+                    $end->lessThan($nextDayStart) ? $end : $nextDayStart,
+                );
             }
         }
 
-        return (int) round($night);
+        return $night;
     }
 
     private function calculateWorkTimeBalanceChange(int $workedHours, int $wantedWorkHours): int

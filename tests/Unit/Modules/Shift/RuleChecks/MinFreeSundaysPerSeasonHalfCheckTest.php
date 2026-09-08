@@ -131,4 +131,24 @@ final class MinFreeSundaysPerSeasonHalfCheckTest extends TestCase
         $this->assertCount(1, $violations);
         $this->assertSame(2, $violations->first()->violation_data['target']);
     }
+
+    /**
+     * Die Spielzeit darf den gemeinsamen Datenkontext nicht aufblähen (kein Kontextbeitrag); der
+     * bewertete Zeitraum (getCoveredRange) bleibt davon unberührt.
+     */
+    #[Test]
+    public function context_range_is_null_while_the_covered_range_still_spans_the_season(): void
+    {
+        $today = Carbon::today();
+        $seasonStart = $today->copy()->subWeeks(2);
+        $seasonEnd = $today->copy()->addWeeks(4);
+        $this->configureSeason($seasonStart, $seasonEnd);
+        $rule = $this->rule(3);
+
+        $this->assertNull($this->check->getContextRange($rule, $today->copy(), $today->copy()->addDays(14)));
+
+        [$from, $to] = $this->check->getCoveredRange($rule, $today->copy(), $today->copy()->addDays(14));
+        $this->assertSame($seasonStart->toDateString(), $from->toDateString());
+        $this->assertSame($seasonEnd->toDateString(), $to->toDateString());
+    }
 }

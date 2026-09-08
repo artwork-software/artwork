@@ -130,12 +130,34 @@ class OvertimeService
 
         // 4) Remove stale open/compensated entries whose day is no longer a positive overtime day.
         //    Never delete payable (must be paid out), paid_out or partially paid entries.
-        $validDates = array_keys($entries);
-        UserOvertime::forUser($user->id)
-            ->whereIn('status', [UserOvertime::STATUS_OPEN, UserOvertime::STATUS_COMPENSATED])
-            ->where('paid_out_minutes', 0)
-            ->whereNotIn('date', $validDates ?: ['1970-01-01'])
-            ->delete();
+        //    Nur Tage, die der Replay tatsächlich beurteilt hat (Überstundenregel an diesem Tag aktiv),
+        //    dürfen bereinigt werden: Ist die Regel an einem Tag NICHT aktiv (z. B. Zuweisung heute mit
+        //    overtime_rule_active=false, Lücke in der Vertragshistorie), bleibt ein vorhandener Eintrag
+        //    unangetastet — sonst löscht jede Buchung/Zuweisung die gesamte offene Historie der Person.
+        $staleDates = [];
+        foreach ($existing as $dateStr => $existingEntry) {
+            if (isset($entries[$dateStr])) {
+                continue;
+            }
+            if (
+                !in_array($existingEntry->status, [UserOvertime::STATUS_OPEN, UserOvertime::STATUS_COMPENSATED], true)
+                || (int) $existingEntry->paid_out_minutes !== 0
+            ) {
+                continue;
+            }
+            if ($this->compensationPeriodOn($user, $existingEntry->date->copy()->startOfDay()) === null) {
+                continue; // Tag nicht beurteilt → Eintrag bleibt
+            }
+            $staleDates[] = $dateStr;
+        }
+
+        if ($staleDates !== []) {
+            UserOvertime::forUser($user->id)
+                ->whereIn('status', [UserOvertime::STATUS_OPEN, UserOvertime::STATUS_COMPENSATED])
+                ->where('paid_out_minutes', 0)
+                ->whereIn('date', $staleDates)
+                ->delete();
+        }
     }
 
     /**

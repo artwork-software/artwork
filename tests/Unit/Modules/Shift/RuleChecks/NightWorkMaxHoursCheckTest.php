@@ -12,9 +12,10 @@ use Tests\Concerns\CreatesShiftRuleFixtures;
 use Tests\TestCase;
 
 /**
- * Nachtarbeit-Tagesmaximum: Arbeitsintervalle werden ihrem Starttag zugerechnet (auch über Mitternacht);
- * hat ein Tag mindestens 2 h im Nachtfenster (22:00–06:00), darf die Arbeit dieses Tages netto höchstens
- * Wert Stunden betragen – eine einzelne Schicht 20:00–06:00 (10 h) reißt die Grenze also allein.
+ * Nachtarbeit-Tagesmaximum: Schichten werden ihrem Starttag zugerechnet (auch über Mitternacht),
+ * individuelle Zeiten je Kalendertag zugeschnitten (wie die nächtliche Buchung); hat ein Tag mindestens
+ * 2 h im Nachtfenster (22:00–06:00), darf die Arbeit dieses Tages netto höchstens Wert Stunden betragen –
+ * eine einzelne Schicht 20:00–06:00 (10 h) reißt die Grenze also allein.
  */
 final class NightWorkMaxHoursCheckTest extends TestCase
 {
@@ -185,5 +186,53 @@ final class NightWorkMaxHoursCheckTest extends TestCase
 
         $this->assertCount(1, $violations);
         $this->assertEqualsWithDelta(8.0, $violations->first()->violation_data['max_allowed'], 0.01);
+    }
+
+    /**
+     * Individuelle Zeiten werden — wie in der nächtlichen Buchung (WorkTimeBookingNightMinutesTest) — je
+     * Kalendertag zugeschnitten: 23:00–03:00 zählt 1 h Nacht am Starttag und 3 h am Folgetag. Mit der
+     * früheren Starttag-Zuordnung (4 h Nacht + 4 h netto am Tag 1) läge der Verstoß am falschen Tag.
+     */
+    #[Test]
+    public function an_individual_time_across_midnight_is_split_per_calendar_day_like_the_booking(): void
+    {
+        $user = User::factory()->create();
+        $day = $this->futureWeekday(Carbon::TUESDAY);
+        $nextDay = $day->copy()->addDay();
+        // Tag 1: Schicht 09:00–17:00 (8 h, keine Nacht) + Anteil der Individualzeit 23:00–24:00 (1 h, 1 h Nacht)
+        //        → 9 h netto, aber nur 60 min Nacht → keine Nachtarbeit im Sinne der Regel
+        // Tag 2: Anteil 00:00–03:00 (3 h, 180 min Nacht) + Schicht 07:00–14:00 (7 h) → 10 h netto mit 3 h Nacht → Verstoß
+        $this->shiftFor($user, $day, '09:00:00', '17:00:00');
+        $this->individualTimeFor($user, $day, '23:00', '03:00', 0, $nextDay);
+        $nextDayShift = $this->shiftFor($user, $nextDay, '07:00:00', '14:00:00');
+
+        $violations = $this->check->check($this->rule(8.0), $user, $day->copy(), $nextDay->copy());
+
+        $this->assertCount(1, $violations);
+        $violation = $violations->first();
+        $this->assertSame($nextDay->toDateString(), $violation->violation_date->toDateString());
+        $this->assertSame($nextDayShift->id, $violation->shift_id);
+        $this->assertEqualsWithDelta(10.0, $violation->violation_data['planned_hours'], 0.01);
+        $this->assertEqualsWithDelta(3.0, $violation->violation_data['night_hours'], 0.01);
+    }
+
+    #[Test]
+    public function the_tail_of_an_individual_time_alone_can_violate_on_the_following_day(): void
+    {
+        $user = User::factory()->create();
+        $day = $this->futureWeekday(Carbon::TUESDAY);
+        $nextDay = $day->copy()->addDay();
+        // 23:00–03:00 ohne Schicht: Tag 2 hat 3 h netto mit 3 h Nacht → bei Maximum 2 h ein Verstoß ohne Schicht;
+        // Tag 1 (1 h, 60 min Nacht) liegt unter der 2-h-Nachtschwelle
+        $this->individualTimeFor($user, $day, '23:00', '03:00', 0, $nextDay);
+
+        $violations = $this->check->check($this->rule(2.0), $user, $day->copy(), $nextDay->copy());
+
+        $this->assertCount(1, $violations);
+        $violation = $violations->first();
+        $this->assertNull($violation->shift_id);
+        $this->assertSame($nextDay->toDateString(), $violation->violation_date->toDateString());
+        $this->assertEqualsWithDelta(3.0, $violation->violation_data['planned_hours'], 0.01);
+        $this->assertEqualsWithDelta(3.0, $violation->violation_data['night_hours'], 0.01);
     }
 }

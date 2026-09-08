@@ -38,6 +38,10 @@
                         @change="applyFilters"
                     />
                 </div>
+                <!-- Server hat "bis" auf von + 1 Jahr begrenzt (Liste antwortet nie mit 422) -->
+                <p v-if="filters?.period_clamped" class="self-end pb-2 text-xs text-warning" role="status">
+                    {{ $t('The period was limited to one year.') }}
+                </p>
                 <div class="min-w-[13rem]">
                     <ArtworkBaseListbox
                         v-model="selectedCrafts"
@@ -378,7 +382,7 @@
 </template>
 
 <script setup>
-import { computed, reactive, ref } from 'vue'
+import { computed, reactive, ref, watch } from 'vue'
 import { router, usePage } from '@inertiajs/vue3'
 import { IconShieldCheck, IconFileSpreadsheet } from '@tabler/icons-vue'
 import ShiftSettingsHeader from "@/Pages/Settings/Components/ShiftSettingsHeader.vue";
@@ -433,6 +437,18 @@ const filterState = reactive({
 const selectedCrafts = ref(
     props.crafts.filter((craft) => (props.filters?.craft_ids ?? []).map(Number).includes(Number(craft.id)))
 )
+
+// Nach jedem Teil-Reload (preserveState) die Eingaben mit den vom Server bereinigten Filtern abgleichen —
+// z. B. zeigt "bis" nach der Begrenzung auf ein Jahr das tatsächlich wirksame Datum.
+watch(() => props.filters, (filters) => {
+    filterState.date_from = filters?.date_from ?? ''
+    filterState.date_to = filters?.date_to ?? ''
+    filterState.user_id = filters?.user_id ?? null
+    filterState.shift_rule_id = filters?.shift_rule_id ?? null
+    filterState.severity = filters?.severity ?? null
+    filterState.status = filters?.status ?? 'active'
+    filterState.sort = filters?.sort ?? 'desc'
+})
 
 const statusOptions = [
     { value: 'active', label: 'Active' },

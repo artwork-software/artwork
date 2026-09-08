@@ -202,4 +202,19 @@ final class ShiftHistoryExportTest extends FeatureTestCase
         $this->get(route('shift-history.export', ['start_date' => '2025-01-01', 'end_date' => '2026-01-02']))
             ->assertOk();
     }
+
+    #[Test]
+    public function export_with_a_single_bound_is_limited_to_one_year(): void
+    {
+        $this->actingAsUserWith(PermissionEnum::VIEW_SHIFT_PLAN->value);
+        Excel::fake();
+
+        // Nur "von": bis = von + 366 Tage (kein unbegrenzter Export, kein 422)
+        $this->get(route('shift-history.export', ['start_date' => '2020-01-01']))->assertOk();
+        Excel::assertDownloaded('schichtverlauf_2020-01-01_bis_2021-01-01.xlsx');
+
+        // Nur "bis": von = bis − 366 Tage
+        $this->get(route('shift-history.export', ['end_date' => '2021-01-01']))->assertOk();
+        Excel::assertDownloaded('schichtverlauf_2020-01-01_bis_2021-01-01.xlsx');
+    }
 }

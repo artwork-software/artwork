@@ -46,6 +46,9 @@ final class ServiceProviderControllerTest extends FeatureTestCase
             ->assertInertia(fn (AssertableInertia $page) => $page
                 ->component('ServiceProvider/Show')
                 ->has('crafts')
+                // Die frühere Prop „shifts" (alle Schichten der Person inkl. Event/Projekt/Raum)
+                // entfiel — daysWithData ist die einzige Datenquelle des Einsatzplans.
+                ->missing('shifts')
                 ->has("daysWithData.{$today}.shifts", 1));
     }
 

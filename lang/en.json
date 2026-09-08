@@ -7974,7 +7974,12 @@
     "Exports are limited to a period of one year.": "Exports are limited to a period of one year.",
     "skipped: target week already committed for this craft": "skipped: target week already committed for this craft",
     "skipped: target week already requested for approval for this craft": "skipped: target week already requested for approval for this craft",
-    "_comment": "_comment",
-    "backend": "backend",
-    "frontend": "frontend"
+    "Calendar week :week does not exist in :year.": "Calendar week :week does not exist in :year.",
+    "Too many shifts to copy (:count, maximum :max). Please select fewer crafts or target weeks.": "Too many shifts to copy (:count, maximum :max). Please select fewer crafts or target weeks.",
+    "Too many shifts to copy ({0}, maximum {1}). Please select fewer crafts or target weeks.": "Too many shifts to copy ({0}, maximum {1}). Please select fewer crafts or target weeks.",
+    "Define the specifications of your trade and who may plan shifts for it.": "Define the specifications of your trade and who may plan shifts for it.",
+    "A holiday treated as a special day reduces the daily target of a person to 0 (or by the weekday average in three-month mode) if no work was done on that day and the contract has the special day rule active. Hours worked on a special day count normally.": "A holiday treated as a special day reduces the daily target of a person to 0 (or by the weekday average in three-month mode) if no work was done on that day and the contract has the special day rule active. Hours worked on a special day count normally.",
+    "No crafts available for you to commit.": "No crafts available for you to commit.",
+    "{n} recipients without shift-plan permission were removed from this rule.": "{n} recipients without shift-plan permission were removed from this rule.",
+    "The period was limited to one year.": "The period was limited to one year."
 }

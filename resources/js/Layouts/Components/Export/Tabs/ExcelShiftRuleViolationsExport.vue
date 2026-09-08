@@ -28,7 +28,8 @@
                         no-margin-top
                     />
                 </div>
-                <p class="text-xs text-text-subtle">
+                <!-- Hinweis wird zur sichtbaren Fehlermeldung, sobald der Zeitraum den Deckel überschreitet -->
+                <p class="text-xs" :class="periodTooLong ? 'text-danger' : 'text-text-subtle'" :role="periodTooLong ? 'alert' : undefined">
                     {{ $t('Exports are limited to a period of one year.') }}
                 </p>
                 <p v-if="rangeInvalid" class="text-xs text-danger">
@@ -94,7 +95,7 @@ import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 import SearchableSelect from "@/Artwork/Listbox/SearchableSelect.vue";
 import ArtworkBaseListbox from "@/Artwork/Listbox/ArtworkBaseListbox.vue";
 import {useTranslation} from "@/Composeables/Translation.js";
-import {currentMonthRange, useBlobDownload} from "@/Layouts/Components/Export/Components/useBlobDownload.js";
+import {currentMonthRange, exceedsExportPeriod, useBlobDownload} from "@/Layouts/Components/Export/Components/useBlobDownload.js";
 
 const props = defineProps({
     crafts: {type: Array, default: () => []},
@@ -128,7 +129,9 @@ const severityOptions = [
 const exporting = ref(false);
 const exportError = ref("");
 const rangeInvalid = computed(() => !dateFrom.value || !dateTo.value || dateFrom.value > dateTo.value);
-const exportDisabled = computed(() => rangeInvalid.value || exporting.value);
+// Zeitraum-Deckel (ein Jahr) schon clientseitig prüfen — der Server antwortet sonst mit 422
+const periodTooLong = computed(() => !rangeInvalid.value && exceedsExportPeriod(dateFrom.value, dateTo.value));
+const exportDisabled = computed(() => rangeInvalid.value || periodTooLong.value || exporting.value);
 
 const initializeDownload = async () => {
     if (exportDisabled.value) return;
@@ -147,7 +150,10 @@ const initializeDownload = async () => {
         emit("close");
     } catch (error) {
         console.error("Violations export failed", error);
-        exportError.value = $t("Export could not be created. Please try again.");
+        // Server-Meldung (z. B. Zeitraum-Deckel, 422) zeigen, sonst generischer Text
+        exportError.value = error?.fromServer && error.message
+            ? error.message
+            : $t("Export could not be created. Please try again.");
     } finally {
         exporting.value = false;
     }

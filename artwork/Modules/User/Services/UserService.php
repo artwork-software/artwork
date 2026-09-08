@@ -16,11 +16,8 @@ use Artwork\Modules\Notification\Services\NotificationSettingService;
 use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Artwork\Modules\Permission\Models\Permission;
 use Artwork\Modules\Role\Models\Role;
-use Artwork\Modules\Project\Services\ProjectService;
 use Artwork\Modules\Project\Enum\ProjectTabComponentEnum;
 use Artwork\Modules\Project\Services\ProjectTabService;
-use Artwork\Modules\Room\Services\RoomService;
-use Artwork\Modules\Shift\Services\ShiftQualificationService;
 use Artwork\Modules\User\DTOs\UserShiftPlanPageDto;
 use Artwork\Modules\User\Enums\UserFilterTypes;
 use Artwork\Modules\User\Events\UserUpdated;
@@ -181,23 +178,17 @@ class UserService
     }
 
     /**
-     * @throws ContainerExceptionInterface
-     * @throws NotFoundExceptionInterface
-     */
-    /**
      * Payload-Diät: rooms, projects, shiftQualifications, wholeWeekDatePeriod, eventsWithTotalPlannedWorkingHours
      * und user_to_edit_whole_week_date_period_vacations werden nicht mehr geladen (Frontend liest sie nicht).
-     * $roomService/$projectService/$shiftQualificationService bleiben nur wegen der unveränderten
-     * Aufrufsignatur im UserController in der Parameterliste.
+     *
+     * @throws ContainerExceptionInterface
+     * @throws NotFoundExceptionInterface
      */
     public function getUserShiftPlanPageDto(
         User $user,
         CalendarService $calendarService,
         EventService $eventService,
-        RoomService $roomService,
         EventTypeService $eventTypeService,
-        ProjectService $projectService,
-        ShiftQualificationService $shiftQualificationService,
         Carbon $selectedPeriodDate,
         Carbon $selectedDate,
         ?string $month,

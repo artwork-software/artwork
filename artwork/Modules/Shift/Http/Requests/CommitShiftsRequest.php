@@ -4,6 +4,7 @@ namespace Artwork\Modules\Shift\Http\Requests;
 
 use Artwork\Modules\Craft\Models\Craft;
 use Artwork\Modules\Craft\Services\CraftScopeService;
+use Artwork\Modules\Shift\Rules\IsoWeekExists;
 use Artwork\Modules\User\Models\User;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Validator;
@@ -27,7 +28,9 @@ class CommitShiftsRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'week_number' => ['required', 'integer', 'min:1', 'max:53'],
+            // KW 53 nur in 53-Wochen-Jahren (IsoWeekExists) — sonst würde die Festschreibung still
+            // auf die letzte KW gedeckelt (HelperService) und die falsche Woche treffen.
+            'week_number' => ['required', 'integer', 'min:1', 'max:53', new IsoWeekExists('year')],
             'year' => ['required', 'integer', 'min:2000', 'max:2100'],
             'craft_ids' => ['required_without:craft_id', 'nullable', 'array', 'max:100'],
             'craft_ids.*' => ['integer', 'exists:crafts,id'],

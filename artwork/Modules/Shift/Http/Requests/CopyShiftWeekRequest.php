@@ -2,7 +2,7 @@
 
 namespace Artwork\Modules\Shift\Http\Requests;
 
-use Artwork\Core\Services\HelperService;
+use Artwork\Modules\Shift\Rules\IsoWeekExists;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Validator;
 
@@ -24,9 +24,13 @@ class CopyShiftWeekRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'source_week' => ['required', 'integer', 'min:1', 'max:53'],
+            // KW 53 existiert nur in 53-Wochen-Jahren (2026 ja, 2025 nein) — Carbon würde sonst still
+            // in KW 1 des Folgejahres überrollen und die falsche Woche kopieren (IsoWeekExists).
+            'source_week' => ['required', 'integer', 'min:1', 'max:53', new IsoWeekExists('source_year')],
             'source_year' => ['required', 'integer', 'min:2000', 'max:2100'],
             'targets' => ['required', 'array', 'min:1', 'max:8'],
+            // Fehler hängt am Ziel-Element (targets.0), nicht am Wochenfeld — Adresse für Frontend/Tests stabil
+            'targets.*' => ['array', new IsoWeekExists('year', 'week')],
             'targets.*.week' => ['required', 'integer', 'min:1', 'max:53'],
             'targets.*.year' => ['required', 'integer', 'min:2000', 'max:2100'],
             'craft_ids' => ['nullable', 'array', 'max:100'],
@@ -43,25 +47,9 @@ class CopyShiftWeekRequest extends FormRequest
             $sourceYear = (int) $this->input('source_year');
             $seen = [];
 
-            // KW 53 existiert nur in 53-Wochen-Jahren (2026 ja, 2025 nein) — Carbon würde sonst still
-            // in KW 1 des Folgejahres überrollen und die falsche Woche kopieren.
-            if ($sourceWeek >= 1 && $sourceYear >= 1 && !HelperService::isoWeekExists($sourceWeek, $sourceYear)) {
-                $validator->errors()->add(
-                    'source_week',
-                    __('Calendar week :week does not exist in :year.', ['week' => $sourceWeek, 'year' => $sourceYear])
-                );
-            }
-
             foreach ((array) $this->input('targets', []) as $index => $target) {
                 $week = (int) ($target['week'] ?? 0);
                 $year = (int) ($target['year'] ?? 0);
-
-                if ($week >= 1 && $year >= 1 && !HelperService::isoWeekExists($week, $year)) {
-                    $validator->errors()->add(
-                        "targets.{$index}",
-                        __('Calendar week :week does not exist in :year.', ['week' => $week, 'year' => $year])
-                    );
-                }
 
                 if ($week === $sourceWeek && $year === $sourceYear) {
                     $validator->errors()->add(

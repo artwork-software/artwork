@@ -32,6 +32,7 @@
                 max="53"
                 label="Calendar Week"
                 id="commit_week"
+                :error="serverErrors.week_number"
             />
 
             <BaseInput
@@ -40,6 +41,7 @@
                 type="number"
                 label="Year"
                 id="commit_year"
+                :error="serverErrors.year"
             />
 
             <div class="col-span-full">
@@ -51,6 +53,7 @@
                         </span>
                     </span>
                     <button
+                        v-if="crafts.length > 0"
                         type="button"
                         class="text-xs font-lexend text-accent-600 hover:text-accent-600 transition-colors"
                         @click="toggleAllCrafts"
@@ -88,8 +91,17 @@
                     </button>
                 </div>
 
+                <!-- Nur planbare Gewerke werden angeboten; hat die Person keine, gibt es nichts festzuschreiben -->
+                <p v-if="crafts.length === 0" class="mt-2 text-xs text-text-subtle font-lexend">
+                    {{ $t('No crafts available for you to commit.') }}
+                </p>
+
                 <p v-if="craftError" class="mt-1 text-xs text-danger font-lexend">
                     {{ $t('Please select at least one craft.') }}
+                </p>
+                <!-- Serverfehler zu den Gewerken (z. B. fremdes Gewerk → 422 aus CommitShiftsRequest) -->
+                <p v-else-if="serverErrors.crafts" class="mt-1 text-xs text-danger font-lexend">
+                    {{ serverErrors.crafts }}
                 </p>
                 <p v-else-if="isShiftCommitWorkflowEnabled" class="mt-1 text-xs text-text-subtle font-lexend">
                     {{ $t('One separate request per selected craft will be created.') }}
@@ -169,6 +181,14 @@
         </div>
 
 
+        <!-- Sonstige Serverfehler (nicht einem Feld zugeordnet) — vorher landeten 422er nur in der Konsole -->
+        <div
+            v-if="serverErrors.general"
+            class="mt-4 rounded-xl border border-danger-border bg-danger-surface px-4 py-3 text-xs text-danger font-lexend"
+        >
+            {{ serverErrors.general }}
+        </div>
+
         <!-- Aktionen -->
         <div class="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <BaseUIButton
@@ -213,6 +233,11 @@ const emit = defineEmits(['close'])
 const props = defineProps({
     dateArray: Array,
     crafts: Array,
+    // Gewerke, die die Person festschreiben darf (CraftScopeService); null = keine Einschränkung (Admin)
+    plannableCraftIds: {
+        type: Array,
+        default: null,
+    },
 });
 
 /**
@@ -250,9 +275,35 @@ const approverNames = computed(() =>
         .map((approver) => approver?.name)
         .filter((name) => typeof name === 'string' && name.trim() !== '')
 )
-const crafts = ref(props.crafts || [])
+// Nur planbare Gewerke anbieten — „alle auswählen" mit fremden Gewerken liefe sonst in den 422
+// aus CommitShiftsRequest (Nicht-Admins dürfen nur Gewerke festschreiben, die sie planen dürfen).
+const crafts = computed(() => {
+    const all = props.crafts || []
+    if (!Array.isArray(props.plannableCraftIds)) {
+        return all
+    }
+    const allowed = new Set(props.plannableCraftIds.map((id) => Number(id)))
+    return all.filter((craft) => allowed.has(Number(craft.id)))
+})
 const selectedCrafts = ref([])
 const craftError = ref(false)
+
+// Serverseitige Validierungsfehler (422) sichtbar machen: Feldfehler an KW/Jahr, Gewerksfehler
+// unter der Gewerksliste, alles andere als allgemeiner Block.
+const firstMessage = (value) => (Array.isArray(value) ? value[0] : value) || null
+const serverErrors = computed(() => {
+    const errors = newShiftCommitForm.errors || {}
+    const craftKeys = Object.keys(errors).filter((key) => key === 'craft_ids' || key === 'craft_id' || key.startsWith('craft_ids.'))
+    const knownKeys = new Set(['week_number', 'year', ...craftKeys])
+    const generalKey = Object.keys(errors).find((key) => !knownKeys.has(key))
+
+    return {
+        week_number: firstMessage(errors.week_number) || '',
+        year: firstMessage(errors.year) || '',
+        crafts: craftKeys.length ? firstMessage(errors[craftKeys[0]]) : null,
+        general: generalKey ? firstMessage(errors[generalKey]) : null,
+    }
+})
 
 const allCraftsSelected = computed(
     () => crafts.value.length > 0 && selectedCrafts.value.length === crafts.value.length
@@ -266,15 +317,17 @@ const toggleCraft = (craft) => {
         : [...selectedCrafts.value, craft]
 }
 
+// „Alle auswählen" nimmt nur die planbaren Gewerke (crafts ist bereits gefiltert)
 const toggleAllCrafts = () => {
     selectedCrafts.value = allCraftsSelected.value ? [] : [...crafts.value]
 }
 
-// Sobald eine Auswahl getroffen wurde, den Fehlerhinweis zurücksetzen
+// Sobald eine Auswahl getroffen wurde, Fehlerhinweise zurücksetzen
 watch(selectedCrafts, (value) => {
     if (value.length > 0) {
         craftError.value = false
     }
+    newShiftCommitForm.clearErrors()
 })
 
 const getDateRangeByCalendarWeekAndYear = async (week, year) => {
@@ -303,6 +356,7 @@ const getDateRangeByCalendarWeekAndYear = async (week, year) => {
 watch(
     [() => newShiftCommitForm.week_number, () => newShiftCommitForm.year],
     ([newWeek, newYear]) => {
+        newShiftCommitForm.clearErrors('week_number', 'year')
         if (newWeek && newYear) {
             getDateRangeByCalendarWeekAndYear(newWeek, newYear)
         }
@@ -334,9 +388,8 @@ const submitToRoute = (routeName) => {
         onSuccess: () => {
             emit('close')
         },
-        onError: (errors) => {
-            console.error('Error submitting shift commit form:', errors)
-        },
+        // Fehler werden über newShiftCommitForm.errors im Modal angezeigt (serverErrors)
+        onError: () => {},
     })
 }
 

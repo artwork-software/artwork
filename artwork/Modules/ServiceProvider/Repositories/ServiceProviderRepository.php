@@ -54,15 +54,6 @@ class ServiceProviderRepository extends BaseRepository
         );
     }
 
-    public function getShiftsWithEventOrderedByStartAscending(int|ServiceProvider $serviceProvider): Collection
-    {
-        return $serviceProvider
-            ->shifts()
-            ->with(['event', 'event.project', 'event.room'])
-            ->orderedByStart()
-            ->get();
-    }
-
     public function scoutSearch(string $query): SupportCollection
     {
         return $this

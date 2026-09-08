@@ -262,7 +262,6 @@ import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 
 const props = defineProps({
     freelancer: Object,
-    shifts: Array,
     calendarData: Array,
     dateToShow: Array,
     wholeWeekDatePeriod: Array,

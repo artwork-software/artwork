@@ -382,6 +382,11 @@
                                 <span v-if="!selectedNotifyUsers.length" class="text-sm text-text-subtle">{{ $t('Nobody is notified') }}</span>
                             </div>
                         </div>
+                        <!-- Altbestand: Empfänger*innen ohne Dienstplan-Recht werden beim Bearbeiten aus dem Formular
+                             genommen (und beim nächsten Speichern serverseitig bereinigt) — kurz erklären, warum -->
+                        <p v-if="removedNotifyRecipients > 0" class="text-xs text-text-subtle">
+                            {{ $t('{n} recipients without shift-plan permission were removed from this rule.', { n: removedNotifyRecipients }) }}
+                        </p>
                     </div>
 
                     <div class="mt-6 flex items-center justify-between">
@@ -573,6 +578,8 @@ const { t: $t } = useI18n()
 
 const showModal = ref(false)
 const editingRule = ref(null)
+// Anzahl der beim Öffnen entfernten Benachrichtigungs-Empfänger*innen ohne Dienstplan-Recht (Altbestand)
+const removedNotifyRecipients = ref(0)
 const ruleToDelete = ref(null)
 
 const form = useForm({
@@ -699,7 +706,12 @@ function editRule(rule) {
     form.default_compensation_days = rule.default_compensation_days ?? null
     form.default_compensation_deadline_days = rule.default_compensation_deadline_days ?? null
     form.contract_ids = rule.contracts ? rule.contracts.map(c => c.id) : []
-    form.user_ids = rule.users_to_notify ? rule.users_to_notify.map(u => u.id) : []
+    // Nur Personen übernehmen, die der Controller als berechtigt liefert (props.users) — Altbestand
+    // ohne Dienstplan-Recht fällt aus dem Formular und wird beim nächsten Speichern bereinigt.
+    const eligibleUserIds = new Set((props.users ?? []).map((user) => user.id))
+    const notifyUserIds = rule.users_to_notify ? rule.users_to_notify.map(u => u.id) : []
+    form.user_ids = notifyUserIds.filter((id) => eligibleUserIds.has(id))
+    removedNotifyRecipients.value = notifyUserIds.length - form.user_ids.length
     form.clearErrors()
     showModal.value = true
 }
@@ -711,6 +723,7 @@ function closeModal() {
 }
 
 function resetForm() {
+    removedNotifyRecipients.value = 0
     form.name = ''
     form.description = ''
     form.trigger_type = ''

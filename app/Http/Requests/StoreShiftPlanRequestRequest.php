@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use Artwork\Modules\Shift\Rules\IsoWeekExists;
 use Illuminate\Foundation\Http\FormRequest;
 
 class StoreShiftPlanRequestRequest extends FormRequest
@@ -22,8 +23,10 @@ class StoreShiftPlanRequestRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'week_number' => ['required', 'integer', 'min:1', 'max:53'],
-            'year' => ['required', 'integer'],
+            // KW 53 nur in 53-Wochen-Jahren (IsoWeekExists) — eine Anfrage für eine nicht
+            // existierende KW würde sonst still auf die letzte KW des Jahres gedeckelt.
+            'week_number' => ['required', 'integer', 'min:1', 'max:53', new IsoWeekExists('year')],
+            'year' => ['required', 'integer', 'min:2000', 'max:2100'],
             // Entweder ein einzelnes Gewerk (Altbestand) oder eine Mehrfachauswahl —
             // die Anfragen werden im Controller weiterhin pro Gewerk getrennt angelegt.
             'craft_id' => ['required_without:craft_ids', 'integer', 'exists:crafts,id'],

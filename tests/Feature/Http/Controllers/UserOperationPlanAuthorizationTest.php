@@ -112,8 +112,18 @@ final class UserOperationPlanAuthorizationTest extends FeatureTestCase
         $this->givePermission($user, PermissionEnum::CAN_VIEW_OWN_UNCOMMITTED_SHIFTS);
         $this->actingAs($user);
 
-        $committedShift = Shift::factory()->create(['is_committed' => true]);
-        $uncommittedShift = Shift::factory()->create(['is_committed' => false]);
+        // Feste Daten im angezeigten Zeitraum: ohne explizites start_date erbt die Schicht den
+        // zufälligen Monatstag der Event-Factory und liegt nur manchmal in der aktuellen Woche.
+        $shiftAttributes = [
+            'event_id' => null,
+            'start_date' => now()->toDateString(),
+            'end_date' => now()->toDateString(),
+            'start' => '10:00',
+            'end' => '12:00',
+            'break_minutes' => 0,
+        ];
+        $committedShift = Shift::factory()->create($shiftAttributes + ['is_committed' => true]);
+        $uncommittedShift = Shift::factory()->create($shiftAttributes + ['is_committed' => false]);
         $qualification = ShiftQualification::factory()->create();
         $user->shifts()->attach([
             $committedShift->id => ['shift_qualification_id' => $qualification->id],

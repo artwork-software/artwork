@@ -161,4 +161,41 @@ final class OvertimeServiceContractHistoryTest extends TestCase
 
         $this->assertSame(0, UserOvertime::where('user_id', $user->id)->count());
     }
+
+    #[Test]
+    public function stale_entries_are_only_removed_on_days_the_replay_actually_judged(): void
+    {
+        $user = User::factory()->create();
+        $template = $this->template();
+        // Bis 31.05. Regel inaktiv, ab 01.06. aktiv
+        $this->assign($user, $template, ['valid_from' => null, 'valid_until' => '2026-05-31', 'overtime_rule_active' => false]);
+        $this->assign($user, $template, ['valid_from' => '2026-06-01', 'valid_until' => null, 'overtime_rule_active' => true]);
+
+        // Alte Einträge ohne (positive) Buchung: im inaktiven Zeitraum bleibt er, im aktiven ist er veraltet
+        $keptEntry = UserOvertime::create([
+            'user_id' => $user->id,
+            'date' => '2026-05-20',
+            'minutes' => 45,
+            'remaining_minutes' => 45,
+            'deadline' => '2026-06-19',
+            'status' => UserOvertime::STATUS_OPEN,
+        ]);
+        UserOvertime::create([
+            'user_id' => $user->id,
+            'date' => '2026-06-10',
+            'minutes' => 45,
+            'remaining_minutes' => 45,
+            'deadline' => '2026-07-10',
+            'status' => UserOvertime::STATUS_OPEN,
+        ]);
+        $this->booking($user, '2026-06-20', 45);
+
+        $this->service->recomputeForUser($user->fresh());
+
+        $this->assertNotNull($keptEntry->fresh());
+        $this->assertSame(
+            ['2026-05-20', '2026-06-20'],
+            UserOvertime::where('user_id', $user->id)->orderBy('date')->get()->map(fn (UserOvertime $e) => $e->date->toDateString())->all()
+        );
+    }
 }

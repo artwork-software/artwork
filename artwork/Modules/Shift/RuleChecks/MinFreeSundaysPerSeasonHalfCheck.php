@@ -115,6 +115,16 @@ class MinFreeSundaysPerSeasonHalfCheck extends AbstractRuleCheck
         ];
     }
 
+    /**
+     * Kein Kontextfenster: Die Spielzeit (bis zu einem Jahr) würde den gemeinsamen Datenkontext für jeden
+     * Lauf aufblähen. Die Ist-Werte rechnet ohnehin der ShiftKpiTrackingService; die noch möglichen
+     * Sonntage (heute bis Hälftenende) liest possibleFreeSundays() bei fehlender Abdeckung direkt.
+     */
+    public function getContextRange(ShiftRule $rule, Carbon $startDate, Carbon $endDate): ?array
+    {
+        return null;
+    }
+
     private function targetFor(ShiftRule $rule, User $user, ShiftKpiTrackingService $kpiService): int
     {
         $ruleValue = (int) round((float) $rule->individual_number_value);

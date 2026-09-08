@@ -96,26 +96,43 @@
                     </template>
 
                     <template #moreButtons>
-                        <!-- Zähler-Chip "N offene Verstöße": Klick aktiviert den Personenfilter -->
+                        <!-- Zähler-Chip "N offene Verstöße": Umschalter für den Personenfilter
+                             (aktiv = gefüllt wie der aktive Ansichts-Umschalter, Klick hebt den Filter wieder auf) -->
                         <button
                             v-if="openViolationsCount > 0 || showOnlyUsersWithOpenViolations"
                             type="button"
-                            class="ui-button text-xs gap-1.5"
-                            :class="showOnlyUsersWithOpenViolations ? '!bg-accent-50 !border-accent-200/80 !text-accent-700' : '!text-warning'"
+                            class="ui-button text-xs gap-1.5 whitespace-nowrap shrink-0"
+                            :class="showOnlyUsersWithOpenViolations
+                                ? '!bg-accent-600 !border-accent-600 !text-white shadow-sm hover:!bg-accent-700 hover:!border-accent-700'
+                                : '!text-warning'"
                             :title="showOnlyUsersWithOpenViolations
-                                ? $t('Only people with open rule violations are shown')
+                                ? $t('Remove filter: only people with open rule violations')
                                 : $t('Show only people with open rule violations')"
-                            :disabled="showOnlyUsersWithOpenViolations"
-                            @click="activateOpenViolationsFilter"
+                            :aria-pressed="showOnlyUsersWithOpenViolations"
+                            @click="toggleOpenViolationsFilter"
                         >
-                            <IconAlertTriangle class="size-4" stroke-width="1.5" />
+                            <component
+                                :is="showOnlyUsersWithOpenViolations ? IconFilterFilled : IconAlertTriangle"
+                                class="size-4 shrink-0"
+                                stroke-width="1.5"
+                                aria-hidden="true"
+                            />
                             {{ $t('{n} open violations', { n: openViolationsCount }) }}
+                            <IconX v-if="showOnlyUsersWithOpenViolations" class="size-3.5 shrink-0 opacity-80" stroke-width="2" aria-hidden="true" />
                         </button>
                         <ShiftPlanViewSwitch current="week" />
                         <SwitchIconTooltip v-if="can('can plan shifts') || is('artwork admin')" v-model="multiEditModeCalendar" :tooltip-text="$t('Multi-edit: select multiple shifts to edit them together.')" size="md"
                                            @change="toggleMultiEditModeCalendar" icon="IconPencil"/>
                     </template>
                 </ShiftPlanFunctionBar>
+
+                <!-- Hinweisleiste: Personenfilter "nur offene Regelverstöße" aktiv (außerhalb des Rasters) -->
+                <div v-if="showOnlyUsersWithOpenViolations" class="px-5 py-2">
+                    <ShiftPlanOpenViolationsFilterNotice
+                        :is-empty="openViolationsFilterIsEmpty"
+                        @remove="setOpenViolationsFilter(false)"
+                    />
+                </div>
             </div>
 
 
@@ -1083,8 +1100,9 @@ import 'vue-virtual-scroller/dist/vue-virtual-scroller.css'
 import Permissions from '@/Mixins/Permissions.vue'
 import axios from 'axios'
 import {Link, router, usePage} from '@inertiajs/vue3'
-import {IconAlertTriangle} from '@tabler/icons-vue'
+import {IconAlertTriangle, IconFilterFilled, IconX} from '@tabler/icons-vue'
 import ShiftPlanFunctionBar from '@/Layouts/Components/ShiftPlanComponents/ShiftPlanFunctionBar.vue'
+import ShiftPlanOpenViolationsFilterNotice from '@/Layouts/Components/ShiftPlanComponents/ShiftPlanOpenViolationsFilterNotice.vue'
 import ShiftPlanEmptyState from '@/Layouts/Components/ShiftPlanComponents/ShiftPlanEmptyState.vue'
 import ShiftHeader from '@/Pages/Shifts/ShiftHeader.vue'
 import {MenuItem} from '@headlessui/vue'
@@ -3576,12 +3594,18 @@ const openViolationsCount = computed(() => {
     return total
 })
 
-function activateOpenViolationsFilter() {
+/** Personenfilter "nur offene Regelverstöße" setzen bzw. aufheben (persistentes user_filters-Flag) */
+function setOpenViolationsFilter(active: boolean) {
     router.patch(
         route('update.user.calendar.filter.open-violations', authUser.value.id),
-        { filter_type: 'shift_filter', show_only_users_with_open_violations: true },
+        { filter_type: 'shift_filter', show_only_users_with_open_violations: active },
         { preserveScroll: true, preserveState: false },
     )
+}
+
+/** Zähler-Chip ist ein Umschalter: aktiv → Filter aufheben, sonst aktivieren */
+function toggleOpenViolationsFilter() {
+    setOpenViolationsFilter(!showOnlyUsersWithOpenViolations.value)
 }
 
 const craftWorkersMap = computed<Map<number, any[]>>(() => {
@@ -3604,6 +3628,11 @@ const craftWorkersMap = computed<Map<number, any[]>>(() => {
 
     return map
 })
+
+/** Filter aktiv, aber keine Person mit offenem Verstoß im Zeitraum → Hinweis statt leerem Raster */
+const openViolationsFilterIsEmpty = computed<boolean>(
+    () => showOnlyUsersWithOpenViolations.value && craftWorkersMap.value.size === 0,
+)
 
 /**
  * Managing-Sets für einen Craft vorbereiten (O(n) → später O(1)-Lookups)

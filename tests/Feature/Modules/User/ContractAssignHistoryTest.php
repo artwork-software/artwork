@@ -326,6 +326,35 @@ final class ContractAssignHistoryTest extends FeatureTestCase
     }
 
     #[Test]
+    public function a_zero_on_the_period_inherits_the_template_value_and_is_no_deviation(): void
+    {
+        $this->actingAsUserWith(PermissionEnum::MA_MANAGER->value);
+        [$user, $assign] = $this->userWithOpenAssign(90, '2026-01-01');
+        // 0 auf der Zuweisung = nicht gesetzt (ContractSettingsResolver::ZERO_MEANS_UNSET_ON_ASSIGN)
+        $assign->update(['compensation_period' => 0]);
+
+        $response = $this->get(route('user.edit.contract-and-work-time', $user))->assertOk();
+
+        $response->assertInertia(fn ($page) => $page
+            ->has('contractAssigns', 1)
+            ->where('contractAssigns.0.deviations', [])
+            ->where('contractAssigns.0.effective_values.compensation_period.value', 90)
+            ->where('contractAssigns.0.effective_values.compensation_period.inherited', true));
+
+        // Echter Wert auf der Zuweisung: Abweichung gelistet, wirksamer Wert = Zuweisung
+        $assign->update(['compensation_period' => 30]);
+
+        $response = $this->get(route('user.edit.contract-and-work-time', $user))->assertOk();
+
+        $response->assertInertia(fn ($page) => $page
+            ->where('contractAssigns.0.deviations.0.key', 'compensation_period')
+            ->where('contractAssigns.0.deviations.0.value', 30)
+            ->where('contractAssigns.0.deviations.0.template_value', 90)
+            ->where('contractAssigns.0.effective_values.compensation_period.value', 30)
+            ->where('contractAssigns.0.effective_values.compensation_period.inherited', false));
+    }
+
+    #[Test]
     public function old_routes_redirect_to_the_combined_tab(): void
     {
         $this->actingAsUserWith(PermissionEnum::MA_MANAGER->value);

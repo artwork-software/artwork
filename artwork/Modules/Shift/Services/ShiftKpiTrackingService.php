@@ -2,7 +2,7 @@
 
 namespace Artwork\Modules\Shift\Services;
 
-use Artwork\Modules\GeneralSettings\Models\GeneralSettings;
+use Artwork\Modules\GeneralSettings\Services\SeasonWindowResolver;
 use Artwork\Modules\User\Models\User;
 use Artwork\Modules\User\Services\ContractSettingsResolver;
 use Artwork\Modules\WorkTime\Services\WorkTimeCalculationService;
@@ -30,56 +30,55 @@ use Illuminate\Support\Facades\DB;
 class ShiftKpiTrackingService
 {
     public function __construct(
-        private readonly GeneralSettings $generalSettings,
+        private readonly SeasonWindowResolver $seasonWindow,
         private readonly ContractSettingsResolver $contractSettings,
         private readonly WorkTimeCalculationService $workTimeCalculationService,
     ) {
     }
 
     /**
-     * Spielzeit-Fenster aus den GeneralSettings (Toolsettings > Kommunikation & Rechtliches).
-     * null, wenn die Spielzeit nicht (oder ungültig) konfiguriert ist – Aufrufer zeigen einen Hinweis.
+     * Spielzeit-Fenster (Toolsettings > Kommunikation & Rechtliches) – immer gesetzt:
+     * das konfigurierte Fenster, wenn gültig, sonst das laufende Kalenderjahr (01.01.–31.12.,
+     * Produktentscheidung PO). Ob ein Fenster hinterlegt ist, sagt isSeasonConfigured() bzw. getSeason().
+     * Einzige Implementierung: SeasonWindowResolver (teilen sich Schicht- und BI-Modul).
      *
-     * @return array{0: Carbon, 1: Carbon}|null
+     * @return array{0: Carbon, 1: Carbon}
      */
-    public function getSeasonBounds(): ?array
+    public function getSeasonBounds(): array
     {
-        $startRaw = trim((string) ($this->generalSettings->playing_time_window_start ?? ''));
-        $endRaw = trim((string) ($this->generalSettings->playing_time_window_end ?? ''));
-        if ($startRaw === '' || $endRaw === '') {
-            return null;
-        }
+        return $this->seasonWindow->bounds();
+    }
 
-        try {
-            $start = Carbon::parse($startRaw)->startOfDay();
-            $end = Carbon::parse($endRaw)->endOfDay();
-        } catch (\Throwable) {
-            return null;
-        }
+    /**
+     * Spielzeit mit Herkunft – `configured` false = Kalenderjahr-Fallback, Aufrufer zeigen einen Hinweis.
+     *
+     * @return array{start: Carbon, end: Carbon, configured: bool}
+     */
+    public function getSeason(): array
+    {
+        return $this->seasonWindow->resolve();
+    }
 
-        if ($end->lt($start)) {
-            return null;
-        }
-
-        return [$start, $end];
+    /**
+     * true nur, wenn in den GeneralSettings ein gültiges Spielzeit-Fenster hinterlegt ist.
+     */
+    public function isSeasonConfigured(): bool
+    {
+        return $this->seasonWindow->isConfigured();
     }
 
     /**
      * Fenster der Kennzahl "Freie Tage in den ersten 26 Wochen der Spielzeit":
      * Spielzeitbeginn bis einschließlich Spielzeitbeginn + 26 Wochen − 1 Tag (182 Tage,
-     * z. B. 01.09.2026 – 01.03.2027). Bezug ist die Spielzeit aus den Einstellungen,
-     * NICHT der Vertragsbeginn (Entscheidung PO). Ohne konfigurierte Spielzeit: null.
+     * z. B. 01.09.2026 – 01.03.2027). Bezug ist die Spielzeit aus den Einstellungen
+     * (bzw. deren Kalenderjahr-Fallback), NICHT der Vertragsbeginn (Entscheidung PO).
      *
-     * @return array{0: Carbon, 1: Carbon}|null
+     * @return array{0: Carbon, 1: Carbon}
      */
-    public function getDaysOffFirst26WeeksWindow(?Carbon $seasonStart = null): ?array
+    public function getDaysOffFirst26WeeksWindow(?Carbon $seasonStart = null): array
     {
         if ($seasonStart === null) {
-            $bounds = $this->getSeasonBounds();
-            if ($bounds === null) {
-                return null;
-            }
-            [$seasonStart] = $bounds;
+            [$seasonStart] = $this->getSeasonBounds();
         }
 
         $from = $seasonStart->copy()->startOfDay();

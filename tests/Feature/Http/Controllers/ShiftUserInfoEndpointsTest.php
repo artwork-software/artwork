@@ -22,7 +22,7 @@ final class ShiftUserInfoEndpointsTest extends FeatureTestCase
     }
 
     #[Test]
-    public function season_endpoint_returns_a_clean_error_when_the_playing_time_window_is_missing(): void
+    public function season_endpoint_falls_back_to_the_calendar_year_when_the_playing_time_window_is_missing(): void
     {
         $this->actingAsAdmin();
         $this->settings('', '');
@@ -30,9 +30,12 @@ final class ShiftUserInfoEndpointsTest extends FeatureTestCase
 
         $response = $this->getJson(route('shift.user-info.season', ['user' => $user->id]));
 
-        $response->assertStatus(422)
-            ->assertJson(['error' => true])
-            ->assertJsonStructure(['error', 'message']);
+        // Produktentscheidung: ohne Spielzeit gilt das Kalenderjahr – kein 422 mehr, dafür configured=false
+        $response->assertOk()
+            ->assertJsonPath('season.start', now()->startOfYear()->toDateString())
+            ->assertJsonPath('season.end', now()->endOfYear()->toDateString())
+            ->assertJsonPath('season.configured', false)
+            ->assertJsonStructure(['kpis' => ['free_sundays_per_season', 'targets'], 'counted_until']);
     }
 
     #[Test]
@@ -47,6 +50,7 @@ final class ShiftUserInfoEndpointsTest extends FeatureTestCase
         $response->assertOk()
             ->assertJsonPath('season.start', '2025-08-01')
             ->assertJsonPath('season.end', '2026-07-31')
+            ->assertJsonPath('season.configured', true)
             ->assertJsonStructure(['kpis' => ['free_sundays_per_season', 'targets'], 'counted_until']);
     }
 

@@ -11,7 +11,7 @@ use Artwork\Modules\BusinessIntelligence\Models\BiEventTypeTag;
 use Artwork\Modules\BusinessIntelligence\Models\BiExportPreset;
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\BusinessIntelligence\Models\BiProjectData;
-use Artwork\Modules\GeneralSettings\Models\GeneralSettings;
+use Artwork\Modules\GeneralSettings\Services\SeasonWindowResolver;
 use Artwork\Modules\Project\Models\Component;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Models\ProjectComponentValue;
@@ -27,7 +27,7 @@ class BiExportService
     public function __construct(
         private readonly BiDerivedValuesService $biDerivedValuesService,
         private readonly BiProjectMetricsService $biProjectMetricsService,
-        private readonly GeneralSettings $generalSettings
+        private readonly SeasonWindowResolver $seasonWindow
     ) {
     }
 
@@ -752,6 +752,10 @@ class BiExportService
     }
 
     /**
+     * Standardzeitraum wie im Dashboard: explizite Daten, sonst Spielzeit-Fenster; ohne Fenster und ohne
+     * Daten das laufende Kalenderjahr (SeasonWindowResolver) statt "alle Termine". Bei nur einem
+     * expliziten Datum ergänzt nur ein konfiguriertes Fenster die fehlende Grenze.
+     *
      * @return array{0: ?Carbon, 1: ?Carbon}
      */
     private function resolveDateRange(array $config): array
@@ -759,12 +763,16 @@ class BiExportService
         $from = !empty($config['date_from']) ? Carbon::parse($config['date_from']) : null;
         $to = !empty($config['date_to']) ? Carbon::parse($config['date_to']) : null;
 
-        if (!$from && !empty($this->generalSettings->playing_time_window_start)) {
-            $from = Carbon::parse($this->generalSettings->playing_time_window_start);
+        if (!$from && !$to) {
+            [$from, $to] = $this->seasonWindow->bounds();
+
+            return [$from, $to];
         }
 
-        if (!$to && !empty($this->generalSettings->playing_time_window_end)) {
-            $to = Carbon::parse($this->generalSettings->playing_time_window_end);
+        $configured = $this->seasonWindow->configuredWindow();
+        if ($configured !== null) {
+            $from ??= $configured[0];
+            $to ??= $configured[1];
         }
 
         return [$from, $to];

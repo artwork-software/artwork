@@ -4,7 +4,7 @@ namespace Artwork\Modules\BusinessIntelligence\Services;
 
 use Artwork\Modules\BusinessIntelligence\Enums\BiEffortBucketEnum;
 use Artwork\Modules\BusinessIntelligence\Enums\BiVisitorModeEnum;
-use Artwork\Modules\GeneralSettings\Models\GeneralSettings;
+use Artwork\Modules\GeneralSettings\Services\SeasonWindowResolver;
 use Artwork\Modules\Project\Models\Project;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
@@ -23,7 +23,7 @@ class BiDashboardService
     public function __construct(
         private readonly BiProjectMetricsService $metricsService,
         private readonly BiDerivedValuesService $derivedValuesService,
-        private readonly GeneralSettings $generalSettings
+        private readonly SeasonWindowResolver $seasonWindow
     ) {
     }
 
@@ -65,7 +65,7 @@ class BiDashboardService
             . '_cat' . ($category !== null ? md5($category) : 'all')
             . '_v' . Cache::get('bi_dashboard_version', 0);
 
-        return Cache::remember(
+        $data = Cache::remember(
             $cacheKey,
             now()->addMinutes(10),
             function () use ($rangeFrom, $rangeTo, $comparisonFrom, $comparisonTo, $category): array {
@@ -133,6 +133,12 @@ class BiDashboardService
                 ];
             }
         );
+
+        // Außerhalb des Caches: Hinweis fürs Dashboard, dass "Spielzeit" gerade das Kalenderjahr ist
+        // (kein Fenster in den Tool-Einstellungen). Kein Einfluss auf die Kennzahlen selbst.
+        $data['season_configured'] = $this->seasonWindow->isConfigured();
+
+        return $data;
     }
 
     private function loadProjects(): Collection
@@ -745,6 +751,11 @@ class BiDashboardService
     }
 
     /**
+     * Standardzeitraum: explizite Daten, sonst das Spielzeit-Fenster der Tool-Einstellungen. Ist keins
+     * hinterlegt und wurden keine Daten übergeben, gilt das laufende Kalenderjahr (SeasonWindowResolver,
+     * Produktentscheidung) statt "alle Zeiträume". Bei nur einem expliziten Datum ergänzt weiterhin nur
+     * ein konfiguriertes Fenster die fehlende Grenze.
+     *
      * @return array{0: ?Carbon, 1: ?Carbon}
      */
     private function resolveDateRange(?string $from, ?string $to): array
@@ -752,12 +763,16 @@ class BiDashboardService
         $rangeFrom = $from ? Carbon::parse($from) : null;
         $rangeTo = $to ? Carbon::parse($to) : null;
 
-        if (!$rangeFrom && !empty($this->generalSettings->playing_time_window_start)) {
-            $rangeFrom = Carbon::parse($this->generalSettings->playing_time_window_start);
+        if (!$rangeFrom && !$rangeTo) {
+            [$rangeFrom, $rangeTo] = $this->seasonWindow->bounds();
+
+            return [$rangeFrom, $rangeTo];
         }
 
-        if (!$rangeTo && !empty($this->generalSettings->playing_time_window_end)) {
-            $rangeTo = Carbon::parse($this->generalSettings->playing_time_window_end);
+        $configured = $this->seasonWindow->configuredWindow();
+        if ($configured !== null) {
+            $rangeFrom ??= $configured[0];
+            $rangeTo ??= $configured[1];
         }
 
         return [$rangeFrom, $rangeTo];

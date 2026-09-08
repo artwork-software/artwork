@@ -19,7 +19,7 @@ use Illuminate\Support\Collection;
  *
  * Verstoß OHNE Schicht auf den letzten Sonntag der Hälfte, wenn ist + möglich < X (Ziel nicht mehr
  * erreichbar) oder wenn die Hälfte abgeschlossen ist und ist < X. Ohne Spielzeit-Einstellung
- * (Toolsettings) passiert nichts — kein Verstoß, keine Exception.
+ * (Toolsettings) gilt das laufende Kalenderjahr als Spielzeit (SeasonWindowResolver).
  */
 class MinFreeSundaysPerSeasonHalfCheck extends AbstractRuleCheck
 {
@@ -29,11 +29,8 @@ class MinFreeSundaysPerSeasonHalfCheck extends AbstractRuleCheck
 
         /** @var ShiftKpiTrackingService $kpiService */
         $kpiService = app(ShiftKpiTrackingService::class);
-        $bounds = $kpiService->getSeasonBounds();
-        if ($bounds === null) {
-            return $violations;
-        }
-        [$seasonStart, $seasonEnd] = $bounds;
+        // Immer gesetzt: konfigurierte Spielzeit oder Kalenderjahr-Fallback
+        [$seasonStart, $seasonEnd] = $kpiService->getSeasonBounds();
 
         $target = $this->targetFor($rule, $user, $kpiService);
         if ($target <= 0) {
@@ -103,11 +100,7 @@ class MinFreeSundaysPerSeasonHalfCheck extends AbstractRuleCheck
      */
     public function getCoveredRange(ShiftRule $rule, Carbon $startDate, Carbon $endDate): ?array
     {
-        $bounds = app(ShiftKpiTrackingService::class)->getSeasonBounds();
-        if ($bounds === null) {
-            return null;
-        }
-        [$seasonStart, $seasonEnd] = $bounds;
+        [$seasonStart, $seasonEnd] = app(ShiftKpiTrackingService::class)->getSeasonBounds();
 
         return [
             $startDate->copy()->startOfDay()->min($seasonStart->copy()->startOfDay()),

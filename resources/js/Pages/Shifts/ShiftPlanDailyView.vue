@@ -69,20 +69,29 @@
                             @click="openAddShiftForRoomAndDay(null, null)"
                         />
 
-                        <!-- Zähler-Chip "N offene Verstöße" (wie Wochenansicht): Klick aktiviert den Personenfilter der Tagesansicht -->
+                        <!-- Zähler-Chip "N offene Verstöße" (wie Wochenansicht): Umschalter für den Personenfilter
+                             der Tagesansicht (aktiv = gefüllt, Klick hebt den Filter wieder auf) -->
                         <button
                             v-if="!props.isInProjectView && (openViolationsCount > 0 || showOnlyUsersWithOpenViolations)"
                             type="button"
-                            class="ui-button text-xs gap-1.5"
-                            :class="showOnlyUsersWithOpenViolations ? '!bg-accent-50 !border-accent-200/80 !text-accent-700' : '!text-warning'"
+                            class="ui-button text-xs gap-1.5 whitespace-nowrap shrink-0"
+                            :class="showOnlyUsersWithOpenViolations
+                                ? '!bg-accent-600 !border-accent-600 !text-white shadow-sm hover:!bg-accent-700 hover:!border-accent-700'
+                                : '!text-warning'"
                             :title="showOnlyUsersWithOpenViolations
-                                ? $t('Only people with open rule violations are shown')
+                                ? $t('Remove filter: only people with open rule violations')
                                 : $t('Show only people with open rule violations')"
-                            :disabled="showOnlyUsersWithOpenViolations"
-                            @click="activateOpenViolationsFilter"
+                            :aria-pressed="showOnlyUsersWithOpenViolations"
+                            @click="toggleOpenViolationsFilter"
                         >
-                            <IconAlertTriangle class="size-4" stroke-width="1.5" />
+                            <component
+                                :is="showOnlyUsersWithOpenViolations ? IconFilterFilled : IconAlertTriangle"
+                                class="size-4 shrink-0"
+                                stroke-width="1.5"
+                                aria-hidden="true"
+                            />
                             {{ $t('{n} open violations', { n: openViolationsCount }) }}
+                            <IconX v-if="showOnlyUsersWithOpenViolations" class="size-3.5 shrink-0 opacity-80" stroke-width="2" aria-hidden="true" />
                         </button>
 
                         <ShiftPlanViewSwitch v-if="!props.project" current="day" />
@@ -110,6 +119,14 @@
                         <FunctionBarSetting :is-planning="false" is-in-shift-plan :is-daily-view="true" :is-in-project-view="props.isInProjectView" />
                     </div>
                 </div>
+
+                <!-- Hinweisleiste: Personenfilter "nur offene Regelverstöße" aktiv (Teil der Top-Bar, nicht des Rasters) -->
+                <ShiftPlanOpenViolationsFilterNotice
+                    v-if="!props.isInProjectView && showOnlyUsersWithOpenViolations"
+                    class="mt-2"
+                    :is-empty="openViolationsFilterIsEmpty"
+                    @remove="setOpenViolationsFilter(false)"
+                />
             </div>
 
             <!-- Zugewiesene Personen (Projektzuordnungen; nur Projektansicht, per Anzeigeeinstellung) -->
@@ -729,6 +746,7 @@ import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 import {
     IconAlertSquareRounded,
     IconAlertTriangle,
+    IconFilterFilled,
     IconCalendar,
     IconCalendarWeek,
     IconCalendarMonth,
@@ -742,6 +760,7 @@ import {
 import { useShiftCalendarListener } from "@/Composeables/Listener/useShiftCalendarListener.js";
 import { provideShiftPlanLookups } from "@/Composeables/useShiftPlanLookups.js";
 import FunctionBarFilter from "@/Artwork/Filter/FunctionBarFilter.vue";
+import ShiftPlanOpenViolationsFilterNotice from "@/Layouts/Components/ShiftPlanComponents/ShiftPlanOpenViolationsFilterNotice.vue";
 import FunctionBarSetting from "@/Artwork/Filter/FunctionBarSetting.vue";
 import ShiftPlanViewSwitch from "@/Layouts/Components/ShiftPlanComponents/ShiftPlanViewSwitch.vue";
 import axios from "axios";
@@ -1771,13 +1790,19 @@ const openViolationsCount = computed(() => {
     return total
 })
 
-function activateOpenViolationsFilter() {
+/** Personenfilter "nur offene Regelverstöße" setzen bzw. aufheben (persistentes user_filters-Flag der Tagesansicht) */
+function setOpenViolationsFilter(active: boolean) {
     if (!authUserId.value) return
     router.patch(
         route('update.user.calendar.filter.open-violations', authUserId.value),
-        { filter_type: 'shift_daily_filter', show_only_users_with_open_violations: true },
+        { filter_type: 'shift_daily_filter', show_only_users_with_open_violations: active },
         { preserveScroll: true, preserveState: false },
     )
+}
+
+/** Zähler-Chip ist ein Umschalter: aktiv → Filter aufheben, sonst aktivieren */
+function toggleOpenViolationsFilter() {
+    setOpenViolationsFilter(!showOnlyUsersWithOpenViolations.value)
 }
 
 /**
@@ -1799,9 +1824,12 @@ const craftPositionMap = computed(() => {
 // P2: Pre-computed index — filter + sort once, then O(1) lookup
 // Debounced to prevent rapid rebuilds during WebSocket bursts
 const filteredShiftsIndex = shallowRef(new Map<string, any[]>())
+/** Anzahl Schichten im gefilterten Index (nebenbei beim Rebuild gezählt, für den Leer-Hinweis des Verstoß-Filters) */
+const filteredShiftsTotal = ref(0)
 
 function rebuildFilteredShiftsIndex() {
     const map = new Map<string, any[]>()
+    let total = 0
     const rooms = shiftPlanCopy.value || []
     const set = craftIdSet.value
     const posMap = craftPositionMap.value
@@ -1865,10 +1893,17 @@ function rebuildFilteredShiftsIndex() {
             })
 
             map.set(`${roomId}|${dayKey}`, shifts)
+            total += shifts.length
         }
     }
     filteredShiftsIndex.value = map
+    filteredShiftsTotal.value = total
 }
+
+/** Filter aktiv, aber keine Schicht mit einer Person mit offenem Verstoß im Zeitraum → Hinweis statt leerem Raster */
+const openViolationsFilterIsEmpty = computed<boolean>(
+    () => showOnlyUsersWithOpenViolations.value && dailyPlanLoaded.value && filteredShiftsTotal.value === 0,
+)
 
 let _shiftsRebuildTimer: ReturnType<typeof setTimeout> | null = null
 let _shiftsFirstRun = true

@@ -140,10 +140,10 @@
                 <span>{{ comparisonSentence }}</span>
             </div>
 
-            <!-- Kein Spielzeitfenster hinterlegt → "Spielzeit" heißt in Wahrheit "alles" -->
-            <div v-if="seasonMissing" class="rounded-2xl border border-warning-border bg-warning-surface px-4 py-3 text-sm text-warning flex items-center justify-between gap-4">
-                <span>{{ $t('No season window is configured, so all periods are evaluated. Set the season under “Communication & Legal” in the tool settings.') }}</span>
-                <Link :href="route('tool.communication-and-legal')" class="shrink-0 font-medium text-warning hover:underline">
+            <!-- Kein Spielzeitfenster hinterlegt → "Spielzeit" ist das Kalenderjahr (Server-Fallback), nur ein Hinweis -->
+            <div v-if="seasonMissing" class="rounded-2xl border border-info-border bg-info-surface px-4 py-3 text-sm text-info flex items-center justify-between gap-4">
+                <span>{{ $t('No season is configured – the calendar year {year} is used as the season.', { year: seasonFallbackYear }) }}</span>
+                <Link :href="route('tool.communication-and-legal')" class="shrink-0 font-medium text-info hover:underline">
                     {{ $t('Set season window') }}
                 </Link>
             </div>
@@ -700,12 +700,16 @@ const comparisonSentence = computed(() => {
     return `${presetLabel} (${rangeText(comparisonRange.value.from, comparisonRange.value.to)})`;
 });
 
-// "Spielzeit" ohne hinterlegtes Fenster = alle Zeiträume → das muss der Nutzer sehen
+// "Spielzeit" ohne hinterlegtes Fenster = Kalenderjahr (Server liefert die Jahresspanne als range)
+// → Hinweis mit dem Jahr, das gerade gilt
 const seasonMissing = computed(() =>
     activePreset.value === 'playing_time'
-    && !props.dashboard.range?.from
-    && !props.dashboard.range?.to
+    && props.dashboard.season_configured === false
 );
+const seasonFallbackYear = computed(() => {
+    const from = props.dashboard.range?.from;
+    return from ? Number(from.slice(0, 4)) : new Date().getFullYear() + periodOffset.value;
+});
 
 // Nach einem Reload die effektiv angewandte Spanne in die Inputs spiegeln
 watch(() => props.dashboard.range, (range) => {
@@ -794,8 +798,13 @@ const applyPresetDates = () => {
         if (seasonBase.value) {
             dateFrom.value = shiftIsoYears(seasonBase.value.from, periodOffset.value);
             dateTo.value = shiftIsoYears(seasonBase.value.to, periodOffset.value);
+        } else if (props.dashboard.season_configured === false) {
+            // Kein Fenster hinterlegt → Spielzeit = Kalenderjahr (wie der Server-Fallback), Hinweis erklärt es
+            const year = now.getFullYear() + periodOffset.value;
+            dateFrom.value = `${year}-01-01`;
+            dateTo.value = `${year}-12-31`;
         } else {
-            // Kein Fenster hinterlegt → Server liefert "alle Zeiträume", Warnbanner erklärt es
+            // Basisfenster noch nicht bekannt → Server liefert die Spielzeit, der Watch merkt sie sich
             dateFrom.value = '';
             dateTo.value = '';
         }

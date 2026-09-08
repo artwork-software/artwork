@@ -278,7 +278,9 @@ final class BiExportControllerTest extends FeatureTestCase
             ->assertJsonStructure([
                 'projects', 'costCenters', 'columns', 'tagColumns', 'presets', 'defaultColumns',
                 'columnGroups' => [['key', 'label', 'default', 'columns']],
+                'seasonFrom', 'seasonTo', 'seasonFallbackYear',
             ])
+            ->assertJsonPath('seasonFallbackYear', now()->year)
             ->assertJsonCount(1, 'costCenters');
     }
 

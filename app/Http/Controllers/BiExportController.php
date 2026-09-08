@@ -7,6 +7,7 @@ use Artwork\Modules\BusinessIntelligence\Jobs\GenerateBiExportJob;
 use Artwork\Modules\BusinessIntelligence\Services\BiExportService;
 use Artwork\Modules\CostCenter\Models\CostCenter;
 use Artwork\Modules\GeneralSettings\Models\GeneralSettings;
+use Artwork\Modules\GeneralSettings\Services\SeasonWindowResolver;
 use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Role\Enums\RoleEnum;
@@ -26,7 +27,7 @@ class BiExportController extends Controller
      * Alles, was der gemeinsame Export-Dialog braucht (Projekt-Tab UND Dashboard):
      * Spaltenkatalog in Gruppen, Presets, Produktionen, Kostenträger, Spielzeit.
      */
-    public function options(Request $request, GeneralSettings $generalSettings): JsonResponse
+    public function options(Request $request, GeneralSettings $generalSettings, SeasonWindowResolver $seasonWindow): JsonResponse
     {
         $this->authorizeBiExport($request);
 
@@ -44,6 +45,8 @@ class BiExportController extends Controller
             'costCenters' => CostCenter::query()->orderBy('name')->get(['id', 'name']),
             'seasonFrom' => $generalSettings->playing_time_window_start ?: null,
             'seasonTo' => $generalSettings->playing_time_window_end ?: null,
+            // Ohne Fenster gilt serverseitig das Kalenderjahr – der Dialog nennt das Jahr
+            'seasonFallbackYear' => $seasonWindow->fallbackYear(),
         ]));
     }
 

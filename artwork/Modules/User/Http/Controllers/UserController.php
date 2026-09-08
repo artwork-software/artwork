@@ -63,6 +63,7 @@ use Artwork\Modules\User\Models\UserContract;
 use Artwork\Modules\User\Models\UserContractAssign;
 use Artwork\Modules\User\Models\UserWorkTime;
 use Artwork\Modules\User\Models\UserWorkTimePattern;
+use Artwork\Modules\User\Services\ContractSettingsResolver;
 use Artwork\Modules\User\Services\UserService;
 use Artwork\Modules\User\Services\UserUserManagementSettingService;
 use Artwork\Modules\WorkTime\Services\WorkTimeCalculationService;
@@ -486,9 +487,12 @@ class UserController extends Controller
                 $data['valid_until'] = $assign->valid_until?->toDateString();
                 $data['contract_name'] = $template?->name;
                 $data['is_current'] = $assign->coversDate(Carbon::today());
+                // 0 auf der Zuweisung bedeutet für die ZERO_MEANS_UNSET_ON_ASSIGN-Spalten "nicht gesetzt"
+                // (ContractSettingsResolver: Vorlagenwert gilt) – das ist keine Abweichung.
                 $data['deviations'] = $template === null
                     ? []
                     : collect(self::CONTRACT_COMPARE_FIELDS)
+                        ->reject(fn (string $field): bool => self::inheritsFromTemplate($assign, $field))
                         ->filter(fn (string $field): bool => self::normalizeContractValue($assign->getAttribute($field))
                             !== self::normalizeContractValue($template->getAttribute($field)))
                         ->map(fn (string $field): array => [
@@ -498,6 +502,18 @@ class UserController extends Controller
                         ])
                         ->values()
                         ->all();
+                // Wirksame Werte wie der Resolver sie liest (Zuweisung, bei 0 die Vorlage) – die Zeile zeigt
+                // diese statt der rohen 0 und markiert geerbte Werte mit "(Vorlage)".
+                $data['effective_values'] = collect(ContractSettingsResolver::ZERO_MEANS_UNSET_ON_ASSIGN)
+                    ->mapWithKeys(function (string $field) use ($assign, $template): array {
+                        $inherited = $template !== null && self::inheritsFromTemplate($assign, $field);
+
+                        return [$field => [
+                            'value' => $inherited ? $template->getAttribute($field) : $assign->getAttribute($field),
+                            'inherited' => $inherited,
+                        ]];
+                    })
+                    ->all();
                 unset($data['user_contract']);
 
                 return $data;
@@ -552,6 +568,16 @@ class UserController extends Controller
         'one_and_half_day_combinations_active',
         'annual_vacation_days',
     ];
+
+    /**
+     * Gleiche Regel wie ContractSettingsResolver::hasValue(): Für die NOT-NULL-DEFAULT-0-Spalten der
+     * Zuweisung ist 0 nicht von "nie eingetragen" unterscheidbar -> der Vorlagenwert gilt.
+     */
+    private static function inheritsFromTemplate(UserContractAssign $assign, string $field): bool
+    {
+        return in_array($field, ContractSettingsResolver::ZERO_MEANS_UNSET_ON_ASSIGN, true)
+            && (float) ($assign->getAttribute($field) ?? 0) == 0.0;
+    }
 
     private static function normalizeContractValue(mixed $value): string
     {
@@ -628,15 +654,10 @@ class UserController extends Controller
      */
     public function shiftUserInfoSeason(User $user, ShiftKpiTrackingService $service): JsonResponse
     {
-        $bounds = $service->getSeasonBounds();
-        if ($bounds === null) {
-            // Leere/ungültige Spielzeit-Einstellung -> Hinweis statt Carbon::parse('')-Absturz
-            return response()->json([
-                'error' => true,
-                'message' => __('The playing time window is not configured. Set it under Tool settings > Communication & Legal.'),
-            ], 422);
-        }
-        [$seasonStart, $seasonEnd] = $bounds;
+        // Ohne (gültige) Spielzeit-Einstellung gilt das Kalenderjahr (configured=false → Hinweis im Modal)
+        $season = $service->getSeason();
+        $seasonStart = $season['start'];
+        $seasonEnd = $season['end'];
         $kpis = $service->computeForUser($user, $seasonStart, $seasonEnd);
 
         $snapshot = UserShiftKpiSnapshot::query()
@@ -650,6 +671,7 @@ class UserController extends Controller
             'season' => [
                 'start' => $seasonStart->toDateString(),
                 'end' => $seasonEnd->toDateString(),
+                'configured' => $season['configured'],
             ],
             // Zählregel: abgeschlossene Tage der Spielzeit (bis gestern); Anzeige = aktueller Stand
             'counted_until' => Carbon::yesterday()->toDateString(),

@@ -296,6 +296,57 @@ final class SeasonSchedulePdfExportControllerTest extends FeatureTestCase
     }
 
     #[Test]
+    public function layout_options_reach_the_view_with_defaults_and_overrides(): void
+    {
+        $user = User::factory()->create();
+        Room::factory()->create(['user_id' => $user->id]);
+
+        $this->mockSnappyPdf($capturedViewData);
+
+        $this->actingAs($user)
+            ->post(route('calendar.export.season-schedule-pdf'), [
+                'startDate' => '2026-03-01',
+                'endDate' => '2026-03-31',
+            ])
+            ->assertRedirectContains('download');
+
+        // Ohne Angabe: KW-Spalte und Farbhinterlegung an, Zeichen-Garantie 16
+        self::assertTrue($capturedViewData['showWeekNumbers']);
+        self::assertTrue($capturedViewData['showEntryColors']);
+        self::assertSame(16, $capturedViewData['minVisibleChars']);
+
+        $this->actingAs($user)
+            ->post(route('calendar.export.season-schedule-pdf'), [
+                'startDate' => '2026-03-01',
+                'endDate' => '2026-03-31',
+                'showWeekNumbers' => false,
+                'showEntryColors' => false,
+                'minVisibleChars' => 28,
+            ])
+            ->assertRedirectContains('download');
+
+        self::assertFalse($capturedViewData['showWeekNumbers']);
+        self::assertFalse($capturedViewData['showEntryColors']);
+        self::assertSame(28, $capturedViewData['minVisibleChars']);
+        // Ohne Kalenderwochen berechnet der Builder keine Wochennummern mehr
+        self::assertNull($capturedViewData['pages'][0][0]['days'][2]['weekNumber']);
+    }
+
+    #[Test]
+    public function character_guarantee_outside_the_allowed_range_is_rejected(): void
+    {
+        $user = User::factory()->create();
+
+        $this->actingAs($user)
+            ->post(route('calendar.export.season-schedule-pdf'), [
+                'startDate' => '2026-03-01',
+                'endDate' => '2026-03-31',
+                'minVisibleChars' => 99,
+            ])
+            ->assertSessionHasErrors('minVisibleChars');
+    }
+
+    #[Test]
     public function period_longer_than_24_months_is_rejected(): void
     {
         $user = User::factory()->create();

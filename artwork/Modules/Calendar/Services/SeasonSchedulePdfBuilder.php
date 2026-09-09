@@ -28,7 +28,7 @@ class SeasonSchedulePdfBuilder
      *     showHolidays: bool,
      *     showWeekNumbers: bool,
      *     highlightWeekends: bool,
-     *     showColorDots: bool,
+     *     showEntryColors: bool,
      *     showEventsWithoutProject: bool,
      *     showRoomAbbreviations: bool
      * } $options
@@ -131,7 +131,7 @@ class SeasonSchedulePdfBuilder
                     continue;
                 }
 
-                // Punktfarbe gemäß Anzeigeeinstellung (Terminart / Terminstatus / Hauptkategorie)
+                // Eintragsfarbe gemäß Anzeigeeinstellung (Terminart / Terminstatus / Hauptkategorie)
                 $entryColor = $displaySettings
                     ? $displaySettings->resolveColor(
                         $event->eventType ?? null,

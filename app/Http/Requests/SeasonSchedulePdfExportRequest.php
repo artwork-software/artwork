@@ -66,10 +66,13 @@ class SeasonSchedulePdfExportRequest extends FormRequest
             'showHolidays' => ['required', 'boolean'],
             'showWeekNumbers' => ['required', 'boolean'],
             'highlightWeekends' => ['required', 'boolean'],
-            'showColorDots' => ['required', 'boolean'],
+            'showEntryColors' => ['required', 'boolean'],
             'showEventsWithoutProject' => ['required', 'boolean'],
             'showRoomAbbreviations' => ['required', 'boolean'],
             'splitMonths' => ['required', 'boolean'],
+            // Zeichen, die ein Name garantiert ungekürzt zeigt — begrenzt nach oben,
+            // wie groß die Schrift in einer Zelle werden darf
+            'minVisibleChars' => ['required', 'integer', 'between:8,40'],
         ];
     }
 
@@ -85,10 +88,11 @@ class SeasonSchedulePdfExportRequest extends FormRequest
             'showHolidays' => $this->has('showHolidays') ? $this->boolean('showHolidays') : true,
             'showWeekNumbers' => $this->has('showWeekNumbers') ? $this->boolean('showWeekNumbers') : true,
             'highlightWeekends' => $this->has('highlightWeekends') ? $this->boolean('highlightWeekends') : true,
-            'showColorDots' => $this->has('showColorDots') ? $this->boolean('showColorDots') : true,
+            'showEntryColors' => $this->has('showEntryColors') ? $this->boolean('showEntryColors') : true,
             'showEventsWithoutProject' => $this->boolean('showEventsWithoutProject'),
             'showRoomAbbreviations' => $this->boolean('showRoomAbbreviations'),
             'splitMonths' => $this->boolean('splitMonths'),
+            'minVisibleChars' => $this->integer('minVisibleChars') ?: 16,
         ]);
     }
 

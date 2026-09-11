@@ -153,6 +153,8 @@ class DemoWorkerSeeder extends Seeder
             PermissionEnum::ADD_EDIT_OWN_PROJECT->value,
             PermissionEnum::EVENT_REQUEST->value,
             PermissionEnum::CONTRACT_SEE_DOWNLOAD->value,
+            // Demo-Personen nehmen am Zu-/Absage-Flow teil (geseedete Stati bleiben sichtbar)
+            PermissionEnum::CAN_RESPOND_TO_SHIFT_ASSIGNMENTS->value,
         ];
         if ($entry['planner'] ?? false) {
             $permissions[] = PermissionEnum::SHIFT_PLANNER->value;

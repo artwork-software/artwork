@@ -30,25 +30,31 @@
                             classesButton="ui-button"
                         />
                     </div>
-                    <div class="flex items-center mx-4 gap-x-1 select-none">
-                        <ToolTipComponent
-                            direction="bottom"
-                            :tooltip-text="scrollBackTooltip"
-                            icon="IconChevronLeft"
-                            icon-size="h-7 w-7"
+                    <!-- Scroll-Gruppe „zurück · Scrollmodus · vor" als kompakte Segment-Leiste (wie die
+                         Zeitraum-Kontrolle), ohne großen Außenabstand — die Leiste wrappt auf schmalen
+                         Bildschirmen früh genug, jeder Pixel zählt -->
+                    <div class="inline-flex items-stretch ml-1 rounded-xl border border-border-subtle/80 bg-surface shadow-raised overflow-hidden select-none">
+                        <button
+                            type="button"
+                            class="w-7 flex items-center justify-center text-text-muted hover:bg-surface-sunken transition duration-200 border-r border-border-subtle"
+                            :title="scrollBackTooltip"
+                            :aria-label="scrollBackTooltip"
                             @click="scrollToPreviousDay"
-                        />
-                        <Menu as="div" class="relative inline-block text-left">
-                            <div class="flex items-center">
-                                <MenuButton class="">
-                                    <ToolTipComponent
-                                        direction="bottom"
-                                        :tooltip-text="$t('Change scroll mode')"
-                                        :icon="userGotoMode === 'month' ? 'IconCalendarMonth' : (userGotoMode === 'week' ? 'IconCalendarWeek' : 'IconCalendar')"
-                                        icon-size="h-5 w-5"
-                                    />
-                                </MenuButton>
-                            </div>
+                        >
+                            <PropertyIcon name="IconChevronLeft" class="h-4 w-4" stroke-width="2" />
+                        </button>
+                        <Menu as="div" class="relative inline-flex">
+                            <MenuButton
+                                class="px-2 flex items-center justify-center text-text-muted hover:bg-surface-sunken transition duration-200"
+                                :title="$t('Change scroll mode')"
+                                :aria-label="$t('Change scroll mode')"
+                            >
+                                <PropertyIcon
+                                    :name="userGotoMode === 'month' ? 'IconCalendarMonth' : (userGotoMode === 'week' ? 'IconCalendarWeek' : 'IconCalendar')"
+                                    class="h-4 w-4"
+                                    stroke-width="1.8"
+                                />
+                            </MenuButton>
 
                             <transition enter-active-class="transition-enter-active"
                                         enter-from-class="transition-enter-from"
@@ -57,49 +63,30 @@
                                         leave-from-class="transition-leave-from"
                                         leave-to-class="transition-leave-to">
                                 <MenuItems
-                                    class="absolute right-0 z-50 mt-2 w-fit origin-top-right rounded-md bg-surface-inverse shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
-                                    <div class="py-1">
-                                        <MenuItem v-slot="{ active }">
-                                            <div @click="changeUserSelectedGoTo('day')"
-                                                 :class="[active ? 'bg-text-inverse/10 text-accent-700' : 'text-white', 'block px-4 py-2 text-sm']">
-                                                <ToolTipComponent
-                                                    direction="right"
-                                                    :tooltip-text="$t('Jump around') + ' ' + $t('Day')"
-                                                    icon="IconCalendar"
-                                                    icon-size="h-5 w-5 text-white"/>
-                                            </div>
-                                        </MenuItem>
-                                        <MenuItem v-slot="{ active }">
-                                            <div @click="changeUserSelectedGoTo('week')"
-                                                 :class="[active ? 'bg-text-inverse/10 text-accent-700' : 'text-white', 'block px-4 py-2 text-sm']">
-                                                <ToolTipComponent
-                                                    direction="right"
-                                                    :tooltip-text="$t('Jump around') + ' ' + $t('Calendar week')"
-                                                    icon="IconCalendarWeek"
-                                                    icon-size="h-5 w-5 text-white"/>
-                                            </div>
-                                        </MenuItem>
-                                        <MenuItem v-slot="{ active }">
-                                            <div @click="changeUserSelectedGoTo('month')"
-                                                 :class="[active ? 'bg-text-inverse/10 text-accent-700' : 'text-white', 'block px-4 py-2 text-sm']">
-                                                <ToolTipComponent
-                                                    direction="right"
-                                                    :tooltip-text="$t('Jump around') + ' ' + $t('Month')"
-                                                    icon="IconCalendarMonth"
-                                                    icon-size="h-5 w-5 text-white"/>
-                                            </div>
-                                        </MenuItem>
+                                    class="absolute left-1/2 -translate-x-1/2 top-full z-50 mt-2 origin-top focus:outline-none">
+                                    <div class="w-56 rounded-xl border border-border-subtle bg-white p-1.5 shadow-xl ring-1 ring-black/5">
+                                        <BaseMenuItem
+                                            v-for="mode in gotoModes"
+                                            :key="mode.key"
+                                            white-menu-background
+                                            without-translation
+                                            :icon="userGotoMode === mode.key ? 'IconCheck' : mode.icon"
+                                            :title="$t('Jump around') + ' ' + $t(mode.label)"
+                                            @click="changeUserSelectedGoTo(mode.key)"
+                                        />
                                     </div>
                                 </MenuItems>
                             </transition>
                         </Menu>
-                        <ToolTipComponent
-                            direction="bottom"
-                            :tooltip-text="scrollForwardTooltip"
-                            icon="IconChevronRight"
-                            icon-size="h-7 w-7"
+                        <button
+                            type="button"
+                            class="w-7 flex items-center justify-center text-text-muted hover:bg-surface-sunken transition duration-200 border-l border-border-subtle"
+                            :title="scrollForwardTooltip"
+                            :aria-label="scrollForwardTooltip"
                             @click="scrollToNextDay"
-                        />
+                        >
+                            <PropertyIcon name="IconChevronRight" class="h-4 w-4" stroke-width="2" />
+                        </button>
                     </div>
                 </div>
 
@@ -143,7 +130,7 @@
                     </template>
                 </div>
 
-                <div class=" mr-2">
+                <div class="ml-3 mr-2">
                     <SwitchIconTooltip
                         v-model="activeSettings.use_project_time_period"
                         :tooltip-text="$t('Project search')"
@@ -161,17 +148,6 @@
                     <slot name="moreButtons">
 
                     </slot>
-
-                    <!-- „Woche kopieren": Schichten einer KW in Folgewochen anlegen (nur Planer*innen, nur Wochengrid) -->
-                    <ToolTipComponent
-                        v-if="!isDailyView && (can('can plan shifts') || hasAdminRole())"
-                        direction="bottom"
-                        :tooltip-text="$t('Copy week')"
-                        icon="IconCopy"
-                        icon-size="h-5 w-5"
-                        classes-button="ui-button"
-                        @click="showCopyWeekModal = true"
-                    />
 
                     <!-- ab 2xl: alle Funktionen als einzelne Buttons -->
                     <div class="hidden 2xl:flex items-center gap-x-3">
@@ -231,7 +207,8 @@
                             :filter-type="isDailyView ? 'shift_daily_filter' : 'shift_filter'"
                         />
 
-                        <ShiftPlanHelpPanel />
+                        <ToolTipComponent direction="bottom" :tooltip-text="$t('Help & legend')" icon="IconInfoCircle"
+                                          icon-size="h-5 w-5" classes-button="ui-button" @click="openHelpPanel"/>
 
                         <ToolTipComponent v-if="can('can commit shifts') || hasAdminRole()" direction="bottom"
                                           :tooltip-text="commitShiftsTooltip" icon="IconCalendarCheck" icon-size="h-5 w-5" classes-button="ui-button"
@@ -263,9 +240,14 @@
                             :filter-type="isDailyView ? 'shift_daily_filter' : 'shift_filter'"
                         />
 
-                        <ShiftPlanHelpPanel />
-
+                        <!-- Hilfe & Legende wandert hier ins Menü — spart einen Button, bevor die Leiste umbricht -->
                         <BaseMenu tooltip-direction="bottom" show-custom-icon icon="IconList" translation-key="More options" has-no-offset>
+                            <BaseMenuItem
+                                icon="IconInfoCircle"
+                                white-menu-background
+                                title="Help & legend"
+                                @click="openHelpPanel"
+                            />
                             <template v-if="!isDailyView">
                                 <BaseMenuItem
                                     v-for="step in shiftZoomSteps"
@@ -317,6 +299,9 @@
             </div>
         </div>
     </div>
+    <!-- Hilfe & Legende (Slide-over): eine Instanz ohne eigenen Trigger — geöffnet über den
+         Icon-Button (ab 2xl) bzw. den Menüeintrag (darunter) -->
+    <ShiftPlanHelpPanel ref="helpPanel" hide-trigger />
     <!-- kein w-full: zusammen mit ml-4 ragte die Zeile 16px über den Viewport hinaus
          und erzeugte einen Seiten-Scrollbalken -->
     <div class="mb-1 mx-4 flex flex-wrap items-center gap-1">
@@ -340,13 +325,6 @@
 
     />
 
-    <CalendarSettingsModal
-        v-if="showCalendarSettingsModal"
-        @close="showCalendarSettingsModal = false"
-        :is-planning="false"
-        in-shift-plan
-    />
-
     <CalendarAboSettingModal v-if="showCalendarAboSettingModal" @close="closeCalendarAboSettingModal" :crafts="crafts"/>
     <CalendarAboInfoModal v-if="showCalendarAboInfoModal" @close="showCalendarAboInfoModal = false" is_shift_calendar_abo />
 
@@ -357,21 +335,13 @@
         :configuration="shiftPlanExportConfiguration"
     />
 
-    <CopyWeekModal
-        v-if="showCopyWeekModal"
-        :date-value="dateValue"
-        :crafts="crafts"
-        @closed="showCopyWeekModal = false"
-    />
 </template>
 
 <script setup>
 import {
     Menu,
     MenuButton,
-    MenuItem,
     MenuItems,
-    Switch,
 } from "@headlessui/vue";
 
 import BaseFilterTag from "@/Layouts/Components/BaseFilterTag.vue";
@@ -409,14 +379,6 @@ const ExportModal = defineAsyncComponent({
     timeout: 3000,
 });
 
-// „Woche kopieren" (lazy: nur Planer*innen öffnen es)
-const CopyWeekModal = defineAsyncComponent({
-    loader: () => import('@/Layouts/Components/ShiftPlanComponents/CopyWeekModal.vue'),
-    delay: 200,
-    timeout: 3000,
-});
-const showCopyWeekModal = ref(false);
-
 // Schichtplan-Spaltenzoom (reaktiv, debounced persistiert)
 const {
     zoomFactor: shiftZoomFactor,
@@ -451,10 +413,20 @@ const props = defineProps({
 
 const emit = defineEmits(['enterFullscreenMode', 'openHistoryModal', 'selectGoToNextMode', 'selectGoToPreviousMode']);
 
+// Hilfe & Legende (Slide-over) — Instanz ohne eigenen Trigger, siehe Template
+const helpPanel = ref(null);
+const openHelpPanel = () => helpPanel.value?.open();
+
+// Scrollmodus der Pfeiltasten (Tag / KW / Monat)
+const gotoModes = [
+    { key: 'day', icon: 'IconCalendar', label: 'Day' },
+    { key: 'week', icon: 'IconCalendarWeek', label: 'Calendar week' },
+    { key: 'month', icon: 'IconCalendarMonth', label: 'Month' },
+];
+
 // Data properties
 const showConfirmCommitModal = ref(false);
 const showShiftCommitDateSelectModal = ref(false);
-const showCalendarSettingsModal = ref(false);
 const showCalendarAboInfoModal = ref(false);
 const showCalendarAboSettingModal = ref(false);
 const showShiftPlanExportModal = ref(false);
@@ -517,12 +489,6 @@ const shiftPlanExportConfiguration = computed(() => {
         },
     };
 });
-
-const CalendarSettingsModal = defineAsyncComponent({
-    loader: () => import('@/Artwork/Modals/CalendarSettingsModal.vue'),
-    delay: 200,
-    timeout: 3000,
-})
 
 // Computed properties
 const activeFilters = computed(() => {

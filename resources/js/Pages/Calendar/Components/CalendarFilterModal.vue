@@ -73,7 +73,7 @@
                                 </div>
                             </div>
                         </div>
-                        <div v-if="staffingFilterContext && showOnlyUsersWithOpenViolations" class="group block cursor-pointer shrink-0 bg-accent-50 w-fit px-2 py-1.5 rounded-full border border-accent-200">
+                        <div v-if="openViolationsFilterContext && showOnlyUsersWithOpenViolations" class="group block cursor-pointer shrink-0 bg-accent-50 w-fit px-2 py-1.5 rounded-full border border-accent-200">
                             <div class="flex items-center">
                                 <div class="mx-2">
                                     <p class="text-accent-600 text-xs group-hover:text-accent-700">{{ $t('Only show people with open rule violations') }}</p>
@@ -185,8 +185,10 @@
                             :label="$t('Only show shifts that are not fully staffed')"
                             :description="$t('Only displays shifts where at least one position still has capacity for additional staff.')"
                         />
-                        <!-- Personenfilter: user_filters-Flag (eigener Endpunkt), Auswertung in ShiftPlan.vue -->
+                        <!-- Personenfilter: user_filters-Flag (eigener Endpunkt). Nur Tagesansicht — in der
+                             Wochenansicht sitzt der Filter im Filter-Popup des Personenbereichs (ShiftPlan.vue) -->
                         <BaseCheckbox
+                            v-if="openViolationsFilterContext"
                             v-model="showOnlyUsersWithOpenViolations"
                             id="filter_show_only_users_with_open_violations"
                             name="filter_show_only_users_with_open_violations"
@@ -294,6 +296,8 @@ const isShiftFilterContext = computed(() =>
 const staffingFilterContext = computed(() =>
     props.filterType === 'shift_filter' || props.filterType === 'shift_daily_filter'
 );
+// Verstoß-Personenfilter nur in der Tagesansicht hier; Wochenansicht: Personen-Filter-Popup unten
+const openViolationsFilterContext = computed(() => props.filterType === 'shift_daily_filter');
 
 const currentShiftPlanSettings = computed(() => {
     const pageProps = usePage().props;

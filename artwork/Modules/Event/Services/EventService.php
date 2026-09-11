@@ -89,6 +89,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Throwable;
+use Artwork\Modules\Shift\Services\ShiftConfirmationEligibilityService;
 
 readonly class EventService
 {
@@ -525,15 +526,18 @@ readonly class EventService
         // Einsatzplan-Karte zeigt "Funktion: …" aus pivot.shift_qualification_id,
         // ohne dass pro Worker eine Query nötig ist.
         $qualificationNames = ShiftQualification::query()->pluck('name', 'id');
+        $confirmationEligibility = app(ShiftConfirmationEligibilityService::class);
 
-        $buildWorkers = function (Shift $shift) use ($qualificationNames): array {
-            $tag = function ($workers, string $type) use ($qualificationNames) {
+        $buildWorkers = function (Shift $shift) use ($qualificationNames, $confirmationEligibility): array {
+            $tag = function ($workers, string $type) use ($qualificationNames, $confirmationEligibility) {
                 if ($workers === null) {
                     return collect();
                 }
 
-                return $workers->map(function ($worker) use ($type, $qualificationNames) {
+                return $workers->map(function ($worker) use ($type, $qualificationNames, $confirmationEligibility) {
                     $worker->setAttribute('type', $type);
+                    // Zu-/Absage-Buttons der Einsatzplan-Karte nur für Personen mit dem Recht
+                    $worker->setAttribute('confirmation_eligible', $confirmationEligibility->isEligible($worker));
                     if ($worker->pivot !== null) {
                         $worker->pivot->setAttribute(
                             'shift_qualification_name',

@@ -57,6 +57,13 @@ export function useShiftCalendarListener(newShiftPlanData, { onWorkersNeedReload
         const room = findRoomById(roomId);
         if (!room) return;
 
+        // Projekt-/Gewerk-/Gruppen-Lookups zuerst einmischen: Nach einem Projektwechsel kennt der
+        // Client das neue Projekt sonst nicht (nicht im Initial-Load) und zeigt die Schicht bis zum
+        // Neuladen als "ohne Projekt".
+        if (data.lookups && onLookupsReceived) {
+            onLookupsReceived(data.lookups);
+        }
+
         let updated = false;
 
         // Nur event-LOSE Schichten ins Raum-Raster upserten: Der Server-Load filtert

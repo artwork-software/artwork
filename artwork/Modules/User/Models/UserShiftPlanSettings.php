@@ -39,6 +39,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property boolean $show_timeline
  * @property boolean $show_only_not_fully_staffed_shifts
  * @property boolean $show_user_overview
+ * @property boolean $user_overview_light_mode
  */
 class UserShiftPlanSettings extends Model
 {
@@ -80,7 +81,8 @@ class UserShiftPlanSettings extends Model
         'show_shift_group_tag',
         'show_timeline',
         'show_only_not_fully_staffed_shifts',
-        'show_user_overview'
+        'show_user_overview',
+        'user_overview_light_mode',
     ];
 
     protected $casts = [
@@ -112,6 +114,7 @@ class UserShiftPlanSettings extends Model
         'show_timeline' => 'boolean',
         'show_only_not_fully_staffed_shifts' => 'boolean',
         'show_user_overview' => 'boolean',
+        'user_overview_light_mode' => 'boolean',
     ];
 
     public function user(): BelongsTo

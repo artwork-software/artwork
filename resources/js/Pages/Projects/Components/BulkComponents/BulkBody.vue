@@ -217,7 +217,9 @@
                         :class="isInModal ? 'overflow-y-auto' : ''"
                         v-slot="{ item, index, active }"
                     >
-                        <DynamicScrollerItem
+                        <!-- BulkScrollerItem statt DynamicScrollerItem: misst recycelte Zeilen bei
+                             ID-Wechsel neu (Cache-Falle der Bibliothek, siehe Komponente). -->
+                        <BulkScrollerItem
                             :item="item"
                             :active="active"
                             :data-index="index"
@@ -283,7 +285,7 @@
                                     stroke-width="2"
                                 />
                             </div>
-                        </DynamicScrollerItem>
+                        </BulkScrollerItem>
                     </DynamicScroller>
 
                     <div v-else class="flex items-center h-24 print:hidden">
@@ -468,7 +470,8 @@ import {useBulkEventsBroadcastUpdater} from '@/Composeables/Listener/useBulkEven
 import FunctionBarFilter from "@/Artwork/Filter/FunctionBarFilter.vue";
 import SwitchIconTooltip from "@/Artwork/Toggles/SwitchIconTooltip.vue";
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
-import {DynamicScroller, DynamicScrollerItem} from 'vue-virtual-scroller';
+import {DynamicScroller} from 'vue-virtual-scroller';
+import BulkScrollerItem from '@/Pages/Projects/Components/BulkComponents/BulkScrollerItem.vue';
 import 'vue-virtual-scroller/dist/vue-virtual-scroller.css';
 import axios from 'axios';
 

@@ -165,7 +165,7 @@ class ShiftController extends Controller
         Shift $shift,
         ShiftsQualificationsService $shiftsQualificationsService,
         ProjectTabService $projectTabService
-    ): RedirectResponse {
+    ): RedirectResponse|JsonResponse {
         // Ohne Validierung landeten end_date < start_date, negative Pausen oder
         // negative Qualifikations-Werte (SQL-Fehler auf smallint unsigned) direkt in der DB.
         $request->validate([
@@ -345,10 +345,16 @@ class ShiftController extends Controller
         }
 
 
-        if ($projectTab && $projectId && !$request->boolean('updateOrCreateInShiftPlan')) {
-            return $this->redirector->route('projects.tab', [$projectId, $projectTab->id]);
+        // Der Dienstplan speichert per axios (kein Inertia-Request): ein 302 würde vom Browser mit
+        // PATCH auf die Dienstplan-URL weiterverfolgt (405 "PATCH not supported for shifts/view").
+        // Deshalb JSON statt Redirect; die Oberfläche aktualisiert sich über den Broadcast.
+        if ($request->boolean('updateOrCreateInShiftPlan') || $request->expectsJson()) {
+            return response()->json(['id' => $shift->id]);
         }
 
+        if ($projectTab && $projectId) {
+            return $this->redirector->route('projects.tab', [$projectId, $projectTab->id]);
+        }
 
         return $this->redirector->back();
     }

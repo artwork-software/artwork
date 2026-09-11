@@ -136,6 +136,26 @@ final class ChecklistControllerTest extends FeatureTestCase
     }
 
     #[Test]
+    public function xhr_update_returns_json_instead_of_a_redirect(): void
+    {
+        // Regression: Team-/Nutzer-Zuweisung speichert per axios (kein Inertia-Request).
+        // Ein 302 wurde vom Browser mit PATCH auf die Seiten-URL weiterverfolgt -> 405.
+        $this->actingAsAdmin();
+        $checklist = Checklist::factory()->create();
+        $user = User::factory()->create();
+
+        $this->patchJson(route('checklists.update', $checklist), [
+            'assigned_user_ids' => [$user->id],
+        ])->assertOk()->assertJson(['id' => $checklist->id]);
+
+        $this->assertTrue($checklist->fresh()->users->contains($user->id));
+
+        // Inertia-Requests bekommen weiterhin den Redirect
+        $this->patch(route('checklists.update', $checklist), ['name' => 'Via Inertia'], ['X-Inertia' => 'true'])
+            ->assertStatus(303);
+    }
+
+    #[Test]
     public function guest_cannot_destroy_checklist(): void
     {
         $checklist = Checklist::factory()->create();

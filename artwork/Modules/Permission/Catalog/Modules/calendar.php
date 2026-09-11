@@ -53,9 +53,12 @@ return new PermissionModuleDefinition(
                 'Accept or decline room requests',
             ],
             requires: [$module],
-            implies: [PermissionEnum::EVENT_REQUEST, PermissionEnum::CAN_PLAN_FIXED_IN_PLANNING_CALENDAR],
+            // Bewusst KEINE Implikation auf "Im Planungskalender fest planen": Kalender und Planungskalender
+            // werden getrennt berechtigt (Entscheidung Jannik 09.09.2026).
+            implies: [PermissionEnum::EVENT_REQUEST],
             personas: [Persona::DISPOSITION, Persona::PRODUCTION_LEAD],
-            note: 'Room admins have the same rights within their own rooms without this permission.',
+            note: 'Room admins have the same rights within their own rooms without this permission. '
+                . 'Direct booking of planned events requires "Plan directly in the planning calendar" separately.',
         ),
     ],
     extras: [
@@ -101,6 +104,7 @@ return new PermissionModuleDefinition(
             allows: ['Only when creating – no editing of existing planned events'],
             requires: [$planningModule, Requirement::permission(PermissionEnum::CAN_SEE_PLANNING_CALENDAR)],
             personas: [Persona::DISPOSITION],
+            note: 'Independent of "Plan events directly": calendar and planning calendar are permitted separately.',
         ),
         new PermissionDefinition(
             name: PermissionEnum::DAY_REMARKS_VIEW,

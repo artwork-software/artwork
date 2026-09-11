@@ -1,6 +1,6 @@
 <template>
     <!-- Container: unterscheidet Kollision/Nicht-Kollision -->
-    <div v-if="!detailsOnly" :class="['w-full min-w-64 rounded-lg select-none border', { 'border-dashed': isUnrelatedProjectShift }]"
+    <div v-if="!detailsOnly" :class="['w-full min-w-64 rounded-lg select-none border', { 'border-dashed': isUnrelatedProjectShift, 'hc-card': highContrast && !isUnrelatedProjectShift }]"
          :style="cardStyle">
         <!-- Linke Spalte: Zeilenstruktur -->
         <div class="flex flex-col w-full">
@@ -382,6 +382,7 @@ import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
 import {Float} from "@headlessui-float/vue";
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
 import {router, usePage} from "@inertiajs/vue3";
+import {useColorHelper} from "@/Composeables/UseColorHelper.js";
 import axios from "axios";
 import SingleEntityInShift from "@/Pages/Shifts/DailyViewComponents/SingleEntityInShift.vue";
 import {can, is} from "laravel-permission-to-vuejs";
@@ -477,12 +478,16 @@ const unrelatedProjectLabel = computed(() =>
     props.shift?.projectName ?? props.shift?.project_name ?? null
 )
 
-// Anzeigeeinstellung "Notizen einblenden" (Tagesansicht-Settings mit Fallback-Kette)
-const showNotes = computed(() => {
+// Anzeigeeinstellungen der Tagesansicht (Fallback-Kette wie im übrigen Dienstplan)
+const displaySettings = computed(() => {
     const pageProps = usePage().props
-    const settings = pageProps.shift_plan_daily_settings ?? pageProps.shift_plan_settings ?? pageProps.auth.user.calendar_settings
-    return !!settings?.shift_notes
+    return pageProps.shift_plan_daily_settings ?? pageProps.shift_plan_settings ?? pageProps.auth.user.calendar_settings
 })
+// Anzeigeeinstellung "Beschreibung einblenden" (shift_notes)
+const showNotes = computed(() => !!displaySettings.value?.shift_notes)
+// Anzeigeeinstellung "Hoher Kontrast": Karte satt in Gewerksfarbe, Textfarbe nach Hintergrund (wie Wochenansicht)
+const highContrast = computed(() => !!displaySettings.value?.high_contrast)
+const { backgroundColorWithOpacity, getTextColorBasedOnBackground, getHighContrastPercent } = useColorHelper()
 
 // Normalize time values that may arrive as "HH:MM" or ISO datetime "2026-05-18T10:00:00.000000Z"
 function normalizeTime(val) {
@@ -1192,6 +1197,14 @@ const cardStyle = computed(() => {
             borderColor: `${base}A0`,
         }
     }
+    if (highContrast.value) {
+        const bg = backgroundColorWithOpacity(base, getHighContrastPercent(displaySettings.value))
+        return {
+            backgroundColor: bg,
+            color: getTextColorBasedOnBackground(bg),
+            borderColor: isFollowUpDay.value ? '#d1d5db' : borderColor.value,
+        }
+    }
     return {
         backgroundColor: `${base}${isFollowUpDay.value ? '30' : '50'}`,
         borderColor: isFollowUpDay.value ? '#d1d5db' : borderColor.value,
@@ -1222,3 +1235,11 @@ const onChildUserRemoved = (payload) => {
     adjustDeltaForUser(person, -1)
 }
 </script>
+
+<style scoped>
+/* Hoher Kontrast: Text-Utilities in der Karte übernehmen die berechnete Kartentextfarbe –
+   außer in Bereichen mit eigenem hellen Hintergrund (Menüs, Drop-Zeilen, Badges). */
+.hc-card :deep(:is(.text-text, .text-text-muted, .text-text-subtle, .text-black):not(.bg-white *, .bg-surface *, .bg-surface-sunken *, .bg-danger-surface *, .bg-warning-surface *)) {
+    color: inherit;
+}
+</style>

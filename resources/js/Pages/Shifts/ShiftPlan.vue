@@ -96,32 +96,8 @@
                     </template>
 
                     <template #moreButtons>
-                        <!-- Zähler-Chip "N offene Verstöße": Umschalter für den Personenfilter
-                             (aktiv = gefüllt wie der aktive Ansichts-Umschalter, Klick hebt den Filter wieder auf) -->
-                        <button
-                            v-if="openViolationsCount > 0 || showOnlyUsersWithOpenViolations"
-                            type="button"
-                            class="ui-button text-xs gap-1.5 whitespace-nowrap shrink-0"
-                            :class="showOnlyUsersWithOpenViolations
-                                ? '!bg-accent-600 !border-accent-600 !text-white shadow-sm hover:!bg-accent-700 hover:!border-accent-700'
-                                : '!text-warning'"
-                            :title="showOnlyUsersWithOpenViolations
-                                ? $t('Remove filter: only people with open rule violations')
-                                : $t('Show only people with open rule violations')"
-                            :aria-pressed="showOnlyUsersWithOpenViolations"
-                            @click="toggleOpenViolationsFilter"
-                        >
-                            <component
-                                :is="showOnlyUsersWithOpenViolations ? IconFilterFilled : IconAlertTriangle"
-                                class="size-4 shrink-0"
-                                stroke-width="1.5"
-                                aria-hidden="true"
-                            />
-                            {{ $t('{n} open violations', { n: openViolationsCount }) }}
-                            <IconX v-if="showOnlyUsersWithOpenViolations" class="size-3.5 shrink-0 opacity-80" stroke-width="2" aria-hidden="true" />
-                        </button>
                         <ShiftPlanViewSwitch current="week" />
-                        <SwitchIconTooltip v-if="can('can plan shifts') || is('artwork admin')" v-model="multiEditModeCalendar" :tooltip-text="$t('Multi-edit: select multiple shifts to edit them together.')" size="md"
+                        <SwitchIconTooltip v-if="can('can plan shifts') || is('artwork admin')" v-model="multiEditModeCalendar" :tooltip-text="$t('Multi-edit: select multiple room-day combinations to create or delete shifts there together.')" size="md"
                                            @change="toggleMultiEditModeCalendar" icon="IconPencil"/>
                     </template>
                 </ShiftPlanFunctionBar>
@@ -448,7 +424,7 @@
                                                             v-for="shift in group.shifts"
                                                             :key="shift.id || shift.dwId || shift.uuid"
                                                             data-sp-shiftrow
-                                                            class="rounded-lg duration-200 ease-in-out"
+                                                            class="duration-200 ease-in-out first:rounded-t-lg last:rounded-b-lg"
                                                             :class="group.project ? 'hover:bg-info-surface' : 'hover:bg-surface-sunken'"
                                                         >
                                                             <!-- Kompaktkarte < 100 % Zoom: Zeit · Gewerk · Besetzung; Klick öffnet das
@@ -519,7 +495,8 @@
             <!-- left-16 = Sidebar-Breite: derselbe linke Ursprung wie das obere Grid (lg:pl-20 im
                  AppLayout minus -ml-4 im ShiftHeader). Nur mit identischem Ursprung und identischer
                  Breite beider Scroll-Container ist der 1:1-scrollLeft-Sync bei jeder Fensterbreite bündig. -->
-            <div id="userOverview" class="fixed bottom-0 left-0 lg:left-16 right-0 z-40 pointer-events-none">
+            <div id="userOverview" class="fixed bottom-0 left-0 lg:left-16 right-0 z-40 pointer-events-none"
+                 :class="userOverviewLightMode ? 'user-overview-light' : ''">
                 <div class="flex justify-center overflow-y-scroll pointer-events-none">
                     <div class="pointer-events-auto relative mb-2">
                         <!-- Schweben + Shadow + Blur -->
@@ -557,13 +534,13 @@
                     </div>
                 </div>
 
-                <div class="bg-surface-inverse pointer-events-auto">
+                <div class="bg-[var(--uo-bg)] pointer-events-auto">
                     <div v-show="showUserOverview"
-                        class="relative z-20 w-full overflow-y-auto bg-surface-inverse "
+                        class="relative z-20 w-full overflow-y-auto bg-[var(--uo-bg)]"
                         :style="showUserOverview ? { height: userOverviewHeight + 'px' } : { height: 20 + 'px' }">
                         <!-- absolute statt fixed: fixed + w-full wäre viewportbreit und ragte durch den
                              lg:left-16-Versatz des Panels rechts über den Fensterrand hinaus -->
-                        <div class="absolute inset-x-0 top-0 z-20 flex items-center justify-between bg-surface-inverse pr-9 py-3">
+                        <div class="absolute inset-x-0 top-0 z-20 flex items-center justify-between bg-[var(--uo-bg)] pr-9 py-3">
                             <div class="flex items-center justify-end gap-x-3">
                                 <SwitchIconTooltip v-if="can('can plan shifts') || is('artwork admin')" v-model="multiEditMode" :tooltip-text="$t('Multi-edit: select multiple shifts to edit them together.')" size="md" @change="toggleMultiEditMode" icon="IconPencil"/>
                                 <ToolTipComponent
@@ -610,17 +587,44 @@
                                                    :tooltip-text="$t('Compact view')" size="md"
                                                    @change="toggleCompactMode"
                                                    :icon="!$page.props.auth.user.compact_mode ? 'IconTextDecrease' : 'IconTextIncrease'"/>
-                                <BaseFilter :whiteIcon="false" :onlyIcon="true">
+                                <!-- Hell/Dunkel-Umschalter des Personenbereichs (pro Person, user_shift_plan_settings.user_overview_light_mode);
+                                     Knopf zeigt den aktiven Zustand: Sonne = hell, Mond = dunkel -->
+                                <SwitchIconTooltip v-model="userOverviewLightMode"
+                                                   :tooltip-text="userOverviewLightMode ? $t('User overview: switch to dark mode') : $t('User overview: switch to light mode')"
+                                                   size="md"
+                                                   @change="toggleUserOverviewLightMode"
+                                                   :icon="userOverviewLightMode ? 'IconSun' : 'IconMoon'"/>
+                                <BaseFilter :whiteIcon="false" :onlyIcon="true" :has-active-filters="showOnlyUsersWithOpenViolations || !showFreelancers">
                                     <div class="mx-auto mt-2 w-full max-h-44 max-w-md rounded-2xl border-none pb-3">
+                                        <!-- Personenfilter „Freelancer einbinden" (user_filters-Flag, persistiert über eigenen
+                                             Endpunkt; Filterung rein clientseitig, daher kein Inertia-Reload) -->
                                         <div class="mb-2 flex items-start">
                                             <div class="flex h-6 items-center">
-                                                <input id="showFreelancers" v-model="showFreelancers"
-                                                       aria-describedby="comments-description" name="comments"
-                                                       type="checkbox" class="input-checklist"/>
+                                                <input id="showFreelancers" :checked="showFreelancers"
+                                                       name="showFreelancers"
+                                                       type="checkbox" class="input-checklist"
+                                                       @change="setShowFreelancersFilter($event.target.checked)"/>
                                             </div>
                                             <div class="ml-2 text-sm leading-6">
                                                 <label for="showFreelancers" class="font-medium text-white">
                                                     {{ $t('Show freelancer') }}
+                                                </label>
+                                            </div>
+                                        </div>
+                                        <!-- Personenfilter „nur Personen mit offenen Regelverstößen" (user_filters-Flag,
+                                             persistiert über eigenen Endpunkt); Zähler erst nach dem Laden der Personen -->
+                                        <div class="mb-2 flex items-start">
+                                            <div class="flex h-6 items-center">
+                                                <input id="showOnlyUsersWithOpenViolations"
+                                                       :checked="showOnlyUsersWithOpenViolations"
+                                                       name="showOnlyUsersWithOpenViolations"
+                                                       type="checkbox" class="input-checklist"
+                                                       @change="setOpenViolationsFilter($event.target.checked)"/>
+                                            </div>
+                                            <div class="ml-2 text-sm leading-6">
+                                                <label for="showOnlyUsersWithOpenViolations" class="font-medium text-white">
+                                                    {{ $t('Only show people with open rule violations') }}
+                                                    <span v-if="workersLoadedOnce" class="text-text-subtle">({{ $t('{n} open violations', { n: openViolationsCount }) }})</span>
                                                 </label>
                                             </div>
                                         </div>
@@ -759,36 +763,36 @@
                         >
                             <!-- Durchgehende KW-Trennlinie über die gesamte Grid-Höhe (statt Stückel-Borders pro Zeile) -->
                             <template #colOverlay="{ day }">
-                                <div v-if="day.isExtraRow" class="h-full border-l-2 border-white/40"></div>
+                                <div v-if="day.isExtraRow" class="h-full border-l-2 border-[var(--uo-line-strong)]"></div>
                             </template>
 
                             <!-- KW-Spaltenheader im unteren Bereich (Tages-Spalten bleiben leer) -->
                             <template #colHeader="{ day }">
                                 <div
                                     v-if="day.isExtraRow"
-                                    class="flex h-full items-center gap-1 border-l-2 border-white/40 pl-2"
+                                    class="flex h-full items-center gap-1 border-l-2 border-[var(--uo-line-strong)] pl-2"
                                 >
-                                    <span class="text-[10px] font-semibold tracking-wide text-white/80">
+                                    <span class="text-[10px] font-semibold tracking-wide text-[var(--uo-text-muted)]">
                                         KW {{ day.weekNumber }}
                                     </span>
-                                    <span class="text-[10px] text-white/60">&rarr;</span>
+                                    <span class="text-[10px] text-[var(--uo-text-subtle)]">&rarr;</span>
                                 </div>
                             </template>
 
                             <template #rowHeader="{ row }">
                                 <div v-if="row.kind === 'craft'" class="w-full px-2">
                                     <div
-                                        class="text-sm/5 font-bold text-text-subtle font-lexend! flex w-96 justify-between cursor-pointer pb-1 "
+                                        class="text-sm/5 font-bold text-[var(--uo-text-muted)] font-lexend! flex w-96 justify-between cursor-pointer pb-1 "
                                         @click="changeCraftVisibility(row.craft.id)"
                                     >
                                         <div class="flex items-center gap-2">
                                             <span>{{ row.craft.name }}</span>
                                             <span
                                                 v-if="row.craft.users?.length > 0"
-                                                class="inline-flex items-center rounded-full bg-white/10 gap-x-2 px-2 py-0.5 text-[9px] font-normal text-text-inverse"
+                                                class="inline-flex items-center rounded-full bg-[var(--uo-chip-bg)] gap-x-2 px-2 py-0.5 text-[9px] font-normal text-[var(--uo-chip-text)]"
                                             >
             {{ row.craft.users.length }}
-            <span class="inline-block h-2 w-2 rounded-full bg-white"></span>
+            <span class="inline-block h-2 w-2 rounded-full bg-[var(--uo-text)]"></span>
           </span>
                                         </div>
 
@@ -806,11 +810,11 @@
                                         @click="changeQualificationGroupVisibility(row.groupKey)"
                                     >
                                         <div class="flex items-center gap-2">
-                                            <span class="font-lexend text-[10px] uppercase tracking-wide text-white/70">
+                                            <span class="font-lexend text-[10px] uppercase tracking-wide text-[var(--uo-text-muted)]">
                                                 {{ row.qualification ? row.qualification.name : $t('Without assigned function') }}
                                             </span>
                                             <span
-                                                class="inline-flex items-center rounded-full bg-white/10 px-2 py-0.5 text-[9px] font-normal text-text-inverse"
+                                                class="inline-flex items-center rounded-full bg-[var(--uo-chip-bg)] px-2 py-0.5 text-[9px] font-normal text-[var(--uo-chip-text)]"
                                             >
                                                 {{ row.workerCount }}
                                             </span>
@@ -818,19 +822,19 @@
 
                                         <PropertyIcon
                                             name="IconChevronDown"
-                                            class="h-3 w-3 text-[#A7A6B1] transition-transform duration-200"
+                                            class="h-3 w-3 text-[var(--uo-text-subtle)] transition-transform duration-200"
                                             :class="!closedQualificationGroups.includes(row.groupKey) ? 'rotate-180' : ''"
                                         />
                                     </div>
                                 </div>
 
                                 <div v-else-if="row.kind === 'internExternDivider'" class="flex h-full w-full items-center gap-x-2 px-2">
-                                    <span class="flex items-center gap-x-1 whitespace-nowrap font-lexend text-[10px] uppercase tracking-wide text-white/70">
+                                    <span class="flex items-center gap-x-1 whitespace-nowrap font-lexend text-[10px] uppercase tracking-wide text-[var(--uo-text-muted)]">
                                         {{ $t('External') }}
                                         <PropertyIcon :name="row.externBelow ? 'IconArrowDown' : 'IconArrowUp'"
-                                                      class="h-3 w-3 text-[#A7A6B1]"/>
+                                                      class="h-3 w-3 text-[var(--uo-text-subtle)]"/>
                                     </span>
-                                    <div class="grow border-t border-white/30"></div>
+                                    <div class="grow border-t border-[var(--uo-line)]"></div>
                                 </div>
 
                                 <div v-else class="w-full">
@@ -883,7 +887,7 @@
 
                                 <!-- Intern/Extern-Trennzeile: durchgehende Linie (KW-Trennlinie kommt vom colOverlay) -->
                                 <div v-if="row.kind === 'internExternDivider'" class="flex h-full w-full items-center">
-                                    <div class="w-full border-t border-white/30"></div>
+                                    <div class="w-full border-t border-[var(--uo-line)]"></div>
                                 </div>
 
                                 <!-- Gewerks-Row: Besetzung „besetzt/Bedarf" je Tag, in der KW-Spalte die Wochensumme;
@@ -906,7 +910,7 @@
                                     <!-- ExtraRow / Wochenarbeitszeit + Freigabe-Status (blau=angefragt, grün=festgeschrieben, gelb=Achtung) -->
                                     <div
                                         v-if="day.isExtraRow"
-                                        class="shiftCell flex h-full items-center justify-center overflow-hidden rounded-lg p-2 text-center text-white"
+                                        class="shiftCell flex h-full items-center justify-center overflow-hidden rounded-lg p-2 text-center text-[var(--uo-text)]"
                                         :class="[kwWorkflowStatusClass(row, day), cellWrapperClass(row, day)]"
                                         :title="kwCellTitle(row, day)"
                                     >
@@ -915,8 +919,8 @@
                                         <div
                                             class="font-lexend text-xs"
                                             :class="row.worker?.weeklyWorkingHours?.[day.weekNumber] && !row.worker.weeklyWorkingHours[day.weekNumber].target_unknown
-                                                ? (row.worker.weeklyWorkingHours[day.weekNumber].isMinus ? 'text-danger-surface' : 'text-success-surface')
-                                                : 'text-white/60'"
+                                                ? (row.worker.weeklyWorkingHours[day.weekNumber].isMinus ? 'text-[var(--uo-danger-text)]' : 'text-[var(--uo-success-text)]')
+                                                : 'text-[var(--uo-text-subtle)]'"
                                         >
                                             {{ row.worker?.weeklyWorkingHours?.[day.weekNumber]?.difference_formatted ?? row.worker?.weeklyWorkingHours?.[day.weekNumber]?.difference ?? '–' }}
                                         </div>
@@ -927,7 +931,7 @@
                                         v-else
                                         class="relative h-full w-full"
                                         :class="cellWrapperClass(row, day)"
-                                        :style="dayTintDark(day) ? { backgroundColor: dayTintDark(day) } : undefined"
+                                        :style="userOverviewDayTintStyle(day)"
                                         @click="handleCellClick(row.worker, day)"
                                     >
                                         <ShiftPlanCell
@@ -944,7 +948,7 @@
                                             <div
                                                 v-for="(svc, idx) in getDayServicesForCell(row.worker, day)"
                                                 :key="svc.id || idx"
-                                                class="flex h-6 w-6 items-center justify-center rounded-full bg-white p-0.5"
+                                                class="flex h-6 w-6 items-center justify-center rounded-full bg-white p-0.5 ring-1 ring-[var(--uo-cell-ring)]"
                                                 :class="idx > 0 ? '-ml-3' : ''"
                                             >
                                                 <ToolTipComponent
@@ -1100,7 +1104,7 @@ import 'vue-virtual-scroller/dist/vue-virtual-scroller.css'
 import Permissions from '@/Mixins/Permissions.vue'
 import axios from 'axios'
 import {Link, router, usePage} from '@inertiajs/vue3'
-import {IconAlertTriangle, IconFilterFilled, IconX} from '@tabler/icons-vue'
+
 import ShiftPlanFunctionBar from '@/Layouts/Components/ShiftPlanComponents/ShiftPlanFunctionBar.vue'
 import ShiftPlanOpenViolationsFilterNotice from '@/Layouts/Components/ShiftPlanComponents/ShiftPlanOpenViolationsFilterNotice.vue'
 import ShiftPlanEmptyState from '@/Layouts/Components/ShiftPlanComponents/ShiftPlanEmptyState.vue'
@@ -1389,6 +1393,9 @@ const workersLoaded = ref<{
     freelancersForShifts: [],
     serviceProvidersForShifts: [],
 })
+// Erster Worker-Load abgeschlossen (auch bei Fehler) — vorher sind Zähler/Leer-Zustände
+// des Verstoß-Filters nicht belastbar (0 Verstöße = „noch nicht geladen", nicht „keine")
+const workersLoadedOnce = ref(false)
 const usersForShiftsResolved = computed(() => workersLoaded.value.usersForShifts)
 const freelancersForShiftsResolved = computed(() => workersLoaded.value.freelancersForShifts)
 const serviceProvidersForShiftsResolved = computed(() => workersLoaded.value.serviceProvidersForShifts)
@@ -1413,6 +1420,7 @@ async function loadShiftPlanWorkers() {
             freelancersForShifts: data.freelancersForShifts ?? [],
             serviceProvidersForShifts: data.serviceProvidersForShifts ?? [],
         }
+        workersLoadedOnce.value = true
     } catch {
         if (gen !== workersLoadGeneration) return
         workersLoaded.value = {
@@ -1420,6 +1428,7 @@ async function loadShiftPlanWorkers() {
             freelancersForShifts: [],
             serviceProvidersForShifts: [],
         }
+        workersLoadedOnce.value = true
     }
 }
 
@@ -1533,7 +1542,26 @@ const currentDayOnView = ref<Day | null>(
         : null,
 )
 
-const showFreelancers = ref(true)
+/** Personenfilter „Freelancer einbinden" (user_filters-Flag; Default an, wenn noch kein Filter existiert) */
+const showFreelancers = ref<boolean>(props.user_filters?.show_freelancers ?? true)
+watch(
+    () => props.user_filters?.show_freelancers,
+    (value) => {
+        if (value !== undefined && value !== null) showFreelancers.value = !!value
+    },
+)
+
+/** „Freelancer einbinden" setzen und am user_filters-Eintrag der Wochenansicht persistieren */
+function setShowFreelancersFilter(active: boolean) {
+    showFreelancers.value = active
+    axios.patch(route('update.user.calendar.filter.show-freelancers', authUser.value.id), {
+        filter_type: 'shift_filter',
+        show_freelancers: active,
+    }).catch(() => {
+        // Speichern fehlgeschlagen: Anzeige auf den persistierten Stand zurücksetzen
+        showFreelancers.value = props.user_filters?.show_freelancers ?? true
+    })
+}
 const multiEditCellByDayAndUser = ref<Record<string, any>>({})
 const showCellMultiEditModal = ref(false)
 const openCellMultiEditDelete = ref(false)
@@ -1609,6 +1637,8 @@ const calendarSettings = computed(() => {
     return usePage().props.shift_plan_settings ?? authUser.value.calendar_settings
 })
 const showUserOverview = ref(calendarSettings.value?.show_user_overview ?? true)
+// Hell/Dunkel des Personenbereichs: immer aus shift_plan_settings (Wochenansicht), nie aus den Daily-Settings
+const userOverviewLightMode = ref<boolean>(!!usePage().props.shift_plan_settings?.user_overview_light_mode)
 const expandDays = computed(() => calendarSettings.value?.expand_days)
 const displayProjectGroups = computed(() => calendarSettings.value?.display_project_groups)
 const compactMode = computed(() => authUser.value.compact_mode)
@@ -1860,6 +1890,12 @@ const specialDayTooltip = (day: any) => {
 
 const dayTintLight = (day: any) => dayTintByKey.value.get(day?.fullDay)?.light ?? null
 const dayTintDark = (day: any) => dayTintByKey.value.get(day?.fullDay)?.dark ?? null
+// Tages-Tint der Personenzellen je Farbwelt: hell = dieselben Tints wie das weiße Haupt-Grid,
+// dunkel = die niedrig gedeckten Dark-Tints (Map-Lookup, kein Render-Pfad-Aufwand)
+const userOverviewDayTintStyle = (day: any) => {
+    const tint = userOverviewLightMode.value ? dayTintLight(day) : dayTintDark(day)
+    return tint ? { backgroundColor: tint } : undefined
+}
 const dayHeaderAccent = (day: any) => dayTintByKey.value.get(day?.fullDay)?.accent ?? null
 const isTodayColumn = (day: any) => day?.fullDay === todayKey
 
@@ -2192,7 +2228,7 @@ function summarizeCell(room: any, dayKey: string): CellSummary {
                 if (!dayIso || !startIso || dayIso === startIso) h += 2 + 20
             }
 
-            // Notizen (Anzeigeeinstellung "Notizen einblenden"): mt-0.5 + text-xs
+            // Beschreibung (Anzeigeeinstellung "Beschreibung einblenden", shift_notes): mt-0.5 + text-xs
             if (settings.shift_notes && event.description) {
                 const noteLines = expanded ? measureTextLines(event.description, contentWidth, 400) : 1
                 h += 2 + noteLines * 16
@@ -3028,14 +3064,15 @@ function kwWorkflowStatus(row: any, day: any): string | null {
 
 function kwWorkflowStatusClass(row: any, day: any): string {
     switch (kwWorkflowStatus(row, day)) {
+        // Farben je Farbwelt des Personenbereichs (--uo-kw-*, app.css)
         case 'attention':
-            return 'bg-warning/50 ring-1 ring-inset ring-warning-border/70'
+            return 'bg-[var(--uo-kw-attention-bg)] ring-1 ring-inset ring-[var(--uo-kw-attention-ring)]'
         case 'requested':
-            return 'bg-accent-500/50 ring-1 ring-inset ring-accent-200/70'
+            return 'bg-[var(--uo-kw-requested-bg)] ring-1 ring-inset ring-[var(--uo-kw-requested-ring)]'
         case 'committed':
-            return 'bg-success/50 ring-1 ring-inset ring-success-border/70'
+            return 'bg-[var(--uo-kw-committed-bg)] ring-1 ring-inset ring-[var(--uo-kw-committed-ring)]'
         default:
-            return 'bg-white/10'
+            return 'bg-[var(--uo-chip-bg)]'
     }
 }
 
@@ -3585,7 +3622,7 @@ function countOpenViolationsOfWorker(worker: any): number {
 /** Personenfilter "nur Personen mit offenen Regelverstößen" (user_filters-Flag, Schichtplan-Filter-Modal) */
 const showOnlyUsersWithOpenViolations = computed(() => !!props.user_filters?.show_only_users_with_open_violations)
 
-/** Zähler-Chip in der Funktionsleiste: offene Verstöße über alle sichtbaren Personen und Tage */
+/** Offene Verstöße über alle sichtbaren Personen und Tage (Zähler im Personen-Filter-Popup) */
 const openViolationsCount = computed(() => {
     let total = 0
     for (const worker of dropWorkers.value) {
@@ -3601,11 +3638,6 @@ function setOpenViolationsFilter(active: boolean) {
         { filter_type: 'shift_filter', show_only_users_with_open_violations: active },
         { preserveScroll: true, preserveState: false },
     )
-}
-
-/** Zähler-Chip ist ein Umschalter: aktiv → Filter aufheben, sonst aktivieren */
-function toggleOpenViolationsFilter() {
-    setOpenViolationsFilter(!showOnlyUsersWithOpenViolations.value)
 }
 
 const craftWorkersMap = computed<Map<number, any[]>>(() => {
@@ -3629,9 +3661,9 @@ const craftWorkersMap = computed<Map<number, any[]>>(() => {
     return map
 })
 
-/** Filter aktiv, aber keine Person mit offenem Verstoß im Zeitraum → Hinweis statt leerem Raster */
+/** Filter aktiv, Personen geladen, aber keine mit offenem Verstoß im Zeitraum → Hinweis statt leerem Raster */
 const openViolationsFilterIsEmpty = computed<boolean>(
-    () => showOnlyUsersWithOpenViolations.value && craftWorkersMap.value.size === 0,
+    () => showOnlyUsersWithOpenViolations.value && workersLoadedOnce.value && craftWorkersMap.value.size === 0,
 )
 
 /**
@@ -4062,6 +4094,22 @@ function showCloseUserOverview() {
         { show_user_overview: showUserOverview.value, is_shift_plan: true },
         { preserveScroll: true, preserveState: true },
     )
+}
+
+// Hell/Dunkel-Umschalter: axios statt router.patch — die Farbwelt ist rein clientseitig
+// (CSS-Variablen), ein Inertia-Reload der Schichtplan-Props wäre nur Ballast.
+function toggleUserOverviewLightMode(value: boolean) {
+    userOverviewLightMode.value = value
+    const settings = usePage().props.shift_plan_settings as any
+    if (settings) settings.user_overview_light_mode = value
+    axios
+        .patch(route('user.calendar_settings.update', { user: authUser.value.id }), {
+            is_shift_plan: true,
+            user_overview_light_mode: value,
+        })
+        .catch(() => {
+            // Anzeige bleibt lokal korrekt; beim nächsten Umschalten wird erneut gespeichert.
+        })
 }
 
 function selectGoToMode(direction: 'next' | 'previous') {

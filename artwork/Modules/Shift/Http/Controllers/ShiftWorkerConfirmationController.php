@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Settings\ShiftSettings;
 use Artwork\Modules\Shift\Events\UpdateShiftInShiftPlan;
 use Artwork\Modules\Shift\Models\ShiftWorker;
+use Artwork\Modules\Shift\Services\ShiftConfirmationEligibilityService;
 use Artwork\Modules\Shift\Services\ShiftWorkerConfirmationService;
 use Artwork\Modules\User\Models\User;
 use Illuminate\Http\RedirectResponse;
@@ -18,7 +19,8 @@ class ShiftWorkerConfirmationController extends Controller
         Request $request,
         ShiftWorker $shiftWorker,
         ShiftSettings $shiftSettings,
-        ShiftWorkerConfirmationService $confirmationService
+        ShiftWorkerConfirmationService $confirmationService,
+        ShiftConfirmationEligibilityService $eligibility
     ): RedirectResponse {
         abort_unless($shiftSettings->shift_confirmation_enabled, 403);
 
@@ -32,17 +34,18 @@ class ShiftWorkerConfirmationController extends Controller
 
         $shiftWorker->load('shift');
         abort_if($shiftWorker->shift === null, 404);
-        // Zu-/Absagen gibt es nur für festgeschriebene Schichten — vorher
-        // ist der Plan noch in Arbeit und wird gar nicht erst angefragt.
-        abort_unless((bool) $shiftWorker->shift->is_committed, 403);
+        // Bewusst KEINE Festschreibungs-Sperre: auch vorläufige Zuweisungen
+        // können zu-/abgesagt werden (Zeitänderungen setzen die Antwort zurück).
+        // Der Flow ist ein Opt-in je Person: nur wer das Recht „Darf Schichten
+        // annehmen/ablehnen" hat, wird gefragt — weder selbst noch stellvertretend
+        // lässt sich für andere Personen ein Status erfassen.
+        abort_unless($eligibility->isEligiblePivot($shiftWorker), 403);
 
         /** @var User $user */
         $user = $request->user();
-        $isSelf = $shiftWorker->employable_type === User::class
-            && (int) $shiftWorker->employable_id === (int) $user->id;
+        $isSelf = (int) $shiftWorker->employable_id === (int) $user->id;
 
-        // Für andere (insb. Freelancer/Dienstleister ohne Login) dürfen nur
-        // Planer:innen stellvertretend erfassen.
+        // Stellvertretend (z.B. telefonische Antwort) dürfen nur Planer:innen erfassen.
         if (!$isSelf) {
             abort_unless($user->can('can plan shifts'), 403);
         }

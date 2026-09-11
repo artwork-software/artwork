@@ -25,7 +25,9 @@
 
             <!-- topbar -->
             <div :class="topBarContainerClass" :style="topBarStyle" ref="topBarEl">
-                <div class="flex items-center pr-5 gap-x-5 justify-between">
+                <!-- flex-wrap: auf schmalen Bildschirmen umbrechen statt rechts aus dem Viewport zu laufen
+                     (Höhe wird per ResizeObserver gemessen, ein Umbruch ist also unkritisch) -->
+                <div class="flex flex-wrap items-center pr-5 gap-x-5 gap-y-2 justify-between">
                     <div class="flex items-center gap-x-4">
                         <div v-if="props.project" class="ml-1 text-sm font-lexend font-semibold text-text-muted">
                             {{ $t('Projektzeitraum') }} {{ formatDate(projectStart) }} - {{ formatDate(projectEnd) }}
@@ -60,7 +62,7 @@
                         </template>
                     </div>
 
-                    <div class="flex items-center gap-x-5">
+                    <div class="flex items-center gap-x-3 ml-auto">
                         <BaseUIButton
                             v-if="isInProjectView && (can('can plan shifts') || is('artwork admin'))"
                             :label="$t('Add Shift')"
@@ -68,31 +70,6 @@
                             is-small
                             @click="openAddShiftForRoomAndDay(null, null)"
                         />
-
-                        <!-- Zähler-Chip "N offene Verstöße" (wie Wochenansicht): Umschalter für den Personenfilter
-                             der Tagesansicht (aktiv = gefüllt, Klick hebt den Filter wieder auf) -->
-                        <button
-                            v-if="!props.isInProjectView && (openViolationsCount > 0 || showOnlyUsersWithOpenViolations)"
-                            type="button"
-                            class="ui-button text-xs gap-1.5 whitespace-nowrap shrink-0"
-                            :class="showOnlyUsersWithOpenViolations
-                                ? '!bg-accent-600 !border-accent-600 !text-white shadow-sm hover:!bg-accent-700 hover:!border-accent-700'
-                                : '!text-warning'"
-                            :title="showOnlyUsersWithOpenViolations
-                                ? $t('Remove filter: only people with open rule violations')
-                                : $t('Show only people with open rule violations')"
-                            :aria-pressed="showOnlyUsersWithOpenViolations"
-                            @click="toggleOpenViolationsFilter"
-                        >
-                            <component
-                                :is="showOnlyUsersWithOpenViolations ? IconFilterFilled : IconAlertTriangle"
-                                class="size-4 shrink-0"
-                                stroke-width="1.5"
-                                aria-hidden="true"
-                            />
-                            {{ $t('{n} open violations', { n: openViolationsCount }) }}
-                            <IconX v-if="showOnlyUsersWithOpenViolations" class="size-3.5 shrink-0 opacity-80" stroke-width="2" aria-hidden="true" />
-                        </button>
 
                         <ShiftPlanViewSwitch v-if="!props.project" current="day" />
 
@@ -745,8 +722,6 @@ import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 import {
     IconAlertSquareRounded,
-    IconAlertTriangle,
-    IconFilterFilled,
     IconCalendar,
     IconCalendarWeek,
     IconCalendarMonth,
@@ -1768,28 +1743,6 @@ function shiftHasWorkerWithOpenViolation(shift: any, isoDay: string): boolean {
     return shiftUserWorkers(shift).some((w: any) => openViolationsOfUserOnDay(w.id, isoDay) > 0)
 }
 
-/** Zähler-Chip: offene Verstöße der in den angezeigten Schichten eingeplanten Personen (je Person/Tag einmal) */
-const openViolationsCount = computed(() => {
-    const seen = new Set<string>()
-    let total = 0
-    for (const room of (shiftPlanCopy.value || [])) {
-        const content = room?.content || {}
-        const shiftsById = room?.shiftsById || {}
-        for (const dayKey of Object.keys(content)) {
-            const isoDay = isoDayKey(dayKey)
-            for (const id of (content[dayKey]?.shiftIds ?? [])) {
-                for (const worker of shiftUserWorkers(shiftsById[id])) {
-                    const key = `${worker.id}|${isoDay}`
-                    if (seen.has(key)) continue
-                    seen.add(key)
-                    total += openViolationsOfUserOnDay(worker.id, isoDay)
-                }
-            }
-        }
-    }
-    return total
-})
-
 /** Personenfilter "nur offene Regelverstöße" setzen bzw. aufheben (persistentes user_filters-Flag der Tagesansicht) */
 function setOpenViolationsFilter(active: boolean) {
     if (!authUserId.value) return
@@ -1801,9 +1754,6 @@ function setOpenViolationsFilter(active: boolean) {
 }
 
 /** Zähler-Chip ist ein Umschalter: aktiv → Filter aufheben, sonst aktivieren */
-function toggleOpenViolationsFilter() {
-    setOpenViolationsFilter(!showOnlyUsersWithOpenViolations.value)
-}
 
 /**
  * Craft filter set

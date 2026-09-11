@@ -2,9 +2,11 @@
     <div
         class="rounded-xl border bg-white shadow-sm overflow-hidden transition hover:shadow-md"
         :class="[
-            ownConfirmationInfo?.accepted
-                ? 'border-success ring-1 ring-success'
-                : (ownConfirmationInfo ? 'border-danger ring-1 ring-danger' : (shift.is_committed ? 'border-border-subtle' : 'border-warning-border')),
+            ownConfirmationInfo?.requested
+                ? 'border-accent-500 ring-1 ring-accent-500'
+                : ownConfirmationInfo?.accepted
+                    ? 'border-success ring-1 ring-success'
+                    : (ownConfirmationInfo ? 'border-danger ring-1 ring-danger' : (shift.is_committed ? 'border-border-subtle' : 'border-warning-border')),
             // Vorläufige (nicht festgeschriebene) Schichten: gestrichelter Rahmen
             shift.is_committed ? '' : 'border-dashed'
         ]"
@@ -135,21 +137,13 @@
                 </span>
             </div>
 
-            <!-- Hinweis an vorläufigen Karten im eigenen Einsatzplan: Zu-/Absage erst nach Festschreibung -->
-            <div
-                v-if="showPendingCommitHint"
-                class="flex items-start gap-1.5 border-b border-border-subtle pb-2 text-[11px] text-text-subtle"
-            >
-                <PropertyIcon name="IconInfoCircle" class="h-3.5 w-3.5 shrink-0 mt-px" stroke-width="1.5" />
-                <span>{{ $t('Accept/decline is possible as soon as the shift plan is committed.') }}</span>
-            </div>
-
-            <!-- Zu-/Absage der Zuweisung (nur festgeschriebene Schichten); Status ist
-                 auch für Planer:innen sichtbar, die einen fremden Plan ansehen -->
+            <!-- Zu-/Absage der Zuweisung (auch vorläufige Schichten, nur Personen mit
+                 dem Recht „Darf Schichten annehmen/ablehnen"); Status ist auch für
+                 Planer:innen sichtbar, die einen fremden Plan ansehen -->
             <div v-if="showOwnConfirmationControls || ownConfirmationInfo" class="border-b border-border-subtle pb-2">
                 <!-- flex-wrap + whitespace-nowrap: auf schmalen Karten rutscht der
                      Aktionslink in eine eigene Zeile statt abgeschnitten zu werden -->
-                <div v-if="ownConfirmationInfo" class="flex flex-wrap items-center justify-between gap-x-2 gap-y-1">
+                <div v-if="ownConfirmationInfo && !ownConfirmationInfo.requested" class="flex flex-wrap items-center justify-between gap-x-2 gap-y-1">
                     <span
                         class="inline-flex items-center gap-1.5 rounded-full px-2 py-1 text-xs font-semibold"
                         :class="ownConfirmationInfo.accepted
@@ -173,11 +167,22 @@
                         {{ ownConfirmationInfo.accepted ? $t('Decline shift') : $t('Accept shift') }}
                     </button>
                 </div>
-                <div v-else class="flex items-center justify-between gap-2">
-                    <span class="text-xs font-semibold uppercase tracking-wide text-text-subtle">
+                <!-- flex-wrap: auf schmalen Karten rutschen die Buttons unter die Pille
+                     statt am Kartenrand abgeschnitten zu werden -->
+                <div v-else class="flex flex-wrap items-center justify-between gap-x-2 gap-y-1">
+                    <!-- Status „angefragt" (blau): festgeschrieben, noch keine Antwort -->
+                    <span
+                        v-if="ownConfirmationInfo?.requested"
+                        class="inline-flex items-center gap-1.5 rounded-full border border-accent-200 bg-accent-50 px-2 py-1 text-xs font-semibold text-accent-700"
+                        v-tooltip.bottom="{ value: $t('Requested – no reply yet'), class: 'aw-tooltip' }"
+                    >
+                        <PropertyIcon name="IconClockQuestion" class="h-3.5 w-3.5" stroke-width="2.5" />
+                        {{ $t('Reply requested') }}
+                    </span>
+                    <span v-else class="text-xs font-semibold uppercase tracking-wide text-text-subtle">
                         {{ $t('Reply to planner') }}
                     </span>
-                    <div class="flex items-center gap-1.5 shrink-0">
+                    <div v-if="showOwnConfirmationControls" class="ml-auto flex items-center gap-1.5 shrink-0">
                         <button
                             type="button"
                             class="inline-flex items-center justify-center h-7 w-7 rounded-lg border border-success-border bg-success-surface text-success hover:opacity-80 transition"
@@ -261,6 +266,7 @@
     <ShiftConfirmationResponseModal
         v-if="responseModalMode"
         :mode="responseModalMode"
+        :worker-name="proxyWorkerName"
         @close="responseModalMode = null"
         @submit="submitResponse"
     />
@@ -343,7 +349,7 @@ const hasIndivTime = ref(false)
 // 'accept' | 'decline' | null — steuert das Antwort-Modal (Kommentar optional)
 const responseModalMode = ref(null)
 
-const { isEnabled: confirmationEnabled, respond: respondToShift, getConfirmationInfo } = useShiftWorkerConfirmation()
+const { isEnabled: confirmationEnabled, isEligible, respond: respondToShift, getConfirmationInfo } = useShiftWorkerConfirmation()
 
 const ownWorker = computed(() => (props.shift.workers || []).find(
     w => w.type === props.type && w.id === props.userToEditId
@@ -360,34 +366,41 @@ const breakMinutes = computed(() => {
 
 const isOwnPlan = computed(() => props.type === 'user' && props.userToEditId === usePage().props.auth.user.id)
 
-// Vorläufige Schicht im eigenen Plan: Zu-/Absage gibt es erst nach Festschreibung
-const showPendingCommitHint = computed(() =>
-    confirmationEnabled()
-    && !props.shift.is_committed
-    && isOwnPlan.value
-    && !!ownWorker.value?.pivot?.id
-)
+// Person nimmt am Zu-/Absage-Flow teil (Recht „Darf Schichten annehmen/ablehnen",
+// Flag aus dem Backend) — ohne das Recht weder Buttons, Hinweise noch Status
+const ownEligible = computed(() => isEligible(ownWorker.value))
 
 // Toast nach gesendeter Zu-/Absage; Titel/Beschreibung sind Übersetzungs-Keys
 // (NotificationToast übersetzt selbst).
 const responseToast = ref(null)
 const responseToastVisible = ref(false)
 
-// Buttons nur im EIGENEN Einsatzplan (die Komponente rendert auch fremde Pläne
-// für Planer:innen) und nur an festgeschriebenen Schichten.
+// Stellvertretende Erfassung: Planer:innen/Admins sehen fremde Pläne und dürfen
+// für berechtigte Personen genauso antworten wie die Person selbst (Backend:
+// Proxy nur mit „Schichten planen", Admins über Gate::before).
+const canRespondAsProxy = computed(() => can('can plan shifts') || hasAdminRole())
+
+// Buttons im eigenen Einsatzplan oder stellvertretend (Planer:in/Admin), auch an
+// vorläufigen Schichten, nur für Personen mit dem Recht.
 const showOwnConfirmationControls = computed(() =>
     confirmationEnabled()
-    && props.shift.is_committed
+    && ownEligible.value
     && props.type === 'user'
-    && props.userToEditId === usePage().props.auth.user.id
+    && (isOwnPlan.value || canRespondAsProxy.value)
     && !!ownWorker.value?.pivot?.id
 )
 
+// Name der Person fürs Modal, wenn stellvertretend geantwortet wird
+const proxyWorkerName = computed(() => {
+    if (isOwnPlan.value) return null
+    const w = ownWorker.value
+    return w?.name || [w?.first_name, w?.last_name].filter(Boolean).join(' ') || null
+})
+
 // Auch read-only sichtbar (Planer:in schaut fremden Plan an); getConfirmationInfo
-// prüft bereits Feature-Setting + vorhandenen Status.
-const ownConfirmationInfo = computed(() =>
-    props.shift.is_committed ? getConfirmationInfo(ownWorker.value) : null
-)
+// prüft bereits Feature-Setting + Recht und liefert „angefragt", solange die
+// Zuweisung unbeantwortet ist (auch vorläufig).
+const ownConfirmationInfo = computed(() => getConfirmationInfo(ownWorker.value, props.shift))
 
 // (1) Zusage nach Zeitänderung zurückgesetzt: ShiftWorkerConfirmationService::resetConfirmation
 // nullt alle confirmation_*-Felder – ein zurückgesetzter Status ist im Pivot daher nicht
@@ -395,7 +408,7 @@ const ownConfirmationInfo = computed(() =>
 // pivot.confirmation_reset_at (Zeitstempel) bzw. pivot.confirmation_reset (bool).
 const confirmationResetInfo = computed(() => {
     const pivot = ownWorker.value?.pivot
-    if (!confirmationEnabled() || !props.shift.is_committed || !pivot || pivot.confirmation_status) return null
+    if (!confirmationEnabled() || !ownEligible.value || !pivot || pivot.confirmation_status) return null
     const resetAt = pivot.confirmation_reset_at ?? null
     const resetFlag = pivot.confirmation_reset === true || pivot.confirmation_was_reset === true
     if (!resetAt && !resetFlag) return null
@@ -446,7 +459,12 @@ const submitResponse = (comment) => {
         onSuccess: () => {
             responseToast.value = status === 'accepted'
                 ? { title: 'Acceptance sent', description: '' }
-                : { title: 'Decline sent', description: 'You remain scheduled until the plan is changed.' }
+                : {
+                    title: 'Decline sent',
+                    description: isOwnPlan.value
+                        ? 'You remain scheduled until the plan is changed.'
+                        : 'The person remains scheduled until the plan is changed.',
+                }
             responseToastVisible.value = true
         },
     })

@@ -158,7 +158,7 @@ const visibleCols = computed(() => {
                 </div>
                 <!-- Abdeckung über der Sticky-Spalte, damit Header-Labels darunter durchscrollen -->
                 <div
-                    class="absolute left-0 top-0 z-10 bg-surface-inverse"
+                    class="absolute left-0 top-0 z-10 bg-[var(--uo-bg)]"
                     :style="{ width: stickyColWidth + 'px', height: headerHeight + 'px' }"
                 ></div>
             </div>
@@ -192,7 +192,7 @@ const visibleCols = computed(() => {
                 <div class="relative h-full w-full">
                     <!-- Sticky left column -->
                     <div
-                        class="sticky left-0 z-10 h-full flex items-center bg-surface-inverse"
+                        class="sticky left-0 z-10 h-full flex items-center bg-[var(--uo-bg)]"
                         :style="{ width: stickyColWidth + 'px' }"
                     >
                         <slot name="rowHeader" :row="vr.row" :rowIndex="vr.r" />

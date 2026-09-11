@@ -16,6 +16,7 @@ use Artwork\Modules\Task\Services\TaskService;
 use Carbon\Carbon;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Auth\AuthManager;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Redirect;
@@ -169,7 +170,7 @@ class ChecklistController extends Controller
         ChecklistUpdateRequest $request,
         Checklist $checklist,
         TaskService $taskService
-    ): RedirectResponse {
+    ): RedirectResponse|JsonResponse {
 
         $setTabId = null;
         if ($request->tab_id === null && $checklist->tab_id !== null) {
@@ -183,7 +184,7 @@ class ChecklistController extends Controller
             $checklist->save();
         }
         if ($request->missing('assigned_user_ids')) {
-            return Redirect::back();
+            return $this->checklistUpdateResponse($request, $checklist);
         }
 
         $this->checklistService->assignUsersById($checklist, $request->assigned_user_ids ?? []);
@@ -199,6 +200,19 @@ class ChecklistController extends Controller
             );
             broadcast(new ChecklistUpdated($checklist->project_id))->toOthers();
         }
+        return $this->checklistUpdateResponse($request, $checklist);
+    }
+
+    /**
+     * Team-/Nutzer-Zuweisung speichert per axios (kein Inertia-Request): ein 302 würde vom Browser
+     * mit PATCH auf die Seiten-URL weiterverfolgt (405). Deshalb JSON für XHR, Redirect für Inertia.
+     */
+    private function checklistUpdateResponse(Request $request, Checklist $checklist): RedirectResponse|JsonResponse
+    {
+        if ($request->expectsJson() && !$request->header('X-Inertia')) {
+            return response()->json(['id' => $checklist->id]);
+        }
+
         return Redirect::back();
     }
 

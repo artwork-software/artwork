@@ -72,6 +72,35 @@ final class ShiftUpdateTest extends FeatureTestCase
     }
 
     #[Test]
+    public function updating_a_shift_from_the_shift_plan_returns_json_instead_of_a_redirect(): void
+    {
+        // Regression: Der Dienstplan speichert per axios (kein Inertia-Request). Ein 302 wurde vom
+        // Browser mit PATCH auf /shifts/view weiterverfolgt -> 405 "PATCH not supported".
+        $this->actingAsAdmin();
+
+        $shift = Shift::factory()->create([
+            'is_committed' => false,
+            'start_date' => '2026-06-08',
+            'end_date' => '2026-06-08',
+            'start' => '10:00:00',
+            'end' => '14:00:00',
+        ]);
+
+        $response = $this->patchJson(route('event.shift.update', $shift), [
+            'start_date' => '2026-06-08',
+            'end_date' => '2026-06-08',
+            'start' => '12:00:00',
+            'end' => '16:00:00',
+            'break_minutes' => 0,
+            'craft_id' => $shift->craft_id,
+            'updateOrCreateInShiftPlan' => true,
+        ]);
+
+        $response->assertOk()->assertJson(['id' => $shift->id]);
+        $this->assertDatabaseHas('shifts', ['id' => $shift->id, 'start' => '12:00:00', 'end' => '16:00:00']);
+    }
+
+    #[Test]
     public function updating_a_shift_without_qualifications_field_preserves_slots_and_assignments(): void
     {
         // Regression: Beim zeitlichen Verschieben einer Schicht wird das Feld `shiftsQualifications`

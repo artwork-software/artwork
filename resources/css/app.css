@@ -744,3 +744,80 @@
     border-radius: 0.5rem; /* rounded-md/lg */
     box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -4px rgba(0,0,0,0.1); /* ~shadow-lg */
 }
+
+/* ============================================================
+   Schichtplan — Personenbereich (unteres Panel in ShiftPlan.vue)
+   Zwei Farbwelten über EINEN Variablensatz (--uo-*): Standard ist die
+   bisherige dunkle Fläche (Band-Ink), `.user-overview-light` schaltet
+   pro Person auf die helle Design-Fläche um. Die Werte auf :root sind
+   bewusst die Dunkel-Werte, damit geteilte Komponenten (DragElement im
+   Projekt-Schichten-Tab) außerhalb des Panels unverändert aussehen.
+   Statusfarben: auf Dunkel die hellen *-border-Töne (lesbar auf Ink),
+   auf Hell die kräftigen Basistöne (AA auf Weiß).
+   ============================================================ */
+:root {
+    --uo-bg:            var(--color-surface-inverse);
+    --uo-text:          #FFFFFF;
+    --uo-text-muted:    rgba(255, 255, 255, 0.75);
+    --uo-text-subtle:   rgba(255, 255, 255, 0.6);
+    --uo-line:          rgba(255, 255, 255, 0.3);
+    --uo-line-strong:   rgba(255, 255, 255, 0.4);
+    --uo-chip-bg:       rgba(255, 255, 255, 0.1);
+    --uo-chip-text:     var(--color-text-inverse);
+    --uo-cell-bg:       rgba(244, 245, 246, 0.1);
+    --uo-cell-ring:     transparent;
+    --uo-hover-ring:    rgba(255, 255, 255, 0.4);
+    --uo-active-ring:   rgba(255, 255, 255, 0.7);
+    --uo-success-text:  var(--color-success-border);
+    --uo-danger-text:   var(--color-danger-border);
+    --uo-warning-text:  var(--color-warning-border);
+    --uo-orange-text:   #F08B32;
+    --uo-teal-text:     var(--color-special-teal-border);
+    --uo-staff-none-bg:    rgba(255, 255, 255, 0.1);
+    --uo-staff-none-text:  rgba(255, 255, 255, 0.5);
+    --uo-staff-low-bg:     color-mix(in srgb, var(--color-danger) 25%, transparent);
+    --uo-staff-low-text:   var(--color-danger-surface);
+    --uo-staff-partial-bg: color-mix(in srgb, var(--color-warning) 25%, transparent);
+    --uo-staff-partial-text: var(--color-warning-surface);
+    --uo-staff-full-bg:    color-mix(in srgb, var(--color-success) 25%, transparent);
+    --uo-staff-full-text:  var(--color-success-surface);
+    --uo-kw-attention-bg:   color-mix(in srgb, var(--color-warning) 50%, transparent);
+    --uo-kw-attention-ring: color-mix(in srgb, var(--color-warning-border) 70%, transparent);
+    --uo-kw-requested-bg:   color-mix(in srgb, var(--color-accent-500) 50%, transparent);
+    --uo-kw-requested-ring: color-mix(in srgb, var(--color-accent-200) 70%, transparent);
+    --uo-kw-committed-bg:   color-mix(in srgb, var(--color-success) 50%, transparent);
+    --uo-kw-committed-ring: color-mix(in srgb, var(--color-success-border) 70%, transparent);
+}
+.user-overview-light {
+    --uo-bg:            var(--color-surface-canvas);
+    --uo-text:          var(--color-text);
+    --uo-text-muted:    var(--color-text-muted);
+    --uo-text-subtle:   var(--color-text-subtle);
+    --uo-line:          var(--color-border);
+    --uo-line-strong:   var(--color-border-strong);
+    --uo-chip-bg:       rgba(28, 31, 36, 0.08);
+    --uo-chip-text:     var(--color-text);
+    --uo-cell-bg:       var(--color-surface);
+    --uo-cell-ring:     var(--color-border-subtle);
+    --uo-hover-ring:    var(--color-border-strong);
+    --uo-active-ring:   var(--color-text);
+    --uo-success-text:  var(--color-success);
+    --uo-danger-text:   var(--color-danger);
+    --uo-warning-text:  var(--color-warning);
+    --uo-orange-text:   var(--color-special-orange);
+    --uo-teal-text:     var(--color-special-teal);
+    --uo-staff-none-bg:    rgba(28, 31, 36, 0.08);
+    --uo-staff-none-text:  var(--color-text-subtle);
+    --uo-staff-low-bg:     var(--color-danger-surface);
+    --uo-staff-low-text:   var(--color-danger);
+    --uo-staff-partial-bg: var(--color-warning-surface);
+    --uo-staff-partial-text: var(--color-warning);
+    --uo-staff-full-bg:    var(--color-success-surface);
+    --uo-staff-full-text:  var(--color-success);
+    --uo-kw-attention-bg:   var(--color-warning-surface);
+    --uo-kw-attention-ring: var(--color-warning-border);
+    --uo-kw-requested-bg:   var(--color-accent-50);
+    --uo-kw-requested-ring: var(--color-accent-200);
+    --uo-kw-committed-bg:   var(--color-success-surface);
+    --uo-kw-committed-ring: var(--color-success-border);
+}

@@ -82,7 +82,7 @@
                 <div class="flex items-start justify-between gap-x-1.5 w-full">
                     <div>
 
-                        <div v-if="resolvedShiftGroup && usePage().props.auth.user.calendar_settings?.show_shift_group_tag" class="text-[8px]">({{ resolvedShiftGroup.name }})</div>
+                        <div v-if="resolvedShiftGroup && displaySettings?.show_shift_group_tag" class="text-[8px]">({{ resolvedShiftGroup.name }})</div>
                         <div class="text-[11px] flex items-center gap-x-1.5 w-full">
                             <ToolTipComponent
                                 v-if="shift.isCommitted"
@@ -163,7 +163,7 @@
             </div>
         </div>
 
-        <div class="w-full px-1" v-if="!compact && usePage().props.auth.user.calendar_settings?.show_qualifications">
+        <div class="w-full px-1" v-if="!compact && displaySettings?.show_qualifications">
             <div class="w-full flex flex-row flex-wrap text-[10px] text-text-subtle">
                 <div
                     v-for="(row) in computedShiftsQualificationsWithWorkerCount"
@@ -197,7 +197,8 @@
 
         </div>
 
-        <div v-if="!compact && usePage().props.auth.user.calendar_settings?.shift_notes" class="px-1 text-sm/5 font-bold text-text-subtle">
+        <!-- Anzeigeeinstellung „Beschreibung einblenden" (shift_notes): Schichtbeschreibung im Wochengrid -->
+        <div v-if="!compact && displaySettings?.shift_notes && shift.description" class="px-1 pb-0.5 text-[11px]/4 text-text-subtle break-words">
             {{ shift.description }}
         </div>
     </div>
@@ -318,7 +319,10 @@ const seriesShiftData = ref<any | null>(null)
 /* ---------------- Helpers ---------------- */
 const page = usePage()
 const { proxy } = getCurrentInstance() || {}
-const expandDays = computed(() => page.props.auth.user.calendar_settings?.expand_days ?? false)
+// Anzeigeeinstellungen des Dienstplans (eigene Tabelle user_shift_plan_settings, nicht die Kalender-Settings —
+// das Anzeige-Modal im Dienstplan speichert mit is_shift_plan dorthin)
+const displaySettings = computed<any>(() => page.props.shift_plan_settings ?? page.props.auth.user.calendar_settings)
+const expandDays = computed(() => displaySettings.value?.expand_days ?? false)
 
 const { resolveCraft, resolveShiftGroup } = useShiftPlanLookups();
 const resolvedCraft = computed(() => props.shift?.craft ?? resolveCraft(props.shift?.craftId) ?? {});
@@ -402,8 +406,8 @@ const { getConfirmationInfo, getConfirmationTooltip } = useShiftWorkerConfirmati
 
 // Zuweisungen mit Absage (pivot.confirmation_status === 'declined'); leer, wenn das Feature aus ist.
 const declinedWorkers = computed(() => shiftWorkers.value.filter((w: any) => {
-    const info = getConfirmationInfo(w)
-    return !!info && !info.accepted
+    const info = getConfirmationInfo(w, props.shift)
+    return !!info?.declined
 }))
 
 function workerDisplayName(worker: any): string {
@@ -418,7 +422,7 @@ const declinedWorkersTooltip = computed(() => {
     const $t = (proxy as any)?.$t ?? ((s: string) => s)
     const label = $t('Declined')
     const lines = declinedWorkers.value
-        .map((w: any) => getConfirmationTooltip(w, $t))
+        .map((w: any) => getConfirmationTooltip(w, $t, props.shift))
         .filter(Boolean)
     return lines.length ? `${label}: ${lines.join(' | ')}` : label
 })

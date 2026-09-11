@@ -16,12 +16,14 @@
             />
 
             <div class="flex items-center justify-end gap-2 pt-2 border-t border-border-subtle">
-                <BaseUIButton type="button" :label="$t('Cancel')" is-cancel-button @click="$emit('close')" />
+                <BaseUIButton type="button" :label="$t('Cancel')" is-cancel-button :disabled="processing" @click="$emit('close')" />
                 <BaseUIButton
                     type="button"
                     is-add-button
                     icon="IconCheck"
                     :label="$t('Accept')"
+                    :processing="processing"
+                    :disabled="processing"
                     @click="$emit('confirm', comment)"
                 />
             </div>
@@ -35,6 +37,10 @@ import ArtworkBaseModal from '@/Artwork/Modals/ArtworkBaseModal.vue';
 import BaseUIButton from '@/Artwork/Buttons/BaseUIButton.vue';
 import BaseTextarea from '@/Artwork/Inputs/BaseTextarea.vue';
 
+defineProps({
+    // true, solange der Accept-Request läuft: Buttons gesperrt, Spinner am Bestätigen-Button
+    processing: { type: Boolean, default: false },
+});
 defineEmits(['close', 'confirm']);
 
 const comment = ref('');

@@ -85,13 +85,15 @@
             :request="request"
             :shift="selectedShift"
             :is-my-request="isMyRequest"
+            :processing="processing"
             @close="closeHistoryDrawer"
             @reject-change="rejectRequestChange"
         />
 
         <AcceptShiftPlanRequestModal
             v-if="acceptModalOpen"
-            @close="acceptModalOpen = false"
+            :processing="processing === 'accept'"
+            @close="closeAcceptModal"
             @confirm="confirmAccept"
         />
 
@@ -107,6 +109,7 @@
             :has-any-selection="hasAnySelection"
             :can-confirm-reject="canConfirmReject"
             :error-messages="rejectState.errorMessages"
+            :processing="processing === 'reject'"
             @toggle-day="toggleDaySelection"
             @toggle-shift="toggleShiftSelection"
             @update-day-reason="updateDayReason"
@@ -335,11 +338,14 @@ const updateGlobalComment = (val) => {
 };
 
 const startReject = () => {
+    if (processing.value) return;
     rejectState.active = true;
     rejectState.modalOpen = true;
     rejectState.errorMessages = [];
 };
 const cancelReject = () => {
+    // Während der Ablehnungs-Request läuft, bleibt das Modal offen (kein Doppel-/Gegen-Klick).
+    if (processing.value === 'reject') return;
     rejectState.active = false;
     rejectState.modalOpen = false;
     rejectState.globalComment = '';
@@ -351,7 +357,7 @@ const cancelReject = () => {
 };
 
 const confirmReject = () => {
-    if (!canConfirmReject.value) return;
+    if (!canConfirmReject.value || processing.value) return;
 
     const parseUniqueKey = (key) => {
         const parts = key.split('-');
@@ -384,6 +390,7 @@ const confirmReject = () => {
     };
 
     rejectState.errorMessages = [];
+    processing.value = 'reject';
 
     router.post(
         route('shift-plan-requests.reject', props.request.id),
@@ -393,6 +400,9 @@ const confirmReject = () => {
             onSuccess: () => {
                 rejectState.modalOpen = false;
                 rejectState.active = false;
+            },
+            onFinish: () => {
+                processing.value = null;
             },
             onError: (errors) => {
                 console.error('Reject error', errors);
@@ -410,9 +420,17 @@ const confirmReject = () => {
 // Akzeptieren: Modal mit optionalem Hinweis an die anfragende Person
 const acceptModalOpen = ref(false);
 const acceptRequest = () => {
+    if (processing.value) return;
     acceptModalOpen.value = true;
 };
+const closeAcceptModal = () => {
+    // Während der Request läuft, bleibt das Modal offen (kein Doppel-/Gegen-Klick).
+    if (processing.value === 'accept') return;
+    acceptModalOpen.value = false;
+};
 const confirmAccept = (comment) => {
+    if (processing.value) return;
+    processing.value = 'accept';
     router.post(
         route('shift-plan-requests.accept', props.request.id),
         {comment: comment?.trim() || null},
@@ -422,6 +440,9 @@ const confirmAccept = (comment) => {
                 acceptModalOpen.value = false;
             },
             onError: (errors) => console.error('Error:', errors),
+            onFinish: () => {
+                processing.value = null;
+            },
         }
     );
 };
@@ -765,6 +786,8 @@ const selectedShift = computed(() => props.shifts.find(s => s.id === historyDraw
 
 // Stub-Funktion für Einzel-Änderung Reject (Drawer)
 const rejectRequestChange = (change) => {
+    if (processing.value) return;
+    processing.value = 'revert';
     router.patch(
         route('shift-plan-requests.change.revert', {
             shiftPlanRequest: props.request.id,
@@ -778,6 +801,9 @@ const rejectRequestChange = (change) => {
             preserveState: true,
             onError: (errors) => {
                 console.error('Fehler beim Zurücksetzen der Änderung:', errors);
+            },
+            onFinish: () => {
+                processing.value = null;
             },
         },
     );

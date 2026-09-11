@@ -36,6 +36,8 @@
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
 import {computed, defineAsyncComponent, ref} from "vue";
 import {usePage} from "@inertiajs/vue3";
+import {can, is} from "laravel-permission-to-vuejs";
+import {resolveView, activeIndicatorKeys} from "@/Artwork/Modals/CalendarSettingsCatalog.js";
 
 const props = defineProps({
     isPlanning: {
@@ -88,34 +90,23 @@ const checkIfAnySettingIsActive = computed(() => {
     const settings = activeSettings.value;
     if (!settings) return false;
 
-    if (props.isListView) {
-        const listViewKeys = [
-            'detailed_shift_overview',
-            'show_fully_staffed_shifts',
-            'show_appointments',
-            'group_by_shift_groups',
-            'hide_shift_row',
-            'shift_notes',
-        ];
-        return listViewKeys.some(setting => settings[setting]);
-    }
-
-    const settingsInShiftPlan = [
-        'high_contrast', 'work_shifts', 'expand_days', 'display_project_groups', 'show_qualifications', 'shift_notes',
-        'hide_unoccupied_days', 'hide_unoccupied_rooms', 'show_shift_group_tag', 'show_only_not_fully_staffed_shifts',
-        'project_artists', 'project_status', 'project_management'
-    ]
-
-    // Projektfremde Termine/Schichten gibt es nur im Projekt-Schichten-Tab
-    if (props.isInProjectView) {
-        settingsInShiftPlan.push('show_unrelated_events', 'show_unrelated_shifts')
-    }
-
-    if (props.isInShiftPlan) {
-        return settingsInShiftPlan.some(setting => settings[setting]);
-    }
-
-    return Object.values(settings).some(value => value);
+    // Dieselbe Liste wie im Modal: nur Einstellungen, die in dieser Ansicht erscheinen und wirken
+    const view = resolveView({
+        isPlanning: props.isPlanning,
+        inShiftPlan: props.isInShiftPlan,
+        isDailyView: props.isDailyView,
+        isListView: props.isListView,
+        isInProjectView: props.isInProjectView,
+    });
+    const ctx = {
+        view,
+        page: usePage().props,
+        settings,
+        dayRemarks: usePage().props.day_remarks ?? { enabled: false, mandatory: false, can_view: false, can_edit: false },
+        can,
+        is,
+    };
+    return activeIndicatorKeys(view, ctx).some((key) => !!settings[key]);
 });
 </script>
 

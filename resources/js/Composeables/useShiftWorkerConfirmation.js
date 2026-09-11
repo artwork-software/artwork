@@ -6,9 +6,26 @@ import dayjs from 'dayjs'
  *
  * Der Pivot trägt confirmation_status ('accepted' | 'declined' | null = ausstehend),
  * confirmation_at, confirmation_by_user_id und confirmation_comment.
+ *
+ * Teilnahme am Flow ist ein Opt-in je Person über das Recht „Darf Schichten
+ * annehmen/ablehnen": das Backend liefert dazu worker.confirmation_eligible
+ * (ShiftConfirmationEligibilityService). Ohne das Flag gibt es weder Buttons
+ * noch Status — auch ein alter, noch gespeicherter Status wird nicht gezeigt.
+ *
+ * Status-Modell (getConfirmationInfo):
+ *   requested  — zugewiesen (auch vorläufig), Person berechtigt, noch keine Antwort (blau)
+ *   accepted   — zugesagt (grün)
+ *   declined   — abgesagt (rot)
  */
+export const CONFIRMATION_REQUESTED = 'requested'
+export const CONFIRMATION_ACCEPTED = 'accepted'
+export const CONFIRMATION_DECLINED = 'declined'
+
 export function useShiftWorkerConfirmation() {
     const isEnabled = () => !!usePage().props.shift_confirmation_enabled
+
+    // Person nimmt am Zu-/Absage-Flow teil (Recht am User; Externe nie)
+    const isEligible = (worker) => !!worker?.confirmation_eligible
 
     const respond = (pivotId, status, comment = null, options = {}) => {
         router.patch(
@@ -18,12 +35,26 @@ export function useShiftWorkerConfirmation() {
         )
     }
 
-    // Liefert null (Feature aus / kein Status) oder ein Anzeige-Objekt für
-    // Rahmen + Tooltip an Worker-Chips.
-    const getConfirmationInfo = (worker) => {
+    // Liefert null (Feature aus / Person nicht berechtigt) oder ein Anzeige-Objekt für
+    // Pille, Rahmen und Tooltip. Unbeantwortet = „angefragt" — unabhängig davon, ob die
+    // Schicht festgeschrieben ist. `shift` bleibt als Parameter für Aufrufer erhalten.
+    // eslint-disable-next-line no-unused-vars
+    const getConfirmationInfo = (worker, shift = null) => {
         const pivot = worker?.pivot
-        if (!isEnabled() || !pivot?.confirmation_status) {
+        if (!isEnabled() || !pivot || !isEligible(worker)) {
             return null
+        }
+
+        if (!pivot.confirmation_status) {
+            return {
+                status: CONFIRMATION_REQUESTED,
+                requested: true,
+                accepted: false,
+                declined: false,
+                date: null,
+                isProxy: false,
+                comment: null,
+            }
         }
 
         const isProxy = worker.type === 'user'
@@ -32,7 +63,9 @@ export function useShiftWorkerConfirmation() {
 
         return {
             status: pivot.confirmation_status,
-            accepted: pivot.confirmation_status === 'accepted',
+            requested: false,
+            accepted: pivot.confirmation_status === CONFIRMATION_ACCEPTED,
+            declined: pivot.confirmation_status === CONFIRMATION_DECLINED,
             date: pivot.confirmation_at ? dayjs(pivot.confirmation_at).format('DD.MM.YYYY') : null,
             isProxy,
             comment: pivot.confirmation_comment || null,
@@ -40,10 +73,14 @@ export function useShiftWorkerConfirmation() {
     }
 
     // Rahmenklassen für Worker-Chips in den Planer-Ansichten.
-    const getConfirmationBorderClass = (worker) => {
-        const info = getConfirmationInfo(worker)
+    const getConfirmationBorderClass = (worker, shift = null) => {
+        const info = getConfirmationInfo(worker, shift)
         if (!info) {
             return ''
+        }
+
+        if (info.requested) {
+            return '!border-accent-500 ring-1 ring-accent-500'
         }
 
         return info.accepted
@@ -52,8 +89,8 @@ export function useShiftWorkerConfirmation() {
     }
 
     // Tooltip-Text; $t wird hereingereicht, damit die Komponenten-Übersetzung greift.
-    const getConfirmationTooltip = (worker, $t) => {
-        const info = getConfirmationInfo(worker)
+    const getConfirmationTooltip = (worker, $t, shift = null) => {
+        const info = getConfirmationInfo(worker, shift)
         if (!info) {
             return null
         }
@@ -61,6 +98,10 @@ export function useShiftWorkerConfirmation() {
         const name = worker.name
             || worker.provider_name
             || [worker.first_name, worker.last_name].filter(Boolean).join(' ')
+
+        if (info.requested) {
+            return $t('Requested from {name} – no reply yet', { name })
+        }
 
         let text = info.accepted
             ? $t('Accepted by {name} on {date}', { name, date: info.date ?? '–' })
@@ -79,6 +120,7 @@ export function useShiftWorkerConfirmation() {
 
     return {
         isEnabled,
+        isEligible,
         respond,
         getConfirmationInfo,
         getConfirmationBorderClass,

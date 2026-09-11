@@ -203,14 +203,6 @@
 
                     <FunctionBarSetting :is-planning="isPlanning" :is-daily-view="dailyView" />
 
-                    <!--<ToolTipComponent
-                        direction="bottom"
-                        :tooltip-text="$t('Display Settings')"
-                        icon="IconSettings"
-                        icon-size="h-7 w-7"
-                        @click="showCalendarSettingsModal = true"
-                    />-->
-
                     <div v-if="!project">
                         <div @click="showCalendarAboSettingModal = true"
                              class="flex items-center gap-x-1 text-sm group cursor-pointer">
@@ -333,7 +325,7 @@
 
 <script setup>
 import DateRangeControl from "@/Artwork/DateRange/DateRangeControl.vue";
-import {computed, defineAsyncComponent, inject, nextTick, ref, unref, watch} from "vue";
+import {computed, inject, nextTick, ref, unref, watch} from "vue";
 import {
     IconChevronLeft,
     IconChevronRight,
@@ -399,7 +391,6 @@ const showExportModal = ref(false);
 const roomCollisions = ref([]);
 const showCalendarAboInfoModal = ref(false);
 const showCalendarFilterModal = ref(false);
-const showCalendarSettingsModal = ref(false);
 const projectSearchInput = ref(null);
 
 
@@ -420,11 +411,6 @@ const toggleProjectTimePeriodAndRedirect = (projectId, enabled) => {
     );
 };
 
-const CalendarSettingsModal = defineAsyncComponent({
-    loader: () => import('@/Artwork/Modals/CalendarSettingsModal.vue'),
-    delay: 200,
-    timeout: 3000,
-})
 
 const exportTabEnums = useExportTabEnums();
 const getExportModalConfiguration = () => {

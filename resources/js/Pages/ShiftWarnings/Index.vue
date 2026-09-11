@@ -278,39 +278,17 @@
 
                         <div>
                             <div class="relative">
-                                <Listbox as="div" class="flex relative" v-model="form.contract_ids" id="contractIds" multiple>
-                                    <ListboxButton class="menu-button">
-                                        <div class="flex flex-grow text-sm/5 font-bold text-text-subtle text-left subpixel-antialiased">
-                                            {{ $t('Assign contracts')}}
-                                        </div>
-                                        <span class="pointer-events-none">
-                                         <IconChevronDown stroke-width="1.5" class="h-5 w-5 text-text" aria-hidden="true"/>
-                                    </span>
-                                    </ListboxButton>
-                                    <transition leave-active-class="transition ease-in duration-100" leave-from-class="opacity-100" leave-to-class="opacity-0">
-                                        <ListboxOptions class="absolute w-full z-10 mt-16 rounded-lg bg-surface-inverse shadow-lg max-h-32 pr-2 pt-2 pb-2 text-base ring-1 ring-black ring-opacity-5 overflow-y-scroll focus:outline-none sm:text-sm">
-                                            <ListboxOption
-                                                as="template"
-                                                class="max-h-8"
-                                                v-for="contract in contracts"
-                                                :key="contract.id"
-                                                :value="contract.id"
-                                                v-slot="{ active, selected }"
-                                            >
-                                                <li :class="[active ? ' text-white' : 'text-text-subtle', 'group hover:border-l-4 hover:border-l-success cursor-pointer flex justify-between items-center py-2 pl-3 pr-9 text-sm subpixel-antialiased']">
-                                                    <div class="flex">
-                                                        <span :class="[selected ? 'text-sm/5 font-bold text-white' : 'font-normal', 'ml-4 block truncate']">
-                                                            {{ contract.name }}
-                                                        </span>
-                                                    </div>
-                                                    <span :class="[active ? ' text-white' : 'text-text-subtle', ' group flex justify-end items-center text-sm subpixel-antialiased']">
-                                                        <IconCheck stroke-width="1.5" v-if="selected" class="h-5 w-5 flex text-success" aria-hidden="true"/>
-                                                    </span>
-                                                </li>
-                                            </ListboxOption>
-                                        </ListboxOptions>
-                                    </transition>
-                                </Listbox>
+                                <ArtworkBaseListbox
+                                    v-model="selectedRuleContracts"
+                                    :items="contracts ?? []"
+                                    multiple
+                                    by="id"
+                                    option-label="name"
+                                    :placeholder="$t('Assign contracts')"
+                                    :search-threshold="0"
+                                    search-placeholder="Search contracts..."
+                                    :empty-text="$t('No contracts found.')"
+                                />
                             </div>
 
                             <!-- Display selected contracts -->
@@ -456,39 +434,17 @@
 
                     <div class="mt-4">
                         <div class="relative">
-                            <Listbox as="div" class="flex relative" v-model="defaultsForm.contract_ids" id="defaultsContractIds" multiple>
-                                <ListboxButton class="menu-button">
-                                    <div class="flex flex-grow text-sm/5 font-bold text-text-subtle text-left subpixel-antialiased">
-                                        {{ $t('Assign contracts') }}
-                                    </div>
-                                    <span class="pointer-events-none">
-                                        <IconChevronDown stroke-width="1.5" class="h-5 w-5 text-text" aria-hidden="true"/>
-                                    </span>
-                                </ListboxButton>
-                                <transition leave-active-class="transition ease-in duration-100" leave-from-class="opacity-100" leave-to-class="opacity-0">
-                                    <ListboxOptions class="absolute w-full z-10 mt-16 rounded-lg bg-surface-inverse shadow-lg max-h-32 pr-2 pt-2 pb-2 text-base ring-1 ring-black ring-opacity-5 overflow-y-scroll focus:outline-none sm:text-sm">
-                                        <ListboxOption
-                                            as="template"
-                                            class="max-h-8"
-                                            v-for="contract in contracts"
-                                            :key="contract.id"
-                                            :value="contract.id"
-                                            v-slot="{ active, selected }"
-                                        >
-                                            <li :class="[active ? ' text-white' : 'text-text-subtle', 'group hover:border-l-4 hover:border-l-success cursor-pointer flex justify-between items-center py-2 pl-3 pr-9 text-sm subpixel-antialiased']">
-                                                <div class="flex">
-                                                    <span :class="[selected ? 'text-sm/5 font-bold text-white' : 'font-normal', 'ml-4 block truncate']">
-                                                        {{ contract.name }}
-                                                    </span>
-                                                </div>
-                                                <span :class="[active ? ' text-white' : 'text-text-subtle', ' group flex justify-end items-center text-sm subpixel-antialiased']">
-                                                    <IconCheck stroke-width="1.5" v-if="selected" class="h-5 w-5 flex text-success" aria-hidden="true"/>
-                                                </span>
-                                            </li>
-                                        </ListboxOption>
-                                    </ListboxOptions>
-                                </transition>
-                            </Listbox>
+                            <ArtworkBaseListbox
+                                v-model="selectedDefaultContracts"
+                                :items="contracts ?? []"
+                                multiple
+                                by="id"
+                                option-label="name"
+                                :placeholder="$t('Assign contracts')"
+                                :search-threshold="0"
+                                search-placeholder="Search contracts..."
+                                :empty-text="$t('No contracts found.')"
+                            />
                         </div>
                         <div class="mt-2">
                             <span v-if="defaultsForm.contract_ids.length > 0" class="text-sm text-text-muted">
@@ -552,6 +508,7 @@ import ArtworkBaseDeleteModal from "@/Artwork/Modals/ArtworkBaseDeleteModal.vue"
 import BaseMenu from "@/Components/Menu/BaseMenu.vue";
 import BaseMenuItem from "@/Components/Menu/BaseMenuItem.vue";
 import RuleViewSwitch from "@/Pages/ShiftWarnings/Components/RuleViewSwitch.vue";
+import ArtworkBaseListbox from "@/Artwork/Listbox/ArtworkBaseListbox.vue";
 import {
     RULE_TYPES,
     SELECTABLE_RULE_TYPES,
@@ -581,6 +538,11 @@ const editingRule = ref(null)
 // Anzahl der beim Öffnen entfernten Benachrichtigungs-Empfänger*innen ohne Dienstplan-Recht (Altbestand)
 const removedNotifyRecipients = ref(0)
 const ruleToDelete = ref(null)
+
+// Vertragsauswahl: durchsuchbare Mehrfachauswahl (Häuser haben schnell 50+ Verträge).
+// Die Formulare halten IDs, die Listbox arbeitet mit Objekten – hier die Brücke.
+const contractsById = computed(() => new Map((props.contracts ?? []).map((contract) => [contract.id, contract])))
+const contractsFromIds = (ids) => (ids ?? []).map((id) => contractsById.value.get(id)).filter(Boolean)
 
 const form = useForm({
     name: '',
@@ -770,6 +732,15 @@ const showDefaultsModal = ref(false)
 const defaultsForm = useForm({
     rules: [],
     contract_ids: [],
+})
+
+const selectedRuleContracts = computed({
+    get: () => contractsFromIds(form.contract_ids),
+    set: (items) => { form.contract_ids = (items ?? []).map((contract) => contract.id) },
+})
+const selectedDefaultContracts = computed({
+    get: () => contractsFromIds(defaultsForm.contract_ids),
+    set: (items) => { defaultsForm.contract_ids = (items ?? []).map((contract) => contract.id) },
 })
 
 const allDefaultRulesSelected = computed(() =>

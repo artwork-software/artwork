@@ -90,7 +90,7 @@
             :aria-label="$t('Delete user from shift')"
             v-tooltip.bottom="{ value: $t('Delete user from shift'), class: 'aw-tooltip' }"
         >
-            <PropertyIcon name="IconSquareRoundedXFilled" class="h-5 w-5 hover:text-danger transition-colors duration-300 ease-in-out cursor-pointer" stroke-width="1.5"/>
+            <PropertyIcon name="IconTrash" class="h-5 w-5 hover:text-danger transition-colors duration-300 ease-in-out cursor-pointer" stroke-width="1.5"/>
         </button>
     </div>
 

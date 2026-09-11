@@ -4,7 +4,7 @@
         {{$t('All day')}}
     </div>
     <!-- Hauptkarte: Einheitliches Styling (ehemals "bei Kollision") -->
-    <div :class="['w-full min-w-64 select-none rounded-lg border', { 'border-dashed': isUnrelatedProjectEvent }]"
+    <div :class="['w-full min-w-64 select-none rounded-lg border', { 'border-dashed': isUnrelatedProjectEvent, 'hc-card': highContrast && !isUnrelatedProjectEvent }]"
          :style="cardStyle">
         <!-- Inhalt: zweizeilig (Zeit/Typ, darunter Titel + Menü) -->
         <div class="flex justify-between font-lexend min-w-0">
@@ -198,6 +198,7 @@
 import {computed, defineAsyncComponent, ref, watch, onMounted, onBeforeUnmount, nextTick} from "vue";
 import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
 import {usePage} from "@inertiajs/vue3";
+import {useColorHelper} from "@/Composeables/UseColorHelper.js";
 import {can, is} from "laravel-permission-to-vuejs";
 import EventComponent from "@/Layouts/Components/EventComponent.vue";
 import {IconDeviceFloppy, IconDoorEnter, IconEdit, IconFileImport, IconTrash, IconWand} from "@tabler/icons-vue";
@@ -264,8 +265,11 @@ const displaySettings = computed(() => {
     return page.props.shift_plan_daily_settings ?? page.props.shift_plan_settings ?? page.props.auth.user.calendar_settings
 })
 
-// Anzeigeeinstellung "Notizen einblenden"
+// Anzeigeeinstellung "Beschreibung einblenden" (shift_notes)
 const showNotes = computed(() => !!displaySettings.value?.shift_notes)
+// Anzeigeeinstellung "Hoher Kontrast": Karte satt in Terminart-Farbe, Textfarbe nach Hintergrund (wie Wochenansicht)
+const highContrast = computed(() => !!displaySettings.value?.high_contrast)
+const { backgroundColorWithOpacity, getTextColorBasedOnBackground, getHighContrastPercent } = useColorHelper()
 
 // Nur wenn Projektleitung UND Terminersteller*in aktiv sind, brauchen die
 // Avatar-Reihen ein "PL:"/"Erstell:"-Label zur Unterscheidung.
@@ -318,6 +322,14 @@ const cardStyle = computed(() => {
             backgroundColor: `${base}0D`,
             backgroundImage: `repeating-linear-gradient(135deg, ${stripe} 0px, ${stripe} 5px, transparent 5px, transparent 11px)`,
             borderColor: borderColor.value,
+        }
+    }
+    if (highContrast.value) {
+        const bg = backgroundColorWithOpacity(base, getHighContrastPercent(displaySettings.value))
+        return {
+            backgroundColor: bg,
+            color: getTextColorBasedOnBackground(bg),
+            borderColor: isFollowUpDay.value ? '#d1d5db' : borderColor.value,
         }
     }
     return {
@@ -430,5 +442,9 @@ watch(eventTitle, () => nextTick(updateTitleTruncation))
 </script>
 
 <style scoped>
-
+/* Hoher Kontrast: Text-Utilities in der Karte übernehmen die berechnete Kartentextfarbe –
+   außer in Bereichen mit eigenem hellen Hintergrund (Menüs, Drop-Zeilen, Badges). */
+.hc-card :deep(:is(.text-text, .text-text-muted, .text-text-subtle, .text-black):not(.bg-white *, .bg-surface *, .bg-surface-sunken *, .bg-danger-surface *, .bg-warning-surface *)) {
+    color: inherit;
+}
 </style>

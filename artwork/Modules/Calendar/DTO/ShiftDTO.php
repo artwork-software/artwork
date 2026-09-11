@@ -7,6 +7,7 @@ use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\Shift\Services\ShiftWorkerAvailability;
 use Carbon\Carbon;
 use Spatie\LaravelData\Data;
+use Artwork\Modules\Shift\Services\ShiftConfirmationEligibilityService;
 
 class ShiftDTO extends Data
 {
@@ -82,6 +83,7 @@ class ShiftDTO extends Data
     private static function serializeAllWorkers(Shift $shift): array
     {
         $workers = [];
+        $confirmationEligibility = app(ShiftConfirmationEligibilityService::class);
 
         foreach (['users' => 'user', 'freelancer' => 'freelancer', 'serviceProvider' => 'service_provider'] as $relation => $type) {
             $collection = $shift->{$relation};
@@ -124,6 +126,8 @@ class ShiftDTO extends Data
                     // Konfliktierender Tagesstatus (NOT_AVAILABLE/OFF_WORK/FREE_WORK) für
                     // die statusfarbene Umrandung im Schichten-Tab
                     'unavailable_status' => $unavailableStatus,
+                    // Person nimmt am Zu-/Absage-Flow teil (Recht „Darf Schichten annehmen/ablehnen")
+                    'confirmation_eligible' => $confirmationEligibility->isEligible($worker),
                 ];
             }
         }

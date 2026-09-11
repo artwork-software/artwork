@@ -3,6 +3,7 @@
 namespace Artwork\Modules\Shift\Events;
 
 use Artwork\Modules\Calendar\DTO\ShiftDTO;
+use Artwork\Modules\Shift\Events\Concerns\BuildsShiftBroadcastLookups;
 use Artwork\Modules\Shift\Models\Shift;
 use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Broadcasting\PrivateChannel;
@@ -12,6 +13,7 @@ use Illuminate\Queue\SerializesModels;
 
 class UpdateEventShiftInShiftPlan implements ShouldBroadcastNow
 {
+    use BuildsShiftBroadcastLookups;
     use Dispatchable;
     use InteractsWithSockets;
     use SerializesModels;
@@ -37,19 +39,12 @@ class UpdateEventShiftInShiftPlan implements ShouldBroadcastNow
 
     public function broadcastWith(): array
     {
-        $this->shift->loadMissing([
-            'craft:id,name,abbreviation,color',
-            'shiftsQualifications',
-            'globalQualifications',
-            'users.globalQualifications',
-            'freelancer.globalQualifications',
-            'serviceProvider.globalQualifications',
-            'project',
-        ]);
+        $this->loadBroadcastRelations($this->shift);
 
         return [
             'shift' => ShiftDTO::fromModel($this->shift, $this->shift->project),
             'roomId' => $this->roomId,
+            'lookups' => $this->buildBroadcastLookups($this->shift),
         ];
     }
 }

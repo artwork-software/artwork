@@ -5,8 +5,8 @@
         </div>
 
         <div class="w-full">
-            <div :class="[$page.props.auth.user.compact_mode ? 'h-8 flex items-center justify-between' : 'h-12']" class="drag-item w-40 p-2 text-white text-xs !rounded-lg flex items-center gap-2 border" :style="{backgroundColor: backgroundColorWithOpacity(color), borderColor : color+'80'}">
-                <div class="text-white" v-if="!$page.props.auth.user.compact_mode">
+            <div :class="[$page.props.auth.user.compact_mode ? 'h-8 flex items-center justify-between' : 'h-12']" class="drag-item w-40 p-2 text-[var(--uo-text)] text-xs !rounded-lg flex items-center gap-2 border" :style="{backgroundColor: backgroundColorWithOpacity(color), borderColor : color+'80'}">
+                <div v-if="!$page.props.auth.user.compact_mode">
                     <img :src="item.profile_photo_url" alt="" class="h-6 w-6 rounded-full object-cover min-w-6 min-h-6">
                 </div>
                 <div class="text-left cursor-pointer flex items-center gap-2 w-full">
@@ -44,7 +44,7 @@
                             icon-size="w-4 h-4"
                             tooltip-text="Freelancer*in"
                             direction="top"
-                            classes="text-text-subtle"
+                            icon-color="text-[var(--uo-text)]"
                         />
                     </div>
                     <button
@@ -80,7 +80,7 @@ export default defineComponent({
     components: {PropertyIcon, ToolTipComponent},
     setup(props) {
         const {backgroundColorWithOpacityOld: backgroundColorWithOpacity} = useColorHelper();
-        const {balanceClass, balanceTooltip} = useWorkTimeBalanceBadge(props);
+        const {balanceClass, balanceTooltip} = useWorkTimeBalanceBadge(props, {themed: true});
         return {backgroundColorWithOpacity, can, is, workTimeBalanceClass: balanceClass, workTimeBalanceTooltip: balanceTooltip};
     },
     props: [

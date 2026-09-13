@@ -119,5 +119,12 @@
     "Can edit the tab \"Shift templates\" in the shift settings": "Kann den Tab „Schichtvorlagen“ in den Schichteinstellungen bearbeiten",
     "Can see the tab \"Shift rules\" in the shift settings": "Kann den Tab „Schichtregeln“ in den Schichteinstellungen sehen",
     "Can edit the tab \"Shift rules\" in the shift settings": "Kann den Tab „Schichtregeln“ in den Schichteinstellungen bearbeiten",
-    "Only take effect with the shift setting \"Granular permissions\" enabled": "Wirken nur bei aktivierter Schichteinstellung „Granulare Rechte“"
+    "Only take effect with the shift setting \"Granular permissions\" enabled": "Wirken nur bei aktivierter Schichteinstellung „Granulare Rechte“",
+    "Accept or decline shifts": "Darf Schichten annehmen/ablehnen",
+    "Accept/decline buttons on the shift cards in the own roster": "Zu-/Absage-Buttons an den Schichtkarten im eigenen Einsatzplan",
+    "Status \"Requested\" (blue) in the duty roster until the person replies": "Status „angefragt“ (blau) im Dienstplan, bis die Person antwortet",
+    "Shift setting \"Shift confirmation by employees\" enabled": "Schichteinstellung „Schichtbestätigung durch Mitarbeitende“ aktiv",
+    "People without this permission are not asked and show no reply status. Planners may record the reply on behalf of a person with this permission.": "Personen ohne dieses Recht werden nicht gefragt und zeigen keinen Antwortstatus. Planer*innen können die Antwort stellvertretend für eine Person mit diesem Recht erfassen.",
+    "Can accept or decline own shift assignments": "Kann eigene Schichtzuweisungen zu- oder absagen",
+    "Accept or decline own shifts (also provisional ones), optionally with a comment": "Eigene Schichten zu- oder absagen (auch vorläufige), optional mit Kommentar"
 }

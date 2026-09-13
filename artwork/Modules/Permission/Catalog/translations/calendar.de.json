@@ -49,5 +49,7 @@
     "Can edit, move, duplicate and delete planned events": "Kann geplante Termine bearbeiten, verschieben, duplizieren und löschen",
     "Can book planned events without a request": "Kann geplante Termine ohne Anfrage buchen",
     "Can see the day remarks": "Kann Tagesbemerkungen sehen",
-    "Can create, edit and delete day remarks": "Kann Tagesbemerkungen anlegen, ändern und löschen"
+    "Can create, edit and delete day remarks": "Kann Tagesbemerkungen anlegen, ändern und löschen",
+    "Room admins have the same rights within their own rooms without this permission. Direct booking of planned events requires \"Plan directly in the planning calendar\" separately.": "Raum-Admins haben in ihren eigenen Räumen dieselben Rechte auch ohne dieses Recht. Das direkte Buchen geplanter Termine braucht zusätzlich „Im Planungskalender fest planen“.",
+    "Independent of \"Plan events directly\": calendar and planning calendar are permitted separately.": "Unabhängig von „Termine fest planen“: Kalender und Planungskalender werden getrennt berechtigt."
 }

@@ -24,6 +24,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property array $craft_ids
  * @property array $project_state_ids
  * @property bool $show_only_users_with_open_violations
+ * @property bool $show_freelancers
  * @property \Illuminate\Support\Carbon $created_at
  * @property \Illuminate\Support\Carbon $updated_at
  * @property \Illuminate\Support\Carbon $deleted_at
@@ -56,10 +57,12 @@ class UserFilter extends CalendarFilter
         'craft_ids',
         'project_state_ids',
         'show_only_users_with_open_violations',
+        'show_freelancers',
     ];
 
     protected $casts = [
         'show_only_users_with_open_violations' => 'boolean',
+        'show_freelancers' => 'boolean',
         'start_date' => 'date',
         'end_date' => 'date',
         'event_type_ids' => 'array',

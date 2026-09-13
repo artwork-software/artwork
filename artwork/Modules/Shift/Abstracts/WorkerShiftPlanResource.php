@@ -6,6 +6,7 @@ use Artwork\Modules\Freelancer\Models\Freelancer;
 use Artwork\Modules\ServiceProvider\Models\ServiceProvider;
 use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\Shift\Models\ShiftQualification;
+use Artwork\Modules\Shift\Services\ShiftConfirmationEligibilityService;
 use Artwork\Modules\User\Models\User;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
@@ -87,6 +88,10 @@ class WorkerShiftPlanResource extends JsonResource
             'type'                 => $this->getTypeAttribute(),
             'shift_qualifications' => $shiftQualificationObjects,
             'managing_craft_ids'   => $this->getManagingCraftIds(),
+            // Person nimmt am Zu-/Absage-Flow teil (Recht „Darf Schichten annehmen/ablehnen");
+            // steuert Status-Pille (angefragt/zugesagt/abgesagt) in der Personenübersicht
+            'confirmation_eligible' => app(ShiftConfirmationEligibilityService::class)
+                ->isEligible($this->resource),
         ];
     }
 
@@ -212,6 +217,7 @@ class WorkerShiftPlanResource extends JsonResource
                 'confirmationStatus'    => $pivot?->confirmation_status,
                 'confirmationAt'        => $pivot?->confirmation_at,
                 'confirmationComment'   => $pivot?->confirmation_comment,
+                'confirmationByUserId'  => $pivot?->confirmation_by_user_id,
             ];
         });
     }

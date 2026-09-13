@@ -15,6 +15,10 @@
         $splitMonths = (bool) ($splitMonths ?? false);
         $dayRanges = $splitMonths ? [[1, 16], [17, 31]] : [[1, 31]];
 
+        // KW-Spalte entfällt komplett, wenn die Kalenderwochen abgewählt sind
+        $showWeekNumbers = (bool) ($showWeekNumbers ?? true);
+        $columnsPerMonth = $showWeekNumbers ? 3 : 2;
+
         // Feste Zellhöhe, damit die Tageszeilen immer auf eine Seite passen —
         // eine wachsende Zelle würde sonst die ganze Tageszeile strecken und
         // die Tabelle auf ein zweites Blatt schieben. Werte bei dpi 72 kalibriert.
@@ -23,11 +27,21 @@
             default => $splitMonths ? 77 : 39,
         };
 
+        // Nutzbare Tabellenbreite in px (Querformat, 8mm Seitenrand je Seite),
+        // dpi-72-kalibriert wie die Zeilenhöhen. Basis für die Zeichen-Garantie
+        // der Schriftgröße weiter unten.
+        $pageWidthMm = strtolower($paperSize ?? 'a3') === 'a4' ? 297.0 : 420.0;
+        $usableWidthPx = ($pageWidthMm - 16) * 4.3;
+        // Mittlere Zeichenbreite einer halbfetten Grotesk in em
+        $charWidthFactor = 0.58;
+        // So viele Zeichen eines Namens müssen immer ungekürzt lesbar bleiben;
+        // die Schrift wächst nie über diese Grenze hinaus.
+        $minVisibleChars = max(6, (int) ($minVisibleChars ?? 16));
+
         // Adaptive Schriftgröße pro Zelle: wenige Einträge -> große Schrift,
         // viele Einträge -> kleiner bzw. zweispaltig (Grenzwerte unten in px, skaliert)
-        $maxEntryFont = 10 * $scaleFactor;
+        $maxEntryFont = 12 * $scaleFactor;
         $twoColumnFontCap = 7.5 * $scaleFactor;
-        $singleColumnMinFont = 6 * $scaleFactor;
         $minEntryFont = 5 * $scaleFactor;
         $holidayLineHeight = 7 * $scaleFactor;
     @endphp
@@ -123,16 +137,16 @@
         td.month-start { border-left: 1.5px solid #404040; }
         td.month-end { border-right: 1.5px solid #404040; }
 
-        td.day-number {
+        /* Wochentag + Tageszahl in einer Spalte ("Mo 1") spart Breite für die Inhalte */
+        td.day-label {
             text-align: center;
+            font-size: {{ $s(7.5) }};
             font-weight: 700;
-            font-size: {{ $s(7) }};
             white-space: nowrap;
         }
-        td.weekday {
-            text-align: center;
-            font-size: {{ $s(6.5) }};
-            white-space: nowrap;
+        td.day-label .weekday {
+            font-weight: 400;
+            color: #333;
         }
         td.week-number {
             text-align: center;
@@ -185,6 +199,11 @@
             white-space: nowrap;
             vertical-align: bottom;
         }
+        /* Farbe des Projekts als Hintergrund der Schrift statt als Punkt davor */
+        .entry-name.colored {
+            padding: 0 2px;
+            border-radius: 2px;
+        }
 
         .entry-more {
             font-size: {{ $s(5) }};
@@ -193,29 +212,42 @@
             white-space: nowrap;
         }
 
-        .dot {
-            display: inline-block;
-            width: {{ $s(4) }};
-            height: {{ $s(4) }};
-            border-radius: 50%;
-            margin-right: 1px;
-            vertical-align: baseline;
-        }
         .entry-count { font-weight: 800; }
         .entry-rooms { font-weight: 400; color: #444; }
     </style>
 </head>
 <body>
 
+@php
+    /**
+     * Lesbare Schriftfarbe auf farbigem Grund (relative Helligkeit nach WCAG-Näherung).
+     */
+    $readableTextColor = static function (?string $hex): string {
+        $hex = ltrim((string) $hex, '#');
+        if (strlen($hex) === 3) {
+            $hex = $hex[0] . $hex[0] . $hex[1] . $hex[1] . $hex[2] . $hex[2];
+        }
+        if (strlen($hex) !== 6 || !ctype_xdigit($hex)) {
+            return '#111';
+        }
+        $r = hexdec(substr($hex, 0, 2));
+        $g = hexdec(substr($hex, 2, 2));
+        $b = hexdec(substr($hex, 4, 2));
+
+        return (0.299 * $r + 0.587 * $g + 0.114 * $b) > 150 ? '#111' : '#fff';
+    };
+@endphp
+
 @foreach($pages as $pageIndex => $pageMonths)
     @php
         $monthCount = count($pageMonths);
-        // Spaltenbreiten je Monat (Summe = 100 / Monatsanzahl): Tag | Wochentag | Inhalt | KW
+        // Spaltenbreiten je Monat (Summe = 100 / Monatsanzahl): Datum | Inhalt | (KW)
         $monthWidth = 100 / $monthCount;
-        $dayWidth = $monthWidth * 0.13;
-        $weekdayWidth = $monthWidth * 0.13;
-        $kwWidth = $monthWidth * 0.09;
-        $contentWidth = $monthWidth - $dayWidth - $weekdayWidth - $kwWidth;
+        $dayWidth = $monthWidth * 0.15;
+        $kwWidth = $showWeekNumbers ? $monthWidth * 0.09 : 0;
+        $contentWidth = $monthWidth - $dayWidth - $kwWidth;
+        // Effektiv beschreibbare Breite einer Inhaltszelle (abzüglich Zellinnenabstand)
+        $contentInnerPx = max(20.0, $usableWidthPx * $contentWidth / 100 - 6);
     @endphp
     @foreach($dayRanges as $rangeIndex => $dayRange)
     @php [$rangeFirstDay, $rangeLastDay] = $dayRange; @endphp
@@ -248,15 +280,16 @@
             <colgroup>
                 @foreach($pageMonths as $month)
                     <col style="width: {{ round($dayWidth, 3) }}%;">
-                    <col style="width: {{ round($weekdayWidth, 3) }}%;">
                     <col style="width: {{ round($contentWidth, 3) }}%;">
-                    <col style="width: {{ round($kwWidth, 3) }}%;">
+                    @if($showWeekNumbers)
+                        <col style="width: {{ round($kwWidth, 3) }}%;">
+                    @endif
                 @endforeach
             </colgroup>
             <thead>
                 <tr>
                     @foreach($pageMonths as $month)
-                        <th colspan="4">{{ $month['label'] }}@if($splitMonths) · {{ $rangeFirstDay }}.–{{ $rangeLastDay }}.@endif</th>
+                        <th colspan="{{ $columnsPerMonth }}">{{ $month['label'] }}@if($splitMonths) · {{ $rangeFirstDay }}.–{{ $rangeLastDay }}.@endif</th>
                     @endforeach
                 </tr>
             </thead>
@@ -266,18 +299,23 @@
                         @foreach($pageMonths as $month)
                             @php
                                 $day = $month['days'][$dayNumber] ?? null;
+                                $lastColumnClass = $showWeekNumbers ? '' : 'month-end';
                             @endphp
                             @if($day === null)
                                 <td class="month-start void-bg"></td>
-                                <td class="void-bg"></td>
-                                <td class="void-bg"></td>
-                                <td class="month-end void-bg"></td>
+                                <td class="void-bg {{ $lastColumnClass }}"></td>
+                                @if($showWeekNumbers)
+                                    <td class="month-end void-bg"></td>
+                                @endif
                             @elseif($day['outOfRange'] ?? false)
                                 {{-- Tag liegt vor dem Start-/nach dem Enddatum: sichtbar, aber ausgegraut --}}
-                                <td class="day-number month-start void-bg" style="color: #77777c;">{{ $day['dayNumber'] }}</td>
-                                <td class="weekday void-bg" style="color: #77777c;">{{ $day['weekday'] }}</td>
-                                <td class="void-bg"></td>
-                                <td class="month-end void-bg"></td>
+                                <td class="day-label month-start void-bg" style="color: #77777c;">
+                                    <span class="weekday" style="color: #77777c;">{{ $day['weekday'] }}</span> {{ $day['dayNumber'] }}
+                                </td>
+                                <td class="void-bg {{ $lastColumnClass }}"></td>
+                                @if($showWeekNumbers)
+                                    <td class="month-end void-bg"></td>
+                                @endif
                             @else
                                 @php
                                     if ($day['isHoliday']) {
@@ -293,20 +331,50 @@
                                     $entries = $day['entries'];
                                     $entryCount = count($entries);
 
-                                    // Adaptive Schrift: je weniger Einträge, desto größer.
-                                    // Erst einspaltig so groß wie möglich; wird die Schrift zu
-                                    // klein, auf zwei Spalten wechseln; unterhalb der Minimal-
-                                    // schrift greift der Notanker "+x weitere".
+                                    // Adaptive Schrift: so groß wie möglich, ohne dass die Zelle wächst.
+                                    // Zwei Deckel greifen — die Höhe (alle Einträge müssen in die feste
+                                    // Zellhöhe passen) und die Breite (die ersten $minVisibleChars Zeichen
+                                    // eines Namens müssen ungekürzt stehen bleiben). Zweispaltig wird nur
+                                    // gesetzt, wenn das unterm Strich die größere Schrift ergibt.
                                     $effectiveClip = $rowClipHeight - ($day['holidayName'] ? $holidayLineHeight : 0);
                                     $columns = 1;
                                     $entryFont = 0;
                                     $hiddenCount = 0;
                                     if ($entryCount > 0) {
-                                        $entryFont = min($maxEntryFont, $effectiveClip / $entryCount / 1.25);
-                                        if ($entryFont < $singleColumnMinFont && $entryCount > 2) {
-                                            $columns = 2;
-                                            $entryFont = min($twoColumnFontCap, $effectiveClip / ceil($entryCount / 2) / 1.25);
+                                        $longestName = 1;
+                                        $longestSuffix = 0;
+                                        foreach ($entries as $entry) {
+                                            $longestName = max($longestName, mb_strlen((string) $entry['name']));
+                                            $suffix = ($entry['count'] > 1 ? mb_strlen('(' . $entry['count'] . ')') + 1 : 0)
+                                                + (!empty($entry['rooms']) ? mb_strlen(implode('/', $entry['rooms'])) + 2 : 0);
+                                            $longestSuffix = max($longestSuffix, $suffix);
                                         }
+                                        $charsToFit = min($longestName, $minVisibleChars) + $longestSuffix;
+                                        $fontByWidth = static fn (int $cols): float =>
+                                            $contentInnerPx * ($cols === 2 ? 0.49 : 1.0)
+                                            / max(1.0, $charsToFit * $charWidthFactor);
+
+                                        $singleColumnFont = min(
+                                            $maxEntryFont,
+                                            $effectiveClip / $entryCount / 1.25,
+                                            $fontByWidth(1)
+                                        );
+                                        $twoColumnFont = $entryCount > 2
+                                            ? min(
+                                                $twoColumnFontCap,
+                                                $effectiveClip / ceil($entryCount / 2) / 1.25,
+                                                $fontByWidth(2)
+                                            )
+                                            : 0;
+
+                                        if ($twoColumnFont > $singleColumnFont) {
+                                            $columns = 2;
+                                            $entryFont = $twoColumnFont;
+                                        } else {
+                                            $entryFont = $singleColumnFont;
+                                        }
+
+                                        // Notanker: unterhalb der Minimalschrift lieber "+x weitere"
                                         if ($entryFont < $minEntryFont) {
                                             $entryFont = $minEntryFont;
                                             $linesAvailable = max(1, (int) floor($effectiveClip / ($entryFont * 1.25)));
@@ -320,9 +388,10 @@
                                         $entryFont = round($entryFont, 1);
                                     }
                                 @endphp
-                                <td class="day-number month-start {{ $bgClass }}">{{ $day['dayNumber'] }}</td>
-                                <td class="weekday {{ $bgClass }}">{{ $day['weekday'] }}</td>
-                                <td class="content {{ $bgClass }}">
+                                <td class="day-label month-start {{ $bgClass }}">
+                                    <span class="weekday">{{ $day['weekday'] }}</span> {{ $day['dayNumber'] }}
+                                </td>
+                                <td class="content {{ $bgClass }} {{ $lastColumnClass }}">
                                     <div class="cell-clip">
                                     @if($day['holidayName'])
                                         <div class="holiday-name">{{ $day['holidayName'] }}</div>
@@ -330,11 +399,16 @@
                                     @foreach($entries as $entry)
                                         @php
                                             $hasSuffix = $entry['count'] > 1 || !empty($entry['rooms']);
+                                            $entryColor = ($showEntryColors ?? false) && !empty($entry['color'])
+                                                ? $entry['color']
+                                                : null;
+                                            $nameStyle = 'max-width: ' . ($hasSuffix ? '68%' : '100%') . ';';
+                                            if ($entryColor !== null) {
+                                                $nameStyle .= ' background-color: ' . $entryColor . ';'
+                                                    . ' color: ' . $readableTextColor($entryColor) . ';';
+                                            }
                                         @endphp
-                                        <div class="entry-line {{ $columns === 2 ? 'col-2' : '' }}" style="font-size: {{ $entryFont }}px;">
-                                            @if(($showColorDots ?? false) && !empty($entry['color']))
-                                                <span class="dot" style="background: {{ $entry['color'] }};"></span>
-                                            @endif<span class="entry-name" style="max-width: {{ $hasSuffix ? '68%' : '100%' }};">{{ $entry['name'] }}</span>@if($entry['count'] > 1)
+                                        <div class="entry-line {{ $columns === 2 ? 'col-2' : '' }}" style="font-size: {{ $entryFont }}px;"><span class="entry-name {{ $entryColor !== null ? 'colored' : '' }}" style="{{ $nameStyle }}">{{ $entry['name'] }}</span>@if($entry['count'] > 1)
                                                 <span class="entry-count">({{ $entry['count'] }})</span>
                                             @endif
                                             @if(!empty($entry['rooms']))
@@ -347,7 +421,9 @@
                                     @endif
                                     </div>
                                 </td>
-                                <td class="week-number month-end {{ $bgClass }}">{{ $day['weekNumber'] ?? '' }}</td>
+                                @if($showWeekNumbers)
+                                    <td class="week-number month-end {{ $bgClass }}">{{ $day['weekNumber'] ?? '' }}</td>
+                                @endif
                             @endif
                         @endforeach
                     </tr>

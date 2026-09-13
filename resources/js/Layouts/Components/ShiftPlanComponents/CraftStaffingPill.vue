@@ -2,8 +2,8 @@
     <button
         v-if="count"
         type="button"
-        class="inline-flex items-center gap-x-1 rounded-full px-2 py-0.5 font-lexend text-[10px] font-semibold tabular-nums transition-colors duration-150 hover:ring-1 hover:ring-white/40"
-        :class="[levelClass, active ? 'ring-1 ring-white/70' : '']"
+        class="inline-flex items-center gap-x-1 rounded-full px-2 py-0.5 font-lexend text-[10px] font-semibold tabular-nums transition-colors duration-150 hover:ring-1 hover:ring-[var(--uo-hover-ring)]"
+        :class="[levelClass, active ? 'ring-1 ring-[var(--uo-active-ring)]' : '']"
         :title="title"
         :aria-pressed="active"
         @click.stop="$emit('toggle')"
@@ -36,11 +36,12 @@ defineEmits(['toggle'])
 
 const {t} = useI18n()
 
+// Ampelfarben je Farbwelt des Personenbereichs (--uo-staff-*, app.css: dunkel = Ist, hell = Statusflächen)
 const LEVEL_CLASS = {
-    none: 'bg-white/10 text-white/50',
-    low: 'bg-danger/25 text-danger-surface',
-    partial: 'bg-warning/25 text-warning-surface',
-    full: 'bg-success/25 text-success-surface',
+    none: 'bg-[var(--uo-staff-none-bg)] text-[var(--uo-staff-none-text)]',
+    low: 'bg-[var(--uo-staff-low-bg)] text-[var(--uo-staff-low-text)]',
+    partial: 'bg-[var(--uo-staff-partial-bg)] text-[var(--uo-staff-partial-text)]',
+    full: 'bg-[var(--uo-staff-full-bg)] text-[var(--uo-staff-full-text)]',
 }
 
 const levelClass = computed(() => LEVEL_CLASS[staffingLevel(props.count)])

@@ -58,6 +58,12 @@ return [
         'new_shift_add' => ':craftAbbreviation · :craftName: You have been assigned to a shift',
         'conflict' => 'Conflict with your shift',
         'conflict_text' => ':username has scheduled you on :date :from - :to contrary to your original entry.',
+        'conflict_text_committed' =>
+            'You are scheduled on :date :from - :to contrary to your original entry. ' .
+            'Who made the assignment was not recorded; the shift was committed by :username.',
+        'conflict_text_unknown' =>
+            'You are scheduled on :date :from - :to contrary to your original entry. ' .
+            'Who made the assignment was not recorded.',
         'deleted_where_locked' => ':craftAbbreviation · :projectName: Shift deleted despite commitment',
         'shift_staffing' => ':craftAbbreviation · :projectName: You have been assigned to a shift',
         'conflict_shift' => 'Shift conflict :date :from - :to',

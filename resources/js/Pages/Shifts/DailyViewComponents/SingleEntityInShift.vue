@@ -80,14 +80,16 @@
             </Teleport>
         </div>
 
-        <!-- RECHTS: Icons (dürfen NICHT rausgedrückt werden) -->
-        <div class="flex shrink-0 items-center gap-x-2">
+        <!-- RECHTS: Icons (dürfen NICHT rausgedrückt werden) — der Container selbst darf schrumpfen (min-w-0),
+             damit die Notiz darin abgeschnitten wird statt über die Karte hinauszuragen; jedes Icon bleibt shrink-0 -->
+        <div class="flex min-w-0 items-center gap-x-2">
+            <!-- Zu-/Absage-Status: blau angefragt (festgeschrieben, keine Antwort), grün/rot beantwortet -->
             <component
                 v-if="confirmationInfo"
-                :is="confirmationInfo.accepted ? IconCircleCheck : IconCircleX"
+                :is="confirmationInfo.requested ? IconClockQuestion : (confirmationInfo.accepted ? IconCircleCheck : IconCircleX)"
                 class="size-4 shrink-0"
-                :class="confirmationInfo.accepted ? 'text-success' : 'text-danger'"
-                v-tooltip.bottom="{ value: getConfirmationTooltip(person, $t), appendTo: 'body', class: 'aw-tooltip', position: 'bottom', useTranslation: false }"
+                :class="confirmationInfo.requested ? 'text-accent-600' : (confirmationInfo.accepted ? 'text-success' : 'text-danger')"
+                v-tooltip.bottom="{ value: getConfirmationTooltip(person, $t, shift), appendTo: 'body', class: 'aw-tooltip', position: 'bottom', useTranslation: false }"
             />
             <!-- „Ersatz suchen" direkt neben dem Absage-Status (nur Planer*innen) -->
             <ToolTipComponent
@@ -96,7 +98,7 @@
                 icon-size="size-4"
                 :stroke="1.75"
                 black-icon
-                classes-button=""
+                classes-button="shrink-0"
                 :tooltip-text="$t('Find replacement for {name}', { name: person.name || person.full_name || person.provider_name || '' })"
                 direction="bottom"
                 @click="showReplacementModal = true"
@@ -107,7 +109,7 @@
                 icon-size="size-5"
                 :stroke="1.75"
                 black-icon
-                classes-button=""
+                classes-button="shrink-0"
             />
 
             <!-- GQ-Icons -->
@@ -149,10 +151,11 @@
                 </template>
             </div>
 
-            <!-- Notes: begrenzen, damit sie nie den Rest killen -->
+            <!-- Notes: begrenzen, damit sie nie den Rest killen (min-w-0 bis zum truncate-Span durchreichen,
+                 sonst ragt eine lange Notiz über die Karte hinaus in die Nachbarkarte) -->
             <div v-if="forceShowNotes || ($page.props.shift_plan_daily_settings ?? $page.props.shift_plan_settings ?? $page.props.auth.user.calendar_settings).shift_notes" class="flex min-w-0 items-center max-w-56">
-                <Popover as="div" v-slot="{ open, close }" class="relative text-left ring-0">
-                    <Float auto-placement portal :offset="{ mainAxis: 5, crossAxis: 25}">
+                <Popover as="div" v-slot="{ open, close }" class="relative text-left ring-0 min-w-0 w-full">
+                    <Float as="div" class="min-w-0 w-full" auto-placement portal :offset="{ mainAxis: 5, crossAxis: 25}">
                         <PopoverButton class="flex items-center gap-x-1 min-w-0 w-full !ring-0 border-none">
                             <component
                                 :is="IconNote"
@@ -203,7 +206,8 @@
                         title="Delete user from shift"
                         @click="deleteUserFromShift(person)"
                     />
-                    <!-- Proxy-Erfassung: Zu-/Absage für Externe (kein Login) -->
+                    <!-- Stellvertretende Erfassung der Zu-/Absage (z.B. telefonische Antwort);
+                         nur für Personen mit dem Recht „Darf Schichten annehmen/ablehnen" -->
                     <template v-if="showProxyConfirmationActions">
                         <BaseMenuItem
                             white-menu-background
@@ -262,7 +266,7 @@ import {router, usePage} from "@inertiajs/vue3";
 import axios from "axios";
 import RequestWorkTimeChangeModal from "@/Pages/Shifts/Components/RequestWorkTimeChangeModal.vue";
 import {computed, ref, onMounted, onBeforeUnmount} from "vue";
-import {IconDeviceFloppy, IconNote, IconChevronDown, IconTrash, IconCircleCheck, IconCircleX} from "@tabler/icons-vue";
+import {IconDeviceFloppy, IconNote, IconChevronDown, IconTrash, IconCircleCheck, IconCircleX, IconClockQuestion} from "@tabler/icons-vue";
 import {can, is} from "laravel-permission-to-vuejs";
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
@@ -278,6 +282,7 @@ const { resolveCraft } = useShiftPlanLookups();
 const { t } = useI18n();
 const {
     isEnabled: confirmationEnabled,
+    isEligible,
     respond: respondToShift,
     getConfirmationInfo,
     getConfirmationTooltip,
@@ -554,7 +559,7 @@ const hasAdminRole = () => is('artwork admin')
 // 'accept' | 'decline' | null — Antwort-Modal für Proxy-Erfassung (Kommentar optional)
 const proxyResponseMode = ref(null);
 
-const confirmationInfo = computed(() => getConfirmationInfo(props.person));
+const confirmationInfo = computed(() => getConfirmationInfo(props.person, props.shift));
 
 // ----- Tagesstatus der Person weicht von "Verfügbar" ab (z.B. krank gemeldet) -----
 // Umrandung in der Farbe des Status (gleiche Farblogik wie die Status-Punkte im
@@ -588,18 +593,18 @@ const availabilityTooltip = computed(() => {
 
 const confirmationRowClass = computed(() => {
     if (!confirmationInfo.value) return '';
+    if (confirmationInfo.value.requested) return 'ring-1 ring-accent-500 rounded-md';
     return confirmationInfo.value.accepted
         ? 'ring-1 ring-success rounded-md'
         : 'ring-1 ring-danger rounded-md';
 });
 
-// Planer:innen erfassen Zu-/Absagen stellvertretend nur für Externe
-// (Freelancer/Dienstleister haben keinen Login).
+// Planer:innen erfassen Zu-/Absagen stellvertretend (z.B. telefonische Antwort) —
+// nur für Personen, die am Flow teilnehmen (Recht „Darf Schichten annehmen/ablehnen",
+// Flag confirmation_eligible aus dem Backend; das Backend prüft dasselbe).
 const showProxyConfirmationActions = computed(() =>
     confirmationEnabled()
-    && (props.shift.isCommitted ?? props.shift.is_committed)
-    && props.person.type
-    && props.person.type !== 'user'
+    && isEligible(props.person)
     && !!props.person.pivot?.id
 );
 
@@ -614,7 +619,7 @@ const showReplacementModal = ref(false);
 
 const canSearchReplacement = computed(() =>
     !!confirmationInfo.value
-    && !confirmationInfo.value.accepted
+    && confirmationInfo.value.declined
     && !!props.person?.pivot?.id
     && (can('can plan shifts') || is('artwork admin'))
 );

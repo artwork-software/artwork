@@ -154,11 +154,12 @@
                 </div>
 
                 <div class="flex items-center gap-2">
-                    <BaseUIButton type="button" :label="$t('Cancel')" is-cancel-button @click="$emit('cancel')" />
+                    <BaseUIButton type="button" :label="$t('Cancel')" is-cancel-button :disabled="processing" @click="$emit('cancel')" />
                     <BaseUIButton
                         type="button"
                         :label="$t('Confirm rejection')"
-                        :disabled="!canConfirmReject"
+                        :disabled="!canConfirmReject || processing"
+                        :processing="processing"
                         is-delete-button
                         @click="$emit('confirm')"
                     />
@@ -185,7 +186,9 @@ const props = defineProps({
     globalComment: { type: String, default: '' },
     hasAnySelection: { type: Boolean, required: true },
     canConfirmReject: { type: Boolean, required: true },
-    errorMessages: { type: Array, default: () => [] }
+    errorMessages: { type: Array, default: () => [] },
+    // true, solange der Reject-Request läuft: Buttons gesperrt, Spinner am Bestätigen-Button
+    processing: { type: Boolean, default: false },
 });
 
 defineEmits([

@@ -1308,6 +1308,9 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     // Endpunkt, damit die übrigen Filterwerte unberührt bleiben)
     Route::patch('/user/{user}/calendar/filter/open-violations', [UserFilterController::class, 'updateOpenViolationsFilter'])
         ->name('update.user.calendar.filter.open-violations');
+    // Schichtplan-Personenfilter "Freelancer einbinden" (user_filters-Flag, Wochenansicht)
+    Route::patch('/user/{user}/calendar/filter/show-freelancers', [UserFilterController::class, 'updateShowFreelancersFilter'])
+        ->name('update.user.calendar.filter.show-freelancers');
     Route::patch('/user/{user}/shift/calendar/filter/update', [UserShiftCalendarFilterController::class, 'update'])
         ->name('update.user.shift.calendar.filter');
     Route::patch('/user/{user}/calendar/filter/date/update', [UserCalendarFilterController::class, 'updateDates'])

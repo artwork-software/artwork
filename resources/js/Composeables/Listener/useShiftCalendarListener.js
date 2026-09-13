@@ -57,6 +57,13 @@ export function useShiftCalendarListener(newShiftPlanData, { onWorkersNeedReload
         const room = findRoomById(roomId);
         if (!room) return;
 
+        // Projekt-/Gewerk-/Gruppen-Lookups zuerst einmischen: Nach einem Projektwechsel kennt der
+        // Client das neue Projekt sonst nicht (nicht im Initial-Load) und zeigt die Schicht bis zum
+        // Neuladen als "ohne Projekt".
+        if (data.lookups && onLookupsReceived) {
+            onLookupsReceived(data.lookups);
+        }
+
         let updated = false;
 
         // Nur event-LOSE Schichten ins Raum-Raster upserten: Der Server-Load filtert
@@ -428,6 +435,17 @@ export function useShiftCalendarListener(newShiftPlanData, { onWorkersNeedReload
         // Individual times channel
         Echo.channel('shift-plan.individual-times')
             .listen('.individual-time.changed', (data) => {
+                if (onWorkerNeedReload) {
+                    onWorkerNeedReload(data.workerId, resolveWorkerType(data.workerType));
+                } else if (onWorkersNeedReload) {
+                    onWorkersNeedReload();
+                }
+            });
+
+        // Verfügbarkeit/Abwesenheit einer Person geändert (Verfügbarkeitskalender, Tagesstatus,
+        // Multi-Edit) → Personenzeile nachladen, damit Beschriftung und Konflikt-Ring aktuell sind.
+        Echo.channel('shift-plan.worker-availability')
+            .listen('.worker-availability.changed', (data) => {
                 if (onWorkerNeedReload) {
                     onWorkerNeedReload(data.workerId, resolveWorkerType(data.workerType));
                 } else if (onWorkersNeedReload) {

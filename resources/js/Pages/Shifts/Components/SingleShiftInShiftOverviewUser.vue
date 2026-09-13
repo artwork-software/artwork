@@ -72,6 +72,52 @@
                 {{ shift.eventName }}
             </div>
         </div>
+
+        <!-- Zu-/Absage der Zuweisung: Status-Pille wie in der Zelle; Antwort in der eigenen
+             Zelle oder stellvertretend (Planer:in/Admin) — nur für Personen mit dem Recht -->
+        <div v-if="confirmationInfo" class="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1">
+            <span
+                class="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold text-white"
+                :class="confirmationInfo.requested ? 'bg-accent-600' : (confirmationInfo.accepted ? 'bg-success' : 'bg-danger')"
+                :title="getConfirmationTooltip(confirmationWorker, $t)"
+            >
+                <PropertyIcon
+                    :name="confirmationInfo.requested ? 'IconClockQuestion' : (confirmationInfo.accepted ? 'IconCheck' : 'IconX')"
+                    class="h-3 w-3"
+                    stroke-width="2.5"
+                />
+                {{ confirmationInfo.requested
+                    ? $t('Reply requested')
+                    : (confirmationInfo.accepted
+                        ? $t('Accepted on {date}', { date: confirmationInfo.date ?? '–' })
+                        : $t('Declined on {date}', { date: confirmationInfo.date ?? '–' })) }}
+            </span>
+            <span v-if="confirmationInfo.comment" class="text-[11px] text-text-subtle">
+                „{{ confirmationInfo.comment }}“
+            </span>
+            <div v-if="canRespondToConfirmation" class="flex items-center gap-1.5">
+                <button
+                    v-if="!confirmationInfo.accepted"
+                    type="button"
+                    class="inline-flex items-center justify-center h-6 w-6 rounded-lg border border-success-border bg-success-surface text-success hover:opacity-80 transition"
+                    :aria-label="$t(isOwnCell ? 'Accept shift' : 'Record acceptance')"
+                    v-tooltip.bottom="{ value: $t(isOwnCell ? 'Accept shift' : 'Record acceptance'), class: 'aw-tooltip' }"
+                    @click="responseModalMode = 'accept'"
+                >
+                    <PropertyIcon name="IconCheck" class="h-3.5 w-3.5" stroke-width="2.5" />
+                </button>
+                <button
+                    v-if="!confirmationInfo.declined"
+                    type="button"
+                    class="inline-flex items-center justify-center h-6 w-6 rounded-lg border border-danger-border bg-danger-surface text-danger hover:opacity-80 transition"
+                    :aria-label="$t(isOwnCell ? 'Decline shift' : 'Record declination')"
+                    v-tooltip.bottom="{ value: $t(isOwnCell ? 'Decline shift' : 'Record declination'), class: 'aw-tooltip' }"
+                    @click="responseModalMode = 'decline'"
+                >
+                    <PropertyIcon name="IconX" class="h-3.5 w-3.5" stroke-width="2.5" />
+                </button>
+            </div>
+        </div>
     </div>
     <!-- Aktionen immer sichtbar, aber dezent — unsichtbare Hover-Buttons sind nicht entdeckbar -->
     <div class="opacity-60 hover:opacity-100 focus-within:opacity-100 transition-opacity cursor-pointer flex items-center gap-x-2">
@@ -90,7 +136,7 @@
             :aria-label="$t('Delete user from shift')"
             v-tooltip.bottom="{ value: $t('Delete user from shift'), class: 'aw-tooltip' }"
         >
-            <PropertyIcon name="IconSquareRoundedXFilled" class="h-5 w-5 hover:text-danger transition-colors duration-300 ease-in-out cursor-pointer" stroke-width="1.5"/>
+            <PropertyIcon name="IconTrash" class="h-5 w-5 hover:text-danger transition-colors duration-300 ease-in-out cursor-pointer" stroke-width="1.5"/>
         </button>
     </div>
 
@@ -109,6 +155,15 @@
         v-if="showRequestWorkTimeChangeModal"
         @close="showRequestWorkTimeChangeModal = false"
     />
+
+    <!-- Zu-/Absage mit optionalem Kommentar (stellvertretend mit Namen der Person) -->
+    <ShiftConfirmationResponseModal
+        v-if="responseModalMode"
+        :mode="responseModalMode"
+        :worker-name="proxyWorkerName"
+        @close="responseModalMode = null"
+        @submit="submitConfirmationResponse"
+    />
 </template>
 
 <script setup>
@@ -121,6 +176,8 @@ import {Float} from "@headlessui-float/vue";
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 import {useShiftPlanLookups} from "@/Composeables/useShiftPlanLookups.js";
+import {usePermission} from "@/Composeables/Permission.js";
+import {useShiftWorkerConfirmation} from "@/Composeables/useShiftWorkerConfirmation.js";
 
 const { resolveCraft } = useShiftPlanLookups();
 
@@ -135,8 +192,58 @@ const props = defineProps({
     },
 })
 
-const emit = defineEmits(['shiftDeleted'])
+const emit = defineEmits(['shiftDeleted', 'confirmationChanged'])
 const page = usePage()
+const { can, hasAdminRole } = usePermission(page.props)
+const { getConfirmationInfo, getConfirmationTooltip, respond: respondToShift } = useShiftWorkerConfirmation()
+
+const isOwnCell = computed(() => props.user.type === 0 && props.user.element.id === page.props.auth.user.id)
+
+// Der Zellen-Payload (WorkerShiftPlanResource) trägt die Pivot-Felder camelCase am Shift und das
+// Recht-Flag an der Person — für das gemeinsame Composable in die Worker/Pivot-Form bringen
+const confirmationWorker = computed(() => ({
+    id: props.user.element.id,
+    type: 'user',
+    first_name: props.user.element.first_name,
+    last_name: props.user.element.last_name,
+    confirmation_eligible: !!props.user.element.confirmation_eligible,
+    pivot: {
+        id: props.shift.pivotId,
+        confirmation_status: props.shift.confirmationStatus ?? null,
+        confirmation_at: props.shift.confirmationAt ?? null,
+        confirmation_comment: props.shift.confirmationComment ?? null,
+        confirmation_by_user_id: props.shift.confirmationByUserId ?? null,
+    },
+}))
+
+// null = Feature aus, Person ohne Recht oder Externe (nie im Flow) → kein Block
+const confirmationInfo = computed(() =>
+    props.user.type === 0 && props.shift.pivotId
+        ? getConfirmationInfo(confirmationWorker.value, props.shift)
+        : null
+)
+
+// Eigene Zelle oder stellvertretend (Backend: Proxy nur mit „Schichten planen", Admins via Gate::before)
+const canRespondToConfirmation = computed(() =>
+    !!confirmationInfo.value && (isOwnCell.value || can('can plan shifts') || hasAdminRole())
+)
+
+const responseModalMode = ref(null)
+const proxyWorkerName = computed(() => isOwnCell.value
+    ? null
+    : [props.user.element.first_name, props.user.element.last_name].filter(Boolean).join(' ') || null
+)
+
+const submitConfirmationResponse = (comment) => {
+    const status = responseModalMode.value === 'accept' ? 'accepted' : 'declined'
+    responseModalMode.value = null
+    // preserveState: der Dienstplan darf nicht remounten (Modal bleibt offen);
+    // die Personenzeile zieht der Parent über desiresReload nach
+    respondToShift(props.shift.pivotId, status, comment, {
+        preserveState: true,
+        onSuccess: () => emit('confirmationChanged'),
+    })
+}
 
 // Lookup-Craft bevorzugen: shift.craft aus WorkerShiftPlanResource ist schlank (ohne craft_shift_planer),
 // nur der craftsById-Lookup enthält die Planer für isCurrentUserPlannerOfShiftCraft
@@ -162,6 +269,12 @@ const ConfirmDeleteModal = defineAsyncComponent({
 
 const RequestWorkTimeChangeModal = defineAsyncComponent({
     loader: () => import('@/Pages/Shifts/Components/RequestWorkTimeChangeModal.vue'),
+    delay: 200,
+    timeout: 5000,
+});
+
+const ShiftConfirmationResponseModal = defineAsyncComponent({
+    loader: () => import('@/Layouts/Components/ShiftPlanComponents/ShiftConfirmationResponseModal.vue'),
     delay: 200,
     timeout: 5000,
 });

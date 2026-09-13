@@ -91,6 +91,25 @@ class UserFilterController extends Controller
     }
 
     /**
+     * Schichtplan-Personenfilter "Freelancer einbinden" (Wochenansicht). Eigener Endpunkt analog zum
+     * Verstoß-Filter, damit die übrigen Filterwerte (Gewerke, Zeitraum) unberührt bleiben.
+     */
+    public function updateShowFreelancersFilter(Request $request, User $user): void
+    {
+        $this->authorize('updateOwnPreferences', $user);
+
+        $validated = $request->validate([
+            'filter_type' => ['required', 'string', 'in:shift_filter,shift_daily_filter'],
+            'show_freelancers' => ['required', 'boolean'],
+        ]);
+
+        $user->userFilters()->updateOrCreate(
+            ['filter_type' => $validated['filter_type']],
+            ['show_freelancers' => (bool) $validated['show_freelancers']]
+        );
+    }
+
+    /**
      * Gibt ein Array zurück oder null, wenn leer.
      */
     private function nullableArray($collection): ?array

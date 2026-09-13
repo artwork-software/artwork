@@ -121,6 +121,7 @@ use Spatie\Activitylog\Models\Activity;
 use Symfony\Component\HttpFoundation\Response as SymfonyResponse;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 use Throwable;
+use Artwork\Modules\Shift\Services\ShiftConfirmationEligibilityService;
 
 class EventController extends Controller
 {
@@ -1295,10 +1296,12 @@ class EventController extends Controller
         // Vereinheitlichte workers-Liste wie im Einsatzplan (EventService::getDaysWith…):
         // SingleUserEventShift liest shift.workers (inkl. type-Tag und Pivot) für
         // Kolleg*innen, individuelle Zeiten und die Zu-/Absage-Buttons.
-        $shiftsOfDay->each(static function ($shift): void {
+        $confirmationEligibility = app(ShiftConfirmationEligibilityService::class);
+        $shiftsOfDay->each(static function ($shift) use ($confirmationEligibility): void {
             $tag = static fn ($workers, string $type) => ($workers ?? collect())
-                ->map(static function ($worker) use ($type) {
+                ->map(static function ($worker) use ($type, $confirmationEligibility) {
                     $worker->setAttribute('type', $type);
+                    $worker->setAttribute('confirmation_eligible', $confirmationEligibility->isEligible($worker));
                     return $worker;
                 });
 
@@ -1469,9 +1472,11 @@ class EventController extends Controller
         $isOption = $request->booleanValue('isOption');
 
         if (!$roomId && !$user->hasRole(RoleEnum::ARTWORK_ADMIN->value)) {
-            $canCreateWithoutRoom = $user->can(PermissionEnum::CREATE_EVENTS_WITHOUT_REQUEST->value) ||
-                ($request->booleanValue('isPlanning') &&
-                    $user->can(PermissionEnum::CAN_PLAN_FIXED_IN_PLANNING_CALENDAR->value));
+            // Kalender und Planungskalender sind getrennt berechtigt: geplante Termine direkt (ohne Raum)
+            // anlegen darf nur "Im Planungskalender fest planen", reguläre nur "Termine fest planen".
+            $canCreateWithoutRoom = $request->booleanValue('isPlanning')
+                ? $user->can(PermissionEnum::CAN_PLAN_FIXED_IN_PLANNING_CALENDAR->value)
+                : $user->can(PermissionEnum::CREATE_EVENTS_WITHOUT_REQUEST->value);
 
             if (!$canCreateWithoutRoom) {
                 if ($user->can(PermissionEnum::EVENT_REQUEST->value)) {
@@ -1493,7 +1498,9 @@ class EventController extends Controller
                 $hasGlobalRequest = $user->can(PermissionEnum::EVENT_REQUEST->value);
                 $isPlanning = $request->booleanValue('isPlanning');
                 $canPlanFixed = $isPlanning && $user->can(PermissionEnum::CAN_PLAN_FIXED_IN_PLANNING_CALENDAR->value);
-                $canBookDirectly = $hasGlobalCreate || $canPlanFixed || $isRoomAdmin || $room->everyone_can_book;
+                // Direktbuchung: reguläre Termine über "Termine fest planen", geplante Termine NUR über
+                // "Im Planungskalender fest planen" (getrennte Berechtigung, keine Implikation).
+                $canBookDirectly = ($isPlanning ? $canPlanFixed : $hasGlobalCreate) || $isRoomAdmin || $room->everyone_can_book;
                 $canRequest = $hasGlobalCreate ||
                     $hasGlobalRequest ||
                     $isRoomAdmin ||

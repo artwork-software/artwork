@@ -4,6 +4,8 @@ namespace Tests\Feature\Modules\Shift;
 
 use App\Settings\ShiftSettings;
 use Artwork\Modules\Freelancer\Models\Freelancer;
+use Artwork\Modules\Permission\Enums\PermissionEnum;
+use Artwork\Modules\Permission\Models\Permission;
 use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\Shift\Models\ShiftQualification;
 use Artwork\Modules\Shift\Models\ShiftWorker;
@@ -14,7 +16,10 @@ use Tests\Feature\FeatureTestCase;
 
 /**
  * Zu-/Absage einer Schichtzuweisung durch die eingeplante Person
- * (bzw. Proxy-Erfassung durch Planer:innen für Externe).
+ * (bzw. stellvertretende Erfassung durch Planer:innen).
+ *
+ * Teilnahme am Flow ist ein Opt-in je Person über das Recht
+ * „Darf Schichten annehmen/ablehnen" (PermissionEnum::CAN_RESPOND_TO_SHIFT_ASSIGNMENTS).
  */
 final class ShiftWorkerConfirmationTest extends FeatureTestCase
 {
@@ -25,9 +30,11 @@ final class ShiftWorkerConfirmationTest extends FeatureTestCase
         $settings = app(ShiftSettings::class);
         $settings->shift_confirmation_enabled = true;
         $settings->save();
+
+        Permission::findOrCreate(PermissionEnum::CAN_RESPOND_TO_SHIFT_ASSIGNMENTS->value, 'web');
     }
 
-    private function createCommittedShiftWithUser(bool $committed = true): array
+    private function createCommittedShiftWithUser(bool $committed = true, bool $eligible = true): array
     {
         $shift = Shift::factory()->create([
             'start_date' => '2026-08-10',
@@ -39,6 +46,9 @@ final class ShiftWorkerConfirmationTest extends FeatureTestCase
         ]);
         $qualification = ShiftQualification::factory()->create();
         $user = User::factory()->create();
+        if ($eligible) {
+            $user->givePermissionTo(PermissionEnum::CAN_RESPOND_TO_SHIFT_ASSIGNMENTS->value);
+        }
         $shift->users()->attach($user->id, [
             'shift_qualification_id' => $qualification->id,
         ]);
@@ -50,6 +60,69 @@ final class ShiftWorkerConfirmationTest extends FeatureTestCase
             ->firstOrFail();
 
         return [$shift->fresh(), $user, $pivot];
+    }
+
+    #[Test]
+    public function worker_without_permission_cannot_respond_to_own_shift(): void
+    {
+        [, $user, $pivot] = $this->createCommittedShiftWithUser(eligible: false);
+
+        $this->actingAs($user)
+            ->patch(route('shift-worker.confirmation.update', $pivot), [
+                'status' => 'accepted',
+            ])
+            ->assertForbidden();
+
+        $this->assertNull($pivot->refresh()->confirmation_status);
+    }
+
+    #[Test]
+    public function permission_via_role_makes_worker_eligible(): void
+    {
+        [, $user, $pivot] = $this->createCommittedShiftWithUser(eligible: false);
+
+        $role = \Spatie\Permission\Models\Role::findOrCreate('Testrolle Schichtantwort', 'web');
+        $role->givePermissionTo(PermissionEnum::CAN_RESPOND_TO_SHIFT_ASSIGNMENTS->value);
+        $user->assignRole($role);
+
+        $this->actingAs($user)
+            ->patch(route('shift-worker.confirmation.update', $pivot), [
+                'status' => 'accepted',
+            ])
+            ->assertRedirect();
+
+        $this->assertSame('accepted', $pivot->refresh()->confirmation_status);
+    }
+
+    #[Test]
+    public function planner_can_record_response_for_eligible_user(): void
+    {
+        [, $user, $pivot] = $this->createCommittedShiftWithUser();
+
+        $planner = $this->actingAsUserWith('can plan shifts');
+
+        $this->patch(route('shift-worker.confirmation.update', $pivot), [
+            'status' => 'accepted',
+        ])->assertRedirect();
+
+        $pivot->refresh();
+        $this->assertSame('accepted', $pivot->confirmation_status);
+        $this->assertSame($planner->id, $pivot->confirmation_by_user_id);
+        $this->assertNotSame($user->id, $pivot->confirmation_by_user_id);
+    }
+
+    #[Test]
+    public function planner_cannot_record_response_for_user_without_permission(): void
+    {
+        [, , $pivot] = $this->createCommittedShiftWithUser(eligible: false);
+
+        $this->actingAsUserWith('can plan shifts');
+
+        $this->patch(route('shift-worker.confirmation.update', $pivot), [
+            'status' => 'accepted',
+        ])->assertForbidden();
+
+        $this->assertNull($pivot->refresh()->confirmation_status);
     }
 
     #[Test]
@@ -132,7 +205,7 @@ final class ShiftWorkerConfirmationTest extends FeatureTestCase
     }
 
     #[Test]
-    public function confirmation_is_rejected_on_uncommitted_shift(): void
+    public function worker_can_respond_on_uncommitted_shift(): void
     {
         [, $user, $pivot] = $this->createCommittedShiftWithUser(committed: false);
 
@@ -140,7 +213,9 @@ final class ShiftWorkerConfirmationTest extends FeatureTestCase
             ->patch(route('shift-worker.confirmation.update', $pivot), [
                 'status' => 'accepted',
             ])
-            ->assertForbidden();
+            ->assertRedirect();
+
+        $this->assertSame('accepted', $pivot->refresh()->confirmation_status);
     }
 
     #[Test]
@@ -155,8 +230,12 @@ final class ShiftWorkerConfirmationTest extends FeatureTestCase
             ->assertForbidden();
     }
 
+    /**
+     * Externe (Freelancer/Dienstleister) können das Recht nicht tragen und nehmen
+     * deshalb nicht am Flow teil — auch nicht stellvertretend.
+     */
     #[Test]
-    public function planner_can_record_response_for_freelancer(): void
+    public function planner_cannot_record_response_for_freelancer(): void
     {
         $shift = Shift::factory()->create([
             'start_date' => '2026-08-10',
@@ -178,16 +257,14 @@ final class ShiftWorkerConfirmationTest extends FeatureTestCase
             ->where('employable_id', $freelancer->id)
             ->firstOrFail();
 
-        $planner = $this->actingAsUserWith('can plan shifts');
+        $this->actingAsUserWith('can plan shifts');
 
         $this->patch(route('shift-worker.confirmation.update', $pivot), [
             'status' => 'declined',
             'comment' => 'Telefonisch abgesagt',
-        ])->assertRedirect();
+        ])->assertForbidden();
 
-        $pivot->refresh();
-        $this->assertSame('declined', $pivot->confirmation_status);
-        $this->assertSame($planner->id, $pivot->confirmation_by_user_id);
+        $this->assertNull($pivot->refresh()->confirmation_status);
     }
 
     #[Test]

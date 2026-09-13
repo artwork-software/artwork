@@ -27,7 +27,8 @@
                 class="flex items-start gap-2 rounded-lg border border-warning-border bg-warning-surface px-3 py-2 text-xs text-warning"
             >
                 <PropertyIcon name="IconInfoCircle" class="h-4 w-4 shrink-0 mt-px" stroke-width="1.5" />
-                <span>{{ $t('You remain scheduled until the plan is changed.') }} {{ $t('The planners will be notified of your decline.') }}</span>
+                <span v-if="workerName">{{ $t('The person remains scheduled until the plan is changed.') }}</span>
+                <span v-else>{{ $t('You remain scheduled until the plan is changed.') }} {{ $t('The planners will be notified of your decline.') }}</span>
             </div>
 
             <div class="mt-4 flex justify-between gap-4">

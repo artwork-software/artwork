@@ -3,7 +3,7 @@
          einfahrendes Panel (kein Dauer-Banner, kein Platzverbrauch im Raster). Drei Abschnitte:
          Legende (Zell-Marker), Bedienung (Ansichten, Zuweisen, Multi-Edit, Filter, Zoom) und
          Ablauf (Planen → Festschreiben → Freigabe → Änderungen → Regelverstöße). -->
-    <button type="button" class="ui-button" :title="$t('Help & legend')" :aria-label="$t('Help & legend')" @click="openPanel">
+    <button v-if="!hideTrigger" type="button" class="ui-button" :title="$t('Help & legend')" :aria-label="$t('Help & legend')" @click="openPanel">
         <IconInfoCircle class="h-5 w-5" stroke-width="1.5" />
     </button>
 
@@ -164,12 +164,12 @@
                                         </span>
                                     </li>
                                     <li class="flex items-start gap-2.5">
-                                        <span class="mt-0.5 inline-flex h-4 w-6 items-center justify-center shrink-0 text-[10px] font-semibold">
-                                            <span class="underline decoration-success decoration-2">10</span><span class="mx-px">/</span><span class="underline decoration-danger decoration-2">18</span>
+                                        <span class="mt-0.5 inline-flex h-4 w-6 items-center justify-center gap-px shrink-0">
+                                            <span class="h-2.5 w-2.5 rounded-full bg-accent-600"></span><span class="h-2.5 w-2.5 rounded-full bg-success"></span><span class="h-2.5 w-2.5 rounded-full bg-danger"></span>
                                         </span>
                                         <span>
                                             <span class="font-medium">{{ $t('Acceptance / refusal') }}</span>
-                                            <span class="block text-xs text-text-subtle">{{ $t('Green underline: the person accepted the shift, red underline: the person declined. Details and comment in the hover text.') }}</span>
+                                            <span class="block text-xs text-text-subtle">{{ $t('Green pill: the person accepted the shift, red pill: the person declined, blue pill: requested, no reply yet. Only for people with the permission "Accept or decline shifts". Details and comment in the hover text.') }}</span>
                                         </span>
                                     </li>
                                     <li class="flex items-start gap-2.5">
@@ -210,7 +210,8 @@
                                     <PropertyIcon :name="block.icon" class="h-4 w-4 text-accent-600" :stroke-width="1.5" />
                                     {{ $t(block.title) }}
                                 </h4>
-                                <p class="text-xs text-text-subtle">{{ $t(block.text) }}</p>
+                                <p v-if="block.text" class="text-xs text-text-subtle">{{ $t(block.text) }}</p>
+                                <p v-for="paragraph in (block.paragraphs ?? [])" :key="paragraph" class="text-xs text-text-subtle">{{ $t(paragraph) }}</p>
                             </section>
                         </template>
 
@@ -251,6 +252,11 @@ import {can, is} from 'laravel-permission-to-vuejs'
 import PropertyIcon from '@/Artwork/Icon/PropertyIcon.vue'
 import {IconInfoCircle, IconX} from '@tabler/icons-vue'
 
+defineProps({
+    /** Kein eigener Icon-Button — das Panel wird von außen über die exponierte open()-Methode geöffnet */
+    hideTrigger: { type: Boolean, default: false },
+})
+
 const STORAGE_KEY = 'shift-plan-help.tab'
 
 const visible = ref(false)
@@ -282,6 +288,16 @@ const operationBlocks = [
         icon: 'IconCirclePlus',
         title: 'Create a shift',
         text: 'Hover over a room cell and click the plus icon, or use the template icon to create several shifts at once from shift templates.',
+    },
+    {
+        // Begriffserklärung aus dem Schicht-Modal hierher verlagert (dort nur für Einsteiger*innen relevant)
+        icon: 'IconInfoCircle',
+        title: 'How a shift is structured',
+        paragraphs: [
+            'Functions are the places in a shift (e.g. lighting operator, stagehand). They belong to the craft; you set how many people are needed per function.',
+            'Global qualifications apply across all crafts (e.g. first aider, forklift licence) and are requested in addition to the functions.',
+            'Shift groups bundle shifts that belong together (e.g. set-up, show, strike). They are optional and help with filtering and the timeline.',
+        ],
     },
     {
         icon: 'IconHandGrab',
@@ -387,4 +403,6 @@ watch(visible, (open) => {
 })
 
 onBeforeUnmount(() => document.removeEventListener('keydown', onKeydown))
+
+defineExpose({ open: openPanel, close: closePanel })
 </script>

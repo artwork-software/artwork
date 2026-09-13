@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, reactive, computed, watch, onMounted, toRef, nextTick, inject } from 'vue'
+import { ref, reactive, computed, watch, onMounted, toRef, nextTick, defineAsyncComponent } from 'vue'
 import { router, useForm, usePage } from '@inertiajs/vue3'
 import axios from 'axios'
 import { useI18n } from 'vue-i18n'
@@ -13,12 +13,11 @@ import AlertComponent from '@/Components/Alerts/AlertComponent.vue'
 import SelectComponent from '@/Components/Inputs/SelectComponent.vue'
 import ConfirmDeleteModal from '@/Layouts/Components/ConfirmDeleteModal.vue'
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
-import LastedProjects from "@/Artwork/LastedProjects.vue";
 import ProjectSearch from "@/Components/SearchBars/ProjectSearch.vue";
+import LastedProjects from "@/Artwork/LastedProjects.vue";
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 import RoomSearch from '@/Components/SearchBars/RoomSearch.vue'
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue"
-import SettingsGuideBanner from "@/Artwork/Guide/SettingsGuideBanner.vue"
 import {useShiftPlanLookups} from "@/Composeables/useShiftPlanLookups.js"
 import {can, is} from "laravel-permission-to-vuejs"
 
@@ -71,9 +70,24 @@ const props = defineProps({
 // Emits
 const emit = defineEmits(['closed'])
 
-// Vom Dienstplan bereitgestellter Schichtverlauf-Shortcut; fehlt er (z.B. im
-// Projekt-Kontext), wird der Verlauf-Button im Modal nicht angezeigt.
-const openShiftHistory = inject<((shift: any) => void) | null>('openShiftHistory', null)
+// Schichtverlauf (nur beim Bearbeiten, gleiche Rechte wie die Verlaufs-Route): als verschachteltes
+// Modal innerhalb dieses Dialogs gerendert, damit ein Klick neben den Verlauf nicht beide Modals schließt
+const ShiftHistoryModal = defineAsyncComponent(() => import('@/Pages/Shifts/Components/ShiftHistoryModal.vue'))
+const showShiftHistory = ref(false)
+const canShowShiftHistory = computed(() =>
+    !!props.edit && !!props.shift?.id && (is('artwork admin') || can('can view shift plan'))
+)
+const historyCrafts = computed(() => (Array.isArray(props.crafts) ? props.crafts : []))
+const historyConfig = computed(() => {
+    const shift: any = props.shift ?? {}
+    const startDate = shift.startDate ?? shift.start_date ?? null
+    return {
+        shiftId: shift.id ?? null,
+        craftId: shift.craft?.id ?? shift.craftId ?? shift.craft_id ?? null,
+        startDate,
+        endDate: shift.endDate ?? shift.end_date ?? startDate,
+    }
+})
 
 // Page
 const page = usePage()
@@ -135,8 +149,6 @@ const showComfirmDeleteModal = ref(false)
 // Zeitvorgaben (Start/Ende/Pause) — kompakte Chip-Reihe unter den Zeitfeldern; die
 // Nutzer*innen-Einstellung (is_time_preset_open) bleibt maßgeblich, ohne Einstellung offen.
 const showTimePresetBox = ref(page.props?.auth?.user?.is_time_preset_open ?? true)
-// Optionales (Schichtgruppe, Projekt, Notiz) ist standardmäßig eingeklappt
-const showOptionalBox = ref(false)
 const showTimeSearchbar = ref(false)
 const searchTimePreset = ref('')
 
@@ -704,15 +716,6 @@ const visibleShiftQualificationsCount = computed(() =>
     (computedShiftQualifications.value || []).filter((q) => canComputedShiftQualificationBeShown(q)).length
 )
 
-// Zusammenfassung des eingeklappten Abschnitts „Optional" (Schichtgruppe, Projekt, Notiz)
-const optionalSummary = computed<Array<{ icon: string, text: string }>>(() => {
-    const entries: Array<{ icon: string, text: string }> = []
-    if (selectedShiftGroup.value?.name) entries.push({ icon: 'IconUsers', text: selectedShiftGroup.value.name })
-    if (selectedProject.value?.name) entries.push({ icon: 'IconBriefcase', text: selectedProject.value.name })
-    if ((shiftForm.description ?? '').trim().length > 0) entries.push({ icon: 'IconNote', text: $t('Note present') })
-    return entries
-})
-
 const axiosProcessing = ref(false)
 const saveDisabled = computed(() => shiftForm.processing || axiosProcessing.value || missingRequiredFields.value.length > 0)
 const saveDisabledReason = computed(() =>
@@ -1127,24 +1130,14 @@ const lockOrUnlockShift = (commit = false) => {
     <ArtworkBaseModal
         v-if="open"
         full-modal
-        title="Organize shift"
+        :title="edit ? 'Edit shift' : 'Organize shift'"
         description="Determine how long your shift lasts and how many people should work in your shift."
         @close="closeModal"
     >
+        <!-- Eine Karte ohne Abschnittsüberschriften: Vorlagen → Gewerk → Zeiten/Pause/Raum → Bedarf → Projekt/Gruppe/Notiz.
+             Begriffserklärung (Funktion vs. globale Qualifikation vs. Schichtgruppe) steht im Hilfe-Panel des Dienstplans. -->
         <form @submit.prevent="saveShift" class="relative z-40 artwork">
-            <div class="space-y-6">
-                <!-- Begriffe: Funktion vs. globale Qualifikation vs. Schichtgruppe -->
-                <SettingsGuideBanner
-                    variant="static"
-                    title="How a shift is structured"
-                    icon="IconInfoCircle"
-                    :paragraphs="[
-                        'Functions are the places in a shift (e.g. lighting operator, stagehand). They belong to the craft; you set how many people are needed per function.',
-                        'Global qualifications apply across all crafts (e.g. first aider, forklift licence) and are requested in addition to the functions.',
-                        'Shift groups bundle shifts that belong together (e.g. set-up, show, strike). They are optional and help with filtering and the timeline.',
-                    ]"
-                />
-
+            <div class="rounded-2xl ring-1 ring-border-subtle/70 bg-white/70 p-4 sm:p-5 shadow-sm space-y-4">
                 <!-- Server-Fehler (z.B. Validierung 422) sichtbar statt nur in der Konsole -->
                 <div v-if="serverErrorList.length" class="rounded-md bg-danger-surface ring-1 ring-danger-border px-3 py-2" role="alert" aria-live="assertive">
                     <p class="text-xs font-semibold text-danger mb-1">{{ $t('The shift could not be saved.') }}</p>
@@ -1152,474 +1145,456 @@ const lockOrUnlockShift = (commit = false) => {
                         <li v-for="(message, index) in serverErrorList" :key="'server-error-' + index">{{ message }}</li>
                     </ul>
                 </div>
-                <!-- Shortcut: Schichtverlauf vorgefiltert auf diese Schicht (nur beim Bearbeiten) -->
-                <div v-if="edit && shift && openShiftHistory" class="flex justify-end">
+
+                <!-- Kopfzeile: Schichtvorlagen (eingeklappte Zeile, setzt Gewerk, Zeiten, Pause, Bedarf)
+                     + Schichtverlauf oben rechts in der Ecke (nur beim Bearbeiten) -->
+                <div class="flex items-start gap-3">
+                    <div class="min-w-0 flex-1 rounded-lg border border-dashed border-border-subtle px-3 py-2">
+                        <div class="flex items-center justify-between gap-2">
+                            <div class="flex items-center gap-1.5 text-xs text-text-muted">
+                                <PropertyIcon name="IconTemplate" class="h-3.5 w-3.5" />
+                                <span class="font-medium">{{ $t('shift templates') }}</span>
+                                <span class="rounded-full bg-surface-sunken px-1.5 py-0.5 text-[10px] font-medium text-text-muted">
+                                    {{ filteredSingleShiftPresets.length }}
+                                </span>
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <button
+                                    v-if="showShiftPresetBox"
+                                    type="button"
+                                    class="text-xs text-text-subtle hover:text-accent-600"
+                                    @click="showShiftSearchbar ? closeShiftSearchbar() : (showShiftSearchbar = true)"
+                                >
+                                    {{ showShiftSearchbar ? $t('Close search') : $t('Search') }}
+                                </button>
+                                <button
+                                    v-if="hasActiveShiftPreset"
+                                    type="button"
+                                    class="text-xs text-text-subtle hover:text-accent-600"
+                                    @click="resetShiftPresetSelection({ alsoFields: true })"
+                                >
+                                    {{ $t('Reset') }}
+                                </button>
+                                <button type="button" class="text-xs text-accent-600 hover:text-accent-700" @click="showShiftPresetBox = !showShiftPresetBox">
+                                    {{ showShiftPresetBox ? $t('Hide') : $t('Show') }}
+                                </button>
+                            </div>
+                        </div>
+
+                        <transition
+                            enter-active-class="transition duration-200 ease-out"
+                            enter-from-class="opacity-0 -translate-y-1"
+                            enter-to-class="opacity-100 translate-y-0"
+                            leave-active-class="transition duration-150 ease-in"
+                            leave-from-class="opacity-100 translate-y-0"
+                            leave-to-class="opacity-0 -translate-y-1"
+                        >
+                            <div v-if="showShiftPresetBox" class="mt-2">
+                                <div v-if="showShiftSearchbar" class="w-full sm:w-80 mb-2">
+                                    <div class="flex items-center gap-2">
+                                        <BaseInput
+                                            is-small
+                                            id="shift-preset-search"
+                                            v-model="searchShiftPreset"
+                                            :label="$t('Browse shift templates')"
+                                        />
+                                        <PropertyIcon name="IconX" class="cursor-pointer h-5 w-5 text-text-subtle hover:text-text-muted" @click="closeShiftSearchbar" />
+                                    </div>
+                                </div>
+
+                                <div v-if="filteredSingleShiftPresets?.length > 0" class="max-h-[260px] overflow-y-auto p-1">
+                                    <div class="grid gap-2"
+                                         style="grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));">
+                                        <button
+                                            v-for="preset in filteredSingleShiftPresets"
+                                            :key="'shift-preset-'+preset.id"
+                                            type="button"
+                                            @click="takeShiftPreset(preset)"
+                                            class="text-left"
+                                        >
+                                            <div
+                                                class="rounded-xl bg-white ring-1 ring-border-subtle p-2.5 hover:shadow-md transition-all duration-200"
+                                                :class="[preset.active ? 'ring-2 !ring-accent-600 shadow-md' : '']"
+                                            >
+                                                <!-- Kopf: Name + Total -->
+                                                <div class="flex items-center justify-between gap-2">
+                                                    <div class="min-w-0 truncate text-[13px] font-semibold text-text">
+                                                        {{ preset.name }}
+                                                    </div>
+                                                    <span
+                                                        v-if="(preset.shifts_qualifications?.length || preset.shift_qualifications?.length)"
+                                                        class="shrink-0 rounded-full bg-surface-sunken px-2 py-0.5 text-[10px] font-medium text-text-muted"
+                                                    >
+                                                      {{ qualStats(preset).total }}
+                                                    </span>
+                                                </div>
+
+                                                <!-- Zeiten + Pause (Badges) -->
+                                                <div class="mt-1 flex items-center gap-1.5 text-[12px] text-text-muted">
+                                                    <span class="shrink-0 rounded border border-border-subtle px-1.5 py-0.5">{{ toHHMM(preset.start_time) }}</span>
+                                                    <span class="shrink-0 text-text-subtle">→</span>
+                                                    <span class="shrink-0 rounded border border-border-subtle px-1.5 py-0.5">{{ toHHMM(preset.end_time) }}</span>
+                                                    <span class="ml-auto shrink-0 rounded bg-surface-sunken px-1.5 py-0.5">
+                                                      {{ preset.break_duration ?? 0 }} {{ $t('min') }}
+                                                    </span>
+                                                </div>
+
+                                                <!-- Gewerk + Anzahl Qualis -->
+                                                <div class="mt-1 flex items-center justify-between gap-2">
+                                                    <span class="shrink-0 rounded border border-border-subtle px-1.5 py-0.5 text-[11px] font-semibold text-text-muted">
+                                                      {{ craftAbbrById(preset.craft_id) || '—' }}
+                                                    </span>
+                                                    <span class="truncate text-[11px] text-text-subtle">
+                                                      {{ qualStats(preset).count }} {{ $t('Qualis') }}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div v-else class="flex flex-wrap items-center gap-2 text-xs text-text-subtle">
+                                    <span>{{ searchShiftPreset ? $t('No shift templates match your search.') : $t('No shift templates yet. Templates save times, break, craft and functions for reuse.') }}</span>
+                                    <a
+                                        v-if="!searchShiftPreset && canOpenShiftTemplates"
+                                        :href="route('single-shift-presets.index')"
+                                        target="_blank"
+                                        rel="noopener"
+                                        class="inline-flex items-center gap-1 font-medium text-accent-600 hover:text-accent-700"
+                                    >
+                                        <PropertyIcon name="IconArrowRight" class="h-3.5 w-3.5" />
+                                        {{ $t('Create shift templates') }}
+                                    </a>
+                                </div>
+                            </div>
+                        </transition>
+                    </div>
+
+                    <!-- Schichtverlauf, vorgefiltert auf diese Schicht; öffnet als verschachteltes Modal (siehe unten) -->
                     <button
+                        v-if="canShowShiftHistory"
                         type="button"
-                        class="inline-flex items-center gap-1 rounded-full border border-border-subtle bg-white px-2.5 py-1.5 text-xs text-text-muted hover:border-accent-700 hover:text-accent-700 transition-colors"
+                        class="shrink-0 inline-flex items-center gap-1.5 rounded-lg border border-border-subtle bg-white px-2.5 py-2 text-xs text-text-muted hover:border-accent-700 hover:text-accent-700 transition-colors"
                         :title="$t('Show shift history for this shift')"
-                        @click="openShiftHistory(shift)"
+                        @click="showShiftHistory = true"
                     >
                         <PropertyIcon name="IconHistory" class="h-4 w-4" stroke-width="2" />
                         <span>{{ $t('Shift history') }}</span>
                     </button>
                 </div>
-                <!-- (1) Schichtvorlagen: Schnellwahl, standardmäßig eingeklappt (setzt Gewerk, Zeiten, Pause, Bedarf) -->
-                <section class="rounded-2xl ring-1 ring-border-subtle/70 bg-white/70 p-0 shadow-sm overflow-hidden">
-                    <!-- Header -->
-                    <div class="flex items-center justify-between gap-3 p-4">
-                        <h3 class="text-sm font-semibold text-text">{{ $t('shift templates') }}</h3>
-                        <div class="flex items-center gap-2">
-                          <span class="rounded-full bg-surface-sunken px-2.5 py-1 text-[11px] font-medium text-text-muted">
-                            {{ filteredSingleShiftPresets.length }}
-                          </span>
-                            <BaseUIButton type="button" hide-icon class="!text-xs" @click="showShiftPresetBox = !showShiftPresetBox">
-                                {{ showShiftPresetBox ? $t('Hide') : $t('Show') }}
-                            </BaseUIButton>
-                            <BaseUIButton
-                                v-if="hasActiveShiftPreset"
-                                type="button"
-                                hide-icon
-                                class="!text-xs"
-                                @click="resetShiftPresetSelection({ alsoFields: true })"
-                            >
-                                {{ $t('Reset') }}
-                            </BaseUIButton>
-                        </div>
-                    </div>
 
-                    <!-- Suche (nur wenn offen) -->
-                    <div v-if="showShiftPresetBox" class="px-4 sm:px-5 pb-2">
-                        <div class="w-full sm:w-80" v-if="showShiftSearchbar">
-                            <div class="flex items-center gap-2">
-                                <BaseInput
-                                    is-small
-                                    id="shift-preset-search"
-                                    v-model="searchShiftPreset"
-                                    :label="$t('Browse shift templates')"
-                                />
-                                <PropertyIcon name="IconX" class="cursor-pointer h-5 w-5 text-text-subtle hover:text-text-muted" @click="closeShiftSearchbar" />
-                            </div>
-                        </div>
-                        <div v-else>
-                            <BaseUIButton type="button" hide-icon class="!text-xs" @click="showShiftSearchbar = true">
-                                <PropertyIcon name="IconSearch" class="h-4 w-4" />
-                                <span>{{ $t('Search') }}</span>
-                            </BaseUIButton>
-                        </div>
-                    </div>
-
-                    <!-- Inhalt (scrollbar) -->
+                <!-- Gewerk: bestimmt die Funktionsplätze -->
+                <div class="grid grid-cols-1 gap-2">
+                    <SelectComponent
+                        id="addShiftCraftSelectComponent"
+                        :label="$t('Craft') + ' *'"
+                        v-model="selectedCraft"
+                        :options="selectableCrafts"
+                        selected-property-to-display="name"
+                        :getter-for-options-to-display="(option) => option.name + ' ' + option.abbreviation"
+                    />
+                    <p class="text-xs text-text-subtle -mt-1">{{ $t('The craft determines the function places of the shift.') }}</p>
+                    <AlertComponent
+                        v-if="craftHasChanged"
+                        type="warning"
+                        show-icon
+                        :text="$t('Changing the craft will remove all assigned employees from this shift.')"
+                    />
+                    <!-- Gewerk-Hinweise -->
                     <transition
-                        enter-active-class="transition duration-200 ease-out"
+                        enter-active-class="transition duration-200"
                         enter-from-class="opacity-0 -translate-y-1"
                         enter-to-class="opacity-100 translate-y-0"
-                        leave-active-class="transition duration-150 ease-in"
+                        leave-active-class="transition duration-150"
                         leave-from-class="opacity-100 translate-y-0"
                         leave-to-class="opacity-0 -translate-y-1"
                     >
-                        <div v-if="showShiftPresetBox" class="px-4 sm:px-5 pb-4">
-                            <div v-if="filteredSingleShiftPresets?.length > 0" class="max-h-[300px] overflow-y-auto p-3">
-                                <!-- kompakteres, luftiges Grid (verhindert Überlauf) -->
-                                <div class="grid gap-3"
-                                     style="grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));">
-                                    <button
-                                        v-for="preset in filteredSingleShiftPresets"
-                                        :key="'shift-preset-'+preset.id"
-                                        type="button"
-                                        @click="takeShiftPreset(preset)"
-                                        class="text-left"
-                                    >
-                                        <div
-                                            class="rounded-xl bg-white ring-1 ring-border-subtle p-3 hover:shadow-md transition-all duration-200"
-                                            :class="[preset.active ? 'ring-2 !ring-accent-600 shadow-md' : '']"
-                                        >
-                                            <!-- Kopf: Name + Total -->
-                                            <div class="flex items-center justify-between gap-2">
-                                                <div class="min-w-0 truncate text-[13px] font-semibold text-text">
-                                                    {{ preset.name }}
-                                                </div>
-                                                <span
-                                                    v-if="(preset.shifts_qualifications?.length || preset.shift_qualifications?.length)"
-                                                    class="shrink-0 rounded-full bg-surface-sunken px-2 py-0.5 text-[10px] font-medium text-text-muted"
-                                                >
-                                                  {{ qualStats(preset).total }}
-                                                </span>
-                                            </div>
-
-                                            <!-- Zeiten + Pause (Badges) -->
-                                            <div class="mt-1 flex items-center gap-1.5 text-[12px] text-text-muted">
-                                                <span class="shrink-0 rounded border border-border-subtle px-1.5 py-0.5">{{ toHHMM(preset.start_time) }}</span>
-                                                <span class="shrink-0 text-text-subtle">→</span>
-                                                <span class="shrink-0 rounded border border-border-subtle px-1.5 py-0.5">{{ toHHMM(preset.end_time) }}</span>
-                                                <span class="ml-auto shrink-0 rounded bg-surface-sunken px-1.5 py-0.5">
-                                                  {{ preset.break_duration ?? 0 }} {{ $t('min') }}
-                                                </span>
-                                            </div>
-
-                                            <!-- Gewerk + Anzahl Qualis -->
-                                            <div class="mt-1 flex items-center justify-between gap-2">
-                                                <span class="shrink-0 rounded border border-border-subtle px-1.5 py-0.5 text-[11px] font-semibold text-text-muted">
-                                                  {{ craftAbbrById(preset.craft_id) || '—' }}
-                                                </span>
-                                                                                <span class="truncate text-[11px] text-text-subtle">
-                                                  {{ qualStats(preset).count }} {{ $t('Qualis') }}
-                                                </span>
-                                            </div>
-                                        </div>
-                                    </button>
-                                </div>
+                        <div v-if="validationMessages.warnings.craft.length || validationMessages.errors.craft.length || serverErrorFor('craft_id')" class="space-y-2" aria-live="polite">
+                            <div v-if="serverErrorFor('craft_id')" class="rounded-md bg-danger-surface ring-1 ring-danger-border px-3 py-2">
+                                <p class="text-xs text-danger">{{ serverErrorFor('craft_id') }}</p>
                             </div>
-
-                            <div v-else class="py-6 flex flex-col items-center gap-2">
-                                <AlertComponent
-                                    type="info"
-                                    show-icon
-                                    icon-size="w-4 h-4"
-                                    :text="searchShiftPreset ? $t('No shift templates match your search.') : $t('No shift templates yet. Templates save times, break, craft and functions for reuse.')"
-                                    class="mx-auto w-fit"
-                                />
-                                <a
-                                    v-if="!searchShiftPreset && canOpenShiftTemplates"
-                                    :href="route('single-shift-presets.index')"
-                                    target="_blank"
-                                    rel="noopener"
-                                    class="inline-flex items-center gap-1 text-xs font-medium text-accent-600 hover:text-accent-700"
-                                >
-                                    <PropertyIcon name="IconArrowRight" class="h-3.5 w-3.5" />
-                                    {{ $t('Create shift templates') }}
-                                </a>
+                            <div v-if="validationMessages.warnings.craft.length" class="rounded-md bg-warning-surface ring-1 ring-warning-border px-3 py-2">
+                                <ul class="text-xs text-warning list-disc list-inside">
+                                    <li v-for="(w, i) in validationMessages.warnings.craft" :key="'wc-'+i">{{ w }}</li>
+                                </ul>
+                            </div>
+                            <div v-if="validationMessages.errors.craft.length" class="rounded-md bg-danger-surface ring-1 ring-danger-border px-3 py-2">
+                                <ul class="text-xs text-danger list-disc list-inside">
+                                    <li v-for="(e, i) in validationMessages.errors.craft" :key="'ec-'+i">{{ e }}</li>
+                                </ul>
                             </div>
                         </div>
                     </transition>
-                </section>
+                </div>
 
-                <!-- Sektion: Basisdaten — Reihenfolge: Gewerk → Datum/Zeiten/Pause (+ Zeitvorlagen-Chips) → Raum -->
-                <section class="rounded-2xl ring-1 ring-border-subtle/70 bg-white/70 p-4 sm:p-5 shadow-sm">
-                    <div class="flex items-start justify-between gap-3 mb-3">
-                        <div>
-                            <h3 class="text-sm font-semibold text-text">{{ $t('basic data') }}</h3>
-                            <p class="text-xs text-text-subtle">
-                                {{ $t('Craft, date, times, break and room. Fields marked with * are required.') }}
-                            </p>
-                        </div>
-                    </div>
+                <!-- Datum (freie Wahl, wenn kein Tag vorgegeben — z.B. Button im Projekt-Schichttab) -->
+                <div class="grid grid-cols-1 gap-2" v-if="needsDaySelection">
+                    <BaseInput
+                        type="date"
+                        v-model="shiftForm.day"
+                        :label="$t('Date')"
+                        id="shift_day"
+                        required
+                        @change="validateShiftDates()"
+                    />
+                    <p v-if="serverErrorFor('day')" class="text-xs text-danger">{{ serverErrorFor('day') }}</p>
+                </div>
 
-                    <!-- (2) Gewerk: bestimmt die Funktionsplätze im Abschnitt „Bedarf" -->
-                    <div class="grid grid-cols-1 gap-2">
-                        <SelectComponent
-                            id="addShiftCraftSelectComponent"
-                            :label="$t('Craft') + ' *'"
-                            v-model="selectedCraft"
-                            :options="selectableCrafts"
-                            selected-property-to-display="name"
-                            :getter-for-options-to-display="(option) => option.name + ' ' + option.abbreviation"
-                        />
-                        <p class="text-xs text-text-subtle -mt-1">{{ $t('The craft determines the function places of the shift.') }}</p>
-                        <AlertComponent
-                            v-if="craftHasChanged"
-                            type="warning"
-                            show-icon
-                            :text="$t('Changing the craft will remove all assigned employees from this shift.')"
-                        />
-                        <!-- Gewerk-Hinweise -->
-                        <transition
-                            enter-active-class="transition duration-200"
-                            enter-from-class="opacity-0 -translate-y-1"
-                            enter-to-class="opacity-100 translate-y-0"
-                            leave-active-class="transition duration-150"
-                            leave-from-class="opacity-100 translate-y-0"
-                            leave-to-class="opacity-0 -translate-y-1"
-                        >
-                            <div v-if="validationMessages.warnings.craft.length || validationMessages.errors.craft.length || serverErrorFor('craft_id')" class="space-y-2" aria-live="polite">
-                                <div v-if="serverErrorFor('craft_id')" class="rounded-md bg-danger-surface ring-1 ring-danger-border px-3 py-2">
-                                    <p class="text-xs text-danger">{{ serverErrorFor('craft_id') }}</p>
-                                </div>
-                                <div v-if="validationMessages.warnings.craft.length" class="rounded-md bg-warning-surface ring-1 ring-warning-border px-3 py-2">
-                                    <ul class="text-xs text-warning list-disc list-inside">
-                                        <li v-for="(w, i) in validationMessages.warnings.craft" :key="'wc-'+i">{{ w }}</li>
-                                    </ul>
-                                </div>
-                                <div v-if="validationMessages.errors.craft.length" class="rounded-md bg-danger-surface ring-1 ring-danger-border px-3 py-2">
-                                    <ul class="text-xs text-danger list-disc list-inside">
-                                        <li v-for="(e, i) in validationMessages.errors.craft" :key="'ec-'+i">{{ e }}</li>
-                                    </ul>
-                                </div>
-                            </div>
-                        </transition>
-                    </div>
-
-                    <!-- (3) Datum (freie Wahl, wenn kein Tag vorgegeben — z.B. Button im Projekt-Schichttab) -->
-                    <div class="grid grid-cols-1 mt-4 gap-2" v-if="needsDaySelection">
+                <!-- Zeiten, Pause und Raum in zwei Spalten; Zeitvorlagen als eingeklappte Zeile darunter -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <!-- Start -->
+                    <div class="flex gap-3">
                         <BaseInput
+                            v-if="!shiftForm.automaticMode"
                             type="date"
-                            v-model="shiftForm.day"
-                            :label="$t('Date')"
-                            id="shift_day"
-                            required
+                            v-model="shiftForm.start_date"
+                            :label="$t('Shift start date')"
+                            id="start_date"
+                            :required="!shiftForm.automaticMode"
                             @change="validateShiftDates()"
                         />
-                        <p v-if="serverErrorFor('day')" class="text-xs text-danger">{{ serverErrorFor('day') }}</p>
+                        <BaseInput
+                            v-model="shiftForm.start"
+                            :label="$t('Start time')"
+                            type="time"
+                            id="start"
+                            required
+                            :class="[!shiftForm.automaticMode ? 'max-w-[10rem]' : 'w-full']"
+                            @change="validateShiftDates()"
+                        />
                     </div>
 
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
-                        <!-- Start -->
-                        <div class="flex gap-3">
-                            <BaseInput
-                                v-if="!shiftForm.automaticMode"
-                                type="date"
-                                v-model="shiftForm.start_date"
-                                :label="$t('Shift start date')"
-                                id="start_date"
-                                :required="!shiftForm.automaticMode"
-                                @change="validateShiftDates()"
-                            />
-                            <BaseInput
-                                v-model="shiftForm.start"
-                                :label="$t('Start time')"
-                                type="time"
-                                id="start"
-                                required
-                                :class="[!shiftForm.automaticMode ? 'max-w-[10rem]' : 'w-full']"
-                                @change="validateShiftDates()"
-                            />
-                        </div>
+                    <!-- End -->
+                    <div class="flex gap-3">
+                        <BaseInput
+                            v-if="!shiftForm.automaticMode"
+                            type="date"
+                            v-model="shiftForm.end_date"
+                            :label="$t('Shift end date')"
+                            id="end_date"
+                            :required="!shiftForm.automaticMode"
+                            @change="validateShiftDates()"
+                        />
+                        <BaseInput
+                            v-model="shiftForm.end"
+                            :label="$t('End time')"
+                            type="time"
+                            id="end"
+                            required
+                            :class="[!shiftForm.automaticMode ? 'max-w-[10rem]' : 'w-full']"
+                            @change="validateShiftDates()"
+                        />
+                    </div>
 
-                        <!-- End -->
-                        <div class="flex gap-3">
-                            <BaseInput
-                                v-if="!shiftForm.automaticMode"
-                                type="date"
-                                v-model="shiftForm.end_date"
-                                :label="$t('Shift end date')"
-                                id="end_date"
-                                :required="!shiftForm.automaticMode"
-                                @change="validateShiftDates()"
-                            />
-                            <BaseInput
-                                v-model="shiftForm.end"
-                                :label="$t('End time')"
-                                type="time"
-                                id="end"
-                                required
-                                :class="[!shiftForm.automaticMode ? 'max-w-[10rem]' : 'w-full']"
-                                @change="validateShiftDates()"
-                            />
-                        </div>
-
-                        <!-- Warnings/Errors: Start & End -->
-                        <transition
-                            enter-active-class="transition duration-200"
-                            enter-from-class="opacity-0 -translate-y-1"
-                            enter-to-class="opacity-100 translate-y-0"
-                            leave-active-class="transition duration-150"
-                            leave-from-class="opacity-100 translate-y-0"
-                            leave-to-class="opacity-0 -translate-y-1"
+                    <!-- Warnings/Errors: Start & End -->
+                    <transition
+                        enter-active-class="transition duration-200"
+                        enter-from-class="opacity-0 -translate-y-1"
+                        enter-to-class="opacity-100 translate-y-0"
+                        leave-active-class="transition duration-150"
+                        leave-from-class="opacity-100 translate-y-0"
+                        leave-to-class="opacity-0 -translate-y-1"
+                    >
+                        <div
+                            v-if="validationMessages.warnings.shift_start.length || validationMessages.errors.shift_start.length || validationMessages.warnings.shift_end.length || validationMessages.errors.shift_end.length || serverErrorFor('start', 'start_date', 'end', 'end_date')"
+                            class="sm:col-span-2 space-y-2"
+                            aria-live="polite"
                         >
-                            <div
-                                v-if="validationMessages.warnings.shift_start.length || validationMessages.errors.shift_start.length || validationMessages.warnings.shift_end.length || validationMessages.errors.shift_end.length || serverErrorFor('start', 'start_date', 'end', 'end_date')"
-                                class="sm:col-span-2 space-y-2"
-                                aria-live="polite"
-                            >
-                                <div v-if="serverErrorFor('start', 'start_date', 'end', 'end_date')" class="rounded-md bg-danger-surface ring-1 ring-danger-border px-3 py-2">
-                                    <p class="text-xs text-danger">{{ serverErrorFor('start', 'start_date', 'end', 'end_date') }}</p>
-                                </div>
-                                <div v-if="validationMessages.warnings.shift_start.length" class="rounded-md bg-warning-surface ring-1 ring-warning-border px-3 py-2">
-                                    <ul class="text-xs text-warning list-disc list-inside">
-                                        <li v-for="(w, i) in validationMessages.warnings.shift_start" :key="'ws-'+i">{{ w }}</li>
-                                    </ul>
-                                </div>
-                                <div v-if="validationMessages.errors.shift_start.length" class="rounded-md bg-danger-surface ring-1 ring-danger-border px-3 py-2">
-                                    <ul class="text-xs text-danger list-disc list-inside">
-                                        <li v-for="(e, i) in validationMessages.errors.shift_start" :key="'es-'+i">{{ e }}</li>
-                                    </ul>
-                                </div>
-
-                                <div v-if="validationMessages.warnings.shift_end.length" class="rounded-md bg-warning-surface ring-1 ring-warning-border px-3 py-2">
-                                    <ul class="text-xs text-warning list-disc list-inside">
-                                        <li v-for="(w, i) in validationMessages.warnings.shift_end" :key="'we-'+i">{{ w }}</li>
-                                    </ul>
-                                </div>
-                                <div v-if="validationMessages.errors.shift_end.length" class="rounded-md bg-danger-surface ring-1 ring-danger-border px-3 py-2">
-                                    <ul class="text-xs text-danger list-disc list-inside">
-                                        <li v-for="(e, i) in validationMessages.errors.shift_end" :key="'ee-'+i">{{ e }}</li>
-                                    </ul>
-                                </div>
+                            <div v-if="serverErrorFor('start', 'start_date', 'end', 'end_date')" class="rounded-md bg-danger-surface ring-1 ring-danger-border px-3 py-2">
+                                <p class="text-xs text-danger">{{ serverErrorFor('start', 'start_date', 'end', 'end_date') }}</p>
                             </div>
-                        </transition>
+                            <div v-if="validationMessages.warnings.shift_start.length" class="rounded-md bg-warning-surface ring-1 ring-warning-border px-3 py-2">
+                                <ul class="text-xs text-warning list-disc list-inside">
+                                    <li v-for="(w, i) in validationMessages.warnings.shift_start" :key="'ws-'+i">{{ w }}</li>
+                                </ul>
+                            </div>
+                            <div v-if="validationMessages.errors.shift_start.length" class="rounded-md bg-danger-surface ring-1 ring-danger-border px-3 py-2">
+                                <ul class="text-xs text-danger list-disc list-inside">
+                                    <li v-for="(e, i) in validationMessages.errors.shift_start" :key="'es-'+i">{{ e }}</li>
+                                </ul>
+                            </div>
 
-                        <!-- Break length -->
-                        <div class="sm:col-span-2">
-                            <BaseInput
-                                type="number"
-                                id="shift-break-minutes-input"
-                                :label="$t('Length of break in minutes')"
-                                v-model="shiftForm.break_minutes"
-                                :min="0"
-                                :max="1000"
-                                required
-                                @input="autoBreak.markManual()"
-                                @change="validateShiftBreak()"
-                            />
-                            <LegalBreakHint
-                                :break-minutes="shiftForm.break_minutes"
-                                :legal-minutes="autoBreak.legalMinutes.value"
-                                :has-times="autoBreak.hasTimes.value"
-                                @reset="autoBreak.resetToLegal(); validateShiftBreak()"
-                            />
+                            <div v-if="validationMessages.warnings.shift_end.length" class="rounded-md bg-warning-surface ring-1 ring-warning-border px-3 py-2">
+                                <ul class="text-xs text-warning list-disc list-inside">
+                                    <li v-for="(w, i) in validationMessages.warnings.shift_end" :key="'we-'+i">{{ w }}</li>
+                                </ul>
+                            </div>
+                            <div v-if="validationMessages.errors.shift_end.length" class="rounded-md bg-danger-surface ring-1 ring-danger-border px-3 py-2">
+                                <ul class="text-xs text-danger list-disc list-inside">
+                                    <li v-for="(e, i) in validationMessages.errors.shift_end" :key="'ee-'+i">{{ e }}</li>
+                                </ul>
+                            </div>
                         </div>
+                    </transition>
 
-                        <!-- Pausen-Hinweise -->
-                        <transition
-                            enter-active-class="transition duration-200"
-                            enter-from-class="opacity-0 -translate-y-1"
-                            enter-to-class="opacity-100 translate-y-0"
-                            leave-active-class="transition duration-150"
-                            leave-from-class="opacity-100 translate-y-0"
-                            leave-to-class="opacity-0 -translate-y-1"
-                        >
-                            <div v-if="validationMessages.warnings.break_length.length || validationMessages.errors.break_length.length || serverErrorFor('break_minutes')" class="sm:col-span-2 space-y-2" aria-live="polite">
-                                <div v-if="serverErrorFor('break_minutes')" class="rounded-md bg-danger-surface ring-1 ring-danger-border px-3 py-2">
-                                    <p class="text-xs text-danger">{{ serverErrorFor('break_minutes') }}</p>
-                                </div>
-                                <div v-if="validationMessages.warnings.break_length.length" class="rounded-md bg-warning-surface ring-1 ring-warning-border px-3 py-2">
-                                    <ul class="text-xs text-warning list-disc list-inside">
-                                        <li v-for="(w, i) in validationMessages.warnings.break_length" :key="'wb-'+i">{{ w }}</li>
-                                    </ul>
-                                </div>
-                                <div v-if="validationMessages.errors.break_length.length" class="rounded-md bg-danger-surface ring-1 ring-danger-border px-3 py-2">
-                                    <ul class="text-xs text-danger list-disc list-inside">
-                                        <li v-for="(e, i) in validationMessages.errors.break_length" :key="'eb-'+i">{{ e }}</li>
-                                    </ul>
-                                </div>
-                            </div>
-                        </transition>
-
-                        <!-- Zeitvorlagen: kompakte Chip-Reihe direkt unter den Zeitfeldern -->
-                        <div class="sm:col-span-2 rounded-lg border border-dashed border-border-subtle px-3 py-2">
-                            <div class="flex items-center justify-between gap-2">
-                                <div class="flex items-center gap-1.5 text-xs text-text-muted">
-                                    <PropertyIcon name="IconClock" class="h-3.5 w-3.5" />
-                                    <span class="font-medium">{{ $t('Time presets') }}</span>
-                                    <span class="rounded-full bg-surface-sunken px-1.5 py-0.5 text-[10px] font-medium text-text-muted">
-                                        {{ filteredShiftTimePresets.length }}
-                                    </span>
-                                </div>
-                                <div class="flex items-center gap-3">
-                                    <button
-                                        v-if="showTimePresetBox && (shiftTimePresets || []).length > 6"
-                                        type="button"
-                                        class="text-xs text-text-subtle hover:text-accent-600"
-                                        @click="showTimeSearchbar ? closeTimeSearchbar() : (showTimeSearchbar = true)"
-                                    >
-                                        {{ showTimeSearchbar ? $t('Close search') : $t('Search') }}
-                                    </button>
-                                    <button
-                                        v-if="hasActiveTimePreset"
-                                        type="button"
-                                        class="text-xs text-text-subtle hover:text-accent-600"
-                                        @click="resetTimePresetSelection"
-                                    >
-                                        {{ $t('Reset') }}
-                                    </button>
-                                    <button type="button" class="text-xs text-accent-600 hover:text-accent-700" @click="toggleTimePresetBox()">
-                                        {{ showTimePresetBox ? $t('Hide') : $t('Show') }}
-                                    </button>
-                                </div>
-                            </div>
-
-                            <transition
-                                enter-active-class="transition duration-200 ease-out"
-                                enter-from-class="opacity-0 -translate-y-1"
-                                enter-to-class="opacity-100 translate-y-0"
-                                leave-active-class="transition duration-150 ease-in"
-                                leave-from-class="opacity-100 translate-y-0"
-                                leave-to-class="opacity-0 -translate-y-1"
-                            >
-                                <div v-if="showTimePresetBox" class="mt-2">
-                                    <div v-if="showTimeSearchbar" class="w-full sm:w-72 mb-2">
-                                        <div class="flex items-center gap-2">
-                                            <BaseInput
-                                                is-small
-                                                id="time-preset-search"
-                                                v-model="searchTimePreset"
-                                                :label="$t('Search time specifications')"
-                                            />
-                                            <PropertyIcon name="IconX" class="cursor-pointer h-5 w-5 text-text-subtle hover:text-text-muted" @click="closeTimeSearchbar" />
-                                        </div>
-                                    </div>
-
-                                    <div v-if="filteredShiftTimePresets?.length > 0" class="flex flex-wrap gap-1.5 max-h-40 overflow-y-auto">
-                                        <button
-                                            v-for="preset in filteredShiftTimePresets"
-                                            :key="'time-preset-'+preset.id"
-                                            type="button"
-                                            :title="preset.name"
-                                            class="inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] leading-none transition-colors"
-                                            :class="preset.active
-                                                ? 'border-success bg-success-surface text-success'
-                                                : 'border-border-subtle bg-white text-text-muted hover:border-accent-600 hover:text-accent-700'"
-                                            @click="takeTimePreset(preset)"
-                                        >
-                                            <span class="font-semibold truncate max-w-[9rem]">{{ preset.name }}</span>
-                                            <span class="tabular-nums">{{ toHHMM(preset.start_time) }}–{{ toHHMM(preset.end_time) }}</span>
-                                            <span class="text-text-subtle">· {{ preset.break_time }} {{ $t('min') }}</span>
-                                        </button>
-                                    </div>
-
-                                    <div v-else class="flex flex-wrap items-center gap-2 text-xs text-text-subtle">
-                                        <span>{{ searchTimePreset ? $t('No time presets match your search.') : $t('No time presets yet. Time presets fill start, end and break with one click.') }}</span>
-                                        <a
-                                            v-if="!searchTimePreset && canOpenGeneralShiftSettings"
-                                            :href="route('shift.settings')"
-                                            target="_blank"
-                                            rel="noopener"
-                                            class="inline-flex items-center gap-1 font-medium text-accent-600 hover:text-accent-700"
-                                        >
-                                            <PropertyIcon name="IconArrowRight" class="h-3.5 w-3.5" />
-                                            {{ $t('Create time presets') }}
-                                        </a>
-                                    </div>
-                                </div>
-                            </transition>
-                        </div>
+                    <!-- Pause -->
+                    <div>
+                        <BaseInput
+                            type="number"
+                            id="shift-break-minutes-input"
+                            :label="$t('Length of break in minutes')"
+                            v-model="shiftForm.break_minutes"
+                            :min="0"
+                            :max="1000"
+                            required
+                            @input="autoBreak.markManual()"
+                            @change="validateShiftBreak()"
+                        />
+                        <LegalBreakHint
+                            :break-minutes="shiftForm.break_minutes"
+                            :legal-minutes="autoBreak.legalMinutes.value"
+                            :has-times="autoBreak.hasTimes.value"
+                            @reset="autoBreak.resetToLegal(); validateShiftBreak()"
+                        />
                     </div>
 
-                    <!-- (4) Raum (im Multi-Add kommen Räume + Tage aus der Auswahl) -->
-                    <div class="grid grid-cols-1 mt-4 gap-2" v-if="!multiAddMode">
-                        <RoomSearch v-if="!selectedRoom" :label="$t('Search for Rooms')" @room-selected="onRoomSelected" />
-                        <p v-if="!selectedRoom" class="text-xs text-text-subtle -mt-1">{{ $t('A room is required.') }}</p>
-                        <div v-else
-                             class="flex items-center gap-1.5 rounded-md border border-border-subtle bg-surface-sunken px-2.5 py-4">
-                            <span class="truncate">{{ selectedRoom?.name ?? selectedRoom?.roomName }}</span>
-                            <button class="ml-0.5 text-text-subtle transition hover:text-danger" @click="selectedRoom = null" type="button">
-                                <PropertyIcon name="IconX" class="size-4" />
-                            </button>
-                        </div>
-                        <p v-if="serverErrorFor('room_id')" class="text-xs text-danger">{{ serverErrorFor('room_id') }}</p>
+                    <!-- Raum (im Multi-Add kommen Räume + Tage aus der Auswahl) -->
+                    <div v-if="!multiAddMode">
+                        <template v-if="!selectedRoom">
+                            <RoomSearch :label="$t('Search for Rooms')" @room-selected="onRoomSelected" />
+                            <p class="text-xs text-text-subtle mt-1">{{ $t('A room is required.') }}</p>
+                        </template>
+                        <template v-else>
+                            <!-- Label wie bei BaseInput, damit die Raum-Box bündig neben der Pause sitzt -->
+                            <span class="mb-1 block font-lexend text-xs font-medium text-[#3F424A]">
+                                {{ $t('Room') }} <span class="text-danger">*</span>
+                            </span>
+                            <div class="flex items-center gap-1.5 rounded-md border border-border-subtle bg-surface-sunken px-2.5 h-10 text-sm">
+                                <span class="truncate">{{ selectedRoom?.name ?? selectedRoom?.roomName }}</span>
+                                <button class="ml-0.5 text-text-subtle transition hover:text-danger" @click="selectedRoom = null" type="button">
+                                    <PropertyIcon name="IconX" class="size-4" />
+                                </button>
+                            </div>
+                        </template>
+                        <p v-if="serverErrorFor('room_id')" class="text-xs text-danger mt-1">{{ serverErrorFor('room_id') }}</p>
                     </div>
-                    <div v-else-if="serverErrorFor('roomsAndDatesForMultiEdit')" class="mt-4 rounded-md bg-danger-surface ring-1 ring-danger-border px-3 py-2">
+                    <div v-else-if="serverErrorFor('roomsAndDatesForMultiEdit')" class="rounded-md bg-danger-surface ring-1 ring-danger-border px-3 py-2">
                         <p class="text-xs text-danger">{{ serverErrorFor('roomsAndDatesForMultiEdit') }}</p>
                     </div>
-                </section>
 
-                <!-- (5) Bedarf: Funktionsplätze des Gewerks zuerst, globale Qualifikationen danach -->
-                <section class="rounded-2xl ring-1 ring-border-subtle/70 bg-white/70 p-4 sm:p-5 shadow-sm">
-                    <div class="flex items-start justify-between gap-3 mb-3">
-                        <div>
-                            <h3 class="text-sm font-semibold text-text">{{ $t('Staffing demand') }}</h3>
-                            <p class="text-xs text-text-subtle">
-                                {{ $t('How many people are needed per function, plus global qualifications across all crafts.') }}
-                            </p>
+                    <!-- Pausen-Hinweise -->
+                    <transition
+                        enter-active-class="transition duration-200"
+                        enter-from-class="opacity-0 -translate-y-1"
+                        enter-to-class="opacity-100 translate-y-0"
+                        leave-active-class="transition duration-150"
+                        leave-from-class="opacity-100 translate-y-0"
+                        leave-to-class="opacity-0 -translate-y-1"
+                    >
+                        <div v-if="validationMessages.warnings.break_length.length || validationMessages.errors.break_length.length || serverErrorFor('break_minutes')" class="sm:col-span-2 space-y-2" aria-live="polite">
+                            <div v-if="serverErrorFor('break_minutes')" class="rounded-md bg-danger-surface ring-1 ring-danger-border px-3 py-2">
+                                <p class="text-xs text-danger">{{ serverErrorFor('break_minutes') }}</p>
+                            </div>
+                            <div v-if="validationMessages.warnings.break_length.length" class="rounded-md bg-warning-surface ring-1 ring-warning-border px-3 py-2">
+                                <ul class="text-xs text-warning list-disc list-inside">
+                                    <li v-for="(w, i) in validationMessages.warnings.break_length" :key="'wb-'+i">{{ w }}</li>
+                                </ul>
+                            </div>
+                            <div v-if="validationMessages.errors.break_length.length" class="rounded-md bg-danger-surface ring-1 ring-danger-border px-3 py-2">
+                                <ul class="text-xs text-danger list-disc list-inside">
+                                    <li v-for="(e, i) in validationMessages.errors.break_length" :key="'eb-'+i">{{ e }}</li>
+                                </ul>
+                            </div>
                         </div>
-                    </div>
+                    </transition>
 
-                    <!-- Funktionen des Gewerks -->
+                    <!-- Zeitvorlagen: kompakte Chip-Reihe, standardmäßig eingeklappt (Nutzer*innen-Einstellung) -->
+                    <div class="sm:col-span-2 rounded-lg border border-dashed border-border-subtle px-3 py-2">
+                        <div class="flex items-center justify-between gap-2">
+                            <div class="flex items-center gap-1.5 text-xs text-text-muted">
+                                <PropertyIcon name="IconClock" class="h-3.5 w-3.5" />
+                                <span class="font-medium">{{ $t('Time presets') }}</span>
+                                <span class="rounded-full bg-surface-sunken px-1.5 py-0.5 text-[10px] font-medium text-text-muted">
+                                    {{ filteredShiftTimePresets.length }}
+                                </span>
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <button
+                                    v-if="showTimePresetBox && (shiftTimePresets || []).length > 6"
+                                    type="button"
+                                    class="text-xs text-text-subtle hover:text-accent-600"
+                                    @click="showTimeSearchbar ? closeTimeSearchbar() : (showTimeSearchbar = true)"
+                                >
+                                    {{ showTimeSearchbar ? $t('Close search') : $t('Search') }}
+                                </button>
+                                <button
+                                    v-if="hasActiveTimePreset"
+                                    type="button"
+                                    class="text-xs text-text-subtle hover:text-accent-600"
+                                    @click="resetTimePresetSelection"
+                                >
+                                    {{ $t('Reset') }}
+                                </button>
+                                <button type="button" class="text-xs text-accent-600 hover:text-accent-700" @click="toggleTimePresetBox()">
+                                    {{ showTimePresetBox ? $t('Hide') : $t('Show') }}
+                                </button>
+                            </div>
+                        </div>
+
+                        <transition
+                            enter-active-class="transition duration-200 ease-out"
+                            enter-from-class="opacity-0 -translate-y-1"
+                            enter-to-class="opacity-100 translate-y-0"
+                            leave-active-class="transition duration-150 ease-in"
+                            leave-from-class="opacity-100 translate-y-0"
+                            leave-to-class="opacity-0 -translate-y-1"
+                        >
+                            <div v-if="showTimePresetBox" class="mt-2">
+                                <div v-if="showTimeSearchbar" class="w-full sm:w-72 mb-2">
+                                    <div class="flex items-center gap-2">
+                                        <BaseInput
+                                            is-small
+                                            id="time-preset-search"
+                                            v-model="searchTimePreset"
+                                            :label="$t('Search time specifications')"
+                                        />
+                                        <PropertyIcon name="IconX" class="cursor-pointer h-5 w-5 text-text-subtle hover:text-text-muted" @click="closeTimeSearchbar" />
+                                    </div>
+                                </div>
+
+                                <div v-if="filteredShiftTimePresets?.length > 0" class="flex flex-wrap gap-1.5 max-h-40 overflow-y-auto">
+                                    <button
+                                        v-for="preset in filteredShiftTimePresets"
+                                        :key="'time-preset-'+preset.id"
+                                        type="button"
+                                        :title="preset.name"
+                                        class="inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] leading-none transition-colors"
+                                        :class="preset.active
+                                            ? 'border-success bg-success-surface text-success'
+                                            : 'border-border-subtle bg-white text-text-muted hover:border-accent-600 hover:text-accent-700'"
+                                        @click="takeTimePreset(preset)"
+                                    >
+                                        <span class="font-semibold truncate max-w-[9rem]">{{ preset.name }}</span>
+                                        <span class="tabular-nums">{{ toHHMM(preset.start_time) }}–{{ toHHMM(preset.end_time) }}</span>
+                                        <span class="text-text-subtle">· {{ preset.break_time }} {{ $t('min') }}</span>
+                                    </button>
+                                </div>
+
+                                <div v-else class="flex flex-wrap items-center gap-2 text-xs text-text-subtle">
+                                    <span>{{ searchTimePreset ? $t('No time presets match your search.') : $t('No time presets yet. Time presets fill start, end and break with one click.') }}</span>
+                                    <a
+                                        v-if="!searchTimePreset && canOpenGeneralShiftSettings"
+                                        :href="route('shift.settings')"
+                                        target="_blank"
+                                        rel="noopener"
+                                        class="inline-flex items-center gap-1 font-medium text-accent-600 hover:text-accent-700"
+                                    >
+                                        <PropertyIcon name="IconArrowRight" class="h-3.5 w-3.5" />
+                                        {{ $t('Create time presets') }}
+                                    </a>
+                                </div>
+                            </div>
+                        </transition>
+                    </div>
+                </div>
+
+                <!-- Bedarf: Funktionsplätze des Gewerks, danach globale Qualifikationen (nur wenn welche angelegt sind) -->
+                <div class="border-t border-border-subtle pt-4 space-y-3">
                     <div v-if="!selectedCraft" class="rounded-md bg-surface-sunken px-3 py-2 text-xs text-text-muted">
                         {{ $t('Select a craft to define the places.') }}
                     </div>
                     <template v-else>
-                        <div class="flex items-center gap-2 mb-2">
+                        <div class="flex items-center gap-2">
                             <span class="text-xs font-semibold text-text">{{ $t('Functions') }}</span>
                             <span class="rounded border border-border-subtle px-1.5 py-0.5 text-[11px] font-semibold text-text-muted">
                                 {{ selectedCraft.abbreviation ?? selectedCraft.name }}
@@ -1629,7 +1604,7 @@ const lockOrUnlockShift = (commit = false) => {
                             {{ $t('This craft has no functions yet.') }}
                         </div>
                         <!-- Qualifications -->
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                             <transition-group
                                 name="list"
                                 enter-active-class="transition duration-200"
@@ -1669,12 +1644,13 @@ const lockOrUnlockShift = (commit = false) => {
                         </div>
                     </template>
 
-                    <!-- Globale Qualifikationen -->
-                    <div class="mt-4 border-t border-border-subtle pt-3">
+                    <!-- Globale Qualifikationen: nur, wenn im Backend welche angelegt sind (sonst kein Platzverbrauch) -->
+                    <div v-if="globalQualifications?.length > 0" class="rounded-lg border border-dashed border-border-subtle px-3 py-2">
                         <div class="flex items-center justify-between gap-3">
-                            <div class="flex items-center gap-2">
-                                <span class="text-xs font-semibold text-text">{{ $t('Global qualifications') }}</span>
-                                <span class="rounded-full bg-surface-sunken px-2 py-0.5 text-[11px] font-medium text-text-muted">
+                            <div class="flex items-center gap-2 min-w-0 text-xs text-text-muted">
+                                <PropertyIcon name="IconCertificate" class="h-3.5 w-3.5 shrink-0" />
+                                <span class="font-medium">{{ $t('Global qualifications') }}</span>
+                                <span class="rounded-full bg-surface-sunken px-1.5 py-0.5 text-[10px] font-medium text-text-muted">
                                     {{ globalQualifications?.length }}
                                 </span>
                                 <span v-if="!showGlobalQualificationBox && requestedGlobalQualificationsSummary" class="text-xs text-text-subtle truncate">
@@ -1694,224 +1670,147 @@ const lockOrUnlockShift = (commit = false) => {
                             leave-from-class="opacity-100 translate-y-0"
                             leave-to-class="opacity-0 -translate-y-1"
                         >
-                            <div v-if="showGlobalQualificationBox" class="mt-2">
-                                <div v-if="globalQualifications?.length > 0" class="max-h-[240px] md:max-h-[280px] overflow-y-auto pr-1 py-1">
-                                    <div class="space-y-3 divide-y divide-border-subtle divide-dashed">
-                                        <div
-                                            v-for="globalQualification in globalQualifications"
-                                            :key="'globalQualification-' + globalQualification.id"
-                                            class="group pb-3"
-                                        >
-                                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 gap-2.5">
-                                                <div class="flex items-center gap-x-2">
-                                                    <PropertyIcon :name="globalQualification.icon" class="w-4 h-4" />
-                                                    <div class="antialiased text-sm">
-                                                        {{ globalQualification.name }}
-                                                    </div>
+                            <div v-if="showGlobalQualificationBox" class="mt-2 max-h-[240px] overflow-y-auto pr-1 py-1">
+                                <div class="space-y-3 divide-y divide-border-subtle divide-dashed">
+                                    <div
+                                        v-for="globalQualification in globalQualifications"
+                                        :key="'globalQualification-' + globalQualification.id"
+                                        class="group pb-3"
+                                    >
+                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-2.5">
+                                            <div class="flex items-center gap-x-2">
+                                                <PropertyIcon :name="globalQualification.icon" class="w-4 h-4" />
+                                                <div class="antialiased text-sm">
+                                                    {{ globalQualification.name }}
                                                 </div>
-                                                <div>
-                                                    <BaseInput
-                                                        v-model="globalQualification.quantity"
-                                                        type="number"
-                                                        :id="'globalQualificationValue-' + globalQualification.id"
-                                                        :label="$t('Quantity')"
-                                                        is-small
-                                                    />
-                                                </div>
+                                            </div>
+                                            <div>
+                                                <BaseInput
+                                                    v-model="globalQualification.quantity"
+                                                    type="number"
+                                                    :id="'globalQualificationValue-' + globalQualification.id"
+                                                    :label="$t('Quantity')"
+                                                    is-small
+                                                />
                                             </div>
                                         </div>
                                     </div>
-                                </div>
-
-                                <div v-else class="py-4 flex flex-col items-center gap-2">
-                                    <AlertComponent
-                                        type="info"
-                                        show-icon
-                                        icon-size="w-4 h-4"
-                                        :text="$t('No global qualifications yet. They apply across all crafts and are requested in addition to the functions.')"
-                                        class="mx-auto w-fit"
-                                    />
-                                    <a
-                                        v-if="canOpenGeneralShiftSettings"
-                                        :href="route('shift.settings')"
-                                        target="_blank"
-                                        rel="noopener"
-                                        class="inline-flex items-center gap-1 text-xs font-medium text-accent-600 hover:text-accent-700"
-                                    >
-                                        <PropertyIcon name="IconArrowRight" class="h-3.5 w-3.5" />
-                                        {{ $t('Create global qualifications') }}
-                                    </a>
                                 </div>
                             </div>
                         </transition>
                     </div>
 
-                    <div v-if="serverErrorFor('shiftsQualifications', 'globalQualifications')" class="mt-3 rounded-md bg-danger-surface ring-1 ring-danger-border px-3 py-2">
+                    <div v-if="serverErrorFor('shiftsQualifications', 'globalQualifications')" class="rounded-md bg-danger-surface ring-1 ring-danger-border px-3 py-2">
                         <p class="text-xs text-danger">{{ serverErrorFor('shiftsQualifications', 'globalQualifications') }}</p>
                     </div>
-                </section>
+                </div>
 
-                <!-- (6) Optionales, eingeklappt: Schichtgruppe, Projekt, Notiz -->
-                <section class="rounded-2xl ring-1 ring-border-subtle/70 bg-white/70 p-4 sm:p-5 shadow-sm">
-                    <div class="flex items-start justify-between gap-3">
-                        <div class="min-w-0">
-                            <h3 class="text-sm font-semibold text-text">{{ $t('Optional') }}</h3>
-                            <p class="text-xs text-text-subtle">
-                                {{ $t('Shift group, project and note.') }}
-                            </p>
-                            <div v-if="!showOptionalBox && optionalSummary.length" class="mt-1.5 flex flex-wrap gap-1.5">
-                                <span
-                                    v-for="(entry, index) in optionalSummary"
-                                    :key="'optional-summary-' + index"
-                                    class="inline-flex items-center gap-1 rounded-full bg-surface-sunken px-2 py-0.5 text-[11px] text-text-muted"
-                                >
-                                    <PropertyIcon :name="entry.icon" class="h-3 w-3" />
-                                    <span class="truncate max-w-[14rem]">{{ entry.text }}</span>
-                                </span>
+                <!-- Projekt, Schichtgruppe und Notiz: immer sichtbar (Projektzuweisung wird fast immer genutzt) -->
+                <div class="border-t border-border-subtle pt-4 space-y-4">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <!-- Projekt (optional): Suche + zuletzt geöffnete Projekte direkt darunter zum Anklicken
+                             (wie bei der Materialausgabe), kein Dropdown im leeren Feld -->
+                        <div>
+                            <div v-if="!selectedProject">
+                                <ProjectSearch id="2" label="Search project" @project-selected="selectedProject = $event" />
                             </div>
-                        </div>
-                        <BaseUIButton type="button" hide-icon class="!text-xs shrink-0" @click="showOptionalBox = !showOptionalBox">
-                            {{ showOptionalBox ? $t('Hide') : $t('Show') }}
-                        </BaseUIButton>
-                    </div>
-
-                    <transition
-                        enter-active-class="transition duration-200 ease-out"
-                        enter-from-class="opacity-0 -translate-y-1"
-                        enter-to-class="opacity-100 translate-y-0"
-                        leave-active-class="transition duration-150 ease-in"
-                        leave-from-class="opacity-100 translate-y-0"
-                        leave-to-class="opacity-0 -translate-y-1"
-                    >
-                        <div v-if="showOptionalBox" class="grid grid-cols-1 gap-4 mt-4">
-                            <!-- Schichtgruppe (optional) -->
-                            <div>
-                                <SelectComponent
-                                    id="addShiftShiftGroupSelectComponent"
-                                    :label="$t('Shift Group')"
-                                    :default="$t('Please select...')"
-                                    v-model="selectedShiftGroup"
-                                    :options="shiftGroups"
-                                    selected-property-to-display="name"
-                                    :getter-for-options-to-display="(option) => option.name"
-                                />
-                                <div class="flex items-center justify-between gap-2 mt-0.5">
-                                    <div class="flex items-center gap-1 text-xs text-text-subtle">
+                            <div v-else>
+                                <div class="flex items-center justify-between gap-3 px-3 min-h-10 rounded-md bg-surface-sunken border border-border-subtle">
+                                    <div class="min-w-0">
+                                        <div class="text-sm font-medium text-text truncate">
+                                            {{ selectedProject.name }}
+                                        </div>
+                                        <div v-if="selectedProject.first_and_last_event_date" class="text-[11px] text-text-subtle">
+                                            {{ $t('Project period') }}: {{ selectedProject.first_and_last_event_date.first_event_date?.split(' ')[0] }} - {{ selectedProject.first_and_last_event_date.last_event_date?.split(' ')[0] }}
+                                        </div>
+                                    </div>
+                                    <button type="button" class="shrink-0 text-xs text-text-subtle hover:text-accent-600" @click="selectedProject = null">
+                                        {{ $t('Change') }}
+                                    </button>
+                                </div>
+                                <div v-if="shiftOutsideProjectPeriod" class="mt-2 rounded-md bg-warning-surface ring-1 ring-warning-border px-3 py-2">
+                                    <p class="text-xs text-warning inline-flex items-center gap-0.5 flex-wrap">
+                                        <span>{{ $t('Shift is outside the project period') }}</span>
                                         <ToolTipComponent
                                             icon="IconInfoCircle"
                                             icon-size="w-3.5 h-3.5"
+                                            :tooltip-text="$t('The project period is determined by the first and last event of the project.')"
                                             classes-button="mt-0"
-                                            direction="top"
-                                            :tooltip-text="$t('Shift groups bundle shifts that belong together (e.g. set-up, show, strike). They are optional and help with filtering and the timeline.')"
                                         />
-                                        <span v-if="shiftGroups.length === 0">
-                                            {{ $t('No shift groups yet.') }}
-                                            <a
-                                                v-if="canOpenShiftGroups"
-                                                :href="route('shift-groups.index')"
-                                                target="_blank"
-                                                rel="noopener"
-                                                class="font-medium text-accent-600 hover:text-accent-700"
-                                            >{{ $t('Create shift groups') }}</a>
-                                        </span>
-                                        <span v-else>{{ $t('Optional') }}</span>
-                                    </div>
-                                    <button type="button" @click="selectedShiftGroup = null" class="text-xs text-text-subtle hover:text-accent-600 duration-200 ease-in-out cursor-pointer">{{ $t('Remove Shift group') }}</button>
-                                </div>
-                                <p v-if="serverErrorFor('shift_group_id')" class="text-xs text-danger mt-1">{{ serverErrorFor('shift_group_id') }}</p>
-                            </div>
-
-                            <!-- Projekt (optional) -->
-                            <div>
-                                <div v-if="!selectedProject">
-
-                                    <ProjectSearch id="2" label="Search project"  @project-selected="selectedProject = $event" />
-
-                                    <LastedProjects
-                                        :limit="10"
-                                        @select="selectedProject = $event"/>
-                                </div>
-
-                                <div v-else>
-                                    <div class="flex items-center justify-between gap-3 p-3 rounded-lg bg-surface-sunken border border-border-subtle">
-                                        <div class="min-w-0 flex items-center gap-3">
-                                            <div class="flex-shrink-0 h-8 w-8 rounded-full bg-border-subtle flex items-center justify-center text-text-subtle font-semibold">
-                                                {{ selectedProject.name.charAt(0).toUpperCase() }}
-                                            </div>
-                                            <div class="min-w-0">
-                                                <div class="text-sm font-medium text-text truncate">
-                                                    {{ selectedProject.name }}
-                                                </div>
-                                                <div v-if="selectedProject.first_and_last_event_date" class="text-[11px] text-text-subtle mt-0.5">
-                                                    {{ $t('Project period') }}: {{ selectedProject.first_and_last_event_date.first_event_date?.split(' ')[0] }} - {{ selectedProject.first_and_last_event_date.last_event_date?.split(' ')[0] }}
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <BaseUIButton type="button" hide-icon class="!text-xs" @click="selectedProject = null">
-                                            {{ $t('Change') }}
-                                        </BaseUIButton>
-                                    </div>
-                                    <div v-if="shiftOutsideProjectPeriod" class="mt-2 rounded-md bg-warning-surface ring-1 ring-warning-border px-3 py-2">
-                                        <p class="text-xs text-warning inline-flex items-center gap-0.5 flex-wrap">
-                                            <span>{{ $t('Shift is outside the project period') }}</span>
-                                            <ToolTipComponent
-                                                icon="IconInfoCircle"
-                                                icon-size="w-3.5 h-3.5"
-                                                :tooltip-text="$t('The project period is determined by the first and last event of the project.')"
-                                                classes-button="mt-0"
-                                            />
-                                        </p>
-                                    </div>
-                                </div>
-                                <p v-if="serverErrorFor('project_id')" class="text-xs text-danger mt-1">{{ serverErrorFor('project_id') }}</p>
-                            </div>
-
-                            <!-- Description -->
-                            <div>
-                                <BaseTextarea
-                                    v-model="shiftForm.description"
-                                    :label="$t('Note for this shift (optional)')"
-                                    rows="4"
-                                    name="comment"
-                                    id="comment"
-                                    maxlength="250"
-                                />
-                                <div class="text-xs text-end mt-1 text-text-muted">
-                                    {{ shiftForm.description?.length ?? 0 }} / 250
+                                    </p>
                                 </div>
                             </div>
+                            <p v-if="serverErrorFor('project_id')" class="text-xs text-danger mt-1">{{ serverErrorFor('project_id') }}</p>
                         </div>
-                    </transition>
-                    <!-- Projektzeitraum-Warnung auch bei eingeklapptem Abschnitt sichtbar halten -->
-                    <div v-if="!showOptionalBox && selectedProject && shiftOutsideProjectPeriod" class="mt-3 rounded-md bg-warning-surface ring-1 ring-warning-border px-3 py-2">
-                        <p class="text-xs text-warning">{{ $t('Shift is outside the project period') }}</p>
-                    </div>
-                    <div v-if="!showOptionalBox && serverErrorFor('shift_group_id', 'project_id')" class="mt-3 rounded-md bg-danger-surface ring-1 ring-danger-border px-3 py-2">
-                        <p class="text-xs text-danger">{{ serverErrorFor('shift_group_id', 'project_id') }}</p>
-                    </div>
-                </section>
 
-                <div v-if="shift?.is_committed" class="flex items-start justify-between gap-3 rounded-2xl ring-1 ring-border-subtle/70 bg-white/70 p-4 sm:p-5 shadow-sm">
+                        <!-- Schichtgruppe (optional) -->
+                        <div>
+                            <SelectComponent
+                                id="addShiftShiftGroupSelectComponent"
+                                :label="$t('Shift Group')"
+                                :default="$t('Please select...')"
+                                v-model="selectedShiftGroup"
+                                :options="shiftGroups"
+                                selected-property-to-display="name"
+                                :getter-for-options-to-display="(option) => option.name"
+                            />
+                            <div class="flex items-center justify-between gap-2 mt-0.5 text-xs text-text-subtle">
+                                <span v-if="shiftGroups.length === 0">
+                                    {{ $t('No shift groups yet.') }}
+                                    <a
+                                        v-if="canOpenShiftGroups"
+                                        :href="route('shift-groups.index')"
+                                        target="_blank"
+                                        rel="noopener"
+                                        class="font-medium text-accent-600 hover:text-accent-700"
+                                    >{{ $t('Create shift groups') }}</a>
+                                </span>
+                                <span v-else>{{ $t('Optional') }}</span>
+                                <button v-if="selectedShiftGroup" type="button" @click="selectedShiftGroup = null" class="hover:text-accent-600 duration-200 ease-in-out cursor-pointer">{{ $t('Remove Shift group') }}</button>
+                            </div>
+                            <p v-if="serverErrorFor('shift_group_id')" class="text-xs text-danger mt-1">{{ serverErrorFor('shift_group_id') }}</p>
+                        </div>
+
+                        <!-- Zuletzt geöffnete Projekte über die volle Breite (mehr Kacheln je Zeile, weniger Höhe) -->
+                        <div v-if="!selectedProject" class="sm:col-span-2 -mt-2">
+                            <LastedProjects :limit="6" @select="selectedProject = $event" />
+                        </div>
+                    </div>
+
+                    <!-- Notiz -->
+                    <div>
+                        <BaseTextarea
+                            v-model="shiftForm.description"
+                            :label="$t('Note for this shift (optional)')"
+                            rows="2"
+                            name="comment"
+                            id="comment"
+                            maxlength="250"
+                        />
+                        <div class="text-xs text-end mt-1 text-text-muted">
+                            {{ shiftForm.description?.length ?? 0 }} / 250
+                        </div>
+                    </div>
+                </div>
+
+                <div v-if="shift?.is_committed" class="flex items-center justify-between gap-3 border-t border-border-subtle pt-4">
                     <AlertComponent
                         type="error"
                         show-icon
                         icon-size="w-4 h-4"
                         :text="$t('This shift is already committed.')"
-                        class="mb-6"
                     />
-
-                    <div class="">
-                        <BaseUIButton hide-icon class="!w-fit" @click="lockOrUnlockShift(false)" type="button">
-                            {{ $t('Canceling a fixed term') }}
-                        </BaseUIButton>
-                    </div>
+                    <BaseUIButton hide-icon class="!w-fit shrink-0" @click="lockOrUnlockShift(false)" type="button">
+                        {{ $t('Canceling a fixed term') }}
+                    </BaseUIButton>
                 </div>
-
             </div>
 
-            <!-- Sticky Footer -->
-            <div class="sticky bottom-0 left-0 right-0 z-50 mt-5">
-                <div class="py-3 bg-white/90 backdrop-blur flex items-center gap-3" :class="!props.shift?.roomId ? 'justify-center' : 'justify-between'">
+            <!-- Sticky Footer — z-10, damit Dropdowns aus der Karte (Projektsuche, Selects: z-50)
+                 nicht vom Footer-Hintergrund überlagert werden -->
+            <div class="sticky bottom-0 left-0 right-0 z-10 mt-5">
+                <!-- px wie die Karte: Buttons bündig mit den Feldern, nicht mit der Kartenkante -->
+                <div class="py-3 px-4 sm:px-5 bg-white/90 backdrop-blur flex items-center gap-3" :class="!props.shift?.roomId ? 'justify-center' : 'justify-between'">
 
                     <div class="flex items-center gap-3 min-w-0" :title="saveDisabledReason">
                         <BaseUIButton
@@ -1944,6 +1843,20 @@ const lockOrUnlockShift = (commit = false) => {
             @delete="deleteShift"
             :description="$t('Do you really want to delete this shift?')"
             :title="$t('Delete shift')"
+        />
+
+        <!-- Schichtverlauf als VERSCHACHTELTES Modal (innerhalb dieses Dialogs gerendert): Headless UI
+             behandelt Klicks außerhalb des Verlaufs dann nicht als „außerhalb" des Bearbeiten-Modals —
+             vorher schloss ein Klick neben den Verlauf beide Modals. -->
+        <ShiftHistoryModal
+            v-if="showShiftHistory"
+            :crafts="historyCrafts"
+            :initial-craft-id="historyConfig.craftId"
+            :initial-start-date="historyConfig.startDate"
+            :initial-end-date="historyConfig.endDate"
+            :initial-shift-id="historyConfig.shiftId"
+            :auto-load="true"
+            @close="showShiftHistory = false"
         />
     </ArtworkBaseModal>
 </template>

@@ -2331,14 +2331,15 @@ class ProjectController extends Controller
                 $cell->update(['value' => $cell->calculations()->sum('value')]);
             }
 
-            // Wenn AJAX-Request: JSON-Response
-            if ($request->wantsJson() || $request->expectsJson()) {
-                return response()->json([
-                    'success' => true,
-                    'message' => 'Calculations saved successfully',
-                    'cell_value' => $cell ? $cell->value : null
-                ]);
-            }
+        }
+
+        // Wenn AJAX-Request: JSON-Response — auch ohne cell_id, sonst folgt der Browser dem 302 mit PATCH (405)
+        if ($request->wantsJson() || $request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Calculations saved successfully',
+                'cell_value' => isset($cell) && $cell ? $cell->value : null
+            ]);
         }
 
         return Redirect::back();

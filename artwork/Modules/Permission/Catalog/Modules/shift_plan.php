@@ -126,6 +126,20 @@ return new PermissionModuleDefinition(
             personas: [Persona::CRAFT_LEAD],
         ),
         new PermissionDefinition(
+            name: PermissionEnum::CAN_RESPOND_TO_SHIFT_ASSIGNMENTS,
+            title: 'Accept or decline shifts',
+            effect: 'Can accept or decline own shift assignments',
+            unlocks: ['Accept/decline buttons on the shift cards in the own roster', 'Status "Requested" (blue) in the duty roster until the person replies'],
+            allows: ['Accept or decline own shifts (also provisional ones), optionally with a comment'],
+            requires: [
+                $module,
+                Requirement::setting('shift_confirmation_enabled', 'Shift setting "Shift confirmation by employees" enabled'),
+                Requirement::permission(PermissionEnum::CAN_VIEW_OWN_ROSTER, hard: false),
+            ],
+            personas: [Persona::BASIS],
+            note: 'People without this permission are not asked and show no reply status. Planners may record the reply on behalf of a person with this permission.',
+        ),
+        new PermissionDefinition(
             name: PermissionEnum::CAN_SUBSCRIBE_SHIFT_CALENDAR,
             title: 'Subscribe to roster calendar',
             effect: 'Can subscribe to the own roster as a calendar (ICS)',

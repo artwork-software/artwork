@@ -57,6 +57,7 @@ use Artwork\Modules\Shift\Services\ShiftRuleService;
 use Artwork\Modules\User\Models\User;
 use Artwork\Modules\User\Services\UserService;
 use Artwork\Modules\User\Services\WorkingHourCacheService;
+use Artwork\Modules\Vacation\Events\WorkerAvailabilityChanged;
 use Artwork\Modules\Vacation\Models\VacationConflict;
 use Artwork\Modules\Vacation\Services\VacationConflictService;
 use Artwork\Modules\Vacation\Services\VacationService;
@@ -165,7 +166,7 @@ class ShiftController extends Controller
         Shift $shift,
         ShiftsQualificationsService $shiftsQualificationsService,
         ProjectTabService $projectTabService
-    ): RedirectResponse {
+    ): RedirectResponse|JsonResponse {
         // Ohne Validierung landeten end_date < start_date, negative Pausen oder
         // negative Qualifikations-Werte (SQL-Fehler auf smallint unsigned) direkt in der DB.
         $request->validate([
@@ -345,10 +346,16 @@ class ShiftController extends Controller
         }
 
 
-        if ($projectTab && $projectId && !$request->boolean('updateOrCreateInShiftPlan')) {
-            return $this->redirector->route('projects.tab', [$projectId, $projectTab->id]);
+        // Der Dienstplan speichert per axios (kein Inertia-Request): ein 302 würde vom Browser mit
+        // PATCH auf die Dienstplan-URL weiterverfolgt (405 "PATCH not supported for shifts/view").
+        // Deshalb JSON statt Redirect; die Oberfläche aktualisiert sich über den Broadcast.
+        if ($request->boolean('updateOrCreateInShiftPlan') || $request->expectsJson()) {
+            return response()->json(['id' => $shift->id]);
         }
 
+        if ($projectTab && $projectId) {
+            return $this->redirector->route('projects.tab', [$projectId, $projectTab->id]);
+        }
 
         return $this->redirector->back();
     }
@@ -1904,6 +1911,9 @@ class ShiftController extends Controller
                     $entityModel,
                     $entity['days']
                 );
+                if (!empty($vacationType['type'])) {
+                    broadcast(WorkerAvailabilityChanged::forMorph($modelClass, (int) $entityModel->id));
+                }
             }
 
             // Verbindliche Projektzuordnung für die selektierten Tage — nach dem
@@ -1936,6 +1946,7 @@ class ShiftController extends Controller
             };
 
             $entityModel = $modelClass::findOrFail($entity['id']);
+            $vacationsCleared = false;
 
             foreach ($entity['days'] as $day) {
                 $this->individualTimeService->deleteForModel($entityModel, $day);
@@ -1947,6 +1958,7 @@ class ShiftController extends Controller
 
                 if ($vacations->isNotEmpty()) {
                     $this->vacationService->deleteVacationInterval($entityModel, $day);
+                    $vacationsCleared = true;
                 }
 
                 $entityModel->shiftPlanComments()->where('date', $day)->delete();
@@ -1955,6 +1967,10 @@ class ShiftController extends Controller
                 $this->shiftService->detachFromShifts($dayShifts, $modelClass, $entityModel);
 
                 $shifts = $shifts->merge($dayShifts); // Merge neue Shifts mit den vorherigen
+            }
+
+            if ($vacationsCleared) {
+                broadcast(WorkerAvailabilityChanged::forMorph($modelClass, (int) $entityModel->id));
             }
         }
 

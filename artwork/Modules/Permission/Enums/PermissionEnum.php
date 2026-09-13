@@ -89,6 +89,8 @@ enum PermissionEnum : string
     case CAN_VIEW_OWN_ROSTER = 'can view own roster';
     case CAN_VIEW_OWN_UNCOMMITTED_SHIFTS = 'can view own uncommitted shifts';
     case CAN_SUBSCRIBE_SHIFT_CALENDAR = 'can subscribe shift calendar';
+    // Opt-in je Person für die Schichtbestätigung (Zu-/Absage eigener Zuweisungen)
+    case CAN_RESPOND_TO_SHIFT_ASSIGNMENTS = 'can respond to shift assignments';
 
     case CAN_VIEW_SHIFT_USER_KPIS = 'can view shift user kpis';
 

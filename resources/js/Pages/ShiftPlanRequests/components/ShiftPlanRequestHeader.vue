@@ -32,6 +32,8 @@
                         @click="$emit('accept')"
                         icon="IconCheck"
                         :label="$t('Accept')"
+                        :processing="processing === 'accept'"
+                        :disabled="!!processing"
                     />
                     <BaseUIButton
                         type="button"
@@ -39,6 +41,8 @@
                         @click="$emit('start-reject')"
                         icon="IconCancel"
                         :label="$t('Reject')"
+                        :processing="processing === 'reject'"
+                        :disabled="!!processing"
                     />
                 </div>
 

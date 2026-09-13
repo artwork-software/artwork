@@ -5,6 +5,7 @@
         :disabled="disabled"
         as="div"
         class="w-full relative"
+        v-slot="{ open }"
     >
         <ComboboxLabel v-if="label" :class="labelClass">
             <slot name="label">{{ label }}</slot>
@@ -26,12 +27,19 @@
                     :class="inputClass"
                     :placeholder="placeholder"
                     :display-value="() => selectedText"
+                    autocomplete="off"
                     @input="onChange"
                     @blur="onBlur"
+                    @click="onInputClick($event, open)"
                 />
-                <ComboboxButton :class="buttonClass">
+                <ComboboxButton ref="buttonRef" :class="buttonClass">
                     <slot name="button-icon">
-                        <IconSelector class="size-4 text-text-subtle" :stroke-width="1.5" aria-hidden="true" />
+                        <IconChevronDown
+                            class="size-4 text-text-subtle transition-transform"
+                            :class="open ? 'rotate-180' : ''"
+                            :stroke-width="1.5"
+                            aria-hidden="true"
+                        />
                     </slot>
                 </ComboboxButton>
             </div>
@@ -84,7 +92,7 @@ import {
     ComboboxOption,
     ComboboxOptions,
 } from '@headlessui/vue'
-import { IconSelector, IconCheck } from '@tabler/icons-vue'
+import { IconChevronDown, IconCheck } from '@tabler/icons-vue'
 import type { PropType } from 'vue'
 import {Float} from "@headlessui-float/vue";
 
@@ -173,6 +181,22 @@ const emit = defineEmits<{
 }>()
 
 const query = ref('')
+
+// Verhält sich wie ein normales Dropdown: Klick ins Feld öffnet die Liste (nicht nur der Pfeil).
+// Der angezeigte Text wird dabei markiert, damit Tippen sofort als Suche wirkt.
+const buttonRef = ref<any>(null)
+function onInputClick(e: MouseEvent, open: boolean) {
+    const input = e.target as HTMLInputElement
+    if (!open) {
+        const btn = buttonRef.value?.$el ?? buttonRef.value
+        if (btn && typeof btn.click === 'function') btn.click()
+        input?.focus()
+    }
+    // Headless UI setzt beim Öffnen den Anzeigewert neu → Markierung erst danach setzen.
+    requestAnimationFrame(() => {
+        if (input?.value && document.activeElement === input) input.select()
+    })
+}
 
 const internalValue = computed({
     get: () => props.modelValue,

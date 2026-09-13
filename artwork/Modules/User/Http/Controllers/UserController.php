@@ -1828,7 +1828,11 @@ class UserController extends Controller
             // auf user_shift_plan_daily_settings)
             'show_unrelated_events',
             'show_unrelated_shifts',
-            'show_user_overview'
+            'show_user_overview',
+            // Nur vom Schichtplan-Personenbereich gesendet (Spalte nur auf user_shift_plan_settings)
+            'user_overview_light_mode',
+            // Besetzungs-Pille je Gewerk (Wochenansicht, Spalte nur auf user_shift_plan_settings)
+            'show_craft_staffing',
         ]);
 
         if ($request->boolean('is_shift_plan')) {

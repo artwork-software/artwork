@@ -1,11 +1,11 @@
 <template>
     <div
-        class="shiftCell h-full overflow-hidden rounded-lg bg-surface-sunken/10 text-xs text-white hover:opacity-100 relative"
+        class="shiftCell h-full overflow-hidden rounded-lg bg-[var(--uo-cell-bg)] text-xs text-[var(--uo-text)] hover:opacity-100 relative"
         :class="[ unavailableAssignmentConflict
           ? (unavailableAssignmentConflict.committed
               ? 'ring-2 ring-inset ring-danger-border bg-danger-border/20'
               : 'ring-2 ring-inset ring-warning-border bg-warning-border/20')
-          : hasMultiShiftGroups && 'ring-2 ring-inset ring-danger-border',
+          : (hasMultiShiftGroups ? 'ring-2 ring-inset ring-danger-border' : 'ring-1 ring-inset ring-[var(--uo-cell-ring)]'),
     ]"
     >
         <!-- Innerer Scroll-Container: Streifen unten bleiben fix am Zellboden -->
@@ -18,26 +18,38 @@
             <!-- Abwesenheit -->
             <span
                 v-if="isOnVacation"
-                class="text-[#f08b32]"
+                class="text-[var(--uo-orange-text)]"
             >
                 {{ vacationLabel }}<template v-if="availabilitiesToday.length || cellParts.length || compensationDayToday">, </template>
             </span>
 
             <!-- Verfügbarkeit -->
             <template v-for="av in availabilitiesToday" :key="`av-top:${av.id}`">
-                <span class="text-success">
+                <span class="text-[var(--uo-success-text)]">
                     {{ availabilityLabel(av) }}<template v-if="cellParts.length || compensationDayToday">, </template>
                 </span>
             </template>
 
-            <span v-if="compensationDayToday" class="text-special-teal">
+            <span v-if="compensationDayToday" class="text-[var(--uo-teal-text)]">
                 {{ compensationDayToday === 'full' ? t('Compensation day off') : t('Half compensation day off') }}<template v-if="compensationDayToday === 'half' && compensationHalfPeriod"> ({{ compensationHalfPeriod === 'morning' ? t('Morning') : t('Afternoon') }})</template><template v-if="cellParts.length">, </template>
             </span>
 
             <template v-for="part in cellParts" :key="part.key">
-                <span :class="part.class" :title="part.title || undefined">
+                <!-- Zu-/Absage-Status als gefüllte Pille (blau angefragt / grün zugesagt /
+                     rot abgesagt) statt Unterstreichung: hebt sich von den
+                     Projektzuordnungs-Streifen am Zellboden ab -->
+                <span
+                    v-if="part.pill"
+                    class="inline-flex max-w-full items-center rounded-full px-1.5 py-px align-baseline font-medium text-white"
+                    :class="part.pill"
+                    :title="part.title || undefined"
+                >
+                    <span class="truncate">{{ part.text }}</span>
+                </span>
+                <span v-else :class="part.class" :title="part.title || undefined">
                     {{ part.text }}
                 </span>
+                <span v-if="part.suffix">{{ part.suffix }}</span>
             </template>
         </div>
         </div>
@@ -187,6 +199,9 @@ function availabilityLabel(av) {
 const cellUserId = computed(() => props.user?.element?.id)
 const cellUserType = computed(() => props.user?.type)
 
+/** Person nimmt am Zu-/Absage-Flow teil (Recht „Darf Schichten annehmen/ablehnen") */
+const confirmationEligible = computed(() => !!props.user?.element?.confirmation_eligible)
+
 /** Robust: ShiftGroup-ID aus allen gängigen Varianten */
 function getShiftGroupId(shift) {
     if (shift?.shiftGroup?.id != null) return shift.shiftGroup.id
@@ -257,31 +272,37 @@ const cellParts = computed(() => {
             timeDisplay = `${s.startPivot} - ${s.endPivot} →`
         }
 
-        // Zu-/Absage der Person: grüne/rote Unterstreichung (lesbar auf jeder
-        // Zellfarbe) + Erklärung im Hover-Titel
-        let confirmationClass = ''
+        // Zu-/Absage der Person als Pille: nur bei Personen mit dem Recht „Darf
+        // Schichten annehmen/ablehnen" (confirmation_eligible). Ohne Antwort =
+        // „angefragt" (blau, auch vorläufig), sonst grün/rot; Erklärung im Hover-Titel.
+        let confirmationPill = null
         let confirmationTitle = null
-        if (page.props.shift_confirmation_enabled && s?.confirmationStatus) {
-            const accepted = s.confirmationStatus === 'accepted'
-            confirmationClass = accepted
-                ? 'underline decoration-success decoration-2'
-                : 'underline decoration-danger decoration-2'
-            const dateLabel = s.confirmationAt
-                ? new Date(s.confirmationAt).toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' })
-                : '–'
-            confirmationTitle = accepted
-                ? t('Accepted on {date}', { date: dateLabel })
-                : t('Declined on {date}', { date: dateLabel })
-            if (s.confirmationComment) {
-                confirmationTitle += ` – „${s.confirmationComment}"`
+        if (page.props.shift_confirmation_enabled && confirmationEligible.value) {
+            if (s?.confirmationStatus) {
+                const accepted = s.confirmationStatus === 'accepted'
+                confirmationPill = accepted ? 'bg-success' : 'bg-danger'
+                const dateLabel = s.confirmationAt
+                    ? new Date(s.confirmationAt).toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' })
+                    : '–'
+                confirmationTitle = accepted
+                    ? t('Accepted on {date}', { date: dateLabel })
+                    : t('Declined on {date}', { date: dateLabel })
+                if (s.confirmationComment) {
+                    confirmationTitle += ` – „${s.confirmationComment}"`
+                }
+            } else {
+                confirmationPill = 'bg-accent-600'
+                confirmationTitle = t('Requested – no reply yet')
             }
         }
 
         parts.push({
             key: `shift:${s.id}`,
-            text: `${timeDisplay} ${s?.roomName ?? ''}${craftSuffix}, `,
-            class: confirmationClass,
+            text: `${timeDisplay} ${s?.roomName ?? ''}${craftSuffix}`,
+            class: '',
+            pill: confirmationPill,
             title: confirmationTitle,
+            suffix: ', ',
         })
     }
 

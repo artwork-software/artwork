@@ -108,4 +108,6 @@ enum PermissionEnum : string
     case CALENDAR_SETTINGS_UPDATE = 'change calendar settings';
     case MONEY_SOURCE_SETTINGS_UPDATE = 'change money source settings';
     case BUDGET_SETTINGS_UPDATE = 'change budget settings';
+
+    case AI_ASSISTANT_SETTINGS_UPDATE = 'change ai assistant settings';
 }

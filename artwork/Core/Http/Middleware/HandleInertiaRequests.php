@@ -4,6 +4,7 @@ namespace Artwork\Core\Http\Middleware;
 
 use App\Settings\EventSettings;
 use App\Settings\GeneralCalendarSettings;
+use Artwork\Modules\AiAssistant\Services\AiAssistantAccess;
 use Artwork\Modules\Craft\Models\Craft;
 use Artwork\Modules\GeneralSettings\Models\GeneralSettings;
 use Artwork\Modules\ModuleSettings\Services\ModuleSettingsService;
@@ -230,6 +231,7 @@ class HandleInertiaRequests extends Middleware
             parent::share($request),
             [
                 'name' => config('app.name'),
+                'ai' => $this->aiAssistantState($user),
                 'use_chat_module' => config('app.use_chat_module'),
                 // Effektives PHP-Upload-Limit für transparente „Datei zu groß"-Meldungen
                 // und die Datei-Einstellungsseite (Abnahme RG-04); nginx kann zusätzlich begrenzen
@@ -316,5 +318,27 @@ class HandleInertiaRequests extends Middleware
                 'day_remarks'                    => $dayRemarksState,
             ]
         );
+    }
+
+    /**
+     * KI-Assistent: ein einziger Prop für das Rendern der Bar. Ist der Assistent nicht frei,
+     * wird bewusst nur `enabled: false` geteilt — die Stufen sind dann keine Information,
+     * die das Frontend braucht (core-modul-settings-policy).
+     *
+     * @return array<string, bool>
+     */
+    private function aiAssistantState(?User $user): array
+    {
+        $access = app(AiAssistantAccess::class);
+
+        if (!$access->allowed($user)) {
+            return ['enabled' => false];
+        }
+
+        return [
+            'enabled' => true,
+            'levelB' => $access->levelBAllowed($user),
+            'levelC' => $access->levelCAllowed($user),
+        ];
     }
 }

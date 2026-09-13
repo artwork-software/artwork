@@ -211,6 +211,7 @@ return [
         App\Providers\RouteServiceProvider::class,
         App\Providers\FortifyServiceProvider::class,
         App\Providers\JetstreamServiceProvider::class,
+        Artwork\Modules\AiAssistant\Providers\AiAssistantServiceProvider::class,
         Artwork\Modules\ExternalAccess\Providers\ExternalAccessServiceProvider::class,
         Artwork\Modules\Mail\Providers\MailSettingsServiceProvider::class,
         Intervention\Image\ImageServiceProvider::class,

@@ -117,6 +117,7 @@ use App\Http\Controllers\ToolSettingsBrandingController;
 use App\Http\Controllers\ToolSettingsCommunicationAndLegalController;
 use App\Http\Controllers\ToolSettingsExternalUserManagementController;
 use App\Http\Controllers\ToolSettingsInterfacesController;
+use Artwork\Modules\AiAssistant\Http\Controllers\AiAssistantSettingsController;
 use Artwork\Modules\ExternalUserManagement\Http\Controllers\ExternalUserGroupMappingController;
 use Artwork\Modules\ExternalUserManagement\Http\Controllers\ExternalUserSourceController;
 use Artwork\Modules\Mail\Http\Controllers\MailSettingsController;
@@ -383,6 +384,14 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
             ->name('tool.mail.update');
         Route::post('/mail/test', [MailSettingsController::class, 'test'])
             ->name('tool.mail.test');
+
+        // KI-ASSISTENT — eigene Permission, nicht "change tool settings"
+        Route::group(['middleware' => 'can:change ai assistant settings'], function (): void {
+            Route::get('/ai-assistant', [AiAssistantSettingsController::class, 'edit'])
+                ->name('tool.ai-assistant');
+            Route::patch('/ai-assistant', [AiAssistantSettingsController::class, 'update'])
+                ->name('tool.ai-assistant.update');
+        });
         Route::group(['namespace' => 'System', 'prefix' => 'system', 'middleware' => 'can:change tool settings'], function (): void {
             Route::get('/file-settings', [FileSettingsController::class, 'index'])
                 ->name('tool.file-settings.index');

@@ -1058,6 +1058,13 @@ class ShiftWorkerService
 
         $notificationTitle = __('notification.shift.worker_short_break', [], $planner->language);
 
+        // Eigene Toast-Nachricht setzen, sonst erbt die planende Person den Broadcast
+        // "Du wurdest mit zu kurzer Ruhezeit eingeplant" aus notifyShortBreakUser().
+        $notificationService->setBroadcastMessage([
+            'id'      => Str::uuid()->toString(),
+            'type'    => 'error',
+            'message' => $notificationTitle,
+        ]);
         $notificationService->setTitle($notificationTitle);
         $notificationService->setDescription([
             1 => [

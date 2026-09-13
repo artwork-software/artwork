@@ -8014,5 +8014,6 @@
     "Accept or decline own shifts (also provisional ones), optionally with a comment": "Eigene Schichten zu- oder absagen (auch vorläufige), optional mit Kommentar",
     "You are scheduled on {date} {start} - {end}, contrary to your original entry. Who made the assignment was not recorded; the shift was committed by {username}.": "Du bist am {date} {start} - {end} eingeteilt, entgegen deines ursprünglichen Eintrags. Wer die Einteilung vorgenommen hat, ist nicht gespeichert; festgeschrieben wurde die Schicht von {username}.",
     "You are scheduled on {date} {start} - {end}, contrary to your original entry. Who made the assignment was not recorded.": "Du bist am {date} {start} - {end} eingeteilt, entgegen deines ursprünglichen Eintrags. Wer die Einteilung vorgenommen hat, ist nicht gespeichert.",
-    "Assignment made on {date}.": "Zuweisung erfolgte am {date}."
+    "Assignment made on {date}.": "Zuweisung erfolgte am {date}.",
+    "Not available despite shift": "Nicht verfügbar eingetragen trotz Schicht"
 }

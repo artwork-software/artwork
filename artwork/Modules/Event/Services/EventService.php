@@ -56,6 +56,7 @@ use Artwork\Modules\ServiceProvider\Http\Resources\ServiceProviderShiftPlanResou
 use Artwork\Modules\ServiceProvider\Models\ServiceProvider;
 use Artwork\Modules\ServiceProvider\Services\ServiceProviderService;
 use Artwork\Modules\Shift\Models\Shift;
+use Artwork\Modules\Shift\Services\ShiftWorkerAvailability;
 use Artwork\Modules\Shift\Models\ShiftFilter;
 use Artwork\Modules\Shift\Models\ShiftQualification;
 use Artwork\Modules\Shift\Models\ShiftRuleViolation;
@@ -66,6 +67,7 @@ use Artwork\Modules\Shift\Services\ShiftsQualificationsService;
 use Artwork\Modules\Shift\Services\ShiftUserService;
 use Artwork\Modules\Shift\Services\ShiftQualificationService;
 use Artwork\Modules\Shift\Services\ShiftTimePresetService;
+use Artwork\Modules\Vacation\Enums\Vacation as VacationType;
 use Artwork\Modules\Event\Models\SubEvent;
 use Artwork\Modules\Event\Services\SubEventService;
 use Artwork\Modules\Timeline\Models\Timeline;
@@ -566,6 +568,7 @@ readonly class EventService
                 'holidays' => [],
                 'comments' => [],
                 'violations' => [],
+                'unavailableAssignment' => null,
                 'totalWorkTime' => '00:00',
                 'totalBreakTime' => '00:00',
             ];
@@ -621,6 +624,33 @@ readonly class EventService
                 ];
             }
         }
+
+        // Shifts use the morph pivot table `shift_workers` for workers (users/freelancers/service providers).
+        // When filtering via `whereHas()`, the callback targets the RELATED model query. Use `whereKey()`
+        // to generate a qualified primary key condition (avoids invalid `*_id` columns and `id` ambiguity).
+        $mapping = [
+            'user' => 'users',
+            'freelancer' => 'freelancer',
+            'service_provider' => 'serviceProvider',
+        ];
+
+        $relationToFind = $mapping[$modelType] ?? 'users';
+
+        // Verfügbarkeitsstatus am Schichttag aus derselben Quelle wie das Warndreieck im
+        // Schichtplan: Wer trotz Abwesenheitseintrag eingeplant ist, soll das auch im
+        // Einsatzplan sehen — dort war der Eintrag bislang nur unten in der Liste sichtbar.
+        // Die Abwesenheiten werden einmal für den Zeitraum geladen und an die jeweilige
+        // Schicht-Zuweisung gehängt (ShiftWorkerAvailability filtert selbst nach Datum);
+        // ein lazy Nachladen je Schicht würde die Relation auf das erste Schichtfenster
+        // festnageln und alle weiteren Tage falsch bewerten.
+        $workerVacations = $this->loadWorkerVacations($worker, $startDate, $endDate);
+
+        $resolveUnavailableStatus = fn (Shift $shift): ?string => $this->resolveWorkerUnavailableStatus(
+            $shift,
+            $workerVacations,
+            $relationToFind,
+            $modelId
+        );
 
         // Feiertage einmal für den gesamten Zeitraum laden und pro Tag zuordnen.
         $holidays = Holiday::query()
@@ -706,17 +736,6 @@ readonly class EventService
             }
         }
 
-        // Shifts use the morph pivot table `shift_workers` for workers (users/freelancers/service providers).
-        // When filtering via `whereHas()`, the callback targets the RELATED model query. Use `whereKey()`
-        // to generate a qualified primary key condition (avoids invalid `*_id` columns and `id` ambiguity).
-        $mapping = [
-            'user' => 'users',
-            'freelancer' => 'freelancer',
-            'service_provider' => 'serviceProvider',
-        ];
-
-        $relationToFind = $mapping[$modelType] ?? 'users';
-
         $events = Event::query()
             ->with(
                 [
@@ -773,6 +792,8 @@ readonly class EventService
                 }
 
                 $plannedData = $calculatePlannedWorkingHours([$shift]);
+                $unavailableStatus = $resolveUnavailableStatus($shift);
+                $this->markUnavailableAssignment($daysWithData[$shiftDate], $unavailableStatus, $shift);
 
                 /** @var Project $project */
                 $project = $event->project;
@@ -799,6 +820,7 @@ readonly class EventService
                     'workers' => $buildWorkers($shift),
                     'shiftQualifications' => $shift->shiftsQualifications ?? [],
                     'plannedWorkingHours' => $plannedData['totalWorkTime'],
+                    'worker_unavailable_status' => $unavailableStatus,
                 ];
 
                 $daysWithData[$shiftDate]['totalWorkTime'] = $this->sumTimes(
@@ -847,6 +869,8 @@ readonly class EventService
                     continue;
                 }
                 $plannedData = $calculatePlannedWorkingHours([$shift]);
+                $unavailableStatus = $resolveUnavailableStatus($shift);
+                $this->markUnavailableAssignment($daysWithData[$shiftDate], $unavailableStatus, $shift);
 
                 $daysWithData[$shiftDate]['shifts'][] = [
                     'room' => $shift->room,
@@ -867,6 +891,7 @@ readonly class EventService
                     'workers' => $buildWorkers($shift),
                     'shiftQualifications' => $shift->shiftsQualifications ?? [],
                     'plannedWorkingHours' => $plannedData['totalWorkTime'],
+                    'worker_unavailable_status' => $unavailableStatus,
                 ];
 
                 $daysWithData[$shiftDate]['totalWorkTime'] = $this->sumTimes(
@@ -910,6 +935,97 @@ readonly class EventService
         ]);
 
         return $daysWithData;
+    }
+
+    /**
+     * Abwesenheiten der betrachteten Person für den gesamten Zeitraum.
+     * Vacation::$with würde sonst Serie und Konflikte mitladen — beides wird hier
+     * nicht gebraucht und macht den Payload nur schwer.
+     *
+     * @return SupportCollection<int, \Artwork\Modules\Vacation\Models\Vacation>
+     */
+    private function loadWorkerVacations(
+        User|Freelancer|ServiceProvider|null $worker,
+        Carbon $startDate,
+        Carbon $endDate
+    ): SupportCollection
+    {
+        if ($worker === null) {
+            return collect();
+        }
+
+        return $worker->vacations()
+            ->without(['series', 'conflicts'])
+            ->whereBetween('date', [$startDate->format('Y-m-d'), $endDate->format('Y-m-d')])
+            ->get();
+    }
+
+    /**
+     * Verfügbarkeitsstatus der betrachteten Person für eine einzelne Schicht.
+     *
+     * Die Instanz aus der Schicht-Relation trägt den Pivot (individuelle Zeiten),
+     * der das Einsatzfenster bestimmt — das frei geladene Modell hätte ihn nicht.
+     * Die Abwesenheiten kommen fertig geladen herein: ein lazy Nachladen je Schicht
+     * würde die Relation auf das erste Schichtfenster festnageln.
+     *
+     * @param SupportCollection<int, \Artwork\Modules\Vacation\Models\Vacation> $workerVacations
+     */
+    private function resolveWorkerUnavailableStatus(
+        Shift $shift,
+        SupportCollection $workerVacations,
+        string $relationToFind,
+        int $modelId
+    ): ?string {
+        if ($workerVacations->isEmpty()) {
+            return null;
+        }
+
+        $assigned = $shift->getRelationValue($relationToFind)?->firstWhere('id', $modelId);
+
+        if ($assigned === null) {
+            return null;
+        }
+
+        $assigned->setRelation('vacations', $workerVacations);
+
+        return ShiftWorkerAvailability::getWorkerUnavailableStatus($shift, $assigned);
+    }
+
+    /**
+     * Tagesmarkierung "eingeplant trotz Abwesenheitseintrag" setzen.
+     *
+     * Mehrere Schichten am selben Tag: die schwerere Einstufung gewinnt
+     * (NOT_AVAILABLE vor allem anderen), ebenso eine festgeschriebene Schicht —
+     * die Farbgebung im Frontend folgt derselben Eskalation wie im Schichtplan.
+     *
+     * @param array<string, mixed> $day
+     */
+    private function markUnavailableAssignment(array &$day, ?string $status, Shift $shift): void
+    {
+        if ($status === null) {
+            return;
+        }
+
+        $existing = $day['unavailableAssignment'] ?? null;
+        $isCommitted = (bool) $shift->is_committed;
+
+        if ($existing !== null) {
+            $keepStatus = $existing['status'] === VacationType::NOT_AVAILABLE->value
+                ? $existing['status']
+                : $status;
+
+            $day['unavailableAssignment'] = [
+                'status' => $keepStatus,
+                'committed' => $existing['committed'] || $isCommitted,
+            ];
+
+            return;
+        }
+
+        $day['unavailableAssignment'] = [
+            'status' => $status,
+            'committed' => $isCommitted,
+        ];
     }
 
     /**

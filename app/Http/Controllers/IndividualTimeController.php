@@ -74,9 +74,10 @@ class IndividualTimeController extends Controller
             || (bool) auth()->user()?->can(
                 \Artwork\Modules\Permission\Enums\PermissionEnum::AVAILABILITY_MANAGEMENT->value
             )
-            || ($isWorker && (bool) auth()->user()?->can(
-                \Artwork\Modules\Permission\Enums\PermissionEnum::MA_MANAGER->value
-            )),
+            || ($isWorker && (bool) auth()->user()?->canAny([
+                \Artwork\Modules\Permission\Enums\PermissionEnum::MA_MANAGER->value,
+                \Artwork\Modules\Permission\Enums\PermissionEnum::EXTERNAL_MANAGER->value,
+            ])),
             403
         );
 
@@ -95,7 +96,7 @@ class IndividualTimeController extends Controller
                         $individualTime['start_time'] ?? null,
                         $individualTime['end_time'] ?? null,
                         $individualTime['start_date'],
-                        $individualTime['break_minutes'] ?? 0,
+                        $individualTime['break_minutes'] ?? null,
                     );
                 } else {
                     $this->individualTimeService->createForModel(
@@ -104,7 +105,7 @@ class IndividualTimeController extends Controller
                         $individualTime['start_time'] ?? null,
                         $individualTime['end_time'] ?? null,
                         $individualTime['start_date'],
-                        $individualTime['break_minutes'] ?? 0,
+                        $individualTime['break_minutes'] ?? null,
                     );
                 }
             } else {
@@ -114,7 +115,7 @@ class IndividualTimeController extends Controller
                     $individualTime['start_time'] ?? null,
                     $individualTime['end_time'] ?? null,
                     $individualTime['start_date'],
-                    $individualTime['break_minutes'] ?? 0,
+                    $individualTime['break_minutes'] ?? null,
                 );
             }
         }

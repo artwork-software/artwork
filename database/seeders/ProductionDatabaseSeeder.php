@@ -2,7 +2,6 @@
 
 namespace Database\Seeders;
 
-use Database\Seeders\InventoryManagement\Production\InventoryManagementDefaultColumnsSeeder;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 
@@ -16,7 +15,6 @@ class ProductionDatabaseSeeder extends Seeder
             PermissionPresetSeeder::class,
             ShiftQualificationSeeder::class,
             DefaultComponentSeeder::class,
-            InventoryManagementDefaultColumnsSeeder::class,
             InventoryArticlePropertiesSeeder::class,
             SubdivisionSeeder::class,
             DatabaseSettingsSeeder::class,

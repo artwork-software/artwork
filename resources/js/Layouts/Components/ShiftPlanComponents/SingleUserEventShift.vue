@@ -1,9 +1,15 @@
 <template>
     <div
         class="rounded-xl border bg-white shadow-sm overflow-hidden transition hover:shadow-md"
-        :class="ownConfirmationInfo?.accepted
-            ? 'border-success ring-1 ring-success'
-            : (ownConfirmationInfo ? 'border-danger ring-1 ring-danger' : 'border-border-subtle')"
+        :class="[
+            ownConfirmationInfo?.requested
+                ? 'border-accent-500 ring-1 ring-accent-500'
+                : ownConfirmationInfo?.accepted
+                    ? 'border-success ring-1 ring-success'
+                    : (ownConfirmationInfo ? 'border-danger ring-1 ring-danger' : (shift.is_committed ? 'border-border-subtle' : 'border-warning-border')),
+            // Vorläufige (nicht festgeschriebene) Schichten: gestrichelter Rahmen
+            shift.is_committed ? '' : 'border-dashed'
+        ]"
     >
         <!-- Farb-Akzent / Headerblock: Titel nutzt die volle Breite,
              die Icons sitzen darunter rechtsbündig am Blockende -->
@@ -36,7 +42,8 @@
                 </span>
             </span>
 
-            <div v-if="hasHeaderIcons" class="mt-1 flex items-center justify-end gap-2">
+            <!-- Statuszeile: Schloss (festgeschrieben) oder Badge „Vorläufig" ist immer da -->
+            <div class="mt-1 flex items-center justify-end gap-2">
                 <PropertyIcon
                     name="IconLock"
                     v-if="shift.is_committed"
@@ -44,13 +51,23 @@
                     class="h-5 w-5 opacity-90"
                     v-tooltip.bottom="{ value: $t('Committed'), class: 'aw-tooltip' }"
                 />
-                <PropertyIcon
-                    name="IconGitPullRequest"
-                    v-else-if="shift.in_workflow"
-                    stroke-width="1.5"
-                    class="h-5 w-5 opacity-90"
-                    v-tooltip.bottom="{ value: $t('Requested'), class: 'aw-tooltip' }"
-                />
+                <template v-else>
+                    <span
+                        class="inline-flex items-center gap-1 rounded-full border border-warning-border bg-warning-surface px-2 py-0.5 text-[11px] font-semibold text-warning"
+                        :aria-label="$t('Provisional: This shift is not committed yet and may still change.')"
+                        v-tooltip.bottom="{ value: $t('Provisional: This shift is not committed yet and may still change.'), class: 'aw-tooltip' }"
+                    >
+                        <PropertyIcon name="IconClockQuestion" class="h-3.5 w-3.5" stroke-width="2" />
+                        {{ $t('Provisional') }}
+                    </span>
+                    <PropertyIcon
+                        name="IconGitPullRequest"
+                        v-if="shift.in_workflow"
+                        stroke-width="1.5"
+                        class="h-5 w-5 opacity-90"
+                        v-tooltip.bottom="{ value: $t('Requested'), class: 'aw-tooltip' }"
+                    />
+                </template>
                 <button
                     v-if="project"
                     type="button"
@@ -88,19 +105,53 @@
                 <div v-if="hasIndivTime" class="text-[10px] text-text-subtle mt-0.5">
                     {{ $t('individual user time, original shift time: {start} - {end}', { start: shift.start, end: shift.end }) }}
                 </div>
+                <!-- Funktion (aus dem shift_workers-Pivot) und Pause der Schicht -->
+                <div v-if="ownQualificationName || breakMinutes !== null" class="text-xs text-text-muted mt-1">
+                    <template v-if="ownQualificationName">{{ $t('Function') }}: {{ ownQualificationName }}</template>
+                    <template v-if="ownQualificationName && breakMinutes !== null"> · </template>
+                    <template v-if="breakMinutes !== null">{{ $t('Break') }} {{ breakMinutes }} min</template>
+                </div>
             </div>
 
-            <!-- Zu-/Absage der Zuweisung (nur festgeschriebene Schichten); Status ist
-                 auch für Planer:innen sichtbar, die einen fremden Plan ansehen -->
+            <!-- Hinweis-Badges im eigenen Einsatzplan: Zusage nach Zeitänderung zurückgesetzt /
+                 offene Zeitanpassungs-Anfrage zu dieser Schicht -->
+            <div
+                v-if="confirmationResetInfo || hasPendingTimeChangeRequest"
+                class="flex flex-wrap items-center gap-1.5 border-b border-border-subtle pb-2"
+            >
+                <span
+                    v-if="confirmationResetInfo"
+                    class="inline-flex items-center gap-1 rounded-full border border-warning-border bg-warning-surface px-2 py-0.5 text-[11px] font-semibold text-warning"
+                    v-tooltip.bottom="{ value: confirmationResetInfo.tooltip, class: 'aw-tooltip' }"
+                >
+                    <PropertyIcon name="IconAlertTriangle" class="h-3.5 w-3.5" stroke-width="2" />
+                    {{ $t('Time changed – please confirm again') }}
+                </span>
+                <span
+                    v-if="hasPendingTimeChangeRequest"
+                    class="inline-flex items-center gap-1 rounded-full border border-border bg-surface-sunken px-2 py-0.5 text-[11px] font-semibold text-text-muted"
+                    v-tooltip.bottom="{ value: $t('Your request for a time change is still pending with the planners.'), class: 'aw-tooltip' }"
+                >
+                    <PropertyIcon name="IconClockEdit" class="h-3.5 w-3.5" stroke-width="2" />
+                    {{ $t('Time change requested') }}
+                </span>
+            </div>
+
+            <!-- Zu-/Absage der Zuweisung (auch vorläufige Schichten, nur Personen mit
+                 dem Recht „Darf Schichten annehmen/ablehnen"); Status ist auch für
+                 Planer:innen sichtbar, die einen fremden Plan ansehen -->
             <div v-if="showOwnConfirmationControls || ownConfirmationInfo" class="border-b border-border-subtle pb-2">
                 <!-- flex-wrap + whitespace-nowrap: auf schmalen Karten rutscht der
                      Aktionslink in eine eigene Zeile statt abgeschnitten zu werden -->
-                <div v-if="ownConfirmationInfo" class="flex flex-wrap items-center justify-between gap-x-2 gap-y-1">
+                <div v-if="ownConfirmationInfo && !ownConfirmationInfo.requested" class="flex flex-wrap items-center justify-between gap-x-2 gap-y-1">
                     <span
                         class="inline-flex items-center gap-1.5 rounded-full px-2 py-1 text-xs font-semibold"
                         :class="ownConfirmationInfo.accepted
                             ? 'bg-success-surface text-success border border-success-border'
                             : 'bg-danger-surface text-danger border border-danger-border'"
+                        v-tooltip.bottom="ownConfirmationInfo.accepted
+                            ? null
+                            : { value: $t('You remain scheduled until the plan is changed.'), class: 'aw-tooltip' }"
                     >
                         <PropertyIcon :name="ownConfirmationInfo.accepted ? 'IconCheck' : 'IconX'" class="h-3.5 w-3.5" stroke-width="2.5" />
                         {{ ownConfirmationInfo.accepted
@@ -116,11 +167,22 @@
                         {{ ownConfirmationInfo.accepted ? $t('Decline shift') : $t('Accept shift') }}
                     </button>
                 </div>
-                <div v-else class="flex items-center justify-between gap-2">
-                    <span class="text-xs font-semibold uppercase tracking-wide text-text-subtle">
+                <!-- flex-wrap: auf schmalen Karten rutschen die Buttons unter die Pille
+                     statt am Kartenrand abgeschnitten zu werden -->
+                <div v-else class="flex flex-wrap items-center justify-between gap-x-2 gap-y-1">
+                    <!-- Status „angefragt" (blau): festgeschrieben, noch keine Antwort -->
+                    <span
+                        v-if="ownConfirmationInfo?.requested"
+                        class="inline-flex items-center gap-1.5 rounded-full border border-accent-200 bg-accent-50 px-2 py-1 text-xs font-semibold text-accent-700"
+                        v-tooltip.bottom="{ value: $t('Requested – no reply yet'), class: 'aw-tooltip' }"
+                    >
+                        <PropertyIcon name="IconClockQuestion" class="h-3.5 w-3.5" stroke-width="2.5" />
+                        {{ $t('Reply requested') }}
+                    </span>
+                    <span v-else class="text-xs font-semibold uppercase tracking-wide text-text-subtle">
                         {{ $t('Reply to planner') }}
                     </span>
-                    <div class="flex items-center gap-1.5 shrink-0">
+                    <div v-if="showOwnConfirmationControls" class="ml-auto flex items-center gap-1.5 shrink-0">
                         <button
                             type="button"
                             class="inline-flex items-center justify-center h-7 w-7 rounded-lg border border-success-border bg-success-surface text-success hover:opacity-80 transition"
@@ -204,8 +266,18 @@
     <ShiftConfirmationResponseModal
         v-if="responseModalMode"
         :mode="responseModalMode"
+        :worker-name="proxyWorkerName"
         @close="responseModalMode = null"
         @submit="submitResponse"
+    />
+
+    <!-- Rückmeldung nach Zu-/Absage -->
+    <NotificationToast
+        v-if="responseToast"
+        v-model:show="responseToastVisible"
+        :title="responseToast.title"
+        :description="responseToast.description"
+        type="success"
     />
 
     <!-- Anfrage Arbeitszeitänderung -->
@@ -219,11 +291,12 @@
             start_of_shift: shift.start_of_shift ?? (shift._day ? formatDateDMYForModal(shift._day) : null)
         }"
         @close="showRequestWorkTimeChangeModal = false"
+        @submitted="locallyRequestedTimeChange = true"
     />
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, defineAsyncComponent } from 'vue'
 import { router, usePage } from '@inertiajs/vue3'
 import { IconCalendarMonth, IconClockEdit, IconLock } from '@tabler/icons-vue'
 import ShiftNoteComponent from '@/Layouts/Components/ShiftNoteComponent.vue'
@@ -235,6 +308,15 @@ import { usePermission } from "@/Composeables/Permission.js";
 import {useShiftPlanLookups} from "@/Composeables/useShiftPlanLookups.js";
 import ShiftConfirmationResponseModal from '@/Layouts/Components/ShiftPlanComponents/ShiftConfirmationResponseModal.vue'
 import { useShiftWorkerConfirmation } from '@/Composeables/useShiftWorkerConfirmation.js'
+import { useTranslation } from '@/Composeables/Translation.js'
+import dayjs from 'dayjs'
+
+const translate = useTranslation()
+
+// Toast nur laden, wenn tatsächlich eine Zu-/Absage gesendet wurde (viele Karten pro Seite)
+const NotificationToast = defineAsyncComponent({
+    loader: () => import('@/Artwork/Feedback/NotificationToast.vue'),
+})
 
 const { backgroundColorWithOpacity, getHighContrastPercent, getTextColorBasedOnBackground } = useColorHelper()
 const percentage = computed(() => getHighContrastPercent(
@@ -248,7 +330,14 @@ const props = defineProps({
     project: { type: [Object, null], required: false, default: null },
     eventType: { type: [Object, null], required: false, default: null },
     firstProjectShiftTabId: { type: Number, required: true },
-    userToEditId: { type: Number, required: true }
+    userToEditId: { type: Number, required: true },
+    /**
+     * Optional: offene Zeitanpassungs-Anfrage der eigenen Person zu dieser Schicht
+     * (true oder Request-Objekt). Alternativ liest die Karte
+     * shift.pending_work_time_change_request, shift.work_time_change_requests[]
+     * oder page.props.pendingWorkTimeChangeRequests[] (shift_id/status/user_id).
+     */
+    pendingWorkTimeChangeRequest: { type: [Boolean, Object], required: false, default: null },
 })
 
 const { resolveCraft } = useShiftPlanLookups();
@@ -256,44 +345,129 @@ const resolvedCraft = computed(() => props.shift?.craft ?? resolveCraft(props.sh
 
 const showRequestWorkTimeChangeModal = ref(false)
 
-// Icon-Zeile im Header nur rendern, wenn mindestens ein Icon sichtbar ist
-// (Bedingungen spiegeln die v-ifs der einzelnen Icons/Buttons)
-const hasHeaderIcons = computed(() =>
-    props.shift.is_committed
-    || props.shift.in_workflow
-    || !!props.project
-    || (props.userToEditId === usePage().props.auth.user.id && props.type === 'user')
-)
 const hasIndivTime = ref(false)
 // 'accept' | 'decline' | null — steuert das Antwort-Modal (Kommentar optional)
 const responseModalMode = ref(null)
 
-const { isEnabled: confirmationEnabled, respond: respondToShift, getConfirmationInfo } = useShiftWorkerConfirmation()
+const { isEnabled: confirmationEnabled, isEligible, respond: respondToShift, getConfirmationInfo } = useShiftWorkerConfirmation()
 
 const ownWorker = computed(() => (props.shift.workers || []).find(
     w => w.type === props.type && w.id === props.userToEditId
 ) ?? null)
 
-// Buttons nur im EIGENEN Einsatzplan (die Komponente rendert auch fremde Pläne
-// für Planer:innen) und nur an festgeschriebenen Schichten.
+// Funktionsname kommt aus dem Payload (EventService::buildWorkers setzt
+// pivot.shift_qualification_name aus einem Bulk-Lookup) — kein Lookup im Frontend.
+const ownQualificationName = computed(() => ownWorker.value?.pivot?.shift_qualification_name ?? null)
+const breakMinutes = computed(() => {
+    const value = props.shift?.break_minutes
+    if (value === null || value === undefined || value === '') return null
+    return Number(value)
+})
+
+const isOwnPlan = computed(() => props.type === 'user' && props.userToEditId === usePage().props.auth.user.id)
+
+// Person nimmt am Zu-/Absage-Flow teil (Recht „Darf Schichten annehmen/ablehnen",
+// Flag aus dem Backend) — ohne das Recht weder Buttons, Hinweise noch Status
+const ownEligible = computed(() => isEligible(ownWorker.value))
+
+// Toast nach gesendeter Zu-/Absage; Titel/Beschreibung sind Übersetzungs-Keys
+// (NotificationToast übersetzt selbst).
+const responseToast = ref(null)
+const responseToastVisible = ref(false)
+
+// Stellvertretende Erfassung: Planer:innen/Admins sehen fremde Pläne und dürfen
+// für berechtigte Personen genauso antworten wie die Person selbst (Backend:
+// Proxy nur mit „Schichten planen", Admins über Gate::before).
+const canRespondAsProxy = computed(() => can('can plan shifts') || hasAdminRole())
+
+// Buttons im eigenen Einsatzplan oder stellvertretend (Planer:in/Admin), auch an
+// vorläufigen Schichten, nur für Personen mit dem Recht.
 const showOwnConfirmationControls = computed(() =>
     confirmationEnabled()
-    && props.shift.is_committed
+    && ownEligible.value
     && props.type === 'user'
-    && props.userToEditId === usePage().props.auth.user.id
+    && (isOwnPlan.value || canRespondAsProxy.value)
     && !!ownWorker.value?.pivot?.id
 )
 
+// Name der Person fürs Modal, wenn stellvertretend geantwortet wird
+const proxyWorkerName = computed(() => {
+    if (isOwnPlan.value) return null
+    const w = ownWorker.value
+    return w?.name || [w?.first_name, w?.last_name].filter(Boolean).join(' ') || null
+})
+
 // Auch read-only sichtbar (Planer:in schaut fremden Plan an); getConfirmationInfo
-// prüft bereits Feature-Setting + vorhandenen Status.
-const ownConfirmationInfo = computed(() =>
-    props.shift.is_committed ? getConfirmationInfo(ownWorker.value) : null
-)
+// prüft bereits Feature-Setting + Recht und liefert „angefragt", solange die
+// Zuweisung unbeantwortet ist (auch vorläufig).
+const ownConfirmationInfo = computed(() => getConfirmationInfo(ownWorker.value, props.shift))
+
+// (1) Zusage nach Zeitänderung zurückgesetzt: ShiftWorkerConfirmationService::resetConfirmation
+// nullt alle confirmation_*-Felder – ein zurückgesetzter Status ist im Pivot daher nicht
+// von "nie beantwortet" zu unterscheiden. Der Badge erwartet deshalb ein Backend-Feld
+// pivot.confirmation_reset_at (Zeitstempel) bzw. pivot.confirmation_reset (bool).
+const confirmationResetInfo = computed(() => {
+    const pivot = ownWorker.value?.pivot
+    if (!confirmationEnabled() || !ownEligible.value || !pivot || pivot.confirmation_status) return null
+    const resetAt = pivot.confirmation_reset_at ?? null
+    const resetFlag = pivot.confirmation_reset === true || pivot.confirmation_was_reset === true
+    if (!resetAt && !resetFlag) return null
+    const date = resetAt ? dayjs(resetAt).format('DD.MM.YYYY') : null
+    return {
+        date,
+        tooltip: date
+            ? translate('The time of this shift was changed on {date}. Your previous reply was reset.', { date })
+            : translate('The time of this shift was changed. Your previous reply was reset.'),
+    }
+})
+
+// (2) Offene Zeitanpassungs-Anfrage der eigenen Person zu dieser Schicht.
+// Nach dem Absenden im Modal sofort sichtbar (lokales Flag), sonst aus dem Payload.
+const locallyRequestedTimeChange = ref(false)
+const hasPendingTimeChangeRequest = computed(() => {
+    if (!isOwnPlan.value) return false
+    if (locallyRequestedTimeChange.value) return true
+    const explicit = props.pendingWorkTimeChangeRequest
+    if (explicit === true) return true
+    if (explicit && typeof explicit === 'object') return (explicit.status ?? 'pending') === 'pending'
+
+    const shift = props.shift
+    if (shift?.pending_work_time_change_request) return true
+    const me = Number(usePage().props.auth.user.id)
+    const isOwnPending = (r) => r && typeof r === 'object'
+        && (r.status ?? 'pending') === 'pending'
+        && (r.user_id === undefined || r.user_id === null || Number(r.user_id) === me)
+
+    const perShift = Array.isArray(shift?.work_time_change_requests)
+        ? shift.work_time_change_requests
+        : (Array.isArray(shift?.workTimeChangeRequests) ? shift.workTimeChangeRequests : null)
+    if (perShift) return perShift.some(isOwnPending)
+
+    const pageList = usePage().props.pendingWorkTimeChangeRequests
+    if (Array.isArray(pageList)) {
+        return pageList.some((r) => (typeof r === 'object' && r !== null)
+            ? Number(r.shift_id) === Number(shift?.id) && isOwnPending(r)
+            : Number(r) === Number(shift?.id))
+    }
+    return false
+})
 
 const submitResponse = (comment) => {
     const status = responseModalMode.value === 'accept' ? 'accepted' : 'declined'
     responseModalMode.value = null
-    respondToShift(ownWorker.value.pivot.id, status, comment)
+    respondToShift(ownWorker.value.pivot.id, status, comment, {
+        onSuccess: () => {
+            responseToast.value = status === 'accepted'
+                ? { title: 'Acceptance sent', description: '' }
+                : {
+                    title: 'Decline sent',
+                    description: isOwnPlan.value
+                        ? 'You remain scheduled until the plan is changed.'
+                        : 'The person remains scheduled until the plan is changed.',
+                }
+            responseToastVisible.value = true
+        },
+    })
 }
 
 const canAccessProject = computed(() => {

@@ -32,6 +32,7 @@ use Spatie\Activitylog\Traits\LogsActivity;
  * @property int $group_id
  * @property string $description
  * @property int $is_group
+ * @property string|null $icon
  * @property string $created_at
  * @property string $updated_at
  */
@@ -60,6 +61,7 @@ class MoneySource extends Model
         'source_name',
         'description',
         'is_group',
+        'icon',
         'users',
         'group_id',
         'sub_money_source_ids',

@@ -133,9 +133,9 @@ class ServiceProviderController extends Controller
     {
         $this->authorize('updateTerms', ServiceProvider::class);
 
-        $serviceProvider->update($request->only([
-            'salary_per_hour',
-            'salary_description',
+        $serviceProvider->update($request->validate([
+            'salary_per_hour' => 'nullable|integer|min:0|max:100000',
+            'salary_description' => 'nullable|string|max:5000',
         ]));
 
         $serviceProvider->syncToCrm();
@@ -209,9 +209,18 @@ class ServiceProviderController extends Controller
         return Redirect::back();
     }
 
+    /**
+     * @throws AuthorizationException
+     */
     public function assignCraftsBulk(ServiceProvider $serviceProvider, Request $request): RedirectResponse
     {
-        $craftsToAssign = Craft::whereIn('id', $request->get('craftIds'))->get();
+        $this->authorize('updateWorkProfile', ServiceProvider::class);
+
+        $validated = $request->validate([
+            'craftIds' => ['nullable', 'array', 'max:100'],
+            'craftIds.*' => ['integer', 'exists:crafts,id'],
+        ]);
+        $craftsToAssign = Craft::whereIn('id', $validated['craftIds'] ?? [])->get();
 
         foreach ($craftsToAssign as $craft) {
             if (!$serviceProvider->assignedCrafts->contains($craft)) {

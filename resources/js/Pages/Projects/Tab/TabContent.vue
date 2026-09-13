@@ -17,7 +17,8 @@
                 @close="showInviteModal = false"
             />
             -->
-            <div v-for="(component, idx) in currentTab.components" :key="component?.id ?? component?.component?.id ?? idx" :class="removeML(component.component?.type)">
+            <div v-for="(component, idx) in currentTab.components" :key="component?.id ?? component?.component?.id ?? idx" :class="outerWidthClass(component.component?.type)">
+                <div :class="innerWidthClass(component.component?.type)">
                 <Component
                     v-if="canSeeComponent(component.component) && componentMapping[component.component?.type]"
                     :is="componentMapping[component.component?.type]"
@@ -54,6 +55,7 @@
                     :component="component"
                     :materials="headerObject.materials"
                 />
+                </div>
             </div>
         </div>
 
@@ -258,19 +260,31 @@ provide('first_project_budget_tab_id', props.first_project_budget_tab_id);
 const show = ref(false);
 const currentSideBarTab = ref(0);
 
-const removeML = (componentType) => {
-    if (
-        componentType === 'CalendarTab' ||
-        componentType === 'ShiftTab' ||
-        componentType === 'BudgetTab' ||
-        componentType === 'ChecklistComponent' ||
-        componentType === 'ChecklistAllComponent' ||
-        componentType === 'BulkBody'
-    ) {
-        return '';
-    } else {
-        return 'artwork-container !pb-0 !mb-0 !mt-0';
-    }
+/*
+ * Designkonzept „Ankerlinie = Seitenkante" (linksverankertes Layout):
+ * Alles hängt an EINER linken Ankerlinie neben der Sidebar. Drei Breitenstufen:
+ * - Werkzeuge (Kalender/Schichten/Budget/Terminliste) laufen IMMER vollbreit bis
+ *   zum rechten Viewport-Rand — auch neben anderen Komponenten auf dem Tab. Sie
+ *   bekommen dasselbe Seitenpadding (artwork-anchored-page), damit ihre linke
+ *   Kante mit Header und Spalte fluchtet.
+ * - Spaltenbreite (artwork-anchored-column, 1536px-Deckel) für Tabellen/Listen/Dokumente.
+ * - Lesebreite (max-w-2xl innerhalb der Spalte) für Text-/Formular-Komponenten.
+ * Die Breite gehört dem Layout, nie der Komponente — Komponenten zentrieren sich
+ * nicht selbst und setzen keine eigenen Außenbreiten oder Seitenpaddings.
+ */
+const TOOL_COMPONENT_TYPES = ['CalendarTab', 'ShiftTab', 'BudgetTab', 'BulkBody'];
+const PROSE_COMPONENT_TYPES = [
+    'TextField', 'TextArea', 'Title', 'Checkbox', 'DropDown', 'Link', 'LinkList',
+    'ProjectStateComponent', 'ProjectBudgetDeadlineComponent', 'ArtistNameDisplayComponent',
+    'ProjectBasicDataDisplayComponent', 'ProjectCostCenterDisplayComponent', 'ProjectAttributesComponent',
+];
+
+const outerWidthClass = (componentType) => {
+    return TOOL_COMPONENT_TYPES.includes(componentType) ? 'artwork-anchored-page' : 'artwork-anchored-column';
+};
+
+const innerWidthClass = (componentType) => {
+    return PROSE_COMPONENT_TYPES.includes(componentType) ? 'max-w-2xl' : '';
 };
 
 onMounted(() => {

@@ -32,11 +32,23 @@ final class UserOperationPlanAuthorizationTest extends FeatureTestCase
     }
 
     #[Test]
-    public function user_without_any_permission_can_view_own_plan(): void
+    public function user_without_own_roster_permission_cannot_view_own_plan(): void
     {
-        // Eigener Einsatzplan ist immer einsehbar; "can view own roster" gated nur
-        // noch den Menüpunkt "Mein Einsatzplan" im Frontend.
+        // "can view own roster" gated nicht mehr nur den Menüpunkt, sondern auch
+        // den Zugriff auf den eigenen Einsatzplan (Seite + Konto-Tab).
         $user = User::factory()->create();
+        $this->actingAs($user);
+
+        $this->get(route('user.operationPlan', $user))->assertForbidden();
+    }
+
+    #[Test]
+    public function foreign_roster_permissions_also_open_the_own_plan(): void
+    {
+        // Wer fremde Einsatzpläne sehen darf, sieht auch den eigenen — Dienstplan-
+        // Sichtrechte schließen den eigenen Plan ein.
+        $user = User::factory()->create();
+        $this->givePermission($user, PermissionEnum::VIEW_SHIFT_PLAN);
         $this->actingAs($user);
 
         $this->get(route('user.operationPlan', $user))->assertOk();
@@ -82,10 +94,9 @@ final class UserOperationPlanAuthorizationTest extends FeatureTestCase
         $response = $this->get(route('user.operationPlan', $user));
 
         $response->assertOk();
-        $this->assertSame([$committedShift->id], collect($response->inertiaProps('shifts'))->pluck('id')->all());
-
-        // daysWithData ist die tatsächliche Datenquelle des Renderings — auch dort
-        // darf die nicht festgeschriebene Schicht nicht auftauchen.
+        // daysWithData ist die einzige Datenquelle des Renderings (die frühere Prop „shifts" mit
+        // allen Schichten der Person entfiel in der Härtung) — die nicht festgeschriebene Schicht
+        // darf dort nicht auftauchen.
         $daysWithDataShiftIds = collect($response->inertiaProps('daysWithData'))
             ->flatMap(static fn(array $day) => collect($day['shifts'])->pluck('id'))
             ->all();
@@ -101,8 +112,18 @@ final class UserOperationPlanAuthorizationTest extends FeatureTestCase
         $this->givePermission($user, PermissionEnum::CAN_VIEW_OWN_UNCOMMITTED_SHIFTS);
         $this->actingAs($user);
 
-        $committedShift = Shift::factory()->create(['is_committed' => true]);
-        $uncommittedShift = Shift::factory()->create(['is_committed' => false]);
+        // Feste Daten im angezeigten Zeitraum: ohne explizites start_date erbt die Schicht den
+        // zufälligen Monatstag der Event-Factory und liegt nur manchmal in der aktuellen Woche.
+        $shiftAttributes = [
+            'event_id' => null,
+            'start_date' => now()->toDateString(),
+            'end_date' => now()->toDateString(),
+            'start' => '10:00',
+            'end' => '12:00',
+            'break_minutes' => 0,
+        ];
+        $committedShift = Shift::factory()->create($shiftAttributes + ['is_committed' => true]);
+        $uncommittedShift = Shift::factory()->create($shiftAttributes + ['is_committed' => false]);
         $qualification = ShiftQualification::factory()->create();
         $user->shifts()->attach([
             $committedShift->id => ['shift_qualification_id' => $qualification->id],
@@ -116,10 +137,11 @@ final class UserOperationPlanAuthorizationTest extends FeatureTestCase
         $response = $this->get(route('user.operationPlan', $user));
 
         $response->assertOk();
-        $this->assertEqualsCanonicalizing(
-            [$committedShift->id, $uncommittedShift->id],
-            collect($response->inertiaProps('shifts'))->pluck('id')->all()
-        );
+        $daysWithDataShiftIds = collect($response->inertiaProps('daysWithData'))
+            ->flatMap(static fn(array $day) => collect($day['shifts'])->pluck('id'))
+            ->all();
+        $this->assertContains($committedShift->id, $daysWithDataShiftIds);
+        $this->assertContains($uncommittedShift->id, $daysWithDataShiftIds);
     }
 
     #[Test]
@@ -238,11 +260,14 @@ final class UserOperationPlanAuthorizationTest extends FeatureTestCase
     }
 
     #[Test]
-    public function profile_shift_plan_tab_is_open_for_own_user_without_permissions(): void
+    public function profile_shift_plan_tab_of_own_user_requires_own_roster_permission(): void
     {
         $user = User::factory()->create();
         $this->actingAs($user);
 
+        $this->get(route('user.edit.shiftplan', $user))->assertForbidden();
+
+        $this->givePermission($user, PermissionEnum::CAN_VIEW_OWN_ROSTER);
         $this->get(route('user.edit.shiftplan', $user))->assertOk();
     }
 
@@ -325,6 +350,15 @@ final class UserOperationPlanAuthorizationTest extends FeatureTestCase
         $this->get(route('user.edit.shiftplan', $other))->assertForbidden();
         $this->get(route('user.operationPlan', $other))->assertForbidden();
         $this->post(route('user.shiftplan.export.monthly-pdf', $other))->assertForbidden();
+    }
+
+    #[Test]
+    public function monthly_pdf_export_of_own_plan_requires_own_roster_permission(): void
+    {
+        $user = User::factory()->create();
+        $this->actingAs($user);
+
+        $this->post(route('user.shiftplan.export.monthly-pdf', $user))->assertForbidden();
     }
 
     #[Test]

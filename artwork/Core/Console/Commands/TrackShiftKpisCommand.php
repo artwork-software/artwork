@@ -22,7 +22,13 @@ class TrackShiftKpisCommand extends Command
     {
         $this->info('Tracking shift KPIs...');
 
-        [$seasonStart, $seasonEnd] = $service->getSeasonBounds();
+        // Ohne (gültige) Spielzeit-Einstellung gilt das Kalenderjahr (Produktentscheidung) – kein Skip mehr
+        $season = $service->getSeason();
+        $seasonStart = $season['start'];
+        $seasonEnd = $season['end'];
+        if (!$season['configured']) {
+            $this->info("Playing time window not configured – using calendar year {$seasonStart->year}");
+        }
 
         $users = User::query()
             ->where('can_work_shifts', true)

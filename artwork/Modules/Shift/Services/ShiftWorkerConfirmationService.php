@@ -6,6 +6,7 @@ use Artwork\Modules\Notification\Enums\NotificationEnum;
 use Artwork\Modules\Notification\Services\NotificationService;
 use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\Shift\Models\ShiftWorker;
+use Artwork\Modules\Shift\Services\ShiftNotificationLinkService;
 use Artwork\Modules\User\Models\User;
 use Carbon\Carbon;
 use Illuminate\Auth\AuthManager;
@@ -58,6 +59,8 @@ class ShiftWorkerConfirmationService
             'confirmation_at' => null,
             'confirmation_by_user_id' => null,
             'confirmation_comment' => null,
+            // Karte im Einsatzplan zeigt "Zeit geaendert - bitte erneut zusagen"
+            'confirmation_reset_at' => now(),
         ]);
     }
 
@@ -159,7 +162,7 @@ class ShiftWorkerConfirmationService
                     'type' => 'string',
                     'title' => __('notification.keyWords.your_shift', [], $recipient->language)
                         . $shift->time_span_label,
-                    'href' => null,
+                    'href' => ShiftNotificationLinkService::shiftPlanForDate($shift->start_date ?? $shift->event_start_day),
                 ],
             ];
 
@@ -171,7 +174,7 @@ class ShiftWorkerConfirmationService
                         ['comment' => $comment],
                         $recipient->language
                     ),
-                    'href' => null,
+                    'href' => ShiftNotificationLinkService::shiftPlanForDate($shift->start_date ?? $shift->event_start_day),
                 ];
             }
 
@@ -183,7 +186,7 @@ class ShiftWorkerConfirmationService
                         ['userName' => $actor->full_name ?? $actor->name ?? ''],
                         $recipient->language
                     ),
-                    'href' => null,
+                    'href' => ShiftNotificationLinkService::shiftPlanForDate($shift->start_date ?? $shift->event_start_day),
                 ];
             }
 

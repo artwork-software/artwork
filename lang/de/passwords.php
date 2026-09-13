@@ -17,6 +17,6 @@ return [
     'reset'    => 'Das Passwort wurde zurückgesetzt!',
     'sent'     => 'Passworterinnerung wurde gesendet!',
     'token'    => 'Der Passwort-Wiederherstellungs-Schlüssel ist ungültig oder abgelaufen.',
-    'user'     => 'Es konnte leider kein Nutzer mit dieser E-Mail Adresse gefunden werden.',
-    'sentToUser' => 'Ein Link zum Zurücksetzen des Passworts wurde an Ihre E-Mail-Adresse gesendet.'
+    'user'     => 'Es konnte leider keine Person mit dieser E-Mail-Adresse gefunden werden.',
+    'sentToUser' => 'Ein Link zum Zurücksetzen des Passworts wurde an deine E-Mail-Adresse gesendet.'
 ];

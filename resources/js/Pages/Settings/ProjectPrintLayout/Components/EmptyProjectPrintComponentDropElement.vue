@@ -130,8 +130,11 @@ const onDrop = (event) => {
 
     const data = JSON?.parse(event.dataTransfer?.getData('application/json'));
 
-
-    console.log('onDrop', data);
+    // Bereits platzierte Komponente wird verschoben (Reihenfolge per Drag&Drop)
+    if (data.drop_type === 'placed_component') {
+        moveComponent(data);
+        return;
+    }
 
     if (props.type === 'body' && props.columnSize > 1 && !data.sidebar_enabled) {
         dropFeedback.value = "Fehler: Im Hauptteil-Bereich mit einer Spaltenanzahl größer als 1 sind keine speziellen Komponenten erlaubt.";
@@ -166,6 +169,35 @@ const onDrop = (event) => {
         }
     });
 
+};
+
+const moveComponent = (data) => {
+    if (props.type === 'body' && props.columnSize > 1 && !data.sidebar_enabled) {
+        dropFeedback.value = "Fehler: Im Hauptteil-Bereich mit einer Spaltenanzahl größer als 1 sind keine speziellen Komponenten erlaubt.";
+        showError.value = true;
+    }
+
+    if ((props.type === 'header' && !data.sidebar_enabled) || (props.type === 'footer' && !data.sidebar_enabled)) {
+        dropFeedback.value = "Fehler: Im \"Kopf\"- oder \"Fuß\"-Bereich sind keine speziellen Komponenten erlaubt.";
+        showError.value = true;
+    }
+
+    if (showError.value) {
+        dropOver.value = false;
+        return;
+    }
+
+    router.patch(route('project-print-layout.components.move', {printLayoutComponent: data.id}), {
+        type: props.type,
+        row: props.row,
+        col: props.col,
+    }, {
+        preserveState: true,
+        preserveScroll: true,
+        onSuccess: () => {
+            dropOver.value = false;
+        }
+    });
 };
 
 const addComponent = (component) => {

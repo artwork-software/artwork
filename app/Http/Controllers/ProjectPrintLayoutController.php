@@ -29,6 +29,7 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use stdClass;
 
@@ -397,6 +398,38 @@ class ProjectPrintLayoutController extends Controller
 
     public function destroyComponent(PrintLayoutComponents $printLayoutComponent){
         $printLayoutComponent->delete();
+    }
+
+    public function moveComponent(PrintLayoutComponents $printLayoutComponent, Request $request): void
+    {
+        $type = $request->get('type');
+        $row = (int) $request->get('row');
+        $position = (int) $request->get('col');
+
+        DB::transaction(function () use ($printLayoutComponent, $type, $row, $position): void {
+            // Belegte Ziel-Zelle: Positionen tauschen statt überschreiben
+            $occupant = PrintLayoutComponents::query()
+                ->where('project_print_layout_id', $printLayoutComponent->project_print_layout_id)
+                ->where('type', $type)
+                ->where('row', $row)
+                ->where('position', $position)
+                ->where('id', '!=', $printLayoutComponent->id)
+                ->first();
+
+            if ($occupant) {
+                $occupant->update([
+                    'type' => $printLayoutComponent->type,
+                    'row' => $printLayoutComponent->row,
+                    'position' => $printLayoutComponent->position,
+                ]);
+            }
+
+            $printLayoutComponent->update([
+                'type' => $type,
+                'row' => $row,
+                'position' => $position,
+            ]);
+        });
     }
 
     public function updateHeaderNote(Request $request, ProjectPrintLayout $projectPrintLayout){

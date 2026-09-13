@@ -83,6 +83,7 @@
                 title="What is the playing time window for?"
                 :paragraphs="[
                     'This period is the default date range of the BI dashboards, the BI exports and the shift KPI evaluation.',
+                    'The playing time window also drives the shift plan key figures (free Sundays, 1.5-day combinations, days off) in the staff info window. The start must be before the end.',
                 ]"
             />
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
@@ -93,6 +94,7 @@
                         @focusout="updateCommunicationAndLegal"
                         rows="4"
                         type="date"
+                        :error="showInvalidPlayingTimeWindowErrorText ? $t('The playing time window start must be before its end.') : ''"
                         id="playingTimeWindowStart"/>
                 </div>
                 <div class="">
@@ -102,6 +104,7 @@
                         @focusout="updateCommunicationAndLegal"
                         rows="4"
                         type="date"
+                        :error="showInvalidPlayingTimeWindowErrorText ? $t('The playing time window start must be before its end.') : ''"
                         id="playingTimeWindowEnd"/>
                 </div>
 
@@ -187,7 +190,8 @@ export default defineComponent({
             showInvalidInvitationEmailAdressErrorText: false,
             showInvalidBusinessEmailAddressErrorText: false,
             showInvalidImpressumLinkErrorText: false,
-            showInvalidPrivacyLinkErrorText: false
+            showInvalidPrivacyLinkErrorText: false,
+            showInvalidPlayingTimeWindowErrorText: false
         }
     },
     methods: {
@@ -205,11 +209,18 @@ export default defineComponent({
             this.showInvalidPrivacyLinkErrorText =
                 this.mailForm.privacyLink !== '' && !urlRegex.test(this.mailForm.privacyLink);
 
+            // Spielzeit: Start muss vor dem Ende liegen (steuert BI-Zeitraum UND Dienstplan-Kennzahlen)
+            this.showInvalidPlayingTimeWindowErrorText =
+                !!this.mailForm.playingTimeWindowStart &&
+                !!this.mailForm.playingTimeWindowEnd &&
+                this.mailForm.playingTimeWindowStart >= this.mailForm.playingTimeWindowEnd;
+
             if (
                 this.showInvalidInvitationEmailAdressErrorText ||
                 this.showInvalidBusinessEmailAddressErrorText ||
                 this.showInvalidImpressumLinkErrorText ||
-                this.showInvalidPrivacyLinkErrorText
+                this.showInvalidPrivacyLinkErrorText ||
+                this.showInvalidPlayingTimeWindowErrorText
             ) {
                 return;
             }

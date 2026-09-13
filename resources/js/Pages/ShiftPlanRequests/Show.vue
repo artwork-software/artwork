@@ -16,8 +16,14 @@
             <ShiftPlanRequestHeader
                 :request="request"
                 :is-my-request="isMyRequest"
+                :can-withdraw="canWithdraw(request)"
+                :can-resubmit="canResubmit(request) && !hasPendingSuccessor"
+                :processing="processing"
                 @accept="acceptRequest"
                 @start-reject="startReject"
+                @withdraw="withdrawModalOpen = true"
+                @resubmit="resubmit(request)"
+                @go-to-week="goToWeekInShiftPlan(request)"
             />
 
             <ShiftPlanRequestWeekNavigator
@@ -52,7 +58,9 @@
                     :selected-days="rejectState.selectedDays"
                     :shift-selections="rejectState.shiftSelections"
                     :is-comparison-focus="highlightedRowKey === row.key"
+                    :can-edit-violations="canEditViolations"
                     @open-history="openHistoryDrawer"
+                    @open-violation="openViolationEditModal"
                 />
 
                 <div v-if="!rows.length" class="text-center text-sm text-text-subtle">
@@ -77,13 +85,15 @@
             :request="request"
             :shift="selectedShift"
             :is-my-request="isMyRequest"
+            :processing="processing"
             @close="closeHistoryDrawer"
             @reject-change="rejectRequestChange"
         />
 
         <AcceptShiftPlanRequestModal
             v-if="acceptModalOpen"
-            @close="acceptModalOpen = false"
+            :processing="processing === 'accept'"
+            @close="closeAcceptModal"
             @confirm="confirmAccept"
         />
 
@@ -99,6 +109,7 @@
             :has-any-selection="hasAnySelection"
             :can-confirm-reject="canConfirmReject"
             :error-messages="rejectState.errorMessages"
+            :processing="processing === 'reject'"
             @toggle-day="toggleDaySelection"
             @toggle-shift="toggleShiftSelection"
             @update-day-reason="updateDayReason"
@@ -107,6 +118,49 @@
             @cancel="cancelReject"
             @confirm="confirmReject"
             @close="cancelReject"
+        />
+
+        <!-- Regelverstoß aus der Prüfansicht bearbeiten (gleicher Payload wie im Hauptplan) -->
+        <ViolationEditModal
+            v-if="canEditViolations && selectedViolation"
+            :violation="selectedViolation"
+            @close="selectedViolation = null"
+            @updated="handleViolationUpdated"
+        />
+
+        <!-- Antragsteller*in: Anfrage zurückziehen (Bestätigung) -->
+        <ArtworkBaseModal
+            v-if="withdrawModalOpen"
+            :title="$t('Withdraw request')"
+            :description="weekLabel(request)"
+            @close="withdrawModalOpen = false"
+        >
+            <div class="space-y-4">
+                <BaseAlertComponent
+                    type="warning"
+                    use-translation
+                    message="The shifts of this request are released again and can be resubmitted later."
+                />
+                <div class="flex items-center justify-between">
+                    <BaseUIButton type="button" is-cancel-button :label="$t('Cancel')" @click="withdrawModalOpen = false" />
+                    <BaseUIButton
+                        type="button"
+                        is-delete-button
+                        icon="IconArrowBackUp"
+                        :label="$t('Withdraw request')"
+                        :processing="processing === 'withdraw'"
+                        @click="confirmWithdraw"
+                    />
+                </div>
+            </div>
+        </ArtworkBaseModal>
+
+        <NotificationToast
+            v-if="toast"
+            v-model:show="toastVisible"
+            :title="toast.title"
+            :description="toast.description"
+            :type="toast.type"
         />
     </AppLayout>
 </template>
@@ -123,11 +177,44 @@ import ShiftPlanRequestWeekNavigator from './components/ShiftPlanRequestWeekNavi
 import ShiftHistoryDrawer from './components/ShiftHistoryDrawer.vue';
 import RejectShiftPlanRequestModal from './components/RejectShiftPlanRequestModal.vue';
 import AcceptShiftPlanRequestModal from './components/AcceptShiftPlanRequestModal.vue';
+import ViolationEditModal from '@/Pages/Shifts/Components/ViolationEditModal.vue';
+import ArtworkBaseModal from '@/Artwork/Modals/ArtworkBaseModal.vue';
+import BaseAlertComponent from '@/Components/Alerts/BaseAlertComponent.vue';
+import BaseUIButton from '@/Artwork/Buttons/BaseUIButton.vue';
+import NotificationToast from '@/Artwork/Feedback/NotificationToast.vue';
 import {useShiftPlanRequest} from './components/useShiftPlanRequest.js';
+import {useShiftPlanRequestActions} from './components/useShiftPlanRequestActions.js';
 import {useI18n} from 'vue-i18n';
 import {useShiftPlanRequestWeekNavigation} from './components/useShiftPlanRequestWeekNavigation.js';
 
 const {t} = useI18n();
+
+// Antragsteller*in: zurückziehen (pending) / erneut einreichen + zur KW (rejected)
+const {
+    canWithdraw,
+    canResubmit,
+    weekLabel,
+    toast,
+    toastVisible,
+    processing,
+    withdraw,
+    resubmit,
+    goToWeekInShiftPlan,
+} = useShiftPlanRequestActions();
+
+const withdrawModalOpen = ref(false);
+const confirmWithdraw = () => {
+    withdraw(props.request, {
+        onSuccess: () => {
+            withdrawModalOpen.value = false;
+            // Die Anfrage existiert nicht mehr – zurück zur Übersicht der eigenen Anfragen,
+            // sofern das Backend nicht ohnehin dorthin weitergeleitet hat.
+            if (route().current('shift-plan-requests.my.show') || route().current('shift-plan-requests.show')) {
+                router.visit(route('shift-plan-requests.my.index'));
+            }
+        },
+    });
+};
 
 const props = defineProps({
     request: {type: Object, required: true},
@@ -139,9 +226,25 @@ const props = defineProps({
     isMyRequest: {type: Boolean, required: false, default: false},
     navigation: {type: Object, default: () => ({previous: null, next: null})},
     shiftQualifications: {type: Array, default: () => []},
-    // user_id => { 'YYYY-MM-DD' => [ShiftRuleViolation, …] } — Warnungen gibt es nur für User
+    // user_id => { 'YYYY-MM-DD' => [ShiftRuleViolation, …] } — Regelverstöße gibt es nur für User
     shiftRuleViolations: {type: Object, default: () => ({})},
+    // Verstöße aus der Prüfansicht bearbeiten: can plan shifts + Regeln bearbeiten (serverseitig ermittelt)
+    canEditViolations: {type: Boolean, default: false},
+    hasPendingSuccessor: {type: Boolean, default: false},
 });
+
+const selectedViolation = ref(null);
+
+function openViolationEditModal(violation) {
+    if (!props.canEditViolations) return;
+    selectedViolation.value = violation;
+}
+
+// Nach Speichern/Ignorieren: nur die Verstöße neu laden (Inertia partial reload), Marker aktualisieren sich
+function handleViolationUpdated() {
+    selectedViolation.value = null;
+    router.reload({only: ['shiftRuleViolations'], preserveScroll: true});
+}
 
 const requestShowUrl = (id) => route(
     props.isMyRequest ? 'shift-plan-requests.my.show' : 'shift-plan-requests.show',
@@ -235,11 +338,14 @@ const updateGlobalComment = (val) => {
 };
 
 const startReject = () => {
+    if (processing.value) return;
     rejectState.active = true;
     rejectState.modalOpen = true;
     rejectState.errorMessages = [];
 };
 const cancelReject = () => {
+    // Während der Ablehnungs-Request läuft, bleibt das Modal offen (kein Doppel-/Gegen-Klick).
+    if (processing.value === 'reject') return;
     rejectState.active = false;
     rejectState.modalOpen = false;
     rejectState.globalComment = '';
@@ -251,7 +357,7 @@ const cancelReject = () => {
 };
 
 const confirmReject = () => {
-    if (!canConfirmReject.value) return;
+    if (!canConfirmReject.value || processing.value) return;
 
     const parseUniqueKey = (key) => {
         const parts = key.split('-');
@@ -284,6 +390,7 @@ const confirmReject = () => {
     };
 
     rejectState.errorMessages = [];
+    processing.value = 'reject';
 
     router.post(
         route('shift-plan-requests.reject', props.request.id),
@@ -293,6 +400,9 @@ const confirmReject = () => {
             onSuccess: () => {
                 rejectState.modalOpen = false;
                 rejectState.active = false;
+            },
+            onFinish: () => {
+                processing.value = null;
             },
             onError: (errors) => {
                 console.error('Reject error', errors);
@@ -310,9 +420,17 @@ const confirmReject = () => {
 // Akzeptieren: Modal mit optionalem Hinweis an die anfragende Person
 const acceptModalOpen = ref(false);
 const acceptRequest = () => {
+    if (processing.value) return;
     acceptModalOpen.value = true;
 };
+const closeAcceptModal = () => {
+    // Während der Request läuft, bleibt das Modal offen (kein Doppel-/Gegen-Klick).
+    if (processing.value === 'accept') return;
+    acceptModalOpen.value = false;
+};
 const confirmAccept = (comment) => {
+    if (processing.value) return;
+    processing.value = 'accept';
     router.post(
         route('shift-plan-requests.accept', props.request.id),
         {comment: comment?.trim() || null},
@@ -322,6 +440,9 @@ const confirmAccept = (comment) => {
                 acceptModalOpen.value = false;
             },
             onError: (errors) => console.error('Error:', errors),
+            onFinish: () => {
+                processing.value = null;
+            },
         }
     );
 };
@@ -665,6 +786,8 @@ const selectedShift = computed(() => props.shifts.find(s => s.id === historyDraw
 
 // Stub-Funktion für Einzel-Änderung Reject (Drawer)
 const rejectRequestChange = (change) => {
+    if (processing.value) return;
+    processing.value = 'revert';
     router.patch(
         route('shift-plan-requests.change.revert', {
             shiftPlanRequest: props.request.id,
@@ -678,6 +801,9 @@ const rejectRequestChange = (change) => {
             preserveState: true,
             onError: (errors) => {
                 console.error('Fehler beim Zurücksetzen der Änderung:', errors);
+            },
+            onFinish: () => {
+                processing.value = null;
             },
         },
     );

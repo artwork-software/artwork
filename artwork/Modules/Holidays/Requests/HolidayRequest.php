@@ -2,7 +2,9 @@
 
 namespace Artwork\Modules\Holidays\Requests;
 
+use Artwork\Modules\Holidays\Models\Holiday;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class HolidayRequest extends FormRequest
 {
@@ -21,6 +23,7 @@ class HolidayRequest extends FormRequest
             'color' => ['nullable', 'string'],
             'yearly' => ['required', 'boolean'],
             'treatAsSpecialDay' => ['nullable', 'boolean'],
+            'type' => ['nullable', 'string', Rule::in(Holiday::TYPES)],
         ];
     }
 }

@@ -5,9 +5,11 @@ namespace App\Exceptions;
 use Artwork\Modules\Project\Models\Project;
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
 use Throwable;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
+use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 
 
 class Handler extends ExceptionHandler
@@ -34,6 +36,17 @@ class Handler extends ExceptionHandler
     public function render($request, Throwable $e)
     {
         if (!$request->expectsJson()) {
+            // 403 innerhalb der App (Inertia-Navigation) als App-Seite statt nackter Laravel-Fehlerseite
+            $status = $e instanceof HttpExceptionInterface ? $e->getStatusCode() : null;
+            if (($status === 403 || $e instanceof AuthorizationException) && $request->header('X-Inertia')) {
+                return Inertia::render('Errors/ProjectError', [
+                    'status' => 403,
+                    'title' => 'No permission',
+                    'message' => 'You do not have permission to open this page. Ask an admin for the required right.',
+                    'homeHref' => Route::has('dashboard') ? route('dashboard') : url('/'),
+                ])->toResponse($request)->setStatusCode(403);
+            }
+
             if ($e instanceof ModelNotFoundException && $e->getModel() === Project::class) {
                 $projectsIndexHref = Route::has('projects.index') ? route('projects.index') : url('/projects');
                 $homeHref = Route::has('dashboard') ? route('dashboard') : url('/');

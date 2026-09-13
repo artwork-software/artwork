@@ -47,14 +47,55 @@ export function useColorHelper() {
         return isDark ? '#FFFFFF' : '#000000';
     }
 
+    // Schrift auf Farbfläche: Weiß nur, wenn Weiß nach WCAG den höheren Kontrast hat als Schwarz.
+    // Kontrast = (L_hell + 0,05) / (L_dunkel + 0,05); der Vergleich kippt bei relativer Luminanz
+    // L ≈ 0,179 (sqrt(0,0525) − 0,05). Darunter gewinnt Weiß, darüber Schwarz. Dieselbe Regel wie
+    // Spielplan-PDF und Tagesdienst-Bälle. Die frühere Helligkeitsschwelle 150 (0.299/0.587/0.114)
+    // setzte auf mittleren Blau-/Türkis-/Pinktönen bei „Hoher Kontrast" noch weiße Schrift, obwohl
+    // Schwarz dort den doppelten Kontrast hat (Befund Jannik 13.09.2026, Tagesansicht Dienstplan).
+    // Versteht rgb()/rgba() und Hex (#rgb, #rrggbb, #rrggbbaa — Alpha wird gegen Weiß verrechnet).
+    const DARK_LUMINANCE_THRESHOLD = 0.179;
     function isDarkColor(color) {
-        if (color.startsWith('rgb')) {
-            const rgb = color.match(/\d+/g).map(Number);
-            const [r, g, b] = rgb;
-            const luminance = (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255;
-            return luminance < 0.5;
+        const rgb = parseColorToRgb(color);
+        if (!rgb) return false;
+        return relativeLuminance(rgb) < DARK_LUMINANCE_THRESHOLD;
+    }
+
+    // WCAG 2.x relative Luminanz (sRGB-Gamma), 0 = Schwarz, 1 = Weiß
+    function relativeLuminance([r, g, b]) {
+        const [lr, lg, lb] = [r, g, b].map((v) => {
+            const c = v / 255;
+            return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+        });
+        return 0.2126 * lr + 0.7152 * lg + 0.0722 * lb;
+    }
+
+    function parseColorToRgb(color) {
+        if (typeof color !== 'string' || color === '') return null;
+        const value = color.trim();
+        if (value.startsWith('rgb')) {
+            const parts = value.match(/[\d.]+/g)?.map(Number) ?? [];
+            if (parts.length < 3) return null;
+            const alpha = parts.length >= 4 ? Math.min(1, Math.max(0, parts[3])) : 1;
+            return blendOverWhite(parts[0], parts[1], parts[2], alpha);
         }
-        return false;
+        let hex = value.replace(/^#/, '');
+        if (hex.length === 3) hex = hex.split('').map((c) => c + c).join('');
+        if (!/^[0-9a-f]{6}([0-9a-f]{2})?$/i.test(hex)) return null;
+        const r = parseInt(hex.slice(0, 2), 16);
+        const g = parseInt(hex.slice(2, 4), 16);
+        const b = parseInt(hex.slice(4, 6), 16);
+        const alpha = hex.length === 8 ? parseInt(hex.slice(6, 8), 16) / 255 : 1;
+        return blendOverWhite(r, g, b, alpha);
+    }
+
+    function blendOverWhite(r, g, b, alpha) {
+        if (alpha >= 1) return [r, g, b];
+        return [
+            Math.round((1 - alpha) * 255 + alpha * r),
+            Math.round((1 - alpha) * 255 + alpha * g),
+            Math.round((1 - alpha) * 255 + alpha * b),
+        ];
     }
 
     // former ColorHelper mixin: WCAG-gamma luminance (handles hex and rgb strings)

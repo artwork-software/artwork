@@ -109,7 +109,7 @@ export default {
     },
     computed: {
         canViewProviderInfo() {
-            return this.hasAdminRole() || this.can('can manage workers');
+            return this.hasAdminRole() || this.can('can manage workers') || this.can('can manage external workers');
         },
         providerAddress() {
             if (!this.provider) return '';

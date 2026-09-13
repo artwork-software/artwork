@@ -168,7 +168,8 @@
                                     </div>
                                     <button type="button"
                                             v-if="request.status !== 'approved' && !isMyRequest"
-                                            class="inline-flex items-center gap-1 rounded-full border border-danger-border bg-danger-surface px-2 py-0.5 text-[8px] font-medium text-danger hover:bg-danger-surface hover:border-danger-border transition"
+                                            :disabled="!!processing"
+                                            class="inline-flex items-center gap-1 rounded-full border border-danger-border bg-danger-surface px-2 py-0.5 text-[8px] font-medium text-danger hover:bg-danger-surface hover:border-danger-border transition disabled:opacity-50 disabled:cursor-not-allowed"
                                             @click.stop="$emit('reject-change', change)">
                                         <IconX class="h-3 w-3"/>
                                         {{ $t('Reject change') }}
@@ -290,6 +291,11 @@ const props = defineProps({
     open: {
         type: Boolean,
         default: false
+    },
+    // laufende Aktion der Seite ('revert' | 'accept' | 'reject' | …): sperrt „Änderung ablehnen"
+    processing: {
+        type: String,
+        default: null
     },
     shift: {
         type: Object,

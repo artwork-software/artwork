@@ -149,6 +149,7 @@
                                 :min="0"
                                 :step="1"
                             />
+                            <p class="mt-1 text-xs text-text-subtle">{{ $t('Used by the BI module as the seat capacity per performance (occupancy rate); projects can override it.') }}</p>
                         </div>
 
                         <div class="flex justify-center pt-8">

@@ -46,7 +46,9 @@
                 <tr>
                     <td></td>
                     @foreach($subPositionRow->cells as $columnCell)
-                        <td>
+                        @php $isTextColumn = in_array($columnCell->column->id, $data['textColumnIds'], true); @endphp
+                        {{-- KTO/KST/Beschreibung: data-type="s" hält führende Nullen ("04000") als Text --}}
+                        <td @if($isTextColumn) data-type="s" @endif>
                             @php
                                 $subPositionRowSumCellsCollection[$columnCell->column->id][] = $formulaService
                                     ->determineExcelColumn(
@@ -55,12 +57,10 @@
                                         $currentRowCount
                                     );
                             @endphp
-                            @if($columnCell->column->type === "empty")
-                                @if ($loop->index === 1 || $loop->index === 2 || $loop->index === 3)
-                                    {{ $columnCell->value }}
-                                @else
-                                    {{ (float) $columnCell->value }}
-                                @endif
+                            @if($isTextColumn)
+                                {{ $data['cellDisplayValues'][$columnCell->id] ?? $columnCell->value }}
+                            @elseif($columnCell->column->type === "empty")
+                                {{ (float) $columnCell->value }}
                             @elseif($columnCell->column->type === "sage")
                                 {{ (float) $columnCell->sage_value ?: 0 }}
                             @else
@@ -170,7 +170,9 @@
                 <tr>
                     <td></td>
                     @foreach($subPositionRow->cells as $columnCell)
-                        <td>
+                        @php $isTextColumn = in_array($columnCell->column->id, $data['textColumnIds'], true); @endphp
+                        {{-- KTO/KST/Beschreibung: data-type="s" hält führende Nullen ("04000") als Text --}}
+                        <td @if($isTextColumn) data-type="s" @endif>
                             @php
                                 $subPositionRowSumCellsCollection[$columnCell->column->id][] = $formulaService
                                     ->determineExcelColumn(
@@ -179,12 +181,10 @@
                                         $currentRowCount
                                     );
                             @endphp
-                            @if($columnCell->column->type === "empty")
-                                @if ($loop->index === 1 || $loop->index === 2 || $loop->index === 3)
-                                    {{ $columnCell->value }}
-                                @else
-                                    {{ (float) $columnCell->value }}
-                                @endif
+                            @if($isTextColumn)
+                                {{ $data['cellDisplayValues'][$columnCell->id] ?? $columnCell->value }}
+                            @elseif($columnCell->column->type === "empty")
+                                {{ (float) $columnCell->value }}
                             @elseif($columnCell->column->type === "sage")
                                 {{ (float) $columnCell->sage_value ?: 0 }}
                             @else
@@ -266,12 +266,16 @@
         <td align="right">SUM</td>
         @foreach($budgetTypeCostDeterminedCellsCollection as $columnId => $budgetTypeCostDeterminedCell)
             <td>
-                {{
-                    $formulaService->createSubtractionFormula(
-                        $budgetTypeEarningDeterminedCellsCollection[$columnId],
-                        $budgetTypeCostDeterminedCell
-                    )
-                }}
+                @if(isset($budgetTypeEarningDeterminedCellsCollection[$columnId]))
+                    {{
+                        $formulaService->createSubtractionFormula(
+                            $budgetTypeEarningDeterminedCellsCollection[$columnId],
+                            $budgetTypeCostDeterminedCell
+                        )
+                    }}
+                @else
+                    {{ '=-' . $budgetTypeCostDeterminedCell }}
+                @endif
             </td>
         @endforeach
     </tr>

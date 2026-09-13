@@ -26,6 +26,7 @@ class ContractModuleController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
+        $this->authorize('create', ContractModule::class);
 
         if (!Storage::exists("contract_modules")) {
             Storage::makeDirectory("contract_modules");
@@ -52,11 +53,15 @@ class ContractModuleController extends Controller
 
     public function download(ContractModule $module): StreamedResponse
     {
+        $this->authorize('view', $module);
+
         return Storage::download('contract_modules/' . $module->basename, $module->name);
     }
 
     public function destroy(ContractModule $module): RedirectResponse
     {
+        $this->authorize('delete', $module);
+
         $module->delete();
         return Redirect::route('contracts.index');
     }

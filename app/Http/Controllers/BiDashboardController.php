@@ -3,10 +3,7 @@
 namespace App\Http\Controllers;
 
 use Artwork\Modules\BusinessIntelligence\Services\BiDashboardService;
-use Artwork\Modules\BusinessIntelligence\Services\BiExportService;
-use Artwork\Modules\CostCenter\Models\CostCenter;
 use Artwork\Modules\Permission\Enums\PermissionEnum;
-use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Services\ProjectTabService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -16,7 +13,6 @@ class BiDashboardController extends Controller
 {
     public function __construct(
         private readonly BiDashboardService $biDashboardService,
-        private readonly BiExportService $biExportService,
         private readonly ProjectTabService $projectTabService
     ) {
     }
@@ -24,7 +20,7 @@ class BiDashboardController extends Controller
     public function index(Request $request): Response
     {
         abort_unless(
-            $request->user()->can(PermissionEnum::BI_DASHBOARD->value) || $request->user()->hasRole('admin'),
+            $request->user()->can(PermissionEnum::BI_DASHBOARD->value) || $request->user()->hasRole(\Artwork\Modules\Role\Enums\RoleEnum::ARTWORK_ADMIN->value),
             403
         );
 
@@ -34,6 +30,8 @@ class BiDashboardController extends Controller
             'compare_from' => ['nullable', 'date'],
             'compare_to' => ['nullable', 'date', 'after_or_equal:compare_from'],
             'compare' => ['nullable', 'in:none'],
+            // Sparten-Filter als echter Seitenfilter (Kacheln, Charts, Tabelle)
+            'category' => ['nullable', 'string', 'max:255'],
         ]);
 
         $data = $this->biDashboardService->getDashboardData(
@@ -41,34 +39,22 @@ class BiDashboardController extends Controller
             $validated['date_to'] ?? null,
             $validated['compare_from'] ?? null,
             $validated['compare_to'] ?? null,
-            ($validated['compare'] ?? null) === 'none'
+            ($validated['compare'] ?? null) === 'none',
+            $validated['category'] ?? null
         );
 
         $biTab = $this->projectTabService->findFirstProjectTabWithBusinessIntelligenceComponent();
 
         $canExport = $request->user()->can(PermissionEnum::BI_EXPORT->value)
-            || $request->user()->hasRole('admin');
+            || $request->user()->hasRole(\Artwork\Modules\Role\Enums\RoleEnum::ARTWORK_ADMIN->value);
 
         return Inertia::render('BusinessIntelligence/Dashboard', [
             'dashboard' => $data,
             'firstProjectTabId' => $biTab?->getAttribute('id')
                 ?? $this->projectTabService->getDefaultOrFirstProjectTab()?->getAttribute('id'),
             'biComponentInTab' => $biTab !== null,
-            'exportOptions' => $canExport ? $this->buildExportOptions() : null,
-        ]);
-    }
-
-    /**
-     * @return array<string, mixed>
-     */
-    private function buildExportOptions(): array
-    {
-        return array_merge($this->biExportService->exportConfigurationOptions(), [
-            'projects' => Project::query()
-                ->where('is_group', false)
-                ->orderBy('name')
-                ->get(['id', 'name', 'cost_center_id']),
-            'costCenters' => CostCenter::query()->orderBy('name')->get(['id', 'name']),
+            // Der Export-Dialog lädt seine Optionen selbst (bi.export.options) — hier nur das Recht
+            'canExportBiData' => $canExport,
         ]);
     }
 }

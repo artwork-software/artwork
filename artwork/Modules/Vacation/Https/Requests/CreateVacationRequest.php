@@ -4,6 +4,9 @@ namespace Artwork\Modules\Vacation\Https\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 
+/**
+ * @property mixed type          'vacation' | 'available' (Abwesenheit oder Verfügbarkeit)
+ */
 class CreateVacationRequest extends FormRequest
 {
     /**

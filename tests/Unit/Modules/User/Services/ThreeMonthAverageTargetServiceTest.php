@@ -12,15 +12,18 @@ use Tests\TestCase;
 
 final class ThreeMonthAverageTargetServiceTest extends TestCase
 {
+    /**
+     * Zieltag 21.07.2026 = Dienstag: Referenzfenster April–Juni, nur Dienstage zählen.
+     */
     #[Test]
     public function it_uses_only_the_three_completed_calendar_months(): void
     {
         $user = User::factory()->create();
-        $this->booking($user, '2026-03-31', 900);
-        $this->booking($user, '2026-04-10', 360);
-        $this->booking($user, '2026-05-10', 480);
-        $this->booking($user, '2026-06-10', 600);
-        $this->booking($user, '2026-07-01', 1200);
+        $this->booking($user, '2026-03-31', 900);  // Dienstag, aber vor dem Fenster
+        $this->booking($user, '2026-04-07', 360);  // Dienstag
+        $this->booking($user, '2026-05-12', 480);  // Dienstag
+        $this->booking($user, '2026-06-09', 600);  // Dienstag
+        $this->booking($user, '2026-07-07', 1200); // Dienstag, laufender Monat
 
         $service = app(ThreeMonthAverageTargetService::class);
 
@@ -32,16 +35,32 @@ final class ThreeMonthAverageTargetServiceTest extends TestCase
     }
 
     #[Test]
+    public function it_only_counts_the_same_weekday(): void
+    {
+        $user = User::factory()->create();
+        $this->booking($user, '2026-04-07', 300);  // Dienstag
+        $this->booking($user, '2026-04-08', 900);  // Mittwoch -> zählt nicht
+        $this->booking($user, '2026-05-13', 900);  // Mittwoch -> zählt nicht
+        $this->booking($user, '2026-06-09', 420);  // Dienstag
+
+        $service = app(ThreeMonthAverageTargetService::class);
+
+        $this->assertSame(360, $service->averageMinutesFor($user, Carbon::parse('2026-07-21'), 480));
+        // Mittwoch als Zieltag: nur die Mittwoche
+        $this->assertSame(900, $service->averageMinutesFor($user, Carbon::parse('2026-07-22'), 480));
+    }
+
+    #[Test]
     public function it_excludes_sickness_days_from_the_average(): void
     {
         $user = User::factory()->create();
-        $this->booking($user, '2026-04-10', 300);
-        $this->booking($user, '2026-05-10', 900);
+        $this->booking($user, '2026-04-14', 300); // Dienstag
+        $this->booking($user, '2026-05-12', 900); // Dienstag, krank
 
         Vacation::factory()->create([
             'vacationer_type' => User::class,
             'vacationer_id' => $user->id,
-            'date' => '2026-05-10',
+            'date' => '2026-05-12',
             'type' => 'NOT_AVAILABLE',
             'comment' => null,
         ]);
@@ -62,14 +81,27 @@ final class ThreeMonthAverageTargetServiceTest extends TestCase
     }
 
     #[Test]
+    public function it_falls_back_to_the_pattern_target_when_the_weekday_has_no_data(): void
+    {
+        $user = User::factory()->create();
+        $this->booking($user, '2026-04-08', 900); // Mittwoch
+        $this->booking($user, '2026-05-13', 900); // Mittwoch
+
+        $service = app(ThreeMonthAverageTargetService::class);
+
+        // Dienstag ohne Daten -> Muster-Soll des Dienstags (= volle Minderung)
+        $this->assertSame(468, $service->averageMinutesFor($user, Carbon::parse('2026-07-21'), 468));
+    }
+
+    #[Test]
     public function it_counts_an_individual_time_without_a_generated_work_time_booking(): void
     {
         $user = User::factory()->create();
-        $this->booking($user, '2026-04-10', 360);
+        $this->booking($user, '2026-04-14', 360); // Dienstag
         $user->individualTimes()->create([
             'title' => 'Individuelle Arbeitszeit',
-            'start_date' => '2026-05-10',
-            'end_date' => '2026-05-10',
+            'start_date' => '2026-05-12',
+            'end_date' => '2026-05-12',
             'start_time' => '09:00',
             'end_time' => '19:00',
             'full_day' => false,
@@ -78,8 +110,8 @@ final class ThreeMonthAverageTargetServiceTest extends TestCase
         ]);
         $user->individualTimes()->create([
             'title' => 'Zweite individuelle Arbeitszeit',
-            'start_date' => '2026-05-10',
-            'end_date' => '2026-05-10',
+            'start_date' => '2026-05-12',
+            'end_date' => '2026-05-12',
             'start_time' => '20:00',
             'end_time' => '22:00',
             'full_day' => false,

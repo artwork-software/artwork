@@ -31,21 +31,62 @@ class WorkTimeChangeRequestController extends Controller
     ) {
     }
 
+    private const PER_PAGE = 25;
+
     /**
-     * Display a listing of the resource.
+     * Listenfilter beider Ansichten: Status (pending|approved|rejected|all) und Zeitraum (created_at).
+     *
+     * @return array{status: string, date_from: string|null, date_to: string|null, per_page: int}
      */
-    public function index(): \Inertia\Response
+    private function listFilters(Request $request, string $defaultStatus): array
     {
-        $workTimeChangeRequests = WorkTimeChangeRequest::with(['user', 'shift', 'craft'])
-            ->where('user_id', auth()->id())
-            ->get();
+        $validated = $request->validate([
+            'status' => 'nullable|in:all,pending,approved,rejected',
+            'date_from' => 'nullable|date_format:Y-m-d',
+            'date_to' => 'nullable|date_format:Y-m-d|after_or_equal:date_from',
+            'per_page' => 'nullable|integer|in:25,50,100',
+        ]);
+
+        return [
+            'status' => $validated['status'] ?? $defaultStatus,
+            'date_from' => $validated['date_from'] ?? null,
+            'date_to' => $validated['date_to'] ?? null,
+            'per_page' => (int) ($validated['per_page'] ?? self::PER_PAGE),
+        ];
+    }
+
+    private function applyListFilters(\Illuminate\Database\Eloquent\Builder $query, array $filters): \Illuminate\Database\Eloquent\Builder
+    {
+        return $query
+            ->when($filters['status'] !== 'all', fn ($q) => $q->where('status', $filters['status']))
+            ->when($filters['date_from'], fn ($q) => $q->whereDate('created_at', '>=', $filters['date_from']))
+            ->when($filters['date_to'], fn ($q) => $q->whereDate('created_at', '<=', $filters['date_to']))
+            ->orderByDesc('created_at')
+            ->orderByDesc('id');
+    }
+
+    /**
+     * Eigene Zeitanpassungs-Anfragen: Statusfilter (Default alle), Zeitraum, 25 je Seite.
+     */
+    public function index(Request $request): \Inertia\Response
+    {
+        $filters = $this->listFilters($request, 'all');
+
+        $workTimeChangeRequests = $this->applyListFilters(
+            WorkTimeChangeRequest::with(['user', 'shift', 'craft'])->where('user_id', auth()->id()),
+            $filters
+        )->paginate($filters['per_page'])->withQueryString();
 
         return Inertia::render('WorkTime/MyRequests', [
             'requests' => $workTimeChangeRequests,
+            'filters' => $filters,
         ]);
     }
 
-    public function received(): \Inertia\Response
+    /**
+     * Erhaltene Anfragen (Planer*innen): Statusfilter (Default offen), Zeitraum, 25 je Seite.
+     */
+    public function received(Request $request): \Inertia\Response
     {
         $user = auth()->user();
 
@@ -56,23 +97,26 @@ class WorkTimeChangeRequestController extends Controller
         }
 
         $userId = $user->id;
+        $filters = $this->listFilters($request, 'pending');
 
-        $workTimeChangeRequests = WorkTimeChangeRequest::with(['user', 'shift', 'craft.craftShiftPlaner'])
-            ->where('status', 'pending')
-            ->where(function ($query) use ($userId) {
-                // Include requests where user is assigned as craft shift planner
-                $query->whereHas('craft.craftShiftPlaner', function ($subQuery) use ($userId): void {
-                    $subQuery->where('user_id', $userId);
-                })
-                // OR include requests from crafts that are assignable by all
-                ->orWhereHas('craft', function ($subQuery): void {
-                    $subQuery->where('assignable_by_all', true);
-                });
-            })
-            ->get();
+        $workTimeChangeRequests = $this->applyListFilters(
+            WorkTimeChangeRequest::with(['user', 'shift', 'craft.craftShiftPlaner'])
+                ->where(function ($query) use ($userId) {
+                    // Include requests where user is assigned as craft shift planner
+                    $query->whereHas('craft.craftShiftPlaner', function ($subQuery) use ($userId): void {
+                        $subQuery->where('user_id', $userId);
+                    })
+                    // OR include requests from crafts that are assignable by all
+                    ->orWhereHas('craft', function ($subQuery): void {
+                        $subQuery->where('assignable_by_all', true);
+                    });
+                }),
+            $filters
+        )->paginate($filters['per_page'])->withQueryString();
 
         return Inertia::render('WorkTime/ReceivedRequests', [
             'requests' => $workTimeChangeRequests,
+            'filters' => $filters,
         ]);
     }
 

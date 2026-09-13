@@ -4,6 +4,7 @@ namespace Tests\Feature\Modules\ExternalIssue;
 
 use Artwork\Modules\ExternalIssue\Models\ExternalIssue;
 use Artwork\Modules\InternalIssue\Models\InternalIssue;
+use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Services\ProjectTabMaterialIssueService;
 use Artwork\Modules\User\Models\User;
@@ -17,8 +18,8 @@ final class ExternalIssueProjectLinkTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->user = User::factory()->create();
-        $this->actingAs($this->user);
+        // Materialausgaben verlangen seit 02.09.2026 "Inventardisposition" (MaterialIssuePolicy)
+        $this->user = $this->actingAsUserWith(PermissionEnum::INVENTORY_DISPOSITION->value);
     }
 
     private function validPayload(array $overrides = []): array

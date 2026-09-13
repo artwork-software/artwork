@@ -2,35 +2,80 @@
 
 namespace Artwork\Modules\BusinessIntelligence\Exports;
 
-use Illuminate\Contracts\View\View;
 use Maatwebsite\Excel\Concerns\Exportable;
-use Maatwebsite\Excel\Concerns\FromView;
+use Maatwebsite\Excel\Concerns\FromArray;
 use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 use Maatwebsite\Excel\Concerns\WithColumnFormatting;
+use Maatwebsite\Excel\Concerns\WithEvents;
+use Maatwebsite\Excel\Concerns\WithHeadings;
+use Maatwebsite\Excel\Concerns\WithStrictNullComparison;
 use Maatwebsite\Excel\Concerns\WithStyles;
 use Maatwebsite\Excel\Concerns\WithTitle;
+use Maatwebsite\Excel\Events\AfterSheet;
 use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 
-class BiProjectExport implements FromView, ShouldAutoSize, WithStyles, WithColumnFormatting, WithTitle
+/**
+ * Ein Tabellenblatt des BI-Exports. FromArray (statt FromView): PHP-Typen kommen
+ * unverändert in Excel an — Zahlen bleiben Zahlen, bool wird TRUE/FALSE, Datums-
+ * Serienwerte werden über columnFormats() als echte Datumszellen dargestellt.
+ * Kopfzeile fixiert + Autofilter, damit die Datei ohne Nacharbeit pivotierbar ist.
+ */
+class BiProjectExport implements
+    FromArray,
+    WithHeadings,
+    ShouldAutoSize,
+    WithStyles,
+    WithColumnFormatting,
+    WithTitle,
+    WithEvents,
+    // Ohne strikten Vergleich würden false und 0 als leere Zellen ausgelassen
+    WithStrictNullComparison
 {
     use Exportable;
 
+    public const FORMAT_CURRENCY = '#,##0.00 "€"';
+    public const FORMAT_PERCENT = '0.0%';
+    public const FORMAT_COUNT = '#,##0';
+    public const FORMAT_DATE = 'DD.MM.YYYY';
+    public const FORMAT_DATETIME = 'DD.MM.YYYY HH:MM';
+
     /**
-     * Excel-Anzeigeformate für Zahlenspalten. Die Werte kommen als Rohzahlen aus
-     * dem Service (Punkt als Dezimaltrenner), Excel rendert sie locale-korrekt.
+     * Excel-Anzeigeformate je Spaltenschlüssel. Prozentwerte werden als Anteil
+     * (0–1) exportiert, damit Excel-Prozentformat und Weiterrechnen stimmen.
      */
     private const COLUMN_FORMATS = [
-        'revenue' => '#,##0.00 "€"',
-        'avg_price' => '#,##0.00 "€"',
-        'occupancy_rate' => '0.0" %"',
-        'free_tickets_rate' => '0.0" %"',
-        'reduced_tickets_rate' => '0.0" %"',
-        'paying_rate' => '0.0" %"',
-        'no_show_rate' => '0.0" %"',
-        'seat_occupancy' => '0.0" %"',
-        'attainment' => '0.0" %"',
-        'plan_revenue' => '#,##0.00 "€"',
+        'revenue' => self::FORMAT_CURRENCY,
+        'avg_price' => self::FORMAT_CURRENCY,
+        'plan_revenue' => self::FORMAT_CURRENCY,
+        'occupancy_rate' => self::FORMAT_PERCENT,
+        'free_tickets_rate' => self::FORMAT_PERCENT,
+        'reduced_tickets_rate' => self::FORMAT_PERCENT,
+        'paying_rate' => self::FORMAT_PERCENT,
+        'no_show_rate' => self::FORMAT_PERCENT,
+        'seat_occupancy' => self::FORMAT_PERCENT,
+        'attainment' => self::FORMAT_PERCENT,
+        'visitors' => self::FORMAT_COUNT,
+        'sold_tickets' => self::FORMAT_COUNT,
+        'seats_capacity' => self::FORMAT_COUNT,
+        'tickets_issued' => self::FORMAT_COUNT,
+        'plan_visitors' => self::FORMAT_COUNT,
+        'plan_sold_tickets' => self::FORMAT_COUNT,
+        'contract_count' => self::FORMAT_COUNT,
+        'event_count' => self::FORMAT_COUNT,
+        'booking_count' => self::FORMAT_COUNT,
+        'task_total' => self::FORMAT_COUNT,
+        'task_open' => self::FORMAT_COUNT,
+        'task_done' => self::FORMAT_COUNT,
+        'document_count' => self::FORMAT_COUNT,
+        'department_count' => self::FORMAT_COUNT,
+        'user_count' => self::FORMAT_COUNT,
+        'tasks_docs_per_production' => self::FORMAT_COUNT,
+        'first_event_date' => self::FORMAT_DATE,
+        'premiere_date' => self::FORMAT_DATE,
+        'event_date' => self::FORMAT_DATE,
+        'event_start' => self::FORMAT_DATETIME,
+        'event_end' => self::FORMAT_DATETIME,
     ];
 
     public function __construct(
@@ -49,19 +94,38 @@ class BiProjectExport implements FromView, ShouldAutoSize, WithStyles, WithColum
         return $this->title;
     }
 
-    public function view(): View
+    /**
+     * @return array<int, string>
+     */
+    public function headings(): array
     {
-        return view('exports.biProjects', [
-            'rows' => $this->rows,
-            'columns' => $this->columns,
-            'labels' => $this->labels,
-        ]);
+        return array_map(
+            fn (string $column): string => (string) ($this->labels[$column] ?? __($column)),
+            array_values($this->columns)
+        );
+    }
+
+    /**
+     * @return array<int, array<int, mixed>>
+     */
+    public function array(): array
+    {
+        return array_map(
+            fn (array $row): array => array_map(
+                fn (string $column): mixed => $row[$column] ?? '',
+                array_values($this->columns)
+            ),
+            $this->rows
+        );
     }
 
     public function styles(Worksheet $sheet): array
     {
         return [
-            1 => ['font' => ['bold' => true]],
+            1 => [
+                'font' => ['bold' => true],
+                'fill' => ['fillType' => 'solid', 'startColor' => ['rgb' => 'E5E7EB']],
+            ],
         ];
     }
 
@@ -80,5 +144,22 @@ class BiProjectExport implements FromView, ShouldAutoSize, WithStyles, WithColum
         }
 
         return $formats;
+    }
+
+    /**
+     * @return array<string, callable>
+     */
+    public function registerEvents(): array
+    {
+        return [
+            AfterSheet::class => static function (AfterSheet $event): void {
+                $sheet = $event->sheet->getDelegate();
+                // Kopfzeile bleibt beim Scrollen stehen, Filter direkt nutzbar
+                $sheet->freezePane('A2');
+                if ($sheet->getHighestRow() > 1) {
+                    $sheet->setAutoFilter($sheet->calculateWorksheetDimension());
+                }
+            },
+        ];
     }
 }

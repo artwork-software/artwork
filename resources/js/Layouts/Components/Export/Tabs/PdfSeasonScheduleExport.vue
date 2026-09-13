@@ -247,6 +247,22 @@
                         </label>
                     </div>
                 </div>
+
+                <!-- Zeichen-Garantie: begrenzt, wie groß die Schrift in einer Zelle werden darf -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-2 pt-2">
+                    <BaseInput
+                        id="season-min-visible-chars"
+                        type="number"
+                        :min="8"
+                        :max="40"
+                        :step="1"
+                        v-model="pdf.minVisibleChars"
+                        :label="$t('Characters always shown in full')"
+                    />
+                    <p class="self-center text-xs text-text-muted">
+                        {{ $t('The font size in a cell grows as far as the row height allows, but at most until this many characters of a name fit without truncation.') }}
+                    </p>
+                </div>
             </section>
 
             <!-- Papierformat + DPI -->
@@ -415,10 +431,11 @@ const pdf = useForm({
     showHolidays: true,
     showWeekNumbers: true,
     highlightWeekends: true,
-    showColorDots: true,
+    showEntryColors: true,
     showEventsWithoutProject: false,
     showRoomAbbreviations: false,
     splitMonths: false,
+    minVisibleChars: 16,
 })
 
 // Anzeigeeinstellungen (Farbquelle + Künstler:innen statt Titel)
@@ -449,7 +466,7 @@ const displayOptions = computed(() => [
     { key: 'showHolidays', label: $t('Show holidays') },
     { key: 'showWeekNumbers', label: $t('Show calendar weeks') },
     { key: 'highlightWeekends', label: $t('Highlight weekends') },
-    { key: 'showColorDots', label: $t('Color dot per event type') },
+    { key: 'showEntryColors', label: $t('Highlight project names in color') },
     { key: 'showEventsWithoutProject', label: $t('Show events without project') },
     { key: 'showRoomAbbreviations', label: $t('Show room abbreviations') },
     { key: 'splitMonths', label: $t('Half months per page (double row height)') },

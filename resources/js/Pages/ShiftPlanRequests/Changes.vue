@@ -89,6 +89,23 @@
                                     icon="IconRepeat"
                                     @click="openCraftSelector"
                                 />
+                                <!-- Export mit den aktuell gesetzten Filtern (Gewerk, Status, Suche, Intern/Extern) -->
+                                <a :href="exportUrl" :title="t('Exports the current filter selection.')">
+                                    <BaseUIButton
+                                        type="button"
+                                        label="Export as Excel"
+                                        use-translation
+                                        icon="IconFileSpreadsheet"
+                                    />
+                                </a>
+                                <ToolTipComponent
+                                    direction="left"
+                                    :tooltip-text="t('Open export dialog')"
+                                    icon="IconFileExport"
+                                    icon-size="h-5 w-5"
+                                    classes-button="p-2 rounded-lg hover:bg-surface-sunken transition-colors"
+                                    @click="showExportModal = true"
+                                />
                             </div>
                         </div>
                     </div>
@@ -498,6 +515,13 @@
                 />
             </div>
         </ArtworkBaseModal>
+
+        <ExportModal
+            v-if="showExportModal"
+            :enums="[exportTabEnums.EXCEL_COMMITTED_SHIFT_CHANGES_EXPORT]"
+            :configuration="exportConfiguration"
+            @close="showExportModal = false"
+        />
     </AppLayout>
 </template>
 
@@ -509,6 +533,9 @@ import AppLayout from '@/Layouts/AppLayout.vue';
 import CraftSelectorModal from "@/Pages/ShiftPlanRequests/components/CraftSelectorModal.vue";
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
+import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
+import ExportModal from "@/Layouts/Components/Export/Modals/ExportModal.vue";
+import { useExportTabEnums } from "@/Layouts/Components/Export/Enums/ExportTabEnum.js";
 
 const props = defineProps({
     craft: {
@@ -711,6 +738,29 @@ const describeChange = (change) => {
 const openCraftSelector = () => {
     showCraftSelector.value = true;
 };
+
+// Excel-Export: direkter Link mit den aktuellen Filtern; Dialog-Tab mit denselben Werten vorbelegt
+const exportTabEnums = useExportTabEnums();
+const showExportModal = ref(false);
+const currentExportFilters = computed(() => ({
+    craft_id: props.craft?.id ?? null,
+    filter: props.filter,
+    search: search.value.trim(),
+    worker_type: props.workerType,
+}));
+const exportUrl = computed(() => {
+    const params = {};
+    Object.entries(currentExportFilters.value).forEach(([key, value]) => {
+        if (value !== null && value !== '' && value !== undefined) params[key] = value;
+    });
+    return route('committed-shift-changes.export', params);
+});
+const exportConfiguration = computed(() => ({
+    [exportTabEnums.EXCEL_COMMITTED_SHIFT_CHANGES_EXPORT]: {
+        crafts: props.allCrafts,
+        filters: currentExportFilters.value,
+    },
+}));
 
 const acknowledge = (change) => {
     router.post(

@@ -14,40 +14,15 @@ final class RoleEnumTest extends UnitTestCase
         $this->assertSame('artwork admin', RoleEnum::ARTWORK_ADMIN->value);
     }
 
-    #[Test]
-    public function it_has_budget_admin_case(): void
-    {
-        $this->assertSame('budget admin', RoleEnum::BUDGET_ADMIN->value);
-    }
 
-    #[Test]
-    public function it_has_contract_admin_case(): void
-    {
-        $this->assertSame('contract admin', RoleEnum::CONTRACT_ADMIN->value);
-    }
 
-    #[Test]
-    public function it_has_money_source_admin_case(): void
-    {
-        $this->assertSame('money source admin', RoleEnum::MONEY_SOURCE_ADMIN->value);
-    }
 
-    #[Test]
-    public function it_has_room_admin_case(): void
-    {
-        $this->assertSame('room admin', RoleEnum::ROOM_ADMIN->value);
-    }
 
-    #[Test]
-    public function it_has_user_case(): void
-    {
-        $this->assertSame('user', RoleEnum::USER->value);
-    }
 
     #[Test]
     public function it_has_expected_total_cases(): void
     {
-        $this->assertCount(6, RoleEnum::cases());
+        $this->assertCount(1, RoleEnum::cases());
     }
 
     #[Test]

@@ -22,6 +22,17 @@ use Artwork\Modules\Checklist\Models\ChecklistTemplate;
 use Artwork\Modules\Checklist\Policies\ChecklistTemplatePolicy;
 use Artwork\Modules\Contract\Models\Contract;
 use Artwork\Modules\Contract\Policies\ContractPolicy;
+use Artwork\Modules\Contract\Models\ContractModule;
+use Artwork\Modules\Contract\Policies\ContractModulePolicy;
+use Artwork\Modules\ExternalIssue\Models\ExternalIssue;
+use Artwork\Modules\InternalIssue\Models\InternalIssue;
+use Artwork\Modules\Inventory\Policies\MaterialIssuePolicy;
+use Artwork\Modules\MoneySource\Models\MoneySource;
+use Artwork\Modules\MoneySource\Models\MoneySourceTask;
+use Artwork\Modules\MoneySource\Policies\MoneySourcePolicy;
+use Artwork\Modules\MoneySource\Policies\MoneySourceTaskPolicy;
+use Artwork\Modules\Room\Models\Room;
+use Artwork\Modules\Room\Policies\RoomPolicy;
 use Artwork\Modules\Department\Models\Department;
 use Artwork\Modules\Department\Policies\DepartmentPolicy;
 use Artwork\Modules\Event\Models\Event;
@@ -51,6 +62,8 @@ use Artwork\Modules\ServiceProvider\Models\ServiceProvider as ServiceProviderMod
 use Artwork\Modules\ServiceProvider\Policies\ServiceProviderPolicy;
 use Artwork\Modules\Shift\Models\ShiftCommitWorkflowUser;
 use Artwork\Modules\Shift\Models\ShiftQualification;
+use Artwork\Modules\Shift\Models\ShiftPlanRequest;
+use Artwork\Modules\Shift\Policies\ShiftPlanRequestPolicy;
 use Artwork\Modules\Shift\Policies\ShiftQualificationPolicy;
 use Artwork\Modules\System\ApiManagement\Policies\TokenPolicy;
 use Artwork\Modules\TaskTemplate\Models\TaskTemplate;
@@ -80,12 +93,19 @@ class AuthServiceProvider extends ServiceProvider
         TaskTemplate::class => TaskTemplatePolicy::class,
         Area::class => AreaPolicy::class,
         Contract::class => ContractPolicy::class,
+        ContractModule::class => ContractModulePolicy::class,
+        MoneySource::class => MoneySourcePolicy::class,
+        MoneySourceTask::class => MoneySourceTaskPolicy::class,
+        Room::class => RoomPolicy::class,
+        InternalIssue::class => MaterialIssuePolicy::class,
+        ExternalIssue::class => MaterialIssuePolicy::class,
         Freelancer::class => FreelancerPolicy::class,
         ServiceProviderModel::class => ServiceProviderPolicy::class,
         GeneralSettings::class => GeneralSettingsPolicy::class,
         Token::class => TokenPolicy::class,
         WebhookEndpoint::class => WebhookEndpointPolicy::class,
         ShiftQualification::class => ShiftQualificationPolicy::class,
+        ShiftPlanRequest::class => ShiftPlanRequestPolicy::class,
         SageApiSettings::class => SageApiSettingsPolicy::class,
         SageAssignedDataComment::class => SageAssignedDataCommentPolicy::class,
         SageNotAssignedData::class => SageNotAssignedDataPolicy::class,

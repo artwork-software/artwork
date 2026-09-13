@@ -75,7 +75,7 @@ const resolvedProjectId = computed(() => props.project?.id ?? props.projectId);
 
 // Frontend-Gate: das Backend autorisiert Link/Unlink zusätzlich via ProjectPolicy::update
 const canEditLinks = computed(() => {
-    if (hasAdminRole() || canAny(['write projects', 'management projects', 'create and edit own project'])) {
+    if (hasAdminRole() || canAny(['write projects', 'create and edit own project'])) {
         return true;
     }
     const userId = page.props.auth?.user?.id;

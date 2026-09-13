@@ -29,7 +29,7 @@ abstract class BaseRepository
      * sadly we can't use addMethods on the mock as its deprecated and will be removed in next
      * PHPUnit version
      *
-     * example @see CraftInventoryCategoryRepositoryTest::testGetAllByCraftIdOrderedByOrder()
+     * example: Repository-Unit-Tests, die orderBy()/count() auf dem gemockten Builder konfigurieren
      **/
     public function getNewModelQuery(): BaseBuilder|Builder
     {

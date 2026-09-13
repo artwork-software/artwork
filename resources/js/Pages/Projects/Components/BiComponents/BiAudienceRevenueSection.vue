@@ -8,13 +8,17 @@
                 class="rounded-lg border border-border-subtle p-3"
                 :class="{ 'bg-surface-sunken opacity-75': notApplicable[metric.key] }"
             >
-                <div class="flex items-center justify-between gap-2 mb-2">
+                <!-- Kopf: Kennzahl-Name in eigener Zeile, Erfassungsart-Schalter darunter —
+                     nebeneinander brach "Pro Termin" in den Schalter hinein -->
+                <div class="flex flex-wrap items-center justify-between gap-x-3 gap-y-1.5 mb-2">
                     <span class="text-sm font-medium text-text">{{ $t(metric.label) }}</span>
                     <SwitchDualLabel
                         v-if="canEdit && !notApplicable[metric.key] && metric.switchRoute"
+                        class="whitespace-nowrap"
                         :model-value="modes[metric.key] === 'per_event'"
                         :left-label="$t('Total')"
                         :right-label="$t('Per event')"
+                        :tooltip-text="$t('Total: one figure for the whole production. Per event: one figure per performance — needed for period comparisons and the monthly trend. Switching discards the figures of the other mode.')"
                         size="sm"
                         @change="isPerEvent => onToggleChange(metric, isPerEvent)"
                     />
@@ -96,18 +100,14 @@
                     </div>
                 </template>
 
-                <label
+                <BaseCheckbox
                     v-if="canEdit"
-                    class="mt-2 flex items-center gap-1.5 text-xs text-text-subtle cursor-pointer select-none print:hidden"
-                >
-                    <input
-                        type="checkbox"
-                        class="input-checklist !h-3.5 !w-3.5"
-                        :checked="notApplicable[metric.key]"
-                        @change="toggleNotApplicable(metric, $event.target.checked)"
-                    />
-                    {{ $t('Not relevant for this project') }}
-                </label>
+                    :id="'bi_na_' + scope + '_' + metric.key"
+                    :model-value="notApplicable[metric.key]"
+                    @update:model-value="checked => toggleNotApplicable(metric, checked)"
+                    :label="$t('Not relevant for this project')"
+                    class="mt-2 print:hidden"
+                />
             </div>
         </div>
 
@@ -140,6 +140,7 @@
                                 :id="'bi_cat_' + scope + '_' + category.id"
                                 v-model.number="categoryTotals[category.id]"
                                 :label="category.name"
+                                without-translation
                                 :disabled="!canEdit || !category.is_active"
                                 :min="0"
                                 :step="1"
@@ -172,14 +173,12 @@
                     </div>
                 </template>
                 <template v-else>
-                    <label class="flex items-center gap-2 text-sm text-text-muted cursor-pointer select-none print:hidden">
-                        <input
-                            type="checkbox"
-                            class="input-checklist !h-3.5 !w-3.5"
-                            v-model="showCategoryColumns"
-                        />
-                        {{ $t('Show category columns in the events table') }}
-                    </label>
+                    <BaseCheckbox
+                        :id="'bi_show_category_columns_' + scope"
+                        v-model="showCategoryColumns"
+                        :label="$t('Show category columns in the events table')"
+                        class="print:hidden"
+                    />
                     <p class="mt-1 text-xs text-text-subtle">
                         {{ $t('Categories follow the per-event mode of sold tickets and are recorded in the table below.') }}
                     </p>
@@ -216,6 +215,7 @@
 import { computed, reactive, ref, watch } from 'vue';
 import { IconChevronDown } from '@tabler/icons-vue';
 import BaseInput from '@/Artwork/Inputs/BaseInput.vue';
+import BaseCheckbox from '@/Artwork/Inputs/BaseCheckbox.vue';
 import SwitchDualLabel from '@/Artwork/Toggles/SwitchDualLabel.vue';
 import BiEventMetricsTable from '@/Pages/Projects/Components/BiComponents/BiEventMetricsTable.vue';
 import BiModeSwitchModal from '@/Pages/Projects/Components/BiComponents/BiModeSwitchModal.vue';

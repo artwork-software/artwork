@@ -27,9 +27,11 @@ final class VacationEnumTest extends UnitTestCase
     }
 
     #[Test]
-    public function it_has_three_cases(): void
+    public function it_has_four_cases(): void
     {
-        $this->assertCount(3, Vacation::cases());
+        // OFF_WORK, NOT_AVAILABLE, AVAILABLE, FREE_WORK (Frei war vorher nur ein Magic String)
+        $this->assertCount(4, Vacation::cases());
+        $this->assertSame('FREE_WORK', Vacation::FREE_WORK->value);
     }
 
     #[Test]

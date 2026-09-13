@@ -1,178 +1,321 @@
 <template>
-    <AppLayout :title="isPlanner ? $t('Requested duty rosters') : $t('Meine Dienstplananfragen')">
+    <AppLayout :title="isPlanner ? $t('Requested duty rosters') : $t('My approval requests')">
         <div class="px-4 py-6 sm:px-6 lg:px-8 max-w-7xl mx-auto space-y-6">
             <!-- Header -->
             <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                     <h1 class="text-xl font-semibold text-text">
-                        {{ isPlanner ? $t('Shift plan requests') : $t('Meine Dienstplananfragen') }}
+                        {{ isPlanner ? $t('Shift plan requests') : $t('My approval requests') }}
                     </h1>
                     <p class="mt-1 text-sm text-text-subtle max-w-2xl">
                         {{ isPlanner
-                            ? $t('Here you can see all shift plan requests grouped by craft.')
-                            : $t('Hier siehst du alle deine angefragten Dienstpläne, gruppiert nach Gewerken.')
+                            ? $t('Here you can see all shift plan requests, newest calendar week first.')
+                            : $t('Here you can see all duty rosters you requested, newest calendar week first.')
                         }}
                     </p>
                 </div>
                 <ShiftPlanWeekShortcut />
             </div>
 
-            <!-- Kein Craft / keine Requests -->
+            <!-- Filter: Status (Default alle), Gewerk, nur eigene Anfragen — in der URL gehalten -->
+            <div class="rounded-2xl border border-border-subtle bg-white shadow-sm p-4 flex flex-wrap items-end gap-3">
+                <div class="min-w-[11rem]">
+                    <SearchableSelect
+                        v-model="filterState.status"
+                        :options="statusOptions"
+                        value-key="value"
+                        label-key="label"
+                        translate-option-labels
+                        :label="$t('Status')"
+                        @change="applyFilters"
+                    />
+                </div>
+                <div class="min-w-[13rem]">
+                    <SearchableSelect
+                        v-model="filterState.craft_id"
+                        :options="crafts"
+                        value-key="id"
+                        :label-key="craft => craft.abbreviation ? `${craft.name} (${craft.abbreviation})` : craft.name"
+                        :empty-option="{ label: 'All crafts', value: null }"
+                        :placeholder="$t('All crafts')"
+                        :label="$t('Craft')"
+                        @change="applyFilters"
+                    />
+                </div>
+                <div v-if="isPlanner" class="pb-1.5">
+                    <BaseCheckbox
+                        id="shift-plan-requests-only-mine"
+                        v-model="filterState.only_mine"
+                        :label="$t('Only my requests')"
+                        @change="applyFilters"
+                    />
+                </div>
+                <BaseUIButton
+                    v-if="hasActiveFilters"
+                    :label="$t('Reset filters')"
+                    is-cancel-button
+                    @click="resetFilters"
+                />
+                <span class="ml-auto text-xs text-text-subtle tabular-nums">
+                    {{ $t('Requests') }}: {{ requests.total ?? 0 }}
+                </span>
+            </div>
+
+            <!-- Keine Requests -->
             <div
-                v-if="!crafts || !crafts.length"
+                v-if="!rows.length"
                 class="rounded-2xl border border-dashed border-border-subtle bg-white p-8 text-center"
             >
                 <p class="text-sm text-text-subtle">
-                    {{ $t('Du hast keine Dienstplananfragen.') }}
+                    {{ hasActiveFilters ? $t('No requests match the current filters.') : $t('You have no approval requests.') }}
                 </p>
+                <BaseUIButton
+                    v-if="hasActiveFilters"
+                    class="mt-4"
+                    :label="$t('Reset filters')"
+                    is-cancel-button
+                    @click="resetFilters"
+                />
             </div>
 
-            <!-- Cards pro Craft -->
-            <div class="grid gap-6 lg:grid-cols-2 xl:grid-cols-3">
+            <!-- Flache Liste, KW absteigend, serverseitig paginiert -->
+            <div v-else class="rounded-2xl border border-border-subtle bg-white shadow-sm divide-y divide-border-subtle">
                 <div
-                    v-for="craft in crafts"
-                    :key="craft.id"
-                    class="group flex flex-col rounded-2xl border border-border-subtle bg-white shadow-sm hover:border-accent-200 hover:shadow-md transition"
+                    v-for="request in rows"
+                    :key="request.id"
+                    class="group w-full text-left px-4 py-3 flex items-center justify-between gap-3 hover:bg-accent-50/60 transition cursor-pointer"
+                    role="button"
+                    tabindex="0"
+                    @click="goToRequest(request.id)"
+                    @keydown.enter.prevent="goToRequest(request.id)"
                 >
-                    <!-- Craft Header -->
-                    <div
-                        class="flex items-center justify-between px-4 py-3 border-b border-border-subtle bg-gradient-to-r from-white to-surface-sunken rounded-t-2xl"
-                    >
-                        <div class="flex items-center gap-3">
-                            <div
-                                class="h-9 w-9 rounded-full flex items-center justify-center text-xs font-semibold text-white shadow-sm"
-                                :style="{ backgroundColor: craft.color || '#4f46e5' }"
-                            >
-                                {{ craft.abbreviation }}
-                            </div>
-                            <div>
-                                <h2 class="text-sm font-semibold text-text">
-                                    {{ craft.name }}
-                                </h2>
-                                <p class="text-xs text-text-subtle">
-                                    <span v-if="craft.assignable_by_all">
-                                        {{ $t('Zuweisbar von allen Planer:innen') }}
-                                    </span>
-                                    <span v-else>
-                                        {{ $t('Eingeschränkte Zuweisung') }}
-                                    </span>
-                                </p>
-                            </div>
+                    <div class="flex items-center gap-3 min-w-0">
+                        <div
+                            class="h-9 w-9 shrink-0 rounded-full flex items-center justify-center text-xs font-semibold text-white shadow-sm"
+                            :style="{ backgroundColor: request.craft?.color || '#4f46e5' }"
+                            :title="request.craft?.name"
+                        >
+                            {{ request.craft?.abbreviation }}
                         </div>
-
-                        <div class="flex flex-col items-end gap-1">
-                            <span
-                                class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium bg-surface-sunken text-text-muted"
-                            >
-                                {{ $t('Anfragen') }}: {{ craft.shift_plan_requests.length }}
-                            </span>
+                        <div class="flex flex-col min-w-0">
+                            <div class="flex items-center gap-2 flex-wrap">
+                                <span class="text-sm font-medium text-text">
+                                    {{ $t('KW') }} {{ request.week_number }} / {{ request.year }}
+                                </span>
+                                <span class="text-xs text-text-subtle truncate">{{ request.craft?.name }}</span>
+                                <span
+                                    :class="[ 'inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium ring-1',
+                                        statusClasses(request.status)
+                                    ]"
+                                >
+                                    <span class="w-1.5 h-1.5 rounded-full mr-1.5 bg-current"></span>
+                                    {{ statusLabel(request.status) }}
+                                </span>
+                            </div>
+                            <p class="mt-0.5 text-xs text-text-subtle">
+                                {{ $t('Requested on') }}: {{ formatDateTime(request.requested_at) }}
+                                <template v-if="isPlanner && request.requested_by_name">
+                                    · {{ $t('Requested by') }}: {{ request.requested_by_name }}
+                                </template>
+                            </p>
                         </div>
                     </div>
 
-                    <!-- Requests-Liste -->
-                    <div class="flex-1">
-                        <div v-if="craft.shift_plan_requests.length" class="divide-y divide-border-subtle">
-                            <button
-                                v-for="request in craft.shift_plan_requests"
-                                :key="request.id"
-                                type="button"
-                                class="w-full text-left px-4 py-3 flex items-center justify-between hover:bg-accent-50/60 transition"
-                                @click="goToRequest(request.id)"
-                            >
-                                <div class="flex items-center gap-3">
-                                    <div class="flex flex-col">
-                                        <div class="flex items-center gap-2">
-                                            <span class="text-sm font-medium text-text">
-                                                {{ $t('KW') }} {{ request.week_number }} / {{ request.year }}
-                                            </span>
-                                            <span
-                                                :class="[ 'inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium',
-                                                    statusClasses(request.status)
-                                                ]"
-                                            >
-                                                <span class="w-1.5 h-1.5 rounded-full mr-1.5 bg-current"></span>
-                                                {{ statusLabel(request.status) }}
-                                            </span>
-                                        </div>
-                                        <p class="mt-0.5 text-xs text-text-subtle">
-                                            {{ $t('Angefragt am') }}:
-                                            {{ formatDateTime(request.requested_at) }}
-                                        </p>
-                                        <p v-if="isPlanner && request.requested_by_name" class="text-xs text-text-subtle">
-                                            {{ $t('Requested by') }}: {{ request.requested_by_name }}
-                                        </p>
-                                    </div>
-                                </div>
-
-                                <div class="flex items-center gap-2">
-                                    <span class="text-xs text-text-subtle">
-                                        {{ $t('Details') }}
-                                    </span>
-                                    <IconChevronRight class="h-4 w-4 text-text-subtle group-hover:text-accent-600" />
-                                </div>
-                            </button>
-                        </div>
-
-                        <!-- Keine Requests für dieses Craft -->
-                        <div
-                            v-else
-                            class="px-4 py-6 text-center text-xs text-text-subtle"
-                        >
-                            {{ $t('Keine Dienstplananfragen für dieses Gewerk.') }}
-                        </div>
+                    <div class="flex items-center gap-2 shrink-0">
+                        <!-- Antragsteller*in: zurückziehen (pending) / erneut einreichen (rejected) -->
+                        <ToolTipComponent
+                            v-if="canWithdraw(request, !isPlanner)"
+                            direction="left"
+                            :tooltip-text="$t('Withdraw request')"
+                            icon="IconArrowBackUp"
+                            icon-size="h-4 w-4 text-text-muted"
+                            classes-button="p-1.5 rounded-lg hover:bg-surface-sunken transition"
+                            @click.stop="askWithdraw(request)"
+                        />
+                        <ToolTipComponent
+                            v-if="canResubmit(request, !isPlanner) && !request.has_pending_sibling"
+                            direction="left"
+                            :tooltip-text="$t('Resubmit for approval')"
+                            icon="IconSend"
+                            icon-size="h-4 w-4 text-text-muted"
+                            classes-button="p-1.5 rounded-lg hover:bg-surface-sunken transition"
+                            @click.stop="resubmit(request, request.craft_id)"
+                        />
+                        <span class="text-xs text-text-subtle">
+                            {{ $t('Details') }}
+                        </span>
+                        <IconChevronRight class="h-4 w-4 text-text-subtle group-hover:text-accent-600" />
                     </div>
                 </div>
             </div>
+
+            <BasePaginator
+                v-if="requests.total > 0"
+                :entities="requests"
+                property-name="requests"
+                emit-update-entities-per-page
+                @update-page="goToPage"
+                @update-entities-per-page="changePerPage"
+            />
         </div>
+
+        <!-- Zurückziehen bestätigen -->
+        <ArtworkBaseModal
+            v-if="withdrawTarget"
+            :title="$t('Withdraw request')"
+            :description="withdrawDescription"
+            @close="withdrawTarget = null"
+        >
+            <div class="space-y-4">
+                <BaseAlertComponent
+                    type="warning"
+                    use-translation
+                    message="The shifts of this request are released again and can be resubmitted later."
+                />
+                <div class="flex items-center justify-between">
+                    <BaseUIButton type="button" is-cancel-button :label="$t('Cancel')" @click="withdrawTarget = null" />
+                    <BaseUIButton
+                        type="button"
+                        is-delete-button
+                        icon="IconArrowBackUp"
+                        :label="$t('Withdraw request')"
+                        :processing="processing === 'withdraw'"
+                        @click="confirmWithdraw"
+                    />
+                </div>
+            </div>
+        </ArtworkBaseModal>
+
+        <NotificationToast
+            v-if="toast"
+            v-model:show="toastVisible"
+            :title="toast.title"
+            :description="toast.description"
+            :type="toast.type"
+        />
     </AppLayout>
 </template>
 
 <script setup>
 import AppLayout from "@/Layouts/AppLayout.vue";
 import ShiftPlanWeekShortcut from "@/Pages/ShiftPlanRequests/components/ShiftPlanWeekShortcut.vue";
+import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
+import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
+import BaseAlertComponent from "@/Components/Alerts/BaseAlertComponent.vue";
+import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
+import BaseCheckbox from "@/Artwork/Inputs/BaseCheckbox.vue";
+import SearchableSelect from "@/Artwork/Listbox/SearchableSelect.vue";
+import BasePaginator from "@/Components/Paginate/BasePaginator.vue";
+import NotificationToast from "@/Artwork/Feedback/NotificationToast.vue";
 import { router } from "@inertiajs/vue3";
+import { computed, reactive, ref } from "vue";
 import {
     IconChevronRight,
 } from "@tabler/icons-vue";
-import { useI18n } from 'vue-i18n';
-
-const { t } = useI18n();
+import { useShiftPlanRequest } from "@/Pages/ShiftPlanRequests/components/useShiftPlanRequest.js";
+import { useShiftPlanRequestActions } from "@/Pages/ShiftPlanRequests/components/useShiftPlanRequestActions.js";
 
 const props = defineProps({
-    crafts: { type: Array, required: true },
+    // Laravel-Paginator (data, total, per_page, current_page, links, …), KW absteigend
+    requests: { type: Object, required: true },
+    crafts: { type: Array, default: () => [] },
+    filters: { type: Object, default: () => ({ status: 'all', craft_id: null, only_mine: false }) },
     isPlanner: { type: Boolean, default: false },
 });
 
-// Status → Label
-const statusLabel = (status) => {
-    switch (status) {
-        case "pending":
-            return t('Prüfung ausstehend');
-        case "approved":
-        case "accepted":
-            return t('Angenommen');
-        case "rejected":
-        case "denied":
-            return t('Abgelehnt');
-        default:
-            return status;
-    }
+const rows = computed(() => props.requests?.data ?? []);
+
+// Status-Label/-Klassen zentral (Keys pending/approved/rejected, Design-Tokens)
+const { statusLabel, statusClasses } = useShiftPlanRequest();
+
+const {
+    canWithdraw,
+    canResubmit,
+    weekLabel,
+    toast,
+    toastVisible,
+    processing,
+    withdraw,
+    resubmit,
+} = useShiftPlanRequestActions();
+
+const filterState = reactive({
+    status: props.filters?.status ?? 'all',
+    craft_id: props.filters?.craft_id ?? null,
+    only_mine: !!props.filters?.only_mine,
+});
+
+const statusOptions = [
+    { value: 'all', label: 'All statuses' },
+    { value: 'pending', label: 'pending' },
+    { value: 'approved', label: 'approved' },
+    { value: 'rejected', label: 'rejected' },
+];
+
+const hasActiveFilters = computed(() =>
+    filterState.status !== 'all' || !!filterState.craft_id || filterState.only_mine
+);
+
+function filterParams() {
+    const params = {};
+    if (filterState.status && filterState.status !== 'all') params.status = filterState.status;
+    if (filterState.craft_id) params.craft_id = filterState.craft_id;
+    if (filterState.only_mine) params.only_mine = 1;
+    if (props.requests?.per_page && Number(props.requests.per_page) !== 25) params.per_page = props.requests.per_page;
+    return params;
+}
+
+function visit(extra = {}) {
+    router.get(route('shift-plan-requests.my.index'), { ...filterParams(), ...extra }, {
+        preserveState: true,
+        preserveScroll: true,
+        replace: true,
+    });
+}
+
+function applyFilters() {
+    visit({ page: 1 });
+}
+
+function resetFilters() {
+    filterState.status = 'all';
+    filterState.craft_id = null;
+    filterState.only_mine = false;
+    applyFilters();
+}
+
+function goToPage(page) {
+    visit({ page });
+}
+
+// Erlaubte Seitengrößen: 25/50/100 (kleinere Werte des Paginator-Menüs werden auf 25 gehoben)
+function changePerPage(perPage) {
+    const allowed = [25, 50, 100].includes(Number(perPage)) ? Number(perPage) : 25;
+    router.get(route('shift-plan-requests.my.index'), { ...filterParams(), per_page: allowed, page: 1 }, {
+        preserveState: true,
+        preserveScroll: true,
+        replace: true,
+    });
+}
+
+const withdrawTarget = ref(null);
+const withdrawDescription = computed(() => {
+    if (!withdrawTarget.value) return '';
+    const request = withdrawTarget.value;
+    return `${request.craft?.name ?? ''} · ${weekLabel(request)}`;
+});
+
+const askWithdraw = (request) => {
+    withdrawTarget.value = request;
 };
 
-// Status → Tailwind-Klassen
-const statusClasses = (status) => {
-    switch (status) {
-        case "pending":
-            return "bg-warning-surface text-warning ring-1 ring-warning-border";
-        case "approved":
-        case "accepted":
-            return "bg-success-surface text-success ring-1 ring-success-border";
-        case "rejected":
-        case "denied":
-            return "bg-danger-surface text-danger ring-1 ring-danger-border";
-        default:
-            return "bg-surface-sunken text-text-muted";
-    }
+const confirmWithdraw = () => {
+    if (!withdrawTarget.value) return;
+    withdraw(withdrawTarget.value, {
+        onSuccess: () => {
+            withdrawTarget.value = null;
+        },
+    });
 };
 
 const formatDateTime = (value) => {

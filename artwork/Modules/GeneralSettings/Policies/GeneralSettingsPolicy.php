@@ -26,9 +26,6 @@ class GeneralSettingsPolicy
 
     public function updateBudgetAccountManagementGlobal(User $user): bool
     {
-        return $user->canAny([
-            'can manage global project budgets',
-            'can manage all project budgets without docs'
-        ]);
+        return $user->can('can manage global project budgets');
     }
 }

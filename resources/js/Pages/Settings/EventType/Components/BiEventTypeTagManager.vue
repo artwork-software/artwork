@@ -14,17 +14,6 @@
             </div>
         </div>
 
-        <!-- Explanation of what BI tags are used for -->
-        <div class="mb-6 rounded-lg border border-accent-200 bg-accent-50/60 px-4 py-3">
-            <div class="flex gap-3">
-                <component :is="IconInfoCircle" class="size-5 shrink-0 text-accent-600 mt-0.5" stroke-width="1.5" />
-                <div class="text-sm text-accent-700 space-y-1">
-                    <p>{{ $t('BI tags group event types for the BI module. For each tag, the number of event days per project is counted and shown in the BI dashboard and in BI exports (one column per tag).') }}</p>
-                    <p class="text-accent-700">{{ $t('The tags "Vorstellung" and "Veranstaltungstag" additionally control the key figures performances and event days. If they have no event types assigned, all events of a project are counted there as a fallback.') }}</p>
-                </div>
-            </div>
-        </div>
-
         <!-- Warning: tags without linked event types -->
         <div v-if="tagsWithoutEventTypes.length > 0" class="mb-6 rounded-lg border border-warning-border bg-warning-surface px-4 py-3 text-sm text-warning">
             {{ $t('The following tags are not linked to any event type yet, so they will not be counted in the dashboard and exports:') }}
@@ -134,7 +123,7 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue';
-import { IconCirclePlus, IconEdit, IconInfoCircle, IconLink, IconTrash, IconX } from '@tabler/icons-vue';
+import { IconCirclePlus, IconEdit, IconLink, IconTrash, IconX } from '@tabler/icons-vue';
 import BaseMenu from '@/Components/Menu/BaseMenu.vue';
 import BaseUIButton from '@/Artwork/Buttons/BaseUIButton.vue';
 import BaseMenuItem from '@/Components/Menu/BaseMenuItem.vue';
@@ -164,12 +153,10 @@ const unassignedEventTypes = computed(() => {
     return props.eventTypes.filter((eventType) => !assignedIds.has(eventType.id));
 });
 
-// Spiegelt die Backend-Heuristik (BiProjectMetricsService::eventHasTag): Vergleich
-// case-insensitive auf name UND name_de gegen die deutschen KPI-Tag-Namen.
+// Kennzahl-Steuerung hängt an der expliziten Rolle (kpi_role), nicht am Namen
 const kpiLabel = (tag) => {
-    const names = [tag.name, tag.name_de].map((name) => (name ?? '').toLowerCase());
-    if (names.includes('vorstellung')) return $t('Performances');
-    if (names.includes('veranstaltungstag')) return $t('Event days');
+    if (tag.kpi_role === 'performance') return $t('Performances');
+    if (tag.kpi_role === 'event_day') return $t('Event days');
     return null;
 };
 

@@ -29,7 +29,7 @@
         </div>
 
         <!-- Manuelle Auszahlung -->
-        <div v-if="local.can_pay_out && local.payable_minutes > 0" class="rounded-lg border border-border-subtle p-3">
+        <div v-if="!readOnly && local.can_pay_out && local.payable_minutes > 0" class="rounded-lg border border-border-subtle p-3">
             <h4 class="text-sm font-semibold text-text mb-2">{{ $t('Pay out overtime') }}</h4>
             <p class="text-[11px] text-text-subtle mb-2">
                 {{ $t('Booking reduces the time account. The actual payment happens outside artwork.') }}
@@ -139,6 +139,8 @@ import { useI18n } from 'vue-i18n'
 const props = defineProps({
     userId: { type: Number, required: true },
     data: { type: Object, required: true },
+    // Selbstansicht ("Meine Zahlen"): keine Auszahlung buchen
+    readOnly: { type: Boolean, default: false },
 })
 
 const { t } = useI18n()

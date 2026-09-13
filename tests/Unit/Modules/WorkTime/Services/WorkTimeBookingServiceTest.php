@@ -5,7 +5,10 @@ namespace Tests\Unit\Modules\WorkTime\Services;
 use Artwork\Modules\Holidays\Models\Holiday;
 use Artwork\Modules\Shift\Models\CompensationDayOff;
 use Artwork\Modules\User\Models\User;
+use Artwork\Modules\User\Models\UserContract;
+use Artwork\Modules\User\Models\UserContractAssign;
 use Artwork\Modules\User\Models\UserWorkTime;
+use Artwork\Modules\Vacation\Models\Vacation;
 use Artwork\Modules\WorkTime\Services\WorkTimeBookingService;
 use Carbon\Carbon;
 use PHPUnit\Framework\Attributes\Test;
@@ -133,21 +136,23 @@ final class WorkTimeBookingServiceTest extends TestCase
     }
 
     /**
-     * Produktentscheidung 2026-07-29: Sondertage senken das Soll auch dann,
-     * wenn gearbeitet wurde — die Arbeit erzeugt Plus-Stunden, die ein
-     * regulärer Ausgleichstag (volles Soll) später abbaut.
+     * Produktentscheidung 2026-09-04 (TVöD-Referenz): Arbeit am Sondertag = KEINE Soll-Minderung,
+     * die geleisteten Stunden zählen normal. Nur Sondertage ohne Arbeit senken das Soll.
      */
     #[Test]
-    public function working_on_a_holiday_still_zeroes_the_daily_target(): void
+    public function working_on_a_special_day_keeps_the_full_daily_target(): void
     {
         Carbon::setTestNow(Carbon::parse('2026-07-21 12:00:00')); // Dienstag
 
         $user = $this->workShiftUserWithDailyTarget('08:00');
+        $this->specialDayContract($user);
         Holiday::create([
             'name' => 'Testfeiertag',
             'date' => '2026-07-21',
+            'end_date' => '2026-07-21',
             'yearly' => false,
             'from_api' => false,
+            'treatAsSpecialDay' => true,
         ]);
         $user->individualTimes()->create([
             'title' => 'Feiertagsdienst',
@@ -162,9 +167,69 @@ final class WorkTimeBookingServiceTest extends TestCase
         $this->assertDatabaseHas('work_time_bookings', [
             'user_id' => $user->id,
             'name' => 'daily_work_time_booking_2026-07-21',
-            'wanted_working_hours' => 0,
+            'wanted_working_hours' => 480,
             'worked_hours' => 480,
-            'work_time_balance_change' => 480,
+            'work_time_balance_change' => 0,
+            'is_special_day' => true,
+        ]);
+
+        Carbon::setTestNow();
+    }
+
+    #[Test]
+    public function a_special_day_without_work_zeroes_the_daily_target_and_flags_the_booking(): void
+    {
+        Carbon::setTestNow(Carbon::parse('2026-07-21 12:00:00')); // Dienstag
+
+        $user = $this->workShiftUserWithDailyTarget('08:00');
+        $this->specialDayContract($user);
+        Holiday::create([
+            'name' => 'Testfeiertag',
+            'date' => '2026-07-21',
+            'end_date' => '2026-07-21',
+            'yearly' => false,
+            'from_api' => false,
+            'treatAsSpecialDay' => true,
+        ]);
+
+        $this->service->calculateDailyWorkingHours();
+
+        $this->assertDatabaseHas('work_time_bookings', [
+            'user_id' => $user->id,
+            'name' => 'daily_work_time_booking_2026-07-21',
+            'wanted_working_hours' => 0,
+            'worked_hours' => 0,
+            'work_time_balance_change' => 0,
+            'is_special_day' => true,
+        ]);
+
+        Carbon::setTestNow();
+    }
+
+    #[Test]
+    public function a_sick_day_is_target_neutral(): void
+    {
+        Carbon::setTestNow(Carbon::parse('2026-07-21 12:00:00')); // Dienstag
+
+        $user = $this->workShiftUserWithDailyTarget('08:00');
+        Vacation::factory()->create([
+            'vacationer_type' => User::class,
+            'vacationer_id' => $user->id,
+            'date' => '2026-07-21',
+            'type' => 'NOT_AVAILABLE',
+            'full_day' => true,
+            'is_series' => false,
+            'comment' => null,
+        ]);
+
+        $this->service->calculateDailyWorkingHours();
+
+        $this->assertDatabaseHas('work_time_bookings', [
+            'user_id' => $user->id,
+            'name' => 'daily_work_time_booking_2026-07-21',
+            'wanted_working_hours' => 480,
+            'worked_hours' => 480,
+            'work_time_balance_change' => 0,
         ]);
 
         Carbon::setTestNow();
@@ -205,6 +270,29 @@ final class WorkTimeBookingServiceTest extends TestCase
         ]);
 
         Carbon::setTestNow();
+    }
+
+    private function specialDayContract(User $user): void
+    {
+        $template = UserContract::create([
+            'name' => 'Sondertag-Vertrag',
+            'free_full_days_per_week' => 2,
+            'free_half_days_per_week' => 0,
+            'special_day_rule_active' => true,
+            'compensation_period' => 90,
+            'free_sundays_per_season' => 0,
+            'days_off_first_26_weeks' => 0,
+        ]);
+        UserContractAssign::create([
+            'user_id' => $user->id,
+            'user_contract_id' => $template->id,
+            'free_full_days_per_week' => 2,
+            'free_half_days_per_week' => 0,
+            'special_day_rule_active' => true,
+            'compensation_period' => 90,
+            'free_sundays_per_season' => 0,
+            'days_off_first_26_weeks' => 0,
+        ]);
     }
 
     private function workShiftUserWithDailyTarget(string $tuesdayTime): User

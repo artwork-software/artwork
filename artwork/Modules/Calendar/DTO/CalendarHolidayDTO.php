@@ -12,6 +12,7 @@ class CalendarHolidayDTO extends Data
         public ?string $end_date,
         public ?string $color,
         public ?array $subdivisions,
+        public bool $treatAsSpecialDay = false,
     ) {
     }
 }

@@ -860,7 +860,7 @@ const modalDescription = computed(() => {
 const checkedEventProperties = computed(() => (event_properties ?? []).filter(p => p.checked))
 
 const canCreateDirect = computed(
-    () => hasAdminRole() || selectedRoom.value?.everyone_can_book || roomAdminIds.value.includes(page.props.auth.user.id) || can('create events without request') || (props.isPlanning && can('can plan fixed in planning calendar'))
+    () => hasAdminRole() || selectedRoom.value?.everyone_can_book || roomAdminIds.value.includes(page.props.auth.user.id) || (props.isPlanning ? can('can plan fixed in planning calendar') : can('create events without request'))
 )
 
 const isPrimaryDisabled = computed(() => {

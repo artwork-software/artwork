@@ -32,6 +32,15 @@
                     {{ $t('Subscribe to shift calendar') }}
                 </div>
             </div>
+            <!-- „Meine Zahlen": nur im eigenen Einsatzplan (Selbstzugriff auf die Kennzahlen) -->
+            <div class="flex items-center" v-if="showMyKeyFigures">
+                <button type="button"
+                        @click="showMyKeyFiguresModal = true"
+                        class="flex items-center gap-x-1 text-sm group cursor-pointer text-text">
+                    <IconChartBar class="h-5 w-5 group-hover:text-accent-600 duration-150 transition-all ease-in-out" stroke-width="1.5" />
+                    {{ $t('My key figures') }}
+                </button>
+            </div>
         </div>
         <div class="flex items-center">
             <ToolTipComponent
@@ -52,12 +61,44 @@
                 classesButton="ui-button"
             />
         </div>
-        <!--        <div v-if="type !== 'freelancer' && type !== 'service_provider'">-->
-        <!--            {{ $t('Planned/target') }}: {{ totalPlannedWorkingHours.toFixed(1) }} / {{ totalHoursExpectedWork }}-->
-        <!--        </div>-->
-        <!--        <div v-if="type === 'freelancer' || type === 'service_provider'">-->
-        <!--            {{ $t('Planned') }}: {{ totalPlannedWorkingHours?.toFixed(1) }}-->
-        <!--        </div>-->
+    </div>
+    <!-- Geplant/Soll für den gewählten Zeitraum. Das Soll kommt aus dem Backend
+         (WorkTimeCalculationService, Arbeitszeitmuster inkl. Sondertage); ohne gültiges
+         Muster an mindestens einem Tag ist es unbekannt -> "–" + Badge "Arbeitszeitmuster fehlt". -->
+    <div v-if="plannedWorkTime" class="ml-4 mb-2 text-xs text-text-muted flex items-center gap-1">
+        <span>{{ $t('Planned') }} {{ plannedWorkTime }} h</span>
+        <template v-if="showTarget">
+            <span class="text-text-subtle">·</span>
+            <span v-if="!targetUnknown">{{ $t('Target') }} {{ targetWorkTime }} h</span>
+            <span v-else class="inline-flex items-center gap-1">
+                {{ $t('Target') }} –
+                <ToolTipComponent
+                    direction="bottom"
+                    :tooltip-text="$t('No work time pattern stored')"
+                    icon="IconInfoCircle"
+                    icon-size="h-3.5 w-3.5 text-text-subtle"
+                    classes-button=""
+                    no-relative
+                />
+            </span>
+            <ToolTipComponent
+                v-if="!targetUnknown"
+                direction="bottom"
+                :tooltip-text="$t('Target according to the work time pattern valid in the selected period (special days reduce the target, vacation and sick days are target-neutral).')"
+                icon="IconInfoCircle"
+                icon-size="h-3.5 w-3.5 text-text-subtle"
+                classes-button=""
+                no-relative
+            />
+            <span
+                v-if="targetUnknown"
+                class="ml-1 inline-flex items-center gap-1 rounded-full border border-warning-border bg-warning-surface px-2 py-0.5 text-[11px] font-semibold text-warning"
+                v-tooltip.bottom="{ value: missingPatternTooltip, appendTo: 'body', class: 'aw-tooltip', position: 'bottom' }"
+            >
+                <IconAlertTriangle class="h-3.5 w-3.5" stroke-width="1.5" />
+                {{ $t('Work time pattern missing') }}
+            </span>
+        </template>
     </div>
     <CalendarAboSettingModal v-if="showCalendarAboSettingModal" @close="closeCalendarAboSettingModal"
                              :crafts="crafts"/>
@@ -69,6 +110,12 @@
         :type="type"
         :date-value="dateValue"
         @close="showExportModal = false"
+    />
+    <UserShiftInfoModal
+        v-if="showMyKeyFiguresModal"
+        :user-id="user_to_edit_id"
+        self-view
+        @closed="showMyKeyFiguresModal = false"
     />
 </template>
 
@@ -83,15 +130,24 @@ import IconLib from "@/Mixins/IconLib.vue";
 import CalendarAboSettingModal from "@/Pages/Shifts/Components/CalendarAboSettingModal.vue";
 import CalendarAboInfoModal from "@/Pages/Shifts/Components/CalendarAboInfoModal.vue";
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
-import {IconCalendar, IconChevronDown, IconChevronLeft, IconChevronRight, IconFileTypePdf} from "@tabler/icons-vue";
+import {IconAlertTriangle, IconCalendar, IconChartBar, IconChevronDown, IconChevronLeft, IconChevronRight, IconFileTypePdf} from "@tabler/icons-vue";
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
 import UserShiftPlanExportModal from "@/Layouts/Components/ShiftPlanComponents/UserShiftPlanExportModal.vue";
+import {defineAsyncComponent} from "vue";
+
+// Modal erst laden, wenn „Meine Zahlen" geöffnet wird (Einsatzplan-Initial-Load schlank halten)
+const UserShiftInfoModal = defineAsyncComponent({
+    loader: () => import("@/Pages/Shifts/Components/UserShiftInfoModal.vue"),
+});
 
 
 export default {
     name: "UserShiftPlanFunctionBar",
     mixins: [Permissions, IconLib],
     components: {
+        UserShiftInfoModal,
+        IconAlertTriangle,
+        IconChartBar,
         UserShiftPlanExportModal,
         ToolTipComponent,
         PropertyIcon,
@@ -109,9 +165,12 @@ export default {
     },
     props: [
         'dateValue',
-        'weeklyWorkingHours',
+        // Soll/Ist des angezeigten Zeitraums aus dem Backend (UserController::operationPlanTargetSummary):
+        // { target_minutes, target_formatted, target_unknown, days_without_pattern, days, ... } oder null
+        'workTimeTarget',
         'type',
         'totalPlannedWorkingHours',
+        'plannedWorkTime',
         'crafts',
         'user_to_edit_id'
     ],
@@ -122,29 +181,38 @@ export default {
             showCalendarAboSettingModal: false,
             showCalendarAboInfoModal: false,
             showExportModal: false,
+            showMyKeyFiguresModal: false,
         }
     },
     computed: {
-        totalHoursExpectedWork() {
-            const startDate = new Date(this.dateValue[0]);
-            const endDate = new Date(this.dateValue[1]);
-
-            // Calculate the time difference in milliseconds between the two dates
-            const timeDifference = endDate - startDate;
-
-            // Calculate the total number of days in the date range (add 1 to include both start and end dates)
-            const totalDays = Math.ceil(timeDifference / (1000 * 60 * 60 * 24)) + 1;
-
-            // Calculate the average number of hours worked per day
-            const hoursPerDay = this.weeklyWorkingHours / 7;
-
-            // Calculate the total number of hours that need to be worked
-            return (totalDays * hoursPerDay).toFixed(1);
+        // Soll nur für User (Externe haben kein Soll) und nur, wenn das Backend etwas geliefert hat
+        showTarget() {
+            return this.type === 'user' && !!this.workTimeTarget && typeof this.workTimeTarget === 'object'
+        },
+        targetUnknown() {
+            return this.showTarget && this.workTimeTarget.target_unknown === true
+        },
+        // Soll als HH:MM aus dem Backend (Arbeitszeitmuster für den Zeitraum)
+        targetWorkTime() {
+            if (!this.showTarget || this.targetUnknown) return null
+            return this.workTimeTarget.target_formatted ?? null
+        },
+        missingPatternTooltip() {
+            const days = Number(this.workTimeTarget?.days_without_pattern ?? 0)
+            return days > 0
+                ? this.$t('No work time pattern is stored for {n} day(s) in this period – the target cannot be calculated.', { n: days })
+                : this.$t('No work time pattern stored')
         },
         checkIfThisIsMe() {
             if (this.$page.props.auth.user.id) {
                 return this.user_to_edit_id === this.$page.props.auth.user.id;
             }
+        },
+        // „Meine Zahlen": eigene Person + Recht auf den eigenen Einsatzplan
+        showMyKeyFigures() {
+            return this.type === 'user'
+                && !!this.checkIfThisIsMe
+                && (this.$can('can view own roster') || this.hasAdminRole());
         },
     },
     methods: {

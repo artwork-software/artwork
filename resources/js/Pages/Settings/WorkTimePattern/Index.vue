@@ -22,8 +22,13 @@
                         <SingleWorkTimePattern :work-time-pattern="workTime" />
                     </li>
                 </ul>
-                <div v-else>
-                    <BaseAlertComponent message="No work time patterns found. Please create a new one." type="info" use-translation />
+                <div v-else class="flex flex-col items-center justify-center py-12 text-center">
+                    <IconClockHour4 class="h-10 w-10 text-text-subtle mb-3" stroke-width="1.5" />
+                    <p class="text-sm font-medium text-text">{{ $t('No work time patterns yet') }}</p>
+                    <p class="mt-1 text-xs text-text-subtle max-w-md">
+                        {{ $t('A work time pattern defines the daily target hours of a person. Without a pattern, the hour account cannot calculate overtime or undertime.') }}
+                    </p>
+                    <BaseUIButton class="mt-4" :label="$t('Add Work Time Pattern')" is-add-button @click="showCreateOrUpdateWorkTimePatternModal = true" />
                 </div>
             </div>
 
@@ -36,18 +41,14 @@
 
 <script setup>
 
-import TabComponent from "@/Components/Tabs/TabComponent.vue";
 import ShiftSettingsHeader from "@/Pages/Settings/Components/ShiftSettingsHeader.vue";
 import {ref} from "vue";
 import CreateOrUpdateWorkTimePatternModal
     from "@/Pages/Settings/WorkTimePattern/Components/CreateOrUpdateWorkTimePatternModal.vue";
-import BaseMenu from "@/Components/Menu/BaseMenu.vue";
-import BaseMenuItem from "@/Components/Menu/BaseMenuItem.vue";
 import SingleWorkTimePattern from "@/Pages/Settings/WorkTimePattern/Components/SingleWorkTimePattern.vue";
-import BaseAlertComponent from "@/Components/Alerts/BaseAlertComponent.vue";
 import SettingsGuideBanner from "@/Artwork/Guide/SettingsGuideBanner.vue";
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
-import {IconCirclePlus} from "@tabler/icons-vue";
+import {IconCirclePlus, IconClockHour4} from "@tabler/icons-vue";
 
 const props = defineProps({
     workTimePatterns: {

@@ -25,7 +25,13 @@
                             class="h-5 w-5 rounded-full object-cover"
                         />
                         <span class="text-[11px] text-text">{{ worker.name }}</span>
-                        <button type="button" class="text-text-subtle hover:text-danger" @click="toggleWorker(worker)">
+                        <button
+                            type="button"
+                            class="text-text-subtle hover:text-danger"
+                            :aria-label="$t('Remove person')"
+                            v-tooltip.bottom="{ value: $t('Remove person'), class: 'aw-tooltip' }"
+                            @click="toggleWorker(worker)"
+                        >
                             <PropertyIcon name="IconX" class="h-3 w-3" stroke-width="2" />
                         </button>
                     </span>
@@ -141,7 +147,13 @@
                             class="inline-flex items-center gap-1 rounded-full bg-surface-sunken px-2 py-0.5 text-[11px] text-text-muted"
                         >
                             {{ formatAssignmentDate(day) }}
-                            <button type="button" class="text-text-subtle hover:text-danger" @click="removeDay(day)">
+                            <button
+                                type="button"
+                                class="text-text-subtle hover:text-danger"
+                                :aria-label="$t('Remove day')"
+                                v-tooltip.bottom="{ value: $t('Remove day'), class: 'aw-tooltip' }"
+                                @click="removeDay(day)"
+                            >
                                 <PropertyIcon name="IconX" class="h-3 w-3" stroke-width="2" />
                             </button>
                         </span>

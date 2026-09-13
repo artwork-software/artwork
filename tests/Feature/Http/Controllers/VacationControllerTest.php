@@ -82,6 +82,59 @@ final class VacationControllerTest extends FeatureTestCase
             ->assertForbidden();
     }
 
+    /**
+     * Selbst erfasste Abwesenheit ist immer „Nicht verfügbar" (NOT_AVAILABLE) – eine wählbare
+     * Urlaubsart gibt es im Verfügbarkeitskalender nicht (kommt mit dem Urlaubsmodul); ein trotzdem
+     * mitgeschicktes vacation_type wird ignoriert.
+     */
+    private function ownAbsencePayload(array $overrides = []): array
+    {
+        return array_merge([
+            'date' => '2026-07-16',
+            'type' => 'vacation',
+            'full_day' => true,
+            'is_series' => false,
+            'comment' => 'Test',
+        ], $overrides);
+    }
+
+    #[Test]
+    public function own_absence_is_stored_as_not_available(): void
+    {
+        $user = User::factory()->create();
+        $this->actingAs($user);
+
+        $this->postJson(route('user.vacation.add', $user), $this->ownAbsencePayload())->assertSuccessful();
+
+        $this->assertDatabaseHas('vacations', [
+            'vacationer_id' => $user->id,
+            'vacationer_type' => User::class,
+            'date' => '2026-07-16',
+            'type' => 'NOT_AVAILABLE',
+        ]);
+    }
+
+    #[Test]
+    public function a_sent_vacation_type_is_ignored_for_own_absences(): void
+    {
+        $user = User::factory()->create();
+        $this->actingAs($user);
+
+        $this->postJson(route('user.vacation.add', $user), $this->ownAbsencePayload(['vacation_type' => 'OFF_WORK']))
+            ->assertSuccessful();
+
+        $this->assertDatabaseHas('vacations', [
+            'vacationer_id' => $user->id,
+            'vacationer_type' => User::class,
+            'type' => 'NOT_AVAILABLE',
+        ]);
+        $this->assertDatabaseMissing('vacations', [
+            'vacationer_id' => $user->id,
+            'vacationer_type' => User::class,
+            'type' => 'OFF_WORK',
+        ]);
+    }
+
     #[Test]
     public function shift_planner_can_set_availability_status(): void
     {
@@ -100,5 +153,18 @@ final class VacationControllerTest extends FeatureTestCase
             'vacationer_type' => User::class,
             'comment' => 'OFF_WORK',
         ]);
+    }
+
+    #[Test]
+    public function unknown_availability_status_is_rejected_with_422(): void
+    {
+        $user = $this->actingAsUserWith(PermissionEnum::SHIFT_PLANNER->value);
+
+        $this->patchJson(route('user.check.vacation', $user), [
+            'checked' => ['type' => 'SOMETHING_ELSE'],
+            'day' => '2026-07-16',
+            'vacationTypeBeforeUpdate' => ['type' => 'AVAILABLE'],
+            'remove_from_shifts' => false,
+        ])->assertStatus(422)->assertJsonValidationErrors(['checked.type']);
     }
 }

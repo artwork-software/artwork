@@ -1,0 +1,11 @@
+{
+    "Interfaces": "Schnittstellen",
+    "Sage permissions are listed under \"Budget & funding\"; the Sage configuration belongs to \"Tool settings\".": "Sage-Rechte stehen unter „Budget & Finanzierung“; die Sage-Konfiguration liegt bei „Tooleinstellungen“.",
+    "Manage webhooks": "Webhooks verwalten",
+    "Tab \"Interfaces\" in the tool settings (webhook section only)": "Tab „Schnittstellen“ in den Tooleinstellungen (nur Webhook-Bereich)",
+    "Create, edit and delete endpoints": "Endpunkte anlegen, ändern und löschen",
+    "View signatures and the delivery log": "Signaturen und Zustellprotokoll einsehen",
+    "Redeliver failed deliveries": "Fehlgeschlagene Zustellungen erneut zustellen",
+    "Deliberately decoupled from \"Tool settings\": the other sections of the tab \"Interfaces\" still require \"Tool settings\".": "Bewusst von „Tooleinstellungen“ entkoppelt: die übrigen Bereiche des Tabs „Schnittstellen“ brauchen weiterhin „Tooleinstellungen“.",
+    "Can manage webhook endpoints and their deliveries": "Kann Webhook-Endpunkte und ihre Zustellungen verwalten"
+}

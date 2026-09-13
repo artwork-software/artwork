@@ -145,17 +145,6 @@ final class FreelancerServiceTest extends TestCase
     }
 
     #[Test]
-    public function get_shifts_with_events_returns_collection(): void
-    {
-        $freelancer = Freelancer::factory()->create();
-
-        $shifts = $this->service->getShiftsWithEventsOrderedByStart($freelancer);
-
-        $this->assertInstanceOf(Collection::class, $shifts);
-        $this->assertCount(0, $shifts);
-    }
-
-    #[Test]
     public function search_freelancers_returns_support_collection(): void
     {
         Freelancer::factory()->create(['first_name' => 'Alice']);

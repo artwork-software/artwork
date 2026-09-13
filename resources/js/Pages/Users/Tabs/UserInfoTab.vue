@@ -347,7 +347,7 @@
                 </template>
 
                 <BaseUIButton
-                    v-if="can('teammanagement') || hasAdminRole()"
+                    v-if="can('teammanagement') || can('can manage workers') || hasAdminRole()"
                     @click="openChangeTeamsModal"
                     hide-icon
                 >
@@ -359,7 +359,7 @@
                 </BaseUIButton>
 
                 <button
-                    v-if="can('teammanagement') && userForm.departments.length || hasAdminRole()"
+                    v-if="(can('teammanagement') || can('can manage workers')) && userForm.departments.length || hasAdminRole()"
                     @click="deleteFromAllDepartments"
                     class="inline-flex items-center gap-2 rounded-xl border border-danger-border bg-danger-surface px-3 py-2.5 text-sm font-medium text-danger transition hover:bg-danger-surface"
                 >

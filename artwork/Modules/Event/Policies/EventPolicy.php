@@ -39,7 +39,9 @@ class EventPolicy
 
     public function update(User $user, Event $event): bool
     {
-        return $user->can(PermissionEnum::PROJECT_MANAGEMENT->value) ||
+        // "Projektleitung sein" (management projects) gab hier bisher systemweites Bearbeiten aller Termine —
+        // Widerspruch zur Beschreibung. Jetzt: Schreibrecht im Projekt des Termins (Konzept Nutzerrechte 6.2 A).
+        return $this->canWriteProjectOf($user, $event) ||
             $user->can(PermissionEnum::CAN_EDIT_PLANNING_CALENDAR->value) ||
             $user->can(PermissionEnum::CREATE_EVENTS_WITHOUT_REQUEST->value) ||
             $event->room?->users()
@@ -84,7 +86,7 @@ class EventPolicy
 
     public function delete(User $user, Event $event): bool
     {
-        return $user->can(PermissionEnum::PROJECT_MANAGEMENT->value) ||
+        return $this->canWriteProjectOf($user, $event) ||
             $user->can(PermissionEnum::CREATE_EVENTS_WITHOUT_REQUEST->value) ||
             ($event->is_planning && $user->can(PermissionEnum::CAN_EDIT_PLANNING_CALENDAR->value)) ||
             $event->room?->users()
@@ -92,5 +94,12 @@ class EventPolicy
                 ->where('user_id', $user->id)
                 ->exists() ||
             $event->creator?->id === $user->id;
+    }
+
+    private function canWriteProjectOf(User $user, Event $event): bool
+    {
+        $project = $event->project;
+
+        return $project !== null && $user->can('update', $project);
     }
 }

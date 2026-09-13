@@ -12,7 +12,6 @@ class BudgetColumnSettingPolicy
         return $user->canAny(
             [
                 PermissionEnum::GLOBAL_PROJECT_BUDGET_ADMIN->value,
-                PermissionEnum::GLOBAL_PROJECT_BUDGET_ADMIN_NO_DOCS->value
             ]
         );
     }
@@ -22,7 +21,6 @@ class BudgetColumnSettingPolicy
         return $user->canAny(
             [
                 PermissionEnum::GLOBAL_PROJECT_BUDGET_ADMIN->value,
-                PermissionEnum::GLOBAL_PROJECT_BUDGET_ADMIN_NO_DOCS->value
             ]
         );
     }

@@ -16,6 +16,16 @@
                         : 'text-danger'">
                         {{ entry.type === 'available' ? $t('Available') : $t('Absent') }}
                     </span>
+                    <!-- Art der Abwesenheit: Urlaub / Nicht verfügbar / Frei -->
+                    <span
+                        v-if="vacationTypeLabel"
+                        class="inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium"
+                        :class="entry.vacationType === 'OFF_WORK'
+                            ? 'border-danger-border bg-danger-surface text-danger'
+                            : 'border-border bg-surface-sunken text-text-muted'"
+                    >
+                        {{ vacationTypeLabel }}
+                    </span>
                     <IconRepeat v-if="entry.kind === 'weekly'" class="h-4 w-4 text-text-subtle" />
                     <span
                         v-if="entry.hasConflicts"
@@ -36,10 +46,13 @@
                 </p>
 
                 <!-- Konflikt-Details -->
-                <div v-if="entry.hasConflicts" class="mt-2 text-xs text-text-muted space-y-0.5">
-                    <p v-for="conflict in entry.conflicts" :key="conflictKey(conflict)">
-                        {{ $t('{username} has scheduled you on {date} {start} - {end}, contrary to your original entry.', { username: conflict.user_name, date: conflict.date_casted, start: conflict.start_time, end: conflict.end_time }) }}
-                    </p>
+                <div v-if="entry.hasConflicts" class="mt-2 text-xs text-text-muted space-y-1">
+                    <div v-for="conflict in entry.conflicts" :key="conflictKey(conflict)">
+                        <p>{{ conflictText(conflict) }}</p>
+                        <p v-if="conflict.scheduled_at_casted" class="text-text-subtle">
+                            {{ $t('Assignment made on {date}.', { date: conflict.scheduled_at_casted }) }}
+                        </p>
+                    </div>
                 </div>
             </div>
 
@@ -136,6 +149,14 @@ const dateLabel = computed(() => {
     return props.entry.dateCasted || formatDate(props.entry.startDate)
 })
 
+// Typ-Badge der Abwesenheit; unbekannte/fehlende Typen zeigen kein Badge
+const VACATION_TYPE_LABELS = { OFF_WORK: 'Vacation', NOT_AVAILABLE: 'Not available', FREE_WORK: 'FREE_WORK' }
+const vacationTypeLabel = computed(() => {
+    if (props.entry.type !== 'vacation') return ''
+    const key = VACATION_TYPE_LABELS[props.entry.vacationType]
+    return key ? proxy.$t(key) : ''
+})
+
 const SYSTEM_COMMENTS = ['OFF_WORK', 'NOT_AVAILABLE', 'FREE_WORK']
 const translatedComment = computed(() =>
     SYSTEM_COMMENTS.includes(props.entry.comment) ? proxy.$t(props.entry.comment) : props.entry.comment
@@ -152,6 +173,38 @@ const deleteDescription = computed(() => {
 })
 
 const conflictKey = (c) => `${c?.date_casted}-${c?.start_time}-${c?.end_time}-${c?.user_name}`
+
+/**
+ * Der Hinweis darf nur dann jemanden als einteilende Person nennen, wenn die
+ * Zuweisung selbst diese Person gespeichert hat (scheduler_source = 'assigned').
+ * Bei Altzuweisungen kennt das Backend nur den Festschreibenden — der hat die
+ * Einteilung aber nicht vorgenommen und taucht deshalb auch nicht im
+ * Schichtverlauf als Zuweisender auf.
+ */
+const conflictText = (conflict) => {
+    const params = {
+        username: conflict?.user_name,
+        date: conflict?.date_casted,
+        start: conflict?.start_time,
+        end: conflict?.end_time,
+    }
+
+    if (conflict?.scheduler_source === 'assigned') {
+        return proxy.$t('{username} has scheduled you on {date} {start} - {end}, contrary to your original entry.', params)
+    }
+
+    if (conflict?.user_name) {
+        return proxy.$t(
+            'You are scheduled on {date} {start} - {end}, contrary to your original entry. Who made the assignment was not recorded; the shift was committed by {username}.',
+            params,
+        )
+    }
+
+    return proxy.$t(
+        'You are scheduled on {date} {start} - {end}, contrary to your original entry. Who made the assignment was not recorded.',
+        params,
+    )
+}
 
 const deleteEntry = () => {
     const isSeries = props.entry.kind !== 'single' && props.entry.seriesId
@@ -175,7 +228,6 @@ const deleteEntry = () => {
             'vacations',
             'availabilities',
             'createShowDate',
-            'user_to_edit_whole_week_date_period_vacations',
             'freelancer_to_edit_whole_week_date_period_vacations',
         ],
         onFinish: () => {

@@ -50,45 +50,146 @@ class CompensationDayOffRepository extends BaseRepository
             ->get();
     }
 
-    public function getAllOpen(?int $craftId = null): Collection
+    /**
+     * Filter des Ersatzfrei-Dashboards: craft_id, user_id, deadline_from, deadline_to (Y-m-d).
+     * Der Status (offen/gewährt/überfällig) wird über die jeweilige Listenmethode abgebildet.
+     *
+     * @param array{craft_id?: int|null, user_id?: int|null, deadline_from?: string|null, deadline_to?: string|null} $filters
+     */
+    private function applyDashboardFilters(Builder $query, array $filters): Builder
     {
-        return CompensationDayOff::with(['user', 'violation.shiftRule'])
+        $craftId = $filters['craft_id'] ?? null;
+        $userId = $filters['user_id'] ?? null;
+        $deadlineFrom = $filters['deadline_from'] ?? null;
+        $deadlineTo = $filters['deadline_to'] ?? null;
+
+        return $query
             ->when($craftId, fn (Builder $q) => $q->whereHas('user', fn (Builder $u) => $u->whereHas('assignedCrafts', fn (Builder $c) => $c->where('crafts.id', $craftId))))
+            ->when($userId, fn (Builder $q) => $q->where('user_id', $userId))
+            ->when($deadlineFrom, fn (Builder $q) => $q->whereDate('deadline', '>=', $deadlineFrom))
+            ->when($deadlineTo, fn (Builder $q) => $q->whereDate('deadline', '<=', $deadlineTo));
+    }
+
+    /**
+     * @param int|array $filters Gewerk-ID (Altaufruf) oder Filter-Array, siehe applyDashboardFilters()
+     */
+    private function normalizeFilters(int|array|null $filters): array
+    {
+        return is_array($filters) ? $filters : ['craft_id' => $filters];
+    }
+
+    private const DASHBOARD_RELATIONS = ['user.assignedCrafts:id,name', 'violation.shiftRule'];
+
+    public function getAllOpen(int|array|null $filters = null): Collection
+    {
+        return $this->applyDashboardFilters(
+            CompensationDayOff::with(self::DASHBOARD_RELATIONS),
+            $this->normalizeFilters($filters)
+        )
             ->open()
             ->orderBy('deadline')
             ->get();
     }
 
-    public function getAllGranted(?int $craftId = null): Collection
+    public function getAllGranted(int|array|null $filters = null): Collection
     {
-        return CompensationDayOff::with(['user', 'violation.shiftRule', 'grantedByUser'])
-            ->when($craftId, fn (Builder $q) => $q->whereHas('user', fn (Builder $u) => $u->whereHas('assignedCrafts', fn (Builder $c) => $c->where('crafts.id', $craftId))))
+        return $this->applyDashboardFilters(
+            CompensationDayOff::with(array_merge(self::DASHBOARD_RELATIONS, ['grantedByUser'])),
+            $this->normalizeFilters($filters)
+        )
             ->granted()
             ->orderByDesc('granted_at')
             ->get();
     }
 
-    public function getAllOverdue(?int $craftId = null): Collection
+    public function getAllOverdue(int|array|null $filters = null): Collection
     {
-        return CompensationDayOff::with(['user', 'violation.shiftRule'])
-            ->when($craftId, fn (Builder $q) => $q->whereHas('user', fn (Builder $u) => $u->whereHas('assignedCrafts', fn (Builder $c) => $c->where('crafts.id', $craftId))))
+        return $this->applyDashboardFilters(
+            CompensationDayOff::with(self::DASHBOARD_RELATIONS),
+            $this->normalizeFilters($filters)
+        )
             ->overdue()
             ->orderBy('deadline')
             ->get();
     }
 
-    public function getDashboardStats(?int $craftId = null): array
+    /**
+     * Seite einer Dashboard-Liste (open|overdue|granted) mit eigenem Seitenparameter, damit die drei
+     * Listen unabhängig blättern. Sortierung wie die ungepaginierten Listenmethoden.
+     */
+    public function paginateDashboardList(
+        string $status,
+        int|array|null $filters,
+        int $perPage,
+        string $pageName
+    ): \Illuminate\Contracts\Pagination\LengthAwarePaginator {
+        $relations = $status === 'granted'
+            ? array_merge(self::DASHBOARD_RELATIONS, ['grantedByUser'])
+            : self::DASHBOARD_RELATIONS;
+
+        $query = $this->applyDashboardFilters(
+            CompensationDayOff::with($relations),
+            $this->normalizeFilters($filters)
+        );
+
+        $query = match ($status) {
+            'granted' => $query->granted()->orderByDesc('granted_at'),
+            'overdue' => $query->overdue()->orderBy('deadline'),
+            default => $query->open()->orderBy('deadline'),
+        };
+
+        return $query->orderByDesc('id')->paginate($perPage, ['*'], $pageName)->withQueryString();
+    }
+
+    /**
+     * Kennzahlen des Dashboards (Anzahl + Summe je offen/gewährt/überfällig) in EINER Abfrage:
+     * die Filter sind für alle sechs Werte identisch, die Statusbedingungen entsprechen den Scopes
+     * open()/granted()/overdue() des Modells (überfällig = offen mit Frist vor jetzt).
+     */
+    public function getDashboardStats(int|array|null $filters = null): array
     {
-        $craftScope = fn (Builder $q) => $q->whereHas('user', fn (Builder $u) => $u->whereHas('assignedCrafts', fn (Builder $c) => $c->where('crafts.id', $craftId)));
+        $filters = $this->normalizeFilters($filters);
+        $now = now()->toDateTimeString();
+        $t = (new CompensationDayOff())->getTable();
+
+        $row = $this->applyDashboardFilters(CompensationDayOff::query(), $filters)
+            ->selectRaw(
+                "SUM(CASE WHEN {$t}.granted_at IS NULL THEN 1 ELSE 0 END) AS open_count, "
+                . "SUM(CASE WHEN {$t}.granted_at IS NOT NULL THEN 1 ELSE 0 END) AS granted_count, "
+                . "SUM(CASE WHEN {$t}.granted_at IS NULL AND {$t}.deadline < ? THEN 1 ELSE 0 END) AS overdue_count, "
+                . "SUM(CASE WHEN {$t}.granted_at IS NULL THEN {$t}.value ELSE 0 END) AS open_value, "
+                . "SUM(CASE WHEN {$t}.granted_at IS NOT NULL THEN {$t}.value ELSE 0 END) AS granted_value, "
+                . "SUM(CASE WHEN {$t}.granted_at IS NULL AND {$t}.deadline < ? THEN {$t}.value ELSE 0 END) AS overdue_value",
+                [$now, $now]
+            )
+            ->toBase()
+            ->first();
 
         return [
-            'open' => CompensationDayOff::open()->when($craftId, $craftScope)->count(),
-            'granted' => CompensationDayOff::granted()->when($craftId, $craftScope)->count(),
-            'overdue' => CompensationDayOff::overdue()->when($craftId, $craftScope)->count(),
-            'open_value' => (float) CompensationDayOff::open()->when($craftId, $craftScope)->sum('value'),
-            'granted_value' => (float) CompensationDayOff::granted()->when($craftId, $craftScope)->sum('value'),
-            'overdue_value' => (float) CompensationDayOff::overdue()->when($craftId, $craftScope)->sum('value'),
+            'open' => (int) ($row->open_count ?? 0),
+            'granted' => (int) ($row->granted_count ?? 0),
+            'overdue' => (int) ($row->overdue_count ?? 0),
+            'open_value' => (float) ($row->open_value ?? 0),
+            'granted_value' => (float) ($row->granted_value ?? 0),
+            'overdue_value' => (float) ($row->overdue_value ?? 0),
         ];
+    }
+
+    /**
+     * Personen, die Ersatzfrei-Einträge haben (für den Personenfilter des Dashboards).
+     *
+     * @return Collection<int, \Artwork\Modules\User\Models\User>
+     */
+    public function getUsersWithEntries(): \Illuminate\Support\Collection
+    {
+        $userIds = CompensationDayOff::query()->distinct()->pluck('user_id');
+
+        return \Artwork\Modules\User\Models\User::query()
+            ->whereIn('id', $userIds)
+            ->select(['id', 'first_name', 'last_name'])
+            ->orderBy('last_name')
+            ->orderBy('first_name')
+            ->get();
     }
 
     public function getGrantedHalvesForUserOnDate(int $userId, string $date): Collection

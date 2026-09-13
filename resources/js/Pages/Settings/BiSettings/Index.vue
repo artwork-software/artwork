@@ -1,27 +1,30 @@
 <template>
     <ProjectSettingsHeader
         :title="$t('BI Field Settings')"
-        :description="$t('Manage custom fields for Business Intelligence.')"
+        :description="$t('Setup checklist, audience categories and BI fields for Business Intelligence.')"
     >
-        <template #actions>
-            <BaseUIButton variant="primary" hide-icon class="inline-flex items-center gap-2" @click="openCreateModal">
-                <IconCirclePlus class="size-5" stroke-width="1" />
-                {{ $t('Create BI field') }}
-            </BaseUIButton>
-        </template>
-
         <SettingsGuideBanner
             storage-key="settings-guide.project.bi-fields"
             title="How does this area work?"
             :paragraphs="[
-                'This tab bundles two tools: audience categories structure how ticket numbers are recorded, BI fields are free additional fields for your projects.',
+                'This tab bundles the BI setup: the checklist shows what the module still needs, audience categories structure how ticket numbers are recorded, BI fields are free additional fields for your projects.',
+                'This tab requires the permission “Tool settings”; BI tags are maintained under System → Events → BI tags.',
             ]"
         />
 
         <div class="mt-4 space-y-6">
+            <BiSetupChecklist :items="setup" />
+
             <BiAudienceCategoryManager />
 
             <div class="rounded-2xl border border-border-subtle bg-white p-5 shadow-xs">
+                <div class="flex flex-wrap items-center justify-between gap-3 mb-3">
+                    <h3 class="text-sm font-semibold text-text">{{ $t('BI fields') }}</h3>
+                    <BaseUIButton variant="primary" hide-icon class="inline-flex items-center gap-2" @click="openCreateModal">
+                        <IconCirclePlus class="size-5" stroke-width="1" />
+                        {{ $t('Create BI field') }}
+                    </BaseUIButton>
+                </div>
                 <SettingsGuideBanner
                     class="mb-4"
                     variant="inline"
@@ -113,6 +116,7 @@ import ProjectSettingsHeader from '@/Pages/Settings/Components/ProjectSettingsHe
 import SettingsGuideBanner from '@/Artwork/Guide/SettingsGuideBanner.vue';
 import BaseUIButton from '@/Artwork/Buttons/BaseUIButton.vue';
 import BiAudienceCategoryManager from '@/Pages/Settings/BiSettings/Components/BiAudienceCategoryManager.vue';
+import BiSetupChecklist from '@/Pages/Settings/BiSettings/Components/BiSetupChecklist.vue';
 import ComponentModal from '@/Pages/Settings/ComponentManagement/Components/ComponentModal.vue';
 import ComponentIcons from '@/Components/Globale/ComponentIcons.vue';
 import ConfirmDeleteModal from '@/Layouts/Components/ConfirmDeleteModal.vue';
@@ -122,6 +126,8 @@ defineOptions({ name: 'BiSettingsIndex' });
 const props = defineProps({
     biFields: { type: Array, default: () => [] },
     tabComponentTypes: { type: Object, default: () => ({}) },
+    // Einrichtungs-Checkliste (Status serverseitig ermittelt)
+    setup: { type: Array, default: () => [] },
 });
 
 const orderedFields = ref([...props.biFields]);

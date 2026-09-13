@@ -9,6 +9,7 @@ use Artwork\Modules\Scheduling\Services\SchedulingService;
 use Artwork\Modules\ServiceProvider\Models\ServiceProvider;
 use Artwork\Modules\User\Models\User;
 use Artwork\Modules\User\Services\WorkingHourCacheService;
+use Artwork\Modules\Vacation\Enums\Vacation as VacationType;
 use Artwork\Modules\Vacation\Https\Requests\CreateVacationRequest;
 use Artwork\Modules\Vacation\Models\Vacation;
 use Artwork\Modules\Vacation\Models\Vacationer;
@@ -31,6 +32,11 @@ readonly class VacationService
     ) {
     }
 
+    /**
+     * @param VacationType|string|null $vacationTypeEnum explizite Art (Planungsstatus wie OFF_WORK/FREE_WORK
+     *        aus dem Tagesstatus) – null: selbst erfasste Abwesenheit = NOT_AVAILABLE. Die Urlaubsart wird
+     *        NICHT im Verfügbarkeitskalender gewählt (kommt mit dem Urlaubsmodul).
+     */
     public function create(
         Vacationer $vacationer,
         Request $request,
@@ -39,8 +45,10 @@ readonly class VacationService
         ChangeService $changeService,
         SchedulingService $schedulingService,
         NotificationService $notificationService,
-        $vacationTypeEnum = \Artwork\Modules\Vacation\Enums\Vacation::NOT_AVAILABLE
+        VacationType|string|null $vacationTypeEnum = null
     ): Vacation|Model {
+        $vacationTypeEnum = $this->resolveVacationType($vacationTypeEnum);
+
         /** @var Vacation $firstVacation */
         $firstVacation = $vacationer->vacations()->create([
             'start_time' => $request->start_time,
@@ -50,7 +58,7 @@ readonly class VacationService
             'day_part' => $request->day_part,
             'comment' => $request->comment,
             'is_series' => $request->is_series,
-            'type' => $vacationTypeEnum,
+            'type' => $vacationTypeEnum->value,
             'created_by' => auth()->id(),
         ]);
 
@@ -97,13 +105,28 @@ readonly class VacationService
             app(\Artwork\Modules\Project\Services\ProjectDayAssignmentService::class)->handleVacationEntry(
                 $vacationer,
                 array_merge([Carbon::parse($request->date)->format('Y-m-d')], $seriesDates),
-                $vacationTypeEnum instanceof \Artwork\Modules\Vacation\Enums\Vacation
-                    ? $vacationTypeEnum->value
-                    : (string) $vacationTypeEnum
+                $vacationTypeEnum->value
             );
         }
 
         return $firstVacation;
+    }
+
+    /**
+     * Typsichere Art des Eintrags: explizit übergeben (Enum oder Magic String wie 'FREE_WORK'),
+     * sonst Nicht verfügbar (NOT_AVAILABLE) – die selbst erfasste Abwesenheit hat keine wählbare Art.
+     * Unbekannte Strings werfen ValueError (Vacation::from).
+     */
+    private function resolveVacationType(VacationType|string|null $type): VacationType
+    {
+        if ($type instanceof VacationType) {
+            return $type;
+        }
+        if (is_string($type) && $type !== '') {
+            return VacationType::from($type);
+        }
+
+        return VacationType::NOT_AVAILABLE;
     }
 
     /**
@@ -116,7 +139,7 @@ readonly class VacationService
         string $date,
         Vacationer $vacationer,
         Request $data,
-        \Artwork\Modules\Vacation\Enums\Vacation $vacationTypeEnum,
+        VacationType $vacationTypeEnum,
         VacationConflictService $vacationConflictService,
         NotificationService $notificationService
     ): array {
@@ -138,7 +161,7 @@ readonly class VacationService
                     'comment' => $data->comment,
                     'is_series' => true,
                     'series_id' => $seriesId,
-                    'type' => $vacationTypeEnum,
+                    'type' => $vacationTypeEnum->value,
                     'created_by' => auth()->id(),
                 ]);
                 $vacationConflictService->checkVacationConflictsOnDay(
@@ -161,7 +184,7 @@ readonly class VacationService
                     'comment' => $data->comment,
                     'is_series' => true,
                     'series_id' => $seriesId,
-                    'type' => $vacationTypeEnum,
+                    'type' => $vacationTypeEnum->value,
                     'created_by' => auth()->id(),
                 ]);
                 $vacationConflictService->checkVacationConflictsOnDay(

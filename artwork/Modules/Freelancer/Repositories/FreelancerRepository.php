@@ -125,19 +125,6 @@ class FreelancerRepository extends BaseRepository
             ->get();
     }
 
-    public function getShiftsWithEventsOrderedByStart(int|Freelancer $freelancer): Collection
-    {
-        if (!$freelancer instanceof Freelancer) {
-            $freelancer = $this->findOrFail($freelancer);
-        }
-
-        return  $freelancer
-            ->shifts()
-            ->with(['event', 'event.project', 'event.room'])
-            ->orderedByStart()
-            ->get();
-    }
-
     public function scoutSearch(string $search): SupportCollection
     {
         return $this

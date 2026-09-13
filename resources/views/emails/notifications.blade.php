@@ -8,6 +8,8 @@
 )
     @php
         $page_title = $page_title !== '' ?$page_title : 'Artwork';
+        // Je Eintrag: Beschreibungszeilen (Datum, Zeit, Gewerk, Projekt …) + Deep-Link aus dem Payload
+        $presenter = \Artwork\Modules\Notification\Support\NotificationMailPresenter::class;
     @endphp
     <style>
         body {
@@ -64,6 +66,20 @@
             margin-bottom: 1rem;
         }
 
+        .notification-description {
+            font-size: 12px;
+            font-weight: 500;
+            margin: 0.2rem 0;
+        }
+
+        .notification-link {
+            display: inline-block;
+            margin-top: 0.3rem;
+            font-size: 12px;
+            text-decoration: none;
+            color: #3017AD;
+        }
+
     </style>
     <div class="email-content">
         <p style="margin-bottom: 2rem; font-size: 16px; font-family: Inter, sans-serif; font-weight: 500; margin-top: 3rem">
@@ -92,6 +108,17 @@
                                     -  {{ date('d.m.Y H:i', strtotime($body['body']['event']['end_time'])) }}
                                 @endif
                             </p>
+                            @php
+                                $entryDescription = $presenter::descriptionOf($body['body'] ?? null);
+                            @endphp
+                            @foreach($presenter::textLines($entryDescription) as $line)
+                                <p class="notification-description">{{ $line }}</p>
+                            @endforeach
+                            @if($presenter::hasDeepLink($entryDescription))
+                                <a href="{{ $presenter::primaryLink($entryDescription) }}" class="notification-link">
+                                    {{ __('Open directly in :app', ['app' => $page_title]) }}
+                                </a>
+                            @endif
                         </div>
                     </div>
                 @endforeach

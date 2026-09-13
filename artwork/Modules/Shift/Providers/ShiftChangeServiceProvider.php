@@ -9,6 +9,7 @@ use Artwork\Modules\Shift\Observers\ShiftGlobalQualificationObserver;
 use Artwork\Modules\Shift\Observers\ShiftObserver;
 use Artwork\Modules\Shift\Observers\ShiftsQualificationsObserver;
 use Artwork\Modules\Shift\Services\ShiftChangeRecorder;
+use Artwork\Modules\Shift\Services\ShiftConfirmationEligibilityService;
 use Illuminate\Support\ServiceProvider;
 
 class ShiftChangeServiceProvider extends ServiceProvider
@@ -18,6 +19,10 @@ class ShiftChangeServiceProvider extends ServiceProvider
         $this->app->singleton(ShiftChangeRecorder::class, function () {
             return new ShiftChangeRecorder();
         });
+
+        // scoped statt singleton: Octane/Swoole hält Singletons über Requests hinweg,
+        // die memoisierten berechtigten User-IDs müssen aber je Request frisch sein.
+        $this->app->scoped(ShiftConfirmationEligibilityService::class);
     }
 
     public function boot(): void

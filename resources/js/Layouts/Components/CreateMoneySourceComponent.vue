@@ -159,6 +159,22 @@
                 <IconInfoCircle stroke-width="1.5" class="mt-0.5 size-4 shrink-0 text-info"/>
                 <span>{{ $t('A funding source group bundles several funding sources so you can keep track of their budgets together. Select below which sources belong to this group — projects and budget items are still linked to the individual sources.') }}</span>
             </div>
+            <div class="flex items-center gap-x-2">
+                <IconSelector :current-icon="createSourceGroupForm.icon"
+                              @update:modelValue="createSourceGroupForm.icon = $event"/>
+                <div class="text-[13px] text-text-muted">
+                    {{ $t('Select an icon for the funding source group') }}
+                </div>
+                <button
+                    v-if="createSourceGroupForm.icon"
+                    type="button"
+                    class="ml-1 p-1 rounded-full hover:bg-border-subtle text-text-subtle hover:text-text-muted"
+                    :title="$t('Remove icon')"
+                    @click="createSourceGroupForm.icon = null"
+                >
+                    <IconX class="size-4"/>
+                </button>
+            </div>
             <BaseInput
                 v-model="createSourceGroupForm.name"
                 id="sourceGroupName"
@@ -252,11 +268,13 @@ import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
 import ArtworkBaseListbox from "@/Artwork/Listbox/ArtworkBaseListbox.vue";
 import BaseTabs from "@/Artwork/Tabs/BaseTabs.vue";
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
+import IconSelector from "@/Components/Icon/IconSelector.vue";
 
 export default {
     name: 'CreateMoneySourceComponent',
     mixins: [Permissions, IconLib],
     components: {
+        IconSelector,
         ArtworkBaseModal,
         ArtworkBaseListbox,
         BaseTabs,
@@ -312,6 +330,7 @@ export default {
                 source_name: null,
                 description: null,
                 is_group: true,
+                icon: null,
                 users: [],
                 sub_money_source_ids: []
             }),

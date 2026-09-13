@@ -66,7 +66,6 @@ class EnsureUserCanAccessProjectBudget
             $user->hasRole(RoleEnum::ARTWORK_ADMIN->value)
             || $user->canAny([
                 PermissionEnum::GLOBAL_PROJECT_BUDGET_ADMIN->value,
-                PermissionEnum::GLOBAL_PROJECT_BUDGET_ADMIN_NO_DOCS->value,
             ])
         ) {
             return $next($request);
@@ -92,13 +91,14 @@ class EnsureUserCanAccessProjectBudget
         // Sage-Aufräumaktionen) bleibt den globalen Rollen oben vorbehalten.
         $routeName = (string) $request->route()?->getName();
         if (str_contains($routeName, 'template') || str_contains($routeName, 'trashed')) {
-            abort_unless(
-                $user->canAny([
+            // Lesen genügt "Budgetvorlagen einsehen"; jede Mutation braucht "Budgetvorlagen bearbeiten".
+            $allowed = $request->isMethodSafe()
+                ? $user->canAny([
                     PermissionEnum::UPDATE_BUDGET_TEMPLATES->value,
                     PermissionEnum::VIEW_BUDGET_TEMPLATES->value,
-                ]),
-                403
-            );
+                ])
+                : $user->can(PermissionEnum::UPDATE_BUDGET_TEMPLATES->value);
+            abort_unless($allowed, 403);
 
             return $next($request);
         }

@@ -2,17 +2,39 @@
 
 namespace Artwork\Modules\Shift\Http\Requests;
 
+use Artwork\Modules\Shift\Services\ShiftRuleService;
 use Illuminate\Foundation\Http\FormRequest;
 
 class StoreShiftRuleRequest extends FormRequest
 {
     public function rules(): array
     {
+        // Ohne Wert (Sonntag/Sondertag/HFT an Sondertag) oder mit optionalem Wert (leer = Vertragsziel)
+        $typesWithoutValue = implode(',', array_merge(
+            ShiftRuleService::ruleTypesWithoutValue(),
+            ShiftRuleService::ruleTypesWithOptionalValue()
+        ));
+        $typesWithPeriodWeeks = implode(',', ShiftRuleService::ruleTypesWithPeriodWeeks());
+
         return [
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
             'trigger_type' => 'required|string',
-            'individual_number_value' => 'required|numeric|min:0.1',
+            // Zahlenwert nur für Regeltypen, die ihn brauchen; für Sonntag/Sondertag/HFT an Sondertag ignoriert.
+            'individual_number_value' => [
+                'nullable',
+                'required_unless:trigger_type,' . $typesWithoutValue,
+                'numeric',
+                'min:0.1',
+            ],
+            // Ausgleichszeitraum in Wochen — Pflicht beim Wochendurchschnitt (averageWeeklyHours)
+            'period_weeks' => [
+                'nullable',
+                'required_if:trigger_type,' . $typesWithPeriodWeeks,
+                'integer',
+                'min:2',
+                'max:104',
+            ],
             'warning_color' => 'required|string',
             'default_compensation_days' => 'nullable|numeric|min:0.5',
             'default_compensation_deadline_days' => 'nullable|integer|min:1',
@@ -21,5 +43,24 @@ class StoreShiftRuleRequest extends FormRequest
             'user_ids' => 'nullable|array',
             'user_ids.*' => 'exists:users,id',
         ];
+    }
+
+    protected function prepareForValidation(): void
+    {
+        // Für Typen ohne Wert kommt vom Formular ggf. 0/''/null — nicht an min:0.1 scheitern lassen.
+        if (in_array($this->input('trigger_type'), ShiftRuleService::ruleTypesWithoutValue(), true)) {
+            $this->merge(['individual_number_value' => null]);
+        }
+        // Optionaler Wert: leer/0 bedeutet "Zielwert aus dem Vertrag"
+        if (
+            in_array($this->input('trigger_type'), ShiftRuleService::ruleTypesWithOptionalValue(), true)
+            && (float) $this->input('individual_number_value') <= 0
+        ) {
+            $this->merge(['individual_number_value' => null]);
+        }
+        // Zeitraum nur beim Wochendurchschnitt; für andere Typen ignorieren
+        if (!in_array($this->input('trigger_type'), ShiftRuleService::ruleTypesWithPeriodWeeks(), true)) {
+            $this->merge(['period_weeks' => null]);
+        }
     }
 }

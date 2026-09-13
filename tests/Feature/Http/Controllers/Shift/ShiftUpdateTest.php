@@ -4,6 +4,7 @@ namespace Tests\Feature\Http\Controllers\Shift;
 
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Shift\Models\Shift;
+use Artwork\Modules\Shift\Models\ShiftCommitWorkflowUser;
 use Artwork\Modules\Shift\Models\ShiftQualification;
 use Artwork\Modules\Shift\Models\ShiftsQualifications;
 use Artwork\Modules\User\Models\User;
@@ -68,6 +69,35 @@ final class ShiftUpdateTest extends FeatureTestCase
         );
 
         $response->assertNotFound();
+    }
+
+    #[Test]
+    public function updating_a_shift_from_the_shift_plan_returns_json_instead_of_a_redirect(): void
+    {
+        // Regression: Der Dienstplan speichert per axios (kein Inertia-Request). Ein 302 wurde vom
+        // Browser mit PATCH auf /shifts/view weiterverfolgt -> 405 "PATCH not supported".
+        $this->actingAsAdmin();
+
+        $shift = Shift::factory()->create([
+            'is_committed' => false,
+            'start_date' => '2026-06-08',
+            'end_date' => '2026-06-08',
+            'start' => '10:00:00',
+            'end' => '14:00:00',
+        ]);
+
+        $response = $this->patchJson(route('event.shift.update', $shift), [
+            'start_date' => '2026-06-08',
+            'end_date' => '2026-06-08',
+            'start' => '12:00:00',
+            'end' => '16:00:00',
+            'break_minutes' => 0,
+            'craft_id' => $shift->craft_id,
+            'updateOrCreateInShiftPlan' => true,
+        ]);
+
+        $response->assertOk()->assertJson(['id' => $shift->id]);
+        $this->assertDatabaseHas('shifts', ['id' => $shift->id, 'start' => '12:00:00', 'end' => '16:00:00']);
     }
 
     #[Test]
@@ -255,6 +285,8 @@ final class ShiftUpdateTest extends FeatureTestCase
     public function admin_can_update_workflow_settings(): void
     {
         $this->actingAsAdmin();
+        // Aktivieren verlangt seit Block 1a mindestens eine Genehmiger:in
+        ShiftCommitWorkflowUser::create(['user_id' => User::factory()->create()->id]);
 
         $response = $this->patch(route('shift.settings.update.shift-commit-workflow'), [
             'shift_commit_workflow' => true,

@@ -59,4 +59,6 @@
     <rule ref="MySource.PHP.EvalObjectFactory"/>
     <rule ref="PEAR.Classes.ClassDeclaration"/>
     <rule ref="Squiz.PHP.Eval"/>
+    <!-- Rechte-Katalog: lange Übersetzungsschlüssel als Strings, keine Zeilenumbrüche im Text -->
+    <exclude-pattern>artwork/Modules/Permission/Catalog/Modules/*</exclude-pattern>
 </ruleset>

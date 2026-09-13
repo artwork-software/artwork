@@ -3,10 +3,11 @@
 namespace Artwork\Modules\Vacation\Services;
 
 use Artwork\Modules\Freelancer\Models\Freelancer;
+use Artwork\Modules\Shift\Services\ShiftNotificationLinkService;
 use Artwork\Modules\Notification\Enums\NotificationEnum;
 use Artwork\Modules\Notification\Services\NotificationService;
 use Artwork\Modules\Shift\Models\Shift;
-use Artwork\Modules\Shift\Models\ShiftWorker;
+use Artwork\Modules\Shift\Support\ShiftSchedulerResolver;
 use Artwork\Modules\User\Models\User;
 use Artwork\Modules\Vacation\Models\VacationConflict;
 use Artwork\Modules\Vacation\Repository\VacationConflictRepository;
@@ -30,26 +31,44 @@ readonly class VacationConflictService
     }
 
     /**
-     * Name der Person, die den Worker dieser Schicht zugewiesen hat — nicht der
-     * Festschreibende: bei Bulk-Festschreiben/Workflow-Genehmigung stand sonst
-     * eine unbeteiligte Person im Konflikt-Hinweis. committedBy bleibt nur als
-     * Fallback für Alt-Zuweisungen ohne assigned_by_user_id.
+     * Zuweisende Person inkl. Quelle und Zeitpunkt. Bei Alt-Zuweisungen ohne
+     * assigned_by_user_id liefert der Resolver den Festschreibenden mit der
+     * Quelle "committed" — der Hinweis darf dann nicht behaupten, diese Person
+     * habe eingeplant (im Schichtverlauf steht davon nichts).
+     *
+     * @return array{name: ?string, source: ?string, at: ?string}
      */
-    private function resolveSchedulerName(Shift $shift, User|Freelancer|null $worker): ?string
+    private function resolveScheduler(Shift $shift, User|Freelancer|null $worker): array
     {
-        if ($worker !== null) {
-            $assignedBy = ShiftWorker::byEmployableIdAndShiftId(
-                $worker instanceof User ? User::class : Freelancer::class,
-                $worker->id,
-                $shift->id
-            )->first()?->assignedBy;
+        return ShiftSchedulerResolver::resolve($shift, $worker);
+    }
 
-            if ($assignedBy !== null) {
-                return $assignedBy->full_name;
-            }
-        }
 
-        return $shift->committedBy()->first()?->full_name;
+    /**
+     * Konflikt-Text passend zur Quelle: nur bei einer echt erfassten Zuweisung
+     * darf der Text sagen, die genannte Person habe eingeteilt.
+     *
+     * @param array{name: ?string, source: ?string, at: ?string} $scheduler
+     */
+    private function conflictNotificationTitle(
+        array $scheduler,
+        string $date,
+        string $from,
+        string $to,
+        string $language
+    ): string {
+        $key = match (true) {
+            $scheduler['source'] === ShiftSchedulerResolver::SOURCE_ASSIGNED => 'notification.shift.conflict_text',
+            $scheduler['name'] !== null => 'notification.shift.conflict_text_committed',
+            default => 'notification.shift.conflict_text_unknown',
+        };
+
+        return __($key, [
+            'username' => $scheduler['name'],
+            'date' => $date,
+            'from' => $from,
+            'to' => $to,
+        ], $language);
     }
 
     //@todo: fix phpcs error - fix complexity and nesting level
@@ -80,7 +99,8 @@ readonly class VacationConflictService
         }
 
         foreach ($shifts as $shift) {
-            $schedulerName = $this->resolveSchedulerName($shift, $user ?? $freelancer);
+            $scheduler = $this->resolveScheduler($shift, $user ?? $freelancer);
+            $schedulerName = $scheduler['name'];
             if ($user) {
                 $notificationTitle = __(
                     'notification.shift.conflict',
@@ -95,17 +115,14 @@ readonly class VacationConflictService
                 $notificationDescription = [
                     1 => [
                         'type' => 'string',
-                        'title' => __(
-                            'notification.shift.conflict_text',
-                            [
-                                'username' => $schedulerName,
-                                'date' => Carbon::parse($shift->event_start_day)->format('d.m.Y'),
-                                'from' => $shift->start,
-                                'to' => $shift->end
-                            ],
+                        'title' => $this->conflictNotificationTitle(
+                            $scheduler,
+                            Carbon::parse($shift->event_start_day)->format('d.m.Y'),
+                            $shift->start,
+                            $shift->end,
                             $user->language
                         ),
-                        'href' => null
+                        'href' => $user ? ShiftNotificationLinkService::ownOperationPlanForDate($user, $shift->event_start_day) : null
                     ],
                 ];
 
@@ -130,6 +147,8 @@ readonly class VacationConflictService
                             'vacation_id' => $vacation->id,
                             'shift_id' => $shift->id,
                             'user_name' => $schedulerName,
+                            'scheduler_source' => $scheduler['source'],
+                            'scheduled_at' => $scheduler['at'],
                             'date' => $shift?->event_start_day ?? $shift->start_date,
                             'start_time' => $shift->start,
                             'end_time' => $shift->end,
@@ -150,6 +169,8 @@ readonly class VacationConflictService
                                 'vacation_id' => $vacation->id,
                                 'shift_id' => $shift->id,
                                 'user_name' => $schedulerName,
+                                'scheduler_source' => $scheduler['source'],
+                                'scheduled_at' => $scheduler['at'],
                                 'date' => $shift?->event_start_day ?? $shift->start_date,
                                 'start_time' => $shift->start,
                                 'end_time' => $shift->end,
@@ -201,7 +222,8 @@ readonly class VacationConflictService
             return;
         }
 
-        $schedulerName = $this->resolveSchedulerName($shift, $user ?? $freelancer);
+        $scheduler = $this->resolveScheduler($shift, $user ?? $freelancer);
+        $schedulerName = $scheduler['name'];
         $hasConflict = false;
 
         if ($user) {
@@ -218,17 +240,14 @@ readonly class VacationConflictService
             $notificationDescription = [
                 1 => [
                     'type' => 'string',
-                    'title' => __(
-                        'notification.shift.conflict_text',
-                        [
-                            'username' => $schedulerName,
-                            'date' => Carbon::parse($shift->event_start_day)->format('d.m.Y'),
-                            'from' => $shift->start,
-                            'to' => $shift->end
-                        ],
+                    'title' => $this->conflictNotificationTitle(
+                        $scheduler,
+                        Carbon::parse($shift->event_start_day)->format('d.m.Y'),
+                        $shift->start,
+                        $shift->end,
                         $user->language
                     ),
-                    'href' => null
+                    'href' => $user ? ShiftNotificationLinkService::ownOperationPlanForDate($user, $shift->event_start_day) : null
                 ],
             ];
 
@@ -252,6 +271,8 @@ readonly class VacationConflictService
                     'vacation_id' => $vacation->id,
                     'shift_id' => $shift->id,
                     'user_name' => $schedulerName,
+                    'scheduler_source' => $scheduler['source'],
+                    'scheduled_at' => $scheduler['at'],
                     'date' => $shift?->event_start_day ?? $shift->start_date,
                     'start_time' => $shift->start,
                     'end_time' => $shift->end,
@@ -269,6 +290,8 @@ readonly class VacationConflictService
                         'vacation_id' => $vacation->id,
                         'shift_id' => $shift->id,
                         'user_name' => $schedulerName,
+                        'scheduler_source' => $scheduler['source'],
+                        'scheduled_at' => $scheduler['at'],
                         'date' => $shift?->event_start_day ?? $shift->start_date,
                         'start_time' => $shift->start,
                         'end_time' => $shift->end,

@@ -1,6 +1,7 @@
 <template>
-    <div :class="hideProjectHeader ? 'px-5' : 'mt-6 px-5  bg-surface-canvas'">
-        <div class="flex bg-surface-canvas w-[95%]">
+    <!-- Seitenpadding liefert der artwork-anchored-page-Wrapper (Ankerlinien-Konzept) -->
+    <div :class="hideProjectHeader ? '' : 'mt-6 bg-surface-canvas'">
+        <div class="flex bg-surface-canvas w-full">
             <BudgetComponent v-if="resolvedTable"
                              :sage-not-assigned="sageNotAssigned ?? effectiveBudgetData?.sageNotAssigned"
                              :hide-project-header="hideProjectHeader"

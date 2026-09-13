@@ -82,8 +82,7 @@ watch(
                     :disabled="!canEditComponent"
                     @focusout="updateTextData"
                     v-model="text"
-                    :label="projectData.data.placeholder"
-                    without-translation
+                    :placeholder="projectData.data.placeholder"
                     :input-classes="inSidebar ? '!bg-surface-inverse !border-white/10 !text-text-inverse' : ''"
                 />
             </div>

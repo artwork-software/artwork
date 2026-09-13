@@ -37,5 +37,12 @@ const tabs = computed(() => ([
         permission: is('artwork admin'),
         icon: 'IconLicense',
     },
+    {
+        name: 'Permissions explained',
+        href: route('permissions.reference'),
+        current: route().current('permissions.reference'),
+        permission: can('can manage workers') || is('artwork admin'),
+        icon: 'IconShieldLock',
+    },
 ]))
 </script>

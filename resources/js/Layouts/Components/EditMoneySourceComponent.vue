@@ -104,6 +104,22 @@
             </div>
             <!-- Form when Source Group -->
             <div v-else class="space-y-4">
+                <div class="flex items-center gap-x-2">
+                    <IconSelector :current-icon="editSourceGroupForm.icon"
+                                  @update:modelValue="editSourceGroupForm.icon = $event"/>
+                    <div class="text-[13px] text-text-muted">
+                        {{ $t('Select an icon for the funding source group') }}
+                    </div>
+                    <button
+                        v-if="editSourceGroupForm.icon"
+                        type="button"
+                        class="ml-1 p-1 rounded-full hover:bg-border-subtle text-text-subtle hover:text-text-muted"
+                        :title="$t('Remove icon')"
+                        @click="editSourceGroupForm.icon = null"
+                    >
+                        <IconX class="size-4"/>
+                    </button>
+                </div>
                 <BaseInput
                     v-model="editSourceGroupForm.name"
                     id="sourceGroupName"
@@ -197,11 +213,13 @@ import BaseCheckbox from "@/Artwork/Inputs/BaseCheckbox.vue";
 import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
 import ArtworkBaseListbox from "@/Artwork/Listbox/ArtworkBaseListbox.vue";
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
+import IconSelector from "@/Components/Icon/IconSelector.vue";
 
 export default {
     name: 'EditMoneySourceComponent',
     mixins: [Permissions, IconLib],
     components: {
+        IconSelector,
         ArtworkBaseModal,
         ArtworkBaseListbox,
         BaseUIButton,
@@ -257,6 +275,7 @@ export default {
                 source_name: this.moneySource.source_name,
                 description: this.moneySource.description,
                 is_group: true,
+                icon: this.moneySource.icon,
                 users: [],
                 sub_money_source_ids: []
             }),

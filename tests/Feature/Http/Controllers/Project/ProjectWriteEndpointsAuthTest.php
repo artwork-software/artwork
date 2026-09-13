@@ -69,12 +69,32 @@ final class ProjectWriteEndpointsAuthTest extends FeatureTestCase
     }
 
     #[Test]
-    public function viewer_can_update_shift_description_via_component_rule(): void
+    public function viewer_cannot_update_shift_description_via_component_rule(): void
     {
-        // Die Edit-UI der Schicht-Infos ist über die Komponenten-Einstellung gegated
-        // (Default allSeeAndEdit) — ein Nutzer mit Projekt-Zutritt darf speichern.
+        // Globales Leserecht öffnet das Projekt, gibt aber kein Schreibrecht — die
+        // Komponenten-Einstellung (allSeeAndEdit) kann das nicht erweitern.
         $this->actingAsUserWith(PermissionEnum::PROJECT_VIEW->value);
         $project = Project::factory()->create();
+        Component::query()->updateOrCreate(
+            ['type' => 'GeneralShiftInformationComponent'],
+            ['name' => 'General Shift Information', 'data' => [], 'permission_type' => 'allSeeAndEdit']
+        );
+
+        $this->patch(
+            route('projects.update.shift_description', ['project' => $project->id]),
+            ['shiftDescription' => 'Schicht-Info']
+        )->assertForbidden();
+
+        $this->assertNull($project->fresh()->shift_description);
+    }
+
+    #[Test]
+    public function write_team_member_can_update_shift_description_via_component_rule(): void
+    {
+        $user = User::factory()->create();
+        $this->actingAs($user);
+        $project = Project::factory()->create();
+        $project->users()->attach($user->id, ['can_write' => true]);
         Component::query()->updateOrCreate(
             ['type' => 'GeneralShiftInformationComponent'],
             ['name' => 'General Shift Information', 'data' => [], 'permission_type' => 'allSeeAndEdit']

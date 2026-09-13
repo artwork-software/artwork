@@ -26,10 +26,8 @@ final class CraftControllerTest extends FeatureTestCase
             'color' => '#abcdef',
             'notify_days' => 7,
             'universally_applicable' => true,
-            'inventory_planned_by_all' => true,
             'assignable_by_all' => true,
             'users' => [],
-            'users_for_inventory' => [],
         ]);
 
         $response->assertRedirect();
@@ -48,10 +46,8 @@ final class CraftControllerTest extends FeatureTestCase
             'color' => '#222',
             'notify_days' => 3,
             'universally_applicable' => false,
-            'inventory_planned_by_all' => false,
             'assignable_by_all' => false,
             'users' => [],
-            'users_for_inventory' => [],
         ]);
 
         $response->assertRedirect();

@@ -2,6 +2,8 @@
 
 namespace Artwork\Modules\Shift\Http\Requests;
 
+use Artwork\Modules\Shift\Models\ShiftRule;
+use Artwork\Modules\Shift\Services\ShiftRuleService;
 use Illuminate\Foundation\Http\FormRequest;
 
 class UpdateShiftRuleRequest extends FormRequest
@@ -11,7 +13,14 @@ class UpdateShiftRuleRequest extends FormRequest
         return [
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
-            'individual_number_value' => 'required|numeric|min:0.1',
+            // Der Regeltyp ist beim Bearbeiten fix (Route-Model); Zahlenwert nur, wenn der Typ ihn braucht.
+            'individual_number_value' => $this->ruleTypeNeedsValue()
+                ? 'required|numeric|min:0.1'
+                : 'nullable|numeric',
+            // Ausgleichszeitraum in Wochen — Pflicht beim Wochendurchschnitt (averageWeeklyHours)
+            'period_weeks' => $this->ruleTypeHasPeriodWeeks()
+                ? 'required|integer|min:2|max:104'
+                : 'nullable|integer',
             'warning_color' => 'required|string',
             'default_compensation_days' => 'nullable|numeric|min:0.5',
             'default_compensation_deadline_days' => 'nullable|integer|min:1',
@@ -20,5 +29,44 @@ class UpdateShiftRuleRequest extends FormRequest
             'user_ids' => 'nullable|array',
             'user_ids.*' => 'exists:users,id',
         ];
+    }
+
+    protected function prepareForValidation(): void
+    {
+        if (!$this->ruleTypeNeedsValue()) {
+            $this->merge(['individual_number_value' => null]);
+        }
+        // Optionaler Wert: leer/0 bedeutet "Zielwert aus dem Vertrag"
+        if ($this->ruleTypeHasOptionalValue() && (float) $this->input('individual_number_value') <= 0) {
+            $this->merge(['individual_number_value' => null]);
+        }
+        if (!$this->ruleTypeHasPeriodWeeks()) {
+            $this->merge(['period_weeks' => null]);
+        }
+    }
+
+    private function triggerType(): ?string
+    {
+        $rule = $this->route('shiftRule');
+
+        return $rule instanceof ShiftRule ? $rule->trigger_type : null;
+    }
+
+    private function ruleTypeNeedsValue(): bool
+    {
+        $triggerType = $this->triggerType();
+
+        return !in_array($triggerType, ShiftRuleService::ruleTypesWithoutValue(), true)
+            && !$this->ruleTypeHasOptionalValue();
+    }
+
+    private function ruleTypeHasOptionalValue(): bool
+    {
+        return in_array($this->triggerType(), ShiftRuleService::ruleTypesWithOptionalValue(), true);
+    }
+
+    private function ruleTypeHasPeriodWeeks(): bool
+    {
+        return in_array($this->triggerType(), ShiftRuleService::ruleTypesWithPeriodWeeks(), true);
     }
 }

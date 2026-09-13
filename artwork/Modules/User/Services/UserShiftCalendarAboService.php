@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 use Spatie\IcalendarGenerator\Components\Calendar;
 use Spatie\IcalendarGenerator\Components\Event;
+use Spatie\IcalendarGenerator\Properties\DateTimeProperty;
 use Spatie\IcalendarGenerator\Properties\TextProperty;
 
 readonly class UserShiftCalendarAboService
@@ -33,11 +34,45 @@ readonly class UserShiftCalendarAboService
         'notification_time_unit' => null,
     ];
 
+    /** Titel-Präfix für nicht festgeschriebene Schichten im Feed. */
+    public const PROVISIONAL_PREFIX = '[vorläufig] ';
+
+    /** Ladefenster des Feeds relativ zu heute (statt aller Schichten der Person). */
+    public const FEED_WINDOW_PAST_DAYS = 30;
+    public const FEED_WINDOW_FUTURE_MONTHS = 12;
+
     public function __construct(
         private UserShiftCalendarAboRepository $userShiftCalendarAboRepository,
         private ShiftSettings $shiftSettings,
     ) {
         //
+    }
+
+    /**
+     * Zeitfenster [von, bis] (Y-m-d) für das Laden der Schichten im Feed.
+     *
+     * @return array{0: string, 1: string}
+     */
+    public function feedWindow(?Carbon $now = null): array
+    {
+        $now = ($now ?? Carbon::now())->copy()->startOfDay();
+
+        return [
+            $now->copy()->subDays(self::FEED_WINDOW_PAST_DAYS)->toDateString(),
+            $now->copy()->addMonths(self::FEED_WINDOW_FUTURE_MONTHS)->toDateString(),
+        ];
+    }
+
+    /**
+     * Widerruf: neuen Feed-Token erzeugen. Der alte Link ist danach ungültig (404),
+     * die Abo-Einstellungen bleiben erhalten.
+     */
+    public function renewToken(UserShiftCalendarAbo $calendarAbo): UserShiftCalendarAbo
+    {
+        $calendarAbo->calendar_abo_id = (string) Str::uuid();
+        $this->userShiftCalendarAboRepository->save($calendarAbo);
+
+        return $calendarAbo;
     }
 
     public function create(array $data, int $userId): void
@@ -179,10 +214,19 @@ readonly class UserShiftCalendarAboService
         string $eventName,
         string $roomName,
         string $colleagueNames,
-        string $creatorName
+        string $creatorName,
+        string $qualificationName = '',
+        ?int $breakMinutes = null,
+        bool $provisional = false
     ): string {
-        $parts = ['Schicht: ' . $craftName];
+        $parts = [];
+        if ($provisional) {
+            $parts[] = 'Vorläufig: noch nicht festgeschrieben.';
+        }
+        $parts[] = 'Schicht: ' . $craftName;
         $optional = [
+            'Funktion: ' => $qualificationName,
+            'Pause: ' => $breakMinutes !== null ? $breakMinutes . ' min' : '',
             'Projekt: ' => $projectName,
             'Event: ' => $eventName,
             'Raum: ' => $roomName,
@@ -201,8 +245,10 @@ readonly class UserShiftCalendarAboService
 
     /**
      * Add a shift to the calendar
+     *
+     * @param Collection<int, string>|null $qualificationNames shift_qualification_id => Name (vorab gebatcht)
      */
-    public function addShiftToCalendar($calendar, $calendarAbo, $shift): void
+    public function addShiftToCalendar($calendar, $calendarAbo, $shift, ?Collection $qualificationNames = null): void
     {
         try {
             // Individuelle Zuweisungszeiten (shift_workers-Pivot) haben Vorrang
@@ -232,6 +278,19 @@ readonly class UserShiftCalendarAboService
                 ? $craftLabel . ' - ' . $contextName
                 : 'Schicht: ' . $craftLabel;
 
+            // Nicht festgeschriebene Schichten landen nur bei aktivem Instanz-Setting
+            // "alle Schichten" im Feed — dann sichtbar als vorläufig markieren.
+            $provisional = !$shift->is_committed;
+            if ($provisional) {
+                $title = self::PROVISIONAL_PREFIX . $title;
+            }
+
+            $qualificationName = '';
+            if ($pivot?->shift_qualification_id !== null && $qualificationNames !== null) {
+                $qualificationName = (string) ($qualificationNames[$pivot->shift_qualification_id] ?? '');
+            }
+            $breakMinutes = $shift->break_minutes !== null ? (int) $shift->break_minutes : null;
+
             // Kolleg*innen der Schicht für die Beschreibung ("Mit: …");
             // die Abo-Inhaber*in selbst wird nicht mit aufgezählt
             $aboUserId = $calendarAbo->user_id;
@@ -249,8 +308,19 @@ readonly class UserShiftCalendarAboService
                 $eventName,
                 $roomName,
                 $colleagueNames,
-                $creatorName
+                $creatorName,
+                $qualificationName,
+                $breakMinutes,
+                $provisional
             );
+
+            // LAST-MODIFIED: jüngste Änderung an Schicht oder Zuweisung (Pivot), damit
+            // Kalender-Clients geänderte Termine zuverlässig neu einlesen.
+            $lastModified = collect([$shift->updated_at, $pivot?->updated_at])
+                ->filter()
+                ->map(fn ($value) => Carbon::parse($value))
+                ->sortDesc()
+                ->first();
 
             $calendar->event(function ($event) use (
                 $shiftEvent,
@@ -263,7 +333,8 @@ readonly class UserShiftCalendarAboService
                 $title,
                 $description,
                 $eventName,
-                $roomName
+                $roomName,
+                $lastModified
             ): void {
                 $event->name($title)
                     ->description($description)
@@ -275,6 +346,12 @@ readonly class UserShiftCalendarAboService
                     ->endsAt(Carbon::parse($shiftEnd . ' ' . $endTime))
                     ->uniqueIdentifier('shift-' . $shift->id)
                     ->createdAt(Carbon::parse($shiftEvent->created_at ?? $shift->created_at));
+
+                if ($lastModified !== null) {
+                    $event->appendProperty(
+                        DateTimeProperty::fromDateTime('LAST-MODIFIED', $lastModified->copy()->utc(), true)
+                    );
+                }
 
                 $this->addAlertToEvent($event, $calendarAbo, $shiftStart, $startTime, $shift, $endTime, $title);
             });

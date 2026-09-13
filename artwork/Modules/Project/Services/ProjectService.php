@@ -137,6 +137,16 @@ class ProjectService
                                 $columns = $sortEnum->mapToColumn();
                                 $dir = $sortEnum->mapToDirection();
 
+                                // Projekte ohne Termine (Zeitraum "Keine Einträge") liefern in der
+                                // Sortier-Subquery NULL und würden bei ASC vor allen datierten
+                                // Projekten landen — unabhängig von der Richtung ans Ende sortieren.
+                                $nullsLastSubQuery = $this->eventService
+                                    ->getOrderBySubQueryBuilder($columns[0], 'asc');
+                                $builder->orderByRaw(
+                                    '(' . $nullsLastSubQuery->toSql() . ') IS NULL',
+                                    $nullsLastSubQuery->getBindings()
+                                );
+
                                 $builder->orderBy(
                                     //order by no. 1: start time (get always first event)
                                     $this->eventService->getOrderBySubQueryBuilder($columns[0], 'asc'),
@@ -924,7 +934,7 @@ class ProjectService
             ->mapWithKeys(fn($user) => [$user => [
                 'access_budget' => false,
                 'is_manager' => true,
-                'can_write' => false,
+                'can_write' => true,
                 'delete_permission' => false
             ]]);
 
@@ -937,7 +947,7 @@ class ProjectService
             ->mapWithKeys(fn($user) => [$user => [
                 'access_budget' => false,
                 'is_manager' => true,
-                'can_write' => false,
+                'can_write' => true,
                 'delete_permission' => false
             ]]);
 
@@ -949,7 +959,7 @@ class ProjectService
         $project->users()->attach($userId, [
             'access_budget' => false,
             'is_manager' => $isManager,
-            'can_write' => false,
+            'can_write' => true,
             'delete_permission' => false
         ]);
     }
@@ -1024,7 +1034,7 @@ class ProjectService
                 $project->users()->attach($userId, [
                     'access_budget' => false,
                     'is_manager' => true,
-                    'can_write' => false,
+                    'can_write' => true,
                     'delete_permission' => false,
                 ]);
             }

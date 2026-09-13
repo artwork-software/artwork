@@ -262,7 +262,6 @@ import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 
 const props = defineProps({
     freelancer: Object,
-    shifts: Array,
     calendarData: Array,
     dateToShow: Array,
     wholeWeekDatePeriod: Array,
@@ -312,13 +311,13 @@ const tabs = reactive([
         id: 3,
         name: proxy.$t('Conditions'),
         current: false,
-        has_permission: can('can edit external users conditions') || is('artwork admin'),
+        has_permission: can('can manage workers') || can('can manage external workers') || is('artwork admin'),
     },
     {
         id: 4,
         name: proxy.$t('Work profile'),
         current: false,
-        has_permission: can('can manage workers') || is('artwork admin'),
+        has_permission: can('can manage workers') || can('can manage external workers') || is('artwork admin'),
     },
 ])
 
@@ -337,7 +336,7 @@ const freelancerData = useForm({
 })
 
 /* Computed */
-const checkCanEdit = computed(() => !(can('can manage workers') || is('artwork admin')))
+const checkCanEdit = computed(() => !(can('can manage workers') || can('can manage external workers') || is('artwork admin')))
 
 /* Lifecycle */
 onMounted(() => {
@@ -368,7 +367,7 @@ const saveFreelancer = () => {
 }
 
 const selectNewPhoto = () => {
-    if (can('can manage workers') || is('artwork admin')) {
+    if (can('can manage workers') || can('can manage external workers') || is('artwork admin')) {
         photoInput.value?.click()
     }
 }

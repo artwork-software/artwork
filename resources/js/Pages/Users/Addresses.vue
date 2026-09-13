@@ -86,7 +86,7 @@
                         </MenuItem>
                     </BaseMenu>
 
-                    <BaseUIButton variant="primary" on-band hide-icon v-if="can('can manage workers') || is('artwork admin')" @click="openSelectAddUsersModal = true">
+                    <BaseUIButton variant="primary" on-band hide-icon v-if="can('can manage workers') || can('can manage external workers') || is('artwork admin')" @click="openSelectAddUsersModal = true">
                         <component :is="IconCirclePlus" stroke-width="1" class="size-5" />
                         {{ $t('Add new Address') }}
                     </BaseUIButton>
@@ -239,7 +239,7 @@
 
                 <div class="flex items-center gap-3">
                     <BaseUIButton
-                        v-if="can('can manage workers') || is('artwork admin')"
+                        v-if="can('can manage workers') || can('can manage external workers') || is('artwork admin')"
                         @click="openSelectAddUsersModal = true"
                         type="button"
                         hide-icon
@@ -539,6 +539,7 @@
         :departments="departments"
         :roles="roles"
         :permission_presets="permission_presets"
+        :catalog="catalog"
         :users="users"
         :invited-users="invitedUsers"
     />
@@ -578,6 +579,7 @@ const props = defineProps({
     freelancers: Array,
     serviceProviders: Array,
     permission_presets: Array,
+    catalog: Object,
     invitedUsers: Array,
     memberSortEnums: Array,
     userUserManagementSetting: Object,
@@ -630,8 +632,9 @@ const userObjectsToShow = computed(() => {
 /* Links */
 // Sichtregel (Spiegel der Backend-Autorisierung): Freelancer-/Dienstleister-Profile
 // öffnen mit Dienstplan-Sichtrechten ODER "can view private user info"; ohne beides
-// sind die Zeilen nicht verlinkt. User-Einsatzplan nur mit Dienstplan-Sichtrechten.
-const { canViewForeignRoster, canViewExternalWorkerProfile } = usePermission(usePage().props)
+// sind die Zeilen nicht verlinkt. User-Einsatzplan nur mit Dienstplan-Sichtrechten,
+// der eigene nur mit "can view own roster".
+const { canViewOwnRoster, canViewForeignRoster, canViewExternalWorkerProfile } = usePermission(usePage().props)
 const checkLink = (user) => {
     if (user.type === 'freelancer') {
         return canViewExternalWorkerProfile() ? route('freelancer.show', { freelancer: user.id }) : null
@@ -639,7 +642,7 @@ const checkLink = (user) => {
     if (user.type === 'service_provider') {
         return canViewExternalWorkerProfile() ? route('service_provider.show', { serviceProvider: user.id }) : null
     }
-    if (canViewForeignRoster() || user.id === usePage().props.auth.user.id) {
+    if (canViewForeignRoster() || (user.id === usePage().props.auth.user.id && canViewOwnRoster())) {
         return route('user.edit.shiftplan', { user: user.id })
     }
     return route('user.edit.info', { user: user.id })

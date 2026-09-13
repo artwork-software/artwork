@@ -4,8 +4,7 @@ namespace Artwork\Modules\BusinessIntelligence\Services;
 
 use Artwork\Modules\BusinessIntelligence\Enums\BiEffortBucketEnum;
 use Artwork\Modules\BusinessIntelligence\Enums\BiVisitorModeEnum;
-use Artwork\Modules\BusinessIntelligence\Models\BiEventTypeTag;
-use Artwork\Modules\GeneralSettings\Models\GeneralSettings;
+use Artwork\Modules\GeneralSettings\Services\SeasonWindowResolver;
 use Artwork\Modules\Project\Models\Project;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
@@ -24,7 +23,7 @@ class BiDashboardService
     public function __construct(
         private readonly BiProjectMetricsService $metricsService,
         private readonly BiDerivedValuesService $derivedValuesService,
-        private readonly GeneralSettings $generalSettings
+        private readonly SeasonWindowResolver $seasonWindow
     ) {
     }
 
@@ -36,9 +35,11 @@ class BiDashboardService
         ?string $to = null,
         ?string $compareFrom = null,
         ?string $compareTo = null,
-        bool $noCompare = false
+        bool $noCompare = false,
+        ?string $category = null
     ): array {
         [$rangeFrom, $rangeTo] = $this->resolveDateRange($from, $to);
+        $category = ($category !== null && $category !== '') ? $category : null;
 
         // Vergleichszeitraum: explizit gewählt, sonst Vorjahr (Default);
         // 'kein Vergleich' unterdrückt den zweiten Lauf komplett.
@@ -61,13 +62,22 @@ class BiDashboardService
             . ($rangeTo?->toDateString() ?? 'null')
             . '_c' . ($comparisonFrom?->toDateString() ?? 'null')
             . '_' . ($comparisonTo?->toDateString() ?? 'null')
+            . '_cat' . ($category !== null ? md5($category) : 'all')
             . '_v' . Cache::get('bi_dashboard_version', 0);
 
-        return Cache::remember(
+        $data = Cache::remember(
             $cacheKey,
             now()->addMinutes(10),
-            function () use ($rangeFrom, $rangeTo, $comparisonFrom, $comparisonTo): array {
-                $projects = $this->loadProjects();
+            function () use ($rangeFrom, $rangeTo, $comparisonFrom, $comparisonTo, $category): array {
+                $allProjects = $this->loadProjects();
+                // Sparten-Liste immer aus dem ungefilterten Zeitraum-Bestand, damit der
+                // Filter auch bei aktiver Sparte umschaltbar bleibt
+                $categories = $this->categoryOptions($this->projectsInRange($allProjects, $rangeFrom, $rangeTo));
+                $projects = $category !== null
+                    ? $allProjects
+                        ->filter(fn(Project $project): bool => ($this->mainCategory($project) ?? '—') === $category)
+                        ->values()
+                    : $allProjects;
 
                 $current = $this->aggregate($projects, $rangeFrom, $rangeTo);
                 // Vergleich nur über datumsfilterbare Werte: TOTAL-Modus-Kennzahlen sind
@@ -110,10 +120,25 @@ class BiDashboardService
                         $comparisonTo
                     ),
                     'data_gaps' => $this->findDataGaps($projects, $rangeFrom, $rangeTo),
-                    'tags_linked' => BiEventTypeTag::has('eventTypes')->exists(),
+                    'category_filter' => $category,
+                    'categories' => $categories,
+                    // Beide KPI-Tags müssen Terminarten haben, sonst bleiben
+                    // Vorstellungen/Veranstaltungstage/Auslastung leer (kein Fallback)
+                    'tags_linked' => $this->metricsService->kpiTagLinked(BiProjectMetricsService::PERFORMANCE_TAG)
+                        && $this->metricsService->kpiTagLinked(BiProjectMetricsService::EVENT_DAY_TAG),
+                    'kpi_tags' => [
+                        'performance' => $this->metricsService->kpiTagLinked(BiProjectMetricsService::PERFORMANCE_TAG),
+                        'event_day' => $this->metricsService->kpiTagLinked(BiProjectMetricsService::EVENT_DAY_TAG),
+                    ],
                 ];
             }
         );
+
+        // Außerhalb des Caches: Hinweis fürs Dashboard, dass "Spielzeit" gerade das Kalenderjahr ist
+        // (kein Fenster in den Tool-Einstellungen). Kein Einfluss auf die Kennzahlen selbst.
+        $data['season_configured'] = $this->seasonWindow->isConfigured();
+
+        return $data;
     }
 
     private function loadProjects(): Collection
@@ -201,7 +226,8 @@ class BiDashboardService
             $anyVisitorsEstimated = $anyVisitorsEstimated || $visitorsEstimated;
             $ticketsValue = $this->metricsService->soldTickets($project, $from, $to);
             $tickets = $ticketsValue ?? 0;
-            $revenue = $this->metricsService->revenue($project, $from, $to) ?? 0.0;
+            $revenueValue = $this->metricsService->revenue($project, $from, $to);
+            $revenue = $revenueValue ?? 0.0;
             $capacity = $this->metricsService->seatsCapacity($project, $from, $to);
             // null (nicht 0) durchreichen: Projekte ohne erfasste Tickets sollen
             // "keine Angabe" zeigen statt fälschlich 0 % Auslastung
@@ -265,9 +291,10 @@ class BiDashboardService
                 'project_id' => $project->id,
                 'project_name' => $project->name,
                 'category' => $this->mainCategory($project),
-                'visitors' => $visitors,
+                // null = nichts erfasst (Frontend zeigt "—" statt einer scheinbar echten 0)
+                'visitors' => $visitorsValue,
                 'visitors_estimated' => $visitorsEstimated,
-                'revenue' => round($revenue, 2),
+                'revenue' => $revenueValue !== null ? round($revenueValue, 2) : null,
                 'occupancy' => $occupancy,
                 'performances' => $performances,
                 'event_days' => $eventDays,
@@ -299,9 +326,14 @@ class BiDashboardService
             }
             $totalTickets += $tickets;
             $totalCapacity += $capacity;
-            $totalEventDays += $eventDays;
-            $totalPerformances += $performances;
+            $totalEventDays += $eventDays ?? 0;
+            $totalPerformances += $performances ?? 0;
         }
+
+        // Ohne Tag-Zuordnung gibt es keine Vorstellungen/Veranstaltungstage
+        // (bewusst kein Fallback auf alle Termine) → Summen bleiben null
+        $performanceTagLinked = $this->metricsService->kpiTagLinked(BiProjectMetricsService::PERFORMANCE_TAG);
+        $eventDayTagLinked = $this->metricsService->kpiTagLinked(BiProjectMetricsService::EVENT_DAY_TAG);
 
         return [
             'kpis' => [
@@ -311,8 +343,8 @@ class BiDashboardService
                 // null = kein Projekt hat Kosten erfasst (Kachel wird dann nicht angezeigt)
                 'costs' => $anyCostsRecorded ? round($totalCosts, 2) : null,
                 'occupancy' => $totalCapacity > 0 ? round($totalTickets / $totalCapacity * 100, 1) : null,
-                'event_days' => $totalEventDays,
-                'performances' => $totalPerformances,
+                'event_days' => $eventDayTagLinked ? $totalEventDays : null,
+                'performances' => $performanceTagLinked ? $totalPerformances : null,
                 'project_count' => $projects->count(),
             ],
             'audience_quotas' => $this->buildAudienceQuotas(
@@ -428,16 +460,20 @@ class BiDashboardService
                 $totalRevenue += $this->metricsService->revenue($project, $from, $to) ?? 0.0;
             }
 
-            $totalEventDays += $this->metricsService->eventDays($project, $from, $to);
-            $totalPerformances += $this->metricsService->performances($project, $from, $to);
+            $totalEventDays += $this->metricsService->eventDays($project, $from, $to) ?? 0;
+            $totalPerformances += $this->metricsService->performances($project, $from, $to) ?? 0;
         }
 
         return [
             'visitors' => $totalVisitors,
             'revenue' => round($totalRevenue, 2),
             'occupancy' => $totalCapacity > 0 ? round($totalTickets / $totalCapacity * 100, 1) : null,
-            'event_days' => $totalEventDays,
-            'performances' => $totalPerformances,
+            'event_days' => $this->metricsService->kpiTagLinked(BiProjectMetricsService::EVENT_DAY_TAG)
+                ? $totalEventDays
+                : null,
+            'performances' => $this->metricsService->kpiTagLinked(BiProjectMetricsService::PERFORMANCE_TAG)
+                ? $totalPerformances
+                : null,
             'excluded_total_mode_projects' => $excludedProjects,
         ];
     }
@@ -457,8 +493,8 @@ class BiDashboardService
                 $grouped[$key] = ['category' => $key, 'visitors' => 0, 'revenue' => 0.0, 'project_count' => 0];
             }
 
-            $grouped[$key]['visitors'] += $row['visitors'];
-            $grouped[$key]['revenue'] += $row['revenue'];
+            $grouped[$key]['visitors'] += $row['visitors'] ?? 0;
+            $grouped[$key]['revenue'] += $row['revenue'] ?? 0.0;
             $grouped[$key]['project_count']++;
         }
 
@@ -675,6 +711,38 @@ class BiDashboardService
         });
     }
 
+    /**
+     * Sparten mit Projektanzahl ('—' = ohne Sparte), alphabetisch, '—' zuletzt.
+     *
+     * @param Collection<int, Project> $projects
+     * @return array<int, array{category: string, project_count: int}>
+     */
+    private function categoryOptions(Collection $projects): array
+    {
+        $counts = [];
+        foreach ($projects as $project) {
+            $key = $this->mainCategory($project) ?? '—';
+            $counts[$key] = ($counts[$key] ?? 0) + 1;
+        }
+
+        $keys = array_keys($counts);
+        usort($keys, static function (string $a, string $b): int {
+            if ($a === '—') {
+                return 1;
+            }
+            if ($b === '—') {
+                return -1;
+            }
+
+            return strcasecmp($a, $b);
+        });
+
+        return array_map(
+            static fn(string $key): array => ['category' => $key, 'project_count' => $counts[$key]],
+            $keys
+        );
+    }
+
     private function mainCategory(Project $project): ?string
     {
         $main = $project->categories->firstWhere('pivot.is_main', true);
@@ -683,6 +751,11 @@ class BiDashboardService
     }
 
     /**
+     * Standardzeitraum: explizite Daten, sonst das Spielzeit-Fenster der Tool-Einstellungen. Ist keins
+     * hinterlegt und wurden keine Daten übergeben, gilt das laufende Kalenderjahr (SeasonWindowResolver,
+     * Produktentscheidung) statt "alle Zeiträume". Bei nur einem expliziten Datum ergänzt weiterhin nur
+     * ein konfiguriertes Fenster die fehlende Grenze.
+     *
      * @return array{0: ?Carbon, 1: ?Carbon}
      */
     private function resolveDateRange(?string $from, ?string $to): array
@@ -690,12 +763,16 @@ class BiDashboardService
         $rangeFrom = $from ? Carbon::parse($from) : null;
         $rangeTo = $to ? Carbon::parse($to) : null;
 
-        if (!$rangeFrom && !empty($this->generalSettings->playing_time_window_start)) {
-            $rangeFrom = Carbon::parse($this->generalSettings->playing_time_window_start);
+        if (!$rangeFrom && !$rangeTo) {
+            [$rangeFrom, $rangeTo] = $this->seasonWindow->bounds();
+
+            return [$rangeFrom, $rangeTo];
         }
 
-        if (!$rangeTo && !empty($this->generalSettings->playing_time_window_end)) {
-            $rangeTo = Carbon::parse($this->generalSettings->playing_time_window_end);
+        $configured = $this->seasonWindow->configuredWindow();
+        if ($configured !== null) {
+            $rangeFrom ??= $configured[0];
+            $rangeTo ??= $configured[1];
         }
 
         return [$rangeFrom, $rangeTo];

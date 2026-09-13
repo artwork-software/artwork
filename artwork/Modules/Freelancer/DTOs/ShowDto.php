@@ -40,8 +40,6 @@ class ShowDto extends BaseDto
 
     public Collection|Closure|null $projects = null;
 
-    public Collection|Closure|null $shifts = null;
-
     public ?Collection $availabilities = null;
 
     public Collection|Closure|null $shiftQualifications = null;
@@ -156,13 +154,6 @@ class ShowDto extends BaseDto
     public function setProjects(Collection|Closure|null $projects): self
     {
         $this->projects = $projects;
-
-        return $this;
-    }
-
-    public function setShifts(Collection|Closure|null $shifts): self
-    {
-        $this->shifts = $shifts;
 
         return $this;
     }
@@ -301,11 +292,6 @@ class ShowDto extends BaseDto
         return $this->projects;
     }
 
-    public function getShifts(): Collection|Closure|null
-    {
-        return $this->shifts;
-    }
-
     public function getAvailabilities(): ?Collection
     {
         return $this->availabilities;
@@ -353,7 +339,6 @@ class ShowDto extends BaseDto
             'rooms' => $this->getRooms(),
             'eventTypes' => $this->getEventTypes(),
             'projects' => $this->getProjects(),
-            'shifts' => $this->getShifts(),
             'availabilities' => $this->getAvailabilities(),
             'shiftQualifications' => $this->getShiftQualifications(),
             'firstProjectShiftTabId' => $this->getFirstProjectShiftTabId(),

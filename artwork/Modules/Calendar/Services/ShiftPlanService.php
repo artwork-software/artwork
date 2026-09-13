@@ -3,6 +3,7 @@
 namespace Artwork\Modules\Calendar\Services;
 
 use Artwork\Modules\Project\Services\ProjectService;
+use Artwork\Modules\Shift\Models\ShiftRuleViolation;
 use Artwork\Modules\Shift\Models\SingleShiftPreset;
 use Artwork\Modules\Shift\Models\ShiftPresetGroup;
 use Artwork\Modules\Shift\Services\SingleShiftPresetService;
@@ -134,7 +135,37 @@ class ShiftPlanService
         return [
             'rooms' => $roomsCalendarData->rooms,
             'lookups' => $filterResult['lookups'],
+            // Personenfilter "nur Personen mit offenen Regelverstößen" in der Tagesansicht:
+            // die Tagesansicht lädt keine Worker-Zeilen, daher hier je User/Tag die offenen Verstöße
+            'openViolationsByUser' => $this->openViolationsByUser(
+                $shiftPlanContext['calendarStartDate'],
+                $shiftPlanContext['calendarEndDate']
+            ),
         ];
+    }
+
+    /**
+     * Offene (status=active) Regelverstöße im Zeitraum, user_id => ['Y-m-d' => Anzahl].
+     *
+     * @return array<int, array<string, int>>
+     */
+    public function openViolationsByUser(Carbon $start, Carbon $end): array
+    {
+        $result = [];
+        $rows = ShiftRuleViolation::query()
+            ->select(['user_id', 'violation_date'])
+            ->where('status', 'active')
+            ->whereBetween('violation_date', [$start->toDateString(), $end->toDateString()])
+            ->get();
+
+        foreach ($rows as $row) {
+            $day = $row->violation_date instanceof \DateTimeInterface
+                ? $row->violation_date->format('Y-m-d')
+                : substr((string) $row->violation_date, 0, 10);
+            $result[$row->user_id][$day] = ($result[$row->user_id][$day] ?? 0) + 1;
+        }
+
+        return $result;
     }
 
     private function buildShiftPlanContext(Request $request): array

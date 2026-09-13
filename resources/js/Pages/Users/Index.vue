@@ -48,7 +48,7 @@
                         </MenuItem>
                     </BaseMenu>
 
-                    <BaseUIButton v-if="hasAdminRole()" variant="primary" on-band hide-icon @click="addingUser = true">
+                    <BaseUIButton v-if="hasAdminRole() || can('can manage workers')" variant="primary" on-band hide-icon @click="addingUser = true">
                         <component :is="IconCirclePlus" stroke-width="1" class="size-5" />
                         {{ $t('Invite new users') }}
                     </BaseUIButton>
@@ -82,6 +82,15 @@
                                     v-tooltip.top="{ value: ssoTooltip(row), appendTo: 'body', class: 'aw-tooltip', position: 'top' }"
                                 >
                                     {{ $t('SSO') }}
+                                </span>
+                                <!-- Personalverwaltung: Schichtarbeitende ohne heute gültiges Arbeitszeitmuster (Flag aus dem Backend, keine N+1) -->
+                                <span
+                                    v-if="showMissingPatternBadge(row)"
+                                    class="inline-flex items-center gap-1 rounded-full border border-warning-border bg-warning-surface px-2 py-0.5 text-xs font-semibold text-warning"
+                                    v-tooltip.top="{ value: $t('This person works shifts but has no valid work time pattern today – the target hours cannot be calculated.'), appendTo: 'body', class: 'aw-tooltip', position: 'top' }"
+                                >
+                                    <IconAlertTriangle class="size-3.5" stroke-width="1.5" />
+                                    {{ $t('Work time pattern missing') }}
                                 </span>
                             </div>
                             <div class="mt-1 text-text-subtle">{{ row.email }}</div>
@@ -170,6 +179,7 @@
         :departments="departments"
         :roles="roles"
         :permission_presets="permission_presets"
+        :catalog="catalog"
         :users="users"
         :invited-users="invitedUsers"
     />
@@ -232,11 +242,10 @@ import { Link, router, usePage } from '@inertiajs/vue3'
 import {
     Menu, MenuButton, MenuItem, MenuItems,
 } from '@headlessui/vue'
-import {IconCheck, IconChevronDown, IconCirclePlus, IconEdit, IconGeometry, IconSearch, IconTrash, IconUsers, IconX} from "@tabler/icons-vue"
+import {IconAlertTriangle, IconCheck, IconChevronDown, IconCirclePlus, IconEdit, IconTrash, IconUsers} from "@tabler/icons-vue"
 import debounce from 'lodash.debounce'
 import InviteUsersModal from '@/Layouts/Components/InviteUsersModal.vue'
 import SuccessModal from '@/Layouts/Components/General/SuccessModal.vue'
-import FormButton from '@/Layouts/Components/General/Buttons/FormButton.vue'
 import BaseMenu from '@/Components/Menu/BaseMenu.vue'
 import BaseModal from '@/Components/Modals/BaseModal.vue'
 import TeamIconCollection from '@/Layouts/Components/TeamIconCollection.vue'
@@ -255,6 +264,7 @@ const props = defineProps({
     freelancers: Array,
     serviceProviders: Array,
     permission_presets: Array,
+    catalog: Object,
     invitedUsers: Array,
     userSortEnumNames: Array,
     userUserManagementSetting: Object,
@@ -277,12 +287,17 @@ const sortBy = ref(props.userUserManagementSetting?.sort_by === null ? undefined
 
 /* Helpers */
 const hasAdminRole = () => is('artwork admin')
-const { canViewForeignRoster, canViewExternalWorkerProfile } = usePermission(usePage().props)
+const { can, canViewOwnRoster, canViewForeignRoster, canViewExternalWorkerProfile } = usePermission(usePage().props)
+
+// Warn-Badge "Arbeitszeitmuster fehlt": nur für Personalverwaltung/Admins, nur interne Schichtarbeitende
+const showMissingPatternBadge = (user) =>
+    user?.work_time_pattern_missing === true
+    && (hasAdminRole() || can('can manage workers'))
 
 // Einsatzplan-Sichtregel (Spiegel der Backend-Autorisierung): fremde Pläne nur mit
-// Dienstplan-Sichtrechten; ohne Rechte führt der Klick auf den Personendaten-Tab.
-// Freelancer-/Dienstleister-Profile öffnen zusätzlich mit "can view private user info",
-// ganz ohne Rechte sind ihre Zeilen nicht klickbar.
+// Dienstplan-Sichtrechten, der eigene nur mit "can view own roster"; ohne Rechte
+// führt der Klick auf den Personendaten-Tab. Freelancer-/Dienstleister-Profile öffnen
+// zusätzlich mit "can view private user info", ganz ohne Rechte sind ihre Zeilen nicht klickbar.
 const checkLink = (user) => {
     if (user.type === 'freelancer') {
         return canViewExternalWorkerProfile() ? route('freelancer.show', { freelancer: user.id }) : null
@@ -290,7 +305,7 @@ const checkLink = (user) => {
     if (user.type === 'service_provider') {
         return canViewExternalWorkerProfile() ? route('service_provider.show', { serviceProvider: user.id }) : null
     }
-    if (canViewForeignRoster() || user.id === usePage().props.auth.user.id) {
+    if (canViewForeignRoster() || (user.id === usePage().props.auth.user.id && canViewOwnRoster())) {
         return route('user.edit.shiftplan', { user: user.id })
     }
     return route('user.edit.info', { user: user.id })

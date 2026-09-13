@@ -23,6 +23,7 @@
                                         </p>
                                     </div>
                                     <div class="flex shrink-0 items-center gap-x-1">
+                                        <slot name="headerActions"/>
                                         <button
                                             type="button"
                                             class="inline-flex size-7 cursor-pointer items-center justify-center rounded-md bg-white/8 text-text-inverse transition-colors duration-150 motion-reduce:transition-none hover:bg-white/16"

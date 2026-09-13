@@ -7,6 +7,7 @@ use Artwork\Modules\Shift\Events\MultiShiftCreateInShiftPlan;
 use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\Shift\Models\SingleShiftPreset;
 use Artwork\Modules\Shift\Models\ShiftQualification;
+use Artwork\Modules\Shift\Services\LegalBreakCalculator;
 use Artwork\Modules\Shift\Services\ShiftService;
 use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
@@ -32,7 +33,7 @@ class ShiftController extends Controller
 
         $dayDate = Carbon::parse($data['day']);
         if (!$dayDate) {
-            return redirect()->back()->with('error', 'Ungültiges Datum angegeben.');
+            return redirect()->back()->with('error', __('Invalid date. Expected format: DD.MM.YYYY.'));
         }
 
         $presetIds = collect($data['preset_ids'])
@@ -51,14 +52,17 @@ class ShiftController extends Controller
             ->get();
 
         $createdShifts = collect();
+        // Übersprungene Vorlagen (ohne gültige Zeiten oder ohne Gewerk) für die Rückmeldung
+        $skippedPresetNames = collect();
 
-        DB::transaction(function () use (&$createdShifts, $presets, $dayDate, $data): void {
+        DB::transaction(function () use (&$createdShifts, &$skippedPresetNames, $presets, $dayDate, $data): void {
 
             foreach ($presets as $preset) {
                 $startTime = $this->normalizeTimeString($preset->start_time);
                 $endTime   = $this->normalizeTimeString($preset->end_time);
 
-                if (!$startTime || !$endTime) {
+                if (!$startTime || !$endTime || !$preset->craft_id) {
+                    $skippedPresetNames->push($preset->name ?: ('#' . $preset->id));
                     continue;
                 }
 
@@ -80,7 +84,12 @@ class ShiftController extends Controller
                     'start'          => $startTime,
                     'end'            => $endTime,
 
-                    'break_minutes'  => (int) ($preset->break_duration ?? 0),
+                    // Vorlage ohne Pause → gesetzliche Mindestpause (ArbZG); 0 bleibt 0.
+                    'break_minutes'  => LegalBreakCalculator::resolveBreakMinutes(
+                        $preset->break_duration,
+                        $startTime,
+                        $endTime
+                    ),
                     'description'    => $preset->description,
 
                     // Shift defaults
@@ -123,12 +132,30 @@ class ShiftController extends Controller
         });
 
         if ($createdShifts->isEmpty()) {
-            return redirect()->back()->with('error', 'Es konnten keine Schichten aus den ausgewählten Vorlagen erstellt werden.');
+            return redirect()->back()->with(
+                'error',
+                __('No shifts could be created from the selected templates: they have no valid times or no craft. Check the templates under Shift settings → Shift templates.')
+            );
         }
 
         broadcast(new MultiShiftCreateInShiftPlan($createdShifts));
 
-        return redirect()->back()->with('success', $createdShifts->count() . ' Schicht(en) wurden hinzugefügt.');
+        // „12 Schichten angelegt." + optional „3 Vorlagen übersprungen: …" (globaler Flash-Toast)
+        $createdCount = $createdShifts->count();
+        $message = $createdCount === 1
+            ? __('1 shift created.')
+            : __(':count shifts created.', ['count' => $createdCount]);
+
+        if ($skippedPresetNames->isNotEmpty()) {
+            $message .= ' ' . ($skippedPresetNames->count() === 1
+                ? __('1 template skipped: :names', ['names' => $skippedPresetNames->implode(', ')])
+                : __(':count templates skipped: :names', [
+                    'count' => $skippedPresetNames->count(),
+                    'names' => $skippedPresetNames->implode(', '),
+                ]));
+        }
+
+        return redirect()->back()->with('success', $message);
     }
 
     private function normalizeTimeString(?string $time): ?string

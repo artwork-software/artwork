@@ -70,6 +70,17 @@
                         <p v-if="paramsDirty" class="text-[11px] text-warning">
                             {{ t('Selection changed – reload to update the results.') }}
                         </p>
+
+                        <!-- Excel-Export mit der aktuellen Auswahl (Gewerk, Zeitraum, Schicht, Suche, Sortierung) -->
+                        <a :href="exportUrl" target="_blank" rel="noopener" class="block" :title="t('Exports the current filter selection.')">
+                            <BaseUIButton
+                                :disabled="loading"
+                                icon="IconFileSpreadsheet"
+                                class="w-full justify-center"
+                            >
+                                {{ t('Export as Excel') }}
+                            </BaseUIButton>
+                        </a>
                     </div>
 
                     <div v-if="error" class="rounded-lg border border-danger-border bg-danger-surface px-3 py-2 text-xs text-danger">
@@ -733,6 +744,20 @@ const currentQuery = computed<HistoryQuery>(() => {
     }
 })
 const querySignature = (query: HistoryQuery | null) => JSON.stringify(query)
+
+// Export-Link mit der aktuellen Auswahl (gleiche Parameter wie der Verlaufs-Request, ohne Paginierung)
+const exportUrl = computed(() => {
+    const query = currentQuery.value
+    const params: Record<string, string | number> = {
+        craftId: query.craftId,
+        start_date: query.start_date,
+        end_date: query.end_date,
+    }
+    if (query.shiftId) params.shiftId = query.shiftId
+    if (query.search) params.search = query.search
+    if (query.sort) params.sort = query.sort
+    return route('shift-history.export', params)
+})
 const paramsDirty = computed(
     () => hasLoaded.value && querySignature(currentQuery.value) !== querySignature(loadedQuery.value)
 )

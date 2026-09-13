@@ -2,8 +2,11 @@
 
 namespace Artwork\Modules\User\Http\Resources;
 
+use Artwork\Modules\User\Models\User;
+use Artwork\Modules\WorkTime\Services\WorkTimeCalculationService;
 use Illuminate\Http\Resources\Json\JsonResource;
 
+/** @mixin User */
 class UserShowResource extends JsonResource
 {
     public static $wrap = null;
@@ -35,7 +38,11 @@ class UserShowResource extends JsonResource
             'can_work_shifts' => $this->can_work_shifts,
             'work_name' => $this->work_name,
             'work_description' => $this->work_description,
-            'weekly_working_hours' => $this->weekly_working_hours,
+            // Wochenstunden laut heute gültigem Arbeitszeitmuster (null ohne Muster); die Spalte
+            // users.weekly_working_hours wird nicht mehr gepflegt und hier bewusst nicht ausgeliefert
+            'weekly_working_hours' => $this->resource instanceof User
+                ? app(WorkTimeCalculationService::class)->currentWeeklyHours($this->resource)
+                : null,
             'salary_per_hour' => $this->salary_per_hour,
             'salary_description' => $this->salary_description,
             'crafts' => $this->crafts,

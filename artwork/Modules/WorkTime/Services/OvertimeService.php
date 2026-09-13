@@ -3,6 +3,7 @@
 namespace Artwork\Modules\WorkTime\Services;
 
 use Artwork\Modules\User\Models\User;
+use Artwork\Modules\User\Services\ContractSettingsResolver;
 use Artwork\Modules\WorkTime\Models\OvertimePayout;
 use Artwork\Modules\WorkTime\Models\UserOvertime;
 use Artwork\Modules\WorkTime\Models\WorkTimeBooking;
@@ -13,20 +14,30 @@ use Illuminate\Validation\ValidationException;
 
 class OvertimeService
 {
+    public function __construct(private readonly ContractSettingsResolver $contractSettings)
+    {
+    }
+
     /**
      * Rebuilds the per-day overtime entries for a user from their WorkTimeBookings, applying FIFO
      * compensation: negative-balance days consume the oldest still-open overtime first. Idempotent.
      * Paid-out minutes per entry (manual payouts) are kept and subtracted after the replay.
+     *
+     * Vertragshistorie: Überstundenregel und Abbaufrist werden je Buchungstag aus dem an diesem Tag
+     * gültigen Vertragszeitraum gelesen (ContractSettingsResolver mit Stichtag), nicht aus dem heute
+     * gültigen Satz. Gilt heute kein Zeitraum (Lücke), läuft der Replay trotzdem – Tage ohne aktive
+     * Regel oder ohne Frist erzeugen schlicht keinen Eintrag.
      */
     public function recomputeForUser(User $user): void
     {
-        /** @var \Artwork\Modules\User\Models\UserContractAssign|null $assign */
-        $assign = $user->contract;
-        $period = (int) ($assign?->overtime_compensation_period ?? 0);
-
-        if (!$assign?->overtime_rule_active || $period <= 0) {
-            return;
+        // Historie einmalig laden: der Resolver löst danach je Tag ohne weitere Abfrage auf.
+        $user->loadMissing('contractAssigns.userContract');
+        if ($user->contractAssigns->isEmpty()) {
+            return; // nie eine Vertragszuweisung → keine Überstundenregel, nichts zu rechnen
         }
+        // Cache des Resolvers ist prozesslokal (Queue-Worker): vor dem Replay leeren, damit eine
+        // zwischenzeitlich geänderte Zuweisung nicht mit alten Tageswerten verrechnet wird.
+        $this->contractSettings->flush();
 
         $today = now()->startOfDay();
 
@@ -38,18 +49,26 @@ class OvertimeService
         $existing = UserOvertime::forUser($user->id)->get()
             ->keyBy(fn (UserOvertime $e): string => $e->date->toDateString());
 
-        // 1) Build overtime entries for every positive day.
+        // 1) Build overtime entries for every positive day whose contract period has the rule active.
         $entries = []; // date(string) => ['minutes','remaining','deadline'(Carbon)]
         foreach ($bookings as $booking) {
             $change = (int) $booking->work_time_balance_change;
-            if ($change > 0) {
-                $dateStr = $booking->booking_day->toDateString();
-                $entries[$dateStr] = [
-                    'minutes' => $change,
-                    'remaining' => $change,
-                    'deadline' => $booking->booking_day->copy()->addDays($period),
-                ];
+            if ($change <= 0) {
+                continue;
             }
+
+            $day = $booking->booking_day->copy()->startOfDay();
+            $period = $this->compensationPeriodOn($user, $day);
+            if ($period === null) {
+                continue; // an diesem Tag keine aktive Überstundenregel / keine Frist
+            }
+
+            $dateStr = $day->toDateString();
+            $entries[$dateStr] = [
+                'minutes' => $change,
+                'remaining' => $change,
+                'deadline' => $day->copy()->addDays($period),
+            ];
         }
 
         // 2) FIFO: apply negative-balance days (under target) to the oldest open entries.
@@ -111,12 +130,49 @@ class OvertimeService
 
         // 4) Remove stale open/compensated entries whose day is no longer a positive overtime day.
         //    Never delete payable (must be paid out), paid_out or partially paid entries.
-        $validDates = array_keys($entries);
-        UserOvertime::forUser($user->id)
-            ->whereIn('status', [UserOvertime::STATUS_OPEN, UserOvertime::STATUS_COMPENSATED])
-            ->where('paid_out_minutes', 0)
-            ->whereNotIn('date', $validDates ?: ['1970-01-01'])
-            ->delete();
+        //    Nur Tage, die der Replay tatsächlich beurteilt hat (Überstundenregel an diesem Tag aktiv),
+        //    dürfen bereinigt werden: Ist die Regel an einem Tag NICHT aktiv (z. B. Zuweisung heute mit
+        //    overtime_rule_active=false, Lücke in der Vertragshistorie), bleibt ein vorhandener Eintrag
+        //    unangetastet — sonst löscht jede Buchung/Zuweisung die gesamte offene Historie der Person.
+        $staleDates = [];
+        foreach ($existing as $dateStr => $existingEntry) {
+            if (isset($entries[$dateStr])) {
+                continue;
+            }
+            if (
+                !in_array($existingEntry->status, [UserOvertime::STATUS_OPEN, UserOvertime::STATUS_COMPENSATED], true)
+                || (int) $existingEntry->paid_out_minutes !== 0
+            ) {
+                continue;
+            }
+            if ($this->compensationPeriodOn($user, $existingEntry->date->copy()->startOfDay()) === null) {
+                continue; // Tag nicht beurteilt → Eintrag bleibt
+            }
+            $staleDates[] = $dateStr;
+        }
+
+        if ($staleDates !== []) {
+            UserOvertime::forUser($user->id)
+                ->whereIn('status', [UserOvertime::STATUS_OPEN, UserOvertime::STATUS_COMPENSATED])
+                ->where('paid_out_minutes', 0)
+                ->whereIn('date', $staleDates)
+                ->delete();
+        }
+    }
+
+    /**
+     * Abbaufrist in Tagen für einen Buchungstag: null, wenn an diesem Tag keine Überstundenregel aktiv
+     * ist oder keine Frist (> 0) hinterlegt ist – Zuweisung vor Vorlage des am Tag gültigen Zeitraums.
+     */
+    private function compensationPeriodOn(User $user, Carbon $day): ?int
+    {
+        if (!$this->contractSettings->bool($user, 'overtime_rule_active', false, $day)) {
+            return null;
+        }
+
+        $period = $this->contractSettings->int($user, 'overtime_compensation_period', 0, $day);
+
+        return $period > 0 ? $period : null;
     }
 
     /**

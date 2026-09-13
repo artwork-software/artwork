@@ -135,9 +135,9 @@
             <div @click="showExportModal = true">
                 <IconFileExport class="h-7 w-7 text-text-muted cursor-pointer" />
             </div>
-            <PlusButton v-if="$can('request room occupancy')" @click="openEventComponent()" />
+            <PlusButton v-if="$can('request room occupancy') || $can('create events without request')" @click="openEventComponent()" />
             <AddButtonSmall
-                v-if="$can('request room occupancy')"
+                v-if="$can('request room occupancy') || $can('create events without request')"
                 @click="openEventComponent()"
                 :text="$t('New occupancy')"
                 class="hidden"

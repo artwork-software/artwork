@@ -3,7 +3,6 @@
 namespace Artwork\Modules\Shift\RuleChecks;
 
 use Artwork\Modules\Shift\Models\ShiftRule;
-use Artwork\Modules\Shift\Repositories\CompensationDayOffRepository;
 use Artwork\Modules\User\Models\User;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
@@ -22,14 +21,10 @@ class HalfDayOffOnSpecialDayCheck extends AbstractRuleCheck
     {
         $violations = collect();
 
-        $repository = app(CompensationDayOffRepository::class);
-
         // Preload all granted halves for the whole range once and group by date. Only days that actually
         // have a granted half can violate this rule, so the (more expensive) special-day lookup runs only
         // for those few days instead of for every day in the range.
-        $halvesByDate = $repository
-            ->getGrantedHalvesForUserInRange($user->id, $startDate->format('Y-m-d'), $endDate->format('Y-m-d'))
-            ->groupBy(fn ($half): string => Carbon::parse($half->granted_date)->format('Y-m-d'));
+        $halvesByDate = $this->getGrantedHalvesByDate($user, $startDate, $endDate);
 
         foreach (CarbonPeriod::create($startDate, $endDate) as $date) {
             $halves = $halvesByDate->get($date->format('Y-m-d')) ?? collect();

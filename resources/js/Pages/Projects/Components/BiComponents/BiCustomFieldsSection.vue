@@ -11,6 +11,7 @@
                         @update:model-value="val => localValues[field.id] = { text: val }"
                         @blur="saveTextField(field.id, getTextValue(field.id))"
                         :label="field.name"
+                        without-translation
                         :disabled="!canEdit"
                     />
                 </div>
@@ -29,16 +30,14 @@
                 </div>
 
                 <!-- Checkbox -->
-                <div v-else-if="field.type === 'Checkbox'" class="flex items-center gap-x-3">
-                    <input
-                        type="checkbox"
+                <div v-else-if="field.type === 'Checkbox'">
+                    <BaseCheckbox
                         :id="'bi_custom_' + field.id"
-                        :checked="getCheckedValue(field.id)"
-                        @change="saveCheckbox(field.id, $event.target.checked)"
-                        class="input-checklist"
+                        :model-value="!!getCheckedValue(field.id)"
+                        @update:model-value="checked => saveCheckbox(field.id, checked)"
+                        :label="field.name"
                         :disabled="!canEdit"
                     />
-                    <label :for="'bi_custom_' + field.id" class="text-sm text-text-muted">{{ field.name }}</label>
                 </div>
 
                 <!-- DropDown -->
@@ -61,6 +60,7 @@
 <script setup>
 import { reactive } from 'vue';
 import BaseInput from '@/Artwork/Inputs/BaseInput.vue';
+import BaseCheckbox from '@/Artwork/Inputs/BaseCheckbox.vue';
 import BaseTextarea from '@/Artwork/Inputs/BaseTextarea.vue';
 import ArtworkBaseListbox from '@/Artwork/Listbox/ArtworkBaseListbox.vue';
 import { useBiSaveFeedback } from '@/Composeables/BiSaveFeedback.js';

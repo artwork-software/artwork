@@ -5,7 +5,8 @@
             <UserShiftPlanFunctionBar
                 :type="type"
                 :totalPlannedWorkingHours="totalPlannedWorkingHours"
-                :weeklyWorkingHours="weeklyWorkingHours"
+                :work-time-target="workTimeTarget"
+                :plannedWorkTime="totalWorkTimeInRange"
                 :dateValue="dateValue"
                 :crafts="crafts"
                 @previousTimeRange="goToPrevAssignedDay"
@@ -31,10 +32,9 @@
                 </div>
 
                 <div class="text-xs text-text-muted">
-                    <span>(</span>
-                    <span>{{ totalWorkTimeInRange }}</span>
-                    <span> | {{ totalBreakTimeInRange }}</span>
-                    <span>)</span>
+                    <span>{{ $t('Work') }} {{ totalWorkTimeInRange }} h</span>
+                    <span class="mx-1 text-text-subtle">·</span>
+                    <span>{{ $t('Break') }} {{ totalBreakTimeInRange }} h</span>
                 </div>
             </div>
 
@@ -74,7 +74,9 @@
                             <span class="ml-2 text-xs font-normal text-text-subtle">{{ week.rangeLabel }}</span>
                         </div>
                         <div class="text-xs text-text-muted">
-                            ({{ week.totalWork }} | {{ week.totalBreak }})
+                            <span>{{ $t('Work') }} {{ week.totalWork }} h</span>
+                            <span class="mx-1 text-text-subtle">·</span>
+                            <span>{{ $t('Break') }} {{ week.totalBreak }} h</span>
                         </div>
                     </div>
 
@@ -85,7 +87,17 @@
                                 v-for="day in week.days"
                                 :key="day.date"
                                 class="flex flex-col min-h-[10rem]"
-                                :class="{ 'bg-surface-sunken/80': !isInRequestedRange(day.date) }"
+                                :class="[
+                                    { 'bg-surface-sunken/80': !isInRequestedRange(day.date) },
+                                    unavailableRingClass(day),
+                                ]"
+                                v-tooltip.bottom="unavailableAssignment(day) ? {
+                                    value: unavailableTooltip(day),
+                                    appendTo: 'body',
+                                    class: 'aw-tooltip',
+                                    position: 'bottom',
+                                    useTranslation: false
+                                } : null"
                             >
                                 <!-- Tages-Kopf -->
                                 <div
@@ -96,6 +108,18 @@
                                         {{ weekdayShort(day.date) }} {{ formatDayShort(day.date) }}
                                     </span>
                                     <div class="flex items-center gap-1">
+                                        <!-- Abwesenheitseintrag trotz Schicht: gleiche Warnung wie im Schichtplan -->
+                                        <svg
+                                            v-if="unavailableAssignment(day)"
+                                            class="h-3.5 w-3.5 shrink-0"
+                                            :class="unavailableIconClass(day)"
+                                            fill="currentColor"
+                                            viewBox="0 0 20 20"
+                                            aria-hidden="true"
+                                        >
+                                            <title>{{ unavailableTooltip(day) }}</title>
+                                            <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+                                        </svg>
                                         <div v-if="violationsForDay(day).length" class="flex items-center gap-0.5">
                                             <div
                                                 v-for="violation in violationsForDay(day)"
@@ -355,7 +379,7 @@
  * - Gruppierung nach Raum (inkl. "Ohne Raum")
  */
 
-import { computed, defineAsyncComponent, ref, watch, onMounted } from 'vue'
+import { computed, defineAsyncComponent, ref, watch } from 'vue'
 import { router, Link, usePage } from '@inertiajs/vue3'
 import UserShiftPlanFunctionBar from '@/Layouts/Components/ShiftPlanComponents/UserShiftPlanFunctionBar.vue'
 import SingleUserShift from '@/Layouts/Components/ShiftPlanComponents/SingleUserEventShift.vue'
@@ -399,7 +423,8 @@ const props = defineProps({
     daysWithData: { type: Object, required: false, default: null }, // optional – sonst aus $page.props
     crafts: { type: Array, required: true },
     type: { type: String, required: true },
-    weeklyWorkingHours: { type: [Number, String], required: false, default: null },
+    // Soll/Ist des Zeitraums aus dem Backend (statt Wochenstunden/7); null = kein Soll (Externe)
+    workTimeTarget: { type: Object, required: false, default: null },
     totalPlannedWorkingHours: { type: String, required: false, default: null },
     dateValue: { type: Array, required: true }, // [start, end] im ISO-Format YYYY-MM-DD
     firstProjectShiftTabId: { type: Number, required: true },
@@ -582,6 +607,45 @@ function violationTooltip(violation) {
         .filter(Boolean)
         .join(': ')
 }
+
+/**
+ * "Eingeplant trotz Abwesenheitseintrag" — kommt aus derselben Backend-Quelle wie
+ * das Warndreieck im Schichtplan (ShiftWorkerAvailability). Der Eintrag stand im
+ * Einsatzplan bisher nur unten in der Abwesenheitsliste, am Tag selbst war nichts
+ * zu sehen.
+ */
+function unavailableAssignment(day) {
+    return day?.unavailableAssignment ?? null
+}
+
+// Rot, wenn die Person "nicht verfügbar" ist oder die Schicht bereits festgeschrieben
+// wurde — sonst amber. Gleiche Eskalation wie Schichtplan und Schichten-Tab.
+function isSevereUnavailability(day) {
+    const info = unavailableAssignment(day)
+    return !!info && (info.status === 'NOT_AVAILABLE' || info.committed)
+}
+
+function unavailableRingClass(day) {
+    if (!unavailableAssignment(day)) return ''
+    return isSevereUnavailability(day)
+        ? 'ring-2 ring-inset ring-danger-border bg-danger-surface/40'
+        : 'ring-2 ring-inset ring-warning-border bg-warning-surface/40'
+}
+
+function unavailableIconClass(day) {
+    return isSevereUnavailability(day) ? 'text-danger' : 'text-warning'
+}
+
+function unavailableTooltip(day) {
+    const info = unavailableAssignment(day)
+    if (!info) return ''
+
+    const status = info.status ? translate(info.status) : ''
+    const base = translate('Not available despite shift')
+
+    return status ? `${base} (${status})` : base
+}
+
 function hasIndividualTimes(day) {
     return Array.isArray(day?.individualTimes) && day.individualTimes.length > 0
 }

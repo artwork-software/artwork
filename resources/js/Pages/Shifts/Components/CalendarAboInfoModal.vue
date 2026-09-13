@@ -1,6 +1,6 @@
 <script setup>
 import { ref, computed, onBeforeUnmount } from 'vue'
-import { usePage } from '@inertiajs/vue3'
+import { router, usePage } from '@inertiajs/vue3'
 import ArtworkBaseModal from '@/Artwork/Modals/ArtworkBaseModal.vue'
 import { Disclosure, DisclosureButton, DisclosurePanel } from '@headlessui/vue'
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
@@ -43,6 +43,24 @@ function downloadICSFile() {
     a.href = calendarUrl.value
     a.download = 'Schichtkalender.ics'
     a.click()
+}
+
+// Link erneuern (Widerruf): nur fürs eigene Schicht-Abo; zweistufig, damit
+// niemand versehentlich den in Kalender-Apps hinterlegten Link ungültig macht.
+const shiftAboId = computed(() => props.is_shift_calendar_abo ? (user.value?.shift_calendar_abo?.id ?? null) : null)
+const confirmRenew = ref(false)
+const renewing = ref(false)
+function renewLink() {
+    if (!shiftAboId.value || renewing.value) return
+    renewing.value = true
+    router.delete(route('user.shift.calendar.abo.renew', { userShiftCalendarAbo: shiftAboId.value }), {
+        preserveScroll: true,
+        preserveState: true,
+        onFinish: () => {
+            renewing.value = false
+            confirmRenew.value = false
+        },
+    })
 }
 
 // Schließen
@@ -131,6 +149,19 @@ const instructions = computed(() => ([
         :description="$t('Here you will find detailed instructions on how to subscribe to the calendar in various applications. Follow the appropriate links for your favorite calendar application to complete the subscription process and stay up to date with your appointments. You can also manually import the calendar into your calendar application by downloading the ICS file.')"
     >
         <div class="flex flex-col gap-8 max-h-[calc(100vh-16rem)] overflow-auto pr-1">
+            <!-- Inhalt des Kalenders (nur Schicht-Abo) -->
+            <section v-if="is_shift_calendar_abo" class="rounded-xl border border-accent-100 bg-accent-50/50 px-4 py-3">
+                <h3 class="text-sm font-semibold text-text mb-2">
+                    {{ $t('What the calendar contains') }}
+                </h3>
+                <ul class="list-disc list-inside space-y-1 text-xs text-text-muted">
+                    <li>{{ $t('Committed shifts of your shift plan.') }}</li>
+                    <li>{{ $t('If your organisation shows all shifts in the subscription, provisional (not yet committed) shifts also appear, marked with the prefix [vorläufig]. They can still change.') }}</li>
+                    <li>{{ $t('Individual times and day services.') }}</li>
+                    <li>{{ $t('Function and break are listed in the description of each shift.') }}</li>
+                </ul>
+            </section>
+
             <!-- Accordion -->
             <section>
                 <h3 class="text-sm font-semibold text-text mb-3">
@@ -198,6 +229,36 @@ const instructions = computed(() => ([
                 <div class="mt-2 text-xs text-accent-600 flex items-center gap-1">
                     <PropertyIcon name="IconInfoCircle" class="h-4 w-4" />
                     {{ $t('Click on “Copy” to copy the URL to your clipboard and paste it into the desired calendar application.') }}
+                </div>
+
+                <!-- Link erneuern (Widerruf des alten Links), nur eigenes Schicht-Abo -->
+                <div v-if="shiftAboId" class="mt-4 rounded-lg border border-border-subtle bg-surface-sunken px-3 py-2.5">
+                    <div class="flex flex-wrap items-center justify-between gap-2">
+                        <p class="text-xs text-text-muted max-w-xl">
+                            {{ $t('If the link has been shared unintentionally, you can renew it. The old link becomes invalid immediately — re-subscribe with the new link in your calendar app.') }}
+                        </p>
+                        <BaseUIButton
+                            v-if="!confirmRenew"
+                            :label="$t('Renew link')"
+                            icon="IconRefresh"
+                            @click="confirmRenew = true"
+                        />
+                    </div>
+                    <div v-if="confirmRenew" class="mt-2 flex flex-wrap items-center justify-between gap-2 rounded-md border border-warning-border bg-warning-surface px-3 py-2">
+                        <span class="text-xs font-medium text-warning">
+                            {{ $t('Renew now? The current link stops working right away.') }}
+                        </span>
+                        <div class="flex items-center gap-2">
+                            <BaseUIButton :label="$t('Cancel')" is-cancel-button @click="confirmRenew = false" />
+                            <BaseUIButton
+                                :label="$t('Renew link')"
+                                icon="IconRefresh"
+                                is-delete-button
+                                :disabled="renewing"
+                                @click="renewLink"
+                            />
+                        </div>
+                    </div>
                 </div>
             </section>
 

@@ -5,8 +5,8 @@ namespace Artwork\Modules\Workflow\Actions;
 use Artwork\Modules\Workflow\Actions\WorkflowAction;
 use Artwork\Modules\Workflow\Models\WorkflowInstance;
 use Artwork\Modules\Shift\Models\ShiftRuleViolation;
+use Artwork\Modules\Shift\Services\ShiftRuleNotificationRecipientService;
 use Artwork\Modules\User\Models\User;
-use Illuminate\Support\Facades\Notification;
 use Artwork\Modules\Workflow\Notifications\ShiftRuleViolationNotification;
 
 class ShiftRuleNotificationAction implements WorkflowAction
@@ -55,7 +55,11 @@ class ShiftRuleNotificationAction implements WorkflowAction
             $ruleUsers = $ruleUsers->merge($additionalUsers);
         }
 
-        return $ruleUsers->unique('id');
+        // Härtung: nur Personen mit Dienstplan-Sicht-/Planungsrecht (oder Admin) erhalten die
+        // Meldung — bestehende Zuordnungen (shift_rule_user_notifications) bleiben unangetastet,
+        // greifen aber erst, sobald das Recht vorhanden ist.
+        return app(ShiftRuleNotificationRecipientService::class)
+            ->filter($ruleUsers->unique('id')->values());
     }
 
     private function generateNotificationMessage(ShiftRuleViolation $violation, array $parameters): string
@@ -69,7 +73,11 @@ class ShiftRuleNotificationAction implements WorkflowAction
         $rule = $violation->shiftRule;
         $violationData = $violation->violation_data;
         
-        return "Regelverstoß erkannt: {$rule->name} am {$violation->violation_date}. " . 
-               ($violationData['message'] ?? 'Details siehe Schichtplan.');
+        return __('Rule violation detected: :rule on :date.', [
+                'rule' => $rule?->name ?? __('Rule violation'),
+                'date' => $violation->violation_date instanceof \DateTimeInterface
+                    ? $violation->violation_date->format('d.m.Y')
+                    : (string) $violation->violation_date,
+            ]) . ' ' . ($violationData['message'] ?? __('See the shift plan for details.'));
     }
 }

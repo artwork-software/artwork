@@ -3,7 +3,7 @@
         v-if="open"
         @close="closeModal"
         :title="$t(craftToEdit ? 'Edit craft' : 'Create craft')"
-        :description="$t('Define the specifications of your trade and who may plan shifts/inventory for it.')"
+        :description="$t('Define the specifications of your trade and who may plan shifts for it.')"
     >
         <!-- Basics ------------------------------------------------------>
         <section class="rounded-2xl border border-border-subtle bg-white p-6 shadow-sm">
@@ -216,7 +216,6 @@ import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 const props = defineProps<{
     craftToEdit?: any | null
     usersWithPermission: Array<any>
-    usersWithInventoryPermission: Array<any>
     propQualifications: Array<any>
 }>()
 const emit = defineEmits<{ (e: 'closed', v: boolean): void }>()
@@ -229,13 +228,11 @@ const craft = useForm({
     abbreviation: props.craftToEdit?.abbreviation ?? '',
     users: [] as number[],
     assignable_by_all: true,
-    inventory_planned_by_all: true,
     color: props.craftToEdit?.color ?? '#ffffff',
     notify_days: props.craftToEdit?.notify_days ?? 0,
     // beim Bearbeiten den gespeicherten Wert übernehmen (null = Erinnerung aus), bei Neuanlage Default 14
     commit_request_deadline_days: props.craftToEdit ? props.craftToEdit.commit_request_deadline_days : 14,
     universally_applicable: props.craftToEdit?.universally_applicable ?? false,
-    users_for_inventory: [] as number[],
     managersToBeAssigned: [] as Array<{ manager_id: number; manager_type: string }>,
     qualifications: props.craftToEdit?.qualifications ?? [],
 })
@@ -243,10 +240,8 @@ const craft = useForm({
 const shiftCommitWorkflowEnabled = computed<boolean>(() => !!usePage().props.shiftCommitWorkflow)
 
 const enabled = ref<boolean>(props.craftToEdit?.assignable_by_all ?? true)
-const inventoryPlannedByAll = ref<boolean>(props.craftToEdit?.inventory_planned_by_all ?? true)
 
 const craftShiftPlaner = ref<Array<any>>(props.craftToEdit?.craft_shift_planer ?? [])
-const craftInventoryPlaner = ref<Array<any>>(props.craftToEdit?.craft_inventory_planer ?? [])
 const managers = ref<Array<any>>(
     props.craftToEdit
         ? [
@@ -271,7 +266,7 @@ watch(
 
 /* ---------------- Methods --------------------- */
 function closeModal(bool = false) {
-    craft.reset('name', 'abbreviation', 'users', 'assignable_by_all', 'users_for_inventory', 'inventory_planned_by_all')
+    craft.reset('name', 'abbreviation', 'users', 'assignable_by_all')
     emit('closed', bool)
 }
 
@@ -279,16 +274,10 @@ function onPickColor(color: string) {
     craft.color = color
 }
 
-function togglePlanner(user: any, type: 'shift_planer' | 'inventory') {
-    if (type === 'shift_planer') {
-        const idx = craftShiftPlaner.value.findIndex((u) => u.id === user.id)
-        if (idx > -1) craftShiftPlaner.value.splice(idx, 1)
-        else craftShiftPlaner.value.push(user)
-    } else {
-        const idx = craftInventoryPlaner.value.findIndex((u) => u.id === user.id)
-        if (idx > -1) craftInventoryPlaner.value.splice(idx, 1)
-        else craftInventoryPlaner.value.push(user)
-    }
+function togglePlanner(user: any, type: 'shift_planer') {
+    const idx = craftShiftPlaner.value.findIndex((u) => u.id === user.id)
+    if (idx > -1) craftShiftPlaner.value.splice(idx, 1)
+    else craftShiftPlaner.value.push(user)
 }
 
 function addSelectedToCraftManagers(user: any) {
@@ -326,15 +315,6 @@ function saveCraft() {
     } else {
         craft.assignable_by_all = true
         craft.users = []
-    }
-
-    // Inventory planners
-    if (!inventoryPlannedByAll.value) {
-        craft.inventory_planned_by_all = false
-        craft.users_for_inventory = craftInventoryPlaner.value.map((u) => u.id)
-    } else {
-        craft.inventory_planned_by_all = true
-        craft.users_for_inventory = []
     }
 
     if (props.craftToEdit?.id) {

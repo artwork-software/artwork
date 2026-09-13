@@ -12,6 +12,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property int $vacation_id
  * @property int $shift_id
  * @property string $user_name
+ * @property string|null $scheduler_source
+ * @property string|null $scheduled_at
  * @property string $date
  * @property string $start_time
  * @property string $end_time
@@ -26,6 +28,8 @@ class VacationConflict extends Model
         'vacation_id',
         'shift_id',
         'user_name',
+        'scheduler_source',
+        'scheduled_at',
         'date',
         'start_time',
         'end_time'
@@ -37,7 +41,8 @@ class VacationConflict extends Model
     ];
 
     protected $appends = [
-        'date_casted'
+        'date_casted',
+        'scheduled_at_casted'
     ];
 
     public function vacation(): BelongsTo
@@ -50,5 +55,16 @@ class VacationConflict extends Model
     {
         Carbon::setLocale('de');
         return Carbon::parse($this->date)->translatedFormat('d.m.Y');
+    }
+
+    /**
+     * Zeitpunkt der Zuweisung für den Konflikthinweis — ohne ihn ist nicht
+     * erkennbar, wann die Einteilung entgegen dem Eintrag entstanden ist.
+     */
+    public function getScheduledAtCastedAttribute(): ?string
+    {
+        return $this->scheduled_at !== null
+            ? Carbon::parse($this->scheduled_at)->translatedFormat('d.m.Y H:i')
+            : null;
     }
 }

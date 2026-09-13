@@ -19,13 +19,15 @@ class MaxWorkingHoursOnDayCheck extends AbstractRuleCheck
             $plannedHours = $this->getPlannedWorkingHoursForDay($user, $date);
 
             if ($plannedHours > $rule->individual_number_value) {
+                $data = [
+                    'planned_hours' => $plannedHours,
+                    'max_allowed' => $rule->individual_number_value,
+                ];
                 $shift = $this->getShiftForUserOnDate($user, $date);
-                if ($shift) {
-                    $violations->push($this->createViolation($rule, $shift, $user, $date, [
-                        'planned_hours' => $plannedHours,
-                        'max_allowed' => $rule->individual_number_value
-                    ]));
-                }
+                // Auch ohne Schicht (nur individuelle Zeiten) ist die Ueberschreitung ein Verstoss.
+                $violations->push($shift
+                    ? $this->createViolation($rule, $shift, $user, $date, $data)
+                    : $this->createViolationWithoutShift($rule, $user, $date, $data));
             }
         }
 

@@ -6,7 +6,6 @@
                 v-model="user_search_query"
                 :label="label"
                 class="w-full"
-                @focus="user_search_query = ''"
                 :disabled="disabled"
             />
         </div>

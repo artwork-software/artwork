@@ -23,14 +23,45 @@
 
                 <div class="mb-4 pb-4 border-b-2 border-dashed border-border">
                     <div v-if="usePage().props.personalFilters?.length > 0 && !saveFilterOption" class="flex flex-wrap items-center gap-2 mt-3">
-                        <div v-for="(filter, index) in usePage().props.personalFilters" class="group block cursor-pointer shrink-0 bg-accent-50  w-fit px-2 py-1.5 rounded-full border border-accent-200">
+                        <!-- Aktiver gespeicherter Filter (= aktuelle Filterwerte identisch) grün mit Haken
+                             und eigenem „Abwählen"-Knopf; das X löscht die Vorlage -->
+                        <div
+                            v-for="filter in usePage().props.personalFilters"
+                            :key="filter.id"
+                            class="group block cursor-pointer shrink-0 w-fit px-2 py-1.5 rounded-full border"
+                            :class="isActiveSavedFilter(filter)
+                                ? 'bg-success-surface border-success-border'
+                                : 'bg-accent-50 border-accent-200'"
+                        >
                             <div class="flex items-center">
-                                <div class="mx-2" @click="activateFilter(filter)">
-                                    <p class="text-accent-600 text-xs group-hover:text-accent-700">{{ filter.name}}</p>
+                                <div
+                                    class="mx-2 flex items-center gap-1"
+                                    :title="isActiveSavedFilter(filter) ? $t('Active filter') : undefined"
+                                    @click="activateFilter(filter)"
+                                >
+                                    <IconCheck v-if="isActiveSavedFilter(filter)" class="size-3.5 text-success" stroke-width="2.5" />
+                                    <p
+                                        class="text-xs"
+                                        :class="isActiveSavedFilter(filter) ? 'text-success font-semibold' : 'text-accent-600 group-hover:text-accent-700'"
+                                    >{{ filter.name }}</p>
                                 </div>
-                                <div class="flex items-center">
-                                    <button type="button" @click="removeFilter(filter)">
-                                        <IconX class="size-4 text-accent-600 hover:text-danger" />
+                                <div class="flex items-center gap-1">
+                                    <button
+                                        v-if="isActiveSavedFilter(filter)"
+                                        type="button"
+                                        :aria-label="$t('Deselect filter')"
+                                        v-tooltip.bottom="{ value: $t('Deselect filter'), class: 'aw-tooltip' }"
+                                        @click="deactivateSavedFilter"
+                                    >
+                                        <IconFilterOff class="size-4 text-success hover:text-danger" />
+                                    </button>
+                                    <button
+                                        type="button"
+                                        :aria-label="$t('Delete saved filter')"
+                                        v-tooltip.bottom="{ value: $t('Delete saved filter'), class: 'aw-tooltip' }"
+                                        @click="removeFilter(filter)"
+                                    >
+                                        <IconX class="size-4 hover:text-danger" :class="isActiveSavedFilter(filter) ? 'text-success' : 'text-accent-600'" />
                                     </button>
                                 </div>
                             </div>
@@ -68,6 +99,18 @@
                                 </div>
                                 <div class="flex items-center">
                                     <button type="button" @click="showOnlyNotFullyStaffed = false">
+                                        <IconX class="size-4 text-accent-600 hover:text-danger" />
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div v-if="openViolationsFilterContext && showOnlyUsersWithOpenViolations" class="group block cursor-pointer shrink-0 bg-accent-50 w-fit px-2 py-1.5 rounded-full border border-accent-200">
+                            <div class="flex items-center">
+                                <div class="mx-2">
+                                    <p class="text-accent-600 text-xs group-hover:text-accent-700">{{ $t('Only show people with open rule violations') }}</p>
+                                </div>
+                                <div class="flex items-center">
+                                    <button type="button" @click="showOnlyUsersWithOpenViolations = false">
                                         <IconX class="size-4 text-accent-600 hover:text-danger" />
                                     </button>
                                 </div>
@@ -165,13 +208,23 @@
                     <div class="flex items-center gap-x-1.5 text-text-inverse bg-surface-inverse rounded-lg px-4 py-2 font-lexend shadow text-sm">
                         {{ $t('shiftFilters') }}
                     </div>
-                    <div class="mt-2 rounded-lg bg-surface border border-border-subtle w-full shadow-raised px-4 py-3">
+                    <div class="mt-2 rounded-lg bg-surface border border-border-subtle w-full shadow-raised px-4 py-3 space-y-3">
                         <BaseCheckbox
                             v-model="showOnlyNotFullyStaffed"
                             id="filter_show_only_not_fully_staffed_shifts"
                             name="filter_show_only_not_fully_staffed_shifts"
                             :label="$t('Only show shifts that are not fully staffed')"
                             :description="$t('Only displays shifts where at least one position still has capacity for additional staff.')"
+                        />
+                        <!-- Personenfilter: user_filters-Flag (eigener Endpunkt). Nur Tagesansicht — in der
+                             Wochenansicht sitzt der Filter im Filter-Popup des Personenbereichs (ShiftPlan.vue) -->
+                        <BaseCheckbox
+                            v-if="openViolationsFilterContext"
+                            v-model="showOnlyUsersWithOpenViolations"
+                            id="filter_show_only_users_with_open_violations"
+                            name="filter_show_only_users_with_open_violations"
+                            :label="$t('Only show people with open rule violations')"
+                            :description="$t('Hides people without an open rule violation in the displayed period.')"
                         />
                     </div>
                 </div>
@@ -201,7 +254,7 @@ import axios from "axios";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 import BaseCheckbox from "@/Artwork/Inputs/BaseCheckbox.vue";
 import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
-import {IconChevronDown, IconX} from "@tabler/icons-vue";
+import {IconCheck, IconChevronDown, IconFilterOff, IconX} from "@tabler/icons-vue";
 import BasePageTitle from "@/Artwork/Titles/BasePageTitle.vue";
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
@@ -274,6 +327,8 @@ const isShiftFilterContext = computed(() =>
 const staffingFilterContext = computed(() =>
     props.filterType === 'shift_filter' || props.filterType === 'shift_daily_filter'
 );
+// Verstoß-Personenfilter nur in der Tagesansicht hier; Wochenansicht: Personen-Filter-Popup unten
+const openViolationsFilterContext = computed(() => props.filterType === 'shift_daily_filter');
 
 const currentShiftPlanSettings = computed(() => {
     const pageProps = usePage().props;
@@ -284,6 +339,24 @@ const currentShiftPlanSettings = computed(() => {
 });
 
 const showOnlyNotFullyStaffed = ref(false);
+
+// Personenfilter "nur Personen mit offenen Regelverstößen": liegt auf user_filters (Flag), wird über
+// einen eigenen Endpunkt gesetzt, damit die übrigen Filterwerte unberührt bleiben
+const showOnlyUsersWithOpenViolations = ref(false);
+
+const persistOpenViolationsFilterIfChanged = async () => {
+    if (!staffingFilterContext.value) {
+        return;
+    }
+    const current = !!props.user_filters?.show_only_users_with_open_violations;
+    if (current === showOnlyUsersWithOpenViolations.value) {
+        return;
+    }
+    await axios.patch(route('update.user.calendar.filter.open-violations', usePage().props.auth.user.id), {
+        filter_type: props.filterType,
+        show_only_users_with_open_violations: showOnlyUsersWithOpenViolations.value,
+    });
+};
 
 const persistStaffingFilterIfChanged = async () => {
     if (!staffingFilterContext.value) {
@@ -397,6 +470,7 @@ const resetFilter = () => {
         })
     })
     showOnlyNotFullyStaffed.value = false;
+    showOnlyUsersWithOpenViolations.value = false;
 
     applyFilter();
 }
@@ -412,6 +486,7 @@ const extractCheckedIds = (filterGroup) => {
 
 const applyFilter = async () => {
     await persistStaffingFilterIfChanged();
+    await persistOpenViolationsFilterIfChanged();
 
     const data = {
         filter_type: props.filterType,
@@ -479,6 +554,39 @@ const removeFilter = (filter) => {
     })
 }
 
+// Aktiv = gespeicherte Vorlage, deren ID-Listen den aktuellen user_filters entsprechen (Reihenfolge egal,
+// null == []). Es wird nirgends gespeichert, WELCHE Vorlage aktiviert wurde — der Wertevergleich ist die
+// einzige Wahrheit und stimmt auch, wenn die Werte von Hand identisch gesetzt wurden.
+const SAVED_FILTER_ID_KEYS = [
+    'room_ids', 'area_ids', 'room_category_ids', 'room_attribute_ids',
+    'event_type_ids', 'event_property_ids', 'craft_ids', 'project_state_ids',
+];
+const normalizeIdList = (list) => Array.isArray(list)
+    ? [...list].map(Number).sort((a, b) => a - b).join(',')
+    : '';
+const activeSavedFilterId = computed(() => {
+    const current = props.user_filters ?? {};
+    const templates = usePage().props.personalFilters ?? [];
+    const match = templates.find((template) =>
+        SAVED_FILTER_ID_KEYS.some((key) => normalizeIdList(template[key]) !== '')
+        && SAVED_FILTER_ID_KEYS.every((key) => normalizeIdList(template[key]) === normalizeIdList(current[key]))
+    );
+    return match?.id ?? null;
+});
+const isActiveSavedFilter = (filter) => activeSavedFilterId.value !== null && filter.id === activeSavedFilterId.value;
+
+// „Abwählen" leert nur die ID-Filter der Vorlage — Besetzungs-/Verstoßfilter sind kein Teil davon
+const deactivateSavedFilter = () => {
+    Object.keys(filteredOptionsByCategories.value).forEach(category => {
+        Object.keys(filteredOptionsByCategories.value[category]).forEach(subCategory => {
+            filteredOptionsByCategories.value[category][subCategory].forEach(filter => {
+                filter.checked = false;
+            })
+        })
+    })
+    applyFilter();
+}
+
 const activateFilter = (filter) => {
     router.post(route('filter.activate', {filter: filter.id, user: usePage().props.auth.user.id}),{}, {
         preserveScroll: true,
@@ -500,6 +608,7 @@ const restoreFilterState = () => {
 onMounted(() => {
     restoreFilterState();
     showOnlyNotFullyStaffed.value = !!currentShiftPlanSettings.value?.show_only_not_fully_staffed_shifts;
+    showOnlyUsersWithOpenViolations.value = !!props.user_filters?.show_only_users_with_open_violations;
 });
 </script>
 

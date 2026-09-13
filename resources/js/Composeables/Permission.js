@@ -72,11 +72,18 @@ export function usePermission(pageProps) {
             return false;
         }
 
-        // Bearbeiten kommt entweder über das globale "write projects"-Recht oder über die
-        // Komponenten-Einstellung (Spiegel: Component::isEditableBy() im Backend).
+        // Spiegel von ProjectPolicy::writeComponent(): globales "write projects" übersteuert alles;
+        // sonst ist Schreibrecht im Projekt (headerObject.canWriteProject, aus ProjectPolicy::update)
+        // Grundvoraussetzung, und die Komponenten-Einstellung kann nur weiter einschränken.
+        if (hasAdminRole() || can('write projects')) {
+            return true;
+        }
+
+        if (!(pageProps?.headerObject?.canWriteProject ?? false)) {
+            return false;
+        }
+
         if (
-            hasAdminRole() ||
-            can('write projects') ||
             component.permission_type === null ||
             component.permission_type === 'allSeeAndEdit'
         ) {
@@ -151,9 +158,15 @@ export function usePermission(pageProps) {
         return role('artwork admin');
     }
 
+    // Sichtregel für den EIGENEN Einsatzplan — Spiegel des Own-Zweigs von
+    // UserPolicy::viewOperationPlan() im Backend: "can view own roster" ODER
+    // Dienstplan-Sichtrechte (wer fremde Pläne sieht, sieht auch den eigenen).
+    function canViewOwnRoster() {
+        return hasAdminRole() || can('can view own roster') || canViewForeignRoster();
+    }
+
     // Sichtregel für FREMDE Einsatzpläne (User/Freelancer/Dienstleister) — Spiegel
-    // von UserPolicy::canViewForeignRoster() im Backend; der eigene Plan ist immer
-    // sichtbar und braucht diese Prüfung nicht.
+    // von UserPolicy::canViewForeignRoster() im Backend.
     function canViewForeignRoster() {
         return hasAdminRole() || canAny([
             'can plan shifts',
@@ -166,7 +179,7 @@ export function usePermission(pageProps) {
     // user info" (Nutzer*innenverwaltungs-Verständnis: auch Externe sind "User") —
     // Spiegel von UserPolicy::canViewExternalWorkerProfile() im Backend.
     function canViewExternalWorkerProfile() {
-        return canViewForeignRoster() || can('can view private user info');
+        return canViewForeignRoster() || canAny(['can view private user info', 'can manage external workers']);
     }
 
     return {
@@ -177,6 +190,7 @@ export function usePermission(pageProps) {
         canAny,
         roleAny,
         hasAdminRole,
+        canViewOwnRoster,
         canViewForeignRoster,
         canViewExternalWorkerProfile
     };

@@ -2,9 +2,11 @@
 
 namespace Tests\Feature\Modules\BusinessIntelligence;
 
+use Artwork\Modules\BusinessIntelligence\Models\BiEventTypeTag;
 use Artwork\Modules\BusinessIntelligence\Models\BiProjectData;
 use Artwork\Modules\BusinessIntelligence\Services\BiDashboardService;
 use Artwork\Modules\Event\Models\Event;
+use Artwork\Modules\GeneralSettings\Models\GeneralSettings;
 use Artwork\Modules\Project\Models\Project;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\Feature\FeatureTestCase;
@@ -81,29 +83,105 @@ final class BiDashboardRangeFilterTest extends FeatureTestCase
     }
 
     #[Test]
-    public function without_a_range_all_projects_stay_visible(): void
+    public function without_a_range_and_without_a_season_the_calendar_year_applies(): void
     {
-        $this->createProjectWithEvent('With Event', '2026-05-10 19:00:00', '2026-05-10 22:00:00');
+        // Produktentscheidung: kein Spielzeitfenster -> Kalenderjahr statt "alle Zeiträume"
+        $settings = app(GeneralSettings::class);
+        $settings->playing_time_window_start = '';
+        $settings->playing_time_window_end = '';
+        $settings->save();
+
+        $year = now()->year;
+        $this->createProjectWithEvent('This Year', "{$year}-05-10 19:00:00", "{$year}-05-10 22:00:00");
+        $this->createProjectWithEvent('Last Year', ($year - 1) . '-05-10 19:00:00', ($year - 1) . '-05-10 22:00:00');
         Project::factory()->create(['name' => 'No Events', 'is_group' => false]);
 
         $dashboard = app(BiDashboardService::class)->getDashboardData(noCompare: true);
 
-        $names = $this->projectNames($dashboard);
-        $this->assertContains('With Event', $names);
-        $this->assertContains('No Events', $names);
+        $this->assertSame("{$year}-01-01", $dashboard['range']['from']);
+        $this->assertSame("{$year}-12-31", $dashboard['range']['to']);
+        $this->assertFalse($dashboard['season_configured']);
+        $this->assertSame(['This Year'], $this->projectNames($dashboard));
+    }
+
+    #[Test]
+    public function without_a_range_the_configured_season_window_applies(): void
+    {
+        $settings = app(GeneralSettings::class);
+        $settings->playing_time_window_start = '2025-08-01';
+        $settings->playing_time_window_end = '2026-07-31';
+        $settings->save();
+
+        $this->createProjectWithEvent('In Season', '2026-05-10 19:00:00', '2026-05-10 22:00:00');
+        $this->createProjectWithEvent('After Season', '2026-09-01 19:00:00', '2026-09-01 22:00:00');
+
+        $dashboard = app(BiDashboardService::class)->getDashboardData(noCompare: true);
+
+        $this->assertSame('2025-08-01', $dashboard['range']['from']);
+        $this->assertSame('2026-07-31', $dashboard['range']['to']);
+        $this->assertTrue($dashboard['season_configured']);
+        $this->assertSame(['In Season'], $this->projectNames($dashboard));
     }
 
     #[Test]
     public function comparison_run_filters_by_the_comparison_range(): void
     {
-        $this->createProjectWithEvent('Current Season', '2026-05-10 19:00:00', '2026-05-10 22:00:00');
+        $current = $this->createProjectWithEvent('Current Season', '2026-05-10 19:00:00', '2026-05-10 22:00:00');
         // Nur im Vorjahreszeitraum aktiv → zählt in previous_kpis, nicht in kpis
-        $this->createProjectWithEvent('Last Season', '2025-05-12 19:00:00', '2025-05-12 22:00:00');
+        $last = $this->createProjectWithEvent('Last Season', '2025-05-12 19:00:00', '2025-05-12 22:00:00');
+
+        // Veranstaltungstage zählen nur mit zugeordnetem KPI-Tag (kein Fallback)
+        $tag = BiEventTypeTag::create(['name' => 'Event day', 'name_de' => 'Veranstaltungstag', 'color' => '#6366f1', 'kpi_role' => 'event_day']);
+        $tag->eventTypes()->sync(
+            Event::query()->whereIn('project_id', [$current->id, $last->id])->pluck('event_type_id')->unique()->all()
+        );
 
         $dashboard = app(BiDashboardService::class)->getDashboardData('2026-05-01', '2026-05-31');
 
         $this->assertSame(['Current Season'], $this->projectNames($dashboard));
         $this->assertSame(1, $dashboard['comparable_kpis']['event_days']);
         $this->assertSame(1, $dashboard['previous_kpis']['event_days']);
+        $this->assertTrue($dashboard['kpi_tags']['event_day']);
+        // Vorstellungs-Tag fehlt → keine Vorstellungen, keine Auslastung, Hinweis-Flag aus
+        $this->assertFalse($dashboard['kpi_tags']['performance']);
+        $this->assertNull($dashboard['kpis']['performances']);
+        $this->assertFalse($dashboard['tags_linked']);
+    }
+
+    #[Test]
+    public function category_filter_narrows_every_aggregate_but_keeps_the_category_list(): void
+    {
+        $this->createProjectWithEvent('Uncategorised', '2026-05-10 19:00:00', '2026-05-10 22:00:00', 40);
+
+        $service = app(BiDashboardService::class);
+
+        // Sparten-Liste kommt aus dem ungefilterten Bestand ('—' = ohne Sparte)
+        $unfiltered = $service->getDashboardData('2026-05-01', '2026-05-31', noCompare: true);
+        $this->assertNull($unfiltered['category_filter']);
+        $this->assertSame([['category' => '—', 'project_count' => 1]], $unfiltered['categories']);
+
+        $filtered = $service->getDashboardData('2026-05-01', '2026-05-31', noCompare: true, category: 'Oper');
+        $this->assertSame('Oper', $filtered['category_filter']);
+        $this->assertSame([], $filtered['projects']);
+        $this->assertSame(0, $filtered['kpis']['project_count']);
+        $this->assertSame([], $filtered['data_gaps']);
+        // Liste bleibt, damit man die Sparte wieder wechseln kann
+        $this->assertSame([['category' => '—', 'project_count' => 1]], $filtered['categories']);
+
+        $none = $service->getDashboardData('2026-05-01', '2026-05-31', noCompare: true, category: '—');
+        $this->assertSame(['Uncategorised'], $this->projectNames($none));
+    }
+
+    #[Test]
+    public function unlinked_kpi_tags_leave_performances_and_event_days_empty(): void
+    {
+        $this->createProjectWithEvent('Rehearsal Only', '2026-05-10 19:00:00', '2026-05-10 22:00:00');
+
+        $dashboard = app(BiDashboardService::class)->getDashboardData('2026-05-01', '2026-05-31', noCompare: true);
+
+        $this->assertNull($dashboard['kpis']['performances']);
+        $this->assertNull($dashboard['kpis']['event_days']);
+        $this->assertNull($dashboard['projects'][0]['performances']);
+        $this->assertNull($dashboard['projects'][0]['event_days']);
     }
 }

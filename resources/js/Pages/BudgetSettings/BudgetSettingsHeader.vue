@@ -49,7 +49,6 @@ export default defineComponent({
                     current: route().current('budget-settings.general'),
                     permission: this.$canAny([
                         'can manage global project budgets',
-                        'can manage all project budgets without docs'
                     ])
                 },
                 {
@@ -58,7 +57,6 @@ export default defineComponent({
                     current: route().current('budget-settings.account-management'),
                     permission: this.$canAny([
                         'can manage global project budgets',
-                        'can manage all project budgets without docs'
                     ])
                 },
                 {

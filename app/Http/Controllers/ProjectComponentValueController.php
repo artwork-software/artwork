@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Artwork\Modules\Project\Events\UpdateProjectComponentData;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Models\Component;
@@ -59,15 +58,8 @@ class ProjectComponentValueController extends Controller
         /** @var \Artwork\Modules\User\Models\User $user */
         $user = $request->user();
 
-        // Zutritt zum Projekt (Team oder globales Recht) ist Grundvoraussetzung fürs Schreiben.
-        abort_unless($user->can('view', $project), 403);
-
-        // Bearbeiten: globales "write projects" ODER die Komponente erlaubt es
-        // (Spiegel von canEditComponent() im Frontend; Admins via Gate::before).
-        abort_unless(
-            $user->can(PermissionEnum::WRITE_PROJECTS->value) || $component->isEditableBy($user),
-            403
-        );
+        // Schreibrecht im Projekt + Komponenten-Einstellung (Spiegel von canEditComponent() im Frontend).
+        abort_unless($user->can('writeComponent', [$project, $component]), 403);
 
         $value = ProjectComponentValue::where('project_id', $project->id)
             ->where('component_id', $component->id)->first();

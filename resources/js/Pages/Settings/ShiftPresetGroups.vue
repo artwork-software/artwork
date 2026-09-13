@@ -1,7 +1,7 @@
 <template>
     <ShiftSettingsHeader
         :title="$t('Shift preset groups')"
-        :description="$t('Groups that collect multiple time presets')"
+        :description="$t('Groups that bundle several shift templates so they can be applied together')"
     >
         <template #actions>
             <BaseUIButton
@@ -102,7 +102,14 @@
                     </li>
                 </TransitionGroup>
 
-                <AlertComponent v-else type="info" :text="$t('No groups yet.')"/>
+                <div v-else class="flex flex-col items-center justify-center py-12 text-center">
+                    <PropertyIcon name="IconFolders" class="h-10 w-10 text-text-subtle mb-3" stroke-width="1.5" />
+                    <p class="text-sm font-medium text-text">{{ $t('No groups yet.') }}</p>
+                    <p class="mt-1 text-xs text-text-subtle max-w-md">
+                        {{ $t('A group bundles several shift templates, e.g. all shifts of a typical performance day, so you can apply them in one go.') }}
+                    </p>
+                    <BaseUIButton class="mt-4" :label="$t('New group')" is-add-button @click="openCreateModal" />
+                </div>
             </div>
         </div>
         <ConfirmDeleteModal
@@ -128,7 +135,6 @@ import {router} from "@inertiajs/vue3";
 
 import ShiftSettingsHeader from "@/Pages/Settings/Components/ShiftSettingsHeader.vue";
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
-import AlertComponent from "@/Components/Alerts/AlertComponent.vue";
 import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 import ShiftPresetGroupAddEditModal from "@/Pages/Settings/ShiftPresetGroupAddEditModal.vue";

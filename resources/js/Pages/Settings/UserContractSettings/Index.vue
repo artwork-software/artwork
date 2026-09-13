@@ -23,8 +23,13 @@
                         <SingleUserContractTemplate :contract="contract" />
                     </li>
                 </ul>
-                <div v-else>
-                    <BaseAlertComponent message="No user contracts found. Please create a new one." type="info" use-translation />
+                <div v-else class="flex flex-col items-center justify-center py-12 text-center">
+                    <IconFileDescription class="h-10 w-10 text-text-subtle mb-3" stroke-width="1.5" />
+                    <p class="text-sm font-medium text-text">{{ $t('No contract templates yet') }}</p>
+                    <p class="mt-1 text-xs text-text-subtle max-w-md">
+                        {{ $t('Contract templates bundle free days, target-hour rules and overtime deadlines. People without a contract are not covered by the rule check.') }}
+                    </p>
+                    <BaseUIButton class="mt-4" :label="$t('Add User Contracts')" is-add-button @click="showCreateOrUpdateUserContractModal = true" />
                 </div>
             </div>
 
@@ -37,22 +42,17 @@
 
 <script setup>
 
-import TabComponent from "@/Components/Tabs/TabComponent.vue";
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 import ShiftSettingsHeader from "@/Pages/Settings/Components/ShiftSettingsHeader.vue";
 import {ref} from "vue";
 import CreateOrUpdateWorkTimePatternModal
     from "@/Pages/Settings/WorkTimePattern/Components/CreateOrUpdateWorkTimePatternModal.vue";
-import BaseMenu from "@/Components/Menu/BaseMenu.vue";
-import BaseMenuItem from "@/Components/Menu/BaseMenuItem.vue";
-import SingleWorkTimePattern from "@/Pages/Settings/WorkTimePattern/Components/SingleWorkTimePattern.vue";
-import BaseAlertComponent from "@/Components/Alerts/BaseAlertComponent.vue";
 import CreateOrUpdateUserContractModal
     from "@/Pages/Settings/UserContractSettings/Components/CreateOrUpdateUserContractModal.vue";
 import SingleUserContractTemplate
     from "@/Pages/Settings/UserContractSettings/Components/SingleUserContractTemplate.vue";
 import SettingsGuideBanner from "@/Artwork/Guide/SettingsGuideBanner.vue";
-import {IconCirclePlus} from "@tabler/icons-vue";
+import {IconCirclePlus, IconFileDescription} from "@tabler/icons-vue";
 
 const props = defineProps({
     contracts: {

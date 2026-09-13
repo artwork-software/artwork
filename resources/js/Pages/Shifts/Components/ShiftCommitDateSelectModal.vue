@@ -1,18 +1,25 @@
 <template>
     <ArtworkBaseModal
-        title="Select Commit Date"
-        description="Select the date for the commit."
+        :title="isShiftCommitWorkflowEnabled ? 'Submit duty roster for approval' : 'Commit duty roster'"
+        :description="isShiftCommitWorkflowEnabled
+            ? 'Select the calendar week and the crafts. One approval request per craft is sent to the approvers.'
+            : 'Select the calendar week and the crafts. All shifts of these crafts in the week are committed and appear in the personal rosters.'"
         @close="$emit('close')"
     >
-        <!-- Hinweis-Box -->
+        <!-- Neutrale Hinweisbox: aktiver Freigabe-Workflow + Genehmiger*innen (shared Prop shiftCommitApprovers) -->
         <div class="mb-4" v-if="isShiftCommitWorkflowEnabled">
-            <div class="bg-warning-surface/80 border border-warning-border text-warning p-4 rounded-xl flex gap-3 items-start">
-                <div class="mt-0.5 h-6 w-6 min-w-6 min-h-6 rounded-full bg-warning-surface flex items-center justify-center text-xs font-semibold">
-                    !
+            <div class="rounded-xl border border-accent-100 bg-accent-50/50 px-4 py-3 flex gap-3 items-start">
+                <PropertyIcon name="IconInfoCircle" class="h-5 w-5 text-accent-600 shrink-0 mt-0.5" :stroke-width="1.5" />
+                <div class="min-w-0 text-xs text-text-muted leading-relaxed space-y-1">
+                    <p>{{ $t('The approval workflow is active: the duty roster is not committed directly but submitted to the approvers. Once released, the shifts are committed automatically.') }}</p>
+                    <p v-if="approverNames.length">
+                        <span class="font-medium text-text">{{ $t('Approvers') }}:</span>
+                        {{ approverNames.join(', ') }}
+                    </p>
+                    <p v-else>
+                        {{ $t('No approvers are set up yet. Ask an administrator to add approvers under Shift settings → Approval workflow.') }}
+                    </p>
                 </div>
-                <p class="text-xs font-lexend leading-relaxed">
-                    {{ $t('Direct approval is currently not possible as the approval workflow is active. Please send a release request to the responsible users.') }}
-                </p>
             </div>
         </div>
 
@@ -25,6 +32,7 @@
                 max="53"
                 label="Calendar Week"
                 id="commit_week"
+                :error="serverErrors.week_number"
             />
 
             <BaseInput
@@ -33,6 +41,7 @@
                 type="number"
                 label="Year"
                 id="commit_year"
+                :error="serverErrors.year"
             />
 
             <div class="col-span-full">
@@ -44,6 +53,7 @@
                         </span>
                     </span>
                     <button
+                        v-if="crafts.length > 0"
                         type="button"
                         class="text-xs font-lexend text-accent-600 hover:text-accent-600 transition-colors"
                         @click="toggleAllCrafts"
@@ -81,8 +91,17 @@
                     </button>
                 </div>
 
+                <!-- Nur planbare Gewerke werden angeboten; hat die Person keine, gibt es nichts festzuschreiben -->
+                <p v-if="crafts.length === 0" class="mt-2 text-xs text-text-subtle font-lexend">
+                    {{ $t('No crafts available for you to commit.') }}
+                </p>
+
                 <p v-if="craftError" class="mt-1 text-xs text-danger font-lexend">
                     {{ $t('Please select at least one craft.') }}
+                </p>
+                <!-- Serverfehler zu den Gewerken (z. B. fremdes Gewerk → 422 aus CommitShiftsRequest) -->
+                <p v-else-if="serverErrors.crafts" class="mt-1 text-xs text-danger font-lexend">
+                    {{ serverErrors.crafts }}
                 </p>
                 <p v-else-if="isShiftCommitWorkflowEnabled" class="mt-1 text-xs text-text-subtle font-lexend">
                     {{ $t('One separate request per selected craft will be created.') }}
@@ -162,6 +181,14 @@
         </div>
 
 
+        <!-- Sonstige Serverfehler (nicht einem Feld zugeordnet) — vorher landeten 422er nur in der Konsole -->
+        <div
+            v-if="serverErrors.general"
+            class="mt-4 rounded-xl border border-danger-border bg-danger-surface px-4 py-3 text-xs text-danger font-lexend"
+        >
+            {{ serverErrors.general }}
+        </div>
+
         <!-- Aktionen -->
         <div class="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <BaseUIButton
@@ -174,14 +201,14 @@
             <div class="flex flex-col xs:flex-row gap-2">
                 <BaseUIButton
                     v-if="isShiftCommitWorkflowEnabled"
-                    :label="$t('Request a firm commitment')"
+                    :label="$t('Submit for approval')"
                     is-add-button
                     :processing="newShiftCommitForm.processing"
                     @click="submit"
                 />
                 <BaseUIButton
                     v-else
-                    :label="$t('Lock all shifts')"
+                    :label="$t('Commit duty roster')"
                     is-add-button
                     :processing="newShiftCommitForm.processing"
                     @click="submitWithoutWorkflow"
@@ -199,12 +226,18 @@ import axios from 'axios'
 import ArtworkBaseModal from '@/Artwork/Modals/ArtworkBaseModal.vue'
 import BaseInput from '@/Artwork/Inputs/BaseInput.vue'
 import BaseUIButton from '@/Artwork/Buttons/BaseUIButton.vue'
+import PropertyIcon from '@/Artwork/Icon/PropertyIcon.vue'
 
 const emit = defineEmits(['close'])
 
 const props = defineProps({
     dateArray: Array,
     crafts: Array,
+    // Gewerke, die die Person festschreiben darf (CraftScopeService); null = keine Einschränkung (Admin)
+    plannableCraftIds: {
+        type: Array,
+        default: null,
+    },
 });
 
 /**
@@ -236,9 +269,41 @@ const dateRange = ref({
 const isLoadingDateRange = ref(false)
 const dateRangeError = ref(null)
 const isShiftCommitWorkflowEnabled = ref(usePage().props.shiftCommitWorkflow)
-const crafts = ref(props.crafts || [])
+// Genehmiger*innen-Namen aus HandleInertiaRequests (nur bei aktivem Workflow gefüllt)
+const approverNames = computed(() =>
+    (usePage().props.shiftCommitApprovers ?? [])
+        .map((approver) => approver?.name)
+        .filter((name) => typeof name === 'string' && name.trim() !== '')
+)
+// Nur planbare Gewerke anbieten — „alle auswählen" mit fremden Gewerken liefe sonst in den 422
+// aus CommitShiftsRequest (Nicht-Admins dürfen nur Gewerke festschreiben, die sie planen dürfen).
+const crafts = computed(() => {
+    const all = props.crafts || []
+    if (!Array.isArray(props.plannableCraftIds)) {
+        return all
+    }
+    const allowed = new Set(props.plannableCraftIds.map((id) => Number(id)))
+    return all.filter((craft) => allowed.has(Number(craft.id)))
+})
 const selectedCrafts = ref([])
 const craftError = ref(false)
+
+// Serverseitige Validierungsfehler (422) sichtbar machen: Feldfehler an KW/Jahr, Gewerksfehler
+// unter der Gewerksliste, alles andere als allgemeiner Block.
+const firstMessage = (value) => (Array.isArray(value) ? value[0] : value) || null
+const serverErrors = computed(() => {
+    const errors = newShiftCommitForm.errors || {}
+    const craftKeys = Object.keys(errors).filter((key) => key === 'craft_ids' || key === 'craft_id' || key.startsWith('craft_ids.'))
+    const knownKeys = new Set(['week_number', 'year', ...craftKeys])
+    const generalKey = Object.keys(errors).find((key) => !knownKeys.has(key))
+
+    return {
+        week_number: firstMessage(errors.week_number) || '',
+        year: firstMessage(errors.year) || '',
+        crafts: craftKeys.length ? firstMessage(errors[craftKeys[0]]) : null,
+        general: generalKey ? firstMessage(errors[generalKey]) : null,
+    }
+})
 
 const allCraftsSelected = computed(
     () => crafts.value.length > 0 && selectedCrafts.value.length === crafts.value.length
@@ -252,15 +317,17 @@ const toggleCraft = (craft) => {
         : [...selectedCrafts.value, craft]
 }
 
+// „Alle auswählen" nimmt nur die planbaren Gewerke (crafts ist bereits gefiltert)
 const toggleAllCrafts = () => {
     selectedCrafts.value = allCraftsSelected.value ? [] : [...crafts.value]
 }
 
-// Sobald eine Auswahl getroffen wurde, den Fehlerhinweis zurücksetzen
+// Sobald eine Auswahl getroffen wurde, Fehlerhinweise zurücksetzen
 watch(selectedCrafts, (value) => {
     if (value.length > 0) {
         craftError.value = false
     }
+    newShiftCommitForm.clearErrors()
 })
 
 const getDateRangeByCalendarWeekAndYear = async (week, year) => {
@@ -289,6 +356,7 @@ const getDateRangeByCalendarWeekAndYear = async (week, year) => {
 watch(
     [() => newShiftCommitForm.week_number, () => newShiftCommitForm.year],
     ([newWeek, newYear]) => {
+        newShiftCommitForm.clearErrors('week_number', 'year')
         if (newWeek && newYear) {
             getDateRangeByCalendarWeekAndYear(newWeek, newYear)
         }
@@ -313,13 +381,15 @@ const submitToRoute = (routeName) => {
 
     newShiftCommitForm.craft_ids = selectedCrafts.value.map((craft) => craft.id)
 
+    // Erfolgsmeldung kommt als Flash über den globalen Toast im AppLayout
+    // (commit-shift-workflow-request.store liefert sie; shifts.commit derzeit ohne Text).
     newShiftCommitForm.post(route(routeName), {
+        preserveScroll: true,
         onSuccess: () => {
             emit('close')
         },
-        onError: (errors) => {
-            console.error('Error submitting shift commit form:', errors)
-        },
+        // Fehler werden über newShiftCommitForm.errors im Modal angezeigt (serverErrors)
+        onError: () => {},
     })
 }
 

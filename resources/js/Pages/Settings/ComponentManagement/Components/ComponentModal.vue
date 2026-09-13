@@ -314,6 +314,16 @@
                         {{ $t('Configure component permissions') }}
                     </div>
 
+                    <SettingsGuideBanner
+                        variant="static"
+                        title="Component permissions can only restrict"
+                        class="mb-4"
+                        :paragraphs="[
+                            'Seeing a component always requires access to the project, editing always requires write permission in the project (project team or global write permission). The settings here can narrow this circle further, but never extend it.',
+                            'Users with “Write permissions for all projects” and admins are not affected by these restrictions.'
+                        ]"
+                    />
+
                     <!-- Everyone can see & edit -->
                     <label class="flex items-center gap-2">
                         <input
@@ -322,7 +332,7 @@
                             v-model="modulePermissions.permission_type"
                         />
                         <span class="text-sm text-text-muted">
-              {{ $t('Everyone can see and edit') }}
+              {{ $t('No further restriction – visible to everyone with project access, editable by everyone with write permission in the project') }}
             </span>
                     </label>
 
@@ -335,7 +345,7 @@
                                 v-model="modulePermissions.permission_type"
                             />
                             <span class="text-sm text-text-muted">
-                {{ $t('Everyone can see, but editing is just allowed for:') }}
+                {{ $t('Visible to everyone with project access, but editing is additionally limited to:') }}
               </span>
                         </label>
 
@@ -418,7 +428,7 @@
                                 v-model="modulePermissions.permission_type"
                             />
                             <span class="text-sm text-text-muted">
-                {{ $t('Only visible to:') }}
+                {{ $t('Only visible to the following (editing additionally requires write permission in the project):') }}
               </span>
                         </label>
 
@@ -542,6 +552,7 @@ import ToolTipComponent from '@/Components/ToolTips/ToolTipComponent.vue'
 import FormButton from '@/Layouts/Components/General/Buttons/FormButton.vue'
 import BaseInput from '@/Artwork/Inputs/BaseInput.vue'
 import ArtworkBaseModal from '@/Artwork/Modals/ArtworkBaseModal.vue'
+import SettingsGuideBanner from '@/Artwork/Guide/SettingsGuideBanner.vue'
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 import ArtworkBaseListbox from "@/Artwork/Listbox/ArtworkBaseListbox.vue";
 

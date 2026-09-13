@@ -34,7 +34,7 @@ class CraftDistributionExportService
         $rangeEnd = $rangeEnd->copy()->endOfDay();
 
         $universalCraft = Craft::query()
-            ->without(['craftShiftPlaner', 'craftInventoryPlaner'])
+            ->without(['craftShiftPlaner'])
             ->with([
                 'users' => fn ($query) => $query
                     ->without('shiftQualifications')
@@ -49,7 +49,7 @@ class CraftDistributionExportService
             ->findOrFail($universalCraftId);
 
         $crafts = Craft::query()
-            ->without(['craftShiftPlaner', 'craftInventoryPlaner'])
+            ->without(['craftShiftPlaner'])
             ->when($craftIds !== [], fn ($query) => $query->whereIn('id', $craftIds))
             ->orderBy('position')
             ->get(['id', 'name', 'position']);

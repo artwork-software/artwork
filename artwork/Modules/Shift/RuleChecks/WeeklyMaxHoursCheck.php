@@ -26,16 +26,20 @@ class WeeklyMaxHoursCheck extends AbstractRuleCheck
                 $plannedWorkingHoursOfWeek = 0;
             }
 
-            $plannedWorkingHoursOfWeek += $this->getPlannedWorkingHoursForDay($user, $date);
+            $dayHours = $this->getPlannedWorkingHoursForDay($user, $date);
+            $plannedWorkingHoursOfWeek += $dayHours;
 
-            if ($plannedWorkingHoursOfWeek > $rule->individual_number_value) {
+            // Nur Tage mit geplanter Arbeit (Schicht oder individuelle Zeit) melden, nicht arbeitsfreie Folgetage.
+            if ($dayHours > 0 && $plannedWorkingHoursOfWeek > $rule->individual_number_value) {
+                $data = [
+                    'weekly_hours' => $plannedWorkingHoursOfWeek,
+                    'max_allowed' => $rule->individual_number_value,
+                ];
                 $shift = $this->getShiftForUserOnDate($user, $date);
-                if ($shift) {
-                    $violations->push($this->createViolation($rule, $shift, $user, $date, [
-                        'weekly_hours' => $plannedWorkingHoursOfWeek,
-                        'max_allowed' => $rule->individual_number_value
-                    ]));
-                }
+                // Auch ohne Schicht (nur individuelle Zeiten) ist die Ueberschreitung ein Verstoss.
+                $violations->push($shift
+                    ? $this->createViolation($rule, $shift, $user, $date, $data)
+                    : $this->createViolationWithoutShift($rule, $user, $date, $data));
             }
         }
 

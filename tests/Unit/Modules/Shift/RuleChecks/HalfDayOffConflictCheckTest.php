@@ -135,4 +135,62 @@ final class HalfDayOffConflictCheckTest extends TestCase
 
         $this->assertCount(0, $violations);
     }
+
+    #[Test]
+    public function pivot_times_of_the_person_override_the_shift_times(): void
+    {
+        $user = User::factory()->create();
+        $this->grantHalf($user, 'morning');
+        // Schicht laut Plan ab 08:00 (Verstoß), die Person kommt laut Pivot aber erst 15:00 -> kein Verstoß
+        $shift = Shift::factory()->create([
+            'start_date' => $this->date->toDateString(),
+            'end_date' => $this->date->toDateString(),
+            'start' => '08:00:00',
+            'end' => '18:00:00',
+            'shift_group_id' => null,
+        ]);
+        $sq = ShiftQualification::factory()->create();
+        $shift->users()->attach($user->id, [
+            'shift_qualification_id' => $sq->id,
+            'shift_count' => 1,
+            'start_date' => $this->date->toDateString(),
+            'end_date' => $this->date->toDateString(),
+            'start_time' => '15:00:00',
+            'end_time' => '18:00:00',
+        ]);
+
+        $violations = $this->check->check($this->rule(), $user, $this->date->copy(), $this->date->copy());
+
+        $this->assertCount(0, $violations);
+    }
+
+    #[Test]
+    public function pivot_times_of_the_person_create_a_violation_the_shift_times_would_not(): void
+    {
+        $user = User::factory()->create();
+        $this->grantHalf($user, 'afternoon');
+        // Schicht laut Plan 08:00–13:00 (ok), die Person bleibt laut Pivot bis 16:00 -> Verstoß
+        $shift = Shift::factory()->create([
+            'start_date' => $this->date->toDateString(),
+            'end_date' => $this->date->toDateString(),
+            'start' => '08:00:00',
+            'end' => '13:00:00',
+            'shift_group_id' => null,
+        ]);
+        $sq = ShiftQualification::factory()->create();
+        $shift->users()->attach($user->id, [
+            'shift_qualification_id' => $sq->id,
+            'shift_count' => 1,
+            'start_date' => $this->date->toDateString(),
+            'end_date' => $this->date->toDateString(),
+            'start_time' => '08:00:00',
+            'end_time' => '16:00:00',
+        ]);
+
+        $violations = $this->check->check($this->rule(), $user, $this->date->copy(), $this->date->copy());
+
+        $this->assertCount(1, $violations);
+        $this->assertSame('afternoon', $violations->first()->violation_data['half_day_period']);
+        $this->assertStringContainsString('16:00:00', $violations->first()->violation_data['shift_end']);
+    }
 }

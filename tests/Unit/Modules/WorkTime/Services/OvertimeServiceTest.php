@@ -237,4 +237,65 @@ final class OvertimeServiceTest extends TestCase
         $this->assertSame(120, $open->remaining_minutes);
         $this->assertSame(0, $open->paid_out_minutes);
     }
+
+    #[Test]
+    public function an_inactive_rule_keeps_existing_open_and_compensated_entries(): void
+    {
+        // Zuweisung heute mit overtime_rule_active=false (z. B. nach Vertragswechsel): der Replay beurteilt
+        // keinen Tag — vorhandene Einträge dürfen dann nicht als "veraltet" gelöscht werden.
+        $user = $this->userWithContract(active: false, period: 30);
+        $openDay = Carbon::now()->startOfDay()->subDays(5);
+        $compensatedDay = Carbon::now()->startOfDay()->subDays(10);
+        $this->booking($user, $openDay, 120);
+        $this->booking($user, $compensatedDay, 60);
+        $open = UserOvertime::create([
+            'user_id' => $user->id,
+            'date' => $openDay->toDateString(),
+            'minutes' => 120,
+            'remaining_minutes' => 120,
+            'deadline' => $openDay->copy()->addDays(30)->toDateString(),
+            'status' => UserOvertime::STATUS_OPEN,
+        ]);
+        $compensated = UserOvertime::create([
+            'user_id' => $user->id,
+            'date' => $compensatedDay->toDateString(),
+            'minutes' => 60,
+            'remaining_minutes' => 0,
+            'deadline' => $compensatedDay->copy()->addDays(30)->toDateString(),
+            'status' => UserOvertime::STATUS_COMPENSATED,
+        ]);
+
+        $this->service->recomputeForUser($user);
+
+        $this->assertSame(2, UserOvertime::where('user_id', $user->id)->count());
+        $this->assertSame(UserOvertime::STATUS_OPEN, $open->fresh()->status);
+        $this->assertSame(120, $open->fresh()->remaining_minutes);
+        $this->assertSame(UserOvertime::STATUS_COMPENSATED, $compensated->fresh()->status);
+    }
+
+    #[Test]
+    public function an_active_rule_still_removes_the_stale_entry_of_a_day_without_overtime(): void
+    {
+        $user = $this->userWithContract(active: true, period: 30);
+        $staleDay = Carbon::now()->startOfDay()->subDays(5);
+        $overtimeDay = Carbon::now()->startOfDay()->subDays(2);
+        // Tag ohne (positive) Buchung mehr, aber mit altem offenen Eintrag → wird bereinigt
+        $this->booking($user, $staleDay, -30);
+        $this->booking($user, $overtimeDay, 90);
+        UserOvertime::create([
+            'user_id' => $user->id,
+            'date' => $staleDay->toDateString(),
+            'minutes' => 45,
+            'remaining_minutes' => 45,
+            'deadline' => $staleDay->copy()->addDays(30)->toDateString(),
+            'status' => UserOvertime::STATUS_OPEN,
+        ]);
+
+        $this->service->recomputeForUser($user);
+
+        $this->assertSame(
+            [$overtimeDay->toDateString()],
+            UserOvertime::where('user_id', $user->id)->orderBy('date')->get()->map(fn (UserOvertime $e) => $e->date->toDateString())->all()
+        );
+    }
 }

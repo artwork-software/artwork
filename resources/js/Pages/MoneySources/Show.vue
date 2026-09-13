@@ -7,6 +7,12 @@
                     <!-- Title & Meta -->
                     <div class="min-w-0">
                         <div class="flex items-center gap-3">
+                            <PropertyIcon
+                                v-if="moneySource.is_group && moneySource.icon"
+                                :name="moneySource.icon"
+                                class="h-6 w-6 shrink-0 text-text"
+                                stroke-width="1.5"
+                            />
                             <h1 class="text-xl lg:text-2xl font-semibold tracking-tight truncate">{{ moneySource.name }}</h1>
                             <span v-if="moneySource.is_group" class="inline-flex items-center rounded-md border px-2 py-0.5 text-[11px] text-text-muted">
                                 {{ $t('Gruppe') }}
@@ -32,7 +38,13 @@
                             </div>
 
                             <div v-if="moneySource.group_id" class="flex items-center gap-2">
-                                <img src="/Svgs/IconSvgs/icon_group_red.svg" class="h-4 w-4" alt="groupIcon" />
+                                <PropertyIcon
+                                    v-if="moneySource.moneySourceGroup?.icon"
+                                    :name="moneySource.moneySourceGroup.icon"
+                                    class="h-4 w-4 shrink-0 text-text"
+                                    stroke-width="1.5"
+                                />
+                                <img v-else src="/Svgs/IconSvgs/icon_group_red.svg" class="h-4 w-4" alt="groupIcon" />
                                 <span>{{ $t('Gehört zu') }}</span>
                                 <Link :href="getEditHref(moneySource.group_id)" class="text-accent-700 hover:text-accent-700">
                                     {{ moneySource.moneySourceGroup?.name }}
@@ -74,10 +86,11 @@
 
                     <!-- Actions -->
                     <div class="flex flex-wrap gap-2">
-                        <BaseMenu  has-no-offset white-menu-background>
-                            <BaseMenuItem white-menu-background title="Edit" :icon="IconEdit"  @click="openEditMoneySourceModal" />
-                            <BaseMenuItem white-menu-background title="Duplicate" :icon="IconCopy"  @click="duplicateMoneySource(moneySource)" />
-                            <BaseMenuItem white-menu-background  title="Delete" :icon="IconTrash" @click="openDeleteSourceModal(moneySource)" />
+                        <!-- Bedingungen spiegeln MoneySourcePolicy (update / create / delete) -->
+                        <BaseMenu v-if="canManage || canDuplicate || canDelete" has-no-offset white-menu-background>
+                            <BaseMenuItem v-if="canManage" white-menu-background title="Edit" :icon="IconEdit"  @click="openEditMoneySourceModal" />
+                            <BaseMenuItem v-if="canDuplicate" white-menu-background title="Duplicate" :icon="IconCopy"  @click="duplicateMoneySource(moneySource)" />
+                            <BaseMenuItem v-if="canDelete" white-menu-background  title="Delete" :icon="IconTrash" @click="openDeleteSourceModal(moneySource)" />
                         </BaseMenu>
                     </div>
                 </div>
@@ -344,6 +357,7 @@ import {
 import { is, can } from 'laravel-permission-to-vuejs'
 import BaseMenu from "@/Components/Menu/BaseMenu.vue";
 import BaseMenuItem from "@/Components/Menu/BaseMenuItem.vue";
+import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 
 /** Props */
 const props = defineProps<{
@@ -379,12 +393,25 @@ const competent_member = computed<number[]>(() => {
     ;(props.moneySource?.users ?? []).forEach((u: any) => { if (u.pivot?.competent) ids.push(u.id) })
     return ids
 })
+const isCreator = computed(() => props.moneySource?.creator?.id === authUser.value.id)
+// Spiegel von MoneySourcePolicy::update
 const canManage = computed(() =>
     is('artwork admin') ||
     access_member.value.includes(authUser.value.id) ||
     competent_member.value.includes(authUser.value.id) ||
+    isCreator.value ||
     can('view edit add money_sources') ||
-    can('can edit and delete money sources')
+    can('can edit and delete money sources') ||
+    can('can manage global project budgets')
+)
+// Duplizieren legt eine neue Quelle an → MoneySourcePolicy::create
+const canDuplicate = computed(() => is('artwork admin') || can('view edit add money_sources'))
+// Spiegel von MoneySourcePolicy::delete
+const canDelete = computed(() =>
+    is('artwork admin') ||
+    isCreator.value ||
+    can('can edit and delete money sources') ||
+    can('can manage global project budgets')
 )
 
 /** Formatters */

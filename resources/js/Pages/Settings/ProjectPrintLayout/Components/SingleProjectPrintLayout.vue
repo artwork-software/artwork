@@ -37,7 +37,7 @@
                     </div>
                     <template v-for="col in layout['columns_header']" :key="col">
                         <div v-if="getComponent(layout, 'header', 1, col)" :key="getComponent(layout, 'header', 1, col).id">
-                            <SingleComponentInPrintLayout :component="getComponent(layout, 'header', 1, col)" />
+                            <SingleComponentInPrintLayout :component="getComponent(layout, 'header', 1, col)" :layout="layout" />
                         </div>
                         <div v-else>
                             <EmptyProjectPrintComponentDropElement has-no-offset :row="1" :col="col" type="header" :column-size="layout['columns_header']" :project-print-layout="layout" :components="components" />
@@ -52,7 +52,7 @@
                         <div class="grid grid-cols-1 gap-4" :class="'grid-cols-' + layout['columns_body']">
                             <template v-for="col in layout['columns_body']" :key="col">
                                 <div v-if="getComponent(layout, 'body', row, col)" :key="getComponent(layout, 'body', row, col).id">
-                                    <SingleComponentInPrintLayout :component="getComponent(layout, 'body', row, col)" />
+                                    <SingleComponentInPrintLayout :component="getComponent(layout, 'body', row, col)" :layout="layout" />
                                 </div>
                                 <div v-else-if="row === getRowCount(layout, 'body')">
                                     <EmptyProjectPrintComponentDropElement
@@ -103,7 +103,7 @@
                     </div>
                     <template v-for="col in layout['columns_footer']" :key="col">
                         <div v-if="getComponent(layout, 'footer', 1, col)" :key="getComponent(layout, 'footer', 1, col).id">
-                            <SingleComponentInPrintLayout :component="getComponent(layout, 'footer', 1, col)" />
+                            <SingleComponentInPrintLayout :component="getComponent(layout, 'footer', 1, col)" :layout="layout" />
                         </div>
                         <div v-else>
                             <EmptyProjectPrintComponentDropElement

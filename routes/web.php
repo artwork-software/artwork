@@ -35,7 +35,6 @@ use App\Http\Controllers\ContractModuleController;
 use App\Http\Controllers\ContractTypeController;
 use App\Http\Controllers\DocumentRequestController;
 use App\Http\Controllers\CraftController;
-use App\Http\Controllers\CraftInventoryItemEventController;
 use App\Http\Controllers\CurrencyController;
 use App\Http\Controllers\DayRemarkController;
 use App\Http\Controllers\DayServiceController;
@@ -141,19 +140,10 @@ use Artwork\Modules\Inventory\Http\Controllers\InventoryArticleController;
 use Artwork\Modules\Inventory\Http\Controllers\InventoryArticlePropertiesController;
 use Artwork\Modules\Inventory\Http\Controllers\InventoryArticleStatusController;
 use Artwork\Modules\Inventory\Http\Controllers\InventoryCategoryController;
-use Artwork\Modules\Inventory\Http\Controllers\InventoryController;
 use Artwork\Modules\Inventory\Http\Controllers\InventorySubCategoryController;
 use Artwork\Modules\Inventory\Http\Controllers\InventoryTagController;
 use Artwork\Modules\Inventory\Http\Controllers\InventoryTagGroupController;
 use Artwork\Modules\Inventory\Http\Controllers\InventoryUserFilterController;
-use Artwork\Modules\InventoryManagement\Http\Controllers\CraftInventoryCategoryController;
-use Artwork\Modules\InventoryManagement\Http\Controllers\CraftInventoryFilterController;
-use Artwork\Modules\InventoryManagement\Http\Controllers\CraftInventoryGroupController;
-use Artwork\Modules\InventoryManagement\Http\Controllers\CraftInventoryGroupFolderController;
-use Artwork\Modules\InventoryManagement\Http\Controllers\CraftInventoryItemCellController;
-use Artwork\Modules\InventoryManagement\Http\Controllers\CraftInventoryItemController;
-use Artwork\Modules\InventoryManagement\Http\Controllers\CraftsInventoryColumnController;
-use Artwork\Modules\InventoryManagement\Http\Controllers\InventoryManagementExportController;
 use Artwork\Modules\Invitation\Http\Controller\InvitationController;
 use Artwork\Modules\Crm\Http\Controllers\CrmContactController;
 use Artwork\Modules\Crm\Http\Controllers\CrmContactTypeController;
@@ -172,7 +162,6 @@ use Artwork\Modules\ExternalAccess\Http\Controllers\ExternalInvitationController
 use Artwork\Modules\Manufacturer\Http\Controllers\ManufacturerController;
 use Artwork\Modules\MaterialSet\Http\Controllers\MaterialSetController;
 use Artwork\Modules\ModuleSettings\Http\Controller\ModuleSettingsController;
-use Artwork\Modules\MoneySource\Http\Middleware\CanEditMoneySource;
 use Artwork\Modules\Project\Http\Controllers\ProjectRoleMatrixExportController;
 use Artwork\Modules\Project\Http\Middleware\CanEditProject;
 use Artwork\Modules\Budget\Http\Middleware\EnsureUserCanAccessProjectBudget;
@@ -248,6 +237,8 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::group(['prefix' => 'shift-rules', 'middleware' => ['can:can plan shifts', 'shift-settings-area:rules,view']], function (): void {
         Route::get('/', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'index'])->name('shift-rules.index');
         Route::post('/', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'store'])->middleware('shift-settings-area:rules,edit')->name('shift-rules.store');
+        // Gesetzliche Standardregeln (ArbZG) anlegen — gleiche Rechte wie das normale Anlegen
+        Route::post('/defaults', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'storeDefaults'])->middleware('shift-settings-area:rules,edit')->name('shift-rules.defaults.store');
 
         // Specific routes must come before parameterized routes
         // Wird auch vom Schichtplaner-Workflow (ShowUserShiftsModal) genutzt — nur "can plan shifts" nötig
@@ -258,9 +249,10 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         Route::put('/contracts/{contract}/assignments', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'updateContractAssignments'])->middleware('shift-settings-area:rules,edit')->name('shift-rules.contracts.assignments.update');
         Route::post('/validate', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'validateRules'])->middleware('shift-settings-area:rules,edit')->name('shift-rules.validate');
         Route::get('/pending', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'getPendingViolations'])->name('shift-rules.pending');
+        // Excel-Export der Verstöße — gleiche Rechte wie die Liste (vor /{shiftRule} registrieren)
+        Route::get('/violations/export', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'exportViolations'])->name('shift-rules.violations.export');
 
         // Parameterized routes come last
-        Route::get('/{shiftRule}', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'show'])->name('shift-rules.show');
         Route::put('/{shiftRule}', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'update'])->middleware('shift-settings-area:rules,edit')->name('shift-rules.update');
         Route::delete('/{shiftRule}', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'destroy'])->middleware('shift-settings-area:rules,edit')->name('shift-rules.destroy');
         Route::post('/{shiftRule}/contracts', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'assignContracts'])->middleware('shift-settings-area:rules,edit')->name('shift-rules.contracts.assign');
@@ -270,15 +262,21 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     // Shift Rule Violations routes
     Route::group(['prefix' => 'shift-rule-violations', 'middleware' => 'can:can plan shifts'], function (): void {
         Route::post('/manual', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'storeManualViolation'])->name('shift-rule-violations.manual.store');
+        // Sammelaktion "Ignorieren" (max. 200 IDs je Aufruf, gleiche Ignore-Logik wie je Verstoß)
+        Route::post('/bulk-ignore', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'bulkIgnoreViolations'])->name('shift-rule-violations.bulk-ignore');
         Route::get('/date-range', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'getViolationsForDateRange'])->name('shift-rule-violations.date-range');
         Route::post('/{violation}/resolve', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'resolveViolation'])->name('shift-rule-violations.resolve');
         Route::post('/{violation}/ignore', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'ignoreViolation'])->name('shift-rule-violations.ignore');
         Route::put('/{violation}/process', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'processViolation'])->name('shift-rule-violations.process');
+        // DP-17 Verlauf: gleiche Rechte wie das Bearbeiten (can plan shifts)
+        Route::get('/{violation}/history', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'violationHistory'])->name('shift-rules.violations.history');
     });
 
     // Compensation Day Offs routes
     Route::group(['prefix' => 'compensation-day-offs', 'middleware' => 'can:can plan shifts'], function (): void {
         Route::get('/dashboard', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'compensationDashboard'])->name('compensation-day-offs.dashboard');
+        // Excel-Export der gefilterten Dashboard-Liste — exakt dieselben Rechte wie das Dashboard (can plan shifts)
+        Route::get('/export', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'exportCompensationDays'])->name('compensation-day-offs.export');
         Route::post('/{compensationDayOff}/grant', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'grantCompensationDay'])->name('compensation-day-offs.grant');
         Route::post('/{compensationDayOff}/check', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'checkCompensationDay'])->name('compensation-day-offs.check');
         Route::post('/{compensationDayOff}/revoke', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'revokeCompensationDay'])->name('compensation-day-offs.revoke');
@@ -385,7 +383,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
             ->name('tool.mail.update');
         Route::post('/mail/test', [MailSettingsController::class, 'test'])
             ->name('tool.mail.test');
-        Route::group(['namespace' => 'System', 'prefix' => 'system'], function (): void {
+        Route::group(['namespace' => 'System', 'prefix' => 'system', 'middleware' => 'can:change tool settings'], function (): void {
             Route::get('/file-settings', [FileSettingsController::class, 'index'])
                 ->name('tool.file-settings.index');
             Route::put('/file-settings', [FileSettingsController::class, 'store'])
@@ -417,10 +415,6 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
             WebhookEndpointController::class,
             'redeliver'
         ])->name('webhooks.deliveries.redeliver');
-    });
-
-    Route::group(['middleware' => CanEditMoneySource::class], function (): void {
-        Route::delete('/money_sources/{moneySource}', [MoneySourceController::class, 'destroy']);
     });
 
     Route::group(['middleware' => ['can:view edit add money_sources']], function (): void {
@@ -485,6 +479,10 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         ->name('user.edit.permissions');
     Route::get('/users/{user}/workProfile', [UserController::class, 'editUserWorkProfile'])->can('can manage workers')
         ->name('user.edit.workProfile');
+    // Tab "Vertrag & Arbeitszeit" (seit 2026-09 ein Tab statt zwei); die alten Routen bleiben als Redirect
+    Route::get('/users/{user}/contract-and-work-time', [UserController::class, 'editContractAndWorkTime'])
+        ->can('can manage workers')
+        ->name('user.edit.contract-and-work-time');
     Route::get('/users/{user}/work-time-pattern', [UserController::class, 'editUserWorkTime'])
         ->can('can manage workers')
         ->name('user.edit.work-time-pattern');
@@ -499,21 +497,27 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         ->name('user.edit.compensationDays');
 
     // DP-18: Lazy-Endpoints für das User-Info-Modal im Schichtplan (je Tab)
+    // Autorisierung über UserPolicy::viewShiftKpis: fremde Personen mit "can view shift user kpis",
+    // die eigene Person auch mit "can view own roster" ("Meine Zahlen" im Einsatzplan).
     Route::get('/users/{user}/shift-info/season', [UserController::class, 'shiftUserInfoSeason'])
-        ->can('can view shift user kpis')
+        ->can('viewShiftKpis', 'user')
         ->name('shift.user-info.season');
     Route::get('/users/{user}/shift-info/compensation', [UserController::class, 'shiftUserInfoCompensation'])
-        ->can('can view shift user kpis')
+        ->can('viewShiftKpis', 'user')
         ->name('shift.user-info.compensation');
     Route::get('/users/{user}/shift-info/vacation', [UserController::class, 'shiftUserInfoVacation'])
-        ->can('can view shift user kpis')
+        ->can('viewShiftKpis', 'user')
         ->name('shift.user-info.vacation');
     Route::get('/users/{user}/shift-info/worktimes', [UserController::class, 'shiftUserInfoWorktimes'])
-        ->can('can view shift user kpis')
+        ->can('viewShiftKpis', 'user')
         ->name('shift.user-info.worktimes');
     Route::get('/users/{user}/shift-info/overtime', [UserController::class, 'shiftUserInfoOvertime'])
-        ->can('can view shift user kpis')
+        ->can('viewShiftKpis', 'user')
         ->name('shift.user-info.overtime');
+    // Offene Regelverstöße (status active) read-only, z. B. "Meine Zahlen" im eigenen Einsatzplan
+    Route::get('/users/{user}/shift-info/violations', [UserController::class, 'shiftUserInfoViolations'])
+        ->can('viewShiftKpis', 'user')
+        ->name('shift.user-info.violations');
 
     // DP-18 Stufe 2: Überstunden – User-Detail-Tab + manuelle Auszahlung
     Route::get('/users/{user}/overtime', [UserController::class, 'editUserOvertime'])
@@ -634,7 +638,8 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::get('/events/{event}/project-assignment-impact', [ProjectDayAssignmentController::class, 'rescheduleImpact'])
         ->name('events.project-assignment-impact')
         ->can('can view shift plan');
-    Route::get('/trashedProjects', [ProjectController::class, 'getTrashed'])->name('projects.trashed');
+    Route::get('/trashedProjects', [ProjectController::class, 'getTrashed'])
+        ->middleware('can:can access trash')->name('projects.trashed');
     Route::get('/projects/users_departments/search', [ProjectController::class, 'searchDepartmentsAndUsers'])
         ->name('users_departments.search');
     Route::get('/projects/create', [ProjectController::class, 'create'])->name('projects.create');
@@ -803,14 +808,16 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         ->name('link_list_templates.destroy');
 
     //TaskTemplates
-    Route::get('/task_templates/create', [TaskTemplateController::class, 'create'])->name('task_templates.create');
-    Route::post('/task_templates', [TaskTemplateController::class, 'store'])->name('task_templates.store');
-    Route::put('/task_templates/order', [TaskTemplateController::class, 'updateOrder'])->name('task_templates.order');
-    Route::get('/task_templates/{task_template}/edit', [TaskTemplateController::class, 'edit']);
-    Route::patch('/task_templates/{task_template}', [TaskTemplateController::class, 'update'])
-        ->name('task_templates.update');
-    Route::delete('/task_templates/{task_template}', [TaskTemplateController::class, 'destroy'])
-        ->name('task_templates.destroy');
+    Route::group(['middleware' => 'can:admin checklistTemplates'], function (): void {
+        Route::get('/task_templates/create', [TaskTemplateController::class, 'create'])->name('task_templates.create');
+        Route::post('/task_templates', [TaskTemplateController::class, 'store'])->name('task_templates.store');
+        Route::put('/task_templates/order', [TaskTemplateController::class, 'updateOrder'])->name('task_templates.order');
+        Route::get('/task_templates/{task_template}/edit', [TaskTemplateController::class, 'edit']);
+        Route::patch('/task_templates/{task_template}', [TaskTemplateController::class, 'update'])
+            ->name('task_templates.update');
+        Route::delete('/task_templates/{task_template}', [TaskTemplateController::class, 'destroy'])
+            ->name('task_templates.destroy');
+    });
 
 
 
@@ -866,7 +873,8 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
 
     //Areas
     Route::get('/areas', [AreaController::class, 'index'])->name('areas.management');
-    Route::get('/trashedAreas', [AreaController::class, 'getTrashed'])->name('areas.trashed');
+    Route::get('/trashedAreas', [AreaController::class, 'getTrashed'])
+        ->middleware('can:can access trash')->name('areas.trashed');
     Route::post('/areas', [AreaController::class, 'store'])->name('areas.store');
     Route::post('/areas/{area}/duplicate', [AreaController::class, 'duplicate'])->name('areas.duplicate');
     Route::patch('/areas/{area}', [AreaController::class, 'update'])->name('areas.update');
@@ -883,7 +891,8 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
 
     //Rooms
     Route::post('/rooms', [RoomController::class, 'store'])->name('rooms.store');
-    Route::get('/trashedRooms', [RoomController::class, 'getTrashed'])->name('rooms.trashed');
+    Route::get('/trashedRooms', [RoomController::class, 'getTrashed'])
+        ->middleware('can:can access trash')->name('rooms.trashed');
     Route::get('/rooms/free', [RoomController::class, 'getAllDayFree'])->name('rooms.free');
     Route::post('/rooms/{room}/duplicate', [RoomController::class, 'duplicate'])->name('rooms.duplicate');
     Route::get('/rooms/{room}', [RoomController::class, 'show'])
@@ -947,7 +956,8 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::get('/events/requests', function () {
         return redirect()->route('event-verifications.index');
     })->name('events.requests');
-    Route::get('/trashedEvents', [EventController::class, 'getTrashed'])->name('events.trashed');
+    Route::get('/trashedEvents', [EventController::class, 'getTrashed'])
+        ->middleware('can:can access trash')->name('events.trashed');
 
     // Event Api
     Route::post('/events', [EventController::class, 'storeEvent'])->name('events.store');
@@ -1008,6 +1018,11 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
 
     Route::get('/shifts/list-view', [EventController::class, 'viewShiftPlanListView'])
         ->name('shifts.plan.list-view')
+        ->can('can view shift plan');
+
+    // Wochenstatus: Gewerke × KW (Festschreibung, Anfragen, Änderungen, Verstöße, Besetzung, Frist)
+    Route::get('/shifts/week-status', [\Artwork\Modules\Shift\Http\Controllers\ShiftWeekStatusController::class, 'index'])
+        ->name('shifts.week-status')
         ->can('can view shift plan');
 
     Route::get('/shifts/workers', [EventController::class, 'getShiftPlanWorkers'])
@@ -1109,8 +1124,15 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         Route::get('/event_types/bi-tags', [EventTypeController::class, 'biTags'])
             ->name('event_types.bi_tags')
             ->can('change event settings');
+        // Feiertagsseite: Termin-Einstellungen ODER Dienstplanung (read-only + Sondertag-Häkchen);
+        // Spatie-"permission"-Middleware = ODER-Verknüpfung, geht über canAny() (Admin via Gate::before)
         Route::get('/holiday', [HolidayController::class, 'index'])
+            ->middleware('permission:change event settings|can plan shifts')
             ->name('holiday.management');
+        // Nur das Sondertag-Flag (Dienstplaner:innen); Anlegen/Bearbeiten/Löschen bleiben bei "change event settings"
+        Route::patch('/holiday/{holiday}/special-day', [HolidayController::class, 'updateTreatAsSpecialDay'])
+            ->can('can plan shifts')
+            ->name('holiday.special-day.update');
         Route::post('/holiday/api', [HolidayController::class, 'create'])
             ->can('change event settings')
             ->name('holiday.api.call');
@@ -1128,7 +1150,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
             ->name('holiday.batch-update');
 
 
-        Route::group(['prefix' => 'event-status'], function (): void {
+        Route::group(['prefix' => 'event-status', 'middleware' => 'can:change event settings'], function (): void {
             Route::get('/', [EventStatusController::class, 'index'])
                 ->name('event_status.management');
 
@@ -1153,7 +1175,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
                 ->name('event_status.delete');
         });
 
-        Route::group(['prefix' => 'event_properties'], function (): void {
+        Route::group(['prefix' => 'event_properties', 'middleware' => 'can:change event settings'], function (): void {
             Route::get('/', [EventPropertyController::class, 'index'])
                 ->name('event_settings.event_properties.index');
             Route::post('/', [EventPropertyController::class, 'store'])
@@ -1167,10 +1189,12 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
 
     //EventTypes
 
-    Route::post('/event_types', [EventTypeController::class, 'store'])->name('event_types.store');
-    Route::get('/event_types/{event_type}', [EventTypeController::class, 'show'])->name('event_types.show');
-    Route::patch('/event_types/{event_type}', [EventTypeController::class, 'update'])->name('event_types.update');
-    Route::delete('/event_types/{event_type}', [EventTypeController::class, 'destroy']);
+    Route::group(['middleware' => 'can:change event settings'], function (): void {
+        Route::post('/event_types', [EventTypeController::class, 'store'])->name('event_types.store');
+        Route::get('/event_types/{event_type}', [EventTypeController::class, 'show'])->name('event_types.show');
+        Route::patch('/event_types/{event_type}', [EventTypeController::class, 'update'])->name('event_types.update');
+        Route::delete('/event_types/{event_type}', [EventTypeController::class, 'destroy'])->name('event_types.destroy');
+    });
 
     // notification
     Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
@@ -1202,6 +1226,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
 
     // Money Sources
     Route::get('/settings/money_sources', [MoneySourceController::class, 'showSettings'])
+        ->middleware('can:change money source settings')
         ->name('money_sources.settings');
     Route::get('/money_sources/search/money_source', [MoneySourceController::class, 'search'])
         ->name('money_sources.search');
@@ -1215,7 +1240,8 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::post('/money_sources/{moneySource}/duplicate', [MoneySourceController::class, 'duplicate'])
         ->name('money_sources.duplicate');
     Route::post('/money_sources/{moneySource}/pin', [MoneySourceController::class, 'pin'])->name('money_sources.pin');
-    Route::delete('/money_sources/{moneySource}', [MoneySourceController::class, 'destroy']);
+    Route::delete('/money_sources/{moneySource}', [MoneySourceController::class, 'destroy'])
+        ->name('money_sources.destroy');
     Route::post('/money_sources/{moneySource}/categories', [MoneySourceController::class, 'syncCategories'])
         ->name('money_sources.categories.sync');
 
@@ -1248,7 +1274,9 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
 
     //DocumentRequests
     Route::get('/document-requests', [DocumentRequestController::class, 'index'])->name('document-requests.index');
-    Route::post('/document-requests', [DocumentRequestController::class, 'store'])->name('document-requests.store');
+    Route::post('/document-requests', [DocumentRequestController::class, 'store'])
+        ->middleware('can:can create document requests')
+        ->name('document-requests.store');
     Route::patch('/document-requests/{documentRequest}', [DocumentRequestController::class, 'update'])
         ->middleware('can:can edit document requests')
         ->name('document-requests.update');
@@ -1267,12 +1295,22 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::patch('money_source/task/{moneySourceTask}/undone', [MoneySourceTaskController::class, 'markAsUnDone'])
         ->name('money_source.task.undone');
     Route::post('/money_source/task', [MoneySourceTaskController::class, 'store'])->name('money_source.task.add');
+    Route::get('/money_source/task', [MoneySourceTaskController::class, 'index'])->name('money_source.task.index');
+    Route::delete('money_source/task/{moneySourceTask}', [MoneySourceTaskController::class, 'destroy'])
+        ->name('money_source.task.destroy');
     Route::delete('/user/{user}/calendar/filter/reset', [UserCalendarFilterController::class, 'reset'])
         ->name('reset.user.calendar.filter');
     Route::delete('/user/{user}/calendar/shift/filter/reset', [UserShiftCalendarFilterController::class, 'reset'])
         ->name('reset.user.shift.calendar.filter');
     Route::patch('/user/{user}/calendar/filter/update', [UserFilterController::class, 'update'])
         ->name('update.user.calendar.filter');
+    // Schichtplan-Personenfilter "nur Personen mit offenen Regelverstößen" (user_filters-Flag, eigener
+    // Endpunkt, damit die übrigen Filterwerte unberührt bleiben)
+    Route::patch('/user/{user}/calendar/filter/open-violations', [UserFilterController::class, 'updateOpenViolationsFilter'])
+        ->name('update.user.calendar.filter.open-violations');
+    // Schichtplan-Personenfilter "Freelancer einbinden" (user_filters-Flag, Wochenansicht)
+    Route::patch('/user/{user}/calendar/filter/show-freelancers', [UserFilterController::class, 'updateShowFreelancersFilter'])
+        ->name('update.user.calendar.filter.show-freelancers');
     Route::patch('/user/{user}/shift/calendar/filter/update', [UserShiftCalendarFilterController::class, 'update'])
         ->name('update.user.shift.calendar.filter');
     Route::patch('/user/{user}/calendar/filter/date/update', [UserCalendarFilterController::class, 'updateDates'])
@@ -1435,16 +1473,31 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
             ->name('project.download.keyVisual');
 
         Route::get('/{project}/exports/shifts-personal-plan', ProjectShiftPersonalPlanExportController::class)
+            ->can('can view shift plan')
             ->name('projects.exports.shifts-personal-plan');
 
         // POST
         Route::post('/{shift}/assign', [ShiftController::class, 'assignToShift'])
             ->name('shift.assignUserByType');
 
+        // „Ersatz suchen" nach Absage: Kandidat*innen + Tausch in einer Transaktion
+        Route::get('/{shift}/replacement-candidates', [ShiftController::class, 'replacementCandidates'])
+            ->can('can plan shifts')
+            ->name('shift.replacement-candidates');
+        Route::post('/{shift}/replace-worker', [ShiftController::class, 'replaceWorker'])
+            ->can('can plan shifts')
+            ->name('shift.replace-worker');
+        // Vorabprüfung vor dem Drop (Überschneidung/Urlaub/nicht verfügbar), nur Warnung
+        Route::post('/shift/assignment-preflight', [ShiftController::class, 'assignmentPreflight'])
+            ->can('can plan shifts')
+            ->name('shift.assignment-preflight');
+
         Route::post('/timeline/add/{event}', [ProjectController::class, 'addTimeLineRow'])->name('add.timeline.row');
         Route::post('/timeline/update/magic/{event}', [ShiftController::class, 'updateTimeLine'])
+            ->can('can plan shifts')
             ->name('edit.timeline.event');
         Route::post('/timeline/add/magic/{event}', [ShiftController::class, 'addTimeLine'])
+            ->can('can plan shifts')
             ->name('create.timeline.event');
         Route::post('/sums/money-source', [SumDetailsController::class, 'store'])
             ->name('project.sum.money.source.store');
@@ -1479,6 +1532,13 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
             ->can('can plan shifts');
         Route::post('/bulk-duplicate', [ShiftController::class, 'bulkDuplicate'])
             ->name('shifts.multi.duplicate')
+            ->can('can plan shifts');
+        // „Woche kopieren": Schichten einer KW in bis zu 8 Ziel-KWs (ohne Personen, nicht festgeschrieben)
+        Route::get('/copy-week/preview', [ShiftController::class, 'copyWeekPreview'])
+            ->name('shifts.copy-week.preview')
+            ->can('can plan shifts');
+        Route::post('/copy-week', [ShiftController::class, 'copyWeek'])
+            ->name('shifts.copy-week')
             ->can('can plan shifts');
         Route::delete('/timeline/delete/{timeline}', [ProjectController::class, 'deleteTimeLineRow'])
             ->name('delete.timeline.row');
@@ -1571,13 +1631,17 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
             Route::post(
                 '/verified/main-position/request',
                 [ProjectController::class, 'verifiedRequestMainPosition']
-            )->name('project.budget.verified.main-position.request');
+            )->name('project.budget.verified.main-position.request')
+                ->middleware('can:can add and remove verified states');
             Route::post('/verified/sub-position/request', [ProjectController::class, 'verifiedRequestSubPosition'])
-                ->name('project.budget.verified.sub-position.request');
+                ->name('project.budget.verified.sub-position.request')
+                ->middleware('can:can add and remove verified states');
             Route::post('/verified/take-back/position', [ProjectController::class, 'takeBackVerification'])
-                ->name('project.budget.take-back.verification');
+                ->name('project.budget.take-back.verification')
+                ->middleware('can:can add and remove verified states');
             Route::post('/verified/remove/position', [ProjectController::class, 'removeVerification'])
-                ->name('project.budget.remove.verification');
+                ->name('project.budget.remove.verification')
+                ->middleware('can:can add and remove verified states');
             Route::post('/template/{table}/create', [BudgetTemplateController::class, 'store'])
                 ->name('project.budget.template.create');
             Route::post('/template/{table}/use', [BudgetTemplateController::class, 'useTemplate'])
@@ -1610,20 +1674,28 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
             Route::patch('/column-color/change', [ProjectController::class, 'changeColumnColor'])
                 ->name('project.budget.column-color.change');
             Route::patch('/verified/main-position', [ProjectController::class, 'verifiedMainPosition'])
-                ->name('project.budget.verified.main-position');
+                ->name('project.budget.verified.main-position')
+                ->middleware('can:can add and remove verified states');
             Route::patch('/verified/sub-position', [ProjectController::class, 'verifiedSubPosition'])
-                ->name('project.budget.verified.sub-position');
-            Route::patch('/lock/column', [ProjectController::class, 'lockColumn'])->name('project.budget.lock.column');
+                ->name('project.budget.verified.sub-position')
+                ->middleware('can:can add and remove verified states');
+            Route::patch('/lock/column', [ProjectController::class, 'lockColumn'])->name('project.budget.lock.column')
+                ->middleware('can:can add and remove verified states');
             Route::patch('/unlock/column', [ProjectController::class, 'unlockColumn'])
-                ->name('project.budget.unlock.column');
+                ->name('project.budget.unlock.column')
+                ->middleware('can:can add and remove verified states');
             Route::patch('/fix/sub-position', [ProjectController::class, 'fixSubPosition'])
-                ->name('project.budget.fix.sub-position');
+                ->name('project.budget.fix.sub-position')
+                ->middleware('can:can add and remove verified states');
             Route::patch('/unfix/sub-position', [ProjectController::class, 'unfixSubPosition'])
-                ->name('project.budget.unfix.sub-position');
+                ->name('project.budget.unfix.sub-position')
+                ->middleware('can:can add and remove verified states');
             Route::patch('/fix/main-position', [ProjectController::class, 'fixMainPosition'])
-                ->name('project.budget.fix.main-position');
+                ->name('project.budget.fix.main-position')
+                ->middleware('can:can add and remove verified states');
             Route::patch('/unfix/main-position', [ProjectController::class, 'unfixMainPosition'])
-                ->name('project.budget.unfix.main-position');
+                ->name('project.budget.unfix.main-position')
+                ->middleware('can:can add and remove verified states');
             Route::patch('/column/{column}/commented', [ProjectController::class, 'updateCommentedStatusOfColumn'])
                 ->name('project.budget.column.update.commented');
             Route::patch('/columns/update-orders', [TableColumnOrderController::class, 'updateTableColumnOrders'])
@@ -1708,11 +1780,14 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     // Budget Settings
     Route::group(['prefix' => 'budget-settings'], function (): void {
         Route::get('/general', [BudgetGeneralController::class, 'index'])
+            ->middleware('can:change budget settings')
             ->name('budget-settings.general');
         Route::patch('/general/{budgetColumnSetting}', [BudgetGeneralController::class, 'update'])
+            ->middleware('can:change budget settings')
             ->name('budget-settings.general.update');
 
         Route::get('/account-management', [BudgetAccountManagementController::class, 'index'])
+            ->middleware('can:change budget settings')
             ->name('budget-settings.account-management');
         Route::patch(
             '/account-management/updateGlobalSetting',
@@ -1916,6 +1991,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
 
     // Project Settings
     Route::get('/trashedProjects/settings', [ProjectController::class, 'getTrashedSettings'])
+        ->middleware('can:can access trash')
         ->name('projects.settings.trashed');
     Route::delete('/trashedProjects/settings/force-all', [ProjectController::class, 'forceDeleteAllSettings'])
         ->name('projects.settings.force.all');
@@ -2023,7 +2099,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::patch(
         '/service-provider/{serviceProvider}/workProfile',
         [ServiceProviderController::class, 'updateWorkProfile']
-    )->name('service_provider.update.workProfile')->can('can manage workers');
+    )->name('service_provider.update.workProfile');
     Route::patch(
         '/service-provider/{serviceProvider}/terms',
         [ServiceProviderController::class, 'updateTerms']
@@ -2141,6 +2217,12 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         )->middleware('shift-settings-area:general,edit')
             ->name('shift.settings.update.shift-confirmation');
 
+        Route::patch(
+            'shift-settings/updateNightTimes',
+            [ShiftSettingsController::class, 'updateNightTimes']
+        )->middleware('shift-settings-area:general,edit')
+            ->name('shift.settings.update.night-times');
+
         Route::post('shift/add/craft', [CraftController::class, 'store'])->middleware('shift-settings-area:general,edit')->name('craft.store');
         Route::patch('shift/update/craft/{craft}', [CraftController::class, 'update'])->middleware('shift-settings-area:general,edit')->name('craft.update');
         Route::delete('shift/delete/craft/{craft}', [CraftController::class, 'destroy'])->middleware('shift-settings-area:general,edit')->name('craft.delete');
@@ -2249,7 +2331,8 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::post('/calendar/export/season-schedule-pdf', \App\Http\Controllers\SeasonSchedulePdfExportController::class)
         ->name('calendar.export.season-schedule-pdf');
     Route::post('/shift-plan/export/pdf', [ExportPDFController::class, 'createShiftPlanPDF'])
-        ->name('shift.plan.export.pdf');
+        ->name('shift.plan.export.pdf')
+        ->can('can view shift plan');
     Route::post('/shift-plan/export/worker-matrix-pdf', WorkerShiftPlanPdfExportController::class)
         ->name('shift.plan.export.worker-matrix.pdf')
         ->can('can view shift plan');
@@ -2274,8 +2357,12 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         ->name('shift.multi.edit.save')
         ->can('can plan shifts');
 
+    Route::get('/permissions/reference', [PermissionPresetController::class, 'reference'])
+        ->middleware('can:can manage workers')
+        ->name('permissions.reference');
     Route::resource('permission-presets', PermissionPresetController::class)
-        ->only(['index', 'store', 'update', 'destroy']);
+        ->only(['index', 'store', 'update', 'destroy'])
+        ->middleware('role:artwork admin');
 
     Route::post('/shift-qualifications/reorder', [ShiftQualificationController::class, 'reorder'])
         ->name('shift-qualifications.reorder')
@@ -2291,6 +2378,11 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
 
     Route::get('/shift-history', [ShiftHistoryController::class, 'index'])
         ->name('shift.history.index')
+        ->can('can view shift plan');
+
+    // Excel-Export des Schichtverlaufs — gleiche Filter und Rechte wie das Modal
+    Route::get('/shift-history/export', [ShiftHistoryController::class, 'export'])
+        ->name('shift-history.export')
         ->can('can view shift plan');
 
     Route::get('/event/standard-values', [EventController::class, 'standardEventValues'])
@@ -2311,12 +2403,12 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     });
 
     Route::group(['prefix' => 'settings'], function (): void {
-        Route::group(['prefix' => 'tab'], function (): void {
+        // lightweight list of tabs for client-side selection (OwnTasks checklist creation) — bewusst ohne Settings-Recht
+        Route::get('tab/list', [ProjectTabController::class, 'list'])
+            ->name('tab.list');
+        Route::group(['prefix' => 'tab', 'middleware' => 'can:change project settings'], function (): void {
             Route::get('index', [ProjectTabController::class, 'index'])
                 ->name('tab.index');
-            // lightweight list of tabs for client-side selection (OwnTasks checklist creation)
-            Route::get('list', [ProjectTabController::class, 'list'])
-                ->name('tab.list');
             Route::post('/{projectTab}/update/component/order', [ProjectTabController::class,
                 'updateComponentOrder'])
                 ->name('tab.update.component.order');
@@ -2380,17 +2472,17 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
             Route::patch('/{projectTab}/update/default', [ProjectTabController::class, 'updateDefault'])
                 ->name('tab.update.default');
         });
-        Route::group(['prefix' => 'component'], function (): void {
+        // project.tab.component.update — Projektwerte einer Komponente schreiben: Projektrecht, kein Settings-Recht
+        Route::patch('component/{project}/{component}/update', [ProjectComponentValueController::class,
+            'update'])
+            ->name('project.tab.component.update');
+        Route::group(['prefix' => 'component', 'middleware' => 'can:change project settings'], function (): void {
             // index
             Route::get('index', [ComponentController::class, 'index'])
                 ->name('component.index');
             // component.show - lazy load single component with relations
             Route::get('/{component}', [ComponentController::class, 'show'])
                 ->name('component.show');
-            // project.tab.component.update
-            Route::patch('/{project}/{component}/update', [ProjectComponentValueController::class,
-                'update'])
-                ->name('project.tab.component.update');
             //component.store
             Route::post('/store', [ComponentController::class, 'store'])
                 ->name('component.store');
@@ -2435,7 +2527,9 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         });
 
         Route::group(['prefix' => 'calendar'], function (): void {
-            Route::get('/', [CalendarController::class, 'settingIndex'])->name('calendar.settings');
+            Route::get('/', [CalendarController::class, 'settingIndex'])
+                ->middleware('can:change calendar settings')
+                ->name('calendar.settings');
 
             // post: calendar-settings.store
             Route::post('/store', [CalendarController::class, 'storeSettings'])->name('calendar-settings.store');
@@ -2445,8 +2539,8 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::group(['prefix' => 'user'], function (): void {
         Route::patch('/{user}/update/checklist/filter', [UserController::class, 'updateChecklistFilter'])
             ->name('user.update.checklist.filter');
-        // Autorisierung im Controller: eigener Plan via "can view own roster",
-        // fremde Pläne via teammanagement/"can manage workers"
+        // Autorisierung im Controller (UserPolicy::viewOperationPlan): eigener Plan
+        // via "can view own roster", fremde Pläne via Dienstplan-Sichtrechte
         Route::get('/{user}/own/operation/plan', [UserController::class, 'operationPlan'])
             ->name('user.operationPlan');
         Route::post('/{user}/toggle/compactMode', [UserController::class, 'compactMode'])
@@ -2496,9 +2590,6 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         )->name('user.update.shift_tab_sort');
 
 
-        Route::patch('/user/{user}/inventory/sort', [UserController::class, 'updateInventorySortColumn'])
-            ->name('user.update.inventory.sort');
-
         //user.calendar.go.to.stepper
         Route::patch('/{user}/calendar/go/to/stepper', [UserController::class, 'calendarGoToStepper'])
             ->name('user.calendar.go.to.stepper');
@@ -2519,6 +2610,13 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
             '/shift/calendar/abo/{userShiftCalendarAbo}/update',
             [UserShiftCalendarAboController::class, 'update']
         )->name('user.shift.calendar.abo.update');
+
+        // user.shift.calendar.abo.renew — Widerruf: neuer Feed-Token, alter Link wird ungültig
+        // (Besitzer-Prüfung im Controller, wie beim Update-Request)
+        Route::delete(
+            '/shift/calendar/abo/{userShiftCalendarAbo}/renew',
+            [UserShiftCalendarAboController::class, 'destroy']
+        )->name('user.shift.calendar.abo.renew');
 
         // save user calendar abo
         Route::post(
@@ -2562,6 +2660,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         '/day-service/{dayService}/attach/{dayServiceable}',
         [DayServiceController::class, 'attachDayServiceable']
     )
+        ->can('can plan shifts')
         ->name('day-service.attach');
 
 
@@ -2617,6 +2716,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
 
         // get inventory.articles.trash
         Route::get('/articles/trash', [InventoryArticleController::class, 'indexTrash'])
+            ->middleware('can:' . PermissionEnum::INVENTORY_DELETE->value)
             ->name('inventory.articles.trash');
 
         // delete articles.forceDelete
@@ -2706,7 +2806,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
 
     // CRM Routes
     Route::group(['prefix' => 'crm'], function (): void {
-        Route::get('/', [CrmController::class, 'index'])->name('crm.index');
+        Route::get('/', [CrmController::class, 'index'])->middleware('can:can view crm')->name('crm.index');
 
         // Import routes (before contacts to avoid {crmContact} param conflict)
         Route::get('/import', [CrmImportController::class, 'showUpload'])->name('crm.import');
@@ -2741,7 +2841,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
             ->middleware('can:can view crm')->name('crm.contacts.mask');
         Route::get('/contacts/{crmContact}/data', [CrmContactController::class, 'getData'])->name('crm.contacts.data');
         Route::get('/contacts/{crmContact}/tooltip', [CrmContactController::class, 'tooltipInfo'])->name('crm.contacts.tooltip');
-        Route::get('/contacts/{crmContact}', [CrmController::class, 'show'])->name('crm.contacts.show');
+        Route::get('/contacts/{crmContact}', [CrmController::class, 'show'])->middleware('can:can view crm')->name('crm.contacts.show');
         // Frontend gated die Kontakt-Aktionen auf 'can view crm' (Seitenzugang); Backend daran
         // angleichen, um keine Lese-CRM-User auszusperren. Schützt weiterhin Nicht-CRM-User
         // vor gefälschten Requests. Strenger ('crm manager') wäre eine Produktentscheidung.
@@ -2833,6 +2933,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         '/day-service/remove/{dayServiceable}',
         [DayServiceController::class, 'removeDayServiceable']
     )
+        ->can('can plan shifts')
         ->name('remove.day.service.from.user');
 
     Route::group(['prefix' => 'inventory-management'], function (): void {
@@ -2840,10 +2941,6 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         Route::get('/article/planning', [InventoryArticleController::class, 'index'])
             ->middleware('can:' . PermissionEnum::INVENTORY_DISPOSITION->value)
             ->name('inventory-management.article.planning');
-
-        Route::get('/', [InventoryController::class, 'inventory'])
-            ->middleware('can:' . PermissionEnum::INVENTORY_STOCK_MANAGE->value)
-            ->name('inventory-management.inventory');
 
         Route::group(
             ['prefix' => 'settings', 'middleware' => 'can:' . PermissionEnum::INVENTORY_SETTINGS->value],
@@ -2908,186 +3005,6 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
             Route::delete('/categories/{inventoryCategory}/destroy', [InventoryCategoryController::class, 'destroy'])
                 ->name('inventory-management.settings.categories.delete');
         });
-
-        Route::group(
-            ['prefix' => 'inventory', 'middleware' => 'can:' . PermissionEnum::INVENTORY_STOCK_MANAGE->value],
-            function (): void {
-            Route::group(['prefix' => 'column'], function (): void {
-                Route::post(
-                    '/create',
-                    [CraftsInventoryColumnController::class, 'create']
-                )->name('inventory-management.inventory.column.create');
-                Route::post(
-                    '/duplicate',
-                    [CraftsInventoryColumnController::class, 'duplicate']
-                )->name('inventory-management.inventory.column.duplicate');
-                Route::patch(
-                    '/{craftsInventoryColumn}/name',
-                    [CraftsInventoryColumnController::class, 'updateName']
-                )->name('inventory-management.inventory.column.update.name');
-                Route::patch(
-                    '/{craftsInventoryColumn}/select-options',
-                    [CraftsInventoryColumnController::class, 'updateTypeOptions']
-                )->name('inventory-management.inventory.column.update.type_options');
-                Route::patch(
-                    '/{craftsInventoryColumn}/background_color',
-                    [CraftsInventoryColumnController::class, 'updateBackgroundColor']
-                )->name('inventory-management.inventory.column.update.background_color');
-                Route::delete(
-                    '/{craftsInventoryColumn}',
-                    [CraftsInventoryColumnController::class, 'forceDelete']
-                )->name('inventory-management.inventory.column.delete');
-            });
-            Route::group(['prefix' => 'columns'], function (): void {
-                Route::patch(
-                    '/reorder',
-                    [CraftsInventoryColumnController::class, 'reorderColumns']
-                )->name('inventory-management.inventory.columns.reorder');
-            });
-            Route::group(['prefix' => 'category'], function (): void {
-                Route::post(
-                    '/create',
-                    [CraftInventoryCategoryController::class, 'create']
-                )->name('inventory-management.inventory.category.create');
-                Route::patch(
-                    '/{craftInventoryCategory}/name',
-                    [CraftInventoryCategoryController::class, 'updateName']
-                )->name('inventory-management.inventory.category.update.name');
-                Route::patch(
-                    '/{craftInventoryCategory}/order',
-                    [CraftInventoryCategoryController::class, 'updateOrder']
-                )->name('inventory-management.inventory.category.update.order');
-                Route::delete(
-                    '/{craftInventoryCategory}',
-                    [CraftInventoryCategoryController::class, 'forceDelete']
-                )->name('inventory-management.inventory.category.delete');
-            });
-            Route::group(['prefix' => 'group'], function (): void {
-                Route::post(
-                    '/create',
-                    [CraftInventoryGroupController::class, 'create']
-                )->name('inventory-management.inventory.group.create');
-                Route::patch(
-                    '/{craftInventoryGroup}/name',
-                    [CraftInventoryGroupController::class, 'updateName']
-                )->name('inventory-management.inventory.group.update.name');
-                Route::patch(
-                    '/{craftInventoryGroup}/order',
-                    [CraftInventoryGroupController::class, 'updateOrder']
-                )->name('inventory-management.inventory.group.update.order');
-                Route::delete(
-                    '/{craftInventoryGroup}',
-                    [CraftInventoryGroupController::class, 'forceDelete']
-                )->name('inventory-management.inventory.group.delete');
-            });
-            Route::group(['prefix' => 'folder'], function (): void {
-                Route::post(
-                    '/create',
-                    [CraftInventoryGroupFolderController::class, 'create']
-                )->name('inventory-management.inventory.folder.create');
-                Route::delete(
-                    '/{craftInventoryGroupFolder}',
-                    [CraftInventoryGroupFolderController::class, 'destroy']
-                )->name('inventory-management.inventory.folder.delete');
-                // update name of folder
-                Route::patch(
-                    '/{craftInventoryGroupFolder}/name',
-                    [CraftInventoryGroupFolderController::class, 'update']
-                )->name('inventory-management.inventory.folder.update.name');
-                // PATCH inventory-management.inventory.folder.update.order
-                Route::patch(
-                    '/inventory/folder/update/order',
-                    [CraftInventoryGroupFolderController::class, 'updateOrder']
-                )->name('inventory-management.inventory.folder.update.order');
-            });
-            Route::group(['prefix' => 'item'], function (): void {
-                Route::post(
-                    '/create',
-                    [CraftInventoryItemController::class, 'create']
-                )->name('inventory-management.inventory.item.create');
-                Route::patch(
-                    '/{craftInventoryItem}/add/folder',
-                    [CraftInventoryItemController::class, 'addItemToFolder']
-                )->name('inventory-management.inventory.item.add.to.folder');
-                Route::patch(
-                    '/{craftInventoryItem}/add/group',
-                    [CraftInventoryItemController::class, 'addItemToGroup']
-                )->name('inventory-management.inventory.item.add.to.group');
-                Route::patch(
-                    '/{craftInventoryItem}/order',
-                    [CraftInventoryItemController::class, 'updateOrder']
-                )->name('inventory-management.inventory.item.update.order');
-                Route::delete(
-                    '/{craftInventoryItem}',
-                    [CraftInventoryItemController::class, 'forceDelete']
-                )->name('inventory-management.inventory.item.delete');
-            });
-            Route::group(['prefix' => 'cells'], function (): void {
-                Route::patch(
-                    '/{craftInventoryItemCell}/cell-value',
-                    [CraftInventoryItemCellController::class, 'updateCellValue']
-                )->name('inventory-management.inventory.item-cell.update.cell-value');
-                Route::post(
-                    '/{craftInventoryItemCell}/cell-value/upload',
-                    [CraftInventoryItemCellController::class, 'updateCellValueUpload']
-                )->name('inventory-management.inventory.item-cell.update.cell-value.upload');
-                Route::get(
-                    '/{craftInventoryItemCell}/cell-value/download',
-                    [CraftInventoryItemCellController::class, 'getDownloadCellValueUpload']
-                )->name('inventory-management.inventory.item-cell.download');
-                Route::delete(
-                    '/{craftInventoryItemCell}/cell-value/delete',
-                    [CraftInventoryItemCellController::class, 'removeUploadedFile']
-                )->name('inventory-management.inventory.item-cell.update.cell-value.delete.file');
-            });
-            Route::group(['prefix' => 'export'], function (): void {
-                Route::post(
-                    '/data',
-                    [InventoryManagementExportController::class, 'saveExportDataInCache']
-                )->name('inventory-management.inventory.export.saveExportDataInCache');
-                Route::group(['prefix' => 'create/{cacheToken}'], function (): void {
-                    Route::get(
-                        '/xlsx',
-                        [InventoryManagementExportController::class, 'downloadXlsx']
-                    )->name('inventory-management.inventory.export.download-xlsx');
-                    Route::get(
-                        '/pdf',
-                        [InventoryManagementExportController::class, 'downloadPdf']
-                    )->name('inventory-management.inventory.export.download-pdf');
-                });
-            });
-            Route::patch('/filter', [CraftInventoryFilterController::class, 'updateOrCreate'])
-                ->name('inventory-management.inventory.filter.update');
-        });
-
-        Route::group(
-            ['middleware' => 'can:' . PermissionEnum::INVENTORY_PLANER->value],
-            function (): void {
-            // inventory.dropItemToEvent
-            Route::post('/inventory/dropItemToEvent/{item}/{event}', [InventoryController::class, 'dropItemToEvent'])
-                ->name('inventory.dropItemToEvent');
-
-            // inventory.events.destroy
-            Route::delete(
-                '/inventory/events/{craftInventoryItemEvent}',
-                [CraftInventoryItemEventController::class, 'destroy']
-            )
-                ->name('inventory.events.destroy');
-
-            // patch inventory.updateEvent
-            Route::patch(
-                '/inventory/updateEvent/{craftInventoryItemEvent}',
-                [CraftInventoryItemEventController::class, 'update']
-            )
-                ->name('inventory.updateEvent');
-
-            // post inventory.multi.events.store
-            Route::post(
-                '/inventory/multi/events/store',
-                [CraftInventoryItemEventController::class, 'storeMultiple']
-            )
-                ->name('inventory.multi.events.store');
-        });
     });
 
     Route::group(['prefix' => 'searching'], function (): void {
@@ -3116,8 +3033,10 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         Route::delete('/delete-chat/{chat}', [ChatController::class, 'destroy'])->name('chat-system.delete-chat');
     });
 
+    // Alt-Resource (EditHolidayModal nutzt holidays.update): gleiche Rechte wie der settings/holiday-Block
     Route::resource('holidays', HolidayController::class)
-        ->only(['index', 'store', 'update', 'destroy', 'show']);
+        ->only(['index', 'store', 'update', 'destroy', 'show'])
+        ->middleware('can:change event settings');
 
     Route::group(['prefix' => 'export'], function (): void {
         Route::post(
@@ -3134,7 +3053,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         )->name('export.download-calendar-xlsx');
     });
 
-    Route::group(['prefix' => 'project-management-builder'], function (): void {
+    Route::group(['prefix' => 'project-management-builder', 'middleware' => 'can:change project settings'], function (): void {
         Route::get('/', [ProjectManagementBuilderController::class, 'index'])
             ->name('project-management-builder.index');
 
@@ -3151,7 +3070,11 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
             ->name('project-management-builder.destroy');
     });
 
-    Route::group(['prefix' => 'project-print-layout'], function (): void {
+    // Druckansicht eines Projekts — Projektzugang statt Settings-Recht
+    Route::get('/project-print-layout/print/{project}/{projectPrintLayout}', [ProjectPrintLayoutController::class, 'show'])
+        ->middleware(CanViewProject::class)
+        ->name('project-print-layout.show');
+    Route::group(['prefix' => 'project-print-layout', 'middleware' => 'can:change project settings'], function (): void {
         Route::get('/', [ProjectPrintLayoutController::class, 'index'])
             ->name('project-print-layout.index');
 
@@ -3166,6 +3089,10 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         Route::delete('/components/{printLayoutComponent}', [ProjectPrintLayoutController::class, 'destroyComponent'])
             ->name('project-print-layout.components.destroy');
 
+        // project-print-layout.components.move
+        Route::patch('/components/{printLayoutComponent}/move', [ProjectPrintLayoutController::class, 'moveComponent'])
+            ->name('project-print-layout.components.move');
+
         // project-print-layout.update
         Route::patch('/{projectPrintLayout}/update', [ProjectPrintLayoutController::class, 'update'])
             ->name('project-print-layout.update');
@@ -3175,8 +3102,6 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
             ->name('project-print-layout.update.header.note');
 
         // project.print.layout
-        Route::get('/print/{project}/{projectPrintLayout}', [ProjectPrintLayoutController::class, 'show'])
-            ->name('project-print-layout.show');
 
         // project-print-layout.destroy
         Route::delete('/destroy/{projectPrintLayout}', [ProjectPrintLayoutController::class, 'destroy'])
@@ -3351,6 +3276,12 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
             '/work-time-pattern/{user}/update-user',
             [\Artwork\Modules\User\Http\Controllers\UserContractAssignController::class, 'store']
         )->middleware('can:can manage workers')->name('shift.work-time-pattern.update-user');
+
+        // Arbeitszeit-Satz (Historie) der Person entfernen — gleiche Gate wie update-user
+        Route::delete(
+            '/work-time-pattern/{user}/work-time/{workTime}',
+            [\Artwork\Modules\User\Http\Controllers\UserContractAssignController::class, 'destroyWorkTime']
+        )->middleware('can:can manage workers')->name('shift.work-time-pattern.work-time.destroy');
     });
 
     // group user contracts
@@ -3377,6 +3308,12 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
             '/contract/{user}/update-user',
             [\Artwork\Modules\User\Http\Controllers\UserContractAssignController::class, 'store']
         )->middleware('can:can manage workers')->name('user-contract-settings.update-user');
+
+        // Vertragszeitraum (Historie) der Person entfernen — gleiche Gate wie update-user
+        Route::delete(
+            '/contract/{user}/assign/{assign}',
+            [\Artwork\Modules\User\Http\Controllers\UserContractAssignController::class, 'destroyAssign']
+        )->middleware('can:can manage workers')->name('user-contract-settings.assign.destroy');
     });
 
     // users.worktimes.store
@@ -3511,10 +3448,12 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
                 ->name('reject')
                 ->can('approve-shift-plan-requests');
 
-            // Anfrage löschen und zugeordnete Schichten wieder freigeben
+            // Anfrage zurückziehen und zugeordnete Schichten wieder freigeben:
+            // Genehmiger*innen immer, Antragsteller*innen nur die eigene offene Anfrage
+            // (ShiftPlanRequestPolicy::withdraw).
             Route::delete('/{shiftPlanRequest}', [ShiftPlanRequestController::class, 'destroy'])
                 ->name('destroy')
-                ->can('approve-shift-plan-requests');
+                ->can('withdraw', 'shiftPlanRequest');
         });
 
 
@@ -3530,6 +3469,13 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         '/committed-shift-changes/acknowledge-all',
         [ShiftPlanRequestController::class, 'acknowledgeAll']
     )->name('committed-shift-changes.acknowledge-all')
+        ->can('approve-shift-plan-requests');
+
+    // Excel-Export der Änderungsübersicht (Filter wie die Liste, optional Zeitraum)
+    Route::get(
+        '/committed-shift-changes/export',
+        [ShiftPlanRequestController::class, 'exportChanges']
+    )->name('committed-shift-changes.export')
         ->can('approve-shift-plan-requests');
 
     Route::patch('/shift-plan-requests/{shiftPlanRequest}/change/{shiftChange}/revert', [App\Http\Controllers\ShiftPlanRequestController::class, 'revertChange'])
@@ -3574,6 +3520,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         Route::group(['prefix' => 'exports'], function (): void {
             // pdf Shift plan exprot
             Route::get('/pdf/{project}/{privacyMode}/shift-plan', [ExportPDFController::class, 'exportDailyViewShiftPlanInProject'])
+                ->can('can view shift plan')
                 ->name('projects.exports.shift-plan');
         });
     });
@@ -3622,6 +3569,7 @@ Route::get(
 // /shift/check-collisions — liefert Zuweisungs-/Zeitdaten beliebiger Worker, daher zwingend hinter Auth
 Route::middleware(['auth:sanctum', 'verified'])
     ->post('/shift/check-collisions', [ShiftController::class, 'checkCollisions'])
+    ->can('can plan shifts')
     ->name('shift.check-collisions');
 
 Route::get('/generate-avatar-image/{letters}', [\Artwork\Modules\User\Http\Controllers\UserController::class, 'createAvatarImage'])
@@ -3687,7 +3635,8 @@ Route::middleware(['auth'])->prefix('bi/dashboard')->group(function () {
 });
 
 Route::middleware(['auth'])->prefix('bi/export')->group(function () {
-    Route::get('/', [BiExportController::class, 'index'])->name('bi.export.index');
+    // Optionen für den gemeinsamen Export-Dialog (Projekt-Tab + Dashboard)
+    Route::get('/options', [BiExportController::class, 'options'])->name('bi.export.options');
     Route::post('/cache', [BiExportController::class, 'cacheExportConfiguration'])->name('bi.export.cache');
     Route::get('/status/{cacheToken}', [BiExportController::class, 'status'])
         ->middleware('can:can export bi data')->name('bi.export.status');
@@ -3709,6 +3658,8 @@ Route::middleware(['auth'])->prefix('bi/export')->group(function () {
 
     Route::get('/presets', [BiExportPresetController::class, 'index'])->name('bi.export.presets.index');
     Route::post('/presets', [BiExportPresetController::class, 'store'])->name('bi.export.presets.store');
+    Route::put('/presets/{biExportPreset}', [BiExportPresetController::class, 'update'])
+        ->name('bi.export.presets.update');
     Route::delete('/presets/{biExportPreset}', [BiExportPresetController::class, 'destroy'])
         ->name('bi.export.presets.destroy');
 });

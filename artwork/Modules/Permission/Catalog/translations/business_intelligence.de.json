@@ -1,0 +1,18 @@
+{
+    "Business Intelligence": "Business Intelligence",
+    "The BI component in the project tab depends on access to the project, not on these permissions.": "Die BI-Komponente im Projekt-Tab hängt am Zugang zum Projekt, nicht an diesen Rechten.",
+    "View BI dashboard": "BI-Dashboard ansehen",
+    "Menu \"BI Dashboard\"": "Menü „BI-Dashboard“",
+    "Key figures and period comparisons across all projects": "Kennzahlen und Zeitraumvergleiche über alle Projekte",
+    "Module \"Business Intelligence\" enabled": "Modul „Business Intelligence“ aktiviert",
+    "Export BI data": "BI-Daten exportieren",
+    "Export buttons in the BI dashboard and in the project BI component": "Export-Buttons im BI-Dashboard und in der BI-Komponente des Projekts",
+    "Tab \"BI Export\" in the project settings": "Tab „BI-Export“ in den Projekteinstellungen",
+    "House-wide booking export by account and cost unit": "Hausweiter Buchungsexport nach Konto und Kostenstelle",
+    "Configure exports and save export presets": "Exporte konfigurieren und Export-Vorlagen speichern",
+    "Export BI data of all projects": "BI-Daten aller Projekte exportieren",
+    "Export bookings house-wide, independent of a project": "Buchungen hausweit exportieren, unabhängig von einem Projekt",
+    "The tab \"BI Export\" sits in the menu \"System → Projects\" and is therefore reachable only with \"Project settings\" as well.": "Der Tab „BI-Export“ liegt im Menü „System → Projekte“ und ist deshalb nur zusätzlich mit „Projekteinstellungen“ erreichbar.",
+    "Can open the house-wide BI dashboard": "Kann das hausweite BI-Dashboard öffnen",
+    "Can export BI and booking data as Excel": "Kann BI- und Buchungsdaten als Excel exportieren"
+}

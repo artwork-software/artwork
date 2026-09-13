@@ -57,14 +57,14 @@ class ShiftCommitWorkflowUserController extends Controller
             ->all();
 
         if (empty($userIds)) {
-            return redirect()->back()->withErrors(['users' => 'Mindestens ein Benutzer muss ausgewählt werden.']);
+            return redirect()->back()->withErrors(['users' => __('Select at least one person.')]);
         }
 
         // 3) Nur existierende User übernehmen
         $validUserIds = User::whereIn('id', $userIds)->pluck('id')->all();
 
         if (empty($validUserIds)) {
-            return redirect()->back()->withErrors(['users' => 'Die ausgewählten Benutzer sind ungültig.']);
+            return redirect()->back()->withErrors(['users' => __('One of the selected people no longer exists. Please reload the list.')]);
         }
 
         // 4) Doppelte Einträge verhindern (DB-seitig wäre unique Index ideal)

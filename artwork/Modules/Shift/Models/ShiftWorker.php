@@ -33,6 +33,7 @@ class ShiftWorker extends MorphPivot
         'end_time' => TimeWithoutSeconds::class,
         'is_overbooked' => 'boolean',
         'confirmation_at' => 'datetime',
+        'confirmation_reset_at' => 'datetime',
     ];
 
     protected static function booted(): void

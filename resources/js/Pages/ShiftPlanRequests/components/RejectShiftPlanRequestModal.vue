@@ -6,6 +6,13 @@
         @close="$emit('close')"
     >
         <div class="space-y-6 text-sm">
+            <!-- Folge der Ablehnung: Schichten werden auf den Stand vor der Anfrage zurückgesetzt -->
+            <BaseAlertComponent
+                type="warning"
+                use-translation
+                message="When rejecting, the shifts of this request are reset to the state before the request."
+            />
+
             <!-- Global Reason -->
             <div>
                 <BaseTextarea
@@ -147,11 +154,12 @@
                 </div>
 
                 <div class="flex items-center gap-2">
-                    <BaseUIButton type="button" :label="$t('Cancel')" is-cancel-button @click="$emit('cancel')" />
+                    <BaseUIButton type="button" :label="$t('Cancel')" is-cancel-button :disabled="processing" @click="$emit('cancel')" />
                     <BaseUIButton
                         type="button"
                         :label="$t('Confirm rejection')"
-                        :disabled="!canConfirmReject"
+                        :disabled="!canConfirmReject || processing"
+                        :processing="processing"
                         is-delete-button
                         @click="$emit('confirm')"
                     />
@@ -166,6 +174,7 @@ import ArtworkBaseModal from '@/Artwork/Modals/ArtworkBaseModal.vue';
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 import BaseTextarea from "@/Artwork/Inputs/BaseTextarea.vue";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
+import BaseAlertComponent from "@/Components/Alerts/BaseAlertComponent.vue";
 
 const props = defineProps({
     days: { type: Array, required: true },
@@ -177,7 +186,9 @@ const props = defineProps({
     globalComment: { type: String, default: '' },
     hasAnySelection: { type: Boolean, required: true },
     canConfirmReject: { type: Boolean, required: true },
-    errorMessages: { type: Array, default: () => [] }
+    errorMessages: { type: Array, default: () => [] },
+    // true, solange der Reject-Request läuft: Buttons gesperrt, Spinner am Bestätigen-Button
+    processing: { type: Boolean, default: false },
 });
 
 defineEmits([

@@ -17,6 +17,7 @@ use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Models\ProjectRole;
 use Artwork\Modules\Project\Services\ProjectService;
 use Artwork\Modules\Room\Models\Room;
+use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Artwork\Modules\Room\Models\RoomAttribute;
 use Artwork\Modules\Room\Services\RoomService;
 use Artwork\Modules\Craft\Models\Craft;
@@ -938,10 +939,12 @@ class ExportPDFController extends Controller
             default => User::query()->findOrFail($modelId),
         };
 
-        // Gleiche Sichtregel wie die Einsatzplan-Seiten: eigener Plan immer, fremde
-        // (inkl. Freelancer/Dienstleister) nur mit Dienstplan-Sichtrechten.
+        // Gleiche Sichtregel wie die Einsatzplan-Seiten (UserPolicy::viewOperationPlan):
+        // eigener Plan nur mit "can view own roster", fremde (inkl. Freelancer/
+        // Dienstleister) nur mit Dienstplan-Sichtrechten.
+        $isOwnPlan = $worker instanceof User && $authUser instanceof User && $authUser->is($worker);
         if (
-            !($worker instanceof User && $authUser instanceof User && $authUser->is($worker))
+            !($isOwnPlan && $authUser->can(PermissionEnum::CAN_VIEW_OWN_ROSTER->value))
             && !($authUser instanceof User && UserPolicy::canViewForeignRoster($authUser))
         ) {
             abort(Response::HTTP_FORBIDDEN);
@@ -1016,7 +1019,13 @@ class ExportPDFController extends Controller
         }
 
         $dayNames = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'];
-        $weeklyWorkingHours = $type === 'user' ? (float) ($worker->weekly_working_hours ?? 0) : null;
+        // Soll je Monat aus dem Arbeitszeitmuster (WorkTimeCalculationService, inkl. Sondertage);
+        // kein Muster an mindestens einem Monatstag -> Soll unbekannt (keine Soll-/Differenzzeile)
+        $targetBreakdown = $type === 'user' && $worker instanceof User
+            ? app(\Artwork\Modules\WorkTime\Services\WorkTimeCalculationService::class)
+                ->breakdownForRange($worker, $gridStart->copy(), $gridEnd->copy())
+            : null;
+        $showSoll = $targetBreakdown !== null;
 
         // Schichtqualifikationen (Funktion) -> [id => name]
         $shiftQualifications = \Artwork\Modules\Shift\Models\ShiftQualification::query()
@@ -1034,7 +1043,6 @@ class ExportPDFController extends Controller
 
             $weeks = [];
             $monthWorkMinutes = 0;
-            $daysInMonth = $monthEnd->day;
             $prevHolidayName = null; // Namen mehrtägiger Feiertage/Ferien nur am ersten Tag zeigen
 
             $cursorWeek = $weekGridStart->copy();
@@ -1093,9 +1101,17 @@ class ExportPDFController extends Controller
                 $cursorWeek->addWeek();
             }
 
-            $sollMinutes = $weeklyWorkingHours !== null
-                ? (int) round($weeklyWorkingHours / 7 * $daysInMonth * 60)
-                : null;
+            $sollMinutes = null;
+            if ($targetBreakdown !== null) {
+                $monthDays = [];
+                foreach (CarbonPeriod::create($monthStart, $monthEnd) as $monthDay) {
+                    $monthDays[] = $targetBreakdown[$monthDay->format('Y-m-d')] ?? ['target' => null, 'actual' => 0];
+                }
+                $monthTarget = \Artwork\Modules\WorkTime\Services\WorkTimeCalculationService::summarizeRange(
+                    $monthDays
+                );
+                $sollMinutes = $monthTarget['target_unknown'] ? null : (int) $monthTarget['target'];
+            }
             $diffMinutes = $sollMinutes !== null ? $monthWorkMinutes - $sollMinutes : null;
 
             $pages[] = [
@@ -1126,7 +1142,7 @@ class ExportPDFController extends Controller
             'pdf.user_shift_plan',
             [
                 'userName' => $worker->getAttribute('full_name') ?? $worker->getAttribute('name'),
-                'showSoll' => $weeklyWorkingHours !== null,
+                'showSoll' => $showSoll,
                 'pages' => $pages,
                 'created_by' => $authUser->first_name . ' ' . $authUser->last_name,
                 'created_date' => Carbon::now()->format('d.m.Y'),

@@ -46,13 +46,27 @@ class UserPolicy
 
     public function viewOperationPlan(User $user, User $targetUser): bool
     {
-        // Der eigene Einsatzplan ist immer einsehbar — "can view own roster" steuert
-        // nur noch die Sichtbarkeit des Menüpunkts "Mein Einsatzplan" im Frontend.
-        if ($user->is($targetUser)) {
+        // Eigener Einsatzplan nur mit "can view own roster" — wer fremde Pläne sehen
+        // darf, sieht auch den eigenen (Dienstplan-Sichtrechte schließen ihn ein).
+        if ($user->is($targetUser) && $user->can(PermissionEnum::CAN_VIEW_OWN_ROSTER->value)) {
             return true;
         }
 
         return self::canViewForeignRoster($user);
+    }
+
+    /**
+     * Kennzahlen-Endpunkte (shift-info/*): fremde Personen nur mit "can view shift user kpis";
+     * die eigene Person zusätzlich mit "can view own roster" ("Meine Zahlen" im Einsatzplan).
+     * Stundenkonto/Überstunden bleiben zusätzlich über authorizeHourAccountAccess geschützt.
+     */
+    public function viewShiftKpis(User $user, User $targetUser): bool
+    {
+        if ($user->can(PermissionEnum::CAN_VIEW_SHIFT_USER_KPIS->value)) {
+            return true;
+        }
+
+        return $user->is($targetUser) && $user->can(PermissionEnum::CAN_VIEW_OWN_ROSTER->value);
     }
 
     public static function canViewForeignRoster(User $user): bool
@@ -74,7 +88,10 @@ class UserPolicy
     public static function canViewExternalWorkerProfile(User $user): bool
     {
         return self::canViewForeignRoster($user)
-            || $user->can(PermissionEnum::CAN_VIEW_PRIVATE_USER_INFO->value);
+            || $user->canAny([
+                PermissionEnum::CAN_VIEW_PRIVATE_USER_INFO->value,
+                PermissionEnum::EXTERNAL_MANAGER->value,
+            ]);
     }
 
     public function delete(User $user, User $model): bool

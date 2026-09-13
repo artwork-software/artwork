@@ -32,20 +32,16 @@ class ShiftSettingsPermissionService
 
         $definitions = array_map(static fn (array $area): array => [
             'name' => $area[0]->value,
-            'name_de' => $area[1],
             'translation_key' => $area[2],
-            'group' => 'Shift settings',
-            'tooltipText' => $area[3],
+            'group' => 'Duty roster',
             'tooltipKey' => $area[4],
             'checked' => true,
         ], $areas);
 
         $definitions[] = [
             'name' => PermissionEnum::CAN_VIEW_OWN_UNCOMMITTED_SHIFTS->value,
-            'name_de' => 'Eigene nicht festgeschriebene Schichten sehen',
             'translation_key' => 'View own uncommitted shifts',
-            'group' => 'Shifts',
-            'tooltipText' => 'Erlaubt einer Person, eigene noch nicht festgeschriebene Schichten weiterhin im Einsatzplan zu sehen, wenn die hausweite Ausblendung aktiv ist.',
+            'group' => 'Duty roster',
             'tooltipKey' => 'Allows a person to continue seeing their own uncommitted shifts when instance-wide hiding is enabled.',
             'checked' => false,
         ];
@@ -87,17 +83,17 @@ class ShiftSettingsPermissionService
             $user->forgetCachedShareData();
         }
 
-        $masterPermissionId = $masterPermission->getKey();
-        $childPermissionIds = $childPermissions->modelKeys();
+        $childPermissionNames = $childPermissions->pluck('name')->all();
 
-        PermissionPreset::query()->eachById(function (PermissionPreset $preset) use ($masterPermissionId, $childPermissionIds): void {
-            $permissionIds = array_map('intval', $preset->permissions ?? []);
-            if (!in_array((int) $masterPermissionId, $permissionIds, true)) {
+        // Presets speichern Rechte-Namen (Altbestände mit IDs löst permissionNames() auf).
+        PermissionPreset::query()->eachById(function (PermissionPreset $preset) use ($childPermissionNames): void {
+            $names = $preset->permissionNames();
+            if (!in_array(PermissionEnum::SHIFT_SETTINGS_VIEW_EDIT->value, $names, true)) {
                 return;
             }
 
             $preset->update([
-                'permissions' => array_values(array_unique([...$permissionIds, ...$childPermissionIds])),
+                'permissions' => array_values(array_unique([...$names, ...$childPermissionNames])),
             ]);
         });
     }

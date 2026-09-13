@@ -11,7 +11,11 @@
             <button @click="$emit('close')" class="text-sm text-text-subtle hover:text-text-muted">
                 {{ $t('Cancel') }}
             </button>
-            <BaseUIButton :label="$t('Continue')" @click="$emit('confirm')" />
+            <!-- Der Wechsel ist destruktiv → der Button sagt, was passiert -->
+            <BaseUIButton
+                :label="entryCount > 0 ? `${$t('Switch and discard values')} (${entryCount})` : $t('Switch input mode')"
+                @click="$emit('confirm')"
+            />
         </div>
     </ArtworkBaseModal>
 </template>

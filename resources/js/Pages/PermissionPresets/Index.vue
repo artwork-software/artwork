@@ -77,7 +77,7 @@
     <PermissionPresetModal
         v-if="showPermissionPresetModal"
         :show="showPermissionPresetModal"
-        :available_permissions="available_permissions"
+        :catalog="catalog"
         :mode="permissionPresetModalMode"
         :permission_preset="permissionPresetModalResource"
         @close="closePermissionPresetModal"
@@ -128,7 +128,7 @@ import ToolbarHeader from "@/Artwork/Toolbar/ToolbarHeader.vue";
 /* Props */
 const props = defineProps({
     permission_presets: { type: Object, required: true },
-    available_permissions: { type: Object, required: true }
+    catalog: { type: Object, required: true }
 })
 
 /* i18n helper */

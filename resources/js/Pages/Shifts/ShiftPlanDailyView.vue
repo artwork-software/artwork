@@ -25,7 +25,9 @@
 
             <!-- topbar -->
             <div :class="topBarContainerClass" :style="topBarStyle" ref="topBarEl">
-                <div class="flex items-center pr-5 gap-x-5 justify-between">
+                <!-- flex-wrap: auf schmalen Bildschirmen umbrechen statt rechts aus dem Viewport zu laufen
+                     (Höhe wird per ResizeObserver gemessen, ein Umbruch ist also unkritisch) -->
+                <div class="flex flex-wrap items-center pr-5 gap-x-5 gap-y-2 justify-between">
                     <div class="flex items-center gap-x-4">
                         <div v-if="props.project" class="ml-1 text-sm font-lexend font-semibold text-text-muted">
                             {{ $t('Projektzeitraum') }} {{ formatDate(projectStart) }} - {{ formatDate(projectEnd) }}
@@ -60,7 +62,7 @@
                         </template>
                     </div>
 
-                    <div class="flex items-center gap-x-5">
+                    <div class="flex items-center gap-x-3 ml-auto">
                         <BaseUIButton
                             v-if="isInProjectView && (can('can plan shifts') || is('artwork admin'))"
                             :label="$t('Add Shift')"
@@ -69,14 +71,7 @@
                             @click="openAddShiftForRoomAndDay(null, null)"
                         />
 
-                        <SwitchIconTooltip
-                            v-if="!props.project"
-                            v-model="dailyViewMode"
-                            :tooltip-text="$t('Switch between weekly and daily view')"
-                            size="md"
-                            @change="changeDailyViewMode"
-                            :icon="IconCalendarWeek"
-                        />
+                        <ShiftPlanViewSwitch v-if="!props.project" current="day" />
 
                         <FunctionBarFilter
                             :user_filters="user_filtersResolved"
@@ -85,6 +80,9 @@
                             :crafts="craftsResolved"
                             :filter-type="props.isInProjectView ? 'project_shift_filter' : 'shift_daily_filter'"
                         />
+
+                        <!-- Hilfe & Legende (Slide-over), gleiches Panel wie in der Wochenansicht -->
+                        <ShiftPlanHelpPanel />
 
                         <ToolTipComponent
                             direction="right"
@@ -98,6 +96,14 @@
                         <FunctionBarSetting :is-planning="false" is-in-shift-plan :is-daily-view="true" :is-in-project-view="props.isInProjectView" />
                     </div>
                 </div>
+
+                <!-- Hinweisleiste: Personenfilter "nur offene Regelverstöße" aktiv (Teil der Top-Bar, nicht des Rasters) -->
+                <ShiftPlanOpenViolationsFilterNotice
+                    v-if="!props.isInProjectView && showOnlyUsersWithOpenViolations"
+                    class="mt-2"
+                    :is-empty="openViolationsFilterIsEmpty"
+                    @remove="setOpenViolationsFilter(false)"
+                />
             </div>
 
             <!-- Zugewiesene Personen (Projektzuordnungen; nur Projektansicht, per Anzeigeeinstellung) -->
@@ -349,6 +355,20 @@
                     </div>
                 </div>
             </section>
+
+            <!-- Leerzustand einmal pro Raster (keine Räume / Stammdaten fehlen / keine Schichten) -->
+            <ShiftPlanEmptyState
+                v-if="dailyPlanLoaded && !emptyStateDismissed"
+                :rooms-count="shiftPlanCopy.length"
+                :crafts-count="craftsResolved?.length ?? 0"
+                :functions-count="shiftQualificationsArray?.length ?? 0"
+                :has-shifts="dailyPlanHasShifts"
+                :filters-active="dailyFiltersActive"
+                :hide-unoccupied-rooms="hideUnoccupiedRooms"
+                @add-shift="openAddShiftForFirstRoomAndDay"
+                @add-from-template="openAddShiftByPresetForFirstRoomAndDay"
+                @dismiss="emptyStateDismissed = true"
+            />
 
             <div
                 v-for="day in daysToRender"
@@ -715,8 +735,9 @@ import {
 import { useShiftCalendarListener } from "@/Composeables/Listener/useShiftCalendarListener.js";
 import { provideShiftPlanLookups } from "@/Composeables/useShiftPlanLookups.js";
 import FunctionBarFilter from "@/Artwork/Filter/FunctionBarFilter.vue";
+import ShiftPlanOpenViolationsFilterNotice from "@/Layouts/Components/ShiftPlanComponents/ShiftPlanOpenViolationsFilterNotice.vue";
 import FunctionBarSetting from "@/Artwork/Filter/FunctionBarSetting.vue";
-import SwitchIconTooltip from "@/Artwork/Toggles/SwitchIconTooltip.vue";
+import ShiftPlanViewSwitch from "@/Layouts/Components/ShiftPlanComponents/ShiftPlanViewSwitch.vue";
 import axios from "axios";
 import { enrichDays } from "@/Composeables/calendarDateUtils.js";
 import { useDayRemarks } from "@/Composeables/useDayRemarks.js";
@@ -730,6 +751,8 @@ const ExportModal = defineAsyncComponent(() => import("@/Layouts/Components/Expo
 import HolidayToolTip from "@/Components/ToolTips/HolidayToolTip.vue";
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 import AddShiftsByPresetsAndGroupsModal from "@/Pages/Shifts/Components/AddShiftsByPresetsAndGroupsModal.vue";
+import ShiftPlanHelpPanel from "@/Layouts/Components/ShiftPlanComponents/ShiftPlanHelpPanel.vue";
+import ShiftPlanEmptyState from "@/Layouts/Components/ShiftPlanComponents/ShiftPlanEmptyState.vue";
 import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
 import { formatAssignmentDate, formatAssignmentDateRanges } from "@/Composeables/UseProjectDayAssignments.js";
 import ProjectAssignPersonModal from "@/Pages/Shifts/Components/ProjectAssignPersonModal.vue";
@@ -1621,14 +1644,61 @@ const initializeDailyShiftPlan = async () => {
         })
 
         if (batchData.lookups) mergeLookups(batchData.lookups)
+        openViolationsByUser.value = batchData.openViolationsByUser ?? {}
         shiftPlanCopy.value = (batchData.rooms ?? []).filter(Boolean)
         triggerRef(shiftPlanCopy)
+        emptyStateDismissed.value = false
+        dailyPlanLoaded.value = true
         return
     }
 
     daysLocal.value = withoutExtraRows(enrichDays(props.days ?? []))
     shiftPlanCopy.value = Array.isArray(props.shiftPlan) ? props.shiftPlan : Object.values(props.shiftPlan ?? {})
     triggerRef(shiftPlanCopy)
+    emptyStateDismissed.value = false
+    dailyPlanLoaded.value = true
+}
+
+// --- Leerzustand des Rasters (ShiftPlanEmptyState) ---
+// Erst nach dem Initial-Load anzeigen, sonst blitzt die Karte während Meta/Batch auf.
+const dailyPlanLoaded = ref(false)
+const emptyStateDismissed = ref(false)
+
+/** Gibt es im geladenen Zeitraum mindestens eine Schicht (unabhängig von Anzeige-Filtern)? */
+const dailyPlanHasShifts = computed<boolean>(() => {
+    for (const room of shiftPlanCopy.value || []) {
+        if (room?.shiftsById && Object.keys(room.shiftsById).length > 0) return true
+        const content = room?.content ?? {}
+        for (const key of Object.keys(content)) {
+            const ids = content[key]?.shiftIds
+            if (Array.isArray(ids) && ids.length > 0) return true
+            if (Array.isArray(content[key]?.shifts) && content[key].shifts.length > 0) return true
+        }
+    }
+    return false
+})
+
+/** Aktive Dienstplan-Filter (Räume, Gewerke, Terminarten …) — Hinweis im Leerzustand „keine Räume" */
+const dailyFiltersActive = computed<boolean>(() => {
+    const filters = (props.user_filters ?? {}) as Record<string, any>
+    return Object.values(filters).some((value) => Array.isArray(value) && value.length > 0)
+})
+
+const firstDailyRoom = () => (shiftPlanCopy.value || [])[0] ?? null
+const firstDailyDay = () => (daysLocal.value || []).find((d: any) => !d?.isExtraRow) ?? null
+
+function openAddShiftForFirstRoomAndDay() {
+    const room = firstDailyRoom()
+    const day = firstDailyDay()
+    if (!room || !day) return
+    openAddShiftForRoomAndDay(day.withoutFormat, room.roomId ?? room.id ?? null)
+}
+
+function openAddShiftByPresetForFirstRoomAndDay() {
+    const room = firstDailyRoom()
+    const day = firstDailyDay()
+    if (!room || !day) return
+    openAddShiftByPresetOrGroup(day, room)
 }
 
 watch(() => props.days, (v) => { daysLocal.value = withoutExtraRows(v as any[]) })
@@ -1642,6 +1712,48 @@ watch(() => props.shiftPlan, (v) => {
     shiftPlanCopy.value = Array.isArray(v) ? v : Object.values(v ?? {})
     triggerRef(shiftPlanCopy)
 })
+
+/**
+ * Personenfilter "nur Personen mit offenen Regelverstößen" (user_filters-Flag der Tagesansicht,
+ * Filter-Typ shift_daily_filter; gesetzt im Filter-Modal oder über den Zähler-Chip).
+ * Die Tagesansicht hat keine Personenzeilen: gefiltert werden Schichten, in denen mindestens eine
+ * eingeplante Person (User) am Schichttag einen offenen Verstoß hat. Verstöße kommen als
+ * user_id => { 'Y-m-d': Anzahl } mit dem Batch-Payload (openViolationsByUser).
+ */
+const openViolationsByUser = ref<Record<string, Record<string, number>>>({})
+const showOnlyUsersWithOpenViolations = computed(() => !!(user_filtersResolved.value as any)?.show_only_users_with_open_violations)
+
+/** Content-Tagesschlüssel "DD.MM.YYYY" -> "YYYY-MM-DD" */
+function isoDayKey(dayKey: string): string {
+    if (/^\d{4}-\d{2}-\d{2}$/.test(dayKey)) return dayKey
+    const parts = String(dayKey).split('.')
+    return parts.length === 3 ? `${parts[2]}-${parts[1]}-${parts[0]}` : dayKey
+}
+
+function openViolationsOfUserOnDay(userId: any, isoDay: string): number {
+    return Number(openViolationsByUser.value?.[String(userId)]?.[isoDay] ?? 0)
+}
+
+function shiftUserWorkers(shift: any): any[] {
+    const workers = Array.isArray(shift?.workers) ? shift.workers : Object.values(shift?.workers ?? {})
+    return workers.filter((w: any) => w && (w.type === 'user' || w.type === 0 || w.type === undefined))
+}
+
+function shiftHasWorkerWithOpenViolation(shift: any, isoDay: string): boolean {
+    return shiftUserWorkers(shift).some((w: any) => openViolationsOfUserOnDay(w.id, isoDay) > 0)
+}
+
+/** Personenfilter "nur offene Regelverstöße" setzen bzw. aufheben (persistentes user_filters-Flag der Tagesansicht) */
+function setOpenViolationsFilter(active: boolean) {
+    if (!authUserId.value) return
+    router.patch(
+        route('update.user.calendar.filter.open-violations', authUserId.value),
+        { filter_type: 'shift_daily_filter', show_only_users_with_open_violations: active },
+        { preserveScroll: true, preserveState: false },
+    )
+}
+
+/** Zähler-Chip ist ein Umschalter: aktiv → Filter aufheben, sonst aktivieren */
 
 /**
  * Craft filter set
@@ -1662,14 +1774,18 @@ const craftPositionMap = computed(() => {
 // P2: Pre-computed index — filter + sort once, then O(1) lookup
 // Debounced to prevent rapid rebuilds during WebSocket bursts
 const filteredShiftsIndex = shallowRef(new Map<string, any[]>())
+/** Anzahl Schichten im gefilterten Index (nebenbei beim Rebuild gezählt, für den Leer-Hinweis des Verstoß-Filters) */
+const filteredShiftsTotal = ref(0)
 
 function rebuildFilteredShiftsIndex() {
     const map = new Map<string, any[]>()
+    let total = 0
     const rooms = shiftPlanCopy.value || []
     const set = craftIdSet.value
     const posMap = craftPositionMap.value
     const settings = page.props.shift_plan_daily_settings ?? page.props.shift_plan_settings ?? page.props.auth?.user?.calendar_settings
     const showOnlyNotFullyStaffed = (settings as any)?.show_only_not_fully_staffed_shifts
+    const onlyOpenViolations = showOnlyUsersWithOpenViolations.value
 
     const getShiftCraftId = (s: any): number | null => {
         return s?.craftId ?? s?.craft_id ?? s?.craft?.id ?? null
@@ -1713,6 +1829,12 @@ function rebuildFilteredShiftsIndex() {
                 })
             }
 
+            // Personenfilter: nur Schichten mit mindestens einer Person mit offenem Verstoß am Tag
+            if (onlyOpenViolations) {
+                const isoDay = isoDayKey(dayKey)
+                shifts = shifts.filter((shift: any) => shiftHasWorkerWithOpenViolation(shift, isoDay))
+            }
+
             shifts.sort((a: any, b: any) => {
                 const cmp = (a.start ?? '').toString().localeCompare((b.start ?? '').toString())
                 if (cmp !== 0) return cmp
@@ -1721,14 +1843,21 @@ function rebuildFilteredShiftsIndex() {
             })
 
             map.set(`${roomId}|${dayKey}`, shifts)
+            total += shifts.length
         }
     }
     filteredShiftsIndex.value = map
+    filteredShiftsTotal.value = total
 }
+
+/** Filter aktiv, aber keine Schicht mit einer Person mit offenem Verstoß im Zeitraum → Hinweis statt leerem Raster */
+const openViolationsFilterIsEmpty = computed<boolean>(
+    () => showOnlyUsersWithOpenViolations.value && dailyPlanLoaded.value && filteredShiftsTotal.value === 0,
+)
 
 let _shiftsRebuildTimer: ReturnType<typeof setTimeout> | null = null
 let _shiftsFirstRun = true
-watch([shiftPlanCopy, craftIdSet, craftPositionMap], () => {
+watch([shiftPlanCopy, craftIdSet, craftPositionMap, showOnlyUsersWithOpenViolations, openViolationsByUser], () => {
     if (_shiftsFirstRun) {
         _shiftsFirstRun = false
         rebuildFilteredShiftsIndex()
@@ -1943,16 +2072,8 @@ const eventComponentClosed = () => {
 }
 
 /**
- * Daily view mode
+ * Daily view mode (Umschalter Woche|Tag|Liste: ShiftPlanViewSwitch)
  */
-const changeDailyViewMode = () => {
-    router.patch(
-        route("user.update.daily_view", page.props.auth.user.id),
-        { daily_view: dailyViewMode.value, context: 'shift_plan' },
-        { preserveScroll: false, preserveState: false }
-    )
-}
-
 const changeDailyViewModeValue = (newValue: boolean, onSuccessCallback?: () => void) => {
     dailyViewMode.value = newValue
     router.patch(

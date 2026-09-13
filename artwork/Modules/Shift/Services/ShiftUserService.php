@@ -18,6 +18,7 @@ use Artwork\Modules\Shift\Repositories\ShiftServiceProviderRepository;
 use Artwork\Modules\Shift\Repositories\ShiftWorkerRepository;
 use Artwork\Modules\Shift\Repositories\ShiftsQualificationsRepository;
 use Artwork\Modules\Shift\Repositories\ShiftUserRepository;
+use Artwork\Modules\Shift\Services\ShiftNotificationLinkService;
 use Artwork\Modules\Shift\Services\ShiftWorkerService;
 use Artwork\Modules\User\Models\User;
 use Artwork\Modules\Vacation\Services\VacationConflictService;
@@ -180,7 +181,7 @@ class ShiftUserService
                 'type'  => 'string',
                 'title' => __('notification.keyWords.your_shift') .
                     $shift->time_span_label,
-                'href'  => null,
+                'href'  => ShiftNotificationLinkService::ownOperationPlanForDate($user, $shift->start_date),
             ],
         ]);
         $notificationService->setNotificationTo($user);
@@ -226,7 +227,7 @@ class ShiftUserService
                     [],
                     $user->language
                 ) . $user->getFullNameAttribute(),
-                'href'  => null,
+                'href'  => ShiftNotificationLinkService::ownOperationPlanForDate($user, $shiftBreakCheck->firstShift->event_start_day),
             ],
             2 => [
                 'type'  => 'string',
@@ -238,7 +239,7 @@ class ShiftUserService
                     ],
                     $user->language
                 ),
-                'href'  => null,
+                'href'  => ShiftNotificationLinkService::ownOperationPlanForDate($user, $shiftBreakCheck->firstShift->event_start_day),
             ],
         ]);
         $notificationService->setNotificationTo($user);
@@ -264,6 +265,13 @@ class ShiftUserService
 
         $notificationTitle = __('notification.shift.worker_short_break', [], $planner->language);
 
+        // Eigene Toast-Nachricht setzen, sonst erbt die planende Person den Broadcast
+        // "Du wurdest mit zu kurzer Ruhezeit eingeplant" aus notifyShortBreakUser().
+        $notificationService->setBroadcastMessage([
+            'id'      => Str::uuid()->toString(),
+            'type'    => 'error',
+            'message' => $notificationTitle,
+        ]);
         $notificationService->setTitle($notificationTitle);
         $notificationService->setDescription([
             1 => [
@@ -273,7 +281,7 @@ class ShiftUserService
                     [],
                     $planner->language
                 ) . $user->getFullNameAttribute(),
-                'href'  => null,
+                'href'  => ShiftNotificationLinkService::shiftPlanForDate($shiftBreakCheck->firstShift->event_start_day),
             ],
             2 => [
                 'type'  => 'string',
@@ -287,7 +295,7 @@ class ShiftUserService
                     ],
                     $planner->language
                 ),
-                'href'  => null,
+                'href'  => ShiftNotificationLinkService::shiftPlanForDate($shiftBreakCheck->firstShift->event_start_day),
             ],
         ]);
         $notificationService->setNotificationTo($planner);
@@ -334,7 +342,7 @@ class ShiftUserService
                     [],
                     $user->language
                 ) . $user->getFullNameAttribute(),
-                'href'  => null,
+                'href'  => ShiftNotificationLinkService::ownOperationPlanForDate($user, $shiftCheck->firstShift->first()->event_start_day),
             ],
             2 => [
                 'type'  => 'string',
@@ -348,7 +356,7 @@ class ShiftUserService
                     ],
                     $user->language
                 ),
-                'href'  => null,
+                'href'  => ShiftNotificationLinkService::ownOperationPlanForDate($user, $shiftCheck->firstShift->first()->event_start_day),
             ],
         ]);
 
@@ -390,7 +398,7 @@ class ShiftUserService
                     [],
                     $planner->language
                 ) . $user->getFullNameAttribute(),
-                'href'  => null,
+                'href'  => ShiftNotificationLinkService::shiftPlanForDate($shiftCheck->firstShift->first()->event_start_day),
             ],
             2 => [
                 'type'  => 'string',
@@ -404,7 +412,7 @@ class ShiftUserService
                     ],
                     $planner->language
                 ),
-                'href'  => null,
+                'href'  => ShiftNotificationLinkService::shiftPlanForDate($shiftCheck->firstShift->first()->event_start_day),
             ],
         ]);
         $notificationService->setNotificationTo($planner);
@@ -707,7 +715,7 @@ class ShiftUserService
                 'type'  => 'string',
                 'title' => __('notification.keyWords.concerns_shift', [], $user->language) .
                     $shift->time_span_label,
-                'href'  => null,
+                'href'  => ShiftNotificationLinkService::ownOperationPlanForDate($user, $shift->start_date),
             ],
         ]);
         $notificationService->setNotificationTo($user);

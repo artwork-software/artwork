@@ -11,6 +11,9 @@ import NumberInputComponent from "@/Components/Inputs/NumberInputComponent.vue";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
+import LegalBreakHint from "@/Components/Inputs/LegalBreakHint.vue";
+import { useAutoBreak } from "@/Composeables/useAutoBreak";
+import { toRef } from "vue";
 
 const emit = defineEmits(['closed'])
 
@@ -28,6 +31,14 @@ const newTimePreset = useForm({
     id: props.timePreset ? props.timePreset.id : null,
     break_time: props.timePreset ? props.timePreset.break_time : 0,
 })
+
+// Auto-Pause nach ArbZG (leeres Feld befüllen, nicht-manuelle Werte anheben,
+// manuelle Werte nie still überschreiben).
+const autoBreak = useAutoBreak(
+    toRef(newTimePreset, 'start_time'),
+    toRef(newTimePreset, 'end_time'),
+    toRef(newTimePreset, 'break_time')
+)
 
 const saveTimePreset = () => {
     if (newTimePreset.id) {
@@ -80,6 +91,13 @@ const saveTimePreset = () => {
                         :min="0"
                         :max="1000"
                         id="break_time"
+                        @input="autoBreak.markManual()"
+                    />
+                    <LegalBreakHint
+                        :break-minutes="newTimePreset.break_time"
+                        :legal-minutes="autoBreak.legalMinutes.value"
+                        :has-times="autoBreak.hasTimes.value"
+                        @reset="autoBreak.resetToLegal()"
                     />
                 </div>
             </div>

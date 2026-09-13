@@ -8,6 +8,7 @@ use Artwork\Modules\Shift\Services\ShiftWorkerAvailability;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Support\Collection as SupportCollection;
+use Artwork\Modules\Shift\Services\ShiftConfirmationEligibilityService;
 
 readonly class ShiftListViewSerializer
 {
@@ -76,7 +77,9 @@ readonly class ShiftListViewSerializer
             return [];
         }
 
-        return $workers->map(function ($worker) use ($type, $shift) {
+        $confirmationEligibility = app(ShiftConfirmationEligibilityService::class);
+
+        return $workers->map(function ($worker) use ($type, $shift, $confirmationEligibility) {
             $unavailableStatus = $shift !== null
                 ? ShiftWorkerAvailability::getWorkerUnavailableStatus($shift, $worker)
                 : null;
@@ -105,6 +108,8 @@ readonly class ShiftListViewSerializer
                 'is_unavailable' => $unavailableStatus !== null,
                 // Konfliktierender Tagesstatus für die statusfarbene Umrandung im Schichten-Tab
                 'unavailable_status' => $unavailableStatus,
+                // Person nimmt am Zu-/Absage-Flow teil (Recht „Darf Schichten annehmen/ablehnen")
+                'confirmation_eligible' => $confirmationEligibility->isEligible($worker),
             ];
 
             if ($type === 'service_provider') {

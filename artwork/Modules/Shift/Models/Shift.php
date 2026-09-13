@@ -12,6 +12,7 @@ use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\ServiceProvider\Models\ServiceProvider;
 use Artwork\Modules\User\Models\User;
+use Artwork\Modules\Shift\Services\LegalBreakCalculator;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
 use Illuminate\Database\Eloquent\Builder;
@@ -306,7 +307,7 @@ class Shift extends Model
             ->using(ShiftWorker::class)
             ->where('shift_workers.employable_type', User::class)
             ->whereNull('shift_workers.deleted_at')
-            ->withPivot(['id', 'shift_qualification_id', 'is_overbooked', 'shift_count', 'craft_abbreviation', 'short_description', 'start_date', 'end_date', 'start_time', 'end_time', 'workflow_rejection_reason', 'confirmation_status', 'confirmation_at', 'confirmation_by_user_id', 'confirmation_comment'])
+            ->withPivot(['id', 'shift_qualification_id', 'is_overbooked', 'shift_count', 'craft_abbreviation', 'short_description', 'start_date', 'end_date', 'start_time', 'end_time', 'workflow_rejection_reason', 'confirmation_status', 'confirmation_at', 'confirmation_by_user_id', 'confirmation_comment', 'confirmation_reset_at'])
             ->without('calendar_settings');
     }
 
@@ -317,7 +318,7 @@ class Shift extends Model
             ->using(ShiftWorker::class)
             ->where('shift_workers.employable_type', Freelancer::class)
             ->whereNull('shift_workers.deleted_at')
-            ->withPivot(['id', 'shift_qualification_id', 'is_overbooked', 'shift_count', 'craft_abbreviation', 'short_description', 'start_date', 'end_date', 'start_time', 'end_time', 'workflow_rejection_reason', 'confirmation_status', 'confirmation_at', 'confirmation_by_user_id', 'confirmation_comment']);
+            ->withPivot(['id', 'shift_qualification_id', 'is_overbooked', 'shift_count', 'craft_abbreviation', 'short_description', 'start_date', 'end_date', 'start_time', 'end_time', 'workflow_rejection_reason', 'confirmation_status', 'confirmation_at', 'confirmation_by_user_id', 'confirmation_comment', 'confirmation_reset_at']);
     }
 
     public function serviceProvider(): MorphToMany
@@ -327,7 +328,7 @@ class Shift extends Model
             ->using(ShiftWorker::class)
             ->where('shift_workers.employable_type', ServiceProvider::class)
             ->whereNull('shift_workers.deleted_at')
-            ->withPivot(['id', 'shift_qualification_id', 'is_overbooked', 'shift_count', 'craft_abbreviation', 'short_description', 'start_date', 'end_date', 'start_time', 'end_time', 'workflow_rejection_reason', 'confirmation_status', 'confirmation_at', 'confirmation_by_user_id', 'confirmation_comment']);
+            ->withPivot(['id', 'shift_qualification_id', 'is_overbooked', 'shift_count', 'craft_abbreviation', 'short_description', 'start_date', 'end_date', 'start_time', 'end_time', 'workflow_rejection_reason', 'confirmation_status', 'confirmation_at', 'confirmation_by_user_id', 'confirmation_comment', 'confirmation_reset_at']);
     }
 
     /**
@@ -403,23 +404,13 @@ class Shift extends Model
 
     public function getInfringementAttribute(): bool
     {
-        $start = Carbon::parse($this->start);
-        $end = Carbon::parse($this->end);
+        // Über-Mitternacht (Ende <= Start) wird im Calculator als +1 Tag behandelt,
+        // sonst wäre der Diff negativ und der Pausen-Check würde nie anschlagen.
+        // Grenzen (ArbZG): > 6h → 30 min, > 9h → 45 min; exakt 9h braucht nur 30 min.
+        $workMinutes = LegalBreakCalculator::workMinutesBetween($this->start, $this->end);
+        $requiredBreak = LegalBreakCalculator::minimumBreakMinutes($workMinutes);
 
-        // Über-Mitternacht-Schichten: end < start am selben Tag → Ende +1 Tag,
-        // sonst wäre der Diff in Carbon 3 negativ und der Pausen-Check
-        // (z.B. 10h-Nachtschicht ohne Pause) würde NIE anschlagen.
-        if ($end->lessThanOrEqualTo($start)) {
-            $end->addDay();
-        }
-
-        $diff = $start->diffInRealMinutes($end);
-        $break = $this->break_minutes;
-
-        if (($diff > 360 && $diff < 540 && $break < 30) || ($diff > 540 && $break < 45)) {
-            return true;
-        }
-        return false;
+        return (int) ($this->break_minutes ?? 0) < $requiredBreak;
     }
 
     public function scopeIsCommitted(Builder $query): Builder

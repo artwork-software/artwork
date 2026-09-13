@@ -7,6 +7,15 @@
         @close="closeModal"
     >
         <div class="">
+            <SettingsGuideBanner
+                variant="static"
+                icon="IconShieldLock"
+                class="mb-4"
+                title="Rights in the project team apply to this project only"
+                :paragraphs="[
+                    'Write, project management, budget and delete here apply only to this project. House-wide permissions for all projects are managed under user rights.'
+                ]"
+            />
             <!-- Suche -->
             <div class="relative">
                 <BaseInput
@@ -257,6 +266,7 @@ import Permissions from '@/Mixins/Permissions.vue'
 import IconLib from '@/Mixins/IconLib.vue'
 
 import ArtworkBaseModal from '@/Artwork/Modals/ArtworkBaseModal.vue'
+import SettingsGuideBanner from '@/Artwork/Guide/SettingsGuideBanner.vue'
 import BaseUIButton from '@/Artwork/Buttons/BaseUIButton.vue'
 import BaseInput from '@/Artwork/Inputs/BaseInput.vue'
 import ProjectTeamPermissionsDropdown from '@/Pages/Projects/Components/ProjectTeamPermissionsDropdown.vue'
@@ -390,6 +400,8 @@ const addUserToProjectTeamArray = (userToAdd) => {
 
     users.value.push({
         ...userToAdd,
+        // Neue Teammitglieder starten mit Schreibrecht (Spiegel des DB-Defaults von project_user.can_write)
+        pivot_can_write: userToAdd.pivot_can_write ?? true,
         // Neue Teammitglieder starten mit ihren im Arbeitsprofil hinterlegten Standard-Projektrollen
         pivot_roles: [...(userToAdd.default_project_role_ids ?? userToAdd.pivot_roles ?? [])],
     })

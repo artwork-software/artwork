@@ -1,6 +1,6 @@
 <template>
     <!-- Container: unterscheidet Kollision/Nicht-Kollision -->
-    <div v-if="!detailsOnly" :class="['w-full min-w-64 rounded-lg select-none border', { 'border-dashed': isUnrelatedProjectShift }]"
+    <div v-if="!detailsOnly" :class="['w-full min-w-64 rounded-lg select-none border', { 'border-dashed': isUnrelatedProjectShift, 'hc-card': highContrast && !isUnrelatedProjectShift }]"
          :style="cardStyle">
         <!-- Linke Spalte: Zeilenstruktur -->
         <div class="flex flex-col w-full">
@@ -353,8 +353,8 @@
     <!-- Bestätigungsmodal: Schicht löschen -->
     <ConfirmationComponent
         v-if="showConfirmDeleteModal && !detailsOnly"
-        titel="Schicht löschen"
-        description="Möchtest du diese Schicht wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden."
+        :titel="$t('Delete shift')"
+        :description="$t('Do you really want to delete this shift?') + ' ' + $t('This action cannot be undone.')"
         @closed="handleConfirmDelete"
     />
 
@@ -364,14 +364,25 @@
         :description="toastDescription"
         :type="toastType"
     />
+
+    <!-- Vorabprüfung (Überschneidung/Urlaub/nicht verfügbar): nur Warnung, Zuweisung bleibt möglich -->
+    <AssignmentConflictModal
+        v-if="showAssignmentConflictModal && pendingAssignment"
+        :conflicts="pendingAssignment.preflight?.conflicts ?? []"
+        :person-name="pendingAssignment.preflight?.person?.name ?? ''"
+        :shift="pendingAssignment.preflight?.shift ?? {}"
+        @cancel="cancelPendingAssignment"
+        @confirm="confirmPendingAssignment"
+    />
 </template>
 
 <script setup>
-import {ref, computed, watch, defineAsyncComponent, onMounted, onBeforeUnmount, reactive, inject} from "vue";
+import {ref, computed, watch, defineAsyncComponent, onMounted, reactive, inject} from "vue";
 import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
 import {Float} from "@headlessui-float/vue";
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
-import {Link, router, usePage} from "@inertiajs/vue3";
+import {router, usePage} from "@inertiajs/vue3";
+import {useColorHelper} from "@/Composeables/UseColorHelper.js";
 import axios from "axios";
 import SingleEntityInShift from "@/Pages/Shifts/DailyViewComponents/SingleEntityInShift.vue";
 import {can, is} from "laravel-permission-to-vuejs";
@@ -389,11 +400,11 @@ import {
     IconHeart,
     IconX
 } from "@tabler/icons-vue";
-import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 import BaseMenu from "@/Components/Menu/BaseMenu.vue";
 import BaseMenuItem from "@/Components/Menu/BaseMenuItem.vue";
 import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
+import AssignmentConflictModal from "@/Layouts/Components/ShiftPlanComponents/AssignmentConflictModal.vue";
 import {useShiftPlanLookups} from "@/Composeables/useShiftPlanLookups.js";
 
 const { resolveCraft, resolveShiftGroup } = useShiftPlanLookups();
@@ -467,12 +478,16 @@ const unrelatedProjectLabel = computed(() =>
     props.shift?.projectName ?? props.shift?.project_name ?? null
 )
 
-// Anzeigeeinstellung "Notizen einblenden" (Tagesansicht-Settings mit Fallback-Kette)
-const showNotes = computed(() => {
+// Anzeigeeinstellungen der Tagesansicht (Fallback-Kette wie im übrigen Dienstplan)
+const displaySettings = computed(() => {
     const pageProps = usePage().props
-    const settings = pageProps.shift_plan_daily_settings ?? pageProps.shift_plan_settings ?? pageProps.auth.user.calendar_settings
-    return !!settings?.shift_notes
+    return pageProps.shift_plan_daily_settings ?? pageProps.shift_plan_settings ?? pageProps.auth.user.calendar_settings
 })
+// Anzeigeeinstellung "Beschreibung einblenden" (shift_notes)
+const showNotes = computed(() => !!displaySettings.value?.shift_notes)
+// Anzeigeeinstellung "Hoher Kontrast": Karte satt in Gewerksfarbe, Textfarbe nach Hintergrund (wie Wochenansicht)
+const highContrast = computed(() => !!displaySettings.value?.high_contrast)
+const { backgroundColorWithOpacity, getTextColorBasedOnBackground, getHighContrastPercent } = useColorHelper()
 
 // Normalize time values that may arrive as "HH:MM" or ISO datetime "2026-05-18T10:00:00.000000Z"
 function normalizeTime(val) {
@@ -1014,8 +1029,50 @@ const createOnDropElementAndSave = (user, craft, shiftQualificationId, isOverboo
         toastVisible.value = true;
         return;
     }
-    assignUser(droppedUser, shiftQualificationId, user, isOverbooked);
+    runPreflightThenAssign(user, shiftQualificationId, isOverbooked);
 }
+
+/* ---------------- Vorabprüfung vor der Zuweisung ---------------- */
+// Überschneidung/Urlaub/nicht verfügbar serverseitig prüfen; nur Warnung, Zuweisung bleibt möglich.
+// Bei Netz-/Serverfehler wird ohne Rückfrage zugewiesen.
+const showAssignmentConflictModal = ref(false);
+const pendingAssignment = ref(null);
+
+const runPreflightThenAssign = async (user, shiftQualificationId, isOverbooked) => {
+    let preflight = null;
+    try {
+        const { data } = await axios.post(route('shift.assignment-preflight'), {
+            shift_id: props.shift.id,
+            employable_type: user.type === 'freelancer' || user.type === 'service_provider' ? user.type : 'user',
+            employable_id: user.id,
+        });
+        preflight = data;
+    } catch {
+        preflight = null;
+    }
+
+    const conflicts = Array.isArray(preflight?.conflicts) ? preflight.conflicts : [];
+    if (conflicts.length === 0) {
+        assignUser(droppedUser, shiftQualificationId, user, isOverbooked);
+        return;
+    }
+
+    pendingAssignment.value = { user, shiftQualificationId, isOverbooked, preflight };
+    showAssignmentConflictModal.value = true;
+};
+
+const cancelPendingAssignment = () => {
+    showAssignmentConflictModal.value = false;
+    pendingAssignment.value = null;
+};
+
+const confirmPendingAssignment = () => {
+    const pending = pendingAssignment.value;
+    showAssignmentConflictModal.value = false;
+    pendingAssignment.value = null;
+    if (!pending) return;
+    assignUser(droppedUser, pending.shiftQualificationId, pending.user, pending.isOverbooked);
+};
 
 const assignUser = (droppedUser, shiftQualificationId, sourceUser = null, isOverbooked = false) => {
 
@@ -1140,6 +1197,14 @@ const cardStyle = computed(() => {
             borderColor: `${base}A0`,
         }
     }
+    if (highContrast.value) {
+        const bg = backgroundColorWithOpacity(base, getHighContrastPercent(displaySettings.value))
+        return {
+            backgroundColor: bg,
+            color: getTextColorBasedOnBackground(bg),
+            borderColor: isFollowUpDay.value ? '#d1d5db' : borderColor.value,
+        }
+    }
     return {
         backgroundColor: `${base}${isFollowUpDay.value ? '30' : '50'}`,
         borderColor: isFollowUpDay.value ? '#d1d5db' : borderColor.value,
@@ -1170,3 +1235,11 @@ const onChildUserRemoved = (payload) => {
     adjustDeltaForUser(person, -1)
 }
 </script>
+
+<style scoped>
+/* Hoher Kontrast: Text-Utilities in der Karte übernehmen die berechnete Kartentextfarbe –
+   außer in Bereichen mit eigenem hellen Hintergrund (Menüs, Drop-Zeilen, Badges). */
+.hc-card :deep(:is(.text-text, .text-text-muted, .text-text-subtle, .text-black):not(.bg-white *, .bg-surface *, .bg-surface-sunken *, .bg-danger-surface *, .bg-warning-surface *)) {
+    color: inherit;
+}
+</style>

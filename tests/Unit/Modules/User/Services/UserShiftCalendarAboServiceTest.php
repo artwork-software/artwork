@@ -148,6 +148,8 @@ final class UserShiftCalendarAboServiceTest extends TestCase
             'end_date' => '2024-05-10',
             'start' => '08:00',
             'end' => '16:00',
+            // festgeschrieben, sonst traegt der Titel das Praefix "[vorläufig] "
+            'is_committed' => true,
         ]);
 
         $abo = new UserShiftCalendarAbo();

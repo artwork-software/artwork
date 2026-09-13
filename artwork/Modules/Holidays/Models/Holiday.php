@@ -17,11 +17,21 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
  * @property Subdivision[]|Collection $subdivisions
  * @property string|null $remote_identifier
  * @property bool $from_api
+ * @property string $type public|school|custom
  * @property Carbon $created_at
  * @property Carbon $updated_at
  */
 class Holiday extends Model
 {
+    /** Gesetzlicher Feiertag (OpenHolidays "Public") – Sondertag-Default: ja */
+    public const TYPE_PUBLIC = 'public';
+    /** Schulferien (OpenHolidays "School") – Sondertag-Default: nein */
+    public const TYPE_SCHOOL = 'school';
+    /** Manuell angelegter Eintrag */
+    public const TYPE_CUSTOM = 'custom';
+
+    public const TYPES = [self::TYPE_PUBLIC, self::TYPE_SCHOOL, self::TYPE_CUSTOM];
+
     protected $table = 'holidays';
 
     protected $fillable = [
@@ -32,6 +42,7 @@ class Holiday extends Model
         'country',
         'remote_identifier',
         'from_api',
+        'type',
         'yearly',
         'color',
         'treatAsSpecialDay',
@@ -43,6 +54,7 @@ class Holiday extends Model
         'date' => 'date:Y-m-d',
         'end_date' => 'date:Y-m-d',
         'from_api' => 'boolean',
+        'type' => 'string',
         'yearly' => 'boolean',
         'treatAsSpecialDay' => 'boolean',
     ];
@@ -62,24 +74,30 @@ class Holiday extends Model
     }
 
     /**
-     * Checks whether the given date is marked as a "Sondertag" (treatAsSpecialDay = true).
-     * Considers one-time holidays (exact date) and yearly recurring holidays (month-day match).
+     * Sondertag-Prüfung. Einzige Quelle ist der SpecialDayService (Flag, mehrtägige Einträge,
+     * jährliche Wiederholung); diese Methode bleibt als Fassade für Altaufrufer.
      */
     public static function isSpecialDay(Carbon|string $date): bool
     {
-        $day = $date instanceof Carbon ? $date : Carbon::parse($date);
-        $formattedDate = $day->toDateString();
-        $monthDay = $day->format('m-d');
+        return app(\Artwork\Modules\Holidays\Services\SpecialDayService::class)->isSpecialDay($date);
+    }
 
-        return self::where(function ($query) use ($formattedDate, $monthDay): void {
-            $query->where(function ($q) use ($formattedDate): void {
-                $q->where('yearly', false)
-                    ->whereDate('date', $formattedDate);
-            })->orWhere(function ($q) use ($monthDay): void {
-                $q->where('yearly', true)
-                    ->whereRaw("DATE_FORMAT(date, '%m-%d') = ?", [$monthDay]);
-            });
-        })->where('treatAsSpecialDay', true)->exists();
+    /**
+     * Typ normalisieren (unbekannte Werte -> custom).
+     */
+    public static function normalizeType(?string $type): string
+    {
+        $type = strtolower(trim((string) $type));
+
+        return in_array($type, self::TYPES, true) ? $type : self::TYPE_CUSTOM;
+    }
+
+    /**
+     * Sondertag-Default je Typ: nur gesetzliche Feiertage sind standardmäßig Sondertage.
+     */
+    public static function defaultTreatAsSpecialDayFor(?string $type): bool
+    {
+        return self::normalizeType($type) === self::TYPE_PUBLIC;
     }
 
     /**

@@ -6,18 +6,36 @@
                 <IconChevronDown class="size-4 transition-transform" :class="{ '-rotate-90': !expanded }" />
                 {{ $t('Entries per event') }} <span class="text-text-subtle">({{ displayedEvents.length }})</span>
             </button>
-            <button
-                type="button"
-                @click="showFilters = !showFilters"
-                class="inline-flex items-center gap-1.5 rounded-md border border-border-subtle px-2.5 py-1 text-xs text-text-muted hover:bg-surface-sunken transition print:hidden"
-                :class="{ 'bg-surface-sunken border-border': showFilters || hasActiveFilter }"
-            >
-                <IconFilter class="size-4" />
-                {{ $t('Filter') }}
-            </button>
+            <div class="flex items-center gap-2 print:hidden">
+                <!-- Standard: nur Publikumstermine (BI-Tag Vorstellung/Veranstaltungstag) — Proben
+                     und Aufbauten bekommen keine Besucherzahlen -->
+                <button
+                    v-if="hasAudienceEvents"
+                    type="button"
+                    class="inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium transition"
+                    :class="audienceOnly ? 'border-accent-200 bg-accent-50 text-accent-700 hover:bg-accent-100' : 'border-border-subtle text-text-muted hover:bg-surface-sunken'"
+                    @click="audienceOnly = !audienceOnly"
+                >
+                    <IconUsers class="size-3.5" />
+                    {{ audienceOnly ? `${$t('Audience events only')} (${audienceEvents.length})` : $t('Show all events') }}
+                </button>
+                <button
+                    type="button"
+                    @click="showFilters = !showFilters"
+                    class="inline-flex items-center gap-1.5 rounded-md border border-border-subtle px-2.5 py-1 text-xs text-text-muted hover:bg-surface-sunken transition"
+                    :class="{ 'bg-surface-sunken border-border': showFilters || hasActiveFilter }"
+                >
+                    <IconFilter class="size-4" />
+                    {{ $t('Filter') }}
+                </button>
+            </div>
         </div>
 
         <div v-show="expanded" class="print:!block">
+            <!-- Ausfüllhilfe ist sonst unsichtbar, bis man zufällig eine Zeile markiert -->
+            <p v-if="canEdit && selectedIds.size === 0 && !hasBulkInput && displayedEvents.length > 1" class="mb-2 text-[11px] text-text-subtle print:hidden">
+                {{ $t('Select several events to enter values at once.') }}
+            </p>
             <!-- Filter bar -->
             <div v-if="showFilters" class="mb-3 flex flex-wrap items-end gap-3 rounded-md bg-surface-sunken p-3 print:hidden">
                 <ArtworkBaseListbox
@@ -51,6 +69,7 @@
                     :id="'bi_bulk_' + field.key"
                     v-model.number="bulkValues[field.key]"
                     :label="(field.translate ?? true) ? $t(field.label) : field.label"
+                    without-translation
                     :min="0"
                     :step="field.key === 'revenue' ? 0.01 : 1"
                     class="w-32"
@@ -74,11 +93,10 @@
                     <thead>
                         <tr>
                             <th v-if="canEdit" class="py-2 pr-2 w-8 print:hidden">
-                                <input
-                                    type="checkbox"
-                                    class="input-checklist !h-3.5 !w-3.5"
-                                    :checked="allDisplayedSelected"
-                                    @change="toggleAll($event.target.checked)"
+                                <BaseCheckbox
+                                    :id="'bi_select_all_' + scope"
+                                    :model-value="allDisplayedSelected"
+                                    @update:model-value="toggleAll"
                                 />
                             </th>
                             <th
@@ -102,23 +120,24 @@
                             v-for="event in displayedEvents"
                             :key="event.id"
                             class="hover:bg-surface-sunken"
-                            :class="{ 'bg-accent-50': event.id === latestPastEventId,
+                            :class="{ 'bg-accent-50': scope === 'actual' && event.id === latestPastEventId,
                                 'opacity-50': isFutureEvent(event),
                             }"
+                            :title="isFutureEvent(event) ? $t('Event lies in the future') : null"
                         >
                             <td v-if="canEdit" class="py-2 pr-2 print:hidden">
-                                <input
-                                    type="checkbox"
-                                    class="input-checklist !h-3.5 !w-3.5"
-                                    :checked="selectedIds.has(event.id)"
-                                    @change="toggleRow(event.id, $event.target.checked)"
+                                <BaseCheckbox
+                                    :id="'bi_select_' + scope + '_' + event.id"
+                                    :model-value="selectedIds.has(event.id)"
+                                    @update:model-value="checked => toggleRow(event.id, checked)"
                                 />
                             </td>
                             <td class="py-2 pl-0 pr-3 text-text-muted">
                                 <span class="inline-flex items-center gap-2">
                                     {{ event.name }}
+                                    <!-- Erfassungs-Anker nur im Ist: für Planwerte gibt es kein "zuletzt stattgefunden" -->
                                     <span
-                                        v-if="event.id === latestPastEventId"
+                                        v-if="scope === 'actual' && event.id === latestPastEventId"
                                         class="rounded-full bg-accent-100 px-2 py-0.5 text-[10px] font-medium text-accent-700 whitespace-nowrap print:hidden"
                                         v-tooltip.top="{ value: $t('The most recent event that already took place — the usual starting point for entering figures after a performance.'), appendTo: 'body', class: 'aw-tooltip' }"
                                     >
@@ -129,17 +148,23 @@
                             <td class="py-2 px-3 text-text-subtle whitespace-nowrap">{{ event.start_time }}</td>
                             <td class="py-2 px-3 text-text-subtle">{{ event.room_name }}</td>
                             <td v-for="field in fields" :key="field.key" class="py-2 px-3">
-                                <input
+                                <BaseInput
                                     v-if="canEdit"
                                     type="number"
-                                    class="w-24 rounded-md border border-border bg-white px-2.5 py-1.5 text-sm shadow-sm focus:border-accent-600 focus:outline-none focus:ring-1 focus:ring-accent-600"
+                                    :id="'bi_cell_' + scope + '_' + event.id + '_' + field.key"
+                                    :label="(field.translate ?? true) ? $t(field.label) : field.label"
+                                    without-translation
+                                    :show-label="false"
                                     :min="0"
                                     :step="field.key === 'revenue' ? 0.01 : 1"
                                     :data-bi-cell="field.key"
-                                    :value="cellValue(event.id, field.key)"
-                                    @input="setDraft(event.id, field.key, $event.target.value)"
+                                    :model-value="cellValue(event.id, field.key)"
+                                    :input-classes="failedCells.has(draftKey(event.id, field.key)) ? 'border-danger! ring-1 ring-danger!' : ''"
+                                    :error="failedCells.has(draftKey(event.id, field.key)) ? ' ' : ''"
+                                    @update:model-value="value => setDraft(event.id, field.key, value)"
                                     @change="saveEventValue(event.id, field.key, $event.target.value)"
                                     @keydown.enter.prevent="focusNextRow(event.id, field.key)"
+                                    class="w-24"
                                 />
                                 <span v-else class="text-text-muted">{{ getEventValue(event.id, field.key) ?? '–' }}</span>
                             </td>
@@ -190,8 +215,9 @@
 
 <script setup>
 import { computed, reactive, ref, watch } from 'vue';
-import { IconChevronDown, IconChevronUp, IconArrowsSort, IconFilter, IconCopy } from '@tabler/icons-vue';
+import { IconChevronDown, IconChevronUp, IconArrowsSort, IconFilter, IconCopy, IconUsers } from '@tabler/icons-vue';
 import BaseInput from '@/Artwork/Inputs/BaseInput.vue';
+import BaseCheckbox from '@/Artwork/Inputs/BaseCheckbox.vue';
 import BaseUIButton from '@/Artwork/Buttons/BaseUIButton.vue';
 import ArtworkBaseListbox from '@/Artwork/Listbox/ArtworkBaseListbox.vue';
 import { useBiSaveFeedback } from '@/Composeables/BiSaveFeedback.js';
@@ -249,6 +275,40 @@ const rooms = computed(() => {
 
 const selectedRoom = computed(() => rooms.value.find(r => r.id === filterRoomId.value) ?? null);
 const hasActiveFilter = computed(() => filterRoomId.value !== null || search.value.trim() !== '');
+
+// Publikumstermine (Terminart mit BI-Tag Vorstellung/Veranstaltungstag) — Standardansicht,
+// sobald es solche gibt; ohne Tag-Zuordnung bleibt die volle Liste
+const audienceEvents = computed(() => props.projectEvents.filter(e => e.is_audience_event));
+const hasAudienceEvents = computed(() => audienceEvents.value.length > 0);
+// Standard nur dann "Publikumstermine", wenn keine erfassten Werte an anderen Terminen
+// hängen — sonst sind die Tags offensichtlich unvollständig und der Filter würde
+// genau die Termine verstecken, an denen gearbeitet wird
+const defaultAudienceOnly = computed(() => {
+    if (!hasAudienceEvents.value) return false;
+    const audienceIds = new Set(audienceEvents.value.map(e => e.id));
+    const hasValue = (entry) => ['visitors', 'sold_tickets', 'revenue'].some(
+        key => entry[key] !== null && entry[key] !== undefined
+    );
+    return !props.eventData.some(entry => hasValue(entry) && !audienceIds.has(entry.event_id));
+});
+const audienceOnlyChoice = ref(null); // null = noch keine bewusste Wahl → Standard
+const audienceOnly = computed({
+    get: () => audienceOnlyChoice.value ?? defaultAudienceOnly.value,
+    set: (value) => { audienceOnlyChoice.value = value; },
+});
+const baseEvents = computed(() => (audienceOnly.value && hasAudienceEvents.value) ? audienceEvents.value : props.projectEvents);
+
+// Zellen, deren letzter Save fehlgeschlagen ist (roter Rahmen, bis ein Save durchgeht)
+const failedCells = ref(new Set());
+const markCell = (key, failed) => {
+    const next = new Set(failedCells.value);
+    if (failed) {
+        next.add(key);
+    } else {
+        next.delete(key);
+    }
+    failedCells.value = next;
+};
 
 const entriesByEventId = computed(() => new Map(props.eventData.map(e => [e.event_id, e])));
 
@@ -312,11 +372,15 @@ const isFutureEvent = (event) => {
     return ts > Date.now();
 };
 
-// Enter springt zur nächsten Zeile derselben Spalte (Serien-Erfassung);
-// der Fokuswechsel committet die aktuelle Zelle über das change-Event
+// Enter springt zum chronologisch NÄCHSTEN Termin derselben Spalte (Serien-Erfassung
+// in der Reihenfolge, in der die Vorstellungen stattfanden) — bei absteigender
+// Datumssortierung ist das die Zeile darüber. Der Fokuswechsel committet die
+// aktuelle Zelle über das change-Event.
 const focusNextRow = (eventId, fieldKey) => {
     const row = document.activeElement?.closest('tr');
-    const next = row?.nextElementSibling?.querySelector(`input[data-bi-cell="${fieldKey}"]`);
+    const forwardIsDown = !(sortKey.value === 'date' && !sortAsc.value);
+    const sibling = forwardIsDown ? row?.nextElementSibling : row?.previousElementSibling;
+    const next = sibling?.querySelector(`input[data-bi-cell="${fieldKey}"]`);
     if (next) {
         next.focus();
         next.select();
@@ -357,7 +421,7 @@ const sortValue = (event, key) => {
 };
 
 const displayedEvents = computed(() => {
-    let list = [...props.projectEvents];
+    let list = [...baseEvents.value];
 
     if (filterRoomId.value !== null) {
         list = list.filter(e => e.room_id === filterRoomId.value);
@@ -384,7 +448,8 @@ const latestPastEventId = computed(() => {
     const now = Date.now();
     let best = null;
     let bestTs = -Infinity;
-    props.projectEvents.forEach((event) => {
+    // Anker innerhalb der Publikumstermine — "Abbau" ist kein Erfassungs-Einstieg
+    baseEvents.value.forEach((event) => {
         const ts = parseDate(event.start_time);
         if (ts && ts <= now && ts > bestTs) {
             bestTs = ts;
@@ -509,6 +574,7 @@ const applyBulk = async () => {
 const saveEventValue = async (eventId, fieldKey, value) => {
     const field = fieldByKey.value.get(fieldKey);
     const parsed = value === '' ? null : Number(value);
+    const cellKey = draftKey(eventId, fieldKey);
     const ok = await biSave.run(() => {
         if (field?.categoryId) {
             return axios.put(route('projects.bi.upsert-category-values', props.projectId), {
@@ -525,6 +591,9 @@ const saveEventValue = async (eventId, fieldKey, value) => {
             { [fieldKey]: parsed, scope: props.scope }
         );
     });
+    // Fehlgeschlagene Zelle rot markieren — der Draft bleibt stehen, der Grund
+    // steht in der Status-Pille; nächster erfolgreicher Save hebt die Markierung auf
+    markCell(cellKey, !ok);
     if (ok) {
         emit('updated');
     }

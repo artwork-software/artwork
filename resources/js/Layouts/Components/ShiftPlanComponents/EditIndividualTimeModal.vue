@@ -42,14 +42,23 @@
             </div>
 
             <!-- Pause -->
-            <BaseInput
-                type="number"
-                id="break_minutes"
-                v-model.number="form.break_minutes"
-                :label="$t('Break (minutes)')"
-                :min="0"
-                :step="1"
-            />
+            <div>
+                <BaseInput
+                    type="number"
+                    id="break_minutes"
+                    v-model.number="form.break_minutes"
+                    :label="$t('Break (minutes)')"
+                    :min="0"
+                    :step="1"
+                    @input="autoBreak.markManual()"
+                />
+                <LegalBreakHint
+                    :break-minutes="form.break_minutes"
+                    :legal-minutes="autoBreak.legalMinutes.value"
+                    :has-times="autoBreak.hasTimes.value"
+                    @reset="autoBreak.resetToLegal()"
+                />
+            </div>
         </div>
 
         <div class="flex justify-end gap-3 p-4 border-t border-border-subtle">
@@ -73,10 +82,12 @@
 </template>
 
 <script setup>
-import { ref, reactive } from 'vue'
+import { ref, reactive, toRef } from 'vue'
 import { router } from '@inertiajs/vue3'
 import ArtworkBaseModal from '@/Artwork/Modals/ArtworkBaseModal.vue'
 import BaseInput from '@/Artwork/Inputs/BaseInput.vue'
+import LegalBreakHint from '@/Components/Inputs/LegalBreakHint.vue'
+import { useAutoBreak } from '@/Composeables/useAutoBreak'
 
 const props = defineProps({
     individualTime: { type: Object, required: true }
@@ -92,6 +103,14 @@ const form = reactive({
     end_time: props.individualTime.end_time ? String(props.individualTime.end_time).slice(0, 5) : '',
     break_minutes: props.individualTime.break_minutes ?? 0,
 })
+
+// Auto-Pause nach ArbZG (leeres Feld befüllen, nicht-manuelle Werte anheben,
+// manuelle Werte nie still überschreiben).
+const autoBreak = useAutoBreak(
+    toRef(form, 'start_time'),
+    toRef(form, 'end_time'),
+    toRef(form, 'break_minutes')
+)
 
 function formatDate(dateStr) {
     if (!dateStr) return ''

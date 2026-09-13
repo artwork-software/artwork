@@ -181,6 +181,17 @@ export const SETTINGS = [
         description: 'Only displays shifts where at least one position still has capacity for additional staff.',
     },
     {
+        // Besetzungs-Pille „besetzt/Bedarf" in der Gewerkszeile des Personenbereichs (Tag + KW-Summe);
+        // der Klick-Filter „nur nicht voll besetzte" bleibt über das Filter-Popup erreichbar
+        key: 'show_craft_staffing',
+        section: 'visibility',
+        views: [VIEW.SHIFT_WEEK],
+        label: 'Show staffing per craft',
+        description: 'Shows staffed and required shift slots per day and calendar week as a traffic light in the craft row of the person area.',
+        default: (ctx) => ctx.settings?.show_craft_staffing ?? true,
+        indicator: false,
+    },
+    {
         key: 'show_project_assignments',
         section: 'visibility',
         views: SHIFT_DAY_VIEWS,

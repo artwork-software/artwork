@@ -96,6 +96,7 @@
                                         :user="user"
                                         :shift="shift"
                                         @shiftDeleted="handleShiftDeleted"
+                                        @confirmation-changed="emit('desiresReload')"
                                     />
                                 </div>
                             </template>

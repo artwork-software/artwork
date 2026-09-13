@@ -8015,5 +8015,10 @@
     "You are scheduled on {date} {start} - {end}, contrary to your original entry. Who made the assignment was not recorded; the shift was committed by {username}.": "Du bist am {date} {start} - {end} eingeteilt, entgegen deines ursprünglichen Eintrags. Wer die Einteilung vorgenommen hat, ist nicht gespeichert; festgeschrieben wurde die Schicht von {username}.",
     "You are scheduled on {date} {start} - {end}, contrary to your original entry. Who made the assignment was not recorded.": "Du bist am {date} {start} - {end} eingeteilt, entgegen deines ursprünglichen Eintrags. Wer die Einteilung vorgenommen hat, ist nicht gespeichert.",
     "Assignment made on {date}.": "Zuweisung erfolgte am {date}.",
-    "Not available despite shift": "Nicht verfügbar eingetragen trotz Schicht"
+    "Not available despite shift": "Nicht verfügbar eingetragen trotz Schicht",
+    "Active filter": "Aktiver Filter",
+    "Deselect filter": "Filter abwählen",
+    "Delete saved filter": "Gespeicherten Filter löschen",
+    "Show staffing per craft": "Besetzung je Gewerk anzeigen",
+    "Shows staffed and required shift slots per day and calendar week as a traffic light in the craft row of the person area.": "Zeigt in der Gewerkszeile des Personenbereichs pro Tag und Kalenderwoche besetzte und benötigte Schichtplätze als Ampel."
 }

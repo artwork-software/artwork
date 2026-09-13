@@ -441,6 +441,17 @@ export function useShiftCalendarListener(newShiftPlanData, { onWorkersNeedReload
                     onWorkersNeedReload();
                 }
             });
+
+        // Verfügbarkeit/Abwesenheit einer Person geändert (Verfügbarkeitskalender, Tagesstatus,
+        // Multi-Edit) → Personenzeile nachladen, damit Beschriftung und Konflikt-Ring aktuell sind.
+        Echo.channel('shift-plan.worker-availability')
+            .listen('.worker-availability.changed', (data) => {
+                if (onWorkerNeedReload) {
+                    onWorkerNeedReload(data.workerId, resolveWorkerType(data.workerType));
+                } else if (onWorkersNeedReload) {
+                    onWorkersNeedReload();
+                }
+            });
     }
 
     return { init };

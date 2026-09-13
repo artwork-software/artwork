@@ -8011,5 +8011,10 @@
     "Green pill: the person accepted the shift, red pill: the person declined, blue pill: requested, no reply yet. Only for people with the permission \"Accept or decline shifts\". Details and comment in the hover text.": "Green pill: the person accepted the shift, red pill: the person declined, blue pill: requested, no reply yet. Only for people with the permission \"Accept or decline shifts\". Details and comment in the hover text.",
     "The person remains scheduled until the plan is changed.": "The person remains scheduled until the plan is changed.",
     "Can accept or decline own shift assignments": "Can accept or decline own shift assignments",
-    "Accept or decline own shifts (also provisional ones), optionally with a comment": "Accept or decline own shifts (also provisional ones), optionally with a comment"
+    "Accept or decline own shifts (also provisional ones), optionally with a comment": "Accept or decline own shifts (also provisional ones), optionally with a comment",
+    "Active filter": "Active filter",
+    "Deselect filter": "Deselect filter",
+    "Delete saved filter": "Delete saved filter",
+    "Show staffing per craft": "Show staffing per craft",
+    "Shows staffed and required shift slots per day and calendar week as a traffic light in the craft row of the person area.": "Shows staffed and required shift slots per day and calendar week as a traffic light in the craft row of the person area."
 }

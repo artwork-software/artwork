@@ -895,6 +895,7 @@
                                 <div v-else-if="row.kind === 'craft'" class="flex h-full w-full items-center justify-center" :class="day.isExtraRow ? 'pl-2' : ''">
                                     <!-- Besetzung EINMAL je Zelle nachschlagen; Ampelklasse/Tooltip rechnet die Pille nur bei Prop-Änderung -->
                                     <CraftStaffingPill
+                                        v-if="showCraftStaffing"
                                         :count="craftStaffingFor(row.craft.id, day)"
                                         :active="isCraftStaffingFilterActive(row.craft.id)"
                                         :week-number="day.isExtraRow ? day.weekNumber : null"
@@ -945,17 +946,21 @@
                                             v-if="getDayServicesForCell(row.worker, day)"
                                             class="absolute right-2 top-1/2 flex -translate-y-1/2 transform"
                                         >
+                                            <!-- Vollflächig in der Tagesdienstfarbe, Icon weiß oder schwarz je nach
+                                                 Helligkeit der Farbe (dayServiceBallStyle); Ring in der Panelfarbe
+                                                 trennt überlappende Bälle voneinander -->
                                             <div
                                                 v-for="(svc, idx) in getDayServicesForCell(row.worker, day)"
                                                 :key="svc.id || idx"
-                                                class="flex h-6 w-6 items-center justify-center rounded-full bg-white p-0.5 ring-1 ring-[var(--uo-cell-ring)]"
+                                                class="flex h-6 w-6 items-center justify-center rounded-full p-0.5 ring-2 ring-[var(--uo-bg)]"
                                                 :class="idx > 0 ? '-ml-3' : ''"
+                                                :style="dayServiceBallStyle(svc.hex_color).ball"
                                             >
                                                 <ToolTipComponent
                                                     :tooltip-text="svc.name"
                                                     :icon="svc.icon"
                                                     icon-size="h-4 w-4"
-                                                    :icon-style="{ color: svc.hex_color }"
+                                                    :icon-style="dayServiceBallStyle(svc.hex_color).icon"
                                                     :classes-button="'mt-0'"
                                                 />
                                             </div>
@@ -1637,12 +1642,18 @@ const calendarSettings = computed(() => {
     return usePage().props.shift_plan_settings ?? authUser.value.calendar_settings
 })
 const showUserOverview = ref(calendarSettings.value?.show_user_overview ?? true)
+// Anzeigeeinstellung „Besetzung je Gewerk anzeigen" (Wochenansicht, Default an) — blendet die
+// Besetzungs-Pille in Tages- UND KW-Zelle der Gewerkszeile aus; Filter bleibt im Popup erreichbar
+const showCraftStaffing = computed(() => usePage().props.shift_plan_settings?.show_craft_staffing ?? true)
 // Hell/Dunkel des Personenbereichs: immer aus shift_plan_settings (Wochenansicht), nie aus den Daily-Settings
 const userOverviewLightMode = ref<boolean>(!!usePage().props.shift_plan_settings?.user_overview_light_mode)
 const expandDays = computed(() => calendarSettings.value?.expand_days)
 const displayProjectGroups = computed(() => calendarSettings.value?.display_project_groups)
 const compactMode = computed(() => authUser.value.compact_mode)
-const openedCrafts = computed(() => authUser.value.opened_crafts ?? [])
+// Optimistischer Zwischenstand beim Auf-/Zuklappen, bis die Server-Antwort
+// auth.user.opened_crafts nachzieht (closedCrafts ist davon abgeleitet und read-only)
+const openedCraftsOverride = ref<number[] | null>(null)
+const openedCrafts = computed<number[]>(() => openedCraftsOverride.value ?? authUser.value.opened_crafts ?? [])
 const sortWorkersByQualification = computed(() => authUser.value.sort_workers_by_qualification ?? true)
 const showQualificationDuplicates = computed(() => authUser.value.show_qualification_duplicates ?? true)
 const closedQualificationGroups = ref<string[]>([...(authUser.value.closed_qualification_groups ?? [])])
@@ -2473,6 +2484,7 @@ watch(
     { immediate: true },
 )
 
+
 type ShiftGroup = {
     project: any | null
     projectId: number | null
@@ -2971,6 +2983,11 @@ onMounted(async () => {
 
 
 onBeforeUnmount(() => {
+    if (userOverviewScrollSaveTimer) clearTimeout(userOverviewScrollSaveTimer)
+    if (userOverviewScrollRestoreTimer) clearTimeout(userOverviewScrollRestoreTimer)
+    saveUserOverviewScroll()
+    userOverviewEl.value?.removeEventListener('scroll', onUserOverviewScrollForSave)
+    window.removeEventListener('pagehide', onPageHideSaveScroll)
     detach()
     debouncedLoadShiftPlanWorkers.cancel()
     monthObserver.value?.disconnect()
@@ -3105,6 +3122,33 @@ function kwWorkflowStatusTitle(row: any, day: any): string {
         default:
             return ''
     }
+}
+
+// Tagesdienst-Ball: Füllung = hinterlegte Farbe, Icon weiß auf dunklen und schwarz auf hellen
+// Farben (wahrgenommene Helligkeit, Schwelle 150 wie im Spielplan-PDF-Export). Sehr helle Farben
+// bekommen zusätzlich eine dünne dunkle Innenkante, damit der Ball auf weißen Zellen (heller
+// Personenbereich) nicht verschwindet. Ergebnis je Farbe gecacht — läuft pro Zelle und Render.
+const dayServiceBallStyleCache = new Map<string, { ball: Record<string, string>, icon: Record<string, string> }>()
+function dayServiceBallStyle(hexColor: string | null | undefined) {
+    const color = (hexColor && /^#?[0-9a-f]{6}$/i.test(hexColor)) ? hexColor.replace(/^#?/, '#') : '#71717a'
+    const cached = dayServiceBallStyleCache.get(color)
+    if (cached) return cached
+
+    const r = parseInt(color.slice(1, 3), 16)
+    const g = parseInt(color.slice(3, 5), 16)
+    const b = parseInt(color.slice(5, 7), 16)
+    const brightness = 0.299 * r + 0.587 * g + 0.114 * b
+    const dark = brightness < 150
+
+    const style = {
+        ball: {
+            backgroundColor: color,
+            ...(brightness >= 200 ? { boxShadow: 'inset 0 0 0 1px rgba(0, 0, 0, 0.35)' } : {}),
+        },
+        icon: { color: dark ? '#ffffff' : '#111111' },
+    }
+    dayServiceBallStyleCache.set(color, style)
+    return style
 }
 
 function getDayServicesForCell(worker: any, day: any) {
@@ -3519,6 +3563,92 @@ const gridRows = computed<GridRow[]>(() => {
 
     return rows
 })
+
+// Scrollposition des Personenbereichs pro Person merken. Reload, Datumsnavigation und
+// Filterwechsel remounten die Seite (preserveState:false) — Inertias preserveScroll greift
+// nur für window/scroll-region, nicht für den Grid-Viewport (Virtual2DGrid).
+const userOverviewScrollKey = computed(() => `shiftPlan.userOverview.scroll.${authUser.value?.id ?? 'anon'}`)
+const userOverviewRangeKey = computed(() => `${props.dateValue?.[0]}|${props.dateValue?.[1]}`)
+let userOverviewScrollSaveTimer: ReturnType<typeof setTimeout> | null = null
+let userOverviewScrollRestoreTimer: ReturnType<typeof setTimeout> | null = null
+let userOverviewScrollRestored = false
+
+function readUserOverviewScroll(): { top: number, left: number, range: string } | null {
+    try {
+        const saved = JSON.parse(localStorage.getItem(userOverviewScrollKey.value) ?? 'null')
+        return saved && typeof saved.top === 'number' ? saved : null
+    } catch {
+        return null
+    }
+}
+
+function saveUserOverviewScroll() {
+    const el = userOverviewEl.value
+    // Vor der Wiederherstellung nichts schreiben — sonst überschreibt der frische
+    // Mount (scrollTop 0) den gemerkten Stand
+    if (!el || !userOverviewScrollRestored) return
+    try {
+        localStorage.setItem(userOverviewScrollKey.value, JSON.stringify({
+            top: el.scrollTop,
+            left: el.scrollLeft,
+            range: userOverviewRangeKey.value,
+        }))
+    } catch {
+        // Storage gesperrt/voll — Position wird dann nicht gemerkt
+    }
+}
+
+function onUserOverviewScrollForSave() {
+    if (userOverviewScrollSaveTimer) clearTimeout(userOverviewScrollSaveTimer)
+    userOverviewScrollSaveTimer = setTimeout(saveUserOverviewScroll, 150)
+}
+
+// Zeilenhöhen (expand_days) und Spacer wachsen nach dem ersten Render noch — deshalb
+// wenige Versuche, bis die gewünschte Position erreichbar ist
+function restoreUserOverviewScroll(attempt = 0) {
+    const el = userOverviewEl.value
+    if (!el) return
+    const saved = readUserOverviewScroll()
+    if (saved) {
+        el.scrollTop = saved.top
+        // Horizontal nur im selben Zeitraum — sonst läge der Offset auf anderen Tagen
+        if (saved.range === userOverviewRangeKey.value) {
+            el.scrollLeft = saved.left
+        }
+        const reachable = el.scrollHeight - el.clientHeight >= saved.top
+        if (!reachable && attempt < 5) {
+            userOverviewScrollRestoreTimer = setTimeout(() => restoreUserOverviewScroll(attempt + 1), 200)
+            return
+        }
+    }
+    userOverviewScrollRestored = true
+}
+
+watch(
+    () => userOverviewEl.value,
+    (el, oldEl) => {
+        oldEl?.removeEventListener('scroll', onUserOverviewScrollForSave)
+        el?.addEventListener('scroll', onUserOverviewScrollForSave, { passive: true })
+    },
+    { immediate: true },
+)
+
+// Erst wiederherstellen, wenn Personen geladen sind und das Grid Zeilen hat —
+// vorher ist der Spacer zu klein und scrollTop würde auf 0 geklemmt
+watch(
+    () => !!userOverviewEl.value && workersLoadedOnce.value && gridRows.value.length > 0,
+    async (ready) => {
+        if (!ready || userOverviewScrollRestored) return
+        await nextTick()
+        restoreUserOverviewScroll()
+    },
+    { immediate: true },
+)
+
+function onPageHideSaveScroll() {
+    saveUserOverviewScroll()
+}
+window.addEventListener('pagehide', onPageHideSaveScroll)
 
 const gridCols = computed(() => days.value) // dein day-array (inkl. extraRow) bleibt “Columns”
 
@@ -4537,16 +4667,26 @@ function resetMultiEditMode(closeMultiEdit = true) {
 }
 
 function changeCraftVisibility(id: number) {
-    if (closedCrafts.value.includes(id)) {
-        closedCrafts.value.splice(closedCrafts.value.indexOf(id), 1)
-    } else {
-        closedCrafts.value.push(id)
-    }
+    const current = openedCrafts.value
+    const opened = current.includes(id) ? current.filter((c) => c !== id) : [...current, id]
+
+    // Vollständige Liste über ALLE Gewerke schicken — craftsToDisplay ist durch den
+    // Gewerkefilter beschnitten und würde den Offen-Status ausgefilterter Gewerke verwerfen
+    const openedIds = craftsResolved.value
+        .map((c: any) => c.id)
+        .filter((craftId: number) => opened.includes(craftId))
+
+    openedCraftsOverride.value = openedIds
 
     router.patch(
         route('user.update.open.crafts', {user: authUser.value.id}),
-        {opened_crafts: craftsToDisplay.value.filter(c => !closedCrafts.value.includes(c.id)).map(c => c.id)},
-        {preserveState: true, preserveScroll: true},
+        {opened_crafts: openedIds},
+        {
+            preserveState: true,
+            preserveScroll: true,
+            // Danach gilt wieder der Serverstand (bei Erfolg identisch, bei Fehler der alte)
+            onFinish: () => { openedCraftsOverride.value = null },
+        },
     )
 }
 

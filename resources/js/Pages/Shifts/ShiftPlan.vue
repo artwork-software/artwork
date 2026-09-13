@@ -3125,7 +3125,8 @@ function kwWorkflowStatusTitle(row: any, day: any): string {
 }
 
 // Tagesdienst-Ball: Füllung = hinterlegte Farbe, Icon weiß auf dunklen und schwarz auf hellen
-// Farben (wahrgenommene Helligkeit, Schwelle 150 wie im Spielplan-PDF-Export). Sehr helle Farben
+// Farben (WCAG-Luminanz < 0,179 = Weiß hat den höheren Kontrast; gleiche Regel wie
+// useColorHelper().isDarkColor und Spielplan-PDF-Export). Sehr helle Farben
 // bekommen zusätzlich eine dünne dunkle Innenkante, damit der Ball auf weißen Zellen (heller
 // Personenbereich) nicht verschwindet. Ergebnis je Farbe gecacht — läuft pro Zelle und Render.
 const dayServiceBallStyleCache = new Map<string, { ball: Record<string, string>, icon: Record<string, string> }>()
@@ -3138,7 +3139,10 @@ function dayServiceBallStyle(hexColor: string | null | undefined) {
     const g = parseInt(color.slice(3, 5), 16)
     const b = parseInt(color.slice(5, 7), 16)
     const brightness = 0.299 * r + 0.587 * g + 0.114 * b
-    const dark = brightness < 150
+    const luminance = [r, g, b]
+        .map((v) => { const c = v / 255; return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4) })
+        .reduce((sum, c, i) => sum + c * [0.2126, 0.7152, 0.0722][i], 0)
+    const dark = luminance < 0.179
 
     const style = {
         ball: {

@@ -59,8 +59,8 @@ class VacationController extends Controller
         );
 
         if ($createVacationRequest->type === 'vacation') {
-            // Art der Abwesenheit kommt aus dem Request (vacation_type: OFF_WORK = Urlaub, Default |
-            // NOT_AVAILABLE = nicht verfügbar, soll-neutral) – Auflösung im VacationService::create
+            // Selbst erfasste Abwesenheit ist immer „Nicht verfügbar" (NOT_AVAILABLE); die Urlaubsart
+            // wird nicht im Verfügbarkeitskalender gewählt, sondern kommt mit dem Urlaubsmodul
             $this->vacationService->create(
                 $user,
                 $createVacationRequest,
@@ -530,7 +530,9 @@ class VacationController extends Controller
                     $this->vacationSeriesService,
                     $this->changeService,
                     $this->schedulingService,
-                    $this->notificationService
+                    $this->notificationService,
+                    // Art des bisherigen Eintrags behalten (z. B. planerisch gesetzter Arbeitsfreier Tag)
+                    $vacation->type
                 );
             } else {
                 $this->availabilityService->create(

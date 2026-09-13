@@ -33,8 +33,9 @@ readonly class VacationService
     }
 
     /**
-     * @param VacationType|string|null $vacationTypeEnum explizite Art (Planungsstatus wie FREE_WORK) –
-     *        null: Art aus dem Request (vacation_type: OFF_WORK|NOT_AVAILABLE), Default Urlaub (OFF_WORK)
+     * @param VacationType|string|null $vacationTypeEnum explizite Art (Planungsstatus wie OFF_WORK/FREE_WORK
+     *        aus dem Tagesstatus) – null: selbst erfasste Abwesenheit = NOT_AVAILABLE. Die Urlaubsart wird
+     *        NICHT im Verfügbarkeitskalender gewählt (kommt mit dem Urlaubsmodul).
      */
     public function create(
         Vacationer $vacationer,
@@ -46,7 +47,7 @@ readonly class VacationService
         NotificationService $notificationService,
         VacationType|string|null $vacationTypeEnum = null
     ): Vacation|Model {
-        $vacationTypeEnum = $this->resolveVacationType($vacationTypeEnum, $request);
+        $vacationTypeEnum = $this->resolveVacationType($vacationTypeEnum);
 
         /** @var Vacation $firstVacation */
         $firstVacation = $vacationer->vacations()->create([
@@ -113,10 +114,10 @@ readonly class VacationService
 
     /**
      * Typsichere Art des Eintrags: explizit übergeben (Enum oder Magic String wie 'FREE_WORK'),
-     * sonst vacation_type aus dem Request (nur OFF_WORK|NOT_AVAILABLE, vom Request validiert),
-     * sonst Urlaub (OFF_WORK). Unbekannte Strings werfen ValueError (Vacation::from).
+     * sonst Nicht verfügbar (NOT_AVAILABLE) – die selbst erfasste Abwesenheit hat keine wählbare Art.
+     * Unbekannte Strings werfen ValueError (Vacation::from).
      */
-    private function resolveVacationType(VacationType|string|null $type, Request $request): VacationType
+    private function resolveVacationType(VacationType|string|null $type): VacationType
     {
         if ($type instanceof VacationType) {
             return $type;
@@ -125,12 +126,7 @@ readonly class VacationService
             return VacationType::from($type);
         }
 
-        $requested = $request->input('vacation_type');
-        if (is_string($requested) && in_array($requested, VacationType::selfServiceAbsenceValues(), true)) {
-            return VacationType::from($requested);
-        }
-
-        return VacationType::OFF_WORK;
+        return VacationType::NOT_AVAILABLE;
     }
 
     /**

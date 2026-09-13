@@ -15,12 +15,4 @@ final class VacationEnumTest extends TestCase
         $this->assertSame('FREE_WORK', Vacation::FREE_WORK->value);
         $this->assertNotNull(Vacation::tryFrom('FREE_WORK'));
     }
-
-    #[Test]
-    public function self_service_absence_values_are_vacation_and_not_available_only(): void
-    {
-        $this->assertSame(['OFF_WORK', 'NOT_AVAILABLE'], Vacation::selfServiceAbsenceValues());
-        $this->assertNotContains('FREE_WORK', Vacation::selfServiceAbsenceValues());
-        $this->assertNotContains('AVAILABLE', Vacation::selfServiceAbsenceValues());
-    }
 }

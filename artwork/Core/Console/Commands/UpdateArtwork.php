@@ -69,6 +69,7 @@ class UpdateArtwork extends Command
         $this->cleanupFalseConflicts();
         $this->migrateChangesHistoryToActivityLog();
         $this->backfillShiftPlanRequestShifts();
+        $this->backfillShiftWorkerAssignedBy();
         $this->generateInventoryArticleThumbnails();
         $this->warnAboutSynchronousQueue();
 
@@ -110,6 +111,14 @@ class UpdateArtwork extends Command
         // Einmaliger Reparatur-Lauf für Anfragen, die unter dem alten Auswahl-Bug erstellt wurden.
         // --once stellt sicher, dass der Lauf nur einmal pro Umgebung erfolgt (nicht bei jedem Deploy).
         $this->call('shift-plan-requests:backfill', ['--once' => true]);
+    }
+
+    private function backfillShiftWorkerAssignedBy(): void
+    {
+        $this->section('Shift Worker Assigned-By Backfill');
+        // Trägt Zuweisende aus dem Schichtverlauf nach, damit Konflikthinweise nicht
+        // ersatzweise den Festschreibenden als einteilende Person nennen.
+        $this->call('artwork:shift-workers:backfill-assigned-by', ['--once' => true]);
     }
 
     private function migrateChangesHistoryToActivityLog(): void

@@ -8011,5 +8011,8 @@
     "Green pill: the person accepted the shift, red pill: the person declined, blue pill: requested, no reply yet. Only for people with the permission \"Accept or decline shifts\". Details and comment in the hover text.": "Grüne Pille: die Person hat zugesagt, rote Pille: die Person hat abgesagt, blaue Pille: angefragt, noch keine Antwort. Nur bei Personen mit dem Recht „Darf Schichten annehmen/ablehnen“. Details und Kommentar im Hover-Text.",
     "The person remains scheduled until the plan is changed.": "Die Person bleibt eingeplant, bis der Plan geändert wird.",
     "Can accept or decline own shift assignments": "Kann eigene Schichtzuweisungen zu- oder absagen",
-    "Accept or decline own shifts (also provisional ones), optionally with a comment": "Eigene Schichten zu- oder absagen (auch vorläufige), optional mit Kommentar"
+    "Accept or decline own shifts (also provisional ones), optionally with a comment": "Eigene Schichten zu- oder absagen (auch vorläufige), optional mit Kommentar",
+    "You are scheduled on {date} {start} - {end}, contrary to your original entry. Who made the assignment was not recorded; the shift was committed by {username}.": "Du bist am {date} {start} - {end} eingeteilt, entgegen deines ursprünglichen Eintrags. Wer die Einteilung vorgenommen hat, ist nicht gespeichert; festgeschrieben wurde die Schicht von {username}.",
+    "You are scheduled on {date} {start} - {end}, contrary to your original entry. Who made the assignment was not recorded.": "Du bist am {date} {start} - {end} eingeteilt, entgegen deines ursprünglichen Eintrags. Wer die Einteilung vorgenommen hat, ist nicht gespeichert.",
+    "Assignment made on {date}.": "Zuweisung erfolgte am {date}."
 }

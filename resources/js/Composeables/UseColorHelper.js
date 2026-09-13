@@ -47,17 +47,27 @@ export function useColorHelper() {
         return isDark ? '#FFFFFF' : '#000000';
     }
 
-    // Schrift auf Farbfläche: weiß nur auf wirklich dunklen Tönen. Wahrgenommene Helligkeit
-    // (0.299/0.587/0.114) mit Schwelle 150 — dieselbe Regel wie Spielplan-PDF und Tagesdienst-Bälle.
-    // Die frühere Schwelle (Luminanz 0,5) stufte mittlere Rot-/Blautöne bei „Hoher Kontrast" schon als
-    // dunkel ein und setzte weiße Schrift auf eigentlich helle Flächen (Befund Jannik 13.09.2026).
+    // Schrift auf Farbfläche: Weiß nur, wenn Weiß nach WCAG den höheren Kontrast hat als Schwarz.
+    // Kontrast = (L_hell + 0,05) / (L_dunkel + 0,05); der Vergleich kippt bei relativer Luminanz
+    // L ≈ 0,179 (sqrt(0,0525) − 0,05). Darunter gewinnt Weiß, darüber Schwarz. Dieselbe Regel wie
+    // Spielplan-PDF und Tagesdienst-Bälle. Die frühere Helligkeitsschwelle 150 (0.299/0.587/0.114)
+    // setzte auf mittleren Blau-/Türkis-/Pinktönen bei „Hoher Kontrast" noch weiße Schrift, obwohl
+    // Schwarz dort den doppelten Kontrast hat (Befund Jannik 13.09.2026, Tagesansicht Dienstplan).
     // Versteht rgb()/rgba() und Hex (#rgb, #rrggbb, #rrggbbaa — Alpha wird gegen Weiß verrechnet).
-    const DARK_BRIGHTNESS_THRESHOLD = 150;
+    const DARK_LUMINANCE_THRESHOLD = 0.179;
     function isDarkColor(color) {
         const rgb = parseColorToRgb(color);
         if (!rgb) return false;
-        const [r, g, b] = rgb;
-        return (0.299 * r + 0.587 * g + 0.114 * b) < DARK_BRIGHTNESS_THRESHOLD;
+        return relativeLuminance(rgb) < DARK_LUMINANCE_THRESHOLD;
+    }
+
+    // WCAG 2.x relative Luminanz (sRGB-Gamma), 0 = Schwarz, 1 = Weiß
+    function relativeLuminance([r, g, b]) {
+        const [lr, lg, lb] = [r, g, b].map((v) => {
+            const c = v / 255;
+            return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+        });
+        return 0.2126 * lr + 0.7152 * lg + 0.0722 * lb;
     }
 
     function parseColorToRgb(color) {

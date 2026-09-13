@@ -47,14 +47,45 @@ export function useColorHelper() {
         return isDark ? '#FFFFFF' : '#000000';
     }
 
+    // Schrift auf Farbfläche: weiß nur auf wirklich dunklen Tönen. Wahrgenommene Helligkeit
+    // (0.299/0.587/0.114) mit Schwelle 150 — dieselbe Regel wie Spielplan-PDF und Tagesdienst-Bälle.
+    // Die frühere Schwelle (Luminanz 0,5) stufte mittlere Rot-/Blautöne bei „Hoher Kontrast" schon als
+    // dunkel ein und setzte weiße Schrift auf eigentlich helle Flächen (Befund Jannik 13.09.2026).
+    // Versteht rgb()/rgba() und Hex (#rgb, #rrggbb, #rrggbbaa — Alpha wird gegen Weiß verrechnet).
+    const DARK_BRIGHTNESS_THRESHOLD = 150;
     function isDarkColor(color) {
-        if (color.startsWith('rgb')) {
-            const rgb = color.match(/\d+/g).map(Number);
-            const [r, g, b] = rgb;
-            const luminance = (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255;
-            return luminance < 0.5;
+        const rgb = parseColorToRgb(color);
+        if (!rgb) return false;
+        const [r, g, b] = rgb;
+        return (0.299 * r + 0.587 * g + 0.114 * b) < DARK_BRIGHTNESS_THRESHOLD;
+    }
+
+    function parseColorToRgb(color) {
+        if (typeof color !== 'string' || color === '') return null;
+        const value = color.trim();
+        if (value.startsWith('rgb')) {
+            const parts = value.match(/[\d.]+/g)?.map(Number) ?? [];
+            if (parts.length < 3) return null;
+            const alpha = parts.length >= 4 ? Math.min(1, Math.max(0, parts[3])) : 1;
+            return blendOverWhite(parts[0], parts[1], parts[2], alpha);
         }
-        return false;
+        let hex = value.replace(/^#/, '');
+        if (hex.length === 3) hex = hex.split('').map((c) => c + c).join('');
+        if (!/^[0-9a-f]{6}([0-9a-f]{2})?$/i.test(hex)) return null;
+        const r = parseInt(hex.slice(0, 2), 16);
+        const g = parseInt(hex.slice(2, 4), 16);
+        const b = parseInt(hex.slice(4, 6), 16);
+        const alpha = hex.length === 8 ? parseInt(hex.slice(6, 8), 16) / 255 : 1;
+        return blendOverWhite(r, g, b, alpha);
+    }
+
+    function blendOverWhite(r, g, b, alpha) {
+        if (alpha >= 1) return [r, g, b];
+        return [
+            Math.round((1 - alpha) * 255 + alpha * r),
+            Math.round((1 - alpha) * 255 + alpha * g),
+            Math.round((1 - alpha) * 255 + alpha * b),
+        ];
     }
 
     // former ColorHelper mixin: WCAG-gamma luminance (handles hex and rgb strings)

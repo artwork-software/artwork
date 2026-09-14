@@ -1866,7 +1866,7 @@ readonly class EventService
         $desiredProjectHasNoEvents = $useProjectTimePeriod && !$startDate && !$endDate;
 
         $eventManagementDto = EventManagementDto::newInstance()
-            ->setEventTypes(EventTypeResource::collection($eventTypeService->getAll())->resolve())
+            ->setEventTypes(EventTypeResource::collection($eventTypeService->getAllWithVerifiers())->resolve())
             ->setDateValue(
                 $desiredProjectHasNoEvents ?
                     [] :

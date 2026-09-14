@@ -13,6 +13,15 @@ class EventTypeRepository extends BaseRepository
         return EventType::all();
     }
 
+    /**
+     * Für EventTypeResource (liefert die Verifizierer je Terminart mit) — ohne
+     * Eager-Load eine event_type_user-Query je Terminart.
+     */
+    public function getAllWithVerifiers(): Collection
+    {
+        return EventType::query()->with('verifiers')->get();
+    }
+
     public function getById(int $id): ?EventType
     {
         return EventType::find($id);

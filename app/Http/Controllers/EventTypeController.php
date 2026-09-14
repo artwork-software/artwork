@@ -19,7 +19,7 @@ class EventTypeController extends Controller
     public function index(): Response|ResponseFactory
     {
         return inertia('Settings/EventSettings', [
-            'event_types' => EventTypeResource::collection(EventType::all())->resolve(),
+            'event_types' => EventTypeResource::collection(EventType::query()->with('verifiers')->get())->resolve(),
         ]);
     }
 
@@ -27,7 +27,7 @@ class EventTypeController extends Controller
     public function biTags(): Response|ResponseFactory
     {
         return inertia('Settings/EventBiTags/Index', [
-            'event_types' => EventTypeResource::collection(EventType::all())->resolve(),
+            'event_types' => EventTypeResource::collection(EventType::query()->with('verifiers')->get())->resolve(),
         ]);
     }
 

@@ -185,7 +185,7 @@ class NotificationController extends Controller
             'notificationCounts' => $this->getNotificationCountsByGroup($user),
             'globalNotification' => $globalNotificationService->getGlobalNotificationEnrichedByImageUrl(),
             'rooms' => RoomIndexWithoutEventsResource::collection(Room::all())->resolve(),
-            'eventTypes' => EventTypeResource::collection(EventType::all())->resolve(),
+            'eventTypes' => EventTypeResource::collection(EventType::query()->with('verifiers')->get())->resolve(),
             'projects' => NotificationProjectResource::collection(
                 Project::select([
                     'id', 'name', 'shift_description',

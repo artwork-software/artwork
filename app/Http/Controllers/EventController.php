@@ -1409,7 +1409,7 @@ class EventController extends Controller
             'notificationCount' => $notification->count(),
             'notificationOfToday' => $notification->take(5)->get(),
             'event' => $event !== null ? new CalendarEventResource($event) : null,
-            'eventTypes' => EventTypeResource::collection(EventType::all())->resolve(),
+            'eventTypes' => EventTypeResource::collection(EventType::query()->with('verifiers')->get())->resolve(),
             'rooms' => Room::select(['id', 'name', 'area_id', 'order'])->get(),
             'projects' => Project::select(['id', 'name'])->get(),
             'historyObjects' => $historyObjects,

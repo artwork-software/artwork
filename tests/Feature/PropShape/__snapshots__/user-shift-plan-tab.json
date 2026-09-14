@@ -1,0 +1,212 @@
+{
+    "availabilities": "[]",
+    "crafts": {
+        "[]": {
+            "abbreviation": ".",
+            "color": ".",
+            "craft_shift_planer": {
+                "[]": {
+                    "business": ".",
+                    "first_name": ".",
+                    "full_name": ".",
+                    "id": ".",
+                    "last_name": ".",
+                    "position": ".",
+                    "profile_photo_url": ".",
+                    "type": "."
+                }
+            },
+            "id": ".",
+            "name": ".",
+            "position": ".",
+            "universally_applicable": "."
+        }
+    },
+    "daysWithData": {
+        "[]": {
+            "comments": "[]",
+            "date": ".",
+            "dayServices": "[]",
+            "holidays": "[]",
+            "individualTimes": "[]",
+            "shifts": {
+                "[]": {
+                    "break_minutes": ".",
+                    "craft": {
+                        "abbreviation": ".",
+                        "color": ".",
+                        "craft_shift_planer": {
+                            "[]": {
+                                "business": ".",
+                                "first_name": ".",
+                                "full_name": ".",
+                                "id": ".",
+                                "last_name": ".",
+                                "position": ".",
+                                "profile_photo_url": ".",
+                                "type": "."
+                            }
+                        },
+                        "id": ".",
+                        "name": "."
+                    },
+                    "description": ".",
+                    "end": ".",
+                    "event": {
+                        "end_time": ".",
+                        "eventName": ".",
+                        "event_type_id": ".",
+                        "id": ".",
+                        "name": ".",
+                        "project": {
+                            "auth_user_in_team": ".",
+                            "groups": {
+                                "[]": {
+                                    "icon": ".",
+                                    "id": ".",
+                                    "name": ".",
+                                    "users": "[]"
+                                }
+                            },
+                            "icon": ".",
+                            "id": ".",
+                            "is_group": ".",
+                            "name": "."
+                        },
+                        "room": {
+                            "id": ".",
+                            "name": "."
+                        },
+                        "start_time": "."
+                    },
+                    "id": ".",
+                    "in_workflow": ".",
+                    "is_committed": ".",
+                    "name": ".",
+                    "plannedWorkingHours": ".",
+                    "project": {
+                        "auth_user_in_team": ".",
+                        "groups": {
+                            "[]": {
+                                "icon": ".",
+                                "id": ".",
+                                "name": ".",
+                                "users": "[]"
+                            }
+                        },
+                        "icon": ".",
+                        "id": ".",
+                        "is_group": ".",
+                        "name": "."
+                    },
+                    "projectGroups": {
+                        "[]": {
+                            "icon": ".",
+                            "id": ".",
+                            "name": ".",
+                            "users": "[]"
+                        }
+                    },
+                    "projectIsGroup": ".",
+                    "projectIsInGroup": ".",
+                    "room": {
+                        "id": ".",
+                        "name": "."
+                    },
+                    "shiftQualifications": {
+                        "[]": {
+                            "created_at": ".",
+                            "deleted_at": ".",
+                            "id": ".",
+                            "overbooked_value": ".",
+                            "shift_id": ".",
+                            "shift_qualification_id": ".",
+                            "updated_at": ".",
+                            "value": "."
+                        }
+                    },
+                    "start": ".",
+                    "worker_unavailable_status": ".",
+                    "workers": {
+                        "[]": {
+                            "confirmation_eligible": ".",
+                            "first_name": ".",
+                            "id": ".",
+                            "last_name": ".",
+                            "name": ".",
+                            "pivot": {
+                                "confirmation_at": ".",
+                                "confirmation_by_user_id": ".",
+                                "confirmation_comment": ".",
+                                "confirmation_reset_at": ".",
+                                "confirmation_status": ".",
+                                "craft_abbreviation": ".",
+                                "employable_id": ".",
+                                "employable_type": ".",
+                                "end_date": ".",
+                                "end_time": ".",
+                                "id": ".",
+                                "is_overbooked": ".",
+                                "shift_id": ".",
+                                "shift_qualification_id": ".",
+                                "shift_qualification_name": ".",
+                                "short_description": ".",
+                                "start_date": ".",
+                                "start_time": "."
+                            },
+                            "profile_photo_url": ".",
+                            "provider_name": ".",
+                            "type": "."
+                        }
+                    }
+                }
+            },
+            "totalBreakTime": ".",
+            "totalWorkTime": ".",
+            "unavailableAssignment": ".",
+            "violations": "[]"
+        }
+    },
+    "user_to_edit": {
+        "business": ".",
+        "can_work_shifts": ".",
+        "crafts": "[]",
+        "departments": "[]",
+        "description": ".",
+        "email": ".",
+        "email_private": ".",
+        "employEnd": ".",
+        "employStart": ".",
+        "first_name": ".",
+        "id": ".",
+        "language": ".",
+        "last_name": ".",
+        "permissions": "[]",
+        "phone_number": ".",
+        "phone_private": ".",
+        "position": ".",
+        "profile_photo_url": ".",
+        "pronouns": ".",
+        "resource": ".",
+        "roles": "[]",
+        "salary_description": ".",
+        "salary_per_hour": ".",
+        "temporary": ".",
+        "use_chat": ".",
+        "weekly_working_hours": ".",
+        "work_description": ".",
+        "work_name": "."
+    },
+    "vacations": "[]",
+    "workTimeTarget": {
+        "actual_formatted": ".",
+        "actual_minutes": ".",
+        "days": ".",
+        "days_without_pattern": ".",
+        "difference_minutes": ".",
+        "difference_signed": ".",
+        "target_formatted": ".",
+        "target_minutes": ".",
+        "target_unknown": "."
+    }
+}

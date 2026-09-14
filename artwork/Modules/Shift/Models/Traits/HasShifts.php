@@ -115,6 +115,21 @@ trait HasShifts
         return $this->morphToMany(Craft::class, 'craft_manager');
     }
 
+    /**
+     * Nur die IDs der zugeordneten Gewerke vorladen, damit der `assigned_craft_ids`-Accessor
+     * (bei Freelancer/ServiceProvider in $appends) beim Serialisieren einer Liste keine
+     * craftables-Query je Zeile nachschiebt. Craft::$with (craftShiftPlaner) und die
+     * Relations-Vorladung `qualifications` werden bewusst ausgelassen.
+     */
+    public function scopeWithAssignedCraftIds(Builder $query): Builder
+    {
+        return $query->with([
+            'assignedCrafts' => static fn (MorphToMany $relation) => $relation
+                ->without(['craftShiftPlaner', 'qualifications'])
+                ->select('crafts.id'),
+        ]);
+    }
+
     public function getAssignedCraftIdsAttribute(): array
     {
         // Wenn assignedCrafts bereits geladen ist, verwende die Collection

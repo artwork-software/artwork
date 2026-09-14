@@ -312,8 +312,9 @@ class UserController extends Controller
             'roles' => $userService->getAuthUser()->hasRole(RoleEnum::ARTWORK_ADMIN->value)
                 ? Role::query()->whereIn('name', array_column(RoleEnum::cases(), 'value'))->get()
                 : [],
-            'freelancers' => Freelancer::all(),
-            'serviceProviders' => ServiceProvider::query()->without('contacts')->get(),
+            // withAssignedCraftIds: sonst je Freelancer/Dienstleister eine craftables-Query beim Serialisieren
+            'freelancers' => Freelancer::query()->withAssignedCraftIds()->get(),
+            'serviceProviders' => ServiceProvider::query()->without('contacts')->withAssignedCraftIds()->get(),
             'permission_presets' => $permissionPresetService->getPermissionPresets()
                 ->map(static fn ($preset): array => [
                     'id' => $preset->id,

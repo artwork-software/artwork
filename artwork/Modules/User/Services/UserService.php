@@ -218,7 +218,11 @@ class UserService
 
         return UserShiftPlanPageDto::newInstance()
             ->setUserToEdit(UserShowResource::make($user))
-            ->setCrafts(static fn() => Craft::all())
+            // Nur die Lookup-Felder der Einsatzplan-Karte; Craft::all() zieht sonst
+            // je Gewerk die craftShiftPlaner-User mit ($with)
+            ->setCrafts(static fn() => Craft::query()
+                ->without(['craftShiftPlaner'])
+                ->get(['id', 'name', 'abbreviation', 'color']))
             ->setCurrentTab('shiftplan')
             ->setCalendarData($calendarData)
             ->setDateToShow($dateToShow)

@@ -55,8 +55,9 @@ class ProjectTabShiftService
             'shift_contacts' => $project->shift_contact,
             'project_managers' => $project->managerUsers,
             'shiftDescription' => $project->shift_description,
-            'freelancers' => Freelancer::all(),
-            'serviceProviders' => ServiceProvider::without(['contacts'])->get(),
+            // withAssignedCraftIds: sonst je Freelancer/Dienstleister eine craftables-Query beim Serialisieren
+            'freelancers' => Freelancer::query()->withAssignedCraftIds()->get(),
+            'serviceProviders' => ServiceProvider::query()->without(['contacts'])->withAssignedCraftIds()->get(),
             // Ergänzt für ShiftPlanDailyView/AddShiftModal im Schichttab
             'globalQualifications' => $this->globalQualificationService->getAll(),
             'shiftGroups' => $this->shiftGroupService->getAllShiftGroups(),

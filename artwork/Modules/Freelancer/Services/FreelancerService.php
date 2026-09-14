@@ -240,7 +240,8 @@ readonly class FreelancerService
                     $endOfWeek
                 )
             )
-            ->setCrafts(static fn() => Craft::all())
+            // Nur die Lookup-Felder der Einsatzplan-Karte (wie UserService)
+            ->setCrafts(static fn() => Craft::query()->without(['craftShiftPlaner'])->get(['id', 'name', 'abbreviation', 'color']))
             ->setRooms(static fn() => $roomService->getAllWithoutTrashed())
             ->setEventTypes(static fn() => EventTypeResource::collection($eventTypeService->getAll())->resolve())
             ->setProjects(static fn() => $projectService->getAll())

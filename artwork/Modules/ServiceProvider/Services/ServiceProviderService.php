@@ -165,7 +165,8 @@ readonly class ServiceProviderService
             )
             // Einsatzplan-Daten pro Tag – wurden bisher berechnet, aber nie ans Frontend gegeben
             ->setDaysWithData($daysWithData)
-            ->setCrafts(Craft::all())
+            // Nur die Lookup-Felder der Einsatzplan-Karte (wie UserService)
+            ->setCrafts(Craft::query()->without(['craftShiftPlaner'])->get(['id', 'name', 'abbreviation', 'color']))
             ->setRooms($roomService->getAllWithoutTrashed())
             ->setEventTypes($eventTypeService->getAll())
             ->setProjects($projectService->getAll())

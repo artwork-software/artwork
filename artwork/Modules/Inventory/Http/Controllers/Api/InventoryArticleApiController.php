@@ -55,7 +55,15 @@ class InventoryArticleApiController extends Controller
     public function show(InventoryArticle $article): JsonResponse
     {
         // Load relationships
-        $article->load(['properties', 'category', 'subCategory', 'images', 'detailedArticleQuantities.status', 'statusValues']);
+        $article->load([
+            'properties',
+            'category',
+            'subCategory',
+            'images',
+            'detailedArticleQuantities.status',
+            'detailedArticleQuantities.properties',
+            'statusValues',
+        ]);
 
         // Transform to DTO
         $articleDTO = InventoryArticleDTO::fromModel($article);

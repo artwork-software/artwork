@@ -7,6 +7,7 @@ use Artwork\Modules\Crm\Models\CrmContactType;
 use Artwork\Modules\Inventory\Models\InventoryArticle;
 use Artwork\Modules\Inventory\Models\InventoryArticleProperties;
 use Artwork\Modules\Inventory\Models\InventoryCategory;
+use Artwork\Modules\Inventory\Models\InventoryDetailedQuantityArticle;
 use Artwork\Modules\Room\Models\Room;
 use Illuminate\Support\Facades\DB;
 use PHPUnit\Framework\Attributes\Test;
@@ -131,6 +132,54 @@ final class InventoryArticleLookupPreloadTest extends FeatureTestCase
         $this->assertSame(['crm' => 0, 'rooms' => 0], $queries, 'Serialisierung nach Preload ohne Queries');
         $this->assertSame('Hersteller 0', $payload[0]['articles'][0]['manufacturer']['name']);
         $this->assertSame('Raum 0', $payload[0]['articles'][0]['room']['name']);
+    }
+
+    /**
+     * Detail-Artikel (detailedArticleQuantities) haben dieselben $appends; ihre Lookups laufen
+     * über denselben Cache und werden mit den Artikeln zusammen vorgeladen — vorher eine
+     * properties-Query je Detail-Artikel (/inventory/articles: 42 bei 15 Artikeln).
+     */
+    #[Test]
+    public function detailed_quantities_share_the_preloaded_lookups(): void
+    {
+        $article = InventoryArticle::factory()->create();
+        for ($i = 0; $i < self::ROWS; $i++) {
+            $detail = InventoryDetailedQuantityArticle::query()->create([
+                'inventory_article_id' => $article->id,
+                'name' => 'Detail ' . $i,
+                'quantity' => 1,
+                'external_id' => 'ext-' . $i,
+                'inventory_number' => 'inv-' . $i,
+            ]);
+            $detail->properties()->attach($this->manufacturerProperty->id, ['value' => $this->manufacturers[$i]->id]);
+            $detail->properties()->attach($this->roomProperty->id, ['value' => $this->rooms[$i]->id]);
+        }
+
+        $articles = InventoryArticle::query()
+            ->with(['properties', 'detailedArticleQuantities.properties'])
+            ->whereKey($article->id)
+            ->get();
+
+        DB::flushQueryLog();
+        DB::enableQueryLog();
+        $payload = $articles->toArray();
+        $log = DB::getQueryLog();
+        DB::disableQueryLog();
+
+        $propertyQueries = count(array_filter(
+            $log,
+            fn (array $q) => str_contains($q['query'], 'inventory_article_properties')
+        ));
+        $this->assertSame(0, $propertyQueries, 'properties der Detail-Artikel sind vorgeladen');
+        $this->assertSame(1, count(array_filter($log, fn (array $q) => str_contains($q['query'], 'crm_contacts'))));
+        $this->assertSame(1, count(array_filter($log, fn (array $q) => str_contains($q['query'], 'from `rooms`'))));
+
+        $details = $payload[0]['detailed_article_quantities'];
+        $this->assertCount(self::ROWS, $details);
+        foreach ($details as $i => $detail) {
+            $this->assertSame('Hersteller ' . $i, $detail['manufacturer']['name']);
+            $this->assertSame('Raum ' . $i, $detail['room']['name']);
+        }
     }
 
     #[Test]

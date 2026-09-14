@@ -212,10 +212,8 @@ class InventoryArticle extends Model
         if ($depth > 6) {
             return;
         }
-        if ($value instanceof self) {
+        if ($value instanceof self || $value instanceof InventoryDetailedQuantityArticle) {
             $articles[] = $value;
-
-            return;
         }
         if ($value instanceof Model) {
             foreach ($value->getRelations() as $relation) {
@@ -231,12 +229,18 @@ class InventoryArticle extends Model
         }
     }
 
+    /**
+     * @param iterable<int, InventoryArticle|InventoryDetailedQuantityArticle> $articles
+     */
     public static function preloadPropertyLookups(iterable $articles): void
     {
         $roomIds = [];
         $manufacturerIds = [];
         foreach ($articles as $article) {
-            if (!$article instanceof self || !$article->relationLoaded('properties')) {
+            if (
+                !($article instanceof self || $article instanceof InventoryDetailedQuantityArticle)
+                || !$article->relationLoaded('properties')
+            ) {
                 continue;
             }
             foreach ($article->properties as $property) {
@@ -278,6 +282,29 @@ class InventoryArticle extends Model
         }
     }
 
+    /** Raum aus dem Cache (bei Bedarf einzeln nachgeladen) — auch für Detail-Artikel */
+    public static function resolveRoom(int|string $roomId): ?Room
+    {
+        if (!array_key_exists($roomId, self::$roomCache)) {
+            self::$roomCache[$roomId] = Room::query()
+                ->without(['admins', 'creator'])
+                ->select('id', 'name')
+                ->find($roomId);
+        }
+
+        return self::$roomCache[$roomId];
+    }
+
+    /** Hersteller aus dem Cache (bei Bedarf einzeln nachgeladen) — auch für Detail-Artikel */
+    public static function resolveManufacturer(int|string $manufacturerId): ?CrmContact
+    {
+        if (!array_key_exists($manufacturerId, self::$manufacturerCache)) {
+            self::$manufacturerCache[$manufacturerId] = CrmContact::select('id', 'display_name')->find($manufacturerId);
+        }
+
+        return self::$manufacturerCache[$manufacturerId];
+    }
+
     public function getRoomAttribute(): ?array
     {
         $roomProperty = $this->properties->firstWhere('type', 'room');
@@ -286,16 +313,7 @@ class InventoryArticle extends Model
             return null;
         }
 
-        $roomId = $roomProperty->pivot->value;
-
-        if (!array_key_exists($roomId, self::$roomCache)) {
-            self::$roomCache[$roomId] = Room::query()
-                ->without(['admins', 'creator'])
-                ->select('id', 'name')
-                ->find($roomId);
-        }
-
-        $room = self::$roomCache[$roomId];
+        $room = self::resolveRoom($roomProperty->pivot->value);
 
         if (!$room) {
             return null;
@@ -316,13 +334,7 @@ class InventoryArticle extends Model
             return null;
         }
 
-        $manufacturerId = $manufacturerProperty->pivot->value;
-
-        if (!array_key_exists($manufacturerId, self::$manufacturerCache)) {
-            self::$manufacturerCache[$manufacturerId] = CrmContact::select('id', 'display_name')->find($manufacturerId);
-        }
-
-        $manufacturer = self::$manufacturerCache[$manufacturerId];
+        $manufacturer = self::resolveManufacturer($manufacturerProperty->pivot->value);
 
         if (!$manufacturer) {
             return null;

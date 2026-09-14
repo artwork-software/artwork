@@ -9,7 +9,8 @@ use Illuminate\Database\Eloquent\Collection;
  * $appends (`room`, `manufacturer`) für alle Artikel auf einmal lädt — die Accessoren
  * fragten sonst je unterschiedlichem Hersteller/Raum einzeln nach (Inventarübersicht:
  * 55 crm_contacts-Queries). Greift überall, wo Artikel als Collection oder Relation
- * serialisiert werden (Inertia-Props, Resources, JSON-Antworten).
+ * serialisiert werden (Inertia-Props, Resources, JSON-Antworten) — inklusive der
+ * geladenen Detail-Artikel (detailedArticleQuantities) mit denselben $appends.
  *
  * @extends Collection<int, InventoryArticle>
  */
@@ -17,14 +18,14 @@ class InventoryArticleCollection extends Collection
 {
     public function toArray(): array
     {
-        InventoryArticle::preloadPropertyLookups($this);
+        InventoryArticle::preloadPropertyLookupsDeep($this);
 
         return parent::toArray();
     }
 
     public function jsonSerialize(): array
     {
-        InventoryArticle::preloadPropertyLookups($this);
+        InventoryArticle::preloadPropertyLookupsDeep($this);
 
         return parent::jsonSerialize();
     }

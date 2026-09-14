@@ -294,8 +294,18 @@ class InventoryArticleController extends Controller
         }
 
         return response()->json([
-            'articles' => $articlesByFilter->with(['category', 'subCategory', 'detailedArticleQuantities.status', 'images', 'statusValues', 'properties', 'tags'])
-                ->paginate(15)
+            // detailedArticleQuantities.properties: die $appends room/manufacturer der Detail-Artikel
+            // lasen properties sonst je Detail-Artikel nach (42 Queries bei 15 Artikeln)
+            'articles' => $articlesByFilter->with([
+                'category',
+                'subCategory',
+                'detailedArticleQuantities.status',
+                'detailedArticleQuantities.properties',
+                'images',
+                'statusValues',
+                'properties',
+                'tags',
+            ])->paginate(15)
         ]);
     }
 

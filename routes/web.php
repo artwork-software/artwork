@@ -118,6 +118,7 @@ use App\Http\Controllers\ToolSettingsCommunicationAndLegalController;
 use App\Http\Controllers\ToolSettingsExternalUserManagementController;
 use App\Http\Controllers\ToolSettingsInterfacesController;
 use Artwork\Modules\AiAssistant\Http\Controllers\AiAssistantSettingsController;
+use Artwork\Modules\AiAssistant\Http\Controllers\AiSessionController;
 use Artwork\Modules\ExternalUserManagement\Http\Controllers\ExternalUserGroupMappingController;
 use Artwork\Modules\ExternalUserManagement\Http\Controllers\ExternalUserSourceController;
 use Artwork\Modules\Mail\Http\Controllers\MailSettingsController;
@@ -223,6 +224,12 @@ Route::middleware(['guest', 'throttle:20,1'])->group(function (): void {
 });
 
 Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
+
+    // KI-Session-Token. throttle:ai-session steht nach der Auth-Gruppe, weil das Limit auf die
+    // User-ID gekeyed ist — vorher waere der User noch nicht aufgeloest.
+    Route::post('/ai/session', [AiSessionController::class, 'store'])
+        ->middleware('throttle:ai-session')
+        ->name('ai.session.store');
 
     // Workflow routes - only accessible via direct URL
     Route::group(['prefix' => 'workflow', 'middleware' => 'role:artwork admin'], function (): void {

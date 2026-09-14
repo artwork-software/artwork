@@ -1,5 +1,6 @@
 <?php
 
+use Artwork\Modules\AiAssistant\Http\Controllers\JwksController;
 use Artwork\Modules\Inventory\Http\Controllers\Api\InventoryArticleApiController;
 use Artwork\Modules\Inventory\Http\Controllers\Api\InventoryCategoryApiController;
 use Illuminate\Support\Facades\Route;
@@ -22,6 +23,12 @@ use Laravel\Passport\Http\Middleware\CheckToken;
 | Middleware-Name und Parameter am ersten Doppelpunkt.
 |
 */
+
+// JWKS: bewusst ohne auth:api — der Schlüssel ist öffentlich, und artwork-ai muss ihn holen können,
+// bevor es ein Token verifizieren kann. ApiAccessLog schreibt hier nichts (kein Bearer-Header).
+Route::middleware('throttle:60,1')
+    ->get('/ai/jwks', JwksController::class)
+    ->name('api.v1.ai.jwks');
 
 Route::middleware(['auth:api', 'throttle:machine-api'])->group(function (): void {
     Route::middleware(CheckToken::using('inventory:read'))->group(function (): void {

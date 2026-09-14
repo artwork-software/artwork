@@ -182,6 +182,21 @@ final class InventoryArticleLookupPreloadTest extends FeatureTestCase
         }
     }
 
+    /** Cache je Prozess: nach Umbenennung eines Herstellers/Raums muss der neue Name erscheinen */
+    #[Test]
+    public function renaming_a_manufacturer_or_room_invalidates_the_lookup_cache(): void
+    {
+        $articles = $this->articlesWithLookups();
+        $this->assertSame('Hersteller 0', $articles->toArray()[0]['manufacturer']['name']);
+        $this->assertSame('Raum 0', $articles->toArray()[0]['room']['name']);
+
+        $this->manufacturers[0]->update(['display_name' => 'Umbenannt GmbH']);
+        $this->rooms[0]->update(['name' => 'Neuer Raum']);
+
+        $this->assertSame('Umbenannt GmbH', $articles->toArray()[0]['manufacturer']['name']);
+        $this->assertSame('Neuer Raum', $articles->toArray()[0]['room']['name']);
+    }
+
     #[Test]
     public function unknown_lookup_values_resolve_to_null_without_repeated_queries(): void
     {

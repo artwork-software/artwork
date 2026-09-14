@@ -262,10 +262,23 @@ class Project extends Model
         return $this->hasMany(Comment::class, 'project_id', 'id');
     }
 
+    /** @var array<string, bool> Pivot-Tabelle => hat Spalte is_main (einmal je Prozess ermittelt) */
+    private static array $pivotHasIsMain = [];
+
+    /**
+     * Die is_main-Guards stammen aus der Migrations-Reparatur nach dem Squash; Schema::hasColumn
+     * fragt aber bei JEDEM Aufruf information_schema ab, und die Relation wird je Projekt neu
+     * instanziiert (Planungskalender: 30 Schema-Queries je Seitenaufruf). Deshalb einmal merken.
+     */
+    private static function pivotHasIsMain(string $table): bool
+    {
+        return self::$pivotHasIsMain[$table] ??= Schema::hasColumn($table, 'is_main');
+    }
+
     public function sectors(): BelongsToMany
     {
         $relation = $this->belongsToMany(Sector::class);
-        if (Schema::hasColumn('project_sector', 'is_main')) {
+        if (self::pivotHasIsMain('project_sector')) {
             $relation->withPivot('is_main');
         }
         return $relation;
@@ -274,7 +287,7 @@ class Project extends Model
     public function categories(): BelongsToMany
     {
         $relation = $this->belongsToMany(Category::class);
-        if (Schema::hasColumn('category_project', 'is_main')) {
+        if (self::pivotHasIsMain('category_project')) {
             $relation->withPivot('is_main');
         }
         return $relation;
@@ -283,7 +296,7 @@ class Project extends Model
     public function genres(): BelongsToMany
     {
         $relation = $this->belongsToMany(Genre::class);
-        if (Schema::hasColumn('genre_project', 'is_main')) {
+        if (self::pivotHasIsMain('genre_project')) {
             $relation->withPivot('is_main');
         }
         return $relation;

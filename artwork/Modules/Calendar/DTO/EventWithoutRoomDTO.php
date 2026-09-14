@@ -91,7 +91,11 @@ class EventWithoutRoomDTO extends Data
             subEvents: self::serializeSubEvents($event),
             option_string: $event->option_string,
             isPlanning: $event->is_planning ?? false,
-            hasVerification: $event->getAttribute('has_verification') ?? false,
+            // withExists('verifications as has_pending_verification') bevorzugen — der
+            // has_verification-Accessor schiebt sonst je Termin eine Exists-Query nach
+            hasVerification: $event->getAttribute('has_pending_verification') !== null
+                ? (bool) $event->getAttribute('has_pending_verification')
+                : ($event->getAttribute('has_verification') ?? false),
         );
     }
 

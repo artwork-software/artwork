@@ -15,6 +15,8 @@ use Artwork\Modules\Budget\Services\MainPositionService;
 use Artwork\Modules\Budget\Services\TableService;
 use Artwork\Modules\Budget\Services\BudgetColumnSettingService;
 use Artwork\Modules\Calendar\DTO\EventWithoutRoomDTO;
+use Artwork\Modules\User\Models\UserCalendarSettings;
+use Artwork\Modules\User\Models\UserDailyViewCalendarSettings;
 use Artwork\Modules\Calendar\DTO\RoomDTO;
 use Artwork\Modules\Calendar\Services\CalendarDataService;
 use Artwork\Modules\Calendar\Services\EventCalendarService;
@@ -394,27 +396,7 @@ class EventController extends Controller
                 // map-Closure und damit einmal pro raumlosem Event (N+1).
                 $eventTypes = EventType::select(['id', 'name', 'abbreviation', 'hex_code'])->get()->keyBy('id');
 
-                return Event::query()
-                    ->hasNoRoom()
-                    ->with([
-                        // Alles, was EventWithoutRoomDTO/ProjectDTO lazy lesen würde
-                        'project:id,name,state,artists,is_group,color,icon',
-                        'project.status:id,name,color',
-                        'project.managerUsers:id,first_name,last_name,position,email,profile_photo_path',
-                        'project.groups',
-                        'project.users:id',
-                        'project.categories',
-                        'creator:id,first_name,last_name,position,email,profile_photo_path',
-                        'eventStatus:id,name,color',
-                        'eventProperties',
-                        'subEvents' => fn ($query) => $query->without('creator'),
-                    ])
-                    ->get()
-                    ->map(fn ($event) => \Artwork\Modules\Calendar\DTO\EventWithoutRoomDTO::formModel(
-                        $event,
-                        $userCalendarSettings,
-                        $eventTypes
-                    ));
+                return $this->eventsWithoutRoomForCalendar($userCalendarSettings, $eventTypes);
             },
             'areas'            => fn () => $this->areaService->getAll(),
             'eventTypes'       => fn () => EventType::select(
@@ -535,6 +517,38 @@ class EventController extends Controller
     }
 
     //phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.FoundInExtendedClassBeforeLastUsed
+    /**
+     * Raumlose Termine für Kalender und Planungskalender mit allem, was
+     * EventWithoutRoomDTO/ProjectDTO sonst je Termin lazy nachladen würden
+     * (Planungskalender vorher: 326 Queries je Seitenaufruf).
+     *
+     * @param \Illuminate\Support\Collection<int, EventType> $eventTypes
+     * @return \Illuminate\Support\Collection<int, EventWithoutRoomDTO>
+     */
+    private function eventsWithoutRoomForCalendar(
+        UserCalendarSettings|UserDailyViewCalendarSettings|null $userCalendarSettings,
+        \Illuminate\Support\Collection $eventTypes
+    ): \Illuminate\Support\Collection {
+        return Event::query()
+            ->hasNoRoom()
+            ->with([
+                'project:id,name,state,artists,is_group,color,icon',
+                'project.status:id,name,color',
+                'project.managerUsers:id,first_name,last_name,position,email,profile_photo_path',
+                'project.groups',
+                'project.users:id',
+                'project.categories',
+                'creator:id,first_name,last_name,position,email,profile_photo_path',
+                'eventStatus:id,name,color',
+                'eventProperties',
+                'subEvents' => fn ($query) => $query->without('creator'),
+            ])
+            // statt Exists-Query je Termin über den has_verification-Accessor
+            ->withExists(['verifications as has_pending_verification' => fn ($q) => $q->where('status', 'pending')])
+            ->get()
+            ->map(fn (Event $event) => EventWithoutRoomDTO::formModel($event, $userCalendarSettings, $eventTypes));
+    }
+
     public function viewPlanningCalendar(Request $request, ?Project $project = null): Response
     {
         /** @var User $user */
@@ -675,8 +689,7 @@ class EventController extends Controller
             'personalFilters' => Inertia::always(fn() => $this->filterService
                 ->getPersonalFilter($user, $planningFilterType)),
             'filterOptions' => $this->filterService->getCalendarFilterDefinitions(),
-            'eventsWithoutRoom' => Event::query()->hasNoRoom()->get()->map(fn($event) =>
-                EventWithoutRoomDTO::formModel($event, $userCalendarSettings, $eventTypes)),
+            'eventsWithoutRoom' => $this->eventsWithoutRoomForCalendar($userCalendarSettings, $eventTypes),
             'areas' => $this->areaService->getAll(),
             'dateValue' => $dateValue,
             'user_filters' => $userCalendarFilter,

@@ -956,12 +956,16 @@
                                                 :class="idx > 0 ? '-ml-3' : ''"
                                                 :style="dayServiceBallStyle(svc.hex_color).ball"
                                             >
+                                                <!-- classes wirkt auf Button UND Icon: der Button ist sonst inline-block
+                                                     und das SVG steht auf der Schriftgrundlinie (Descender-Platz unten),
+                                                     wodurch das Icon im Ball nach oben rutscht -->
                                                 <ToolTipComponent
                                                     :tooltip-text="svc.name"
                                                     :icon="svc.icon"
                                                     icon-size="h-4 w-4"
                                                     :icon-style="dayServiceBallStyle(svc.hex_color).icon"
-                                                    :classes-button="'mt-0'"
+                                                    :classes-button="'mt-0 flex'"
+                                                    classes="flex items-center justify-center leading-none"
                                                 />
                                             </div>
                                         </div>

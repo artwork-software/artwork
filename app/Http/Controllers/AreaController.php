@@ -28,14 +28,26 @@ class AreaController extends Controller
 
     public function index(): Response|ResponseFactory
     {
+        // Räume samt Relationen für alle Areale in wenigen Queries laden; vorher je Areal
+        // eine Raum-Query und je Raum vier weitere (Admins, Kategorien, Attribute,
+        // Nebenräume) in RoomIndexResource — 144 Queries bei 25 Räumen.
+        $areas = Area::query()
+            ->with([
+                'rooms' => fn ($query) => $query->orderBy('position')->orderBy('id'),
+                'rooms.categories',
+                'rooms.attributes',
+                'rooms.adjoining_rooms',
+            ])
+            ->get();
+
         return inertia('Areas/AreaManagement', [
-            'areas' => Area::all()->map(fn ($area) => [
+            'areas' => $areas->map(fn ($area) => [
                 'id' => $area->id,
                 'name' => $area->name,
                 'color' => $area->color ?? '#000000',
                 // showContent declares if the area should be showing all details when loading the page
                 'showContent' => true,
-                'rooms' => RoomIndexResource::collection($area->rooms()->orderBy('position')->orderBy('id')->get())->resolve(),
+                'rooms' => RoomIndexResource::collection($area->rooms)->resolve(),
             ]),
             'opened_areas' => User::where('id', Auth::id())->first()->opened_areas,
             'room_categories' => RoomCategory::all(),

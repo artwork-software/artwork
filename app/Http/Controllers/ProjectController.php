@@ -2600,10 +2600,10 @@ class ProjectController extends Controller
         $firstEvent = $this->projectService->getFirstEventInProject($project);
         $lastEvent  = $this->projectService->getLatestEndingEventInProject($project);
 
+        // components inkl. component sind seit dem load() oben geladen (sortiert nach order) —
+        // eine frische Query hydratisierte alles ein zweites Mal (Komponenten, Disclosures)
         $projectTabComponents = $projectTab
-            ->components()
-            ->with(['component'])
-            ->get()
+            ->components
             ->concat(
                 $projectTab->sidebarTabs->flatMap->componentsInSidebar->unique('id')
             );
@@ -2704,7 +2704,10 @@ class ProjectController extends Controller
         $headerObject->project->state = $project->status;
 
         $tabInformation = [];
+        // without(): ProjectTab::$with (components, sidebarTabs) würde je Abfrage die komplette
+        // Komponentenstruktur mitladen — hier werden nur Id und Name gebraucht
         ProjectTab::query()
+            ->without(['components', 'sidebarTabs'])
             ->visibleForUser($authUser)
             ->orderBy('order')
             ->get(['id', 'name'])
@@ -2754,18 +2757,22 @@ class ProjectController extends Controller
         $user = $this->authManager->user();
 
 
+        // value('id') hydratisiert ein Modell und zieht damit ProjectTab::$with nach — without()
         $firstVisibleTabId = ProjectTab::query()
+            ->without(['components', 'sidebarTabs'])
             ->visibleForUser($authUser)
             ->orderBy('order')
             ->value('id');
 
         $firstVisibleCalendarTabId = ProjectTab::query()
+            ->without(['components', 'sidebarTabs'])
             ->visibleForUser($authUser)
             ->byComponentsComponentType(ProjectTabComponentEnum::CALENDAR->value)
             ->orderBy('order')
             ->value('id') ?? $firstVisibleTabId;
 
         $firstVisibleBudgetTabId = ProjectTab::query()
+            ->without(['components', 'sidebarTabs'])
             ->visibleForUser($authUser)
             ->byComponentsComponentType(ProjectTabComponentEnum::BUDGET->value)
             ->orderBy('order')

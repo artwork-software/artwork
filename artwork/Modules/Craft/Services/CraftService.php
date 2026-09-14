@@ -35,6 +35,47 @@ class CraftService
      * × 6 KB), und Freelancer/Dienstleister schoben über `assigned_craft_ids` ($appends)
      * je Person eine craftables-Query nach.
      */
+    /**
+     * Planer:innen eines Gewerks (craft_users) in der Form, die das Frontend liest:
+     * SingleEntityInShift/SingleShiftInShiftOverviewUser prüfen `craft_shift_planer[].id`
+     * (Personen-Menü an der Schicht), RequestWorkTimeChangeModal zeigt Name, Position,
+     * Firma und Avatar (UserPopoverTooltip).
+     */
+    public const PLANER_VISIBLE = [
+        'id',
+        'first_name',
+        'last_name',
+        'full_name',
+        'position',
+        'business',
+        'profile_photo_url',
+        'type',
+    ];
+
+    /**
+     * Gewerke als Lookup (Karten/Modale im Einsatzplan): nur Stammfelder plus schlanke
+     * Planer:innen — Craft::all() lieferte die Planer:innen als volle User-Modelle.
+     */
+    public function getLookupCrafts(): Collection
+    {
+        $crafts = Craft::query()
+            ->orderBy('position')
+            ->get(['id', 'name', 'abbreviation', 'color', 'position', 'universally_applicable']);
+
+        foreach ($crafts as $craft) {
+            self::slimPlaners($craft);
+        }
+
+        return $crafts;
+    }
+
+    public static function slimPlaners(Craft $craft): void
+    {
+        if ($craft->relationLoaded('craftShiftPlaner')) {
+            $craft->craftShiftPlaner->each->setVisible(self::PLANER_VISIBLE);
+        }
+    }
+
     public function getAllWithAssignableWorkers(bool $withManagers = false): Collection
     {
         $workerVisible = [
@@ -68,13 +109,15 @@ class CraftService
             $with[$relation] = static fn (Relation $query) => $query->withAssignedCraftIds();
         }
 
+        // craftShiftPlaner (Craft::$with) bleibt geladen: die Listenansicht erkennt darüber,
+        // ob die angemeldete Person Planer:in des Gewerks ist (Personen-Menü an der Schicht)
         $crafts = Craft::query()
             ->with($with)
-            ->without(['craftShiftPlaner'])
             ->orderBy('position')
             ->get();
 
         foreach ($crafts as $craft) {
+            self::slimPlaners($craft);
             foreach ($workerRelations as $relation) {
                 foreach ($craft->getRelation($relation) as $worker) {
                     $worker->setVisible($workerVisible);

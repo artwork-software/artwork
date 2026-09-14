@@ -4,7 +4,7 @@ namespace Artwork\Modules\Freelancer\Services;
 
 use Artwork\Modules\Availability\Models\Availability;
 use Artwork\Modules\Calendar\Services\CalendarService;
-use Artwork\Modules\Craft\Models\Craft;
+use Artwork\Modules\Craft\Services\CraftService;
 use Artwork\Modules\Event\Services\EventService;
 use Artwork\Modules\Vacation\Models\Vacation;
 use Artwork\Modules\EventType\Http\Resources\EventTypeResource;
@@ -240,8 +240,8 @@ readonly class FreelancerService
                     $endOfWeek
                 )
             )
-            // Nur die Lookup-Felder der Einsatzplan-Karte (wie UserService)
-            ->setCrafts(static fn() => Craft::query()->without(['craftShiftPlaner'])->get(['id', 'name', 'abbreviation', 'color']))
+            // Lookup-Felder der Einsatzplan-Karte + schlanke Planer:innen (wie UserService)
+            ->setCrafts(static fn() => app(CraftService::class)->getLookupCrafts())
             ->setRooms(static fn() => $roomService->getAllWithoutTrashed())
             ->setEventTypes(static fn() => EventTypeResource::collection($eventTypeService->getAllWithVerifiers())->resolve())
             ->setProjects(static fn() => $projectService->getAll())

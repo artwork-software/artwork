@@ -171,16 +171,35 @@ final class CraftAssignableWorkersPayloadTest extends FeatureTestCase
         );
     }
 
+    /**
+     * Planer:innen des Gewerks bleiben dabei — schlank: die Listenansicht erkennt darüber
+     * die Planer:in (Personen-Menü an der Schicht), das Zeitanpassungs-Modal zeigt Name,
+     * Position, Firma und Avatar.
+     */
     #[Test]
-    public function craft_planer_users_are_not_shipped_with_the_crafts(): void
+    public function craft_planers_are_shipped_slim(): void
     {
-        $planer = User::factory()->create();
+        $planer = User::factory()->create(['position' => 'Disposition', 'business' => 'Haus']);
         $this->craft->craftShiftPlaner()->attach($planer->id);
 
         $craft = $this->serializedCraft();
 
-        $this->assertArrayNotHasKey('craft_shift_planer', $craft);
         $this->assertArrayHasKey('qualifications', $craft);
+        $this->assertCount(1, $craft['craft_shift_planer']);
+        $shipped = $craft['craft_shift_planer'][0];
+        $this->assertEqualsCanonicalizing(CraftService::PLANER_VISIBLE, array_keys($shipped));
+        $this->assertSame($planer->id, $shipped['id']);
+        $this->assertSame($planer->first_name . ' ' . $planer->last_name, $shipped['full_name']);
+        $this->assertSame('Disposition', $shipped['position']);
+        $this->assertSame('Haus', $shipped['business']);
+
+        // Lookup-Variante der Einsatzplan-Seiten: gleiche Planer-Form
+        $lookup = collect(app(CraftService::class)->getLookupCrafts()->toArray())->firstWhere('id', $this->craft->id);
+        $this->assertSame(
+            ['id', 'name', 'abbreviation', 'color', 'position', 'universally_applicable', 'craft_shift_planer'],
+            array_keys($lookup)
+        );
+        $this->assertEqualsCanonicalizing(CraftService::PLANER_VISIBLE, array_keys($lookup['craft_shift_planer'][0]));
     }
 
     #[Test]

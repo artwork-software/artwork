@@ -8,7 +8,7 @@ use Artwork\Modules\Availability\Models\Availability;
 use Artwork\Modules\Calendar\Services\CalendarService;
 use Artwork\Modules\Vacation\Models\Vacation;
 use Artwork\Modules\Event\Services\EventService;
-use Artwork\Modules\Craft\Models\Craft;
+use Artwork\Modules\Craft\Services\CraftService;
 use Artwork\Modules\EventType\Http\Resources\EventTypeResource;
 use Artwork\Modules\EventType\Services\EventTypeService;
 use Artwork\Modules\Inventory\Services\ProductBasketService;
@@ -218,11 +218,8 @@ class UserService
 
         return UserShiftPlanPageDto::newInstance()
             ->setUserToEdit(UserShowResource::make($user))
-            // Nur die Lookup-Felder der Einsatzplan-Karte; Craft::all() zieht sonst
-            // je Gewerk die craftShiftPlaner-User mit ($with)
-            ->setCrafts(static fn() => Craft::query()
-                ->without(['craftShiftPlaner'])
-                ->get(['id', 'name', 'abbreviation', 'color']))
+            // Lookup-Felder der Einsatzplan-Karte + schlanke Planer:innen (Zeitanpassungs-Modal)
+            ->setCrafts(static fn() => app(CraftService::class)->getLookupCrafts())
             ->setCurrentTab('shiftplan')
             ->setCalendarData($calendarData)
             ->setDateToShow($dateToShow)

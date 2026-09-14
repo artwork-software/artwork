@@ -15,6 +15,7 @@ use Artwork\Modules\Calendar\DTO\CalendarPeriodDTO;
 use Artwork\Modules\Calendar\Services\CalendarDataService;
 use Artwork\Modules\Calendar\Services\CalendarService;
 use Artwork\Modules\Change\Services\ChangeService;
+use Artwork\Modules\Craft\Models\Craft;
 use Artwork\Modules\Craft\Services\CraftService;
 use Artwork\Modules\DayService\Services\DayServicesService;
 use Artwork\Modules\Event\DTOs\EventManagementDto;
@@ -613,9 +614,18 @@ readonly class EventService
         $slimRoom = static fn (Builder|Relation $query) => $query
             ->without(['admins', 'creator'])
             ->select(['rooms.id', 'rooms.name']);
+        // craftShiftPlaner (Craft::$with) bleibt geladen und wird unten auf die Felder des
+        // Zeitanpassungs-Modals reduziert („Zuständige Personen“ = Planer:innen des Gewerks)
         $slimCraft = static fn (Builder|Relation $query) => $query
-            ->without(['craftShiftPlaner'])
             ->select(['crafts.id', 'crafts.name', 'crafts.abbreviation', 'crafts.color']);
+        $prepareCraft = static function (?Craft $craft): Craft|array {
+            if ($craft === null) {
+                return [];
+            }
+            CraftService::slimPlaners($craft);
+
+            return $craft;
+        };
 
         // Projekt als Array mit genau den Feldern, die Karte (Name/Link),
         // Gruppen-Pills (id/name/icon, users nur als IDs für den Mitglieds-Check)
@@ -917,7 +927,7 @@ readonly class EventService
                     'description' => $shift->description,
                     'is_committed' => (bool) $shift->is_committed,
                     'in_workflow' => (bool) $shift->in_workflow,
-                    'craft' => $shift->craft ?? [],
+                    'craft' => $prepareCraft($shift->craft),
                     // Nur die vereinheitlichte workers-Liste (type-Tag + Pivot); die
                     // getrennten users/freelancer/serviceProvider-Listen waren dieselben
                     // Personen noch einmal und wurden von keinem Konsumenten gelesen.
@@ -992,7 +1002,7 @@ readonly class EventService
                     'description' => $shift->description,
                     'is_committed' => (bool) $shift->is_committed,
                     'in_workflow' => (bool) $shift->in_workflow,
-                    'craft' => $shift->craft ?? [],
+                    'craft' => $prepareCraft($shift->craft),
                     // Nur die vereinheitlichte workers-Liste (type-Tag + Pivot); die
                     // getrennten users/freelancer/serviceProvider-Listen waren dieselben
                     // Personen noch einmal und wurden von keinem Konsumenten gelesen.

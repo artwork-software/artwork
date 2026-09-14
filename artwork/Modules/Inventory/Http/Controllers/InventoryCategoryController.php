@@ -149,8 +149,14 @@ class InventoryCategoryController extends Controller
             'search_property_id' => $searchPropertyId,
         ]);
 
+        $categories = $this->categoryService->getAllWithRelations($filteredArticleIds);
+        // Raum-/Hersteller-Lookups der Artikel-$appends für die ganze Seite in je einer Query
+        InventoryArticle::preloadPropertyLookupsDeep(
+            [$categories, $articles, $inventoryCategory, $inventorySubCategory]
+        );
+
         return Inertia::render('Inventory/Index', [
-            'categories' => $this->categoryService->getAllWithRelations($filteredArticleIds),
+            'categories' => $categories,
             'hasActiveFilter' => $hasActiveFilter,
             'currentCategory' => $inventoryCategory,
             'currentSubCategory' => $inventorySubCategory,
@@ -283,6 +289,8 @@ class InventoryCategoryController extends Controller
         ->select('id', 'name')
         ->orderBy('name')
         ->get();
+
+        InventoryArticle::preloadPropertyLookupsDeep($categories);
 
         return response()->json([
             'categories' => $categories,

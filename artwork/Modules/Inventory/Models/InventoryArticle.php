@@ -162,6 +162,122 @@ class InventoryArticle extends Model
         return $this->getRelationValue('subCategory');
     }
 
+    /**
+     * Lookup-Caches der $appends room/manufacturer (Id => Modell|null), je Prozess.
+     * array_key_exists statt isset: ein gecachtes null gilt bei isset() nicht als
+     * vorhanden, wodurch nicht auflösbare Werte bei JEDER Serialisierung erneut
+     * abgefragt wurden (gemessen 100x dieselbe Query auf /inventory).
+     *
+     * @var array<int|string, Room|null>
+     */
+    private static array $roomCache = [];
+
+    /** @var array<int|string, CrmContact|null> */
+    private static array $manufacturerCache = [];
+
+    /** Caches leeren (Tests; nach Umbenennung eines Herstellers/Raums in langlebigen Prozessen) */
+    public static function flushPropertyLookupCaches(): void
+    {
+        self::$roomCache = [];
+        self::$manufacturerCache = [];
+    }
+
+    public function newCollection(array $models = []): InventoryArticleCollection
+    {
+        return new InventoryArticleCollection($models);
+    }
+
+    /**
+     * Räume und Hersteller aller Artikel in je einer Query vorladen (InventoryArticleCollection
+     * ruft das vor dem Serialisieren) — sonst eine Query je unterschiedlichem Wert.
+     *
+     * @param iterable<int, InventoryArticle> $articles
+     */
+    /**
+     * Lookups für alle Artikel in einer verschachtelten Struktur (Kategorien → Unterkategorien
+     * → Artikel) auf einmal vorladen — die Collection-Variante greift sonst je Kategorie einzeln.
+     */
+    public static function preloadPropertyLookupsDeep(mixed $value): void
+    {
+        $articles = [];
+        self::collectArticles($value, $articles, 0);
+        self::preloadPropertyLookups($articles);
+    }
+
+    /**
+     * @param array<int, InventoryArticle> $articles
+     */
+    private static function collectArticles(mixed $value, array &$articles, int $depth): void
+    {
+        if ($depth > 6) {
+            return;
+        }
+        if ($value instanceof self) {
+            $articles[] = $value;
+
+            return;
+        }
+        if ($value instanceof Model) {
+            foreach ($value->getRelations() as $relation) {
+                self::collectArticles($relation, $articles, $depth + 1);
+            }
+
+            return;
+        }
+        if (is_iterable($value)) {
+            foreach ($value as $item) {
+                self::collectArticles($item, $articles, $depth + 1);
+            }
+        }
+    }
+
+    public static function preloadPropertyLookups(iterable $articles): void
+    {
+        $roomIds = [];
+        $manufacturerIds = [];
+        foreach ($articles as $article) {
+            if (!$article instanceof self || !$article->relationLoaded('properties')) {
+                continue;
+            }
+            foreach ($article->properties as $property) {
+                $value = $property->pivot->value ?? null;
+                if (!$value) {
+                    continue;
+                }
+                if ($property->type === 'room') {
+                    $roomIds[$value] = true;
+                } elseif ($property->type === 'manufacturer') {
+                    $manufacturerIds[$value] = true;
+                }
+            }
+        }
+
+        $missingRooms = array_keys(array_diff_key($roomIds, self::$roomCache));
+        if ($missingRooms !== []) {
+            $rooms = Room::query()
+                ->without(['admins', 'creator'])
+                ->select('id', 'name')
+                ->whereIn('id', $missingRooms)
+                ->get()
+                ->keyBy('id');
+            foreach ($missingRooms as $id) {
+                self::$roomCache[$id] = $rooms->get($id);
+            }
+        }
+
+        $missingManufacturers = array_keys(array_diff_key($manufacturerIds, self::$manufacturerCache));
+        if ($missingManufacturers !== []) {
+            $contacts = CrmContact::query()
+                ->select('id', 'display_name')
+                ->whereIn('id', $missingManufacturers)
+                ->get()
+                ->keyBy('id');
+            foreach ($missingManufacturers as $id) {
+                self::$manufacturerCache[$id] = $contacts->get($id);
+            }
+        }
+    }
+
     public function getRoomAttribute(): ?array
     {
         $roomProperty = $this->properties->firstWhere('type', 'room');
@@ -170,19 +286,16 @@ class InventoryArticle extends Model
             return null;
         }
 
-        // Optimierung: Verwende Relation oder eager loading statt einzelner Query
-        static $roomCache = [];
-
         $roomId = $roomProperty->pivot->value;
 
-        // array_key_exists statt isset: ein gecachtes null gilt bei isset() nicht
-        // als vorhanden, wodurch nicht auflösbare Werte bei JEDER Serialisierung
-        // erneut abgefragt wurden (gemessen 100x dieselbe Query auf /inventory).
-        if (!array_key_exists($roomId, $roomCache)) {
-            $roomCache[$roomId] = Room::select('id', 'name')->find($roomId);
+        if (!array_key_exists($roomId, self::$roomCache)) {
+            self::$roomCache[$roomId] = Room::query()
+                ->without(['admins', 'creator'])
+                ->select('id', 'name')
+                ->find($roomId);
         }
 
-        $room = $roomCache[$roomId];
+        $room = self::$roomCache[$roomId];
 
         if (!$room) {
             return null;
@@ -203,16 +316,13 @@ class InventoryArticle extends Model
             return null;
         }
 
-        static $manufacturerCache = [];
-
         $manufacturerId = $manufacturerProperty->pivot->value;
 
-        // array_key_exists statt isset: siehe getRoomAttribute()
-        if (!array_key_exists($manufacturerId, $manufacturerCache)) {
-            $manufacturerCache[$manufacturerId] = CrmContact::select('id', 'display_name')->find($manufacturerId);
+        if (!array_key_exists($manufacturerId, self::$manufacturerCache)) {
+            self::$manufacturerCache[$manufacturerId] = CrmContact::select('id', 'display_name')->find($manufacturerId);
         }
 
-        $manufacturer = $manufacturerCache[$manufacturerId];
+        $manufacturer = self::$manufacturerCache[$manufacturerId];
 
         if (!$manufacturer) {
             return null;

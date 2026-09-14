@@ -357,32 +357,88 @@ class Project extends Model
         ];
     }
 
+    /**
+     * @var array{first_event_date: string, last_event_date: string}|null|false
+     *      false = noch nicht ermittelt; je Modellinstanz gemerkt, weil die Projektseite das
+     *      Attribut mehrfach serialisiert (vorher 4 Event-Queries je Serialisierung)
+     */
+    private array|null|false $firstAndLastEventDateCache = false;
+
     public function getFirstAndLastEventDateAttribute(): ?array
     {
-        $firstEvent = $this->events()
-                ->select('events.*')
-                ->join('event_types', 'events.event_type_id', '=', 'event_types.id')
-                ->where('event_types.relevant_for_project_period', true)
-                ->orderBy('start_time', 'ASC')
-                ->first()
-            ?? $this->events()->orderBy('start_time', 'ASC')->first();
-
-        $lastEvent = $this->events()
-                ->select('events.*')
-                ->join('event_types', 'events.event_type_id', '=', 'event_types.id')
-                ->where('event_types.relevant_for_project_period', true)
-                ->orderBy('end_time', 'DESC')
-                ->first()
-            ?? $this->events()->orderBy('end_time', 'DESC')->first();
-
-        if ($firstEvent && $lastEvent) {
-            return [
-                'first_event_date' => Carbon::parse($firstEvent->start_time)->translatedFormat('d.m.Y H:i'),
-                'last_event_date' => Carbon::parse($lastEvent->end_time)->translatedFormat('d.m.Y H:i'),
-            ];
+        if ($this->firstAndLastEventDateCache === false) {
+            $this->firstAndLastEventDateCache = self::firstAndLastEventDatesFor([$this->id])[$this->id] ?? null;
         }
 
-        return null;
+        return $this->firstAndLastEventDateCache;
+    }
+
+    /**
+     * Zeitraum für viele Projekte mit zwei Aggregat-Queries vorberechnen (Gruppen /
+     * Projekte einer Gruppe auf der Projektseite), statt je Projekt beim Serialisieren.
+     *
+     * @param iterable<int, Project> $projects
+     */
+    public static function loadFirstAndLastEventDates(iterable $projects): void
+    {
+        $projects = collect($projects);
+        $periods = self::firstAndLastEventDatesFor($projects->pluck('id')->all());
+
+        foreach ($projects as $project) {
+            $project->firstAndLastEventDateCache = $periods[$project->id] ?? null;
+        }
+    }
+
+    /**
+     * Gleiche Semantik wie der frühere Accessor: frühester Beginn / spätestes Ende der
+     * Termine mit event_types.relevant_for_project_period, sonst aller Termine; Soft-Deletes
+     * über den Event-Global-Scope ausgeschlossen. Zwei Aggregat-Queries für beliebig viele
+     * Projekte statt bis zu vier Einzel-Queries je Projekt.
+     *
+     * @param array<int, int> $projectIds
+     * @return array<int, array{first_event_date: string, last_event_date: string}|null>
+     */
+    private static function firstAndLastEventDatesFor(array $projectIds): array
+    {
+        if ($projectIds === []) {
+            return [];
+        }
+
+        // toBase(): die Aggregat-Zeilen sind keine vollständigen Events (kein id, keine Appends)
+        $aggregate = static fn (bool $relevantOnly, array $ids) => Event::query()
+            ->when($relevantOnly, static fn ($query) => $query
+                ->join('event_types', 'events.event_type_id', '=', 'event_types.id')
+                ->where('event_types.relevant_for_project_period', true))
+            ->whereIn('events.project_id', $ids)
+            ->groupBy('events.project_id')
+            ->selectRaw('events.project_id, MIN(events.start_time) as first_start, MAX(events.end_time) as last_end')
+            ->get()
+            ->toBase()
+            ->keyBy('project_id');
+
+        $relevant = $aggregate(true, $projectIds);
+        $missing = array_values(array_diff($projectIds, $relevant->keys()->all()));
+        $fallback = $missing === [] ? collect() : $aggregate(false, $missing);
+
+        $periods = [];
+        foreach ($projectIds as $projectId) {
+            $period = $relevant->get($projectId) ?? $fallback->get($projectId);
+            $periods[$projectId] = $period && $period->first_start && $period->last_end
+                ? [
+                    'first_event_date' => Carbon::parse($period->first_start)->translatedFormat('d.m.Y H:i'),
+                    'last_event_date' => Carbon::parse($period->last_end)->translatedFormat('d.m.Y H:i'),
+                ]
+                : null;
+        }
+
+        return $periods;
+    }
+
+    public function refresh(): static
+    {
+        $this->firstAndLastEventDateCache = false;
+
+        return parent::refresh();
     }
 
     // biData/biEventData sind bewusst auf den Ist-Scope gefiltert: sämtliche

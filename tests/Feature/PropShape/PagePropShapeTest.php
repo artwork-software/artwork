@@ -284,11 +284,11 @@ final class PagePropShapeTest extends FeatureTestCase
         $tab = $this->shiftTab();
 
         $this->assertPropShapeMatchesSnapshot(
-            // Altlast der Projektseite (nicht Teil der Payload-Diät): Komponenten/Disclosures je
-            // Tab und first_and_last_event_date je Aufruf laufen mehrfach — hier bewusst erlaubt
+            // Altlast der Projektseite (nicht Teil der Payload-Diät): Komponenten/Disclosures
+            // werden je Tab geladen — hier bewusst erlaubt
             $this->page(
                 route('projects.tab', ['project' => $this->project->id, 'projectTab' => $tab->id]),
-                ['from `components`', 'from `disclosure_components`', 'from `events`']
+                ['from `components`', 'from `disclosure_components`']
             ),
             'project-shift-tab',
             ['crafts', 'headerObject', 'shiftQualifications', 'currentUserCrafts']

@@ -2664,7 +2664,9 @@ class ProjectController extends Controller
         $headerObject->projectGroups     = $project->groups;
 
         // Append first_and_last_event_date to groups so the frontend can show project periods
+        // (Zeiträume gebündelt vorberechnet statt Event-Queries je Gruppe beim Serialisieren)
         $project->loadMissing('groups');
+        Project::loadFirstAndLastEventDates($project->groups);
         $project->groups->each->append('first_and_last_event_date');
 
         $hasGroupComponent = in_array('ProjectGroupComponent', $componentTypes, true);
@@ -2674,7 +2676,9 @@ class ProjectController extends Controller
             $headerObject->groupProjects = collect();
         }
 
-        $headerObject->projectsOfGroup = $project->projectsOfGroup()->get()->each->append('first_and_last_event_date');
+        $projectsOfGroup = $project->projectsOfGroup()->get();
+        Project::loadFirstAndLastEventDates($projectsOfGroup);
+        $headerObject->projectsOfGroup = $projectsOfGroup->each->append('first_and_last_event_date');
 
         $hasAttributesComponent = in_array('ProjectAttributesComponent', $componentTypes, true);
         $needsProjectAttributesData = $hasAttributesComponent || (bool) ($projectCreateSettings->attributes ?? false);

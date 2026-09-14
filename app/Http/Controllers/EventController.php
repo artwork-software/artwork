@@ -1145,13 +1145,8 @@ class EventController extends Controller
             // Die Listenansicht reicht diese crafts an SingleShiftInDailyShiftView
             // weiter, dessen getAssignablePeople() daraus die Auswahlliste zum
             // Zuweisen von Personen auf Schichtplätze baut. Ohne die Relationen
-            // bleibt dieses Dropdown leer.
-            'crafts' => Craft::with([
-                'users',
-                'freelancers',
-                'serviceProviders',
-                'qualifications:id,name,icon',
-            ])->get(['id', 'name', 'abbreviation', 'color', 'position', 'universally_applicable']),
+            // bleibt dieses Dropdown leer. Schlanke Personen-Serialisierung: CraftService.
+            'crafts' => $this->craftService->getAllWithAssignableWorkers(),
             'eventTypes' => EventType::select(['id', 'name', 'abbreviation', 'hex_code'])->get(),
             'filterOptions' => $this->filterService->getCalendarFilterDefinitions(),
             'personalFilters' => $this->filterService->getPersonalFilter($user, $shiftFilterType),

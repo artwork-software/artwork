@@ -2923,8 +2923,11 @@ class ProjectController extends Controller
         $headerObject->project->project_managers           = $project->managerUsers;
         $headerObject->project->shiftDescription           = $project->shift_description;
         // Step 4: Nur essentielle Felder für Freelancers und ServiceProviders laden
-        $headerObject->project->freelancers                = Freelancer::select('id', 'first_name', 'last_name')->get();
-        $headerObject->project->serviceProviders           = ServiceProvider::select('id', 'provider_name')->get();
+        // withAssignedCraftIds: sonst je Person eine craftables-Query über $appends assigned_craft_ids
+        $headerObject->project->freelancers                = Freelancer::select('id', 'first_name', 'last_name')
+            ->withAssignedCraftIds()->get();
+        $headerObject->project->serviceProviders           = ServiceProvider::select('id', 'provider_name')
+            ->withAssignedCraftIds()->get();
     }
 
     /**
@@ -2945,17 +2948,9 @@ class ProjectController extends Controller
         array $history
     ): array {
         return [
-            // Crafts mit allen notwendigen Relationen für ShiftPlanDailyView
-            // Benötigt: users, freelancers, serviceProviders mit shift_qualifications
-            'crafts' => Craft::with([
-                'users',
-                'freelancers',
-                'serviceProviders',
-                'managingUsers',
-                'managingFreelancers',
-                'managingServiceProviders',
-                'qualifications'
-            ])->without(['craftShiftPlaner'])->get(),
+            // Crafts mit users/freelancers/serviceProviders (+ shift_qualifications) für
+            // ShiftPlanDailyView — schlanke Personen-Serialisierung, siehe CraftService
+            'crafts' => $craftService->getAllWithAssignableWorkers(withManagers: true),
             // Step 2: Tags/TagGroups entfernt - werden nicht im ShiftTab verwendet
             // Step 3: History entfernt - wird per API geladen (/projects/{project}/history)
             'personalFilters' => $filterService->getPersonalFilter($user, UserFilterTypes::PROJECT_SHIFT_FILTER->value),

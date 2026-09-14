@@ -45,8 +45,7 @@ class UserWorkProfileResource extends JsonResource
             'accessibleCrafts' => $this->can('can plan shifts') ?
                 $this->crafts->filter(fn(Craft $craft) =>
                     $craft->getAttribute('assignable_by_all') === true ||
-                    $craft->craftShiftPlaner->contains($this->resource->id)
-                )
+                    $craft->craftShiftPlaner->contains($this->resource->id))
                     ->merge($this->getAttribute('assignedCrafts'))
                     ->merge($this->getAttribute('managingCrafts'))
                     ->unique('id')

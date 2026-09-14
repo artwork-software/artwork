@@ -1036,10 +1036,12 @@ class ShiftController extends Controller
             $dayAssignmentService = app(\Artwork\Modules\Project\Services\ProjectDayAssignmentService::class);
 
             // Existenz der Person sicherstellen — sonst entstehen verwaiste Zuordnungszeilen
-            foreach (\Artwork\Modules\Project\Models\Project::query()
+            foreach (
+                \Artwork\Modules\Project\Models\Project::query()
                 ->whereKey($fullPeriodProjectIds)
                 ->orderBy('id')
-                ->get() as $projectToAssign) {
+                ->get() as $projectToAssign
+            ) {
                 $dayAssignmentService->createFullPeriodAssignments(
                     $projectToAssign,
                     $employableType,
@@ -2166,25 +2168,25 @@ class ShiftController extends Controller
             // Batch load ShiftWorkers scoped by date to avoid loading all historical data
             $allPivots = ShiftWorker::withoutTrashed()
                 ->with('shift.craft')
-                ->whereHas('shift', function ($q) use ($scopeStartDate, $scopeEndDate) {
+                ->whereHas('shift', function ($q) use ($scopeStartDate, $scopeEndDate): void {
                     $q->where('start_date', '<=', $scopeEndDate)
                       ->where('end_date', '>=', $scopeStartDate);
                 })
-                ->where(function ($query) use ($peopleByType) {
+                ->where(function ($query) use ($peopleByType): void {
                     if (!empty($peopleByType['user'])) {
-                        $query->orWhere(function ($q) use ($peopleByType) {
+                        $query->orWhere(function ($q) use ($peopleByType): void {
                             $q->where('employable_type', User::class)
                               ->whereIn('employable_id', $peopleByType['user']);
                         });
                     }
                     if (!empty($peopleByType['freelancer'])) {
-                        $query->orWhere(function ($q) use ($peopleByType) {
+                        $query->orWhere(function ($q) use ($peopleByType): void {
                             $q->where('employable_type', Freelancer::class)
                               ->whereIn('employable_id', $peopleByType['freelancer']);
                         });
                     }
                     if (!empty($peopleByType['service_provider'])) {
-                        $query->orWhere(function ($q) use ($peopleByType) {
+                        $query->orWhere(function ($q) use ($peopleByType): void {
                             $q->where('employable_type', ServiceProvider::class)
                               ->whereIn('employable_id', $peopleByType['service_provider']);
                         });
@@ -2557,5 +2559,4 @@ class ShiftController extends Controller
 
         return back();
     }
-
 }

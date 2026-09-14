@@ -153,7 +153,7 @@ class IndividualTimeSeriesController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(UpdateIndividualTimeSeriesRequest $request, IndividualTimeSeries $series)
+    public function update(UpdateIndividualTimeSeriesRequest $request, IndividualTimeSeries $series): void
     {
         $data = $this->validatePayload($request);
 
@@ -420,5 +420,4 @@ class IndividualTimeSeriesController extends Controller
             default => 0,
         };
     }
-
 }

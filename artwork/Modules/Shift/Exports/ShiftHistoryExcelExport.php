@@ -84,6 +84,7 @@ class ShiftHistoryExcelExport implements
      * @param Activity $log
      * @return array<int, mixed>
      */
+    // phpcs:ignore SlevomatCodingStandard.TypeHints.ParameterTypeHint.MissingNativeTypeHint -- Signatur der Elternklasse erlaubt keinen Typ
     public function map($log): array
     {
         $shift = $this->presenter->shiftDetails($log, $this->shiftsById());

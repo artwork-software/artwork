@@ -12,7 +12,7 @@ class PaginatedInventoryCategoryDTO
 
     public static function fromPaginator(LengthAwarePaginator $paginator): static
     {
-        $dto = new static();
+        $dto = new self();
 
         $dto->data = InventoryCategoryDTO::fromCollection($paginator->getCollection());
 
@@ -58,7 +58,7 @@ class PaginatedInventoryCategoryDTO
      */
     public static function fromArray(array $data): static
     {
-        $dto = new static();
+        $dto = new self();
 
         foreach ($data as $key => $value) {
             if (property_exists($dto, $key)) {

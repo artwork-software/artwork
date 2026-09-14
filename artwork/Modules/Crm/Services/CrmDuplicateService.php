@@ -21,7 +21,8 @@ readonly class CrmDuplicateService
 
     public function __construct(
         private CrmContactService $contactService,
-    ) {}
+    ) {
+    }
 
     /**
      * Findet Duplikat-Cluster: Kontakte desselben Typs mit gleichem Namen oder

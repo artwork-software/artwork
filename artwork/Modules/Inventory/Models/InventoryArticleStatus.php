@@ -19,5 +19,4 @@ class InventoryArticleStatus extends Model
         'default' => 'boolean',
         'deletable' => 'boolean',
     ];
-
 }

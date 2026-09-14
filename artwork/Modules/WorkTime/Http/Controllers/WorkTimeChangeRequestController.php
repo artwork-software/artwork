@@ -91,8 +91,10 @@ class WorkTimeChangeRequestController extends Controller
         $user = auth()->user();
 
         // Check if user is admin or has shift planner permission
-        if (!$user->hasRole(RoleEnum::ARTWORK_ADMIN->value) &&
-            !$user->hasPermissionTo(PermissionEnum::SHIFT_PLANNER->value)) {
+        if (
+            !$user->hasRole(RoleEnum::ARTWORK_ADMIN->value) &&
+            !$user->hasPermissionTo(PermissionEnum::SHIFT_PLANNER->value)
+        ) {
             abort(403, 'Unauthorized');
         }
 
@@ -101,7 +103,7 @@ class WorkTimeChangeRequestController extends Controller
 
         $workTimeChangeRequests = $this->applyListFilters(
             WorkTimeChangeRequest::with(['user', 'shift', 'craft.craftShiftPlaner'])
-                ->where(function ($query) use ($userId) {
+                ->where(function ($query) use ($userId): void {
                     // Include requests where user is assigned as craft shift planner
                     $query->whereHas('craft.craftShiftPlaner', function ($subQuery) use ($userId): void {
                         $subQuery->where('user_id', $userId);

@@ -96,7 +96,7 @@ class AreaController extends Controller
 
     public function forceDeleteAll(): RedirectResponse
     {
-        Area::onlyTrashed()->each(function ($area) {
+        Area::onlyTrashed()->each(function ($area): void {
             $area->forceDelete();
         });
         return Redirect::route('areas.trashed');

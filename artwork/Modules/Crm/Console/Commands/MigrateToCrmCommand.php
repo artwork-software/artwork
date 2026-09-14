@@ -306,7 +306,7 @@ class MigrateToCrmCommand extends Command
         $this->info('Migrating artists...');
         $type = $this->contactTypes[CrmSystemContactTypeEnum::ARTIST->value];
 
-        Artist::all()->each(function (Artist $artist) use ($type) {
+        Artist::all()->each(function (Artist $artist) use ($type): void {
             $contact = $this->migrateEntity($artist, $type);
 
             // Update ArtistResidencies
@@ -320,7 +320,7 @@ class MigrateToCrmCommand extends Command
         $this->info('Migrating accommodations...');
         $type = $this->contactTypes[CrmSystemContactTypeEnum::ACCOMMODATION->value];
 
-        Accommodation::all()->each(function (Accommodation $accommodation) use ($type) {
+        Accommodation::all()->each(function (Accommodation $accommodation) use ($type): void {
             $contact = $this->migrateEntity($accommodation, $type, $accommodation->profile_image);
 
             // Migrate room type pivot
@@ -347,7 +347,7 @@ class MigrateToCrmCommand extends Command
         $this->info('Migrating manufacturers...');
         $type = $this->contactTypes[CrmSystemContactTypeEnum::MANUFACTURER->value];
 
-        Manufacturer::all()->each(function (Manufacturer $manufacturer) use ($type) {
+        Manufacturer::all()->each(function (Manufacturer $manufacturer) use ($type): void {
             $contact = $this->migrateEntity($manufacturer, $type);
 
             // Migrate inventory manufacturer property values
@@ -364,7 +364,7 @@ class MigrateToCrmCommand extends Command
         $this->info('Migrating users...');
         $type = $this->contactTypes[CrmSystemContactTypeEnum::USER->value];
 
-        User::all()->each(function (User $user) use ($type) {
+        User::all()->each(function (User $user) use ($type): void {
             $this->migrateEntity($user, $type, $user->profile_photo_path);
         });
     }
@@ -374,7 +374,7 @@ class MigrateToCrmCommand extends Command
         $this->info('Migrating freelancers...');
         $type = $this->contactTypes[CrmSystemContactTypeEnum::FREELANCER->value];
 
-        Freelancer::all()->each(function (Freelancer $freelancer) use ($type) {
+        Freelancer::all()->each(function (Freelancer $freelancer) use ($type): void {
             $this->migrateEntity($freelancer, $type, $freelancer->profile_image);
         });
     }
@@ -384,7 +384,7 @@ class MigrateToCrmCommand extends Command
         $this->info('Migrating service providers...');
         $type = $this->contactTypes[CrmSystemContactTypeEnum::SERVICE_PROVIDER->value];
 
-        ServiceProvider::all()->each(function (ServiceProvider $provider) use ($type) {
+        ServiceProvider::all()->each(function (ServiceProvider $provider) use ($type): void {
             $this->migrateEntity($provider, $type, $provider->profile_image);
         });
     }

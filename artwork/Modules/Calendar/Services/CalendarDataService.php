@@ -120,8 +120,7 @@ readonly class CalendarDataService
         User $user,
         bool $extraRow = true,
         ?bool $isDailyView = null
-    ): array
-    {
+    ): array {
         if (!$startDate || !$endDate) {
             return [];
         }
@@ -261,7 +260,7 @@ readonly class CalendarDataService
             if (!empty($filter?->event_property_ids)) {
                 $ids = $filter->event_property_ids;
 
-                $eventQuery->whereExists(function ($sq) use ($ids) {
+                $eventQuery->whereExists(function ($sq) use ($ids): void {
                     $sq->selectRaw('1')
                         ->from('event_event_property as eep')
                         ->whereColumn('eep.event_id', 'events.id')

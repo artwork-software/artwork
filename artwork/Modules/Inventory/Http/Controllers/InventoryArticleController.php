@@ -36,7 +36,7 @@ class InventoryArticleController extends Controller
         private readonly InventoryUserFilterService $inventoryUserFilterService,
         private readonly InventoryUserFilterShareService $inventoryUserFilterShareService,
         private readonly ProjectTabService $projectTabService,
-    ){
+    ) {
     }
 
     /**
@@ -68,7 +68,7 @@ class InventoryArticleController extends Controller
     /**
      * Show the form for creating a new resource.
      */
-    public function create()
+    public function create(): void
     {
         //
     }
@@ -99,14 +99,14 @@ class InventoryArticleController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(StoreInventoryArticleRequest $request)
+    public function store(StoreInventoryArticleRequest $request): void
     {
         $this->inventoryArticleService->store($request);
     }
     /**
      * Display the specified resource.
      */
-    public function show(InventoryArticle $inventoryArticle)
+    public function show(InventoryArticle $inventoryArticle): void
     {
         //
     }
@@ -114,7 +114,7 @@ class InventoryArticleController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(InventoryArticle $inventoryArticle)
+    public function edit(InventoryArticle $inventoryArticle): void
     {
         //
     }
@@ -122,7 +122,7 @@ class InventoryArticleController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(UpdateInventoryArticleRequest $request, InventoryArticle $inventoryArticle)
+    public function update(UpdateInventoryArticleRequest $request, InventoryArticle $inventoryArticle): void
     {
         $this->authorizeTagAccess($inventoryArticle);
         $this->inventoryArticleService->update($inventoryArticle, $request);
@@ -131,7 +131,7 @@ class InventoryArticleController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(InventoryArticle $inventoryArticle)
+    public function destroy(InventoryArticle $inventoryArticle): void
     {
         $this->authorizeTagAccess($inventoryArticle);
         $this->inventoryArticleService->delete($inventoryArticle);
@@ -146,7 +146,7 @@ class InventoryArticleController extends Controller
 
     public function forceDeleteAll(): void
     {
-        InventoryArticle::onlyTrashed()->each(function ($article) {
+        InventoryArticle::onlyTrashed()->each(function ($article): void {
             $this->inventoryArticleService->forceDelete($article);
         });
     }
@@ -214,17 +214,17 @@ class InventoryArticleController extends Controller
                 'statusValues',
                 'detailedArticleQuantities.status',
                 // Interne Verplanungen: Zeitüberlappung (start <= endAt) && (end >= startAt)
-                'internalIssues' => function ($q) use ($tsInternalStart, $tsInternalEnd, $startAt, $endAt) {
+                'internalIssues' => function ($q) use ($tsInternalStart, $tsInternalEnd, $startAt, $endAt): void {
                     $q->where($tsInternalStart, '<=', $endAt)
-                        ->where(function ($qq) use ($tsInternalEnd, $startAt) {
+                        ->where(function ($qq) use ($tsInternalEnd, $startAt): void {
                             $qq->where($tsInternalEnd, '>=', $startAt)
                                 ->orWhereNull('end_date'); // Sicherheit wie bisher, falls offene Enden genutzt werden
                         });
                 },
                 // Externe Ausgaben (Verleih): gleiche Logik
-                'externalIssues' => function ($q) use ($tsExternalStart, $tsExternalEnd, $startAt, $endAt) {
+                'externalIssues' => function ($q) use ($tsExternalStart, $tsExternalEnd, $startAt, $endAt): void {
                     $q->where($tsExternalStart, '<=', $endAt)
-                        ->where(function ($qq) use ($tsExternalEnd, $startAt) {
+                        ->where(function ($qq) use ($tsExternalEnd, $startAt): void {
                             $qq->where($tsExternalEnd, '>=', $startAt)
                                 ->orWhereNull('return_date');
                         });
@@ -272,7 +272,8 @@ class InventoryArticleController extends Controller
         return response()->json($articles);
     }
 
-    public function loadArticlesByFilter(Request $request) {
+    public function loadArticlesByFilter(Request $request)
+    {
         $startDate = $request->get('start_date');
         $endDate = $request->get('end_date');
         $search = $request->get('search');
@@ -282,12 +283,12 @@ class InventoryArticleController extends Controller
 
         // Apply search filter if provided (search by name, category, or subcategory)
         if (!empty($search)) {
-            $articlesByFilter = $articlesByFilter->where(function ($q) use ($search) {
+            $articlesByFilter = $articlesByFilter->where(function ($q) use ($search): void {
                 $q->where('name', 'like', '%' . $search . '%')
-                    ->orWhereHas('category', function ($q) use ($search) {
+                    ->orWhereHas('category', function ($q) use ($search): void {
                         $q->where('name', 'like', '%' . $search . '%');
                     })
-                    ->orWhereHas('subCategory', function ($q) use ($search) {
+                    ->orWhereHas('subCategory', function ($q) use ($search): void {
                         $q->where('name', 'like', '%' . $search . '%');
                     });
             });

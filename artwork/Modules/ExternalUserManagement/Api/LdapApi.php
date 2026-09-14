@@ -213,8 +213,7 @@ class LdapApi implements ExternalUserManagementApi
         ExternalUserSource $source,
         string $userIdentifier,
         bool $includeNested = true,
-    ): array
-    {
+    ): array {
         $this->groupParentCache = [];
         $connectionName = $this->registerConnection($source);
 
@@ -324,7 +323,17 @@ class LdapApi implements ExternalUserManagementApi
      * = gefunden, aber Passwort falsch (der Nutzer gehört zum IdP → kein lokaler
      * Fallback).
      *
-     * @return array{identifier: string|null, email: string|null, first_name: string, last_name: string, groups: array<int, string>, email_verified: bool, meta_data: array<string, mixed>}|null
+     * @return array{
+     *     identifier: string|null,
+     *     email: string|null,
+     *     first_name: string,
+     *     last_name: string,
+     *     groups: array<int,
+     *     string>,
+     *     email_verified: bool,
+     *     meta_data: array<string,
+     *     mixed>,
+     * }|null
      * @throws LdapAuthenticationFailedException
      */
     public function authenticateAndFetch(ExternalUserSource $source, string $username, string $password): ?array

@@ -2330,7 +2330,6 @@ class ProjectController extends Controller
             if ($cell) {
                 $cell->update(['value' => $cell->calculations()->sum('value')]);
             }
-
         }
 
         // Wenn AJAX-Request: JSON-Response — auch ohne cell_id, sonst folgt der Browser dem 302 mit PATCH (405)
@@ -2783,7 +2782,7 @@ class ProjectController extends Controller
             'headerObject'                 => $headerObject,
             'loadedProjectInformation'     => $loadedProjectInformation,
             'first_project_tab_id'         => $firstVisibleTabId,
-            'first_project_calendar_tab_id'=> $firstVisibleCalendarTabId,
+            'first_project_calendar_tab_id' => $firstVisibleCalendarTabId,
             'first_project_budget_tab_id'  => $firstVisibleBudgetTabId,
             'createSettings'               => app(ProjectCreateSettings::class),
             'printLayouts'                 => $this->projectPrintLayoutService->getAll(),

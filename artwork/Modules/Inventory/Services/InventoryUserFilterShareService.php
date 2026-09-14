@@ -69,11 +69,11 @@ class InventoryUserFilterShareService
             'user_filter' => $userFilterArr,
 
             // bereits vorhanden:
-            'rooms' => Room::select('id','name')->orderBy('name')->get(),
+            'rooms' => Room::select('id', 'name')->orderBy('name')->get(),
 
             // NEU:
-            'projects' => Project::select('id','name')->orderBy('name')->get(),
-            'users' => User::select('id','first_name', 'last_name')->orderBy('first_name')->get(),
+            'projects' => Project::select('id', 'name')->orderBy('name')->get(),
+            'users' => User::select('id', 'first_name', 'last_name')->orderBy('first_name')->get(),
             'manufacturers' => CrmContact::query()
                     ->whereHas('contactType', fn ($q) => $q->where('slug', CrmSystemContactTypeEnum::MANUFACTURER->value))
                     ->select('id', 'display_name as name')
@@ -85,5 +85,4 @@ class InventoryUserFilterShareService
             'tagGroups' => InventoryTagGroup::select('id', 'name')->orderBy('position')->get(),
         ]);
     }
-
 }

@@ -75,7 +75,11 @@ class ShiftRuleController extends Controller
      * Gefilterte Listen (überfällig/offen/gewährt). Bei Statusfilter sind die anderen Listen leer;
      * "offen" enthält auch überfällige Einträge (überfällig = offen mit abgelaufener Frist).
      *
-     * @return array{overdue: \Illuminate\Database\Eloquent\Collection, open: \Illuminate\Database\Eloquent\Collection, granted: \Illuminate\Database\Eloquent\Collection}
+     * @return array{
+     *     overdue: \Illuminate\Database\Eloquent\Collection,
+     *     open: \Illuminate\Database\Eloquent\Collection,
+     *     granted: \Illuminate\Database\Eloquent\Collection,
+     * }
      */
     private function dashboardLists(CompensationDayOffRepository $repository, array $filters): array
     {

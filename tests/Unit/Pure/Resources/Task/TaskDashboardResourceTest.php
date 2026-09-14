@@ -28,7 +28,8 @@ final class TaskDashboardResourceTest extends TestCase
             public $checklist;
             public $deadline;
             public $done_at = null;
-            public function __construct($deadline, $checklist) {
+            public function __construct($deadline, $checklist)
+            {
                 $this->deadline = $deadline;
                 $this->checklist = $checklist;
             }

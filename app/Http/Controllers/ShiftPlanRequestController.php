@@ -238,13 +238,13 @@ class ShiftPlanRequestController extends Controller
 
         $craftsWithShiftPlans = Craft::query()
             ->with(['shiftPlanRequests' => function ($query) use ($cutoffYear, $cutoffWeek): void {
-                $query->where(function ($q) use ($cutoffYear, $cutoffWeek) {
+                $query->where(function ($q) use ($cutoffYear, $cutoffWeek): void {
                     $q->where('status', 'pending')
-                        ->orWhere(function ($q2) use ($cutoffYear, $cutoffWeek) {
+                        ->orWhere(function ($q2) use ($cutoffYear, $cutoffWeek): void {
                             $q2->whereIn('status', ['approved', 'rejected'])
-                                ->where(function ($q3) use ($cutoffYear, $cutoffWeek) {
+                                ->where(function ($q3) use ($cutoffYear, $cutoffWeek): void {
                                     $q3->where('year', '>', $cutoffYear)
-                                        ->orWhere(function ($q4) use ($cutoffYear, $cutoffWeek) {
+                                        ->orWhere(function ($q4) use ($cutoffYear, $cutoffWeek): void {
                                             $q4->where('year', '=', $cutoffYear)
                                                 ->where('week_number', '>=', $cutoffWeek);
                                         });
@@ -255,21 +255,21 @@ class ShiftPlanRequestController extends Controller
                 ->orderByDesc('week_number');
             }])
             ->withCount([
-                'shiftPlanRequests as past_approved_count' => function ($q) use ($cutoffYear, $cutoffWeek) {
+                'shiftPlanRequests as past_approved_count' => function ($q) use ($cutoffYear, $cutoffWeek): void {
                     $q->where('status', 'approved')
-                        ->where(function ($q2) use ($cutoffYear, $cutoffWeek) {
+                        ->where(function ($q2) use ($cutoffYear, $cutoffWeek): void {
                             $q2->where('year', '<', $cutoffYear)
-                                ->orWhere(function ($q3) use ($cutoffYear, $cutoffWeek) {
+                                ->orWhere(function ($q3) use ($cutoffYear, $cutoffWeek): void {
                                     $q3->where('year', '=', $cutoffYear)
                                         ->where('week_number', '<', $cutoffWeek);
                                 });
                         });
                 },
-                'shiftPlanRequests as past_rejected_count' => function ($q) use ($cutoffYear, $cutoffWeek) {
+                'shiftPlanRequests as past_rejected_count' => function ($q) use ($cutoffYear, $cutoffWeek): void {
                     $q->where('status', 'rejected')
-                        ->where(function ($q2) use ($cutoffYear, $cutoffWeek) {
+                        ->where(function ($q2) use ($cutoffYear, $cutoffWeek): void {
                             $q2->where('year', '<', $cutoffYear)
-                                ->orWhere(function ($q3) use ($cutoffYear, $cutoffWeek) {
+                                ->orWhere(function ($q3) use ($cutoffYear, $cutoffWeek): void {
                                     $q3->where('year', '=', $cutoffYear)
                                         ->where('week_number', '<', $cutoffWeek);
                                 });
@@ -294,9 +294,9 @@ class ShiftPlanRequestController extends Controller
 
         $requests = ShiftPlanRequest::where('craft_id', $craft->id)
             ->where('status', $status)
-            ->where(function ($q) use ($cutoffYear, $cutoffWeek) {
+            ->where(function ($q) use ($cutoffYear, $cutoffWeek): void {
                 $q->where('year', '<', $cutoffYear)
-                    ->orWhere(function ($q2) use ($cutoffYear, $cutoffWeek) {
+                    ->orWhere(function ($q2) use ($cutoffYear, $cutoffWeek): void {
                         $q2->where('year', '=', $cutoffYear)
                             ->where('week_number', '<', $cutoffWeek);
                     });
@@ -460,14 +460,14 @@ class ShiftPlanRequestController extends Controller
         // Individual Times für alle Craft-Worker im Wochenzeitraum laden
         $individualTimes = IndividualTime::query()
             ->individualByDateRange($start->toDateString(), $end->toDateString())
-            ->where(function ($q) use ($craftUserIds, $craftFreelancerIds, $craftServiceProviderIds) {
-                $q->where(function ($q) use ($craftUserIds) {
+            ->where(function ($q) use ($craftUserIds, $craftFreelancerIds, $craftServiceProviderIds): void {
+                $q->where(function ($q) use ($craftUserIds): void {
                     $q->where('timeable_type', User::class)
                       ->whereIn('timeable_id', $craftUserIds);
-                })->orWhere(function ($q) use ($craftFreelancerIds) {
+                })->orWhere(function ($q) use ($craftFreelancerIds): void {
                     $q->where('timeable_type', Freelancer::class)
                       ->whereIn('timeable_id', $craftFreelancerIds);
-                })->orWhere(function ($q) use ($craftServiceProviderIds) {
+                })->orWhere(function ($q) use ($craftServiceProviderIds): void {
                     $q->where('timeable_type', ServiceProvider::class)
                       ->whereIn('timeable_id', $craftServiceProviderIds);
                 });
@@ -759,8 +759,10 @@ class ShiftPlanRequestController extends Controller
         return redirect()->route('shift-plan-requests.my.index')->with('success', __('Shift plan request withdrawn.'));
     }
 
-    public function reject(\Artwork\Modules\Shift\Models\ShiftPlanRequest $shiftPlanRequest, \Illuminate\Http\Request $request): \Illuminate\Http\RedirectResponse
-    {
+    public function reject(
+        \Artwork\Modules\Shift\Models\ShiftPlanRequest $shiftPlanRequest,
+        \Illuminate\Http\Request $request
+    ): \Illuminate\Http\RedirectResponse {
         /** @var \App\Models\User $user */
         $user = $this->auth->user();
 
@@ -1604,14 +1606,14 @@ class ShiftPlanRequestController extends Controller
         // Individual Times für alle Craft-Worker im Wochenzeitraum laden
         $individualTimes = IndividualTime::query()
             ->individualByDateRange($start->toDateString(), $end->toDateString())
-            ->where(function ($q) use ($craftUserIds, $craftFreelancerIds, $craftServiceProviderIds) {
-                $q->where(function ($q) use ($craftUserIds) {
+            ->where(function ($q) use ($craftUserIds, $craftFreelancerIds, $craftServiceProviderIds): void {
+                $q->where(function ($q) use ($craftUserIds): void {
                     $q->where('timeable_type', User::class)
                       ->whereIn('timeable_id', $craftUserIds);
-                })->orWhere(function ($q) use ($craftFreelancerIds) {
+                })->orWhere(function ($q) use ($craftFreelancerIds): void {
                     $q->where('timeable_type', Freelancer::class)
                       ->whereIn('timeable_id', $craftFreelancerIds);
-                })->orWhere(function ($q) use ($craftServiceProviderIds) {
+                })->orWhere(function ($q) use ($craftServiceProviderIds): void {
                     $q->where('timeable_type', ServiceProvider::class)
                       ->whereIn('timeable_id', $craftServiceProviderIds);
                 });

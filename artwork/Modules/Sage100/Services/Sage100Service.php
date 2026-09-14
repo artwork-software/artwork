@@ -139,12 +139,14 @@ class Sage100Service
 
                 // ParentBooking could either be a sageAssignedData or sageNotAssignedData.
                 // If nothing is found we create a new one
-                if ($parentBooking = $this->sageAssignedDataService->findParentBookingByIdentifiers(
-                    $sageId,
-                    $ktoSoll,
-                    $ktoHaben,
-                    $kstTraeger
-                )) {
+                if (
+                    $parentBooking = $this->sageAssignedDataService->findParentBookingByIdentifiers(
+                        $sageId,
+                        $ktoSoll,
+                        $ktoHaben,
+                        $kstTraeger
+                    )
+                ) {
                     $serviceToUse = $this->sageAssignedDataService;
                 } else {
                     $parentBooking = $this->sageNotAssignedDataService->findParentBookingByIdentifiers(
@@ -238,7 +240,7 @@ class Sage100Service
         }
 
         if (!$parentBooking) {
-            if($this->updateExistingSageAssignedDataIfExists($item)) {
+            if ($this->updateExistingSageAssignedDataIfExists($item)) {
                 return null;
             }
             $sageNotAssignedData = $this->updateExistingSageNotAssignedDataIfExists($item);
@@ -761,12 +763,14 @@ class Sage100Service
             );
         }
 
-        if ($sageData = $this->sageNotAssignedDataService->findBookingByIdentifiers(
-            $item['ID'],
-            $item['KtoSoll'],
-            $item['KtoHaben'],
-            $item['KstTraeger'],
-        )) {
+        if (
+            $sageData = $this->sageNotAssignedDataService->findBookingByIdentifiers(
+                $item['ID'],
+                $item['KtoSoll'],
+                $item['KtoHaben'],
+                $item['KstTraeger'],
+            )
+        ) {
             return $sageData;
         }
 

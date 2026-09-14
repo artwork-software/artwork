@@ -44,11 +44,11 @@ class ProjectTabBulkEditService
             ])
             ->orderBy('start_time', 'asc')
             // Eventtypen filtern (nur diese zulassen, wenn gesetzt)
-            ->when(!empty($userCalendarFilter?->event_type_ids), function ($q) use ($userCalendarFilter) {
+            ->when(!empty($userCalendarFilter?->event_type_ids), function ($q) use ($userCalendarFilter): void {
                 $q->whereIn('event_type_id', $userCalendarFilter->event_type_ids);
             })
             // Projektstatus-Filter (zentrale Semantik im Event-Scope)
-            ->when(!empty($userCalendarFilter?->project_state_ids), function ($q) use ($userCalendarFilter) {
+            ->when(!empty($userCalendarFilter?->project_state_ids), function ($q) use ($userCalendarFilter): void {
                 $q->byProjectStateIds($userCalendarFilter->project_state_ids);
             })
             // Raumfilter via whereHas(Room …) anwenden
@@ -57,8 +57,8 @@ class ProjectTabBulkEditService
                 || !empty($userCalendarFilter?->room_attribute_ids)
                 || !empty($userCalendarFilter?->area_ids)
                 || !empty($userCalendarFilter?->room_category_ids),
-                function ($q) use ($userCalendarFilter) {
-                    $q->whereHas('room', function ($rq) use ($userCalendarFilter) {
+                function ($q) use ($userCalendarFilter): void {
+                    $q->whereHas('room', function ($rq) use ($userCalendarFilter): void {
                         $rq->select(['id'])
                             ->unlessRoomIds($userCalendarFilter?->room_ids)
                             ->unlessRoomAttributeIds($userCalendarFilter?->room_attribute_ids)
@@ -110,4 +110,3 @@ class ProjectTabBulkEditService
         ];
     }
 }
-

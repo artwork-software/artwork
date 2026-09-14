@@ -8,24 +8,13 @@ use Illuminate\Support\Facades\Schema;
 
 class UpdateServiceProviderContacts extends Command
 {
-    /**
-     * The name and signature of the console command.
-     *
-     * @var string
-     */
     protected $signature = 'artwork:update-service-provider-contacts';
-
-    /**
-     * The console command description.
-     *
-     * @var string
-     */
     protected $description = 'Command description';
 
     /**
      * Execute the console command.
      */
-    public function handle()
+    public function handle(): void
     {
 
         if (!Schema::hasTable('service_provider_contacts')) {
@@ -34,7 +23,7 @@ class UpdateServiceProviderContacts extends Command
         }
         $serviceProviders = \Artwork\Modules\ServiceProvider\Models\ServiceProvider::with('oldContacts')->get();
 
-        $serviceProviders->each(function ($serviceProvider) {
+        $serviceProviders->each(function ($serviceProvider): void {
             try {
                 $contacts = $serviceProvider->oldContacts;
 
@@ -79,6 +68,5 @@ class UpdateServiceProviderContacts extends Command
             Log::error('Fehler beim Löschen der alten Tabelle: ' . $e->getMessage());
             $this->error('Löschen der alten Kontakt-Tabelle fehlgeschlagen.');
         }
-
     }
 }

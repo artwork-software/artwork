@@ -54,7 +54,7 @@ class ProjectTabDocumentService
         $visibleTabIds = ProjectTab::query()->visibleForUser($user)->pluck('id');
 
         return $project->project_files()
-            ->where(function ($query) use ($visibleTabIds) {
+            ->where(function ($query) use ($visibleTabIds): void {
                 $query->whereIn('tab_id', $visibleTabIds)
                     ->orWhereNull('tab_id');
             })
@@ -88,5 +88,3 @@ class ProjectTabDocumentService
             ->toArray();
     }
 }
-
-

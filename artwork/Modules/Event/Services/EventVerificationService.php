@@ -24,7 +24,7 @@ class EventVerificationService
         private readonly NotificationService $notificationService,
         private readonly ChangeService $changeService,
         private readonly RoomRequestNotificationService $roomRequestNotificationService,
-    ){
+    ) {
     }
 
     /**
@@ -61,13 +61,14 @@ class EventVerificationService
         );
     }
 
-    public function getAllByUser(User $user, int $paginate = 5, string $filterVerificationRequest = '') {
-        return EventVerification::where(function ($query) use ($user) {
+    public function getAllByUser(User $user, int $paginate = 5, string $filterVerificationRequest = '')
+    {
+        return EventVerification::where(function ($query) use ($user): void {
             $query->where('verifier_id', $user->id)
                 ->orWhere('event_id', $user->id);
-            })
+        })
             ->with(['event.room', 'event.event_type', 'event.project', 'verifier', 'requester'])
-            ->when(!empty($filterVerificationRequest), function ($query) use ($filterVerificationRequest) {
+            ->when(!empty($filterVerificationRequest), function ($query) use ($filterVerificationRequest): void {
                 $query->where('status', $filterVerificationRequest);
             })
             ->orderBy('created_at', 'desc')
@@ -85,7 +86,7 @@ class EventVerificationService
             ->orderBy('created_at', 'desc')
             ->paginate($paginate);
 
-        $events->each(function ($event) {
+        $events->each(function ($event): void {
             $groupedByUuid = $event->verifications
                 ->sortByDesc('created_at')
                 ->groupBy('uuid');
@@ -208,8 +209,8 @@ class EventVerificationService
                 break;
 
             case 'all':
-                $approvedCount = $event->verifications()->where('status', 'approved')->where('uuid', $verification->uuid )->count();
-                $totalCount = $event->verifications()->whereIn('status', ['approved', 'rejected'])->where('uuid', $verification->uuid )->count();
+                $approvedCount = $event->verifications()->where('status', 'approved')->where('uuid', $verification->uuid)->count();
+                $totalCount = $event->verifications()->whereIn('status', ['approved', 'rejected'])->where('uuid', $verification->uuid)->count();
                 $notificationTitle = __('notification.request-verification.user-approved', [
                     'name' => $verification->verifier?->full_name ?? '',
                 ], $eventCreator?->language);

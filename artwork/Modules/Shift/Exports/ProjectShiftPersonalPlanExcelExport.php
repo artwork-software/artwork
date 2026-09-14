@@ -302,9 +302,15 @@ class ProjectShiftPersonalPlanExcelExport implements FromView, WithEvents, WithC
         }
 
         // string/bool/int normalisieren
-        if (is_bool($val)) return $val;
-        if (is_int($val)) return $val === 1;
-        if (is_string($val)) return in_array(strtolower($val), ['1', 'true', 'yes', 'y', 'on'], true);
+        if (is_bool($val)) {
+            return $val;
+        }
+        if (is_int($val)) {
+            return $val === 1;
+        }
+        if (is_string($val)) {
+            return in_array(strtolower($val), ['1', 'true', 'yes', 'y', 'on'], true);
+        }
 
         return false;
     }
@@ -592,26 +598,56 @@ class ProjectShiftPersonalPlanExcelExport implements FromView, WithEvents, WithC
                     ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_LEFT);
 
                 $this->setNumberFormatRange(
-                    $sheet, $shiftsStart, $shiftsInternEnd, $dataStart, $totalRow, NumberFormat::FORMAT_NUMBER
+                    $sheet,
+                    $shiftsStart,
+                    $shiftsInternEnd,
+                    $dataStart,
+                    $totalRow,
+                    NumberFormat::FORMAT_NUMBER
                 );
                 $this->setNumberFormatRange(
-                    $sheet, $shiftsExternStart, $shiftsExternEnd, $dataStart, $totalRow, NumberFormat::FORMAT_NUMBER
+                    $sheet,
+                    $shiftsExternStart,
+                    $shiftsExternEnd,
+                    $dataStart,
+                    $totalRow,
+                    NumberFormat::FORMAT_NUMBER
                 );
                 $this->setNumberFormatRange(
-                    $sheet, $shiftsInternSum, $shiftsInternSum, $dataStart, $totalRow, NumberFormat::FORMAT_NUMBER
+                    $sheet,
+                    $shiftsInternSum,
+                    $shiftsInternSum,
+                    $dataStart,
+                    $totalRow,
+                    NumberFormat::FORMAT_NUMBER
                 );
                 $this->setNumberFormatRange(
-                    $sheet, $shiftsExternSum, $shiftsExternSum, $dataStart, $totalRow, NumberFormat::FORMAT_NUMBER
+                    $sheet,
+                    $shiftsExternSum,
+                    $shiftsExternSum,
+                    $dataStart,
+                    $totalRow,
+                    NumberFormat::FORMAT_NUMBER
                 );
                 $this->setNumberFormatRange($sheet, $headcountCol, $headcountCol, $dataStart, $totalRow, NumberFormat::FORMAT_NUMBER);
 
                 if ($this->decimalNumbers) {
                     // Dauer- und Pausenspalte sowie alle Stunden-Spalten als Dezimalzahl (z. B. 8,5)
                     $this->setNumberFormatRange(
-                        $sheet, 6, 7, $dataStart, $totalRow, NumberFormat::FORMAT_NUMBER_00
+                        $sheet,
+                        6,
+                        7,
+                        $dataStart,
+                        $totalRow,
+                        NumberFormat::FORMAT_NUMBER_00
                     );
                     $this->setNumberFormatRange(
-                        $sheet, $hoursStart, $hoursTotalCol, $dataStart, $totalRow, NumberFormat::FORMAT_NUMBER_00
+                        $sheet,
+                        $hoursStart,
+                        $hoursTotalCol,
+                        $dataStart,
+                        $totalRow,
+                        NumberFormat::FORMAT_NUMBER_00
                     );
                 }
             },

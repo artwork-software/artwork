@@ -105,9 +105,11 @@ readonly class ChecklistService
                 return true;
             }
             // Keep if any task is assigned to the user
-            if ($checklist->tasks->contains(function ($task) use ($userId) {
-                return $task->task_users->contains('id', $userId);
-            })) {
+            if (
+                $checklist->tasks->contains(function ($task) use ($userId) {
+                    return $task->task_users->contains('id', $userId);
+                })
+            ) {
                 return true;
             }
         });

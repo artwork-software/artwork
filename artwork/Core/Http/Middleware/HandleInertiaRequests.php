@@ -101,7 +101,8 @@ class HandleInertiaRequests extends Middleware
             )
             : [[], [], []];
 
-        // erstelle mir ein Array aus $generalCalendarSettings (Start und end ) für stunden z.b. Start: 22:00 end: 08:00 array = [22:00, 23:00, 00:00, 01:00, 02:00, 03:00, 04:00, 05:00, 06:00, 07:00, 08:00]
+        // Stundenraster aus $generalCalendarSettings (start/end), z.B. Start 22:00, Ende 08:00
+        // → [22:00, 23:00, 00:00, 01:00, 02:00, 03:00, 04:00, 05:00, 06:00, 07:00, 08:00]
         $start = explode(':', $generalCalendarSettings->start);
         $end = explode(':', $generalCalendarSettings->end);
 

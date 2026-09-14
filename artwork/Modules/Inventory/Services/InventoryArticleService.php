@@ -637,11 +637,17 @@ class InventoryArticleService
                 ->sum('issuable_inventory_article.quantity');
             if ($totalPlanned > $article->quantity) {
                 foreach ($issue->responsibleUsers as $user) {
-                    $notificationTitle = __('notification.inventory_article_overbooked_title', ['issueName' => $issue->name, 'articleName' => $article->name], $user->language);
+                    $notificationTitle = __('notification.inventory_article_overbooked_title', [
+                        'issueName' => $issue->name,
+                        'articleName' => $article->name,
+                    ], $user->language);
                     $notificationDescription = [
                         1 => [
                             'type' => 'string',
-                            'title' => __('notification.inventory_article_overbooked_description', ['issueName' => $issue->name, 'articleName' => $article->name], $user->language)
+                            'title' => __('notification.inventory_article_overbooked_description', [
+                                'issueName' => $issue->name,
+                                'articleName' => $article->name,
+                            ], $user->language)
                         ],
                         2 => [
                             'type' => 'link',
@@ -674,11 +680,17 @@ class InventoryArticleService
                 ->sum('issuable_inventory_article.quantity');
             if ($totalPlanned > $article->quantity && $issue->issuedBy) {
                 $user = $issue->issuedBy;
-                $notificationTitle = __('notification.inventory_article_overbooked_title', ['issueName' => $issue->name, 'articleName' => $article->name], $user->language);
+                $notificationTitle = __('notification.inventory_article_overbooked_title', [
+                    'issueName' => $issue->name,
+                    'articleName' => $article->name,
+                ], $user->language);
                 $notificationDescription = [
                     1 => [
                         'type' => 'string',
-                        'title' => __('notification.inventory_article_overbooked_description', ['issueName' => $issue->name, 'articleName' => $article->name], $user->language)
+                        'title' => __('notification.inventory_article_overbooked_description', [
+                            'issueName' => $issue->name,
+                            'articleName' => $article->name,
+                        ], $user->language)
                     ],
                     2 => [
                         'type' => 'link',

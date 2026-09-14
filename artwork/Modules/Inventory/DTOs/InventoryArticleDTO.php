@@ -29,7 +29,7 @@ class InventoryArticleDTO
      */
     public static function fromModel(InventoryArticle $article): static
     {
-        $dto = new static();
+        $dto = new self();
         $dto->id = $article->id;
         $dto->inventory_number = $article->inventory_number;
         $dto->name = $article->name;
@@ -54,7 +54,7 @@ class InventoryArticleDTO
      * @param \Illuminate\Database\Eloquent\Collection $articles
      * @return array
      */
-    public static function fromCollection($articles): array
+    public static function fromCollection(\Illuminate\Database\Eloquent\Collection $articles): array
     {
         $dtos = [];
 
@@ -83,7 +83,7 @@ class InventoryArticleDTO
      */
     public static function fromArray(array $data): static
     {
-        $dto = new static();
+        $dto = new self();
 
         foreach ($data as $key => $value) {
             if (property_exists($dto, $key)) {

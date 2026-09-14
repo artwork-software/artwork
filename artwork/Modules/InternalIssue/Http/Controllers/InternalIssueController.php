@@ -28,7 +28,8 @@ class InternalIssueController extends Controller
         protected InventoryUserFilterShareService $inventoryUserFilterShareService,
         protected AuthManager $authManger,
         protected InventoryUserFilterService $inventoryUserFilterService
-    ) {}
+    ) {
+    }
 
     public function index(): \Inertia\Response
     {
@@ -72,15 +73,15 @@ class InternalIssueController extends Controller
                 'project',
                 'responsibleUsers.departments',
             ])
-            ->when(!empty($articleIds), function ($q) use ($articleIds) {
-                $q->whereHas('articles', function ($sub) use ($articleIds) {
+            ->when(!empty($articleIds), function ($q) use ($articleIds): void {
+                $q->whereHas('articles', function ($sub) use ($articleIds): void {
                     $sub->whereIn('inventory_articles.id', $articleIds);
                 });
             })
             ->when($projectId > 0, fn ($q) => $q->where('project_id', $projectId))
             ->when($roomId > 0, fn ($q) => $q->where('room_id', $roomId))
-            ->when(!empty($responsibleUserIds), function ($q) use ($responsibleUserIds) {
-                $q->whereHas('responsibleUsers', function ($sub) use ($responsibleUserIds) {
+            ->when(!empty($responsibleUserIds), function ($q) use ($responsibleUserIds): void {
+                $q->whereHas('responsibleUsers', function ($sub) use ($responsibleUserIds): void {
                     $sub->whereIn('users.id', $responsibleUserIds);
                 });
             })
@@ -89,8 +90,8 @@ class InternalIssueController extends Controller
             ->overlapping($dateFrom, $dateTo)
 
             // Suche
-            ->when($q !== '', function ($qbuilder) use ($q) {
-                $qbuilder->where(function ($sub) use ($q) {
+            ->when($q !== '', function ($qbuilder) use ($q): void {
+                $qbuilder->where(function ($sub) use ($q): void {
                     $sub->where('name', 'like', "%{$q}%")
                         ->orWhere('notes', 'like', "%{$q}%");
                 });
@@ -116,13 +117,12 @@ class InternalIssueController extends Controller
                 'category',
                 'subCategory',
                 'properties',
-                'images' => function ($query) {
+                'images' => function ($query): void {
                     $query->orderBy('is_main_image', 'desc')->orderBy('id');
                 },
                 'statusValues',
                 'detailedArticleQuantities.status',
-            ])->find(request()->get('articleId'))
-            ),
+            ])->find(request()->get('articleId'))),
             'urlParameters' => request()->only([
                 'article_ids','date_from','date_to','project_id','room_id','responsible_user_ids','q'
             ]),
@@ -282,4 +282,3 @@ class InternalIssueController extends Controller
         return redirect()->back();
     }
 }
-

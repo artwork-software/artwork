@@ -40,7 +40,8 @@ class InspectShiftRulesCommand extends Command
         /** @var Collection<ShiftRule> $rules */
         $rules = $contract->shiftRules()->where('is_active', true)->get();
         $this->line("Active rules for contract #{$contract->id}:");
-        $this->table(['ID', 'Name', 'Trigger', 'Value', 'Color'],
+        $this->table(
+            ['ID', 'Name', 'Trigger', 'Value', 'Color'],
             $rules->map(fn($r) => [$r->id, $r->name, $r->trigger_type, $r->individual_number_value, $r->warning_color])->toArray()
         );
 

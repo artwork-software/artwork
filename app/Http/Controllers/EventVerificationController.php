@@ -180,7 +180,7 @@ class EventVerificationController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Event $event)
+    public function store(Event $event): void
     {
         /** @var User $user */
         $user = $this->authManager->user();

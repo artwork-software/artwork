@@ -54,7 +54,7 @@ class BiProjectDataService
 
         if ($mode === BiVisitorModeEnum::TOTAL) {
             $this->biEventDataRepository->getByProjectId($projectId, $scope)
-                ->each(function (BiEventData $eventData) {
+                ->each(function (BiEventData $eventData): void {
                     $eventData->update(['visitors' => null]);
                 });
         } else {
@@ -77,7 +77,7 @@ class BiProjectDataService
 
         if ($mode === BiVisitorModeEnum::TOTAL) {
             $this->biEventDataRepository->getByProjectId($projectId, $scope)
-                ->each(function (BiEventData $eventData) {
+                ->each(function (BiEventData $eventData): void {
                     $eventData->update(['sold_tickets' => null]);
                 });
             // Kategorien folgen dem Ticket-Modus: Pro-Termin-Werte verwerfen
@@ -109,7 +109,7 @@ class BiProjectDataService
 
         if ($mode === BiVisitorModeEnum::TOTAL) {
             $this->biEventDataRepository->getByProjectId($projectId, $scope)
-                ->each(function (BiEventData $eventData) {
+                ->each(function (BiEventData $eventData): void {
                     $eventData->update(['revenue' => null]);
                 });
         } else {

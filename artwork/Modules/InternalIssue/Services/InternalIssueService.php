@@ -16,7 +16,7 @@ class InternalIssueService
     public function __construct(
         protected readonly InventoryArticleService $articleService,
         protected readonly AuthManager $auth,
-    ){
+    ) {
     }
 
     public function store(array $data, array $files = []): InternalIssue
@@ -203,7 +203,7 @@ class InternalIssueService
             ->performedOn($issue)
             ->causedBy($this->auth->user())
             ->event($event)
-            ->tap(function (Activity $activity) use ($properties) {
+            ->tap(function (Activity $activity) use ($properties): void {
                 $activity->properties = $activity->properties->merge($properties);
             })
             ->log($description);

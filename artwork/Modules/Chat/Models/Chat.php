@@ -6,6 +6,9 @@ use Artwork\Modules\User\Models\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
+/**
+ * @property-read ChatMessage|null $last_message
+ */
 class Chat extends Model
 {
     use HasFactory;
@@ -47,10 +50,8 @@ class Chat extends Model
         return $this->hasOne(ChatMessage::class)->latest()->with('sender');
     }
 
-    public function getLastMessageAttribute(): Model|null
+    public function getLastMessageAttribute(): ?ChatMessage
     {
         return $this->lastMessage()->first();
     }
-
-
 }

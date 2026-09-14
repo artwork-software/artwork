@@ -92,7 +92,7 @@ class InventoryTagController extends Controller
         $inventoryTag->delete();
     }
 
-    public function reorderTags(InventoryTagGroup $group, Request $request)
+    public function reorderTags(InventoryTagGroup $group, Request $request): void
     {
         $data = $request->validate([
             'ordered_ids'   => ['required', 'array'],

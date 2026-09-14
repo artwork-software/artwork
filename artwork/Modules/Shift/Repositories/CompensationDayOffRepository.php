@@ -64,7 +64,10 @@ class CompensationDayOffRepository extends BaseRepository
         $deadlineTo = $filters['deadline_to'] ?? null;
 
         return $query
-            ->when($craftId, fn (Builder $q) => $q->whereHas('user', fn (Builder $u) => $u->whereHas('assignedCrafts', fn (Builder $c) => $c->where('crafts.id', $craftId))))
+            ->when($craftId, fn (Builder $q) => $q->whereHas(
+                'user',
+                fn (Builder $u) => $u->whereHas('assignedCrafts', fn (Builder $c) => $c->where('crafts.id', $craftId))
+            ))
             ->when($userId, fn (Builder $q) => $q->where('user_id', $userId))
             ->when($deadlineFrom, fn (Builder $q) => $q->whereDate('deadline', '>=', $deadlineFrom))
             ->when($deadlineTo, fn (Builder $q) => $q->whereDate('deadline', '<=', $deadlineTo));

@@ -1080,8 +1080,7 @@ readonly class EventService
         User|Freelancer|ServiceProvider|null $worker,
         Carbon $startDate,
         Carbon $endDate
-    ): SupportCollection
-    {
+    ): SupportCollection {
         if ($worker === null) {
             return collect();
         }
@@ -1391,7 +1390,7 @@ readonly class EventService
             end_date: $holiday->end_date->format('Y-m-d'),
             color: $holiday->color,
             subdivisions: $holiday->subdivisions->pluck('name')->toArray(),
-                treatAsSpecialDay: (bool) $holiday->treatAsSpecialDay,
+            treatAsSpecialDay: (bool) $holiday->treatAsSpecialDay,
         ));
     }
 

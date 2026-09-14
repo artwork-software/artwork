@@ -50,7 +50,7 @@ class NotificationAction implements WorkflowAction
 
         $this->notificationService->setTitle('Workflow Benachrichtigung')
             ->setDescription($message)
-            ->setNotificationConstEnum(\Artwork\Modules\Notification\Enums\NotificationEnum::NOTIFICATION_WORKFLOW)
+            ->setNotificationConstEnum(\Artwork\Modules\Notification\Enums\NotificationEnum::NOTIFICATION_NEW_SHIFT_COMMIT_WORKFLOW_REQUEST)
             ->setButtons([
                 ['type' => 'success', 'text' => 'OK']
             ])

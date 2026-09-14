@@ -13,7 +13,8 @@ class InventoryCategoryService
 {
     public function __construct(
         protected InventoryCategoryRepository $categoryRepository
-    ) {}
+    ) {
+    }
 
     /**
      * Get all categories with optimized relations.

@@ -189,7 +189,7 @@ class UserController extends Controller
      *
      * @param \Illuminate\Database\Eloquent\Builder $query
      */
-    private function applyAuthProviderFilter($query, ?string $filter): void
+    private function applyAuthProviderFilter(\Illuminate\Database\Eloquent\Builder $query, ?string $filter): void
     {
         if ($filter === 'sso') {
             $query->where('auth_provider', '!=', 'local');

@@ -12,7 +12,7 @@ class AccommodationRoomTypeController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(): void
     {
         //
     }
@@ -20,7 +20,7 @@ class AccommodationRoomTypeController extends Controller
     /**
      * Show the form for creating a new resource.
      */
-    public function create()
+    public function create(): void
     {
         //
     }
@@ -42,7 +42,7 @@ class AccommodationRoomTypeController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(AccommodationRoomType $accommodationRoomType)
+    public function show(AccommodationRoomType $accommodationRoomType): void
     {
         //
     }
@@ -50,7 +50,7 @@ class AccommodationRoomTypeController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(AccommodationRoomType $accommodationRoomType)
+    public function edit(AccommodationRoomType $accommodationRoomType): void
     {
         //
     }
@@ -58,7 +58,7 @@ class AccommodationRoomTypeController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(UpdateAccommodationRoomTypeRequest $request, AccommodationRoomType $accommodationRoomType)
+    public function update(UpdateAccommodationRoomTypeRequest $request, AccommodationRoomType $accommodationRoomType): void
     {
         //
     }
@@ -66,7 +66,7 @@ class AccommodationRoomTypeController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(AccommodationRoomType $accommodationRoomType)
+    public function destroy(AccommodationRoomType $accommodationRoomType): void
     {
         //
     }

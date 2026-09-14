@@ -2,7 +2,7 @@
 
 namespace App\Policies;
 
-use App\IndividualTimeSeries;
+use Artwork\Modules\IndividualTimes\Models\IndividualTimeSeries;
 use Artwork\Modules\User\Models\User;
 use Illuminate\Auth\Access\Response;
 

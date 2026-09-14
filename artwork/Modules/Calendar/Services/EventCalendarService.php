@@ -2,7 +2,6 @@
 
 namespace Artwork\Modules\Calendar\Services;
 
-
 use Artwork\Modules\Calendar\DTO\CalendarHolidayDTO;
 use Illuminate\Support\Facades\Auth;
 use Artwork\Modules\Calendar\DTO\CalendarPeriodDTO;
@@ -31,8 +30,8 @@ readonly class EventCalendarService
     public function filterRoomsEvents(
         SupportCollection $rooms,
         UserFilter $filter,
-                   $startDate,
-                   $endDate,
+        $startDate,
+        $endDate,
         null|UserCalendarSettings|UserDailyViewCalendarSettings $userCalendarSettings = null,
     ): SupportCollection {
         $events = $this->filter(
@@ -50,10 +49,40 @@ readonly class EventCalendarService
         $userIds        = $events->pluck('user_id')->unique()->filter();
         $eventStatusIds = $events->pluck('event_status_id')->unique()->filter();
 
-        $users        = $userIds->isEmpty() ? collect() : User::whereIn('id', $userIds)->select(['id','first_name','last_name','position','email','profile_photo_path'])->get()->keyBy('id');
-        $projects     = $projectIds->isEmpty() ? collect() : Project::whereIn('id',$projectIds)->select(['id','name','state','artists','is_group','color','icon'])->with(['status:id,name,color','managerUsers:id,first_name,last_name,position,email,profile_photo_path','managerUsers.departments:id','groups','categories'])->get()->keyBy('id');
-        $eventTypes   = $eventTypeIds->isEmpty() ? collect() : EventType::whereIn('id',$eventTypeIds)->select(['id','name','abbreviation','hex_code'])->get()->keyBy('id');
-        $eventStatuses= $eventStatusIds->isEmpty() ? collect() : EventStatus::whereIn('id',$eventStatusIds)->select(['id','name','color'])->get()->keyBy('id');
+        $users        = $userIds->isEmpty() ? collect() : User::whereIn('id', $userIds)->select([
+            'id',
+            'first_name',
+            'last_name',
+            'position',
+            'email',
+            'profile_photo_path',
+        ])->get()->keyBy('id');
+        $projects     = $projectIds->isEmpty() ? collect() : Project::whereIn('id', $projectIds)->select([
+            'id',
+            'name',
+            'state',
+            'artists',
+            'is_group',
+            'color',
+            'icon',
+        ])->with([
+            'status:id,name,color',
+            'managerUsers:id,first_name,last_name,position,email,profile_photo_path',
+            'managerUsers.departments:id',
+            'groups',
+            'categories',
+        ])->get()->keyBy('id');
+        $eventTypes   = $eventTypeIds->isEmpty() ? collect() : EventType::whereIn('id', $eventTypeIds)->select([
+            'id',
+            'name',
+            'abbreviation',
+            'hex_code',
+        ])->get()->keyBy('id');
+        $eventStatuses = $eventStatusIds->isEmpty() ? collect() : EventStatus::whereIn('id', $eventStatusIds)->select([
+            'id',
+            'name',
+            'color',
+        ])->get()->keyBy('id');
 
         $eventDTOs = $events->map(fn($event) => EventDTO::fromModel(
             $event,
@@ -82,8 +111,8 @@ readonly class EventCalendarService
     public function filterRoomsEventsForPdf(
         SupportCollection $rooms,
         UserFilter $filter,
-                   $startDate,
-                   $endDate,
+        $startDate,
+        $endDate,
         null|UserCalendarSettings|UserDailyViewCalendarSettings $userCalendarSettings = null,
         ?EventExportDisplaySettings $displaySettings = null,
     ): SupportCollection {
@@ -193,11 +222,10 @@ readonly class EventCalendarService
     public function filterRoomsEventsWithMinimalData(
         SupportCollection $rooms,
         UserFilter $filter,
-                   $startDate,
-                   $endDate,
+        $startDate,
+        $endDate,
         null|UserCalendarSettings|UserDailyViewCalendarSettings $userCalendarSettings = null,
-    ): SupportCollection
-    {
+    ): SupportCollection {
         $events = $this->filter(
             $this->getEventQueryWithMinimalData(),
             $rooms,
@@ -253,14 +281,13 @@ readonly class EventCalendarService
     }
 
     private function filter(
-        Builder               $eventsQuery,
-        SupportCollection     $rooms,
-        UserFilter            $filter,
-                              $startDate,
-                              $endDate,
+        Builder $eventsQuery,
+        SupportCollection $rooms,
+        UserFilter $filter,
+        $startDate,
+        $endDate,
         null|UserCalendarSettings|UserDailyViewCalendarSettings $userCalendarSettings = null,
-    ): SupportCollection
-    {
+    ): SupportCollection {
         $endDateEndOfDay = $endDate instanceof Carbon ? $endDate->copy()->endOfDay() : Carbon::parse($endDate)->endOfDay();
 
         return $eventsQuery
@@ -268,10 +295,10 @@ readonly class EventCalendarService
             ->where(function ($q) use ($startDate, $endDateEndOfDay): void {
                 // Überlappungen (Start innerhalb, Ende innerhalb, oder komplett spannend)
                 $q->whereBetween('start_time', [$startDate, $endDateEndOfDay])
-                    ->orWhereBetween('end_time',   [$startDate, $endDateEndOfDay])
-                    ->orWhere(function ($nested) use ($startDate, $endDateEndOfDay) {
+                    ->orWhereBetween('end_time', [$startDate, $endDateEndOfDay])
+                    ->orWhere(function ($nested) use ($startDate, $endDateEndOfDay): void {
                         $nested->where('start_time', '<=', $startDate)
-                            ->where('end_time',   '>=', $endDateEndOfDay);
+                            ->where('end_time', '>=', $endDateEndOfDay);
                     });
             })
             ->when(!empty($filter->event_type_ids), fn($q) => $q->whereIn('event_type_id', $filter->event_type_ids))

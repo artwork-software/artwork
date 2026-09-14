@@ -63,14 +63,14 @@ Route::post('/inventory/article/search', [\Artwork\Modules\Inventory\Http\Contro
 // Ab hier scope-pflichtig: Tokens, die vor Einführung der Scopes ausgegeben wurden, tragen eine
 // leere Scope-Menge im signierten JWT und lassen sich nicht nachrüsten — sie müssen neu erstellt
 // werden. Bewusst ein eigener Deploy, damit dafür ein Zeitfenster bleibt.
-Route::middleware(['auth:api', CheckToken::using('inventory:read')])->group(function () {
+Route::middleware(['auth:api', CheckToken::using('inventory:read')])->group(function (): void {
     Route::get('/inventory', [InventoryCategoryApiController::class, 'index']);
     Route::get('/inventory/articles', [InventoryArticleApiController::class, 'index']);
     Route::get('/inventory/articles/{article}', [InventoryArticleApiController::class, 'show']);
 });
 
 // Shift Rules API routes
-Route::middleware('auth:sanctum')->group(function () {
+Route::middleware('auth:sanctum')->group(function (): void {
     Route::post('/shift-rules/validate', [ShiftRuleController::class, 'validateRules'])->name('api.shift-rules.validate');
     Route::get('/shift-rules/pending', [ShiftRuleController::class, 'getPendingViolations'])->name('api.shift-rules.pending');
     Route::patch('/shift-rules/violations/{violationId}/status', [ShiftRuleController::class, 'updateViolationStatus'])->name('api.shift-rules.update-status');

@@ -8,11 +8,11 @@ trait TriggersWorkflows
 {
     public static function bootTriggersWorkflows(): void
     {
-        static::created(function ($model) {
+        static::created(function ($model): void {
             $model->triggerWorkflow('created');
         });
 
-        static::updated(function ($model) {
+        static::updated(function ($model): void {
             $model->triggerWorkflow('updated', [
                 'changes' => $model->getChanges(),
                 'original' => $model->getOriginal()

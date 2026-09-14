@@ -686,9 +686,33 @@ class DemoProjectSeeder extends Seeder
         }
         $setupDay = $firstShow->copy()->subDay();
 
-        $this->createEvent($project, 'anlieferung', $stage, $setupDay->copy()->setTime(8, 0), $setupDay->copy()->setTime(10, 0), $rng, ['name' => 'Anlieferung Compagnie']);
-        $this->createEvent($project, 'aufbau', $stage, $setupDay->copy()->setTime(10, 0), $setupDay->copy()->setTime(18, 0), $rng, ['name' => 'Aufbau & Einrichtung']);
-        $this->createEvent($project, 'probe', $stage, $firstShow->copy()->setTime(15, 0), $firstShow->copy()->setTime(17, 0), $rng, ['name' => 'Soundcheck / Spacing']);
+        $this->createEvent(
+            $project,
+            'anlieferung',
+            $stage,
+            $setupDay->copy()->setTime(8, 0),
+            $setupDay->copy()->setTime(10, 0),
+            $rng,
+            ['name' => 'Anlieferung Compagnie']
+        );
+        $this->createEvent(
+            $project,
+            'aufbau',
+            $stage,
+            $setupDay->copy()->setTime(10, 0),
+            $setupDay->copy()->setTime(18, 0),
+            $rng,
+            ['name' => 'Aufbau & Einrichtung']
+        );
+        $this->createEvent(
+            $project,
+            'probe',
+            $stage,
+            $firstShow->copy()->setTime(15, 0),
+            $firstShow->copy()->setTime(17, 0),
+            $rng,
+            ['name' => 'Soundcheck / Spacing']
+        );
 
         $showCount = $rng->int(1, 3);
         $lastShow = $firstShow;
@@ -700,7 +724,15 @@ class DemoProjectSeeder extends Seeder
             }
         }
 
-        $this->createEvent($project, 'abbau', $stage, $lastShow->copy()->setTime(22, 30), $lastShow->copy()->addDay()->setTime(1, 30), $rng, ['name' => 'Abbau & Verladung']);
+        $this->createEvent(
+            $project,
+            'abbau',
+            $stage,
+            $lastShow->copy()->setTime(22, 30),
+            $lastShow->copy()->addDay()->setTime(1, 30),
+            $rng,
+            ['name' => 'Abbau & Verladung']
+        );
     }
 
     private function scheduleKonzert(Project $project, Room $stage, Carbon $month, DemoRandom $rng): void
@@ -795,7 +827,15 @@ class DemoProjectSeeder extends Seeder
                     continue;
                 }
                 $anchor = $anchor->copy()->addDays($index); // Festival-Tage staffeln
-                $this->createEvent($sub, 'aufbau', $stage, $anchor->copy()->setTime(9, 0), $anchor->copy()->setTime(16, 0), $rng, ['name' => 'Festival-Aufbau']);
+                $this->createEvent(
+                    $sub,
+                    'aufbau',
+                    $stage,
+                    $anchor->copy()->setTime(9, 0),
+                    $anchor->copy()->setTime(16, 0),
+                    $rng,
+                    ['name' => 'Festival-Aufbau']
+                );
                 $this->createEvent(
                     $sub,
                     'vorstellung',
@@ -811,7 +851,11 @@ class DemoProjectSeeder extends Seeder
         }
 
         $this->updateProjectState($group);
-        $this->command?->info(sprintf('Festival-Projektgruppe "%s" mit %d Unterprojekten angelegt.', $group->name, count(DemoProjectPools::FESTIVAL['sub_projects'])));
+        $this->command?->info(sprintf(
+            'Festival-Projektgruppe "%s" mit %d Unterprojekten angelegt.',
+            $group->name,
+            count(DemoProjectPools::FESTIVAL['sub_projects'])
+        ));
     }
 
     private function seedPlanningProjects(): void

@@ -85,7 +85,7 @@ class ProjectDTO extends Data
     /**
      * @param \Illuminate\Support\Collection|\Illuminate\Database\Eloquent\Collection $managers
      */
-    private static function serializeLeaders($managers): array
+    private static function serializeLeaders(\Illuminate\Support\Collection|\Illuminate\Database\Eloquent\Collection $managers): array
     {
         // Bewusst ohne E-Mail: Kontaktdaten (inkl. Privacy-Flags) lädt das
         // UserPopoverTooltip lazy über user.tooltip.info nach.

@@ -550,7 +550,6 @@ class ShiftUserService
 
         $shiftWorkerPivot = ShiftWorker::find($usersPivot);
         if ($shiftWorkerPivot && $shiftWorkerPivot->employable_type === User::class) {
-
             if (!$shiftWorkerPivot->relationLoaded('shift')) {
                 $shiftWorkerPivot->load('shift');
             }
@@ -772,5 +771,4 @@ class ShiftUserService
             $shiftUser->shift_id
         );
     }
-
 }

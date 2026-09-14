@@ -503,7 +503,6 @@ class UpdateArtwork extends Command
     {
         $this->section('Consolidating shifts workers');
         $this->consolidateShiftsSeeder->seed();
-
     }
 
     private function createBasicProductBaskets(): void
@@ -621,14 +620,14 @@ class UpdateArtwork extends Command
         ];
 
         foreach ($entityClasses as $class) {
-            $table = (new $class)->getTable();
+            $table = (new $class())->getTable();
 
-            $morphClass = (new $class)->getMorphClass();
+            $morphClass = (new $class())->getMorphClass();
 
             // Bulk-update: backfill crm_contact_id where non-deleted CRM contact exists via entity_type/entity_id
             $updated = DB::table($table)
                 ->whereNull('crm_contact_id')
-                ->whereExists(function ($query) use ($table, $morphClass) {
+                ->whereExists(function ($query) use ($table, $morphClass): void {
                     $query->select(DB::raw(1))
                         ->from('crm_contacts')
                         ->where('crm_contacts.entity_type', $morphClass)
@@ -650,7 +649,7 @@ class UpdateArtwork extends Command
 
             // Create CRM contacts for entities that have none at all
             $missing = $class::whereNull('crm_contact_id')
-                ->whereNotExists(function ($query) use ($table, $morphClass) {
+                ->whereNotExists(function ($query) use ($table, $morphClass): void {
                     $query->select(DB::raw(1))
                         ->from('crm_contacts')
                         ->where('crm_contacts.entity_type', $morphClass)

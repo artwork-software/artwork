@@ -37,8 +37,8 @@ class SageNotAssignedDataController extends Controller
         $perPage = (int) $request->input('entitiesPerPage', 25);
 
         $sageNotAssignedDataTrashed = SageNotAssignedData::onlyTrashed()
-            ->when($search !== '', function ($query) use ($search) {
-                $query->where(function ($subQuery) use ($search) {
+            ->when($search !== '', function ($query) use ($search): void {
+                $query->where(function ($subQuery) use ($search): void {
                     $subQuery->where('buchungstext', 'like', '%' . $search . '%')
                         ->orWhere('kreditor', 'like', '%' . $search . '%')
                         ->orWhere('belegnummer', 'like', '%' . $search . '%');
@@ -82,7 +82,7 @@ class SageNotAssignedDataController extends Controller
 
     public function forceDeleteAll(): RedirectResponse
     {
-        SageNotAssignedData::onlyTrashed()->each(function ($item) {
+        SageNotAssignedData::onlyTrashed()->each(function ($item): void {
             $this->sageNotAssignedDataService->forceDelete($item);
         });
         return Redirect::route('sageNotAssignedData.trashed');

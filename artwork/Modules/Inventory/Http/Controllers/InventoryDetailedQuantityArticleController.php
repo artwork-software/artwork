@@ -12,7 +12,7 @@ class InventoryDetailedQuantityArticleController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(): void
     {
         //
     }
@@ -20,7 +20,7 @@ class InventoryDetailedQuantityArticleController extends Controller
     /**
      * Show the form for creating a new resource.
      */
-    public function create()
+    public function create(): void
     {
         //
     }
@@ -28,7 +28,7 @@ class InventoryDetailedQuantityArticleController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(StoreInventoryDetailedQuantityArticleRequest $request)
+    public function store(StoreInventoryDetailedQuantityArticleRequest $request): void
     {
         //
     }
@@ -36,7 +36,7 @@ class InventoryDetailedQuantityArticleController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(InventoryDetailedQuantityArticle $inventoryDetailedQuantityArticle)
+    public function show(InventoryDetailedQuantityArticle $inventoryDetailedQuantityArticle): void
     {
         //
     }
@@ -44,7 +44,7 @@ class InventoryDetailedQuantityArticleController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(InventoryDetailedQuantityArticle $inventoryDetailedQuantityArticle)
+    public function edit(InventoryDetailedQuantityArticle $inventoryDetailedQuantityArticle): void
     {
         //
     }
@@ -52,7 +52,7 @@ class InventoryDetailedQuantityArticleController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(UpdateInventoryDetailedQuantityArticleRequest $request, InventoryDetailedQuantityArticle $inventoryDetailedQuantityArticle)
+    public function update(UpdateInventoryDetailedQuantityArticleRequest $request, InventoryDetailedQuantityArticle $inventoryDetailedQuantityArticle): void
     {
         //
     }
@@ -60,7 +60,7 @@ class InventoryDetailedQuantityArticleController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(InventoryDetailedQuantityArticle $inventoryDetailedQuantityArticle)
+    public function destroy(InventoryDetailedQuantityArticle $inventoryDetailedQuantityArticle): void
     {
         //
     }

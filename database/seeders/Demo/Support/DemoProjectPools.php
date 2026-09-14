@@ -96,7 +96,12 @@ final class DemoProjectPools
         'sub_projects' => [
             ['name' => 'Festival: Eröffnung & Empfang %s', 'genre' => 'Performance', 'artists' => 'Alle Festival-Compagnien', 'stage_role' => 'foyer'],
             ['name' => 'Festival: Tanz-Triple %s', 'genre' => 'Tanz', 'artists' => 'Cie. Marelle / PULS / Compagnia Vento', 'stage_role' => 'main_stage'],
-            ['name' => 'Festival: Lange Nacht der Performance %s', 'genre' => 'Performance', 'artists' => 'Kollektiv Beton, Studio Nachtblau u.a.', 'stage_role' => 'second_stage'],
+            [
+                'name' => 'Festival: Lange Nacht der Performance %s',
+                'genre' => 'Performance',
+                'artists' => 'Kollektiv Beton, Studio Nachtblau u.a.',
+                'stage_role' => 'second_stage',
+            ],
         ],
     ];
 
@@ -275,10 +280,18 @@ final class DemoProjectPools
     ];
 
     public const TECH_REQUIREMENTS = [
-        'eigenproduktion' => "Drehbühne wird genutzt, Einrichtung ab Aufbautag 1.\nZusätzlich 12 Moving Lights aus dem Lager, Haze durchgehend.\nAchtung: offene Flamme in Szene 3 – Brandwache erforderlich.",
-        'gastspiel' => "Rider siehe Dokumente. Compagnie bringt eigenes Licht-Pult mit (MA3).\nTon: 2x d&b Monitor zusätzlich, FOH ab Soundcheck besetzt.\nTanzboden schwarz, Verlegung am Aufbautag.",
-        'konzert' => "Backline: Flügel (gestimmt), Drum-Riser 3x2m.\nFOH + Monitor aus dem Haus, 4 Wege In-Ear für Band.\nFoyer-Bestuhlung: Clubtische, 120 Plätze.",
-        'vermietung' => "Standard-Konferenz-Setup: Rednerpult, 2x Handfunk, Beamer 12k.\nEinlass ab 60 Minuten vor Beginn, Garderobe besetzt.\nAufbau durch Kunde ab 14 Uhr, Hausbetreuung durch VT.",
+        'eigenproduktion' => "Drehbühne wird genutzt, Einrichtung ab Aufbautag 1.\n"
+            . "Zusätzlich 12 Moving Lights aus dem Lager, Haze durchgehend.\n"
+            . "Achtung: offene Flamme in Szene 3 – Brandwache erforderlich.",
+        'gastspiel' => "Rider siehe Dokumente. Compagnie bringt eigenes Licht-Pult mit (MA3).\n"
+            . "Ton: 2x d&b Monitor zusätzlich, FOH ab Soundcheck besetzt.\n"
+            . "Tanzboden schwarz, Verlegung am Aufbautag.",
+        'konzert' => "Backline: Flügel (gestimmt), Drum-Riser 3x2m.\n"
+            . "FOH + Monitor aus dem Haus, 4 Wege In-Ear für Band.\n"
+            . "Foyer-Bestuhlung: Clubtische, 120 Plätze.",
+        'vermietung' => "Standard-Konferenz-Setup: Rednerpult, 2x Handfunk, Beamer 12k.\n"
+            . "Einlass ab 60 Minuten vor Beginn, Garderobe besetzt.\n"
+            . "Aufbau durch Kunde ab 14 Uhr, Hausbetreuung durch VT.",
     ];
 
     public const DAY_REMARKS = [

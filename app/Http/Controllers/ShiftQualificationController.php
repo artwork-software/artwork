@@ -35,7 +35,6 @@ class ShiftQualificationController extends Controller
         try {
             $this->shiftQualificationService->createFromRequest($storeShiftQualificationRequest);
         } catch (Throwable $t) {
-
             return $this->redirector->back()->with(
                 'error',
                 ['shift_qualification' => __('flash-messages.shift-qualification.error.create')]
@@ -55,7 +54,6 @@ class ShiftQualificationController extends Controller
         try {
             $this->shiftQualificationService->updateFromRequest($updateShiftQualificationRequest, $shiftQualification);
         } catch (Throwable $t) {
-
             return $this->redirector->back()->with(
                 'error',
                 ['shift_qualification' => __('flash-messages.shift-qualification.error.update')]

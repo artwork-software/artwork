@@ -13,7 +13,7 @@ class ShiftCommitWorkflowUserController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(): void
     {
         //
     }
@@ -21,7 +21,7 @@ class ShiftCommitWorkflowUserController extends Controller
     /**
      * Show the form for creating a new resource.
      */
-    public function create()
+    public function create(): void
     {
         //
     }
@@ -90,7 +90,7 @@ class ShiftCommitWorkflowUserController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(ShiftCommitWorkflowUser $shiftCommitWorkflowUser)
+    public function show(ShiftCommitWorkflowUser $shiftCommitWorkflowUser): void
     {
         //
     }
@@ -98,7 +98,7 @@ class ShiftCommitWorkflowUserController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(ShiftCommitWorkflowUser $shiftCommitWorkflowUser)
+    public function edit(ShiftCommitWorkflowUser $shiftCommitWorkflowUser): void
     {
         //
     }
@@ -106,7 +106,7 @@ class ShiftCommitWorkflowUserController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(UpdateShiftCommitWorkflowUserRequest $request, ShiftCommitWorkflowUser $shiftCommitWorkflowUser)
+    public function update(UpdateShiftCommitWorkflowUserRequest $request, ShiftCommitWorkflowUser $shiftCommitWorkflowUser): void
     {
         //
     }

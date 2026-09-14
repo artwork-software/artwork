@@ -13,6 +13,7 @@ use Spatie\LaravelData\Data;
 class EventWithoutRoomDTO extends Data
 {
     use SerializesEventRelations;
+
     public function __construct(
         public int $id,
         public string $start,
@@ -98,5 +99,4 @@ class EventWithoutRoomDTO extends Data
                 : ($event->getAttribute('has_verification') ?? false),
         );
     }
-
 }

@@ -36,13 +36,11 @@ class BudgetService
         private readonly SageNotAssignedDataService $sageNotAssignedDataService,
         private readonly BudgetCacheService $budgetCacheService,
         private readonly BudgetSumCalculator $budgetSumCalculator
-    )
-    {
+    ) {
     }
 
     public function generateBasicBudgetValues(
         Project $project,
-
     ): void {
         DB::transaction(function () use (
             $project,
@@ -89,7 +87,7 @@ class BudgetService
                 relevant_for_project_groups: true,
             );
 
-            if ($project->is_group){
+            if ($project->is_group) {
                 $columns[] = $this->columnService->createColumnInTable(
                     table: $table,
                     name: 'Unterprojekte',
@@ -708,8 +706,10 @@ class BudgetService
                                     $sageColumn = $tableData['sageColumn'];
                                     if ($sageColumn) {
                                         $sageCell = $subRowCells->get($sageColumn->id);
-                                        if ($sageCell && $sageCell->relationLoaded('sageAssignedData')
-                                            && $sageCell->sageAssignedData->isNotEmpty()) {
+                                        if (
+                                            $sageCell && $sageCell->relationLoaded('sageAssignedData')
+                                            && $sageCell->sageAssignedData->isNotEmpty()
+                                        ) {
                                             $sageValue = (string) $sageCell->sageAssignedData->sum('buchungsbetrag');
                                             $sageCellId = $sageCell->id;
                                             $uniqueSageKey = $sageCellId . '-sage';
@@ -996,8 +996,8 @@ class BudgetService
     }
 
 
-    private function determineRecentlyCreatedSageAssignedDataComment(
-    ): SageAssignedDataComment|null {
+    private function determineRecentlyCreatedSageAssignedDataComment(): SageAssignedDataComment|null
+    {
         $recentlyCreatedSageAssignedDataComment = null;
 
         if ($recentlyCreatedSageAssignedDataCommentId = session('recentlyCreatedSageAssignedDataCommentId')) {

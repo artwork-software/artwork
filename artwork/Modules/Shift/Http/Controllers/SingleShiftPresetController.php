@@ -14,7 +14,8 @@ class SingleShiftPresetController extends Controller
 {
     public function __construct(
         private readonly SingleShiftPresetService $service
-    ) {}
+    ) {
+    }
 
     /**
      * Display a listing of the resource.
@@ -34,7 +35,7 @@ class SingleShiftPresetController extends Controller
     /**
      * Show the form for creating a new resource.
      */
-    public function create()
+    public function create(): void
     {
         //
     }
@@ -42,7 +43,7 @@ class SingleShiftPresetController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(StoreSingleShiftPresetRequest $request)
+    public function store(StoreSingleShiftPresetRequest $request): void
     {
         $preset = $this->service->createPreset($request->validated());
     }
@@ -50,7 +51,7 @@ class SingleShiftPresetController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(SingleShiftPreset $singleShiftPreset)
+    public function show(SingleShiftPreset $singleShiftPreset): void
     {
         //
     }
@@ -58,7 +59,7 @@ class SingleShiftPresetController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(SingleShiftPreset $singleShiftPreset)
+    public function edit(SingleShiftPreset $singleShiftPreset): void
     {
         //
     }
@@ -66,7 +67,7 @@ class SingleShiftPresetController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(UpdateSingleShiftPresetRequest $request, SingleShiftPreset $singleShiftPreset)
+    public function update(UpdateSingleShiftPresetRequest $request, SingleShiftPreset $singleShiftPreset): void
     {
         $preset = $this->service->updatePreset($singleShiftPreset, $request->validated());
     }
@@ -74,7 +75,7 @@ class SingleShiftPresetController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(SingleShiftPreset $singleShiftPreset)
+    public function destroy(SingleShiftPreset $singleShiftPreset): void
     {
         $success = $this->service->deletePreset($singleShiftPreset);
     }

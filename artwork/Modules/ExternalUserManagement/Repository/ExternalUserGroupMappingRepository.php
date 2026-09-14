@@ -60,4 +60,3 @@ class ExternalUserGroupMappingRepository extends BaseRepository
         return $mapping;
     }
 }
-

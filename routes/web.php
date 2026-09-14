@@ -236,54 +236,132 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     // Shift Rules routes - New shift rules management system
     Route::group(['prefix' => 'shift-rules', 'middleware' => ['can:can plan shifts', 'shift-settings-area:rules,view']], function (): void {
         Route::get('/', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'index'])->name('shift-rules.index');
-        Route::post('/', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'store'])->middleware('shift-settings-area:rules,edit')->name('shift-rules.store');
+        Route::post('/', [
+            \Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class,
+            'store',
+        ])->middleware('shift-settings-area:rules,edit')->name('shift-rules.store');
         // Gesetzliche Standardregeln (ArbZG) anlegen — gleiche Rechte wie das normale Anlegen
-        Route::post('/defaults', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'storeDefaults'])->middleware('shift-settings-area:rules,edit')->name('shift-rules.defaults.store');
+        Route::post('/defaults', [
+            \Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class,
+            'storeDefaults',
+        ])->middleware('shift-settings-area:rules,edit')->name('shift-rules.defaults.store');
 
         // Specific routes must come before parameterized routes
         // Wird auch vom Schichtplaner-Workflow (ShowUserShiftsModal) genutzt — nur "can plan shifts" nötig
         Route::get('/active', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'activeRules'])
             ->withoutMiddleware('shift-settings-area:rules,view')
             ->name('shift-rules.active');
-        Route::get('/contracts/assignments', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'contractAssignments'])->name('shift-rules.contracts.index');
-        Route::put('/contracts/{contract}/assignments', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'updateContractAssignments'])->middleware('shift-settings-area:rules,edit')->name('shift-rules.contracts.assignments.update');
-        Route::post('/validate', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'validateRules'])->middleware('shift-settings-area:rules,edit')->name('shift-rules.validate');
+        Route::get('/contracts/assignments', [
+            \Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class,
+            'contractAssignments',
+        ])->name('shift-rules.contracts.index');
+        Route::put('/contracts/{contract}/assignments', [
+            \Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class,
+            'updateContractAssignments',
+        ])->middleware('shift-settings-area:rules,edit')->name('shift-rules.contracts.assignments.update');
+        Route::post('/validate', [
+            \Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class,
+            'validateRules',
+        ])->middleware('shift-settings-area:rules,edit')->name('shift-rules.validate');
         Route::get('/pending', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'getPendingViolations'])->name('shift-rules.pending');
         // Excel-Export der Verstöße — gleiche Rechte wie die Liste (vor /{shiftRule} registrieren)
-        Route::get('/violations/export', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'exportViolations'])->name('shift-rules.violations.export');
+        Route::get('/violations/export', [
+            \Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class,
+            'exportViolations',
+        ])->name('shift-rules.violations.export');
 
         // Parameterized routes come last
-        Route::put('/{shiftRule}', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'update'])->middleware('shift-settings-area:rules,edit')->name('shift-rules.update');
-        Route::delete('/{shiftRule}', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'destroy'])->middleware('shift-settings-area:rules,edit')->name('shift-rules.destroy');
-        Route::post('/{shiftRule}/contracts', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'assignContracts'])->middleware('shift-settings-area:rules,edit')->name('shift-rules.contracts.assign');
-        Route::post('/{shiftRule}/users', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'assignUsers'])->middleware('shift-settings-area:rules,edit')->name('shift-rules.users.assign');
+        Route::put('/{shiftRule}', [
+            \Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class,
+            'update',
+        ])->middleware('shift-settings-area:rules,edit')->name('shift-rules.update');
+        Route::delete('/{shiftRule}', [
+            \Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class,
+            'destroy',
+        ])->middleware('shift-settings-area:rules,edit')->name('shift-rules.destroy');
+        Route::post('/{shiftRule}/contracts', [
+            \Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class,
+            'assignContracts',
+        ])->middleware('shift-settings-area:rules,edit')->name('shift-rules.contracts.assign');
+        Route::post('/{shiftRule}/users', [
+            \Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class,
+            'assignUsers',
+        ])->middleware('shift-settings-area:rules,edit')->name('shift-rules.users.assign');
     });
 
     // Shift Rule Violations routes
     Route::group(['prefix' => 'shift-rule-violations', 'middleware' => 'can:can plan shifts'], function (): void {
-        Route::post('/manual', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'storeManualViolation'])->name('shift-rule-violations.manual.store');
+        Route::post('/manual', [
+            \Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class,
+            'storeManualViolation',
+        ])->name('shift-rule-violations.manual.store');
         // Sammelaktion "Ignorieren" (max. 200 IDs je Aufruf, gleiche Ignore-Logik wie je Verstoß)
-        Route::post('/bulk-ignore', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'bulkIgnoreViolations'])->name('shift-rule-violations.bulk-ignore');
-        Route::get('/date-range', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'getViolationsForDateRange'])->name('shift-rule-violations.date-range');
-        Route::post('/{violation}/resolve', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'resolveViolation'])->name('shift-rule-violations.resolve');
-        Route::post('/{violation}/ignore', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'ignoreViolation'])->name('shift-rule-violations.ignore');
-        Route::put('/{violation}/process', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'processViolation'])->name('shift-rule-violations.process');
+        Route::post('/bulk-ignore', [
+            \Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class,
+            'bulkIgnoreViolations',
+        ])->name('shift-rule-violations.bulk-ignore');
+        Route::get('/date-range', [
+            \Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class,
+            'getViolationsForDateRange',
+        ])->name('shift-rule-violations.date-range');
+        Route::post('/{violation}/resolve', [
+            \Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class,
+            'resolveViolation',
+        ])->name('shift-rule-violations.resolve');
+        Route::post('/{violation}/ignore', [
+            \Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class,
+            'ignoreViolation',
+        ])->name('shift-rule-violations.ignore');
+        Route::put('/{violation}/process', [
+            \Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class,
+            'processViolation',
+        ])->name('shift-rule-violations.process');
         // DP-17 Verlauf: gleiche Rechte wie das Bearbeiten (can plan shifts)
-        Route::get('/{violation}/history', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'violationHistory'])->name('shift-rules.violations.history');
+        Route::get('/{violation}/history', [
+            \Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class,
+            'violationHistory',
+        ])->name('shift-rules.violations.history');
     });
 
     // Compensation Day Offs routes
     Route::group(['prefix' => 'compensation-day-offs', 'middleware' => 'can:can plan shifts'], function (): void {
-        Route::get('/dashboard', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'compensationDashboard'])->name('compensation-day-offs.dashboard');
+        Route::get('/dashboard', [
+            \Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class,
+            'compensationDashboard',
+        ])->name('compensation-day-offs.dashboard');
         // Excel-Export der gefilterten Dashboard-Liste — exakt dieselben Rechte wie das Dashboard (can plan shifts)
-        Route::get('/export', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'exportCompensationDays'])->name('compensation-day-offs.export');
-        Route::post('/{compensationDayOff}/grant', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'grantCompensationDay'])->name('compensation-day-offs.grant');
-        Route::post('/{compensationDayOff}/check', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'checkCompensationDay'])->name('compensation-day-offs.check');
-        Route::post('/{compensationDayOff}/revoke', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'revokeCompensationDay'])->name('compensation-day-offs.revoke');
-        Route::post('/store-manual', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'storeManualCompensationDay'])->name('compensation-day-offs.store-manual');
-        Route::get('/user/{user}/open', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'getOpenCompensationDays'])->name('compensation-day-offs.open');
-        Route::delete('/{compensationDayOff}', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'deleteCompensationDay'])->name('compensation-day-offs.delete');
-        Route::get('/user/{user}/week-schedule', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'getUserWeekSchedule'])->name('compensation-day-offs.week-schedule');
+        Route::get('/export', [
+            \Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class,
+            'exportCompensationDays',
+        ])->name('compensation-day-offs.export');
+        Route::post('/{compensationDayOff}/grant', [
+            \Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class,
+            'grantCompensationDay',
+        ])->name('compensation-day-offs.grant');
+        Route::post('/{compensationDayOff}/check', [
+            \Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class,
+            'checkCompensationDay',
+        ])->name('compensation-day-offs.check');
+        Route::post('/{compensationDayOff}/revoke', [
+            \Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class,
+            'revokeCompensationDay',
+        ])->name('compensation-day-offs.revoke');
+        Route::post('/store-manual', [
+            \Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class,
+            'storeManualCompensationDay',
+        ])->name('compensation-day-offs.store-manual');
+        Route::get('/user/{user}/open', [
+            \Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class,
+            'getOpenCompensationDays',
+        ])->name('compensation-day-offs.open');
+        Route::delete('/{compensationDayOff}', [
+            \Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class,
+            'deleteCompensationDay',
+        ])->name('compensation-day-offs.delete');
+        Route::get('/user/{user}/week-schedule', [
+            \Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class,
+            'getUserWeekSchedule',
+        ])->name('compensation-day-offs.week-schedule');
     });
 
     // TOOL SETTING ROUTE
@@ -2240,38 +2318,42 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         Route::group(
             ['prefix' => 'inventory-tags', 'middleware' => 'can:' . PermissionEnum::INVENTORY_SETTINGS->value],
             static function (): void {
-            Route::get('/', [InventoryTagGroupController::class, 'index'])
+                Route::get('/', [InventoryTagGroupController::class, 'index'])
                 ->name('settings.inventory-tags.index');
 
             // inventory.tag-groups.store
-            Route::post('/tag-groups/store', [InventoryTagGroupController::class, 'store'])
+                Route::post('/tag-groups/store', [InventoryTagGroupController::class, 'store'])
                 ->name('settings.inventory-tag-groups.store');
 
             // settings.inventory-tags.store
-            Route::post('/store', [InventoryTagController::class, 'store'])
+                Route::post('/store', [InventoryTagController::class, 'store'])
                 ->name('settings.inventory-tags.store');
 
             // settings.inventory-tags.update
-            Route::patch('/{inventoryTag}/update', [InventoryTagController::class, 'update'])
+                Route::patch('/{inventoryTag}/update', [InventoryTagController::class, 'update'])
                 ->name('settings.inventory-tags.update');
 
-            Route::post('settings/inventory-tag-groups/reorder', [InventoryTagGroupController::class, 'reorderGroups'])
+                Route::post('settings/inventory-tag-groups/reorder', [InventoryTagGroupController::class, 'reorderGroups'])
                 ->name('settings.inventory-tag-groups.reorder');
 
-            Route::post('settings/inventory-tags/reorder', [InventoryTagController::class, 'reorderTags'])
+                Route::post('settings/inventory-tags/reorder', [InventoryTagController::class, 'reorderTags'])
                 ->name('settings.inventory-tags.reorder');
 
             // settings.inventory-tag-groups.destroy
-            Route::delete('/tag-groups/{inventoryTagGroup}/delete', [InventoryTagGroupController::class, 'destroy'])
+                Route::delete('/tag-groups/{inventoryTagGroup}/delete', [InventoryTagGroupController::class, 'destroy'])
                 ->name('settings.inventory-tag-groups.destroy');
 
             // settings.inventory-tags.destroy
-            Route::delete('/{inventoryTag}/delete', [InventoryTagController::class, 'destroy'])
+                Route::delete('/{inventoryTag}/delete', [InventoryTagController::class, 'destroy'])
                 ->name('settings.inventory-tags.destroy');
-        });
+            }
+        );
     });
 
-    Route::post('/empty/preset/store', [ShiftPresetController::class, 'storeEmpty'])->middleware('shift-settings-area:shift-templates,edit')->name('empty.presets.store');
+    Route::post('/empty/preset/store', [
+        ShiftPresetController::class,
+        'storeEmpty',
+    ])->middleware('shift-settings-area:shift-templates,edit')->name('empty.presets.store');
     Route::delete('/preset/{presetShift}/shift/delete', [PresetShiftController::class, 'destroy'])
         ->middleware('shift-settings-area:shift-templates,edit')
         ->name('preset.shift.destroy');
@@ -2287,7 +2369,10 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::patch('/shift/preset/{shiftPreset}/update', [ShiftPresetController::class, 'update'])
         ->middleware('shift-settings-area:shift-templates,edit')
         ->name('update.shift.preset');
-    Route::get('/shift/template/search', [ShiftPresetController::class, 'search'])->middleware('shift-settings-area:shift-templates,view')->name('shift.template.search');
+    Route::get('/shift/template/search', [
+        ShiftPresetController::class,
+        'search',
+    ])->middleware('shift-settings-area:shift-templates,view')->name('shift.template.search');
     Route::delete('/preset/timeline/{presetTimeLine}/delete', [PresetTimeLineController::class, 'destroy'])
         ->middleware('shift-settings-area:shift-templates,edit')
         ->name('preset.delete.timeline.row');
@@ -2671,7 +2756,10 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         Route::get('/category/{inventoryCategory}', [\Artwork\Modules\Inventory\Http\Controllers\InventoryCategoryController::class, 'index'])
             ->name('inventory.category.show');
 
-        Route::get('/category/{inventoryCategory}/sub/{inventorySubCategory}', [\Artwork\Modules\Inventory\Http\Controllers\InventoryCategoryController::class, 'index'])
+        Route::get('/category/{inventoryCategory}/sub/{inventorySubCategory}', [
+            \Artwork\Modules\Inventory\Http\Controllers\InventoryCategoryController::class,
+            'index',
+        ])
             ->name('inventory.sub.category.show');
 
         // post inventory-management.articles.store
@@ -2695,7 +2783,10 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
             ->name('inventory-management.articles.detailed.update-field');
 
         // patch inventory-management.articles.detailed.update-property (inline autosave for detailed article properties)
-        Route::patch('/articles/detailed/{inventoryDetailedQuantityArticle}/update-property', [InventoryArticleController::class, 'updateDetailedArticlePropertyValue'])
+        Route::patch('/articles/detailed/{inventoryDetailedQuantityArticle}/update-property', [
+            InventoryArticleController::class,
+            'updateDetailedArticlePropertyValue',
+        ])
             ->middleware('can:' . PermissionEnum::INVENTORY_CREATE_EDIT->value)
             ->name('inventory-management.articles.detailed.update-property');
 
@@ -2770,7 +2861,10 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         // inventory.product_basket.update_quantity
         Route::post('/update_quantity/{basketArticle}', [\Artwork\Modules\Inventory\Http\Controllers\ProductBasketArticleController::class, 'updateQuantity'])
             ->name('inventory.product_basket.update_quantity');
-        Route::post('/update_quantity/{basketArticle}/single', [\Artwork\Modules\Inventory\Http\Controllers\ProductBasketArticleController::class, 'updateQuantitySingle'])
+        Route::post('/update_quantity/{basketArticle}/single', [
+            \Artwork\Modules\Inventory\Http\Controllers\ProductBasketArticleController::class,
+            'updateQuantitySingle',
+        ])
             ->name('inventory.product_basket.update_quantity.single');
 
         Route::delete('/{basketArticle}', [\Artwork\Modules\Inventory\Http\Controllers\ProductBasketArticleController::class, 'destroy'])
@@ -2861,7 +2955,10 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         Route::patch('/contacts/{crmContact}/room-types', [CrmContactController::class, 'updateRoomTypes'])->name('crm.contacts.room-types.update');
         Route::post('/contacts/{crmContact}/room-types', [CrmContactController::class, 'storeRoomType'])->name('crm.contacts.room-types.store');
         Route::patch('/room-types/{roomType}/name', [CrmContactController::class, 'updateRoomTypeName'])->name('crm.contacts.room-types.update-name');
-        Route::delete('/contacts/{crmContact}/room-types/{roomType}', [CrmContactController::class, 'destroyRoomType'])->name('crm.contacts.room-types.destroy');
+        Route::delete('/contacts/{crmContact}/room-types/{roomType}', [
+            CrmContactController::class,
+            'destroyRoomType',
+        ])->name('crm.contacts.room-types.destroy');
 
         // External access invitations (requires the "invite externals" permission, enforced in the request)
         Route::post('/externals/invitations', [ExternalInvitationController::class, 'store'])
@@ -2946,65 +3043,69 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
             ['prefix' => 'settings', 'middleware' => 'can:' . PermissionEnum::INVENTORY_SETTINGS->value],
             function (): void {
 
-            Route::get('/general', [GeneralSettingsController::class, 'inventoryGeneral'])
+                Route::get('/general', [GeneralSettingsController::class, 'inventoryGeneral'])
                 ->name('inventory-management.settings.general');
 
-            Route::patch('/general/detailed-articles-always-quantity-one', [GeneralSettingsController::class, 'updateInventoryDetailedArticlesAlwaysQuantityOne'])
+                Route::patch('/general/detailed-articles-always-quantity-one', [
+                    GeneralSettingsController::class,
+                    'updateInventoryDetailedArticlesAlwaysQuantityOne',
+                ])
                 ->name('inventory-management.settings.general.update-detailed-articles-always-quantity-one');
 
-            Route::patch('/general/inventory-display-settings', [GeneralSettingsController::class, 'updateInventoryDisplaySettings'])
+                Route::patch('/general/inventory-display-settings', [GeneralSettingsController::class, 'updateInventoryDisplaySettings'])
                 ->name('inventory-management.settings.general.update-inventory-display-settings');
 
-            Route::patch('/general/article-image-max-size', [GeneralSettingsController::class, 'updateInventoryArticleImageMaxSize'])
+                Route::patch('/general/article-image-max-size', [GeneralSettingsController::class, 'updateInventoryArticleImageMaxSize'])
                 ->name('inventory-management.settings.general.update-article-image-max-size');
 
-            Route::get('/categories', [InventoryCategoryController::class, 'settings'])
+                Route::get('/categories', [InventoryCategoryController::class, 'settings'])
                 ->name('inventory-management.settings.category');
 
-            Route::get('/status', [InventoryArticleStatusController::class, 'index'])
+                Route::get('/status', [InventoryArticleStatusController::class, 'index'])
                 ->name('inventory-management.settings.status');
 
-            Route::put('/status/{inventoryArticleStatus}', [InventoryArticleStatusController::class, 'update'])
+                Route::put('/status/{inventoryArticleStatus}', [InventoryArticleStatusController::class, 'update'])
                 ->name('inventory.article-status.update');
 
-            Route::post('/status/reorder', [InventoryArticleStatusController::class, 'reorder'])
+                Route::post('/status/reorder', [InventoryArticleStatusController::class, 'reorder'])
                 ->name('inventory.article-status.reorder');
 
-            Route::get('/properties', [InventoryArticlePropertiesController::class, 'index'])
+                Route::get('/properties', [InventoryArticlePropertiesController::class, 'index'])
                 ->name('inventory-management.settings.properties');
 
             // post create Article Property
-            Route::post('/properties/create', [InventoryArticlePropertiesController::class, 'store'])
+                Route::post('/properties/create', [InventoryArticlePropertiesController::class, 'store'])
                 ->name('inventory-management.settings.properties.create');
 
             // delete Article Property
-            Route::delete('/properties/{inventoryArticleProperty}', [InventoryArticlePropertiesController::class, 'destroy'])
+                Route::delete('/properties/{inventoryArticleProperty}', [InventoryArticlePropertiesController::class, 'destroy'])
                 ->name('inventory-management.settings.properties.delete');
 
             // patch inventory-management.settings.properties.update
-            Route::patch('/properties/{inventoryArticleProperty}/update', [InventoryArticlePropertiesController::class, 'update'])
+                Route::patch('/properties/{inventoryArticleProperty}/update', [InventoryArticlePropertiesController::class, 'update'])
                 ->name('inventory-management.settings.properties.update');
 
             // reorder global property order (Ref 1.41)
-            Route::post('/properties/reorder', [InventoryArticlePropertiesController::class, 'reorder'])
+                Route::post('/properties/reorder', [InventoryArticlePropertiesController::class, 'reorder'])
                 ->name('inventory-management.settings.properties.reorder');
 
             // inventory-management.settings.categories.create
-            Route::post('/categories/create', [InventoryCategoryController::class, 'store'])
+                Route::post('/categories/create', [InventoryCategoryController::class, 'store'])
                 ->name('inventory-management.settings.categories.create');
 
             // update inventory-management.settings.categories.update
-            Route::patch('/categories/{inventoryCategory}/update', [InventoryCategoryController::class, 'update'])
+                Route::patch('/categories/{inventoryCategory}/update', [InventoryCategoryController::class, 'update'])
                 ->name('inventory-management.settings.categories.update');
 
             // delete inventory-management.settings.categories.subcategories.delete
-            Route::delete('/sub-categories/{inventorySubCategory}/destroy', [InventorySubCategoryController::class, 'destroy'])
+                Route::delete('/sub-categories/{inventorySubCategory}/destroy', [InventorySubCategoryController::class, 'destroy'])
                 ->name('inventory-management.settings.categories.subcategories.delete');
 
             // delete categories.destroy
-            Route::delete('/categories/{inventoryCategory}/destroy', [InventoryCategoryController::class, 'destroy'])
+                Route::delete('/categories/{inventoryCategory}/destroy', [InventoryCategoryController::class, 'destroy'])
                 ->name('inventory-management.settings.categories.delete');
-        });
+            }
+        );
     });
 
     Route::group(['prefix' => 'searching'], function (): void {
@@ -3290,7 +3391,10 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         Route::get('/', [UserContractController::class, 'index'])->middleware('shift-settings-area:user-contracts,view')->name('user-contract-settings.index');
 
         // user-contract-settings.store
-        Route::post('/store', [UserContractController::class, 'store'])->middleware('shift-settings-area:user-contracts,edit')->name('user-contract-settings.store');
+        Route::post('/store', [
+            UserContractController::class,
+            'store',
+        ])->middleware('shift-settings-area:user-contracts,edit')->name('user-contract-settings.store');
 
         // user-contract-settings.update
         Route::patch('/{userContract}/update', [UserContractController::class, 'update'])
@@ -3389,8 +3493,14 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::group(['prefix' => 'shift-groups', 'middleware' => 'shift-settings-area:shift-groups,view'], function (): void {
         Route::get('/', [ShiftGroupController::class, 'index'])->name('shift-groups.index');
         Route::post('/', [ShiftGroupController::class, 'store'])->middleware('shift-settings-area:shift-groups,edit')->name('shift-groups.store');
-        Route::patch('/{shiftGroup}/update', [ShiftGroupController::class, 'update'])->middleware('shift-settings-area:shift-groups,edit')->name('shift-groups.update');
-        Route::delete('/{shiftGroup}/destroy', [ShiftGroupController::class, 'destroy'])->middleware('shift-settings-area:shift-groups,edit')->name('shift-groups.destroy');
+        Route::patch('/{shiftGroup}/update', [
+            ShiftGroupController::class,
+            'update',
+        ])->middleware('shift-settings-area:shift-groups,edit')->name('shift-groups.update');
+        Route::delete('/{shiftGroup}/destroy', [
+            ShiftGroupController::class,
+            'destroy',
+        ])->middleware('shift-settings-area:shift-groups,edit')->name('shift-groups.destroy');
     });
 
     // patch shift-settings.update-warn-multiple-assignments
@@ -3478,7 +3588,10 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     )->name('committed-shift-changes.export')
         ->can('approve-shift-plan-requests');
 
-    Route::patch('/shift-plan-requests/{shiftPlanRequest}/change/{shiftChange}/revert', [App\Http\Controllers\ShiftPlanRequestController::class, 'revertChange'])
+    Route::patch('/shift-plan-requests/{shiftPlanRequest}/change/{shiftChange}/revert', [
+        App\Http\Controllers\ShiftPlanRequestController::class,
+        'revertChange',
+    ])
         ->name('shift-plan-requests.change.revert')
         ->can('approve-shift-plan-requests');
 
@@ -3543,7 +3656,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         ->name('shifts.createFromPresets')
         ->can('can plan shifts');
 
-    Route::prefix('inventory')->group(function () {
+    Route::prefix('inventory')->group(function (): void {
         Route::post('/filter-presets', [\Artwork\Modules\Inventory\Http\Controllers\InventoryArticleFilterPresetController::class, 'store'])
             ->name('inventory.filter-presets.store');
 
@@ -3576,7 +3689,7 @@ Route::get('/generate-avatar-image/{letters}', [\Artwork\Modules\User\Http\Contr
     ->name('generate-avatar-image');
 
 // BI Event Type Tags
-Route::middleware(['auth', 'can:change event settings'])->prefix('bi/tags')->group(function () {
+Route::middleware(['auth', 'can:change event settings'])->prefix('bi/tags')->group(function (): void {
     Route::get('/', [BiEventTypeTagController::class, 'index'])->name('bi.tags.index');
     Route::post('/', [BiEventTypeTagController::class, 'store'])->name('bi.tags.store');
     Route::put('/{biEventTypeTag}', [BiEventTypeTagController::class, 'update'])->name('bi.tags.update');
@@ -3589,8 +3702,8 @@ Route::middleware(['auth', 'can:change event settings'])->prefix('bi/tags')->gro
 // Lesen erfordert Projekt-Sichtrecht, Schreiben das Projekt-Schreibrecht (ProjectPolicy::update ist
 // deckungsgleich zum Frontend-"canEditComponent"-Kreis). Schreib-Routen bewusst NICHT zusätzlich mit
 // view gestackt: 'write projects'-Inhaber ohne Projektmitgliedschaft haben nicht zwingend view.
-Route::middleware(['auth'])->prefix('projects/{project}/bi')->group(function () {
-    Route::middleware(['can:view,project'])->group(function () {
+Route::middleware(['auth'])->prefix('projects/{project}/bi')->group(function (): void {
+    Route::middleware(['can:view,project'])->group(function (): void {
         Route::get('/', [BiProjectDataController::class, 'show'])->name('projects.bi.show');
         Route::get('/room-capacities', [BiProjectDataController::class, 'roomCapacities'])
             ->name('projects.bi.room-capacities');
@@ -3602,7 +3715,7 @@ Route::middleware(['auth'])->prefix('projects/{project}/bi')->group(function () 
             ->name('projects.bi.metrics-summary');
     });
 
-    Route::middleware(['can:update,project'])->group(function () {
+    Route::middleware(['can:update,project'])->group(function (): void {
         Route::put('/data', [BiProjectDataController::class, 'updateData'])->name('projects.bi.update-data');
         Route::put('/visitor-mode', [BiProjectDataController::class, 'switchVisitorMode'])
             ->name('projects.bi.switch-visitor-mode');
@@ -3630,11 +3743,11 @@ Route::middleware(['auth'])->prefix('projects/{project}/bi')->group(function () 
 });
 
 // BI Export
-Route::middleware(['auth'])->prefix('bi/dashboard')->group(function () {
+Route::middleware(['auth'])->prefix('bi/dashboard')->group(function (): void {
     Route::get('/', [BiDashboardController::class, 'index'])->name('bi.dashboard');
 });
 
-Route::middleware(['auth'])->prefix('bi/export')->group(function () {
+Route::middleware(['auth'])->prefix('bi/export')->group(function (): void {
     // Optionen für den gemeinsamen Export-Dialog (Projekt-Tab + Dashboard)
     Route::get('/options', [BiExportController::class, 'options'])->name('bi.export.options');
     Route::post('/cache', [BiExportController::class, 'cacheExportConfiguration'])->name('bi.export.cache');
@@ -3644,7 +3757,7 @@ Route::middleware(['auth'])->prefix('bi/export')->group(function () {
         ->middleware('can:can export bi data')->name('bi.export.download');
 
     // Projektunabhängiger Budget-Export (KTO/KST/Kostenträger, Baustein G)
-    Route::middleware(['can:can export bi data'])->prefix('budget')->group(function () {
+    Route::middleware(['can:can export bi data'])->prefix('budget')->group(function (): void {
         Route::get('/options', [BiBudgetExportController::class, 'options'])->name('bi.budget-export.options');
         Route::get('/match-counts', [BiBudgetExportController::class, 'matchCounts'])
             ->name('bi.budget-export.match-counts');
@@ -3665,7 +3778,7 @@ Route::middleware(['auth'])->prefix('bi/export')->group(function () {
 });
 
 // BI Component Settings (Custom Fields)
-Route::middleware(['auth', 'can:change tool settings'])->prefix('settings/bi')->group(function () {
+Route::middleware(['auth', 'can:change tool settings'])->prefix('settings/bi')->group(function (): void {
     Route::get('/', [BiComponentSettingsController::class, 'index'])->name('bi.settings.index');
 
     // Besucher*innen-Kategorien (Order-Route bewusst vor der {biAudienceCategory}-Route)

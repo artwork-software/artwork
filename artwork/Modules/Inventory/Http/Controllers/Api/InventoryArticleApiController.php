@@ -16,7 +16,8 @@ class InventoryArticleApiController extends Controller
 {
     public function __construct(
         protected InventoryArticleService $articleService
-    ) {}
+    ) {
+    }
 
     /**
      * Get a paginated list of inventory articles

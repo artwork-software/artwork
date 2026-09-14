@@ -227,7 +227,8 @@ readonly class VacationService
         // Parität zu create()/updateEntry(): auch der Legacy-Update-Pfad (z. B. Datums-
         // Verschiebung) löst Projektzuordnungen/-wünsche am neuen Tag auf
         $vacationer = $vacation->vacationer_type::find($vacation->vacationer_id);
-        if ($vacationer instanceof User
+        if (
+            $vacationer instanceof User
             || $vacationer instanceof Freelancer
             || $vacationer instanceof ServiceProvider
         ) {

@@ -65,7 +65,7 @@ class ProjectTab extends Model
 
     public function visibleForUser(?User $user): bool
     {
-        if($user->hasRole(RoleEnum::ARTWORK_ADMIN->value)) {
+        if ($user->hasRole(RoleEnum::ARTWORK_ADMIN->value)) {
             return true;
         }
         if ($this->visible_for_all) {
@@ -100,7 +100,7 @@ class ProjectTab extends Model
             return $q;
         }
 
-        return $q->where(function (Builder $query) use ($user) {
+        return $q->where(function (Builder $query) use ($user): void {
             $query->where('visible_for_all', true)
                 ->orWhereHas('visibleUsers', fn (Builder $uq) => $uq->where('users.id', $user->id))
                 ->orWhereHas('visibleDepartments.users', fn (Builder $dq) => $dq->where('users.id', $user->id));

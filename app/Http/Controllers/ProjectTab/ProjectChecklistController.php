@@ -55,4 +55,3 @@ class ProjectChecklistController extends Controller
         );
     }
 }
-

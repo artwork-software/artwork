@@ -3,7 +3,6 @@
 namespace Artwork\Modules\Setup\DataProvider;
 
 use Artwork\Modules\Permission\Catalog\PermissionCatalog;
-
 use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Artwork\Modules\Role\Enums\RoleEnum;
 use Artwork\Modules\Permission\Services\ShiftSettingsPermissionService;

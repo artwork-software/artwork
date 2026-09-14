@@ -31,7 +31,7 @@ class BudgetManagementAccountController extends Controller
         $perPage = (int) $request->input('entitiesPerPage', 25);
 
         $trashedAccounts = BudgetManagementAccount::onlyTrashed()
-            ->when($search !== '', function ($query) use ($search) {
+            ->when($search !== '', function ($query) use ($search): void {
                 $query->where('account_number', 'like', '%' . $search . '%')
                     ->orWhere('title', 'like', '%' . $search . '%');
             })
@@ -52,7 +52,6 @@ class BudgetManagementAccountController extends Controller
         try {
             $this->budgetManagementAccountService->createFromRequest($storeBudgetManagementAccountRequest);
         } catch (Throwable $t) {
-
             return Redirect::back()->with(
                 'error',
                 __('flash-messages.budget-account-management.error.account.create')
@@ -75,7 +74,6 @@ class BudgetManagementAccountController extends Controller
                 $request
             );
         } catch (Throwable $t) {
-
             return Redirect::back()->with(
                 'error',
                 __('flash-messages.budget-account-management.error.account.update')
@@ -93,7 +91,6 @@ class BudgetManagementAccountController extends Controller
         try {
             $this->budgetManagementAccountService->delete($budgetManagementAccount);
         } catch (Throwable $t) {
-
             return Redirect::back()->with(
                 'error',
                 __('flash-messages.budget-account-management.error.account.delete')
@@ -131,7 +128,7 @@ class BudgetManagementAccountController extends Controller
         ProjectService $projectService,
         ColumnCellService $columnCellService
     ): RedirectResponse {
-        BudgetManagementAccount::onlyTrashed()->each(function ($account) use ($projectService, $columnCellService) {
+        BudgetManagementAccount::onlyTrashed()->each(function ($account) use ($projectService, $columnCellService): void {
             $this->budgetManagementAccountService->forceDelete($account, $projectService, $columnCellService);
         });
         return Redirect::route('budget-settings.account-management.trash-accounts');

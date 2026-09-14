@@ -37,6 +37,8 @@ use Laravel\Scout\Searchable;
  * @extends \Illuminate\Database\Eloquent\Model
  * @uses \Illuminate\Database\Eloquent\Factories\HasFactory
  * @uses \Artwork\Modules\Inventory\Models\InventoryArticleFactory
+ * @property-read InventoryCategory|null $category
+ * @property-read InventorySubCategory|null $subCategory
  */
 class InventoryArticle extends Model
 {
@@ -152,12 +154,12 @@ class InventoryArticle extends Model
         ];
     }
 
-    public function getCategoryAttribute()
+    public function getCategoryAttribute(): ?InventoryCategory
     {
         return $this->getRelationValue('category');
     }
 
-    public function getSubCategoryAttribute()
+    public function getSubCategoryAttribute(): ?InventorySubCategory
     {
         return $this->getRelationValue('subCategory');
     }

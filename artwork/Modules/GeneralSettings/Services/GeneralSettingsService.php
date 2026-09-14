@@ -103,7 +103,7 @@ class GeneralSettingsService
         $this->generalSettings->save();
     }
 
-    function updateWarningMultipleAssignmentsFromRequest(Request $request): void
+    public function updateWarningMultipleAssignmentsFromRequest(Request $request): void
     {
         $this->generalSettings->warn_multiple_assignments = $request->get('warn_multiple_assignments');
         $this->generalSettings->save();

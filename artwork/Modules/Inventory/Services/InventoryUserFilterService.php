@@ -60,7 +60,7 @@ class InventoryUserFilterService
                     // Mehrfachwerte erlauben
                     $values = is_array($value) ? array_values($value) : [(string)$value];
 
-                    $query->whereHas('properties', function ($q) use ($propertyId, $values) {
+                    $query->whereHas('properties', function ($q) use ($propertyId, $values): void {
                         $q->where('inventory_article_properties.id', (int)$propertyId)
                             // WICHTIG: direkt auf die Pivot-Tabelle referenzieren
                             ->whereIn('inventory_property_values.value', $values);
@@ -90,7 +90,7 @@ class InventoryUserFilterService
             ->with([
                 'category:id,name',
                 'subCategory:id,name',
-                'properties' => fn($q) => $q->withPivot('value')->select('inventory_article_properties.id','name','type'),
+                'properties' => fn($q) => $q->withPivot('value')->select('inventory_article_properties.id', 'name', 'type'),
             ]);
 
         if (!$filter) {
@@ -113,7 +113,7 @@ class InventoryUserFilterService
                 $value  = is_array($raw) && array_key_exists('value', $raw) ? $raw['value'] : $raw;
                 $values = is_array($value) ? array_values($value) : [(string)$value];
 
-                $qb->whereHas('properties', function ($q) use ($propertyId, $values) {
+                $qb->whereHas('properties', function ($q) use ($propertyId, $values): void {
                     $q->where('inventory_article_properties.id', (int)$propertyId)
                         // Wichtig: direkt auf die Pivot-Tabelle referenzieren
                         ->whereIn('inventory_property_values.value', $values);
@@ -123,7 +123,7 @@ class InventoryUserFilterService
 
         // Tags
         if (!empty($filter->tag_ids)) {
-            $qb->whereHas('tags', function ($q) use ($filter) {
+            $qb->whereHas('tags', function ($q) use ($filter): void {
                 $q->whereIn('inventory_tags.id', $filter->tag_ids);
             });
         }

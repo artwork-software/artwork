@@ -16,7 +16,7 @@ trait HasInventoryPropertiesOptimized
      */
     public function scopeWithPropertyType($query, string $type)
     {
-        return $query->with(['properties' => function ($query) use ($type) {
+        return $query->with(['properties' => function ($query) use ($type): void {
             $query->where('type', $type);
         }]);
     }
@@ -31,7 +31,7 @@ trait HasInventoryPropertiesOptimized
         }
 
         $property = $this->properties->firstWhere('type', $type);
-        
+
         return $property ? $property->pivot->value : null;
     }
 
@@ -44,7 +44,7 @@ trait HasInventoryPropertiesOptimized
         foreach ($properties as $propertyId => $value) {
             $syncData[$propertyId] = ['value' => $value];
         }
-        
+
         $this->properties()->syncWithoutDetaching($syncData);
     }
 }

@@ -36,7 +36,7 @@ class CalendarEventResource extends JsonResource
             'roomName'    => $this->getAttribute('room')?->getAttribute('name'),
             'created_by'  => [
                 'id'               => $creator->getAttribute('id'),
-                'profile_photo_url'=> $creator->getAttribute('profile_photo_url'),
+                'profile_photo_url' => $creator->getAttribute('profile_photo_url'),
                 'first_name'       => $creator->getAttribute('first_name'),
                 'last_name'        => $creator->getAttribute('last_name'),
             ],
@@ -67,7 +67,7 @@ class CalendarEventResource extends JsonResource
             'audience'         => $this->getAttribute('audience'),
             'isLoud'           => $this->getAttribute('is_loud'),
             'projectName'      => $projectName,
-            'projectStateColor'=> $projectStateColor,
+            'projectStateColor' => $projectStateColor,
             'projectLeaders'   => $projectLeaders,
             'subEvents'        => SubEventResource::collection($this->getAttribute('subEvents'))->resolve(),
             'shifts'           => $this->aggregateEventShifts($this->getAttribute('shifts')->all()),

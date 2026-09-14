@@ -36,7 +36,7 @@ class InventoryArticleRepository
      *
      * @return \Illuminate\Database\Eloquent\Collection<int, InventoryArticle>
      */
-    public function searchAdvanced(string $term, ?int $propertyId = null)
+    public function searchAdvanced(string $term, ?int $propertyId = null): \Illuminate\Database\Eloquent\Collection
     {
         // Translate wildcard `*` to SQL `%`; a plain term matches as substring.
         $pattern = str_contains($term, '*')
@@ -89,9 +89,9 @@ class InventoryArticleRepository
             $property = InventoryArticleProperties::find($filter['property_id']);
 
             // Apply filter using OR logic: match either main article properties OR detailed quantities properties
-            $query->where(function ($orQuery) use ($filter, $property) {
+            $query->where(function ($orQuery) use ($filter, $property): void {
                 // Check main article properties
-                $orQuery->whereHas('properties', function ($q) use ($filter, $property) {
+                $orQuery->whereHas('properties', function ($q) use ($filter, $property): void {
                     $q->where('inventory_article_properties.id', $filter['property_id']);
 
                     if ($property && $property->type === 'room') {
@@ -124,7 +124,7 @@ class InventoryArticleRepository
                         return;
                     }
 
-                    $q->where(function ($subQuery) use ($filter) {
+                    $q->where(function ($subQuery) use ($filter): void {
                         $column = 'inventory_property_values.value';
 
                         match ($filter['operator']) {
@@ -147,9 +147,9 @@ class InventoryArticleRepository
                 });
 
                 // Also check detailed article quantities properties for articles with is_detailed_quantity = true
-                $orQuery->orWhere(function ($detailedQuery) use ($filter, $property) {
+                $orQuery->orWhere(function ($detailedQuery) use ($filter, $property): void {
                     $detailedQuery->where('is_detailed_quantity', true)
-                        ->whereHas('detailedArticleQuantities.properties', function ($q) use ($filter, $property) {
+                        ->whereHas('detailedArticleQuantities.properties', function ($q) use ($filter, $property): void {
                             $q->where('inventory_article_properties.id', $filter['property_id']);
 
                             if ($property && $property->type === 'room') {
@@ -182,7 +182,7 @@ class InventoryArticleRepository
                                 return;
                             }
 
-                            $q->where(function ($subQuery) use ($filter) {
+                            $q->where(function ($subQuery) use ($filter): void {
                                 $column = 'inventory_property_values.value';
 
                                 match ($filter['operator']) {
@@ -289,10 +289,10 @@ class InventoryArticleRepository
                 'properties',
                 'category',
                 'subCategory',
-                'images' => function ($query) {
+                'images' => function ($query): void {
                     $query->withTrashed();
                 },
-                'detailedArticleQuantities' => function ($query) {
+                'detailedArticleQuantities' => function ($query): void {
                     $query->withTrashed();
                 },
             ])
@@ -343,14 +343,14 @@ class InventoryArticleRepository
     {
         $values = InventoryPropertyValue::query()
             ->whereHas('property', fn ($query) => $query->where('type', 'file'))
-            ->where(function ($query) use ($article, $detailedArticles) {
-                $query->where(function ($q) use ($article) {
+            ->where(function ($query) use ($article, $detailedArticles): void {
+                $query->where(function ($q) use ($article): void {
                     $q->where('inventory_propertyable_type', InventoryArticle::class)
                         ->where('inventory_propertyable_id', $article->id);
                 });
 
                 if ($detailedArticles->isNotEmpty()) {
-                    $query->orWhere(function ($q) use ($detailedArticles) {
+                    $query->orWhere(function ($q) use ($detailedArticles): void {
                         $q->where('inventory_propertyable_type', InventoryDetailedQuantityArticle::class)
                             ->whereIn('inventory_propertyable_id', $detailedArticles->pluck('id')->all());
                     });
@@ -404,7 +404,6 @@ class InventoryArticleRepository
         // Get all available stock for the given article
         // get article stock for the given date range in all issues and returns the available stock of the article
         return $article->getAvailableStock($startDate, $endDate);
-
     }
 
     public function getAllWithCategories(): \Illuminate\Support\Collection

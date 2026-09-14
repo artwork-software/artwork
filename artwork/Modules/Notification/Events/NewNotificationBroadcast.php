@@ -38,4 +38,3 @@ class NewNotificationBroadcast implements ShouldBroadcastNow
         ];
     }
 }
-

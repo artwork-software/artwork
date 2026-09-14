@@ -13,7 +13,8 @@ class UserWorkTimePatternPolicy
      */
     public function viewAny(User $user): bool
     {
-        //
+        // Scaffold ohne Regeln: nichts erlauben, bis Regeln definiert sind
+        return false;
     }
 
     /**
@@ -21,7 +22,8 @@ class UserWorkTimePatternPolicy
      */
     public function view(User $user, UserWorkTimePattern $userWorkTimePattern): bool
     {
-        //
+        // Scaffold ohne Regeln: nichts erlauben, bis Regeln definiert sind
+        return false;
     }
 
     /**
@@ -29,7 +31,8 @@ class UserWorkTimePatternPolicy
      */
     public function create(User $user): bool
     {
-        //
+        // Scaffold ohne Regeln: nichts erlauben, bis Regeln definiert sind
+        return false;
     }
 
     /**
@@ -37,7 +40,8 @@ class UserWorkTimePatternPolicy
      */
     public function update(User $user, UserWorkTimePattern $userWorkTimePattern): bool
     {
-        //
+        // Scaffold ohne Regeln: nichts erlauben, bis Regeln definiert sind
+        return false;
     }
 
     /**
@@ -45,7 +49,8 @@ class UserWorkTimePatternPolicy
      */
     public function delete(User $user, UserWorkTimePattern $userWorkTimePattern): bool
     {
-        //
+        // Scaffold ohne Regeln: nichts erlauben, bis Regeln definiert sind
+        return false;
     }
 
     /**
@@ -53,7 +58,8 @@ class UserWorkTimePatternPolicy
      */
     public function restore(User $user, UserWorkTimePattern $userWorkTimePattern): bool
     {
-        //
+        // Scaffold ohne Regeln: nichts erlauben, bis Regeln definiert sind
+        return false;
     }
 
     /**
@@ -61,6 +67,7 @@ class UserWorkTimePatternPolicy
      */
     public function forceDelete(User $user, UserWorkTimePattern $userWorkTimePattern): bool
     {
-        //
+        // Scaffold ohne Regeln: nichts erlauben, bis Regeln definiert sind
+        return false;
     }
 }

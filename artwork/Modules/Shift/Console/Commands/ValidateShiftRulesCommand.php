@@ -53,7 +53,6 @@ class ValidateShiftRulesCommand extends Command
 
             $this->info('Shift rule validation completed successfully');
             return self::SUCCESS;
-
         } catch (\Exception $e) {
             $this->error('Error during shift rule validation: ' . $e->getMessage());
             return self::FAILURE;

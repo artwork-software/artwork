@@ -498,7 +498,7 @@ class BiExportService
      * @param \Illuminate\Support\Collection<int, Project> $projects
      * @return array<int, array{0: string, 1: mixed}>
      */
-    private function buildInfoEntries(array $config, $projects, ?Carbon $from, ?Carbon $to): array
+    private function buildInfoEntries(array $config, \Illuminate\Support\Collection $projects, ?Carbon $from, ?Carbon $to): array
     {
         $explicitRange = !empty($config['date_from']) || !empty($config['date_to']);
         $periodSource = match (true) {
@@ -586,7 +586,7 @@ class BiExportService
         ?Carbon $from,
         ?Carbon $to,
         array $tagFilter,
-        $audienceCategories = null
+        ?\Illuminate\Support\Collection $audienceCategories = null
     ): array {
         $eventDataByEventId = $project->biEventData->keyBy('event_id');
         $capacityOverrides = $project->biRoomCapacities->keyBy('room_id');

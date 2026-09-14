@@ -21,4 +21,3 @@ class ProjectBudgetInformationController extends Controller
         );
     }
 }
-

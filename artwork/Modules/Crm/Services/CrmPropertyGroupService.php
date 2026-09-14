@@ -13,7 +13,8 @@ readonly class CrmPropertyGroupService
 {
     public function __construct(
         private CrmPropertyGroupRepository $repository,
-    ) {}
+    ) {
+    }
 
     public function getAll(): Collection
     {
@@ -111,7 +112,7 @@ readonly class CrmPropertyGroupService
 
     public function updatePermissions(CrmPropertyGroup $group, array $permissions): void
     {
-        DB::transaction(function () use ($group, $permissions) {
+        DB::transaction(function () use ($group, $permissions): void {
             $group->permissions()->delete();
 
             foreach ($permissions as $permission) {

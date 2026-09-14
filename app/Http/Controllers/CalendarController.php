@@ -10,7 +10,6 @@ use Artwork\Modules\Room\Services\RoomService;
 use Artwork\Modules\Room\Services\RoomAttributeService;
 use Artwork\Modules\Room\Services\RoomCategoryService;
 use Artwork\Modules\GeneralSettings\Models\GeneralSettings;
-
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;

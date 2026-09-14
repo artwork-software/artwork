@@ -45,7 +45,7 @@ class CrmContactRepository
             return;
         }
 
-        $query->where(function ($q) use ($search, $allowedPropertyIds) {
+        $query->where(function ($q) use ($search, $allowedPropertyIds): void {
             $q->where('display_name', 'like', "%{$search}%")
                 ->orWhereHas('propertyValues', fn ($pv) => $pv
                     ->when($allowedPropertyIds !== null, fn ($sub) => $sub->whereIn('crm_property_id', $allowedPropertyIds))
@@ -71,7 +71,7 @@ class CrmContactRepository
                 continue;
             }
 
-            $query->whereHas('propertyValues', function ($q) use ($propId, $filterValue) {
+            $query->whereHas('propertyValues', function ($q) use ($propId, $filterValue): void {
                 $q->where('crm_property_id', $propId);
 
                 if (is_array($filterValue)) {
@@ -132,24 +132,21 @@ class CrmContactRepository
         if ($search) {
             $terms = array_filter(explode(' ', trim($search)));
 
-            $query->where(function ($q) use ($search, $terms) {
+            $query->where(function ($q) use ($search, $terms): void {
                 $q->where('display_name', 'like', "%{$search}%");
 
                 $q->orWhereHas('propertyValues', fn ($pv) =>
                     $pv->where('value', 'like', "%{$search}%")
-                       ->whereHas('property', fn ($p) => $p->where('type', 'text'))
-                );
+                       ->whereHas('property', fn ($p) => $p->where('type', 'text')));
 
                 if (count($terms) > 1) {
-                    $q->orWhere(function ($multi) use ($terms) {
+                    $q->orWhere(function ($multi) use ($terms): void {
                         foreach ($terms as $term) {
                             $multi->where(fn ($inner) =>
                                 $inner->where('display_name', 'like', "%{$term}%")
                                     ->orWhereHas('propertyValues', fn ($pv) =>
                                         $pv->where('value', 'like', "%{$term}%")
-                                           ->whereHas('property', fn ($p) => $p->where('type', 'text'))
-                                    )
-                            );
+                                           ->whereHas('property', fn ($p) => $p->where('type', 'text'))));
                         }
                     });
                 }

@@ -14,12 +14,6 @@ class ShiftCommitWorkflowUser extends Model
     protected $fillable = [
         'user_id',
     ];
-
-    /**
-     * The attributes that should be cast to native types.
-     *
-     * @var array<string, string>
-     */
     protected $casts = [
         'user_id' => 'integer',
     ];

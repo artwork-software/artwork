@@ -25,7 +25,7 @@ trait HasWorkflows
         $query = $this->workflowInstances()->whereNull('completed_at');
 
         if ($workflowType) {
-            $query->whereHas('workflowDefinitionConfig.workflowDefinition', function ($q) use ($workflowType) {
+            $query->whereHas('workflowDefinitionConfig.workflowDefinition', function ($q) use ($workflowType): void {
                 $q->where('type', $workflowType);
             });
         }

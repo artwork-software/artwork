@@ -26,7 +26,20 @@ readonly class WorkerShiftPlanService
     {
         $eagerLoads = [
             'individualTimes' => function ($query) use ($startDate, $endDate): void {
-                $query->select(['id', 'title', 'start_time', 'end_time', 'start_date', 'end_date', 'full_day', 'working_time_minutes', 'break_minutes', 'series_uuid', 'timeable_type', 'timeable_id'])
+                $query->select([
+                    'id',
+                    'title',
+                    'start_time',
+                    'end_time',
+                    'start_date',
+                    'end_date',
+                    'full_day',
+                    'working_time_minutes',
+                    'break_minutes',
+                    'series_uuid',
+                    'timeable_type',
+                    'timeable_id',
+                ])
                     ->with(['series:uuid,title'])
                     ->individualByDateRange($startDate->toDateString(), $endDate->toDateString());
             },

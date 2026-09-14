@@ -90,7 +90,7 @@ class ProductBasketArticleController extends Controller
         }
 
         // 4) Atomar aktualisieren (Race-Condition-sicher)
-        DB::transaction(function () use (&$basketArticle, $delta) {
+        DB::transaction(function () use (&$basketArticle, $delta): void {
             /** @var ProductBasketArticle $fresh */
             $fresh = ProductBasketArticle::whereKey($basketArticle->id)
                 ->lockForUpdate()
@@ -109,7 +109,7 @@ class ProductBasketArticleController extends Controller
         ]);
     }
 
-    public function updateQuantitySingle(ProductBasketArticle $basketArticle, Request $request)
+    public function updateQuantitySingle(ProductBasketArticle $basketArticle, Request $request): void
     {
         $this->authorizeBasketArticleOwnership($basketArticle);
 
@@ -155,7 +155,7 @@ class ProductBasketArticleController extends Controller
         return response()->json(['deleted' => true, 'basket_article_id' => $basketArticle->id]);
     }
 
-    public function removeArticles(ProductBasket $productBasket)
+    public function removeArticles(ProductBasket $productBasket): void
     {
         abort_unless($productBasket->user_id === auth()->id(), 403);
 

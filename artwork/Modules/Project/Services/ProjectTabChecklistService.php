@@ -88,4 +88,3 @@ class ProjectTabChecklistService
         return ChecklistIndexResource::collection($checklists)->resolve();
     }
 }
-

@@ -575,5 +575,4 @@ class UserService
             'calendarAboShift' => $shiftCalendarAbo,
         ]);
     }
-
 }

@@ -23,7 +23,8 @@ class EventCollectionService
     public function __construct(
         private readonly RoomRepository $roomRepository,
         private readonly EventRepository $eventRepository
-    ) {}
+    ) {
+    }
 
     public function collectEventsForRooms(
         array|SupportCollection $roomsWithEvents,
@@ -158,18 +159,18 @@ class EventCollectionService
         $q = $room->events()
             ->with($this->calendarEventEagerLoads())
             ->withExists('timelines')
-            ->when($calendarPeriod, function ($builder) use ($calendarPeriod) {
+            ->when($calendarPeriod, function ($builder) use ($calendarPeriod): void {
                 // Overlap innerhalb Period
-                $builder->where(function ($w) use ($calendarPeriod) {
+                $builder->where(function ($w) use ($calendarPeriod): void {
                     $w->whereBetween('start_time', [$calendarPeriod->start, $calendarPeriod->end])
-                        ->orWhereBetween('end_time',   [$calendarPeriod->start, $calendarPeriod->end])
-                        ->orWhere(function ($nested) use ($calendarPeriod) {
+                        ->orWhereBetween('end_time', [$calendarPeriod->start, $calendarPeriod->end])
+                        ->orWhere(function ($nested) use ($calendarPeriod): void {
                             $nested->where('start_time', '<=', $calendarPeriod->start)
-                                ->where('end_time',   '>=', $calendarPeriod->end);
+                                ->where('end_time', '>=', $calendarPeriod->end);
                         });
                 });
             })
-            ->when($date, function ($builder) use ($date) {
+            ->when($date, function ($builder) use ($date): void {
                 $builder->whereDate('start_time', '<=', $date)->whereDate('end_time', '>=', $date);
             })
             ->when($project, fn($builder) => $builder->where('project_id', $project->id))
@@ -206,14 +207,14 @@ class EventCollectionService
                         ->whereHas('categories', fn($cb) => $cb->whereIn('room_categories.id', $roomCategoryIds)))
                     ->without('admins'))
             )
-            ->when($eventTypeIds, function ($builder) use ($eventTypeIds) {
-                $builder->where(function ($b) use ($eventTypeIds) {
+            ->when($eventTypeIds, function ($builder) use ($eventTypeIds): void {
+                $builder->where(function ($b) use ($eventTypeIds): void {
                     $b->whereIn('event_type_id', $eventTypeIds)
                         ->orWhereHas('subEvents', fn($sb) => $sb->whereIn('event_type_id', $eventTypeIds));
                 });
             })
             // Projektstatus-Filter (zentrale Semantik im Event-Scope)
-            ->when($projectStateIds, function ($builder) use ($projectStateIds) {
+            ->when($projectStateIds, function ($builder) use ($projectStateIds): void {
                 $builder->byProjectStateIds($projectStateIds);
             });
     }

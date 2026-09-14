@@ -276,7 +276,7 @@ class InventoryCategoryController extends Controller
         $categories = InventoryCategory::with([
             'subcategories:id,inventory_category_id,name',
             'subcategories.properties:id,name,type,select_values',
-            'articles' => function ($query) use ($filteredArticleIds) {
+            'articles' => function ($query) use ($filteredArticleIds): void {
                 if (!empty($filteredArticleIds)) {
                     $query->whereIn('id', $filteredArticleIds);
                 }
@@ -306,8 +306,6 @@ class InventoryCategoryController extends Controller
         auth()->user()->update([
             'inventory_grid_layout' => $validated['inventory_grid_layout']
         ]);
-
-
     }
 
     public function updateInventoryHideImages(\Illuminate\Http\Request $request): void

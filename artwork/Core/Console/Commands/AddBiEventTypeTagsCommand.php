@@ -30,8 +30,29 @@ class AddBiEventTypeTagsCommand extends Command
      * @var array<string, array<int, string>>
      */
     private const KPI_ROLE_EVENT_TYPE_HINTS = [
-        BiEventTypeTag::KPI_ROLE_PERFORMANCE => ['vorstellung', 'premiere', 'derniere', 'dernière', 'aufführung', 'auffuehrung', 'performance', 'konzert', 'show'],
-        BiEventTypeTag::KPI_ROLE_EVENT_DAY => ['vorstellung', 'premiere', 'derniere', 'dernière', 'aufführung', 'auffuehrung', 'performance', 'konzert', 'show', 'veranstaltung'],
+        BiEventTypeTag::KPI_ROLE_PERFORMANCE => [
+            'vorstellung',
+            'premiere',
+            'derniere',
+            'dernière',
+            'aufführung',
+            'auffuehrung',
+            'performance',
+            'konzert',
+            'show',
+        ],
+        BiEventTypeTag::KPI_ROLE_EVENT_DAY => [
+            'vorstellung',
+            'premiere',
+            'derniere',
+            'dernière',
+            'aufführung',
+            'auffuehrung',
+            'performance',
+            'konzert',
+            'show',
+            'veranstaltung',
+        ],
     ];
 
     public function handle(): void

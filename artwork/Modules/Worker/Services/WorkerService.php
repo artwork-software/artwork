@@ -88,8 +88,8 @@ class WorkerService
         if ($qualificationIds->isNotEmpty()) {
             $qualifications = ShiftQualification::whereIn('id', $qualificationIds)->get()->keyBy('id');
 
-            $workers->each(function ($worker) use ($qualifications) {
-                $worker->shifts->each(function ($shift) use ($qualifications) {
+            $workers->each(function ($worker) use ($qualifications): void {
+                $worker->shifts->each(function ($shift) use ($qualifications): void {
                     if ($shift->pivot && $shift->pivot->shift_qualification_id) {
                         $shift->pivot->setRelation('shiftQualification', $qualifications->get($shift->pivot->shift_qualification_id));
                     }

@@ -73,7 +73,7 @@ class EventTypeController extends Controller
         }
 
         try {
-            DB::transaction(function () use ($eventType) {
+            DB::transaction(function () use ($eventType): void {
                 // Get all events associated with this event type and reassign to event type id 1
                 // Use DB query to include soft-deleted events
                 DB::table('events')->where('event_type_id', $eventType->id)->update(['event_type_id' => 1]);

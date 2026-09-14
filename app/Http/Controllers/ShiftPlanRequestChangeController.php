@@ -11,7 +11,7 @@ class ShiftPlanRequestChangeController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(): void
     {
         //
     }
@@ -19,7 +19,7 @@ class ShiftPlanRequestChangeController extends Controller
     /**
      * Show the form for creating a new resource.
      */
-    public function create()
+    public function create(): void
     {
         //
     }
@@ -27,7 +27,7 @@ class ShiftPlanRequestChangeController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(StoreShiftPlanRequestChangeRequest $request)
+    public function store(StoreShiftPlanRequestChangeRequest $request): void
     {
         //
     }
@@ -35,7 +35,7 @@ class ShiftPlanRequestChangeController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(ShiftPlanRequestChange $shiftPlanRequestChange)
+    public function show(ShiftPlanRequestChange $shiftPlanRequestChange): void
     {
         //
     }
@@ -43,7 +43,7 @@ class ShiftPlanRequestChangeController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(ShiftPlanRequestChange $shiftPlanRequestChange)
+    public function edit(ShiftPlanRequestChange $shiftPlanRequestChange): void
     {
         //
     }
@@ -51,7 +51,7 @@ class ShiftPlanRequestChangeController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(UpdateShiftPlanRequestChangeRequest $request, ShiftPlanRequestChange $shiftPlanRequestChange)
+    public function update(UpdateShiftPlanRequestChangeRequest $request, ShiftPlanRequestChange $shiftPlanRequestChange): void
     {
         //
     }
@@ -59,7 +59,7 @@ class ShiftPlanRequestChangeController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(ShiftPlanRequestChange $shiftPlanRequestChange)
+    public function destroy(ShiftPlanRequestChange $shiftPlanRequestChange): void
     {
         //
     }

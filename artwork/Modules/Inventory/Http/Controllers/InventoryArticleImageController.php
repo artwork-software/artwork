@@ -3,8 +3,8 @@
 namespace Artwork\Modules\Inventory\Http\Controllers;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\StoreInventoryArticleImageRequest;
-use App\Http\Requests\UpdateInventoryArticleImageRequest;
+use Artwork\Modules\Inventory\Http\Requests\StoreInventoryArticleImageRequest;
+use Artwork\Modules\Inventory\Http\Requests\UpdateInventoryArticleImageRequest;
 use Artwork\Modules\Inventory\Models\InventoryArticleImage;
 
 class InventoryArticleImageController extends Controller
@@ -12,7 +12,7 @@ class InventoryArticleImageController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(): void
     {
         //
     }
@@ -20,7 +20,7 @@ class InventoryArticleImageController extends Controller
     /**
      * Show the form for creating a new resource.
      */
-    public function create()
+    public function create(): void
     {
         //
     }
@@ -28,7 +28,7 @@ class InventoryArticleImageController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(StoreInventoryArticleImageRequest $request)
+    public function store(StoreInventoryArticleImageRequest $request): void
     {
         //
     }
@@ -36,7 +36,7 @@ class InventoryArticleImageController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(InventoryArticleImage $inventoryArticleImage)
+    public function show(InventoryArticleImage $inventoryArticleImage): void
     {
         //
     }
@@ -44,7 +44,7 @@ class InventoryArticleImageController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(InventoryArticleImage $inventoryArticleImage)
+    public function edit(InventoryArticleImage $inventoryArticleImage): void
     {
         //
     }
@@ -52,7 +52,7 @@ class InventoryArticleImageController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(UpdateInventoryArticleImageRequest $request, InventoryArticleImage $inventoryArticleImage)
+    public function update(UpdateInventoryArticleImageRequest $request, InventoryArticleImage $inventoryArticleImage): void
     {
         //
     }
@@ -60,7 +60,7 @@ class InventoryArticleImageController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(InventoryArticleImage $inventoryArticleImage)
+    public function destroy(InventoryArticleImage $inventoryArticleImage): void
     {
         //
     }

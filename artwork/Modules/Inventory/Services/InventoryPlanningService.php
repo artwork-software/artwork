@@ -22,7 +22,8 @@ class InventoryPlanningService
     public function __construct(
         protected readonly InventoryArticleRepository $articleRepo,
         protected readonly InventoryUserFilterService $filterService,
-    ) {}
+    ) {
+    }
 
 
     public function getAvailabilityData(User $user): array
@@ -94,7 +95,7 @@ class InventoryPlanningService
     protected function loadInternalIssuesInRange(array $articleIds, string $rangeStart, string $rangeEnd): Collection
     {
         return InternalIssue::with([
-            'articles' => function ($query) use ($articleIds) {
+            'articles' => function ($query) use ($articleIds): void {
                 $query->whereIn('inventory_articles.id', $articleIds);
             },
             'project:id,name',
@@ -116,7 +117,7 @@ class InventoryPlanningService
     protected function loadExternalIssuesInRange(array $articleIds, string $rangeStart, string $rangeEnd): Collection
     {
         return ExternalIssue::with([
-            'articles' => function ($query) use ($articleIds) {
+            'articles' => function ($query) use ($articleIds): void {
                 $query->whereIn('inventory_articles.id', $articleIds);
             },
             'receivedBy:id,first_name,last_name',
@@ -340,7 +341,13 @@ class InventoryPlanningService
             int $startMin,
             int $endMin,
             iterable $issueArticles
-        ) use (&$intervals, $dateList, $dateIndex, $rangeStart, $rangeEnd): void {
+        ) use (
+            &$intervals,
+            $dateList,
+            $dateIndex,
+            $rangeStart,
+            $rangeEnd
+): void {
             $effectiveStart = $startDate < $rangeStart ? $rangeStart : $startDate;
             $effectiveEnd   = $endDate   > $rangeEnd   ? $rangeEnd   : $endDate;
 
@@ -481,7 +488,7 @@ class InventoryPlanningService
         $article = InventoryArticle::with(['category', 'subCategory', 'statusValues', 'detailedArticleQuantities'])
             ->findOrFail($articleId);
 
-        $internal = InternalIssue::with(['articles' => function ($query) use ($articleId) {
+        $internal = InternalIssue::with(['articles' => function ($query) use ($articleId): void {
             $query->where('inventory_article_id', $articleId);
         }, 'project', 'specialItems', 'files', 'responsibleUsers'])
             // B11: date-typed columns — plain comparison uses the index.
@@ -489,7 +496,7 @@ class InventoryPlanningService
             ->where('end_date', '>=', $date)
             ->get();
 
-        $external = ExternalIssue::with(['articles' => function ($query) use ($articleId) {
+        $external = ExternalIssue::with(['articles' => function ($query) use ($articleId): void {
             $query->where('inventory_article_id', $articleId);
         }, 'issuedBy', 'receivedBy', 'files', 'specialItems'])
             ->where('issue_date', '<=', $date)
@@ -739,22 +746,22 @@ class InventoryPlanningService
             'detailedArticleQuantities', 'detailedArticleQuantities.status',
         ])->findOrFail($articleId);
 
-        $internal = InternalIssue::with(['articles' => function ($query) use ($articleId) {
+        $internal = InternalIssue::with(['articles' => function ($query) use ($articleId): void {
             $query->where('inventory_article_id', $articleId);
         }, 'project'])
             // B11: date-typed columns — plain comparison uses the index.
             ->where('start_date', '<=', $endDate)
-            ->where(function ($q) use ($startDate) {
+            ->where(function ($q) use ($startDate): void {
                 $q->where('end_date', '>=', $startDate)
                     ->orWhereNull('end_date');
             })
             ->get();
 
-        $external = ExternalIssue::with(['articles' => function ($query) use ($articleId) {
+        $external = ExternalIssue::with(['articles' => function ($query) use ($articleId): void {
             $query->where('inventory_article_id', $articleId);
         }])
             ->where('issue_date', '<=', $endDate)
-            ->where(function ($q) use ($startDate) {
+            ->where(function ($q) use ($startDate): void {
                 $q->where('return_date', '>=', $startDate)
                     ->orWhereNull('return_date');
             })

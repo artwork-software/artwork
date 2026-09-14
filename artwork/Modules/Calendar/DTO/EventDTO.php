@@ -14,6 +14,7 @@ use Spatie\LaravelData\Optional;
 class EventDTO extends Data
 {
     use SerializesEventRelations;
+
     public bool $isMinimal = false; // this is used by frontend, dont remove it
 
     public function __construct(
@@ -115,5 +116,4 @@ class EventDTO extends Data
             admission_time: $event->admission_time ? substr($event->admission_time, 0, 5) : null,
         );
     }
-
 }

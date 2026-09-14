@@ -440,6 +440,7 @@ class User extends Model implements
         return $this->hasOne(UserDailyViewCalendarSettings::class);
     }
 
+    // phpcs:ignore PSR1.Methods.CamelCapsMethodName.NotCamelCaps -- wird als Attribut shift_list_view_settings gelesen
     public function shift_list_view_settings(): HasOne
     {
         return $this->hasOne(UserShiftListViewSettings::class);

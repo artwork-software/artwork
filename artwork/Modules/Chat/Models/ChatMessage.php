@@ -54,7 +54,9 @@ class ChatMessage extends Model
     public function getCreatedAtDateAttribute(): ?string
     {
         $raw = $this->getRawOriginal('created_at');
-        if (!$raw) return null;
+        if (!$raw) {
+            return null;
+        }
 
         $dt = Carbon::parse($raw)->locale('de');
         // Beispiel: Donnerstag 21.08.2025
@@ -64,7 +66,9 @@ class ChatMessage extends Model
     public function getCreatedAtTimeAttribute(): ?string
     {
         $raw = $this->getRawOriginal('created_at');
-        if (!$raw) return null;
+        if (!$raw) {
+            return null;
+        }
 
         $dt = Carbon::parse($raw)->locale('de');
         // Beispiel: 14:37

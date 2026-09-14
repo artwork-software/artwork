@@ -3,7 +3,6 @@
 namespace Artwork\Modules\User\Models\Traits;
 
 use Artwork\Core\FileHandling\Naming\StoredFileName;
-use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -68,9 +67,9 @@ trait HasProfilePhotoCustom
      * @param  string  $storagePath
      * @return void
      */
-    public function updateProfilePhoto(UploadedFile $photo, $storagePath = 'profile-photos')
+    public function updateProfilePhoto(UploadedFile $photo, string $storagePath = 'profile-photos'): void
     {
-        tap($this->profile_photo_path, function ($previous) use ($photo, $storagePath) {
+        tap($this->profile_photo_path, function ($previous) use ($photo, $storagePath): void {
             $this->forceFill([
                 'profile_photo_path' => $photo->storeAs(
                     $storagePath,
@@ -108,25 +107,11 @@ trait HasProfilePhotoCustom
     }
 
     /**
-     * Get the URL to the user's profile photo.
-     *
-     * @return \Illuminate\Database\Eloquent\Casts\Attribute
-     */
-    public function profilePhotoUrl(): Attribute
-    {
-        return Attribute::get(function (): string {
-            return $this->profile_photo_path
-                ? asset('storage/' . $this->profile_photo_path)
-                : $this->defaultProfilePhotoUrl();
-        });
-    }
-
-    /**
      * Get the default profile photo URL if no profile photo has been uploaded.
      *
      * @return string
      */
-    protected function defaultProfilePhotoUrl()
+    protected function defaultProfilePhotoUrl(): string
     {
         $name = $this->name ?? '';
         $name = trim(collect(explode(' ', $name))->map(function ($segment) {
@@ -147,7 +132,7 @@ trait HasProfilePhotoCustom
      *
      * @return string
      */
-    protected function profilePhotoDisk()
+    protected function profilePhotoDisk(): string
     {
         return isset($_ENV['VAPOR_ARTIFACT_NAME']) ? 's3' : config('jetstream.profile_photo_disk', 'public');
     }

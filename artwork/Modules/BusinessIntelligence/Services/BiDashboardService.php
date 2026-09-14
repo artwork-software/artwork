@@ -529,7 +529,10 @@ class BiDashboardService
             ? $this->monthSequence($compareFrom, $compareTo, array_keys($previousBuckets))
             : [];
 
-        return array_map(function (string $month, int $index) use (
+        return array_map(function (
+            string $month,
+            int $index
+        ) use (
             $currentBuckets,
             $previousBuckets,
             $compareMonths

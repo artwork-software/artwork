@@ -21,6 +21,6 @@ class MatchRelevantProjectGroupDTO extends Data
         public ?bool $commented,
         public string $value1,
         public string $value2,
-
-    ){}
+    ) {
+    }
 }

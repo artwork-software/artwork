@@ -165,10 +165,10 @@ class Kernel extends ConsoleKernel
     {
         if (!$fromArtworkCore) {
             return $namespace . str_replace(
-                    ['/', '.php'],
-                    ['\\', ''],
-                    Str::after($file->getRealPath(), realpath(app_path()) . DIRECTORY_SEPARATOR)
-                );
+                ['/', '.php'],
+                ['\\', ''],
+                Str::after($file->getRealPath(), realpath(app_path()) . DIRECTORY_SEPARATOR)
+            );
         }
 
         return str_replace(

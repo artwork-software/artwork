@@ -16,7 +16,10 @@ use Spatie\Activitylog\Traits\LogsActivity;
 
 class ShiftRuleViolation extends Model implements WorkflowSubject
 {
-    use HasFactory, HasWorkflows, TriggersWorkflows, LogsActivity;
+    use HasFactory;
+    use HasWorkflows;
+    use TriggersWorkflows;
+    use LogsActivity;
 
     protected $fillable = [
         'shift_rule_id',

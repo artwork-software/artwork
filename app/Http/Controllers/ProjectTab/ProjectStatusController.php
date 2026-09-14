@@ -21,4 +21,3 @@ class ProjectStatusController extends Controller
         );
     }
 }
-

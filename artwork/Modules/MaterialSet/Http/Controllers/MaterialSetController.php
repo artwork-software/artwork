@@ -20,7 +20,8 @@ class MaterialSetController extends Controller
         protected InventoryUserFilterService $filterService,
         protected InventoryUserFilterShareService $filterShareService,
         protected AuthManager $auth
-    ) {}
+    ) {
+    }
 
     public function index(): \Inertia\Response
     {
@@ -49,5 +50,4 @@ class MaterialSetController extends Controller
     {
         $this->service->delete($set);
     }
-
 }

@@ -57,7 +57,7 @@ class ProjectTabChecklistService
     private function getFilteredChecklists(Project $project, array $scope, bool $private, int $userId): array
     {
         $query = $project->checklists()
-            ->with(['users', 'tasks.task_users'])
+            ->with(['users', 'tasks.task_users', 'tasks.user_who_done'])
             ->where('private', $private);
 
         if (!empty($scope)) {

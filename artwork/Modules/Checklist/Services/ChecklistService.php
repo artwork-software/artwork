@@ -69,7 +69,7 @@ readonly class ChecklistService
      */
     public function buildOwnTasksChecklistPayload(int $userId, int $sort): array
     {
-        $checklists = Checklist::with(['users', 'tasks.task_users', 'project'])
+        $checklists = Checklist::with(['users', 'tasks.task_users', 'tasks.user_who_done', 'project'])
             ->where(function ($query) use ($userId): void {
                 $query->where(function ($q) use ($userId): void {
                     // Public checklists where user is assigned, has tasks, or is a project member

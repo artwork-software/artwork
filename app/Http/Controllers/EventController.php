@@ -1266,6 +1266,8 @@ class EventController extends Controller
             })
             ->orderByRaw('CASE WHEN deadline IS NULL THEN 1 ELSE 0 END, deadline ASC')
             ->limit(5)
+            // alles, was TaskDashboardResource je Aufgabe lesen würde
+            ->with(['checklist:id,name,project_id', 'checklist.project:id,name', 'task_users', 'user_who_done'])
             ->get();
 
         $user = Auth::user();

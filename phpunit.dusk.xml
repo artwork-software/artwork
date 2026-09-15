@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    Browser-Tests (core-ki-bar-stub-test). Getrennt von phpunit.xml, weil Dusk gegen eine echte,
+    laufende Anwendung testet: keine DatabaseTransactions, keine In-Memory-Caches.
+    Aufruf: ddev exec php vendor/bin/phpunit -c phpunit.dusk.xml
+-->
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/12.0/phpunit.xsd" bootstrap="vendor/autoload.php" colors="true" cacheDirectory=".phpunit.cache">
+  <testsuites>
+    <testsuite name="Browser">
+      <directory suffix="Test.php">./tests/Browser</directory>
+    </testsuite>
+  </testsuites>
+  <php>
+    <!-- Dieselbe Datenbank wie die Anwendung unter Test; der Test legt seine Daten selbst an
+         und raeumt sie wieder ab (kein Truncate, kein Refresh). -->
+    <env name="DB_DATABASE" value="artwork_test"/>
+    <env name="DUSK_APP_URL" value="http://127.0.0.1:8099"/>
+    <env name="SCOUT_DRIVER" value="null"/>
+  </php>
+</phpunit>

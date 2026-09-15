@@ -25,7 +25,7 @@ use Tests\TestCase;
  */
 final class AiDevStubRoutesTest extends TestCase
 {
-    private const ROUTE_NAMES = ['ai.dev-stub.chat', 'ai.dev-stub.confirm'];
+    private const ROUTE_NAMES = ['ai.dev-stub.chat', 'ai.dev-stub.confirm', 'ai.dev-stub.calls'];
 
     #[Test]
     public function the_stub_routes_exist_in_the_local_environment(): void
@@ -104,6 +104,31 @@ final class AiDevStubRoutesTest extends TestCase
         );
 
         $this->assertSame(422, $response->getStatusCode());
+    }
+
+    /**
+     * Der Zaehler je client_turn_id ist der Nachweis des Dusk-Tests dafuer, dass nach
+     * `token_expired` genau einmal wiederholt wird (core-ki-bar-stub-test).
+     */
+    #[Test]
+    public function the_stub_counts_calls_per_client_turn_id(): void
+    {
+        $controller = app(DevStubController::class);
+        $turnId = (string) Str::uuid();
+
+        $this->assertSame(0, $controller->calls($turnId)->getData(true)['count']);
+
+        $controller->chat($this->chatRequest(body: [
+            'message' => 'expired test',
+            'client_turn_id' => $turnId,
+        ]));
+        $controller->chat($this->chatRequest(body: [
+            'message' => 'expired test',
+            'client_turn_id' => $turnId,
+        ]));
+
+        $this->assertSame(2, $controller->calls($turnId)->getData(true)['count']);
+        $this->assertSame(0, $controller->calls((string) Str::uuid())->getData(true)['count']);
     }
 
     /** @param array<string, mixed>|null $body */

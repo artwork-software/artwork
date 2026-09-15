@@ -7,6 +7,7 @@ use Artwork\Modules\AiAssistant\Support\DevStubScripts;
 use Artwork\Modules\AiAssistant\Support\SseEventSchemaValidator;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Validator as ValidatorFacade;
 use Illuminate\Support\Str;
 use Symfony\Component\HttpFoundation\Response;
@@ -30,6 +31,9 @@ class DevStubController extends Controller
 
     /** Laenge einer Warteschleife in Mikrosekunden — bestimmt, wie schnell ein Abbruch auffaellt. */
     private const SLEEP_SLICE_MICROSECONDS = 200000;
+
+    /** Lebensdauer der Aufrufzaehler (core-ki-bar-stub-test). */
+    private const CALL_COUNTER_TTL_SECONDS = 3600;
 
     public function __construct(private readonly SseEventSchemaValidator $validator)
     {
@@ -60,6 +64,8 @@ class DevStubController extends Controller
         /** @var array{conversation_id?: string|null, message: string, client_turn_id: string} $validated */
         $validated = $validator->validated();
 
+        $this->countCall($validated['client_turn_id']);
+
         return $this->stream(DevStubScripts::build(
             DevStubScripts::resolveKeyword($validated['message']),
             $validated['conversation_id'] ?? (string) Str::uuid(),
@@ -80,6 +86,32 @@ class DevStubController extends Controller
             (string) $request->input('conversation_id', (string) Str::uuid()),
             (string) Str::uuid(),
         ));
+    }
+
+    /**
+     * Wie oft wurde dieselbe `client_turn_id` gesendet? (core-ki-bar-stub-test)
+     *
+     * Der Dusk-Test weist damit nach, dass die Bar nach `token_expired` genau einmal wiederholt —
+     * und zwar mit derselben Turn-ID (0.2 §4, 0.3 §5). Nur lesend, nur lokal.
+     */
+    public function calls(string $clientTurnId): JsonResponse
+    {
+        return response()->json(['count' => (int) Cache::get(self::callKey($clientTurnId), 0)]);
+    }
+
+    /** Zaehlt einen Aufruf; die Werte sind Wegwerfzustand und laufen nach einer Stunde aus. */
+    private function countCall(string $clientTurnId): void
+    {
+        $key = self::callKey($clientTurnId);
+
+        // add() legt den Schluessel mit TTL an, increment() erhoeht ihn danach ohne die TTL zu verlieren.
+        Cache::add($key, 0, self::CALL_COUNTER_TTL_SECONDS);
+        Cache::increment($key);
+    }
+
+    private static function callKey(string $clientTurnId): string
+    {
+        return 'ai-dev-stub:calls:' . $clientTurnId;
     }
 
     /** 401 wie artwork-ai (contracts/token-contract.md), solange Header fehlen. */

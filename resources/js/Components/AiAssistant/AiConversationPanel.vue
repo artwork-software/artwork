@@ -49,7 +49,8 @@
                             </button>
                             <button
                                 type="button"
-                                class="shrink-0 rounded-md p-1 text-text-subtle opacity-0 transition group-hover:opacity-100 hover:text-danger"
+                                data-ai-conversation-delete
+                                class="shrink-0 rounded-md p-1 text-text-subtle transition hover:text-danger"
                                 :title="$t('Delete')"
                                 @click="pendingDeleteId = conversation.id"
                             >
@@ -63,6 +64,7 @@
                             <div class="mt-2 flex gap-2">
                                 <button
                                     type="button"
+                                    data-ai-conversation-delete-confirm
                                     class="rounded-md bg-danger px-2 py-1 text-xs font-semibold text-white"
                                     @click="confirmDelete(conversation.id)"
                                 >

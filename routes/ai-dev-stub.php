@@ -24,3 +24,8 @@ Route::post('/ai/dev-stub/chat', [DevStubController::class, 'chat'])
 
 Route::post('/ai/dev-stub/actions/{action}/confirm', [DevStubController::class, 'confirm'])
     ->name('ai.dev-stub.confirm');
+
+// Aufrufzaehler je client_turn_id — Nachweis fuer den Dusk-Test, dass nach `token_expired` genau
+// einmal mit derselben Turn-ID wiederholt wird (core-ki-bar-stub-test).
+Route::get('/ai/dev-stub/calls/{clientTurnId}', [DevStubController::class, 'calls'])
+    ->name('ai.dev-stub.calls');

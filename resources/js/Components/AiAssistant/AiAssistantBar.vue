@@ -61,6 +61,7 @@
                                     <button
                                         type="button"
                                         class="rounded-md p-1.5 text-text-subtle hover:text-text"
+                                        data-ai-panel-toggle
                                         :title="$t('Conversations')"
                                         @click="togglePanel"
                                     >
@@ -93,7 +94,15 @@
                                         {{ $t('Ask a question about your projects, schedules or shifts.') }}
                                     </p>
 
-                                    <div v-for="turn in state.turns" :key="turn.clientTurnId" class="space-y-2">
+                                    <!-- data-ai-turn: der Browser-Test liest die client_turn_id aus, um am
+                                         Zaehler des Stubs zu pruefen, dass nach `token_expired` genau einmal
+                                         mit derselben ID wiederholt wurde (core-ki-bar-stub-test). -->
+                                    <div
+                                        v-for="turn in state.turns"
+                                        :key="turn.clientTurnId"
+                                        :data-ai-turn="turn.clientTurnId"
+                                        class="space-y-2"
+                                    >
                                         <div class="flex justify-end">
                                             <p class="max-w-[80%] whitespace-pre-wrap break-words rounded-2xl bg-accent-50 px-3 py-2 text-sm text-text">
                                                 {{ turn.question }}
@@ -136,10 +145,19 @@
                                         />
                                     </div>
 
-                                    <div v-if="state.status === 'streaming'" class="flex items-center gap-2 text-xs text-text-subtle">
+                                    <div
+                                        v-if="state.status === 'streaming'"
+                                        data-ai-streaming
+                                        class="flex items-center gap-2 text-xs text-text-subtle"
+                                    >
                                         <span class="size-2 animate-pulse rounded-full bg-accent-600" aria-hidden="true" />
                                         {{ $t('The assistant is working...') }}
-                                        <button type="button" class="underline hover:text-text" @click="assistant.cancel()">
+                                        <button
+                                            type="button"
+                                            data-ai-cancel
+                                            class="underline hover:text-text"
+                                            @click="assistant.cancel()"
+                                        >
                                             {{ $t('Stop') }}
                                         </button>
                                     </div>

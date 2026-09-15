@@ -19,6 +19,15 @@ class AiActionController extends Controller
     {
     }
 
+    /**
+     * Zustand einer Aktion fuer die Bar: nach der Ausfuehrung stehen hier Batch, Frist und die
+     * Links auf die betroffenen Objekte (core-ki-bar-confirm; Konzept W3 §3).
+     */
+    public function show(Request $request, string $action): JsonResponse
+    {
+        return response()->json($this->actions->resultFor($request->user(), $action));
+    }
+
     public function cancel(Request $request, string $action): JsonResponse
     {
         $turn = $this->actions->cancel($request->user(), $action);

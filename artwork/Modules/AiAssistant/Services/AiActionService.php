@@ -2,6 +2,7 @@
 
 namespace Artwork\Modules\AiAssistant\Services;
 
+use Artwork\Modules\AiAssistant\Models\AiActionBatch;
 use Artwork\Modules\AiAssistant\Models\AiConversation;
 use Artwork\Modules\AiAssistant\Models\AiConversationTurn;
 use Artwork\Modules\AiAssistant\Support\AiActionHash;
@@ -184,6 +185,52 @@ class AiActionService
         unset($action['jti']);
 
         return array_merge($action, ['id' => $turn->id, 'status' => $turn->status]);
+    }
+
+    /**
+     * Was die Bar nach dem Bestaetigungs-Stream wissen muss (core-ki-bar-confirm).
+     *
+     * Die Batch-ID kann nicht ueber SSE kommen — `done` traegt laut Contract nur `reason` —, und
+     * aus dem Antworttext zu lesen waere geraten. Deshalb fragt die Bar hier nach.
+     *
+     * @return array{status: string, batch: array{
+     *     id: string, status: string, undo_until: string|null, links: list<array{id: int, url: string}>
+     * }|null}
+     */
+    public function resultFor(User $user, string $actionId): array
+    {
+        $turn = $this->findOrFail($user, $actionId);
+        $batchId = $turn->pending_action['batch_id'] ?? null;
+
+        if (!is_string($batchId)) {
+            return ['status' => $turn->status, 'batch' => null];
+        }
+
+        $batch = AiActionBatch::query()
+            ->with('items')
+            ->where('user_id', $user->id)
+            ->find($batchId);
+
+        if ($batch === null) {
+            return ['status' => $turn->status, 'batch' => null];
+        }
+
+        return [
+            'status' => $turn->status,
+            'batch' => [
+                'id' => $batch->id,
+                'status' => $batch->status,
+                'undo_until' => $batch->undo_until->toIso8601String(),
+                'links' => $batch->items
+                    ->where('action', '!=', 'delete')
+                    ->map(static fn ($item): array => [
+                        'id' => (int) $item->model_id,
+                        'url' => route('dashboard.redirect-to-calendar', $item->model_id),
+                    ])
+                    ->values()
+                    ->all(),
+            ],
+        ];
     }
 
     private function findOrFail(User $user, string $actionId): AiConversationTurn

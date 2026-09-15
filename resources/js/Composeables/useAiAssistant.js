@@ -10,7 +10,7 @@
 import { reactive } from 'vue'
 import { usePage } from '@inertiajs/vue3'
 import axios from 'axios'
-import { AiStreamError, streamChat } from '@/Components/AiAssistant/sseClient'
+import { AiStreamError, streamChat, streamConfirm } from '@/Components/AiAssistant/sseClient'
 import { renderAiMarkdown } from '@/Components/AiAssistant/aiMarkdown'
 import { cfg } from '@/runtimeConfig'
 
@@ -111,9 +111,34 @@ function newTurn(message) {
         tools: [],
         error: null,
         confirm: null,
+        result: null,
         /** streaming | completed | cancelled | error | awaiting_confirmation */
         status: 'streaming',
         retriedAfterTokenExpiry: false,
+    }
+}
+
+/**
+ * Zustand der Aktion nach dem Bestaetigungs-Stream (core-ki-bar-confirm).
+ *
+ * Die Batch-ID kann nicht ueber SSE kommen — `done` traegt laut Contract nur `reason` —, und aus
+ * dem Antworttext zu lesen waere geraten. Deshalb fragt die Bar artwork danach.
+ */
+async function loadActionResult(turn) {
+    const { data } = await axios.get(window.route('ai.actions.show', turn.confirm.actionId))
+
+    if (data.status !== 'executed' || !data.batch) {
+        return
+    }
+
+    turn.confirm.status = 'executed'
+    turn.result = {
+        batchId: data.batch.id,
+        undoUntil: data.batch.undo_until,
+        links: data.batch.links ?? [],
+        /** executed | reverting | reverted */
+        status: data.batch.status === 'reverted' ? 'reverted' : 'executed',
+        error: null,
     }
 }
 
@@ -201,7 +226,14 @@ function handleEvent(event, turn) {
 
             return null
         case 'confirm.request':
-            turn.confirm = { actionId: data.action_id, tool: data.tool, preview: data.preview, expiresAt: data.expires_at }
+            turn.confirm = {
+                actionId: data.action_id,
+                tool: data.tool,
+                preview: data.preview,
+                expiresAt: data.expires_at,
+                /** pending | confirming | executed | cancelled | error */
+                status: 'pending',
+            }
             state.pendingConfirm = turn.confirm
 
             return null
@@ -362,6 +394,102 @@ export function useAiAssistant() {
 
         cancel() {
             controller?.abort()
+        },
+
+        /**
+         * Bestaetigung (Konzept W2 §7, Schritte 4–7).
+         *
+         * Das Write-Token lebt ausschliesslich in dieser Funktion: es geht in genau einen Aufruf
+         * und ist danach weg — kein `state`, kein localStorage, kein Cookie. Nach der Ausfuehrung
+         * ist es ohnehin serverseitig revoziert (W2 §3).
+         */
+        async confirmAction(turn) {
+            const action = turn?.confirm
+
+            if (!action || action.status !== 'pending' || state.status === 'streaming') {
+                return
+            }
+
+            action.status = 'confirming'
+            state.status = 'streaming'
+            state.error = null
+            turn.status = 'streaming'
+            controller = new AbortController()
+
+            try {
+                const { data } = await axios.post(window.route('ai.session.store'), {
+                    scopes: ['ai:write'],
+                    action_id: action.actionId,
+                })
+
+                const stream = await streamConfirm({
+                    endpoint: endpoint(),
+                    token: data.access_token,
+                    actionId: action.actionId,
+                    conversationId: state.conversationId,
+                    signal: controller.signal,
+                })
+
+                for await (const event of stream) {
+                    handleEvent(event, turn)
+                }
+
+                await loadActionResult(turn)
+            } catch (error) {
+                action.status = 'error'
+                const code = error instanceof AiStreamError ? error.code : 'internal'
+                applyError(turn, { code, message: '', retryable: false, retryAfterSeconds: null })
+            } finally {
+                controller = null
+
+                if (state.status === 'streaming') {
+                    state.status = 'idle'
+                }
+
+                if (action.status === 'confirming') {
+                    action.status = 'pending'
+                }
+
+                state.pendingConfirm = action.status === 'pending' ? action : null
+            }
+        },
+
+        /** Ablehnung (W2 §6): kein Token, kein Aufruf an artwork-ai. */
+        async cancelAction(turn) {
+            const action = turn?.confirm
+
+            if (!action || action.status !== 'pending') {
+                return
+            }
+
+            await axios.post(window.route('ai.actions.cancel', action.actionId))
+
+            action.status = 'cancelled'
+            state.pendingConfirm = null
+            state.status = 'idle'
+        },
+
+        /** Ruecknahme (W3 §2). Die Rueckfrage stellt die Komponente, hier passiert sie wirklich. */
+        async revertBatch(turn) {
+            const result = turn?.result
+
+            if (!result || result.status !== 'executed') {
+                return
+            }
+
+            result.status = 'reverting'
+            result.error = null
+
+            try {
+                await axios.post(window.route('ai.actions.batches.revert', result.batchId))
+                result.status = 'reverted'
+            } catch (error) {
+                result.status = 'executed'
+                result.error = {
+                    status: error?.response?.status ?? 0,
+                    message: error?.response?.data?.message ?? '',
+                }
+            }
         },
 
         startNewConversation() {

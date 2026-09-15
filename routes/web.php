@@ -244,6 +244,11 @@ Route::group(['middleware' => ['auth', 'verified']], function (): void {
         Route::delete('/ai/conversations/{conversation}', [AiConversationController::class, 'destroy'])
             ->name('ai.conversations.destroy');
 
+        // Zustand einer Aktion fuer die Bar (core-ki-bar-confirm): Batch und Undo-Frist kommen
+        // nicht ueber SSE — `done` traegt laut Contract nur `reason`.
+        Route::get('/ai/actions/{action}', [AiActionController::class, 'show'])
+            ->name('ai.actions.show');
+
         // Ablehnung einer bestaetigungspflichtigen Aktion (core-confirm-actions; Konzept W2 §6).
         Route::post('/ai/actions/{action}/cancel', [AiActionController::class, 'cancel'])
             ->name('ai.actions.cancel');

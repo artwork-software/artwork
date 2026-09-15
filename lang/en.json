@@ -8056,5 +8056,17 @@
     "The assistant could not authenticate. Please reload the page.": "The assistant could not authenticate. Please reload the page.",
     "Unexpected error.": "Unexpected error.",
     "Waiting for confirmation": "Waiting for confirmation",
-    "Actions are not enabled in this version yet.": "Actions are not enabled in this version yet."
+    "The confirmation window has expired.": "The confirmation window has expired.",
+    "Confirm within :time": "Confirm within :time",
+    "The action is being executed...": "The action is being executed...",
+    "Action cancelled.": "Action cancelled.",
+    "Affected entries": "Affected entries",
+    "The action was undone.": "The action was undone.",
+    "Undo (:time left)": "Undo (:time left)",
+    "Really undo?": "Really undo?",
+    "Yes, undo": "Yes, undo",
+    "Keep": "Keep",
+    "Undo is no longer possible — entries were changed.": "Undo is no longer possible — entries were changed.",
+    "Undo failed.": "Undo failed.",
+    ":count min": ":count min"
 }

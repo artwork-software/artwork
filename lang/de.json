@@ -8056,5 +8056,17 @@
     "The assistant could not authenticate. Please reload the page.": "Der Assistent konnte sich nicht anmelden. Bitte die Seite neu laden.",
     "Unexpected error.": "Unerwarteter Fehler.",
     "Waiting for confirmation": "Wartet auf Bestätigung",
-    "Actions are not enabled in this version yet.": "Aktionen sind in dieser Version noch nicht freigeschaltet"
+    "The confirmation window has expired.": "Die Bestätigungsfrist ist abgelaufen.",
+    "Confirm within :time": "Bestätigen innerhalb von :time",
+    "The action is being executed...": "Die Aktion wird ausgeführt …",
+    "Action cancelled.": "Aktion abgebrochen.",
+    "Affected entries": "Betroffene Einträge",
+    "The action was undone.": "Die Aktion wurde rückgängig gemacht.",
+    "Undo (:time left)": "Rückgängig (noch :time)",
+    "Really undo?": "Wirklich rückgängig machen?",
+    "Yes, undo": "Ja, rückgängig",
+    "Keep": "Behalten",
+    "Undo is no longer possible — entries were changed.": "Rückgängig geht nicht mehr — Einträge wurden geändert.",
+    "Undo failed.": "Rückgängig machen ist fehlgeschlagen.",
+    ":count min": ":count Min."
 }

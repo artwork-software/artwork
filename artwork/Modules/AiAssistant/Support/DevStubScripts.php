@@ -86,8 +86,12 @@ final class DevStubScripts
     /**
      * @return list<array{event: string, data: array<string, mixed>, delay_ms: int}>
      */
-    public static function build(string $keyword, string $conversationId, string $turnId): array
-    {
+    public static function build(
+        string $keyword,
+        string $conversationId,
+        string $turnId,
+        ?string $actionId = null
+    ): array {
         $events = [self::event('meta', [
             'protocol' => 1,
             'conversation_id' => $conversationId,
@@ -101,7 +105,7 @@ final class DevStubScripts
         return array_merge($events, match ($keyword) {
             'tools' => self::toolsScript(),
             'slow' => self::slowScript(),
-            'confirm' => self::confirmScript(),
+            'confirm' => self::confirmScript($actionId),
             default => self::textScript($keyword),
         });
     }
@@ -111,17 +115,32 @@ final class DevStubScripts
      *
      * @return list<array{event: string, data: array<string, mixed>, delay_ms: int}>
      */
-    public static function buildConfirmExecution(string $conversationId, string $turnId): array
-    {
-        return [
-            self::event('meta', [
-                'protocol' => 1,
-                'conversation_id' => $conversationId,
-                'turn_id' => $turnId,
-            ]),
-            self::event('text.delta', ['text' => 'Die Aktion wurde ausgefuehrt (Stub).'], 200),
-            self::event('done', ['reason' => 'completed'], 100),
-        ];
+    public static function buildConfirmExecution(
+        string $conversationId,
+        string $turnId,
+        ?string $error = null
+    ): array {
+        $events = [self::event('meta', [
+            'protocol' => 1,
+            'conversation_id' => $conversationId,
+            'turn_id' => $turnId,
+        ])];
+
+        if ($error !== null) {
+            $events[] = self::event('error', [
+                'code' => 'internal',
+                'message' => $error,
+                'retryable' => false,
+            ], 100);
+            $events[] = self::event('done', ['reason' => 'error'], 50);
+
+            return $events;
+        }
+
+        $events[] = self::event('text.delta', ['text' => 'Die Aktion wurde ausgefuehrt.'], 200);
+        $events[] = self::event('done', ['reason' => 'completed'], 100);
+
+        return $events;
     }
 
     /** @return list<array{event: string, data: array<string, mixed>, delay_ms: int}> */
@@ -176,13 +195,15 @@ final class DevStubScripts
     }
 
     /** @return list<array{event: string, data: array<string, mixed>, delay_ms: int}> */
-    private static function confirmScript(): array
+    private static function confirmScript(?string $actionId = null): array
     {
         return array_merge(
             self::deltas(['Ich habe zwei Aenderungen vorbereitet.'], 200),
             [
                 self::event('confirm.request', [
-                    'action_id' => (string) Str::uuid(),
+                    // Steht in der Nachricht eine UUID, ist das die Aktion — so kann ein Dusk-Lauf
+                    // eine echte, in artwork angelegte Aktion bestaetigen (core-ki-bar-confirm).
+                    'action_id' => $actionId ?? (string) Str::uuid(),
                     'tool' => 'create_event',
                     'expires_at' => Carbon::now()->addMinutes(5)->toIso8601String(),
                     'preview' => [

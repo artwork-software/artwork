@@ -1,10 +1,10 @@
 <!--
-    Bestaetigungsdialog fuer Schreib-Aktionen (core-ki-bar-ui, Konzept C4 §7, W2).
+    Bestaetigungsdialog fuer Schreib-Aktionen (core-ki-bar-confirm; Konzept C4 §7, W2 §7).
 
-    In dieser Version bewusst nur der Vertrag: Props `preview` und `expiresAt`, Events `confirm`
-    und `cancel`. Die Knoepfe sind deaktiviert — Fall C wird erst in W2 freigeschaltet, und ohne
-    Write-Token gibt es hier nichts auszufuehren. Alle Texte kommen aus artwork-ai und werden
-    deshalb als Text gerendert, nie als HTML (0.3 §10).
+    Zeigt genau das, was bestaetigt wird: die Vorschau aus `confirm.request`, Konflikte je Eintrag
+    und die verbleibende Frist. Alle Texte kommen aus artwork-ai und werden als Text gerendert,
+    nie als HTML (0.3 §10). Das Write-Token holt der Aufrufer (useAiAssistant) — hier gibt es
+    keinen Token-Code (C4 §7).
 -->
 <template>
     <div class="rounded-xl border border-warning-border bg-warning-surface p-4" data-ai-confirm>
@@ -24,36 +24,44 @@
                     </li>
                 </ul>
 
-                <p v-if="expiresAt" class="mt-3 text-xs text-text-subtle">
-                    {{ $t('Valid until') }}: {{ formattedExpiry }}
+                <p v-if="expiresAt" class="mt-3 text-xs text-text-subtle" data-ai-confirm-expiry>
+                    {{ expired ? $t('The confirmation window has expired.') : remainingText }}
                 </p>
 
-                <div class="mt-4 flex items-center gap-2">
+                <div v-if="status === 'pending'" class="mt-4 flex items-center gap-2">
                     <button
                         type="button"
+                        data-ai-confirm-accept
                         class="rounded-lg bg-accent-600 px-3 py-1.5 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50"
-                        disabled
+                        :disabled="expired"
                         @click="$emit('confirm')"
                     >
                         {{ $t('Confirm') }}
                     </button>
                     <button
                         type="button"
-                        class="rounded-lg border border-border-subtle px-3 py-1.5 text-sm text-text disabled:cursor-not-allowed disabled:opacity-50"
-                        disabled
+                        data-ai-confirm-cancel
+                        class="rounded-lg border border-border-subtle px-3 py-1.5 text-sm text-text"
                         @click="$emit('cancel')"
                     >
                         {{ $t('Cancel') }}
                     </button>
-                    <span class="text-xs text-text-subtle">{{ $t('Actions are not enabled in this version yet.') }}</span>
                 </div>
+
+                <p v-else-if="status === 'confirming'" class="mt-4 text-xs text-text-subtle" data-ai-confirm-running>
+                    {{ $t('The action is being executed...') }}
+                </p>
+
+                <p v-else-if="status === 'cancelled'" class="mt-4 text-xs text-text-subtle" data-ai-confirm-cancelled>
+                    {{ $t('Action cancelled.') }}
+                </p>
             </div>
         </div>
     </div>
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import PropertyIcon from '@/Artwork/Icon/PropertyIcon.vue'
 
@@ -65,6 +73,10 @@ const props = defineProps({
     expiresAt: {
         type: String,
         default: null,
+    },
+    status: {
+        type: String,
+        default: 'pending',
     },
 })
 
@@ -80,13 +92,43 @@ const ACTION_LABELS = {
 
 const actionLabel = (action) => t(ACTION_LABELS[action] ?? 'Change')
 
-const formattedExpiry = computed(() => {
+// Der Countdown laeuft in der Komponente, nicht im Zustand: er betrifft nur die Anzeige.
+const now = ref(Date.now())
+let timer = null
+
+onMounted(() => {
+    timer = setInterval(() => {
+        now.value = Date.now()
+    }, 1000)
+})
+
+onBeforeUnmount(() => {
+    if (timer !== null) {
+        clearInterval(timer)
+    }
+})
+
+const remainingMs = computed(() => {
     if (!props.expiresAt) {
+        return null
+    }
+
+    const expiry = Date.parse(props.expiresAt)
+
+    return Number.isNaN(expiry) ? null : expiry - now.value
+})
+
+const expired = computed(() => remainingMs.value !== null && remainingMs.value <= 0)
+
+const remainingText = computed(() => {
+    if (remainingMs.value === null) {
         return ''
     }
 
-    const date = new Date(props.expiresAt)
+    const totalSeconds = Math.max(0, Math.floor(remainingMs.value / 1000))
+    const minutes = Math.floor(totalSeconds / 60)
+    const seconds = `${totalSeconds % 60}`.padStart(2, '0')
 
-    return Number.isNaN(date.getTime()) ? '' : date.toLocaleTimeString()
+    return t('Confirm within :time', { time: `${minutes}:${seconds}` })
 })
 </script>

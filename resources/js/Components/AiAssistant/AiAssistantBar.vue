@@ -142,6 +142,18 @@
                                             v-if="turn.confirm"
                                             :preview="turn.confirm.preview"
                                             :expires-at="turn.confirm.expiresAt"
+                                            :status="turn.confirm.status"
+                                            @confirm="assistant.confirmAction(turn)"
+                                            @cancel="assistant.cancelAction(turn)"
+                                        />
+
+                                        <AiActionResult
+                                            v-if="turn.result"
+                                            :undo-until="turn.result.undoUntil"
+                                            :links="turn.result.links"
+                                            :status="turn.result.status"
+                                            :error="turn.result.error"
+                                            @revert="assistant.revertBatch(turn)"
                                         />
                                     </div>
 
@@ -247,6 +259,7 @@ import { Dialog, DialogPanel, DialogTitle, TransitionChild, TransitionRoot } fro
 import { useI18n } from 'vue-i18n'
 import PropertyIcon from '@/Artwork/Icon/PropertyIcon.vue'
 import AiActionConfirm from '@/Components/AiAssistant/AiActionConfirm.vue'
+import AiActionResult from '@/Components/AiAssistant/AiActionResult.vue'
 import AiConversationPanel from '@/Components/AiAssistant/AiConversationPanel.vue'
 import { MAX_MESSAGE_LENGTH, useAiAssistant } from '@/Composeables/useAiAssistant'
 

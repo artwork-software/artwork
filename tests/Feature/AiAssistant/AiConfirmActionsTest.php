@@ -543,4 +543,42 @@ final class AiConfirmActionsTest extends TestCase
 
         $this->assertSame(0, Event::query()->where('project_id', $this->project->id)->count());
     }
+
+    /** Die Bar liest Batch und Undo-Frist ueber den Web-Endpunkt (core-ki-bar-confirm). */
+    #[Test]
+    public function the_bar_endpoint_reports_the_batch_of_an_executed_action(): void
+    {
+        $user = $this->planner();
+        $args = $this->createArgs();
+        $turn = $this->pendingAction($user, $args);
+        [, $turn] = $this->writeTokenFor($user, $turn);
+
+        $this->postJson(
+            '/api/v1/ai/events/batch',
+            array_merge($args, ['dry_run' => false, 'action_id' => $turn->id])
+        )->assertOk();
+
+        $this->app['auth']->forgetGuards();
+
+        $payload = $this->withoutHeader('Authorization')
+            ->actingAs($user)
+            ->getJson('/ai/actions/' . $turn->id)
+            ->assertOk()
+            ->json();
+
+        $this->assertSame(AiActionService::STATUS_EXECUTED, $payload['status']);
+        $this->assertNotNull($payload['batch']['id']);
+        $this->assertNotNull($payload['batch']['undo_until']);
+        $this->assertCount(3, $payload['batch']['links']);
+    }
+
+    #[Test]
+    public function the_bar_endpoint_refuses_a_foreign_action(): void
+    {
+        $foreign = $this->pendingAction(User::factory()->create());
+
+        $this->actingAs($this->planner())
+            ->getJson('/ai/actions/' . $foreign->id)
+            ->assertForbidden();
+    }
 }

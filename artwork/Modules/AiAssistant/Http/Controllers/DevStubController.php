@@ -10,7 +10,9 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Validator as ValidatorFacade;
 use Illuminate\Support\Str;
+use Illuminate\Contracts\Http\Kernel as HttpKernel;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\Response as SymfonyResponse;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /**
@@ -70,22 +72,121 @@ class DevStubController extends Controller
             DevStubScripts::resolveKeyword($validated['message']),
             $validated['conversation_id'] ?? (string) Str::uuid(),
             (string) Str::uuid(),
+            $this->actionIdIn($validated['message']),
         ));
     }
 
+    /**
+     * Bestaetigungs-Turn (Konzept W2 §5). Der Stub steht hier fuer artwork-ai und macht deshalb
+     * genau dessen zwei Schritte (W2 §7, Schritt 5): Aktion holen, Schreib-Endpunkt mit
+     * `dry_run=false` aufrufen — beides mit dem mitgeschickten Write-Token. Danach streamt er ein
+     * festes Ergebnis-Skript. Ohne diese beiden Schritte liefe der Stub an der eigentlichen Kette
+     * vorbei, und ein Dusk-Lauf koennte „Rueckgaengig" nie sehen.
+     */
     public function confirm(Request $request, string $action): StreamedResponse|JsonResponse
     {
         if (($unauthorized = $this->rejectWithoutCredentials($request)) !== null) {
             return $unauthorized;
         }
 
-        // Der Stub prueft die action_id nicht — W2 bringt die echte Pruef- und Revocation-Logik.
-        unset($action);
+        $error = $this->executeAction($request, $action);
 
         return $this->stream(DevStubScripts::buildConfirmExecution(
             (string) $request->input('conversation_id', (string) Str::uuid()),
             (string) Str::uuid(),
+            $error,
         ));
+    }
+
+    /** UUID in der Nachricht = Aktion, die der Stub bestaetigen lassen soll. */
+    private function actionIdIn(string $message): ?string
+    {
+        preg_match('/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i', $message, $matches);
+
+        return $matches[0] ?? null;
+    }
+
+    /**
+     * Fuehrt die bestaetigte Aktion aus wie artwork-ai. Rueckgabe ist die Fehlermeldung fuers
+     * Skript oder null.
+     *
+     * Bewusst ueber den HTTP-Kernel derselben Anwendung statt ueber einen echten Request: der
+     * Entwicklungsserver beantwortet nur eine Anfrage zugleich, ein Selbstaufruf ueber das Netz
+     * wuerde blockieren. Middleware, Scopes und Pruefkette laufen dabei vollstaendig.
+     */
+    private function executeAction(Request $request, string $action): ?string
+    {
+        $token = (string) $request->header('Authorization');
+
+        $actionResponse = $this->subRequest('GET', '/api/v1/ai/actions/' . $action, null, $token);
+
+        if ($actionResponse->getStatusCode() !== Response::HTTP_OK) {
+            return 'Aktion nicht abrufbar (' . $actionResponse->getStatusCode() . ').';
+        }
+
+        /** @var array{tool?: string, args?: array<string, mixed>} $payload */
+        $payload = json_decode((string) $actionResponse->getContent(), true) ?: [];
+        $args = (array) ($payload['args'] ?? []);
+        $target = $this->endpointFor((string) ($payload['tool'] ?? ''), $args);
+
+        if ($target === null) {
+            return 'Unbekanntes Werkzeug.';
+        }
+
+        $writeResponse = $this->subRequest(
+            $target[0],
+            $target[1],
+            array_merge($args, ['dry_run' => false, 'action_id' => $action]),
+            $token
+        );
+
+        return $writeResponse->getStatusCode() === Response::HTTP_OK
+            ? null
+            : 'Ausfuehrung fehlgeschlagen (' . $writeResponse->getStatusCode() . ').';
+    }
+
+    /**
+     * @param array<string, mixed> $args
+     * @return array{0: string, 1: string}|null
+     */
+    private function endpointFor(string $tool, array $args): ?array
+    {
+        return match ($tool) {
+            'create_events' => ['POST', '/api/v1/ai/events/batch'],
+            'delete_events' => ['DELETE', '/api/v1/ai/events/batch'],
+            'update_event' => ['PATCH', '/api/v1/ai/events/' . (int) ($args['event_id'] ?? 0)],
+            default => null,
+        };
+    }
+
+    /**
+     * @param array<string, mixed>|null $body
+     */
+    private function subRequest(string $method, string $path, ?array $body, string $authorization): SymfonyResponse
+    {
+        $subRequest = Request::create(
+            $path,
+            $method,
+            [],
+            [],
+            [],
+            ['HTTP_ACCEPT' => 'application/json', 'HTTP_AUTHORIZATION' => $authorization],
+            $body === null ? null : json_encode($body, JSON_THROW_ON_ERROR)
+        );
+
+        if ($body !== null) {
+            $subRequest->headers->set('Content-Type', 'application/json');
+        }
+
+        $outer = app('request');
+
+        try {
+            return app(HttpKernel::class)->handle($subRequest);
+        } finally {
+            // Der Kernel bindet `request` um; ohne das Zuruecksetzen liefe der Stream mit dem
+            // Sub-Request weiter.
+            app()->instance('request', $outer);
+        }
     }
 
     /**

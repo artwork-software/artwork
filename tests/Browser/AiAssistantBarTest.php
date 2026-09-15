@@ -185,20 +185,26 @@ final class AiAssistantBarTest extends DuskTestCase
     }
 
     /** 7. Der Confirm-Vertrag ist sichtbar, die Knoepfe bleiben gesperrt (W2 fuellt sie). */
+    /**
+     * Seit core-ki-bar-confirm sind die Knoepfe scharf; der Ablauf selbst steht in
+     * `AiActionConfirmTest`. Hier bleibt die Vorschau samt Konflikten und Frist.
+     */
     #[Test]
-    public function the_confirm_skeleton_is_visible_but_disabled(): void
+    public function the_confirm_dialog_shows_the_preview_and_offers_both_buttons(): void
     {
         $this->browse(function (Browser $browser): void {
             $this->ask($browser, 'confirm Leg das an')
                 ->waitFor('[data-ai-confirm]')
-                ->assertSeeIn('[data-ai-confirm]', 'Probe am 20.09.');
+                ->assertSeeIn('[data-ai-confirm]', 'Probe am 20.09.')
+                ->assertSeeIn('[data-ai-confirm]', 'Studio 1 ist von 08:00 bis 09:00 belegt')
+                ->assertVisible('[data-ai-confirm-expiry]');
 
-            $disabled = $browser->script(
+            $enabled = $browser->script(
                 "return Array.from(document.querySelectorAll('[data-ai-confirm] button'))"
-                . '.every((button) => button.disabled)'
+                . '.every((button) => !button.disabled)'
             )[0];
 
-            $this->assertTrue($disabled);
+            $this->assertTrue($enabled);
         });
     }
 

@@ -12,6 +12,15 @@ return [
     // defaults: unset values arrive as null and the fallbacks in
     // resources/js/bootstrap.js apply, which keeps the previous behaviour.
     // REVERB_APP_SECRET and REVERB_APP_ID must never be listed here.
+    // KI-Assistent: Basis-URL des artwork-ai-Dienstes. Die Bar spricht den Endpunkt direkt aus dem
+    // Browser an (SSE ueber fetch, Konzept 0.3 §1), braucht ihn also im Client. Bewusst kein
+    // Haus-Setting und kein Shared-Prop: der Wert ist Betreiber-Config (config/ai.php) und kommt wie
+    // die Reverb-Werte zur Laufzeit, damit das Bundle umgebungsneutral bleibt.
+    // Lokal zeigt er auf den Entwicklungs-Stub (z.B. https://artwork.ddev.site/ai/dev-stub).
+    'ai' => [
+        'endpoint_url' => env('AI_ENDPOINT_URL'),
+    ],
+
     'reverb' => [
         'key' => env('REVERB_APP_KEY'),
         'cluster' => env('REVERB_APP_CLUSTER'),

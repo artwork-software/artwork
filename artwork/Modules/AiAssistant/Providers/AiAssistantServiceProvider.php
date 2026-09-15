@@ -6,6 +6,7 @@ use Artwork\Modules\AiAssistant\Listeners\AttachActivityOrigin;
 use Artwork\Modules\AiAssistant\Listeners\RevokeAiSessionTokens;
 use Artwork\Modules\AiAssistant\Passport\AiSessionGrant;
 use Artwork\Modules\AiAssistant\Passport\AiSessionTokenFactory;
+use Artwork\Modules\AiAssistant\Support\SseEventSchemaValidator;
 use DateInterval;
 use Illuminate\Auth\Events\Logout;
 use Illuminate\Auth\Events\PasswordReset;
@@ -33,6 +34,11 @@ class AiAssistantServiceProvider extends ServiceProvider
         );
 
         $this->registerAiSessionAuthorizationServer();
+
+        // Schema-Pruefung des Entwicklungs-Stubs (core-ki-bar-ui). Der Pfad kommt aus der Config,
+        // deshalb eine explizite Bindung statt Autowiring.
+        $this->app->singleton(SseEventSchemaValidator::class, static fn (): SseEventSchemaValidator
+            => SseEventSchemaValidator::fromConfig());
     }
 
     public function boot(): void

@@ -18,6 +18,10 @@ return [
     */
 
     'name' => env('APP_NAME', 'Laravel'),
+    // Version der laufenden Instanz. Wird beim Deploy gesetzt (Tag/Release) und als Shared-Prop
+    // `artwork_version` an das Frontend gegeben; der KI-Assistent schickt sie als Turn-Kontext mit
+    // (core-ki-bar-ui, Konzept C4 §5). Ohne gesetzte Variable bleibt der Wert null.
+    'version' => env('APP_VERSION'),
     'use_chat_module' => env('USE_CHAT_MODULE', false),
     'notion_api_token' => env('NOTION_API_TOKEN', ''),
     /*

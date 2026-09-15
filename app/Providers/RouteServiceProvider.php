@@ -48,6 +48,11 @@ class RouteServiceProvider extends ServiceProvider
             // External-access routes carry their own middleware groups (declared per-group in the files).
             Route::group([], base_path('routes/external-guest.php'));
             Route::group([], base_path('routes/external.php'));
+
+            // Entwicklungs-Stub der KI-Bar: nur lokal, nie in testing/production (core-ki-bar-ui).
+            if ($this->app->environment('local')) {
+                Route::group([], base_path('routes/ai-dev-stub.php'));
+            }
         });
 
         Route::bind('projects', function ($value) {

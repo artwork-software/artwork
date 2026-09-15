@@ -231,6 +231,9 @@ class HandleInertiaRequests extends Middleware
             parent::share($request),
             [
                 'name' => config('app.name'),
+                // Instanz-Version als Turn-Kontext der KI-Bar (core-ki-bar-ui, Konzept C4 §5).
+                // Quelle: config/app.php -> APP_VERSION; ohne gesetzte Variable null.
+                'artwork_version' => config('app.version'),
                 'ai' => $this->aiAssistantState($user),
                 'use_chat_module' => config('app.use_chat_module'),
                 // Effektives PHP-Upload-Limit für transparente „Datei zu groß"-Meldungen

@@ -43,16 +43,15 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - name: Composer Setup
-        uses: php-actions/composer@v6
+      - name: Install PHP and Composer
+        uses: shivammathur/setup-php@v2
         with:
-          php_version: 8.4
-          php_extensions: gd zip bcmath pcntl
+          php-version: '8.4'
+          extensions: gd zip bcmath pcntl ldap
+      - name: Install Dependencies
+        run: composer install --no-progress --no-suggest --no-interaction
       - name: PHPStan Static Analysis
-        uses: php-actions/phpstan@v3
-        with:
-          configuration: phpstan.neon.dist
-          memory_limit: 1G
+        run: vendor/bin/phpstan analyse --configuration=phpstan.neon.dist --memory-limit=1G --no-progress --error-format=github
 
   tests:
     name: PHP ${{ matrix.php }} - PHPUnit

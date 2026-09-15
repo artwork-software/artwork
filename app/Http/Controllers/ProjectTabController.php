@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use Artwork\Modules\Project\Enum\ProjectTabComponentEnum;
 use Artwork\Modules\Project\Models\Component;
 use Artwork\Modules\Project\Models\ComponentInTab;
 use Artwork\Modules\Project\Models\DisclosureComponents;
@@ -10,6 +11,7 @@ use Artwork\Modules\Project\Models\ProjectTab;
 use Artwork\Modules\Project\Models\ProjectTabSidebarTab;
 use Artwork\Modules\Project\Models\SidebarTabComponent;
 use Artwork\Modules\Project\Services\ComponentUsageService;
+use Artwork\Modules\SageApiSettings\Services\SageApiSettingsService;
 use Illuminate\Http\Request;
 use Inertia\Response;
 use Inertia\ResponseFactory;
@@ -120,6 +122,16 @@ class ProjectTabController extends Controller
                 ->orderBy('name')
                 ->get();
         });
+
+        // Sage-Rechnungsübersicht nur anbieten, wenn die Sage-Schnittstelle aktiv ist
+        // (nach dem Cache gefiltert, damit der Schalter ohne Cache-Flush wirkt)
+        if (!app(SageApiSettingsService::class)->isEnabled()) {
+            $componentsSpecial = $componentsSpecial
+                ->reject(
+                    fn (Component $component) => $component->type === ProjectTabComponentEnum::SAGE_INVOICE_OVERVIEW->value
+                )
+                ->values();
+        }
 
         return inertia('Settings/ProjectTab/Index', [
             'tabs' => $tabs,

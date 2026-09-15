@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Artwork\Modules\Project\Enum\ProjectTabComponentEnum;
 use Artwork\Modules\Project\Models\Component;
 use Artwork\Modules\Project\Services\ComponentUsageService;
+use Artwork\Modules\SageApiSettings\Services\SageApiSettingsService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -37,6 +38,15 @@ class ComponentController extends Controller
                 ->orderBy('name')
                 ->get();
         });
+
+        // Sage-Rechnungsübersicht nur zeigen, wenn die Sage-Schnittstelle aktiv ist
+        if (!app(SageApiSettingsService::class)->isEnabled()) {
+            $componentsSpecial = $componentsSpecial
+                ->reject(
+                    fn (Component $component) => $component->type === ProjectTabComponentEnum::SAGE_INVOICE_OVERVIEW->value
+                )
+                ->values();
+        }
 
         return Inertia::render('Settings/ComponentManagement/Index', [
             'components' => $components,

@@ -84,6 +84,7 @@ use App\Http\Controllers\ProjectTab\ProjectDocumentsController;
 use App\Http\Controllers\ProjectTab\ProjectMaterialIssueController;
 use App\Http\Controllers\ProjectTab\ProjectShiftContactsController;
 use App\Http\Controllers\ProjectTab\ProjectShiftController;
+use App\Http\Controllers\ProjectTab\ProjectSageInvoiceOverviewController;
 use App\Http\Controllers\ProjectTab\ProjectStatusController;
 use App\Http\Controllers\ProjectTab\ProjectTeamController;
 use App\Http\Controllers\ProjectTabController;
@@ -871,6 +872,8 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
             ->name('projects.tabs.budget');
         Route::get('/shift', [ProjectShiftController::class, 'show'])
             ->name('projects.tabs.shift');
+        Route::get('/sage-invoices', [ProjectSageInvoiceOverviewController::class, 'show'])
+            ->name('projects.tabs.sage-invoices');
     });
 
     // Verknüpfung von CRM-Künstler*innen mit einem Projekt (Autorisierung via ProjectPolicy::update)

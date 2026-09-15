@@ -181,5 +181,23 @@ class AddNewComponents extends Command
             ]);
             $this->info('Component Document request updated');
         }
+
+        // Sage-Rechnungsübersicht: nur sinnvoll, wenn die Sage-Schnittstelle aktiv ist.
+        // Die Palette blendet sie bei deaktivierter Schnittstelle aus (siehe ProjectTabController/ComponentController).
+        if (!Component::query()->where('type', ProjectTabComponentEnum::SAGE_INVOICE_OVERVIEW)->first()) {
+            Component::create([
+                'name' => 'Sage invoice overview',
+                'type' => ProjectTabComponentEnum::SAGE_INVOICE_OVERVIEW,
+                'data' => [
+                    'icon' => 'IconFileInvoice'
+                ],
+                'special' => true,
+                'sidebar_enabled' => false,
+                'permission_type' => ProjectTabComponentPermissionEnum::PERMISSION_TYPE_ALL_SEE_AND_EDIT->value
+            ]);
+            $this->info('Component Sage invoice overview added');
+        } else {
+            $this->info('Component Sage invoice overview already exists');
+        }
     }
 }

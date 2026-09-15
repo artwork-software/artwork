@@ -176,17 +176,25 @@ export default defineComponent({
         ConfirmationComponent
     },
     mixins: [Permissions, IconLib, CurrencyFloatToStringFormatter],
-    props: ['show', 'cell'],
+    props: {
+        show: {type: Boolean, default: false},
+        cell: {type: Object, required: true},
+        // Startindex, wenn das Modal aus einer Liste heraus für eine bestimmte Buchung geöffnet wird
+        // (Sage-Rechnungsübersicht); die Budgettabelle startet weiterhin bei 0.
+        initialIndex: {type: Number, default: 0}
+    },
     emits: ['close', 'budget-updated'],
     data() {
+        const length = this.cell.sage_assigned_data?.length ?? 0;
+
         return {
             bookingDataCommentForm: useForm({
                 userId: this.$page.props.auth.user.id,
                 sageAssignedDataId: null,
                 comment: null
             }),
-            currentIndex: 0,
-            maxIndex: this.cell.sage_assigned_data.length,
+            currentIndex: Math.min(Math.max(0, this.initialIndex), Math.max(0, length - 1)),
+            maxIndex: length,
             openChildren: {},
             showDeleteConfirmationModal: false
         };
@@ -194,6 +202,15 @@ export default defineComponent({
     computed: {
         currentSageAssignedData() {
             return this.cell.sage_assigned_data[this.currentIndex];
+        }
+    },
+    watch: {
+        // Liste kann von außen ersetzt werden (Neuladen nach Löschen/Kommentar) → Pager nachziehen
+        'cell.sage_assigned_data.length'(length) {
+            this.maxIndex = length ?? 0;
+            if (this.currentIndex > this.maxIndex - 1) {
+                this.currentIndex = Math.max(0, this.maxIndex - 1);
+            }
         }
     },
     methods: {
@@ -215,9 +232,13 @@ export default defineComponent({
             this.bookingDataCommentForm.post(route('sageAssignedDataComments.store'), {
                 preserveScroll: true,
                 onSuccess: () => {
-                    sageAssignedData.comments.unshift(
-                        this.$page.props.loadedProjectInformation.BudgetTab.recentlyCreatedSageAssignedDataComment
-                    );
+                    // Nur die Budgettabelle liefert den frischen Kommentar über die Seiten-Props;
+                    // andere Aufrufer (Sage-Rechnungsübersicht) laden nach 'budget-updated' selbst neu.
+                    const createdComment = this.$page.props.loadedProjectInformation?.BudgetTab
+                        ?.recentlyCreatedSageAssignedDataComment;
+                    if (createdComment) {
+                        sageAssignedData.comments.unshift(createdComment);
+                    }
                     this.bookingDataCommentForm.reset();
                     this.$emit('budget-updated');
                 }

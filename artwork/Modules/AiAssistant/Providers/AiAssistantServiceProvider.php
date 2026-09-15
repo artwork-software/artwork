@@ -2,10 +2,14 @@
 
 namespace Artwork\Modules\AiAssistant\Providers;
 
+use Artwork\Modules\AiAssistant\Contracts\ActionGuard;
+use Artwork\Modules\AiAssistant\Contracts\BatchRecorder;
 use Artwork\Modules\AiAssistant\Listeners\AttachActivityOrigin;
 use Artwork\Modules\AiAssistant\Listeners\RevokeAiSessionTokens;
 use Artwork\Modules\AiAssistant\Passport\AiSessionGrant;
 use Artwork\Modules\AiAssistant\Passport\AiSessionTokenFactory;
+use Artwork\Modules\AiAssistant\Support\DatabaseBatchRecorder;
+use Artwork\Modules\AiAssistant\Support\PendingActionGuard;
 use Artwork\Modules\AiAssistant\Support\SseEventSchemaValidator;
 use DateInterval;
 use Illuminate\Auth\Events\Logout;
@@ -39,6 +43,11 @@ class AiAssistantServiceProvider extends ServiceProvider
         // deshalb eine explizite Bindung statt Autowiring.
         $this->app->singleton(SseEventSchemaValidator::class, static fn (): SseEventSchemaValidator
             => SseEventSchemaValidator::fromConfig());
+
+        // Haken der Schreib-Endpunkte: seit core-confirm-actions traegt der ActionGuard die echte
+        // Pruefkette (W2 §2), seit core-undo schreibt der BatchRecorder echte Batches (W3 §1).
+        $this->app->bind(ActionGuard::class, PendingActionGuard::class);
+        $this->app->bind(BatchRecorder::class, DatabaseBatchRecorder::class);
     }
 
     public function boot(): void

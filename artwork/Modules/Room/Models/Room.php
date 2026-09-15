@@ -318,4 +318,19 @@ class Room extends Model
     {
         return $builder->whereNotIn('id', $ids);
     }
+
+    /**
+     * Raeume, die diese Person sehen darf (core-visibility-scopes, Konzept B1 §2).
+     *
+     * Aus der Oberflaeche extrahiert, nicht erfunden: Im Kalender sind alle Raeume sichtbar;
+     * `RoomPolicy::view():23` (`room update` oder
+     * Raum-Admin) regelt nur das **Verwalten** eines Raums, nicht das Sehen.
+     * Deshalb liefert der Scope fuer jede angemeldete Person alles und ohne Benutzer nichts.
+     * Er existiert trotzdem als eigene Methode, damit die Aggregations-Endpunkte (B1) genau eine
+     * Stelle haben, an der sich die Regel aendern laesst, wenn die Oberflaeche sie bekommt.
+     */
+    public function scopeVisibleFor(Builder $builder, ?User $user): Builder
+    {
+        return $user instanceof User ? $builder : $builder->whereRaw('1 = 0');
+    }
 }

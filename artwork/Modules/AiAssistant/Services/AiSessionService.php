@@ -23,6 +23,7 @@ class AiSessionService
         private readonly AiSessionTokenFactory $factory,
         private readonly AiAssistantSettings $settings,
         private readonly AiAssistantAccess $access,
+        private readonly AiActionService $actions,
     ) {
     }
 
@@ -30,11 +31,28 @@ class AiSessionService
      * @param string[] $requestedScopes leer = alle erlaubten
      * @return array{access_token: string, expires_at: string, scopes: string[]}
      */
-    public function issue(User $user, array $requestedScopes = []): array
+    public function issue(User $user, array $requestedScopes = [], ?string $actionId = null): array
     {
-        $scopes = $this->resolveScopes($user, $requestedScopes);
+        $wantsWrite = in_array(AiScopes::WRITE, $requestedScopes, true);
+        $turn = null;
+
+        if ($wantsWrite) {
+            // Wirft, wenn die Aktion fehlt, fremd, abgelaufen oder schon entschieden ist, oder
+            // wenn das Haus Stufe C nicht freigeschaltet hat (W2 §2).
+            $turn = $this->actions->forTokenIssuance($user, (string) $actionId);
+        }
+
+        $scopes = $wantsWrite
+            // Write-Token ist bewusst eng: kein ai:read (W2 §2).
+            ? [AiScopes::WRITE, AiScopes::TRANSCRIPT]
+            : $this->resolveScopes($user, $requestedScopes);
 
         $result = $this->factory->make($user->id, 'ai-session', $scopes);
+
+        if ($turn !== null) {
+            // Die jti bindet genau dieses Token an genau diese Aktion (W2 §2).
+            $this->actions->bindToken($turn, (string) $result->accessTokenId);
+        }
 
         return [
             'access_token' => $result->accessToken,
@@ -44,8 +62,8 @@ class AiSessionService
     }
 
     /**
-     * ai:transcript immer, ai:read nur bei Stufe B. ai:write nie — der Schreibpfad braucht eine
-     * Aktions-Bindung und kommt mit W2; der FormRequest lehnt ihn vorher mit 422 ab.
+     * ai:transcript immer, ai:read nur bei Stufe B. ai:write laeuft nicht hier durch, sondern nur
+     * ueber den Aktions-Pfad in issue() — nie implizit.
      *
      * @param string[] $requestedScopes
      * @return string[]

@@ -3,6 +3,9 @@
 namespace Artwork\Modules\AiAssistant\Http\Requests;
 
 use Artwork\Modules\AiAssistant\Models\AiConversationTurn;
+use Artwork\Modules\AiAssistant\Services\AiEventWriteService;
+use Artwork\Modules\AiAssistant\Support\AiActionHash;
+use Carbon\CarbonImmutable;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -13,6 +16,18 @@ class StoreAiConversationTurnRequest extends FormRequest
     public const MAX_USER_MESSAGE_CHARS = 4000;
     public const MAX_ASSISTANT_MESSAGE_BYTES = 65536;
     public const MAX_TOOL_CALLS = 50;
+
+    /** Grenzen der Vorschau aus `sse-events/confirm.request.schema.json`. */
+    public const MAX_PREVIEW_SUMMARY_CHARS = 500;
+    public const MAX_PREVIEW_ITEMS = 200;
+    public const MAX_PREVIEW_LABEL_CHARS = 200;
+
+    /** Werkzeuge, zu denen es eine bestaetigungspflichtige Aktion geben kann (Konzept W1 §1). */
+    public const CONFIRMABLE_TOOLS = [
+        AiEventWriteService::TOOL_CREATE,
+        AiEventWriteService::TOOL_UPDATE,
+        AiEventWriteService::TOOL_DELETE,
+    ];
 
     public function authorize(): bool
     {
@@ -44,6 +59,31 @@ class StoreAiConversationTurnRequest extends FormRequest
             'context.project_id' => ['nullable', 'integer'],
             'context.locale' => ['nullable', 'string', 'max:16'],
             'context.artwork_version' => ['nullable', 'string', 'max:64'],
+
+            // Bestaetigungspflichtige Aktion (core-confirm-actions; Konzept W2 §1). Der Turn ist
+            // die Aktion — deshalb steht sie hier und nicht in einer eigenen Tabelle.
+            'pending_action' => ['sometimes', 'array'],
+            'pending_action.tool' => ['required_with:pending_action', Rule::in(self::CONFIRMABLE_TOOLS)],
+            'pending_action.args' => ['required_with:pending_action', 'array'],
+            'pending_action.args_hash' => ['required_with:pending_action', 'string', 'regex:/^[a-f0-9]{64}$/i'],
+            // Form der Vorschau ist bindend: contracts/action-contract.md verweist auf
+            // sse-events/confirm.request.schema.json — summary ist ein Text, items tragen
+            // action/label und optional Konflikte als Texte.
+            'pending_action.preview' => ['required_with:pending_action', 'array'],
+            'pending_action.preview.summary' => [
+                'required_with:pending_action.preview',
+                'string',
+                'max:' . self::MAX_PREVIEW_SUMMARY_CHARS,
+            ],
+            // 'sometimes' statt 'required_with': eine leere Liste ist gueltig (Vorschau ohne
+            // Objekte), wuerde von required_with aber als „fehlt" gewertet. Dass der Schluessel
+            // ueberhaupt da ist, prueft validatePendingAction().
+            'pending_action.preview.items' => ['sometimes', 'array', 'max:' . self::MAX_PREVIEW_ITEMS],
+            'pending_action.preview.items.*.action' => ['required', Rule::in(['create', 'update', 'delete'])],
+            'pending_action.preview.items.*.label' => ['required', 'string', 'max:' . self::MAX_PREVIEW_LABEL_CHARS],
+            'pending_action.preview.items.*.conflicts' => ['sometimes', 'array'],
+            'pending_action.preview.items.*.conflicts.*' => ['string', 'max:' . self::MAX_PREVIEW_LABEL_CHARS],
+            'pending_action.expires_at' => ['required_with:pending_action', 'date'],
         ];
     }
 
@@ -57,10 +97,81 @@ class StoreAiConversationTurnRequest extends FormRequest
                 $validator->errors()->add('assistant_message', __('The assistant message is too long.'));
             }
 
-            // pending_action gehoert zu W2 und darf in v1 nicht gesetzt werden.
-            if ($this->has('pending_action')) {
-                $validator->errors()->add('pending_action', __('This field is not supported yet.'));
-            }
+            $this->validatePendingAction($validator);
         });
+    }
+
+    /**
+     * Die Aktion muss zum Status passen, in die Zukunft zeigen und ihren eigenen Fingerabdruck
+     * korrekt tragen — artwork rechnet den Hash nach und glaubt ihn nicht (Konzept W2 §4).
+     */
+    private function validatePendingAction(Validator $validator): void
+    {
+        $isAwaiting = $this->input('status') === AiConversationTurn::STATUS_AWAITING_CONFIRMATION;
+        $action = $this->input('pending_action');
+
+        if (!is_array($action)) {
+            if ($isAwaiting) {
+                $validator->errors()->add('pending_action', __('This field is required.'));
+            }
+
+            return;
+        }
+
+        if (!$isAwaiting) {
+            $validator->errors()->add('pending_action', __('This field is not supported yet.'));
+
+            return;
+        }
+
+        $preview = $action['preview'] ?? null;
+
+        if (is_array($preview) && !array_key_exists('items', $preview)) {
+            $validator->errors()->add('pending_action.preview.items', __('This field is required.'));
+        }
+
+        $this->validateArgsHash($validator, $action);
+        $this->validateExpiry($validator, $action);
+    }
+
+    /**
+     * Der Hash wird nachgerechnet, nicht geglaubt (contracts/action-contract.md).
+     *
+     * @param array<string, mixed> $action
+     */
+    private function validateArgsHash(Validator $validator, array $action): void
+    {
+        $args = $action['args'] ?? null;
+        $hash = $action['args_hash'] ?? null;
+
+        if (is_array($args) && is_string($hash) && !AiActionHash::matches($args, $hash)) {
+            $validator->errors()->add('pending_action.args_hash', __('The hash does not match the arguments.'));
+        }
+    }
+
+    /**
+     * Die Bestaetigungsfrist liegt in der Zukunft und hoechstens `ai.action_ttl_minutes` entfernt.
+     *
+     * @param array<string, mixed> $action
+     */
+    private function validateExpiry(Validator $validator, array $action): void
+    {
+        $expiresAt = $action['expires_at'] ?? null;
+
+        if (!is_string($expiresAt)) {
+            return;
+        }
+
+        $maxMinutes = (int) config('ai.action_ttl_minutes');
+        $expires = CarbonImmutable::parse($expiresAt);
+
+        if ($expires->isPast() || $expires->greaterThan(CarbonImmutable::now()->addMinutes($maxMinutes))) {
+            $validator->errors()->add(
+                'pending_action.expires_at',
+                __('The confirmation window must be in the future and at most :minutes minutes.', [
+                    'minutes' => $maxMinutes,
+                ])
+            );
+        }
     }
 }

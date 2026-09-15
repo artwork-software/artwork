@@ -72,6 +72,10 @@ class Kernel extends ConsoleKernel
         $schedule->command('passport:purge')->dailyAt('02:30')->runInBackground();
         // KI-Chatverläufe nach der Aufbewahrungsfrist des Hauses (0 = unbegrenzt)
         $schedule->command('ai:purge-transcripts')->dailyAt('02:45')->runInBackground();
+
+        // Bestaetigungsfrist einer KI-Aktion sind 10 Minuten (config ai.action_ttl_minutes);
+        // stuendlich reicht, weil abgelaufene Aktionen ohnehin bei jeder Pruefung durchfallen.
+        $schedule->command('ai:expire-actions')->hourly()->runInBackground();
         $schedule->command(CreateMoneySourceExpirationReminderNotificationsCommand::class)
             ->dailyAt('01:00')
             ->runInBackground();

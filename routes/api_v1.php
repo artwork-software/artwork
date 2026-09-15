@@ -1,8 +1,16 @@
 <?php
 
 use Artwork\Core\Api\Middleware\EnsureTokenNotExpired;
+use Artwork\Modules\AiAssistant\Http\Controllers\Api\AiActionApiController;
+use Artwork\Modules\AiAssistant\Http\Controllers\Api\AiContextApiController;
 use Artwork\Modules\AiAssistant\Http\Controllers\Api\AiConversationApiController;
+use Artwork\Modules\AiAssistant\Http\Controllers\Api\AiEventApiController;
+use Artwork\Modules\AiAssistant\Http\Controllers\Api\AiEventWriteApiController;
+use Artwork\Modules\AiAssistant\Http\Controllers\Api\AiInventoryApiController;
+use Artwork\Modules\AiAssistant\Http\Controllers\Api\AiProjectApiController;
+use Artwork\Modules\AiAssistant\Http\Controllers\Api\AiShiftApiController;
 use Artwork\Modules\AiAssistant\Http\Controllers\JwksController;
+use Artwork\Modules\AiAssistant\Http\Middleware\EnsureAiWriteScope;
 use Artwork\Modules\Inventory\Http\Controllers\Api\InventoryArticleApiController;
 use Artwork\Modules\Inventory\Http\Controllers\Api\InventoryCategoryApiController;
 use Illuminate\Support\Facades\Route;
@@ -44,6 +52,67 @@ Route::middleware(['auth:api', EnsureTokenNotExpired::class, 'throttle:machine-a
 
         Route::post('/ai/conversations/{conversation}/turns', [AiConversationApiController::class, 'storeTurn'])
             ->name('api.v1.ai.conversations.turns.store');
+    });
+
+    // Lese-Endpunkte fuer artwork-ai (Stufe B, Konzept B1 §3). Der Scope ai:read wird nur
+    // ausgegeben, wenn das Haus Stufe B eingeschaltet hat (AiSessionService); jede Abfrage laeuft
+    // zusaetzlich ueber visibleFor($user) — der Token traegt immer den echten Benutzer.
+    Route::middleware(CheckToken::using('ai:read'))->group(function (): void {
+        Route::get('/ai/context', AiContextApiController::class)
+            ->name('api.v1.ai.context');
+
+        Route::get('/ai/projects', [AiProjectApiController::class, 'index'])
+            ->name('api.v1.ai.projects.index');
+
+        Route::get('/ai/projects/{project}', [AiProjectApiController::class, 'show'])
+            ->whereNumber('project')
+            ->name('api.v1.ai.projects.show');
+
+        Route::get('/ai/events', [AiEventApiController::class, 'index'])
+            ->name('api.v1.ai.events.index');
+
+        // Belegung und freie Slots rechnen bewusst mit *allen* Terminen der Raeume: ein belegter
+        // Raum ist ein Faktum, der Termininhalt bleibt geschuetzt (B1 §5).
+        Route::get('/ai/rooms/occupancy', [AiEventApiController::class, 'occupancy'])
+            ->name('api.v1.ai.rooms.occupancy');
+
+        Route::get('/ai/rooms/free-slots', [AiEventApiController::class, 'freeSlots'])
+            ->name('api.v1.ai.rooms.free-slots');
+
+        // Eigener Einsatzplan: kein Parameter fuer fremde Personen (B1 §6). Der Dienstplan-
+        // Ausschnitt verlangt zusaetzlich das Recht "Schichtplan einsehen" wie die Oberflaeche.
+        Route::get('/ai/me/schedule', [AiShiftApiController::class, 'schedule'])
+            ->name('api.v1.ai.me.schedule');
+
+        Route::get('/ai/shift-plan', [AiShiftApiController::class, 'shiftPlan'])
+            ->name('api.v1.ai.shift-plan');
+
+        // Verfuegbarkeit rechnet mit *allen* Ausgaben des Zeitraums; Projektnamen gehen nur raus,
+        // wo das Projekt fuer die fragende Person sichtbar ist (B1 §5, gleiche Trennung wie beim Raum).
+        Route::get('/ai/inventory/availability', AiInventoryApiController::class)
+            ->name('api.v1.ai.inventory.availability');
+    });
+
+    // Schreib-Endpunkte (Stufe C, Konzept W1). Statt CheckToken steht hier EnsureAiWriteScope:
+    // die Vorschau (dry_run=true) darf auch ein Read-Token holen, die Ausfuehrung verlangt
+    // ai:write — und das gibt es nur mit einer bestaetigten Aktion (W2 §2).
+    Route::middleware(EnsureAiWriteScope::class)->group(function (): void {
+        Route::post('/ai/events/batch', [AiEventWriteApiController::class, 'storeBatch'])
+            ->name('api.v1.ai.events.batch.store');
+
+        Route::patch('/ai/events/{event}', [AiEventWriteApiController::class, 'update'])
+            ->whereNumber('event')
+            ->name('api.v1.ai.events.update');
+
+        Route::delete('/ai/events/batch', [AiEventWriteApiController::class, 'destroyBatch'])
+            ->name('api.v1.ai.events.batch.destroy');
+    });
+
+    // Die bestaetigte Aktion selbst — artwork-ai holt sie im Confirm-Turn (W2 §4). Braucht ein
+    // Write-Token, liefert aber nie die jti mit.
+    Route::middleware(CheckToken::using('ai:write'))->group(function (): void {
+        Route::get('/ai/actions/{action}', AiActionApiController::class)
+            ->name('api.v1.ai.actions.show');
     });
 
     Route::middleware(CheckToken::using('inventory:read'))->group(function (): void {

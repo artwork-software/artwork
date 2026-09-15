@@ -21,7 +21,11 @@ class AiSessionController extends Controller
     public function store(StoreAiSessionRequest $request): JsonResponse
     {
         return response()->json(
-            $this->service->issue($request->user(), $request->validated('scopes', []))
+            $this->service->issue(
+                $request->user(),
+                $request->validated('scopes', []),
+                $request->actionId()
+            )
         );
     }
 }

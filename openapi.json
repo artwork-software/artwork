@@ -16,6 +16,62 @@
         }
     ],
     "paths": {
+        "/api/v1/ai/actions/{action}": {
+            "get": {
+                "operationId": "v1.ai.actions.show",
+                "tags": [
+                    "AiActionApi"
+                ],
+                "parameters": [
+                    {
+                        "name": "action",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "`AiPendingActionData`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AiPendingActionData"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/api/v1/ai/context": {
+            "get": {
+                "operationId": "v1.ai.context",
+                "tags": [
+                    "AiContextApi"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "`AiContextData`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AiContextData"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
         "/ai/conversations": {
             "get": {
                 "operationId": "ai.conversations.index",
@@ -210,6 +266,601 @@
                 }
             }
         },
+        "/api/v1/ai/events": {
+            "get": {
+                "operationId": "v1.ai.events.index",
+                "tags": [
+                    "AiEventApi"
+                ],
+                "parameters": [
+                    {
+                        "name": "from",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "date-time"
+                        }
+                    },
+                    {
+                        "name": "to",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "date-time"
+                        }
+                    },
+                    {
+                        "name": "room_ids[]",
+                        "in": "query",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "integer"
+                            }
+                        }
+                    },
+                    {
+                        "name": "project_id",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "integer",
+                                "null"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "type_id",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "integer",
+                                "null"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "integer",
+                                "null"
+                            ],
+                            "minimum": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "`AiEventListData`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AiEventListData"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
+        "/api/v1/ai/rooms/occupancy": {
+            "get": {
+                "operationId": "v1.ai.rooms.occupancy",
+                "tags": [
+                    "AiEventApi"
+                ],
+                "parameters": [
+                    {
+                        "name": "from",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "date-time"
+                        }
+                    },
+                    {
+                        "name": "to",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "date-time"
+                        }
+                    },
+                    {
+                        "name": "room_ids[]",
+                        "in": "query",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "integer"
+                            }
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "`AiRoomOccupancyListData`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AiRoomOccupancyListData"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
+        "/api/v1/ai/rooms/free-slots": {
+            "get": {
+                "operationId": "v1.ai.rooms.free-slots",
+                "tags": [
+                    "AiEventApi"
+                ],
+                "parameters": [
+                    {
+                        "name": "from",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "date-time"
+                        }
+                    },
+                    {
+                        "name": "to",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "date-time"
+                        }
+                    },
+                    {
+                        "name": "room_ids[]",
+                        "in": "query",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "integer"
+                            }
+                        }
+                    },
+                    {
+                        "name": "min_hours",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "number",
+                                "null"
+                            ],
+                            "minimum": 0.25,
+                            "maximum": 24
+                        }
+                    },
+                    {
+                        "name": "weekdays[]",
+                        "in": "query",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "integer",
+                                "minimum": 1,
+                                "maximum": 7
+                            }
+                        }
+                    },
+                    {
+                        "name": "day_window",
+                        "in": "query",
+                        "description": "\"HH:MM-HH:MM\", z.B. 18:00-23:00",
+                        "schema": {
+                            "type": [
+                                "string",
+                                "null"
+                            ],
+                            "pattern": "^([01]\\d|2[0-3]):[0-5]\\d-([01]\\d|2[0-3]):[0-5]\\d$"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "`AiFreeSlotListData`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AiFreeSlotListData"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
+        "/api/v1/ai/events/batch": {
+            "post": {
+                "operationId": "v1.ai.events.batch.store",
+                "tags": [
+                    "AiEventWriteApi"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/StoreAiEventBatchRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "`AiWriteResultData`\n\n`AiWritePreviewData`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "anyOf": [
+                                        {
+                                            "$ref": "#/components/schemas/AiWriteResultData"
+                                        },
+                                        {
+                                            "$ref": "#/components/schemas/AiWritePreviewData"
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            },
+            "delete": {
+                "operationId": "v1.ai.events.batch.destroy",
+                "tags": [
+                    "AiEventWriteApi"
+                ],
+                "parameters": [
+                    {
+                        "name": "dry_run",
+                        "in": "query",
+                        "schema": {
+                            "type": "boolean"
+                        }
+                    },
+                    {
+                        "name": "action_id",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "string",
+                                "null"
+                            ],
+                            "format": "uuid"
+                        }
+                    },
+                    {
+                        "name": "ids[]",
+                        "in": "query",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "integer"
+                            }
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "`AiWriteResultData`\n\n`AiWritePreviewData`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "anyOf": [
+                                        {
+                                            "$ref": "#/components/schemas/AiWriteResultData"
+                                        },
+                                        {
+                                            "$ref": "#/components/schemas/AiWritePreviewData"
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
+        "/api/v1/ai/events/{event}": {
+            "patch": {
+                "operationId": "v1.ai.events.update",
+                "tags": [
+                    "AiEventWriteApi"
+                ],
+                "parameters": [
+                    {
+                        "name": "event",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/UpdateAiEventRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "`AiWriteResultData`\n\n`AiWritePreviewData`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "anyOf": [
+                                        {
+                                            "$ref": "#/components/schemas/AiWriteResultData"
+                                        },
+                                        {
+                                            "$ref": "#/components/schemas/AiWritePreviewData"
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
+        "/api/v1/ai/inventory/availability": {
+            "get": {
+                "operationId": "v1.ai.inventory.availability",
+                "tags": [
+                    "AiInventoryApi"
+                ],
+                "parameters": [
+                    {
+                        "name": "from",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "date-time"
+                        }
+                    },
+                    {
+                        "name": "to",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "date-time"
+                        }
+                    },
+                    {
+                        "name": "q",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "string",
+                                "null"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "integer",
+                                "null"
+                            ],
+                            "minimum": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "`AiInventoryListData`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AiInventoryListData"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
+        "/api/v1/ai/projects": {
+            "get": {
+                "operationId": "v1.ai.projects.index",
+                "tags": [
+                    "AiProjectApi"
+                ],
+                "parameters": [
+                    {
+                        "name": "q",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "string",
+                                "null"
+                            ],
+                            "maxLength": 200
+                        }
+                    },
+                    {
+                        "name": "state",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "integer",
+                                "null"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "from",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "string",
+                                "null"
+                            ],
+                            "format": "date-time"
+                        }
+                    },
+                    {
+                        "name": "to",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "string",
+                                "null"
+                            ],
+                            "format": "date-time"
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "integer",
+                                "null"
+                            ],
+                            "minimum": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "`AiProjectListData`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AiProjectListData"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
+        "/api/v1/ai/projects/{project}": {
+            "get": {
+                "operationId": "v1.ai.projects.show",
+                "tags": [
+                    "AiProjectApi"
+                ],
+                "parameters": [
+                    {
+                        "name": "project",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "`AiProjectDetailData`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AiProjectDetailData"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "An error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "description": "Error overview.",
+                                            "examples": [
+                                                ""
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
         "/ai/session": {
             "post": {
                 "operationId": "ai.session.store",
@@ -241,6 +892,22 @@
                                         },
                                         "scopes": {
                                             "anyOf": [
+                                                {
+                                                    "type": "array",
+                                                    "prefixItems": [
+                                                        {
+                                                            "type": "string",
+                                                            "const": "ai:write"
+                                                        },
+                                                        {
+                                                            "type": "string",
+                                                            "const": "ai:transcript"
+                                                        }
+                                                    ],
+                                                    "minItems": 2,
+                                                    "maxItems": 2,
+                                                    "additionalItems": false
+                                                },
                                                 {
                                                     "type": "array",
                                                     "items": []
@@ -277,6 +944,143 @@
                     },
                     "403": {
                         "$ref": "#/components/responses/AuthorizationException"
+                    }
+                }
+            }
+        },
+        "/api/v1/ai/me/schedule": {
+            "get": {
+                "operationId": "v1.ai.me.schedule",
+                "tags": [
+                    "AiShiftApi"
+                ],
+                "parameters": [
+                    {
+                        "name": "from",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "date-time"
+                        }
+                    },
+                    {
+                        "name": "to",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "date-time"
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "integer",
+                                "null"
+                            ],
+                            "minimum": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "`AiScheduleData`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AiScheduleData"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
+        "/api/v1/ai/shift-plan": {
+            "get": {
+                "operationId": "v1.ai.shift-plan",
+                "tags": [
+                    "AiShiftApi"
+                ],
+                "parameters": [
+                    {
+                        "name": "week",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "pattern": "^\\d{4}-W(0[1-9]|[1-4]\\d|5[0-3])$"
+                        }
+                    },
+                    {
+                        "name": "craft_id",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "integer",
+                                "null"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "integer",
+                                "null"
+                            ],
+                            "minimum": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "`AiShiftPlanData`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AiShiftPlanData"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "An error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "description": "Error overview.",
+                                            "examples": [
+                                                ""
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
                     }
                 }
             }
@@ -478,25 +1282,1375 @@
             }
         },
         "schemas": {
+            "AiAbsenceData": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer"
+                    },
+                    "date": {
+                        "type": "string"
+                    },
+                    "full_day": {
+                        "type": "boolean"
+                    },
+                    "start_time": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "end_time": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "type": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "comment": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    }
+                },
+                "required": [
+                    "id",
+                    "date",
+                    "full_day"
+                ],
+                "title": "AiAbsenceData"
+            },
+            "AiAbsenceListData": {
+                "type": "object",
+                "properties": {
+                    "data": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/AiAbsenceData"
+                        }
+                    },
+                    "total": {
+                        "type": "integer"
+                    },
+                    "limit": {
+                        "type": "integer"
+                    },
+                    "truncated": {
+                        "type": "boolean"
+                    }
+                },
+                "required": [
+                    "data",
+                    "total",
+                    "limit",
+                    "truncated"
+                ],
+                "title": "AiAbsenceListData"
+            },
+            "AiAvailabilityData": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer"
+                    },
+                    "date": {
+                        "type": "string"
+                    },
+                    "full_day": {
+                        "type": "boolean"
+                    },
+                    "start_time": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "end_time": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "comment": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    }
+                },
+                "required": [
+                    "id",
+                    "date",
+                    "full_day"
+                ],
+                "title": "AiAvailabilityData"
+            },
+            "AiAvailabilityListData": {
+                "type": "object",
+                "properties": {
+                    "data": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/AiAvailabilityData"
+                        }
+                    },
+                    "total": {
+                        "type": "integer"
+                    },
+                    "limit": {
+                        "type": "integer"
+                    },
+                    "truncated": {
+                        "type": "boolean"
+                    }
+                },
+                "required": [
+                    "data",
+                    "total",
+                    "limit",
+                    "truncated"
+                ],
+                "title": "AiAvailabilityListData"
+            },
+            "AiContextData": {
+                "type": "object",
+                "properties": {
+                    "user": {
+                        "$ref": "#/components/schemas/AiContextUserData"
+                    },
+                    "roles": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "house": {
+                        "$ref": "#/components/schemas/AiHouseData"
+                    },
+                    "permissions_summary": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "level_c_enabled": {
+                        "type": "boolean"
+                    }
+                },
+                "required": [
+                    "user",
+                    "roles",
+                    "house",
+                    "permissions_summary",
+                    "level_c_enabled"
+                ],
+                "title": "AiContextData"
+            },
+            "AiContextUserData": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer"
+                    },
+                    "display_name": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "id",
+                    "display_name"
+                ],
+                "title": "AiContextUserData"
+            },
             "AiConversationData": {
                 "type": "object",
-                "additionalProperties": [],
+                "properties": {
+                    "id": {
+                        "type": "string"
+                    },
+                    "title": {
+                        "type": "string"
+                    },
+                    "status": {
+                        "type": "string"
+                    },
+                    "last_turn_at": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    }
+                },
+                "required": [
+                    "id",
+                    "title",
+                    "status"
+                ],
                 "title": "AiConversationData"
             },
             "AiConversationListData": {
                 "type": "object",
-                "additionalProperties": [],
+                "properties": {
+                    "data": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/AiConversationData"
+                        }
+                    },
+                    "current_page": {
+                        "type": "integer"
+                    },
+                    "last_page": {
+                        "type": "integer"
+                    },
+                    "per_page": {
+                        "type": "integer"
+                    },
+                    "total": {
+                        "type": "integer"
+                    }
+                },
+                "required": [
+                    "data",
+                    "current_page",
+                    "last_page",
+                    "per_page",
+                    "total"
+                ],
                 "title": "AiConversationListData"
             },
             "AiConversationTurnData": {
                 "type": "object",
-                "additionalProperties": [],
+                "properties": {
+                    "id": {
+                        "type": "string"
+                    },
+                    "client_turn_id": {
+                        "type": "string"
+                    },
+                    "user_message": {
+                        "type": "string"
+                    },
+                    "assistant_message": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "status": {
+                        "type": "string"
+                    },
+                    "error_code": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "tool_calls": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "context": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "created_at": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    }
+                },
+                "required": [
+                    "id",
+                    "client_turn_id",
+                    "user_message",
+                    "status",
+                    "tool_calls",
+                    "context"
+                ],
                 "title": "AiConversationTurnData"
             },
             "AiConversationWithTurnsData": {
                 "type": "object",
-                "additionalProperties": [],
+                "properties": {
+                    "conversation": {
+                        "$ref": "#/components/schemas/AiConversationData"
+                    },
+                    "turns": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/AiConversationTurnData"
+                        }
+                    }
+                },
+                "required": [
+                    "conversation",
+                    "turns"
+                ],
                 "title": "AiConversationWithTurnsData"
+            },
+            "AiDayWindowData": {
+                "type": "object",
+                "properties": {
+                    "from": {
+                        "type": "string"
+                    },
+                    "to": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "from",
+                    "to"
+                ],
+                "title": "AiDayWindowData"
+            },
+            "AiEventBriefData": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer"
+                    },
+                    "name": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "start": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "room": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    }
+                },
+                "required": [
+                    "id"
+                ],
+                "title": "AiEventBriefData"
+            },
+            "AiEventData": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer"
+                    },
+                    "name": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "start": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "end": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "room": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/AiRefData"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    },
+                    "project": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/AiRefData"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    },
+                    "type": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/AiRefData"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    },
+                    "status": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    }
+                },
+                "required": [
+                    "id"
+                ],
+                "title": "AiEventData"
+            },
+            "AiEventListData": {
+                "type": "object",
+                "properties": {
+                    "data": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/AiEventData"
+                        }
+                    },
+                    "total": {
+                        "type": "integer"
+                    },
+                    "limit": {
+                        "type": "integer"
+                    },
+                    "truncated": {
+                        "type": "boolean"
+                    }
+                },
+                "required": [
+                    "data",
+                    "total",
+                    "limit",
+                    "truncated"
+                ],
+                "title": "AiEventListData"
+            },
+            "AiFreeSlotData": {
+                "type": "object",
+                "properties": {
+                    "room_id": {
+                        "type": "integer"
+                    },
+                    "start": {
+                        "type": "string"
+                    },
+                    "end": {
+                        "type": "string"
+                    },
+                    "hours": {
+                        "type": "number"
+                    }
+                },
+                "required": [
+                    "room_id",
+                    "start",
+                    "end",
+                    "hours"
+                ],
+                "title": "AiFreeSlotData"
+            },
+            "AiFreeSlotListData": {
+                "type": "object",
+                "properties": {
+                    "data": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/AiFreeSlotData"
+                        }
+                    },
+                    "period": {
+                        "$ref": "#/components/schemas/AiPeriodData"
+                    },
+                    "day_window": {
+                        "$ref": "#/components/schemas/AiDayWindowData"
+                    },
+                    "min_hours": {
+                        "type": "number"
+                    }
+                },
+                "required": [
+                    "data",
+                    "period",
+                    "day_window",
+                    "min_hours"
+                ],
+                "title": "AiFreeSlotListData"
+            },
+            "AiHouseData": {
+                "type": "object",
+                "properties": {
+                    "name": {
+                        "type": "string"
+                    },
+                    "timezone": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "name",
+                    "timezone"
+                ],
+                "title": "AiHouseData"
+            },
+            "AiInventoryArticleData": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer"
+                    },
+                    "name": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "category": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/AiRefData"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    },
+                    "total": {
+                        "type": "number"
+                    },
+                    "reserved": {
+                        "type": "number"
+                    },
+                    "available": {
+                        "type": "number"
+                    },
+                    "next_reservation": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/AiInventoryReservationData"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    }
+                },
+                "required": [
+                    "id",
+                    "total",
+                    "reserved",
+                    "available"
+                ],
+                "title": "AiInventoryArticleData"
+            },
+            "AiInventoryListData": {
+                "type": "object",
+                "properties": {
+                    "data": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/AiInventoryArticleData"
+                        }
+                    },
+                    "period": {
+                        "$ref": "#/components/schemas/AiPeriodData"
+                    },
+                    "total": {
+                        "type": "integer"
+                    },
+                    "limit": {
+                        "type": "integer"
+                    },
+                    "truncated": {
+                        "type": "boolean"
+                    }
+                },
+                "required": [
+                    "data",
+                    "period",
+                    "total",
+                    "limit",
+                    "truncated"
+                ],
+                "title": "AiInventoryListData"
+            },
+            "AiInventoryReservationData": {
+                "type": "object",
+                "properties": {
+                    "project": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/AiRefData"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    },
+                    "period": {
+                        "$ref": "#/components/schemas/AiPeriodData"
+                    },
+                    "quantity": {
+                        "type": "integer"
+                    }
+                },
+                "required": [
+                    "period",
+                    "quantity"
+                ],
+                "title": "AiInventoryReservationData"
+            },
+            "AiOccupancyDayData": {
+                "type": "object",
+                "properties": {
+                    "date": {
+                        "type": "string"
+                    },
+                    "busy_hours": {
+                        "type": "number"
+                    },
+                    "free_hours": {
+                        "type": "number"
+                    },
+                    "event_count": {
+                        "type": "integer"
+                    }
+                },
+                "required": [
+                    "date",
+                    "busy_hours",
+                    "free_hours",
+                    "event_count"
+                ],
+                "title": "AiOccupancyDayData"
+            },
+            "AiPendingActionData": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string"
+                    },
+                    "status": {
+                        "type": "string"
+                    },
+                    "tool": {
+                        "type": "string"
+                    },
+                    "args": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "preview": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "args_hash": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "expires_at": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    }
+                },
+                "required": [
+                    "id",
+                    "status",
+                    "tool",
+                    "args",
+                    "preview"
+                ],
+                "title": "AiPendingActionData"
+            },
+            "AiPeriodData": {
+                "type": "object",
+                "properties": {
+                    "from": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "to": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    }
+                },
+                "title": "AiPeriodData"
+            },
+            "AiProjectDetailData": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer"
+                    },
+                    "name": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "state": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "shift_description": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "period": {
+                        "$ref": "#/components/schemas/AiPeriodData"
+                    },
+                    "team_size": {
+                        "type": "integer"
+                    },
+                    "event_count": {
+                        "type": "integer"
+                    },
+                    "room_count": {
+                        "type": "integer"
+                    },
+                    "next_events": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/AiEventBriefData"
+                        }
+                    }
+                },
+                "required": [
+                    "id",
+                    "period",
+                    "team_size",
+                    "event_count",
+                    "room_count",
+                    "next_events"
+                ],
+                "title": "AiProjectDetailData"
+            },
+            "AiProjectListData": {
+                "type": "object",
+                "properties": {
+                    "data": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/AiProjectSummaryData"
+                        }
+                    },
+                    "total": {
+                        "type": "integer"
+                    },
+                    "limit": {
+                        "type": "integer"
+                    },
+                    "truncated": {
+                        "type": "boolean"
+                    }
+                },
+                "required": [
+                    "data",
+                    "total",
+                    "limit",
+                    "truncated"
+                ],
+                "title": "AiProjectListData"
+            },
+            "AiProjectSummaryData": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer"
+                    },
+                    "name": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "state": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "period": {
+                        "$ref": "#/components/schemas/AiPeriodData"
+                    },
+                    "room_count": {
+                        "type": "integer"
+                    },
+                    "event_count": {
+                        "type": "integer"
+                    }
+                },
+                "required": [
+                    "id",
+                    "period",
+                    "room_count",
+                    "event_count"
+                ],
+                "title": "AiProjectSummaryData"
+            },
+            "AiRefData": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer"
+                    },
+                    "name": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    }
+                },
+                "required": [
+                    "id"
+                ],
+                "title": "AiRefData"
+            },
+            "AiRoomOccupancyData": {
+                "type": "object",
+                "properties": {
+                    "room": {
+                        "$ref": "#/components/schemas/AiRefData"
+                    },
+                    "days": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/AiOccupancyDayData"
+                        }
+                    }
+                },
+                "required": [
+                    "room",
+                    "days"
+                ],
+                "title": "AiRoomOccupancyData"
+            },
+            "AiRoomOccupancyListData": {
+                "type": "object",
+                "properties": {
+                    "data": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/AiRoomOccupancyData"
+                        }
+                    },
+                    "period": {
+                        "$ref": "#/components/schemas/AiPeriodData"
+                    },
+                    "day_window": {
+                        "$ref": "#/components/schemas/AiDayWindowData"
+                    }
+                },
+                "required": [
+                    "data",
+                    "period",
+                    "day_window"
+                ],
+                "title": "AiRoomOccupancyListData"
+            },
+            "AiScheduleData": {
+                "type": "object",
+                "properties": {
+                    "period": {
+                        "$ref": "#/components/schemas/AiPeriodData"
+                    },
+                    "shifts": {
+                        "$ref": "#/components/schemas/AiShiftListData"
+                    },
+                    "availabilities": {
+                        "$ref": "#/components/schemas/AiAvailabilityListData"
+                    },
+                    "absences": {
+                        "$ref": "#/components/schemas/AiAbsenceListData"
+                    }
+                },
+                "required": [
+                    "period",
+                    "shifts",
+                    "availabilities",
+                    "absences"
+                ],
+                "title": "AiScheduleData"
+            },
+            "AiShiftData": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer"
+                    },
+                    "start": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "end": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "craft": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/AiRefData"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    },
+                    "qualification": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "event": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/AiRefData"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    },
+                    "project": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/AiRefData"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    },
+                    "committed": {
+                        "type": "boolean"
+                    }
+                },
+                "required": [
+                    "id",
+                    "committed"
+                ],
+                "title": "AiShiftData"
+            },
+            "AiShiftListData": {
+                "type": "object",
+                "properties": {
+                    "data": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/AiShiftData"
+                        }
+                    },
+                    "total": {
+                        "type": "integer"
+                    },
+                    "limit": {
+                        "type": "integer"
+                    },
+                    "truncated": {
+                        "type": "boolean"
+                    }
+                },
+                "required": [
+                    "data",
+                    "total",
+                    "limit",
+                    "truncated"
+                ],
+                "title": "AiShiftListData"
+            },
+            "AiShiftPlanAssigneeData": {
+                "type": "object",
+                "properties": {
+                    "display_name": {
+                        "type": "string"
+                    },
+                    "qualification": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "overbooked": {
+                        "type": "boolean"
+                    }
+                },
+                "required": [
+                    "display_name",
+                    "overbooked"
+                ],
+                "title": "AiShiftPlanAssigneeData"
+            },
+            "AiShiftPlanData": {
+                "type": "object",
+                "properties": {
+                    "week": {
+                        "type": "string"
+                    },
+                    "period": {
+                        "$ref": "#/components/schemas/AiPeriodData"
+                    },
+                    "craft": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/AiRefData"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    },
+                    "data": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/AiShiftPlanShiftData"
+                        }
+                    },
+                    "total": {
+                        "type": "integer"
+                    },
+                    "limit": {
+                        "type": "integer"
+                    },
+                    "truncated": {
+                        "type": "boolean"
+                    }
+                },
+                "required": [
+                    "week",
+                    "period",
+                    "data",
+                    "total",
+                    "limit",
+                    "truncated"
+                ],
+                "title": "AiShiftPlanData"
+            },
+            "AiShiftPlanQualificationData": {
+                "type": "object",
+                "properties": {
+                    "qualification": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/AiRefData"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    },
+                    "required": {
+                        "type": "integer"
+                    },
+                    "staffed": {
+                        "type": "integer"
+                    },
+                    "open": {
+                        "type": "integer"
+                    }
+                },
+                "required": [
+                    "required",
+                    "staffed",
+                    "open"
+                ],
+                "title": "AiShiftPlanQualificationData"
+            },
+            "AiShiftPlanShiftData": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer"
+                    },
+                    "start": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "end": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "craft": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/AiRefData"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    },
+                    "required": {
+                        "type": "integer"
+                    },
+                    "staffed": {
+                        "type": "integer"
+                    },
+                    "open": {
+                        "type": "integer"
+                    },
+                    "committed": {
+                        "type": "boolean"
+                    },
+                    "qualifications": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/AiShiftPlanQualificationData"
+                        }
+                    },
+                    "assigned": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/AiShiftPlanAssigneeData"
+                        }
+                    }
+                },
+                "required": [
+                    "id",
+                    "required",
+                    "staffed",
+                    "open",
+                    "committed",
+                    "qualifications",
+                    "assigned"
+                ],
+                "title": "AiShiftPlanShiftData"
+            },
+            "AiWriteConflictData": {
+                "type": "object",
+                "properties": {
+                    "type": {
+                        "type": "string"
+                    },
+                    "message": {
+                        "type": "string"
+                    },
+                    "event": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/AiRefData"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    }
+                },
+                "required": [
+                    "type",
+                    "message"
+                ],
+                "title": "AiWriteConflictData"
+            },
+            "AiWriteItemData": {
+                "type": "object",
+                "properties": {
+                    "action": {
+                        "type": "string"
+                    },
+                    "id": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
+                    },
+                    "label": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "start": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "end": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "room": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/AiRefData"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    },
+                    "conflicts": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/AiWriteConflictData"
+                        }
+                    }
+                },
+                "required": [
+                    "action",
+                    "conflicts"
+                ],
+                "title": "AiWriteItemData"
+            },
+            "AiWriteLinkData": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer"
+                    },
+                    "url": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "id",
+                    "url"
+                ],
+                "title": "AiWriteLinkData"
+            },
+            "AiWritePreviewData": {
+                "type": "object",
+                "properties": {
+                    "dry_run": {
+                        "type": "boolean"
+                    },
+                    "tool": {
+                        "type": "string"
+                    },
+                    "items": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/AiWriteItemData"
+                        }
+                    },
+                    "summary": {
+                        "$ref": "#/components/schemas/AiWriteSummaryData"
+                    }
+                },
+                "required": [
+                    "dry_run",
+                    "tool",
+                    "items",
+                    "summary"
+                ],
+                "title": "AiWritePreviewData"
+            },
+            "AiWriteResultData": {
+                "type": "object",
+                "properties": {
+                    "dry_run": {
+                        "type": "boolean"
+                    },
+                    "tool": {
+                        "type": "string"
+                    },
+                    "batch_id": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "undo_until": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "ids": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "items": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/AiWriteItemData"
+                        }
+                    },
+                    "links": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/AiWriteLinkData"
+                        }
+                    },
+                    "summary": {
+                        "$ref": "#/components/schemas/AiWriteSummaryData"
+                    }
+                },
+                "required": [
+                    "dry_run",
+                    "tool",
+                    "ids",
+                    "items",
+                    "links",
+                    "summary"
+                ],
+                "title": "AiWriteResultData"
+            },
+            "AiWriteSummaryData": {
+                "type": "object",
+                "properties": {
+                    "action": {
+                        "type": "string"
+                    },
+                    "total": {
+                        "type": "integer"
+                    },
+                    "with_conflicts": {
+                        "type": "integer"
+                    },
+                    "blocked": {
+                        "type": "integer"
+                    }
+                },
+                "required": [
+                    "action",
+                    "total",
+                    "with_conflicts",
+                    "blocked"
+                ],
+                "title": "AiWriteSummaryData"
             },
             "StoreAiConversationRequest": {
                 "type": "object",
@@ -601,14 +2755,168 @@
                                 "maxLength": 64
                             }
                         }
+                    },
+                    "pending_action": {
+                        "type": "object",
+                        "description": "Bestaetigungspflichtige Aktion (core-confirm-actions; Konzept W2 §1). Der Turn ist\ndie Aktion — deshalb steht sie hier und nicht in einer eigenen Tabelle.",
+                        "properties": {
+                            "tool": {
+                                "type": "string",
+                                "enum": [
+                                    "create_events",
+                                    "update_event",
+                                    "delete_events"
+                                ]
+                            },
+                            "args": {
+                                "type": "array",
+                                "items": {
+                                    "type": "string"
+                                }
+                            },
+                            "args_hash": {
+                                "type": "string",
+                                "pattern": "^[a-f0-9]{64}$"
+                            },
+                            "preview": {
+                                "type": "object",
+                                "description": "Form der Vorschau ist bindend: contracts/action-contract.md verweist auf\nsse-events/confirm.request.schema.json — summary ist ein Text, items tragen\naction/label und optional Konflikte als Texte.",
+                                "properties": {
+                                    "summary": {
+                                        "type": "string",
+                                        "maxLength": 500
+                                    },
+                                    "items": {
+                                        "type": "array",
+                                        "description": "'sometimes' statt 'required_with': eine leere Liste ist gueltig (Vorschau ohne\nObjekte), wuerde von required_with aber als „fehlt\" gewertet. Dass der Schluessel\nueberhaupt da ist, prueft validatePendingAction().",
+                                        "items": {
+                                            "type": "object",
+                                            "properties": {
+                                                "action": {
+                                                    "type": "string",
+                                                    "enum": [
+                                                        "create",
+                                                        "update",
+                                                        "delete"
+                                                    ]
+                                                },
+                                                "label": {
+                                                    "type": "string",
+                                                    "maxLength": 200
+                                                },
+                                                "conflicts": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string",
+                                                        "maxLength": 200
+                                                    }
+                                                }
+                                            },
+                                            "required": [
+                                                "action",
+                                                "label"
+                                            ]
+                                        },
+                                        "maxItems": 200
+                                    }
+                                }
+                            },
+                            "expires_at": {
+                                "type": "string",
+                                "format": "date-time"
+                            }
+                        }
                     }
                 },
                 "required": [
                     "client_turn_id",
                     "user_message",
-                    "status"
+                    "status",
+                    "pending_action"
                 ],
                 "title": "StoreAiConversationTurnRequest"
+            },
+            "StoreAiEventBatchRequest": {
+                "type": "object",
+                "description": "POST /api/v1/ai/events/batch (core-write-endpoints-dry-run; Konzept W1 §1).\n\nDer Serienbeschrieb ist bewusst eng: Zeitraum, Wochentage, Uhrzeit, Dauer, Raum, Typ. Alles\nandere legt der Bulk-Service der Oberflaeche fest.",
+                "properties": {
+                    "dry_run": {
+                        "type": "boolean"
+                    },
+                    "action_id": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "uuid"
+                    },
+                    "project_id": {
+                        "type": "integer"
+                    },
+                    "series_spec": {
+                        "type": "object",
+                        "properties": {
+                            "from": {
+                                "type": "string",
+                                "format": "date-time"
+                            },
+                            "to": {
+                                "type": "string",
+                                "format": "date-time"
+                            },
+                            "weekdays": {
+                                "type": [
+                                    "array",
+                                    "null"
+                                ],
+                                "items": {
+                                    "type": "integer",
+                                    "minimum": 1,
+                                    "maximum": 7
+                                }
+                            },
+                            "start_time": {
+                                "type": "string"
+                            },
+                            "duration_minutes": {
+                                "type": "integer",
+                                "minimum": 15,
+                                "maximum": 1440
+                            },
+                            "room_id": {
+                                "type": "integer"
+                            },
+                            "type_id": {
+                                "type": "integer"
+                            },
+                            "name": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ]
+                            },
+                            "description": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ]
+                            }
+                        },
+                        "required": [
+                            "from",
+                            "to",
+                            "start_time",
+                            "duration_minutes",
+                            "room_id",
+                            "type_id"
+                        ]
+                    }
+                },
+                "required": [
+                    "project_id",
+                    "series_spec"
+                ],
+                "title": "StoreAiEventBatchRequest"
             },
             "StoreAiSessionRequest": {
                 "type": "object",
@@ -617,15 +2925,77 @@
                         "type": "array",
                         "items": {
                             "type": "string",
-                            "description": "ai:write fehlt hier absichtlich: der Schreibpfad braucht eine Aktions-Bindung\n(action_id) und kommt mit W2. Bis dahin ist ai:write im Request ein 422.",
                             "enum": [
                                 "ai:transcript",
-                                "ai:read"
+                                "ai:read",
+                                "ai:write"
                             ]
                         }
+                    },
+                    "action_id": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "uuid",
+                        "description": "ai:write gibt es nur zusammen mit einer bestaetigten Aktion (contracts/token-contract.md,\nKonzept W2 §2) — nie implizit."
                     }
                 },
                 "title": "StoreAiSessionRequest"
+            },
+            "UpdateAiEventRequest": {
+                "type": "object",
+                "description": "PATCH /api/v1/ai/events/{event} (core-write-endpoints-dry-run; Konzept W1 §1).\n\nAlle Felder sind optional; was fehlt, bleibt wie es ist. Der Bulk-Service der Oberflaeche\nbraucht trotzdem den vollstaendigen Satz — den baut der Lese-/Schreibdienst aus dem Termin.",
+                "properties": {
+                    "dry_run": {
+                        "type": "boolean"
+                    },
+                    "action_id": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "uuid"
+                    },
+                    "name": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "day": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "date"
+                    },
+                    "start_time": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "end_time": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "room_id": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
+                    },
+                    "type_id": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
+                    }
+                },
+                "title": "UpdateAiEventRequest"
             }
         },
         "responses": {

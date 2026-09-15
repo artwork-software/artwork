@@ -118,9 +118,12 @@ use App\Http\Controllers\ToolSettingsCommunicationAndLegalController;
 use App\Http\Controllers\ToolSettingsExternalUserManagementController;
 use App\Http\Controllers\ToolSettingsInterfacesController;
 use Artwork\Modules\AiAssistant\Http\Controllers\AiAssistantSettingsController;
+use Artwork\Modules\AiAssistant\Http\Controllers\AiActionBatchController;
+use Artwork\Modules\AiAssistant\Http\Controllers\AiActionController;
 use Artwork\Modules\AiAssistant\Http\Controllers\AiConversationController;
 use Artwork\Modules\AiAssistant\Http\Middleware\EnsureAiAssistantIsEnabled;
 use Artwork\Modules\AiAssistant\Http\Controllers\AiSessionController;
+use Artwork\Modules\AiAssistant\Http\Controllers\HelpRedirectController;
 use Artwork\Modules\ExternalUserManagement\Http\Controllers\ExternalUserGroupMappingController;
 use Artwork\Modules\ExternalUserManagement\Http\Controllers\ExternalUserSourceController;
 use Artwork\Modules\Mail\Http\Controllers\MailSettingsController;
@@ -240,7 +243,22 @@ Route::group(['middleware' => ['auth', 'verified']], function (): void {
             ->name('ai.conversations.index');
         Route::delete('/ai/conversations/{conversation}', [AiConversationController::class, 'destroy'])
             ->name('ai.conversations.destroy');
+
+        // Ablehnung einer bestaetigungspflichtigen Aktion (core-confirm-actions; Konzept W2 §6).
+        Route::post('/ai/actions/{action}/cancel', [AiActionController::class, 'cancel'])
+            ->name('ai.actions.cancel');
+
+        // Ruecknahme einer ausgefuehrten Aktion (core-undo; Konzept W3 §2).
+        Route::post('/ai/actions/batches/{batch}/revert', [AiActionBatchController::class, 'revert'])
+            ->name('ai.actions.batches.revert');
     });
+
+    // Weiterleitung ins Wiki (core-help-redirect). Innerhalb der auth-Gruppe, damit daraus kein
+    // anonymer Redirect-Dienst wird. Der Punkt fehlt in der Zeichenklasse — `..` trifft die Route
+    // damit nicht.
+    Route::get('/help/{path?}', HelpRedirectController::class)
+        ->where('path', '[A-Za-z0-9_\-\/#]*')
+        ->name('help.redirect');
 
     // Workflow routes - only accessible via direct URL
     Route::group(['prefix' => 'workflow', 'middleware' => 'role:artwork admin'], function (): void {

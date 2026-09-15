@@ -156,15 +156,19 @@ final class AiSessionTokenTest extends TestCase
         $this->assertSame([AiScopes::TRANSCRIPT], $response->json('scopes'));
     }
 
+    /**
+     * Seit core-confirm-actions (W2) ist ai:write kein verbotener Scope mehr, sondern einer, den
+     * es nur mit einer bestaetigten Aktion gibt — ohne `action_id` bleibt es bei 422.
+     */
     #[Test]
-    public function requesting_the_write_scope_is_rejected(): void
+    public function requesting_the_write_scope_without_an_action_is_rejected(): void
     {
         $this->actingAs(User::factory()->create());
         $this->house(enabled: true, levelB: true, levelC: true);
 
         $this->postJson(route('ai.session.store'), ['scopes' => [AiScopes::WRITE]])
             ->assertStatus(422)
-            ->assertJsonValidationErrors('scopes.0');
+            ->assertJsonValidationErrors('action_id');
     }
 
     // --- Das Token selbst --------------------------------------------------------------

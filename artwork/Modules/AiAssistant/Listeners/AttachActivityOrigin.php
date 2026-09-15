@@ -29,9 +29,37 @@ class AttachActivityOrigin
 
     public const CONVERSATION_HEADER = 'X-Ai-Conversation';
 
+    /**
+     * Erzwungene Herkunft fuer einen abgegrenzten Abschnitt (core-undo).
+     *
+     * @var array{0: string, 1: string|null}|null
+     */
+    private static ?array $forcedOrigin = null;
+
+    /**
+     * Fuehrt den Rueckruf mit fest gesetzter Herkunft aus. Gebraucht wird das vom Revert: er laeuft
+     * unter dem Web-Guard (die Person klickt in der Bar), gehoert aber zum Assistenten — Konzept
+     * W3 §2 verlangt `via = ai_assistant`.
+     *
+     * @template T
+     * @param callable(): T $callback
+     * @return T
+     */
+    public static function during(string $via, ?string $detail, callable $callback): mixed
+    {
+        $previous = self::$forcedOrigin;
+        self::$forcedOrigin = [$via, $detail];
+
+        try {
+            return $callback();
+        } finally {
+            self::$forcedOrigin = $previous;
+        }
+    }
+
     public function handle(Activity $activity): void
     {
-        [$via, $detail] = $this->resolveOrigin();
+        [$via, $detail] = self::$forcedOrigin ?? $this->resolveOrigin();
 
         // Ergaenzen, nie ersetzen: bestehende Properties eines Eintrags bleiben unangetastet.
         $activity->properties = $activity->properties->merge([

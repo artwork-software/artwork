@@ -82,9 +82,17 @@ class AiConversationService
                 'error_code' => $attributes['error_code'] ?? null,
                 'tool_calls' => $attributes['tool_calls'] ?? [],
                 'context' => $attributes['context'] ?? [],
+                'pending_action' => $attributes['pending_action'] ?? null,
             ]);
 
-            $conversation->forceFill(['last_turn_at' => $turn->created_at])->save();
+            // Ein Gespraech mit offener Aktion ist blockiert, bis bestaetigt, abgebrochen oder
+            // abgelaufen wurde (Konzept W2 §1).
+            $conversation->forceFill([
+                'last_turn_at' => $turn->created_at,
+                'status' => $turn->status === AiConversationTurn::STATUS_AWAITING_CONFIRMATION
+                    ? AiConversation::STATUS_AWAITING_CONFIRMATION
+                    : AiConversation::STATUS_ACTIVE,
+            ])->save();
 
             return [$turn, true];
         });

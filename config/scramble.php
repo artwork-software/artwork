@@ -19,6 +19,13 @@ return [
 
     'export_path' => 'openapi.json',
 
+    // Ohne diese Erweiterung exportiert scramble spatie/laravel-data-Antworten als leeres Objekt
+    // (die Auswertung von laravel-data gehoert zur Pro-Version) — der Contract waere an genau den
+    // Stellen wertlos, an denen artwork-ai ihn liest (0.4 §5, core-api-context-projects).
+    'extensions' => [
+        \Artwork\Core\Api\Scramble\LaravelDataToSchema::class,
+    ],
+
     'security_strategy' => \Dedoc\Scramble\SecurityDocumentation\MiddlewareAuthSecurityStrategy::class,
 
     'info' => [

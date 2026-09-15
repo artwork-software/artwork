@@ -2667,6 +2667,7 @@
             },
             "StoreAiConversationTurnRequest": {
                 "type": "object",
+                "description": "Ein Turn, wie artwork-ai ihn schreibt (core-chat-historie; ab W2 optional mit `pending_action`).\n\n**Keine `required`-Regel unterhalb von `pending_action`**: scramble markiert ein Objekt als\nPflichtfeld, sobald eine einzige verschachtelte Regel `required` traegt\n(`DeepParametersMerger.php:89-93`). `pending_action` ist aber optional und ausserhalb von\n`awaiting_confirmation` sogar verboten — ein Fall-A-Turn koennte die exportierte Spec sonst nie\nerfuellen. Die Pflichtfelder innerhalb der Vorschau prueft deshalb `validatePendingAction()`.",
                 "properties": {
                     "client_turn_id": {
                         "type": "string",
@@ -2794,6 +2795,7 @@
                                             "properties": {
                                                 "action": {
                                                     "type": "string",
+                                                    "description": "'sometimes' statt 'required': siehe Klassenkommentar. Dass beide Felder da sind,\nprueft validatePendingAction() und meldet es am exakt gleichen Schluessel.",
                                                     "enum": [
                                                         "create",
                                                         "update",
@@ -2811,11 +2813,7 @@
                                                         "maxLength": 200
                                                     }
                                                 }
-                                            },
-                                            "required": [
-                                                "action",
-                                                "label"
-                                            ]
+                                            }
                                         },
                                         "maxItems": 200
                                     }
@@ -2831,8 +2829,7 @@
                 "required": [
                     "client_turn_id",
                     "user_message",
-                    "status",
-                    "pending_action"
+                    "status"
                 ],
                 "title": "StoreAiConversationTurnRequest"
             },

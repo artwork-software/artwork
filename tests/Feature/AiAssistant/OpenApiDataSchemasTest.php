@@ -92,4 +92,55 @@ final class OpenApiDataSchemasTest extends TestCase
             }
         }
     }
+
+    /**
+     * Ein optionales Feld (`sometimes`) darf im Contract nicht als Pflichtfeld stehen.
+     *
+     * Anlass: scramble markiert ein Objekt als erforderlich, sobald **eine** verschachtelte Regel
+     * `required` traegt (`DeepParametersMerger.php:89-93`). `pending_action` war dadurch Pflicht,
+     * und ein Fall-A-Turn konnte die exportierte Spec nie erfuellen.
+     */
+    #[Test]
+    public function optional_request_fields_are_not_required_in_the_contract(): void
+    {
+        $schemas = $this->contract()['components']['schemas'] ?? [];
+        $checked = 0;
+
+        foreach (glob(base_path('artwork/Modules/AiAssistant/Http/Requests/*.php')) ?: [] as $file) {
+            $class = 'Artwork\\Modules\\AiAssistant\\Http\\Requests\\' . basename($file, '.php');
+
+            if (!class_exists($class) || (new \ReflectionClass($class))->isAbstract()) {
+                continue;
+            }
+
+            $schema = $schemas[class_basename($class)] ?? null;
+
+            if ($schema === null) {
+                continue;
+            }
+
+            $rules = (new $class())->rules();
+            $checked++;
+
+            foreach ($schema['required'] ?? [] as $field) {
+                $ruleSet = $rules[$field] ?? [];
+                $ruleSet = is_string($ruleSet) ? explode('|', $ruleSet) : (array) $ruleSet;
+                $names = array_map(
+                    static fn (mixed $rule): string => is_object($rule) ? $rule::class : (string) $rule,
+                    $ruleSet
+                );
+
+                if (!in_array('sometimes', $names, true)) {
+                    continue;
+                }
+
+                $this->assertTrue(
+                    in_array('required', $names, true) || in_array('present', $names, true),
+                    class_basename($class) . ".{$field} ist 'sometimes', steht im Contract aber unter required."
+                );
+            }
+        }
+
+        $this->assertGreaterThan(0, $checked, 'Kein Request-Schema geprueft — der Test liefe leer.');
+    }
 }

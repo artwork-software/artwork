@@ -10,6 +10,15 @@ use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
+/**
+ * Ein Turn, wie artwork-ai ihn schreibt (core-chat-historie; ab W2 optional mit `pending_action`).
+ *
+ * **Keine `required`-Regel unterhalb von `pending_action`**: scramble markiert ein Objekt als
+ * Pflichtfeld, sobald eine einzige verschachtelte Regel `required` traegt
+ * (`DeepParametersMerger.php:89-93`). `pending_action` ist aber optional und ausserhalb von
+ * `awaiting_confirmation` sogar verboten — ein Fall-A-Turn koennte die exportierte Spec sonst nie
+ * erfuellen. Die Pflichtfelder innerhalb der Vorschau prueft deshalb `validatePendingAction()`.
+ */
 class StoreAiConversationTurnRequest extends FormRequest
 {
     /** Konzept C3 §9. */
@@ -79,8 +88,10 @@ class StoreAiConversationTurnRequest extends FormRequest
             // Objekte), wuerde von required_with aber als „fehlt" gewertet. Dass der Schluessel
             // ueberhaupt da ist, prueft validatePendingAction().
             'pending_action.preview.items' => ['sometimes', 'array', 'max:' . self::MAX_PREVIEW_ITEMS],
-            'pending_action.preview.items.*.action' => ['required', Rule::in(['create', 'update', 'delete'])],
-            'pending_action.preview.items.*.label' => ['required', 'string', 'max:' . self::MAX_PREVIEW_LABEL_CHARS],
+            // 'sometimes' statt 'required': siehe Klassenkommentar. Dass beide Felder da sind,
+            // prueft validatePendingAction() und meldet es am exakt gleichen Schluessel.
+            'pending_action.preview.items.*.action' => ['sometimes', Rule::in(['create', 'update', 'delete'])],
+            'pending_action.preview.items.*.label' => ['sometimes', 'string', 'max:' . self::MAX_PREVIEW_LABEL_CHARS],
             'pending_action.preview.items.*.conflicts' => ['sometimes', 'array'],
             'pending_action.preview.items.*.conflicts.*' => ['string', 'max:' . self::MAX_PREVIEW_LABEL_CHARS],
             'pending_action.expires_at' => ['required_with:pending_action', 'date'],
@@ -124,14 +135,44 @@ class StoreAiConversationTurnRequest extends FormRequest
             return;
         }
 
-        $preview = $action['preview'] ?? null;
-
-        if (is_array($preview) && !array_key_exists('items', $preview)) {
-            $validator->errors()->add('pending_action.preview.items', __('This field is required.'));
-        }
+        $this->validatePreview($validator, $action['preview'] ?? null);
 
         $this->validateArgsHash($validator, $action);
         $this->validateExpiry($validator, $action);
+    }
+
+    /**
+     * Die Vorschau hat die Form aus `sse-events/confirm.request.schema.json`: `summary` und
+     * `items`, jedes Element mit `action` und `label` (contracts/action-contract.md).
+     *
+     * @param mixed $preview
+     */
+    private function validatePreview(Validator $validator, mixed $preview): void
+    {
+        if (!is_array($preview)) {
+            return;
+        }
+
+        if (!array_key_exists('items', $preview)) {
+            $validator->errors()->add('pending_action.preview.items', __('This field is required.'));
+
+            return;
+        }
+
+        if (!is_array($preview['items'])) {
+            return;
+        }
+
+        foreach ($preview['items'] as $index => $item) {
+            foreach (['action', 'label'] as $field) {
+                if (!is_array($item) || ($item[$field] ?? null) === null) {
+                    $validator->errors()->add(
+                        "pending_action.preview.items.{$index}.{$field}",
+                        __('This field is required.')
+                    );
+                }
+            }
+        }
     }
 
     /**

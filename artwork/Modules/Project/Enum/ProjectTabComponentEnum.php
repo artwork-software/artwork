@@ -57,6 +57,7 @@ enum ProjectTabComponentEnum: string
     case SAGE_INVOICE_OVERVIEW = 'SageInvoiceOverviewComponent';
     // CRM-Kontakte des Projekts je Komponente (anlegen/verknüpfen, auch durch Externe)
     case CRM_CONTACT_LIST = 'CrmContactListComponent';
+    case TICKETING = 'TicketingTab';
 
     /**
      * Component types that may be rendered in the external tab view.
@@ -158,6 +159,7 @@ enum ProjectTabComponentEnum: string
         self::CALENDAR,
         self::SHIFT_TAB,
         self::BUDGET,
+        self::TICKETING,
         self::BULK_EDIT,
         self::CHECKLIST_ALL,
         self::COMMENT_ALL_TAB,

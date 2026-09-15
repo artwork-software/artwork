@@ -121,6 +121,8 @@ use App\Http\Controllers\ToolSettingsCommunicationAndLegalController;
 use App\Http\Controllers\ToolSettingsFormatsController;
 use App\Http\Controllers\ToolSettingsExternalUserManagementController;
 use App\Http\Controllers\ToolSettingsInterfacesController;
+use Artwork\Modules\Ticketing\Http\Controllers\TicketingConnectionController;
+use Artwork\Modules\Ticketing\Http\Controllers\TicketingProjectController;
 use Artwork\Modules\ExternalUserManagement\Http\Controllers\ExternalUserGroupMappingController;
 use Artwork\Modules\ExternalUserManagement\Http\Controllers\ExternalUserSourceController;
 use Artwork\Modules\Mail\Http\Controllers\MailSettingsController;
@@ -395,6 +397,23 @@ Route::group(['middleware' => ['auth:sanctum']], function (): void {
             \Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class,
             'getUserWeekSchedule',
         ])->name('compensation-day-offs.week-schedule');
+    });
+
+    // artwork tickets: eigene Einstellungskategorie mit eigener Berechtigung, ein Tab je Bereich
+    Route::group([
+        'prefix' => 'settings/tickets',
+        'middleware' => 'can:' . PermissionEnum::TICKETING_MANAGE->value,
+    ], function (): void {
+        Route::get('/', [TicketingConnectionController::class, 'index'])->name('settings.tickets');
+        Route::get('/availability', [TicketingConnectionController::class, 'checkAvailability'])
+            ->name('settings.tickets.availability');
+        Route::post('/connection', [TicketingConnectionController::class, 'store'])->name('settings.tickets.connect');
+        Route::delete('/connection', [TicketingConnectionController::class, 'destroy'])->name('settings.tickets.disconnect');
+        Route::get('/rooms', [TicketingConnectionController::class, 'rooms'])->name('settings.tickets.rooms');
+        Route::post('/rooms', [TicketingConnectionController::class, 'syncRooms'])->name('settings.tickets.rooms.sync');
+        Route::get('/reductions', [TicketingConnectionController::class, 'reductions'])->name('settings.tickets.reductions');
+        Route::post('/reductions', [TicketingConnectionController::class, 'syncReductions'])
+            ->name('settings.tickets.reductions.sync');
     });
 
     // TOOL SETTING ROUTE
@@ -902,6 +921,24 @@ Route::group(['middleware' => ['auth:sanctum']], function (): void {
         Route::get('/artist-residencies', [ProjectArtistResidenciesController::class, 'show'])
             ->name('projects.tabs.artist-residencies')
             ->middleware(EnsureUserCanSeeProjectComponent::for(ProjectTabComponentEnum::ARTIST_RESIDENCIES));
+        Route::get('/ticketing', [TicketingProjectController::class, 'show'])
+            ->name('projects.tabs.ticketing')
+            ->middleware(EnsureUserCanSeeProjectComponent::for(ProjectTabComponentEnum::TICKETING));
+        Route::get('/ticketing/events/{event}/sales', [TicketingProjectController::class, 'sales'])
+            ->name('projects.tabs.ticketing.sales')
+            ->middleware(EnsureUserCanSeeProjectComponent::for(ProjectTabComponentEnum::TICKETING));
+        Route::post('/ticketing/production', [TicketingProjectController::class, 'saveProduction'])
+            ->middleware(CanEditProject::class)
+            ->name('projects.tabs.ticketing.production');
+        Route::put('/ticketing/events', [TicketingProjectController::class, 'saveDraft'])
+            ->middleware(CanEditProject::class)
+            ->name('projects.tabs.ticketing.draft');
+        Route::post('/ticketing/release', [TicketingProjectController::class, 'release'])
+            ->middleware(CanEditProject::class)
+            ->name('projects.tabs.ticketing.release');
+        Route::delete('/ticketing/release', [TicketingProjectController::class, 'withdraw'])
+            ->middleware(CanEditProject::class)
+            ->name('projects.tabs.ticketing.withdraw');
         Route::get('/components/{componentInTab}/comments', [ProjectCommentController::class, 'index'])
             ->name('projects.tabs.comments');
         Route::get('/all-comments', [ProjectCommentController::class, 'all'])

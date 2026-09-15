@@ -640,6 +640,11 @@
                         </div>
 
                         <div class="flex items-center gap-2">
+                            <BaseUIButton v-if="ticketsReleased" type="button" hide-icon @click="showTicketDetails = true">
+                                <IconTicket class="size-4" />
+                                {{ $t('Ticket details') }}
+                            </BaseUIButton>
+
                             <BaseUIButton type="button" hide-icon @click="closeModal(false)">
                                 {{ $t('Cancel') }}
                             </BaseUIButton>
@@ -844,6 +849,15 @@
         </div>
     </ArtworkBaseModal>
 
+    <TicketingSalesModal
+        v-if="showTicketDetails"
+        :project-id="props.event.projectId"
+        :event-id="props.event.id"
+        :description="props.event.eventName || props.event.title || ''"
+        @close="showTicketDetails = false"
+    />
+
+
     <!-- Confirm: Verschiebung löst Einzeltag-Projektzuordnungen auf -->
     <ArtworkBaseModal
         v-if="showAssignmentImpactModal"
@@ -912,6 +926,7 @@ import dayjs from 'dayjs'
 import { can } from 'laravel-permission-to-vuejs'
 
 import ArtworkBaseModal from '@/Artwork/Modals/ArtworkBaseModal.vue'
+import TicketingSalesModal from '@/Pages/Projects/Tab/Components/Ticketing/TicketingSalesModal.vue'
 import BaseUIButton from '@/Artwork/Buttons/BaseUIButton.vue'
 import BaseInput from '@/Artwork/Inputs/BaseInput.vue'
 import BaseTextarea from '@/Artwork/Inputs/BaseTextarea.vue'
@@ -922,7 +937,7 @@ import ConfirmationComponent from '@/Layouts/Components/ConfirmationComponent.vu
 import ProjectSearch from '@/Components/SearchBars/ProjectSearch.vue'
 import RoomSearch from '@/Components/SearchBars/RoomSearch.vue'
 
-import { IconAlertTriangle, IconArrowsMoveHorizontal, IconCheck, IconChevronUp, IconCircleX, IconRepeat, IconTrash } from '@tabler/icons-vue'
+import { IconAlertTriangle, IconArrowsMoveHorizontal, IconCheck, IconChevronUp, IconCircleX, IconRepeat, IconTicket, IconTrash } from '@tabler/icons-vue'
 import SwitchIconTooltip from '@/Artwork/Toggles/SwitchIconTooltip.vue'
 import { useEvent } from '@/Composeables/Event.js'
 import ArtworkBaseListbox from "@/Artwork/Listbox/ArtworkBaseListbox.vue";
@@ -986,6 +1001,20 @@ const onToggleShiftPeriodOnStartDateChange = () => {
         {shift_period_on_start_date_change: shiftPeriodOnStartDateChange.value}
     ).catch((e) => console.error('shift-period-setting:patch-failed', e))
 }
+
+const showTicketDetails = ref(false)
+/* Only a released date has ticket details; the answer costs nothing when there are none. */
+const ticketsReleased = ref(false)
+watch(() => props.event?.id, async (eventId) => {
+    ticketsReleased.value = false
+    if (!eventId || !props.event?.projectId) return
+    try {
+        const { data } = await axios.get(route('projects.tabs.ticketing.sales', { project: props.event.projectId, event: eventId }), { params: { only_state: 1 } })
+        ticketsReleased.value = data.released === true
+    } catch {
+        ticketsReleased.value = false
+    }
+}, { immediate: true })
 
 // --- Wiederholungstermine (KONZEPT_Wiederholungstermine.md)
 const series = ref(false)

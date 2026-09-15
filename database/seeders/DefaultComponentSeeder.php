@@ -228,6 +228,17 @@ class DefaultComponentSeeder extends Seeder
             ]);
         }
 
+        if (!Component::query()->where('type', ProjectTabComponentEnum::TICKETING)->first()) {
+            Component::create([
+                'name' => 'artwork tickets',
+                'type' => ProjectTabComponentEnum::TICKETING,
+                'data' => ['icon' => 'IconBuildingStore'],
+                'special' => true,
+                'sidebar_enabled' => false,
+                'permission_type' => ProjectTabComponentPermissionEnum::PERMISSION_TYPE_ALL_SEE_AND_EDIT->value
+            ]);
+        }
+
         if (!Component::query()->where('type', ProjectTabComponentEnum::ARTIST_RESIDENCIES)->first()) {
             Component::create([
                 'name' => 'Artist residencies',

@@ -102,6 +102,7 @@ enum PermissionEnum : string
     case DAY_REMARKS_EDIT = 'can edit day remarks';
 
     case WEBHOOKS_MANAGE = 'manage webhooks';
+    case TICKETING_MANAGE = 'manage ticketing';
 
     // Eigene Rechte für bisher admin-only Bereiche (Konzept Nutzerrechte, Entscheidung 8)
     case TRASH_ACCESS = 'can access trash';

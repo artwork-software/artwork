@@ -119,6 +119,10 @@ class EventTypeController extends Controller
             'relevant_for_project_period',
             $eventType->relevant_for_project_period
         );
+        $eventType->relevant_for_ticketing = $request->boolean(
+            'relevant_for_ticketing',
+            (bool) $eventType->relevant_for_ticketing
+        );
         $eventType->verification_mode = $request->validated('verification_mode')
             ?? $eventType->verification_mode
             ?? 'none';

@@ -1,0 +1,29 @@
+<template>
+    <TicketsSettingsHeader :description="$t('Connect this artwork to its ticket house and manage everything ticketing.')">
+        <SettingsGuideBanner
+            storage-key="settings-guide.tickets"
+            title="How does this area work?"
+            :paragraphs="[
+                'artwork tickets is the ticket shop of the suite. Connecting creates a ticket house for this installation; the person connecting becomes its owner.',
+                'Once connected, artwork and tickets exchange released events, prices and sales. Rooms with their price classes and the reductions are synced from the other tabs.',
+            ]"
+        />
+
+        <div class="mt-6 rounded-lg border border-border-subtle/70 bg-surface shadow-raised px-3 py-4 sm:px-5 sm:py-5">
+            <TicketsConnection :connection="connection" :rooms="rooms" :house-defaults="houseDefaults" :countries="countries"/>
+        </div>
+    </TicketsSettingsHeader>
+</template>
+
+<script setup>
+import SettingsGuideBanner from '@/Artwork/Guide/SettingsGuideBanner.vue'
+import TicketsSettingsHeader from '@/Pages/Settings/Tickets/TicketsSettingsHeader.vue'
+import TicketsConnection from '@/Pages/Settings/Tickets/TicketsConnection.vue'
+
+defineProps({
+    connection: { type: Object, required: true },
+    rooms: { type: Array, default: () => [] },
+    houseDefaults: { type: Object, required: true },
+    countries: { type: Array, required: true },
+})
+</script>

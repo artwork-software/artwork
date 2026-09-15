@@ -14,6 +14,7 @@ use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\Event\Models\SubEvent;
 use Artwork\Modules\Timeline\Models\Timeline;
 use Artwork\Modules\User\Models\User;
+use Artwork\Modules\Ticketing\Models\TicketingEventRelease;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
 use DateTimeInterface;
@@ -256,6 +257,14 @@ class Event extends Model
             'id',
             'users'
         );
+    }
+
+    /**
+     * @return HasOne<TicketingEventRelease, $this>
+     */
+    public function ticketingRelease(): HasOne
+    {
+        return $this->hasOne(TicketingEventRelease::class, 'event_id');
     }
 
     /**

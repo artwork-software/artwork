@@ -72,6 +72,27 @@
                         ]"
                     />
                 </div>
+                <div class="col-span-full">
+                    <div class="flex gap-x-3">
+                        <div class="flex h-6 shrink-0 items-center">
+                            <div class="group grid size-4 grid-cols-1">
+                                <input id="relevant_for_ticketing" v-model="eventTypeForm.relevant_for_ticketing" type="checkbox" class="col-start-1 row-start-1 input-checklist" />
+                            </div>
+                        </div>
+                        <div class="text-sm/6">
+                            <label for="relevant_for_ticketing" class="font-medium font-lexend" :class="eventTypeForm.relevant_for_ticketing ? 'text-text' : 'text-text-subtle'">{{$t('Can sell tickets')}}</label>
+                        </div>
+                    </div>
+                    <SettingsGuideBanner
+                        class="mt-2"
+                        variant="static"
+                        title="Effect on artwork tickets"
+                        :paragraphs="[
+                            'Only events of these types appear in the ticketing component of a project, where they get their prices and are released for sale in artwork tickets.',
+                            'Rehearsals, set-ups and other internal types stay out.',
+                        ]"
+                    />
+                </div>
 
                 <!-- "Termine immer direkt buchbar": Verifizierung ist instanzweit abgeschaltet, Konfiguration bleibt gespeichert -->
                 <div v-if="directBookingOnly" class="col-span-full border-t border-border-subtle border-dashed pt-4">
@@ -201,6 +222,7 @@ const eventTypeForm = useForm({
     abbreviation: props.eventType ? props.eventType.abbreviation : '',
     hex_code: props.eventType ? props.eventType.hex_code : '#EC7A3D',
     relevant_for_project_period: props.eventType ? props.eventType.relevant_for_project_period : false,
+    relevant_for_ticketing: props.eventType ? props.eventType.relevant_for_ticketing : false,
     svg_name: props.eventType ? props.eventType.svg_name : 'IconPhoto',
     users: props.eventType ? props.eventType.users ?? [] : [],
     verification_mode: props.eventType ? props.eventType.verification_mode ?? 'none' : 'none',

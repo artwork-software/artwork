@@ -70,6 +70,8 @@ class Kernel extends ConsoleKernel
         // KI-Session-Tokens leben 15 Minuten und erzeugen bei aktiver Nutzung viele Zeilen in
         // oauth_access_tokens; ohne Purge bleiben abgelaufene und widerrufene Tokens dort liegen.
         $schedule->command('passport:purge')->dailyAt('02:30')->runInBackground();
+        // KI-Chatverläufe nach der Aufbewahrungsfrist des Hauses (0 = unbegrenzt)
+        $schedule->command('ai:purge-transcripts')->dailyAt('02:45')->runInBackground();
         $schedule->command(CreateMoneySourceExpirationReminderNotificationsCommand::class)
             ->dailyAt('01:00')
             ->runInBackground();

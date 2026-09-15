@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\RoomController;
+use Artwork\Core\Api\Middleware\EnsureTokenNotExpired;
 use Artwork\Modules\Chat\Http\Controllers\ChatController;
 use Artwork\Modules\Inventory\Http\Controllers\Api\InventoryArticleApiController;
 use Artwork\Modules\User\Services\UserStatusService;
@@ -21,37 +22,37 @@ use Artwork\Modules\Shift\Http\Controllers\ShiftRuleController;
 |
 */
 
-Route::middleware('auth:api')->get('/user', function (Request $request) {
+Route::middleware(['auth:api', EnsureTokenNotExpired::class])->get('/user', function (Request $request) {
     return $request->user();
 });
 
 
 // get all timeline presets with times count
-Route::middleware('auth:sanctum')->get('/timeline-presets', function () {
+Route::middleware('auth')->get('/timeline-presets', function () {
     return \Artwork\Modules\Shift\Models\ShiftPresetTimeline::withCount('times')->get();
 })->name('timeline-presets.all');
 
 
-Route::middleware('auth:sanctum')->post('/user/set-public-key', [ChatController::class, 'setPublicKey'])->name('keypair.store');
-Route::middleware('auth:sanctum')->post('/chat/store', [ChatController::class, 'storeChat'])->name('chat.store');
-Route::middleware('auth:sanctum')->post('/chat/message/{message}/read', [ChatController::class, 'markAsRead'])->name('chat-system.mark-as-read');
-Route::middleware('auth:sanctum')->post('/chat/messages/read', [ChatController::class, 'markMultipleAsRead'])->name('chat-system.mark-multiple-as-read');
+Route::middleware('auth')->post('/user/set-public-key', [ChatController::class, 'setPublicKey'])->name('keypair.store');
+Route::middleware('auth')->post('/chat/store', [ChatController::class, 'storeChat'])->name('chat.store');
+Route::middleware('auth')->post('/chat/message/{message}/read', [ChatController::class, 'markAsRead'])->name('chat-system.mark-as-read');
+Route::middleware('auth')->post('/chat/messages/read', [ChatController::class, 'markMultipleAsRead'])->name('chat-system.mark-multiple-as-read');
 
-Route::middleware('auth:sanctum')->get('/user-status/{id}', function ($id, UserStatusService $service) {
+Route::middleware('auth')->get('/user-status/{id}', function ($id, UserStatusService $service) {
     return response()->json(['status' => $service->getStatus($id)]);
 })->name('user-status.show');
 
 Route::get('/inventory/categories', [\Artwork\Modules\Inventory\Http\Controllers\InventoryCategoryController::class, 'getAllCategories'])
-    ->middleware('auth:sanctum')
+    ->middleware('auth')
     ->name('inventory.categories.get-all');
 
 Route::post('/room/search', [RoomController::class, 'search'])
-    ->middleware('auth:sanctum')
+    ->middleware('auth')
     ->name('room.search');
 
 
 Route::post('/inventory/article/search', [\Artwork\Modules\Inventory\Http\Controllers\InventoryArticleController::class, 'search'])
-    ->middleware('auth:sanctum')
+    ->middleware('auth')
     ->name('inventory.articles.search');
 
 
@@ -63,14 +64,16 @@ Route::post('/inventory/article/search', [\Artwork\Modules\Inventory\Http\Contro
 // Ab hier scope-pflichtig: Tokens, die vor Einführung der Scopes ausgegeben wurden, tragen eine
 // leere Scope-Menge im signierten JWT und lassen sich nicht nachrüsten — sie müssen neu erstellt
 // werden. Bewusst ein eigener Deploy, damit dafür ein Zeitfenster bleibt.
-Route::middleware(['auth:api', CheckToken::using('inventory:read')])->group(function () {
+Route::middleware(['auth:api', EnsureTokenNotExpired::class, CheckToken::using('inventory:read')])->group(function () {
     Route::get('/inventory', [InventoryCategoryApiController::class, 'index']);
     Route::get('/inventory/articles', [InventoryArticleApiController::class, 'index']);
     Route::get('/inventory/articles/{article}', [InventoryArticleApiController::class, 'show']);
 });
 
 // Shift Rules API routes
-Route::middleware('auth:sanctum')->group(function () {
+// Rechte wie bei den gleichnamigen Web-Routen (shift-rule-violations.resolve/.ignore): Verstöße
+// bearbeiten darf, wer Schichten planen darf. Vorher lief hier jeder eingeloggte User durch.
+Route::middleware(['auth', 'can:can plan shifts'])->group(function () {
     Route::post('/shift-rules/validate', [ShiftRuleController::class, 'validateRules'])->name('api.shift-rules.validate');
     Route::get('/shift-rules/pending', [ShiftRuleController::class, 'getPendingViolations'])->name('api.shift-rules.pending');
     Route::patch('/shift-rules/violations/{violationId}/status', [ShiftRuleController::class, 'updateViolationStatus'])->name('api.shift-rules.update-status');

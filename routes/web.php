@@ -118,6 +118,8 @@ use App\Http\Controllers\ToolSettingsCommunicationAndLegalController;
 use App\Http\Controllers\ToolSettingsExternalUserManagementController;
 use App\Http\Controllers\ToolSettingsInterfacesController;
 use Artwork\Modules\AiAssistant\Http\Controllers\AiAssistantSettingsController;
+use Artwork\Modules\AiAssistant\Http\Controllers\AiConversationController;
+use Artwork\Modules\AiAssistant\Http\Middleware\EnsureAiAssistantIsEnabled;
 use Artwork\Modules\AiAssistant\Http\Controllers\AiSessionController;
 use Artwork\Modules\ExternalUserManagement\Http\Controllers\ExternalUserGroupMappingController;
 use Artwork\Modules\ExternalUserManagement\Http\Controllers\ExternalUserSourceController;
@@ -223,13 +225,22 @@ Route::middleware(['guest', 'throttle:20,1'])->group(function (): void {
         ->name('auth.oidc.callback');
 });
 
-Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
+Route::group(['middleware' => ['auth', 'verified']], function (): void {
 
     // KI-Session-Token. throttle:ai-session steht nach der Auth-Gruppe, weil das Limit auf die
     // User-ID gekeyed ist — vorher waere der User noch nicht aufgeloest.
     Route::post('/ai/session', [AiSessionController::class, 'store'])
         ->middleware('throttle:ai-session')
         ->name('ai.session.store');
+
+    // Gespraechsliste und Loeschen fuer die KI-Bar. Die Freischaltung haengt am Service, nicht an
+    // einem Gate — Gate::before wuerde Admins sonst auch bei abgeschaltetem Haus durchlassen.
+    Route::middleware(EnsureAiAssistantIsEnabled::class)->group(function (): void {
+        Route::get('/ai/conversations', [AiConversationController::class, 'index'])
+            ->name('ai.conversations.index');
+        Route::delete('/ai/conversations/{conversation}', [AiConversationController::class, 'destroy'])
+            ->name('ai.conversations.destroy');
+    });
 
     // Workflow routes - only accessible via direct URL
     Route::group(['prefix' => 'workflow', 'middleware' => 'role:artwork admin'], function (): void {
@@ -3583,7 +3594,7 @@ Route::get(
 
 
 // /shift/check-collisions — liefert Zuweisungs-/Zeitdaten beliebiger Worker, daher zwingend hinter Auth
-Route::middleware(['auth:sanctum', 'verified'])
+Route::middleware(['auth', 'verified'])
     ->post('/shift/check-collisions', [ShiftController::class, 'checkCollisions'])
     ->can('can plan shifts')
     ->name('shift.check-collisions');

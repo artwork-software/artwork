@@ -1,5 +1,7 @@
 <?php
 
+use Artwork\Core\Api\Middleware\EnsureTokenNotExpired;
+use Artwork\Modules\AiAssistant\Http\Controllers\Api\AiConversationApiController;
 use Artwork\Modules\AiAssistant\Http\Controllers\JwksController;
 use Artwork\Modules\Inventory\Http\Controllers\Api\InventoryArticleApiController;
 use Artwork\Modules\Inventory\Http\Controllers\Api\InventoryCategoryApiController;
@@ -30,7 +32,20 @@ Route::middleware('throttle:60,1')
     ->get('/ai/jwks', JwksController::class)
     ->name('api.v1.ai.jwks');
 
-Route::middleware(['auth:api', 'throttle:machine-api'])->group(function (): void {
+Route::middleware(['auth:api', EnsureTokenNotExpired::class, 'throttle:machine-api'])->group(function (): void {
+    // Chat-Historie fuer artwork-ai. Der Token traegt immer den echten User; jede Abfrage ist auf
+    // dessen Gespraeche eingeschraenkt, eine fremde ID liefert 404 statt 403.
+    Route::middleware(CheckToken::using('ai:transcript'))->group(function (): void {
+        Route::post('/ai/conversations', [AiConversationApiController::class, 'store'])
+            ->name('api.v1.ai.conversations.store');
+
+        Route::get('/ai/conversations/{conversation}', [AiConversationApiController::class, 'show'])
+            ->name('api.v1.ai.conversations.show');
+
+        Route::post('/ai/conversations/{conversation}/turns', [AiConversationApiController::class, 'storeTurn'])
+            ->name('api.v1.ai.conversations.turns.store');
+    });
+
     Route::middleware(CheckToken::using('inventory:read'))->group(function (): void {
         Route::get('/inventory', [InventoryCategoryApiController::class, 'index'])
             ->name('api.v1.inventory.index');

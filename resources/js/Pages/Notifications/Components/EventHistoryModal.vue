@@ -21,6 +21,7 @@
                                                 :width="7"
                                                 :user="historyItem.change_by"
                                                 :id="index"/>
+                                            <ActivityOriginHint :via="historyItem.via" :via-detail="historyItem.via_detail"/>
                                 <div class="text-text-subtle subpixel-antialiased ml-2 text-sm my-auto w-96">
                                     {{
                                         $t(
@@ -46,11 +47,13 @@ import Permissions from "@/Mixins/Permissions.vue";
 import NewUserToolTip from "@/Layouts/Components/NewUserToolTip.vue";
 import JetDialogModal from "@/Jetstream/DialogModal.vue";
 import BaseModal from "@/Components/Modals/BaseModal.vue";
+import ActivityOriginHint from '@/Components/Activity/ActivityOriginHint.vue';
 
 export default {
     name: "EventHistoryModal",
     mixins: [Permissions],
     components: {
+        ActivityOriginHint,
         BaseModal,
         NewUserToolTip,
         JetDialogModal,

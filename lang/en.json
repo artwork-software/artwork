@@ -8030,5 +8030,8 @@
     "Keep chat transcripts for (days)": "Keep chat transcripts for (days)",
     "0 = keep indefinitely.": "0 = keep indefinitely.",
     "The AI assistant is switched off for this instance. The settings below can be prepared, but take effect only once the operator enables it.": "The AI assistant is switched off for this instance. The settings below can be prepared, but take effect only once the operator enables it.",
-    "The settings were saved.": "The settings were saved."
+    "The settings were saved.": "The settings were saved.",
+    "via assistant": "via assistant",
+    "via API": "via API",
+    "via API (:name)": "via API (:name)"
 }

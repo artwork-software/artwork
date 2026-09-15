@@ -1,0 +1,721 @@
+{
+    "openapi": "3.1.0",
+    "info": {
+        "title": "artwork Machine API",
+        "version": "1.0.0",
+        "description": "Machine API of artwork. Authenticate with a bearer token created under Tool settings → Interfaces. Every endpoint requires the scope noted on it."
+    },
+    "servers": [
+        {
+            "url": "https://artwork.ddev.site"
+        }
+    ],
+    "security": [
+        {
+            "http": []
+        }
+    ],
+    "paths": {
+        "/ai/conversations": {
+            "get": {
+                "operationId": "ai.conversations.index",
+                "tags": [
+                    "AiConversation"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "`AiConversationListData`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AiConversationListData"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/ai/conversations/{conversation}": {
+            "delete": {
+                "operationId": "ai.conversations.destroy",
+                "tags": [
+                    "AiConversation"
+                ],
+                "parameters": [
+                    {
+                        "name": "conversation",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No content",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": []
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "An error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "description": "Error overview.",
+                                            "examples": [
+                                                ""
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/api/v1/ai/conversations": {
+            "post": {
+                "operationId": "v1.ai.conversations.store",
+                "tags": [
+                    "AiConversationApi"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/StoreAiConversationRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "`AiConversationData`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AiConversationData"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
+        "/api/v1/ai/conversations/{conversation}": {
+            "get": {
+                "operationId": "v1.ai.conversations.show",
+                "tags": [
+                    "AiConversationApi"
+                ],
+                "parameters": [
+                    {
+                        "name": "conversation",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "`AiConversationWithTurnsData`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AiConversationWithTurnsData"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/api/v1/ai/conversations/{conversation}/turns": {
+            "post": {
+                "operationId": "v1.ai.conversations.turns.store",
+                "tags": [
+                    "AiConversationApi"
+                ],
+                "parameters": [
+                    {
+                        "name": "conversation",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/StoreAiConversationTurnRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
+        "/ai/session": {
+            "post": {
+                "operationId": "ai.session.store",
+                "tags": [
+                    "AiSession"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/StoreAiSessionRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "access_token": {
+                                            "type": "string"
+                                        },
+                                        "expires_at": {
+                                            "type": "string"
+                                        },
+                                        "scopes": {
+                                            "anyOf": [
+                                                {
+                                                    "type": "array",
+                                                    "items": []
+                                                },
+                                                {
+                                                    "type": "array",
+                                                    "prefixItems": [
+                                                        {
+                                                            "type": "string",
+                                                            "const": "ai:read"
+                                                        }
+                                                    ],
+                                                    "minItems": 1,
+                                                    "maxItems": 1,
+                                                    "additionalItems": false
+                                                }
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "access_token",
+                                        "expires_at",
+                                        "scopes"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    }
+                }
+            }
+        },
+        "/api/v1/inventory/articles": {
+            "get": {
+                "operationId": "v1.inventory.articles.index",
+                "summary": "Get a paginated list of inventory articles",
+                "tags": [
+                    "InventoryArticleApi"
+                ],
+                "parameters": [
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "default": 15
+                        }
+                    },
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "default": ""
+                        }
+                    },
+                    {
+                        "name": "category_id",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "subcategory_id",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": []
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/api/v1/inventory/articles/{article}": {
+            "get": {
+                "operationId": "v1.inventory.articles.show",
+                "summary": "Get a specific inventory article by ID",
+                "tags": [
+                    "InventoryArticleApi"
+                ],
+                "parameters": [
+                    {
+                        "name": "article",
+                        "in": "path",
+                        "required": true,
+                        "description": "The article ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": []
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/api/v1/inventory": {
+            "get": {
+                "operationId": "v1.inventory.index",
+                "tags": [
+                    "InventoryCategoryApi"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": []
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/api/v1/ai/jwks": {
+            "get": {
+                "operationId": "v1.ai.jwks",
+                "tags": [
+                    "Jwks"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "keys": {
+                                            "type": "array",
+                                            "prefixItems": [
+                                                {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "kty": {
+                                                            "type": "string",
+                                                            "const": "RSA"
+                                                        },
+                                                        "use": {
+                                                            "type": "string",
+                                                            "const": "sig"
+                                                        },
+                                                        "alg": {
+                                                            "type": "string",
+                                                            "const": "RS256"
+                                                        },
+                                                        "kid": {
+                                                            "type": "string"
+                                                        },
+                                                        "n": {
+                                                            "type": "string"
+                                                        },
+                                                        "e": {
+                                                            "type": "string"
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "kty",
+                                                        "use",
+                                                        "alg",
+                                                        "kid",
+                                                        "n",
+                                                        "e"
+                                                    ]
+                                                }
+                                            ],
+                                            "minItems": 1,
+                                            "maxItems": 1,
+                                            "additionalItems": false
+                                        }
+                                    },
+                                    "required": [
+                                        "keys"
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": []
+            }
+        }
+    },
+    "components": {
+        "securitySchemes": {
+            "http": {
+                "type": "http",
+                "scheme": "bearer"
+            }
+        },
+        "schemas": {
+            "AiConversationData": {
+                "type": "object",
+                "additionalProperties": [],
+                "title": "AiConversationData"
+            },
+            "AiConversationListData": {
+                "type": "object",
+                "additionalProperties": [],
+                "title": "AiConversationListData"
+            },
+            "AiConversationTurnData": {
+                "type": "object",
+                "additionalProperties": [],
+                "title": "AiConversationTurnData"
+            },
+            "AiConversationWithTurnsData": {
+                "type": "object",
+                "additionalProperties": [],
+                "title": "AiConversationWithTurnsData"
+            },
+            "StoreAiConversationRequest": {
+                "type": "object",
+                "properties": {
+                    "title": {
+                        "type": "string",
+                        "maxLength": 255
+                    }
+                },
+                "required": [
+                    "title"
+                ],
+                "title": "StoreAiConversationRequest"
+            },
+            "StoreAiConversationTurnRequest": {
+                "type": "object",
+                "properties": {
+                    "client_turn_id": {
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "user_message": {
+                        "type": "string",
+                        "maxLength": 4000
+                    },
+                    "assistant_message": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "status": {
+                        "type": "string",
+                        "enum": [
+                            "completed",
+                            "cancelled",
+                            "error",
+                            "awaiting_confirmation"
+                        ]
+                    },
+                    "error_code": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 255
+                    },
+                    "tool_calls": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "name": {
+                                    "type": "string",
+                                    "maxLength": 255
+                                },
+                                "label": {
+                                    "type": "string",
+                                    "maxLength": 255
+                                },
+                                "status": {
+                                    "type": "string",
+                                    "maxLength": 255
+                                }
+                            },
+                            "required": [
+                                "name",
+                                "label",
+                                "status"
+                            ]
+                        },
+                        "maxItems": 50
+                    },
+                    "context": {
+                        "type": "object",
+                        "properties": {
+                            "route": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ],
+                                "maxLength": 255
+                            },
+                            "project_id": {
+                                "type": [
+                                    "integer",
+                                    "null"
+                                ]
+                            },
+                            "locale": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ],
+                                "maxLength": 16
+                            },
+                            "artwork_version": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ],
+                                "maxLength": 64
+                            }
+                        }
+                    }
+                },
+                "required": [
+                    "client_turn_id",
+                    "user_message",
+                    "status"
+                ],
+                "title": "StoreAiConversationTurnRequest"
+            },
+            "StoreAiSessionRequest": {
+                "type": "object",
+                "properties": {
+                    "scopes": {
+                        "type": "array",
+                        "items": {
+                            "type": "string",
+                            "description": "ai:write fehlt hier absichtlich: der Schreibpfad braucht eine Aktions-Bindung\n(action_id) und kommt mit W2. Bis dahin ist ai:write im Request ein 422.",
+                            "enum": [
+                                "ai:transcript",
+                                "ai:read"
+                            ]
+                        }
+                    }
+                },
+                "title": "StoreAiSessionRequest"
+            }
+        },
+        "responses": {
+            "AuthenticationException": {
+                "description": "Unauthenticated",
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "message": {
+                                    "type": "string",
+                                    "description": "Error overview."
+                                }
+                            },
+                            "required": [
+                                "message"
+                            ]
+                        }
+                    }
+                }
+            },
+            "ValidationException": {
+                "description": "Validation error",
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "message": {
+                                    "type": "string",
+                                    "description": "Errors overview."
+                                },
+                                "errors": {
+                                    "type": "object",
+                                    "description": "A detailed description of each field that failed validation.",
+                                    "additionalProperties": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            },
+                            "required": [
+                                "message",
+                                "errors"
+                            ]
+                        }
+                    }
+                }
+            },
+            "ModelNotFoundException": {
+                "description": "Not found",
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "message": {
+                                    "type": "string",
+                                    "description": "Error overview."
+                                }
+                            },
+                            "required": [
+                                "message"
+                            ]
+                        }
+                    }
+                }
+            },
+            "AuthorizationException": {
+                "description": "Authorization error",
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "message": {
+                                    "type": "string",
+                                    "description": "Error overview."
+                                }
+                            },
+                            "required": [
+                                "message"
+                            ]
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

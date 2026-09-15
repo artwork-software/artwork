@@ -8030,5 +8030,8 @@
     "Keep chat transcripts for (days)": "Chatverläufe aufbewahren (Tage)",
     "0 = keep indefinitely.": "0 = unbegrenzt aufbewahren.",
     "The AI assistant is switched off for this instance. The settings below can be prepared, but take effect only once the operator enables it.": "Der KI-Assistent ist für diese Instanz abgeschaltet. Die Einstellungen lassen sich vorbereiten, wirken aber erst, wenn der Betreiber ihn freischaltet.",
-    "The settings were saved.": "Die Einstellungen wurden gespeichert."
+    "The settings were saved.": "Die Einstellungen wurden gespeichert.",
+    "via assistant": "via Assistent",
+    "via API": "via API",
+    "via API (:name)": "via API (:name)"
 }

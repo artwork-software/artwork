@@ -2,6 +2,7 @@
 
 namespace Artwork\Modules\AiAssistant\Providers;
 
+use Artwork\Modules\AiAssistant\Listeners\AttachActivityOrigin;
 use Artwork\Modules\AiAssistant\Listeners\RevokeAiSessionTokens;
 use Artwork\Modules\AiAssistant\Passport\AiSessionGrant;
 use Artwork\Modules\AiAssistant\Passport\AiSessionTokenFactory;
@@ -38,6 +39,7 @@ class AiAssistantServiceProvider extends ServiceProvider
     {
         $this->registerRateLimiters();
         $this->registerListeners();
+        $this->registerActivityOrigin();
     }
 
     /**
@@ -105,5 +107,22 @@ class AiAssistantServiceProvider extends ServiceProvider
     {
         Event::listen(Logout::class, RevokeAiSessionTokens::class);
         Event::listen(PasswordReset::class, RevokeAiSessionTokens::class);
+    }
+
+    /**
+     * Herkunft (`via`) an jedem Activity-Log-Eintrag (core-via-activity-log, Konzept C1 §6).
+     *
+     * Haengt am konfigurierten Activity-Modell, nicht an einer festen Klasse — config/activitylog.php
+     * darf das Modell austauschen, ohne dass dieser Provider bricht.
+     */
+    private function registerActivityOrigin(): void
+    {
+        $model = config('activitylog.activity_model');
+
+        if (!is_string($model) || !class_exists($model)) {
+            return;
+        }
+
+        $model::creating(static fn ($activity) => app(AttachActivityOrigin::class)->handle($activity));
     }
 }

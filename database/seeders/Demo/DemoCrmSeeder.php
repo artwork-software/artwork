@@ -29,7 +29,9 @@ class DemoCrmSeeder extends Seeder
     public function run(): void
     {
         if (!CrmContactType::query()->exists()) {
-            $this->command?->warn('CRM: keine Kontakttypen vorhanden (artwork:update/migrate-to-crm fehlt) – übersprungen.');
+            $this->command?->warn(
+                'CRM: keine Kontakttypen vorhanden (artwork:update/migrate-to-crm fehlt) – übersprungen.'
+            );
 
             return;
         }
@@ -37,7 +39,9 @@ class DemoCrmSeeder extends Seeder
         $mirrored = $this->mirrorEntities();
         $curated = $this->seedCuratedContacts();
 
-        $this->command?->info(sprintf('CRM: %d Entitäten gespiegelt, %d kuratierte Kontakte angelegt.', $mirrored, $curated));
+        $this->command?->info(
+            sprintf('CRM: %d Entitäten gespiegelt, %d kuratierte Kontakte angelegt.', $mirrored, $curated)
+        );
     }
 
     /** Spiegelt alle Demo-Entitäten ohne CRM-Kontakt über den Trait-Mechanismus. */

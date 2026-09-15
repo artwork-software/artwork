@@ -132,7 +132,16 @@ class EventVerificationController extends Controller
 
         $myRoomRequests = Event::where('user_id', $user->id)
             ->where('occupancy_option', true)
-            ->with(['room', 'event_type', 'project', 'creator', 'eventStatus', 'eventProperties', 'subEvents', 'series'])
+            ->with([
+                'room',
+                'event_type',
+                'project',
+                'creator',
+                'eventStatus',
+                'eventProperties',
+                'subEvents',
+                'series',
+            ])
             ->orderBy('start_time', 'desc')
             ->get();
 

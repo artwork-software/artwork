@@ -535,7 +535,9 @@ class InventoryPlanningService
         foreach ($internal as $issue) {
             foreach ($issue->articles as $a) {
                 $internalForSweep->push((object) [
-                    'start_date' => $issue->start_date ? CarbonCarbon::parse($issue->start_date)->format('Y-m-d') : null,
+                    'start_date' => $issue
+                        ->start_date ? CarbonCarbon::parse($issue->start_date)
+                        ->format('Y-m-d') : null,
                     'start_time' => $issue->start_time,
                     'end_date' => $issue->end_date ? CarbonCarbon::parse($issue->end_date)->format('Y-m-d') : null,
                     'end_time' => $issue->end_time,
@@ -548,8 +550,12 @@ class InventoryPlanningService
         foreach ($external as $issue) {
             foreach ($issue->articles as $a) {
                 $externalForSweep->push((object) [
-                    'issue_date' => $issue->issue_date ? CarbonCarbon::parse($issue->issue_date)->format('Y-m-d') : null,
-                    'return_date' => $issue->return_date ? CarbonCarbon::parse($issue->return_date)->format('Y-m-d') : null,
+                    'issue_date' => $issue
+                        ->issue_date ? CarbonCarbon::parse($issue->issue_date)
+                        ->format('Y-m-d') : null,
+                    'return_date' => $issue
+                        ->return_date ? CarbonCarbon::parse($issue->return_date)
+                        ->format('Y-m-d') : null,
                     'pivot' => (object) ['quantity' => $a->pivot->quantity],
                 ]);
             }
@@ -610,7 +616,17 @@ class InventoryPlanningService
         // dayIntervals[$date] = [[startMin, endMin, qty], ...]
         $dayIntervals = [];
 
-        $collect = function (?string $startDate, ?string $endDate, int $startMin, int $endMin, int $qty) use (&$dayIntervals, $rangeStart, $rangeEnd): void {
+        $collect = function (
+            ?string $startDate,
+            ?string $endDate,
+            int $startMin,
+            int $endMin,
+            int $qty
+        ) use (
+            &$dayIntervals,
+            $rangeStart,
+            $rangeEnd
+): void {
             if ($qty <= 0 || $startDate === null) {
                 return;
             }
@@ -806,7 +822,9 @@ class InventoryPlanningService
         foreach ($availabilityInternal as $issue) {
             foreach ($issue->articles as $a) {
                 $internalForSweep->push((object) [
-                    'start_date' => $issue->start_date ? CarbonCarbon::parse($issue->start_date)->format('Y-m-d') : null,
+                    'start_date' => $issue
+                        ->start_date ? CarbonCarbon::parse($issue->start_date)
+                        ->format('Y-m-d') : null,
                     'start_time' => $issue->start_time,
                     'end_date' => $issue->end_date ? CarbonCarbon::parse($issue->end_date)->format('Y-m-d') : null,
                     'end_time' => $issue->end_time,
@@ -819,8 +837,12 @@ class InventoryPlanningService
         foreach ($availabilityExternal as $issue) {
             foreach ($issue->articles as $a) {
                 $externalForSweep->push((object) [
-                    'issue_date' => $issue->issue_date ? CarbonCarbon::parse($issue->issue_date)->format('Y-m-d') : null,
-                    'return_date' => $issue->return_date ? CarbonCarbon::parse($issue->return_date)->format('Y-m-d') : null,
+                    'issue_date' => $issue
+                        ->issue_date ? CarbonCarbon::parse($issue->issue_date)
+                        ->format('Y-m-d') : null,
+                    'return_date' => $issue
+                        ->return_date ? CarbonCarbon::parse($issue->return_date)
+                        ->format('Y-m-d') : null,
                     'pivot' => (object) ['quantity' => $a->pivot->quantity],
                 ]);
             }

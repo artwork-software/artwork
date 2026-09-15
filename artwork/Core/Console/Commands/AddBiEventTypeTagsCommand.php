@@ -15,8 +15,18 @@ class AddBiEventTypeTagsCommand extends Command
      * @var array<int, array{name: string, name_de: string, color: string, kpi_role: ?string}>
      */
     private const DEFAULT_TAGS = [
-        ['name' => 'Event day', 'name_de' => 'Veranstaltungstag', 'color' => '#6366f1', 'kpi_role' => BiEventTypeTag::KPI_ROLE_EVENT_DAY],
-        ['name' => 'Performance', 'name_de' => 'Vorstellung', 'color' => '#22c55e', 'kpi_role' => BiEventTypeTag::KPI_ROLE_PERFORMANCE],
+        [
+            'name' => 'Event day',
+            'name_de' => 'Veranstaltungstag',
+            'color' => '#6366f1',
+            'kpi_role' => BiEventTypeTag::KPI_ROLE_EVENT_DAY,
+        ],
+        [
+            'name' => 'Performance',
+            'name_de' => 'Vorstellung',
+            'color' => '#22c55e',
+            'kpi_role' => BiEventTypeTag::KPI_ROLE_PERFORMANCE,
+        ],
         ['name' => 'Rehearsal', 'name_de' => 'Probe', 'color' => '#f59e0b', 'kpi_role' => null],
         ['name' => 'Education', 'name_de' => 'Vermittlung', 'color' => '#ec4899', 'kpi_role' => null],
         ['name' => 'Special event', 'name_de' => 'Sonderveranstaltung', 'color' => '#06b6d4', 'kpi_role' => null],

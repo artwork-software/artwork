@@ -264,10 +264,7 @@ class DailyShiftPlanPdfBuilder
         $laneColumns = $this->buildLaneColumns($craftGroups);
 
 
-        $layout = $this->computeLayoutForDay(
-            $timelineLanes,
-            count($laneColumns)
-        );
+        $layout = $this->computeLayoutForDay($timelineLanes);
 
         // Tag in Zeitfenster teilen, die jeweils sicher auf eine Seite passen.
         // Geschnitten wird nur an Minuten, über die kein Block hinwegläuft.
@@ -430,8 +427,12 @@ class DailyShiftPlanPdfBuilder
      * ungefähr 1/$parts der Gesamthöhe liegt (gleich große Teile statt
      * Rest-Schnipsel).
      */
-    private function findBalancedCleanCut(array $rows, array $timelineBlocks, array $shiftBlocksByCraft, int $parts = 2): ?int
-    {
+    private function findBalancedCleanCut(
+        array $rows,
+        array $timelineBlocks,
+        array $shiftBlocksByCraft,
+        int $parts = 2
+    ): ?int {
         $allBlocks = $timelineBlocks;
         foreach ($shiftBlocksByCraft as $blocks) {
             foreach ($blocks as $b) {
@@ -534,7 +535,7 @@ class DailyShiftPlanPdfBuilder
      * Zeit + Timeline sollen minimal sein.
      * Dompdf-wrap killen wir, indem wir Timeline-Breite hart begrenzen.
      */
-    private function computeLayoutForDay(int $timelineLanes, int $craftCols): array
+    private function computeLayoutForDay(int $timelineLanes): array
     {
         $timeCol = 44;
 
@@ -741,7 +742,10 @@ class DailyShiftPlanPdfBuilder
         if (!empty($markerMinutes)) {
             foreach ($rows as &$row) {
                 // Gap-Message unterdrücken wenn Gap direkt an Marker grenzt
-                if ($row['isGap'] && (in_array($row['from'], $markerMinutes, true) || in_array($row['to'], $markerMinutes, true))) {
+                if (
+                    $row['isGap']
+                     && (in_array($row['from'], $markerMinutes, true) || in_array($row['to'], $markerMinutes, true))
+                ) {
                     $row['message'] = null;
                 }
 

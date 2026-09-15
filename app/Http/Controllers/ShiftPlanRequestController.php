@@ -181,7 +181,8 @@ class ShiftPlanRequestController extends Controller
     ): \Illuminate\Support\Collection {
         return ShiftRuleViolation::query()
             ->with([
-                'shiftRule:id,name,description,warning_color,trigger_type,default_compensation_days,default_compensation_deadline_days',
+                'shiftRule:id,name,description,warning_color,trigger_type,'
+                    . 'default_compensation_days,default_compensation_deadline_days',
                 'resolvedByUser:id,first_name,last_name',
             ])
             ->whereIn('user_id', $userIds)
@@ -540,7 +541,13 @@ class ShiftPlanRequestController extends Controller
         // "approved"-Anfrage mit halb committeten Schichten).
         $approved = false;
         $committedShiftIds = [];
-        $response = DB::transaction(function () use ($shiftPlanRequest, $user, $comment, &$approved, &$committedShiftIds) {
+        $response = DB::transaction(function () use (
+            $shiftPlanRequest,
+            $user,
+            $comment,
+            &$approved,
+            &$committedShiftIds
+        ) {
             // Atomarer Status-Flip nur aus 'pending': verhindert Doppel-Genehmigung und
             // Genehmigen nach Ablehnung (auch bei zwei gleichzeitigen Genehmigern —
             // der zweite wartet auf das Row-Lock und sieht dann flipped = 0).
@@ -555,7 +562,8 @@ class ShiftPlanRequestController extends Controller
                 ]);
 
             if ($flipped === 0) {
-                return back()->with('error', __('This release request has already been decided. You can see the current status under "My release requests".'));
+                return back()->with('error', __('This release request has already been decided. You can see the '
+                    . 'current status under "My release requests".'));
             }
 
             $shiftPlanRequest->refresh();
@@ -617,8 +625,10 @@ class ShiftPlanRequestController extends Controller
      *
      * @param array<int, int> $committedShiftIds
      */
-    private function notifyWorkersAboutLockedShiftPlan(ShiftPlanRequest $shiftPlanRequest, array $committedShiftIds): void
-    {
+    private function notifyWorkersAboutLockedShiftPlan(
+        ShiftPlanRequest $shiftPlanRequest,
+        array $committedShiftIds
+    ): void {
         if ($committedShiftIds === []) {
             return;
         }
@@ -711,7 +721,8 @@ class ShiftPlanRequestController extends Controller
         // Nur offene Anfragen können zurückgezogen werden — genehmigte/abgelehnte
         // Anfragen sind Historie und dürfen nicht mehr entfernt werden.
         if ($shiftPlanRequest->status !== 'pending') {
-            return back()->with('error', __('This release request has already been decided. You can see the current status under "My release requests".'));
+            return back()->with('error', __('This release request has already been decided. You can see the '
+                . 'current status under "My release requests".'));
         }
 
         DB::transaction(function () use ($shiftPlanRequest): void {
@@ -775,7 +786,11 @@ class ShiftPlanRequestController extends Controller
             'shifts' => ['array'],
             'shifts.*.shift_id' => ['required', 'integer', 'exists:shifts,id'],
             'shifts.*.unique_key' => ['required', 'string'],
-            'shifts.*.row_type' => ['required', 'string', \Illuminate\Validation\Rule::in(['user', 'freelancer', 'service_provider', 'unassigned'])],
+            'shifts.*.row_type' => [
+                'required',
+                'string',
+                \Illuminate\Validation\Rule::in(['user', 'freelancer', 'service_provider', 'unassigned']),
+            ],
             'shifts.*.row_id' => ['nullable', 'integer'],
             'shifts.*.reason' => ['nullable', 'string'],
         ]);
@@ -800,7 +815,8 @@ class ShiftPlanRequestController extends Controller
                 ]);
 
             if ($flipped === 0) {
-                return back()->with('error', __('This release request has already been decided. You can see the current status under "My release requests".'));
+                return back()->with('error', __('This release request has already been decided. You can see the '
+                    . 'current status under "My release requests".'));
             }
 
             $shiftPlanRequest->refresh();
@@ -906,7 +922,11 @@ class ShiftPlanRequestController extends Controller
                 $initialData = null;
                 if ($firstChange) {
                     $fieldChanges = $firstChange->field_changes ?? [];
-                    if (is_array($fieldChanges) && isset($fieldChanges['_initial']) && is_array($fieldChanges['_initial'])) {
+                    if (
+                        is_array($fieldChanges)
+                         && isset($fieldChanges['_initial'])
+                         && is_array($fieldChanges['_initial'])
+                    ) {
                         $initialData = $fieldChanges['_initial'];
                     }
                 }
@@ -1117,7 +1137,8 @@ class ShiftPlanRequestController extends Controller
                 // ---------- 5) Workflow-Felder setzen / Activity-Log ----------
                 $old = [
                     'in_workflow'               => $originalBeforeRollback['in_workflow'] ?? (bool) $shift->in_workflow,
-                    'workflow_rejection_reason' => $originalBeforeRollback['workflow_rejection_reason'] ?? $shift->workflow_rejection_reason,
+                    'workflow_rejection_reason' => $originalBeforeRollback['workflow_rejection_reason']
+                         ?? $shift->workflow_rejection_reason,
                 ];
 
                 $shift->workflow_rejection_reason = $summaryReason;
@@ -1463,7 +1484,11 @@ class ShiftPlanRequestController extends Controller
             ->pluck('id');
 
         $validated = $request->validate([
-            'status' => ['nullable', 'string', \Illuminate\Validation\Rule::in(['all', 'pending', 'approved', 'rejected'])],
+            'status' => [
+                'nullable',
+                'string',
+                \Illuminate\Validation\Rule::in(['all', 'pending', 'approved', 'rejected']),
+            ],
             'craft_id' => ['nullable', 'integer'],
             'only_mine' => ['nullable', 'boolean'],
             'per_page' => ['nullable', 'integer', 'min:1', 'max:100'],
@@ -1678,8 +1703,10 @@ class ShiftPlanRequestController extends Controller
      * @param int $changeId
      * @return \Illuminate\Http\RedirectResponse
      */
-    public function revertChange(ShiftPlanRequest $shiftPlanRequest, ShiftPlanRequestChange $shiftChange): \Illuminate\Http\RedirectResponse
-    {
+    public function revertChange(
+        ShiftPlanRequest $shiftPlanRequest,
+        ShiftPlanRequestChange $shiftChange
+    ): \Illuminate\Http\RedirectResponse {
         /** @var User $user */
         $user = $this->auth->user();
 
@@ -1733,7 +1760,13 @@ class ShiftPlanRequestController extends Controller
         // erneute $shift->save() (bzw. die Qualifikations-Saves) über die Observer wieder einen
         // ShiftPlanRequestChange/CommittedShiftChange anlegen und die "abgelehnte" Änderung bliebe
         // als frischer Revert-Eintrag im Verlauf stehen.
-        return ShiftChangeRecorder::withoutRecording(fn () => DB::transaction(function () use ($shiftPlanRequest, $shiftChange, $shift, $fieldChanges, $user) {
+        return ShiftChangeRecorder::withoutRecording(fn () => DB::transaction(function () use (
+            $shiftPlanRequest,
+            $shiftChange,
+            $shift,
+            $fieldChanges,
+            $user
+        ) {
             $rollbackFieldChanges = [];
 
             // Originalzustand der Schicht für Activity-Log

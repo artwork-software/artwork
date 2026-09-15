@@ -138,7 +138,8 @@ SVG;
   <circle cx="450" cy="480" r="62" fill="#FCFCFB"/>
   <path d="M420,510 A60,60 0 0 1 480,450 L480,480 A30,30 0 0 0 450,510 Z" fill="#27233C"/>
   <text x="450" y="640" text-anchor="middle" font-family="Lexend, 'Helvetica Neue', Helvetica, Arial, sans-serif"
-        font-size="64" fill="#F4F4F2"><tspan font-weight="600">artwork</tspan><tspan font-weight="300"> Testhaus</tspan></text>
+        font-size="64" fill="#F4F4F2"><tspan font-weight="600">artwork</tspan><tspan
+        font-weight="300"> Testhaus</tspan></text>
   <text x="450" y="690" text-anchor="middle" font-family="Inter, 'Helvetica Neue', Helvetica, Arial, sans-serif"
         font-size="22" fill="#A7A6B1">Demo-Umgebung – alle Daten sind fiktiv</text>
   <rect x="402" y="726" width="96" height="34" rx="17" fill="#EB7A3D"/>

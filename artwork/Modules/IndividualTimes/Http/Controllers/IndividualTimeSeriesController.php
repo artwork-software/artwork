@@ -255,6 +255,7 @@ class IndividualTimeSeriesController extends Controller
             'start_time'            => [
                 'nullable',
                 'date_format:H:i',
+                // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter -- Laravel-Validierungs-Closure (attribute, value, fail) – Signatur vorgegeben
                 function ($attribute, $value, $fail) use ($request): void {
                     if (!$request->boolean('full_day') && empty($value)) {
                         $fail(__('Start time is required if not full day.'));
@@ -264,6 +265,7 @@ class IndividualTimeSeriesController extends Controller
             'end_time'              => [
                 'nullable',
                 'date_format:H:i',
+                // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter -- Laravel-Validierungs-Closure (attribute, value, fail) – Signatur vorgegeben
                 function ($attribute, $value, $fail) use ($request): void {
                     if (!$request->boolean('full_day') && empty($value)) {
                         $fail(__('End time is required if not full day.'));

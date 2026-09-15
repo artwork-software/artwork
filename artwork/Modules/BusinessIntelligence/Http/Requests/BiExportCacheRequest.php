@@ -30,6 +30,7 @@ class BiExportCacheRequest extends FormRequest
             'granularity' => ['nullable', 'in:projects,events,both'],
             'event_tag_filter' => ['nullable', 'array'],
             'event_tag_filter.*' => [
+                // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter -- Laravel-Validierungs-Closure (attribute, value, fail) – Signatur vorgegeben
                 function (string $attribute, mixed $value, callable $fail): void {
                     if ($value === 'untagged') {
                         return;

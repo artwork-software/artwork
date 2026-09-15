@@ -122,7 +122,10 @@ readonly class VacationConflictService
                             $shift->end,
                             $user->language
                         ),
-                        'href' => $user ? ShiftNotificationLinkService::ownOperationPlanForDate($user, $shift->event_start_day) : null
+                        'href' => $user ? ShiftNotificationLinkService::ownOperationPlanForDate(
+                            $user,
+                            $shift->event_start_day
+                        ) : null
                     ],
                 ];
 
@@ -247,7 +250,10 @@ readonly class VacationConflictService
                         $shift->end,
                         $user->language
                     ),
-                    'href' => $user ? ShiftNotificationLinkService::ownOperationPlanForDate($user, $shift->event_start_day) : null
+                    'href' => $user ? ShiftNotificationLinkService::ownOperationPlanForDate(
+                        $user,
+                        $shift->event_start_day
+                    ) : null
                 ],
             ];
 

@@ -85,7 +85,13 @@ class ShiftDTO extends Data
         $workers = [];
         $confirmationEligibility = app(ShiftConfirmationEligibilityService::class);
 
-        foreach (['users' => 'user', 'freelancer' => 'freelancer', 'serviceProvider' => 'service_provider'] as $relation => $type) {
+        foreach (
+            [
+            'users' => 'user',
+            'freelancer' => 'freelancer',
+            'serviceProvider' => 'service_provider',
+            ] as $relation => $type
+        ) {
             $collection = $shift->{$relation};
             if ($collection === null || $collection->isEmpty()) {
                 continue;

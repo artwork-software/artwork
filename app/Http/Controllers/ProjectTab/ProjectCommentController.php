@@ -26,7 +26,10 @@ class ProjectCommentController extends Controller
         // If not found, try as DisclosureComponents
         if (!$componentInTabModel) {
             $disclosureComponent = DisclosureComponents::find($componentInTab);
-            if (!$disclosureComponent || $disclosureComponent->component?->type !== ProjectTabComponentEnum::COMMENT_TAB->value) {
+            if (
+                !$disclosureComponent
+                 || $disclosureComponent->component?->type !== ProjectTabComponentEnum::COMMENT_TAB->value
+            ) {
                 throw new NotFoundHttpException();
             }
 

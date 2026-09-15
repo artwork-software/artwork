@@ -96,7 +96,10 @@ class InventoryCategorySeeder extends Seeder
 
             // 2️⃣ Debugging: Ausgabe der gefundenen Properties
             if ($articleProperties->isEmpty()) {
-                dump("⚠ Keine Properties für Artikel #{$article->id} (Kategorie: {$category->name}, Sub-Kategorie: {$subCategory->name})");
+                dump(
+                    "⚠ Keine Properties für Artikel #{$article->id} "
+                    . "(Kategorie: {$category->name}, Sub-Kategorie: {$subCategory->name})"
+                );
             }
 
             // 3️⃣ Weisen dem Artikel die Properties MIT WERTEN zu

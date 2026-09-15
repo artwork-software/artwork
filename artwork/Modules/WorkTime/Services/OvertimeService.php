@@ -182,8 +182,13 @@ class OvertimeService
      *
      * @throws ValidationException when the amount exceeds the payable total
      */
-    public function payOut(User $user, int $minutes, int $hrUserId, ?string $comment, ?Carbon $payoutDate = null): OvertimePayout
-    {
+    public function payOut(
+        User $user,
+        int $minutes,
+        int $hrUserId,
+        ?string $comment,
+        ?Carbon $payoutDate = null
+    ): OvertimePayout {
         $payoutDate ??= Carbon::today();
 
         return DB::transaction(function () use ($user, $minutes, $hrUserId, $comment, $payoutDate): OvertimePayout {

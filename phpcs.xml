@@ -58,21 +58,29 @@
         <exclude name="Generic.CodeAnalysis.EmptyStatement.DetectedCatch"/>
     </rule>
     <rule ref="Generic.CodeAnalysis.ForLoopShouldBeWhileLoop"/>
-    <rule ref="Generic.CodeAnalysis.ForLoopWithTestFunctionCall"/>
+    <!-- ForLoopWithTestFunctionCall entfernt: schlägt bei jeder Carbon-Datumsschleife
+         (for ($day = …; $day->lte($end); $day->addDay())) an; count()-Aufrufe im Schleifenkopf sind bereinigt -->
     <rule ref="Generic.CodeAnalysis.JumbledIncrementer"/>
     <rule ref="Generic.CodeAnalysis.UnconditionalIfStatement"/>
     <rule ref="Generic.CodeAnalysis.UnnecessaryFinalModifier"/>
-    <rule ref="Generic.CodeAnalysis.UnusedFunctionParameter"/>
+    <!-- Unbenutzte Parameter nur dort melden, wo die Signatur frei ist: bei Interface-/Elternklassen-Implementierungen
+         und Policies (Laravel ruft mit fester Signatur) lässt sich der Parameter nicht entfernen -->
+    <rule ref="Generic.CodeAnalysis.UnusedFunctionParameter">
+        <exclude name="Generic.CodeAnalysis.UnusedFunctionParameter.FoundInExtendedClass"/>
+        <exclude name="Generic.CodeAnalysis.UnusedFunctionParameter.FoundInExtendedClassBeforeLastUsed"/>
+        <exclude name="Generic.CodeAnalysis.UnusedFunctionParameter.FoundInExtendedClassAfterLastUsed"/>
+        <exclude name="Generic.CodeAnalysis.UnusedFunctionParameter.FoundInImplementedInterface"/>
+        <exclude name="Generic.CodeAnalysis.UnusedFunctionParameter.FoundInImplementedInterfaceBeforeLastUsed"/>
+        <exclude name="Generic.CodeAnalysis.UnusedFunctionParameter.FoundInImplementedInterfaceAfterLastUsed"/>
+        <exclude-pattern>*/Policies/*</exclude-pattern>
+        <exclude-pattern>./database/factories/</exclude-pattern>
+        <exclude-pattern>./routes/channels.php</exclude-pattern>
+    </rule>
     <rule ref="Generic.CodeAnalysis.UselessOverridingMethod"/>
     <rule ref="Generic.ControlStructures.InlineControlStructure"/>
     <rule ref="Generic.Formatting.DisallowMultipleStatements"/>
-    <!-- Komplexitäts-Metriken als Hinweis, nicht als Blocker (Refactoring-Kandidaten) -->
-    <rule ref="Generic.Metrics.CyclomaticComplexity">
-        <type>warning</type>
-    </rule>
-    <rule ref="Generic.Metrics.NestingLevel">
-        <type>warning</type>
-    </rule>
+    <!-- Komplexitäts-/Nesting-Metriken nicht mehr im Sniff: 256 Bestandsfunktionen lagen darüber (Stand 15.09.2026),
+         das Signal ging im Rauschen unter. Refactoring-Kandidaten sind in der Projektnotiz festgehalten. -->
     <rule ref="Generic.PHP.DeprecatedFunctions"/>
     <rule ref="Generic.PHP.DisallowShortOpenTag"/>
     <rule ref="Generic.PHP.NoSilencedErrors"/>

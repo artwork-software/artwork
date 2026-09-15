@@ -1510,7 +1510,9 @@ class EventController extends Controller
                 $canPlanFixed = $isPlanning && $user->can(PermissionEnum::CAN_PLAN_FIXED_IN_PLANNING_CALENDAR->value);
                 // Direktbuchung: reguläre Termine über "Termine fest planen", geplante Termine NUR über
                 // "Im Planungskalender fest planen" (getrennte Berechtigung, keine Implikation).
-                $canBookDirectly = ($isPlanning ? $canPlanFixed : $hasGlobalCreate) || $isRoomAdmin || $room->everyone_can_book;
+                $canBookDirectly = ($isPlanning ? $canPlanFixed : $hasGlobalCreate)
+                     || $isRoomAdmin
+                     || $room->everyone_can_book;
                 $canRequest = $hasGlobalCreate ||
                     $hasGlobalRequest ||
                     $isRoomAdmin ||
@@ -1716,7 +1718,8 @@ class EventController extends Controller
 
         // Rueckmeldung fuer den globalen Flash-Toast (Block 2): vorher schloss das Modal ohne jede Meldung.
         $request->session()->flash('success', trans_choice(
-            'Duty roster committed for calendar week :week (:count craft).|Duty roster committed for calendar week :week (:count crafts).',
+            'Duty roster committed for calendar week :week (:count craft).|Duty roster committed for calendar '
+                . 'week :week (:count crafts).',
             count($craftIds),
             ['week' => $weekNumber, 'count' => count($craftIds)]
         ));
@@ -3677,9 +3680,6 @@ class EventController extends Controller
     public function restore(
         int $id,
         ShiftsQualificationsService $shiftsQualificationsService,
-        ShiftUserService $shiftUserService,
-        ShiftFreelancerService $shiftFreelancerService,
-        ShiftServiceProviderService $shiftServiceProviderService,
         ChangeService $changeService,
         EventCommentService $eventCommentService,
         TimelineService $timelineService,
@@ -3703,9 +3703,6 @@ class EventController extends Controller
         $this->eventService->restore(
             $event,
             $shiftsQualificationsService,
-            $shiftUserService,
-            $shiftFreelancerService,
-            $shiftServiceProviderService,
             $changeService,
             $eventCommentService,
             $timelineService,

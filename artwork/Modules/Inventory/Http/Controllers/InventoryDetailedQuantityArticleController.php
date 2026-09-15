@@ -52,8 +52,10 @@ class InventoryDetailedQuantityArticleController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(UpdateInventoryDetailedQuantityArticleRequest $request, InventoryDetailedQuantityArticle $inventoryDetailedQuantityArticle): void
-    {
+    public function update(
+        UpdateInventoryDetailedQuantityArticleRequest $request,
+        InventoryDetailedQuantityArticle $inventoryDetailedQuantityArticle
+    ): void {
         //
     }
 

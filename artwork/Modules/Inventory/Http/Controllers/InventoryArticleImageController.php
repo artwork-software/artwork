@@ -52,8 +52,10 @@ class InventoryArticleImageController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(UpdateInventoryArticleImageRequest $request, InventoryArticleImage $inventoryArticleImage): void
-    {
+    public function update(
+        UpdateInventoryArticleImageRequest $request,
+        InventoryArticleImage $inventoryArticleImage
+    ): void {
         //
     }
 

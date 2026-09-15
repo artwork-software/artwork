@@ -20,7 +20,7 @@ class InventoryUserFilterService
     /**
      * Gibt gefilterte Artikel für einen User zurück und berechnet die einsatzbereite Menge im Zeitraum.
      */
-    public function getFilteredArticles(User $user, $startDate = null, $endDate = null)
+    public function getFilteredArticles(User $user)
     {
         // Hole den gespeicherten Filter des Users
         $filter = $this->filterRepo->getByUser($user);
@@ -31,7 +31,11 @@ class InventoryUserFilterService
                 'category:id,name',
                 'subCategory:id,name',
                 // Properties inkl. Pivot-Wert
-                'properties' => fn($q) => $q->withPivot('value')->select('inventory_article_properties.id', 'name', 'type'),
+                'properties' => fn($q) => $q->withPivot('value')->select(
+                    'inventory_article_properties.id',
+                    'name',
+                    'type'
+                ),
             ]);
 
         if ($filter) {
@@ -90,7 +94,11 @@ class InventoryUserFilterService
             ->with([
                 'category:id,name',
                 'subCategory:id,name',
-                'properties' => fn($q) => $q->withPivot('value')->select('inventory_article_properties.id', 'name', 'type'),
+                'properties' => fn($q) => $q->withPivot('value')->select(
+                    'inventory_article_properties.id',
+                    'name',
+                    'type'
+                ),
             ]);
 
         if (!$filter) {

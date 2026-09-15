@@ -67,8 +67,11 @@ class BiProjectDataService
         return $biData->fresh();
     }
 
-    public function switchSoldTicketsMode(int $projectId, BiVisitorModeEnum $mode, string $scope = 'actual'): BiProjectData
-    {
+    public function switchSoldTicketsMode(
+        int $projectId,
+        BiVisitorModeEnum $mode,
+        string $scope = 'actual'
+    ): BiProjectData {
         $biData = $this->getOrCreateForProject($projectId, $scope);
 
         if ($biData->sold_tickets_mode === $mode) {

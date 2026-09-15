@@ -241,7 +241,10 @@ class ShiftAssignmentPreflightService
                         $date,
                         $vacation->end_time,
                     );
-                    if ($window === null || !self::intervalsOverlap($currentStart, $currentEnd, $window[0], $window[1])) {
+                    if (
+                        $window === null
+                         || !self::intervalsOverlap($currentStart, $currentEnd, $window[0], $window[1])
+                    ) {
                         continue;
                     }
                     $conflicts[] = [

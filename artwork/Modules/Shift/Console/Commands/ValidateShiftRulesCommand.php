@@ -72,7 +72,10 @@ class ValidateShiftRulesCommand extends Command
         // Group by violation_id to create one new violation per group
         $grouped = $overdueDayOffs->groupBy('violation_id');
 
-        $this->info("Found {$overdueDayOffs->count()} overdue compensation day offs across {$grouped->count()} violations");
+        $this
+            ->info(
+                "Found {$overdueDayOffs->count()} overdue compensation day offs across {$grouped->count()} violations"
+            );
 
         foreach ($grouped as $violationId => $dayOffs) {
             $firstDayOff = $dayOffs->first();
@@ -116,7 +119,8 @@ class ValidateShiftRulesCommand extends Command
 
             $this->line(
                 "  Created deadline violation for {$userName} "
-                . "(original: {$violation->violation_date->format('Y-m-d')}, deadline: {$firstDayOff->deadline->format('Y-m-d')})"
+                . "(original: {$violation->violation_date->format('Y-m-d')}, "
+                . "deadline: {$firstDayOff->deadline->format('Y-m-d')})"
             );
         }
     }

@@ -75,7 +75,10 @@ class InventoryUserFilterShareService
             'projects' => Project::select('id', 'name')->orderBy('name')->get(),
             'users' => User::select('id', 'first_name', 'last_name')->orderBy('first_name')->get(),
             'manufacturers' => CrmContact::query()
-                    ->whereHas('contactType', fn ($q) => $q->where('slug', CrmSystemContactTypeEnum::MANUFACTURER->value))
+                    ->whereHas(
+                        'contactType',
+                        fn ($q) => $q->where('slug', CrmSystemContactTypeEnum::MANUFACTURER->value)
+                    )
                     ->select('id', 'display_name as name')
                     ->orderBy('display_name')
                     ->get(),

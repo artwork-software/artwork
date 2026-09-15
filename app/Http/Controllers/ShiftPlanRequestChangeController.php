@@ -51,8 +51,10 @@ class ShiftPlanRequestChangeController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(UpdateShiftPlanRequestChangeRequest $request, ShiftPlanRequestChange $shiftPlanRequestChange): void
-    {
+    public function update(
+        UpdateShiftPlanRequestChangeRequest $request,
+        ShiftPlanRequestChange $shiftPlanRequestChange
+    ): void {
         //
     }
 

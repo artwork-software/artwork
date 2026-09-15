@@ -32,16 +32,28 @@ Route::middleware('auth:sanctum')->get('/timeline-presets', function () {
 })->name('timeline-presets.all');
 
 
-Route::middleware('auth:sanctum')->post('/user/set-public-key', [ChatController::class, 'setPublicKey'])->name('keypair.store');
+Route::middleware('auth:sanctum')->post('/user/set-public-key', [
+    ChatController::class,
+    'setPublicKey',
+])->name('keypair.store');
 Route::middleware('auth:sanctum')->post('/chat/store', [ChatController::class, 'storeChat'])->name('chat.store');
-Route::middleware('auth:sanctum')->post('/chat/message/{message}/read', [ChatController::class, 'markAsRead'])->name('chat-system.mark-as-read');
-Route::middleware('auth:sanctum')->post('/chat/messages/read', [ChatController::class, 'markMultipleAsRead'])->name('chat-system.mark-multiple-as-read');
+Route::middleware('auth:sanctum')->post('/chat/message/{message}/read', [
+    ChatController::class,
+    'markAsRead',
+])->name('chat-system.mark-as-read');
+Route::middleware('auth:sanctum')->post('/chat/messages/read', [
+    ChatController::class,
+    'markMultipleAsRead',
+])->name('chat-system.mark-multiple-as-read');
 
 Route::middleware('auth:sanctum')->get('/user-status/{id}', function ($id, UserStatusService $service) {
     return response()->json(['status' => $service->getStatus($id)]);
 })->name('user-status.show');
 
-Route::get('/inventory/categories', [\Artwork\Modules\Inventory\Http\Controllers\InventoryCategoryController::class, 'getAllCategories'])
+Route::get('/inventory/categories', [
+    \Artwork\Modules\Inventory\Http\Controllers\InventoryCategoryController::class,
+    'getAllCategories',
+])
     ->middleware('auth:sanctum')
     ->name('inventory.categories.get-all');
 
@@ -50,7 +62,10 @@ Route::post('/room/search', [RoomController::class, 'search'])
     ->name('room.search');
 
 
-Route::post('/inventory/article/search', [\Artwork\Modules\Inventory\Http\Controllers\InventoryArticleController::class, 'search'])
+Route::post('/inventory/article/search', [
+    \Artwork\Modules\Inventory\Http\Controllers\InventoryArticleController::class,
+    'search',
+])
     ->middleware('auth:sanctum')
     ->name('inventory.articles.search');
 
@@ -71,7 +86,16 @@ Route::middleware(['auth:api', CheckToken::using('inventory:read')])->group(func
 
 // Shift Rules API routes
 Route::middleware('auth:sanctum')->group(function (): void {
-    Route::post('/shift-rules/validate', [ShiftRuleController::class, 'validateRules'])->name('api.shift-rules.validate');
-    Route::get('/shift-rules/pending', [ShiftRuleController::class, 'getPendingViolations'])->name('api.shift-rules.pending');
-    Route::patch('/shift-rules/violations/{violationId}/status', [ShiftRuleController::class, 'updateViolationStatus'])->name('api.shift-rules.update-status');
+    Route::post('/shift-rules/validate', [
+        ShiftRuleController::class,
+        'validateRules',
+    ])->name('api.shift-rules.validate');
+    Route::get('/shift-rules/pending', [
+        ShiftRuleController::class,
+        'getPendingViolations',
+    ])->name('api.shift-rules.pending');
+    Route::patch('/shift-rules/violations/{violationId}/status', [
+        ShiftRuleController::class,
+        'updateViolationStatus',
+    ])->name('api.shift-rules.update-status');
 });

@@ -48,7 +48,10 @@ class CrmContactRepository
         $query->where(function ($q) use ($search, $allowedPropertyIds): void {
             $q->where('display_name', 'like', "%{$search}%")
                 ->orWhereHas('propertyValues', fn ($pv) => $pv
-                    ->when($allowedPropertyIds !== null, fn ($sub) => $sub->whereIn('crm_property_id', $allowedPropertyIds))
+                    ->when(
+                        $allowedPropertyIds !== null,
+                        fn ($sub) => $sub->whereIn('crm_property_id', $allowedPropertyIds)
+                    )
                     ->where('value', 'like', "%{$search}%")
                     ->whereHas('property', fn ($p) => $p->whereIn('type', ['text', 'textarea', 'link'])));
         });

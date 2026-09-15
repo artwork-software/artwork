@@ -23,7 +23,10 @@ class ProductBasketController extends Controller
     public function index(): \Illuminate\Http\JsonResponse
     {
         return response()->json([
-            'baskets' => $this->auth->user()?->productBasket()->with(['basketArticles.article', 'basketArticles.article.images'])->get()
+            'baskets' => $this->auth->user()?->productBasket()->with([
+                'basketArticles.article',
+                'basketArticles.article.images',
+            ])->get()
         ]);
     }
 

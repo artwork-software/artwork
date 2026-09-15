@@ -150,7 +150,12 @@ readonly class EventCalendarService
         $projects   = $projectIds->isEmpty() ? collect() :
             Project::whereIn('id', $projectIds)->select($projectSelect)->with($projectWith)->get()->keyBy('id');
         $eventTypes = $eventTypeIds->isEmpty() ? collect() :
-            EventType::whereIn('id', $eventTypeIds)->select(['id', 'name', 'abbreviation', 'hex_code'])->get()->keyBy('id');
+            EventType::whereIn('id', $eventTypeIds)->select([
+                'id',
+                'name',
+                'abbreviation',
+                'hex_code',
+            ])->get()->keyBy('id');
         $eventStatuses = $eventStatusIds->isEmpty() ? collect() :
             EventStatus::whereIn('id', $eventStatusIds)->select(['id', 'name', 'color'])->get()->keyBy('id');
         $users = $userIds->isEmpty() ? collect() :
@@ -288,7 +293,10 @@ readonly class EventCalendarService
         $endDate,
         null|UserCalendarSettings|UserDailyViewCalendarSettings $userCalendarSettings = null,
     ): SupportCollection {
-        $endDateEndOfDay = $endDate instanceof Carbon ? $endDate->copy()->endOfDay() : Carbon::parse($endDate)->endOfDay();
+        $endDateEndOfDay = $endDate instanceof Carbon ? $endDate
+            ->copy()
+            ->endOfDay() : Carbon::parse($endDate)
+            ->endOfDay();
 
         return $eventsQuery
             ->whereIn('room_id', $rooms->pluck('id'))
@@ -303,7 +311,10 @@ readonly class EventCalendarService
             })
             ->when(!empty($filter->event_type_ids), fn($q) => $q->whereIn('event_type_id', $filter->event_type_ids))
             ->when(!empty($filter->event_property_ids), function ($q) use ($filter): void {
-                $q->whereHas('eventProperties', fn($sub) => $sub->whereIn('event_property_id', $filter->event_property_ids));
+                $q->whereHas(
+                    'eventProperties',
+                    fn($sub) => $sub->whereIn('event_property_id', $filter->event_property_ids)
+                );
             })
             // Projektstatus-Filter (zentrale Semantik im Event-Scope)
             ->when(!empty($filter->project_state_ids), function ($q) use ($filter): void {
@@ -316,7 +327,9 @@ readonly class EventCalendarService
                 if (
                     $userCalendarSettings?->show_planned_events &&
                     $user &&
-                    ($user->hasRole('artwork admin') || $user->can('can see planning calendar') || $user->can('can edit planning calendar'))
+                    ($user->hasRole('artwork admin') ||
+                         $user->can('can see planning calendar') ||
+                         $user->can('can edit planning calendar'))
                 ) {
                     $query->orWhere('is_planning', true);
                 }

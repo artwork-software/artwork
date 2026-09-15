@@ -26,7 +26,10 @@ class ProjectDocumentsController extends Controller
         // If not found, try as DisclosureComponents
         if (!$componentInTabModel) {
             $disclosureComponent = DisclosureComponents::find($componentInTab);
-            if (!$disclosureComponent || $disclosureComponent->component?->type !== ProjectTabComponentEnum::PROJECT_DOCUMENTS->value) {
+            if (
+                !$disclosureComponent
+                 || $disclosureComponent->component?->type !== ProjectTabComponentEnum::PROJECT_DOCUMENTS->value
+            ) {
                 throw new NotFoundHttpException();
             }
 

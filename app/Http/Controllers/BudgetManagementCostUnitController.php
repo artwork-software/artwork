@@ -125,7 +125,10 @@ class BudgetManagementCostUnitController extends Controller
         ProjectService $projectService,
         ColumnCellService $columnCellService
     ): RedirectResponse {
-        BudgetManagementCostUnit::onlyTrashed()->each(function ($costUnit) use ($projectService, $columnCellService): void {
+        BudgetManagementCostUnit::onlyTrashed()->each(function ($costUnit) use (
+            $projectService,
+            $columnCellService
+        ): void {
             $this->budgetManagementCostUnitService->forceDelete($costUnit, $projectService, $columnCellService);
         });
         return Redirect::route('budget-settings.account-management.trash-cost-units');

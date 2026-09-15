@@ -92,7 +92,10 @@ class ShiftQualificationController extends Controller
         $this->shiftsQualificationsService
             ->increaseValueOrCreateWithOneByQualification($shift->id, $request->integer('qualification_id'));
 
-        broadcast(new \Artwork\Modules\Shift\Events\UpdateShiftInShiftPlan($shift, $shift->room_id ?? $shift->event?->room_id));
+        broadcast(new \Artwork\Modules\Shift\Events\UpdateShiftInShiftPlan(
+            $shift,
+            $shift->room_id ?? $shift->event?->room_id
+        ));
     }
 
     public function increaseOverbookedValue(Shift $shift, Request $request): void
@@ -108,7 +111,10 @@ class ShiftQualificationController extends Controller
         $this->shiftsQualificationsService
             ->increaseOverbookedValue($shift->id, $request->integer('qualification_id'));
 
-        broadcast(new \Artwork\Modules\Shift\Events\UpdateShiftInShiftPlan($shift, $shift->room_id ?? $shift->event?->room_id));
+        broadcast(new \Artwork\Modules\Shift\Events\UpdateShiftInShiftPlan(
+            $shift,
+            $shift->room_id ?? $shift->event?->room_id
+        ));
     }
 
     public function decreaseOverbookedValue(Shift $shift, Request $request): void
@@ -124,7 +130,10 @@ class ShiftQualificationController extends Controller
         $this->shiftsQualificationsService
             ->decreaseOverbookedValue($shift->id, $request->integer('qualification_id'));
 
-        broadcast(new \Artwork\Modules\Shift\Events\UpdateShiftInShiftPlan($shift, $shift->room_id ?? $shift->event?->room_id));
+        broadcast(new \Artwork\Modules\Shift\Events\UpdateShiftInShiftPlan(
+            $shift,
+            $shift->room_id ?? $shift->event?->room_id
+        ));
     }
 
     public function destroy(

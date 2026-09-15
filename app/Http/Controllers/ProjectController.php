@@ -64,6 +64,8 @@ use Artwork\Modules\Currency\Services\CurrencyService;
 use Artwork\Modules\InternalIssue\Models\InternalIssue;
 use Artwork\Modules\Inventory\Models\InventoryTag;
 use Artwork\Modules\Inventory\Models\InventoryTagGroup;
+use Artwork\Modules\Inventory\Services\InventoryUserFilterShareService;
+use Artwork\Modules\BusinessIntelligence\Services\BiProjectMetricsService;
 use Artwork\Modules\Notification\Services\DatabaseNotificationService;
 use Artwork\Modules\Department\Models\Department;
 use Artwork\Modules\Event\Http\Resources\MinimalCalendarEventResource;
@@ -207,8 +209,8 @@ class ProjectController extends Controller
         private readonly ProjectPrintLayoutService $projectPrintLayoutService,
         protected readonly SingleShiftPresetService $singleShiftPresetService,
         private readonly FilterService $filterService,
-        private readonly \Artwork\Modules\Inventory\Services\InventoryUserFilterShareService $inventoryUserFilterShareService,
-        private readonly \Artwork\Modules\BusinessIntelligence\Services\BiProjectMetricsService $biProjectMetricsService,
+        private readonly InventoryUserFilterShareService $inventoryUserFilterShareService,
+        private readonly BiProjectMetricsService $biProjectMetricsService,
     ) {
     }
 
@@ -275,7 +277,9 @@ class ProjectController extends Controller
         $projects = $this->projectService->paginateProjects(
             $request->string('query'),
             $user->entities_per_page,
-            $userProjectManagementSetting['sort_by'] ? ProjectSortEnum::from($userProjectManagementSetting['sort_by']) : null,
+            $userProjectManagementSetting['sort_by']
+                 ? ProjectSortEnum::from($userProjectManagementSetting['sort_by'])
+                 : null,
             Collection::make($userProjectManagementSetting['project_state_ids']),
             Collection::make($userProjectManagementSetting['project_filters'])
         );
@@ -380,7 +384,9 @@ class ProjectController extends Controller
                         $projectData->title = $project->name;
                         $projectData->key_visual_path = $project->key_visual_path;
                         $projectData->is_group = $project->is_group;
-                        $projectData->projects_of_group_count = $project->is_group ? ($project->projects_of_group_count ?? 0) : null;
+                        $projectData
+                            ->projects_of_group_count = $project
+                            ->is_group ? ($project->projects_of_group_count ?? 0) : null;
                         $projectData->color = $project->color;
                         $projectData->icon = $project->icon;
                         break;
@@ -402,7 +408,9 @@ class ProjectController extends Controller
                     case ProjectTabComponentEnum::PROJECT_GROUP->value:
                         $projectData->group = $project->groups;
                         $projectData->is_group = $project->is_group;
-                        $projectData->projects_of_group_count = $project->is_group ? ($project->projects_of_group_count ?? 0) : null;
+                        $projectData
+                            ->projects_of_group_count = $project
+                            ->is_group ? ($project->projects_of_group_count ?? 0) : null;
                         break;
                     case ProjectTabComponentEnum::PROJECT_TEAM->value:
                         $projectData->team = $project->users;
@@ -718,9 +726,21 @@ class ProjectController extends Controller
             }
         }
 
-        $this->projectService->syncCategories($project, $request->collect('assignedCategoryIds'), $request->input('mainCategoryId'));
-        $this->projectService->syncSectors($project, $request->collect('assignedSectorIds'), $request->input('mainSectorId'));
-        $this->projectService->syncGenres($project, $request->collect('assignedGenreIds'), $request->input('mainGenreId'));
+        $this->projectService->syncCategories(
+            $project,
+            $request->collect('assignedCategoryIds'),
+            $request->input('mainCategoryId')
+        );
+        $this->projectService->syncSectors(
+            $project,
+            $request->collect('assignedSectorIds'),
+            $request->input('mainSectorId')
+        );
+        $this->projectService->syncGenres(
+            $project,
+            $request->collect('assignedGenreIds'),
+            $request->input('mainGenreId')
+        );
 
         $project->departments()->sync($departments->pluck('id'));
 
@@ -752,7 +772,11 @@ class ProjectController extends Controller
             $project->users()->updateExistingPivot($request->user, ['access_budget' => true]);
             $user = User::find($request->user);
             if ($user !== null) {
-                $notificationTitle = __('notification.project.budget.add', ['project' => $project->name], $user->language);
+                $notificationTitle = __(
+                    'notification.project.budget.add',
+                    ['project' => $project->name],
+                    $user->language
+                );
                 $broadcastMessage = [
                     'id' => Str::uuid()->toString(),
                     'type' => 'success',
@@ -2817,7 +2841,8 @@ class ProjectController extends Controller
 
             $userCalendarSettings = $user->getAttribute('calendar_settings');
 
-            $startDate = $firstEvent?->getAttribute('start_time')?->copy()?->startOfDay() ?? Carbon::now()->startOfDay();
+            $startDate = $firstEvent?->getAttribute('start_time')?->copy()?->startOfDay() ?? Carbon::now()
+                ->startOfDay();
             $endDate   = $lastEvent?->getAttribute('end_time')?->copy()?->endOfDay() ?? $startDate->copy()->endOfDay();
 
             /** @var CalendarDataService $calendarDataService */
@@ -3062,7 +3087,15 @@ class ProjectController extends Controller
             });
 
         // Load document requests for this project (created by user or assigned to user)
-        $docRequestEagerLoad = ['requester', 'requested', 'project', 'contract', 'contractType', 'companyType', 'crmContact.contactType'];
+        $docRequestEagerLoad = [
+            'requester',
+            'requested',
+            'project',
+            'contract',
+            'contractType',
+            'companyType',
+            'crmContact.contactType',
+        ];
 
         $createdRequests = \Artwork\Modules\DocumentRequest\Models\DocumentRequest::where('requester_id', $userId)
             ->where('project_id', $project->id)
@@ -3188,8 +3221,10 @@ class ProjectController extends Controller
     /**
      * Get crafts that the current user is allowed to assign in shift planning.
      */
-    private function getCurrentUserCraftsForShiftTab(User $user, CraftService $craftService): \Illuminate\Database\Eloquent\Collection
-    {
+    private function getCurrentUserCraftsForShiftTab(
+        User $user,
+        CraftService $craftService
+    ): \Illuminate\Database\Eloquent\Collection {
         // If user is admin, return all crafts with qualifications
         if ($user->hasRole('artwork admin')) {
             return $craftService->getAll(['qualifications']);
@@ -3350,9 +3385,21 @@ class ProjectController extends Controller
             }
         }
 
-        $this->projectService->syncCategories($project, $request->collect('assignedCategoryIds'), $request->input('mainCategoryId'));
-        $this->projectService->syncSectors($project, $request->collect('assignedSectorIds'), $request->input('mainSectorId'));
-        $this->projectService->syncGenres($project, $request->collect('assignedGenreIds'), $request->input('mainGenreId'));
+        $this->projectService->syncCategories(
+            $project,
+            $request->collect('assignedCategoryIds'),
+            $request->input('mainCategoryId')
+        );
+        $this->projectService->syncSectors(
+            $project,
+            $request->collect('assignedSectorIds'),
+            $request->input('mainSectorId')
+        );
+        $this->projectService->syncGenres(
+            $project,
+            $request->collect('assignedGenreIds'),
+            $request->input('mainGenreId')
+        );
 
         $this->updateProjectState($request, $project);
 
@@ -4231,9 +4278,6 @@ class ProjectController extends Controller
     public function restore(
         int $id,
         ShiftsQualificationsService $shiftsQualificationsService,
-        ShiftUserService $shiftUserService,
-        ShiftFreelancerService $shiftFreelancerService,
-        ShiftServiceProviderService $shiftServiceProviderService,
         CommentService $commentService,
         ChecklistService $checklistService,
         ProjectFileService $projectFileService,
@@ -4253,9 +4297,6 @@ class ProjectController extends Controller
             $this->projectService->restore(
                 $project,
                 $shiftsQualificationsService,
-                $shiftUserService,
-                $shiftFreelancerService,
-                $shiftServiceProviderService,
                 $commentService,
                 $checklistService,
                 $projectFileService,
@@ -5055,7 +5096,10 @@ class ProjectController extends Controller
         }
 
         // Earliest-starting room first.
-        usort($result, static fn ($a, $b) => strcmp($a['start_date'] . $a['start_time'], $b['start_date'] . $b['start_time']));
+        usort(
+            $result,
+            static fn ($a, $b) => strcmp($a['start_date'] . $a['start_time'], $b['start_date'] . $b['start_time'])
+        );
 
         return $result;
     }

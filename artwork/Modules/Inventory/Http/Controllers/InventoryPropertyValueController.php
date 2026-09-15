@@ -52,8 +52,10 @@ class InventoryPropertyValueController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(UpdateInventoryPropertyValueRequest $request, InventoryPropertyValue $inventoryPropertyValue): void
-    {
+    public function update(
+        UpdateInventoryPropertyValueRequest $request,
+        InventoryPropertyValue $inventoryPropertyValue
+    ): void {
         //
     }
 

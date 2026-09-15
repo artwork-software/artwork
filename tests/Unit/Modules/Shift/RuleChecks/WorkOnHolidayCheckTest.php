@@ -38,7 +38,12 @@ final class WorkOnHolidayCheckTest extends TestCase
         $this->holiday($wednesday, 'Tag der Arbeit', true);
         $this->shiftFor($user, $wednesday);
 
-        $violations = $this->check->check($this->rule(), $user, $wednesday->copy()->subDays(2), $wednesday->copy()->addDays(2));
+        $violations = $this->check->check(
+            $this->rule(),
+            $user,
+            $wednesday->copy()->subDays(2),
+            $wednesday->copy()->addDays(2)
+        );
 
         $this->assertCount(1, $violations);
         $violation = $violations->first();

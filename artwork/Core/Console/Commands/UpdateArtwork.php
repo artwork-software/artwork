@@ -397,8 +397,13 @@ class UpdateArtwork extends Command
     /**
      * Migriert einen Filter mit optionalen Extra-Werten.
      */
-    private function migrateUserFilter(User $user, string $relation, string $filterType, array $fields, array $extra = []): void
-    {
+    private function migrateUserFilter(
+        User $user,
+        string $relation,
+        string $filterType,
+        array $fields,
+        array $extra = []
+    ): void {
         $filter = $user->$relation;
 
         if (!$filter) {

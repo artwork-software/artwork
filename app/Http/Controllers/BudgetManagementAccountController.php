@@ -128,7 +128,10 @@ class BudgetManagementAccountController extends Controller
         ProjectService $projectService,
         ColumnCellService $columnCellService
     ): RedirectResponse {
-        BudgetManagementAccount::onlyTrashed()->each(function ($account) use ($projectService, $columnCellService): void {
+        BudgetManagementAccount::onlyTrashed()->each(function ($account) use (
+            $projectService,
+            $columnCellService
+        ): void {
             $this->budgetManagementAccountService->forceDelete($account, $projectService, $columnCellService);
         });
         return Redirect::route('budget-settings.account-management.trash-accounts');

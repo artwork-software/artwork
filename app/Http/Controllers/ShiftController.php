@@ -175,7 +175,11 @@ class ShiftController extends Controller
             'break_minutes' => ['sometimes', 'nullable', 'integer', 'min:0'],
             'craft_id' => ['sometimes', 'integer', 'exists:crafts,id'],
             'shiftsQualifications' => ['sometimes', 'array'],
-            'shiftsQualifications.*.shift_qualification_id' => ['required_with:shiftsQualifications', 'integer', 'exists:shift_qualifications,id'],
+            'shiftsQualifications.*.shift_qualification_id' => [
+                'required_with:shiftsQualifications',
+                'integer',
+                'exists:shift_qualifications,id',
+            ],
             'shiftsQualifications.*.value' => ['nullable', 'integer', 'min:0'],
         ]);
 
@@ -551,7 +555,10 @@ class ShiftController extends Controller
                                             ],
                                             $user->language
                                         ),
-                                        'href' => ShiftNotificationLinkService::ownOperationPlanForDate($user, $shift->start_date)
+                                        'href' => ShiftNotificationLinkService::ownOperationPlanForDate(
+                                            $user,
+                                            $shift->start_date
+                                        )
                                     ],
                                 ];
 
@@ -599,7 +606,10 @@ class ShiftController extends Controller
                                                 ],
                                                 $user->language
                                             ),
-                                            'href' => ShiftNotificationLinkService::ownOperationPlanForDate($user, $shift->start_date)
+                                            'href' => ShiftNotificationLinkService::ownOperationPlanForDate(
+                                                $user,
+                                                $shift->start_date
+                                            )
                                         ],
                                     ];
 
@@ -656,7 +666,10 @@ class ShiftController extends Controller
                                             ],
                                             $user->language
                                         ),
-                                        'href' => ShiftNotificationLinkService::ownOperationPlanForDate($user, $shift->start_date)
+                                        'href' => ShiftNotificationLinkService::ownOperationPlanForDate(
+                                            $user,
+                                            $shift->start_date
+                                        )
                                     ],
                                 ];
 
@@ -1115,7 +1128,10 @@ class ShiftController extends Controller
             $resolvedShiftQualificationId = $shiftToAssign['shiftQualificationId'] ?? null;
             if ($resolvedShiftQualificationId === null) {
                 // Try to take the first defined qualification for this shift
-                $resolvedShiftQualificationId = $shift->shiftsQualifications()->orderBy('id')->value('shift_qualification_id');
+                $resolvedShiftQualificationId = $shift
+                    ->shiftsQualifications()
+                    ->orderBy('id')
+                    ->value('shift_qualification_id');
                 if ($resolvedShiftQualificationId === null) {
                     // Fallback to a generic worker qualification if available
                     $resolvedShiftQualificationId = \Artwork\Modules\Shift\Models\ShiftQualification::available()
@@ -1228,7 +1244,8 @@ class ShiftController extends Controller
         if ($isOverbooked && !app(\App\Settings\ShiftSettings::class)->allow_shift_overbooking) {
             abort(
                 403,
-                __('Overbooking is not active in this organisation. Admins can enable it under Shift settings → Overbooking.')
+                __('Overbooking is not active in this organisation. Admins can enable it under Shift settings → '
+                    . 'Overbooking.')
             );
         }
 
@@ -2021,7 +2038,11 @@ class ShiftController extends Controller
             'end' => ['required', 'string'],
             'break_minutes' => ['nullable', 'integer', 'min:0'],
             'shiftsQualifications' => ['present', 'array'],
-            'shiftsQualifications.*.shift_qualification_id' => ['required', 'integer', 'exists:shift_qualifications,id'],
+            'shiftsQualifications.*.shift_qualification_id' => [
+                'required',
+                'integer',
+                'exists:shift_qualifications,id',
+            ],
             'shiftsQualifications.*.value' => ['nullable', 'integer', 'min:0'],
         ]);
 
@@ -2093,13 +2114,7 @@ class ShiftController extends Controller
                 // Über den Service löschen statt Hard-Detach + Soft-Delete: so werden
                 // die Zuweisungen MIT-soft-deleted (Restore möglich), Qualifikationen
                 // konsistent behandelt und der Working-Hour-Cache invalidiert.
-                $this->shiftService->delete(
-                    $roomShift,
-                    $shiftsQualificationsService,
-                    $shiftUserService,
-                    $shiftFreelancerService,
-                    $shiftServiceProviderService
-                );
+                $this->shiftService->delete($roomShift, $shiftsQualificationsService);
             });
         }
     }
@@ -2233,7 +2248,8 @@ class ShiftController extends Controller
                     $case3 = $currentStart <= $shiftStart && $currentEnd >= $shiftEnd;
 
                     // Special case for exact time match (mentioned in issue description)
-                    // This handles the case where a user is assigned to a shift with the exact same time as the current shift
+                    // This handles the case where a user is assigned to a shift with the exact same time as the
+                    // current shift
                     $exactMatch = $currentStart->format('H:i') === $shiftStart->format('H:i') &&
                               $currentEnd->format('H:i') === $shiftEnd->format('H:i') &&
                               $currentStart->toDateString() === $shiftStart->toDateString() &&
@@ -2310,7 +2326,11 @@ class ShiftController extends Controller
             'roomsAndDatesForMultiEdit.*.roomId' => ['required', 'integer', 'exists:rooms,id'],
             'roomsAndDatesForMultiEdit.*.day' => ['required', 'date'],
             'shiftsQualifications' => ['present', 'array'],
-            'shiftsQualifications.*.shift_qualification_id' => ['required', 'integer', 'exists:shift_qualifications,id'],
+            'shiftsQualifications.*.shift_qualification_id' => [
+                'required',
+                'integer',
+                'exists:shift_qualifications,id',
+            ],
             'shiftsQualifications.*.value' => ['nullable', 'integer', 'min:0'],
         ]);
 

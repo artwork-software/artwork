@@ -126,7 +126,8 @@ class ShiftSettingsPermissionService
             'name' => PermissionEnum::CAN_VIEW_OWN_UNCOMMITTED_SHIFTS->value,
             'translation_key' => 'View own uncommitted shifts',
             'group' => 'Duty roster',
-            'tooltipKey' => 'Allows a person to continue seeing their own uncommitted shifts when instance-wide hiding is enabled.',
+        'tooltipKey' => 'Allows a person to continue seeing their own uncommitted shifts when instance-wide '
+                . 'hiding is enabled.',
             'checked' => false,
         ];
 

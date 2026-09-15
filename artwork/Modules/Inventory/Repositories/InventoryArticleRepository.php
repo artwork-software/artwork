@@ -55,12 +55,16 @@ class InventoryArticleRepository
                 });
 
                 // Detailed article (single inventory) property values
-                $q->orWhereHas('detailedArticleQuantities.properties', function ($pq) use ($pattern, $propertyId): void {
-                    $pq->where('inventory_property_values.value', 'like', $pattern);
-                    if ($propertyId) {
-                        $pq->where('inventory_article_properties.id', $propertyId);
+                $q->orWhereHas(
+                    'detailedArticleQuantities.properties',
+                    function ($pq) use ($pattern, $propertyId): void {
+
+                        $pq->where('inventory_property_values.value', 'like', $pattern);
+                        if ($propertyId) {
+                            $pq->where('inventory_article_properties.id', $propertyId);
+                        }
                     }
-                });
+                );
 
                 // When not scoped to a single property, also match the basics.
                 if (!$propertyId) {
@@ -80,7 +84,14 @@ class InventoryArticleRepository
 
     public function withRelations($query, int $perPage = 50)
     {
-        return $query->with(['properties', 'category', 'subCategory', 'images', 'detailedArticleQuantities.status', 'statusValues'])->paginate($perPage);
+        return $query->with([
+            'properties',
+            'category',
+            'subCategory',
+            'images',
+            'detailedArticleQuantities.status',
+            'statusValues',
+        ])->paginate($perPage);
     }
 
     public function applyFilters($query, array $filters)
@@ -149,60 +160,84 @@ class InventoryArticleRepository
                 // Also check detailed article quantities properties for articles with is_detailed_quantity = true
                 $orQuery->orWhere(function ($detailedQuery) use ($filter, $property): void {
                     $detailedQuery->where('is_detailed_quantity', true)
-                        ->whereHas('detailedArticleQuantities.properties', function ($q) use ($filter, $property): void {
-                            $q->where('inventory_article_properties.id', $filter['property_id']);
+                        ->whereHas(
+                            'detailedArticleQuantities.properties',
+                            function ($q) use ($filter, $property): void {
 
-                            if ($property && $property->type === 'room') {
-                                $q->join('rooms', 'inventory_property_values.value', '=', 'rooms.id');
+                                $q->where('inventory_article_properties.id', $filter['property_id']);
 
-                                match ($filter['operator']) {
-                                    'like' => $q->where('rooms.name', 'like', '%' . $filter['value'] . '%'),
-                                    'starts_with' => $q->where('rooms.name', 'like', $filter['value'] . '%'),
-                                    'ends_with' => $q->where('rooms.name', 'like', '%' . $filter['value']),
-                                    'exact', 'equals' => $q->where('rooms.name', '=', $filter['value']),
-                                    'not_equals' => $q->where('rooms.name', '!=', $filter['value']),
-                                    default => null,
-                                };
+                                if ($property && $property->type === 'room') {
+                                    $q->join('rooms', 'inventory_property_values.value', '=', 'rooms.id');
 
-                                return;
+                                    match ($filter['operator']) {
+                                        'like' => $q->where('rooms.name', 'like', '%' . $filter['value'] . '%'),
+                                        'starts_with' => $q->where('rooms.name', 'like', $filter['value'] . '%'),
+                                        'ends_with' => $q->where('rooms.name', 'like', '%' . $filter['value']),
+                                        'exact', 'equals' => $q->where('rooms.name', '=', $filter['value']),
+                                        'not_equals' => $q->where('rooms.name', '!=', $filter['value']),
+                                        default => null,
+                                    };
+
+                                    return;
+                                }
+
+                                if ($property && $property->type === 'manufacturer') {
+                                    $q->join('crm_contacts', 'inventory_property_values.value', '=', 'crm_contacts.id');
+
+                                    match ($filter['operator']) {
+                                        'like' => $q->where(
+                                            'crm_contacts.display_name',
+                                            'like',
+                                            '%' . $filter['value'] . '%'
+                                        ),
+                                        'starts_with' => $q->where(
+                                            'crm_contacts.display_name',
+                                            'like',
+                                            $filter['value'] . '%'
+                                        ),
+                                        'ends_with' => $q->where(
+                                            'crm_contacts.display_name',
+                                            'like',
+                                            '%' . $filter['value']
+                                        ),
+                                        'exact', 'equals' => $q->where(
+                                            'crm_contacts.display_name',
+                                            '=',
+                                            $filter['value']
+                                        ),
+                                        'not_equals' => $q->where('crm_contacts.display_name', '!=', $filter['value']),
+                                        default => null,
+                                    };
+
+                                    return;
+                                }
+
+                                $q->where(function ($subQuery) use ($filter): void {
+                                    $column = 'inventory_property_values.value';
+
+                                    match ($filter['operator']) {
+                                        'like' => $subQuery->where($column, 'like', '%' . $filter['value'] . '%'),
+                                        'starts_with' => $subQuery->where($column, 'like', $filter['value'] . '%'),
+                                        'ends_with' => $subQuery->where($column, 'like', '%' . $filter['value']),
+                                        'exact', 'equals' => $subQuery->where($column, '=', $filter['value']),
+                                        'not_equals' => $subQuery->where($column, '!=', $filter['value']),
+                                        'less_than' => $subQuery->where($column, '<', $filter['value']),
+                                        'greater_than' => $subQuery->where($column, '>', $filter['value']),
+                                        'is_null' => $subQuery->whereNull($column),
+                                        'not_like' => $subQuery->where(
+                                            $column,
+                                            'not like',
+                                            '%' . $filter['value'] . '%'
+                                        ),
+                                        'date_before' => $subQuery->whereDate($column, '<', $filter['value']),
+                                        'date_after' => $subQuery->whereDate($column, '>', $filter['value']),
+                                        'from' => $subQuery->where($column, '>=', $filter['value']),
+                                        'until' => $subQuery->where($column, '<=', $filter['value']),
+                                        default => null,
+                                    };
+                                });
                             }
-
-                            if ($property && $property->type === 'manufacturer') {
-                                $q->join('crm_contacts', 'inventory_property_values.value', '=', 'crm_contacts.id');
-
-                                match ($filter['operator']) {
-                                    'like' => $q->where('crm_contacts.display_name', 'like', '%' . $filter['value'] . '%'),
-                                    'starts_with' => $q->where('crm_contacts.display_name', 'like', $filter['value'] . '%'),
-                                    'ends_with' => $q->where('crm_contacts.display_name', 'like', '%' . $filter['value']),
-                                    'exact', 'equals' => $q->where('crm_contacts.display_name', '=', $filter['value']),
-                                    'not_equals' => $q->where('crm_contacts.display_name', '!=', $filter['value']),
-                                    default => null,
-                                };
-
-                                return;
-                            }
-
-                            $q->where(function ($subQuery) use ($filter): void {
-                                $column = 'inventory_property_values.value';
-
-                                match ($filter['operator']) {
-                                    'like' => $subQuery->where($column, 'like', '%' . $filter['value'] . '%'),
-                                    'starts_with' => $subQuery->where($column, 'like', $filter['value'] . '%'),
-                                    'ends_with' => $subQuery->where($column, 'like', '%' . $filter['value']),
-                                    'exact', 'equals' => $subQuery->where($column, '=', $filter['value']),
-                                    'not_equals' => $subQuery->where($column, '!=', $filter['value']),
-                                    'less_than' => $subQuery->where($column, '<', $filter['value']),
-                                    'greater_than' => $subQuery->where($column, '>', $filter['value']),
-                                    'is_null' => $subQuery->whereNull($column),
-                                    'not_like' => $subQuery->where($column, 'not like', '%' . $filter['value'] . '%'),
-                                    'date_before' => $subQuery->whereDate($column, '<', $filter['value']),
-                                    'date_after' => $subQuery->whereDate($column, '>', $filter['value']),
-                                    'from' => $subQuery->where($column, '>=', $filter['value']),
-                                    'until' => $subQuery->where($column, '<=', $filter['value']),
-                                    default => null,
-                                };
-                            });
-                        });
+                        );
                 });
             });
         }

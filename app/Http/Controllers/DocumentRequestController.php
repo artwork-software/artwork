@@ -43,7 +43,15 @@ class DocumentRequestController extends Controller
     {
         $userId = Auth::id();
 
-        $eagerLoad = ['requester', 'requested', 'project', 'contract', 'contractType', 'companyType', 'crmContact.contactType'];
+        $eagerLoad = [
+            'requester',
+            'requested',
+            'project',
+            'contract',
+            'contractType',
+            'companyType',
+            'crmContact.contactType',
+        ];
 
         // Get requests created by the user
         $createdRequests = DocumentRequest::where('requester_id', $userId)
@@ -67,9 +75,11 @@ class DocumentRequestController extends Controller
             'contract_types' => ContractType::all(),
             'company_types' => CompanyType::all(),
             'currencies' => Currency::all(),
-            'first_project_calendar_tab_id' => $this->projectTabService->getFirstProjectTabWithTypeIdOrFirstProjectTabId(
-                ProjectTabComponentEnum::CALENDAR
-            ),
+            'first_project_calendar_tab_id' => $this
+                ->projectTabService
+                ->getFirstProjectTabWithTypeIdOrFirstProjectTabId(
+                    ProjectTabComponentEnum::CALENDAR
+                ),
             'crmContactTypes' => $this->crmContactTypeService->getActive(),
         ]);
     }
@@ -169,7 +179,11 @@ class DocumentRequestController extends Controller
 
         // If contract was uploaded and status changed to completed, notify requester
         // Only send notification if a user was assigned
-        if (isset($validated['contract_id']) && $validated['status'] === DocumentRequest::STATUS_COMPLETED && $documentRequest->requested_id) {
+        if (
+            isset($validated['contract_id'])
+             && $validated['status'] === DocumentRequest::STATUS_COMPLETED
+             && $documentRequest->requested_id
+        ) {
             $this->sendDocumentRequestCompletedNotification($documentRequest);
         }
 

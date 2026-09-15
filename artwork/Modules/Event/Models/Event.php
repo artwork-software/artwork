@@ -312,7 +312,10 @@ class Event extends Model
      */
     public function getDaysOfEventAttribute(): array
     {
-        $days_period = CarbonPeriod::create($this->start_time->copy()->startOfDay(), $this->end_time->copy()->startOfDay());
+        $days_period = CarbonPeriod::create(
+            $this->start_time->copy()->startOfDay(),
+            $this->end_time->copy()->startOfDay()
+        );
         $days = [];
 
         foreach ($days_period as $day) {
@@ -447,14 +450,16 @@ class Event extends Model
             }
         )->orWhere(
             function (Builder $query) use ($start, $end): void {
-                // Events, die vor dem gegebenen Startdatum beginnen und innerhalb des gegebenen Zeitraums enden (überlappend)
+                // Events, die vor dem gegebenen Startdatum beginnen und innerhalb des gegebenen Zeitraums enden
+                // (überlappend)
                 $query->where('start_time', '<', $start)
                     ->where('end_time', '>', $start)
                     ->where('end_time', '<=', $end);
             }
         )->orWhere(
             function (Builder $query) use ($start, $end): void {
-                // Events, die innerhalb des gegebenen Zeitraums starten und nach dem gegebenen Enddatum enden (überlappend)
+                // Events, die innerhalb des gegebenen Zeitraums starten und nach dem gegebenen Enddatum enden
+                // (überlappend)
                 $query->where('start_time', '>=', $start)
                     ->where('start_time', '<', $end)
                     ->where('end_time', '>', $end);
@@ -540,7 +545,9 @@ class Event extends Model
 
     public function getMinutesFormStartHourToStartAttribute(): int
     {
-        return abs(Carbon::parse($this->start_time)->diffInMinutes(Carbon::parse($this->start_time)->copy()->startOfHour()));
+        $start = Carbon::parse($this->start_time);
+
+        return abs($start->diffInMinutes($start->copy()->startOfHour()));
     }
 
     public function scopeIsPlanning(Builder $builder): Builder

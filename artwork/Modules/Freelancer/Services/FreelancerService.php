@@ -54,7 +54,8 @@ readonly class FreelancerService
 
         $freelancers = $craftIds !== null
             ? $this->freelancerRepository->getWorkersByIds(
-                app(\Artwork\Modules\Craft\Repositories\CraftRepository::class)->getWorkerIdsByCraftIds($craftIds)['freelancer_ids'],
+                app(\Artwork\Modules\Craft\Repositories\CraftRepository::class)
+                    ->getWorkerIdsByCraftIds($craftIds)['freelancer_ids'],
                 $startDate,
                 $endDate
             )
@@ -243,7 +244,9 @@ readonly class FreelancerService
             // Lookup-Felder der Einsatzplan-Karte + schlanke Planer:innen (wie UserService)
             ->setCrafts(static fn() => app(CraftService::class)->getLookupCrafts())
             ->setRooms(static fn() => $roomService->getAllWithoutTrashed())
-            ->setEventTypes(static fn() => EventTypeResource::collection($eventTypeService->getAllWithVerifiers())->resolve())
+            ->setEventTypes(
+                static fn() => EventTypeResource::collection($eventTypeService->getAllWithVerifiers())->resolve()
+            )
             ->setProjects(static fn() => $projectService->getAll())
             ->setVacations(
                 tap(
@@ -282,8 +285,10 @@ readonly class FreelancerService
         return $this->freelancerRepository->getAvailabilitiesByDateOrderedByDateAscending($freelancer, $date);
     }
 
-    public function getAvailabilitiesByMonthOrderedByDateAscending(int|Freelancer $freelancer, Carbon $monthDate): Collection
-    {
+    public function getAvailabilitiesByMonthOrderedByDateAscending(
+        int|Freelancer $freelancer,
+        Carbon $monthDate
+    ): Collection {
         return $this->freelancerRepository->getAvailabilitiesByMonthOrderedByDateAscending($freelancer, $monthDate);
     }
 

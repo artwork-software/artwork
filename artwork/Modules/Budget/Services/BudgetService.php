@@ -534,7 +534,13 @@ class BudgetService
             if ($canViewProjectSageData || $canViewGlobalSageData) {
                 $sageNotAssigned = $this->sageNotAssignedDataService->getForFrontend($project);
 
-                $sageNotAssigned->each(function ($item) use ($projectsGroup, $globalGroup, $project, $canViewProjectSageData, $canViewGlobalSageData): void {
+                $sageNotAssigned->each(function ($item) use (
+                    $projectsGroup,
+                    $globalGroup,
+                    $project,
+                    $canViewProjectSageData,
+                    $canViewGlobalSageData
+                ): void {
                     if ($item->project_id === null && $canViewGlobalSageData) {
                         $globalGroup->push($item);
                     } elseif ($item->project_id === $project->id && $canViewProjectSageData) {
@@ -657,8 +663,12 @@ class BudgetService
                             foreach ($subMainPosition->subPositions ?? [] as $subPosition) {
                                 foreach ($subPosition->subPositionRows ?? [] as $subRow) {
                                     $subRowCells = $subCellsByRowId[$subRow->id] ?? collect();
-                                    $subFirstValue = trim((string) ($subRowCells->get($tableData['firstColumn']->id)?->value ?? ''));
-                                    $subSecondValue = trim((string) ($subRowCells->get($tableData['secondColumn']->id)?->value ?? ''));
+                                    $subFirstValue = trim(
+                                        (string) ($subRowCells->get($tableData['firstColumn']->id)?->value ?? '')
+                                    );
+                                    $subSecondValue = trim(
+                                        (string) ($subRowCells->get($tableData['secondColumn']->id)?->value ?? '')
+                                    );
 
                                     if ($groupFirstValue !== $subFirstValue || $groupSecondValue !== $subSecondValue) {
                                         continue;
@@ -953,7 +963,11 @@ class BudgetService
                         $sageColumnId = (int) $sageColumn->id;
                         $groupSageCell = $row->cells?->firstWhere('column_id', $sageColumnId);
 
-                        if ($groupSageCell && $groupSageCell->sageAssignedData && $groupSageCell->sageAssignedData->isNotEmpty()) {
+                        if (
+                            $groupSageCell
+                             && $groupSageCell->sageAssignedData
+                             && $groupSageCell->sageAssignedData->isNotEmpty()
+                        ) {
                             $sageValue = (string) $groupSageCell->sageAssignedData->sum('buchungsbetrag');
 
                             if (!isset($sumByGroupRowIdAndColumn[$rowId])) {

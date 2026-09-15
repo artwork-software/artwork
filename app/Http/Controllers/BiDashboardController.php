@@ -20,7 +20,11 @@ class BiDashboardController extends Controller
     public function index(Request $request): Response
     {
         abort_unless(
-            $request->user()->can(PermissionEnum::BI_DASHBOARD->value) || $request->user()->hasRole(\Artwork\Modules\Role\Enums\RoleEnum::ARTWORK_ADMIN->value),
+            $request
+                ->user()
+                ->can(PermissionEnum::BI_DASHBOARD->value) || $request
+                ->user()
+                ->hasRole(\Artwork\Modules\Role\Enums\RoleEnum::ARTWORK_ADMIN->value),
             403
         );
 

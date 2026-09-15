@@ -55,8 +55,10 @@ class WorkTimeChangeRequestController extends Controller
         ];
     }
 
-    private function applyListFilters(\Illuminate\Database\Eloquent\Builder $query, array $filters): \Illuminate\Database\Eloquent\Builder
-    {
+    private function applyListFilters(
+        \Illuminate\Database\Eloquent\Builder $query,
+        array $filters
+    ): \Illuminate\Database\Eloquent\Builder {
         return $query
             ->when($filters['status'] !== 'all', fn ($q) => $q->where('status', $filters['status']))
             ->when($filters['date_from'], fn ($q) => $q->whereDate('created_at', '>=', $filters['date_from']))
@@ -333,8 +335,10 @@ class WorkTimeChangeRequestController extends Controller
         return redirect()->back();
     }
 
-    public function decline(WorkTimeChangeRequest $workTimeChangeRequest, Request $request): \Illuminate\Http\RedirectResponse
-    {
+    public function decline(
+        WorkTimeChangeRequest $workTimeChangeRequest,
+        Request $request
+    ): \Illuminate\Http\RedirectResponse {
         $this->authorizeDecision($workTimeChangeRequest);
 
         $workTimeChangeRequest->update([

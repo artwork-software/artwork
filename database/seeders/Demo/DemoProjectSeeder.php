@@ -179,11 +179,21 @@ class DemoProjectSeeder extends Seeder
         if ($altManager !== null && $rng->chance(0.5)) {
             $manager = $altManager;
         }
-        $team[$manager->id] = ['is_manager' => true, 'can_write' => true, 'access_budget' => true, 'delete_permission' => true];
+        $team[$manager->id] = [
+            'is_manager' => true,
+            'can_write' => true,
+            'access_budget' => true,
+            'delete_permission' => true,
+        ];
 
         $budgetUser = $this->context->demoUser('Helga', 'Storm');
         if ($budgetUser !== null) {
-            $team[$budgetUser->id] ??= ['is_manager' => false, 'can_write' => false, 'access_budget' => true, 'delete_permission' => false];
+            $team[$budgetUser->id] ??= [
+                'is_manager' => false,
+                'can_write' => false,
+                'access_budget' => true,
+                'delete_permission' => false,
+            ];
         }
 
         $crewPool = $this->context->demoUsers()
@@ -191,7 +201,12 @@ class DemoProjectSeeder extends Seeder
             ->pluck('id')
             ->all();
         foreach ($rng->pickMany($crewPool, $rng->int(2, 4)) as $userId) {
-            $team[$userId] ??= ['is_manager' => false, 'can_write' => true, 'access_budget' => false, 'delete_permission' => false];
+            $team[$userId] ??= [
+                'is_manager' => false,
+                'can_write' => true,
+                'access_budget' => false,
+                'delete_permission' => false,
+            ];
         }
 
         $project->users()->syncWithoutDetaching($team);
@@ -224,7 +239,11 @@ class DemoProjectSeeder extends Seeder
     {
         $values = [
             ['Sparte', 'DropDown', ['selected' => $entry['genre']]],
-            ['Technische Anforderungen', 'TextArea', ['text' => nl2br(DemoProjectPools::TECH_REQUIREMENTS[$archetypeKey])]],
+            [
+                'Technische Anforderungen',
+                'TextArea',
+                ['text' => nl2br(DemoProjectPools::TECH_REQUIREMENTS[$archetypeKey])],
+            ],
             ['Barrierefrei', 'Checkbox', ['checked' => $rng->chance(0.5)]],
             ['Pressematerial', 'Link', ['text' => 'https://presse.testhaus.artwork.software/' . $project->id]],
         ];
@@ -622,8 +641,24 @@ class DemoProjectSeeder extends Seeder
         // Aufbau + Endproben auf der Bühne
         foreach ([4, 3] as $offset) {
             $day = $premiere->copy()->subDays($offset);
-            $this->createEvent($project, 'aufbau', $stage, $day->copy()->setTime(9, 0), $day->copy()->setTime(18, 0), $rng, ['name' => 'Aufbau Bühnenbild']);
-            $this->createEvent($project, 'probe', $stage, $day->copy()->setTime(18, 30), $day->copy()->setTime(22, 0), $rng, ['name' => 'Endprobe']);
+            $this->createEvent(
+                $project,
+                'aufbau',
+                $stage,
+                $day->copy()->setTime(9, 0),
+                $day->copy()->setTime(18, 0),
+                $rng,
+                ['name' => 'Aufbau Bühnenbild']
+            );
+            $this->createEvent(
+                $project,
+                'probe',
+                $stage,
+                $day->copy()->setTime(18, 30),
+                $day->copy()->setTime(22, 0),
+                $rng,
+                ['name' => 'Endprobe']
+            );
         }
 
         $this->createEvent(
@@ -742,8 +777,24 @@ class DemoProjectSeeder extends Seeder
             return;
         }
 
-        $this->createEvent($project, 'aufbau', $stage, $day->copy()->setTime(9, 0), $day->copy()->setTime(13, 0), $rng, ['name' => 'Aufbau Backline']);
-        $this->createEvent($project, 'probe', $stage, $day->copy()->setTime(16, 0), $day->copy()->setTime(17, 30), $rng, ['name' => 'Soundcheck']);
+        $this->createEvent(
+            $project,
+            'aufbau',
+            $stage,
+            $day->copy()->setTime(9, 0),
+            $day->copy()->setTime(13, 0),
+            $rng,
+            ['name' => 'Aufbau Backline']
+        );
+        $this->createEvent(
+            $project,
+            'probe',
+            $stage,
+            $day->copy()->setTime(16, 0),
+            $day->copy()->setTime(17, 30),
+            $rng,
+            ['name' => 'Soundcheck']
+        );
         $this->createEvent(
             $project,
             'vorstellung',
@@ -753,7 +804,15 @@ class DemoProjectSeeder extends Seeder
             $rng,
             ['name' => 'Konzert', 'admission' => '19:15']
         );
-        $this->createEvent($project, 'abbau', $stage, $day->copy()->setTime(22, 30), $day->copy()->addDay()->setTime(0, 30), $rng, ['name' => 'Abbau']);
+        $this->createEvent(
+            $project,
+            'abbau',
+            $stage,
+            $day->copy()->setTime(22, 30),
+            $day->copy()->addDay()->setTime(0, 30),
+            $rng,
+            ['name' => 'Abbau']
+        );
     }
 
     private function scheduleVermietung(Project $project, Room $stage, Carbon $month, DemoRandom $rng): void
@@ -763,7 +822,15 @@ class DemoProjectSeeder extends Seeder
             return;
         }
 
-        $this->createEvent($project, 'aufbau', $stage, $day->copy()->setTime(14, 0), $day->copy()->setTime(17, 0), $rng, ['name' => 'Aufbau durch Kunde']);
+        $this->createEvent(
+            $project,
+            'aufbau',
+            $stage,
+            $day->copy()->setTime(14, 0),
+            $day->copy()->setTime(17, 0),
+            $rng,
+            ['name' => 'Aufbau durch Kunde']
+        );
         $this->createEvent(
             $project,
             'sonderveranstaltung',
@@ -796,7 +863,10 @@ class DemoProjectSeeder extends Seeder
                 'icon' => 'IconConfetti',
                 'is_group' => true,
                 'user_id' => $this->context->adminUser()->id,
-                'cost_center_id' => CostCenter::query()->where('name', DemoProjectPools::FESTIVAL['cost_center'])->value('id'),
+                'cost_center_id' => CostCenter::query()->where(
+                    'name',
+                    DemoProjectPools::FESTIVAL['cost_center']
+                )->value('id'),
             ]
         );
 
@@ -868,7 +938,10 @@ class DemoProjectSeeder extends Seeder
 
         foreach (DemoProjectPools::PLANNING_PROJECTS as $index => $definition) {
             $name = str_contains($definition['name'], '%s')
-                ? sprintf($definition['name'], $futureMonth->copy()->addYear()->format('y') . '/' . $futureMonth->copy()->addYears(2)->format('y'))
+                ? sprintf(
+                    $definition['name'],
+                    $futureMonth->copy()->addYear()->format('y') . '/' . $futureMonth->copy()->addYears(2)->format('y')
+                )
                 : $definition['name'];
 
             $project = Project::firstOrCreate(

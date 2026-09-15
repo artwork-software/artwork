@@ -105,7 +105,10 @@ class ProjectTabBulkEditService
             'events' => $eventsSorted->toArray(),
             'lastEditEventIds' => $lastEditEventIds,
             'user_filters' => $userCalendarFilter,
-            'personalFilters' => $this->filterService->getPersonalFilter($user, UserFilterTypes::CALENDAR_FILTER->value),
+            'personalFilters' => $this->filterService->getPersonalFilter(
+                $user,
+                UserFilterTypes::CALENDAR_FILTER->value
+            ),
             'filterOptions' => $this->filterService->getCalendarFilterDefinitions(),
         ];
     }

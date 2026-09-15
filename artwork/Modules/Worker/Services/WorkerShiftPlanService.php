@@ -114,7 +114,10 @@ readonly class WorkerShiftPlanService
             $this->getWorkerKey($worker) => $resource->resolve(),
             'dayServices' => $this->workerService->mapDayServices($worker->dayServices)->groupBy('pivot.date'),
             'individual_times' => $this->workerService->mapIndividualTimes($worker->individualTimes),
-            'shift_comments' => $worker->getShiftPlanCommentsForPeriod($startDate->toDateString(), $endDate->toDateString()),
+            'shift_comments' => $worker->getShiftPlanCommentsForPeriod(
+                $startDate->toDateString(),
+                $endDate->toDateString()
+            ),
         ];
 
         if ($worker instanceof User) {
@@ -149,7 +152,10 @@ readonly class WorkerShiftPlanService
             ->groupBy('formatted_date');
 
         $workerData['violations'] = ShiftRuleViolation::query()
-            ->with(['shiftRule:id,name,description,warning_color,default_compensation_days,default_compensation_deadline_days'])
+            ->with([
+                'shiftRule:id,name,description,warning_color,'
+                    . 'default_compensation_days,default_compensation_deadline_days',
+            ])
             ->where('user_id', $workerId)
             ->whereBetween('violation_date', [$startDate->toDateString(), $endDate->toDateString()])
             ->whereIn('status', ['active', 'resolved'])

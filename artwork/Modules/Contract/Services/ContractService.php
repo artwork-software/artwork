@@ -41,8 +41,12 @@ class ContractService
     ) {
     }
 
-    public function createContract(array $data, Project $project, UploadedFile $file, ?int $documentRequestId = null): Contract
-    {
+    public function createContract(
+        array $data,
+        Project $project,
+        UploadedFile $file,
+        ?int $documentRequestId = null
+    ): Contract {
         if (!Storage::exists("contracts")) {
             Storage::makeDirectory("contracts");
         }
@@ -284,11 +288,19 @@ class ContractService
             $query->whereDate('deadline_date', '<=', $filters['dateTo']);
         }
 
-        if (!empty($filters['legalFormIds']) && is_array($filters['legalFormIds']) && count($filters['legalFormIds']) > 0) {
+        if (
+            !empty($filters['legalFormIds'])
+             && is_array($filters['legalFormIds'])
+             && count($filters['legalFormIds']) > 0
+        ) {
             $query->whereIn('company_type_id', $filters['legalFormIds']);
         }
 
-        if (!empty($filters['contractTypeIds']) && is_array($filters['contractTypeIds']) && count($filters['contractTypeIds']) > 0) {
+        if (
+            !empty($filters['contractTypeIds'])
+             && is_array($filters['contractTypeIds'])
+             && count($filters['contractTypeIds']) > 0
+        ) {
             $query->whereIn('contract_type_id', $filters['contractTypeIds']);
         }
 
@@ -372,8 +384,12 @@ class ContractService
         }
     }
 
-    private function sendContractUpdatedNotifications(Contract $contract, ?Project $project, string $originalName, array $previousUserIds = []): void
-    {
+    private function sendContractUpdatedNotifications(
+        Contract $contract,
+        ?Project $project,
+        string $originalName,
+        array $previousUserIds = []
+    ): void {
         // Only notify users who are newly added (didn't have access before)
         $contractUsers = $contract->accessingUsers()->get()->filter(function ($user) use ($previousUserIds) {
             return !in_array($user->id, $previousUserIds);

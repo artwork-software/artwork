@@ -629,7 +629,14 @@ class ProjectShiftPersonalPlanExcelExport implements FromView, WithEvents, WithC
                     $totalRow,
                     NumberFormat::FORMAT_NUMBER
                 );
-                $this->setNumberFormatRange($sheet, $headcountCol, $headcountCol, $dataStart, $totalRow, NumberFormat::FORMAT_NUMBER);
+                $this->setNumberFormatRange(
+                    $sheet,
+                    $headcountCol,
+                    $headcountCol,
+                    $dataStart,
+                    $totalRow,
+                    NumberFormat::FORMAT_NUMBER
+                );
 
                 if ($this->decimalNumbers) {
                     // Dauer- und Pausenspalte sowie alle Stunden-Spalten als Dezimalzahl (z. B. 8,5)

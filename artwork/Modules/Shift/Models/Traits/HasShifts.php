@@ -75,7 +75,9 @@ trait HasShifts
             $endDateStr = $endDate->toDateString();
 
             return $this->shifts->filter(function ($shift) use ($startDateStr, $endDateStr) {
-                $eventStartDay = $shift->event_start_day ? Carbon::parse($shift->event_start_day)->toDateString() : null;
+                $eventStartDay = $shift
+                    ->event_start_day ? Carbon::parse($shift->event_start_day)
+                    ->toDateString() : null;
                 $eventEndDay = $shift->event_end_day ? Carbon::parse($shift->event_end_day)->toDateString() : null;
                 $shiftStartDate = $shift->start_date ? Carbon::parse($shift->start_date)->toDateString() : null;
                 $shiftEndDate = $shift->end_date ? Carbon::parse($shift->end_date)->toDateString() : null;

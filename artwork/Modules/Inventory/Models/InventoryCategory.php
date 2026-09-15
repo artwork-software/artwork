@@ -13,7 +13,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property string description
  * @property int order
  * @property array properties
- * @property \Illuminate\Database\Eloquent\Collection<\Artwork\Modules\Inventory\Models\InventorySubCategory> subCategories
+ * @property \Illuminate\Database\Eloquent\Collection<InventorySubCategory> subCategories
  * @property \Illuminate\Database\Eloquent\Collection<\Artwork\Modules\Inventory\Models\InventoryArticle> articles
  * @extends \Illuminate\Database\Eloquent\Model
  */

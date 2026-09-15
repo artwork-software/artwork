@@ -156,7 +156,10 @@ class AddNewComponents extends Command
             $this->info('Project period component already exists');
         }
 
-        $contractsDocumentsComponent = Component::query()->where('type', ProjectTabComponentEnum::PROJECT_CONTRACTS_DOCUMENTS)->first();
+        $contractsDocumentsComponent = Component::query()->where(
+            'type',
+            ProjectTabComponentEnum::PROJECT_CONTRACTS_DOCUMENTS
+        )->first();
         if (!$contractsDocumentsComponent) {
             Component::create([
                 'name' => 'Document request',

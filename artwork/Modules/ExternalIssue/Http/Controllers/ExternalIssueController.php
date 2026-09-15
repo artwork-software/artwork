@@ -141,7 +141,11 @@ class ExternalIssueController extends Controller
             'articlesInFilter' => !empty($articleIds)
                 ? InventoryArticle::whereIn('id', $articleIds)->get()
                 : [],
-            'materialSets' => MaterialSet::with('items.article', 'items.article.category', 'items.article.subCategory')->get(),
+            'materialSets' => MaterialSet::with(
+                'items.article',
+                'items.article.category',
+                'items.article.subCategory'
+            )->get(),
             'detailedArticle' => Inertia::optional(fn () =>
             InventoryArticle::with([
                 'category',
@@ -153,7 +157,8 @@ class ExternalIssueController extends Controller
             ])->find(request()?->get('articleId'))),
             // optional, falls du urlParameters nutzt:
             'urlParameters' => request()->only([
-                'article_ids','date_from','date_to','issued_by_id','received_by_id','project_id','overdue_only','q','issue'
+                'article_ids', 'date_from', 'date_to', 'issued_by_id', 'received_by_id',
+                'project_id', 'overdue_only', 'q', 'issue',
             ]),
         ]);
     }
@@ -167,11 +172,17 @@ class ExternalIssueController extends Controller
         return redirect()->route('extern-issue-of-material.index');
     }
 
-    public function update(UpdateExternalIssueRequest $request, ExternalIssue $externalIssue): \Illuminate\Http\RedirectResponse
-    {
+    public function update(
+        UpdateExternalIssueRequest $request,
+        ExternalIssue $externalIssue
+    ): \Illuminate\Http\RedirectResponse {
         $this->authorize('update', $externalIssue);
 
-        $issue = $this->externalIssueService->update($externalIssue, $request->validated(), $request->file('files', []));
+        $issue = $this->externalIssueService->update(
+            $externalIssue,
+            $request->validated(),
+            $request->file('files', [])
+        );
 
         return redirect()->route('extern-issue-of-material.index');
     }

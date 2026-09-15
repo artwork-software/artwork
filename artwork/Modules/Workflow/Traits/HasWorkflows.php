@@ -43,6 +43,7 @@ trait HasWorkflows
         ];
     }
 
+    // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter -- Default-Implementierung, Modelle überschreiben mit gleicher Signatur
     public function canHaveWorkflow(string $workflowType): bool
     {
         // Override in models to add specific logic

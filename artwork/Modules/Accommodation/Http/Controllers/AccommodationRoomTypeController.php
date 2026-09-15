@@ -58,8 +58,10 @@ class AccommodationRoomTypeController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(UpdateAccommodationRoomTypeRequest $request, AccommodationRoomType $accommodationRoomType): void
-    {
+    public function update(
+        UpdateAccommodationRoomTypeRequest $request,
+        AccommodationRoomType $accommodationRoomType
+    ): void {
         //
     }
 

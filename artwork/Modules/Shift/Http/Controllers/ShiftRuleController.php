@@ -50,7 +50,13 @@ class ShiftRuleController extends Controller
     /**
      * Filter des Dashboards aus der Query: Gewerk, Person, Frist von–bis, Status (open|granted|overdue).
      *
-     * @return array{craft_id: int|null, user_id: int|null, deadline_from: string|null, deadline_to: string|null, status: string|null}
+     * @return array{
+     *     craft_id: int|null,
+     *     user_id: int|null,
+     *     deadline_from: string|null,
+     *     deadline_to: string|null,
+     *     status: string|null,
+     * }
      */
     private function dashboardFilters(Request $request): array
     {
@@ -87,7 +93,11 @@ class ShiftRuleController extends Controller
         $empty = new \Illuminate\Database\Eloquent\Collection();
 
         return [
-            'overdue' => in_array($status, [null, 'overdue', 'open'], true) ? $repository->getAllOverdue($filters) : $empty,
+            'overdue' => in_array($status, [
+                null,
+                'overdue',
+                'open',
+            ], true) ? $repository->getAllOverdue($filters) : $empty,
             'open' => in_array($status, [null, 'open'], true) ? $repository->getAllOpen($filters) : $empty,
             'granted' => in_array($status, [null, 'granted'], true) ? $repository->getAllGranted($filters) : $empty,
         ];
@@ -111,13 +121,28 @@ class ShiftRuleController extends Controller
         );
         $lists = [
             'overdue' => in_array($status, [null, 'overdue', 'open'], true)
-                ? $compensationDayOffRepository->paginateDashboardList('overdue', $filters, self::DASHBOARD_PER_PAGE, 'overdue_page')
+                ? $compensationDayOffRepository->paginateDashboardList(
+                    'overdue',
+                    $filters,
+                    self::DASHBOARD_PER_PAGE,
+                    'overdue_page'
+                )
                 : $emptyPage('overdue_page'),
             'open' => in_array($status, [null, 'open'], true)
-                ? $compensationDayOffRepository->paginateDashboardList('open', $filters, self::DASHBOARD_PER_PAGE, 'open_page')
+                ? $compensationDayOffRepository->paginateDashboardList(
+                    'open',
+                    $filters,
+                    self::DASHBOARD_PER_PAGE,
+                    'open_page'
+                )
                 : $emptyPage('open_page'),
             'granted' => in_array($status, [null, 'granted'], true)
-                ? $compensationDayOffRepository->paginateDashboardList('granted', $filters, self::DASHBOARD_PER_PAGE, 'granted_page')
+                ? $compensationDayOffRepository->paginateDashboardList(
+                    'granted',
+                    $filters,
+                    self::DASHBOARD_PER_PAGE,
+                    'granted_page'
+                )
                 : $emptyPage('granted_page'),
         ];
 
@@ -273,7 +298,11 @@ class ShiftRuleController extends Controller
             $rule = $existingRules->first(
                 static fn (ShiftRule $candidate): bool => LegalDefaultShiftRules::matches($candidate, $definition)
             ) ?? $existingRules->first(
-                static fn (ShiftRule $candidate): bool => LegalDefaultShiftRules::matches($candidate, $definition, false)
+                static fn (ShiftRule $candidate): bool => LegalDefaultShiftRules::matches(
+                    $candidate,
+                    $definition,
+                    false
+                )
             );
 
             if ($rule === null) {
@@ -306,11 +335,15 @@ class ShiftRuleController extends Controller
             app(ShiftRuleRevalidationService::class)->revalidateForContracts($newlyAssignedContractIds);
         }
 
-        return redirect()->back()->with('success', __(':created rules created, :existing already existed, :assigned contract templates assigned', [
+        return redirect()->back()->with(
+            'success',
+            __(':created rules created, :existing already existed, :assigned contract templates assigned', [
+
                 'created' => $created,
                 'existing' => $alreadyExisting,
                 'assigned' => count($newlyAssignedContractIds),
-        ]));
+            ])
+        );
     }
 
     public function update(UpdateShiftRuleRequest $request, ShiftRule $shiftRule): RedirectResponse
@@ -448,8 +481,15 @@ class ShiftRuleController extends Controller
 
         if ($forExport) {
             // Defaults VOR dem Deckel: eine fehlende Grenze macht den Export sonst unbegrenzt
-            [$from, $to] = ExportPeriodLimit::resolveBounds($validated['date_from'] ?? null, $validated['date_to'] ?? null);
-            $period = ['date_from' => $from->toDateString(), 'date_to' => $to->toDateString(), 'period_clamped' => false];
+            [
+                $from,
+                $to,
+            ] = ExportPeriodLimit::resolveBounds($validated['date_from'] ?? null, $validated['date_to'] ?? null);
+            $period = [
+                'date_from' => $from->toDateString(),
+                'date_to' => $to->toDateString(),
+                'period_clamped' => false,
+            ];
         } else {
             $period = ExportPeriodLimit::clampForList($validated['date_from'] ?? null, $validated['date_to'] ?? null);
         }
@@ -688,8 +728,10 @@ class ShiftRuleController extends Controller
         return redirect()->back()->with('success', __('Rule violation successfully processed'));
     }
 
-    public function grantCompensationDay(Request $request, CompensationDayOff $compensationDayOff): JsonResponse|RedirectResponse
-    {
+    public function grantCompensationDay(
+        Request $request,
+        CompensationDayOff $compensationDayOff
+    ): JsonResponse|RedirectResponse {
         if ($compensationDayOff->isGranted()) {
             return new JsonResponse(['error' => 'Compensation day already granted.'], 422);
         }
@@ -740,7 +782,8 @@ class ShiftRuleController extends Controller
 
             if (!$secondHalf) {
                 throw \Illuminate\Validation\ValidationException::withMessages([
-                    'half_day_period' => __('"Both" requires two open half days off. Create the second half day first via "Grant compensation day".'),
+                'half_day_period' => __('"Both" requires two open half days off. Create the second half day '
+                        . 'first via "Grant compensation day".'),
                 ]);
             }
 

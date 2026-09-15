@@ -27,8 +27,10 @@ class ProjectDTO extends Data
     }
 
 
-    public static function fromModel(Project $project, null|UserCalendarSettings|UserDailyViewCalendarSettings $userCalendarSettings = null): self
-    {
+    public static function fromModel(
+        Project $project,
+        null|UserCalendarSettings|UserDailyViewCalendarSettings $userCalendarSettings = null
+    ): self {
         $statusModel = $project->relationLoaded('status') ? $project->status : null;
 
         return new self(
@@ -47,7 +49,12 @@ class ProjectDTO extends Data
             $project->icon,
             $project->is_group,
             $project->groups->isNotEmpty(),
-            $project->groups->isNotEmpty() ? $project->groups->map(fn (Project $group) => self::fromModel($group, $userCalendarSettings))->all() : null,
+            $project
+                ->groups
+                ->isNotEmpty() ? $project
+                ->groups
+                ->map(fn (Project $group) => self::fromModel($group, $userCalendarSettings))
+                ->all() : null,
             $project->users->pluck('id')->toArray(),
             $project->categories->firstWhere('pivot.is_main', true)?->color,
         );
@@ -72,7 +79,10 @@ class ProjectDTO extends Data
             icon: $project->icon,
             isGroup: $project->is_group,
             isInGroup: $groups->isNotEmpty(),
-            group: $groups->isNotEmpty() ? $groups->map(fn (Project $group) => self::fromModelForCalendar($group))->all() : null,
+            group: $groups
+                ->isNotEmpty() ? $groups
+                ->map(fn (Project $group) => self::fromModelForCalendar($group))
+                ->all() : null,
             userIds: $project->relationLoaded('users')
                 ? $project->users->pluck('id')->toArray()
                 : [],
@@ -85,8 +95,9 @@ class ProjectDTO extends Data
     /**
      * @param \Illuminate\Support\Collection|\Illuminate\Database\Eloquent\Collection $managers
      */
-    private static function serializeLeaders(\Illuminate\Support\Collection|\Illuminate\Database\Eloquent\Collection $managers): array
-    {
+    private static function serializeLeaders(
+        \Illuminate\Support\Collection|\Illuminate\Database\Eloquent\Collection $managers
+    ): array {
         // Bewusst ohne E-Mail: Kontaktdaten (inkl. Privacy-Flags) lädt das
         // UserPopoverTooltip lazy über user.tooltip.info nach.
         return $managers->map(fn ($user) => [

@@ -188,7 +188,6 @@ class UserService
         User $user,
         CalendarService $calendarService,
         EventService $eventService,
-        EventTypeService $eventTypeService,
         Carbon $selectedPeriodDate,
         Carbon $selectedDate,
         ?string $month,

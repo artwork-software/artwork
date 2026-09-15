@@ -110,7 +110,10 @@ class EventTypeController extends Controller
         $eventType->individual_name = $request->get('individual_name', $eventType->individual_name);
         $eventType->abbreviation = $request->get('abbreviation', $eventType->abbreviation);
         $eventType->abbreviation = $request->get('abbreviation', $eventType->abbreviation);
-        $eventType->relevant_for_project_period = $request->get('relevant_for_project_period', $eventType->relevant_for_project_period);
+        $eventType->relevant_for_project_period = $request->get(
+            'relevant_for_project_period',
+            $eventType->relevant_for_project_period
+        );
         $eventType->verification_mode = $request->get('verification_mode', $eventType->verification_mode);
         $eventType->specific_verifier_id = $request->get('specific_verifier_id', $eventType->specific_verifier_id);
         return $eventType;

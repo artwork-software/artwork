@@ -166,7 +166,10 @@ class InventoryCategoryController extends Controller
             'properties' => $this->propertyRepository->all(),
             'rooms' => Room::select('id', 'name')->orderBy('name')->get(),
             'manufacturers' => CrmContact::query()
-                    ->whereHas('contactType', fn ($q) => $q->where('slug', CrmSystemContactTypeEnum::MANUFACTURER->value))
+                    ->whereHas(
+                        'contactType',
+                        fn ($q) => $q->where('slug', CrmSystemContactTypeEnum::MANUFACTURER->value)
+                    )
                     ->select('id', 'display_name as name')
                     ->orderBy('display_name')
                     ->get(),
@@ -233,7 +236,10 @@ class InventoryCategoryController extends Controller
             'properties' => $this->propertyRepository->all(),
             'rooms' => Room::all(),
             'manufacturers' => CrmContact::query()
-                    ->whereHas('contactType', fn ($q) => $q->where('slug', CrmSystemContactTypeEnum::MANUFACTURER->value))
+                    ->whereHas(
+                        'contactType',
+                        fn ($q) => $q->where('slug', CrmSystemContactTypeEnum::MANUFACTURER->value)
+                    )
                     ->select('id', 'display_name as name')
                     ->orderBy('display_name')
                     ->get(),

@@ -81,7 +81,14 @@ final class RestTimeBeforeWorkdayCheckTest extends TestCase
         $user = User::factory()->create();
         $tuesday = $this->futureWeekday(Carbon::TUESDAY);
         // Schicht Mo 14:00–20:00, die Person selbst aber bis 23:30 (Pivot) -> Di 06:00 = 6,5 h Ruhe
-        $this->shiftWithPivotTimesFor($user, $tuesday->copy()->subDay(), '14:00:00', '20:00:00', '14:00:00', '23:30:00');
+        $this->shiftWithPivotTimesFor(
+            $user,
+            $tuesday->copy()->subDay(),
+            '14:00:00',
+            '20:00:00',
+            '14:00:00',
+            '23:30:00'
+        );
         $this->shiftFor($user, $tuesday, '06:00:00', '14:00:00');
 
         $violations = $this->check->check($this->rule(11.0), $user, $tuesday->copy(), $tuesday->copy());
@@ -96,7 +103,14 @@ final class RestTimeBeforeWorkdayCheckTest extends TestCase
         $user = User::factory()->create();
         $tuesday = $this->futureWeekday(Carbon::TUESDAY);
         // Schicht Mo bis 23:00, die Person geht laut Pivot schon 17:00 -> Di 06:00 = 13 h Ruhe
-        $this->shiftWithPivotTimesFor($user, $tuesday->copy()->subDay(), '14:00:00', '23:00:00', '14:00:00', '17:00:00');
+        $this->shiftWithPivotTimesFor(
+            $user,
+            $tuesday->copy()->subDay(),
+            '14:00:00',
+            '23:00:00',
+            '14:00:00',
+            '17:00:00'
+        );
         $this->shiftFor($user, $tuesday, '06:00:00', '14:00:00');
 
         $violations = $this->check->check($this->rule(11.0), $user, $tuesday->copy(), $tuesday->copy());

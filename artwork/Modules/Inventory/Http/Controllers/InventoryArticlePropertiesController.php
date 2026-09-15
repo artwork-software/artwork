@@ -56,8 +56,10 @@ class InventoryArticlePropertiesController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(UpdateInventoryArticlePropertiesRequest $request, InventoryArticleProperties $inventoryArticleProperty): void
-    {
+    public function update(
+        UpdateInventoryArticlePropertiesRequest $request,
+        InventoryArticleProperties $inventoryArticleProperty
+    ): void {
         $inventoryArticleProperty->update($request->validated());
     }
 

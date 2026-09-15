@@ -100,7 +100,12 @@ class CraftService
 
         $workerRelations = ['users', 'freelancers', 'serviceProviders'];
         if ($withManagers) {
-            $workerRelations = [...$workerRelations, 'managingUsers', 'managingFreelancers', 'managingServiceProviders'];
+            $workerRelations = [
+                ...$workerRelations,
+                'managingUsers',
+                'managingFreelancers',
+                'managingServiceProviders',
+            ];
         }
 
         $with = ['qualifications'];

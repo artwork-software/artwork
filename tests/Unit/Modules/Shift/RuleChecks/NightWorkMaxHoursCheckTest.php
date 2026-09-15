@@ -201,7 +201,8 @@ final class NightWorkMaxHoursCheckTest extends TestCase
         $nextDay = $day->copy()->addDay();
         // Tag 1: Schicht 09:00–17:00 (8 h, keine Nacht) + Anteil der Individualzeit 23:00–24:00 (1 h, 1 h Nacht)
         //        → 9 h netto, aber nur 60 min Nacht → keine Nachtarbeit im Sinne der Regel
-        // Tag 2: Anteil 00:00–03:00 (3 h, 180 min Nacht) + Schicht 07:00–14:00 (7 h) → 10 h netto mit 3 h Nacht → Verstoß
+        // Tag 2: Anteil 00:00–03:00 (3 h, 180 min Nacht) + Schicht 07:00–14:00 (7 h) → 10 h netto mit 3 h Nacht →
+        // Verstoß
         $this->shiftFor($user, $day, '09:00:00', '17:00:00');
         $this->individualTimeFor($user, $day, '23:00', '03:00', 0, $nextDay);
         $nextDayShift = $this->shiftFor($user, $nextDay, '07:00:00', '14:00:00');

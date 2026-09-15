@@ -48,6 +48,8 @@ class DemoContractSeeder extends Seeder
                 ->all();
             $rule->contracts()->syncWithoutDetaching($contractIds);
         }
-        $this->command?->info(sprintf('Regeln: %d angelegt und Verträgen zugeordnet.', count(DemoDataPools::SHIFT_RULES)));
+        $this->command?->info(
+            sprintf('Regeln: %d angelegt und Verträgen zugeordnet.', count(DemoDataPools::SHIFT_RULES))
+        );
     }
 }

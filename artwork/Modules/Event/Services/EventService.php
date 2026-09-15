@@ -232,9 +232,6 @@ readonly class EventService
     public function restore(
         Event $event,
         ShiftsQualificationsService $shiftsQualificationsService,
-        ShiftUserService $shiftUserService,
-        ShiftFreelancerService $shiftFreelancerService,
-        ShiftServiceProviderService $shiftServiceProviderService,
         ChangeService $changeService,
         EventCommentService $eventCommentService,
         TimelineService $timelineService,
@@ -253,13 +250,7 @@ readonly class EventService
         }
         $eventCommentService->restoreEventComments($event->comments()->onlyTrashed()->get());
         $timelineService->restoreTimelines($event->timelines()->onlyTrashed()->get());
-        $shiftService->restoreShifts(
-            $event->shifts()->onlyTrashed()->get(),
-            $shiftsQualificationsService,
-            $shiftUserService,
-            $shiftFreelancerService,
-            $shiftServiceProviderService
-        );
+        $shiftService->restoreShifts($event->shifts()->onlyTrashed()->get(), $shiftsQualificationsService);
         $subEventService->restoreSubEvents($event->subEvents()->onlyTrashed()->get());
 
         broadcast(new OccupancyUpdated())->toOthers();
@@ -294,9 +285,6 @@ readonly class EventService
     public function restoreAll(
         Collection|array $events,
         ShiftsQualificationsService $shiftsQualificationsService,
-        ShiftUserService $shiftUserService,
-        ShiftFreelancerService $shiftFreelancerService,
-        ShiftServiceProviderService $shiftServiceProviderService,
         ChangeService $changeService,
         EventCommentService $eventCommentService,
         TimelineService $timelineService,
@@ -318,13 +306,7 @@ readonly class EventService
 
             $eventCommentService->restoreEventComments($event->comments()->onlyTrashed()->get());
             $timelineService->restoreTimelines($event->timelines()->onlyTrashed()->get());
-            $shiftService->restoreShifts(
-                $event->shifts()->onlyTrashed()->get(),
-                $shiftsQualificationsService,
-                $shiftUserService,
-                $shiftFreelancerService,
-                $shiftServiceProviderService
-            );
+            $shiftService->restoreShifts($event->shifts()->onlyTrashed()->get(), $shiftsQualificationsService);
             $subEventService->restoreSubEvents($event->subEvents()->onlyTrashed()->get());
 
             broadcast(new OccupancyUpdated())->toOthers();

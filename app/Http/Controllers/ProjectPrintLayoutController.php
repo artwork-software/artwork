@@ -124,7 +124,10 @@ class ProjectPrintLayoutController extends Controller
             'components.component',
         ]);
         $loadedProjectInformation = [];
-        $projectComponents = collect([$project])->map(function ($project) use ($projectPrintLayout, $loadedProjectInformation) {
+        $projectComponents = collect([$project])->map(function ($project) use (
+            $projectPrintLayout,
+            $loadedProjectInformation
+        ) {
             /** @var Project $project */
             $projectData = new stdClass(); // needed for the ProjectShowHeaderComponent
             $projectData->id = $project->id;

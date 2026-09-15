@@ -555,9 +555,6 @@ class ProjectService
     public function restore(
         Project $project,
         ShiftsQualificationsService $shiftsQualificationsService,
-        ShiftUserService $shiftUserService,
-        ShiftFreelancerService $shiftFreelancerService,
-        ShiftServiceProviderService $shiftServiceProviderService,
         CommentService $commentService,
         ChecklistService $checklistService,
         ProjectFileService $projectFileService,
@@ -576,9 +573,6 @@ class ProjectService
         $eventService->restoreAll(
             $project->events()->with(['shifts'])->onlyTrashed()->get(),
             $shiftsQualificationsService,
-            $shiftUserService,
-            $shiftFreelancerService,
-            $shiftServiceProviderService,
             $changeService,
             $eventCommentService,
             $timelineService,

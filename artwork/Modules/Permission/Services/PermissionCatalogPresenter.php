@@ -25,7 +25,15 @@ readonly class PermissionCatalogPresenter
     }
 
     /**
-     * @return array{modules: array<int, array<string, mixed>>, instance: array<string, mixed>, user: array<string, mixed>|null}
+     * @return array{
+     *     modules: array<int,
+     *     array<string,
+     *     mixed>>,
+     *     instance: array<string,
+     *     mixed>,
+     *     user: array<string,
+     *     mixed>|null,
+     * }
      */
     public function present(?User $user = null): array
     {

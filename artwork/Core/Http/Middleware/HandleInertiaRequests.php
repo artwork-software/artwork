@@ -258,7 +258,8 @@ class HandleInertiaRequests extends Middleware
                 'letterheadCity' => $generalSettings->letterhead_city,
                 'letterheadEmail' => $generalSettings->letterhead_email,
                 'budgetAccountManagementGlobal' => $generalSettings->budget_account_management_global,
-                'inventoryDetailedArticlesAlwaysQuantityOne' => $generalSettings->inventory_detailed_articles_always_quantity_one,
+                'inventoryDetailedArticlesAlwaysQuantityOne' =>
+                    $generalSettings->inventory_detailed_articles_always_quantity_one,
                 'inventoryShowInventoryNumberAsName' => $generalSettings->inventory_show_inventory_number_as_name,
                 'inventoryNumberPrefix' => $generalSettings->inventory_number_prefix,
                 'inventoryArticleImageMaxSizeMb' => $generalSettings->inventory_article_image_max_size_mb,

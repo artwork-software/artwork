@@ -44,7 +44,10 @@ class UpdateServiceProviderContacts extends Command
                         ->exists();
 
                     if ($alreadyExists) {
-                        Log::info("Kontakt mit Email {$contact->email} existiert bereits für ServiceProvider ID {$serviceProvider->id}");
+                        Log::info(
+                            "Kontakt mit Email {$contact->email} existiert bereits "
+                            . "für ServiceProvider ID {$serviceProvider->id}"
+                        );
                         continue;
                     }
 

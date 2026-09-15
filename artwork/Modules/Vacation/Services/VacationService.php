@@ -101,7 +101,11 @@ readonly class VacationService
 
         // Frei-/Abwesenheits-Einträge lösen Projektzuordnungen bzw. -wünsche auf
         // (gesammelt über alle Tage der Serie, damit Notifications gebündelt sind).
-        if ($vacationer instanceof User || $vacationer instanceof Freelancer || $vacationer instanceof ServiceProvider) {
+        if (
+            $vacationer instanceof User
+             || $vacationer instanceof Freelancer
+             || $vacationer instanceof ServiceProvider
+        ) {
             app(\Artwork\Modules\Project\Services\ProjectDayAssignmentService::class)->handleVacationEntry(
                 $vacationer,
                 array_merge([Carbon::parse($request->date)->format('Y-m-d')], $seriesDates),

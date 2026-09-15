@@ -340,7 +340,13 @@ class ProjectDayAssignmentService
                 ->map(static fn ($date) => Carbon::parse($date)->format('Y-m-d'));
 
             $shiftCoveredDates = $type === ProjectDayAssignmentType::BINDING
-                ? $this->getShiftCoveredDates($project->id, $employableType, $employableId, $dates->first(), $dates->last())
+                ? $this->getShiftCoveredDates(
+                    $project->id,
+                    $employableType,
+                    $employableId,
+                    $dates->first(),
+                    $dates->last()
+                )
                 : collect();
 
             $datesToCreate = $dates
@@ -812,7 +818,8 @@ class ProjectDayAssignmentService
                 ->event('project_assignment_dissolved')
                 ->tap(function ($activity) use ($project, $workerName, $datesLabel): void {
                     $activity->properties = $activity->properties->merge([
-                        'translation_key' => 'Project assignment of {0} for {1} ({2}) was dissolved by a free day entry',
+                    'translation_key' => 'Project assignment of {0} for {1} ({2}) was dissolved by a free day '
+                            . 'entry',
                         'translation_key_placeholder_values' => [$workerName, $project?->name ?? '', $datesLabel],
                         'context' => 'normal',
                     ]);
@@ -1031,7 +1038,9 @@ class ProjectDayAssignmentService
                     ->groupBy(static fn (ProjectDayAssignment $row) => $row->date->format('Y-m-d'))
                     ->map(static function (Collection $dayRows) use ($groupBounds) {
                         return $dayRows
-                            ->map(static fn (ProjectDayAssignment $row) => self::serializeAssignment($row, $groupBounds))
+                            ->map(
+                                static fn (ProjectDayAssignment $row) => self::serializeAssignment($row, $groupBounds)
+                            )
                             ->values();
                     });
             });
@@ -1099,7 +1108,10 @@ class ProjectDayAssignmentService
             'group_id' => $row->group_id,
             'is_full_period' => $row->is_full_period,
             'date' => $row->date->format('Y-m-d'),
-            'series_start' => $bounds ? Carbon::parse($bounds->series_start)->format('Y-m-d') : $row->date->format('Y-m-d'),
+            'series_start' => $bounds ? Carbon::parse($bounds->series_start)
+                ->format('Y-m-d') : $row
+                ->date
+                ->format('Y-m-d'),
             'series_end' => $bounds ? Carbon::parse($bounds->series_end)->format('Y-m-d') : $row->date->format('Y-m-d'),
         ];
     }
@@ -1462,7 +1474,10 @@ class ProjectDayAssignmentService
             })
             ->get();
 
-        foreach ($outOfPeriodSingles->groupBy(static fn ($row) => $row->employable_type . '_' . $row->employable_id) as $rows) {
+        $outOfPeriodByWorker = $outOfPeriodSingles
+            ->groupBy(static fn ($row) => $row->employable_type . '_' . $row->employable_id);
+
+        foreach ($outOfPeriodByWorker as $rows) {
             $first = $rows->first();
             $workerName = $this->getWorkerName($first->employable_type, $first->employable_id);
             $datesLabel = $rows->map(static fn ($row) => $row->date->format('d.m.Y'))->unique()->implode(', ');

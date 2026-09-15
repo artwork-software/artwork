@@ -34,8 +34,11 @@ class WorkerService
         return $users->merge($freelancers)->merge($serviceProviders);
     }
 
-    public function getWorkersForShiftPlan(string $workerType, Carbon|null $startDate = null, Carbon|null $endDate = null): Collection
-    {
+    public function getWorkersForShiftPlan(
+        string $workerType,
+        Carbon|null $startDate = null,
+        Carbon|null $endDate = null
+    ): Collection {
         $eagerLoads = WorkerEagerLoadConfig::getShiftPlanEagerLoads($startDate, $endDate);
         // Polymorphe Query basierend auf Worker-Typ
         $query = match ($workerType) {
@@ -91,7 +94,10 @@ class WorkerService
             $workers->each(function ($worker) use ($qualifications): void {
                 $worker->shifts->each(function ($shift) use ($qualifications): void {
                     if ($shift->pivot && $shift->pivot->shift_qualification_id) {
-                        $shift->pivot->setRelation('shiftQualification', $qualifications->get($shift->pivot->shift_qualification_id));
+                        $shift->pivot->setRelation(
+                            'shiftQualification',
+                            $qualifications->get($shift->pivot->shift_qualification_id)
+                        );
                     }
                 });
             });

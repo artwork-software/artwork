@@ -111,7 +111,11 @@ class InternalIssueController extends Controller
         return Inertia::render('IssueOfMaterial/IssueOfMaterialManagement', [
             'issues' => $issues,
             'articlesInFilter' => $articlesInFilter,
-            'materialSets' => MaterialSet::with('items.article', 'items.article.category', 'items.article.subCategory')->get(),
+            'materialSets' => MaterialSet::with(
+                'items.article',
+                'items.article.category',
+                'items.article.subCategory'
+            )->get(),
             'detailedArticle' => Inertia::optional(fn () =>
             InventoryArticle::with([
                 'category',
@@ -186,8 +190,10 @@ class InternalIssueController extends Controller
         return redirect()->back();
     }
 
-    public function update(UpdateInternalIssueRequest $request, InternalIssue $internalIssue): \Illuminate\Http\RedirectResponse
-    {
+    public function update(
+        UpdateInternalIssueRequest $request,
+        InternalIssue $internalIssue
+    ): \Illuminate\Http\RedirectResponse {
         $this->authorize('update', $internalIssue);
 
         //dd($request->all());

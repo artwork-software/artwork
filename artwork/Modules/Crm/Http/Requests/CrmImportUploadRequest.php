@@ -17,7 +17,12 @@ class CrmImportUploadRequest extends FormRequest
         return [
             'file' => ['required', 'file', 'mimes:csv,xlsx,xls,txt', 'max:10240'],
             'use_type_column' => ['sometimes', 'boolean'],
-            'crm_contact_type_id' => ['required_unless:use_type_column,true', 'nullable', 'integer', 'exists:crm_contact_types,id'],
+            'crm_contact_type_id' => [
+                'required_unless:use_type_column,true',
+                'nullable',
+                'integer',
+                'exists:crm_contact_types,id',
+            ],
         ];
     }
 }

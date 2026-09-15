@@ -198,7 +198,8 @@ class InventoryArticleController extends Controller
             : \Carbon\Carbon::parse($startDate)->startOfDay();
 
         $endAt = $hasTime
-            ? \Carbon\Carbon::parse("{$endDate} {$endTime}:59") // inkl. :59, um "bis 10:00" als einschließend zu behandeln
+            // inkl. :59, um "bis 10:00" als einschließend zu behandeln
+            ? \Carbon\Carbon::parse("{$endDate} {$endTime}:59")
             : \Carbon\Carbon::parse($endDate)->endOfDay();
 
         // Hilfs-Raws: TIMESTAMP(date, time) – fällt auf 00:00:00 bzw. 23:59:59 zurück, wenn time NULL ist
@@ -371,8 +372,10 @@ class InventoryArticleController extends Controller
         return response()->json(['success' => true]);
     }
 
-    public function updateDetailedArticleField(Request $request, InventoryDetailedQuantityArticle $inventoryDetailedQuantityArticle)
-    {
+    public function updateDetailedArticleField(
+        Request $request,
+        InventoryDetailedQuantityArticle $inventoryDetailedQuantityArticle
+    ) {
         $fieldRules = [
             'name' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string'],

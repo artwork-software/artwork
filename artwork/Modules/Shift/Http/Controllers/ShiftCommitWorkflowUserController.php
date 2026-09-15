@@ -64,7 +64,9 @@ class ShiftCommitWorkflowUserController extends Controller
         $validUserIds = User::whereIn('id', $userIds)->pluck('id')->all();
 
         if (empty($validUserIds)) {
-            return redirect()->back()->withErrors(['users' => __('One of the selected people no longer exists. Please reload the list.')]);
+            return redirect()
+                ->back()
+                ->withErrors(['users' => __('One of the selected people no longer exists. Please reload the list.')]);
         }
 
         // 4) Doppelte Einträge verhindern (DB-seitig wäre unique Index ideal)
@@ -81,7 +83,10 @@ class ShiftCommitWorkflowUserController extends Controller
             User::forgetCachedShareDataForIds($newUserIds);
         }
 
-        return redirect()->back()->with('success', 'Benutzer wurden erfolgreich zum Shift-Commit-Workflow hinzugefügt.');
+        return redirect()->back()->with(
+            'success',
+            'Benutzer wurden erfolgreich zum Shift-Commit-Workflow hinzugefügt.'
+        );
     }
 
 
@@ -106,8 +111,10 @@ class ShiftCommitWorkflowUserController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(UpdateShiftCommitWorkflowUserRequest $request, ShiftCommitWorkflowUser $shiftCommitWorkflowUser): void
-    {
+    public function update(
+        UpdateShiftCommitWorkflowUserRequest $request,
+        ShiftCommitWorkflowUser $shiftCommitWorkflowUser
+    ): void {
         //
     }
 

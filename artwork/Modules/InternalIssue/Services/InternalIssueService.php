@@ -197,8 +197,12 @@ class InternalIssueService
         $file->delete();
     }
 
-    protected function logActivity(InternalIssue $issue, string $event, string $description, array $properties = []): void
-    {
+    protected function logActivity(
+        InternalIssue $issue,
+        string $event,
+        string $description,
+        array $properties = []
+    ): void {
         activity('material_issue')
             ->performedOn($issue)
             ->causedBy($this->auth->user())

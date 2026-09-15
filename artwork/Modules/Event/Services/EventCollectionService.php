@@ -66,8 +66,16 @@ class EventCollectionService
         );
 
         foreach ($query->get() as $event) {
-            $eventStart = $event->start_time->isBefore($calendarPeriod->start) ? $calendarPeriod->start : $event->start_time;
-            $eventEnd   = $event->end_time->isAfter($calendarPeriod->end)     ? $calendarPeriod->end   : $event->end_time;
+            $eventStart = $event
+                ->start_time
+                ->isBefore($calendarPeriod->start) ? $calendarPeriod
+                ->start : $event
+                ->start_time;
+            $eventEnd   = $event
+                ->end_time
+                ->isAfter($calendarPeriod->end)     ? $calendarPeriod
+                ->end   : $event
+                ->end_time;
 
             $eventPeriod = CarbonPeriod::create($eventStart->copy()->startOfDay(), $eventEnd->copy()->endOfDay());
 

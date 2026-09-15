@@ -48,7 +48,8 @@ readonly class ServiceProviderService
 
         $serviceProviders = $craftIds !== null
             ? $this->serviceProviderRepository->getWorkersByIds(
-                app(\Artwork\Modules\Craft\Repositories\CraftRepository::class)->getWorkerIdsByCraftIds($craftIds)['service_provider_ids'],
+                app(\Artwork\Modules\Craft\Repositories\CraftRepository::class)
+                    ->getWorkerIdsByCraftIds($craftIds)['service_provider_ids'],
                 $startDate,
                 $endDate
             )

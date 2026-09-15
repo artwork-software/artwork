@@ -13,6 +13,7 @@ use Artwork\Modules\DocumentRequest\Models\DocumentRequest;
 use Artwork\Modules\Notification\Enums\NotificationEnum;
 use Artwork\Modules\Notification\Services\NotificationService;
 use Artwork\Modules\Permission\Enums\PermissionEnum;
+use Artwork\Modules\Role\Enums\RoleEnum;
 use Artwork\Modules\Project\Enum\ProjectTabComponentEnum;
 use Artwork\Modules\Project\Events\UpdateProjectContractsDocuments;
 use Artwork\Modules\Project\Services\ProjectTabService;
@@ -68,10 +69,24 @@ class DocumentRequestController extends Controller
             ->with($eagerLoad)
             ->get();
 
+        // Offene Anfragen, die anderen Personen zugewiesen sind (unabhängig davon, wer sie erstellt hat).
+        // Sichtbarkeit wie beim Tab "Nicht zugewiesen": nur mit Erstellen-/Bearbeiten-Recht bzw. Admin.
+        $assignedToOthersRequests = collect();
+        if ($this->canSeeForeignRequests()) {
+            $assignedToOthersRequests = DocumentRequest::whereNotNull('requested_id')
+                ->where('requested_id', '!=', $userId)
+                ->where('status', '!=', DocumentRequest::STATUS_COMPLETED)
+                ->with($eagerLoad)
+                ->orderBy('deadline_date')
+                ->orderBy('created_at')
+                ->get();
+        }
+
         return inertia('DocumentRequests/Index', [
             'createdRequests' => DocumentRequestResource::collection($createdRequests)->resolve(),
             'assignedRequests' => DocumentRequestResource::collection($assignedRequests)->resolve(),
             'unassignedRequests' => DocumentRequestResource::collection($unassignedRequests)->resolve(),
+            'assignedToOthersRequests' => DocumentRequestResource::collection($assignedToOthersRequests)->resolve(),
             'contract_types' => ContractType::all(),
             'company_types' => CompanyType::all(),
             'currencies' => Currency::all(),
@@ -82,6 +97,21 @@ class DocumentRequestController extends Controller
                 ),
             'crmContactTypes' => $this->crmContactTypeService->getActive(),
         ]);
+    }
+
+    /**
+     * Fremde Anfragen (nicht zugewiesen / an andere zugewiesen) sehen nur Personen,
+     * die Anfragen erstellen oder bearbeiten dürfen, sowie Admins.
+     */
+    private function canSeeForeignRequests(): bool
+    {
+        $user = Auth::user();
+
+        return $user !== null && (
+            $user->hasRole(RoleEnum::ARTWORK_ADMIN->value)
+            || $user->can(PermissionEnum::DOCUMENT_REQUEST_CREATE->value)
+            || $user->can(PermissionEnum::DOCUMENT_REQUEST_EDIT->value)
+        );
     }
 
     /**

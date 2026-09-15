@@ -3109,10 +3109,31 @@ class ProjectController extends Controller
             ->get()
             ->map(fn($request) => $this->mapDocumentRequest($request));
 
+        // Offene Anfragen mit Projektbezug, die noch niemandem zugewiesen sind.
+        // Sichtbarkeit wie der Tab "Nicht zugewiesen" in der Dokumentenanfragen-Übersicht.
+        $unassignedRequests = collect();
+        if (
+            $authUser !== null && (
+                $authUser->hasRole(RoleEnum::ARTWORK_ADMIN->value)
+                || $authUser->can(PermissionEnum::DOCUMENT_REQUEST_CREATE->value)
+                || $authUser->can(PermissionEnum::DOCUMENT_REQUEST_EDIT->value)
+            )
+        ) {
+            $unassignedRequests = \Artwork\Modules\DocumentRequest\Models\DocumentRequest::whereNull('requested_id')
+                ->where('project_id', $project->id)
+                ->where('status', '!=', \Artwork\Modules\DocumentRequest\Models\DocumentRequest::STATUS_COMPLETED)
+                ->with($docRequestEagerLoad)
+                ->orderBy('deadline_date')
+                ->orderBy('created_at')
+                ->get()
+                ->map(fn($request) => $this->mapDocumentRequest($request));
+        }
+
         return [
             'projectContracts' => $contracts,
             'projectCreatedRequests' => $createdRequests,
             'projectAssignedRequests' => $assignedRequests,
+            'projectUnassignedRequests' => $unassignedRequests,
             'contractTypes' => $contractTypeService->getAll(),
             'companyTypes' => $companyTypeService->getAll(),
             'currencies' => $currencyService->getAll(),

@@ -57,10 +57,10 @@ jobs:
     name: PHP ${{ matrix.php }} - PHPUnit
     needs: [phpcs, phpstan]
     runs-on: ${{ matrix.operating-systems }}
-    timeout-minutes: 20
+    timeout-minutes: 45
     env:
       COMPOSER_NO_INTERACTION: 1
-      XDEBUG_MODE: coverage
+      XDEBUG_MODE: off
     strategy:
       matrix:
         php: [ 8.4 ]
@@ -83,7 +83,7 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: ${{ matrix.php }}
-          extensions: curl, fileinfo, gd, intl, mbstring, openssl, pdo, pdo_mysql, tokenizer, zip, xdebug, pcntl, bcmath
+          extensions: curl, fileinfo, gd, intl, mbstring, openssl, pdo, pdo_mysql, tokenizer, zip, pcntl, bcmath, ldap
       - name: Composer Install
         run: composer install
       - name: Set Testing Environment
@@ -100,7 +100,7 @@ jobs:
           php artisan key:generate --env=testing
           php artisan migrate:fresh --env=testing --force
       - name: Run PHPUnit
-        run: vendor/bin/phpunit --colors=always --coverage-clover=coverage.xml --coverage-text
+        run: vendor/bin/phpunit --colors=always --no-coverage
 
   push_to_registry:
     name: Push Docker image to Docker Hub

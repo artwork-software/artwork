@@ -1594,10 +1594,7 @@ readonly class EventService
             return [];
         }
 
-        return [
-            'id' => $series->getAttribute('id'),
-            'end_date' => $series->getAttribute('end_date')->format('Y-m-d'),
-        ];
+        return $series->toDefinitionArray();
     }
 
     public function mapRoomsToContent(Collection $rooms, $startDate, $endDate, bool $withShifts = true): array

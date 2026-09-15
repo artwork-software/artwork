@@ -40,6 +40,7 @@ use App\Http\Controllers\DayRemarkController;
 use App\Http\Controllers\DayServiceController;
 use App\Http\Controllers\DepartmentController;
 use App\Http\Controllers\EventController;
+use App\Http\Controllers\EventSeriesController;
 use App\Http\Controllers\EventStatusController;
 use App\Http\Controllers\EventTypeController;
 use App\Http\Controllers\EventVerificationController;
@@ -1168,6 +1169,19 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         EventController::class,
         'updateSeriesEvents',
     ])->name('events.series.update');
+    // Wiederholungstermine: Vorbelegung + Serien-Tab, Vorschau beim Anlegen, Warnung vor Turnus-Wechsel,
+    // Termin lösen / Serie beenden, Serie aus dem Papierkorb holen (KONZEPT_Wiederholungstermine.md)
+    Route::post('/events/series/preview', [EventSeriesController::class, 'preview'])
+        ->name('events.series.preview');
+    Route::patch('/events/series/{series}/restore', [EventSeriesController::class, 'restore'])
+        ->middleware('can:can access trash')
+        ->name('events.series.restore');
+    Route::get('/events/{event}/series', [EventSeriesController::class, 'show'])
+        ->name('events.series.show');
+    Route::post('/events/{event}/series/impact', [EventSeriesController::class, 'impact'])
+        ->name('events.series.impact');
+    Route::post('/events/{event}/series/detach', [EventSeriesController::class, 'detach'])
+        ->name('events.series.detach');
     Route::post('/event/answer/{event}', [EventController::class, 'answerOnEvent'])->name('event.answer');
     Route::get('/events/{event}/timelines', [EventController::class, 'getTimelines'])->name('events.timelines');
 

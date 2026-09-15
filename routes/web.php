@@ -180,7 +180,6 @@ use Artwork\Modules\WorkTime\Http\Controllers\CraftDistributionExportController;
 use Artwork\Modules\WorkTime\Http\Controllers\WorkTimeOverviewExportController;
 use Artwork\Modules\User\Http\Controllers\UserCalendarFilterController;
 use Artwork\Modules\User\Http\Controllers\UserCalenderAboController;
-use Artwork\Modules\User\Http\Controllers\UserBudgetAccountDisplaySettingController;
 use Artwork\Modules\User\Http\Controllers\UserCommentedBudgetItemsSettingController;
 use Artwork\Modules\User\Http\Controllers\UserContractController;
 use Artwork\Modules\User\Http\Controllers\UserController;
@@ -1584,11 +1583,6 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::resource(
         'user.commentedBudgetItemsSettings',
         UserCommentedBudgetItemsSettingController::class
-    )->only(['store', 'update']);
-
-    Route::resource(
-        'user.budgetAccountDisplaySettings',
-        UserBudgetAccountDisplaySettingController::class
     )->only(['store', 'update']);
 
     Route::group(['prefix' => 'timeline-preset'], function (): void {

@@ -5,6 +5,7 @@ namespace Artwork\Modules\Budget\Services;
 use Artwork\Modules\Budget\DTOs\MatchRelevantProjectGroupDTO;
 use Artwork\Modules\Budget\Enums\BudgetTypeEnum;
 use Artwork\Modules\Budget\Models\BudgetManagementAccount;
+use Artwork\Modules\GeneralSettings\Models\GeneralSettings;
 use Artwork\Modules\Budget\Models\BudgetManagementCostUnit;
 use Artwork\Modules\Budget\Models\BudgetSumDetails;
 use Artwork\Modules\Budget\Models\Column;
@@ -241,7 +242,7 @@ class BudgetService
         $selectedSumDetail = $this->resolveSelectedSumDetail();
 
         //load commented budget items setting for given user
-        Auth::user()->load(['commentedBudgetItemsSetting', 'budgetAccountDisplaySetting']);
+        Auth::user()->load(['commentedBudgetItemsSetting']);
 
         $sageNotAssigned = $this->resolveSageNotAssigned($project);
 
@@ -770,9 +771,14 @@ class BudgetService
      * Daher reichern wir die geladenen Zellen nur für die Ausgabe mit einem nicht-persistierten
      * Attribut `display_value` an.
      */
+    /**
+     * Bei aktiver Kontenverwaltung: KTO-/KST-Zellen bekommen `display_value` = „Nummer – Name“
+     * (Entscheidung 14.09.2026: immer beides, kein Nutzer-Schalter mehr). Ohne hinterlegtes
+     * Konto bleibt display_value null → Frontend zeigt die Rohnummer.
+     */
     private function enrichAccountManagementDisplayValues(?Table $table): void
     {
-        if (!$table) {
+        if (!$table || !app(GeneralSettings::class)->budget_account_management_global) {
             return;
         }
 
@@ -837,14 +843,32 @@ class BudgetService
                         }
 
                         if ((int) $cell->column_id === (int) $ktoColumnId) {
-                            $cell->setAttribute('display_value', $accountTitlesByNumber->get($rawValue));
+                            $cell->setAttribute(
+                                'display_value',
+                                self::formatAccountDisplayValue($rawValue, $accountTitlesByNumber->get($rawValue))
+                            );
                         } elseif ((int) $cell->column_id === (int) $kstColumnId) {
-                            $cell->setAttribute('display_value', $costUnitTitlesByNumber->get($rawValue));
+                            $cell->setAttribute(
+                                'display_value',
+                                self::formatAccountDisplayValue($rawValue, $costUnitTitlesByNumber->get($rawValue))
+                            );
                         }
                     }
                 }
             }
         }
+    }
+
+    /**
+     * Einheitliche Darstellung „Nummer – Name“ für KTO/KST (Tabelle, Suche und Excel-Export nutzen dasselbe Format).
+     */
+    public static function formatAccountDisplayValue(string $number, ?string $title): ?string
+    {
+        if ($title === null || trim($title) === '') {
+            return null;
+        }
+
+        return $number . ' – ' . $title;
     }
 
     /**

@@ -120,13 +120,7 @@ class HandleInertiaRequests extends Middleware
             $currentHour = ($currentHour + 1) % 24;
             $failSave++;
         }
-        $sageApiEnabled = false;
-
-        if (config('services.sage.enabled')) {
-            $sageApiSettingsService = app(SageApiSettingsService::class);
-            $sageApiSettings = $sageApiSettingsService->getFirst();
-            $sageApiEnabled = !is_null($sageApiSettings) && $sageApiSettings->enabled;
-        }
+        $sageApiEnabled = app(SageApiSettingsService::class)->isEnabled();
 
         $shiftCommitWorkflowEnabled = (bool) $generalSettings->shift_commit_workflow_enabled;
 

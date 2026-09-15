@@ -15,6 +15,18 @@ use Tests\Feature\FeatureTestCase;
  */
 final class MachineApiScopeTest extends FeatureTestCase
 {
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        // Der Passport-Guard braucht die Signaturschlüssel schon zum Parsen des Bearer-Tokens
+        // (sonst „Invalid key supplied“, z. B. in der CI ohne storage/oauth-*.key). Nur erzeugen,
+        // wenn sie fehlen — --force würde lokal vorhandene Tokens entwerten.
+        if (!file_exists(Passport::keyPath('oauth-private.key'))) {
+            $this->artisan('passport:keys');
+        }
+    }
+
     #[Test]
     public function unauthenticated_requests_are_rejected(): void
     {

@@ -32,6 +32,10 @@ class AiActionBatchService
      */
     private const REVERTABLE = [Event::class];
 
+    public function __construct(private readonly AiBatchNotifier $notifier)
+    {
+    }
+
     /**
      * @param list<array{
      *     model_type: string,
@@ -101,24 +105,41 @@ class AiActionBatchService
             'Seit der Ausfuehrung wurden Objekte veraendert: ' . implode(', ', $conflicts)
         );
 
+        /** @var list<Event> $reverted */
+        $reverted = [];
+
         // Der Revert gehoert zum Assistenten, obwohl die Person ihn in der Oberflaeche ausloest
         // (W3 §2). Ohne den Override schriebe der Herkunfts-Listener `ui`.
-        return AttachActivityOrigin::during(
+        $result = AttachActivityOrigin::during(
             AttachActivityOrigin::VIA_AI_ASSISTANT,
             $batch->conversation_id,
-            fn (): AiActionBatch => DB::transaction(function () use ($batch): AiActionBatch {
-                foreach ($batch->items as $item) {
-                    $this->revertItem($item);
-                }
+            // Bewusst keine Pfeilfunktion: die wuerde `$reverted` by value einfangen, und die
+            // Referenz der inneren Closure zeigte dann auf die Kopie.
+            function () use ($batch, &$reverted): AiActionBatch {
+                return DB::transaction(function () use ($batch, &$reverted): AiActionBatch {
+                    foreach ($batch->items as $item) {
+                        $model = $this->revertItem($item);
 
-                $batch->forceFill([
-                    'status' => AiActionBatch::STATUS_REVERTED,
-                    'reverted_at' => CarbonImmutable::now(),
-                ])->save();
+                        if ($model instanceof Event) {
+                            $reverted[] = $model;
+                        }
+                    }
 
-                return $batch;
-            })
+                    $batch->forceFill([
+                        'status' => AiActionBatch::STATUS_REVERTED,
+                        'reverted_at' => CarbonImmutable::now(),
+                    ])->save();
+
+                    return $batch;
+                });
+            }
         );
+
+        // Sammelmeldung und Kalender-Refresh nach der Ruecknahme (W4). Erst nach der Transaktion:
+        // vorher stuende in der Meldung ein Zustand, der noch zurueckgerollt werden koennte.
+        $this->notifier->notify($user, AiBatchNotifier::ACTION_REVERTED, $reverted);
+
+        return $result;
     }
 
     /**
@@ -150,13 +171,16 @@ class AiActionBatchService
         return $conflicts;
     }
 
-    private function revertItem(AiActionBatchItem $item): void
+    /**
+     * Gibt das betroffene Modell zurueck, damit der Aufrufer danach benachrichtigen kann (W4).
+     */
+    private function revertItem(AiActionBatchItem $item): ?Model
     {
         $model = $this->resolve($item);
 
         if ($model === null) {
             // Objekt ist nicht mehr da (hart geloescht) — dann gibt es auch nichts zurueckzunehmen.
-            return;
+            return null;
         }
 
         match ($item->action) {
@@ -165,6 +189,8 @@ class AiActionBatchService
             AiActionBatchItem::ACTION_DELETE => $this->undelete($model),
             default => null,
         };
+
+        return $model;
     }
 
     private function restoreState(Model $model, AiActionBatchItem $item): void
@@ -197,6 +223,12 @@ class AiActionBatchService
         /** @var class-string<Model> $class */
         $class = $item->model_type;
         $query = $class::query();
+
+        if ($class === Event::class) {
+            // Fuer die Sammelmeldung: beim Zuruecknehmen eines Anlege-Batches wird der Termin
+            // geloescht — die Empfaenger muessen vorher am Modell haengen (W4).
+            $query->with(['project.managerUsers', 'creator', 'shifts.users']);
+        }
 
         if (in_array(SoftDeletes::class, class_uses_recursive($class), true)) {
             $query->withTrashed();

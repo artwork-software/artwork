@@ -53,6 +53,7 @@ class AiEventWriteService
         private readonly EventCollisionService $collisionService,
         private readonly ActionGuard $actionGuard,
         private readonly BatchRecorder $batchRecorder,
+        private readonly AiBatchNotifier $notifier,
     ) {
     }
 
@@ -177,7 +178,14 @@ class AiEventWriteService
         array $ids,
         AiWriteIntent $intent
     ): AiWritePreviewData|AiWriteResultData {
-        $events = Event::query()->visibleFor($user)->whereIn('id', $ids)->with(['room'])->get();
+        // `project.managerUsers`, `creator` und `shifts.users` werden hier geladen, weil der
+        // Notifier sie nach dem Loeschen braucht: die Zeilen sind dann weg, die geladenen
+        // Beziehungen am Modell im Speicher aber noch da (core-notification-buendelung).
+        $events = Event::query()
+            ->visibleFor($user)
+            ->whereIn('id', $ids)
+            ->with(['room', 'project.managerUsers', 'creator', 'shifts.users'])
+            ->get();
         abort_if($events->count() !== count($ids), Response::HTTP_NOT_FOUND);
 
         $conflicts = [];
@@ -261,6 +269,10 @@ class AiEventWriteService
 
             DB::commit();
 
+            // Erst nach dem Commit: eine Sammelmeldung je betroffenem Nutzer und ein
+            // Refresh-Broadcast fuer den ganzen Batch (W4).
+            $this->notifier->notify($user, $this->notifiedAction($tool), $events);
+
             return new AiWriteResultData(
                 dry_run: false,
                 tool: $tool,
@@ -276,6 +288,15 @@ class AiEventWriteService
 
             throw $throwable;
         }
+    }
+
+    private function notifiedAction(string $tool): string
+    {
+        return match ($tool) {
+            self::TOOL_CREATE => AiBatchNotifier::ACTION_CREATED,
+            self::TOOL_DELETE => AiBatchNotifier::ACTION_DELETED,
+            default => AiBatchNotifier::ACTION_UPDATED,
+        };
     }
 
     /**

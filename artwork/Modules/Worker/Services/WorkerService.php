@@ -25,8 +25,17 @@ class WorkerService
     ) {
     }
 
-    public function searchWorkers(string $search): Collection
+    /**
+     * Personensuche über Nutzer*innen, Freelancer und Dienstleister (Scout). Liefert die gemappten
+     * Such-Arrays der drei Repositories — eine Support-Collection, KEINE Eloquent-Collection
+     * (der frühere Eloquent-Rückgabetyp warf zur Laufzeit einen TypeError → 500 in jeder Personensuche).
+     */
+    public function searchWorkers(string $search): SupportCollection
     {
+        if (trim($search) === '') {
+            return new SupportCollection();
+        }
+
         $users = $this->userService->searchUsers($search);
         $freelancers = $this->freelancerService->searchFreelancers($search);
         $serviceProviders = $this->serviceProviderService->searchServiceProviders($search);

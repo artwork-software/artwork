@@ -223,6 +223,7 @@
         "/api/v1/ai/conversations/{conversation}/turns": {
             "post": {
                 "operationId": "v1.ai.conversations.turns.store",
+                "summary": "Zwei getrennte `return` statt eines ternaeren Status: scramble liest den Status-Ausdruck\nstatisch und faellt bei einem Ternaer auf `string` zurueck — die Antwort stand dadurch ohne\nTyp im Export (Export-Fix 2, 16.09.2026)",
                 "tags": [
                     "AiConversationApi"
                 ],
@@ -248,11 +249,21 @@
                 },
                 "responses": {
                     "200": {
-                        "description": "",
+                        "description": "`AiConversationTurnData`",
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "type": "string"
+                                    "$ref": "#/components/schemas/AiConversationTurnData"
+                                }
+                            }
+                        }
+                    },
+                    "201": {
+                        "description": "`AiConversationTurnData`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AiConversationTurnData"
                                 }
                             }
                         }
@@ -878,60 +889,11 @@
                 },
                 "responses": {
                     "200": {
-                        "description": "",
+                        "description": "`AiSessionTokenData`",
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "access_token": {
-                                            "type": "string"
-                                        },
-                                        "expires_at": {
-                                            "type": "string"
-                                        },
-                                        "scopes": {
-                                            "anyOf": [
-                                                {
-                                                    "type": "array",
-                                                    "prefixItems": [
-                                                        {
-                                                            "type": "string",
-                                                            "const": "ai:write"
-                                                        },
-                                                        {
-                                                            "type": "string",
-                                                            "const": "ai:transcript"
-                                                        }
-                                                    ],
-                                                    "minItems": 2,
-                                                    "maxItems": 2,
-                                                    "additionalItems": false
-                                                },
-                                                {
-                                                    "type": "array",
-                                                    "items": []
-                                                },
-                                                {
-                                                    "type": "array",
-                                                    "prefixItems": [
-                                                        {
-                                                            "type": "string",
-                                                            "const": "ai:read"
-                                                        }
-                                                    ],
-                                                    "minItems": 1,
-                                                    "maxItems": 1,
-                                                    "additionalItems": false
-                                                }
-                                            ]
-                                        }
-                                    },
-                                    "required": [
-                                        "access_token",
-                                        "expires_at",
-                                        "scopes"
-                                    ]
+                                    "$ref": "#/components/schemas/AiSessionTokenData"
                                 }
                             }
                         }
@@ -1213,58 +1175,11 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "",
+                        "description": "`AiJwksData`",
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "keys": {
-                                            "type": "array",
-                                            "prefixItems": [
-                                                {
-                                                    "type": "object",
-                                                    "properties": {
-                                                        "kty": {
-                                                            "type": "string",
-                                                            "const": "RSA"
-                                                        },
-                                                        "use": {
-                                                            "type": "string",
-                                                            "const": "sig"
-                                                        },
-                                                        "alg": {
-                                                            "type": "string",
-                                                            "const": "RS256"
-                                                        },
-                                                        "kid": {
-                                                            "type": "string"
-                                                        },
-                                                        "n": {
-                                                            "type": "string"
-                                                        },
-                                                        "e": {
-                                                            "type": "string"
-                                                        }
-                                                    },
-                                                    "required": [
-                                                        "kty",
-                                                        "use",
-                                                        "alg",
-                                                        "kid",
-                                                        "n",
-                                                        "e"
-                                                    ]
-                                                }
-                                            ],
-                                            "minItems": 1,
-                                            "maxItems": 1,
-                                            "additionalItems": false
-                                        }
-                                    },
-                                    "required": [
-                                        "keys"
-                                    ]
+                                    "$ref": "#/components/schemas/AiJwksData"
                                 }
                             }
                         }
@@ -1555,14 +1470,14 @@
                     "tool_calls": {
                         "type": "array",
                         "items": {
-                            "type": "string"
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
                         }
                     },
                     "context": {
-                        "type": "array",
-                        "items": {
-                            "type": "string"
-                        }
+                        "type": "object"
                     },
                     "created_at": {
                         "type": [
@@ -1913,6 +1828,53 @@
                 ],
                 "title": "AiInventoryReservationData"
             },
+            "AiJwkData": {
+                "type": "object",
+                "properties": {
+                    "kty": {
+                        "type": "string"
+                    },
+                    "use": {
+                        "type": "string"
+                    },
+                    "alg": {
+                        "type": "string"
+                    },
+                    "kid": {
+                        "type": "string"
+                    },
+                    "n": {
+                        "type": "string"
+                    },
+                    "e": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "kty",
+                    "use",
+                    "alg",
+                    "kid",
+                    "n",
+                    "e"
+                ],
+                "title": "AiJwkData"
+            },
+            "AiJwksData": {
+                "type": "object",
+                "properties": {
+                    "keys": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/AiJwkData"
+                        }
+                    }
+                },
+                "required": [
+                    "keys"
+                ],
+                "title": "AiJwksData"
+            },
             "AiOccupancyDayData": {
                 "type": "object",
                 "properties": {
@@ -1950,16 +1912,10 @@
                         "type": "string"
                     },
                     "args": {
-                        "type": "array",
-                        "items": {
-                            "type": "string"
-                        }
+                        "type": "object"
                     },
                     "preview": {
-                        "type": "array",
-                        "items": {
-                            "type": "string"
-                        }
+                        "type": "object"
                     },
                     "args_hash": {
                         "type": [
@@ -2200,6 +2156,29 @@
                     "absences"
                 ],
                 "title": "AiScheduleData"
+            },
+            "AiSessionTokenData": {
+                "type": "object",
+                "properties": {
+                    "access_token": {
+                        "type": "string"
+                    },
+                    "expires_at": {
+                        "type": "string"
+                    },
+                    "scopes": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    }
+                },
+                "required": [
+                    "access_token",
+                    "expires_at",
+                    "scopes"
+                ],
+                "title": "AiSessionTokenData"
             },
             "AiShiftData": {
                 "type": "object",
@@ -2599,7 +2578,7 @@
                     "ids": {
                         "type": "array",
                         "items": {
-                            "type": "string"
+                            "type": "integer"
                         }
                     },
                     "items": {
@@ -2770,10 +2749,7 @@
                                 ]
                             },
                             "args": {
-                                "type": "array",
-                                "items": {
-                                    "type": "string"
-                                }
+                                "type": "object"
                             },
                             "args_hash": {
                                 "type": "string",

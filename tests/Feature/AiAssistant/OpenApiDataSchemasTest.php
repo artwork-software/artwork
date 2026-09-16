@@ -143,4 +143,130 @@ final class OpenApiDataSchemasTest extends TestCase
 
         $this->assertGreaterThan(0, $checked, 'Kein Request-Schema geprueft — der Test liefe leer.');
     }
+
+    /**
+     * Freie Schluessel sind im Contract ein Objekt, keine Liste (Export-Fix 2, 16.09.2026).
+     *
+     * Anlass: `LaravelDataToSchema` kannte nur `Foo[]`; jedes andere Array wurde zum nackten
+     * `ArrayType`, dessen `items` scramble still mit `string` fuellt. `pending_action.args` und
+     * `.preview` standen dadurch als `array<string>` im Export, obwohl
+     * `contracts/action-contract.md` Objekte verlangt.
+     */
+    #[Test]
+    public function map_shaped_fields_are_objects_in_the_contract(): void
+    {
+        $schemas = $this->contract()['components']['schemas'] ?? [];
+
+        $expected = [
+            'AiPendingActionData.args' => ['AiPendingActionData', 'args'],
+            'AiPendingActionData.preview' => ['AiPendingActionData', 'preview'],
+            'AiConversationTurnData.context' => ['AiConversationTurnData', 'context'],
+        ];
+
+        foreach ($expected as $label => [$schema, $field]) {
+            $this->assertSame(
+                'object',
+                $schemas[$schema]['properties'][$field]['type'] ?? null,
+                "{$label} muss ein Objekt sein, keine Liste."
+            );
+        }
+
+        $this->assertSame(
+            'object',
+            $schemas['StoreAiConversationTurnRequest']['properties']['pending_action']
+                ['properties']['args']['type'] ?? null,
+            'StoreAiConversationTurnRequest.pending_action.args muss ein Objekt sein.'
+        );
+    }
+
+    /**
+     * Listen tragen den Elementtyp, den der Konstruktor-Docblock nennt — nicht den
+     * `string`-Default von scrambles `ArrayType`.
+     */
+    #[Test]
+    public function typed_lists_carry_their_element_type(): void
+    {
+        $schemas = $this->contract()['components']['schemas'] ?? [];
+
+        $this->assertSame(
+            'integer',
+            $schemas['AiWriteResultData']['properties']['ids']['items']['type'] ?? null,
+            'AiWriteResultData.ids ist int[] und muss ganzzahlige Elemente tragen.'
+        );
+
+        $this->assertSame(
+            'object',
+            $schemas['AiConversationTurnData']['properties']['tool_calls']['items']['type'] ?? null,
+            'AiConversationTurnData.tool_calls ist eine Liste von Objekten.'
+        );
+
+        $this->assertSame(
+            '#/components/schemas/AiJwkData',
+            $schemas['AiJwksData']['properties']['keys']['items']['$ref'] ?? null,
+            'AiJwksData.keys verweist auf AiJwkData.'
+        );
+    }
+
+    /**
+     * Antworten mit Datentyp stehen auch dann im Contract, wenn der Status vom Code abhaengt.
+     *
+     * Anlass: `storeTurn` gab den Status ternaer zurueck; scramble liest ihn statisch und fiel
+     * auf `string` zurueck — die Antwort stand ohne Typ im Export.
+     */
+    #[Test]
+    public function the_turn_endpoint_declares_its_response_type(): void
+    {
+        $responses = $this->contract()['paths']['/api/v1/ai/conversations/{conversation}/turns']
+            ['post']['responses'] ?? [];
+
+        foreach (['200', '201'] as $status) {
+            $this->assertSame(
+                '#/components/schemas/AiConversationTurnData',
+                $responses[$status]['content']['application/json']['schema']['$ref'] ?? '',
+                "Antwort {$status} von POST …/turns traegt kein Schema."
+            );
+        }
+    }
+
+    /**
+     * Ein leeres Array ist an den Stellen, wo JSON Schema ein Schema erwartet, kein gueltiger
+     * Wert. Scramble schreibt es, wenn es einen Typ nicht ableiten kann.
+     */
+    #[Test]
+    public function the_ai_schemas_contain_no_empty_schema_fragments(): void
+    {
+        $schemas = $this->contract()['components']['schemas'] ?? [];
+        $found = [];
+
+        foreach ($schemas as $name => $schema) {
+            if (!str_starts_with((string) $name, 'Ai') && !str_starts_with((string) $name, 'StoreAi')) {
+                continue;
+            }
+
+            $this->collectEmptyFragments($schema, (string) $name, $found);
+        }
+
+        $this->assertSame([], $found, 'Leere Schema-Fragmente im Contract: ' . implode(', ', $found));
+    }
+
+    /**
+     * @param mixed $node
+     * @param string[] $found
+     */
+    private function collectEmptyFragments(mixed $node, string $path, array &$found): void
+    {
+        if (!is_array($node)) {
+            return;
+        }
+
+        foreach (['items', 'additionalProperties'] as $key) {
+            if (array_key_exists($key, $node) && $node[$key] === []) {
+                $found[] = $path . '.' . $key;
+            }
+        }
+
+        foreach ($node as $key => $value) {
+            $this->collectEmptyFragments($value, $path . '/' . $key, $found);
+        }
+    }
 }

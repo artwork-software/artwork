@@ -4,6 +4,7 @@ namespace Artwork\Modules\AiAssistant\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use Artwork\Modules\AiAssistant\Http\Requests\StoreAiSessionRequest;
+use Artwork\Modules\AiAssistant\DTOs\AiSessionTokenData;
 use Artwork\Modules\AiAssistant\Services\AiSessionService;
 use Illuminate\Http\JsonResponse;
 
@@ -21,10 +22,12 @@ class AiSessionController extends Controller
     public function store(StoreAiSessionRequest $request): JsonResponse
     {
         return response()->json(
-            $this->service->issue(
-                $request->user(),
-                $request->validated('scopes', []),
-                $request->actionId()
+            AiSessionTokenData::fromPayload(
+                $this->service->issue(
+                    $request->user(),
+                    $request->validated('scopes', []),
+                    $request->actionId()
+                )
             )
         );
     }

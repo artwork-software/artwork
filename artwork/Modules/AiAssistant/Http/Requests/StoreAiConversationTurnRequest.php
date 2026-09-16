@@ -73,6 +73,10 @@ class StoreAiConversationTurnRequest extends FormRequest
             // die Aktion — deshalb steht sie hier und nicht in einer eigenen Tabelle.
             'pending_action' => ['sometimes', 'array'],
             'pending_action.tool' => ['required_with:pending_action', Rule::in(self::CONFIRMABLE_TOOLS)],
+            // `@var` uebersteuert das Schema im Export: eine Regel `array` ohne Unterregeln wird
+            // sonst zu `array<string>`, `args` ist aber ein Objekt mit werkzeugabhaengigen
+            // Schluesseln (contracts/action-contract.md). Export-Fix 2, 16.09.2026.
+            /** @var object */
             'pending_action.args' => ['required_with:pending_action', 'array'],
             'pending_action.args_hash' => ['required_with:pending_action', 'string', 'regex:/^[a-f0-9]{64}$/i'],
             // Form der Vorschau ist bindend: contracts/action-contract.md verweist auf

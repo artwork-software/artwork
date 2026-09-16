@@ -46,15 +46,23 @@ class AiConversationApiController extends Controller
         );
     }
 
+    /**
+     * Zwei getrennte `return` statt eines ternaeren Status: scramble liest den Status-Ausdruck
+     * statisch und faellt bei einem Ternaer auf `string` zurueck — die Antwort stand dadurch ohne
+     * Typ im Export (Export-Fix 2, 16.09.2026).
+     */
     public function storeTurn(StoreAiConversationTurnRequest $request, string $conversation): JsonResponse
     {
         $model = $this->service->findForUserOrFail($request->user(), $conversation);
 
         [$turn, $created] = $this->service->recordTurn($model, $request->validated());
 
-        return response()->json(
-            AiConversationTurnData::fromModel($turn),
-            $created ? Response::HTTP_CREATED : Response::HTTP_OK
-        );
+        $data = AiConversationTurnData::fromModel($turn);
+
+        if ($created) {
+            return response()->json($data, Response::HTTP_CREATED);
+        }
+
+        return response()->json($data, Response::HTTP_OK);
     }
 }

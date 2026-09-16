@@ -3,6 +3,8 @@
 namespace Artwork\Modules\AiAssistant\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use Artwork\Modules\AiAssistant\DTOs\AiJwkData;
+use Artwork\Modules\AiAssistant\DTOs\AiJwksData;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Cache;
 use Laravel\Passport\Passport;
@@ -24,7 +26,7 @@ class JwksController extends Controller
     public function __invoke(): JsonResponse
     {
         return response()
-            ->json(['keys' => [$this->key()]])
+            ->json(new AiJwksData([AiJwkData::fromArray($this->key())]))
             ->header('Cache-Control', 'public, max-age=' . self::CACHE_SECONDS);
     }
 

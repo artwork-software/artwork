@@ -1831,8 +1831,11 @@ class ProjectController extends Controller
 
 
 
-    public function addColumn(Request $request, ColumnRelevanceService $columnRelevanceService): void
-    {
+    public function addColumn(
+        Request $request,
+        ColumnRelevanceService $columnRelevanceService,
+        ColumnCellService $columnCellService
+    ): void {
         $table = Table::find($request->table_id);
         if ($request->column_type === 'empty') {
             /** @var Column $column */
@@ -1896,64 +1899,20 @@ class ProjectController extends Controller
             // Die neueste Wertspalte gilt als aktueller Planungsstand und wird budgetrelevant.
             $columnRelevanceService->assignExclusive($column);
         }
-        if ($request->column_type === 'sum') {
-            $firstColumns = ColumnCell::where('column_id', $request->first_column_id)->get();
+        if (in_array($request->column_type, ['sum', 'difference'], true)) {
             $column = $table->columns()->create([
-                'name' => 'sum',
+                'name' => $request->column_type,
                 'subName' => '-',
-                'type' => 'sum',
+                'type' => $request->column_type,
                 'linked_first_column' => $request->first_column_id,
                 'linked_second_column' => $request->second_column_id,
                 'position' => $table->columns()->whereNot('position', 100)->max('position') + 1
             ]);
             $this->setColumnSubName($request->table_id);
-            foreach ($firstColumns as $firstColumn) {
-                $secondColumn = ColumnCell::where('column_id', $request->second_column_id)
-                    ->where('sub_position_row_id', $firstColumn->sub_position_row_id)
-                    ->first();
-                $firstDecimal = str_replace(',', '.', $firstColumn->value ?: '0');
-                $secondDecimal = str_replace(',', '.', $secondColumn->value ?: '0');
-                $sum = bcadd($firstDecimal, $secondDecimal, 2);
-                ColumnCell::create([
-                    'column_id' => $column->id,
-                    'sub_position_row_id' => $firstColumn->sub_position_row_id,
-                    'value' => $sum,
-                    'verified_value' => null,
-                    'linked_money_source_id' => null,
-                    'commented' => $secondColumn->commented
-                ]);
-            }
+            // Startwerte ueber den Service: der loest Sage-Spalten ueber die
+            // zugeordneten Buchungen auf (sage_value) statt ueber das leere `value`.
+            $columnCellService->createCellsForAutomaticColumn($column);
         }
-
-        if ($request->column_type === 'difference') {
-            $firstColumns = ColumnCell::where('column_id', $request->first_column_id)->get();
-            $column = $table->columns()->create([
-                'name' => 'difference',
-                'subName' => '-',
-                'type' => 'difference',
-                'linked_first_column' => $request->first_column_id,
-                'linked_second_column' => $request->second_column_id,
-                'position' => $table->columns()->whereNot('position', 100)->max('position') + 1
-            ]);
-            $this->setColumnSubName($request->table_id);
-            foreach ($firstColumns as $firstColumn) {
-                $secondColumn = ColumnCell::where('column_id', $request->second_column_id)
-                    ->where('sub_position_row_id', $firstColumn->sub_position_row_id)
-                    ->first();
-                $firstDecimal = str_replace(',', '.', $firstColumn->value ?: '0');
-                $secondDecimal = str_replace(',', '.', $secondColumn->value ?: '0');
-                $sum = bcsub($firstDecimal, $secondDecimal, 2);
-                ColumnCell::create([
-                    'column_id' => $column->id,
-                    'sub_position_row_id' => $firstColumn->sub_position_row_id,
-                    'value' => $sum,
-                    'verified_value' => null,
-                    'linked_money_source_id' => null,
-                    'commented' => $secondColumn->commented
-                ]);
-            }
-        }
-
 
         broadcast(new UpdateBudget($table->project_id));
     }

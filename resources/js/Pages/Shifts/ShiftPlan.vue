@@ -1103,6 +1103,7 @@
         :initial-start-date="historyModalConfig.startDate ?? dateValue[0]"
         :initial-end-date="historyModalConfig.endDate ?? dateValue[1]"
         :prefill-search="historyModalConfig.search"
+        :initial-person="historyModalConfig.person"
         :initial-shift-id="historyModalConfig.shiftId"
         :auto-load="historyModalConfig.autoLoad"
         @close="showHistoryModal = false"
@@ -1327,6 +1328,7 @@ const showHistoryModal = ref(false)
 // Person+Tag über das Tagesmodal, konkrete Schicht über das Verlauf-Icon an der Schicht.
 type HistoryModalConfig = {
     search?: string
+    person?: { id: number; type: 'user' | 'freelancer' | 'service_provider'; name: string } | null
     startDate?: string
     endDate?: string
     shiftId?: number
@@ -4218,9 +4220,10 @@ function openHistoryModal(config: HistoryModalConfig = {}) {
 }
 
 // Shortcut aus dem Tagesmodal: Schichtverlauf mit Person + Tag vorausgewählt öffnen.
-function openHistoryForWorkerDay(payload: { search: string; date: string }) {
+function openHistoryForWorkerDay(payload: { search: string; person?: HistoryModalConfig['person']; date: string }) {
     openHistoryModal({
         search: payload.search,
+        person: payload.person ?? null,
         startDate: payload.date,
         endDate: payload.date,
         autoLoad: true,

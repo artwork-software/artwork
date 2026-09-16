@@ -211,6 +211,10 @@ class ShiftWorkerService
                     'shift_id' => $shift->id,
                     'craft_id' => $shift->craft_id,
                     'shift_snapshot' => $shift->toActivitySnapshot(),
+                    // Person als ID (nicht nur als Name in den Platzhaltern), damit der Personenfilter
+                    // im Schichtverlauf auch nach Umbenennung / bei Namensgleichheit exakt trifft.
+                    'employable_type' => $pivot->employable_type,
+                    'employable_id' => $pivot->employable_id,
                 ]);
             })
             ->log($logMessage);

@@ -1647,7 +1647,12 @@ function openHistory() {
     const name = el.type === 'service_provider'
         ? el.provider_name
         : (el.full_name ?? `${el.first_name ?? ''} ${el.last_name ?? ''}`.trim());
-    emit('openHistory', { search: name ?? '', date: props.day.withoutFormat });
+    const type = el.type === 'service_provider' || el.type === 'freelancer' ? el.type : 'user';
+    emit('openHistory', {
+        search: name ?? '',
+        person: el.id ? { id: el.id, type, name: name ?? '' } : null,
+        date: props.day.withoutFormat,
+    });
 }
 
 function removeUserFromShift(shiftId, usersPivotId) {

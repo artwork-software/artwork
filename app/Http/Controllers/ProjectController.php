@@ -3058,17 +3058,34 @@ class ProjectController extends Controller
             ->get()
             ->map(fn($request) => $this->mapDocumentRequest($request));
 
+        // Fremde Anfragen (nicht zugewiesen / an andere zugewiesen) sehen nur Personen,
+        // die Anfragen erstellen oder bearbeiten dürfen, sowie Admins – wie in der Dokumentenanfragen-Übersicht.
+        $canSeeForeignRequests = $authUser !== null && (
+            $authUser->hasRole(RoleEnum::ARTWORK_ADMIN->value)
+            || $authUser->can(PermissionEnum::DOCUMENT_REQUEST_CREATE->value)
+            || $authUser->can(PermissionEnum::DOCUMENT_REQUEST_EDIT->value)
+        );
+
         // Offene Anfragen mit Projektbezug, die noch niemandem zugewiesen sind.
-        // Sichtbarkeit wie der Tab "Nicht zugewiesen" in der Dokumentenanfragen-Übersicht.
         $unassignedRequests = collect();
-        if (
-            $authUser !== null && (
-                $authUser->hasRole(RoleEnum::ARTWORK_ADMIN->value)
-                || $authUser->can(PermissionEnum::DOCUMENT_REQUEST_CREATE->value)
-                || $authUser->can(PermissionEnum::DOCUMENT_REQUEST_EDIT->value)
-            )
-        ) {
+        if ($canSeeForeignRequests) {
             $unassignedRequests = \Artwork\Modules\DocumentRequest\Models\DocumentRequest::whereNull('requested_id')
+                ->where('project_id', $project->id)
+                ->where('status', '!=', \Artwork\Modules\DocumentRequest\Models\DocumentRequest::STATUS_COMPLETED)
+                ->with($docRequestEagerLoad)
+                ->orderBy('deadline_date')
+                ->orderBy('created_at')
+                ->get()
+                ->map(fn($request) => $this->mapDocumentRequest($request));
+        }
+
+        // Offene Anfragen mit Projektbezug, die anderen Personen zugewiesen sind (egal, wer sie erstellt hat).
+        // Sichtbarkeit wie der Tab "An andere zugewiesen" in der Dokumentenanfragen-Übersicht.
+        $assignedToOthersRequests = collect();
+        if ($canSeeForeignRequests) {
+            $assignedToOthersRequests = \Artwork\Modules\DocumentRequest\Models\DocumentRequest::query()
+                ->whereNotNull('requested_id')
+                ->where('requested_id', '!=', $userId)
                 ->where('project_id', $project->id)
                 ->where('status', '!=', \Artwork\Modules\DocumentRequest\Models\DocumentRequest::STATUS_COMPLETED)
                 ->with($docRequestEagerLoad)
@@ -3083,6 +3100,7 @@ class ProjectController extends Controller
             'projectCreatedRequests' => $createdRequests,
             'projectAssignedRequests' => $assignedRequests,
             'projectUnassignedRequests' => $unassignedRequests,
+            'projectAssignedToOthersRequests' => $assignedToOthersRequests,
             'contractTypes' => $contractTypeService->getAll(),
             'companyTypes' => $companyTypeService->getAll(),
             'currencies' => $currencyService->getAll(),

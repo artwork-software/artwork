@@ -39,11 +39,12 @@
             <EmptyState
                 icon="IconFileInvoice"
                 :title="$t('No Sage bookings')"
-                :description="$t('No Sage bookings have been assigned to this project yet.')"
+                :description="$t('There are no Sage bookings for this project yet.')"
             />
         </div>
 
-        <!-- Tabelle: Sortierung KST → Sachkonto → Belegdatum kommt vom Server -->
+        <!-- Tabelle: Sortierung KST → KTO → Belegdatum kommt vom Server; zugeordnete und
+             projektbezogen nicht zugeordnete Buchungen stehen gemeinsam drin (Spalte Status) -->
         <div v-else class="mt-8 flow-root">
             <div class="-mx-4 -my-2 sm:-mx-6 lg:-mx-8">
                 <div class="inline-block min-w-full py-2 align-middle sm:px-6 lg:px-8">
@@ -77,7 +78,7 @@
                                     </td>
                                 </tr>
 
-                                <template v-for="booking in group.bookings" :key="booking.id">
+                                <template v-for="booking in group.bookings" :key="booking.row_key">
                                     <tr
                                         class="group h-10 cursor-pointer hover:bg-surface-hover focus:outline-none focus-visible:bg-surface-hover"
                                         tabindex="0"
@@ -91,14 +92,14 @@
                                                     v-if="booking.is_collective_booking"
                                                     type="button"
                                                     class="-ml-1 flex size-6 shrink-0 items-center justify-center rounded text-text-subtle hover:bg-surface-hover hover:text-text"
-                                                    :aria-expanded="isExpanded(booking.id)"
+                                                    :aria-expanded="isExpanded(booking.row_key)"
                                                     :aria-label="$t('Collective Booking')"
-                                                    @click.stop="toggleExpanded(booking.id)"
+                                                    @click.stop="toggleExpanded(booking.row_key)"
                                                     @keydown.enter.stop
                                                 >
                                                     <IconChevronDown
                                                         class="size-4 transition-transform"
-                                                        :class="isExpanded(booking.id) ? 'rotate-180' : ''"
+                                                        :class="isExpanded(booking.row_key) ? 'rotate-180' : ''"
                                                         stroke-width="1.5"
                                                         aria-hidden="true"
                                                     />
@@ -116,8 +117,8 @@
                                             </div>
                                         </td>
                                         <td class="px-3 py-2 text-[13px] whitespace-nowrap">
-                                            <div class="tabular-nums text-text">{{ booking.sa_kto || '–' }}</div>
-                                            <div v-if="booking.sa_kto_title" class="text-[11px] text-text-subtle">{{ booking.sa_kto_title }}</div>
+                                            <div class="tabular-nums text-text">{{ booking.kto || '–' }}</div>
+                                            <div v-if="booking.kto_title" class="text-[11px] text-text-subtle">{{ booking.kto_title }}</div>
                                         </td>
                                         <td class="px-3 py-2 text-[13px] tabular-nums whitespace-nowrap text-text">
                                             {{ booking.kst_stelle || '–' }}
@@ -131,13 +132,23 @@
                                         <td class="px-3 py-2 text-[13px] tabular-nums whitespace-nowrap text-text">
                                             {{ formatBookingDataDate(booking.belegdatum) }}
                                         </td>
+                                        <td class="px-3 py-2 text-[13px] whitespace-nowrap">
+                                            <span
+                                                class="inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium"
+                                                :class="booking.source === 'assigned'
+                                                    ? 'bg-success-surface text-success'
+                                                    : 'bg-special-orange-surface text-special-orange'"
+                                            >
+                                                {{ booking.source === 'assigned' ? $t('Assigned') : $t('Not assigned') }}
+                                            </span>
+                                        </td>
                                     </tr>
 
                                     <!-- Einzelbuchungen einer Sammelbuchung, leicht eingerückt -->
-                                    <template v-if="booking.is_collective_booking && isExpanded(booking.id)">
+                                    <template v-if="booking.is_collective_booking && isExpanded(booking.row_key)">
                                         <tr
                                             v-for="child in booking.find_children"
-                                            :key="`child-${child.id}`"
+                                            :key="`child-${booking.row_key}-${child.id}`"
                                             class="h-9 cursor-pointer bg-surface-sunken/60 text-text-muted hover:bg-surface-hover"
                                             @click="openBooking(booking)"
                                         >
@@ -145,8 +156,8 @@
                                                 <div class="truncate">{{ child.kreditor || '–' }}</div>
                                             </td>
                                             <td class="px-3 py-1.5 text-xs whitespace-nowrap">
-                                                <div class="tabular-nums">{{ child.sa_kto || '–' }}</div>
-                                                <div v-if="child.sa_kto_title" class="text-[11px] text-text-subtle">{{ child.sa_kto_title }}</div>
+                                                <div class="tabular-nums">{{ child.kto || '–' }}</div>
+                                                <div v-if="child.kto_title" class="text-[11px] text-text-subtle">{{ child.kto_title }}</div>
                                             </td>
                                             <td class="px-3 py-1.5 text-xs tabular-nums whitespace-nowrap">
                                                 {{ child.kst_stelle || '–' }}
@@ -160,6 +171,7 @@
                                             <td class="px-3 py-1.5 text-xs tabular-nums whitespace-nowrap">
                                                 {{ formatBookingDataDate(child.belegdatum) }}
                                             </td>
+                                            <td />
                                         </tr>
                                     </template>
                                 </template>
@@ -167,13 +179,13 @@
                         </tbody>
                         <tfoot>
                             <tr class="border-t border-border bg-surface">
-                                <td :colspan="columns.length - 2" class="py-2 pl-4 pr-3 text-[13px] font-semibold text-text">
+                                <td :colspan="columns.length - 3" class="py-2 pl-4 pr-3 text-[13px] font-semibold text-text">
                                     {{ $t('Total') }}
                                 </td>
                                 <td class="px-3 py-2 text-right text-[13px] font-semibold tabular-nums whitespace-nowrap text-text">
                                     {{ formatAmount(total) }}
                                 </td>
-                                <td />
+                                <td :colspan="2" />
                             </tr>
                         </tfoot>
                     </table>
@@ -181,12 +193,15 @@
             </div>
         </div>
 
-        <!-- Gleiches Modal wie in der Budgettabelle: Details, Einzelbuchungen, Kommentare, Löschen -->
+        <!-- Gleiches Modal wie in der Budgettabelle: Details, Einzelbuchungen, Kommentare, Löschen.
+             Nicht zugeordnete Buchungen werden nur lesend gezeigt (keine Kommentare, kein Löschen) und
+             blättern nur untereinander, da sie in einer anderen Tabelle liegen. -->
         <SageAssignedDataModal
             v-if="showBookingModal"
             :show="showBookingModal"
             :cell="modalCell"
             :initial-index="modalIndex"
+            :read-only="modalSource !== 'assigned'"
             @close="closeBookingModal"
             @budget-updated="loadBookings"
         />
@@ -220,11 +235,12 @@ const resolvedProjectId = computed(() => props.project?.id ?? props.projectId)
 
 const columns = [
     { key: 'kreditor', label: 'Creditor / name' },
-    { key: 'sa_kto', label: 'Account' },
+    { key: 'kto', label: 'KTO' },
     { key: 'kst_stelle', label: 'KST' },
     { key: 'buchungstext', label: 'Designation' },
     { key: 'buchungsbetrag', label: 'Amount', align: 'right' },
     { key: 'belegdatum', label: 'Document date' },
+    { key: 'source', label: 'Status' },
 ]
 
 const isLoading = ref(false)
@@ -236,9 +252,11 @@ const expanded = ref({})
 
 const showBookingModal = ref(false)
 const modalIndex = ref(0)
-// Das Modal erwartet eine Budget-Zelle mit sage_assigned_data; hier bekommt es die ganze Liste,
-// sodass Vor/Zurück durch alle Rechnungen blättert und ein Löschen die Tabelle direkt aktualisiert.
-const modalCell = computed(() => ({ sage_assigned_data: rows.value }))
+const modalSource = ref('assigned')
+// Das Modal erwartet eine Budget-Zelle mit sage_assigned_data; hier bekommt es alle Zeilen derselben
+// Herkunft, sodass Vor/Zurück durch diese Rechnungen blättert und ein Löschen die Tabelle direkt aktualisiert.
+const modalRows = computed(() => rows.value.filter((row) => row.source === modalSource.value))
+const modalCell = computed(() => ({ sage_assigned_data: modalRows.value }))
 
 // Server liefert bereits nach KST sortiert → Gruppen in Reihenfolge des ersten Auftretens
 const groupedRows = computed(() => {
@@ -273,7 +291,8 @@ function formatAmount(value) {
 }
 
 function openBooking(booking) {
-    const index = rows.value.findIndex((row) => row.id === booking.id)
+    modalSource.value = booking.source
+    const index = modalRows.value.findIndex((row) => row.row_key === booking.row_key)
     if (index < 0) {
         return
     }
@@ -300,7 +319,7 @@ async function loadBookings() {
             sage: data?.access?.sage !== false,
         }
         // Modal offen und die Liste ist geschrumpft (Löschen) → Index in den gültigen Bereich holen
-        if (showBookingModal.value && rows.value.length === 0) {
+        if (showBookingModal.value && modalRows.value.length === 0) {
             showBookingModal.value = false
         }
     } catch (error) {

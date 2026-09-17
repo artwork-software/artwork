@@ -208,6 +208,88 @@ final class AiAssistantBarTest extends DuskTestCase
         });
     }
 
+    /**
+     * 9. Auswahl-Liste (core-ki-bar-choice, Protokoll 1.1): erscheint trotz eines unbekannten
+     * Events im Skript, der Filter grenzt ein, ein Klick sendet das Label als normale Nachricht.
+     */
+    #[Test]
+    public function the_choice_list_filters_and_sends_the_chosen_label(): void
+    {
+        $this->browse(function (Browser $browser): void {
+            $this->ask($browser, 'choice Welcher Raum?')
+                ->waitFor('[data-ai-choice]')
+                ->waitUntilMissing('[data-ai-streaming]');
+
+            // Das unbekannte Event vor der Frage hat die Bar nicht aus dem Tritt gebracht: die
+            // Liste steht vollstaendig da, es gibt keinen Fehlerzustand.
+            $browser->assertMissing('[data-ai-error]')
+                ->assertSeeIn('[data-ai-choice]', 'Studio 1')
+                ->assertSeeIn('[data-ai-choice]', 'Werkstatt');
+
+            $this->assertSame(3, $this->choiceOptions($browser));
+
+            // `awaiting_input`: die Eingabe bleibt offen, tippen ist weiter moeglich.
+            $this->assertTrue($browser->script('return !document.querySelector("[data-ai-input]").disabled')[0]);
+
+            $browser->type('[data-ai-choice-filter]', 'stud');
+            $browser->waitUntil('document.querySelectorAll("[data-ai-choice-option]").length === 2');
+
+            $this->assertSame(2, $this->choiceOptions($browser));
+
+            $browser->click('[data-ai-choice-option]')
+                ->waitUntilMissing('[data-ai-choice]')
+                ->waitUntilMissing('[data-ai-streaming]');
+
+            // Die Wahl ist als ganz normale Nachricht rausgegangen — mit dem Label als Text.
+            $questions = $browser->script(
+                "return Array.from(document.querySelectorAll('[data-ai-turn] p')).map((p) => p.textContent.trim())"
+            )[0];
+
+            $this->assertContains('Studio 1', $questions);
+        });
+    }
+
+    /**
+     * 10. Gekuerzte Liste: Hinweis sichtbar, und der unbekannte `done.reason` am Ende des Skripts
+     * laesst die Bar trotzdem sauber auf `idle` zurueckfallen (Protokoll 1.1).
+     */
+    #[Test]
+    public function a_truncated_choice_shows_the_hint_and_survives_an_unknown_done_reason(): void
+    {
+        $this->browse(function (Browser $browser): void {
+            $this->ask($browser, 'choice-truncated Welcher Raum?')
+                ->waitFor('[data-ai-choice-truncated]')
+                ->waitUntilMissing('[data-ai-streaming]')
+                ->assertSeeIn('[data-ai-choice-truncated]', 'enger eingrenzen')
+                ->assertMissing('[data-ai-error]');
+
+            $this->assertTrue($browser->script('return !document.querySelector("[data-ai-input]").disabled')[0]);
+
+            // Kein Fehler heisst auch: der naechste Turn laesst sich absenden.
+            $browser->type('[data-ai-input]', 'ok Und weiter?')
+                ->click('[data-ai-send]')
+                ->waitForText('Naechste Schritte');
+        });
+    }
+
+    /** 11. Abbrechen an der Liste sendet nichts. */
+    #[Test]
+    public function dismissing_the_choice_list_sends_nothing(): void
+    {
+        $this->browse(function (Browser $browser): void {
+            $this->ask($browser, 'choice Welcher Raum?')
+                ->waitFor('[data-ai-choice]')
+                ->waitUntilMissing('[data-ai-streaming]')
+                ->click('[data-ai-choice-dismiss]')
+                ->waitUntilMissing('[data-ai-choice]');
+
+            // Genau ein Turn: der eigene. Ein Klick auf „Abbrechen" darf keinen zweiten ausloesen.
+            $turns = $browser->script("return document.querySelectorAll('[data-ai-turn]').length")[0];
+
+            $this->assertSame(1, $turns);
+        });
+    }
+
     /** 8. Panel: Gespraech erscheint, Loeschen fragt nach und entfernt es. */
     #[Test]
     public function the_panel_lists_and_deletes_conversations(): void
@@ -230,6 +312,11 @@ final class AiAssistantBarTest extends DuskTestCase
 
             $this->assertDatabaseMissing('ai_conversations', ['id' => $conversation->id]);
         });
+    }
+
+    private function choiceOptions(Browser $browser): int
+    {
+        return (int) $browser->script("return document.querySelectorAll('[data-ai-choice-option]').length")[0];
     }
 
     private function skipWithoutStub(): void

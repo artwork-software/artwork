@@ -8068,5 +8068,8 @@
     "Keep": "Behalten",
     "Undo is no longer possible — entries were changed.": "Rückgängig geht nicht mehr — Einträge wurden geändert.",
     "Undo failed.": "Rückgängig machen ist fehlgeschlagen.",
-    ":count min": ":count Min."
+    ":count min": ":count Min.",
+    "Narrow down": "Eingrenzen",
+    "No match. Change the filter or just type your answer.": "Kein Treffer. Filter ändern oder die Antwort einfach tippen.",
+    "More matches — narrow your search": "Mehr Treffer — enger eingrenzen"
 }

@@ -57,6 +57,8 @@ final class OpenApiDataSchemasTest extends TestCase
             '/api/v1/ai/me/schedule' => 'AiScheduleData',
             '/api/v1/ai/shift-plan' => 'AiShiftPlanData',
             '/api/v1/ai/inventory/availability' => 'AiInventoryListData',
+            '/api/v1/ai/rooms' => 'AiRoomListData',
+            '/api/v1/ai/event-types' => 'AiEventTypeListData',
             '/api/v1/ai/actions/{action}' => 'AiPendingActionData',
         ];
 

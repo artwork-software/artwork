@@ -20,6 +20,15 @@ final class DevStubScripts
     public const DEFAULT_SCRIPT = 'ok';
 
     /**
+     * Bewusst protokollfremdes Event (Protokoll 1.1, core-ki-bar-choice). Der Client muss es
+     * ignorieren und weiterlaufen. Es hat kein Schema und traegt deshalb `raw`.
+     */
+    public const UNKNOWN_EVENT = 'future.feature';
+
+    /** Ebenso bewusst: ein `done.reason`, den das Schema (noch) nicht kennt. */
+    public const UNKNOWN_DONE_REASON = 'needs_more_input';
+
+    /**
      * Antworttexte in Deltas. `ok` enthaelt Markdown mit Liste und relativem Link, `absolute`
      * einen absoluten Link (muss als Text erscheinen), `html` rohes HTML (muss escaped erscheinen).
      *
@@ -71,7 +80,7 @@ final class DevStubScripts
         return array_values(array_unique(array_merge(
             array_keys(self::TEXT_SCRIPTS),
             array_keys(self::ERROR_SCRIPTS),
-            ['tools', 'slow', 'confirm'],
+            ['tools', 'slow', 'confirm', 'choice', 'choice-truncated'],
         )));
     }
 
@@ -106,6 +115,8 @@ final class DevStubScripts
             'tools' => self::toolsScript(),
             'slow' => self::slowScript(),
             'confirm' => self::confirmScript($actionId),
+            'choice' => self::choiceScript(),
+            'choice-truncated' => self::truncatedChoiceScript(),
             default => self::textScript($keyword),
         });
     }
@@ -223,6 +234,62 @@ final class DevStubScripts
         );
     }
 
+    /**
+     * Auswahl-Liste (Protokoll 1.1). Vor der Frage steht ein unbekanntes Event: die Bar muss es
+     * ignorieren und trotzdem die Liste zeigen (core-ki-bar-choice).
+     *
+     * @return list<array{event: string, data: array<string, mixed>, delay_ms: int, raw?: bool}>
+     */
+    private static function choiceScript(): array
+    {
+        return array_merge(
+            self::deltas(['Welchen Raum meinst du?'], 200),
+            [
+                self::event(self::UNKNOWN_EVENT, ['note' => 'Dieses Event gehoert nicht zum Protokoll.'], 150, true),
+                self::event('choice.request', [
+                    'question' => 'Welchen Raum meinst du?',
+                    'kind' => 'room',
+                    'options' => [
+                        ['id' => 1, 'label' => 'Studio 1', 'hint' => 'Grosses Haus'],
+                        ['id' => 2, 'label' => 'Studio 2', 'hint' => 'Grosses Haus'],
+                        ['id' => 3, 'label' => 'Werkstatt', 'hint' => 'Nebengebaeude'],
+                    ],
+                    'truncated' => false,
+                ], 300),
+                self::event('done', ['reason' => 'awaiting_input'], 100),
+            ],
+        );
+    }
+
+    /**
+     * Gekuerzte Auswahl — die Bar zeigt den Hinweis „enger eingrenzen". Das Skript endet mit
+     * einem unbekannten `done.reason`: auch der darf die Bar nicht blockieren (Protokoll 1.1).
+     *
+     * @return list<array{event: string, data: array<string, mixed>, delay_ms: int, raw?: bool}>
+     */
+    private static function truncatedChoiceScript(): array
+    {
+        $names = ['Probebuehne A', 'Probebuehne B', 'Probebuehne C', 'Probenraum Nord', 'Probenraum Sued'];
+        $options = [];
+
+        foreach ($names as $i => $name) {
+            $options[] = ['id' => $i + 10, 'label' => $name];
+        }
+
+        return array_merge(
+            self::deltas(['Es gibt viele Treffer.'], 200),
+            [
+                self::event('choice.request', [
+                    'question' => 'Welchen Probenraum meinst du?',
+                    'kind' => 'room',
+                    'options' => $options,
+                    'truncated' => true,
+                ], 300),
+                self::event('done', ['reason' => self::UNKNOWN_DONE_REASON], 100, true),
+            ],
+        );
+    }
+
     /** @return list<array{event: string, data: array<string, mixed>, delay_ms: int}> */
     private static function errorScript(string $keyword): array
     {
@@ -253,11 +320,16 @@ final class DevStubScripts
     }
 
     /**
+     * `$raw` markiert ein Event, das absichtlich nicht zum Protokoll gehoert: Stub und
+     * Skript-Test ueberspringen dafuer die Schema-Pruefung, fuer alle anderen bleibt sie streng.
+     *
      * @param array<string, mixed> $data
-     * @return array{event: string, data: array<string, mixed>, delay_ms: int}
+     * @return array{event: string, data: array<string, mixed>, delay_ms: int, raw?: bool}
      */
-    private static function event(string $event, array $data, int $delayMs = 0): array
+    private static function event(string $event, array $data, int $delayMs = 0, bool $raw = false): array
     {
-        return ['event' => $event, 'data' => $data, 'delay_ms' => $delayMs];
+        $entry = ['event' => $event, 'data' => $data, 'delay_ms' => $delayMs];
+
+        return $raw ? array_merge($entry, ['raw' => true]) : $entry;
     }
 }

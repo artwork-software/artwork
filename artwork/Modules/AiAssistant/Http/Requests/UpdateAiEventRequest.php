@@ -7,6 +7,10 @@ namespace Artwork\Modules\AiAssistant\Http\Requests;
  *
  * Alle Felder sind optional; was fehlt, bleibt wie es ist. Der Bulk-Service der Oberflaeche
  * braucht trotzdem den vollstaendigen Satz — den baut der Lese-/Schreibdienst aus dem Termin.
+ *
+ * `all_day` (core-api-lookups) hat drei Zustaende: `true` macht den Termin ganztaegig, `false`
+ * nimmt ihm diese Eigenschaft, und ohne das Feld bleibt sie, wie sie ist. Es faellt deshalb nicht
+ * unter das `array_filter` in `changes()`.
  */
 class UpdateAiEventRequest extends AiWriteRequest
 {
@@ -22,6 +26,7 @@ class UpdateAiEventRequest extends AiWriteRequest
             'end_time' => ['nullable', 'date_format:H:i'],
             'room_id' => ['nullable', 'integer'],
             'type_id' => ['nullable', 'integer'],
+            'all_day' => ['nullable', 'boolean'],
         ]);
     }
 
@@ -30,7 +35,7 @@ class UpdateAiEventRequest extends AiWriteRequest
      */
     public function changes(): array
     {
-        return array_filter(
+        $changes = array_filter(
             [
                 'name' => $this->validated('name'),
                 'day' => $this->validated('day'),
@@ -41,5 +46,12 @@ class UpdateAiEventRequest extends AiWriteRequest
             ],
             static fn (mixed $value): bool => $value !== null
         );
+
+        // `false` ist hier eine Aussage und kein fehlendes Feld — deshalb neben dem Filter.
+            if ($this->validated('all_day') !== null) {
+                $changes['all_day'] = $this->boolean('all_day');
+            }
+
+            return $changes;
     }
 }

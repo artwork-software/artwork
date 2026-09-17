@@ -118,6 +118,33 @@ final class AiEventWriteApiTest extends TestCase
         ]);
     }
 
+    /**
+     * Derselbe Serienbeschrieb ganztaegig: ohne Uhrzeit und ohne Dauer.
+     *
+     * @param array<string, mixed> $overrides
+     * @return array<string, mixed>
+     */
+    private function allDaySeriesPayload(array $overrides = []): array
+    {
+        $payload = $this->seriesPayload($overrides);
+        unset($payload['series_spec']['start_time'], $payload['series_spec']['duration_minutes']);
+        $payload['series_spec']['all_day'] = true;
+
+        return $payload;
+    }
+
+    private function allDayEvent(string $day): Event
+    {
+        return Event::factory()->create([
+            'room_id' => $this->room->id,
+            'project_id' => $this->project->id,
+            'event_type_id' => $this->eventType->id,
+            'start_time' => $day . ' 00:00:00',
+            'end_time' => $day . ' 23:59:59',
+            'allDay' => true,
+        ]);
+    }
+
     private function fakeActionGuard(): void
     {
         $this->app->bind(ActionGuard::class, fn (): ActionGuard => new class implements ActionGuard {
@@ -351,6 +378,117 @@ final class AiEventWriteApiTest extends TestCase
         ])->assertOk();
 
         $this->assertSame('20:00:00', $event->fresh()->start_time->format('H:i:s'));
+    }
+
+    // --- Ganztaegig (core-api-lookups) --------------------------------------------------------
+
+    #[Test]
+    public function a_series_without_times_is_rejected_unless_it_is_all_day(): void
+    {
+        $this->actingAsToken($this->planner());
+
+        $payload = $this->seriesPayload();
+        unset($payload['series_spec']['start_time'], $payload['series_spec']['duration_minutes']);
+
+        $this->postJson('/api/v1/ai/events/batch', $payload)
+            ->assertStatus(422)
+            ->assertJsonValidationErrors(['series_spec.start_time', 'series_spec.duration_minutes']);
+    }
+
+    #[Test]
+    public function the_preview_of_an_all_day_series_covers_the_whole_day(): void
+    {
+        $this->actingAsToken($this->planner());
+
+        $payload = $this->postJson('/api/v1/ai/events/batch', $this->allDaySeriesPayload())->assertOk()->json();
+
+        $this->assertTrue($payload['dry_run']);
+        $this->assertCount(3, $payload['items']);
+        $this->assertStringStartsWith(self::MONDAY . 'T00:00:00', $payload['items'][0]['start']);
+        $this->assertStringStartsWith(self::MONDAY . 'T23:59:59', $payload['items'][0]['end']);
+    }
+
+    #[Test]
+    public function an_execution_creates_all_day_events(): void
+    {
+        $this->fakeActionGuard();
+        $this->actingAsToken($this->planner());
+
+        $payload = $this->postJson(
+            '/api/v1/ai/events/batch',
+            $this->allDaySeriesPayload(['dry_run' => false, 'action_id' => (string) Str::uuid()])
+        )->assertOk()->json();
+
+        $events = Event::query()->whereIn('id', $payload['ids'])->get();
+
+        $this->assertCount(3, $events);
+
+        foreach ($events as $event) {
+            $this->assertTrue((bool) $event->allDay);
+            $this->assertSame('00:00:00', $event->start_time->format('H:i:s'));
+            $this->assertSame('23:59:59', $event->end_time->format('H:i:s'));
+        }
+    }
+
+    #[Test]
+    public function an_execution_turns_a_timed_event_into_an_all_day_event(): void
+    {
+        $this->fakeActionGuard();
+        $event = $this->existingEvent('2026-09-14 19:00:00', '2026-09-14 21:00:00');
+        $this->actingAsToken($this->planner());
+
+        $this->patchJson('/api/v1/ai/events/' . $event->id, [
+            'all_day' => true,
+            'dry_run' => false,
+            'action_id' => (string) Str::uuid(),
+        ])->assertOk();
+
+        $updated = $event->fresh();
+        $this->assertTrue((bool) $updated->allDay);
+        $this->assertSame('00:00:00', $updated->start_time->format('H:i:s'));
+        $this->assertSame('23:59:59', $updated->end_time->format('H:i:s'));
+    }
+
+    #[Test]
+    public function an_all_day_event_gets_times_back_with_all_day_false(): void
+    {
+        $this->fakeActionGuard();
+        $event = $this->allDayEvent(self::MONDAY);
+        $this->actingAsToken($this->planner());
+
+        $this->patchJson('/api/v1/ai/events/' . $event->id, [
+            'all_day' => false,
+            'start_time' => '19:00',
+            'end_time' => '21:00',
+            'dry_run' => false,
+            'action_id' => (string) Str::uuid(),
+        ])->assertOk();
+
+        $updated = $event->fresh();
+        $this->assertFalse((bool) $updated->allDay);
+        $this->assertSame('19:00:00', $updated->start_time->format('H:i:s'));
+    }
+
+    /**
+     * Ohne `all_day` im Aufruf bleibt ein ganztaegiger Termin ganztaegig — sonst machten dessen
+     * Randzeiten (00:00/23:59) aus ihm einen Termin mit Uhrzeit (core-api-lookups).
+     */
+    #[Test]
+    public function an_unrelated_change_keeps_an_event_all_day(): void
+    {
+        $this->fakeActionGuard();
+        $event = $this->allDayEvent(self::MONDAY);
+        $this->actingAsToken($this->planner());
+
+        $this->patchJson('/api/v1/ai/events/' . $event->id, [
+            'name' => 'Umbautag',
+            'dry_run' => false,
+            'action_id' => (string) Str::uuid(),
+        ])->assertOk();
+
+        $updated = $event->fresh();
+        $this->assertTrue((bool) $updated->allDay);
+        $this->assertSame('Umbautag', $updated->eventName);
     }
 
     #[Test]

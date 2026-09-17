@@ -23,6 +23,15 @@ export const MAX_MESSAGE_LENGTH = 4000
 /** 0.3 §5: nach diesen Fehlern bleibt die Eingabe gesperrt, bis die Seite neu geladen wird. */
 const INPUT_LOCKING_CODES = ['budget_exceeded', 'tenant_disabled']
 
+/**
+ * contracts/sse-events/done.schema.json. Protokoll 1.1 ist additiv: ein unbekannter Grund wird
+ * ignoriert und wie `completed` behandelt, nicht als Fehler (core-ki-bar-choice).
+ */
+const DONE_REASONS = ['completed', 'awaiting_confirmation', 'awaiting_input', 'cancelled', 'error']
+
+/** Gruende, nach denen der Mensch wieder dran ist — die Eingabe muss dann offen sein. */
+const IDLE_AFTER = ['completed', 'awaiting_confirmation', 'awaiting_input']
+
 const state = reactive({
     open: false,
     /** idle | streaming | error | interrupted */
@@ -111,6 +120,7 @@ function newTurn(message) {
         tools: [],
         error: null,
         confirm: null,
+        choice: null,
         result: null,
         /** streaming | completed | cancelled | error | awaiting_confirmation */
         status: 'streaming',
@@ -237,6 +247,19 @@ function handleEvent(event, turn) {
             state.pendingConfirm = turn.confirm
 
             return null
+        case 'choice.request':
+            // Protokoll 1.1: Kandidaten zum Anklicken. Gefiltert wird im Browser ueber genau
+            // diese Liste; `truncated` sagt der Person, dass es mehr gibt.
+            turn.choice = {
+                question: typeof data.question === 'string' ? data.question : '',
+                kind: typeof data.kind === 'string' ? data.kind : 'other',
+                options: Array.isArray(data.options) ? data.options : [],
+                truncated: data.truncated === true,
+                /** open | answered */
+                status: 'open',
+            }
+
+            return null
         case 'error':
             if (data.code === 'token_expired') {
                 return 'token_expired'
@@ -245,11 +268,22 @@ function handleEvent(event, turn) {
             applyError(turn, errorFrom(data))
 
             return null
-        case 'done':
+        case 'done': {
             renderNow(turn)
-            turn.status = typeof data.reason === 'string' ? data.reason : 'completed'
 
-            if (turn.status === 'completed' || turn.status === 'awaiting_confirmation') {
+            const reason = typeof data.reason === 'string' ? data.reason : 'completed'
+
+            if (!DONE_REASONS.includes(reason)) {
+                console.debug('[ai] unbekannter done.reason ignoriert:', reason)
+                turn.status = 'completed'
+                state.status = 'idle'
+
+                return null
+            }
+
+            turn.status = reason
+
+            if (IDLE_AFTER.includes(turn.status)) {
                 state.status = 'idle'
             }
 
@@ -260,7 +294,11 @@ function handleEvent(event, turn) {
             }
 
             return null
+        }
         default:
+            // Protokoll 1.1: unbekannte Event-Namen werden ignoriert, nicht als Fehler gewertet.
+            console.debug('[ai] unbekanntes Event ignoriert:', event.event)
+
             return null
     }
 }
@@ -373,11 +411,44 @@ export function useAiAssistant() {
                 return
             }
 
+            // Wer statt zu klicken tippt, hat die Frage ebenfalls beantwortet — die alte Liste
+            // ist danach nicht mehr aktuell (core-ki-bar-choice).
+            this.closeOpenChoices()
+
             const turn = newTurn(text.slice(0, MAX_MESSAGE_LENGTH))
             state.turns.push(turn)
             state.pendingConfirm = null
 
             await runTurn(turn)
+        },
+
+        /**
+         * Klick auf einen Kandidaten (Protokoll 1.1): das Label geht als ganz normale Nachricht
+         * zurueck. Kein Sonderformat — das Modell erkennt die Antwort aus dem Gespraechskontext.
+         */
+        async chooseOption(turn, option) {
+            const label = typeof option?.label === 'string' ? option.label : ''
+
+            if (turn?.choice?.status !== 'open' || label === '') {
+                return
+            }
+
+            await this.send(label)
+        },
+
+        /** Verwerfen (Esc oder „Abbrechen"): schliesst die Liste, sendet nichts. */
+        dismissChoice(turn) {
+            if (turn?.choice) {
+                turn.choice.status = 'answered'
+            }
+        },
+
+        closeOpenChoices() {
+            state.turns
+                .filter((turn) => turn.choice?.status === 'open')
+                .forEach((turn) => {
+                    turn.choice.status = 'answered'
+                })
         },
 
         /** Wiederholung nach einem wiederholbaren Fehler — neuer Turn, neue client_turn_id. */
@@ -542,6 +613,7 @@ export function useAiAssistant() {
                 })),
                 error: turn.error_code ? { code: turn.error_code, message: '', retryable: false, retryAfterSeconds: null } : null,
                 confirm: null,
+                choice: null,
                 status: turn.status,
                 retriedAfterTokenExpiry: false,
             }))

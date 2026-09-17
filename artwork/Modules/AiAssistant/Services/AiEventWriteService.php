@@ -59,8 +59,9 @@ class AiEventWriteService
 
     /**
      * @param array{
-     *     from: string, to: string, weekdays: list<int>, start_time: string,
-     *     duration_minutes: int, room_id: int, type_id: int, name: string|null, description: string|null
+     *     from: string, to: string, weekdays: list<int>, all_day: bool, start_time: string|null,
+     *     duration_minutes: int|null, room_id: int, type_id: int, name: string|null,
+     *     description: string|null
      * } $spec
      */
     public function createBatch(
@@ -301,8 +302,9 @@ class AiEventWriteService
 
     /**
      * @param array{
-     *     from: string, to: string, weekdays: list<int>, start_time: string,
-     *     duration_minutes: int, room_id: int, type_id: int, name: string|null, description: string|null
+     *     from: string, to: string, weekdays: list<int>, all_day: bool, start_time: string|null,
+     *     duration_minutes: int|null, room_id: int, type_id: int, name: string|null,
+     *     description: string|null
      * } $spec
      * @return list<CarbonImmutable>
      */
@@ -325,21 +327,28 @@ class AiEventWriteService
     }
 
     /**
+     * Ganztaegige Termine gehen **ohne** Zeiten an den Bulk-Service: `processEventTimes()`
+     * (`EventService.php:2053-2073`) setzt dann `allDay` und dehnt den Termin auf den ganzen Tag.
+     * Selbst zu rechnen hiesse, dieselbe Regel ein zweites Mal zu pflegen.
+     *
      * @param array{
-     *     start_time: string, duration_minutes: int, room_id: int, type_id: int,
-     *     name: string|null, description: string|null, from: string, to: string, weekdays: list<int>
+     *     all_day: bool, start_time: string|null, duration_minutes: int|null, room_id: int,
+     *     type_id: int, name: string|null, description: string|null, from: string, to: string,
+     *     weekdays: list<int>
      * } $spec
      * @return array<string, mixed>
      */
     private function creationPayload(CarbonImmutable $day, array $spec): array
     {
-        $start = $day->setTimeFromTimeString($spec['start_time']);
-        $end = $start->addMinutes($spec['duration_minutes']);
+        $start = $spec['all_day'] || $spec['start_time'] === null
+            ? null
+            : $day->setTimeFromTimeString($spec['start_time']);
+        $end = $start === null ? null : $start->addMinutes((int) $spec['duration_minutes']);
 
         return [
             'day' => $day->toDateString(),
-            'start_time' => $start->format('H:i'),
-            'end_time' => $end->format('H:i'),
+            'start_time' => $start?->format('H:i'),
+            'end_time' => $end?->format('H:i'),
             'name' => $spec['name'] ?? '',
             'description' => $spec['description'],
             'type' => ['id' => $spec['type_id']],
@@ -352,22 +361,41 @@ class AiEventWriteService
      * Der Bulk-Service der Oberflaeche erwartet den vollstaendigen Satz; was der Aufruf nicht
      * mitschickt, kommt aus dem Termin.
      *
+     * Ganztaegig ist auch hier die Abwesenheit von Zeiten (siehe `creationPayload()`). Ohne
+     * `all_day` im Aufruf behaelt der Termin seine Eigenschaft: fuer einen ganztaegigen Termin
+     * stuenden sonst dessen Randzeiten (00:00 und 23:59) im Satz, und der Bulk-Service machte
+     * daraus einen Termin mit Uhrzeit (core-api-lookups).
+     *
      * @param array<string, mixed> $changes
      * @return array<string, mixed>
      */
     private function updatePayload(Event $event, array $changes): array
     {
-        $start = CarbonImmutable::parse($event->start_time);
-        $end = CarbonImmutable::parse($event->end_time);
-
         return [
             'name' => $changes['name'] ?? ($event->eventName ?: $event->name),
-            'day' => $changes['day'] ?? $start->toDateString(),
-            'start_time' => $changes['start_time'] ?? $start->format('H:i'),
-            'end_time' => $changes['end_time'] ?? $end->format('H:i'),
+            'day' => $changes['day'] ?? CarbonImmutable::parse($event->start_time)->toDateString(),
+            ...$this->updateTimes($event, $changes),
             'type' => ['id' => $changes['type_id'] ?? $event->event_type_id],
             'room' => ['id' => $changes['room_id'] ?? $event->room_id],
             'is_planning' => (bool) $event->is_planning,
+        ];
+    }
+
+    /**
+     * @param array<string, mixed> $changes
+     * @return array{start_time: string|null, end_time: string|null}
+     */
+    private function updateTimes(Event $event, array $changes): array
+    {
+        $allDay = array_key_exists('all_day', $changes) ? (bool) $changes['all_day'] : (bool) $event->allDay;
+
+        if ($allDay) {
+            return ['start_time' => null, 'end_time' => null];
+        }
+
+        return [
+            'start_time' => $changes['start_time'] ?? CarbonImmutable::parse($event->start_time)->format('H:i'),
+            'end_time' => $changes['end_time'] ?? CarbonImmutable::parse($event->end_time)->format('H:i'),
         ];
     }
 

@@ -7,6 +7,7 @@ use Artwork\Modules\AiAssistant\Http\Controllers\Api\AiConversationApiController
 use Artwork\Modules\AiAssistant\Http\Controllers\Api\AiEventApiController;
 use Artwork\Modules\AiAssistant\Http\Controllers\Api\AiEventWriteApiController;
 use Artwork\Modules\AiAssistant\Http\Controllers\Api\AiInventoryApiController;
+use Artwork\Modules\AiAssistant\Http\Controllers\Api\AiLookupApiController;
 use Artwork\Modules\AiAssistant\Http\Controllers\Api\AiProjectApiController;
 use Artwork\Modules\AiAssistant\Http\Controllers\Api\AiShiftApiController;
 use Artwork\Modules\AiAssistant\Http\Controllers\JwksController;
@@ -91,6 +92,15 @@ Route::middleware(['auth:api', EnsureTokenNotExpired::class, 'throttle:machine-a
         // wo das Projekt fuer die fragende Person sichtbar ist (B1 §5, gleiche Trennung wie beim Raum).
         Route::get('/ai/inventory/availability', AiInventoryApiController::class)
             ->name('api.v1.ai.inventory.availability');
+
+        // Nachschlagen von Stammdaten (core-api-lookups): ohne diese beiden Listen kann das Modell
+        // einen Raum- oder Terminartnamen nicht in die IDs aufloesen, die die Schreib-Endpunkte
+        // verlangen. Bewusst ohne Zeitraum — es sind keine Aggregationen.
+        Route::get('/ai/rooms', [AiLookupApiController::class, 'rooms'])
+            ->name('api.v1.ai.rooms.index');
+
+        Route::get('/ai/event-types', [AiLookupApiController::class, 'eventTypes'])
+            ->name('api.v1.ai.event-types.index');
     });
 
     // Schreib-Endpunkte (Stufe C, Konzept W1). Statt CheckToken steht hier EnsureAiWriteScope:

@@ -44,6 +44,11 @@ final class AiDevStubScriptsTest extends TestCase
         $this->assertNotEmpty($events, "Skript {$keyword} ist leer");
 
         foreach ($events as $index => $event) {
+            // Die Sonden aus Protokoll 1.1 haben absichtlich kein Schema (core-ki-bar-choice).
+            if (($event['raw'] ?? false) === true) {
+                continue;
+            }
+
             $errors = $this->validator->errorsFor($event['event'], $event['data']);
 
             $this->assertSame(
@@ -75,13 +80,17 @@ final class AiDevStubScriptsTest extends TestCase
         }
     }
 
-    /** Der Brief nennt 13 Skripte; laeuft die Liste auseinander, faellt es hier auf. */
+    /**
+     * 13 Skripte aus dem Brief zu core-ki-bar-ui, dazu die beiden Auswahl-Skripte aus
+     * core-ki-bar-choice. Laeuft die Liste auseinander, faellt es hier auf.
+     */
     #[Test]
-    public function the_stub_offers_the_thirteen_scripts_from_the_brief(): void
+    public function the_stub_offers_the_scripts_from_the_briefs(): void
     {
         $expected = [
             'ok', 'tools', 'slow', 'expired', 'rate', 'budget', 'disabled',
             'provider', 'transcript', 'internal', 'confirm', 'absolute', 'html',
+            'choice', 'choice-truncated',
         ];
 
         $actual = DevStubScripts::keywords();
@@ -91,9 +100,42 @@ final class AiDevStubScriptsTest extends TestCase
         $this->assertSame($expected, $actual);
     }
 
+    /**
+     * Die beiden Sonden aus Protokoll 1.1 sind da und tragen `raw` — sonst liefe der Client-Test
+     * gegen ein Skript, das gar nichts Unbekanntes mehr enthaelt (core-ki-bar-choice).
+     */
+    #[Test]
+    public function the_choice_scripts_carry_the_protocol_probes(): void
+    {
+        $choice = DevStubScripts::build('choice', (string) Str::uuid(), (string) Str::uuid());
+        $truncated = DevStubScripts::build('choice-truncated', (string) Str::uuid(), (string) Str::uuid());
+
+        $unknownEvent = array_values(array_filter(
+            $choice,
+            static fn (array $event): bool => $event['event'] === DevStubScripts::UNKNOWN_EVENT
+        ));
+
+        $this->assertCount(1, $unknownEvent);
+        $this->assertTrue($unknownEvent[0]['raw']);
+
+        $last = $truncated[array_key_last($truncated)];
+
+        $this->assertSame('done', $last['event']);
+        $this->assertSame(DevStubScripts::UNKNOWN_DONE_REASON, $last['data']['reason']);
+        $this->assertTrue($last['raw']);
+
+        $request = array_values(array_filter(
+            $truncated,
+            static fn (array $event): bool => $event['event'] === 'choice.request'
+        ));
+
+        $this->assertTrue($request[0]['data']['truncated']);
+    }
+
     #[Test]
     public function the_first_word_of_the_message_selects_the_script(): void
     {
+        $this->assertSame('choice-truncated', DevStubScripts::resolveKeyword('choice-truncated bitte'));
         $this->assertSame('tools', DevStubScripts::resolveKeyword('tools bitte die Schichten'));
         $this->assertSame('rate', DevStubScripts::resolveKeyword('  RATE  '));
         $this->assertSame('ok', DevStubScripts::resolveKeyword('Wann ist die naechste Probe?'));

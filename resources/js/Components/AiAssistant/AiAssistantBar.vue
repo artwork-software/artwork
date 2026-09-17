@@ -138,6 +138,15 @@
                                             {{ $t('Cancelled') }}
                                         </p>
 
+                                        <AiChoiceList
+                                            v-if="turn.choice && turn.choice.status === 'open'"
+                                            :question="turn.choice.question"
+                                            :options="turn.choice.options"
+                                            :truncated="turn.choice.truncated"
+                                            @choose="assistant.chooseOption(turn, $event)"
+                                            @dismiss="assistant.dismissChoice(turn)"
+                                        />
+
                                         <AiActionConfirm
                                             v-if="turn.confirm"
                                             :preview="turn.confirm.preview"
@@ -260,6 +269,7 @@ import { useI18n } from 'vue-i18n'
 import PropertyIcon from '@/Artwork/Icon/PropertyIcon.vue'
 import AiActionConfirm from '@/Components/AiAssistant/AiActionConfirm.vue'
 import AiActionResult from '@/Components/AiAssistant/AiActionResult.vue'
+import AiChoiceList from '@/Components/AiAssistant/AiChoiceList.vue'
 import AiConversationPanel from '@/Components/AiAssistant/AiConversationPanel.vue'
 import { MAX_MESSAGE_LENGTH, useAiAssistant } from '@/Composeables/useAiAssistant'
 

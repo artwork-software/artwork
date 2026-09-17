@@ -229,7 +229,7 @@ class DevStubController extends Controller
     }
 
     /**
-     * @param list<array{event: string, data: array<string, mixed>, delay_ms: int}> $events
+     * @param list<array{event: string, data: array<string, mixed>, delay_ms: int, raw?: bool}> $events
      */
     private function stream(array $events): StreamedResponse
     {
@@ -247,7 +247,10 @@ class DevStubController extends Controller
                     return;
                 }
 
-                if ($validate) {
+                // `raw` markiert die bewusst protokollfremden Sonden aus Protokoll 1.1
+                // (unbekanntes Event, unbekannter done.reason) — fuer alles andere bleibt die
+                // Pruefung streng (core-ki-bar-choice).
+                if ($validate && ($event['raw'] ?? false) !== true) {
                     $this->validator->assertValid($event['event'], $event['data']);
                 }
 

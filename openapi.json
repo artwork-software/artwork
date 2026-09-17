@@ -735,6 +735,104 @@
                 }
             }
         },
+        "/api/v1/ai/rooms": {
+            "get": {
+                "operationId": "v1.ai.rooms.index",
+                "tags": [
+                    "AiLookupApi"
+                ],
+                "parameters": [
+                    {
+                        "name": "q",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "string",
+                                "null"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "integer",
+                                "null"
+                            ],
+                            "minimum": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "`AiRoomListData`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AiRoomListData"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
+        "/api/v1/ai/event-types": {
+            "get": {
+                "operationId": "v1.ai.event-types.index",
+                "tags": [
+                    "AiLookupApi"
+                ],
+                "parameters": [
+                    {
+                        "name": "q",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "string",
+                                "null"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "integer",
+                                "null"
+                            ],
+                            "minimum": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "`AiEventTypeListData`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AiEventTypeListData"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
         "/api/v1/ai/projects": {
             "get": {
                 "operationId": "v1.ai.projects.index",
@@ -1654,6 +1752,61 @@
                 ],
                 "title": "AiEventListData"
             },
+            "AiEventTypeData": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer"
+                    },
+                    "name": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "abbreviation": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "is_default": {
+                        "type": "boolean"
+                    }
+                },
+                "required": [
+                    "id",
+                    "is_default"
+                ],
+                "title": "AiEventTypeData"
+            },
+            "AiEventTypeListData": {
+                "type": "object",
+                "properties": {
+                    "data": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/AiEventTypeData"
+                        }
+                    },
+                    "total": {
+                        "type": "integer"
+                    },
+                    "limit": {
+                        "type": "integer"
+                    },
+                    "truncated": {
+                        "type": "boolean"
+                    }
+                },
+                "required": [
+                    "data",
+                    "total",
+                    "limit",
+                    "truncated"
+                ],
+                "title": "AiEventTypeListData"
+            },
             "AiFreeSlotData": {
                 "type": "object",
                 "properties": {
@@ -2090,6 +2243,61 @@
                     "id"
                 ],
                 "title": "AiRefData"
+            },
+            "AiRoomData": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer"
+                    },
+                    "name": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "area": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/AiRefData"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    }
+                },
+                "required": [
+                    "id"
+                ],
+                "title": "AiRoomData"
+            },
+            "AiRoomListData": {
+                "type": "object",
+                "properties": {
+                    "data": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/AiRoomData"
+                        }
+                    },
+                    "total": {
+                        "type": "integer"
+                    },
+                    "limit": {
+                        "type": "integer"
+                    },
+                    "truncated": {
+                        "type": "boolean"
+                    }
+                },
+                "required": [
+                    "data",
+                    "total",
+                    "limit",
+                    "truncated"
+                ],
+                "title": "AiRoomListData"
             },
             "AiRoomOccupancyData": {
                 "type": "object",
@@ -2811,7 +3019,7 @@
             },
             "StoreAiEventBatchRequest": {
                 "type": "object",
-                "description": "POST /api/v1/ai/events/batch (core-write-endpoints-dry-run; Konzept W1 §1).\n\nDer Serienbeschrieb ist bewusst eng: Zeitraum, Wochentage, Uhrzeit, Dauer, Raum, Typ. Alles\nandere legt der Bulk-Service der Oberflaeche fest.",
+                "description": "POST /api/v1/ai/events/batch (core-write-endpoints-dry-run; Konzept W1 §1).\n\nDer Serienbeschrieb ist bewusst eng: Zeitraum, Wochentage, Uhrzeit, Dauer, Raum, Typ. Alles\nandere legt der Bulk-Service der Oberflaeche fest.\n\n`all_day` (core-api-lookups) schaltet Uhrzeit und Dauer ab: ganztaegige Termine haben keine,\nund mit `required` waeren sie nur ueber eine erfundene Uhrzeit ausdrueckbar.",
                 "properties": {
                     "dry_run": {
                         "type": "boolean"
@@ -2848,6 +3056,12 @@
                                     "maximum": 7
                                 }
                             },
+                            "all_day": {
+                                "type": [
+                                    "boolean",
+                                    "null"
+                                ]
+                            },
                             "start_time": {
                                 "type": "string"
                             },
@@ -2878,8 +3092,6 @@
                         "required": [
                             "from",
                             "to",
-                            "start_time",
-                            "duration_minutes",
                             "room_id",
                             "type_id"
                         ]
@@ -2918,7 +3130,7 @@
             },
             "UpdateAiEventRequest": {
                 "type": "object",
-                "description": "PATCH /api/v1/ai/events/{event} (core-write-endpoints-dry-run; Konzept W1 §1).\n\nAlle Felder sind optional; was fehlt, bleibt wie es ist. Der Bulk-Service der Oberflaeche\nbraucht trotzdem den vollstaendigen Satz — den baut der Lese-/Schreibdienst aus dem Termin.",
+                "description": "PATCH /api/v1/ai/events/{event} (core-write-endpoints-dry-run; Konzept W1 §1).\n\nAlle Felder sind optional; was fehlt, bleibt wie es ist. Der Bulk-Service der Oberflaeche\nbraucht trotzdem den vollstaendigen Satz — den baut der Lese-/Schreibdienst aus dem Termin.\n\n`all_day` (core-api-lookups) hat drei Zustaende: `true` macht den Termin ganztaegig, `false`\nnimmt ihm diese Eigenschaft, und ohne das Feld bleibt sie, wie sie ist. Es faellt deshalb nicht\nunter das `array_filter` in `changes()`.",
                 "properties": {
                     "dry_run": {
                         "type": "boolean"
@@ -2964,6 +3176,12 @@
                     "type_id": {
                         "type": [
                             "integer",
+                            "null"
+                        ]
+                    },
+                    "all_day": {
+                        "type": [
+                            "boolean",
                             "null"
                         ]
                     }

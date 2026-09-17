@@ -24,7 +24,7 @@ class EventVerificationService
         private readonly NotificationService $notificationService,
         private readonly ChangeService $changeService,
         private readonly RoomRequestNotificationService $roomRequestNotificationService,
-    ){
+    ) {
     }
 
     /**
@@ -61,13 +61,14 @@ class EventVerificationService
         );
     }
 
-    public function getAllByUser(User $user, int $paginate = 5, string $filterVerificationRequest = '') {
-        return EventVerification::where(function ($query) use ($user) {
+    public function getAllByUser(User $user, int $paginate = 5, string $filterVerificationRequest = '')
+    {
+        return EventVerification::where(function ($query) use ($user): void {
             $query->where('verifier_id', $user->id)
                 ->orWhere('event_id', $user->id);
-            })
+        })
             ->with(['event.room', 'event.event_type', 'event.project', 'verifier', 'requester'])
-            ->when(!empty($filterVerificationRequest), function ($query) use ($filterVerificationRequest) {
+            ->when(!empty($filterVerificationRequest), function ($query) use ($filterVerificationRequest): void {
                 $query->where('status', $filterVerificationRequest);
             })
             ->orderBy('created_at', 'desc')
@@ -85,7 +86,7 @@ class EventVerificationService
             ->orderBy('created_at', 'desc')
             ->paginate($paginate);
 
-        $events->each(function ($event) {
+        $events->each(function ($event): void {
             $groupedByUuid = $event->verifications
                 ->sortByDesc('created_at')
                 ->groupBy('uuid');
@@ -93,7 +94,11 @@ class EventVerificationService
             $latestGroup = $groupedByUuid->first();
             $totalCount = $latestGroup->count() ?: 1; // Vermeidet Division durch 0
 
-            $groupedByStatus = collect(['approved', 'rejected', 'pending'])->mapWithKeys(function ($status) use ($latestGroup) {
+            $groupedByStatus = collect([
+                'approved',
+                'rejected',
+                'pending',
+            ])->mapWithKeys(function ($status) use ($latestGroup) {
                 $verifiers = $latestGroup->where('status', $status)->map(function ($verification) use ($status) {
                     $verifier = $verification->verifier;
 
@@ -119,7 +124,11 @@ class EventVerificationService
                 return [$status => $verifiers->values()];
             });
 
-            $statusCounts = collect(['pending', 'approved', 'rejected'])->mapWithKeys(function ($status) use ($latestGroup) {
+            $statusCounts = collect([
+                'pending',
+                'approved',
+                'rejected',
+            ])->mapWithKeys(function ($status) use ($latestGroup) {
                 return [
                     $status => $latestGroup->where('status', $status)->count()
                 ];
@@ -203,19 +212,33 @@ class EventVerificationService
         switch ($eventType?->verification_mode) {
             case 'any':
                 $this->confirmEvent($event);
-                $notificationTitle = __('notification.request-verification.approved-finished', [], $eventCreator?->language);
+                $notificationTitle = __(
+                    'notification.request-verification.approved-finished',
+                    [],
+                    $eventCreator?->language
+                );
                 $event->verifications()->where('status', 'pending')->delete();
                 break;
 
             case 'all':
-                $approvedCount = $event->verifications()->where('status', 'approved')->where('uuid', $verification->uuid )->count();
-                $totalCount = $event->verifications()->whereIn('status', ['approved', 'rejected'])->where('uuid', $verification->uuid )->count();
+                $approvedCount = $event->verifications()->where('status', 'approved')->where(
+                    'uuid',
+                    $verification->uuid
+                )->count();
+                $totalCount = $event->verifications()->whereIn('status', [
+                    'approved',
+                    'rejected',
+                ])->where('uuid', $verification->uuid)->count();
                 $notificationTitle = __('notification.request-verification.user-approved', [
                     'name' => $verification->verifier?->full_name ?? '',
                 ], $eventCreator?->language);
                 if ($approvedCount === $totalCount) {
                     $this->confirmEvent($event);
-                    $notificationTitle = __('notification.request-verification.approved-finished', [], $eventCreator?->language);
+                    $notificationTitle = __(
+                        'notification.request-verification.approved-finished',
+                        [],
+                        $eventCreator?->language
+                    );
                 }
                 break;
 
@@ -223,7 +246,11 @@ class EventVerificationService
                 $specificVerifier = $eventType->specificVerifier;
                 if ($specificVerifier !== null && $verification->verifier_id === $specificVerifier->id) {
                     $this->confirmEvent($event);
-                    $notificationTitle = __('notification.request-verification.approved-finished', [], $eventCreator?->language);
+                    $notificationTitle = __(
+                        'notification.request-verification.approved-finished',
+                        [],
+                        $eventCreator?->language
+                    );
                 }
                 break;
         }
@@ -235,7 +262,9 @@ class EventVerificationService
 
         $this->notificationService->setIcon('green');
         $this->notificationService->setPriority(3);
-        $this->notificationService->setNotificationConstEnum(NotificationEnum::NOTIFICATION_EVENT_VERIFICATION_REQUESTS);
+        $this
+            ->notificationService
+            ->setNotificationConstEnum(NotificationEnum::NOTIFICATION_EVENT_VERIFICATION_REQUESTS);
 
         $broadcastMessage = [
             'id' => Str::uuid()->toString(),
@@ -310,7 +339,9 @@ class EventVerificationService
 
         $this->notificationService->setIcon('red');
         $this->notificationService->setPriority(3);
-        $this->notificationService->setNotificationConstEnum(NotificationEnum::NOTIFICATION_EVENT_VERIFICATION_REQUESTS);
+        $this
+            ->notificationService
+            ->setNotificationConstEnum(NotificationEnum::NOTIFICATION_EVENT_VERIFICATION_REQUESTS);
         $notificationTitle = __('notification.request-verification.user-rejected', [
             'name' => $verification->verifier?->full_name ?? '',
         ], $eventCreator->language);
@@ -379,7 +410,9 @@ class EventVerificationService
 
         $this->notificationService->setIcon('green');
         $this->notificationService->setPriority(3);
-        $this->notificationService->setNotificationConstEnum(NotificationEnum::NOTIFICATION_EVENT_VERIFICATION_REQUESTS);
+        $this
+            ->notificationService
+            ->setNotificationConstEnum(NotificationEnum::NOTIFICATION_EVENT_VERIFICATION_REQUESTS);
 
         /** @var User $verifier */
         foreach ($verifiers as $verifier) {

@@ -130,8 +130,11 @@ class ProjectTabMaterialIssueService
             'externalMaterials' => $externalMaterials,
             'first_event' => $project->events()->orderBy('start_time', 'ASC')->first(),
             'last_event' => $project->events()->orderBy('end_time', 'DESC')->first(),
-            'materialSets' => MaterialSet::with('items.article', 'items.article.category', 'items.article.subCategory')->get(),
+            'materialSets' => MaterialSet::with(
+                'items.article',
+                'items.article.category',
+                'items.article.subCategory'
+            )->get(),
         ];
     }
 }
-

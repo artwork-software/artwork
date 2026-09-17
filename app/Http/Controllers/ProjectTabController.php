@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use Artwork\Modules\Project\Enum\ProjectTabComponentEnum;
 use Artwork\Modules\Project\Models\Component;
 use Artwork\Modules\Project\Models\ComponentInTab;
 use Artwork\Modules\Project\Models\DisclosureComponents;
@@ -10,6 +11,7 @@ use Artwork\Modules\Project\Models\ProjectTab;
 use Artwork\Modules\Project\Models\ProjectTabSidebarTab;
 use Artwork\Modules\Project\Models\SidebarTabComponent;
 use Artwork\Modules\Project\Services\ComponentUsageService;
+use Artwork\Modules\SageApiSettings\Services\SageApiSettingsService;
 use Illuminate\Http\Request;
 use Inertia\Response;
 use Inertia\ResponseFactory;
@@ -120,6 +122,16 @@ class ProjectTabController extends Controller
                 ->orderBy('name')
                 ->get();
         });
+
+        // Sage-Rechnungsübersicht nur anbieten, wenn die Sage-Schnittstelle aktiv ist
+        // (nach dem Cache gefiltert, damit der Schalter ohne Cache-Flush wirkt)
+        if (!app(SageApiSettingsService::class)->isEnabled()) {
+            $componentsSpecial = $componentsSpecial
+                ->reject(
+                    fn (Component $component) => $component->type === ProjectTabComponentEnum::SAGE_INVOICE_OVERVIEW->value
+                )
+                ->values();
+        }
 
         return inertia('Settings/ProjectTab/Index', [
             'tabs' => $tabs,
@@ -270,18 +282,24 @@ class ProjectTabController extends Controller
                 ->exists();
 
             if ($exists) {
-                return redirect()->back()->withErrors(['error' => 'Diese Komponente ist bereits im Sidebar-Tab vorhanden']);
+                return redirect()
+                    ->back()
+                    ->withErrors(['error' => 'Diese Komponente ist bereits im Sidebar-Tab vorhanden']);
             }
 
             // Prüfe ob die Komponente Sidebar-fähig ist
             $component = Component::find($validated['component_id']);
             if (!$component->sidebar_enabled) {
-                return redirect()->back()->withErrors(['error' => 'Diese Komponente kann nicht in die Sidebar gelegt werden']);
+                return redirect()
+                    ->back()
+                    ->withErrors(['error' => 'Diese Komponente kann nicht in die Sidebar gelegt werden']);
             }
 
             // Prüfe ob es sich um eine Ordnerkomponente handelt
             if ($component->type === 'DisclosureComponent') {
-                return redirect()->back()->withErrors(['error' => 'Ordnerkomponenten können nicht in die Sidebar gelegt werden']);
+                return redirect()
+                    ->back()
+                    ->withErrors(['error' => 'Ordnerkomponenten können nicht in die Sidebar gelegt werden']);
             }
 
             // Verschiebe alle Komponenten mit höherer Order um 1 nach oben

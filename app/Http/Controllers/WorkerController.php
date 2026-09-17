@@ -14,6 +14,9 @@ class WorkerController extends Controller
 
     public function scoutWorkerSearch(Request $request): Collection
     {
-        return $this->workerService->searchWorkers($request->string('query'));
+        // UserSearch.vue sendet den Suchbegriff als user_search (wie user.scoutSearch); query bleibt als Fallback
+        $search = (string) $request->string('user_search', (string) $request->string('query'));
+
+        return $this->workerService->searchWorkers($search);
     }
 }

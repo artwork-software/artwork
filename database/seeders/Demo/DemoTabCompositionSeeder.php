@@ -41,7 +41,11 @@ class DemoTabCompositionSeeder extends Seeder
         [
             'name' => 'Technische Anforderungen',
             'type' => ProjectTabComponentEnum::TEXT_AREA,
-            'data' => ['label' => 'Technische Anforderungen', 'text' => '', 'placeholder' => 'Rider, Sonderbedarfe, Sicherheitsauflagen …'],
+            'data' => [
+                'label' => 'Technische Anforderungen',
+                'text' => '',
+                'placeholder' => 'Rider, Sonderbedarfe, Sicherheitsauflagen …',
+            ],
         ],
         [
             'name' => 'Ansprechperson extern',

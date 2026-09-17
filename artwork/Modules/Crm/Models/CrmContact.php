@@ -2,6 +2,7 @@
 
 namespace Artwork\Modules\Crm\Models;
 
+use Artwork\Modules\Inventory\Models\InventoryArticle;
 use Artwork\Modules\Accommodation\Models\AccommodationRoomType;
 use Artwork\Modules\ArtistResidency\Models\ArtistResidency;
 use Artwork\Modules\Contacts\Models\Traits\HasContacts;
@@ -40,6 +41,11 @@ class CrmContact extends Model
 
     protected static function booted(): void
     {
+        // Hersteller-Lookup-Cache der Inventar-Artikel (je Prozess, unter Octane/Swoole
+        // request-übergreifend) nach Umbenennung/Löschung leeren
+        static::saved(static fn () => InventoryArticle::flushPropertyLookupCaches());
+        static::deleted(static fn () => InventoryArticle::flushPropertyLookupCaches());
+
         // Beim (Soft-)Löschen eines Kontakts offene externe Zugänge widerrufen –
         // die DB-Cascade auf external_accesses feuert bei Soft-Delete NICHT, sonst
         // könnte sich ein extern eingeladener, "gelöschter" Kontakt weiter einloggen.

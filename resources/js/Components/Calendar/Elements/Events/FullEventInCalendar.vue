@@ -1433,13 +1433,11 @@ const deleteSeriesEvents = () => {
 };
 
 const confirmDeleteSeriesEvents = () => {
-    router.delete(route("events.series.delete", props.event.id), {
-        preserveScroll: true,
-        preserveState: true,
-        onFinish: () => {
+    // JSON-Endpunkt (kein Inertia-Response); der Kalender lädt über den OccupancyUpdated-Broadcast nach
+    axios.delete(route("events.series.delete", props.event.id), { data: { scope: "all" } })
+        .finally(() => {
             showDeleteSeriesModal.value = false;
-        }
-    });
+        });
 };
 
 const closeDeleteSeriesModal = () => {

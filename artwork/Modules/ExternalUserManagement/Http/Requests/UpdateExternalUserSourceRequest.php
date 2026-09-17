@@ -90,9 +90,11 @@ class UpdateExternalUserSourceRequest extends FormRequest
             $active = $this->has('active') ? $this->boolean('active') : (bool) $source?->active;
             $config = $this->has('config') ? $this->input('config', []) : ($source?->config ?? []);
 
-            if ($this->resolvedType() === 'identity_provider'
+            if (
+                $this->resolvedType() === 'identity_provider'
                 && $active
-                && empty($config['allowed_domains'] ?? [])) {
+                && empty($config['allowed_domains'] ?? [])
+            ) {
                 $validator->errors()->add(
                     'config.allowed_domains',
                     __('An active identity provider requires at least one allowed email domain.')

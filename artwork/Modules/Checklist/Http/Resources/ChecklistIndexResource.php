@@ -30,8 +30,7 @@ class ChecklistIndexResource extends JsonResource
                 'name' => $this->project->name,
             ] : null,
             'checklist_tab_id' => $this->tab_id,
-            'tasks' => $this->tasks()->with('task_users')->orderBy('order')->get()
-            ->map(function (Task $task) {
+            'tasks' => $this->orderedTasks()->map(function (Task $task) {
                 return [
                     'id' => $task->id,
                     'name' => $task->name,
@@ -52,5 +51,24 @@ class ChecklistIndexResource extends JsonResource
                 ];
             }),
         ];
+    }
+
+    /**
+     * Aufgaben aus der bereits geladenen Relation (die Aufrufer laden `tasks.task_users`
+     * eager); vorher fragte die Resource je Checkliste die Aufgaben neu ab und je Aufgabe
+     * die erledigende Person nach. Ohne Vorladung: eine Query je Checkliste statt je Aufgabe.
+     *
+     * @return \Illuminate\Database\Eloquent\Collection<int, Task>
+     */
+    private function orderedTasks(): \Illuminate\Database\Eloquent\Collection
+    {
+        if (!$this->relationLoaded('tasks')) {
+            return $this->tasks()->with(['task_users', 'user_who_done'])->orderBy('order')->get();
+        }
+
+        $tasks = $this->tasks;
+        $tasks->loadMissing(['task_users', 'user_who_done']);
+
+        return $tasks->sortBy('order')->values();
     }
 }

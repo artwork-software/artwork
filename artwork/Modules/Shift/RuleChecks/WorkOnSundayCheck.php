@@ -11,7 +11,8 @@ use Illuminate\Support\Collection;
 /**
  * Sonntagsarbeit: ein Verstoß (severity warning) für jeden Sonntag im Zeitraum, an dem die
  * Person eine Schicht hat. Schichttag = effektiver Starttag der Person (Pivot-Datum, sonst
- * start_date), bei Schichten über Mitternacht zählt also der Starttag. $rule->individual_number_value wird nicht verwendet.
+ * start_date), bei Schichten über Mitternacht zählt also der Starttag. $rule->individual_number_value wird nicht
+ * verwendet.
  */
 class WorkOnSundayCheck extends AbstractRuleCheck
 {

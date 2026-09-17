@@ -80,17 +80,24 @@ class ArtistResidencyController extends Controller
         $artistResidency->delete();
     }
 
-    public function updateName(ArtistResidency $artistResidency): void
+    /**
+     * Inline-Umbenennung aus der Tabelle: schreibt nur die lokalen Namensspalten des Aufenthalts,
+     * der verknüpfte Künstler*innen-/CRM-Datensatz bleibt unberührt.
+     */
+    public function updateName(Request $request, ArtistResidency $artistResidency): void
     {
-        if (!$artistResidency->do_not_save_artist) {
-            abort(403);
-        }
-
-        $data = request()->validate([
-            'name' => 'required|string|max:255',
+        $data = $request->validate([
+            'field' => ['required', 'string', 'in:name,first_name,last_name'],
+            'value' => ['nullable', 'string', 'max:255'],
         ]);
 
-        $artistResidency->update(['name' => $data['name']]);
+        $value = trim((string) ($data['value'] ?? ''));
+
+        if ($data['field'] === 'name' && $value === '') {
+            throw ValidationException::withMessages(['value' => __('validation.required', ['attribute' => 'name'])]);
+        }
+
+        $artistResidency->update([$data['field'] => $value !== '' ? $value : null]);
     }
 
     public function duplicate(ArtistResidency $artistResidency): void
@@ -108,8 +115,10 @@ class ArtistResidencyController extends Controller
         return $this->artistResidencyService->exportService($project, ExportType::EXCEL->value, $language);
     }
 
-    public function exportPerDiemPdf(Project $project, string $language = 'en'): \Symfony\Component\HttpFoundation\Response
-    {
+    public function exportPerDiemPdf(
+        Project $project,
+        string $language = 'en'
+    ): \Symfony\Component\HttpFoundation\Response {
         return $this->artistResidencyService->exportPerDiemPdf($project, $language);
     }
 

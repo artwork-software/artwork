@@ -189,7 +189,7 @@ class UserController extends Controller
      *
      * @param \Illuminate\Database\Eloquent\Builder $query
      */
-    private function applyAuthProviderFilter($query, ?string $filter): void
+    private function applyAuthProviderFilter(\Illuminate\Database\Eloquent\Builder $query, ?string $filter): void
     {
         if ($filter === 'sso') {
             $query->where('auth_provider', '!=', 'local');
@@ -282,7 +282,10 @@ class UserController extends Controller
         // Nur Personen, die Schichten arbeiten, brauchen ein Muster (Soll gilt nur im Dienstplan).
         $shiftWorkerIds = array_values(array_map(
             static fn (array $listedUser): int => (int) $listedUser['id'],
-            array_filter($users, static fn (array $listedUser): bool => (bool) ($listedUser['can_work_shifts'] ?? false))
+            array_filter(
+                $users,
+                static fn (array $listedUser): bool => (bool) ($listedUser['can_work_shifts'] ?? false)
+            )
         ));
         $userIdsWithPattern = $this->workTimeCalculationService->userIdsWithPatternOn($shiftWorkerIds);
         $shiftWorkerLookup = array_flip($shiftWorkerIds);
@@ -312,8 +315,9 @@ class UserController extends Controller
             'roles' => $userService->getAuthUser()->hasRole(RoleEnum::ARTWORK_ADMIN->value)
                 ? Role::query()->whereIn('name', array_column(RoleEnum::cases(), 'value'))->get()
                 : [],
-            'freelancers' => Freelancer::all(),
-            'serviceProviders' => ServiceProvider::query()->without('contacts')->get(),
+            // withAssignedCraftIds: sonst je Freelancer/Dienstleister eine craftables-Query beim Serialisieren
+            'freelancers' => Freelancer::query()->withAssignedCraftIds()->get(),
+            'serviceProviders' => ServiceProvider::query()->without('contacts')->withAssignedCraftIds()->get(),
             'permission_presets' => $permissionPresetService->getPermissionPresets()
                 ->map(static fn ($preset): array => [
                     'id' => $preset->id,
@@ -983,7 +987,11 @@ class UserController extends Controller
         $compensationDayOffs = CompensationDayOff::where('user_id', $user->id)
             ->whereNotNull('granted_date')
             ->whereBetween('granted_date', [$start->toDateString(), $end->toDateString()])
-            ->with(['violation:id,shift_rule_id', 'violation.shiftRule:id,name', 'grantedByUser:id,first_name,last_name'])
+            ->with([
+                'violation:id,shift_rule_id',
+                'violation.shiftRule:id,name',
+                'grantedByUser:id,first_name,last_name',
+            ])
             ->get()
             ->groupBy(fn ($d) => $d->granted_date->toDateString());
 
@@ -1064,7 +1072,10 @@ class UserController extends Controller
                 'special_day_name' => $day['special_day_name'],
                 'special_day_counts' => (bool) $day['special_day_counts'],
                 'target_reduction' => (int) $day['target_reduction'],
-                'target_reduction_formatted' => $this->convertMinutesToHoursAndMinutes((int) $day['target_reduction'], true),
+                'target_reduction_formatted' => $this->convertMinutesToHoursAndMinutes(
+                    (int) $day['target_reduction'],
+                    true
+                ),
                 'reduction_reason' => $day['reduction_reason'],
                 'reference_period' => $day['reference_period'],
                 'reference_weekday_average' => $day['reference_weekday_average'],
@@ -1147,7 +1158,6 @@ class UserController extends Controller
             $user,
             $calendarService,
             $eventService,
-            $eventTypeService,
             $selectedPeriodDate,
             $selectedDate,
             $request->get('month'),
@@ -2069,7 +2079,6 @@ class UserController extends Controller
             $user,
             $calendarService,
             $eventService,
-            $eventTypeService,
             $selectedPeriodDate,
             $selectedDate,
             $request->get('month'),

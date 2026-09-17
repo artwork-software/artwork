@@ -11,7 +11,6 @@ use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 
-
 class Handler extends ExceptionHandler
 {
     protected $dontReport = [];

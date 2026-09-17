@@ -2,6 +2,7 @@
 
 namespace Artwork\Modules\Room\Models;
 
+use Artwork\Modules\Inventory\Models\InventoryArticle;
 use Artwork\Core\Database\Models\Model;
 use Artwork\Modules\Area\Models\Area;
 use Artwork\Modules\Area\Models\BelongsToArea;
@@ -91,6 +92,14 @@ class Room extends Model
         'admins',
         'creator'
     ];
+
+    protected static function booted(): void
+    {
+        // Raum-Lookup-Cache der Inventar-Artikel (je Prozess, unter Octane/Swoole
+        // request-übergreifend) nach Umbenennung/Löschung leeren
+        static::saved(static fn () => InventoryArticle::flushPropertyLookupCaches());
+        static::deleted(static fn () => InventoryArticle::flushPropertyLookupCaches());
+    }
 
     protected $casts = [
         'everyone_can_book' => 'boolean',

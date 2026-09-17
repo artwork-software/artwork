@@ -39,9 +39,18 @@ class UserCalendarFilterController extends Controller
         $roomIds = $request->collect('rooms')->isNotEmpty() ? $request->collect('rooms') : null;
         $areaIds = $request->collect('areas')->isNotEmpty() ? $request->collect('areas') : null;
         $eventTypes = $request->collect('event_types')->isNotEmpty() ? $request->collect('event_types') : null;
-        $roomAttributes = $request->collect('room_attributes')->isNotEmpty() ? $request->collect('room_attributes') : null;
-        $roomCategories = $request->collect('room_categories')->isNotEmpty() ? $request->collect('room_categories') : null;
-        $eventProperties = $request->collect('event_properties')->isNotEmpty() ? $request->collect('event_properties') : null;
+        $roomAttributes = $request
+            ->collect('room_attributes')
+            ->isNotEmpty() ? $request
+            ->collect('room_attributes') : null;
+        $roomCategories = $request
+            ->collect('room_categories')
+            ->isNotEmpty() ? $request
+            ->collect('room_categories') : null;
+        $eventProperties = $request
+            ->collect('event_properties')
+            ->isNotEmpty() ? $request
+            ->collect('event_properties') : null;
 
 
         $user->calendar_filter()->update([

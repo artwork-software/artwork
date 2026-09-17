@@ -8,7 +8,8 @@ use Illuminate\Support\Facades\DB;
 class CleanupFalseConflictsCommand extends Command
 {
     protected $signature = 'artwork:cleanup-false-conflicts';
-    protected $description = 'Removes vacation and availability conflict records where the date does not match the shift date range';
+    protected $description = 'Removes vacation and availability conflict records where the date does not match '
+        . 'the shift date range';
 
     public function handle(): void
     {

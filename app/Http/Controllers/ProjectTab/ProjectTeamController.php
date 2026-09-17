@@ -21,5 +21,3 @@ class ProjectTeamController extends Controller
         );
     }
 }
-
-

@@ -127,7 +127,12 @@ class MakeExtendedCommand extends Command
 
         // Namespace für den Service hinzufügen, falls nicht vorhanden
         if (strpos($content, "use $serviceNamespace;") === false) {
-            $content = preg_replace('/namespace App\\\Http\\\Controllers;/', "namespace App\\Http\\Controllers;\n\nuse $serviceNamespace;", $content, 1);
+            $content = preg_replace(
+                '/namespace App\\\Http\\\Controllers;/',
+                "namespace App\\Http\\Controllers;\n\nuse $serviceNamespace;",
+                $content,
+                1
+            );
         }
 
         // Konstruktor mit private readonly hinzufügen

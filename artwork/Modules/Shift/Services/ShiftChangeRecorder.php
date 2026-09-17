@@ -774,5 +774,4 @@ class ShiftChangeRecorder
 
         return $initial;
     }
-
 }

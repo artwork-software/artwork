@@ -16,7 +16,7 @@ use Carbon\Carbon;
 use Illuminate\Config\Repository;
 use Illuminate\Console\Command;
 use Illuminate\Database\Eloquent\Collection;
-use Illuminate\Mail\MailManager;
+use Illuminate\Contracts\Mail\Factory as MailFactory;
 use Illuminate\Notifications\DatabaseNotification;
 use Illuminate\Translation\Translator;
 use Psr\Log\LoggerInterface;
@@ -36,7 +36,8 @@ class SendNotificationsEmailSummariesCommand extends Command
         private readonly Repository $config,
         private readonly NotificationSettingService $notificationSettingService,
         private readonly CarbonService $carbonService,
-        private readonly MailManager $mailManager,
+        // Contract statt MailManager: unter Mail::fake() liefert der Container MailFake (TypeError)
+        private readonly MailFactory $mailManager,
         private readonly Translator $translator,
     ) {
         parent::__construct();
@@ -112,7 +113,7 @@ class SendNotificationsEmailSummariesCommand extends Command
         }
 
         if (!empty($notificationArray)) {
-            $this->mailManager->to($user)->send(
+            $this->mailManager->mailer()->to($user)->send(
                 new NotificationSummary(
                     $notificationArray,
                     $user->getAttribute('first_name'),

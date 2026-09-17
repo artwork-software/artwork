@@ -132,7 +132,16 @@ class EventVerificationController extends Controller
 
         $myRoomRequests = Event::where('user_id', $user->id)
             ->where('occupancy_option', true)
-            ->with(['room', 'event_type', 'project', 'creator', 'eventStatus', 'eventProperties', 'subEvents', 'series'])
+            ->with([
+                'room',
+                'event_type',
+                'project',
+                'creator',
+                'eventStatus',
+                'eventProperties',
+                'subEvents',
+                'series',
+            ])
             ->orderBy('start_time', 'desc')
             ->get();
 
@@ -180,7 +189,7 @@ class EventVerificationController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Event $event)
+    public function store(Event $event): void
     {
         /** @var User $user */
         $user = $this->authManager->user();

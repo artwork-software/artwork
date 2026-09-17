@@ -118,7 +118,10 @@ class AvailabilityConflictService
                             $shift->end,
                             $user?->language ?? app()->getFallbackLocale()
                         ),
-                        'href' => $user ? ShiftNotificationLinkService::ownOperationPlanForDate($user, $shift->event_start_day) : null
+                        'href' => $user ? ShiftNotificationLinkService::ownOperationPlanForDate(
+                            $user,
+                            $shift->event_start_day
+                        ) : null
                     ],
                 ];
 

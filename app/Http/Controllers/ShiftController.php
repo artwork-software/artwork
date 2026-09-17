@@ -175,7 +175,11 @@ class ShiftController extends Controller
             'break_minutes' => ['sometimes', 'nullable', 'integer', 'min:0'],
             'craft_id' => ['sometimes', 'integer', 'exists:crafts,id'],
             'shiftsQualifications' => ['sometimes', 'array'],
-            'shiftsQualifications.*.shift_qualification_id' => ['required_with:shiftsQualifications', 'integer', 'exists:shift_qualifications,id'],
+            'shiftsQualifications.*.shift_qualification_id' => [
+                'required_with:shiftsQualifications',
+                'integer',
+                'exists:shift_qualifications,id',
+            ],
             'shiftsQualifications.*.value' => ['nullable', 'integer', 'min:0'],
         ]);
 
@@ -551,7 +555,10 @@ class ShiftController extends Controller
                                             ],
                                             $user->language
                                         ),
-                                        'href' => ShiftNotificationLinkService::ownOperationPlanForDate($user, $shift->start_date)
+                                        'href' => ShiftNotificationLinkService::ownOperationPlanForDate(
+                                            $user,
+                                            $shift->start_date
+                                        )
                                     ],
                                 ];
 
@@ -599,7 +606,10 @@ class ShiftController extends Controller
                                                 ],
                                                 $user->language
                                             ),
-                                            'href' => ShiftNotificationLinkService::ownOperationPlanForDate($user, $shift->start_date)
+                                            'href' => ShiftNotificationLinkService::ownOperationPlanForDate(
+                                                $user,
+                                                $shift->start_date
+                                            )
                                         ],
                                     ];
 
@@ -656,7 +666,10 @@ class ShiftController extends Controller
                                             ],
                                             $user->language
                                         ),
-                                        'href' => ShiftNotificationLinkService::ownOperationPlanForDate($user, $shift->start_date)
+                                        'href' => ShiftNotificationLinkService::ownOperationPlanForDate(
+                                            $user,
+                                            $shift->start_date
+                                        )
                                     ],
                                 ];
 
@@ -1036,10 +1049,12 @@ class ShiftController extends Controller
             $dayAssignmentService = app(\Artwork\Modules\Project\Services\ProjectDayAssignmentService::class);
 
             // Existenz der Person sicherstellen — sonst entstehen verwaiste Zuordnungszeilen
-            foreach (\Artwork\Modules\Project\Models\Project::query()
+            foreach (
+                \Artwork\Modules\Project\Models\Project::query()
                 ->whereKey($fullPeriodProjectIds)
                 ->orderBy('id')
-                ->get() as $projectToAssign) {
+                ->get() as $projectToAssign
+            ) {
                 $dayAssignmentService->createFullPeriodAssignments(
                     $projectToAssign,
                     $employableType,
@@ -1113,7 +1128,10 @@ class ShiftController extends Controller
             $resolvedShiftQualificationId = $shiftToAssign['shiftQualificationId'] ?? null;
             if ($resolvedShiftQualificationId === null) {
                 // Try to take the first defined qualification for this shift
-                $resolvedShiftQualificationId = $shift->shiftsQualifications()->orderBy('id')->value('shift_qualification_id');
+                $resolvedShiftQualificationId = $shift
+                    ->shiftsQualifications()
+                    ->orderBy('id')
+                    ->value('shift_qualification_id');
                 if ($resolvedShiftQualificationId === null) {
                     // Fallback to a generic worker qualification if available
                     $resolvedShiftQualificationId = \Artwork\Modules\Shift\Models\ShiftQualification::available()
@@ -1226,7 +1244,8 @@ class ShiftController extends Controller
         if ($isOverbooked && !app(\App\Settings\ShiftSettings::class)->allow_shift_overbooking) {
             abort(
                 403,
-                __('Overbooking is not active in this organisation. Admins can enable it under Shift settings → Overbooking.')
+                __('Overbooking is not active in this organisation. Admins can enable it under Shift settings → '
+                    . 'Overbooking.')
             );
         }
 
@@ -2019,7 +2038,11 @@ class ShiftController extends Controller
             'end' => ['required', 'string'],
             'break_minutes' => ['nullable', 'integer', 'min:0'],
             'shiftsQualifications' => ['present', 'array'],
-            'shiftsQualifications.*.shift_qualification_id' => ['required', 'integer', 'exists:shift_qualifications,id'],
+            'shiftsQualifications.*.shift_qualification_id' => [
+                'required',
+                'integer',
+                'exists:shift_qualifications,id',
+            ],
             'shiftsQualifications.*.value' => ['nullable', 'integer', 'min:0'],
         ]);
 
@@ -2091,13 +2114,7 @@ class ShiftController extends Controller
                 // Über den Service löschen statt Hard-Detach + Soft-Delete: so werden
                 // die Zuweisungen MIT-soft-deleted (Restore möglich), Qualifikationen
                 // konsistent behandelt und der Working-Hour-Cache invalidiert.
-                $this->shiftService->delete(
-                    $roomShift,
-                    $shiftsQualificationsService,
-                    $shiftUserService,
-                    $shiftFreelancerService,
-                    $shiftServiceProviderService
-                );
+                $this->shiftService->delete($roomShift, $shiftsQualificationsService);
             });
         }
     }
@@ -2166,25 +2183,25 @@ class ShiftController extends Controller
             // Batch load ShiftWorkers scoped by date to avoid loading all historical data
             $allPivots = ShiftWorker::withoutTrashed()
                 ->with('shift.craft')
-                ->whereHas('shift', function ($q) use ($scopeStartDate, $scopeEndDate) {
+                ->whereHas('shift', function ($q) use ($scopeStartDate, $scopeEndDate): void {
                     $q->where('start_date', '<=', $scopeEndDate)
                       ->where('end_date', '>=', $scopeStartDate);
                 })
-                ->where(function ($query) use ($peopleByType) {
+                ->where(function ($query) use ($peopleByType): void {
                     if (!empty($peopleByType['user'])) {
-                        $query->orWhere(function ($q) use ($peopleByType) {
+                        $query->orWhere(function ($q) use ($peopleByType): void {
                             $q->where('employable_type', User::class)
                               ->whereIn('employable_id', $peopleByType['user']);
                         });
                     }
                     if (!empty($peopleByType['freelancer'])) {
-                        $query->orWhere(function ($q) use ($peopleByType) {
+                        $query->orWhere(function ($q) use ($peopleByType): void {
                             $q->where('employable_type', Freelancer::class)
                               ->whereIn('employable_id', $peopleByType['freelancer']);
                         });
                     }
                     if (!empty($peopleByType['service_provider'])) {
-                        $query->orWhere(function ($q) use ($peopleByType) {
+                        $query->orWhere(function ($q) use ($peopleByType): void {
                             $q->where('employable_type', ServiceProvider::class)
                               ->whereIn('employable_id', $peopleByType['service_provider']);
                         });
@@ -2231,7 +2248,8 @@ class ShiftController extends Controller
                     $case3 = $currentStart <= $shiftStart && $currentEnd >= $shiftEnd;
 
                     // Special case for exact time match (mentioned in issue description)
-                    // This handles the case where a user is assigned to a shift with the exact same time as the current shift
+                    // This handles the case where a user is assigned to a shift with the exact same time as the
+                    // current shift
                     $exactMatch = $currentStart->format('H:i') === $shiftStart->format('H:i') &&
                               $currentEnd->format('H:i') === $shiftEnd->format('H:i') &&
                               $currentStart->toDateString() === $shiftStart->toDateString() &&
@@ -2308,7 +2326,11 @@ class ShiftController extends Controller
             'roomsAndDatesForMultiEdit.*.roomId' => ['required', 'integer', 'exists:rooms,id'],
             'roomsAndDatesForMultiEdit.*.day' => ['required', 'date'],
             'shiftsQualifications' => ['present', 'array'],
-            'shiftsQualifications.*.shift_qualification_id' => ['required', 'integer', 'exists:shift_qualifications,id'],
+            'shiftsQualifications.*.shift_qualification_id' => [
+                'required',
+                'integer',
+                'exists:shift_qualifications,id',
+            ],
             'shiftsQualifications.*.value' => ['nullable', 'integer', 'min:0'],
         ]);
 
@@ -2557,5 +2579,4 @@ class ShiftController extends Controller
 
         return back();
     }
-
 }

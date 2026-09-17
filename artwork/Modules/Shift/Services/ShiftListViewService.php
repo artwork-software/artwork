@@ -308,7 +308,10 @@ readonly class ShiftListViewService
                     })
                     ->orWhere(function (Builder $nested) use ($start, $end): void {
                         $nested->where('yearly', true)
-                            ->whereBetween(\DB::raw('DATE_FORMAT(date, "%m-%d")'), [$start->format('m-d'), $end->format('m-d')]);
+                            ->whereBetween(\DB::raw('DATE_FORMAT(date, "%m-%d")'), [
+                                $start->format('m-d'),
+                                $end->format('m-d'),
+                            ]);
                     });
             })
             ->with(['subdivisions' => fn ($q) => $q->select('name')])

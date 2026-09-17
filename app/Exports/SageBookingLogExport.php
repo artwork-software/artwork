@@ -53,6 +53,7 @@ class SageBookingLogExport implements FromQuery, WithHeadings, WithMapping
      * @param SageBookingLogEntry $row
      * @return array<int, string|null>
      */
+    // phpcs:ignore SlevomatCodingStandard.TypeHints.ParameterTypeHint.MissingNativeTypeHint -- Interface WithMapping::map($row) erlaubt keinen engeren Typ
     public function map($row): array
     {
         return [

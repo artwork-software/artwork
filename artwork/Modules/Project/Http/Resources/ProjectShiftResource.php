@@ -43,8 +43,9 @@ class ProjectShiftResource extends JsonResource
             //needed for ProjectShowHeaderComponent
             'project_history' => $historyArray,
             'delete_permission_users' => $this->delete_permission_users,
-            'freelancers' => Freelancer::all(),
-            'serviceProviders' => ServiceProvider::without(['contacts'])->get(),
+            // withAssignedCraftIds: sonst je Freelancer/Dienstleister eine craftables-Query beim Serialisieren
+            'freelancers' => Freelancer::query()->withAssignedCraftIds()->get(),
+            'serviceProviders' => ServiceProvider::query()->without(['contacts'])->withAssignedCraftIds()->get(),
         ];
     }
 }

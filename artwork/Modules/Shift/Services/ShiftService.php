@@ -149,13 +149,8 @@ class ShiftService
         );
     }
 
-    public function delete(
-        Shift $shift,
-        ShiftsQualificationsService $shiftsQualificationsService,
-        ShiftUserService $shiftUserService,
-        ShiftFreelancerService $shiftFreelancerService,
-        ShiftServiceProviderService $shiftServiceProviderService
-    ): bool {
+    public function delete(Shift $shift, ShiftsQualificationsService $shiftsQualificationsService): bool
+    {
         $this->workingHourCacheService->forgetForShift($shift);
 
         // Die "Betroffen: …"-Namen für den Lösch-Verlaufseintrag JETZT erfassen:
@@ -206,10 +201,7 @@ class ShiftService
 
     public function restoreShifts(
         Collection|array $shifts,
-        ShiftsQualificationsService $shiftsQualificationsService,
-        ShiftUserService $shiftUserService,
-        ShiftFreelancerService $shiftFreelancerService,
-        ShiftServiceProviderService $shiftServiceProviderService
+        ShiftsQualificationsService $shiftsQualificationsService
     ): void {
         /** @var Shift $shift */
         foreach ($shifts as $shift) {

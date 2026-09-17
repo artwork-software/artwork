@@ -19,7 +19,18 @@ class CompensationDayOff extends Model
     {
         return LogOptions::defaults()
             ->useLogName('compensation_day_off')
-            ->logOnly(['user_id', 'violation_id', 'value', 'half_day_period', 'deadline', 'granted_date', 'granted_by', 'granted_at', 'reason', 'for_holiday'])
+            ->logOnly([
+                'user_id',
+                'violation_id',
+                'value',
+                'half_day_period',
+                'deadline',
+                'granted_date',
+                'granted_by',
+                'granted_at',
+                'reason',
+                'for_holiday',
+            ])
             ->logOnlyDirty()
             ->dontSubmitEmptyLogs();
     }

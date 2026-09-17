@@ -38,6 +38,55 @@
             <!-- EDIT MODE -->
             <div v-if="canEdit">
 
+                <!-- Serie: Tabs (Termin / Serie bzw. Vorschau) + Reichweite der Änderung -->
+                <div v-if="showSeriesHeader" class="mb-3 flex flex-wrap items-center justify-between gap-3 rounded-[10px] border border-border-subtle bg-surface-sunken px-3 py-2">
+                    <div class="inline-flex gap-[2px] rounded-[8px] bg-border-subtle p-[3px]" role="tablist">
+                        <button
+                            type="button"
+                            role="tab"
+                            class="inline-flex items-center justify-center h-[26px] px-3 rounded-[6px] text-[12.5px] font-semibold transition"
+                            :class="activeTab === 'event' ? 'bg-surface shadow-raised text-text' : 'text-text hover:bg-white/60'"
+                            :aria-selected="activeTab === 'event'"
+                            @click="activeTab = 'event'"
+                        >
+                            {{ $t('Event') }}
+                        </button>
+                        <button
+                            type="button"
+                            role="tab"
+                            class="inline-flex items-center justify-center gap-1.5 h-[26px] px-3 rounded-[6px] text-[12.5px] font-semibold transition"
+                            :class="activeTab === 'series' ? 'bg-surface shadow-raised text-text' : 'text-text hover:bg-white/60'"
+                            :aria-selected="activeTab === 'series'"
+                            @click="activeTab = 'series'"
+                        >
+                            <IconRepeat class="size-3.5" />
+                            {{ isSeriesEvent ? $t('Series') : $t('Preview') }}
+                            <span v-if="seriesTabCount !== null" class="inline-flex min-w-[18px] items-center justify-center rounded-full bg-accent-100 px-1.5 text-[11px] text-accent-700">{{ seriesTabCount }}</span>
+                        </button>
+                    </div>
+
+                    <div v-if="isSeriesEvent" class="flex flex-wrap items-center gap-2">
+                        <span class="text-[12px] text-text-muted">{{ $t('Changes apply to') }}:</span>
+                        <div class="inline-flex gap-[2px] rounded-[8px] bg-border-subtle p-[3px]" role="radiogroup" :aria-label="$t('Changes apply to')">
+                            <button
+                                v-for="opt in scopeOptions"
+                                :key="opt.id"
+                                type="button"
+                                role="radio"
+                                class="inline-flex items-center justify-center h-[26px] px-3 rounded-[6px] text-[12.5px] font-semibold transition"
+                                :class="seriesScope === opt.id ? 'bg-surface shadow-raised text-text' : 'text-text hover:bg-white/60'"
+                                :aria-checked="seriesScope === opt.id"
+                                @click="seriesScope = opt.id"
+                            >
+                                {{ opt.label }}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <p v-if="isSeriesEvent" class="ui-hint mb-3 -mt-1">{{ scopeHint }}</p>
+
+                <div v-show="activeTab === 'event'">
+
                 <!-- Basics -->
                 <section class="pb-4">
                     <h3 class="mb-3 font-lexend font-semibold text-[11px] uppercase tracking-[0.08em] text-accent-600">{{ $t('Basics') }}</h3>
@@ -191,29 +240,102 @@
 
                     <div class="flex flex-wrap items-center gap-2">
                         <label class="inline-flex items-center gap-2">
-                            <input type="checkbox" v-model="series" class="ui-checkbox" />
+                            <input type="checkbox" v-model="series" class="ui-checkbox" :disabled="seriesLoading" @change="onSeriesToggle" />
                             <span class="text-[13px] text-text-muted">{{ $t('Repeat event') }}</span>
                         </label>
-                        <span class="ui-hint">{{ $t('Enable if this event should repeat automatically.') }}</span>
+                        <span v-if="!isSeriesEvent" class="ui-hint">{{ $t('Enable if this event should repeat automatically.') }}</span>
                     </div>
 
-                    <div v-show="series" class="mt-2 ui-grid-2">
-                        <ArtworkBaseListbox
-                            v-model="selectedFrequency"
-                            :items="frequencies"
-                            by="id"
-                            option-label="name"
-                            option-key="id"
-                            label="Frequency"
-                            :use-translations="false"
-                        />
-                        <BaseInput id="seriesEndDate" type="date" v-model="seriesEndDate" :label="$t('End date Repeat event')" class="ui-input" />
-                    </div>
-
-                    <p v-if="event?.is_series" class="ui-hint mt-2">
-                        {{ $t('Event is part of a repeat event') }} —
-                        {{ $t('Cycle: {0} to {1}', [selectedFrequency?.name, convertDateFormat(seriesEndDate)]) }}
+                    <!-- Bestehende Serie: Zusammenfassung; Turnus/Ende nur mit Reichweite über den Termin hinaus -->
+                    <p v-if="isSeriesEvent && series" class="mt-2 text-[13px] text-text">
+                        <IconRepeat class="mr-1 inline size-3.5 align-[-2px] text-accent-600" />
+                        {{ seriesSummaryText }}
                     </p>
+                    <p v-if="isSeriesEvent && series && seriesFieldsLocked" class="ui-hint mt-1">
+                        {{ $t('To change the frequency or the end of the series, choose "This and following" or "Whole series" above.') }}
+                    </p>
+
+                    <div v-show="series" class="mt-2 space-y-3" :class="seriesFieldsLocked ? 'pointer-events-none opacity-60' : ''">
+                        <div class="ui-grid-2">
+                            <ArtworkBaseListbox
+                                v-model="selectedFrequency"
+                                :items="frequencies"
+                                by="id"
+                                option-label="name"
+                                option-key="id"
+                                label="Frequency"
+                                :use-translations="false"
+                            />
+                            <div>
+                                <div class="mb-1 inline-flex gap-[2px] rounded-[8px] bg-border-subtle p-[3px]" role="radiogroup" :aria-label="$t('Series ends')">
+                                    <button
+                                        type="button"
+                                        role="radio"
+                                        class="inline-flex items-center justify-center h-[24px] px-2.5 rounded-[6px] text-[12px] font-semibold transition"
+                                        :class="seriesEndMode === 'date' ? 'bg-surface shadow-raised text-text' : 'text-text hover:bg-white/60'"
+                                        :aria-checked="seriesEndMode === 'date'"
+                                        @click="seriesEndMode = 'date'"
+                                    >
+                                        {{ $t('Ends on date') }}
+                                    </button>
+                                    <button
+                                        type="button"
+                                        role="radio"
+                                        class="inline-flex items-center justify-center h-[24px] px-2.5 rounded-[6px] text-[12px] font-semibold transition"
+                                        :class="seriesEndMode === 'count' ? 'bg-surface shadow-raised text-text' : 'text-text hover:bg-white/60'"
+                                        :aria-checked="seriesEndMode === 'count'"
+                                        @click="seriesEndMode = 'count'"
+                                    >
+                                        {{ $t('Ends after') }}
+                                    </button>
+                                </div>
+                                <BaseInput
+                                    v-if="seriesEndMode === 'date'"
+                                    id="seriesEndDate"
+                                    type="date"
+                                    v-model="seriesEndDate"
+                                    :label="$t('End date Repeat event')"
+                                    :disabled="seriesFieldsLocked"
+                                    class="ui-input"
+                                />
+                                <BaseInput
+                                    v-else
+                                    id="seriesOccurrenceCount"
+                                    type="number"
+                                    min="1"
+                                    max="500"
+                                    v-model="seriesOccurrenceCount"
+                                    :label="$t('Number of events')"
+                                    :disabled="seriesFieldsLocked"
+                                    class="ui-input"
+                                />
+                            </div>
+                        </div>
+
+                        <!-- Wochentage (nur wöchentlich / alle 2 Wochen) -->
+                        <div v-if="showWeekdayPicker">
+                            <div class="mb-1 ui-hint">{{ $t('On these weekdays') }}</div>
+                            <div class="flex flex-wrap gap-1.5">
+                                <button
+                                    v-for="wd in weekdayOptions"
+                                    :key="wd.id"
+                                    type="button"
+                                    class="inline-flex h-[28px] min-w-[38px] items-center justify-center rounded-full border px-2.5 text-xs font-medium transition"
+                                    :class="[
+                                        seriesWeekdays.includes(wd.id) ? 'bg-accent-50 text-accent-700 border-accent-200' : 'bg-surface border-border text-text-muted hover:bg-surface-hover',
+                                        wd.id === anchorWeekday ? 'ring-1 ring-accent-300' : '',
+                                    ]"
+                                    :aria-pressed="seriesWeekdays.includes(wd.id)"
+                                    :title="wd.id === anchorWeekday ? $t('Weekday of the first event, always included') : ''"
+                                    @click="toggleWeekday(wd.id)"
+                                >
+                                    {{ wd.label }}
+                                </button>
+                            </div>
+                        </div>
+
+                        <p class="ui-error" v-if="seriesValidationMessage">{{ seriesValidationMessage }}</p>
+                    </div>
                 </section>
 
                 <!-- Room -->
@@ -440,6 +562,67 @@
                     </div>
                 </section>
 
+                </div>
+
+                <!-- Serien-Tab: Liste aller Termine der Serie (Bearbeiten) bzw. Vorschau (Anlegen) -->
+                <div v-if="activeTab === 'series'" class="pb-4">
+                    <div class="mb-3 flex flex-wrap items-center justify-between gap-2">
+                        <h3 class="font-lexend font-semibold text-[11px] uppercase tracking-[0.08em] text-accent-600">
+                            {{ isSeriesEvent ? $t('Events of this series') : $t('Preview of the series') }}
+                        </h3>
+                        <span class="ui-hint">{{ seriesSummaryText }}</span>
+                    </div>
+
+                    <div v-if="seriesLoading || seriesPreviewLoading" class="py-6 text-center text-[13px] text-text-muted">
+                        {{ $t('Loading…') }}
+                    </div>
+                    <div v-else-if="seriesLoadFailed" class="ui-error py-4">
+                        {{ $t('Data could not be loaded.') }}
+                    </div>
+                    <div v-else-if="!isSeriesEvent && !seriesDefinitionValid" class="py-6 text-center text-[13px] text-text-muted">
+                        {{ $t('Choose a frequency and an end for the series to see the preview.') }}
+                    </div>
+                    <div v-else-if="seriesRows.length === 0" class="py-6 text-center text-[13px] text-text-muted">
+                        {{ $t('No events') }}
+                    </div>
+                    <ul v-else class="max-h-[46vh] overflow-y-auto divide-y divide-border-hairline rounded-[10px] border border-border-subtle">
+                        <li
+                            v-for="row in seriesRows"
+                            :key="row.key"
+                            class="flex flex-wrap items-center gap-x-3 gap-y-1 px-3 py-2 text-[13px]"
+                            :class="[
+                                row.isCurrent ? 'bg-accent-50' : '',
+                                row.isTrashed || row.isPast ? 'text-text-subtle' : 'text-text',
+                                row.isTrashed ? 'line-through decoration-border' : '',
+                            ]"
+                        >
+                            <span class="w-6 shrink-0 text-right text-[11px] tabular-nums text-text-subtle">{{ row.index }}</span>
+                            <span class="w-[132px] shrink-0 font-medium">{{ row.dateLabel }}</span>
+                            <span class="w-[104px] shrink-0 tabular-nums">{{ row.timeLabel }}</span>
+                            <span class="min-w-0 flex-1 truncate text-text-muted">{{ row.roomName ?? '' }}</span>
+                            <span class="flex shrink-0 flex-wrap items-center gap-1">
+                                <span v-if="row.isCurrent" class="rounded-full bg-accent-600 px-2 py-0.5 text-[11px] font-semibold text-white">{{ $t('This event') }}</span>
+                                <span v-if="row.isException" class="rounded-full border border-warning-border bg-warning-surface px-2 py-0.5 text-[11px] text-warning">{{ $t('Deviating') }}</span>
+                                <span v-if="row.isTrashed" class="rounded-full border border-border bg-surface px-2 py-0.5 text-[11px] text-text-subtle">{{ $t('In the trash') }}</span>
+                                <span v-if="row.shiftsCount > 0" class="rounded-full border border-border bg-surface px-2 py-0.5 text-[11px] text-text-muted" :title="$t('Shifts')">{{ row.shiftsCount }} {{ $t('Shifts') }}</span>
+                                <span v-if="row.collisions > 0" class="inline-flex items-center gap-1 rounded-full border border-warning-border bg-warning-surface px-2 py-0.5 text-[11px] text-warning">
+                                    <IconAlertTriangle class="size-3" />
+                                    {{ $t('{0} potential conflicts detected', [row.collisions]) }}
+                                </span>
+                            </span>
+                            <a
+                                v-if="row.id && !row.isCurrent && !row.isTrashed"
+                                :href="route('dashboard.redirect-to-calendar', { event: row.id })"
+                                class="ml-1 shrink-0 text-[12px] text-accent-600 hover:underline"
+                                :title="$t('Show in calendar')"
+                            >
+                                {{ $t('Show in calendar') }}
+                            </a>
+                        </li>
+                    </ul>
+                    <p v-if="seriesPreview?.capped" class="ui-hint mt-2">{{ $t('A series is limited to {0} events.', [500]) }}</p>
+                </div>
+
                 <!-- Sticky Action Bar -->
                 <div class="ui-footer">
                     <div class="flex items-center justify-between gap-2">
@@ -449,7 +632,7 @@
                                 type="button"
                                 variant="danger"
                                 hide-icon
-                                @click="deleteComponentVisible = true"
+                                @click="onDeleteClick"
                             >
                                 <IconTrash class="size-4" />
                                 {{ $t('Put in the trash') }}
@@ -568,12 +751,98 @@
         />
     </ArtworkBaseModal>
 
-    <ChangeAllSubmitModal
-        v-if="showSeriesEdit"
-        @close-modal="closeSeriesEditModal"
-        @allEvents="saveAllSeriesEvents"
-        @single="singleSaveEvent"
-    />
+    <!-- Serientermin löschen: Reichweite wählen -->
+    <ArtworkBaseModal
+        v-if="showSeriesDeleteModal"
+        :title="$t('Put in the trash')"
+        :description="$t('This event is part of a series. Which events should be put in the trash?')"
+        modal-size="sm:max-w-lg"
+        @close="showSeriesDeleteModal = false"
+    >
+        <div class="mt-4 grid gap-2">
+            <button
+                v-for="opt in scopeOptions"
+                :key="opt.id"
+                type="button"
+                class="flex w-full flex-col items-start rounded-[10px] border border-border-subtle px-4 py-3 text-left transition hover:border-accent-300 hover:bg-accent-50"
+                :disabled="isLoading"
+                @click="deleteSeriesScoped(opt.id)"
+            >
+                <span class="text-[13px] font-semibold text-text">{{ opt.label }}</span>
+                <span class="text-[12px] text-text-muted">{{ deleteScopeDescription(opt.id) }}</span>
+            </button>
+        </div>
+        <div class="mt-4 flex justify-end">
+            <BaseUIButton type="button" hide-icon @click="showSeriesDeleteModal = false">{{ $t('Cancel') }}</BaseUIButton>
+        </div>
+    </ArtworkBaseModal>
+
+    <!-- Serie abwählen: Termin lösen oder Serie beenden -->
+    <ArtworkBaseModal
+        v-if="showSeriesDetachModal"
+        :title="$t('Remove from series?')"
+        :description="$t('This event is part of a series. What should happen?')"
+        modal-size="sm:max-w-lg"
+        @close="cancelDetach"
+    >
+        <div class="mt-4 grid gap-2">
+            <button
+                type="button"
+                class="flex w-full flex-col items-start rounded-[10px] border border-border-subtle px-4 py-3 text-left transition hover:border-accent-300 hover:bg-accent-50"
+                :disabled="isLoading"
+                @click="confirmDetach('single')"
+            >
+                <span class="text-[13px] font-semibold text-text">{{ $t('Detach only this event') }}</span>
+                <span class="text-[12px] text-text-muted">{{ $t('This event becomes a single event. The other events of the series stay as they are.') }}</span>
+            </button>
+            <button
+                type="button"
+                class="flex w-full flex-col items-start rounded-[10px] border border-border-subtle px-4 py-3 text-left transition hover:border-danger hover:bg-danger/5"
+                :disabled="isLoading"
+                @click="confirmDetach('end')"
+            >
+                <span class="text-[13px] font-semibold text-text">{{ $t('End the series') }}</span>
+                <span class="text-[12px] text-text-muted">{{ $t('All other events of the series ({0}) are put in the trash. This event becomes a single event.', [seriesOtherActiveCount]) }}</span>
+            </button>
+        </div>
+        <div class="mt-4 flex justify-end">
+            <BaseUIButton type="button" hide-icon @click="cancelDetach">{{ $t('Cancel') }}</BaseUIButton>
+        </div>
+    </ArtworkBaseModal>
+
+    <!-- Warnung vor Turnus-/Ende-Änderung -->
+    <ArtworkBaseModal
+        v-if="showSeriesImpactModal"
+        :title="$t('Change series?')"
+        :description="seriesImpact?.rebuild
+            ? $t('Changing the frequency re-creates the future events of the series from this event on.')
+            : $t('Changing the end of the series adds or removes events at the end of the series.')"
+        modal-size="sm:max-w-lg"
+        @close="showSeriesImpactModal = false"
+    >
+        <ul class="mt-4 space-y-1.5 text-[13px] text-text">
+            <li v-if="seriesImpact?.trash > 0" class="flex items-start gap-2">
+                <IconAlertTriangle class="mt-0.5 size-4 shrink-0 text-warning" />
+                <span>{{ $t('{0} events are put in the trash', [seriesImpact.trash]) }}<span v-if="seriesImpact?.shifts > 0">, {{ $t('including {0} shifts', [seriesImpact.shifts]) }}</span>.</span>
+            </li>
+            <li v-if="seriesImpact?.create > 0" class="flex items-start gap-2">
+                <IconRepeat class="mt-0.5 size-4 shrink-0 text-accent-600" />
+                <span>{{ $t('{0} events are created', [seriesImpact.create]) }}.</span>
+            </li>
+            <li v-if="seriesImpact?.exceptions > 0" class="flex items-start gap-2">
+                <IconCheck class="mt-0.5 size-4 shrink-0 text-success" />
+                <span>{{ $t('{0} individually adjusted events are kept', [seriesImpact.exceptions]) }}.</span>
+            </li>
+            <li class="flex items-start gap-2 text-text-muted">
+                <IconCheck class="mt-0.5 size-4 shrink-0" />
+                <span>{{ $t('Events in the trash can be restored. No date is created twice.') }}</span>
+            </li>
+        </ul>
+        <div class="mt-6 flex justify-end gap-2">
+            <BaseUIButton type="button" variant="secondary" hide-icon @click="showSeriesImpactModal = false">{{ $t('Cancel') }}</BaseUIButton>
+            <BaseUIButton type="button" variant="primary" hide-icon :disabled="isLoading" @click="confirmSeriesImpactAndSave">{{ $t('Apply changes') }}</BaseUIButton>
+        </div>
+    </ArtworkBaseModal>
 
     <!-- Confirm: Verschiebung löst Einzeltag-Projektzuordnungen auf -->
     <ArtworkBaseModal
@@ -649,12 +918,11 @@ import BaseTextarea from '@/Artwork/Inputs/BaseTextarea.vue'
 import FormButton from '@/Layouts/Components/General/Buttons/FormButton.vue'
 import UserPopoverTooltip from '@/Layouts/Components/UserPopoverTooltip.vue'
 import NewUserToolTip from '@/Layouts/Components/NewUserToolTip.vue'
-import ChangeAllSubmitModal from '@/Layouts/Components/ChangeAllSubmitModal.vue'
 import ConfirmationComponent from '@/Layouts/Components/ConfirmationComponent.vue'
 import ProjectSearch from '@/Components/SearchBars/ProjectSearch.vue'
 import RoomSearch from '@/Components/SearchBars/RoomSearch.vue'
 
-import { IconAlertTriangle, IconArrowsMoveHorizontal, IconCheck, IconChevronUp, IconCircleX, IconTrash } from '@tabler/icons-vue'
+import { IconAlertTriangle, IconArrowsMoveHorizontal, IconCheck, IconChevronUp, IconCircleX, IconRepeat, IconTrash } from '@tabler/icons-vue'
 import SwitchIconTooltip from '@/Artwork/Toggles/SwitchIconTooltip.vue'
 import { useEvent } from '@/Composeables/Event.js'
 import ArtworkBaseListbox from "@/Artwork/Listbox/ArtworkBaseListbox.vue";
@@ -719,17 +987,310 @@ const onToggleShiftPeriodOnStartDateChange = () => {
     ).catch((e) => console.error('shift-period-setting:patch-failed', e))
 }
 
-const showSeriesEdit = ref(false)
-const allSeriesEvents = ref(false)
+// --- Wiederholungstermine (KONZEPT_Wiederholungstermine.md)
 const series = ref(false)
 const seriesEndDate = ref(null)
-const selectedFrequency = ref({ id: 2, name: 'Wöchentlich' })
-const frequencies = [
-    { id: 1, name: 'Täglich' },
-    { id: 2, name: 'Wöchentlich' },
-    { id: 3, name: 'Alle 2 Wochen' },
-    { id: 4, name: 'Monatlich' },
-]
+const frequencies = computed(() => [
+    { id: 1, name: $t('Daily') },
+    { id: 2, name: $t('Weekly') },
+    { id: 3, name: $t('Every 2 weeks') },
+    { id: 4, name: $t('Monthly') },
+])
+const selectedFrequency = ref(frequencies.value[1])
+// Ende: Datum ODER Anzahl Termine
+const seriesEndMode = ref('date')
+const seriesOccurrenceCount = ref(10)
+// ISO-Wochentage 1..7, nur bei wöchentlich / alle 2 Wochen
+const seriesWeekdays = ref([])
+// Reichweite beim Bearbeiten eines Serientermins
+const seriesScope = ref('single')
+const activeTab = ref('event')
+// Definition + alle Termine der Serie (beim Öffnen nachgeladen, hält das Kalender-Paket schlank)
+const seriesInfo = ref(null)
+const seriesLoading = ref(false)
+const seriesLoadFailed = ref(false)
+let initialSeriesDefinition = null
+// Vorschau beim Anlegen
+const seriesPreview = ref(null)
+const seriesPreviewLoading = ref(false)
+let seriesPreviewTimer = null
+// Dialoge
+const showSeriesDeleteModal = ref(false)
+const showSeriesDetachModal = ref(false)
+const showSeriesImpactModal = ref(false)
+const seriesImpact = ref(null)
+let seriesImpactConfirmed = false
+
+const WEEKDAY_KEYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+const weekdayOptions = computed(() => WEEKDAY_KEYS.map((key, i) => ({ id: i + 1, label: $t(key) })))
+const isSeriesEvent = computed(() => !!props.event?.id && !!props.event?.is_series)
+const showSeriesHeader = computed(() => isSeriesEvent.value || (!props.event?.id && series.value))
+const seriesFieldsLocked = computed(() => isSeriesEvent.value && (seriesScope.value === 'single' || seriesLoading.value || seriesLoadFailed.value))
+const showWeekdayPicker = computed(() => [2, 3].includes(selectedFrequency.value?.id))
+const anchorWeekday = computed(() => {
+    const d = dayjs(startDate.value)
+    return d.isValid() ? ((d.day() + 6) % 7) + 1 : null
+})
+const scopeOptions = computed(() => [
+    { id: 'single', label: $t('Only this event') },
+    { id: 'following', label: $t('This and following') },
+    { id: 'all', label: $t('Whole series') },
+])
+const scopeHint = computed(() => {
+    if (seriesScope.value === 'following') return $t('Changes apply to this and all following events of the series. Changed times are applied as a shift.')
+    if (seriesScope.value === 'all') return $t('Changes apply to all events of the series, including past ones. Changed times are applied as a shift.')
+    return $t('Changes apply only to this event. Changing date, time or room makes it a deviating event of the series.')
+})
+const seriesDefinitionValid = computed(() => {
+    if (!series.value || !selectedFrequency.value) return false
+    if (seriesEndMode.value === 'count') {
+        const n = Number(seriesOccurrenceCount.value)
+        return Number.isInteger(n) && n >= 1 && n <= 500
+    }
+    if (!seriesEndDate.value) return false
+    return !startDate.value || seriesEndDate.value >= startDate.value
+})
+const seriesValidationMessage = computed(() => {
+    if (!series.value || seriesFieldsLocked.value) return ''
+    if (seriesEndMode.value === 'count') {
+        const n = Number(seriesOccurrenceCount.value)
+        return Number.isInteger(n) && n >= 1 && n <= 500 ? '' : $t('Please enter a number between 1 and 500.')
+    }
+    if (!seriesEndDate.value) return $t('Please choose an end date for the series.')
+    if (startDate.value && seriesEndDate.value < startDate.value) return $t('The end of the series must not be before the start of the event.')
+    return ''
+})
+function normalizedWeekdays() {
+    if (!showWeekdayPicker.value) return null
+    const set = new Set(seriesWeekdays.value.map(Number))
+    if (anchorWeekday.value) set.add(anchorWeekday.value)
+    const list = [...set].sort((a, b) => a - b)
+    return list.length === 1 && list[0] === anchorWeekday.value ? null : list
+}
+function currentSeriesDefinition() {
+    return {
+        frequency: selectedFrequency.value?.id ?? null,
+        end_date: seriesEndMode.value === 'date' ? (seriesEndDate.value || null) : null,
+        weekdays: normalizedWeekdays(),
+        occurrence_count: seriesEndMode.value === 'count' ? Number(seriesOccurrenceCount.value) : null,
+    }
+}
+function seriesDefinitionChanged() {
+    return initialSeriesDefinition !== null && JSON.stringify(currentSeriesDefinition()) !== initialSeriesDefinition
+}
+const activeSeriesOccurrences = computed(() => (seriesInfo.value?.occurrences ?? []).filter(o => !o.isTrashed))
+const seriesOtherActiveCount = computed(() => activeSeriesOccurrences.value.filter(o => !o.isCurrent).length)
+const seriesTabCount = computed(() => {
+    if (isSeriesEvent.value) return seriesInfo.value ? activeSeriesOccurrences.value.length : null
+    return seriesPreview.value?.total ?? null
+})
+const seriesSummaryText = computed(() => {
+    if (!series.value) return ''
+    let text = selectedFrequency.value?.name ?? ''
+    const weekdays = normalizedWeekdays()
+    if (weekdays) text += ' (' + weekdays.map(d => $t(WEEKDAY_KEYS[d - 1])).join(', ') + ')'
+    if (seriesEndMode.value === 'count') text += ' · ' + $t('{0} events', [Number(seriesOccurrenceCount.value) || 0])
+    else if (seriesEndDate.value) text += ' · ' + $t('until {0}', [convertDateFormat(seriesEndDate.value)])
+    const count = isSeriesEvent.value ? activeSeriesOccurrences.value.length : seriesPreview.value?.total
+    if (seriesEndMode.value !== 'count' && count) text += ' · ' + $t('{0} events', [count])
+    return text
+})
+function weekdayLabelOf(dateString) {
+    const d = dayjs(dateString)
+    return d.isValid() ? $t(WEEKDAY_KEYS[(d.day() + 6) % 7]) : ''
+}
+function occurrenceRow(o, index, extra = {}) {
+    const start = dayjs(o.start)
+    const end = dayjs(o.end)
+    const sameDay = start.format('YYYY-MM-DD') === end.format('YYYY-MM-DD')
+    return {
+        key: o.id ?? o.start,
+        id: o.id ?? null,
+        index,
+        dateLabel: `${weekdayLabelOf(o.start)}, ${start.format('DD.MM.YYYY')}`,
+        timeLabel: o.allDay ? $t('Full day') : (sameDay ? `${start.format('HH:mm')}–${end.format('HH:mm')}` : `${start.format('HH:mm')} – ${end.format('DD.MM. HH:mm')}`),
+        roomName: o.roomName ?? null,
+        isCurrent: !!o.isCurrent,
+        isException: !!o.isException,
+        isTrashed: !!o.isTrashed,
+        isPast: !!o.isPast,
+        shiftsCount: o.shiftsCount ?? 0,
+        collisions: o.collisions ?? 0,
+        ...extra,
+    }
+}
+const seriesRows = computed(() => {
+    if (isSeriesEvent.value) {
+        return (seriesInfo.value?.occurrences ?? []).map((o, i) => occurrenceRow(o, i + 1))
+    }
+    return (seriesPreview.value?.occurrences ?? []).map((o, i) => occurrenceRow(
+        { ...o, allDay: allDayEvent.value, roomName: selectedRoom.value?.name ?? null },
+        i + 1,
+        { isCurrent: i === 0 }
+    ))
+})
+function toggleWeekday(id) {
+    if (id === anchorWeekday.value) return
+    const idx = seriesWeekdays.value.indexOf(id)
+    if (idx >= 0) seriesWeekdays.value.splice(idx, 1)
+    else seriesWeekdays.value.push(id)
+}
+function applySeriesDefinition(def) {
+    if (!def) return
+    const found = frequencies.value.find(f => f.id === def.frequency_id)
+    if (found) selectedFrequency.value = found
+    seriesWeekdays.value = Array.isArray(def.weekdays) ? [...def.weekdays] : []
+    if (def.occurrence_count) {
+        seriesEndMode.value = 'count'
+        seriesOccurrenceCount.value = def.occurrence_count
+        seriesEndDate.value = def.end_date ?? null
+    } else {
+        seriesEndMode.value = 'date'
+        seriesEndDate.value = def.end_date ?? null
+        seriesOccurrenceCount.value = seriesInfo.value?.counts?.active ?? 10
+    }
+    initialSeriesDefinition = JSON.stringify(currentSeriesDefinition())
+}
+async function loadSeriesInfo() {
+    seriesInfo.value = null
+    seriesLoadFailed.value = false
+    initialSeriesDefinition = null
+    if (!props.event?.id || !props.event?.is_series) return
+    seriesLoading.value = true
+    try {
+        const { data } = await axios.get(route('events.series.show', { event: props.event.id }))
+        seriesInfo.value = data
+        applySeriesDefinition(data.series)
+    } catch {
+        seriesLoadFailed.value = true
+    } finally {
+        seriesLoading.value = false
+    }
+}
+function scheduleSeriesPreview() {
+    clearTimeout(seriesPreviewTimer)
+    if (isSeriesEvent.value || !series.value || !seriesDefinitionValid.value) {
+        seriesPreview.value = null
+        return
+    }
+    seriesPreviewTimer = setTimeout(fetchSeriesPreview, 350)
+}
+async function fetchSeriesPreview() {
+    const start = formatDate(startDate.value, allDayEvent.value ? '00:00' : startTime.value)
+    const end = formatDate(endDate.value, allDayEvent.value ? '23:59' : endTime.value)
+    if (!start || !end) return
+    seriesPreviewLoading.value = true
+    try {
+        const { data } = await axios.post(route('events.series.preview'), {
+            start,
+            end,
+            roomId: selectedRoom.value?.id ?? null,
+            ...seriesDefinitionPayload(),
+        })
+        seriesPreview.value = data
+    } catch {
+        seriesPreview.value = null
+    } finally {
+        seriesPreviewLoading.value = false
+    }
+}
+function seriesDefinitionPayload() {
+    return {
+        seriesFrequency: selectedFrequency.value?.id ?? null,
+        seriesEndDate: seriesEndMode.value === 'date' ? (seriesEndDate.value || null) : null,
+        seriesWeekdays: showWeekdayPicker.value ? seriesWeekdays.value.map(Number) : null,
+        seriesOccurrenceCount: seriesEndMode.value === 'count' ? Number(seriesOccurrenceCount.value) : null,
+    }
+}
+// Serie abwählen: nie still löschen – Rückfrage „lösen“ oder „beenden“
+function onSeriesToggle() {
+    if (isSeriesEvent.value && !series.value) {
+        series.value = true
+        showSeriesDetachModal.value = true
+    }
+}
+function cancelDetach() {
+    showSeriesDetachModal.value = false
+}
+async function confirmDetach(mode) {
+    isLoading.value = true
+    try {
+        await axios.post(route('events.series.detach', { event: props.event.id }), { mode })
+        showSeriesDetachModal.value = false
+        isLoading.value = false
+        closeModal(true)
+    } catch (e) {
+        isLoading.value = false
+        error.value = e?.response?.data?.errors ?? e
+    }
+}
+function onDeleteClick() {
+    if (isSeriesEvent.value) showSeriesDeleteModal.value = true
+    else deleteComponentVisible.value = true
+}
+function deleteScopeDescription(scope) {
+    if (scope === 'single') return $t('Only this event is put in the trash.')
+    const currentStart = props.event?.start ?? ''
+    const following = activeSeriesOccurrences.value.filter(o => o.isCurrent || o.start >= currentStart).length
+    if (scope === 'following') return $t('This and all following events of the series ({0}).', [following])
+    return $t('All events of the series ({0}).', [activeSeriesOccurrences.value.length])
+}
+async function deleteSeriesScoped(scope) {
+    isLoading.value = true
+    try {
+        if (scope === 'single') await axios.delete(`/events/${props.event.id}`)
+        else await axios.delete(route('events.series.delete', { event: props.event.id }), { data: { scope } })
+        showSeriesDeleteModal.value = false
+        isLoading.value = false
+        closeModal(true)
+    } catch (e) {
+        isLoading.value = false
+        error.value = e?.response?.data?.errors ?? e
+    }
+}
+// Warnung vor Turnus-/Ende-Änderung (Dry-Run im Backend)
+async function checkSeriesImpact() {
+    if (!isSeriesEvent.value || seriesScope.value === 'single' || !series.value || seriesImpactConfirmed) return true
+    if (!seriesDefinitionValid.value || !seriesDefinitionChanged()) return true
+    try {
+        const { data } = await axios.post(route('events.series.impact', { event: props.event.id }), seriesDefinitionPayload())
+        if (data?.changed && (data.trash > 0 || data.create > 0 || data.rebuild)) {
+            seriesImpact.value = data
+            showSeriesImpactModal.value = true
+            return false
+        }
+    } catch {
+        // Der Precheck darf das Speichern nie blockieren
+    }
+    return true
+}
+async function confirmSeriesImpactAndSave() {
+    seriesImpactConfirmed = true
+    showSeriesImpactModal.value = false
+    await doSaveEvent()
+}
+// Zeitraum, den der Kalender nach dem Schließen neu laden soll
+function affectedDayRange() {
+    let from = startDate.value
+    let to = endDate.value
+    const push = (d) => {
+        if (!d) return
+        const day = String(d).slice(0, 10)
+        if (!from || day < from) from = day
+        if (!to || day > to) to = day
+    }
+    push(oldStartDate.value)
+    push(oldEndDate.value)
+    if (series.value && seriesEndMode.value === 'date') push(seriesEndDate.value)
+    if (isSeriesEvent.value) {
+        push(seriesInfo.value?.counts?.first)
+        push(seriesInfo.value?.counts?.last)
+    } else if (series.value) {
+        const last = seriesPreview.value?.occurrences?.at(-1)?.start
+        push(last)
+    }
+    return [from, to]
+}
 
 const projectName = ref(null)
 const title = ref(null)
@@ -864,7 +1425,7 @@ const canCreateDirect = computed(
 )
 
 const isPrimaryDisabled = computed(() => {
-    const invalidSeries = series.value && (!seriesEndDate.value || !selectedFrequency.value || (endDate.value && seriesEndDate.value && endDate.value > seriesEndDate.value))
+    const invalidSeries = series.value && !seriesFieldsLocked.value && !seriesDefinitionValid.value
     const missingRoom = !selectedRoom.value
     const missingSubmit = !submit.value
     const needDecision = props.event?.occupancy_option && accept.value === false && optionAccept.value === false && adminComment.value === ''
@@ -882,7 +1443,7 @@ const isRequestableForRoom = computed(() => {
 })
 
 const requestDisabled = computed(() => {
-    const invalidSeries = series.value && (!seriesEndDate.value || !selectedFrequency.value || (endDate.value && seriesEndDate.value && endDate.value > seriesEndDate.value))
+    const invalidSeries = series.value && !seriesFieldsLocked.value && !seriesDefinitionValid.value
     if (!selectedRoom.value || !submit.value || invalidSeries || isLoading.value) return true
     const canRequestGlobal = can('request room occupancy')
     const canRequestRoom = isRequestableForRoom.value
@@ -1006,11 +1567,10 @@ function openModal() {
     }
 
     series.value = !!props.event.is_series
-    if (series.value) {
-        seriesEndDate.value = props.event.series?.end_date ?? null
-        const found = frequencies.find(f => f.id === props.event.series?.frequency_id)
-        if (found) selectedFrequency.value = found
-    }
+    seriesScope.value = 'single'
+    activeTab.value = 'event'
+    // Turnus, Wochentage, Ende und die Terminliste kommen aus events.series.show (nicht aus dem Kalender-Paket)
+    loadSeriesInfo()
 
     if (selectedProject.value?.id) showProjectInfo.value = true
 
@@ -1047,7 +1607,7 @@ function closeModal(closedOnPurpose = false) {
             'closed',
             closedOnPurpose,
             Array.from(new Set([initialRoomId.value, selectedRoom.value?.id].filter(Boolean))),
-            getDaysOfEvent(startDate.value, series.value ? seriesEndDate.value : endDate.value),
+            getDaysOfEvent(...affectedDayRange()),
             getDaysOfEvent(oldStartDate.value, oldEndDate.value),
         )
     } else {
@@ -1067,6 +1627,17 @@ function closeModal(closedOnPurpose = false) {
     allDayEvent.value = !!page.props.event_all_day_default
     series.value = false
     seriesEndDate.value = null
+    seriesEndMode.value = 'date'
+    seriesOccurrenceCount.value = 10
+    seriesWeekdays.value = []
+    selectedFrequency.value = frequencies.value[1]
+    seriesScope.value = 'single'
+    activeTab.value = 'event'
+    seriesInfo.value = null
+    seriesPreview.value = null
+    initialSeriesDefinition = null
+    seriesImpactConfirmed = false
+    showSeriesDeleteModal.value = showSeriesDetachModal.value = showSeriesImpactModal.value = false
     requestSubmitted.value = false
     showProjectInfo.value = Boolean(props.project) || (props.calendarProjectPeriod && page.props.auth.user.calendar_settings.time_period_project_id)
     creatingProject.value = false
@@ -1083,6 +1654,9 @@ function closeModal(closedOnPurpose = false) {
 const showDiscardConfirmation = ref(false)
 
 function handleCloseAttempt() {
+    // Headless-UI-Falle: Schließt ein innerer Dialog (Warnung, Lösch-/Lösen-Rückfrage) per Klick,
+    // wertet der äußere Dialog denselben Klick als „außerhalb“ und würde das Termin-Modal mitschließen.
+    if (innerDialogOpen.value || Date.now() < suppressOuterCloseUntil) return
     if (!props.event?.id) {
         showDiscardConfirmation.value = true
         return
@@ -1304,9 +1878,12 @@ function payload() {
         creatingProject: showProjectInfo.value ? creatingProject.value : false,
         declinedRoomId: declinedRoomId.value,
         is_series: !!series.value,
-        seriesFrequency: selectedFrequency.value.id,
-        seriesEndDate: seriesEndDate.value,
-        allSeriesEvents: allSeriesEvents.value,
+        seriesScope: isSeriesEvent.value ? seriesScope.value : 'single',
+        // Turnus/Ende nur mitschicken, wenn sie gelten: beim Anlegen, beim Umwandeln in eine Serie
+        // oder bei Reichweite über den Termin hinaus. Sonst bleibt die Serie unangetastet.
+        ...((series.value && (!isSeriesEvent.value || seriesScope.value !== 'single'))
+            ? seriesDefinitionPayload()
+            : { seriesFrequency: null, seriesEndDate: null, seriesWeekdays: null, seriesOccurrenceCount: null }),
         adminComment: adminComment.value,
         optionString: optionAccept.value ? optionString.value : null,
         accept: accept.value,
@@ -1329,8 +1906,6 @@ async function updateOrCreateEvent(isOptionParam = false) {
         isOption.value = true
     }
 
-    // Normales Bearbeiten: immer nur diesen einen Termin speichern
-    allSeriesEvents.value = false
     await doSaveEvent()
 }
 // --- Confirm-Dialog: Terminverschiebung löst Einzeltag-Projektzuordnungen auf ---
@@ -1398,10 +1973,15 @@ async function doSaveEvent() {
     isLoading.value = true
     const data = payload()
 
+    if (!(await checkSeriesImpact())) {
+        isLoading.value = false
+        return
+    }
     if (!(await checkProjectAssignmentImpact(data))) {
         isLoading.value = false
         return
     }
+    seriesImpactConfirmed = false
     // Bestätigung gilt nur für genau diesen Speichervorgang — sonst überspringt
     // ein späteres erneutes Verschieben im selben Modal den Precheck stumm
     assignmentImpactConfirmed = false
@@ -1457,19 +2037,6 @@ function handleSuccessfulSave() {
     }
 
     closeModal(true)
-}
-async function singleSaveEvent() {
-    allSeriesEvents.value = false
-    closeSeriesEditModal()
-    await doSaveEvent()
-}
-async function saveAllSeriesEvents() {
-    allSeriesEvents.value = true
-    closeSeriesEditModal()
-    await doSaveEvent()
-}
-function closeSeriesEditModal() {
-    showSeriesEdit.value = false
 }
 async function afterConfirm(confirmed) {
     if (!confirmed) {
@@ -1531,4 +2098,21 @@ function chooseProjectFromPicker(project) {
     chooseProject(project)      // deine vorhandene Methode (setzt selectedProject)
     // nach Auswahl → Chip anzeigen (Suche verschwindet automatisch)
 }
+
+// Innere Dialoge: solange einer offen ist (und kurz danach) darf der äußere Dialog nicht auf „close“ reagieren
+const innerDialogOpen = computed(() =>
+    showSeriesDeleteModal.value || showSeriesDetachModal.value || showSeriesImpactModal.value
+    || showAssignmentImpactModal.value || showDiscardConfirmation.value
+)
+let suppressOuterCloseUntil = 0
+watch(innerDialogOpen, (open) => {
+    if (!open) suppressOuterCloseUntil = Date.now() + 500
+})
+
+// Vorschau beim Anlegen nachziehen (steht am Ende, weil die Quellen erst weiter oben deklariert werden)
+watch(
+    [series, startDate, startTime, endDate, endTime, allDayEvent, selectedFrequency, seriesEndDate, seriesEndMode, seriesOccurrenceCount, seriesWeekdays, () => selectedRoom.value?.id],
+    () => scheduleSeriesPreview(),
+    { deep: true }
+)
 </script>

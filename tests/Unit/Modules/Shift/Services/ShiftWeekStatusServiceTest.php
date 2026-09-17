@@ -62,8 +62,12 @@ final class ShiftWeekStatusServiceTest extends TestCase
         ], $attributes)));
     }
 
-    private function makeRequest(string $status, ?Craft $craft = null, int $week = 41, int $year = 2026): ShiftPlanRequest
-    {
+    private function makeRequest(
+        string $status,
+        ?Craft $craft = null,
+        int $week = 41,
+        int $year = 2026
+    ): ShiftPlanRequest {
         return ShiftPlanRequest::create([
             'craft_id' => ($craft ?? $this->craft)->id,
             'week_number' => $week,
@@ -93,8 +97,12 @@ final class ShiftWeekStatusServiceTest extends TestCase
     /**
      * @return array<string, mixed>
      */
-    private function cell(?Craft $craft = null, string $weekKey = self::WEEK_KEY, int $weeks = 1, ?Carbon $today = null): array
-    {
+    private function cell(
+        ?Craft $craft = null,
+        string $weekKey = self::WEEK_KEY,
+        int $weeks = 1,
+        ?Carbon $today = null
+    ): array {
         $from = Carbon::parse(self::MONDAY);
         $to = $from->copy()->addWeeks($weeks)->subDay();
         $result = $this->service->compute($from, $to, [($craft ?? $this->craft)->id], $today);
@@ -235,11 +243,31 @@ final class ShiftWeekStatusServiceTest extends TestCase
         $notScheduled = User::factory()->create();
         $shift->users()->attach($scheduled->id, ['shift_qualification_id' => $qualification->id]);
 
-        ShiftRuleViolation::factory()->create(['user_id' => $scheduled->id, 'violation_date' => '2026-10-07', 'status' => 'active']);
-        ShiftRuleViolation::factory()->create(['user_id' => $scheduled->id, 'violation_date' => '2026-10-11', 'status' => 'active']);
-        ShiftRuleViolation::factory()->create(['user_id' => $scheduled->id, 'violation_date' => '2026-10-07', 'status' => 'resolved']);
-        ShiftRuleViolation::factory()->create(['user_id' => $scheduled->id, 'violation_date' => '2026-10-12', 'status' => 'active']);
-        ShiftRuleViolation::factory()->create(['user_id' => $notScheduled->id, 'violation_date' => '2026-10-07', 'status' => 'active']);
+        ShiftRuleViolation::factory()->create([
+            'user_id' => $scheduled->id,
+            'violation_date' => '2026-10-07',
+            'status' => 'active',
+        ]);
+        ShiftRuleViolation::factory()->create([
+            'user_id' => $scheduled->id,
+            'violation_date' => '2026-10-11',
+            'status' => 'active',
+        ]);
+        ShiftRuleViolation::factory()->create([
+            'user_id' => $scheduled->id,
+            'violation_date' => '2026-10-07',
+            'status' => 'resolved',
+        ]);
+        ShiftRuleViolation::factory()->create([
+            'user_id' => $scheduled->id,
+            'violation_date' => '2026-10-12',
+            'status' => 'active',
+        ]);
+        ShiftRuleViolation::factory()->create([
+            'user_id' => $notScheduled->id,
+            'violation_date' => '2026-10-07',
+            'status' => 'active',
+        ]);
 
         $this->assertSame(2, $this->cell()['open_violations']);
     }
@@ -253,7 +281,11 @@ final class ShiftWeekStatusServiceTest extends TestCase
 
         $this->makeShift()->users()->attach($user->id, ['shift_qualification_id' => $qualification->id]);
         $this->makeShift([], $otherCraft)->users()->attach($user->id, ['shift_qualification_id' => $qualification->id]);
-        ShiftRuleViolation::factory()->create(['user_id' => $user->id, 'violation_date' => '2026-10-07', 'status' => 'active']);
+        ShiftRuleViolation::factory()->create([
+            'user_id' => $user->id,
+            'violation_date' => '2026-10-07',
+            'status' => 'active',
+        ]);
 
         $from = Carbon::parse(self::MONDAY);
         $result = $this->service->compute($from, $from->copy()->addDays(6), [$this->craft->id, $otherCraft->id]);
@@ -399,7 +431,11 @@ final class ShiftWeekStatusServiceTest extends TestCase
                 $user = User::factory()->create();
                 $shift->users()->attach($user->id, ['shift_qualification_id' => $qualification->id]);
                 $this->makeChange($shift);
-                ShiftRuleViolation::factory()->create(['user_id' => $user->id, 'violation_date' => $date, 'status' => 'active']);
+                ShiftRuleViolation::factory()->create([
+                    'user_id' => $user->id,
+                    'violation_date' => $date,
+                    'status' => 'active',
+                ]);
                 $this->makeRequest('pending', $craft, 41 + $week);
             }
         }

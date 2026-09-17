@@ -487,7 +487,12 @@ class DemoShiftAssignmentSeeder extends Seeder
                 $this->assign($shift, $candidate, $mitarbeiterId, $rng->fork('double|' . $shift->id), $start, $end);
             }
         }
-        $this->command?->info('Demo-Konflikt: Doppelbuchung angelegt (' . $worker->first_name . ' ' . $worker->last_name . ').');
+        $this
+            ->command?->info('Demo-Konflikt: Doppelbuchung angelegt ('
+                 . $worker->first_name
+                 . ' '
+                 . $worker->last_name
+                 . ').');
     }
 
     /** Ein bereits eingeplanter User bekommt Urlaub am Schichttag (Warndreieck "nicht verfügbar"). */
@@ -557,7 +562,15 @@ class DemoShiftAssignmentSeeder extends Seeder
                 continue;
             }
 
-            $this->assign($shift, $candidate, $demand->shift_qualification_id, $rng->fork('overbook'), $start, $end, true);
+            $this->assign(
+                $shift,
+                $candidate,
+                $demand->shift_qualification_id,
+                $rng->fork('overbook'),
+                $start,
+                $end,
+                true
+            );
             $demand->update(['overbooked_value' => $assignedCount + 1 - (int) $demand->value]);
             $this->command?->info('Demo-Konflikt: Überbuchung angelegt.');
 

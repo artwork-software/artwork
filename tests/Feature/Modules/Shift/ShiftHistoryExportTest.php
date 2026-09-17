@@ -217,4 +217,51 @@ final class ShiftHistoryExportTest extends FeatureTestCase
         $this->get(route('shift-history.export', ['end_date' => '2021-01-01']))->assertOk();
         Excel::assertDownloaded('schichtverlauf_2020-01-01_bis_2021-01-01.xlsx');
     }
+
+    #[Test]
+    public function exportWithPersonFilterAddsRelationColumnAndAppliesScope(): void
+    {
+        $this->actingAsUserWith(PermissionEnum::VIEW_SHIFT_PLAN->value);
+        $worker = User::factory()->create(['first_name' => 'Max', 'last_name' => 'Schmidt']);
+        $shift = $this->makeShift();
+        \Artwork\Modules\Shift\Models\ShiftWorker::create([
+            'shift_id' => $shift->id,
+            'employable_type' => User::class,
+            'employable_id' => $worker->id,
+            'shift_qualification_id' => \Artwork\Modules\Shift\Models\ShiftQualification::factory()->create()->id,
+        ]);
+        $this->logActivity($shift, 'User assigned to shift', [
+            'translation_key' => '{0} was assigned to shift as {1} for {2} ({3})',
+            'translation_key_placeholder_values' => ['Max Schmidt', 'Tech', 'Stage', 'ST'],
+        ]);
+
+        $service = app(ShiftHistoryQueryService::class);
+        $filters = $service->resolveFilters([
+            'craftId' => $shift->craft_id,
+            'start_date' => '2026-05-01',
+            'end_date' => '2026-05-31',
+            'person_type' => 'user',
+            'person_id' => $worker->id,
+            'person_scope' => 'assigned',
+        ]);
+        $matched = $service->matchedShiftIds($filters, [$shift->id]);
+        $person = $service->resolvePerson($filters);
+        $personShiftIds = $service->personShiftIds($person, $matched);
+        $export = new ShiftHistoryExcelExport(
+            $service->activityQuery($filters, $matched, $person, $personShiftIds),
+            $matched,
+            'de',
+            fn (Activity $log) => $service->matchReasons($log, $person, $personShiftIds)
+        );
+
+        $headings = $export->headings();
+        $this->assertCount(9, $headings);
+        $this->assertSame(__('Relation', [], 'de'), $headings[8]);
+
+        $row = $export->map($export->query()->where('description', 'User assigned to shift')->firstOrFail());
+        $this->assertSame(
+            __('Concerns the person', [], 'de') . ', ' . __('Person is scheduled in this shift', [], 'de'),
+            $row[8]
+        );
+    }
 }

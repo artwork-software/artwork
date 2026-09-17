@@ -50,8 +50,7 @@ readonly class SageNotAssignedDataService implements CollectiveBookingService
         array $data,
         int|null $projectId = null,
         CollectiveBooking|null $collectiveBooking = null,
-    ): SageNotAssignedData
-    {
+    ): SageNotAssignedData {
         return $this->create([
             'project_id' => $projectId,
             'sage_id' => $data['ID'],
@@ -98,7 +97,7 @@ readonly class SageNotAssignedDataService implements CollectiveBookingService
             'parent_booking_id' => $newParent?->id,
         ]);
         if ($sageAssignedData->is_collective_booking) {
-            foreach($sageAssignedData->findChildren()->get() as $child) {
+            foreach ($sageAssignedData->findChildren()->get() as $child) {
                 $this->createFromSageAssignedData($child, null, $sageNotAssignedData);
             }
             app(SageAssignedDataService::class)->deleteChildData($sageAssignedData);
@@ -242,5 +241,4 @@ readonly class SageNotAssignedDataService implements CollectiveBookingService
     {
         return $this->sageNotAssignedDataRepository->getForFrontend($project?->id)->get();
     }
-
 }

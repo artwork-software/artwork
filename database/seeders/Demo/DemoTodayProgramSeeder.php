@@ -52,12 +52,42 @@ class DemoTodayProgramSeeder extends Seeder
         $rehearsal = $context->roomByName('Probebühne 1');
 
         $plan = [
-            ['wartung', $mainStage, $today->copy()->setTime(8, 0), $today->copy()->setTime(10, 0), 'Wartung Obermaschinerie'],
-            ['fuehrung', $foyer, $today->copy()->setTime(15, 0), $today->copy()->setTime(16, 0), 'Führung hinter die Kulissen'],
-            ['vorstellung', $mainStage, $today->copy()->setTime(19, 30), $today->copy()->setTime(22, 0), 'Zusatzvorstellung'],
+            [
+                'wartung',
+                $mainStage,
+                $today->copy()->setTime(8, 0),
+                $today->copy()->setTime(10, 0),
+                'Wartung Obermaschinerie',
+            ],
+            [
+                'fuehrung',
+                $foyer,
+                $today->copy()->setTime(15, 0),
+                $today->copy()->setTime(16, 0),
+                'Führung hinter die Kulissen',
+            ],
+            [
+                'vorstellung',
+                $mainStage,
+                $today->copy()->setTime(19, 30),
+                $today->copy()->setTime(22, 0),
+                'Zusatzvorstellung',
+            ],
             ['probe', $rehearsal, $today->copy()->setTime(10, 0), $today->copy()->setTime(14, 0), 'Probe'],
-            ['probe', $rehearsal, $today->copy()->addDay()->setTime(10, 0), $today->copy()->addDay()->setTime(14, 0), 'Probe'],
-            ['fuehrung', $foyer, $today->copy()->addDay()->setTime(11, 0), $today->copy()->addDay()->setTime(12, 0), 'Führung hinter die Kulissen'],
+            [
+                'probe',
+                $rehearsal,
+                $today->copy()->addDay()->setTime(10, 0),
+                $today->copy()->addDay()->setTime(14, 0),
+                'Probe',
+            ],
+            [
+                'fuehrung',
+                $foyer,
+                $today->copy()->addDay()->setTime(11, 0),
+                $today->copy()->addDay()->setTime(12, 0),
+                'Führung hinter die Kulissen',
+            ],
         ];
 
         $created = 0;

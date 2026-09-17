@@ -75,7 +75,9 @@ trait HasShifts
             $endDateStr = $endDate->toDateString();
 
             return $this->shifts->filter(function ($shift) use ($startDateStr, $endDateStr) {
-                $eventStartDay = $shift->event_start_day ? Carbon::parse($shift->event_start_day)->toDateString() : null;
+                $eventStartDay = $shift
+                    ->event_start_day ? Carbon::parse($shift->event_start_day)
+                    ->toDateString() : null;
                 $eventEndDay = $shift->event_end_day ? Carbon::parse($shift->event_end_day)->toDateString() : null;
                 $shiftStartDate = $shift->start_date ? Carbon::parse($shift->start_date)->toDateString() : null;
                 $shiftEndDate = $shift->end_date ? Carbon::parse($shift->end_date)->toDateString() : null;
@@ -113,6 +115,21 @@ trait HasShifts
     public function managingCrafts(): MorphToMany
     {
         return $this->morphToMany(Craft::class, 'craft_manager');
+    }
+
+    /**
+     * Nur die IDs der zugeordneten Gewerke vorladen, damit der `assigned_craft_ids`-Accessor
+     * (bei Freelancer/ServiceProvider in $appends) beim Serialisieren einer Liste keine
+     * craftables-Query je Zeile nachschiebt. Craft::$with (craftShiftPlaner) und die
+     * Relations-Vorladung `qualifications` werden bewusst ausgelassen.
+     */
+    public function scopeWithAssignedCraftIds(Builder $query): Builder
+    {
+        return $query->with([
+            'assignedCrafts' => static fn (MorphToMany $relation) => $relation
+                ->without(['craftShiftPlaner', 'qualifications'])
+                ->select('crafts.id'),
+        ]);
     }
 
     public function getAssignedCraftIdsAttribute(): array

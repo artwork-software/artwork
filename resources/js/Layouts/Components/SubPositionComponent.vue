@@ -113,11 +113,11 @@
                                         >
                                             <span
                                                 :ref="el => setTruncEl(cell.id, el)"
-                                                :class="(userShowAccountName ? (cell.display_value ?? cell.value) : cell.value) === '' ? 'w-6 cursor-pointer h-6' : 'truncate w-42 cursor-pointer block'"
+                                                :class="(cell.display_value ?? cell.value) === '' ? 'w-6 cursor-pointer h-6' : 'truncate w-42 cursor-pointer block'"
                                                 @mousedown="storeFocus(cell.id)"
                                                 @click="this.handleCellClick(cell, '', index, row)"
                                             >
-                                                {{ userShowAccountName ? (cell.display_value ?? cell.value) : cell.value }}
+                                                {{ cell.display_value ?? cell.value }}
                                             </span>
                                             <span
                                                 v-if="isTruncated[cell.id]"
@@ -131,7 +131,7 @@
                                                     class="absolute -top-1 left-3 h-2 w-2 rotate-45 bg-white/95
                                                            border-l border-t border-border-subtle"
                                                 />
-                                                {{ String(userShowAccountName ? (cell.display_value ?? cell.value) : (cell.value ?? '')) }}
+                                                {{ String(cell.display_value ?? cell.value ?? '') }}
                                             </span>
                                         </span>
                                     </div>
@@ -141,34 +141,43 @@
                                     class="my-4 h-6 flex items-center" v-else>
                                     <div class="flex flex-row items-center relative">
                                         <input v-model="cell.searchValue"
-                                               :placeholder="userShowAccountName ? (cell.display_value ?? cell.value) : cell.value"
+                                               :placeholder="cell.display_value ?? cell.value"
                                                :ref="`cell-${cell.id}`"
                                                type="text"
                                                class="w-full"
+                                               autocomplete="off"
                                                @input="this.handleBudgetManagementSearch(index, cell, (this.mainPosition.type !== 'BUDGET_TYPE_COST'))"
-                                               @focusout="this.handleBudgetManagementSearchBlur(cell)"
+                                               @keydown.down.prevent="moveBudgetManagementSearchHighlight(index, cell, 1)"
+                                               @keydown.up.prevent="moveBudgetManagementSearchHighlight(index, cell, -1)"
+                                               @keydown.enter.prevent="handleBudgetManagementSearchEnter(index, cell, (this.mainPosition.type !== 'BUDGET_TYPE_COST'))"
+                                               @keydown.esc.prevent="handleBudgetManagementSearchCancel(cell)"
+                                               @focusout="this.handleBudgetManagementSearchBlur(index, cell, (this.mainPosition.type !== 'BUDGET_TYPE_COST'))"
                                         />
                                         <PropertyIcon name="IconX" class="w-10 h-10 cursor-pointer"
                                                @click="this.handleBudgetManagementSearchCancel(cell)"
                                         />
-                                        <div v-if="cell.accountSearchResults" class="absolute w-96 z-20 top-10">
+                                        <div v-if="cell.accountSearchResults" class="absolute w-96 z-20 top-10 max-h-80 overflow-y-auto">
                                             <div v-if="cell.accountSearchResults.length > 0"
-                                                 v-for="account in cell.accountSearchResults"
+                                                 v-for="(account, resultIndex) in cell.accountSearchResults"
+                                                 :key="account.id"
                                                  class="flex flex-col"
                                             >
                                                 <div
-                                                    class="group/account relative p-3 cursor-pointer bg-surface-inverse hover:bg-accent-700 text-white"
+                                                    :ref="el => setSearchResultEl(cell.id, resultIndex, el)"
+                                                    class="group/account relative p-3 cursor-pointer hover:bg-accent-700 text-white"
+                                                    :class="cell.searchHighlightIndex === resultIndex ? 'bg-accent-700' : 'bg-surface-inverse'"
+                                                    @mouseenter="cell.searchHighlightIndex = resultIndex"
                                                     @mousedown="this.handleBudgetManagementSearchSelect(index, cell, account.account_number, account.title, mainPosition.is_verified, subPosition.is_verified)">
                                                     <div class="flex gap-2">
                                                         <div class="shrink-0 text-left">
-                                                            {{ account.account_number }}
+                                                            <span v-for="(part, partIndex) in highlightSearchParts(account.account_number, cell.searchValue)" :key="partIndex" :class="part.hit ? 'font-bold underline' : ''">{{ part.text }}</span>
                                                         </div>
                                                         <div class="text-right truncate">
-                                                            {{ account.title }}
+                                                            <span v-for="(part, partIndex) in highlightSearchParts(account.title, cell.searchValue)" :key="partIndex" :class="part.hit ? 'font-bold underline' : ''">{{ part.text }}</span>
                                                         </div>
                                                     </div>
                                                     <div class="hidden group-hover/account:block absolute left-0 bottom-full mb-1 w-max max-w-sm px-2 py-1 text-xs bg-black text-white rounded shadow-lg z-30 whitespace-normal">
-                                                        {{ account.account_number }} - {{ account.title }}
+                                                        {{ account.account_number }} – {{ account.title }}
                                                     </div>
                                                 </div>
                                             </div>
@@ -181,24 +190,28 @@
                                                 {{ $t('More results available - refine your search') }}
                                             </div>
                                         </div>
-                                        <div v-if="cell.costUnitSearchResults" class="absolute w-96 z-20 top-10">
+                                        <div v-if="cell.costUnitSearchResults" class="absolute w-96 z-20 top-10 max-h-80 overflow-y-auto">
                                             <div v-if="cell.costUnitSearchResults.length > 0"
-                                                 v-for="cost_unit in cell.costUnitSearchResults"
+                                                 v-for="(cost_unit, resultIndex) in cell.costUnitSearchResults"
+                                                 :key="cost_unit.id"
                                                  class="flex flex-col"
                                             >
                                                 <div
-                                                    class="group/costunit relative p-3 cursor-pointer bg-surface-inverse hover:bg-accent-700 text-white"
+                                                    :ref="el => setSearchResultEl(cell.id, resultIndex, el)"
+                                                    class="group/costunit relative p-3 cursor-pointer hover:bg-accent-700 text-white"
+                                                    :class="cell.searchHighlightIndex === resultIndex ? 'bg-accent-700' : 'bg-surface-inverse'"
+                                                    @mouseenter="cell.searchHighlightIndex = resultIndex"
                                                     @mousedown="this.handleBudgetManagementSearchSelect(index, cell, cost_unit.cost_unit_number, cost_unit.title, mainPosition.is_verified, subPosition.is_verified)">
                                                     <div class="flex gap-2">
                                                         <div class="shrink-0 text-left">
-                                                            {{ cost_unit.cost_unit_number }}
+                                                            <span v-for="(part, partIndex) in highlightSearchParts(cost_unit.cost_unit_number, cell.searchValue)" :key="partIndex" :class="part.hit ? 'font-bold underline' : ''">{{ part.text }}</span>
                                                         </div>
                                                         <div class="text-right truncate">
-                                                            {{ cost_unit.title }}
+                                                            <span v-for="(part, partIndex) in highlightSearchParts(cost_unit.title, cell.searchValue)" :key="partIndex" :class="part.hit ? 'font-bold underline' : ''">{{ part.text }}</span>
                                                         </div>
                                                     </div>
                                                     <div class="hidden group-hover/costunit:block absolute left-0 bottom-full mb-1 w-max max-w-sm px-2 py-1 text-xs bg-black text-white rounded shadow-lg z-30 whitespace-normal">
-                                                        {{ cost_unit.cost_unit_number }} - {{ cost_unit.title }}
+                                                        {{ cost_unit.cost_unit_number }} – {{ cost_unit.title }}
                                                     </div>
                                                 </div>
                                             </div>
@@ -516,7 +529,7 @@ export default {
         SageDataDropElement,
         ConfirmationComponent,
     },
-    props: ['subPosition', 'mainPosition', 'allMainPositions', 'columns', 'project', 'table', 'projectManagers', 'hasBudgetAccess', 'userShowAccountName'],
+    props: ['subPosition', 'mainPosition', 'allMainPositions', 'columns', 'project', 'table', 'projectManagers', 'hasBudgetAccess'],
     emits: [
         'openDeleteModal',
         'openVerifiedModal',
@@ -533,6 +546,8 @@ export default {
             // Debounce-Timer der Kontensuche je Zelle (250 ms); Limit = serverseitiges Trefferlimit
             budgetManagementSearchTimeouts: {},
             budgetManagementSearchLimit: 50,
+            // DOM-Elemente der Suchtreffer je Zelle (fuer scrollIntoView bei Pfeiltasten-Navigation)
+            budgetManagementSearchResultEls: {},
             editedCellOriginalValue: null,
             showMenu: null,
             hoveredRow: null,
@@ -1220,17 +1235,150 @@ export default {
                 onSuccess: () => this.$emit('budget-updated')
             })
         },
-        handleBudgetManagementSearchBlur(cell) {
+        handleBudgetManagementSearchBlur(index, cell, is_account_for_revenue) {
             // Auto-close the search input if user leaves the field without making any change
             // Use a short timeout so click on a suggestion can be processed before we possibly cancel
-            setTimeout(() => {
-                if (cell?.value === this.editedCellOriginalValue) {
+            setTimeout(async () => {
+                if (!cell?.clicked || cell.value !== this.editedCellOriginalValue) {
+                    return;
+                }
+                // Exakt eingetippte Nummer (oder eindeutiger Name) wird beim Verlassen uebernommen,
+                // ohne dass ein Treffer angeklickt werden muss.
+                const accepted = await this.acceptExactBudgetManagementMatch(index, cell, is_account_for_revenue);
+                if (!accepted && cell.clicked) {
                     this.handleBudgetManagementSearchCancel(cell);
                 }
             }, 0);
         },
+        budgetManagementSearchResults(index, cell) {
+            return (index === 0 ? cell.accountSearchResults : cell.costUnitSearchResults) ?? null;
+        },
+        budgetManagementResultNumber(index, result) {
+            return index === 0 ? result.account_number : result.cost_unit_number;
+        },
+        setSearchResultEl(cellId, resultIndex, el) {
+            if (!this.budgetManagementSearchResultEls[cellId]) {
+                this.budgetManagementSearchResultEls[cellId] = {};
+            }
+            if (el) {
+                this.budgetManagementSearchResultEls[cellId][resultIndex] = el;
+            } else {
+                delete this.budgetManagementSearchResultEls[cellId][resultIndex];
+            }
+        },
+        moveBudgetManagementSearchHighlight(index, cell, delta) {
+            const results = this.budgetManagementSearchResults(index, cell);
+            if (!results || results.length === 0) {
+                return;
+            }
+            const current = cell.searchHighlightIndex ?? -1;
+            const next = Math.min(results.length - 1, Math.max(0, current + delta));
+            cell.searchHighlightIndex = next;
+            this.budgetManagementSearchResultEls[cell.id]?.[next]?.scrollIntoView?.({block: 'nearest'});
+        },
+        findExactBudgetManagementMatch(index, cell, results) {
+            const term = (cell.searchValue ?? '').trim().toLowerCase();
+            if (term === '' || !results || results.length === 0) {
+                return null;
+            }
+            const byNumber = results.filter(
+                (result) => String(this.budgetManagementResultNumber(index, result)).toLowerCase() === term
+            );
+            if (byNumber.length === 1) {
+                return byNumber[0];
+            }
+            const byTitle = results.filter((result) => String(result.title ?? '').toLowerCase() === term);
+            if (byTitle.length === 1) {
+                return byTitle[0];
+            }
+            return null;
+        },
+        async fetchBudgetManagementSearch(index, cell, is_account_for_revenue) {
+            if (index === 0) {
+                const response = await axios.get(
+                    route('budget-settings.account-management.search-accounts'),
+                    {params: {search: cell.searchValue, is_account_for_revenue: is_account_for_revenue}}
+                );
+                return response.data;
+            }
+            const response = await axios.get(
+                route('budget-settings.account-management.search-cost-units'),
+                {params: {search: cell.searchValue}}
+            );
+            return response.data;
+        },
+        async acceptExactBudgetManagementMatch(index, cell, is_account_for_revenue) {
+            if ((cell.searchValue ?? '').trim() === '') {
+                return false;
+            }
+            let results = this.budgetManagementSearchResults(index, cell);
+            if (!results) {
+                // Debounce noch nicht durch: Treffer fuer die exakte Pruefung direkt laden
+                window.clearTimeout(this.budgetManagementSearchTimeouts[cell.id]);
+                try {
+                    results = await this.fetchBudgetManagementSearch(index, cell, is_account_for_revenue);
+                } catch (e) {
+                    return false;
+                }
+            }
+            if (!cell.clicked) {
+                return true; // inzwischen anders abgeschlossen (z. B. Klick auf Treffer)
+            }
+            const match = this.findExactBudgetManagementMatch(index, cell, results);
+            if (!match) {
+                return false;
+            }
+            this.handleBudgetManagementSearchSelect(
+                index, cell, this.budgetManagementResultNumber(index, match), match.title,
+                this.mainPosition.is_verified, this.subPosition.is_verified
+            );
+            return true;
+        },
+        async handleBudgetManagementSearchEnter(index, cell, is_account_for_revenue) {
+            const results = this.budgetManagementSearchResults(index, cell);
+            const highlight = cell.searchHighlightIndex ?? -1;
+            let chosen = null;
+            if (results && highlight >= 0 && results[highlight]) {
+                chosen = results[highlight];
+            } else if (results && results.length === 1) {
+                chosen = results[0];
+            }
+            if (chosen) {
+                this.handleBudgetManagementSearchSelect(
+                    index, cell, this.budgetManagementResultNumber(index, chosen), chosen.title,
+                    this.mainPosition.is_verified, this.subPosition.is_verified
+                );
+                return;
+            }
+            await this.acceptExactBudgetManagementMatch(index, cell, is_account_for_revenue);
+        },
+        highlightSearchParts(text, term) {
+            const value = String(text ?? '');
+            const needle = String(term ?? '').trim();
+            if (needle === '') {
+                return [{text: value, hit: false}];
+            }
+            const lowerValue = value.toLowerCase();
+            const lowerNeedle = needle.toLowerCase();
+            const parts = [];
+            let position = 0;
+            let found = lowerValue.indexOf(lowerNeedle, position);
+            while (found !== -1) {
+                if (found > position) {
+                    parts.push({text: value.slice(position, found), hit: false});
+                }
+                parts.push({text: value.slice(found, found + needle.length), hit: true});
+                position = found + needle.length;
+                found = lowerValue.indexOf(lowerNeedle, position);
+            }
+            if (position < value.length) {
+                parts.push({text: value.slice(position), hit: false});
+            }
+            return parts;
+        },
         handleBudgetManagementSearch(index, cell, is_account_for_revenue) {
             window.clearTimeout(this.budgetManagementSearchTimeouts[cell.id]);
+            cell.searchHighlightIndex = -1;
 
             if (cell.searchValue === '') {
                 //return if search input is emptied, reset search results
@@ -1249,26 +1397,15 @@ export default {
                 return;
             }
 
-            if (index === 0) {
-                axios.get(
-                    route('budget-settings.account-management.search-accounts'),
-                    {
-                        params: {
-                            search: cell.searchValue,
-                            is_account_for_revenue: is_account_for_revenue
-                        }
-                    }
-                ).then((response) => cell.accountSearchResults = response.data);
-            } else {
-                axios.get(
-                    route('budget-settings.account-management.search-cost-units'),
-                    {
-                        params: {
-                            search: cell.searchValue
-                        }
-                    }
-                ).then(response => cell.costUnitSearchResults = response.data);
-            }
+            this.fetchBudgetManagementSearch(index, cell, is_account_for_revenue).then((results) => {
+                if (index === 0) {
+                    cell.accountSearchResults = results;
+                } else {
+                    cell.costUnitSearchResults = results;
+                }
+                // Bei genau einem Treffer ist dieser vorausgewaehlt: Enter uebernimmt ihn direkt.
+                cell.searchHighlightIndex = results.length === 1 ? 0 : -1;
+            });
         },
         handleBudgetManagementSearchSelect(index, cell, value, displayValue, mainPositionIsVerified, subPositionIsVerified) {
             if (index === 0) {
@@ -1276,15 +1413,18 @@ export default {
             } else {
                 cell.costUnitSearchResults = null;
             }
+            cell.searchHighlightIndex = -1;
 
             cell.value = value;
-            cell.display_value = displayValue;
+            // Gleiches Format wie BudgetService::enrichAccountManagementDisplayValues („Nummer – Name“)
+            cell.display_value = displayValue ? `${value} – ${displayValue}` : null;
 
             this.updateCellValue(cell, mainPositionIsVerified, subPositionIsVerified);
         },
         handleBudgetManagementSearchCancel(cell) {
             cell.clicked = false;
             cell.searchValue = '';
+            cell.searchHighlightIndex = -1;
             cell.accountSearchResults = null;
             cell.costUnitSearchResults = null;
             this.editedCellOriginalValue = null;

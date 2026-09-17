@@ -15,7 +15,8 @@ readonly class CrmContactService
     public function __construct(
         private CrmContactRepository $contactRepository,
         private CrmPropertyValueRepository $propertyValueRepository,
-    ) {}
+    ) {
+    }
 
     public function getByType(
         int $typeId,

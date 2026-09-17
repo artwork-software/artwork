@@ -53,9 +53,11 @@ final class AdjoiningRoomIndexResourceTest extends TestCase
 
         $array = (new AdjoiningRoomIndexResource($model))->toArray(new Request());
 
-        foreach (['id', 'name', 'description', 'end_date', 'everyone_can_book', 'order',
+        foreach (
+            ['id', 'name', 'description', 'end_date', 'everyone_can_book', 'order',
                  'start_date', 'temporary', 'user_id', 'area_id', 'created_at',
-                 'updated_at', 'deleted_at'] as $key) {
+                 'updated_at', 'deleted_at'] as $key
+        ) {
             $this->assertArrayHasKey($key, $array, sprintf('Missing key: %s', $key));
         }
     }

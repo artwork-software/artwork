@@ -95,7 +95,8 @@ class SubEvent extends Model
         return $this->belongsToMany(EventProperty::class);
     }
 
-    public function getFormattedDatesAttribute(){
+    public function getFormattedDatesAttribute()
+    {
         return [
             'start_time' => Carbon::parse($this->start_time)->format('H:i'),
             'end_time' => Carbon::parse($this->end_time)->format('H:i'),

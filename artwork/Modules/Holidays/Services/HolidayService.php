@@ -142,7 +142,7 @@ class HolidayService
 
         foreach ($responses as $holidays) {
             foreach ($holidays as $holiday) {
-                if(!is_array($holiday)) {
+                if (!is_array($holiday)) {
                     continue; //country information
                 }
                 $name = $holiday['name'][0]['text'];

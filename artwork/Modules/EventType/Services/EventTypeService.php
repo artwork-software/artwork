@@ -27,6 +27,11 @@ readonly class EventTypeService
         return $this->eventTypeRepository->getById($id);
     }
 
+    public function getAllWithVerifiers(): Collection
+    {
+        return $this->eventTypeRepository->getAllWithVerifiers();
+    }
+
     public function getAll(): Collection
     {
         if (!$all = EventTypeArrayCache::getAll()) {

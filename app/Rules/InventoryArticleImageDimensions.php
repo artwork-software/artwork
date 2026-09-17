@@ -23,7 +23,12 @@ class InventoryArticleImageDimensions implements ValidationRule
         }
 
         try {
-            $dimensions = @getimagesize($value->getRealPath());
+            try {
+                $dimensions = getimagesize($value->getRealPath());
+            } catch (\Throwable) {
+                // ungültiges Bild: getimagesize warnt (Laravel wirft daraus eine Exception) → Imagick-Fallback
+                $dimensions = false;
+            }
 
             if ($dimensions === false && class_exists(\Imagick::class)) {
                 $image = new \Imagick();

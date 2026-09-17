@@ -412,13 +412,15 @@ class WorkTimeOverviewExportService
                     ? max(1, (int) ($worker->shift_count ?? 1))
                     : 1;
 
-                foreach ($this->workedMinutesByMonth(
-                    $start,
-                    $end,
-                    (int) ($worker->shift?->break_minutes ?? 0),
-                    $rangeStart,
-                    $rangeEnd,
-                ) as $monthKey => $minutes) {
+                foreach (
+                    $this->workedMinutesByMonth(
+                        $start,
+                        $end,
+                        (int) ($worker->shift?->break_minutes ?? 0),
+                        $rangeStart,
+                        $rangeEnd,
+                    ) as $monthKey => $minutes
+                ) {
                     $minutesByWorker[$craftId][$workerId][$monthKey] =
                         ($minutesByWorker[$craftId][$workerId][$monthKey] ?? 0) + ($minutes * $headcount);
                 }

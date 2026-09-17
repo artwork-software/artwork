@@ -1,0 +1,339 @@
+{
+    "crafts": {
+        "[]": {
+            "abbreviation": ".",
+            "color": ".",
+            "craft_shift_planer": {
+                "[]": {
+                    "business": ".",
+                    "first_name": ".",
+                    "full_name": ".",
+                    "id": ".",
+                    "last_name": ".",
+                    "position": ".",
+                    "profile_photo_url": ".",
+                    "type": "."
+                }
+            },
+            "id": ".",
+            "name": ".",
+            "position": ".",
+            "universally_applicable": "."
+        }
+    },
+    "daysWithData": {
+        "[]": {
+            "comments": "[]",
+            "date": ".",
+            "dayServices": "[]",
+            "holidays": "[]",
+            "individualTimes": "[]",
+            "shifts": {
+                "[]": {
+                    "break_minutes": ".",
+                    "craft": {
+                        "abbreviation": ".",
+                        "color": ".",
+                        "craft_shift_planer": {
+                            "[]": {
+                                "business": ".",
+                                "first_name": ".",
+                                "full_name": ".",
+                                "id": ".",
+                                "last_name": ".",
+                                "position": ".",
+                                "profile_photo_url": ".",
+                                "type": "."
+                            }
+                        },
+                        "id": ".",
+                        "name": "."
+                    },
+                    "description": ".",
+                    "end": ".",
+                    "event": {
+                        "end_time": ".",
+                        "eventName": ".",
+                        "event_type_id": ".",
+                        "id": ".",
+                        "name": ".",
+                        "project": {
+                            "auth_user_in_team": ".",
+                            "groups": {
+                                "[]": {
+                                    "icon": ".",
+                                    "id": ".",
+                                    "name": ".",
+                                    "users": "[]"
+                                }
+                            },
+                            "icon": ".",
+                            "id": ".",
+                            "is_group": ".",
+                            "name": "."
+                        },
+                        "room": {
+                            "id": ".",
+                            "name": "."
+                        },
+                        "start_time": "."
+                    },
+                    "id": ".",
+                    "in_workflow": ".",
+                    "is_committed": ".",
+                    "name": ".",
+                    "plannedWorkingHours": ".",
+                    "project": {
+                        "auth_user_in_team": ".",
+                        "groups": {
+                            "[]": {
+                                "icon": ".",
+                                "id": ".",
+                                "name": ".",
+                                "users": "[]"
+                            }
+                        },
+                        "icon": ".",
+                        "id": ".",
+                        "is_group": ".",
+                        "name": "."
+                    },
+                    "projectGroups": {
+                        "[]": {
+                            "icon": ".",
+                            "id": ".",
+                            "name": ".",
+                            "users": "[]"
+                        }
+                    },
+                    "projectIsGroup": ".",
+                    "projectIsInGroup": ".",
+                    "room": {
+                        "id": ".",
+                        "name": "."
+                    },
+                    "shiftQualifications": {
+                        "[]": {
+                            "created_at": ".",
+                            "deleted_at": ".",
+                            "id": ".",
+                            "overbooked_value": ".",
+                            "shift_id": ".",
+                            "shift_qualification_id": ".",
+                            "updated_at": ".",
+                            "value": "."
+                        }
+                    },
+                    "start": ".",
+                    "worker_unavailable_status": ".",
+                    "workers": {
+                        "[]": {
+                            "confirmation_eligible": ".",
+                            "first_name": ".",
+                            "id": ".",
+                            "last_name": ".",
+                            "name": ".",
+                            "pivot": {
+                                "confirmation_at": ".",
+                                "confirmation_by_user_id": ".",
+                                "confirmation_comment": ".",
+                                "confirmation_reset_at": ".",
+                                "confirmation_status": ".",
+                                "craft_abbreviation": ".",
+                                "employable_id": ".",
+                                "employable_type": ".",
+                                "end_date": ".",
+                                "end_time": ".",
+                                "id": ".",
+                                "is_overbooked": ".",
+                                "shift_id": ".",
+                                "shift_qualification_id": ".",
+                                "shift_qualification_name": ".",
+                                "short_description": ".",
+                                "start_date": ".",
+                                "start_time": "."
+                            },
+                            "profile_photo_url": ".",
+                            "provider_name": ".",
+                            "type": "."
+                        }
+                    }
+                }
+            },
+            "totalBreakTime": ".",
+            "totalWorkTime": ".",
+            "unavailableAssignment": ".",
+            "violations": "[]"
+        }
+    },
+    "serviceProvider": {
+        "assignableCrafts": {
+            "[]": {
+                "abbreviation": ".",
+                "assignable_by_all": ".",
+                "color": ".",
+                "commit_request_deadline_days": ".",
+                "craft_shift_planer": "[]",
+                "created_at": ".",
+                "id": ".",
+                "inventory_planned_by_all": ".",
+                "name": ".",
+                "notify_days": ".",
+                "position": ".",
+                "qualifications": "[]",
+                "universally_applicable": ".",
+                "updated_at": "."
+            }
+        },
+        "assignedCrafts": {
+            "[]": {
+                "abbreviation": ".",
+                "assignable_by_all": ".",
+                "color": ".",
+                "commit_request_deadline_days": ".",
+                "craft_shift_planer": {
+                    "[]": {
+                        "ad_identifier": ".",
+                        "ad_managed": ".",
+                        "at_a_glance": ".",
+                        "auth_provider": ".",
+                        "auth_provider_id": ".",
+                        "auth_provider_issuer": ".",
+                        "bulk_column_size": {
+                            "[]": "."
+                        },
+                        "bulk_sort_id": ".",
+                        "business": ".",
+                        "calendar_daily_view": ".",
+                        "can_work_shifts": ".",
+                        "chat_popup_position": ".",
+                        "chat_public_key": ".",
+                        "chat_push_notification": ".",
+                        "checklist_completed_tasks": ".",
+                        "checklist_has_projects": ".",
+                        "checklist_no_private_checklists": ".",
+                        "checklist_no_projects": ".",
+                        "checklist_private_checklists": ".",
+                        "checklist_show_without_tasks": ".",
+                        "checklist_style": ".",
+                        "closed_qualification_groups": ".",
+                        "compact_mode": ".",
+                        "created_at": ".",
+                        "crm_contact_id": ".",
+                        "current_team_id": ".",
+                        "daily_view": ".",
+                        "description": ".",
+                        "drawer_height": ".",
+                        "email": ".",
+                        "email_private": ".",
+                        "email_verified_at": ".",
+                        "employEnd": ".",
+                        "employStart": ".",
+                        "entities_per_page": ".",
+                        "first_name": ".",
+                        "formated_work_time_balance": ".",
+                        "full_name": ".",
+                        "goto_mode": ".",
+                        "id": ".",
+                        "inventory_grid_layout": ".",
+                        "inventory_hide_images": ".",
+                        "inventory_sort_column_id": ".",
+                        "inventory_sort_direction": ".",
+                        "is_developer": ".",
+                        "is_freelancer": ".",
+                        "is_sidebar_opened": ".",
+                        "is_time_preset_open": ".",
+                        "language": ".",
+                        "last_name": ".",
+                        "last_project_id": ".",
+                        "notification_enums_last_sent_dates": ".",
+                        "opened_areas": "[]",
+                        "opened_checklists": "[]",
+                        "opened_crafts": ".",
+                        "phone_number": ".",
+                        "phone_private": ".",
+                        "pivot": {
+                            "craft_id": ".",
+                            "user_id": "."
+                        },
+                        "position": ".",
+                        "profile_photo_path": ".",
+                        "profile_photo_url": ".",
+                        "pronouns": ".",
+                        "salary_description": ".",
+                        "salary_per_hour": ".",
+                        "share_calendar_date": ".",
+                        "shift_period_on_start_date_change": ".",
+                        "shift_plan_daily_view": ".",
+                        "shift_plan_user_sort_by_id": ".",
+                        "show_crafts": ".",
+                        "show_description_in_bulk": ".",
+                        "show_modal_backdrop": ".",
+                        "show_notification_indicator": ".",
+                        "show_project_team_names": ".",
+                        "show_qualification_duplicates": ".",
+                        "show_qualifications": "[]",
+                        "sort_type_shift_tab": ".",
+                        "sort_workers_by_qualification": ".",
+                        "temporary": ".",
+                        "toggle_hints": ".",
+                        "type": ".",
+                        "updated_at": ".",
+                        "use_chat": ".",
+                        "weekly_working_hours": ".",
+                        "work_description": ".",
+                        "work_name": ".",
+                        "work_time_balance": ".",
+                        "zoom_factor": "."
+                    }
+                },
+                "created_at": ".",
+                "id": ".",
+                "inventory_planned_by_all": ".",
+                "name": ".",
+                "notify_days": ".",
+                "pivot": {
+                    "craft_id": ".",
+                    "craftable_id": ".",
+                    "craftable_type": "."
+                },
+                "position": ".",
+                "qualifications": {
+                    "[]": {
+                        "available": ".",
+                        "created_at": ".",
+                        "icon": ".",
+                        "id": ".",
+                        "name": ".",
+                        "pivot": {
+                            "craft_id": ".",
+                            "shift_qualification_id": "."
+                        },
+                        "position": ".",
+                        "updated_at": "."
+                    }
+                },
+                "universally_applicable": ".",
+                "updated_at": "."
+            }
+        },
+        "can_work_shifts": ".",
+        "contacts": "[]",
+        "email": ".",
+        "id": ".",
+        "location": ".",
+        "note": ".",
+        "phone_number": ".",
+        "profile_image": ".",
+        "profile_photo_url": ".",
+        "provider_name": ".",
+        "salary_description": ".",
+        "salary_per_hour": ".",
+        "shiftQualifications": "[]",
+        "street": ".",
+        "type_of_provider": ".",
+        "work_description": ".",
+        "work_name": ".",
+        "zip_code": "."
+    }
+}

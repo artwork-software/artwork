@@ -48,7 +48,10 @@ class SyncExternalUserSource implements ShouldBeUnique, ShouldQueue
         $source = $this->source->fresh();
 
         if (!$source || $source->type !== 'ldap' || !$source->active) {
-            $this->storeStatus('cancelled', __('LDAP synchronization was cancelled because the source is no longer active.'));
+            $this->storeStatus(
+                'cancelled',
+                __('LDAP synchronization was cancelled because the source is no longer active.')
+            );
 
             return;
         }

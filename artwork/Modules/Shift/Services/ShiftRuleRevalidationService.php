@@ -91,7 +91,8 @@ class ShiftRuleRevalidationService
                 $query->whereDate('shifts.end_date', '>=', $today->toDateString())
                     ->orWhereDate('shift_workers.end_date', '>=', $today->toDateString());
             })
-            ->selectRaw('MAX(GREATEST(COALESCE(shift_workers.end_date, shifts.end_date), shifts.end_date)) as latest_end')
+        ->selectRaw('MAX(GREATEST(COALESCE(shift_workers.end_date, shifts.end_date), shifts.end_date)) as '
+                . 'latest_end')
             ->value('latest_end');
 
         if ($latestEnd) {

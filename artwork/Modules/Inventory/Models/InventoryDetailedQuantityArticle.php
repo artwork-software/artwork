@@ -3,8 +3,6 @@
 namespace Artwork\Modules\Inventory\Models;
 
 use Artwork\Modules\Inventory\Models\Traits\HasInventoryProperties;
-use Artwork\Modules\Crm\Models\CrmContact;
-use Artwork\Modules\Room\Models\Room;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -42,19 +40,8 @@ class InventoryDetailedQuantityArticle extends Model
             return null;
         }
 
-        // Optimierung: Verwende Relation oder eager loading statt einzelner Query
-        static $roomCache = [];
-
-        $roomId = $roomProperty->pivot->value;
-
-        // array_key_exists statt isset: ein gecachtes null gilt bei isset() nicht
-        // als vorhanden, wodurch nicht auflösbare Werte bei JEDER Serialisierung
-        // erneut abgefragt wurden.
-        if (!array_key_exists($roomId, $roomCache)) {
-            $roomCache[$roomId] = Room::select('id', 'name')->find($roomId);
-        }
-
-        $room = $roomCache[$roomId];
+        // gemeinsamer Cache mit InventoryArticle (dort auch gebündelt vorgeladen)
+        $room = InventoryArticle::resolveRoom($roomProperty->pivot->value);
 
         if (!$room) {
             return null;
@@ -75,20 +62,7 @@ class InventoryDetailedQuantityArticle extends Model
             return null;
         }
 
-        // Optimierung: Verwende Relation oder eager loading statt einzelner Query
-        static $manufacturerCache = [];
-
-        $manufacturerId = $manufacturerProperty->pivot->value;
-
-        // array_key_exists statt isset: siehe getRoomAttribute()
-        if (!array_key_exists($manufacturerId, $manufacturerCache)) {
-            $manufacturerCache[$manufacturerId] = CrmContact::select(
-                'id',
-                'display_name as name'
-            )->find($manufacturerId);
-        }
-
-        $manufacturer = $manufacturerCache[$manufacturerId];
+        $manufacturer = InventoryArticle::resolveManufacturer($manufacturerProperty->pivot->value);
 
         if (!$manufacturer) {
             return null;
@@ -96,7 +70,7 @@ class InventoryDetailedQuantityArticle extends Model
 
         return [
             'id' => $manufacturer->id,
-            'name' => $manufacturer->name,
+            'name' => $manufacturer->display_name,
             'property_id' => $manufacturerProperty->id,
         ];
     }

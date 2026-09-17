@@ -101,7 +101,8 @@ class HandleInertiaRequests extends Middleware
             )
             : [[], [], []];
 
-        // erstelle mir ein Array aus $generalCalendarSettings (Start und end ) für stunden z.b. Start: 22:00 end: 08:00 array = [22:00, 23:00, 00:00, 01:00, 02:00, 03:00, 04:00, 05:00, 06:00, 07:00, 08:00]
+        // Stundenraster aus $generalCalendarSettings (start/end), z.B. Start 22:00, Ende 08:00
+        // → [22:00, 23:00, 00:00, 01:00, 02:00, 03:00, 04:00, 05:00, 06:00, 07:00, 08:00]
         $start = explode(':', $generalCalendarSettings->start);
         $end = explode(':', $generalCalendarSettings->end);
 
@@ -119,13 +120,7 @@ class HandleInertiaRequests extends Middleware
             $currentHour = ($currentHour + 1) % 24;
             $failSave++;
         }
-        $sageApiEnabled = false;
-
-        if (config('services.sage.enabled')) {
-            $sageApiSettingsService = app(SageApiSettingsService::class);
-            $sageApiSettings = $sageApiSettingsService->getFirst();
-            $sageApiEnabled = !is_null($sageApiSettings) && $sageApiSettings->enabled;
-        }
+        $sageApiEnabled = app(SageApiSettingsService::class)->isEnabled();
 
         $shiftCommitWorkflowEnabled = (bool) $generalSettings->shift_commit_workflow_enabled;
 
@@ -257,7 +252,8 @@ class HandleInertiaRequests extends Middleware
                 'letterheadCity' => $generalSettings->letterhead_city,
                 'letterheadEmail' => $generalSettings->letterhead_email,
                 'budgetAccountManagementGlobal' => $generalSettings->budget_account_management_global,
-                'inventoryDetailedArticlesAlwaysQuantityOne' => $generalSettings->inventory_detailed_articles_always_quantity_one,
+                'inventoryDetailedArticlesAlwaysQuantityOne' =>
+                    $generalSettings->inventory_detailed_articles_always_quantity_one,
                 'inventoryShowInventoryNumberAsName' => $generalSettings->inventory_show_inventory_number_as_name,
                 'inventoryNumberPrefix' => $generalSettings->inventory_number_prefix,
                 'inventoryArticleImageMaxSizeMb' => $generalSettings->inventory_article_image_max_size_mb,

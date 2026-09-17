@@ -185,8 +185,12 @@ class ArtistResidency extends Model
             // arrival_date/departure_date sind nullable; Date::parse(null) liefert sonst "heute".
             'arrival_date' => $this->arrival_date ? Date::parse($this->arrival_date)->translatedFormat('d.m.Y') : null,
             'arrival_time' => $this->arrival_time ? Date::parse($this->arrival_time)->translatedFormat('H:i') : null,
-            'departure_date' => $this->departure_date ? Date::parse($this->departure_date)->translatedFormat('d.m.Y') : null,
-            'departure_time' => $this->departure_time ? Date::parse($this->departure_time)->translatedFormat('H:i') : null,
+            'departure_date' => $this
+                ->departure_date ? Date::parse($this->departure_date)
+                ->translatedFormat('d.m.Y') : null,
+            'departure_time' => $this
+                ->departure_time ? Date::parse($this->departure_time)
+                ->translatedFormat('H:i') : null,
         ];
     }
 }

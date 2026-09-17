@@ -25,7 +25,17 @@ class OidcApi implements ExternalUserManagementApi
      * Userinfo-Endpoint und normalisiert sie auf dieselbe Shape wie
      * {@see \Artwork\Modules\ExternalUserManagement\Api\LdapApi::fetchUsers()}.
      *
-     * @return array{identifier: string, email: string|null, first_name: string, last_name: string, groups: array<int, string>, email_verified: bool, meta_data: array<string, mixed>}
+     * @return array{
+     *     identifier: string,
+     *     email: string|null,
+     *     first_name: string,
+     *     last_name: string,
+     *     groups: array<int,
+     *     string>,
+     *     email_verified: bool,
+     *     meta_data: array<string,
+     *     mixed>,
+     * }
      */
     public function userFromCallback(ExternalUserSource $source): array
     {
@@ -50,7 +60,17 @@ class OidcApi implements ExternalUserManagementApi
      * Pure Funktion (ohne I/O) — direkt unit-testbar.
      *
      * @param array<string, mixed> $raw
-     * @return array{identifier: string, email: string|null, first_name: string, last_name: string, groups: array<int, string>, email_verified: bool, meta_data: array<string, mixed>}
+     * @return array{
+     *     identifier: string,
+     *     email: string|null,
+     *     first_name: string,
+     *     last_name: string,
+     *     groups: array<int,
+     *     string>,
+     *     email_verified: bool,
+     *     meta_data: array<string,
+     *     mixed>,
+     * }
      */
     public function normalizeClaims(
         array $raw,

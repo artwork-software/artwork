@@ -78,7 +78,11 @@ class WorkingHourService
     /**
      * Zusatzdaten für das Stundenkonto-Badge einer Person (nur wenn Stunden sichtbar sind).
      *
-     * @return array{workTimeBalance: string|null, workTimeBalanceFormatted: string|null, workTimeBalanceMinutes: int|null}
+     * @return array{
+     *     workTimeBalance: string|null,
+     *     workTimeBalanceFormatted: string|null,
+     *     workTimeBalanceMinutes: int|null,
+     * }
      */
     public function workTimeBalanceData(User $user, bool $showHours): array
     {
@@ -116,7 +120,8 @@ class WorkingHourService
 
         $workers = $craftIds !== null
             ? $this->userRepository->getWorkersByIds(
-                app(\Artwork\Modules\Craft\Repositories\CraftRepository::class)->getWorkerIdsByCraftIds($craftIds)['user_ids'],
+                app(\Artwork\Modules\Craft\Repositories\CraftRepository::class)
+                    ->getWorkerIdsByCraftIds($craftIds)['user_ids'],
                 $startDate,
                 $endDate
             )
@@ -152,7 +157,10 @@ class WorkingHourService
 
         // Batch-load shift rule violations for all users in date range
         $violationsByUser = \Artwork\Modules\Shift\Models\ShiftRuleViolation::query()
-            ->with(['shiftRule:id,name,description,trigger_type,warning_color,default_compensation_days,default_compensation_deadline_days'])
+            ->with([
+                'shiftRule:id,name,description,trigger_type,warning_color,'
+                    . 'default_compensation_days,default_compensation_deadline_days',
+            ])
             ->whereIn('user_id', $workerIds)
             ->whereBetween('violation_date', [$startDate->toDateString(), $endDate->toDateString()])
             ->whereIn('status', ['active', 'resolved'])
@@ -230,7 +238,14 @@ class WorkingHourService
     /**
      * Wochenperioden im Zeitraum (ISO-Woche, auf den Zeitraum beschnitten).
      *
-     * @return array<int, array{weekStart: Carbon, actualStart: Carbon, actualEnd: Carbon, weekNumber: string, year: int, isoWeek: int}>
+     * @return array<int, array{
+     *     weekStart: Carbon,
+     *     actualStart: Carbon,
+     *     actualEnd: Carbon,
+     *     weekNumber: string,
+     *     year: int,
+     *     isoWeek: int,
+     * }>
      */
     private function buildWeekPeriods(Carbon $startDate, Carbon $endDate): array
     {
@@ -403,7 +418,12 @@ class WorkingHourService
         $weeklyWorkingHours = [];
 
         foreach ($weekPeriods as $index => $wp) {
-            $cached = $this->workingHourCacheService->getWeeklyData($entityType, $entityId, $wp['year'], $wp['isoWeek']);
+            $cached = $this->workingHourCacheService->getWeeklyData(
+                $entityType,
+                $entityId,
+                $wp['year'],
+                $wp['isoWeek']
+            );
 
             if ($cached !== null) {
                 $weeklyWorkingHours[$wp['weekNumber']] = $cached;

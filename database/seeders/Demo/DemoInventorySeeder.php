@@ -32,7 +32,12 @@ use Illuminate\Support\Facades\Storage;
  */
 class DemoInventorySeeder extends Seeder
 {
-    private const ZUSTAND_WEIGHTS = ['Neuwertig' => 15, 'Gut' => 55, 'Gebrauchsspuren' => 25, 'Reparaturbedürftig' => 5];
+    private const ZUSTAND_WEIGHTS = [
+        'Neuwertig' => 15,
+        'Gut' => 55,
+        'Gebrauchsspuren' => 25,
+        'Reparaturbedürftig' => 5,
+    ];
 
     /** Wahrscheinlichkeit "Verleihbar" je Kategorie (Default 0.5). */
     private const VERLEIHBAR_CHANCE = [

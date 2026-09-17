@@ -43,11 +43,23 @@ final class ShiftRuleCheckContextTest extends TestCase
 
         $context = ShiftRuleCheckContext::forRange($user, $monday, $sunday);
 
-        $this->assertSame([$dayShift->id], $this->ids($context->shiftsBetween($monday->toDateString(), $monday->toDateString())));
-        $this->assertSame([$nightShift->id], $this->ids($context->shiftsBetween($tuesday->toDateString(), $tuesday->toDateString())));
+        $this->assertSame(
+            [$dayShift->id],
+            $this->ids($context->shiftsBetween($monday->toDateString(), $monday->toDateString()))
+        );
+        $this->assertSame(
+            [$nightShift->id],
+            $this->ids($context->shiftsBetween($tuesday->toDateString(), $tuesday->toDateString()))
+        );
         // Folgetag der Nachtschicht ist belegt, der Vortag nicht
-        $this->assertSame([$nightShift->id], $this->ids($context->shiftsBetween($wednesday->toDateString(), $wednesday->toDateString())));
-        $this->assertSame([$pivotShift->id], $this->ids($context->shiftsBetween($thursday->toDateString(), $thursday->toDateString())));
+        $this->assertSame(
+            [$nightShift->id],
+            $this->ids($context->shiftsBetween($wednesday->toDateString(), $wednesday->toDateString()))
+        );
+        $this->assertSame(
+            [$pivotShift->id],
+            $this->ids($context->shiftsBetween($thursday->toDateString(), $thursday->toDateString()))
+        );
         $this->assertSame([], $this->ids($context->shiftsBetween($friday->toDateString(), $friday->toDateString())));
         // Bereich über alles: jede Schicht genau einmal, in Ladereihenfolge
         $this->assertSame(
@@ -57,7 +69,10 @@ final class ShiftRuleCheckContextTest extends TestCase
         // Bereich größer als der Index (Fallback über die Indextage) liefert dasselbe
         $this->assertSame(
             [$dayShift->id, $nightShift->id, $pivotShift->id],
-            $this->ids($context->shiftsBetween($monday->copy()->subYear()->toDateString(), $sunday->copy()->addYear()->toDateString()))
+            $this->ids($context->shiftsBetween(
+                $monday->copy()->subYear()->toDateString(),
+                $sunday->copy()->addYear()->toDateString()
+            ))
         );
         $this->assertSame([], $this->ids($context->shiftsBetween($sunday->toDateString(), $monday->toDateString())));
     }
@@ -77,9 +92,18 @@ final class ShiftRuleCheckContextTest extends TestCase
 
         $context = ShiftRuleCheckContext::forRange($user, $monday, $sunday);
 
-        $this->assertSame([], $context->individualTimesBetween($monday->toDateString(), $monday->toDateString())->pluck('id')->all());
-        $this->assertSame([$multiDay->id], $context->individualTimesBetween($wednesday->toDateString(), $wednesday->toDateString())->pluck('id')->all());
-        $this->assertSame([$multiDay->id], $context->individualTimesBetween($thursday->toDateString(), $thursday->toDateString())->pluck('id')->all());
+        $this->assertSame(
+            [],
+            $context->individualTimesBetween($monday->toDateString(), $monday->toDateString())->pluck('id')->all()
+        );
+        $this->assertSame(
+            [$multiDay->id],
+            $context->individualTimesBetween($wednesday->toDateString(), $wednesday->toDateString())->pluck('id')->all()
+        );
+        $this->assertSame(
+            [$multiDay->id],
+            $context->individualTimesBetween($thursday->toDateString(), $thursday->toDateString())->pluck('id')->all()
+        );
         $this->assertSame(
             [$multiDay->id, $single->id],
             $context->individualTimesBetween($monday->toDateString(), $sunday->toDateString())->pluck('id')->all()

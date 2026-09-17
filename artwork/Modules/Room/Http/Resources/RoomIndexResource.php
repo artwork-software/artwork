@@ -40,11 +40,13 @@ class RoomIndexResource extends JsonResource
             'start_date_dt_local' => Carbon::parse($this->start_date)->toDateString(),
             'end_date' => Carbon::parse($this->end_date)->format('d.m.Y'),
             'end_date_dt_local' => Carbon::parse($this->end_date)->toDateString(),
-            'room_admins' => UserIconResource::collection($this->users()->wherePivot('is_admin', true)->get())->resolve(),
-            'room_categories' => $this->categories()->get(),
+            // Relationen statt frischer Queries: admins/creator kommen über Room::$with,
+            // categories/attributes/adjoining_rooms laden die Aufrufer eager (AreaController)
+            // — sonst vier Queries je Raum.
+            'room_admins' => UserIconResource::collection($this->admins)->resolve(),
+            'room_categories' => $this->categories,
             'room_attributes' => $this->attributes,
-            'adjoining_rooms' => $this->adjoining_rooms()->get()
+            'adjoining_rooms' => $this->adjoining_rooms
         ];
     }
-
 }

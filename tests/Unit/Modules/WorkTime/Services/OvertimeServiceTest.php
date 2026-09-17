@@ -295,7 +295,10 @@ final class OvertimeServiceTest extends TestCase
 
         $this->assertSame(
             [$overtimeDay->toDateString()],
-            UserOvertime::where('user_id', $user->id)->orderBy('date')->get()->map(fn (UserOvertime $e) => $e->date->toDateString())->all()
+            UserOvertime::where(
+                'user_id',
+                $user->id
+            )->orderBy('date')->get()->map(fn (UserOvertime $e) => $e->date->toDateString())->all()
         );
     }
 }

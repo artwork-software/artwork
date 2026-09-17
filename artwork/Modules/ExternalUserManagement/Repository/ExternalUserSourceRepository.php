@@ -89,4 +89,3 @@ class ExternalUserSourceRepository extends BaseRepository
         return $source;
     }
 }
-

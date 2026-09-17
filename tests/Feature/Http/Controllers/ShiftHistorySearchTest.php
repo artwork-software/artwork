@@ -3,7 +3,11 @@
 namespace Tests\Feature\Http\Controllers;
 
 use Artwork\Modules\Craft\Models\Craft;
+use Artwork\Modules\Freelancer\Models\Freelancer;
 use Artwork\Modules\Shift\Models\Shift;
+use Artwork\Modules\Shift\Models\ShiftQualification;
+use Artwork\Modules\Shift\Models\ShiftWorker;
+use Artwork\Modules\User\Models\User;
 use PHPUnit\Framework\Attributes\Test;
 use Spatie\Activitylog\Models\Activity;
 use Tests\Feature\FeatureTestCase;
@@ -315,5 +319,202 @@ final class ShiftHistorySearchTest extends FeatureTestCase
         $response->assertOk()
             ->assertJsonPath('logs.meta.total', 0)
             ->assertJsonCount(0, 'shifts');
+    }
+
+    private function assignWorker(Shift $shift, string $type, int $id): ShiftWorker
+    {
+        return ShiftWorker::create([
+            'shift_id' => $shift->id,
+            'employable_type' => $type,
+            'employable_id' => $id,
+            'shift_qualification_id' => ShiftQualification::factory()->create()->id,
+        ]);
+    }
+
+    /** @return array<string, mixed> */
+    private function personQuery(Shift $shift, string $type, int $id, string $scope): array
+    {
+        return [
+            'craftId' => $shift->craft_id,
+            'start_date' => '2026-05-01',
+            'end_date' => '2026-05-31',
+            'person_type' => $type,
+            'person_id' => $id,
+            'person_scope' => $scope,
+        ];
+    }
+
+    #[Test]
+    public function personFilterScopeSubjectReturnsOnlyEntriesAboutThePerson(): void
+    {
+        $this->actingAsAdmin();
+        $worker = User::factory()->create(['first_name' => 'Max', 'last_name' => 'Schmidt']);
+        $shift = $this->makeShift();
+        $this->assignWorker($shift, User::class, $worker->id);
+
+        $this->logActivity($shift, 'User assigned to shift', [
+            'translation_key' => '{0} was assigned to shift as {1} for {2} ({3})',
+            'translation_key_placeholder_values' => ['Max Schmidt', 'Tech', 'Stage', 'ST'],
+        ]);
+        $this->logActivity($shift, 'User assigned to shift', [
+            'translation_key' => '{0} was assigned to shift as {1} for {2} ({3})',
+            'translation_key_placeholder_values' => ['Selma Wirth', 'Tech', 'Stage', 'ST'],
+        ]);
+        $this->logActivity(
+            $shift,
+            'shift updated',
+            ['attributes' => ['start' => '10:00'], 'old' => ['start' => '09:00']]
+        );
+
+        $response = $this->getJson(
+            route('shift.history.index', $this->personQuery($shift, 'user', $worker->id, 'subject'))
+        );
+
+        $response->assertOk();
+        $response->assertJsonPath('logs.meta.total', 1);
+        $entry = $response->json('logs.data.0');
+        $this->assertSame(
+            ['Max Schmidt', 'Tech', 'Stage', 'ST'],
+            $entry['properties']['translation_key_placeholder_values']
+        );
+        $this->assertSame(['subject'], $entry['match_reasons']);
+    }
+
+    #[Test]
+    public function personFilterScopeAssignedIncludesEveryEntryOfThePersonsShifts(): void
+    {
+        $this->actingAsAdmin();
+        $worker = User::factory()->create(['first_name' => 'Max', 'last_name' => 'Schmidt']);
+        $craft = Craft::factory()->create();
+        $ownShift = $this->makeShift(['craft_id' => $craft->id]);
+        $foreignShift = $this->makeShift(['craft_id' => $craft->id]);
+        // Zuweisung wurde später wieder entfernt (soft-deleted Pivot) → Schichtbezug bleibt erhalten
+        // (MorphPivot ohne id → über die Query löschen)
+        $this->assignWorker($ownShift, User::class, $worker->id);
+        ShiftWorker::where('shift_id', $ownShift->id)->delete();
+
+        $this->logActivity(
+            $ownShift,
+            'shift updated',
+            ['attributes' => ['start' => '10:00'], 'old' => ['start' => '09:00']]
+        );
+        $this->logActivity($ownShift, 'User assigned to shift', [
+            'translation_key' => '{0} was assigned to shift as {1} for {2} ({3})',
+            'translation_key_placeholder_values' => ['Max Schmidt', 'Tech', 'Stage', 'ST'],
+        ]);
+        $this->logActivity(
+            $foreignShift,
+            'shift updated',
+            ['attributes' => ['start' => '11:00'], 'old' => ['start' => '09:00']]
+        );
+        activity('shift')
+            ->event('committed_bulk')
+            ->withProperties([
+                'shift_ids' => [$ownShift->id, $foreignShift->id],
+                'craft_ids' => [$craft->id],
+                'commit_summary' => ['start_date' => '2026-05-06', 'end_date' => '2026-05-06'],
+            ])
+            ->log('bulk commitment');
+
+        $response = $this->getJson(
+            route('shift.history.index', $this->personQuery($ownShift, 'user', $worker->id, 'assigned'))
+        );
+
+        $response->assertOk();
+        $data = collect($response->json('logs.data'));
+        // Anlage-Eintrag der eigenen Schicht (Factory) + Update + Zuweisung + Sammel-Festschreibung;
+        // NICHT die fremde Schicht
+        $this->assertSame([], $data->where('subject_id', $foreignShift->id)->all());
+        $this->assertTrue($data->contains(fn ($e) => $e['description'] === 'bulk commitment'));
+        $update = $data->firstWhere('description', 'shift updated');
+        $this->assertSame(['assigned'], $update['match_reasons']);
+        $assignment = $data->firstWhere('description', 'User assigned to shift');
+        $this->assertSame(['subject', 'assigned'], $assignment['match_reasons']);
+        $bulk = $data->firstWhere('description', 'bulk commitment');
+        $this->assertSame(['assigned'], $bulk['match_reasons']);
+    }
+
+    #[Test]
+    public function personFilterScopeCauserAddsEntriesCarriedOutByThePerson(): void
+    {
+        // Schicht + Fremd-Eintrag VOR dem Login anlegen: Spatie setzt sonst automatisch den
+        // eingeloggten Planer als Verursacher (Auto-Log der Anlage, CauserResolver).
+        $shift = $this->makeShift();
+        $this->logActivity(
+            $shift,
+            'shift updated',
+            ['attributes' => ['start' => '10:00'], 'old' => ['start' => '09:00']]
+        );
+        $planner = $this->actingAsAdmin();
+        $planner->update(['first_name' => 'Max', 'last_name' => 'Schmidt']);
+
+        $caused = activity('shift')->performedOn($shift)->causedBy($planner)->withProperties([
+            'translation_key' => '{0} was assigned to shift as {1} for {2} ({3})',
+            'translation_key_placeholder_values' => ['Selma Wirth', 'Tech', 'Stage', 'ST'],
+        ])->log('User assigned to shift');
+
+        $assignedScope = $this->getJson(
+            route('shift.history.index', $this->personQuery($shift, 'user', $planner->id, 'assigned'))
+        );
+        $assignedScope->assertOk()->assertJsonPath('logs.meta.total', 0);
+
+        $causerScope = $this->getJson(
+            route('shift.history.index', $this->personQuery($shift, 'user', $planner->id, 'causer'))
+        );
+        $causerScope->assertOk()->assertJsonPath('logs.meta.total', 1);
+        $this->assertSame($caused->id, (int) $causerScope->json('logs.data.0.id'));
+        $this->assertSame(['causer'], $causerScope->json('logs.data.0.match_reasons'));
+    }
+
+    #[Test]
+    public function personFilterMatchesNewEntriesByIdAndFreelancersByName(): void
+    {
+        $this->actingAsAdmin();
+        $freelancer = Freelancer::factory()->create(['first_name' => 'Frida', 'last_name' => 'Frei']);
+        $shift = $this->makeShift();
+
+        // Neuer Eintrag: Person als ID geloggt, Name inzwischen anders geschrieben
+        $this->logActivity($shift, 'User assigned to shift', [
+            'translation_key' => '{0} was assigned to shift as {1} for {2} ({3})',
+            'translation_key_placeholder_values' => ['F. Frei', 'Tech', 'Stage', 'ST'],
+            'employable_type' => Freelancer::class,
+            'employable_id' => $freelancer->id,
+        ]);
+        // Alt-Eintrag: nur der Name
+        $this->logActivity($shift, 'Worker removed from shift', [
+            'translation_key' => '{0} removed from shift as {1} for {2} ({3})',
+            'translation_key_placeholder_values' => ['Frida Frei', 'Tech', 'Stage', 'ST'],
+        ]);
+        // Lösch-Eintrag mit Betroffenen-Liste
+        $this->logActivity($shift, 'deleted', ['affected_workers' => ['Frida Frei', 'Someone Else']]);
+        $this->logActivity($shift, 'User assigned to shift', [
+            'translation_key_placeholder_values' => ['Frida Freiherr', 'Tech', 'Stage', 'ST'],
+        ]);
+
+        $response = $this->getJson(
+            route('shift.history.index', $this->personQuery($shift, 'freelancer', $freelancer->id, 'subject'))
+        );
+
+        $response->assertOk();
+        $response->assertJsonPath('logs.meta.total', 3);
+        foreach ($response->json('logs.data') as $entry) {
+            $this->assertSame(['subject'], $entry['match_reasons']);
+        }
+    }
+
+    #[Test]
+    public function unknownPersonFilterIsIgnoredAndEntriesCarryNoReasons(): void
+    {
+        $this->actingAsAdmin();
+        $shift = $this->makeShift();
+        $this->logActivity($shift, 'shift updated noise');
+
+        $response = $this->getJson(
+            route('shift.history.index', $this->personQuery($shift, 'user', 999999, 'assigned'))
+        );
+
+        $response->assertOk();
+        $this->assertGreaterThanOrEqual(1, (int) $response->json('logs.meta.total'));
+        $this->assertSame([], $response->json('logs.data.0.match_reasons'));
     }
 }

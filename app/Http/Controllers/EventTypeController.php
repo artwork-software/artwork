@@ -19,7 +19,7 @@ class EventTypeController extends Controller
     public function index(): Response|ResponseFactory
     {
         return inertia('Settings/EventSettings', [
-            'event_types' => EventTypeResource::collection(EventType::all())->resolve(),
+            'event_types' => EventTypeResource::collection(EventType::query()->with('verifiers')->get())->resolve(),
         ]);
     }
 
@@ -27,7 +27,7 @@ class EventTypeController extends Controller
     public function biTags(): Response|ResponseFactory
     {
         return inertia('Settings/EventBiTags/Index', [
-            'event_types' => EventTypeResource::collection(EventType::all())->resolve(),
+            'event_types' => EventTypeResource::collection(EventType::query()->with('verifiers')->get())->resolve(),
         ]);
     }
 
@@ -73,7 +73,7 @@ class EventTypeController extends Controller
         }
 
         try {
-            DB::transaction(function () use ($eventType) {
+            DB::transaction(function () use ($eventType): void {
                 // Get all events associated with this event type and reassign to event type id 1
                 // Use DB query to include soft-deleted events
                 DB::table('events')->where('event_type_id', $eventType->id)->update(['event_type_id' => 1]);
@@ -110,7 +110,10 @@ class EventTypeController extends Controller
         $eventType->individual_name = $request->get('individual_name', $eventType->individual_name);
         $eventType->abbreviation = $request->get('abbreviation', $eventType->abbreviation);
         $eventType->abbreviation = $request->get('abbreviation', $eventType->abbreviation);
-        $eventType->relevant_for_project_period = $request->get('relevant_for_project_period', $eventType->relevant_for_project_period);
+        $eventType->relevant_for_project_period = $request->get(
+            'relevant_for_project_period',
+            $eventType->relevant_for_project_period
+        );
         $eventType->verification_mode = $request->get('verification_mode', $eventType->verification_mode);
         $eventType->specific_verifier_id = $request->get('specific_verifier_id', $eventType->specific_verifier_id);
         return $eventType;

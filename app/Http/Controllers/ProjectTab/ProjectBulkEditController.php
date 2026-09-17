@@ -21,4 +21,3 @@ class ProjectBulkEditController extends Controller
         );
     }
 }
-

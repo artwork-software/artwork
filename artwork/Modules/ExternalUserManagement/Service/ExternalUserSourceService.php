@@ -60,4 +60,3 @@ class ExternalUserSourceService
         return $this->repository->delete($source);
     }
 }
-

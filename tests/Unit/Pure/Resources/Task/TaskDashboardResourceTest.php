@@ -18,7 +18,7 @@ final class TaskDashboardResourceTest extends TestCase
         $project = (object) ['id' => 11, 'name' => 'P'];
         $checklist = (object) ['name' => 'CL', 'project' => $project];
 
-        // Build mockable model with task_users() call - using anonymous class
+        // Build mockable model with task_users relation - using anonymous class
         $model = new class ($future, $checklist) {
             public int $id = 7;
             public string $name = 'Task A';
@@ -28,15 +28,13 @@ final class TaskDashboardResourceTest extends TestCase
             public $checklist;
             public $deadline;
             public $done_at = null;
-            public function __construct($deadline, $checklist) {
+            public function __construct($deadline, $checklist)
+            {
                 $this->deadline = $deadline;
                 $this->checklist = $checklist;
             }
-            public function task_users() {
-                return new class () {
-                    public function get(): array { return []; }
-                };
-            }
+            // Resource liest die (eager geladene) Relation statt task_users()->get()
+            public array $task_users = [];
         };
 
         $array = (new TaskDashboardResource($model))->toArray(new Request());
@@ -64,9 +62,7 @@ final class TaskDashboardResourceTest extends TestCase
             public ?object $checklist = null;
             public $deadline = null;
             public $done_at = null;
-            public function task_users() {
-                return new class () { public function get(): array { return []; } };
-            }
+            public array $task_users = [];
         };
 
         $array = (new TaskDashboardResource($model))->toArray(new Request());

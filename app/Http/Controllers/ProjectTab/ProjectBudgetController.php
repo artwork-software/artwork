@@ -21,4 +21,3 @@ class ProjectBudgetController extends Controller
         );
     }
 }
-

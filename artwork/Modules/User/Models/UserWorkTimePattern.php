@@ -25,11 +25,6 @@ class UserWorkTimePattern extends Model
     use HasFactory;
     use Searchable;
 
-    /**
-     * The table associated with the model.
-     *
-     * @var string
-     */
     protected $fillable = [
         'name',
         'description',
@@ -41,12 +36,6 @@ class UserWorkTimePattern extends Model
         'saturday',
         'sunday'
     ];
-
-    /**
-     * The attributes that should be cast to native types.
-     *
-     * @var array<string, string>
-     */
     protected $casts = [
         'monday' => 'datetime:H:i',
         'tuesday' => 'datetime:H:i',

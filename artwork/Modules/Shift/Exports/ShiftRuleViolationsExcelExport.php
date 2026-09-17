@@ -93,6 +93,7 @@ class ShiftRuleViolationsExcelExport implements
      * @param ShiftRuleViolation $violation
      * @return array<int, mixed>
      */
+    // phpcs:ignore SlevomatCodingStandard.TypeHints.ParameterTypeHint.MissingNativeTypeHint -- Signatur der Elternklasse erlaubt keinen Typ
     public function map($violation): array
     {
         $grantedOn = $violation->compensationDayOffs

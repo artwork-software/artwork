@@ -10,6 +10,7 @@ use Artwork\Modules\Freelancer\Models\Freelancer;
 use Artwork\Modules\ServiceProvider\Models\ServiceProvider;
 use Artwork\Modules\User\Models\User;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Facades\Log;
 
 class CraftService
@@ -22,6 +23,120 @@ class CraftService
     public function getAll(array $with = []): Collection
     {
         return $this->craftRepository->getAll($with);
+    }
+
+    /**
+     * Gewerke mit den zuweisbaren Personen für Projekt-Schichten-Tab und
+     * Schichtplan-Listenansicht (Auswahlliste/Drag&Drop in SingleShiftInDailyShiftView,
+     * ShiftsQualificationsDropElement, ShiftBookedElementComponent, DragElement).
+     *
+     * Personen tragen nur die dort gelesenen Felder: das volle User-Modell (88 Felder
+     * inkl. Settings) machte die crafts-Prop lokal 2,3 MB groß (14 Gewerke × 153 User
+     * × 6 KB), und Freelancer/Dienstleister schoben über `assigned_craft_ids` ($appends)
+     * je Person eine craftables-Query nach.
+     */
+    /**
+     * Planer:innen eines Gewerks (craft_users) in der Form, die das Frontend liest:
+     * SingleEntityInShift/SingleShiftInShiftOverviewUser prüfen `craft_shift_planer[].id`
+     * (Personen-Menü an der Schicht), RequestWorkTimeChangeModal zeigt Name, Position,
+     * Firma und Avatar (UserPopoverTooltip).
+     */
+    public const PLANER_VISIBLE = [
+        'id',
+        'first_name',
+        'last_name',
+        'full_name',
+        'position',
+        'business',
+        'profile_photo_url',
+        'type',
+    ];
+
+    /**
+     * Gewerke als Lookup (Karten/Modale im Einsatzplan): nur Stammfelder plus schlanke
+     * Planer:innen — Craft::all() lieferte die Planer:innen als volle User-Modelle.
+     */
+    public function getLookupCrafts(): Collection
+    {
+        $crafts = Craft::query()
+            ->orderBy('position')
+            ->get(['id', 'name', 'abbreviation', 'color', 'position', 'universally_applicable']);
+
+        foreach ($crafts as $craft) {
+            self::slimPlaners($craft);
+        }
+
+        return $crafts;
+    }
+
+    public static function slimPlaners(Craft $craft): void
+    {
+        if ($craft->relationLoaded('craftShiftPlaner')) {
+            $craft->craftShiftPlaner->each->setVisible(self::PLANER_VISIBLE);
+        }
+    }
+
+    public function getAllWithAssignableWorkers(bool $withManagers = false): Collection
+    {
+        $workerVisible = [
+            'id',
+            'first_name',
+            'last_name',
+            'provider_name',
+            'name',
+            'full_name',
+            'display_name',
+            'profile_photo_url',
+            'can_work_shifts',
+            'is_freelancer',
+            'type',
+            'assigned_craft_ids',
+            'shiftQualifications',
+            'pivot',
+        ];
+        $qualificationVisible = ['id', 'name', 'icon', 'available', 'pivot'];
+        // Frontend liest nur pivot.craft_id (Zuordnung Funktion → Gewerk)
+        $qualificationPivotVisible = ['craft_id', 'shift_qualification_id'];
+
+        $workerRelations = ['users', 'freelancers', 'serviceProviders'];
+        if ($withManagers) {
+            $workerRelations = [
+                ...$workerRelations,
+                'managingUsers',
+                'managingFreelancers',
+                'managingServiceProviders',
+            ];
+        }
+
+        $with = ['qualifications'];
+        foreach ($workerRelations as $relation) {
+            // withAssignedCraftIds (HasShifts): Gewerk-IDs vorladen statt Query je Person
+            $with[$relation] = static fn (Relation $query) => $query->withAssignedCraftIds();
+        }
+
+        // craftShiftPlaner (Craft::$with) bleibt geladen: die Listenansicht erkennt darüber,
+        // ob die angemeldete Person Planer:in des Gewerks ist (Personen-Menü an der Schicht)
+        $crafts = Craft::query()
+            ->with($with)
+            ->orderBy('position')
+            ->get();
+
+        foreach ($crafts as $craft) {
+            self::slimPlaners($craft);
+            foreach ($workerRelations as $relation) {
+                foreach ($craft->getRelation($relation) as $worker) {
+                    $worker->setVisible($workerVisible);
+                    if ($worker->relationLoaded('shiftQualifications')) {
+                        foreach ($worker->shiftQualifications as $qualification) {
+                            $qualification->setVisible($qualificationVisible);
+                            $qualification->pivot?->setVisible($qualificationPivotVisible);
+                        }
+                    }
+                }
+            }
+        }
+
+        return $crafts;
     }
 
     public function storeByRequest(CraftStoreRequest $craftStoreRequest): void

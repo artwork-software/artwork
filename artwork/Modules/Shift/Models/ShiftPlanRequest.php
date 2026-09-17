@@ -61,9 +61,9 @@ class ShiftPlanRequest extends Model
         $cutoffYear = (int) $twelveMonthsAgo->format('o');
         $cutoffWeek = (int) $twelveMonthsAgo->format('W');
 
-        return static::query()->where(function ($q) use ($cutoffYear, $cutoffWeek) {
+        return static::query()->where(function ($q) use ($cutoffYear, $cutoffWeek): void {
             $q->where('year', '<', $cutoffYear)
-                ->orWhere(function ($q2) use ($cutoffYear, $cutoffWeek) {
+                ->orWhere(function ($q2) use ($cutoffYear, $cutoffWeek): void {
                     $q2->where('year', '=', $cutoffYear)
                         ->where('week_number', '<', $cutoffWeek);
                 });

@@ -12,11 +12,13 @@ class StaticLookupObserver
     ) {
     }
 
+    // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter -- Observer-Signatur (saved/deleted erhalten das Model)
     public function saved(Model $model): void
     {
         $this->budgetCacheService->forgetStaticLookups();
     }
 
+    // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter -- Observer-Signatur (saved/deleted erhalten das Model)
     public function deleted(Model $model): void
     {
         $this->budgetCacheService->forgetStaticLookups();

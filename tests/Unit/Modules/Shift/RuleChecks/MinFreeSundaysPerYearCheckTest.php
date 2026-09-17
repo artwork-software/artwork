@@ -67,7 +67,12 @@ final class MinFreeSundaysPerYearCheckTest extends TestCase
         $this->individualTimeFor($user, $yearStart, null, null, 0, $blockedUntil);
         $expectedPossible = $this->sundaysBetween($blockedUntil->copy()->addDay(), $yearEnd);
 
-        $violations = $this->check->check($this->rule(0.0), $user, Carbon::create($year, 3, 1), Carbon::create($year, 3, 14));
+        $violations = $this->check->check(
+            $this->rule(0.0),
+            $user,
+            Carbon::create($year, 3, 1),
+            Carbon::create($year, 3, 14)
+        );
 
         $this->assertCount(1, $violations);
         $violation = $violations->first();
@@ -92,10 +97,22 @@ final class MinFreeSundaysPerYearCheckTest extends TestCase
         // Nur Wochentage belegt: Mo–Fr in den ersten 20 Wochen — alle Sonntage frei
         $monday = Carbon::create($year, 1, 1)->next(Carbon::MONDAY);
         for ($week = 0; $week < 20; $week++) {
-            $this->individualTimeFor($user, $monday->copy()->addWeeks($week), '09:00', '17:00', 0, $monday->copy()->addWeeks($week)->addDays(4));
+            $this->individualTimeFor(
+                $user,
+                $monday->copy()->addWeeks($week),
+                '09:00',
+                '17:00',
+                0,
+                $monday->copy()->addWeeks($week)->addDays(4)
+            );
         }
 
-        $violations = $this->check->check($this->rule(15.0), $user, Carbon::create($year, 2, 1), Carbon::create($year, 2, 14));
+        $violations = $this->check->check(
+            $this->rule(15.0),
+            $user,
+            Carbon::create($year, 2, 1),
+            Carbon::create($year, 2, 14)
+        );
 
         $this->assertCount(0, $violations);
     }
@@ -111,11 +128,21 @@ final class MinFreeSundaysPerYearCheckTest extends TestCase
         $free = $this->sundaysBetween($blockedUntil->copy()->addDay(), $yearEnd);
 
         // Ziel = genau die freien Sonntage -> erreichbar, kein Verstoß
-        $violations = $this->check->check($this->rule((float) $free), $user, Carbon::create($year, 6, 1), Carbon::create($year, 6, 14));
+        $violations = $this->check->check(
+            $this->rule((float) $free),
+            $user,
+            Carbon::create($year, 6, 1),
+            Carbon::create($year, 6, 14)
+        );
         $this->assertCount(0, $violations);
 
         // Ziel eins höher -> nicht mehr erreichbar
-        $violations = $this->check->check($this->rule((float) ($free + 1)), $user, Carbon::create($year, 6, 1), Carbon::create($year, 6, 14));
+        $violations = $this->check->check(
+            $this->rule((float) ($free + 1)),
+            $user,
+            Carbon::create($year, 6, 1),
+            Carbon::create($year, 6, 14)
+        );
         $this->assertCount(1, $violations);
         $this->assertSame($free + 1, $violations->first()->violation_data['target']);
     }
@@ -133,7 +160,12 @@ final class MinFreeSundaysPerYearCheckTest extends TestCase
         $this->shiftFor($user, $saturday, '22:00:00', '02:00:00', [], $saturday->copy()->addDay());
 
         // Ziel = alle Sonntage des Jahres: durch die Nachtschicht ist einer belegt -> Verstoß
-        $violations = $this->check->check($this->rule((float) $allSundays), $user, Carbon::create($year, 3, 1), Carbon::create($year, 3, 14));
+        $violations = $this->check->check(
+            $this->rule((float) $allSundays),
+            $user,
+            Carbon::create($year, 3, 1),
+            Carbon::create($year, 3, 14)
+        );
 
         $this->assertCount(1, $violations);
         $this->assertSame($allSundays - 1, $violations->first()->violation_data['possible']);

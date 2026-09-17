@@ -13,7 +13,7 @@ class ChatMessageController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(): void
     {
         //
     }
@@ -21,7 +21,7 @@ class ChatMessageController extends Controller
     /**
      * Show the form for creating a new resource.
      */
-    public function create()
+    public function create(): void
     {
         //
     }
@@ -49,7 +49,7 @@ class ChatMessageController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(ChatMessage $chatMessage)
+    public function show(ChatMessage $chatMessage): void
     {
         //
     }
@@ -57,7 +57,7 @@ class ChatMessageController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(ChatMessage $chatMessage)
+    public function edit(ChatMessage $chatMessage): void
     {
         //
     }
@@ -65,7 +65,7 @@ class ChatMessageController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(UpdateChatMessageRequest $request, ChatMessage $chatMessage)
+    public function update(UpdateChatMessageRequest $request, ChatMessage $chatMessage): void
     {
         //
     }
@@ -73,7 +73,7 @@ class ChatMessageController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(ChatMessage $chatMessage)
+    public function destroy(ChatMessage $chatMessage): void
     {
         //
     }

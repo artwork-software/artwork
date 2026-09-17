@@ -96,7 +96,10 @@ final class ContractSettingsResolverDateTest extends TestCase
     public function a_gap_without_contract_returns_the_defaults(): void
     {
         $user = User::factory()->create();
-        $this->assign($user, $this->template('Befristet'), ['valid_from' => '2026-01-01', 'valid_until' => '2026-03-31']);
+        $this->assign($user, $this->template('Befristet'), [
+            'valid_from' => '2026-01-01',
+            'valid_until' => '2026-03-31',
+        ]);
 
         $resolver = app(ContractSettingsResolver::class);
 

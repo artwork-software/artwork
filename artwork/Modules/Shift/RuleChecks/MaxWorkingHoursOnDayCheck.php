@@ -38,5 +38,4 @@ class MaxWorkingHoursOnDayCheck extends AbstractRuleCheck
     {
         return 'maxWorkingHoursOnDay';
     }
-
 }

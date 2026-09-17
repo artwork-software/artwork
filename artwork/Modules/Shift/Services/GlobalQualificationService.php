@@ -42,7 +42,8 @@ class GlobalQualificationService
     }
 
     /**
-     * Aktiviert oder deaktiviert eine GlobalQualification für ein beliebiges qualifiable Model (User, Freelancer, ServiceProvider)
+     * Aktiviert oder deaktiviert eine GlobalQualification für ein beliebiges qualifiable Model (User, Freelancer,
+     * ServiceProvider)
      */
     public function activateOrDeactivateInQualifiable(GlobalQualification $globalQualification, $qualifiable): void
     {

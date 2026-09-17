@@ -440,6 +440,7 @@ class User extends Model implements
         return $this->hasOne(UserDailyViewCalendarSettings::class);
     }
 
+    // phpcs:ignore PSR1.Methods.CamelCapsMethodName.NotCamelCaps -- wird als Attribut shift_list_view_settings gelesen
     public function shift_list_view_settings(): HasOne
     {
         return $this->hasOne(UserShiftListViewSettings::class);
@@ -603,11 +604,6 @@ class User extends Model implements
     public function commentedBudgetItemsSetting(): HasOne
     {
         return $this->hasOne(UserCommentedBudgetItemsSetting::class);
-    }
-
-    public function budgetAccountDisplaySetting(): HasOne
-    {
-        return $this->hasOne(UserBudgetAccountDisplaySetting::class);
     }
 
     public function crafts(): BelongsToMany

@@ -68,8 +68,11 @@ class ExternalUserRepository extends BaseRepository
         return $externalUser;
     }
 
-    public function findOrCreateBySourceAndIdentification(int $sourceId, string $identification, array $attributes = []): ExternalUser
-    {
+    public function findOrCreateBySourceAndIdentification(
+        int $sourceId,
+        string $identification,
+        array $attributes = []
+    ): ExternalUser {
         $externalUser = $this->getNewModelQuery()->withTrashed()->firstOrCreate(
             [
                 'source_id' => $sourceId,

@@ -13,7 +13,8 @@ class InventoryCategoryService
 {
     public function __construct(
         protected InventoryCategoryRepository $categoryRepository
-    ) {}
+    ) {
+    }
 
     /**
      * Get all categories with optimized relations.
@@ -37,8 +38,11 @@ class InventoryCategoryService
     /**
      * Create category with relations in a transaction
      */
-    public function createWithRelations(array $data, SupportCollection $properties, SupportCollection $subcategories): InventoryCategory
-    {
+    public function createWithRelations(
+        array $data,
+        SupportCollection $properties,
+        SupportCollection $subcategories
+    ): InventoryCategory {
         return DB::transaction(function () use ($data, $properties, $subcategories) {
             $category = $this->categoryRepository->create($data);
 

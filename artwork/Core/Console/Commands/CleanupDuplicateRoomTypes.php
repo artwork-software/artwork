@@ -33,7 +33,7 @@ class CleanupDuplicateRoomTypes extends Command
 
         $this->info('Duplicates found. Starting cleanup...');
 
-        DB::transaction(function () {
+        DB::transaction(function (): void {
             foreach (TypOfRoom::cases() as $roomType) {
                 $roomTypeName = $roomType->value;
                 $duplicates = AccommodationRoomType::where('name', $roomTypeName)

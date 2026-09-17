@@ -134,7 +134,8 @@ class ShiftController extends Controller
         if ($createdShifts->isEmpty()) {
             return redirect()->back()->with(
                 'error',
-                __('No shifts could be created from the selected templates: they have no valid times or no craft. Check the templates under Shift settings → Shift templates.')
+                __('No shifts could be created from the selected templates: they have no valid times or no craft. '
+                    . 'Check the templates under Shift settings → Shift templates.')
             );
         }
 

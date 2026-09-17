@@ -101,7 +101,7 @@ final class CommentServiceTest extends TestCase
 
     private function mockChangeService(): ChangeService
     {
-        return $this->mock(ChangeService::class, function ($m) {
+        return $this->mock(ChangeService::class, function ($m): void {
             $m->shouldReceive('createBuilder')->andReturn(ChangeBuilder::newInstance());
             $m->shouldReceive('saveFromBuilder')->andReturn(new Activity());
         });

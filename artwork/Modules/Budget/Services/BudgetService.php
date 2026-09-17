@@ -5,6 +5,7 @@ namespace Artwork\Modules\Budget\Services;
 use Artwork\Modules\Budget\DTOs\MatchRelevantProjectGroupDTO;
 use Artwork\Modules\Budget\Enums\BudgetTypeEnum;
 use Artwork\Modules\Budget\Models\BudgetManagementAccount;
+use Artwork\Modules\GeneralSettings\Models\GeneralSettings;
 use Artwork\Modules\Budget\Models\BudgetManagementCostUnit;
 use Artwork\Modules\Budget\Models\BudgetSumDetails;
 use Artwork\Modules\Budget\Models\Column;
@@ -36,13 +37,11 @@ class BudgetService
         private readonly SageNotAssignedDataService $sageNotAssignedDataService,
         private readonly BudgetCacheService $budgetCacheService,
         private readonly BudgetSumCalculator $budgetSumCalculator
-    )
-    {
+    ) {
     }
 
     public function generateBasicBudgetValues(
         Project $project,
-
     ): void {
         DB::transaction(function () use (
             $project,
@@ -89,7 +88,7 @@ class BudgetService
                 relevant_for_project_groups: true,
             );
 
-            if ($project->is_group){
+            if ($project->is_group) {
                 $columns[] = $this->columnService->createColumnInTable(
                     table: $table,
                     name: 'Unterprojekte',
@@ -243,7 +242,7 @@ class BudgetService
         $selectedSumDetail = $this->resolveSelectedSumDetail();
 
         //load commented budget items setting for given user
-        Auth::user()->load(['commentedBudgetItemsSetting', 'budgetAccountDisplaySetting']);
+        Auth::user()->load(['commentedBudgetItemsSetting']);
 
         $sageNotAssigned = $this->resolveSageNotAssigned($project);
 
@@ -536,7 +535,13 @@ class BudgetService
             if ($canViewProjectSageData || $canViewGlobalSageData) {
                 $sageNotAssigned = $this->sageNotAssignedDataService->getForFrontend($project);
 
-                $sageNotAssigned->each(function ($item) use ($projectsGroup, $globalGroup, $project, $canViewProjectSageData, $canViewGlobalSageData): void {
+                $sageNotAssigned->each(function ($item) use (
+                    $projectsGroup,
+                    $globalGroup,
+                    $project,
+                    $canViewProjectSageData,
+                    $canViewGlobalSageData
+                ): void {
                     if ($item->project_id === null && $canViewGlobalSageData) {
                         $globalGroup->push($item);
                     } elseif ($item->project_id === $project->id && $canViewProjectSageData) {
@@ -659,8 +664,12 @@ class BudgetService
                             foreach ($subMainPosition->subPositions ?? [] as $subPosition) {
                                 foreach ($subPosition->subPositionRows ?? [] as $subRow) {
                                     $subRowCells = $subCellsByRowId[$subRow->id] ?? collect();
-                                    $subFirstValue = trim((string) ($subRowCells->get($tableData['firstColumn']->id)?->value ?? ''));
-                                    $subSecondValue = trim((string) ($subRowCells->get($tableData['secondColumn']->id)?->value ?? ''));
+                                    $subFirstValue = trim(
+                                        (string) ($subRowCells->get($tableData['firstColumn']->id)?->value ?? '')
+                                    );
+                                    $subSecondValue = trim(
+                                        (string) ($subRowCells->get($tableData['secondColumn']->id)?->value ?? '')
+                                    );
 
                                     if ($groupFirstValue !== $subFirstValue || $groupSecondValue !== $subSecondValue) {
                                         continue;
@@ -708,8 +717,10 @@ class BudgetService
                                     $sageColumn = $tableData['sageColumn'];
                                     if ($sageColumn) {
                                         $sageCell = $subRowCells->get($sageColumn->id);
-                                        if ($sageCell && $sageCell->relationLoaded('sageAssignedData')
-                                            && $sageCell->sageAssignedData->isNotEmpty()) {
+                                        if (
+                                            $sageCell && $sageCell->relationLoaded('sageAssignedData')
+                                            && $sageCell->sageAssignedData->isNotEmpty()
+                                        ) {
                                             $sageValue = (string) $sageCell->sageAssignedData->sum('buchungsbetrag');
                                             $sageCellId = $sageCell->id;
                                             $uniqueSageKey = $sageCellId . '-sage';
@@ -760,9 +771,14 @@ class BudgetService
      * Daher reichern wir die geladenen Zellen nur für die Ausgabe mit einem nicht-persistierten
      * Attribut `display_value` an.
      */
+    /**
+     * Bei aktiver Kontenverwaltung: KTO-/KST-Zellen bekommen `display_value` = „Nummer – Name“
+     * (Entscheidung 14.09.2026: immer beides, kein Nutzer-Schalter mehr). Ohne hinterlegtes
+     * Konto bleibt display_value null → Frontend zeigt die Rohnummer.
+     */
     private function enrichAccountManagementDisplayValues(?Table $table): void
     {
-        if (!$table) {
+        if (!$table || !app(GeneralSettings::class)->budget_account_management_global) {
             return;
         }
 
@@ -827,14 +843,32 @@ class BudgetService
                         }
 
                         if ((int) $cell->column_id === (int) $ktoColumnId) {
-                            $cell->setAttribute('display_value', $accountTitlesByNumber->get($rawValue));
+                            $cell->setAttribute(
+                                'display_value',
+                                self::formatAccountDisplayValue($rawValue, $accountTitlesByNumber->get($rawValue))
+                            );
                         } elseif ((int) $cell->column_id === (int) $kstColumnId) {
-                            $cell->setAttribute('display_value', $costUnitTitlesByNumber->get($rawValue));
+                            $cell->setAttribute(
+                                'display_value',
+                                self::formatAccountDisplayValue($rawValue, $costUnitTitlesByNumber->get($rawValue))
+                            );
                         }
                     }
                 }
             }
         }
+    }
+
+    /**
+     * Einheitliche Darstellung „Nummer – Name“ für KTO/KST (Tabelle, Suche und Excel-Export nutzen dasselbe Format).
+     */
+    public static function formatAccountDisplayValue(string $number, ?string $title): ?string
+    {
+        if ($title === null || trim($title) === '') {
+            return null;
+        }
+
+        return $number . ' – ' . $title;
     }
 
     /**
@@ -953,7 +987,11 @@ class BudgetService
                         $sageColumnId = (int) $sageColumn->id;
                         $groupSageCell = $row->cells?->firstWhere('column_id', $sageColumnId);
 
-                        if ($groupSageCell && $groupSageCell->sageAssignedData && $groupSageCell->sageAssignedData->isNotEmpty()) {
+                        if (
+                            $groupSageCell
+                             && $groupSageCell->sageAssignedData
+                             && $groupSageCell->sageAssignedData->isNotEmpty()
+                        ) {
                             $sageValue = (string) $groupSageCell->sageAssignedData->sum('buchungsbetrag');
 
                             if (!isset($sumByGroupRowIdAndColumn[$rowId])) {
@@ -996,8 +1034,8 @@ class BudgetService
     }
 
 
-    private function determineRecentlyCreatedSageAssignedDataComment(
-    ): SageAssignedDataComment|null {
+    private function determineRecentlyCreatedSageAssignedDataComment(): SageAssignedDataComment|null
+    {
         $recentlyCreatedSageAssignedDataComment = null;
 
         if ($recentlyCreatedSageAssignedDataCommentId = session('recentlyCreatedSageAssignedDataCommentId')) {

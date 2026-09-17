@@ -2,7 +2,6 @@
 
 namespace Artwork\Modules\Accommodation\Http\Controllers;
 
-
 use App\Http\Controllers\Controller;
 use Artwork\Modules\Accommodation\Http\Requests\StoreAccommodationRequest;
 use Artwork\Modules\Accommodation\Http\Requests\UpdateAccommodationRequest;
@@ -16,7 +15,8 @@ class AccommodationController extends Controller
 
     public function __construct(
         protected AccommodationService $accommodationService
-    ) {}
+    ) {
+    }
 
     /**
      * Display a listing of the resource.
@@ -32,7 +32,7 @@ class AccommodationController extends Controller
     /**
      * Show the form for creating a new resource.
      */
-    public function create()
+    public function create(): void
     {
         //
     }
@@ -66,7 +66,7 @@ class AccommodationController extends Controller
     public function show(Accommodation $accommodation)
     {
         return Inertia::render('Accommodation/Show', [
-            'accommodation' => $accommodation->load(['contacts', 'roomTypes' => function($query) {
+            'accommodation' => $accommodation->load(['contacts', 'roomTypes' => function ($query): void {
                 $query->withPivot('cost_per_night');
             }]),
             'roomTypes' => AccommodationRoomType::all(),
@@ -76,7 +76,7 @@ class AccommodationController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(Accommodation $accommodation)
+    public function edit(Accommodation $accommodation): void
     {
         //
     }

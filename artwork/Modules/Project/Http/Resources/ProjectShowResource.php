@@ -97,8 +97,8 @@ class ProjectShowResource extends JsonResource
             ]),
             'shift_relevant_event_types' => $this->shiftRelevantEventTypes()->get(),
             'shift_contacts' => $this->shift_contact()->get(),
-            'freelancers' => Freelancer::all(),
-            'serviceProviders' => ServiceProvider::without(['contacts'])->get(),
+            'freelancers' => Freelancer::query()->withAssignedCraftIds()->get(),
+            'serviceProviders' => ServiceProvider::query()->without(['contacts'])->withAssignedCraftIds()->get(),
         ];
     }
 }

@@ -25,6 +25,7 @@ class SeasonSchedulePdfExportRequest extends FormRequest
                 'required',
                 'date_format:Y-m-d',
                 'after_or_equal:startDate',
+                // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter -- Laravel-Validierungs-Closure (attribute, value, fail) – Signatur vorgegeben
                 function (string $attribute, mixed $value, \Closure $fail): void {
                     $start = Carbon::createFromFormat('Y-m-d', (string) $this->input('startDate'));
                     $end = Carbon::createFromFormat('Y-m-d', (string) $value);

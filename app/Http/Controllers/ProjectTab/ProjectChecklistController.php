@@ -29,7 +29,10 @@ class ProjectChecklistController extends Controller
             // If not found, try as DisclosureComponents
             if (!$componentInTabModel) {
                 $disclosureComponent = DisclosureComponents::find($componentInTab);
-                if (!$disclosureComponent || $disclosureComponent->component?->type !== ProjectTabComponentEnum::CHECKLIST->value) {
+                if (
+                    !$disclosureComponent
+                     || $disclosureComponent->component?->type !== ProjectTabComponentEnum::CHECKLIST->value
+                ) {
                     throw new NotFoundHttpException();
                 }
 
@@ -55,4 +58,3 @@ class ProjectChecklistController extends Controller
         );
     }
 }
-

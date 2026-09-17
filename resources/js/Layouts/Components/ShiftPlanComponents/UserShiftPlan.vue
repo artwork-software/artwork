@@ -366,6 +366,7 @@
         :initial-start-date="dateValue[0]"
         :initial-end-date="dateValue[1]"
         :prefill-search="prefillSearchName"
+        :initial-person="historyPerson"
         auto-load
         @close="showHistoryModal = false"
     />
@@ -503,6 +504,17 @@ const prefillSearchName = computed(() => {
         nameOf(page.props?.serviceProvider) ||
         nameOf(page.props?.freelancer) ||
         nameOf(page.props?.auth?.user)
+    )
+})
+
+// Personenfilter des Verlaufs auf die betrachtete Person setzen (ID + Typ statt nur Name)
+const historyPerson = computed(() => {
+    const pick = (obj, type) => (obj?.id ? { id: obj.id, type, name: prefillSearchName.value } : null)
+    return (
+        pick(page.props?.user_to_edit, 'user') ||
+        pick(page.props?.serviceProvider, 'service_provider') ||
+        pick(page.props?.freelancer, 'freelancer') ||
+        pick(page.props?.auth?.user, 'user')
     )
 })
 

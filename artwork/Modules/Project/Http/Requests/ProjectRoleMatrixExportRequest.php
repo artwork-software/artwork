@@ -25,6 +25,7 @@ class ProjectRoleMatrixExportRequest extends FormRequest
                 'after_or_equal:start_date',
                 // Zeitraum begrenzen: alle Projekte des Zeitraums samt Teams werden in den
                 // Speicher geladen — ohne Cap ist der Export per URL auf OOM/Timeout treibbar
+                // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter -- Laravel-Validierungs-Closure (attribute, value, fail) – Signatur vorgegeben
                 function (string $attribute, mixed $value, \Closure $fail): void {
                     $start = Carbon::createFromFormat('Y-m-d', (string) $this->input('start_date'));
                     $end = Carbon::createFromFormat('Y-m-d', $value);

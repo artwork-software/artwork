@@ -30,7 +30,8 @@ class CrmContactController extends Controller
     public function __construct(
         private readonly CrmContactService $contactService,
         private readonly CrmPropertyGroupService $propertyGroupService,
-    ) {}
+    ) {
+    }
 
     private function abortIfMirrored(CrmContact $crmContact): void
     {

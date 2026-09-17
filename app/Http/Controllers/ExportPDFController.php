@@ -97,19 +97,19 @@ class ExportPDFController extends Controller
 
 
         $filteredEventTypes = EventType::whereIn('id', $userCalendarFilter->event_type_ids ?? [])
-            ->get()->pluck('name')->toArray();
+            ->pluck('name')->toArray();
 
         $filteredRooms = Room::whereIn('id', $userCalendarFilter->room_ids ?? [])
-            ->get()->pluck('name')->toArray();
+            ->pluck('name')->toArray();
 
         $filteredEventProperties = EventProperty::whereIn('id', $userCalendarFilter->event_property_ids ?? [])
-            ->get()->pluck('name')->toArray();
+            ->pluck('name')->toArray();
 
         $filteredRoomAttributes = RoomAttribute::whereIn('id', $userCalendarFilter->room_attribute_ids ?? [])
-            ->get()->pluck('name')->toArray();
+            ->pluck('name')->toArray();
 
         $filteredAreas = Area::whereIn('id', $userCalendarFilter->area_ids ?? [])
-            ->get()->pluck('name')->toArray();
+            ->pluck('name')->toArray();
 
         $startDate = \Carbon\Carbon::parse($startDate)->startOfDay();
         $endDate   = \Carbon\Carbon::parse($endDate)->endOfDay();
@@ -302,10 +302,17 @@ class ExportPDFController extends Controller
                         $tz = config('app.timezone');
                         foreach ($events as $event) {
                             $start    = \Illuminate\Support\Carbon::parse($event->start)->timezone($tz);
-                            $startMin = max(360, min(1440, ((int) $start->format('H')) * 60 + ((int) $start->format('i'))));
+                            $startMin = max(
+                                360,
+                                min(1440, ((int) $start->format('H')) * 60 + ((int) $start->format('i')))
+                            );
                             $allDay   = (bool) ($event->allDay ?? false);
 
-                            $slot = $allDay ? 'morning' : ($startMin < 720 ? 'morning' : ($startMin < 1080 ? 'noon' : 'evening'));
+                            $slot = $allDay
+                                 ? 'morning'
+                                 : ($startMin < 720
+                                 ? 'morning'
+                                 : ($startMin < 1080 ? 'noon' : 'evening'));
 
                             // Gleiche Namens-/Zeilenlogik wie __buildSegmentForDay im Blade,
                             // damit die vorberechneten Slot-Höhen zum Rendering passen
@@ -318,8 +325,12 @@ class ExportPDFController extends Controller
 
                             $titleText    = ($abbr !== '' ? $abbr . ': ' : '') . $name;
                             $titleLines   = max(1, (int) ceil(mb_strlen($titleText) / $effectiveCharsPerLine));
-                            $projectLines = $projectName !== '' ? max(1, (int) ceil(mb_strlen($projectName) / $effectiveCharsPerLine)) : 0;
-                            $contentHeight = max(40,
+                            $projectLines = $projectName !== '' ? max(
+                                1,
+                                (int) ceil(mb_strlen($projectName) / $effectiveCharsPerLine)
+                            ) : 0;
+                            $contentHeight = max(
+                                40,
                                 $titleLines * $titleLineH
                                 + $projectLines * $projectLineH
                                 + $timeLineH
@@ -595,7 +606,10 @@ class ExportPDFController extends Controller
         $activeFilter = [
             'rooms' => Room::whereIn('id', $userCalendarFilter->room_ids ?? [])->pluck('name')->toArray(),
             'areas' => Area::whereIn('id', $userCalendarFilter->area_ids ?? [])->pluck('name')->toArray(),
-            'event_types' => EventType::whereIn('id', $userCalendarFilter->event_type_ids ?? [])->pluck('name')->toArray(),
+            'event_types' => EventType::whereIn(
+                'id',
+                $userCalendarFilter->event_type_ids ?? []
+            )->pluck('name')->toArray(),
             'crafts' => Craft::whereIn('id', $userCalendarFilter->craft_ids ?? [])->pluck('name')->toArray(),
         ];
 

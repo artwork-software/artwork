@@ -37,12 +37,12 @@ class WorkflowManagementCommand extends Command
     private function listWorkflows(): int
     {
         $type = $this->option('type');
-        
+
         $query = WorkflowInstance::with(['workflowDefinitionConfig.workflowDefinition', 'subject'])
             ->whereNull('completed_at');
 
         if ($type) {
-            $query->whereHas('workflowDefinitionConfig.workflowDefinition', function ($q) use ($type) {
+            $query->whereHas('workflowDefinitionConfig.workflowDefinition', function ($q) use ($type): void {
                 $q->where('type', $type);
             });
         }
@@ -73,7 +73,7 @@ class WorkflowManagementCommand extends Command
     private function showWorkflow(): int
     {
         $id = $this->option('id');
-        
+
         if (!$id) {
             $this->error('Please provide workflow instance ID with --id option');
             return self::FAILURE;
@@ -92,14 +92,14 @@ class WorkflowManagementCommand extends Command
         $this->info("Subject: " . get_class($instance->subject) . " #{$instance->subject->id}");
         $this->info("Current Place: {$instance->current_place}");
         $this->info("Started: " . $instance->created_at->format('Y-m-d H:i:s'));
-        
+
         if ($instance->completed_at) {
             $this->info("Completed: " . $instance->completed_at->format('Y-m-d H:i:s'));
         }
 
         // Show available transitions
         $transitions = $this->workflowService->getAvailableTransitions($instance);
-        
+
         if (!empty($transitions)) {
             $this->info("\nAvailable Transitions:");
             foreach ($transitions as $transition) {
@@ -116,21 +116,21 @@ class WorkflowManagementCommand extends Command
     {
         $id = $this->option('id');
         $transitionName = $this->option('transition');
-        
+
         if (!$id || !$transitionName) {
             $this->error('Please provide both --id and --transition options');
             return self::FAILURE;
         }
 
         $instance = WorkflowInstance::find($id);
-        
+
         if (!$instance) {
             $this->error("Workflow instance {$id} not found");
             return self::FAILURE;
         }
 
         $success = $this->workflowService->executeTransition($instance, $transitionName);
-        
+
         if ($success) {
             $this->info("Transition '{$transitionName}' executed successfully");
             $this->info("New state: {$instance->fresh()->current_place}");

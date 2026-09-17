@@ -74,5 +74,4 @@ class ProjectPrintLayout extends Model
             'id'
         );
     }
-
 }

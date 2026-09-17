@@ -99,11 +99,13 @@ class RoomRequestNotificationService
             ]
         ];
 
-        if (!$this->notificationService->updateExistingRoomRequestNotification(
-            $event->id,
-            $recipient->id,
-            $notificationDescription
-        )) {
+        if (
+            !$this->notificationService->updateExistingRoomRequestNotification(
+                $event->id,
+                $recipient->id,
+                $notificationDescription
+            )
+        ) {
             $this->notificationService->setTitle($notificationTitle);
             $this->notificationService->setBroadcastMessage($broadcastMessage);
             $this->notificationService->setDescription($notificationDescription);

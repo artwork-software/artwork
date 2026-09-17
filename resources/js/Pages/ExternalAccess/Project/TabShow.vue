@@ -25,23 +25,69 @@
                     :scope="scope"
                 />
             </div>
+
+            <!-- Absenden: Eingaben sind bereits gespeichert, erst hier wird das Haus benachrichtigt -->
+            <div v-if="scope.access_type === 'write' && components.length" class="mt-10 rounded-2xl border border-border-subtle bg-white p-5">
+                <p v-if="flashStatus" class="mb-4 rounded-xl border border-success-border bg-success-surface px-4 py-3 text-sm text-success">
+                    {{ flashStatus }}
+                </p>
+                <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div class="text-sm text-text-muted">
+                        <p>{{ $t('Your entries are saved automatically. Once everything is complete, submit your data so the inviting person is notified.') }}</p>
+                        <p v-if="scope.last_submitted_at" class="mt-1 text-xs text-text-subtle">
+                            {{ $t('Last submitted') }}: {{ formatDateTime(scope.last_submitted_at) }}
+                        </p>
+                    </div>
+                    <button
+                        type="button"
+                        :disabled="submitting"
+                        class="shrink-0 rounded-lg bg-surface-inverse px-4 py-2 text-sm font-medium text-white disabled:bg-border-strong disabled:cursor-not-allowed"
+                        @click="submitData"
+                    >
+                        {{ scope.last_submitted_at ? $t('Submit data again') : $t('Submit data') }}
+                    </button>
+                </div>
+            </div>
         </div>
     </ExternalAppLayout>
 </template>
 
 <script setup>
+import { computed, ref } from 'vue'
+import { router, usePage } from '@inertiajs/vue3'
+import { useTranslation } from '@/Composeables/Translation.js'
 import ExternalAppLayout from '@/Pages/ExternalAccess/Layouts/ExternalAppLayout.vue'
 import ExternalComponentRenderer from '@/Pages/ExternalAccess/Project/Components/ExternalComponentRenderer.vue'
 
-defineProps({
+const props = defineProps({
     project: { type: Object, required: true },
     tab: { type: Object, required: true },
     scope: { type: Object, required: true },
     components: { type: Array, required: true },
 })
 
+const $t = useTranslation()
+const page = usePage()
+const flashStatus = computed(() => page.props.flash?.status ?? null)
+const submitting = ref(false)
+
+function submitData() {
+    if (!window.confirm($t('Submit your data now? The inviting person will be notified.'))) return
+    submitting.value = true
+    router.post(
+        route('external.project.tab.submit', { project: props.project.id, tab: props.tab.id }),
+        {},
+        { preserveScroll: true, onFinish: () => { submitting.value = false } },
+    )
+}
+
 function formatDate(iso) {
     if (!iso) return '—'
     return new Date(iso).toLocaleDateString()
+}
+
+function formatDateTime(iso) {
+    if (!iso) return '—'
+    return new Date(iso).toLocaleString()
 }
 </script>

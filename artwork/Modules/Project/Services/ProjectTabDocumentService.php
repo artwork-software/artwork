@@ -42,6 +42,8 @@ class ProjectTabDocumentService
 
         return $project->project_files()
             ->whereIn('tab_id', $scope)
+            // Herkunftsvermerk für Uploads externer Personen (freigegebene Tabs)
+            ->with(['externalAccess:id,email,crm_contact_id', 'externalAccess.crmContact:id,display_name'])
             ->get();
     }
 

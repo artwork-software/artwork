@@ -16,7 +16,7 @@ final class InviteExternalCommand
      */
     public function __construct(
         public readonly string $email,
-        public readonly int $crmContactTypeId,
+        public readonly ?int $crmContactTypeId,
         public readonly InviteSource $source,
         public readonly ?int $sourceReferenceProjectId,
         public readonly User $invitedBy,
@@ -24,6 +24,8 @@ final class InviteExternalCommand
         public readonly array $tabScopes = [],
         public readonly array $confidentialFieldValues = [],
         public readonly array $publicFieldValues = [],
+        /** Bestehenden CRM-Kontakt einladen: der Zugang wird an diesen Kontakt gebunden. */
+        public readonly ?int $crmContactId = null,
     ) {
     }
 

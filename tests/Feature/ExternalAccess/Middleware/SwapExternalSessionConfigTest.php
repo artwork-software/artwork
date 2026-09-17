@@ -5,7 +5,7 @@ namespace Tests\Feature\ExternalAccess\Middleware;
 use Artwork\Modules\ExternalAccess\Http\Middleware\SwapExternalSessionConfig;
 use Illuminate\Http\Request;
 use PHPUnit\Framework\Attributes\Test;
-use Tests\TestCase;
+use Tests\Feature\ExternalAccess\ExternalAccessTestCase as TestCase;
 
 final class SwapExternalSessionConfigTest extends TestCase
 {

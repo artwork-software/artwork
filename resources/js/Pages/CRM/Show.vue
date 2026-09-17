@@ -9,30 +9,67 @@
                 </Link>
             </div>
 
-            <!-- External access status — Feature vorerst ausgeblendet (noch nicht ausgereift)
-            <div v-if="externalAccessStatus" class="mb-4 flex flex-wrap items-center gap-3">
-                <span
-                    v-if="externalAccessStatus.crm_access_expires_at && !externalAccessStatus.revoked_at"
-                    class="inline-flex items-center rounded-full bg-accent-50 px-3 py-1 text-xs font-medium text-accent-700"
-                >
-                    {{ $t('External access active until {date}', { date: new Date(externalAccessStatus.crm_access_expires_at).toLocaleDateString() }) }}
-                </span>
-                <Link
-                    v-if="externalAccessStatus.has_pending_submission"
-                    :href="route('crm.contacts.external-submissions.show', [contact.id, externalAccessStatus.pending_submission_id])"
-                    class="inline-flex items-center rounded-full bg-warning-surface px-3 py-1 text-xs font-medium text-warning hover:bg-warning-surface"
-                >
-                    {{ $t('There is a data update request to review') }}
-                </Link>
-                <Link
-                    v-if="externalAccessStatus.id"
-                    :href="route('crm.external-access.show', externalAccessStatus.id)"
-                    class="inline-flex items-center rounded-full bg-surface-sunken px-3 py-1 text-xs font-medium text-text-muted hover:bg-border-subtle"
-                >
-                    {{ $t('Manage external access') }}
-                </Link>
+            <!-- Externe Zugänge dieses Kontakts (Feature-Schalter + Recht "Externe einladen") -->
+            <div v-if="externalAccessStatus || canInviteExternal" class="mb-6 rounded-xl border border-border-subtle bg-white p-4">
+                <div class="flex flex-wrap items-center justify-between gap-3">
+                    <div>
+                        <h2 class="text-sm font-semibold text-text">{{ $t('External access') }}</h2>
+                        <p class="text-xs text-text-subtle">{{ $t('This contact can maintain their own data and fill in shared project tabs via a link sent by email.') }}</p>
+                    </div>
+                    <BaseUIButton v-if="canInviteExternal" hide-icon @click="showInviteModal = true">
+                        <component :is="IconUserPlus" stroke-width="1" class="size-5" />
+                        {{ externalAccessStatus ? $t('Invite again / extend') : $t('Invite contact for external access') }}
+                    </BaseUIButton>
+                </div>
+                <ul v-if="externalAccessStatus" class="mt-3 divide-y divide-border-subtle">
+                    <li v-for="access in externalAccessStatus.accesses" :key="access.id" class="py-3 text-sm">
+                        <div class="flex flex-wrap items-center gap-2">
+                            <span class="font-medium">{{ access.email }}</span>
+                            <span
+                                v-if="access.crm_access_active"
+                                class="inline-flex items-center rounded-full bg-accent-50 px-2.5 py-0.5 text-xs font-medium text-accent-700"
+                            >
+                                {{ $t('CRM access until {date}', { date: formatIsoDate(access.crm_access_expires_at) }) }}
+                            </span>
+                            <span v-else class="inline-flex items-center rounded-full bg-surface-sunken px-2.5 py-0.5 text-xs text-text-muted">
+                                {{ $t('CRM access expired') }}
+                            </span>
+                            <Link
+                                v-if="access.has_pending_submission"
+                                :href="route('crm.contacts.external-submissions.show', [contact.id, access.pending_submission_id])"
+                                class="inline-flex items-center rounded-full bg-warning-surface px-2.5 py-0.5 text-xs font-medium text-warning"
+                            >
+                                {{ $t('There is a data update request to review') }}
+                            </Link>
+                            <Link
+                                :href="route('crm.external-access.show', access.id)"
+                                class="ml-auto text-xs text-accent-600 hover:underline"
+                            >
+                                {{ $t('Manage external access') }}
+                            </Link>
+                        </div>
+                        <ul v-if="access.scopes.length" class="mt-2 space-y-1 text-xs text-text-muted">
+                            <li v-for="scope in access.scopes" :key="scope.id" class="flex flex-wrap items-center gap-x-2">
+                                <span class="font-medium text-text">{{ scope.project }}</span>
+                                <span>· {{ $t('Tab') }} „{{ scope.tab }}“</span>
+                                <span>· {{ scope.access_type === 'write' ? $t('Read and write') : $t('Read only') }}</span>
+                                <span>· {{ $t('until') }} {{ formatIsoDate(scope.valid_to) }}</span>
+                                <span v-if="scope.last_submitted_at" class="text-success">· {{ $t('submitted') }} {{ formatIsoDateTime(scope.last_submitted_at) }}</span>
+                                <span v-else class="text-text-subtle">· {{ $t('Not submitted yet') }}</span>
+                            </li>
+                        </ul>
+                        <p v-else class="mt-1 text-xs text-text-subtle">{{ $t('No tab access granted.') }}</p>
+                    </li>
+                </ul>
             </div>
-            -->
+
+            <InviteExternalModal
+                v-if="showInviteModal"
+                source="crm_contact"
+                :contact="{ id: contact.id, display_name: contact.display_name }"
+                @close="showInviteModal = false"
+                @success="onInvited"
+            />
 
             <Transition
                 enter-active-class="transition ease-out duration-200"
@@ -312,14 +349,16 @@
 
 <script setup>
 import { ref, computed } from 'vue'
-import { router, Link } from '@inertiajs/vue3'
+import { router, Link, usePage } from '@inertiajs/vue3'
 import AppLayout from '@/Layouts/AppLayout.vue'
 import PropertyIcon from '@/Artwork/Icon/PropertyIcon.vue'
 import CrmPropertyGroupSection from '@/Pages/CRM/Components/CrmPropertyGroupSection.vue'
 import ChangeContactTypeModal from '@/Pages/CRM/Components/ChangeContactTypeModal.vue'
+import InviteExternalModal from '@/Pages/CRM/Components/InviteExternalModal.vue'
+import { usePermission } from '@/Composeables/Permission.js'
 import {
     IconArrowLeft, IconEdit, IconCheck, IconInfoCircle, IconTrash, IconCirclePlus, IconX,
-    IconCamera, IconSwitchHorizontal,
+    IconCamera, IconSwitchHorizontal, IconUserPlus,
 } from '@tabler/icons-vue'
 import BaseInput from '@/Artwork/Inputs/BaseInput.vue'
 import BaseUIButton from '@/Artwork/Buttons/BaseUIButton.vue'
@@ -340,6 +379,17 @@ const props = defineProps({
 const $t = useTranslation()
 
 const activeTab = ref('info')
+
+// Externe Zugänge: Einladen nur mit Recht UND instanzweit freigeschaltetem Feature
+const { can: canPermission } = usePermission(usePage().props)
+const canInviteExternal = computed(() => usePage().props.externalAccessEnabled === true && canPermission('can invite externals'))
+const showInviteModal = ref(false)
+const formatIsoDate = (iso) => (iso ? new Date(iso).toLocaleDateString() : '')
+const formatIsoDateTime = (iso) => (iso ? new Date(iso).toLocaleString() : '')
+function onInvited() {
+    showInviteModal.value = false
+    router.reload({ only: ['externalAccessStatus'] })
+}
 
 // Backend liefert "d.m.Y H:i" – im Projektprotokoll nur das Datum anzeigen
 const dateOnly = (value) => (value ? String(value).split(' ')[0] : '-')

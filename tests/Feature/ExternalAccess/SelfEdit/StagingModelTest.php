@@ -11,7 +11,7 @@ use Artwork\Modules\ExternalAccess\Models\ExternalPendingFieldChange;
 use Artwork\Modules\ExternalAccess\Models\ExternalPendingSubmission;
 use Artwork\Modules\Freelancer\Models\Freelancer;
 use PHPUnit\Framework\Attributes\Test;
-use Tests\TestCase;
+use Tests\Feature\ExternalAccess\ExternalAccessTestCase as TestCase;
 
 final class StagingModelTest extends TestCase
 {

@@ -19,6 +19,7 @@ class Artist extends Model implements CrmEntity
         'name',
         'first_name',
         'last_name',
+        'email',
         'phone_number',
         'position',
     ];
@@ -53,6 +54,7 @@ class Artist extends Model implements CrmEntity
             'Künstler*innen Name' => 'name',
             'Vorname' => 'first_name',
             'Nachname' => 'last_name',
+            'Email' => 'email',
             'Telefon' => 'phone_number',
             'Position' => 'position',
         ];

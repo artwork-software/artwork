@@ -15,6 +15,7 @@
                     </div>
                 </div>
                 <div class="flex gap-2" v-if="canManage">
+                    <BaseUIButton v-if="!access.revoked_at" variant="secondary" hide-icon @click="resendInvitation">{{ $t('Resend invitation') }}</BaseUIButton>
                     <BaseUIButton v-if="!access.revoked_at" variant="secondary" hide-icon @click="revokeOpen = true">{{ $t('Revoke access') }}</BaseUIButton>
                     <BaseUIButton v-else hide-icon @click="reactivate">{{ $t('Reactivate') }}</BaseUIButton>
                     <BaseUIButton v-if="canRelink" hide-icon @click="relinkOpen = true">{{ $t('Re-link to another contact') }}</BaseUIButton>
@@ -43,6 +44,7 @@
                             <th class="py-2">{{ $t('Tab') }}</th>
                             <th class="py-2">{{ $t('Access') }}</th>
                             <th class="py-2">{{ $t('Valid') }}</th>
+                            <th class="py-2">{{ $t('Last submitted') }}</th>
                             <th class="py-2"></th>
                         </tr>
                     </thead>
@@ -58,6 +60,9 @@
                             <td class="py-3 text-sm">
                                 {{ formatDate(scope.valid_from) }} – {{ formatDate(scope.valid_to) }}
                                 <span v-if="isExpired(scope)" class="text-xs text-text-subtle ml-1">({{ $t('expired') }})</span>
+                            </td>
+                            <td class="py-3 text-sm">
+                                {{ formatDateTime(scope.last_submitted_at) || $t('Not submitted yet') }}
                             </td>
                             <td class="py-3 text-right" v-if="canManage">
                                 <div class="flex justify-end gap-2">
@@ -211,6 +216,11 @@ function revoke() {
 
 function reactivate() {
     router.post(route('crm.external-access.reactivate', props.access.id), {}, opts)
+}
+
+function resendInvitation() {
+    if (!window.confirm($t('Resend invitation') + '?')) return
+    router.post(route('crm.external-access.resend-invitation', props.access.id), {}, opts)
 }
 
 function extendCrm() {

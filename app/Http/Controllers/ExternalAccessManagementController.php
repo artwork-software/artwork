@@ -13,7 +13,9 @@ use Artwork\Modules\ExternalAccess\Models\ExternalAccessScope;
 use Artwork\Modules\ExternalAccess\Models\ExternalPendingSubmission;
 use Artwork\Modules\ExternalAccess\Repositories\ExternalAccessRepository;
 use Artwork\Modules\ExternalAccess\Repositories\ExternalAccessScopeRepository;
+use Artwork\Modules\ExternalAccess\Exceptions\ExternalAccessException;
 use Artwork\Modules\ExternalAccess\Services\ExternalAccessManagementService;
+use Artwork\Modules\ExternalAccess\Services\ExternalAccessService;
 use Artwork\Modules\User\Models\User;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
@@ -29,6 +31,7 @@ class ExternalAccessManagementController extends Controller
         private readonly ExternalAccessRepository $repository,
         private readonly ExternalAccessScopeRepository $scopeRepository,
         private readonly ExternalAccessManagementService $service,
+        private readonly ExternalAccessService $externalAccessService,
     ) {
     }
 
@@ -63,9 +66,10 @@ class ExternalAccessManagementController extends Controller
                 'submitted_at' => $s->submitted_at->toIso8601String(),
                 'field_count' => $s->field_changes_count,
             ])->all(),
-            'audit_log' => $this->loadAuditLog($access),
-            'can_manage' => $request->user()->can('manage', $access),
-            'can_relink' => $request->user()->can('relink', $access),
+            // Prop-Namen müssen den Vue-Props (camelCase) entsprechen — Inertia konvertiert nicht.
+            'auditLog' => $this->loadAuditLog($access),
+            'canManage' => $request->user()->can('manage', $access),
+            'canRelink' => $request->user()->can('relink', $access),
         ]);
     }
 
@@ -129,6 +133,19 @@ class ExternalAccessManagementController extends Controller
         return redirect()->back()->with('status', __('Scope ended.'));
     }
 
+    public function resendInvitation(Request $request, ExternalAccess $access): RedirectResponse
+    {
+        $this->authorize('manage', $access);
+
+        try {
+            $this->externalAccessService->resendInvitation($access, $request->user());
+        } catch (ExternalAccessException $e) {
+            return redirect()->back()->with('error', __($e->getMessage()));
+        }
+
+        return redirect()->back()->with('status', __('Invitation sent.'));
+    }
+
     public function relink(RelinkAccessRequest $request, ExternalAccess $access): RedirectResponse
     {
         $this->authorize('relink', $access);
@@ -184,6 +201,7 @@ class ExternalAccessManagementController extends Controller
             'access_type' => $scope->access_type->value,
             'valid_from' => $scope->valid_from->toIso8601String(),
             'valid_to' => $scope->valid_to->toIso8601String(),
+            'last_submitted_at' => $scope->last_submitted_at?->toIso8601String(),
         ];
     }
 

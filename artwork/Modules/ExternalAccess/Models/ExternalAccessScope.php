@@ -21,6 +21,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property ExternalAccessType $access_type
  * @property Carbon $valid_from
  * @property Carbon $valid_to
+ * @property Carbon|null $last_submitted_at
+ * @property Carbon|null $expiry_reminder_sent_at
  * @property int|null $granted_by_user_id
  */
 class ExternalAccessScope extends Model
@@ -34,6 +36,8 @@ class ExternalAccessScope extends Model
         'access_type',
         'valid_from',
         'valid_to',
+        'last_submitted_at',
+        'expiry_reminder_sent_at',
         'granted_by_user_id',
     ];
 
@@ -42,6 +46,8 @@ class ExternalAccessScope extends Model
         return [
             'valid_from' => 'datetime',
             'valid_to' => 'datetime',
+            'last_submitted_at' => 'datetime',
+            'expiry_reminder_sent_at' => 'datetime',
             'access_type' => ExternalAccessType::class,
         ];
     }

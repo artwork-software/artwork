@@ -13,7 +13,7 @@ use Artwork\Modules\ExternalAccess\Services\ExternalSelfEditSubmissionService;
 use Artwork\Modules\Freelancer\Models\Freelancer;
 use Illuminate\Validation\ValidationException;
 use PHPUnit\Framework\Attributes\Test;
-use Tests\TestCase;
+use Tests\Feature\ExternalAccess\ExternalAccessTestCase as TestCase;
 
 final class SubmissionServiceTest extends TestCase
 {
@@ -63,7 +63,7 @@ final class SubmissionServiceTest extends TestCase
     }
 
     #[Test]
-    public function direct_crm_property_change_writes_immediately(): void
+    public function crm_property_change_is_staged_not_written_immediately(): void
     {
         [$external, , $type] = $this->freelancerExternal();
         $property = $this->attachDirectProperty($type);
@@ -72,8 +72,11 @@ final class SubmissionServiceTest extends TestCase
             'crm_group_' . $property->crm_property_group_id => ['crm_property:' . $property->id => 'Blau'],
         ]);
 
-        $this->assertNull($result); // only direct writes
-        $this->assertDatabaseHas('crm_property_values', [
+        // Eigenschaftswerte laufen über die Freigabe: Submission statt Direktschreiben
+        $this->assertNotNull($result);
+        $this->assertSame(1, $result->fieldChanges()->count());
+        $this->assertSame('crm_property:' . $property->id, $result->fieldChanges()->first()->field_key);
+        $this->assertDatabaseMissing('crm_property_values', [
             'crm_contact_id' => $external->crm_contact_id,
             'crm_property_id' => $property->id,
             'value' => 'Blau',
@@ -116,7 +119,7 @@ final class SubmissionServiceTest extends TestCase
     }
 
     #[Test]
-    public function submission_with_only_direct_writes_returns_null(): void
+    public function submission_with_only_property_changes_creates_pending_submission(): void
     {
         [$external, , $type] = $this->freelancerExternal();
         $property = $this->attachDirectProperty($type);
@@ -125,6 +128,7 @@ final class SubmissionServiceTest extends TestCase
             'crm_group_' . $property->crm_property_group_id => ['crm_property:' . $property->id => 'Grün'],
         ]);
 
-        $this->assertNull($result);
+        $this->assertNotNull($result);
+        $this->assertSame(ExternalSubmissionStatus::PENDING, $result->status);
     }
 }

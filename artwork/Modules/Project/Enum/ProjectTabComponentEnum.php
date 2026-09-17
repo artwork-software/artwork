@@ -77,6 +77,8 @@ enum ProjectTabComponentEnum: string
         self::PROJECT_TITLE,
         self::PROJECT_BASIC_DATA_DISPLAY,
         self::ARTIST_NAME_DISPLAY,
+        // Dokumente des freigegebenen Tabs (Upload/Download über eigene externe Endpunkte)
+        self::PROJECT_DOCUMENTS,
     ];
 
     /**
@@ -91,6 +93,8 @@ enum ProjectTabComponentEnum: string
         self::LINK,
         self::LINK_LIST,
         self::DISCLOSURE_COMPONENT,
+        // Schreibend = Dateien hochladen/eigene Uploads löschen (ExternalProjectFileService)
+        self::PROJECT_DOCUMENTS,
     ];
 
     /**

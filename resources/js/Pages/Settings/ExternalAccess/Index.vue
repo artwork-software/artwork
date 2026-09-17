@@ -9,6 +9,21 @@
             </header>
 
             <form @submit.prevent="save" class="space-y-8">
+                <!-- Feature switch -->
+                <section class="rounded-2xl border border-border-subtle bg-white p-6">
+                    <h2 class="text-lg font-semibold">{{ $t('Activate external access') }}</h2>
+                    <p class="mt-1 text-sm text-text-subtle">
+                        {{ $t('When enabled, users with the permission "Invite externals" can invite external people to project tabs and their CRM contact. When disabled, invitation buttons and the external login are hidden; existing accesses are kept and work again once re-enabled.') }}
+                    </p>
+                    <div class="mt-4">
+                        <BaseCheckbox
+                            id="external_access_enabled"
+                            v-model="form.enabled"
+                            :label="$t('External access enabled')"
+                        />
+                    </div>
+                </section>
+
                 <!-- Invitation wording -->
                 <section class="rounded-2xl border border-border-subtle bg-white p-6">
                     <h2 class="text-lg font-semibold">{{ $t('Invitation wording') }}</h2>
@@ -45,6 +60,16 @@
                                 type="number"
                                 :label="$t('Tab access default (days)')"
                             />
+                        </div>
+                        <div>
+                            <BaseInput
+                                id="expiry_reminder_days"
+                                v-model="form.expiry_reminder_days"
+                                type="number"
+                                :label="$t('Expiry reminder (days before, 0 = off)')"
+                                :error="errors.expiry_reminder_days"
+                            />
+                            <p class="text-xs text-text-subtle mt-1">{{ $t('Inviters are notified this many days before a tab or CRM access expires.') }}</p>
                         </div>
                     </div>
                 </section>
@@ -187,6 +212,7 @@ import { router, useForm, usePage } from '@inertiajs/vue3'
 import AppLayout from '@/Layouts/AppLayout.vue'
 import ArtworkBaseModal from '@/Artwork/Modals/ArtworkBaseModal.vue'
 import BaseInput from '@/Artwork/Inputs/BaseInput.vue'
+import BaseCheckbox from '@/Artwork/Inputs/BaseCheckbox.vue'
 import BaseUIButton from '@/Artwork/Buttons/BaseUIButton.vue'
 import ArtworkBaseListbox from '@/Artwork/Listbox/ArtworkBaseListbox.vue'
 import { useTranslation } from '@/Composeables/Translation.js'
@@ -210,6 +236,8 @@ const recipientItems = computed(() => [
 ])
 
 const form = useForm({
+    enabled: props.settings.enabled === true,
+    expiry_reminder_days: props.settings.expiry_reminder_days,
     company_name_override: props.settings.company_name_override,
     default_crm_access_months: props.settings.default_crm_access_months,
     default_tab_access_days: props.settings.default_tab_access_days,

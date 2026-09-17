@@ -2706,6 +2706,9 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
 
             // tab.store
             Route::post('/store', [ProjectTabController::class, 'store'])->name('tab.store');
+            // tab.templates.apply — Tab aus Vorlage anlegen (ergibt normalen Tab + normale Komponenten)
+            Route::post('/templates/{template}/apply', [ProjectTabController::class, 'applyTemplate'])
+                ->name('tab.templates.apply');
             //tab.reorder
             Route::post('/reorder', [ProjectTabController::class, 'reorder'])
                 ->name('tab.reorder');
@@ -3216,6 +3219,8 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         Route::get('/externals/contact-types/{crmContactType}/requirements', [
             ExternalInvitationController::class, 'showContactTypeRequirements',
         ])->name('crm.externals.contact-types.requirements');
+        Route::get('/externals/contacts/{crmContact}/invite-info', [ExternalInvitationController::class, 'inviteInfo'])
+            ->name('crm.externals.contacts.invite-info');
 
         // External self-edit submission review (Inviter/Admin authorization enforced in service)
         Route::prefix('contacts/{contact}/external-submissions')
@@ -3250,6 +3255,8 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
             Route::post('{access}/scopes/{scope}/end', [ExternalAccessManagementController::class, 'endScope'])
                 ->name('scope.end');
             Route::post('{access}/relink', [ExternalAccessManagementController::class, 'relink'])->name('relink');
+            Route::post('{access}/resend-invitation', [ExternalAccessManagementController::class, 'resendInvitation'])
+                ->name('resend-invitation');
         });
 
         Route::group(['prefix' => 'settings', 'middleware' => 'can:crm manager'], function (): void {

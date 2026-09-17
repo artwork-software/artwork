@@ -2725,12 +2725,7 @@ class ProjectController extends Controller
                 'created_at' => $latestActivity->created_at->diffInHours() < 24
                     ? $latestActivity->created_at->diffForHumans()
                     : $latestActivity->created_at->format('d.m.Y, H:i'),
-                // Aktivitäten ohne Verursacher (System/Konsole): morphTo-Query wäre kaputtes SQL
-                'changer'    => $latestActivity->causer_type !== null && $latestActivity->causer_id !== null
-                    ? $latestActivity->causer()
-                        ->without(['roles', 'departments', 'calendar_settings', 'calendarAbo', 'shiftCalendarAbo'])
-                        ->first()
-                    : null,
+                'changer'    => $this->resolveHistoryChanger($latestActivity),
             ]];
         }
         $headerObject->project_history = $latestChange;
@@ -2879,7 +2874,7 @@ class ProjectController extends Controller
     public function history(Project $project): JsonResponse
     {
         $activities = $project->activities()->latest()->get();
-        $history = $activities->map(static function ($activity) {
+        $history = $activities->map(function ($activity) {
             $properties = $activity->properties;
 
             return [
@@ -2889,12 +2884,7 @@ class ProjectController extends Controller
                 'created_at' => $activity->created_at->diffInHours() < 24
                     ? $activity->created_at->diffForHumans()
                     : $activity->created_at->format('d.m.Y, H:i'),
-                // Aktivitäten ohne Verursacher (System/Konsole): morphTo-Query wäre kaputtes SQL
-                'changer'    => $activity->causer_type !== null && $activity->causer_id !== null
-                    ? $activity->causer()
-                        ->without(['roles', 'departments', 'calendar_settings', 'calendarAbo', 'shiftCalendarAbo'])
-                        ->first()
-                    : null,
+                'changer'    => $this->resolveHistoryChanger($activity),
             ];
         })->all();
 
@@ -5113,5 +5103,45 @@ class ProjectController extends Controller
     public function updateTimeline(Timeline $timeline, UpdateTimelineRequest $request): void
     {
         $this->timelineService->updateTimeline($timeline, collect($request->all()));
+    }
+
+    /**
+     * Verursacher eines Verlaufseintrags fürs Frontend (UserPopoverTooltip). Aktivitäten ohne
+     * Verursacher (System/Konsole) liefern null (morphTo-Query wäre kaputtes SQL). Externe Zugänge
+     * (Magic-Link-Personen) werden mit E-Mail bzw. CRM-Namen als Pseudo-User dargestellt.
+     *
+     * @return User|array<string, mixed>|null
+     */
+    private function resolveHistoryChanger(\Spatie\Activitylog\Models\Activity $activity): User|array|null
+    {
+        if ($activity->causer_type === null || $activity->causer_id === null) {
+            return null;
+        }
+
+        if ($activity->causer_type === (new \Artwork\Modules\ExternalAccess\Models\ExternalAccess())->getMorphClass()) {
+            /** @var \Artwork\Modules\ExternalAccess\Models\ExternalAccess|null $external */
+            $external = \Artwork\Modules\ExternalAccess\Models\ExternalAccess::query()
+                ->with('crmContact:id,display_name')
+                ->find($activity->causer_id);
+            if ($external === null) {
+                return null;
+            }
+            $name = $external->crmContact?->display_name ?: $external->email;
+
+            return [
+                'id' => 'external-' . $external->id,
+                'type' => 'external',
+                'is_external' => true,
+                'first_name' => $name,
+                'last_name' => '',
+                'email' => $external->email,
+                'position' => __('External access'),
+                'profile_photo_url' => route('generate-avatar-image', ['letters' => mb_substr($name, 0, 1)]),
+            ];
+        }
+
+        return $activity->causer()
+            ->without(['roles', 'departments', 'calendar_settings', 'calendarAbo', 'shiftCalendarAbo'])
+            ->first();
     }
 }

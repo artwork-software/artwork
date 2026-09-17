@@ -7,7 +7,7 @@ use Artwork\Modules\Permission\Models\Permission;
 use Artwork\Modules\Setup\DataProvider\BaseDataProvider;
 use Artwork\Modules\User\Models\User;
 use PHPUnit\Framework\Attributes\Test;
-use Tests\TestCase;
+use Tests\Feature\ExternalAccess\ExternalAccessTestCase as TestCase;
 
 final class InviteExternalPermissionTest extends TestCase
 {

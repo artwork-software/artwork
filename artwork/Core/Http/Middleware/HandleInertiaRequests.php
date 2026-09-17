@@ -4,6 +4,7 @@ namespace Artwork\Core\Http\Middleware;
 
 use App\Settings\EventSettings;
 use App\Settings\GeneralCalendarSettings;
+use Artwork\Modules\ExternalAccess\Services\ExternalAccessSettingsResolver;
 use Artwork\Modules\Craft\Models\Craft;
 use Artwork\Modules\GeneralSettings\Models\GeneralSettings;
 use Artwork\Modules\ModuleSettings\Services\ModuleSettingsService;
@@ -276,6 +277,8 @@ class HandleInertiaRequests extends Middleware
                 'default_language' => config('app.fallback_locale'),
                 'selected_language' => app()->getLocale(),
                 'sageApiEnabled' => $sageApiEnabled,
+                // Externe Zugänge: gated Einladen-Buttons und CRM-Verwaltungslinks im Frontend
+                'externalAccessEnabled' => app(ExternalAccessSettingsResolver::class)->isEnabled(),
                 'calendar_settings' => $calendarSettings,
                 'daily_view_calendar_settings' => $dailyViewCalendarSettings,
                 'shift_plan_settings' => $shiftPlanSettings,

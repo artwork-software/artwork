@@ -4,7 +4,7 @@ namespace Tests\Unit\Modules\ExternalAccess\Models;
 
 use Artwork\Modules\ExternalAccess\Models\ExternalLoginToken;
 use PHPUnit\Framework\Attributes\Test;
-use Tests\TestCase;
+use Tests\Feature\ExternalAccess\ExternalAccessTestCase as TestCase;
 
 final class ExternalLoginTokenTest extends TestCase
 {

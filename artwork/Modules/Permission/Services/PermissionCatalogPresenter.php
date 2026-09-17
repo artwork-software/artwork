@@ -3,6 +3,7 @@
 namespace Artwork\Modules\Permission\Services;
 
 use App\Settings\GeneralCalendarSettings;
+use Artwork\Modules\ExternalAccess\Services\ExternalAccessSettingsResolver;
 use App\Settings\ShiftSettings;
 use Artwork\Modules\GeneralSettings\Models\GeneralSettings;
 use Artwork\Modules\ModuleSettings\Services\ModuleSettingsService;
@@ -99,8 +100,8 @@ readonly class PermissionCatalogPresenter
             ],
             'features' => [
                 'sage_api' => $sageEnabled,
-                // Externe einladen: UI bewusst deaktiviert (CRM/Index.vue, TabContent.vue)
-                'external_access' => false,
+                // Externe Zugänge: instanzweiter Schalter in den Einstellungen (Externe Zugänge)
+                'external_access' => app(ExternalAccessSettingsResolver::class)->isEnabled(),
             ],
         ];
     }

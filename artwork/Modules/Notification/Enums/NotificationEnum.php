@@ -91,6 +91,8 @@ enum NotificationEnum: string
 
     case NOTIFICATION_EXTERNAL_TAB_COMPONENT_UPDATED = 'NOTIFICATION_EXTERNAL_TAB_COMPONENT_UPDATED';
 
+    case NOTIFICATION_EXTERNAL_ACCESS_EXPIRING = 'NOTIFICATION_EXTERNAL_ACCESS_EXPIRING';
+
     case NOTIFICATION_EXTERNAL_ISSUE_RETURN_DUE = 'NOTIFICATION_EXTERNAL_ISSUE_RETURN_DUE';
 
     public function groupType(): string
@@ -142,7 +144,8 @@ enum NotificationEnum: string
             self::NOTIFICATION_EXTERNAL_ISSUE_RETURN_DUE => "INVENTORY",
 
             self::NOTIFICATION_EXTERNAL_CRM_SUBMITTED,
-            self::NOTIFICATION_EXTERNAL_TAB_COMPONENT_UPDATED => "EXTERNAL_ACCESS",
+            self::NOTIFICATION_EXTERNAL_TAB_COMPONENT_UPDATED,
+            self::NOTIFICATION_EXTERNAL_ACCESS_EXPIRING => "EXTERNAL_ACCESS",
         };
     }
 
@@ -188,6 +191,8 @@ enum NotificationEnum: string
                 \Artwork\Modules\ExternalAccess\Notifications\ExternalCrmSubmissionNotification::class,
             self::NOTIFICATION_EXTERNAL_TAB_COMPONENT_UPDATED =>
                 \Artwork\Modules\ExternalAccess\Notifications\ExternalTabComponentUpdatedNotification::class,
+            self::NOTIFICATION_EXTERNAL_ACCESS_EXPIRING =>
+                \Artwork\Modules\ExternalAccess\Notifications\ExternalAccessExpiringNotification::class,
         };
     }
 
@@ -242,7 +247,8 @@ enum NotificationEnum: string
             self::NOTIFICATION_DOCUMENT_REQUEST_CREATED => "New document request",
             self::NOTIFICATION_DOCUMENT_REQUEST_COMPLETED => "Document request completed",
             self::NOTIFICATION_EXTERNAL_CRM_SUBMITTED => "External person filled in or updated their data",
-            self::NOTIFICATION_EXTERNAL_TAB_COMPONENT_UPDATED => "External person updated shared tab content",
+            self::NOTIFICATION_EXTERNAL_TAB_COMPONENT_UPDATED => "External person submitted shared tab data",
+            self::NOTIFICATION_EXTERNAL_ACCESS_EXPIRING => "External access about to expire",
         };
     }
 
@@ -294,7 +300,8 @@ enum NotificationEnum: string
             self::NOTIFICATION_DOCUMENT_REQUEST_CREATED => "Find out if someone has created a document request for you.",
             self::NOTIFICATION_DOCUMENT_REQUEST_COMPLETED => "Find out if a document request you created has been completed.",
             self::NOTIFICATION_EXTERNAL_CRM_SUBMITTED => "Get notified when an external person fills in or updates their CRM data.",
-            self::NOTIFICATION_EXTERNAL_TAB_COMPONENT_UPDATED => "Get notified when an external person updates content in a shared project tab.",
+            self::NOTIFICATION_EXTERNAL_TAB_COMPONENT_UPDATED => "Get notified when an external person submits their data in a shared project tab.",
+            self::NOTIFICATION_EXTERNAL_ACCESS_EXPIRING => "Get notified a few days before an external access you granted expires.",
         };
     }
 

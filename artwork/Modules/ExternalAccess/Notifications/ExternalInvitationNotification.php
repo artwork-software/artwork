@@ -2,6 +2,7 @@
 
 namespace Artwork\Modules\ExternalAccess\Notifications;
 
+use Artwork\Modules\ExternalAccess\Services\ExternalAccessSettingsResolver;
 use Artwork\Modules\GeneralSettings\Models\GeneralSettings;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\User\Models\User;
@@ -46,7 +47,7 @@ class ExternalInvitationNotification extends Notification implements ShouldQueue
             ? $settings->business_email
             : $fallbackSenderMail;
 
-        $lifetimeMinutes = (int) config('external_access.login_token.lifetime_minutes', 15);
+        $lifetimeMinutes = app(ExternalAccessSettingsResolver::class)->loginTokenLifetimeMinutes();
         $url = route('external.login.redeem', ['token' => $this->plainToken]);
 
         $invitedByName = $this->invitedBy !== null

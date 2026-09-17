@@ -221,7 +221,10 @@ readonly class CalendarDataService
         bool $considerShiftsForOccupancy = false,
         ?Project $project = null,
         bool $showUnrelatedEvents = false,
-        bool $showUnrelatedShifts = false
+        bool $showUnrelatedShifts = false,
+        // Dienstplan-Wochenansicht mit ausgeblendeten Terminen: Räume, die nur durch Termine
+        // belegt sind, zählen bei „Räume ohne Belegung ausblenden" nicht mehr als belegt
+        bool $considerEventsForOccupancy = true
     ): SupportCollection {
         $overlap = static function ($q, string $startCol, string $endCol) use ($startDate, $endDate): void {
             // Overlap: start <= endDate AND end >= startDate (SQL-Server indexfreundlich)
@@ -325,10 +328,13 @@ readonly class CalendarDataService
                 function ($query) use (
                     $eventOccupancySubquery,
                     $shiftOccupancySubquery,
-                    $considerShiftsForOccupancy
+                    $considerShiftsForOccupancy,
+                    $considerEventsForOccupancy
                 ): void {
                     if (!$considerShiftsForOccupancy) {
                         $query->whereExists($eventOccupancySubquery);
+                    } elseif (!$considerEventsForOccupancy) {
+                        $query->whereExists($shiftOccupancySubquery);
                     } else {
                         $query->where(function ($q) use ($eventOccupancySubquery, $shiftOccupancySubquery): void {
                             $q->whereExists($eventOccupancySubquery)

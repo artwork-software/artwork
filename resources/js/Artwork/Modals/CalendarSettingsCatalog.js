@@ -151,6 +151,17 @@ export const SETTINGS = [
 
     // ----------------------------------------------------------- Sichtbarkeit & Filter
     {
+        // Termin-Kacheln (inkl. Projektgruppen-Balken) im Raster der Wochenansicht; aus = nur Schichten.
+        // Backend lädt dann keine Termine mehr und zählt bei „Räume ohne Belegung ausblenden" nur Schichten.
+        key: 'show_events',
+        section: 'visibility',
+        views: [VIEW.SHIFT_WEEK],
+        label: 'Show events',
+        description: 'Shows the events of the period as cards in the room grid. Switch off to see only the shifts.',
+        default: (ctx) => ctx.settings?.show_events ?? true,
+        indicator: false,
+    },
+    {
         key: 'hide_unoccupied_rooms',
         section: 'visibility',
         views: [...CALENDAR_VIEWS, ...SHIFT_PLAN_VIEWS],

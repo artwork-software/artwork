@@ -8025,6 +8025,7 @@
     "Delete saved filter": "Gespeicherten Filter löschen",
     "Show staffing per craft": "Besetzung je Gewerk anzeigen",
     "Shows staffed and required shift slots per day and calendar week as a traffic light in the craft row of the person area.": "Zeigt in der Gewerkszeile des Personenbereichs pro Tag und Kalenderwoche besetzte und benötigte Schichtplätze als Ampel.",
+    "Shows the events of the period as cards in the room grid. Switch off to see only the shifts.": "Zeigt die Termine des Zeitraums als Kacheln im Raumraster. Ausschalten, um nur die Schichten zu sehen.",
     "Sage invoice overview": "Sage-Rechnungsübersicht",
     "Creditor / name": "Kreditor/Name",
     "Account": "Konto",

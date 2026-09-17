@@ -1843,6 +1843,8 @@ class UserController extends Controller
             'user_overview_light_mode',
             // Besetzungs-Pille je Gewerk (Wochenansicht, Spalte nur auf user_shift_plan_settings)
             'show_craft_staffing',
+            // Termin-Kacheln in der Wochenansicht (Spalte nur auf user_shift_plan_settings)
+            'show_events',
         ]);
 
         if ($request->boolean('is_shift_plan')) {

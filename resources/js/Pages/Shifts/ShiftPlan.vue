@@ -346,8 +346,9 @@
                                     :class="expandDays ? 'min-h-12 h-full overflow-visible' : 'h-full overflow-y-auto'"
                                     :data-sp-row="rowIndex"
                                 >
-                                    <!-- Events einmal pro Zelle auflösen statt mehrfach je Render -->
-                                    <template v-for="dayEvents in [getRoomDayEvents(room, day.fullDay)]" :key="`cell-events-${day.fullDay}`">
+                                    <!-- Events einmal pro Zelle auflösen statt mehrfach je Render;
+                                         Anzeigeeinstellung „Termine anzeigen" (show_events) blendet den ganzen Block aus -->
+                                    <template v-for="dayEvents in [showEvents ? getRoomDayEvents(room, day.fullDay) : []]" :key="`cell-events-${day.fullDay}`">
                                         <!-- Project Groups in Events -->
                                         <template v-if="displayProjectGroups && dayEvents.length">
                                             <template
@@ -1652,6 +1653,9 @@ const showUserOverview = ref(calendarSettings.value?.show_user_overview ?? true)
 // Anzeigeeinstellung „Besetzung je Gewerk anzeigen" (Wochenansicht, Default an) — blendet die
 // Besetzungs-Pille in Tages- UND KW-Zelle der Gewerkszeile aus; Filter bleibt im Popup erreichbar
 const showCraftStaffing = computed(() => usePage().props.shift_plan_settings?.show_craft_staffing ?? true)
+// Anzeigeeinstellung „Termine anzeigen" (Wochenansicht, Default an): aus = nur Schichten im Raster.
+// Das Backend liefert dann keine Termine; der Frontend-Guard fängt zusätzlich Websocket-Nachschübe ab.
+const showEvents = computed(() => usePage().props.shift_plan_settings?.show_events ?? true)
 // Hell/Dunkel des Personenbereichs: immer aus shift_plan_settings (Wochenansicht), nie aus den Daily-Settings
 const userOverviewLightMode = ref<boolean>(!!usePage().props.shift_plan_settings?.user_overview_light_mode)
 const expandDays = computed(() => calendarSettings.value?.expand_days)
@@ -2176,7 +2180,7 @@ function summarizeCell(room: any, dayKey: string): CellSummary {
     const cached = cellSummaryCache.get(cacheKey)
     if (cached) return cached
 
-    const events = getRoomDayEvents(room, dayKey)
+    const events = showEvents.value ? getRoomDayEvents(room, dayKey) : []
     const shifts = getRoomDayShifts(room, dayKey)
     const showProjectGroups = displayProjectGroups.value
     const expanded = expandDays.value

@@ -1,0 +1,107 @@
+{
+    "eventTypes": {
+        "[]": {
+            "abbreviation": ".",
+            "hex_code": ".",
+            "id": ".",
+            "individual_name": ".",
+            "name": ".",
+            "project_mandatory": ".",
+            "relevant_for_inventory": ".",
+            "relevant_for_project_period": ".",
+            "relevant_for_shift": ".",
+            "resource": ".",
+            "specific_verifier_id": ".",
+            "users": {
+                "[]": {
+                    "email": ".",
+                    "first_name": ".",
+                    "full_name": ".",
+                    "id": ".",
+                    "last_name": ".",
+                    "name": ".",
+                    "profile_photo_url": "."
+                }
+            },
+            "verification_mode": "."
+        }
+    },
+    "projects": {
+        "[]": {
+            "categories": "[]",
+            "cost_center": ".",
+            "description": ".",
+            "genres": "[]",
+            "group": {
+                "[]": {
+                    "artists": ".",
+                    "budget_deadline": ".",
+                    "color": ".",
+                    "cost_center_description": ".",
+                    "cost_center_id": ".",
+                    "created_at": ".",
+                    "deleted_at": ".",
+                    "gema": ".",
+                    "icon": ".",
+                    "id": ".",
+                    "is_group": ".",
+                    "key_visual_path": ".",
+                    "marked_as_done": ".",
+                    "name": ".",
+                    "number_of_participants": ".",
+                    "pinned_by_users": ".",
+                    "pivot": {
+                        "group_id": ".",
+                        "project_id": "."
+                    },
+                    "shift_description": ".",
+                    "state": ".",
+                    "updated_at": ".",
+                    "user_id": ".",
+                    "users": "[]"
+                }
+            },
+            "id": ".",
+            "is_group": ".",
+            "key_visual_path": ".",
+            "name": ".",
+            "number_of_participants": ".",
+            "sectors": "[]",
+            "shiftDescription": "."
+        }
+    },
+    "rooms": {
+        "[]": {
+            "admins": {
+                "[]": {
+                    "first_name": ".",
+                    "id": ".",
+                    "last_name": ".",
+                    "profile_photo_url": "."
+                }
+            },
+            "created_at": ".",
+            "created_by": {
+                "first_name": ".",
+                "id": ".",
+                "last_name": ".",
+                "profile_photo_url": "."
+            },
+            "description": ".",
+            "end_date": ".",
+            "id": ".",
+            "name": ".",
+            "resource": ".",
+            "room_admins": {
+                "[]": {
+                    "first_name": ".",
+                    "id": ".",
+                    "last_name": ".",
+                    "profile_photo_url": "."
+                }
+            },
+            "start_date": ".",
+            "temporary": "."
+        }
+    }
+}

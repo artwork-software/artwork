@@ -321,19 +321,23 @@ class WorkTimeCalculationService
     {
         $shiftMinutesPerDay = [];
         $rangeStartTimestamp = strtotime($start->toDateString() . ' 00:00:00');
-        // Tagesgrenze exklusiv um 24:00, sonst fehlt bei Über-Mitternacht-Schichten die Minute 23:59
-        $rangeEndTimestamp = strtotime($end->toDateString() . ' 00:00:00') + 86400;
+        // Tagesgrenze exklusiv um 24:00, sonst fehlt bei Über-Mitternacht-Schichten die Minute 23:59.
+        // Kalendertage über strtotime('+1 day') statt +86400: am Tag der Zeitumstellung hat der Tag
+        // 23 bzw. 25 Stunden — mit festen 86400 s verschob sich das Tagesfenster und die Schicht
+        // am Umstellungstag fiel aus der Zählung (Regelverstoß blieb unentdeckt).
+        $rangeEndTimestamp = self::nextCalendarDay(strtotime($end->toDateString() . ' 00:00:00'));
 
         $dayTimestamps = [];
         $ts = $rangeStartTimestamp;
         while ($ts < $rangeEndTimestamp) {
             $dateStr = date('Y-m-d', $ts);
+            $next = self::nextCalendarDay($ts);
             $shiftMinutesPerDay[$dateStr] = 0;
             $dayTimestamps[$dateStr] = [
                 'start' => $ts,
-                'end' => $ts + 86400,
+                'end' => $next,
             ];
-            $ts += 86400;
+            $ts = $next;
         }
 
         foreach ($this->shiftsFor($entity, $start, $end) as $shift) {
@@ -374,7 +378,7 @@ class WorkTimeCalculationService
             while ($dayTs <= $lastDayTs) {
                 $dateStr = date('Y-m-d', $dayTs);
                 $dayStartTimestamp = $dayTimestamps[$dateStr]['start'] ?? $dayTs;
-                $dayEndTimestamp = $dayTimestamps[$dateStr]['end'] ?? ($dayTs + 86400);
+                $dayEndTimestamp = $dayTimestamps[$dateStr]['end'] ?? self::nextCalendarDay($dayTs);
 
                 $workStartTimestamp = max($shiftStartTs, $dayStartTimestamp);
                 $workEndTimestamp = min($shiftEndTs, $dayEndTimestamp);
@@ -387,11 +391,17 @@ class WorkTimeCalculationService
                     $shiftMinutesPerDay[$dateStr] = ($shiftMinutesPerDay[$dateStr] ?? 0) + max(0, $duration);
                 }
 
-                $dayTs += 86400;
+                $dayTs = self::nextCalendarDay($dayTs);
             }
         }
 
         return $shiftMinutesPerDay;
+    }
+
+    /** 00:00 des folgenden Kalendertags (DST-sicher, statt Timestamp + 86400). */
+    private static function nextCalendarDay(int $dayStartTimestamp): int
+    {
+        return (int) strtotime('+1 day', $dayStartTimestamp);
     }
 
     /**
@@ -619,7 +629,7 @@ class WorkTimeCalculationService
         $endKey = $end->toDateString();
         $rangeStartTimestamp = strtotime($startKey . ' 00:00:00');
         // Tagesgrenze exklusiv um 24:00 (wie shiftMinutesPerDay)
-        $rangeEndTimestamp = strtotime($endKey . ' 00:00:00') + 86400;
+        $rangeEndTimestamp = self::nextCalendarDay(strtotime($endKey . ' 00:00:00'));
         $result = [];
 
         foreach ($individualTimes as $individualTime) {
@@ -661,7 +671,7 @@ class WorkTimeCalculationService
                     while ($dayTs <= $lastDayTs) {
                         $dateStr = date('Y-m-d', $dayTs);
                         $workStart = max($timeStartTs, $dayTs);
-                        $workEnd = min($timeEndTs, $dayTs + 86400);
+                        $workEnd = min($timeEndTs, self::nextCalendarDay($dayTs));
                         if ($workStart < $workEnd) {
                             $duration = intdiv($workEnd - $workStart, 60);
                             if ($dateStr === $entryFirstDay) {
@@ -669,7 +679,7 @@ class WorkTimeCalculationService
                             }
                             $result[$dateStr] = ($result[$dateStr] ?? 0) + max(0, $duration);
                         }
-                        $dayTs += 86400;
+                        $dayTs = self::nextCalendarDay($dayTs);
                     }
 
                     continue;

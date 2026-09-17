@@ -33,7 +33,6 @@ class AutoStartWorkflowListener implements ShouldQueue
                 'trigger_type' => $event->triggerType,
                 'context' => $event->context
             ]);
-
         } catch (\Exception $e) {
             logger()->error('Workflow trigger processing failed', [
                 'subject_type' => get_class($event->subject),

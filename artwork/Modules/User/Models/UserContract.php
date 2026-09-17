@@ -81,19 +81,6 @@ class UserContract extends Model
         'annual_vacation_days' => 'integer',
     ];
 
-    /**
-     * @deprecated Use shiftRules() instead
-     */
-    public function workflowRules(): BelongsToMany
-    {
-        return $this->belongsToMany(
-            \Artwork\Modules\Workflow\Models\WorkflowRule::class,
-            'workflow_rule_contract_assignments',
-            'contract_id',
-            'workflow_rule_id'
-        )->withTimestamps();
-    }
-
     public function userContractAssigns(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
         return $this->hasMany(UserContractAssign::class, 'user_contract_id');

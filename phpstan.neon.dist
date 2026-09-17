@@ -2,6 +2,13 @@ includes:
     - vendor/larastan/larastan/extension.neon
 parameters:
 	level: 0
+	# larastans "could have been retrieved as a query" ist ein Performance-Hinweis, kein Fehler — und
+	# z.B. skip() auf der Query erzeugt OFFSET ohne LIMIT (MariaDB-Syntaxfehler)
+	noUnnecessaryCollectionCall: false
 	paths:
 	    - app
 	    - artwork
+	ignoreErrors:
+		# larastan erkennt $appends nicht, wenn neben getXAttribute() eine gleichnamige Relation x() existiert
+		- '#^Property ''last_message'' does not exist in model\.$#'
+		- '#^Property ''(category|subCategory)'' does not exist in model\.$#'

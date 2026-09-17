@@ -47,6 +47,4 @@ class InventorySubCategory extends Model
     {
         return $this->hasMany(InventoryArticle::class, 'inventory_sub_category_id', 'id');
     }
-
-
 }

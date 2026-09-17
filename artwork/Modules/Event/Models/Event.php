@@ -47,6 +47,7 @@ use Spatie\Activitylog\Traits\LogsActivity;
  * @property int $user_id
  * @property int $project_id
  * @property bool $is_series
+ * @property bool $is_series_exception
  * @property int $series_id
  * @property Carbon $earliest_start_datetime
  * @property Carbon $latest_end_datetime
@@ -110,6 +111,7 @@ class Event extends Model
         'project_id',
         'series_id',
         'is_series',
+        'is_series_exception',
         'accepted',
         'option_string',
         'declined_room_id',
@@ -131,6 +133,7 @@ class Event extends Model
         'start_time' => 'datetime:d. M Y H:i',
         'end_time' => 'datetime:d. M Y H:i',
         'is_series' => 'boolean',
+        'is_series_exception' => 'boolean',
         'accepted' => 'boolean',
         'allDay' => 'boolean',
         'earliest_start_datetime' => 'datetime',
@@ -312,7 +315,10 @@ class Event extends Model
      */
     public function getDaysOfEventAttribute(): array
     {
-        $days_period = CarbonPeriod::create($this->start_time->copy()->startOfDay(), $this->end_time->copy()->startOfDay());
+        $days_period = CarbonPeriod::create(
+            $this->start_time->copy()->startOfDay(),
+            $this->end_time->copy()->startOfDay()
+        );
         $days = [];
 
         foreach ($days_period as $day) {
@@ -447,14 +453,16 @@ class Event extends Model
             }
         )->orWhere(
             function (Builder $query) use ($start, $end): void {
-                // Events, die vor dem gegebenen Startdatum beginnen und innerhalb des gegebenen Zeitraums enden (überlappend)
+                // Events, die vor dem gegebenen Startdatum beginnen und innerhalb des gegebenen Zeitraums enden
+                // (überlappend)
                 $query->where('start_time', '<', $start)
                     ->where('end_time', '>', $start)
                     ->where('end_time', '<=', $end);
             }
         )->orWhere(
             function (Builder $query) use ($start, $end): void {
-                // Events, die innerhalb des gegebenen Zeitraums starten und nach dem gegebenen Enddatum enden (überlappend)
+                // Events, die innerhalb des gegebenen Zeitraums starten und nach dem gegebenen Enddatum enden
+                // (überlappend)
                 $query->where('start_time', '>=', $start)
                     ->where('start_time', '<', $end)
                     ->where('end_time', '>', $end);
@@ -488,11 +496,14 @@ class Event extends Model
             return [];
         }
 
+        // end_date kann null sein („endet nach N Terminen"); dann gibt es kein festes Serienende
+        $seriesEnd = $this->series->end_date;
+
         return [
             'start' => Carbon::parse($this->start_time)->format('Y-m-d'),
-            'end' => Carbon::parse($this->series->end_date)->format('Y-m-d'),
+            'end' => $seriesEnd?->format('Y-m-d'),
             'formatted_start' => Carbon::parse($this->start_time)->translatedFormat('d. M Y'),
-            'formatted_end' => Carbon::parse($this->series->end_date)->translatedFormat('d. M Y')
+            'formatted_end' => $seriesEnd?->translatedFormat('d. M Y'),
         ];
     }
 
@@ -540,7 +551,9 @@ class Event extends Model
 
     public function getMinutesFormStartHourToStartAttribute(): int
     {
-        return abs(Carbon::parse($this->start_time)->diffInMinutes(Carbon::parse($this->start_time)->copy()->startOfHour()));
+        $start = Carbon::parse($this->start_time);
+
+        return abs($start->diffInMinutes($start->copy()->startOfHour()));
     }
 
     public function scopeIsPlanning(Builder $builder): Builder

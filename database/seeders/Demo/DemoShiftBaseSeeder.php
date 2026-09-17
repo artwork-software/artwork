@@ -37,7 +37,9 @@ class DemoShiftBaseSeeder extends Seeder
                 $created++;
             }
         }
-        $this->command?->info(sprintf('Funktionen: %d neu, %d vorhanden.', $created, count(DemoDataPools::QUALIFICATIONS) - $created));
+        $this->command?->info(
+            sprintf('Funktionen: %d neu, %d vorhanden.', $created, count(DemoDataPools::QUALIFICATIONS) - $created)
+        );
     }
 
     private function seedCrafts(): void

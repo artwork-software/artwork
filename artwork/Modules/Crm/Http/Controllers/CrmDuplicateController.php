@@ -21,7 +21,8 @@ class CrmDuplicateController extends Controller
 
     public function __construct(
         private readonly CrmDuplicateService $duplicateService,
-    ) {}
+    ) {
+    }
 
     public function index(): Response
     {

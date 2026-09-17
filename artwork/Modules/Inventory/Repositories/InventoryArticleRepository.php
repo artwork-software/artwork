@@ -36,7 +36,7 @@ class InventoryArticleRepository
      *
      * @return \Illuminate\Database\Eloquent\Collection<int, InventoryArticle>
      */
-    public function searchAdvanced(string $term, ?int $propertyId = null)
+    public function searchAdvanced(string $term, ?int $propertyId = null): \Illuminate\Database\Eloquent\Collection
     {
         // Translate wildcard `*` to SQL `%`; a plain term matches as substring.
         $pattern = str_contains($term, '*')
@@ -55,12 +55,16 @@ class InventoryArticleRepository
                 });
 
                 // Detailed article (single inventory) property values
-                $q->orWhereHas('detailedArticleQuantities.properties', function ($pq) use ($pattern, $propertyId): void {
-                    $pq->where('inventory_property_values.value', 'like', $pattern);
-                    if ($propertyId) {
-                        $pq->where('inventory_article_properties.id', $propertyId);
+                $q->orWhereHas(
+                    'detailedArticleQuantities.properties',
+                    function ($pq) use ($pattern, $propertyId): void {
+
+                        $pq->where('inventory_property_values.value', 'like', $pattern);
+                        if ($propertyId) {
+                            $pq->where('inventory_article_properties.id', $propertyId);
+                        }
                     }
-                });
+                );
 
                 // When not scoped to a single property, also match the basics.
                 if (!$propertyId) {
@@ -80,7 +84,14 @@ class InventoryArticleRepository
 
     public function withRelations($query, int $perPage = 50)
     {
-        return $query->with(['properties', 'category', 'subCategory', 'images', 'detailedArticleQuantities.status', 'statusValues'])->paginate($perPage);
+        return $query->with([
+            'properties',
+            'category',
+            'subCategory',
+            'images',
+            'detailedArticleQuantities.status',
+            'statusValues',
+        ])->paginate($perPage);
     }
 
     public function applyFilters($query, array $filters)
@@ -89,9 +100,9 @@ class InventoryArticleRepository
             $property = InventoryArticleProperties::find($filter['property_id']);
 
             // Apply filter using OR logic: match either main article properties OR detailed quantities properties
-            $query->where(function ($orQuery) use ($filter, $property) {
+            $query->where(function ($orQuery) use ($filter, $property): void {
                 // Check main article properties
-                $orQuery->whereHas('properties', function ($q) use ($filter, $property) {
+                $orQuery->whereHas('properties', function ($q) use ($filter, $property): void {
                     $q->where('inventory_article_properties.id', $filter['property_id']);
 
                     if ($property && $property->type === 'room') {
@@ -124,7 +135,7 @@ class InventoryArticleRepository
                         return;
                     }
 
-                    $q->where(function ($subQuery) use ($filter) {
+                    $q->where(function ($subQuery) use ($filter): void {
                         $column = 'inventory_property_values.value';
 
                         match ($filter['operator']) {
@@ -147,62 +158,86 @@ class InventoryArticleRepository
                 });
 
                 // Also check detailed article quantities properties for articles with is_detailed_quantity = true
-                $orQuery->orWhere(function ($detailedQuery) use ($filter, $property) {
+                $orQuery->orWhere(function ($detailedQuery) use ($filter, $property): void {
                     $detailedQuery->where('is_detailed_quantity', true)
-                        ->whereHas('detailedArticleQuantities.properties', function ($q) use ($filter, $property) {
-                            $q->where('inventory_article_properties.id', $filter['property_id']);
+                        ->whereHas(
+                            'detailedArticleQuantities.properties',
+                            function ($q) use ($filter, $property): void {
 
-                            if ($property && $property->type === 'room') {
-                                $q->join('rooms', 'inventory_property_values.value', '=', 'rooms.id');
+                                $q->where('inventory_article_properties.id', $filter['property_id']);
 
-                                match ($filter['operator']) {
-                                    'like' => $q->where('rooms.name', 'like', '%' . $filter['value'] . '%'),
-                                    'starts_with' => $q->where('rooms.name', 'like', $filter['value'] . '%'),
-                                    'ends_with' => $q->where('rooms.name', 'like', '%' . $filter['value']),
-                                    'exact', 'equals' => $q->where('rooms.name', '=', $filter['value']),
-                                    'not_equals' => $q->where('rooms.name', '!=', $filter['value']),
-                                    default => null,
-                                };
+                                if ($property && $property->type === 'room') {
+                                    $q->join('rooms', 'inventory_property_values.value', '=', 'rooms.id');
 
-                                return;
+                                    match ($filter['operator']) {
+                                        'like' => $q->where('rooms.name', 'like', '%' . $filter['value'] . '%'),
+                                        'starts_with' => $q->where('rooms.name', 'like', $filter['value'] . '%'),
+                                        'ends_with' => $q->where('rooms.name', 'like', '%' . $filter['value']),
+                                        'exact', 'equals' => $q->where('rooms.name', '=', $filter['value']),
+                                        'not_equals' => $q->where('rooms.name', '!=', $filter['value']),
+                                        default => null,
+                                    };
+
+                                    return;
+                                }
+
+                                if ($property && $property->type === 'manufacturer') {
+                                    $q->join('crm_contacts', 'inventory_property_values.value', '=', 'crm_contacts.id');
+
+                                    match ($filter['operator']) {
+                                        'like' => $q->where(
+                                            'crm_contacts.display_name',
+                                            'like',
+                                            '%' . $filter['value'] . '%'
+                                        ),
+                                        'starts_with' => $q->where(
+                                            'crm_contacts.display_name',
+                                            'like',
+                                            $filter['value'] . '%'
+                                        ),
+                                        'ends_with' => $q->where(
+                                            'crm_contacts.display_name',
+                                            'like',
+                                            '%' . $filter['value']
+                                        ),
+                                        'exact', 'equals' => $q->where(
+                                            'crm_contacts.display_name',
+                                            '=',
+                                            $filter['value']
+                                        ),
+                                        'not_equals' => $q->where('crm_contacts.display_name', '!=', $filter['value']),
+                                        default => null,
+                                    };
+
+                                    return;
+                                }
+
+                                $q->where(function ($subQuery) use ($filter): void {
+                                    $column = 'inventory_property_values.value';
+
+                                    match ($filter['operator']) {
+                                        'like' => $subQuery->where($column, 'like', '%' . $filter['value'] . '%'),
+                                        'starts_with' => $subQuery->where($column, 'like', $filter['value'] . '%'),
+                                        'ends_with' => $subQuery->where($column, 'like', '%' . $filter['value']),
+                                        'exact', 'equals' => $subQuery->where($column, '=', $filter['value']),
+                                        'not_equals' => $subQuery->where($column, '!=', $filter['value']),
+                                        'less_than' => $subQuery->where($column, '<', $filter['value']),
+                                        'greater_than' => $subQuery->where($column, '>', $filter['value']),
+                                        'is_null' => $subQuery->whereNull($column),
+                                        'not_like' => $subQuery->where(
+                                            $column,
+                                            'not like',
+                                            '%' . $filter['value'] . '%'
+                                        ),
+                                        'date_before' => $subQuery->whereDate($column, '<', $filter['value']),
+                                        'date_after' => $subQuery->whereDate($column, '>', $filter['value']),
+                                        'from' => $subQuery->where($column, '>=', $filter['value']),
+                                        'until' => $subQuery->where($column, '<=', $filter['value']),
+                                        default => null,
+                                    };
+                                });
                             }
-
-                            if ($property && $property->type === 'manufacturer') {
-                                $q->join('crm_contacts', 'inventory_property_values.value', '=', 'crm_contacts.id');
-
-                                match ($filter['operator']) {
-                                    'like' => $q->where('crm_contacts.display_name', 'like', '%' . $filter['value'] . '%'),
-                                    'starts_with' => $q->where('crm_contacts.display_name', 'like', $filter['value'] . '%'),
-                                    'ends_with' => $q->where('crm_contacts.display_name', 'like', '%' . $filter['value']),
-                                    'exact', 'equals' => $q->where('crm_contacts.display_name', '=', $filter['value']),
-                                    'not_equals' => $q->where('crm_contacts.display_name', '!=', $filter['value']),
-                                    default => null,
-                                };
-
-                                return;
-                            }
-
-                            $q->where(function ($subQuery) use ($filter) {
-                                $column = 'inventory_property_values.value';
-
-                                match ($filter['operator']) {
-                                    'like' => $subQuery->where($column, 'like', '%' . $filter['value'] . '%'),
-                                    'starts_with' => $subQuery->where($column, 'like', $filter['value'] . '%'),
-                                    'ends_with' => $subQuery->where($column, 'like', '%' . $filter['value']),
-                                    'exact', 'equals' => $subQuery->where($column, '=', $filter['value']),
-                                    'not_equals' => $subQuery->where($column, '!=', $filter['value']),
-                                    'less_than' => $subQuery->where($column, '<', $filter['value']),
-                                    'greater_than' => $subQuery->where($column, '>', $filter['value']),
-                                    'is_null' => $subQuery->whereNull($column),
-                                    'not_like' => $subQuery->where($column, 'not like', '%' . $filter['value'] . '%'),
-                                    'date_before' => $subQuery->whereDate($column, '<', $filter['value']),
-                                    'date_after' => $subQuery->whereDate($column, '>', $filter['value']),
-                                    'from' => $subQuery->where($column, '>=', $filter['value']),
-                                    'until' => $subQuery->where($column, '<=', $filter['value']),
-                                    default => null,
-                                };
-                            });
-                        });
+                        );
                 });
             });
         }
@@ -289,10 +324,10 @@ class InventoryArticleRepository
                 'properties',
                 'category',
                 'subCategory',
-                'images' => function ($query) {
+                'images' => function ($query): void {
                     $query->withTrashed();
                 },
-                'detailedArticleQuantities' => function ($query) {
+                'detailedArticleQuantities' => function ($query): void {
                     $query->withTrashed();
                 },
             ])
@@ -343,14 +378,14 @@ class InventoryArticleRepository
     {
         $values = InventoryPropertyValue::query()
             ->whereHas('property', fn ($query) => $query->where('type', 'file'))
-            ->where(function ($query) use ($article, $detailedArticles) {
-                $query->where(function ($q) use ($article) {
+            ->where(function ($query) use ($article, $detailedArticles): void {
+                $query->where(function ($q) use ($article): void {
                     $q->where('inventory_propertyable_type', InventoryArticle::class)
                         ->where('inventory_propertyable_id', $article->id);
                 });
 
                 if ($detailedArticles->isNotEmpty()) {
-                    $query->orWhere(function ($q) use ($detailedArticles) {
+                    $query->orWhere(function ($q) use ($detailedArticles): void {
                         $q->where('inventory_propertyable_type', InventoryDetailedQuantityArticle::class)
                             ->whereIn('inventory_propertyable_id', $detailedArticles->pluck('id')->all());
                     });
@@ -404,7 +439,6 @@ class InventoryArticleRepository
         // Get all available stock for the given article
         // get article stock for the given date range in all issues and returns the available stock of the article
         return $article->getAvailableStock($startDate, $endDate);
-
     }
 
     public function getAllWithCategories(): \Illuminate\Support\Collection

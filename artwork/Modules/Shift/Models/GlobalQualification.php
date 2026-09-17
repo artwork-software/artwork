@@ -70,5 +70,4 @@ class GlobalQualification extends Model
     {
         return new ShiftsQualificationsBuilder($query);
     }
-
 }

@@ -85,13 +85,19 @@ final class RevalidateShiftRulesJobTest extends TestCase
         $rule = $this->ruleForContract($contract, 'maxWorkingHoursOnDay', 8.0);
         Bus::fake();
         $automatic = ShiftRuleViolation::factory()->create([
-            'shift_rule_id' => $rule->id, 'shift_id' => null, 'user_id' => $user->id, 'status' => 'active', 'is_manual' => false,
+            'shift_rule_id' => $rule
+                ->id, 'shift_id' => null, 'user_id' => $user
+                ->id, 'status' => 'active', 'is_manual' => false,
         ]);
         $manual = ShiftRuleViolation::factory()->create([
-            'shift_rule_id' => $rule->id, 'shift_id' => null, 'user_id' => $user->id, 'status' => 'active', 'is_manual' => true,
+            'shift_rule_id' => $rule
+                ->id, 'shift_id' => null, 'user_id' => $user
+                ->id, 'status' => 'active', 'is_manual' => true,
         ]);
         $resolved = ShiftRuleViolation::factory()->create([
-            'shift_rule_id' => $rule->id, 'shift_id' => null, 'user_id' => $user->id, 'status' => 'resolved', 'is_manual' => false,
+            'shift_rule_id' => $rule
+                ->id, 'shift_id' => null, 'user_id' => $user
+                ->id, 'status' => 'resolved', 'is_manual' => false,
         ]);
 
         app(ShiftRuleService::class)->deleteRule($rule);
@@ -140,7 +146,10 @@ final class RevalidateShiftRulesJobTest extends TestCase
 
         [$from, $to] = $service->rangeForUsers([$user->id]);
         $this->assertSame(Carbon::today()->toDateString(), $from->toDateString());
-        $this->assertSame(Carbon::today()->addDays(ShiftRuleRevalidationService::MIN_DAYS_AHEAD)->toDateString(), $to->toDateString());
+        $this->assertSame(
+            Carbon::today()->addDays(ShiftRuleRevalidationService::MIN_DAYS_AHEAD)->toDateString(),
+            $to->toDateString()
+        );
 
         $farShiftDate = Carbon::today()->addDays(100);
         $this->shiftFor($user, $farShiftDate);
@@ -149,6 +158,9 @@ final class RevalidateShiftRulesJobTest extends TestCase
 
         $this->shiftFor($user, Carbon::today()->addMonths(20));
         [, $to] = $service->rangeForUsers([$user->id]);
-        $this->assertSame(Carbon::today()->addMonths(ShiftRuleRevalidationService::MAX_MONTHS_AHEAD)->toDateString(), $to->toDateString());
+        $this->assertSame(
+            Carbon::today()->addMonths(ShiftRuleRevalidationService::MAX_MONTHS_AHEAD)->toDateString(),
+            $to->toDateString()
+        );
     }
 }

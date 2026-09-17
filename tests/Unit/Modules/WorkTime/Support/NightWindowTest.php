@@ -70,7 +70,10 @@ final class NightWindowTest extends TestCase
 
         $this->assertSame(0, $window->minutesWithin($this->at('2026-09-10 23:00'), $this->at('2026-09-10 23:00')));
         $this->assertSame(0, $window->minutesWithin($this->at('2026-09-11 03:00'), $this->at('2026-09-10 23:00')));
-        $this->assertSame(59, $window->minutesWithin($this->at('2026-09-10 23:00:00'), $this->at('2026-09-10 23:59:59')));
+        $this->assertSame(
+            59,
+            $window->minutesWithin($this->at('2026-09-10 23:00:00'), $this->at('2026-09-10 23:59:59'))
+        );
     }
 
     #[Test]

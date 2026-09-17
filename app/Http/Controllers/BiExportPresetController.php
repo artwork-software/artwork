@@ -57,7 +57,13 @@ class BiExportPresetController extends Controller
         $this->authorizeManage($request, $biExportPreset);
 
         $validated = $request->validate([
-            'name' => ['sometimes', 'required', 'string', 'max:255', Rule::unique('bi_export_presets', 'name')->ignore($biExportPreset->id)],
+            'name' => [
+                'sometimes',
+                'required',
+                'string',
+                'max:255',
+                Rule::unique('bi_export_presets', 'name')->ignore($biExportPreset->id),
+            ],
             'columns' => ['sometimes', 'required', 'array', 'min:1'],
             'columns.*' => ['string', Rule::in(BiExportService::allowedColumnKeys())],
         ], [
@@ -107,7 +113,11 @@ class BiExportPresetController extends Controller
 
     private function authorizeManage(Request $request, BiExportPreset $preset): void
     {
-        abort_unless($this->canManage($request, $preset), 403, __('Only the creator or an admin can change this preset.'));
+        abort_unless(
+            $this->canManage($request, $preset),
+            403,
+            __('Only the creator or an admin can change this preset.')
+        );
     }
 
     private function authorizeBiExport(Request $request): void

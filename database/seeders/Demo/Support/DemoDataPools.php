@@ -225,7 +225,13 @@ final class DemoDataPools
     ];
 
     public const ROOM_CATEGORIES = ['Spielstätte', 'Probenraum', 'Werkstatt', 'Außenfläche'];
-    public const ROOM_ATTRIBUTES = ['Bestuhlung variabel', 'Tageslicht', 'Feste Tonregie', 'Schwingboden', 'Verdunkelbar'];
+    public const ROOM_ATTRIBUTES = [
+        'Bestuhlung variabel',
+        'Tageslicht',
+        'Feste Tonregie',
+        'Schwingboden',
+        'Verdunkelbar',
+    ];
 
     /** key => Daten; Flags steuern Schicht-/Inventarrelevanz in den Templates. */
     public const EVENT_TYPES = [
@@ -330,11 +336,13 @@ final class DemoDataPools
         ['first' => 'Tarik', 'last' => 'Yılmaz', 'pronouns' => 'er/ihm', 'position' => 'Bühnentechniker',
             'craft' => 'buehne', 'contract' => 'haustarif', 'pattern' => 'theaterbetrieb'],
         ['first' => 'Jens', 'last' => 'Peters', 'pronouns' => 'er/ihm', 'position' => 'Seitenmeister',
-            'craft' => 'buehne', 'qualification' => 'vorarbeiter', 'contract' => 'nv_buehne', 'pattern' => 'theaterbetrieb'],
+            'craft' => 'buehne', 'qualification' => 'vorarbeiter',
+            'contract' => 'nv_buehne', 'pattern' => 'theaterbetrieb'],
 
         // Licht
         ['first' => 'Lea', 'last' => 'Winkler', 'pronouns' => 'sie/ihr', 'position' => 'Lichttechnikerin / Operatorin',
-            'craft' => 'licht', 'qualification' => 'operator', 'contract' => 'nv_buehne', 'pattern' => 'theaterbetrieb'],
+            'craft' => 'licht', 'qualification' => 'operator',
+            'contract' => 'nv_buehne', 'pattern' => 'theaterbetrieb'],
         ['first' => 'Samuel', 'last' => 'Osei', 'pronouns' => 'er/ihm', 'position' => 'Lichttechniker',
             'craft' => 'licht', 'contract' => 'haustarif', 'pattern' => 'theaterbetrieb'],
         ['first' => 'Nina', 'last' => 'Hartwig', 'pronouns' => 'sie/ihr', 'position' => 'Lichttechnikerin',
@@ -348,13 +356,15 @@ final class DemoDataPools
 
         // Video
         ['first' => 'Greta', 'last' => 'Paulsen', 'pronouns' => 'sie/ihr', 'position' => 'Videotechnikerin',
-            'craft' => 'video', 'qualification' => 'operator', 'contract' => 'haustarif', 'pattern' => 'theaterbetrieb'],
+            'craft' => 'video', 'qualification' => 'operator',
+            'contract' => 'haustarif', 'pattern' => 'theaterbetrieb'],
         ['first' => 'Milan', 'last' => 'Petrović', 'pronouns' => 'er/ihm', 'position' => 'Videotechniker',
             'craft' => 'video', 'contract' => 'teilzeit', 'pattern' => 'teilzeit'],
 
         // Kostüm
         ['first' => 'Ruth', 'last' => 'Blankenburg', 'pronouns' => 'sie/ihr', 'position' => 'Gewandmeisterin',
-            'craft' => 'kostuem', 'qualification' => 'meister', 'contract' => 'nv_buehne', 'pattern' => 'theaterbetrieb'],
+            'craft' => 'kostuem', 'qualification' => 'meister',
+            'contract' => 'nv_buehne', 'pattern' => 'theaterbetrieb'],
         ['first' => 'Hannah', 'last' => 'Vogt', 'pronouns' => 'sie/ihr', 'position' => 'Ankleiderin',
             'craft' => 'kostuem', 'contract' => 'teilzeit', 'pattern' => 'teilzeit'],
 
@@ -366,7 +376,8 @@ final class DemoDataPools
 
         // Requisite
         ['first' => 'Bernd', 'last' => 'Otte', 'pronouns' => 'er/ihm', 'position' => 'Requisiteur',
-            'craft' => 'requisite', 'qualification' => 'vorarbeiter', 'contract' => 'haustarif', 'pattern' => 'theaterbetrieb'],
+            'craft' => 'requisite', 'qualification' => 'vorarbeiter',
+            'contract' => 'haustarif', 'pattern' => 'theaterbetrieb'],
         ['first' => 'Charlotte', 'last' => 'Weiß', 'pronouns' => 'sie/ihr', 'position' => 'Requisiteurin',
             'craft' => 'requisite', 'contract' => 'teilzeit', 'pattern' => 'teilzeit'],
 
@@ -381,19 +392,49 @@ final class DemoDataPools
             'craft' => 'einlass', 'contract' => 'teilzeit', 'pattern' => 'theaterbetrieb'],
 
         // Auszubildende (universelles Gewerk — in allen Gewerken einsetzbar)
-        ['first' => 'Tim', 'last' => 'Bergmann', 'pronouns' => 'er/ihm', 'position' => 'Azubi Veranstaltungstechnik (1. Jahr)',
+        [
+            'first' => 'Tim',
+            'last' => 'Bergmann',
+            'pronouns' => 'er/ihm',
+            'position' => 'Azubi Veranstaltungstechnik (1. Jahr)',
+
             'craft' => 'azubi', 'contract' => 'haustarif', 'pattern' => 'theaterbetrieb'],
-        ['first' => 'Zoe', 'last' => 'Krämer', 'pronouns' => 'sie/ihr', 'position' => 'Azubi Veranstaltungstechnik (2. Jahr)',
+        [
+            'first' => 'Zoe',
+            'last' => 'Krämer',
+            'pronouns' => 'sie/ihr',
+            'position' => 'Azubi Veranstaltungstechnik (2. Jahr)',
+
             'craft' => 'azubi', 'contract' => 'haustarif', 'pattern' => 'theaterbetrieb'],
-        ['first' => 'Luca', 'last' => 'Moretti', 'pronouns' => 'dey/deren', 'position' => 'Azubi Veranstaltungstechnik (3. Jahr)',
+        [
+            'first' => 'Luca',
+            'last' => 'Moretti',
+            'pronouns' => 'dey/deren',
+            'position' => 'Azubi Veranstaltungstechnik (3. Jahr)',
+
             'craft' => 'azubi', 'contract' => 'haustarif', 'pattern' => 'theaterbetrieb'],
-        ['first' => 'Finja', 'last' => 'Dreyer', 'pronouns' => 'sie/ihr', 'position' => 'Azubi Fachkraft Veranstaltungstechnik',
+        [
+            'first' => 'Finja',
+            'last' => 'Dreyer',
+            'pronouns' => 'sie/ihr',
+            'position' => 'Azubi Fachkraft Veranstaltungstechnik',
+
             'craft' => 'azubi', 'contract' => 'haustarif', 'pattern' => 'theaterbetrieb'],
 
         // Allrounder (universelles Gewerk VT)
-        ['first' => 'Viktor', 'last' => 'Hansen', 'pronouns' => 'er/ihm', 'position' => 'Veranstaltungstechniker (Allrounder)',
+        [
+            'first' => 'Viktor',
+            'last' => 'Hansen',
+            'pronouns' => 'er/ihm',
+            'position' => 'Veranstaltungstechniker (Allrounder)',
+
             'craft' => 'vt', 'qualification' => 'meister', 'contract' => 'nv_buehne', 'pattern' => 'theaterbetrieb'],
-        ['first' => 'Maren', 'last' => 'Kolbe', 'pronouns' => 'sie/ihr', 'position' => 'Veranstaltungstechnikerin (Allrounderin)',
+        [
+            'first' => 'Maren',
+            'last' => 'Kolbe',
+            'pronouns' => 'sie/ihr',
+            'position' => 'Veranstaltungstechnikerin (Allrounderin)',
+
             'craft' => 'vt', 'contract' => 'haustarif', 'pattern' => 'theaterbetrieb'],
     ];
 

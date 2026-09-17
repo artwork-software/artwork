@@ -54,7 +54,12 @@ class CompensationDayOffRepository extends BaseRepository
      * Filter des Ersatzfrei-Dashboards: craft_id, user_id, deadline_from, deadline_to (Y-m-d).
      * Der Status (offen/gewährt/überfällig) wird über die jeweilige Listenmethode abgebildet.
      *
-     * @param array{craft_id?: int|null, user_id?: int|null, deadline_from?: string|null, deadline_to?: string|null} $filters
+     * @param array{
+     *     craft_id?: int|null,
+     *     user_id?: int|null,
+     *     deadline_from?: string|null,
+     *     deadline_to?: string|null,
+     * } $filters
      */
     private function applyDashboardFilters(Builder $query, array $filters): Builder
     {
@@ -64,7 +69,10 @@ class CompensationDayOffRepository extends BaseRepository
         $deadlineTo = $filters['deadline_to'] ?? null;
 
         return $query
-            ->when($craftId, fn (Builder $q) => $q->whereHas('user', fn (Builder $u) => $u->whereHas('assignedCrafts', fn (Builder $c) => $c->where('crafts.id', $craftId))))
+            ->when($craftId, fn (Builder $q) => $q->whereHas(
+                'user',
+                fn (Builder $u) => $u->whereHas('assignedCrafts', fn (Builder $c) => $c->where('crafts.id', $craftId))
+            ))
             ->when($userId, fn (Builder $q) => $q->where('user_id', $userId))
             ->when($deadlineFrom, fn (Builder $q) => $q->whereDate('deadline', '>=', $deadlineFrom))
             ->when($deadlineTo, fn (Builder $q) => $q->whereDate('deadline', '<=', $deadlineTo));
@@ -159,7 +167,8 @@ class CompensationDayOffRepository extends BaseRepository
                 . "SUM(CASE WHEN {$t}.granted_at IS NULL AND {$t}.deadline < ? THEN 1 ELSE 0 END) AS overdue_count, "
                 . "SUM(CASE WHEN {$t}.granted_at IS NULL THEN {$t}.value ELSE 0 END) AS open_value, "
                 . "SUM(CASE WHEN {$t}.granted_at IS NOT NULL THEN {$t}.value ELSE 0 END) AS granted_value, "
-                . "SUM(CASE WHEN {$t}.granted_at IS NULL AND {$t}.deadline < ? THEN {$t}.value ELSE 0 END) AS overdue_value",
+                . "SUM(CASE WHEN {$t}.granted_at IS NULL AND {$t}.deadline < ? THEN {$t}.value ELSE 0 END) "
+                . "AS overdue_value",
                 [$now, $now]
             )
             ->toBase()

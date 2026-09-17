@@ -10,7 +10,8 @@ class ShiftObserver
 {
     public function __construct(
         protected ShiftChangeRecorder $recorder
-    ) {}
+    ) {
+    }
 
     public function created(Shift $shift): void
     {

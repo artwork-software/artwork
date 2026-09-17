@@ -14,7 +14,7 @@ class ShiftRuleNotificationAction implements WorkflowAction
     public function execute(WorkflowInstance $workflowInstance, array $parameters = []): void
     {
         $subject = $workflowInstance->subject;
-        
+
         if (!($subject instanceof ShiftRuleViolation)) {
             return;
         }
@@ -45,10 +45,10 @@ class ShiftRuleNotificationAction implements WorkflowAction
     private function getUsersToNotify($rule, array $parameters): \Illuminate\Support\Collection
     {
         $userIds = $parameters['user_ids'] ?? [];
-        
+
         // Hole Benutzer die für die Regel benachrichtigt werden sollen
         $ruleUsers = $rule->usersToNotify ?? collect([]);
-        
+
         // Zusätzliche Benutzer aus Parametern
         if (!empty($userIds)) {
             $additionalUsers = User::whereIn('id', $userIds)->get();
@@ -65,14 +65,14 @@ class ShiftRuleNotificationAction implements WorkflowAction
     private function generateNotificationMessage(ShiftRuleViolation $violation, array $parameters): string
     {
         $customMessage = $parameters['message'] ?? null;
-        
+
         if ($customMessage) {
             return $customMessage;
         }
 
         $rule = $violation->shiftRule;
         $violationData = $violation->violation_data;
-        
+
         return __('Rule violation detected: :rule on :date.', [
                 'rule' => $rule?->name ?? __('Rule violation'),
                 'date' => $violation->violation_date instanceof \DateTimeInterface

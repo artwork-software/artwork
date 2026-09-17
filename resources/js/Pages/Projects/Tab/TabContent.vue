@@ -156,6 +156,7 @@ import ProjectMaterialIssueComponent from "@/Pages/Projects/Components/Issue/Pro
 import LinkListComponent from "@/Pages/Projects/Tab/Components/LinkListComponent.vue";
 import ProjectContractsDocumentsComponent from "@/Pages/Projects/Components/ProjectContractsDocumentsComponent.vue";
 import BusinessIntelligenceComponent from "@/Pages/Projects/Tab/Components/BusinessIntelligenceComponent.vue";
+import SageInvoiceOverviewComponent from "@/Pages/Projects/Components/SageInvoiceOverviewComponent.vue";
 // Externe-Einladen-Feature vorerst ausgeblendet (noch nicht ausgereift)
 // import InviteExternalModal from "@/Pages/CRM/Components/InviteExternalModal.vue";
 import { IconUserPlus } from "@tabler/icons-vue";
@@ -209,6 +210,7 @@ const componentMapping = {
     LinkList: LinkListComponent,
     ProjectContractsDocumentsComponent,
     BusinessIntelligenceComponent,
+    SageInvoiceOverviewComponent,
 };
 
 const props = defineProps({

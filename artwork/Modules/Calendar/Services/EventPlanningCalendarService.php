@@ -18,8 +18,8 @@ class EventPlanningCalendarService
 {
     use MapRoomsToContentForCalendar;
 
-    public function __construct(
-    ) {
+    public function __construct()
+    {
     }
 
     public function filterRoomsEvents(
@@ -101,7 +101,13 @@ class EventPlanningCalendarService
 
         $projects = Project::whereIn('id', $projectIds)
             ->select(['id', 'name', 'state', 'artists', 'is_group', 'color', 'icon'])
-            ->with(['status:id,name,color', 'managerUsers:id,first_name,last_name,position,email,profile_photo_path', 'managerUsers.departments:id', 'groups', 'categories'])
+            ->with([
+                'status:id,name,color',
+                'managerUsers:id,first_name,last_name,position,email,profile_photo_path',
+                'managerUsers.departments:id',
+                'groups',
+                'categories',
+            ])
             ->get()->keyBy('id');
 
         $eventTypes = EventType::whereIn('id', $eventTypeIds)

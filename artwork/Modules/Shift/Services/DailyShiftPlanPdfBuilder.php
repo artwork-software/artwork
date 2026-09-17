@@ -76,10 +76,14 @@ class DailyShiftPlanPdfBuilder
         $acc = function ($rel) use (&$sumByQid): void {
             foreach (($rel ?? []) as $p) {
                 $qid = (int)($p->pivot?->shift_qualification_id ?? 0);
-                if ($qid <= 0) continue;
+                if ($qid <= 0) {
+                    continue;
+                }
 
                 $c = (int)($p->pivot?->shift_count ?? 1);
-                if ($c <= 0) $c = 1;
+                if ($c <= 0) {
+                    $c = 1;
+                }
 
                 $sumByQid[$qid] = ($sumByQid[$qid] ?? 0) + $c;
             }
@@ -101,7 +105,9 @@ class DailyShiftPlanPdfBuilder
         }
 
         foreach ($sumByQid as $qid => $sum) {
-            if (isset($neededByQid[$qid])) continue;
+            if (isset($neededByQid[$qid])) {
+                continue;
+            }
 
             $lines[] = [
                 'qid'    => (int)$qid,
@@ -154,21 +160,31 @@ class DailyShiftPlanPdfBuilder
         foreach ($project->shifts as $s) {
             foreach (($s->shiftsQualifications ?? []) as $sq) {
                 $qid = (int)($sq->shift_qualification_id ?? 0);
-                if ($qid > 0) $ids[] = $qid;
+                if ($qid > 0) {
+                    $ids[] = $qid;
+                }
             }
             foreach (($s->users ?? []) as $u) {
-                if (!empty($u->pivot?->shift_qualification_id)) $ids[] = (int)$u->pivot->shift_qualification_id;
+                if (!empty($u->pivot?->shift_qualification_id)) {
+                    $ids[] = (int)$u->pivot->shift_qualification_id;
+                }
             }
             foreach (($s->freelancer ?? []) as $f) {
-                if (!empty($f->pivot?->shift_qualification_id)) $ids[] = (int)$f->pivot->shift_qualification_id;
+                if (!empty($f->pivot?->shift_qualification_id)) {
+                    $ids[] = (int)$f->pivot->shift_qualification_id;
+                }
             }
             foreach (($s->serviceProvider ?? []) as $sp) {
-                if (!empty($sp->pivot?->shift_qualification_id)) $ids[] = (int)$sp->pivot->shift_qualification_id;
+                if (!empty($sp->pivot?->shift_qualification_id)) {
+                    $ids[] = (int)$sp->pivot->shift_qualification_id;
+                }
             }
         }
 
         $ids = array_values(array_unique(array_filter($ids)));
-        if (empty($ids)) return [];
+        if (empty($ids)) {
+            return [];
+        }
 
         return ShiftQualification::query()
             ->whereIn('id', $ids)
@@ -248,10 +264,7 @@ class DailyShiftPlanPdfBuilder
         $laneColumns = $this->buildLaneColumns($craftGroups);
 
 
-        $layout = $this->computeLayoutForDay(
-            $timelineLanes,
-            count($laneColumns)
-        );
+        $layout = $this->computeLayoutForDay($timelineLanes);
 
         // Tag in Zeitfenster teilen, die jeweils sicher auf eine Seite passen.
         // Geschnitten wird nur an Minuten, über die kein Block hinwegläuft.
@@ -364,8 +377,12 @@ class DailyShiftPlanPdfBuilder
         $craftAfter = [];
         foreach ($shiftBlocksByCraft as $craftKey => $blocks) {
             [$before, $after] = $this->splitBlocksAt($blocks, $cutMinute);
-            if (!empty($before)) $craftBefore[$craftKey] = $before;
-            if (!empty($after)) $craftAfter[$craftKey] = $after;
+            if (!empty($before)) {
+                $craftBefore[$craftKey] = $before;
+            }
+            if (!empty($after)) {
+                $craftAfter[$craftKey] = $after;
+            }
         }
 
         $countBefore = count($timelineBefore) + array_sum(array_map('count', $craftBefore));
@@ -410,15 +427,23 @@ class DailyShiftPlanPdfBuilder
      * ungefähr 1/$parts der Gesamthöhe liegt (gleich große Teile statt
      * Rest-Schnipsel).
      */
-    private function findBalancedCleanCut(array $rows, array $timelineBlocks, array $shiftBlocksByCraft, int $parts = 2): ?int
-    {
+    private function findBalancedCleanCut(
+        array $rows,
+        array $timelineBlocks,
+        array $shiftBlocksByCraft,
+        int $parts = 2
+    ): ?int {
         $allBlocks = $timelineBlocks;
         foreach ($shiftBlocksByCraft as $blocks) {
-            foreach ($blocks as $b) $allBlocks[] = $b;
+            foreach ($blocks as $b) {
+                $allBlocks[] = $b;
+            }
         }
 
         $totalHeight = 0;
-        foreach ($rows as $r) $totalHeight += (int)($r['heightPx'] ?? 0);
+        foreach ($rows as $r) {
+            $totalHeight += (int)($r['heightPx'] ?? 0);
+        }
         $target = $totalHeight / max(2, $parts);
 
         $best = null;
@@ -510,7 +535,7 @@ class DailyShiftPlanPdfBuilder
      * Zeit + Timeline sollen minimal sein.
      * Dompdf-wrap killen wir, indem wir Timeline-Breite hart begrenzen.
      */
-    private function computeLayoutForDay(int $timelineLanes, int $craftCols): array
+    private function computeLayoutForDay(int $timelineLanes): array
     {
         $timeCol = 44;
 
@@ -551,7 +576,9 @@ class DailyShiftPlanPdfBuilder
 
         $allShiftBlocksFlat = [];
         foreach ($shiftBlocksByCraft as $blocks) {
-            foreach ($blocks as $b) $allShiftBlocksFlat[] = $b;
+            foreach ($blocks as $b) {
+                $allShiftBlocksFlat[] = $b;
+            }
         }
 
         $allBlocksFlat = array_merge($timelineBlocks, $allShiftBlocksFlat);
@@ -592,7 +619,9 @@ class DailyShiftPlanPdfBuilder
             $minMin = $minMin === null ? (int)$b['start'] : min($minMin, (int)$b['start']);
             $maxMin = $maxMin === null ? (int)$b['end']   : max($maxMin, (int)$b['end']);
         }
-        if ($maxMin <= $minMin) $maxMin = $minMin + 30;
+        if ($maxMin <= $minMin) {
+            $maxMin = $minMin + 30;
+        }
 
         $breaks = [$minMin, $maxMin];
         foreach ($allBlocksFlat as $b) {
@@ -606,7 +635,9 @@ class DailyShiftPlanPdfBuilder
         for ($i = 0; $i < count($breaks) - 1; $i++) {
             $from = (int)$breaks[$i];
             $to   = (int)$breaks[$i + 1];
-            if ($to <= $from) continue;
+            if ($to <= $from) {
+                continue;
+            }
 
             $isActive = $this->anyBlockOverlaps($allBlocksFlat, $from, $to);
 
@@ -619,7 +650,10 @@ class DailyShiftPlanPdfBuilder
 
         $merged = [];
         foreach ($segments as $seg) {
-            if (empty($merged)) { $merged[] = $seg; continue; }
+            if (empty($merged)) {
+                $merged[] = $seg;
+                continue;
+            }
             $lastIdx = count($merged) - 1;
             $last = $merged[$lastIdx];
 
@@ -635,8 +669,11 @@ class DailyShiftPlanPdfBuilder
 
         foreach ($merged as $seg) {
             $dur = $seg['to'] - $seg['from'];
-            if ($seg['isActive']) $totalActiveMinutes += $dur;
-            else $gapCount++;
+            if ($seg['isActive']) {
+                $totalActiveMinutes += $dur;
+            } else {
+                $gapCount++;
+            }
         }
 
         $gapTotalHeight = $gapCount * $this->gapRowHeightPx;
@@ -666,8 +703,7 @@ class DailyShiftPlanPdfBuilder
             } elseif ($heightMode === 'content-only' || $heightMode === 'uniform') {
                 // Content-driven: estimate height from block content
                 $overlapping = array_filter($allBlocksFlat, fn($b) =>
-                    (int)$b['start'] < $to && (int)$b['end'] > $from
-                );
+                    (int)$b['start'] < $to && (int)$b['end'] > $from);
                 $maxContentH = $this->activeRowMinHeightPx;
                 foreach ($overlapping as $ob) {
                     $maxContentH = max($maxContentH, $this->estimateBlockContentHeight($ob));
@@ -706,7 +742,10 @@ class DailyShiftPlanPdfBuilder
         if (!empty($markerMinutes)) {
             foreach ($rows as &$row) {
                 // Gap-Message unterdrücken wenn Gap direkt an Marker grenzt
-                if ($row['isGap'] && (in_array($row['from'], $markerMinutes, true) || in_array($row['to'], $markerMinutes, true))) {
+                if (
+                    $row['isGap']
+                     && (in_array($row['from'], $markerMinutes, true) || in_array($row['to'], $markerMinutes, true))
+                ) {
                     $row['message'] = null;
                 }
 
@@ -761,8 +800,12 @@ class DailyShiftPlanPdfBuilder
         foreach ($blocks as $b) {
             $s = (int)$b['start'];
             $e = (int)$b['end'];
-            if ($e <= $from) continue;
-            if ($s >= $to) continue;
+            if ($e <= $from) {
+                continue;
+            }
+            if ($s >= $to) {
+                continue;
+            }
             return true;
         }
         return false;
@@ -815,7 +858,9 @@ class DailyShiftPlanPdfBuilder
         if ($minutes >= 60) {
             $h = intdiv($minutes, 60);
             $m = $minutes % 60;
-            if ($m === 0) return $h . 'h frei';
+            if ($m === 0) {
+                return $h . 'h frei';
+            }
             return $h . 'h ' . $m . 'min frei';
         }
         return $minutes . 'min frei';
@@ -850,7 +895,9 @@ class DailyShiftPlanPdfBuilder
                 // Helper: meta-Präfix bestimmen
                 $metaPrefix = function () use ($startOrEnd): string {
                     // Wenn nicht gesetzt: fallback auf "ab"
-                    if ($startOrEnd === null) return 'ab ';
+                    if ($startOrEnd === null) {
+                        return 'ab ';
+                    }
                     // boolean false => 0 => bis
                     return ((bool)$startOrEnd) ? 'ab ' : 'bis ';
                 };
@@ -916,9 +963,14 @@ class DailyShiftPlanPdfBuilder
         foreach ($blocks as &$b) {
             $assigned = null;
             foreach ($laneEnds as $li => $lend) {
-                if ($lend <= $b['start']) { $assigned = $li; break; }
+                if ($lend <= $b['start']) {
+                    $assigned = $li;
+                    break;
+                }
             }
-            if ($assigned === null) $assigned = count($laneEnds);
+            if ($assigned === null) {
+                $assigned = count($laneEnds);
+            }
 
             $b['lane'] = $assigned;
             $laneEnds[$assigned] = $b['end'];
@@ -945,10 +997,16 @@ class DailyShiftPlanPdfBuilder
             $startStr = (string)($s->start ?? '');
             $endStr   = (string)($s->end ?? '');
 
-            if ($startStr === '' && $endStr === '') continue;
+            if ($startStr === '' && $endStr === '') {
+                continue;
+            }
 
-            if ($startStr === '') $startStr = $endStr;
-            if ($endStr === '') $endStr = $startStr;
+            if ($startStr === '') {
+                $startStr = $endStr;
+            }
+            if ($endStr === '') {
+                $endStr = $startStr;
+            }
 
             $start = $this->timeToMinutes($startStr);
             $end   = ($s->start && $s->end)
@@ -985,9 +1043,14 @@ class DailyShiftPlanPdfBuilder
             foreach ($blocks as &$b) {
                 $assigned = null;
                 foreach ($laneEnds as $li => $lend) {
-                    if ($lend <= $b['start']) { $assigned = $li; break; }
+                    if ($lend <= $b['start']) {
+                        $assigned = $li;
+                        break;
+                    }
                 }
-                if ($assigned === null) $assigned = count($laneEnds);
+                if ($assigned === null) {
+                    $assigned = count($laneEnds);
+                }
                 $b['lane'] = $assigned;
                 $laneEnds[$assigned] = $b['end'];
                 ksort($laneEnds);
@@ -1008,7 +1071,9 @@ class DailyShiftPlanPdfBuilder
             $name = trim($name) !== '' ? trim($name) : ucfirst($type);
 
             $count = (int)($pivot?->shift_count ?? 1);
-            if ($count <= 0) $count = 1;
+            if ($count <= 0) {
+                $count = 1;
+            }
 
             $qid = (int)($pivot?->shift_qualification_id ?? 0);
             $needed = $qid > 0 ? (int)($neededByQid[$qid] ?? 0) : 0;
@@ -1034,8 +1099,12 @@ class DailyShiftPlanPdfBuilder
         /** @var Freelancer $f */
         foreach (($shift->freelancer ?? []) as $f) {
             $n = trim(($f->first_name ?? '') . ' ' . ($f->last_name ?? ''));
-            if ($n === '' && isset($f->display_name)) $n = (string)$f->display_name;
-            if ($n === '' && isset($f->name)) $n = (string)$f->name;
+            if ($n === '' && isset($f->display_name)) {
+                $n = (string)$f->display_name;
+            }
+            if ($n === '' && isset($f->name)) {
+                $n = (string)$f->name;
+            }
 
             $make('freelancer', $n !== '' ? $n : ('Freelancer #' . ($f->id ?? '')), $f->pivot ?? null);
         }
@@ -1043,7 +1112,9 @@ class DailyShiftPlanPdfBuilder
         /** @var ServiceProvider $sp */
         foreach (($shift->serviceProvider ?? []) as $sp) {
             $n = trim((string)($sp->provider_name ?? ''));
-            if ($n === '' && isset($sp->name)) $n = (string)$sp->name;
+            if ($n === '' && isset($sp->name)) {
+                $n = (string)$sp->name;
+            }
 
             $make('service', $n !== '' ? $n : ('Service #' . ($sp->id ?? '')), $sp->pivot ?? null);
         }
@@ -1053,10 +1124,14 @@ class DailyShiftPlanPdfBuilder
 
     private function qualificationLabelFromPivot($pivot): ?string
     {
-        if (!$pivot) return null;
+        if (!$pivot) {
+            return null;
+        }
 
         $sd = trim((string)($pivot->short_description ?? ''));
-        if ($sd !== '') return $sd;
+        if ($sd !== '') {
+            return $sd;
+        }
 
         $qid = $pivot->shift_qualification_id ?? null;
         if ($qid && isset($this->qualificationNameById[(int)$qid])) {
@@ -1064,7 +1139,9 @@ class DailyShiftPlanPdfBuilder
         }
 
         $abbr = trim((string)($pivot->craft_abbreviation ?? ''));
-        if ($abbr !== '') return $abbr;
+        if ($abbr !== '') {
+            return $abbr;
+        }
 
         return null;
     }
@@ -1076,7 +1153,9 @@ class DailyShiftPlanPdfBuilder
 
         foreach (($shift->shiftsQualifications ?? []) as $sq) {
             $qid = (int)($sq->shift_qualification_id ?? 0);
-            if ($qid <= 0) continue;
+            if ($qid <= 0) {
+                continue;
+            }
 
             $map[$qid] = (int)($sq->value ?? 0);
         }
@@ -1090,10 +1169,14 @@ class DailyShiftPlanPdfBuilder
 
         foreach ($shifts as $s) {
             $craft = $s->craft;
-            if (!$craft) continue;
+            if (!$craft) {
+                continue;
+            }
 
             $key = strtoupper($craft->abbreviation ?? ('CRAFT_' . $craft->id));
-            if (isset($meta[$key])) continue;
+            if (isset($meta[$key])) {
+                continue;
+            }
 
             $color = $this->normalizeHexColor($craft->color) ?? '#0ea5e9';
 
@@ -1162,10 +1245,14 @@ class DailyShiftPlanPdfBuilder
 
         foreach ($blocks as $b) {
             $range = $this->spanRowRange($rows, $b);
-            if ($range === null) continue;
+            if ($range === null) {
+                continue;
+            }
             [$startIndex, $endIndex] = $range;
 
-            if (isset($map[$startIndex])) continue;
+            if (isset($map[$startIndex])) {
+                continue;
+            }
 
             $spanHeight = 0;
             for ($i = $startIndex; $i <= $endIndex; $i++) {
@@ -1199,7 +1286,9 @@ class DailyShiftPlanPdfBuilder
         $startIndex = $this->rowIndexForMinute($rows, (int)$block['start']);
         $endIndex   = $this->rowIndexForMinute($rows, max((int)$block['start'], (int)$block['end'] - 1));
 
-        if ($startIndex === null || $endIndex === null) return null;
+        if ($startIndex === null || $endIndex === null) {
+            return null;
+        }
 
         while ($endIndex >= $startIndex && ($rows[$endIndex]['isGap'] ?? false)) {
             $endIndex--;
@@ -1217,7 +1306,9 @@ class DailyShiftPlanPdfBuilder
     {
         foreach ($blocks as $b) {
             $range = $this->spanRowRange($rows, $b);
-            if ($range === null) continue;
+            if ($range === null) {
+                continue;
+            }
             [$startIndex, $endIndex] = $range;
 
             $spanHeight = 0;
@@ -1229,10 +1320,14 @@ class DailyShiftPlanPdfBuilder
                 }
             }
 
-            if (empty($activeIndexes)) continue;
+            if (empty($activeIndexes)) {
+                continue;
+            }
 
             $deficit = $this->estimateBlockContentHeight($b) - $spanHeight;
-            if ($deficit <= 0) continue;
+            if ($deficit <= 0) {
+                continue;
+            }
 
             $perRow = (int)ceil($deficit / count($activeIndexes));
             foreach ($activeIndexes as $i) {
@@ -1244,10 +1339,14 @@ class DailyShiftPlanPdfBuilder
     private function rowIndexForMinute(array $rows, int $minute): ?int
     {
         foreach ($rows as $idx => $r) {
-            if ($minute >= $r['from'] && $minute < $r['to']) return $idx;
+            if ($minute >= $r['from'] && $minute < $r['to']) {
+                return $idx;
+            }
         }
         $last = end($rows);
-        if ($last && $minute >= $last['to']) return count($rows) - 1;
+        if ($last && $minute >= $last['to']) {
+            return count($rows) - 1;
+        }
         return null;
     }
 
@@ -1355,12 +1454,18 @@ class DailyShiftPlanPdfBuilder
 
     private function normalizeHexColor(?string $color): ?string
     {
-        if (!$color) return null;
+        if (!$color) {
+            return null;
+        }
 
         $c = trim($color);
 
-        if (preg_match('/^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/', $c)) return $c;
-        if (preg_match('/^([0-9a-fA-F]{6})$/', $c)) return '#' . $c;
+        if (preg_match('/^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/', $c)) {
+            return $c;
+        }
+        if (preg_match('/^([0-9a-fA-F]{6})$/', $c)) {
+            return '#' . $c;
+        }
 
         return null;
     }
@@ -1369,9 +1474,11 @@ class DailyShiftPlanPdfBuilder
     {
         $hex = ltrim(trim($hex), '#');
         if (strlen($hex) === 3) {
-            $hex = $hex[0].$hex[0].$hex[1].$hex[1].$hex[2].$hex[2];
+            $hex = $hex[0] . $hex[0] . $hex[1] . $hex[1] . $hex[2] . $hex[2];
         }
-        if (strlen($hex) !== 6) return '#f3f4f6';
+        if (strlen($hex) !== 6) {
+            return '#f3f4f6';
+        }
 
         $r = hexdec(substr($hex, 0, 2));
         $g = hexdec(substr($hex, 2, 2));

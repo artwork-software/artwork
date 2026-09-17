@@ -24,8 +24,7 @@ class EnsureShiftSettingsAreaPermission
         Closure $next,
         string $area,
         string $access = 'view'
-    ): Response
-    {
+    ): Response {
         $user = $request->user();
         abort_unless($user?->can(PermissionEnum::SHIFT_SETTINGS_VIEW_EDIT->value), Response::HTTP_FORBIDDEN);
 

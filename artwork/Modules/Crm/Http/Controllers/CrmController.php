@@ -22,7 +22,8 @@ class CrmController extends Controller
         private readonly CrmContactTypeService $contactTypeService,
         private readonly CrmContactService $contactService,
         private readonly CrmPropertyGroupService $propertyGroupService,
-    ) {}
+    ) {
+    }
 
     public function index(Request $request): Response
     {

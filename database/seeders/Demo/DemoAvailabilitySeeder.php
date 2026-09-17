@@ -158,7 +158,9 @@ class DemoAvailabilitySeeder extends Seeder
             })
             ->with('shift')
             ->get()
-            ->groupBy(static fn (ShiftWorker $row) => $row->employable_id . '|' . $row->shift->start_date->format('Y-m-d'));
+            ->groupBy(static fn (ShiftWorker $row) => $row->employable_id
+                 . '|'
+                 . $row->shift->start_date->format('Y-m-d'));
 
         $balances = [];
         $bookingsCreated = 0;

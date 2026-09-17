@@ -29,7 +29,8 @@ class ExternalIssueController extends Controller
         protected ExternalIssueService $externalIssueService,
         protected AuthManager $auth,
         protected InventoryUserFilterShareService $inventoryUserFilterShareService,
-    ) {}
+    ) {
+    }
 
     /**
      * Namenssuche über externe Materialausgaben als Kopierquelle: liefert die
@@ -89,7 +90,7 @@ class ExternalIssueController extends Controller
         ]);
 
         if (!empty($articleIds)) {
-            $issuesQuery->whereHas('articles', function ($query) use ($articleIds) {
+            $issuesQuery->whereHas('articles', function ($query) use ($articleIds): void {
                 $query->whereIn('inventory_articles.id', $articleIds);
             });
         }
@@ -99,16 +100,16 @@ class ExternalIssueController extends Controller
 
         // User-Filter
         $issuesQuery
-            ->when($issuedBy !== null,   fn($q) => $q->where('issued_by_id',   $issuedBy))
+            ->when($issuedBy !== null, fn($q) => $q->where('issued_by_id', $issuedBy))
             ->when($receivedBy !== null, fn($q) => $q->where('received_by_id', $receivedBy))
-            ->when($projectId !== null,  fn($q) => $q->where('project_id',     $projectId))
+            ->when($projectId !== null, fn($q) => $q->where('project_id', $projectId))
             ->when($overdueOnly, fn($q) => $q
                 ->whereNull('received_by_id')
                 ->whereDate('return_date', '<', now()->toDateString()));
 
         // Name/Extern/Remarks Suche
         if ($q !== '') {
-            $issuesQuery->where(function ($sub) use ($q) {
+            $issuesQuery->where(function ($sub) use ($q): void {
                 $sub->where('name', 'like', "%{$q}%")
                     ->orWhere('external_name', 'like', "%{$q}%")
                     ->orWhere('return_remarks', 'like', "%{$q}%");
@@ -140,7 +141,11 @@ class ExternalIssueController extends Controller
             'articlesInFilter' => !empty($articleIds)
                 ? InventoryArticle::whereIn('id', $articleIds)->get()
                 : [],
-            'materialSets' => MaterialSet::with('items.article', 'items.article.category', 'items.article.subCategory')->get(),
+            'materialSets' => MaterialSet::with(
+                'items.article',
+                'items.article.category',
+                'items.article.subCategory'
+            )->get(),
             'detailedArticle' => Inertia::optional(fn () =>
             InventoryArticle::with([
                 'category',
@@ -149,11 +154,11 @@ class ExternalIssueController extends Controller
                 'images' => fn ($q) => $q->orderBy('is_main_image', 'desc')->orderBy('id'),
                 'statusValues',
                 'detailedArticleQuantities.status',
-            ])->find(request()?->get('articleId'))
-            ),
+            ])->find(request()?->get('articleId'))),
             // optional, falls du urlParameters nutzt:
             'urlParameters' => request()->only([
-                'article_ids','date_from','date_to','issued_by_id','received_by_id','project_id','overdue_only','q','issue'
+                'article_ids', 'date_from', 'date_to', 'issued_by_id', 'received_by_id',
+                'project_id', 'overdue_only', 'q', 'issue',
             ]),
         ]);
     }
@@ -167,11 +172,17 @@ class ExternalIssueController extends Controller
         return redirect()->route('extern-issue-of-material.index');
     }
 
-    public function update(UpdateExternalIssueRequest $request, ExternalIssue $externalIssue): \Illuminate\Http\RedirectResponse
-    {
+    public function update(
+        UpdateExternalIssueRequest $request,
+        ExternalIssue $externalIssue
+    ): \Illuminate\Http\RedirectResponse {
         $this->authorize('update', $externalIssue);
 
-        $issue = $this->externalIssueService->update($externalIssue, $request->validated(), $request->file('files', []));
+        $issue = $this->externalIssueService->update(
+            $externalIssue,
+            $request->validated(),
+            $request->file('files', [])
+        );
 
         return redirect()->route('extern-issue-of-material.index');
     }
@@ -245,7 +256,15 @@ class ExternalIssueController extends Controller
     {
         $this->authorize('view', $externalIssue);
 
-        $externalIssue->load(['articles.category', 'articles.subCategory', 'specialItems.category', 'specialItems.subCategory', 'files', 'issuedBy', 'receivedBy']);
+        $externalIssue->load([
+            'articles.category',
+            'articles.subCategory',
+            'specialItems.category',
+            'specialItems.subCategory',
+            'files',
+            'issuedBy',
+            'receivedBy',
+        ]);
 
         $createdAt = now()->format('d.m.Y');
         $createdBy = $this->auth->user()->full_name;

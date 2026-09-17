@@ -3,6 +3,9 @@
 namespace Tests\Feature\Http\Controllers;
 
 use Artwork\Modules\DocumentRequest\Models\DocumentRequest;
+use Artwork\Modules\Permission\Enums\PermissionEnum;
+use Artwork\Modules\User\Models\User;
+use Inertia\Testing\AssertableInertia;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\Feature\FeatureTestCase;
 
@@ -23,6 +26,76 @@ final class DocumentRequestControllerTest extends FeatureTestCase
         $response = $this->get(route('document-requests.index'));
 
         $response->assertOk();
+    }
+
+    #[Test]
+    public function index_lists_open_requests_assigned_to_others_for_users_with_edit_permission(): void
+    {
+        $viewer = $this->actingAsUserWith(PermissionEnum::DOCUMENT_REQUEST_EDIT->value);
+        $requester = User::factory()->create();
+        $other = User::factory()->create();
+
+        // sichtbar: offen, an andere Person zugewiesen, egal von wem erstellt
+        $foreignOpen = DocumentRequest::create([
+            'requester_id' => $requester->id,
+            'requested_id' => $other->id,
+            'status' => DocumentRequest::STATUS_OPEN,
+        ]);
+        $ownCreatedForOther = DocumentRequest::create([
+            'requester_id' => $viewer->id,
+            'requested_id' => $other->id,
+            'status' => DocumentRequest::STATUS_IN_PROGRESS,
+        ]);
+
+        // nicht sichtbar: mir zugewiesen, niemandem zugewiesen, bereits erledigt
+        DocumentRequest::create([
+            'requester_id' => $requester->id,
+            'requested_id' => $viewer->id,
+            'status' => DocumentRequest::STATUS_OPEN,
+        ]);
+        DocumentRequest::create([
+            'requester_id' => $requester->id,
+            'requested_id' => null,
+            'status' => DocumentRequest::STATUS_OPEN,
+        ]);
+        DocumentRequest::create([
+            'requester_id' => $requester->id,
+            'requested_id' => $other->id,
+            'status' => DocumentRequest::STATUS_COMPLETED,
+        ]);
+
+        $this->get(route('document-requests.index'))
+            ->assertOk()
+            ->assertInertia(fn (AssertableInertia $page) => $page
+                ->component('DocumentRequests/Index')
+                ->has('assignedToOthersRequests', 2)
+                ->where(
+                    'assignedToOthersRequests',
+                    fn ($rows) => collect($rows)->pluck('id')->sort()->values()->all()
+                        === collect([$foreignOpen->id, $ownCreatedForOther->id])->sort()->values()->all()
+                )
+                ->where('assignedToOthersRequests.0.requester.id', $requester->id)
+                ->where('assignedToOthersRequests.0.requested.id', $other->id));
+    }
+
+    #[Test]
+    public function index_hides_requests_assigned_to_others_without_permission(): void
+    {
+        $this->actingAs(User::factory()->create());
+        $requester = User::factory()->create();
+        $other = User::factory()->create();
+
+        DocumentRequest::create([
+            'requester_id' => $requester->id,
+            'requested_id' => $other->id,
+            'status' => DocumentRequest::STATUS_OPEN,
+        ]);
+
+        $this->get(route('document-requests.index'))
+            ->assertOk()
+            ->assertInertia(fn (AssertableInertia $page) => $page
+                ->component('DocumentRequests/Index')
+                ->has('assignedToOthersRequests', 0));
     }
 
     #[Test]

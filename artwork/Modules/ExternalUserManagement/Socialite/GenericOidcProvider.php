@@ -16,11 +16,6 @@ use Laravel\Socialite\Two\User;
  */
 class GenericOidcProvider extends AbstractProvider
 {
-    /**
-     * OIDC nutzt Leerzeichen als Scope-Trenner (statt Komma).
-     *
-     * @var string
-     */
     protected $scopeSeparator = ' ';
 
     /**
@@ -57,6 +52,7 @@ class GenericOidcProvider extends AbstractProvider
      * @param string $token
      * @return array<string, mixed>
      */
+    // phpcs:ignore SlevomatCodingStandard.TypeHints.ParameterTypeHint.MissingNativeTypeHint -- Elternmethode ist untypisiert
     protected function getUserByToken($token): array
     {
         $response = $this->getHttpClient()->get($this->openidConfig['userinfo_endpoint'], [

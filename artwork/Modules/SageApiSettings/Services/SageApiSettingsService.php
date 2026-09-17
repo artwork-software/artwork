@@ -24,6 +24,19 @@ class SageApiSettingsService
     }
 
     /**
+     * Sage-Schnittstelle gilt nur als aktiv, wenn sowohl die Umgebung (SAGE_API_ENABLED)
+     * als auch der Schalter in den Schnittstellen-Einstellungen gesetzt sind.
+     */
+    public function isEnabled(): bool
+    {
+        if (!config('services.sage.enabled')) {
+            return false;
+        }
+
+        return (bool) $this->getFirst()?->enabled;
+    }
+
+    /**
      * @throws Throwable
      */
     public function createOrUpdateFromRequest(

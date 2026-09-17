@@ -41,6 +41,7 @@ readonly class ShiftFreelancerService
     /**
      * Freelancer einer Schicht zuweisen (inkl. Serienlogik).
      */
+    // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter -- Signatur an vielen Aufrufstellen positional – Bereinigung ist ein eigenes Refactoring
     public function assignToShift(
         Shift $shift,
         int $freelancerId,
@@ -122,6 +123,7 @@ readonly class ShiftFreelancerService
     /**
      * Freelancer aus Schicht entfernen (inkl. Serienlogik).
      */
+    // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter -- Signatur an vielen Aufrufstellen positional – Bereinigung ist ein eigenes Refactoring
     public function removeFromShift(
         ShiftFreelancer|int $freelancersPivot,
         bool $removeFromSingleShift,
@@ -187,6 +189,7 @@ readonly class ShiftFreelancerService
         );
     }
 
+    // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter -- Signatur an vielen Aufrufstellen positional – Bereinigung ist ein eigenes Refactoring
     private function removeFreelancerFromAllShiftsWithSameUuid(
         Shift $shift,
         Freelancer $freelancer,
@@ -230,7 +233,9 @@ readonly class ShiftFreelancerService
 
             $shift = $shiftWorkerPivot->shift;
             if (!$shift) {
-                throw new \RuntimeException("Shift for ShiftWorker pivot ID {$usersPivot} not found (shift_id: {$shiftWorkerPivot->shift_id})");
+                throw new \RuntimeException(
+                    "Shift for ShiftWorker pivot ID {$usersPivot} not found (shift_id: {$shiftWorkerPivot->shift_id})"
+                );
             }
 
             return $shift;
@@ -251,7 +256,10 @@ readonly class ShiftFreelancerService
 
         $shift = $shiftFreelancerPivot->shift;
         if (!$shift) {
-            throw new \RuntimeException("Shift for ShiftFreelancer pivot ID {$usersPivot} not found (shift_id: {$shiftFreelancerPivot->shift_id})");
+            throw new \RuntimeException(
+                "Shift for ShiftFreelancer pivot ID {$usersPivot} not found "
+                . "(shift_id: {$shiftFreelancerPivot->shift_id})"
+            );
         }
 
         return $shift;

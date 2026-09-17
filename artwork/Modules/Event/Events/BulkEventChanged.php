@@ -13,7 +13,9 @@ use Illuminate\Queue\SerializesModels;
 
 class BulkEventChanged implements ShouldBroadcastNow
 {
-    use Dispatchable, InteractsWithSockets, SerializesModels;
+    use Dispatchable;
+    use InteractsWithSockets;
+    use SerializesModels;
 
     public Event $event;
     public string $action;

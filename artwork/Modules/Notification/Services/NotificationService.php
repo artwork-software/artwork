@@ -648,8 +648,11 @@ class NotificationService
         return $notificationObj;
     }
 
-    public function updateExistingRoomRequestNotification(int $eventId, int $recipientUserId, array $newDescription): bool
-    {
+    public function updateExistingRoomRequestNotification(
+        int $eventId,
+        int $recipientUserId,
+        array $newDescription
+    ): bool {
         $existingNotification = DB::table('notifications')
             ->where('data->type', NotificationEnum::NOTIFICATION_ROOM_REQUEST->value)
             ->where('data->eventId', $eventId)

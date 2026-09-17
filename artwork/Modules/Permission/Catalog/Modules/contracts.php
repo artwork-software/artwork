@@ -55,6 +55,8 @@ return new PermissionModuleDefinition(
                 'Menu "Documents → Document requests"',
                 'Button "Create document request" (also in the project tab)',
                 'Tab "Unassigned" in the document requests',
+                'Tab "Assigned to others" in the document requests',
+                'Tab "Unassigned" in the project tab "Documents"',
             ],
             allows: ['Create and assign document requests'],
             requires: [$module],
@@ -67,6 +69,9 @@ return new PermissionModuleDefinition(
             unlocks: [
                 'Menu "Documents → Document requests"',
                 '"Edit" and "Delete" in the menu of a document request',
+                'Tab "Unassigned" in the document requests',
+                'Tab "Assigned to others" in the document requests',
+                'Tab "Unassigned" in the project tab "Documents"',
             ],
             allows: ['Edit, set the status, delete and link a contract'],
             requires: [$module],

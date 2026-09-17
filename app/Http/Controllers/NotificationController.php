@@ -58,7 +58,10 @@ class NotificationController extends Controller
             $counts[$case->value] = ['unread' => 0, 'archived' => 0];
         }
 
+        // reorder(): die notifications()-Relation sortiert per latest() nach created_at; mit GROUP BY
+        // verweigert MySQL 8 (ONLY_FULL_GROUP_BY) diese ORDER BY, MariaDB nicht.
         $rows = $user->notifications()
+            ->reorder()
             ->selectRaw("JSON_UNQUOTE(JSON_EXTRACT(data, '$.groupType')) as group_type")
             ->selectRaw('SUM(CASE WHEN read_at IS NULL THEN 1 ELSE 0 END) as unread')
             ->selectRaw('SUM(CASE WHEN read_at IS NOT NULL THEN 1 ELSE 0 END) as archived')
@@ -185,7 +188,7 @@ class NotificationController extends Controller
             'notificationCounts' => $this->getNotificationCountsByGroup($user),
             'globalNotification' => $globalNotificationService->getGlobalNotificationEnrichedByImageUrl(),
             'rooms' => RoomIndexWithoutEventsResource::collection(Room::all())->resolve(),
-            'eventTypes' => EventTypeResource::collection(EventType::all())->resolve(),
+            'eventTypes' => EventTypeResource::collection(EventType::query()->with('verifiers')->get())->resolve(),
             'projects' => NotificationProjectResource::collection(
                 Project::select([
                     'id', 'name', 'shift_description',

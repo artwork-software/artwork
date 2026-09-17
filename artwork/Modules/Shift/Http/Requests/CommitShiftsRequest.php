@@ -66,7 +66,10 @@ class CommitShiftsRequest extends FormRequest
             $names = Craft::query()->whereKey($forbidden)->orderBy('name')->pluck('name')->all();
             $validator->errors()->add(
                 'craft_ids',
-                __('You are not allowed to commit this craft.') . ($names !== [] ? ' (' . implode(', ', $names) . ')' : '')
+                __('You are not allowed to commit this craft.')
+                     . ($names !== [] ? ' ('
+                     . implode(', ', $names)
+                     . ')' : '')
             );
         });
     }

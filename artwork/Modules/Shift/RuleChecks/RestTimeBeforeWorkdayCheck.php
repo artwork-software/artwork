@@ -53,6 +53,4 @@ class RestTimeBeforeWorkdayCheck extends AbstractRuleCheck
     {
         return 'restTimeBeforeWorkday';
     }
-
-
 }

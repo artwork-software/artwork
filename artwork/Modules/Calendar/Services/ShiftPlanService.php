@@ -282,7 +282,7 @@ class ShiftPlanService
             ->select(['id', 'name'])
             ->withCount('presets')
             ->with([
-                'presets' => function ($query) {
+                'presets' => function ($query): void {
                     $query->select([
                         'single_shift_presets.id',
                         'single_shift_presets.name',

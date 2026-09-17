@@ -55,8 +55,10 @@ class WorkTimeChangeRequestController extends Controller
         ];
     }
 
-    private function applyListFilters(\Illuminate\Database\Eloquent\Builder $query, array $filters): \Illuminate\Database\Eloquent\Builder
-    {
+    private function applyListFilters(
+        \Illuminate\Database\Eloquent\Builder $query,
+        array $filters
+    ): \Illuminate\Database\Eloquent\Builder {
         return $query
             ->when($filters['status'] !== 'all', fn ($q) => $q->where('status', $filters['status']))
             ->when($filters['date_from'], fn ($q) => $q->whereDate('created_at', '>=', $filters['date_from']))
@@ -91,8 +93,10 @@ class WorkTimeChangeRequestController extends Controller
         $user = auth()->user();
 
         // Check if user is admin or has shift planner permission
-        if (!$user->hasRole(RoleEnum::ARTWORK_ADMIN->value) &&
-            !$user->hasPermissionTo(PermissionEnum::SHIFT_PLANNER->value)) {
+        if (
+            !$user->hasRole(RoleEnum::ARTWORK_ADMIN->value) &&
+            !$user->hasPermissionTo(PermissionEnum::SHIFT_PLANNER->value)
+        ) {
             abort(403, 'Unauthorized');
         }
 
@@ -101,7 +105,7 @@ class WorkTimeChangeRequestController extends Controller
 
         $workTimeChangeRequests = $this->applyListFilters(
             WorkTimeChangeRequest::with(['user', 'shift', 'craft.craftShiftPlaner'])
-                ->where(function ($query) use ($userId) {
+                ->where(function ($query) use ($userId): void {
                     // Include requests where user is assigned as craft shift planner
                     $query->whereHas('craft.craftShiftPlaner', function ($subQuery) use ($userId): void {
                         $subQuery->where('user_id', $userId);
@@ -331,8 +335,10 @@ class WorkTimeChangeRequestController extends Controller
         return redirect()->back();
     }
 
-    public function decline(WorkTimeChangeRequest $workTimeChangeRequest, Request $request): \Illuminate\Http\RedirectResponse
-    {
+    public function decline(
+        WorkTimeChangeRequest $workTimeChangeRequest,
+        Request $request
+    ): \Illuminate\Http\RedirectResponse {
         $this->authorizeDecision($workTimeChangeRequest);
 
         $workTimeChangeRequest->update([

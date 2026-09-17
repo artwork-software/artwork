@@ -83,10 +83,10 @@ class InventoryCategorySeeder extends Seeder
             }
 
             // 1️⃣ Lade die Properties, damit sie verfügbar sind
-            $category->load(['properties' => function ($query) {
+            $category->load(['properties' => function ($query): void {
                 $query->withPivot('value');
             }]);
-            $subCategory->load(['properties' => function ($query) {
+            $subCategory->load(['properties' => function ($query): void {
                 $query->withPivot('value');
             }]);
 
@@ -96,7 +96,10 @@ class InventoryCategorySeeder extends Seeder
 
             // 2️⃣ Debugging: Ausgabe der gefundenen Properties
             if ($articleProperties->isEmpty()) {
-                dump("⚠ Keine Properties für Artikel #{$article->id} (Kategorie: {$category->name}, Sub-Kategorie: {$subCategory->name})");
+                dump(
+                    "⚠ Keine Properties für Artikel #{$article->id} "
+                    . "(Kategorie: {$category->name}, Sub-Kategorie: {$subCategory->name})"
+                );
             }
 
             // 3️⃣ Weisen dem Artikel die Properties MIT WERTEN zu
@@ -106,7 +109,5 @@ class InventoryCategorySeeder extends Seeder
                 $article->properties()->attach($property->id, ['value' => $value]);
             }
         }
-
-
     }
 }

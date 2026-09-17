@@ -11,7 +11,9 @@ class ArtistRepository
     public function findById(int $id, bool $lockForUpdate = false): ?Artist
     {
         $q = Artist::query()->whereKey($id);
-        if ($lockForUpdate) $q->lockForUpdate();
+        if ($lockForUpdate) {
+            $q->lockForUpdate();
+        }
         return $q->first();
     }
 

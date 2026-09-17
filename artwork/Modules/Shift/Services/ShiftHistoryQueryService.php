@@ -2,7 +2,10 @@
 
 namespace Artwork\Modules\Shift\Services;
 
+use Artwork\Modules\Freelancer\Models\Freelancer;
+use Artwork\Modules\ServiceProvider\Models\ServiceProvider;
 use Artwork\Modules\Shift\Models\Shift;
+use Artwork\Modules\Shift\Models\ShiftWorker;
 use Artwork\Modules\Shift\Support\ExportPeriodLimit;
 use Artwork\Modules\User\Models\User;
 use Illuminate\Database\Eloquent\Builder;
@@ -16,15 +19,42 @@ use Spatie\Activitylog\Models\Activity;
  */
 class ShiftHistoryQueryService
 {
+    /** Reichweite des Personenfilters: nur Vorgänge AN der Person (Zuweisung, Entfernung, Zu-/Absage). */
+    public const PERSON_SCOPE_SUBJECT = 'subject';
+    /** … plus ALLE Einträge der Schichten, in denen die Person eingeplant ist/war (Default). */
+    public const PERSON_SCOPE_ASSIGNED = 'assigned';
+    /** … plus Einträge, die die Person selbst ausgeführt hat (nur Nutzer*innen als Verursacher). */
+    public const PERSON_SCOPE_CAUSER = 'causer';
+
+    public const PERSON_SCOPES = [
+        self::PERSON_SCOPE_SUBJECT,
+        self::PERSON_SCOPE_ASSIGNED,
+        self::PERSON_SCOPE_CAUSER,
+    ];
+
+    /** Kurzform aus dem Frontend → Model-Klasse (identisch zu employable_type in shift_workers). */
+    public const PERSON_TYPES = [
+        'user' => User::class,
+        'freelancer' => Freelancer::class,
+        'service_provider' => ServiceProvider::class,
+    ];
+
+    /** Gründe, warum ein Eintrag bei aktivem Personenfilter angezeigt wird (match_reasons). */
+    public const REASON_SUBJECT = 'subject';
+    public const REASON_ASSIGNED = 'assigned';
+    public const REASON_CAUSER = 'causer';
+
     /**
-     * Filter aus Query-Parametern (craftId, shiftId, start_date, end_date, search, sort).
+     * Filter aus Query-Parametern (craftId, shiftId, start_date, end_date, search, sort, person_type,
+     * person_id, person_scope).
      * Zeitraum über ExportPeriodLimit::resolveBounds(): ohne Angabe aktueller Monat, eine Grenze →
      * höchstens ein Jahr ab/bis dahin; länger als ein Jahr → ValidationException (422).
      *
      * @param array<string, mixed> $params
      * @return array{
      *     craft_id: int, shift_id: int, start_date: Carbon, end_date: Carbon,
-     *     start_ymd: string, end_ymd: string, search: string, sort_by_shift_day: bool
+     *     start_ymd: string, end_ymd: string, search: string, sort_by_shift_day: bool,
+     *     person_type: ?string, person_id: int, person_scope: string
      * }
      */
     public function resolveFilters(array $params): array
@@ -46,7 +76,134 @@ class ShiftHistoryQueryService
             'end_ymd' => $endDate->toDateString(),
             'search' => trim((string) ($params['search'] ?? '')),
             'sort_by_shift_day' => ($params['sort'] ?? null) === 'shift_day',
+            'person_type' => self::PERSON_TYPES[(string) ($params['person_type'] ?? '')] ?? null,
+            'person_id' => max(0, (int) ($params['person_id'] ?? 0)),
+            'person_scope' => in_array($params['person_scope'] ?? null, self::PERSON_SCOPES, true)
+                ? (string) $params['person_scope']
+                : self::PERSON_SCOPE_ASSIGNED,
         ];
+    }
+
+    /**
+     * Löst den Personenfilter auf: Model-Klasse, ID und die Namensschreibweisen, unter denen die Person
+     * in Alt-Einträgen vorkommt (Platzhalterwerte, affected_workers speichern nur Namen, keine IDs).
+     * Null, wenn kein (gültiger) Personenfilter gesetzt ist oder die Person nicht existiert.
+     *
+     * @param array{person_type: ?string, person_id: int, person_scope: string} $filters
+     * @return array{type: string, id: int, scope: string, names: array<int, string>, name: string}|null
+     */
+    public function resolvePerson(array $filters): ?array
+    {
+        $type = $filters['person_type'];
+        $id = $filters['person_id'];
+        if ($type === null || $id <= 0) {
+            return null;
+        }
+
+        $query = $type::query();
+        if (in_array(\Illuminate\Database\Eloquent\SoftDeletes::class, class_uses_recursive($type), true)) {
+            $query->withTrashed();
+        }
+        /** @var User|Freelancer|ServiceProvider|null $model */
+        $model = $query->find($id);
+        if ($model === null) {
+            return null;
+        }
+
+        $names = [];
+        if ($model instanceof ServiceProvider) {
+            $names[] = trim((string) $model->provider_name);
+        } else {
+            $first = trim((string) ($model->first_name ?? ''));
+            $last = trim((string) ($model->last_name ?? ''));
+            $names[] = trim($first . ' ' . $last);
+            // Alt-Einträge einzelner Log-Stellen nutzen die Schreibweise "Nachname, Vorname"
+            if ($first !== '' && $last !== '') {
+                $names[] = $last . ', ' . $first;
+            }
+        }
+        $names = array_values(array_unique(array_filter($names, fn (string $n) => $n !== '')));
+
+        return [
+            'type' => $type,
+            'id' => $id,
+            'scope' => $filters['person_scope'],
+            'names' => $names,
+            'name' => $names[0] ?? '',
+        ];
+    }
+
+    /**
+     * Schichten (aus $matchedShiftIds), in denen die Person eingeplant ist oder war — inkl. soft-gelöschter
+     * Pivots, damit auch entfernte Zuweisungen den Schichtbezug behalten. Per DB-Kaskade (Schicht-Löschung)
+     * verschwundene Pivots sind hier nicht mehr sichtbar; solche Einträge greifen über affected_workers
+     * (Namen) im Lösch-Eintrag.
+     *
+     * @param array{type: string, id: int} $person
+     * @param array<int, int> $matchedShiftIds
+     * @return array<int, int>
+     */
+    public function personShiftIds(array $person, array $matchedShiftIds): array
+    {
+        if ($matchedShiftIds === []) {
+            return [];
+        }
+
+        return ShiftWorker::withTrashed()
+            ->where('employable_type', $person['type'])
+            ->where('employable_id', $person['id'])
+            ->whereIn('shift_id', $matchedShiftIds)
+            ->distinct()
+            ->pluck('shift_id')
+            ->map(fn ($id) => (int) $id)
+            ->all();
+    }
+
+    /**
+     * Gründe, warum ein Eintrag bei aktivem Personenfilter erscheint — für die Bezugs-Chips im Modal und die
+     * Spalte "Bezug" im Export. Reihenfolge: subject → assigned → causer. Leer ohne Personenfilter.
+     *
+     * @param array{type: string, id: int, scope: string, names: array<int, string>} $person
+     * @param array<int, int> $personShiftIds
+     * @return array<int, string>
+     */
+    public function matchReasons(Activity $log, array $person, array $personShiftIds): array
+    {
+        $properties = $log->properties;
+        $properties = $properties instanceof \Illuminate\Support\Collection
+            ? $properties->all()
+            : (array) $properties;
+
+        $reasons = [];
+
+        $placeholders = array_map('strval', (array) ($properties['translation_key_placeholder_values'] ?? []));
+        $affected = array_map('strval', (array) ($properties['affected_workers'] ?? []));
+        $employableMatch = ($properties['employable_type'] ?? null) === $person['type']
+            && (int) ($properties['employable_id'] ?? 0) === $person['id'];
+        $nameMatch = array_intersect($person['names'], array_merge($placeholders, $affected)) !== [];
+        if ($employableMatch || $nameMatch) {
+            $reasons[] = self::REASON_SUBJECT;
+        }
+
+        if ($person['scope'] !== self::PERSON_SCOPE_SUBJECT) {
+            $shiftIds = $log->subject_id !== null
+                ? [(int) $log->subject_id]
+                : array_map('intval', (array) ($properties['shift_ids'] ?? []));
+            if (array_intersect($shiftIds, $personShiftIds) !== []) {
+                $reasons[] = self::REASON_ASSIGNED;
+            }
+        }
+
+        if (
+            $person['scope'] === self::PERSON_SCOPE_CAUSER
+            && $person['type'] === User::class
+            && $log->causer_type === User::class
+            && (int) $log->causer_id === $person['id']
+        ) {
+            $reasons[] = self::REASON_CAUSER;
+        }
+
+        return $reasons;
     }
 
     /**
@@ -102,9 +259,16 @@ class ShiftHistoryQueryService
      *     search: string, sort_by_shift_day: bool
      * } $filters
      * @param array<int, int> $matchedShiftIds
+     * @param array{type: string, id: int, scope: string, names: array<int, string>}|null $person
+     *     aufgelöster Personenfilter (resolvePerson), null = kein Personenfilter
+     * @param array<int, int> $personShiftIds Schichten der Person (personShiftIds), nur mit $person
      */
-    public function activityQuery(array $filters, array $matchedShiftIds): Builder
-    {
+    public function activityQuery(
+        array $filters,
+        array $matchedShiftIds,
+        ?array $person = null,
+        array $personShiftIds = []
+    ): Builder {
         $craftId = $filters['craft_id'];
         $shiftId = $filters['shift_id'];
         $startYmd = $filters['start_ymd'];
@@ -153,6 +317,9 @@ class ShiftHistoryQueryService
                     });
                 });
             })
+            ->when($person !== null, function ($q) use ($person, $personShiftIds): void {
+                $this->applyPersonFilter($q, $person, $personShiftIds);
+            })
             ->when($search !== '', function ($q) use ($search): void {
                 // Groß-/Kleinschreibung bewusst ignorieren (LOWER auf beiden Seiten), Teiltreffer über
                 // LIKE %...%. Spalten explizit mit activity_log. qualifizieren — beim
@@ -196,5 +363,52 @@ class ShiftHistoryQueryService
                 $q->orderByDesc('activity_log.created_at')
                     ->orderByDesc('activity_log.id');
             });
+    }
+
+    /**
+     * Personenfilter (siehe PERSON_SCOPE_*): Vorgänge an der Person über exakten Namens-Treffer in den
+     * Platzhalterwerten / affected_workers (Alt-Einträge kennen keine IDs) oder über employable_type/-id
+     * (neue Zuweisungs-Einträge); je nach Reichweite zusätzlich alle Einträge ihrer Schichten (inkl.
+     * Sammel-Festschreibungen, die eine ihrer Schichten enthalten) und die von ihr ausgeführten Vorgänge.
+     *
+     * @param array{type: string, id: int, scope: string, names: array<int, string>} $person
+     * @param array<int, int> $personShiftIds
+     */
+    private function applyPersonFilter(Builder $query, array $person, array $personShiftIds): void
+    {
+        $query->where(function ($outer) use ($person, $personShiftIds): void {
+            $outer->where(function ($subject) use ($person): void {
+                $subject->where(function ($byId) use ($person): void {
+                    $byId->where('properties->employable_type', $person['type'])
+                        ->where('properties->employable_id', $person['id']);
+                });
+                foreach ($person['names'] as $name) {
+                    $subject->orWhereJsonContains('properties->translation_key_placeholder_values', $name)
+                        ->orWhereJsonContains('properties->affected_workers', $name);
+                }
+            });
+
+            if ($person['scope'] !== self::PERSON_SCOPE_SUBJECT && $personShiftIds !== []) {
+                $outer->orWhere(function ($assigned) use ($personShiftIds): void {
+                    $assigned->where('subject_type', Shift::class)
+                        ->whereIn('subject_id', $personShiftIds);
+                });
+                // Sammel-Einträge (Festschreibung KW/Zeitraum) ohne Subject: enthalten shift_ids
+                $outer->orWhere(function ($summary) use ($personShiftIds): void {
+                    $summary->whereNull('subject_id');
+                    $summary->where(function ($anyShift) use ($personShiftIds): void {
+                        foreach (array_slice($personShiftIds, 0, 500) as $shiftId) {
+                            $anyShift->orWhereJsonContains('properties->shift_ids', $shiftId);
+                        }
+                    });
+                });
+            }
+
+            if ($person['scope'] === self::PERSON_SCOPE_CAUSER && $person['type'] === User::class) {
+                $outer->orWhere(function ($caused) use ($person): void {
+                    $caused->where('causer_type', User::class)->where('causer_id', $person['id']);
+                });
+            }
+        });
     }
 }

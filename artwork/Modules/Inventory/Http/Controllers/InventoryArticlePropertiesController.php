@@ -24,7 +24,7 @@ class InventoryArticlePropertiesController extends Controller
     /**
      * Show the form for creating a new resource.
      */
-    public function create()
+    public function create(): void
     {
         //
     }
@@ -32,7 +32,7 @@ class InventoryArticlePropertiesController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(StoreInventoryArticlePropertiesRequest $request)
+    public function store(StoreInventoryArticlePropertiesRequest $request): void
     {
         InventoryArticleProperties::create($request->validated());
     }
@@ -40,7 +40,7 @@ class InventoryArticlePropertiesController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(InventoryArticleProperties $inventoryArticleProperties)
+    public function show(InventoryArticleProperties $inventoryArticleProperties): void
     {
         //
     }
@@ -48,7 +48,7 @@ class InventoryArticlePropertiesController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(InventoryArticleProperties $inventoryArticleProperties)
+    public function edit(InventoryArticleProperties $inventoryArticleProperties): void
     {
         //
     }
@@ -56,15 +56,17 @@ class InventoryArticlePropertiesController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(UpdateInventoryArticlePropertiesRequest $request, InventoryArticleProperties $inventoryArticleProperty)
-    {
+    public function update(
+        UpdateInventoryArticlePropertiesRequest $request,
+        InventoryArticleProperties $inventoryArticleProperty
+    ): void {
         $inventoryArticleProperty->update($request->validated());
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(InventoryArticleProperties $inventoryArticleProperty)
+    public function destroy(InventoryArticleProperties $inventoryArticleProperty): void
     {
         // Pflicht-Properties (z. B. "Raum"/"Hersteller", is_deletable=false) dürfen nicht
         // gelöscht werden — sonst entfernt die FK-Kaskade alle zugehörigen Property-Werte.

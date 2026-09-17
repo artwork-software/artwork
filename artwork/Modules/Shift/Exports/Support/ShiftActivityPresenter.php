@@ -105,7 +105,15 @@ final class ShiftActivityPresenter
         if (!empty($properties['commit_summary']) || $ctx === 'commit') {
             return 'commitment';
         }
-        if (in_array($ev, ['committed', 'uncommitted', 'committed_bulk', 'uncommitted_bulk', 'shift_committed'], true)) {
+        if (
+            in_array($ev, [
+            'committed',
+            'uncommitted',
+            'committed_bulk',
+            'uncommitted_bulk',
+            'shift_committed',
+            ], true)
+        ) {
             return 'commitment';
         }
         if (in_array($ev, ['shift_added_to_request', 'workflow_withdrawn'], true) || str_contains($key, 'request')) {
@@ -168,7 +176,8 @@ final class ShiftActivityPresenter
 
             return [
                 'date' => $start
-                    ? ($end && $end !== $start ? self::dateDe($start) . ' – ' . self::dateDe($end) : self::dateDe($start))
+                    ? ($end
+                         && $end !== $start ? self::dateDe($start) . ' – ' . self::dateDe($end) : self::dateDe($start))
                     : '',
                 'time' => '',
                 'room' => '',
@@ -194,7 +203,11 @@ final class ShiftActivityPresenter
                 : '',
             'time' => trim(implode(' – ', array_filter([$start, $end]))),
             'room' => (string) ($snap['room'] ?? $live?->room?->name ?? $old['room.name'] ?? ''),
-            'craft' => (string) ($snap['craft'] ?? $live?->craft?->abbreviation ?? $live?->craft?->name ?? $old['craft.name'] ?? ''),
+            'craft' => (string) ($snap['craft']
+                 ?? $live?->craft?->abbreviation
+                 ?? $live?->craft?->name
+                 ?? $old['craft.name']
+                 ?? ''),
         ];
     }
 
@@ -265,7 +278,11 @@ final class ShiftActivityPresenter
         if (!is_array($payload)) {
             return null;
         }
-        $base = $payload['label'] ?? $payload[$fallbackKey] ?? $payload['before_label'] ?? $payload['after_label'] ?? null;
+        $base = $payload['label']
+             ?? $payload[$fallbackKey]
+             ?? $payload['before_label']
+             ?? $payload['after_label']
+             ?? null;
         if (!$base) {
             $parts = [];
             $date = $payload['start_date'] ?? $payload['event_start_day'] ?? null;

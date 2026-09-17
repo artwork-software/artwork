@@ -22,7 +22,8 @@ class InventoryPlanningService
     public function __construct(
         protected readonly InventoryArticleRepository $articleRepo,
         protected readonly InventoryUserFilterService $filterService,
-    ) {}
+    ) {
+    }
 
 
     public function getAvailabilityData(User $user): array
@@ -94,7 +95,7 @@ class InventoryPlanningService
     protected function loadInternalIssuesInRange(array $articleIds, string $rangeStart, string $rangeEnd): Collection
     {
         return InternalIssue::with([
-            'articles' => function ($query) use ($articleIds) {
+            'articles' => function ($query) use ($articleIds): void {
                 $query->whereIn('inventory_articles.id', $articleIds);
             },
             'project:id,name',
@@ -116,7 +117,7 @@ class InventoryPlanningService
     protected function loadExternalIssuesInRange(array $articleIds, string $rangeStart, string $rangeEnd): Collection
     {
         return ExternalIssue::with([
-            'articles' => function ($query) use ($articleIds) {
+            'articles' => function ($query) use ($articleIds): void {
                 $query->whereIn('inventory_articles.id', $articleIds);
             },
             'receivedBy:id,first_name,last_name',
@@ -340,7 +341,13 @@ class InventoryPlanningService
             int $startMin,
             int $endMin,
             iterable $issueArticles
-        ) use (&$intervals, $dateList, $dateIndex, $rangeStart, $rangeEnd): void {
+        ) use (
+            &$intervals,
+            $dateList,
+            $dateIndex,
+            $rangeStart,
+            $rangeEnd
+): void {
             $effectiveStart = $startDate < $rangeStart ? $rangeStart : $startDate;
             $effectiveEnd   = $endDate   > $rangeEnd   ? $rangeEnd   : $endDate;
 
@@ -481,7 +488,7 @@ class InventoryPlanningService
         $article = InventoryArticle::with(['category', 'subCategory', 'statusValues', 'detailedArticleQuantities'])
             ->findOrFail($articleId);
 
-        $internal = InternalIssue::with(['articles' => function ($query) use ($articleId) {
+        $internal = InternalIssue::with(['articles' => function ($query) use ($articleId): void {
             $query->where('inventory_article_id', $articleId);
         }, 'project', 'specialItems', 'files', 'responsibleUsers'])
             // B11: date-typed columns — plain comparison uses the index.
@@ -489,7 +496,7 @@ class InventoryPlanningService
             ->where('end_date', '>=', $date)
             ->get();
 
-        $external = ExternalIssue::with(['articles' => function ($query) use ($articleId) {
+        $external = ExternalIssue::with(['articles' => function ($query) use ($articleId): void {
             $query->where('inventory_article_id', $articleId);
         }, 'issuedBy', 'receivedBy', 'files', 'specialItems'])
             ->where('issue_date', '<=', $date)
@@ -528,7 +535,9 @@ class InventoryPlanningService
         foreach ($internal as $issue) {
             foreach ($issue->articles as $a) {
                 $internalForSweep->push((object) [
-                    'start_date' => $issue->start_date ? CarbonCarbon::parse($issue->start_date)->format('Y-m-d') : null,
+                    'start_date' => $issue
+                        ->start_date ? CarbonCarbon::parse($issue->start_date)
+                        ->format('Y-m-d') : null,
                     'start_time' => $issue->start_time,
                     'end_date' => $issue->end_date ? CarbonCarbon::parse($issue->end_date)->format('Y-m-d') : null,
                     'end_time' => $issue->end_time,
@@ -541,8 +550,12 @@ class InventoryPlanningService
         foreach ($external as $issue) {
             foreach ($issue->articles as $a) {
                 $externalForSweep->push((object) [
-                    'issue_date' => $issue->issue_date ? CarbonCarbon::parse($issue->issue_date)->format('Y-m-d') : null,
-                    'return_date' => $issue->return_date ? CarbonCarbon::parse($issue->return_date)->format('Y-m-d') : null,
+                    'issue_date' => $issue
+                        ->issue_date ? CarbonCarbon::parse($issue->issue_date)
+                        ->format('Y-m-d') : null,
+                    'return_date' => $issue
+                        ->return_date ? CarbonCarbon::parse($issue->return_date)
+                        ->format('Y-m-d') : null,
                     'pivot' => (object) ['quantity' => $a->pivot->quantity],
                 ]);
             }
@@ -603,7 +616,17 @@ class InventoryPlanningService
         // dayIntervals[$date] = [[startMin, endMin, qty], ...]
         $dayIntervals = [];
 
-        $collect = function (?string $startDate, ?string $endDate, int $startMin, int $endMin, int $qty) use (&$dayIntervals, $rangeStart, $rangeEnd): void {
+        $collect = function (
+            ?string $startDate,
+            ?string $endDate,
+            int $startMin,
+            int $endMin,
+            int $qty
+        ) use (
+            &$dayIntervals,
+            $rangeStart,
+            $rangeEnd
+): void {
             if ($qty <= 0 || $startDate === null) {
                 return;
             }
@@ -739,22 +762,22 @@ class InventoryPlanningService
             'detailedArticleQuantities', 'detailedArticleQuantities.status',
         ])->findOrFail($articleId);
 
-        $internal = InternalIssue::with(['articles' => function ($query) use ($articleId) {
+        $internal = InternalIssue::with(['articles' => function ($query) use ($articleId): void {
             $query->where('inventory_article_id', $articleId);
         }, 'project'])
             // B11: date-typed columns — plain comparison uses the index.
             ->where('start_date', '<=', $endDate)
-            ->where(function ($q) use ($startDate) {
+            ->where(function ($q) use ($startDate): void {
                 $q->where('end_date', '>=', $startDate)
                     ->orWhereNull('end_date');
             })
             ->get();
 
-        $external = ExternalIssue::with(['articles' => function ($query) use ($articleId) {
+        $external = ExternalIssue::with(['articles' => function ($query) use ($articleId): void {
             $query->where('inventory_article_id', $articleId);
         }])
             ->where('issue_date', '<=', $endDate)
-            ->where(function ($q) use ($startDate) {
+            ->where(function ($q) use ($startDate): void {
                 $q->where('return_date', '>=', $startDate)
                     ->orWhereNull('return_date');
             })
@@ -799,7 +822,9 @@ class InventoryPlanningService
         foreach ($availabilityInternal as $issue) {
             foreach ($issue->articles as $a) {
                 $internalForSweep->push((object) [
-                    'start_date' => $issue->start_date ? CarbonCarbon::parse($issue->start_date)->format('Y-m-d') : null,
+                    'start_date' => $issue
+                        ->start_date ? CarbonCarbon::parse($issue->start_date)
+                        ->format('Y-m-d') : null,
                     'start_time' => $issue->start_time,
                     'end_date' => $issue->end_date ? CarbonCarbon::parse($issue->end_date)->format('Y-m-d') : null,
                     'end_time' => $issue->end_time,
@@ -812,8 +837,12 @@ class InventoryPlanningService
         foreach ($availabilityExternal as $issue) {
             foreach ($issue->articles as $a) {
                 $externalForSweep->push((object) [
-                    'issue_date' => $issue->issue_date ? CarbonCarbon::parse($issue->issue_date)->format('Y-m-d') : null,
-                    'return_date' => $issue->return_date ? CarbonCarbon::parse($issue->return_date)->format('Y-m-d') : null,
+                    'issue_date' => $issue
+                        ->issue_date ? CarbonCarbon::parse($issue->issue_date)
+                        ->format('Y-m-d') : null,
+                    'return_date' => $issue
+                        ->return_date ? CarbonCarbon::parse($issue->return_date)
+                        ->format('Y-m-d') : null,
                     'pivot' => (object) ['quantity' => $a->pivot->quantity],
                 ]);
             }

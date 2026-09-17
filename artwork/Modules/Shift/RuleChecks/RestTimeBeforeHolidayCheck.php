@@ -53,6 +53,4 @@ class RestTimeBeforeHolidayCheck extends AbstractRuleCheck
     {
         return 'restTimeBeforeHoliday';
     }
-
-
 }

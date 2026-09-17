@@ -120,8 +120,7 @@ readonly class CalendarDataService
         User $user,
         bool $extraRow = true,
         ?bool $isDailyView = null
-    ): array
-    {
+    ): array {
         if (!$startDate || !$endDate) {
             return [];
         }
@@ -215,6 +214,7 @@ readonly class CalendarDataService
      */
     public function getFilteredRooms(
         ?UserFilter $filter,
+        // phpcs:ignore Generic.Files.LineLength.TooLong -- Union-Typ ohne Alias nicht umbrechbar
         null|UserCalendarSettings|UserDailyViewCalendarSettings|UserShiftPlanSettings|UserShiftPlanDailySettings $userCalendarSettings,
         CarbonInterface $startDate,
         CarbonInterface $endDate,
@@ -243,8 +243,14 @@ readonly class CalendarDataService
                 ->whereColumn('events.room_id', 'rooms.id')
                 ->whereNull('events.deleted_at')
                 // "Projektfremde Termine anzeigen": auch Räume behalten, die nur durch fremde Termine belegt sind
-                ->when($project !== null && !$showUnrelatedEvents, fn ($q) => $q->where('events.project_id', $project->id))
-                ->when(!empty($filter?->event_type_ids), fn ($q) => $q->whereIn('events.event_type_id', $filter->event_type_ids))
+                ->when(
+                    $project !== null && !$showUnrelatedEvents,
+                    fn ($q) => $q->where('events.project_id', $project->id)
+                )
+                ->when(
+                    !empty($filter?->event_type_ids),
+                    fn ($q) => $q->whereIn('events.event_type_id', $filter->event_type_ids)
+                )
                 ->where(fn ($q) => $overlap($q, 'events.start_time', 'events.end_time'))
                 ->where(function ($q) use ($userCalendarSettings): void {
                     $q->where('events.is_planning', false);
@@ -252,7 +258,9 @@ readonly class CalendarDataService
                     if (
                         $userCalendarSettings?->show_planned_events &&
                         $user &&
-                        ($user->hasRole('artwork admin') || $user->can('can see planning calendar') || $user->can('can edit planning calendar'))
+                        ($user->hasRole('artwork admin') ||
+                             $user->can('can see planning calendar') ||
+                             $user->can('can edit planning calendar'))
                     ) {
                         $q->orWhere('events.is_planning', true);
                     }
@@ -261,7 +269,7 @@ readonly class CalendarDataService
             if (!empty($filter?->event_property_ids)) {
                 $ids = $filter->event_property_ids;
 
-                $eventQuery->whereExists(function ($sq) use ($ids) {
+                $eventQuery->whereExists(function ($sq) use ($ids): void {
                     $sq->selectRaw('1')
                         ->from('event_event_property as eep')
                         ->whereColumn('eep.event_id', 'events.id')
@@ -287,7 +295,10 @@ readonly class CalendarDataService
                 ->whereNull('shifts.event_id')
                 ->whereColumn('shifts.room_id', 'rooms.id')
                 // "Projektfremde Schichten anzeigen": auch Räume behalten, die nur durch fremde Schichten belegt sind
-                ->when($project !== null && !$showUnrelatedShifts, fn ($q) => $q->where('shifts.project_id', $project->id))
+                ->when(
+                    $project !== null && !$showUnrelatedShifts,
+                    fn ($q) => $q->where('shifts.project_id', $project->id)
+                )
                 ->when(!empty($filter?->craft_ids), fn ($q) => $q->whereIn('shifts.craft_id', $filter->craft_ids))
                 ->where(fn ($q) => $overlap($q, 'shifts.start_date', 'shifts.end_date'));
         };
@@ -311,7 +322,11 @@ readonly class CalendarDataService
             })
             ->when(
                 $userCalendarSettings?->hide_unoccupied_rooms,
-                function ($query) use ($eventOccupancySubquery, $shiftOccupancySubquery, $considerShiftsForOccupancy): void {
+                function ($query) use (
+                    $eventOccupancySubquery,
+                    $shiftOccupancySubquery,
+                    $considerShiftsForOccupancy
+                ): void {
                     if (!$considerShiftsForOccupancy) {
                         $query->whereExists($eventOccupancySubquery);
                     } else {
@@ -331,6 +346,7 @@ readonly class CalendarDataService
 
 
     public function getCalendarDateRange(
+        // phpcs:ignore Generic.Files.LineLength.TooLong -- Union-Typ ohne Alias nicht umbrechbar
         UserCalendarSettings|UserDailyViewCalendarSettings|UserShiftPlanSettings|UserShiftPlanDailySettings $userCalendarSettings,
         ?UserFilter $userCalendarFilter,
         ?Project $project = null
@@ -393,7 +409,10 @@ readonly class CalendarDataService
                     ->orWhere(function (Builder $nested) use ($start, $end): void {
                         // jährliche Gedenktage
                         $nested->where('yearly', true)
-                            ->whereBetween(\DB::raw('DATE_FORMAT(date, "%m-%d")'), [$start->format('m-d'), $end->format('m-d')]);
+                            ->whereBetween(\DB::raw('DATE_FORMAT(date, "%m-%d")'), [
+                                $start->format('m-d'),
+                                $end->format('m-d'),
+                            ]);
                     });
             })
             ->with(['subdivisions' => fn($q) => $q->select('name')])

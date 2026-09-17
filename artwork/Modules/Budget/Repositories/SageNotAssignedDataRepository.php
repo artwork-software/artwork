@@ -81,7 +81,7 @@ class SageNotAssignedDataRepository extends BaseRepository
         return SageNotAssignedData::query()
             ->with('findChildren')
             ->whereNull('parent_booking_id')
-            ->where(function($q) use ($projectId) {
+            ->where(function ($q) use ($projectId): void {
                 $q->where('project_id', $projectId)
                     ->orWhereNull('project_id');
             })

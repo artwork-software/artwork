@@ -4,57 +4,69 @@
              (Zuweisung per Drop ging in der reinen Anzeige-Pille verloren — Abnahme DP-07). -->
         <div
             v-if="compact"
-            class="flex items-center justify-between gap-x-1 px-1 py-0.5 text-[10px] cursor-pointer select-none"
-            :title="`${resolvedCraft.abbreviation ?? ''} ${shift.start} - ${shift.end} (${computedUsedWorkerCount}/${computedMaxWorkerCount})`"
+            class="cursor-pointer select-none"
+            :title="compactTitle"
             @dragover="onDragOver"
             @drop="onDrop"
             @click="handleClickEvent"
         >
-            <span class="flex items-center gap-x-1 min-w-0">
-                <PropertyIcon
-                    v-if="shift.isCommitted"
-                    name="IconLock"
-                    class="size-3 shrink-0 text-black"
-                    :stroke-width="2"
-                />
-                <!-- Nur Startzeit — die volle Zeitspanne steht im title-Tooltip und im Modal -->
-                <span class="truncate">
-                    {{ resolvedCraft.abbreviation }} {{ shift.start }}
+            <div class="flex items-center justify-between gap-x-1 px-1 py-0.5 text-[10px]">
+                <span class="flex items-center gap-x-1 min-w-0">
+                    <PropertyIcon
+                        v-if="shift.isCommitted"
+                        name="IconLock"
+                        class="size-3 shrink-0 text-black"
+                        :stroke-width="2"
+                    />
+                    <!-- Nur Startzeit — die volle Zeitspanne steht im title-Tooltip und im Modal -->
+                    <span class="truncate">
+                        {{ resolvedCraft.abbreviation }} {{ shift.start }}
+                    </span>
                 </span>
-            </span>
-            <span class="flex items-center shrink-0 tabular-nums">
-                ({{ computedUsedWorkerCount }}/{{ computedMaxWorkerCount }})
-                <!-- Absage einer eingeplanten Person: rotes Icon, Klick öffnet „Ersatz suchen" -->
-                <button
-                    v-if="declinedWorkers.length"
-                    type="button"
-                    class="ml-1 shrink-0 text-danger"
-                    :title="declinedWorkersTooltip"
-                    @click.stop="openReplacement(declinedWorkers[0])"
-                >
-                    <PropertyIcon name="IconCircleX" class="h-2.5 w-2.5" :stroke-width="2.5" />
-                </button>
-                <!-- Eingeplante Person nicht (mehr) verfügbar: Warndreieck statt Besetzungs-Punkt,
-                     rot bei festgeschriebener Schicht -->
-                <svg
-                    v-if="unavailableWorkers.length"
-                    class="ml-1 h-2.5 w-2.5 shrink-0"
-                    :class="shift.isCommitted ? 'text-danger' : 'text-warning'"
-                    fill="currentColor" viewBox="0 0 20 20"
-                >
-                    <title>{{ unavailableWorkersTooltip }}</title>
-                    <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
-                </svg>
-                <span
-                    v-else
-                    class="ml-1 inline-block h-2 w-2 rounded-full"
-                    :class="{
-                        'bg-danger': (computedUsedWorkerCount === 0 && computedMaxWorkerCount !== 0) || computedUsedWorkerCount > computedMaxWorkerCount,
-                        'bg-warning': computedUsedWorkerCount !== 0 && computedUsedWorkerCount < computedMaxWorkerCount,
-                        'bg-success': computedUsedWorkerCount === computedMaxWorkerCount
-                    }"
-                ></span>
-            </span>
+                <span class="flex items-center shrink-0 tabular-nums">
+                    ({{ computedUsedWorkerCount }}/{{ computedMaxWorkerCount }})
+                    <!-- Absage einer eingeplanten Person: rotes Icon, Klick öffnet „Ersatz suchen" -->
+                    <button
+                        v-if="declinedWorkers.length"
+                        type="button"
+                        class="ml-1 shrink-0 text-danger"
+                        :title="declinedWorkersTooltip"
+                        @click.stop="openReplacement(declinedWorkers[0])"
+                    >
+                        <PropertyIcon name="IconCircleX" class="h-2.5 w-2.5" :stroke-width="2.5" />
+                    </button>
+                    <!-- Eingeplante Person nicht (mehr) verfügbar: Warndreieck statt Besetzungs-Punkt,
+                         rot bei festgeschriebener Schicht -->
+                    <svg
+                        v-if="unavailableWorkers.length"
+                        class="ml-1 h-2.5 w-2.5 shrink-0"
+                        :class="shift.isCommitted ? 'text-danger' : 'text-warning'"
+                        fill="currentColor" viewBox="0 0 20 20"
+                    >
+                        <title>{{ unavailableWorkersTooltip }}</title>
+                        <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+                    </svg>
+                    <span
+                        v-else
+                        class="ml-1 inline-block h-2 w-2 rounded-full"
+                        :class="{
+                            'bg-danger': (computedUsedWorkerCount === 0 && computedMaxWorkerCount !== 0) || computedUsedWorkerCount > computedMaxWorkerCount,
+                            'bg-warning': computedUsedWorkerCount !== 0 && computedUsedWorkerCount < computedMaxWorkerCount,
+                            'bg-success': computedUsedWorkerCount === computedMaxWorkerCount
+                        }"
+                    ></span>
+                </span>
+            </div>
+            <!-- Anzeigeeinstellung „Beschreibung anzeigen" (shift_notes) gilt auch in der Kompaktpille:
+                 eine Zeile unter der Pille, gekürzt (voller Text im Tooltip) bzw. umbrechend bei „Tage ausklappen".
+                 Höhe (14px/Zeile + 2px) wird in ShiftPlan.vue summarizeCell() mitgerechnet. -->
+            <div
+                v-if="displaySettings?.shift_notes && shift.description"
+                class="px-1 pb-0.5 text-[10px]/3.5 text-text-subtle"
+                :class="expandDays ? 'break-words' : 'truncate'"
+            >
+                {{ shift.description }}
+            </div>
         </div>
         <div
             v-else
@@ -323,6 +335,14 @@ const { proxy } = getCurrentInstance() || {}
 // das Anzeige-Modal im Dienstplan speichert mit is_shift_plan dorthin)
 const displaySettings = computed<any>(() => page.props.shift_plan_settings ?? page.props.auth.user.calendar_settings)
 const expandDays = computed(() => displaySettings.value?.expand_days ?? false)
+
+/** Tooltip der Kompaktpille: Gewerk, volle Zeitspanne, Besetzung — plus Beschreibung, wenn eingeblendet */
+const compactTitle = computed(() => {
+    const base = `${resolvedCraft.value.abbreviation ?? ''} ${props.shift.start} - ${props.shift.end} (${computedUsedWorkerCount.value}/${computedMaxWorkerCount.value})`
+    return displaySettings.value?.shift_notes && props.shift.description
+        ? `${base}\n${props.shift.description}`
+        : base
+})
 
 const { resolveCraft, resolveShiftGroup } = useShiftPlanLookups();
 const resolvedCraft = computed(() => props.shift?.craft ?? resolveCraft(props.shift?.craftId) ?? {});

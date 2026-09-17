@@ -40,8 +40,7 @@ class ProjectPrintLayoutController extends Controller
         private readonly ProjectTabService $projectTabService,
         private readonly UserService $userService,
         private readonly \Artwork\Modules\BusinessIntelligence\Services\BiProjectMetricsService $biProjectMetricsService
-    )
-    {
+    ) {
     }
     /**
      * Display a listing of the resource.
@@ -96,9 +95,8 @@ class ProjectPrintLayoutController extends Controller
     /**
      * Show the form for creating a new resource.
      */
-    public function create()
+    public function create(): void
     {
-
     }
 
     /**
@@ -126,7 +124,10 @@ class ProjectPrintLayoutController extends Controller
             'components.component',
         ]);
         $loadedProjectInformation = [];
-        $projectComponents = collect([$project])->map(function ($project) use ($projectPrintLayout, $loadedProjectInformation ) {
+        $projectComponents = collect([$project])->map(function ($project) use (
+            $projectPrintLayout,
+            $loadedProjectInformation
+        ) {
             /** @var Project $project */
             $projectData = new stdClass(); // needed for the ProjectShowHeaderComponent
             $projectData->id = $project->id;
@@ -362,7 +363,7 @@ class ProjectPrintLayoutController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(string $id)
+    public function edit(string $id): void
     {
         //
     }
@@ -370,9 +371,9 @@ class ProjectPrintLayoutController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(UpdateProjectPrintLayoutRequest $request, ProjectPrintLayout $projectPrintLayout)
+    public function update(UpdateProjectPrintLayoutRequest $request, ProjectPrintLayout $projectPrintLayout): void
     {
-        if ($request->validated() && $projectPrintLayout->exists){
+        if ($request->validated() && $projectPrintLayout->exists) {
             $projectPrintLayout->update($request->all());
         }
     }
@@ -380,14 +381,15 @@ class ProjectPrintLayoutController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(ProjectPrintLayout $projectPrintLayout)
+    public function destroy(ProjectPrintLayout $projectPrintLayout): void
     {
         // first remove all components
         $projectPrintLayout->components()->delete();
         $projectPrintLayout->delete();
     }
 
-    public function addComponent(ProjectPrintLayout $projectPrintLayout, Request $request){
+    public function addComponent(ProjectPrintLayout $projectPrintLayout, Request $request): void
+    {
         $projectPrintLayout->components()->create([
             'component_id' => $request->get('component_id'),
             'type' => $request->get('type'),
@@ -396,7 +398,8 @@ class ProjectPrintLayoutController extends Controller
         ]);
     }
 
-    public function destroyComponent(PrintLayoutComponents $printLayoutComponent){
+    public function destroyComponent(PrintLayoutComponents $printLayoutComponent): void
+    {
         $printLayoutComponent->delete();
     }
 
@@ -432,7 +435,8 @@ class ProjectPrintLayoutController extends Controller
         });
     }
 
-    public function updateHeaderNote(Request $request, ProjectPrintLayout $projectPrintLayout){
+    public function updateHeaderNote(Request $request, ProjectPrintLayout $projectPrintLayout): void
+    {
         $projectPrintLayout->update([
             'notes' => [
                 'header' => collect($request->input('header_note', [])),

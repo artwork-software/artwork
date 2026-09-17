@@ -13,7 +13,8 @@ class EventUpdateRequest extends EventStoreOrUpdateRequest
      * @param  mixed  $default
      * @return mixed
      */
-    public function data($key = null, $default = null)
+    // phpcs:ignore SlevomatCodingStandard.TypeHints.ParameterTypeHint.MissingNativeTypeHint -- Signatur der Elternklasse erlaubt keinen Typ
+    public function data($key = null, $default = null): mixed
     {
         $eventData = [
             'start_time' => Carbon::create($this->get('start'))->setTimezone(config('app.timezone')),
@@ -51,6 +52,4 @@ class EventUpdateRequest extends EventStoreOrUpdateRequest
 
         return $eventData[$key] ?? $default;
     }
-
-
 }

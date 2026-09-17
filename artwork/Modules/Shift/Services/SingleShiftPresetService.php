@@ -10,7 +10,8 @@ class SingleShiftPresetService
 {
     public function __construct(
         private readonly SingleShiftPresetRepository $repository
-    ) {}
+    ) {
+    }
 
     public function createPreset(array $data): SingleShiftPreset
     {

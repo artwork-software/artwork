@@ -37,13 +37,22 @@ class ShiftHistoryExcelExport implements
     /** @var array<int, Shift>|null Live-Schichten (auch soft-deleted) für die Schicht-Spalten */
     private ?array $shiftsById = null;
 
+    private const REASON_LABELS = [
+        'subject' => 'Concerns the person',
+        'assigned' => 'Person is scheduled in this shift',
+        'causer' => 'Carried out by the person',
+    ];
+
     /**
      * @param array<int, int> $matchedShiftIds
+     * @param (\Closure(Activity): array<int, string>)|null $matchReasons Bezugsgründe pro Eintrag bei aktivem
+     *     Personenfilter (ShiftHistoryQueryService::matchReasons); null = kein Personenfilter, keine Spalte
      */
     public function __construct(
         private readonly Builder $activityQuery,
         private readonly array $matchedShiftIds,
         private readonly ?string $locale = null,
+        private readonly ?\Closure $matchReasons = null,
     ) {
         $this->presenter = new ShiftActivityPresenter($locale);
     }
@@ -68,7 +77,7 @@ class ShiftHistoryExcelExport implements
      */
     public function headings(): array
     {
-        return [
+        $headings = [
             $this->tr('Timestamp'),
             $this->tr('Changed by'),
             $this->tr('Action'),
@@ -78,18 +87,24 @@ class ShiftHistoryExcelExport implements
             $this->tr('Craft'),
             $this->tr('Details'),
         ];
+        if ($this->matchReasons !== null) {
+            $headings[] = $this->tr('Relation');
+        }
+
+        return $headings;
     }
 
     /**
      * @param Activity $log
      * @return array<int, mixed>
      */
+    // phpcs:ignore SlevomatCodingStandard.TypeHints.ParameterTypeHint.MissingNativeTypeHint -- Signatur der Elternklasse erlaubt keinen Typ
     public function map($log): array
     {
         $shift = $this->presenter->shiftDetails($log, $this->shiftsById());
         $details = array_merge([$this->presenter->message($log)], $this->presenter->changeLines($log));
 
-        return [
+        $row = [
             $log->created_at?->format('d.m.Y H:i') ?? '',
             $this->presenter->causerName($log),
             $this->presenter->categoryLabel($log),
@@ -99,6 +114,14 @@ class ShiftHistoryExcelExport implements
             $shift['craft'],
             implode("\n", array_filter($details, fn ($line) => $line !== '')),
         ];
+        if ($this->matchReasons !== null) {
+            $row[] = implode(', ', array_map(
+                fn (string $reason) => $this->tr(self::REASON_LABELS[$reason] ?? $reason),
+                ($this->matchReasons)($log)
+            ));
+        }
+
+        return $row;
     }
 
     public function styles(Worksheet $sheet): array

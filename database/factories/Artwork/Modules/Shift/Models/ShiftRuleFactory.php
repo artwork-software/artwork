@@ -16,7 +16,7 @@ class ShiftRuleFactory extends Factory
             'description' => $this->faker->sentence(),
             'trigger_type' => $this->faker->randomElement([
                 'maxWorkingHoursOnDay',
-                'maxConsecWorkingDays', 
+                'maxConsecWorkingDays',
                 'weeklyMaxHours',
                 'restTimeBeforeWorkday',
                 'restTimeBeforeHoliday'

@@ -17,7 +17,7 @@ class InventoryArticleImageDTO
      */
     public static function fromModel(InventoryArticleImage $image): static
     {
-        $dto = new static();
+        $dto = new self();
         $dto->url = $image->getAbsoluteImageUrl();
 
         return $dto;
@@ -29,7 +29,7 @@ class InventoryArticleImageDTO
      * @param \Illuminate\Database\Eloquent\Collection $images
      * @return array
      */
-    public static function fromCollection($images): array
+    public static function fromCollection(\Illuminate\Database\Eloquent\Collection $images): array
     {
         $urls = [];
 
@@ -58,7 +58,7 @@ class InventoryArticleImageDTO
      */
     public static function fromArray(array $data): static
     {
-        $dto = new static();
+        $dto = new self();
 
         foreach ($data as $key => $value) {
             if (property_exists($dto, $key)) {

@@ -21,7 +21,8 @@ readonly class CrmDuplicateService
 
     public function __construct(
         private CrmContactService $contactService,
-    ) {}
+    ) {
+    }
 
     /**
      * Findet Duplikat-Cluster: Kontakte desselben Typs mit gleichem Namen oder
@@ -66,7 +67,15 @@ readonly class CrmDuplicateService
         $clusters = [];
         $seenIdSets = [];
 
-        $pushCluster = function (string $match, string $key, array $group) use (&$clusters, &$seenIdSets, $types): void {
+        $pushCluster = function (
+            string $match,
+            string $key,
+            array $group
+        ) use (
+            &$clusters,
+            &$seenIdSets,
+            $types
+): void {
             if (count($group) < 2) {
                 return;
             }
@@ -237,8 +246,12 @@ readonly class CrmDuplicateService
      * Projekt am Hauptkontakt schon verknüpft, wird die Duplikat-Zeile verworfen
      * (bei $mergeRoles werden die Rollen-Arrays vorher vereinigt).
      */
-    private function reassignProjectPivot(string $table, CrmContact $primary, CrmContact $duplicate, bool $mergeRoles = false): void
-    {
+    private function reassignProjectPivot(
+        string $table,
+        CrmContact $primary,
+        CrmContact $duplicate,
+        bool $mergeRoles = false
+    ): void {
         $duplicateRows = DB::table($table)->where('crm_contact_id', $duplicate->id)->get();
 
         foreach ($duplicateRows as $row) {

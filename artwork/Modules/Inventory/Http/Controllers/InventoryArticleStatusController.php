@@ -24,7 +24,7 @@ class InventoryArticleStatusController extends Controller
     /**
      * Show the form for creating a new resource.
      */
-    public function create()
+    public function create(): void
     {
         //
     }
@@ -32,7 +32,7 @@ class InventoryArticleStatusController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(StoreInventoryArticleStatusRequest $request)
+    public function store(StoreInventoryArticleStatusRequest $request): void
     {
         //
     }
@@ -40,7 +40,7 @@ class InventoryArticleStatusController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(InventoryArticleStatus $inventoryArticleStatus)
+    public function show(InventoryArticleStatus $inventoryArticleStatus): void
     {
         //
     }
@@ -48,7 +48,7 @@ class InventoryArticleStatusController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(InventoryArticleStatus $inventoryArticleStatus)
+    public function edit(InventoryArticleStatus $inventoryArticleStatus): void
     {
         //
     }
@@ -65,7 +65,7 @@ class InventoryArticleStatusController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(InventoryArticleStatus $inventoryArticleStatus)
+    public function destroy(InventoryArticleStatus $inventoryArticleStatus): void
     {
         //
     }

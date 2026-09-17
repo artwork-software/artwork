@@ -103,7 +103,8 @@ class DemoPrintLayoutSeeder extends Seeder
             ],
             [
                 'name' => 'Technische Vorlage',
-                'description' => 'Für die Gewerke: technische Anforderungen, schichtrelevante Termine und Ansprechpersonen.',
+            'description' => 'Für die Gewerke: technische Anforderungen, schichtrelevante Termine und '
+                    . 'Ansprechpersonen.',
                 'is_default' => false,
                 'columns_header' => 1,
                 'columns_body' => 1,

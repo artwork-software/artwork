@@ -54,6 +54,7 @@ enum ProjectTabComponentEnum: string
     case PROJECT_CONTRACTS_DOCUMENTS = 'ProjectContractsDocumentsComponent';
     case BUSINESS_INTELLIGENCE = 'BusinessIntelligenceComponent';
     case BI_KEY_FIGURES = 'BiKeyFiguresDisplay';
+    case SAGE_INVOICE_OVERVIEW = 'SageInvoiceOverviewComponent';
 
     /**
      * Component types that may be rendered in the external tab view.

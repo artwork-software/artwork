@@ -1,0 +1,82 @@
+{
+    "eventsWithoutRoom": {
+        "[]": {
+            "allDay": ".",
+            "created_by": {
+                "first_name": ".",
+                "id": ".",
+                "last_name": ".",
+                "profile_photo_url": "."
+            },
+            "declinedRoomId": ".",
+            "description": ".",
+            "end": ".",
+            "eventLengthInHours": ".",
+            "eventName": ".",
+            "eventProperties": "[]",
+            "eventStatus": ".",
+            "eventType": {
+                "abbreviation": ".",
+                "hex_code": ".",
+                "id": ".",
+                "name": "."
+            },
+            "hasVerification": ".",
+            "id": ".",
+            "isPlanning": ".",
+            "is_series": ".",
+            "minutesFormStartHourToStart": ".",
+            "occupancy_option": ".",
+            "option_string": ".",
+            "project": {
+                "artistNames": ".",
+                "color": ".",
+                "group": {
+                    "[]": {
+                        "artistNames": ".",
+                        "color": ".",
+                        "group": ".",
+                        "icon": ".",
+                        "id": ".",
+                        "isGroup": ".",
+                        "isInGroup": ".",
+                        "leaders": "[]",
+                        "mainCategoryColor": ".",
+                        "name": ".",
+                        "status": ".",
+                        "userIds": "[]"
+                    }
+                },
+                "icon": ".",
+                "id": ".",
+                "isGroup": ".",
+                "isInGroup": ".",
+                "leaders": "[]",
+                "mainCategoryColor": ".",
+                "name": ".",
+                "status": ".",
+                "userIds": {
+                    "[]": "."
+                }
+            },
+            "roomId": ".",
+            "roomName": ".",
+            "shifts": ".",
+            "start": ".",
+            "startHour": ".",
+            "subEvents": "[]"
+        }
+    },
+    "rooms": {
+        "[]": {
+            "admins": {
+                "[]": "."
+            },
+            "everyone_can_book": ".",
+            "has_events": ".",
+            "id": ".",
+            "name": ".",
+            "requestable_by": "[]"
+        }
+    }
+}

@@ -13,7 +13,8 @@ readonly class CrmPropertyGroupService
 {
     public function __construct(
         private CrmPropertyGroupRepository $repository,
-    ) {}
+    ) {
+    }
 
     public function getAll(): Collection
     {
@@ -51,8 +52,12 @@ readonly class CrmPropertyGroupService
         $this->repository->delete($group);
     }
 
-    public function annotateEditPermissions(Collection $groups, int $userId, array $departmentIds, bool $isCrmManager): void
-    {
+    public function annotateEditPermissions(
+        Collection $groups,
+        int $userId,
+        array $departmentIds,
+        bool $isCrmManager
+    ): void {
         // Eager-load permissions to avoid N+1
         $groups->loadMissing('permissions');
 
@@ -65,21 +70,26 @@ readonly class CrmPropertyGroupService
                 continue;
             }
 
-            $canEdit = $group->permissions->contains(function ($perm) use ($userId, $departmentIds, $userMorphClass, $departmentMorphClass) {
-                if (!$perm->can_edit) {
+            $canEdit = $group
+                ->permissions
+                ->contains(function ($perm) use ($userId, $departmentIds, $userMorphClass, $departmentMorphClass) {
+                    if (!$perm->can_edit) {
+                        return false;
+                    }
+
+                    if ($perm->permissionable_type === $userMorphClass && $perm->permissionable_id === $userId) {
+                        return true;
+                    }
+
+                    if (
+                        $perm->permissionable_type === $departmentMorphClass
+                         && in_array($perm->permissionable_id, $departmentIds)
+                    ) {
+                        return true;
+                    }
+
                     return false;
-                }
-
-                if ($perm->permissionable_type === $userMorphClass && $perm->permissionable_id === $userId) {
-                    return true;
-                }
-
-                if ($perm->permissionable_type === $departmentMorphClass && in_array($perm->permissionable_id, $departmentIds)) {
-                    return true;
-                }
-
-                return false;
-            });
+                });
 
             $group->setAttribute('can_edit', $canEdit);
         }
@@ -111,7 +121,7 @@ readonly class CrmPropertyGroupService
 
     public function updatePermissions(CrmPropertyGroup $group, array $permissions): void
     {
-        DB::transaction(function () use ($group, $permissions) {
+        DB::transaction(function () use ($group, $permissions): void {
             $group->permissions()->delete();
 
             foreach ($permissions as $permission) {

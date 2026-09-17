@@ -19,7 +19,7 @@ readonly class EventStatusService
 
     public function create(array $data): EventStatus
     {
-        if($data['default']) {
+        if ($data['default']) {
             $this->eventStatusRepository->removeDefaultStatus();
         }
 
@@ -36,7 +36,7 @@ readonly class EventStatusService
 
     public function update(EventStatus $eventStatus, array $data): EventStatus
     {
-        if($data['default']) {
+        if ($data['default']) {
             $this->eventStatusRepository->removeDefaultStatus();
         }
 

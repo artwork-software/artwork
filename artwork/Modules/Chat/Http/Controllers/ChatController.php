@@ -26,7 +26,7 @@ class ChatController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(): void
     {
         //
     }
@@ -34,7 +34,7 @@ class ChatController extends Controller
     /**
      * Show the form for creating a new resource.
      */
-    public function create()
+    public function create(): void
     {
         //
     }
@@ -54,7 +54,7 @@ class ChatController extends Controller
             ->values();
 
         // Suche existierenden Chat mit exakt diesen Teilnehmern
-        $existingChat = Chat::whereHas('users', function ($q) use ($userIds) {
+        $existingChat = Chat::whereHas('users', function ($q) use ($userIds): void {
             $q->whereIn('users.id', $userIds);
         }, '=', $userIds->count())
             ->with('users') // wichtig für .users->pluck() später
@@ -99,15 +99,14 @@ class ChatController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(Chat $chat)
+    public function show(Chat $chat): void
     {
-
     }
 
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(Chat $chat)
+    public function edit(Chat $chat): void
     {
         //
     }
@@ -155,7 +154,7 @@ class ChatController extends Controller
         // Delete related data first (cascade)
         // Delete message reads
         \DB::table('chat_message_reads')
-            ->whereIn('message_id', function($query) use ($chatId) {
+            ->whereIn('message_id', function ($query) use ($chatId): void {
                 $query->select('id')
                     ->from('chat_messages')
                     ->where('chat_id', $chatId);
@@ -197,10 +196,10 @@ class ChatController extends Controller
         $user = $this->auth->user();
 
         $chats = $user->chats()
-            ->with(['users', 'messages' => function ($q) {
+            ->with(['users', 'messages' => function ($q): void {
                 $q->latest()->limit(1);
             }])
-            ->withCount(['messages as unread_count' => function ($q) use ($user) {
+            ->withCount(['messages as unread_count' => function ($q) use ($user): void {
                 $q->whereDoesntHave('reads', fn($sub) => $sub->where('user_id', $user->id))
                     ->where('sender_id', '!=', $user->id);
             }])

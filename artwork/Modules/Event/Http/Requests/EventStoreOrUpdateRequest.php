@@ -42,7 +42,13 @@ class EventStoreOrUpdateRequest extends FormRequest
             'optionString' => ['sometimes','nullable','string'],
             'allDay' => ['sometimes', 'nullable', 'boolean'],
             'showProjectPeriodInCalendar' => ['sometimes', 'nullable', 'boolean'],
+            'is_series' => ['sometimes', 'nullable', 'boolean'],
+            'seriesFrequency' => ['sometimes', 'nullable', 'integer', 'in:1,2,3,4'],
             'seriesEndDate' => ['sometimes', 'nullable', 'date'],
+            'seriesWeekdays' => ['sometimes', 'nullable', 'array'],
+            'seriesWeekdays.*' => ['integer', 'between:1,7'],
+            'seriesOccurrenceCount' => ['sometimes', 'nullable', 'integer', 'between:1,500'],
+            'seriesScope' => ['sometimes', 'nullable', 'in:single,following,all'],
         ];
     }
 

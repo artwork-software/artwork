@@ -250,8 +250,12 @@ class ShiftKpiTrackingService
      * Gewährte Urlaubstage (OFF_WORK) im Bereich, ganzer Tag = 1, halber Tag = 0,5 (max. 1 je Tag).
      * includePlanned=false zählt nur abgeschlossene Tage (bis gestern) – wie die Spielzeit-Kennzahlen.
      */
-    public function grantedVacationUnitsForUser(User $user, Carbon $from, Carbon $to, bool $includePlanned = false): float
-    {
+    public function grantedVacationUnitsForUser(
+        User $user,
+        Carbon $from,
+        Carbon $to,
+        bool $includePlanned = false
+    ): float {
         $from = $from->copy()->startOfDay();
         $to = $to->copy()->endOfDay();
         if (!$includePlanned) {

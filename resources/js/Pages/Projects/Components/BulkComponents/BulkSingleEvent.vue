@@ -652,14 +652,12 @@ const openDeleteEventConfirmModal = () => showDeleteEventConfirmModal.value = tr
 const onCloseDeleteEventConfirmModal = (closedOnPurpose) => { if (closedOnPurpose) emit('deleteCurrentEvent', props.event); showDeleteEventConfirmModal.value = false; };
 
 const confirmDeleteSeriesEvents = () => {
-    router.delete(route('events.series.delete', props.event.id), {
-        preserveScroll: true,
-        preserveState: false,
-        onFinish: () => {
+    // JSON-Endpunkt (kein Inertia-Response)
+    axios.delete(route('events.series.delete', props.event.id), { data: { scope: 'all' } })
+        .finally(() => {
             showDeleteSeriesModal.value = false;
             window.location.reload();
-        }
-    });
+        });
 };
 
 // helpers for snapshot comparison

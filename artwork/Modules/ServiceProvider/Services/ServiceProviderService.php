@@ -2,7 +2,7 @@
 
 namespace Artwork\Modules\ServiceProvider\Services;
 
-use Artwork\Modules\Craft\Models\Craft;
+use Artwork\Modules\Craft\Services\CraftService;
 use Artwork\Modules\Event\Services\EventService;
 use Artwork\Modules\EventType\Services\EventTypeService;
 use Artwork\Modules\Permission\Enums\PermissionEnum;
@@ -48,7 +48,8 @@ readonly class ServiceProviderService
 
         $serviceProviders = $craftIds !== null
             ? $this->serviceProviderRepository->getWorkersByIds(
-                app(\Artwork\Modules\Craft\Repositories\CraftRepository::class)->getWorkerIdsByCraftIds($craftIds)['service_provider_ids'],
+                app(\Artwork\Modules\Craft\Repositories\CraftRepository::class)
+                    ->getWorkerIdsByCraftIds($craftIds)['service_provider_ids'],
                 $startDate,
                 $endDate
             )
@@ -165,7 +166,8 @@ readonly class ServiceProviderService
             )
             // Einsatzplan-Daten pro Tag – wurden bisher berechnet, aber nie ans Frontend gegeben
             ->setDaysWithData($daysWithData)
-            ->setCrafts(Craft::all())
+            // Lookup-Felder der Einsatzplan-Karte + schlanke Planer:innen (wie UserService)
+            ->setCrafts(app(CraftService::class)->getLookupCrafts())
             ->setRooms($roomService->getAllWithoutTrashed())
             ->setEventTypes($eventTypeService->getAll())
             ->setProjects($projectService->getAll())

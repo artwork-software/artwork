@@ -36,7 +36,8 @@ class ChecklistUpdateRequest extends EventStoreOrUpdateRequest
      * @param mixed|null $default
      * @return mixed
      */
-    public function data($key = null, $default = null)
+    // phpcs:ignore SlevomatCodingStandard.TypeHints.ParameterTypeHint.MissingNativeTypeHint -- Signatur der Elternklasse erlaubt keinen Typ
+    public function data($key = null, $default = null): mixed
     {
         $data = $this->only(['user_id', 'name']);
 

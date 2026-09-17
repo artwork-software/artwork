@@ -12,7 +12,9 @@ use Artwork\Modules\Budget\Models\SubPosition;
 use Artwork\Modules\Budget\Models\SubPositionRow;
 use Artwork\Modules\Budget\Models\Table;
 use Artwork\Modules\GeneralSettings\Models\GeneralSettings;
+use Maatwebsite\Excel\Facades\Excel;
 use PHPUnit\Framework\Attributes\Test;
+use Tests\CreateAdminUser;
 use Tests\Feature\FeatureTestCase;
 
 /**
@@ -21,6 +23,8 @@ use Tests\Feature\FeatureTestCase;
  */
 final class BudgetExportTextColumnsTest extends FeatureTestCase
 {
+    use CreateAdminUser;
+
     /**
      * @return array{Table, array<int, Column>, SubPositionRow}
      */
@@ -113,8 +117,28 @@ final class BudgetExportTextColumnsTest extends FeatureTestCase
         $this->assertContains('0815 – Bühne', $data['cellDisplayValues']);
 
         $html = view('exports.projectBudget', ['data' => $data])->render();
-        $this->assertStringContainsString('04000 – Personalkosten', $html);
-        $this->assertStringContainsString('0815 – Bühne', $html);
+        $this->assertMatchesRegularExpression('/<td\s+data-type="s"\s*>\s*04000 – Personalkosten\s*<\/td>/', $html);
+        $this->assertMatchesRegularExpression('/<td\s+data-type="s"\s*>\s*0815 – Bühne\s*<\/td>/', $html);
+        // Nummern ohne hinterlegtes Konto bleiben als Nummer stehen (8000 hat kein Konto)
+        $this->assertMatchesRegularExpression('/<td\s+data-type="s"\s*>\s*8000\s*<\/td>/', $html);
+    }
+
+    #[Test]
+    public function export_route_delivers_number_and_name(): void
+    {
+        Excel::fake();
+        $this->setAccountManagement(true);
+        BudgetManagementAccount::factory()->create(['account_number' => '04000', 'title' => 'Personalkosten']);
+        [$table] = $this->createBudget();
+
+        $this->actingAs($this->adminUser())
+            ->get(route('projects.export.budget', ['project' => $table->project->id]))
+            ->assertOk();
+
+        Excel::matchByRegex();
+        Excel::assertDownloaded('/_budget_stand_.*\.xlsx$/', function (BudgetExport $export): bool {
+            return in_array('04000 – Personalkosten', $export->getData()['cellDisplayValues'], true);
+        });
     }
 
     #[Test]

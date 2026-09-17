@@ -27,8 +27,11 @@ class BiExportController extends Controller
      * Alles, was der gemeinsame Export-Dialog braucht (Projekt-Tab UND Dashboard):
      * Spaltenkatalog in Gruppen, Presets, Produktionen, Kostenträger, Spielzeit.
      */
-    public function options(Request $request, GeneralSettings $generalSettings, SeasonWindowResolver $seasonWindow): JsonResponse
-    {
+    public function options(
+        Request $request,
+        GeneralSettings $generalSettings,
+        SeasonWindowResolver $seasonWindow
+    ): JsonResponse {
         $this->authorizeBiExport($request);
 
         $user = $request->user();

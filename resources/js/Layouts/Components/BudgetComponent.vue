@@ -81,19 +81,6 @@
                         {{ $t('Excluded items hidden') }}
                     </span>
             </div>
-
-            <div class="flex items-center gap-x-2" v-if="!table.is_template && this.$page.props.budgetAccountManagementGlobal">
-                <SwitchDualLabel
-                    v-model="userShowAccountName"
-                    :left-label="$t('Show number')"
-                    :right-label="$t('Show name')"
-                />
-                <ToolTipComponent
-                    icon="IconInfoCircle"
-                    icon-size="w-5 h-5"
-                    :tooltip-text="$t('Use the slider to determine whether you want to see the name or the number in the first two columns when account linking is active.')"
-                />
-            </div>
         </div>
 
 
@@ -455,7 +442,6 @@
                                                                :main-position="mainPosition"
                                                                :project-managers="projectManager"
                                                                :hasBudgetAccess="this.hasBudgetAccess()"
-                                                               :user-show-account-name="userShowAccountName"
                                                                type="BUDGET_TYPE_COST"
                                         />
                                     </div>
@@ -582,7 +568,6 @@
                                                                :main-position="mainPosition"
                                                                :project-managers="projectManager"
                                                                :hasBudgetAccess="this.hasBudgetAccess()"
-                                                               :user-show-account-name="userShowAccountName"
                                                                type="BUDGET_TYPE_EARNING"
                                         />
                                     </div>
@@ -847,7 +832,6 @@ import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
 import {IconEyeX, IconFlagUp} from "@tabler/icons-vue";
 import SwitchIconTooltip from "@/Artwork/Toggles/SwitchIconTooltip.vue";
-import SwitchDualLabel from "@/Artwork/Toggles/SwitchDualLabel.vue";
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
@@ -868,7 +852,6 @@ export default {
         ArtworkBaseModal,
         BaseUIButton,
         SwitchIconTooltip,
-        SwitchDualLabel,
         ToolTipComponent,
         UserPopoverTooltip,
         UserSearch,
@@ -972,9 +955,6 @@ export default {
             userExcludeCommentedBudgetItems: this.$page.props.auth.user.commented_budget_items_setting ?
                 this.$page.props.auth.user.commented_budget_items_setting.exclude === 1 :
                 false,
-            userShowAccountName: this.$page.props.auth.user.budget_account_display_setting ?
-                !this.$page.props.auth.user.budget_account_display_setting.show_number :
-                false,
             showDeleteSageNotAssignedDataConfirmationModal: false,
             sageNotAssignedDataToDelete: null,
             localCostMainPositions: [],
@@ -1002,9 +982,6 @@ export default {
     ],
     emits: ['changeProjectHeaderVisualisation', 'budget-updated', 'sumDetailLoaded'],
     computed: {
-        userShowAccountNumber() {
-            return !this.userShowAccountName;
-        },
         computedSortedColumns: function () {
             // Kopie statt in-place-sort: das computed darf die Prop nicht mutieren
             return [...(this.table.columns ?? [])].sort((a, b) => {
@@ -1158,46 +1135,6 @@ export default {
                     ),
                     {
                         exclude: excludeHiddenItems
-                    },
-                    {
-                        preserveScroll: true,
-                        preserveState: true
-                    }
-                );
-            }
-        },
-        userShowAccountName: {
-            handler(showName) {
-                const showNumber = !showName;
-                if (!this.$page.props.auth.user.budget_account_display_setting) {
-                    router.post(
-                        route(
-                            'user.budgetAccountDisplaySettings.store',
-                            {
-                                user: this.$page.props.auth.user.id
-                            }
-                        ),
-                        {
-                            show_number: showNumber
-                        },
-                        {
-                            preserveState: true,
-                            preserveScroll: true
-                        }
-                    );
-                    return;
-                }
-
-                router.patch(
-                    route(
-                        'user.budgetAccountDisplaySettings.update',
-                        {
-                            user: this.$page.props.auth.user.id,
-                            budgetAccountDisplaySetting: this.$page.props.auth.user.budget_account_display_setting.id
-                        }
-                    ),
-                    {
-                        show_number: showNumber
                     },
                     {
                         preserveScroll: true,

@@ -104,7 +104,9 @@ class BiExportService
             'default' => false,
             'columns' => $customFieldColumns->map(fn (array $column) => [...$column, 'translate' => false])->all(),
         ];
-        $columnGroups = array_values(array_filter($columnGroups, static fn (array $group) => count($group['columns']) > 0));
+        $columnGroups = array_values(
+            array_filter($columnGroups, static fn (array $group) => count($group['columns']) > 0)
+        );
 
         $defaultColumns = [];
         foreach ($columnGroups as $group) {
@@ -498,8 +500,12 @@ class BiExportService
      * @param \Illuminate\Support\Collection<int, Project> $projects
      * @return array<int, array{0: string, 1: mixed}>
      */
-    private function buildInfoEntries(array $config, $projects, ?Carbon $from, ?Carbon $to): array
-    {
+    private function buildInfoEntries(
+        array $config,
+        \Illuminate\Support\Collection $projects,
+        ?Carbon $from,
+        ?Carbon $to
+    ): array {
         $explicitRange = !empty($config['date_from']) || !empty($config['date_to']);
         $periodSource = match (true) {
             $explicitRange => __('Chosen in the export dialog'),
@@ -542,7 +548,11 @@ class BiExportService
             [__('Filter events by BI tags'), count($tagNames) > 0 ? implode(', ', $tagNames) : __('All events')],
             [__('Productions'), $projects->count()],
             [__('Selected productions'), $listed],
-            [__('Note'), __('The column selection applies to the productions sheet; the events sheet always has the same columns.')],
+            [
+                __('Note'),
+                // phpcs:ignore Generic.Files.LineLength.TooLong -- Übersetzungsschlüssel muss am Stück bleiben
+                __('The column selection applies to the productions sheet; the events sheet always has the same columns.'),
+            ],
         ];
     }
 
@@ -586,7 +596,7 @@ class BiExportService
         ?Carbon $from,
         ?Carbon $to,
         array $tagFilter,
-        $audienceCategories = null
+        ?\Illuminate\Support\Collection $audienceCategories = null
     ): array {
         $eventDataByEventId = $project->biEventData->keyBy('event_id');
         $capacityOverrides = $project->biRoomCapacities->keyBy('room_id');
@@ -651,7 +661,8 @@ class BiExportService
                     'project_id' => $project->id,
                     'project_name' => $project->name,
                     // Echte Datums-/Zeitzellen (Excel-Serienwert + Zellformat) statt Text
-                    'event_date' => $event->start_time ? ExcelDate::PHPToExcel($event->start_time->copy()->startOfDay()) : '',
+                    'event_date' => $event
+                        ->start_time ? ExcelDate::PHPToExcel($event->start_time->copy()->startOfDay()) : '',
                     'event_start' => $event->start_time ? ExcelDate::PHPToExcel($event->start_time) : '',
                     'event_end' => $event->end_time ? ExcelDate::PHPToExcel($event->end_time) : '',
                     'event_time' => $this->formatEventTime($event),
@@ -826,7 +837,8 @@ class BiExportService
                 // Quoten als Anteil (0–1) → echtes Excel-Prozentformat
                 'occupancy_rate' => self::ratio($occupancy),
                 'tickets_issued' => $ticketsIssued ?? '',
-                'free_tickets_rate' => self::ratio($this->biProjectMetricsService->freeTicketsRate($project, $from, $to)),
+                'free_tickets_rate' => self::ratio($this->biProjectMetricsService
+                    ->freeTicketsRate($project, $from, $to)),
                 'reduced_tickets_rate' => self::ratio($this->biProjectMetricsService
                     ->reducedTicketsRate($project, $from, $to)),
                 'paying_rate' => self::ratio($this->biProjectMetricsService->payingRate($project, $from, $to)),

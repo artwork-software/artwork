@@ -14,7 +14,6 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Inertia\Inertia;
 
-
 class HolidayController extends Controller
 {
     public function __construct(

@@ -424,6 +424,7 @@
                                                             v-for="shift in group.shifts"
                                                             :key="shift.id || shift.dwId || shift.uuid"
                                                             data-sp-shiftrow
+                                                            :data-sp-has-notes="calendarSettings?.shift_notes && shift.description ? '' : undefined"
                                                             class="duration-200 ease-in-out first:rounded-t-lg last:rounded-b-lg"
                                                             :class="group.project ? 'hover:bg-info-surface' : 'hover:bg-surface-sunken'"
                                                         >
@@ -956,12 +957,16 @@
                                                 :class="idx > 0 ? '-ml-3' : ''"
                                                 :style="dayServiceBallStyle(svc.hex_color).ball"
                                             >
+                                                <!-- classes wirkt auf Button UND Icon: der Button ist sonst inline-block
+                                                     und das SVG steht auf der Schriftgrundlinie (Descender-Platz unten),
+                                                     wodurch das Icon im Ball nach oben rutscht -->
                                                 <ToolTipComponent
                                                     :tooltip-text="svc.name"
                                                     :icon="svc.icon"
                                                     icon-size="h-4 w-4"
                                                     :icon-style="dayServiceBallStyle(svc.hex_color).icon"
-                                                    :classes-button="'mt-0'"
+                                                    :classes-button="'mt-0 flex'"
+                                                    classes="flex items-center justify-center leading-none"
                                                 />
                                             </div>
                                         </div>
@@ -1098,6 +1103,7 @@
         :initial-start-date="historyModalConfig.startDate ?? dateValue[0]"
         :initial-end-date="historyModalConfig.endDate ?? dateValue[1]"
         :prefill-search="historyModalConfig.search"
+        :initial-person="historyModalConfig.person"
         :initial-shift-id="historyModalConfig.shiftId"
         :auto-load="historyModalConfig.autoLoad"
         @close="showHistoryModal = false"
@@ -1322,6 +1328,7 @@ const showHistoryModal = ref(false)
 // Person+Tag über das Tagesmodal, konkrete Schicht über das Verlauf-Icon an der Schicht.
 type HistoryModalConfig = {
     search?: string
+    person?: { id: number; type: 'user' | 'freelancer' | 'service_provider'; name: string } | null
     startDate?: string
     endDate?: string
     shiftId?: number
@@ -2028,7 +2035,8 @@ async function measureBaselineMetrics() {
     const pg = measureMax('[data-sp-pgbar]', outerHeightWithMargin)
     if (pg !== null) cellMetrics.pgBarWithMb = pg
 
-    const sr = measureMax('[data-sp-shiftrow]', el => el.getBoundingClientRect().height)
+    // Nur Zeilen OHNE Beschreibung messen — die Beschreibungshöhe kommt je Schicht aus summarizeCell()
+    const sr = measureMax('[data-sp-shiftrow]:not([data-sp-has-notes])', el => el.getBoundingClientRect().height)
     if (sr !== null) cellMetrics.shiftRow = sr
 
     const gh = measureMax('[data-sp-shiftgroupheader]', el => el.getBoundingClientRect().height)
@@ -2126,7 +2134,8 @@ function measureTextLines(text: string | undefined | null, availableWidth: numbe
 type CellSummary = {
     pgTotalHeight: number
     totalEventHeight: number
-    shiftGroups: Array<{ hasProject: boolean; shiftCount: number }>
+    // notesHeight: Summe der Beschreibungszeilen (shift_notes) aller Schichten der Gruppe in px
+    shiftGroups: Array<{ hasProject: boolean; shiftCount: number; notesHeight: number }>
 }
 
 const cellSummaryCache = new Map<string, CellSummary>()
@@ -2270,9 +2279,20 @@ function summarizeCell(room: any, dayKey: string): CellSummary {
     }
 
     const shiftGroupsRaw = groupShiftsByProject(shifts, dayKey)
+    // Schichtbeschreibung (shift_notes): Vollkarte text-[11px]/4 (16px), Kompaktpille text-[10px]/3.5 (14px),
+    // jeweils + pb-0.5 (2px). Textbreite: Gruppen-px-1 (8) + Zeilen-px-1 (8).
+    const noteLineHeight = isCompactShiftZoom.value ? 14 : 16
+    const noteWidth = cellInnerWidth.value - 16
     const shiftGroups = shiftGroupsRaw.map(g => ({
         hasProject: !!g.project,
         shiftCount: g.shifts.length,
+        notesHeight: settings.shift_notes
+            ? g.shifts.reduce((sum: number, shift: any) => {
+                if (!shift?.description) return sum
+                const lines = expanded ? measureTextLines(shift.description, noteWidth, 400) : 1
+                return sum + lines * noteLineHeight + 2
+            }, 0)
+            : 0,
     }))
 
     const summary: CellSummary = { pgTotalHeight, totalEventHeight, shiftGroups }
@@ -2306,6 +2326,7 @@ function computeHeightFromSummary(summary: CellSummary, metrics: typeof cellMetr
                 h += (n - 1) * (metrics.shiftRowGap + metrics.shiftDivider)
             }
         }
+        h += group.notesHeight ?? 0
     })
 
     const minHeight = 112
@@ -4199,9 +4220,10 @@ function openHistoryModal(config: HistoryModalConfig = {}) {
 }
 
 // Shortcut aus dem Tagesmodal: Schichtverlauf mit Person + Tag vorausgewählt öffnen.
-function openHistoryForWorkerDay(payload: { search: string; date: string }) {
+function openHistoryForWorkerDay(payload: { search: string; person?: HistoryModalConfig['person']; date: string }) {
     openHistoryModal({
         search: payload.search,
+        person: payload.person ?? null,
         startDate: payload.date,
         endDate: payload.date,
         autoLoad: true,

@@ -7,6 +7,7 @@ use Artwork\Modules\Shift\Serializers\ShiftHistorySerializer;
 use Artwork\Modules\Shift\Services\ShiftHistoryQueryService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Spatie\Activitylog\Models\Activity;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class ShiftHistoryController
@@ -75,11 +76,26 @@ class ShiftHistoryController
 
         $matchedShiftIds = $this->queryService->matchedShiftIds($filters, $shiftIds);
 
-        $paginator = $this->queryService->activityQuery($filters, $matchedShiftIds)->paginate($perPage);
+        // Personenfilter (optional): Schichten der Person + Bezugsgründe pro Eintrag ("warum sehe ich das")
+        $person = $this->queryService->resolvePerson($filters);
+        $personShiftIds = $person ? $this->queryService->personShiftIds($person, $matchedShiftIds) : [];
+
+        $paginator = $this->queryService
+            ->activityQuery($filters, $matchedShiftIds, $person, $personShiftIds)
+            ->paginate($perPage);
+
+        $items = collect($paginator->items())->map(function ($log) use ($person, $personShiftIds) {
+            $log->setAttribute(
+                'match_reasons',
+                $person ? $this->queryService->matchReasons($log, $person, $personShiftIds) : []
+            );
+
+            return $log;
+        })->values();
 
         $response = [
             'logs'   => [
-                'data' => $paginator->items(),
+                'data' => $items,
                 'meta' => [
                     'current_page' => $paginator->currentPage(),
                     'last_page'    => $paginator->lastPage(),
@@ -114,6 +130,9 @@ class ShiftHistoryController
             'shiftId' => 'nullable|integer|min:0',
             'search' => 'nullable|string|max:200',
             'sort' => 'nullable|string|in:shift_day',
+            'person_type' => 'nullable|string|in:' . implode(',', array_keys(ShiftHistoryQueryService::PERSON_TYPES)),
+            'person_id' => 'nullable|integer|min:0',
+            'person_scope' => 'nullable|string|in:' . implode(',', ShiftHistoryQueryService::PERSON_SCOPES),
         ]);
 
         $filters = $this->queryService->resolveFilters($request->query());
@@ -122,11 +141,16 @@ class ShiftHistoryController
             ->pluck('id')
             ->all();
         $matchedShiftIds = $this->queryService->matchedShiftIds($filters, $shiftIds);
+        $person = $this->queryService->resolvePerson($filters);
+        $personShiftIds = $person ? $this->queryService->personShiftIds($person, $matchedShiftIds) : [];
 
         $export = new ShiftHistoryExcelExport(
-            $this->queryService->activityQuery($filters, $matchedShiftIds),
+            $this->queryService->activityQuery($filters, $matchedShiftIds, $person, $personShiftIds),
             $matchedShiftIds,
-            $request->user()?->language ?? app()->getLocale()
+            $request->user()?->language ?? app()->getLocale(),
+            $person
+                ? fn (Activity $log) => $this->queryService->matchReasons($log, $person, $personShiftIds)
+                : null
         );
 
         return $export->download(sprintf(

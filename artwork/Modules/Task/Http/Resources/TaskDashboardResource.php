@@ -29,7 +29,8 @@ class TaskDashboardResource extends JsonResource
             'done_by_user' => $this->user_who_done,
             'done_at' => $this->done_at?->format('d.m.Y, H:i'),
             'done_at_dt_local' => $this->done_at?->toDateTimeLocalString(),
-            'users' => $this->task_users()->get()
+            // geladene Relation statt Query je Aufgabe (Dashboard lädt task_users eager)
+            'users' => $this->task_users
         ];
     }
 }

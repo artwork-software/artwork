@@ -93,7 +93,10 @@ final class NotificationEnumTest extends UnitTestCase
     #[Test]
     public function room_request_notification_class_is_room_request_notification(): void
     {
-        $this->assertSame(RoomRequestNotification::class, NotificationEnum::NOTIFICATION_ROOM_REQUEST->notificationClass());
+        $this->assertSame(
+            RoomRequestNotification::class,
+            NotificationEnum::NOTIFICATION_ROOM_REQUEST->notificationClass()
+        );
     }
 
     #[Test]
@@ -105,7 +108,10 @@ final class NotificationEnumTest extends UnitTestCase
     #[Test]
     public function task_reminder_notification_class_is_deadline_notification(): void
     {
-        $this->assertSame(DeadlineNotification::class, NotificationEnum::NOTIFICATION_TASK_REMINDER->notificationClass());
+        $this->assertSame(
+            DeadlineNotification::class,
+            NotificationEnum::NOTIFICATION_TASK_REMINDER->notificationClass()
+        );
     }
 
     #[Test]
@@ -135,7 +141,10 @@ final class NotificationEnumTest extends UnitTestCase
     #[Test]
     public function budget_money_source_changed_notification_class_is_money_source_notification(): void
     {
-        $this->assertSame(MoneySourceNotification::class, NotificationEnum::NOTIFICATION_BUDGET_MONEY_SOURCE_CHANGED->notificationClass());
+        $this->assertSame(
+            MoneySourceNotification::class,
+            NotificationEnum::NOTIFICATION_BUDGET_MONEY_SOURCE_CHANGED->notificationClass()
+        );
     }
 
     #[Test]

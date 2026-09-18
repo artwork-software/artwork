@@ -1023,7 +1023,7 @@ class ProjectService
 
         foreach ($newManagerIds as $userId) {
             if ($existingUserIds->contains($userId)) {
-                $project->users()->updateExistingPivot($userId, ['is_manager' => true]);
+                $project->users()->updateExistingPivot($userId, ['is_manager' => true, 'can_write' => true]);
             } else {
                 $project->users()->attach($userId, [
                     'access_budget' => false,

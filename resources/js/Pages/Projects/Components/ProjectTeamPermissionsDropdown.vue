@@ -46,15 +46,31 @@
                         </div>
 
                         <div class="mt-2 space-y-2">
-                            <label class="flex cursor-pointer items-center gap-3 rounded-lg px-2 py-1.5 hover:bg-surface-sunken">
-                                <input
-                                    :checked="user.pivot_can_write"
-                                    type="checkbox"
-                                    class="h-5 w-5 cursor-pointer rounded border-2 border-border text-success ring-offset-0 focus:ring-0 focus:shadow-none"
-                                    @change="updatePermission('pivot_can_write', $event)"
-                                />
-                                <span class="text-sm text-text-subtle">{{ $t('Write permission') }}</span>
-                            </label>
+                            <!-- Projektleitung hat laut ProjectPolicy::update immer Schreibrecht: Häkchen dann
+                                 gesetzt + gesperrt; v-tooltip braucht ein echtes DOM-Element (span) -->
+                            <span
+                                class="block"
+                                v-tooltip.bottom="{
+                                    value: $t('Project management automatically has write permission for the entire project'),
+                                    disabled: !user.pivot_is_manager,
+                                    class: 'aw-tooltip',
+                                }"
+                            >
+                                <label
+                                    class="flex items-center gap-3 rounded-lg px-2 py-1.5"
+                                    :class="user.pivot_is_manager ? 'cursor-not-allowed opacity-60' : 'cursor-pointer hover:bg-surface-sunken'"
+                                >
+                                    <input
+                                        :checked="user.pivot_can_write || user.pivot_is_manager"
+                                        :disabled="user.pivot_is_manager"
+                                        type="checkbox"
+                                        class="h-5 w-5 rounded border-2 border-border text-success ring-offset-0 focus:ring-0 focus:shadow-none"
+                                        :class="user.pivot_is_manager ? 'cursor-not-allowed' : 'cursor-pointer'"
+                                        @change="updatePermission('pivot_can_write', $event)"
+                                    />
+                                    <span class="text-sm text-text-subtle">{{ $t('Write permission') }}</span>
+                                </label>
+                            </span>
 
                             <label class="flex cursor-pointer items-center gap-3 rounded-lg px-2 py-1.5 hover:bg-surface-sunken">
                                 <input
@@ -87,6 +103,16 @@
                                     @change="updatePermission('pivot_is_manager', $event)"
                                 />
                                 <span class="text-sm text-text-subtle">{{ $t('Project management') }}</span>
+                                <ToolTipComponent
+                                    direction="bottom"
+                                    icon="IconInfoCircle"
+                                    icon-size="h-4 w-4"
+                                    classes-button=""
+                                    tooltip-css-class="aw-tooltip-wide"
+                                    allow-html
+                                    :tooltip-text="projectManagementInfoHtml"
+                                    @click.prevent
+                                />
                             </label>
                         </div>
                     </div>
@@ -137,6 +163,8 @@
 import {IconChevronDown} from "@tabler/icons-vue";
 import {computed, nextTick, onMounted, onUnmounted, ref, watch} from 'vue'
 import {Link} from '@inertiajs/vue3'
+import {useI18n} from 'vue-i18n'
+import ToolTipComponent from '@/Components/ToolTips/ToolTipComponent.vue'
 
 const props = defineProps({
     user: {type: Object, required: true},
@@ -161,11 +189,38 @@ const activeAssignmentCount = computed(() => {
     ].filter(Boolean).length + (props.user.pivot_roles?.length ?? 0)
 })
 
+const {t} = useI18n()
+
+// Kurzfassung der Unterschiede Projektleitung vs. Teammitglied (Quelle: ProjectPolicy,
+// ContractPolicy, MoneySourceController, EventController-Benachrichtigungen, Kalender-Kacheln)
+const projectManagementInfoHtml = computed(() => {
+    const escapeHtml = (value) => String(value)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+    const items = [
+        t('Always has write permission in the entire project, even without the “Write permission” checkbox.'),
+        t('Automatically sees the project’s contracts (“Contracts” component, separate from the “Documents” component) and linked funding sources.'),
+        t('Receives notifications for room requests, room changes, unfilled shifts at the staffing deadline and submissions from external accesses.'),
+        t('Is shown as project management in the project header, on calendar and shift plan tiles and in exports.'),
+    ]
+    return `<div class="text-left"><div class="font-semibold mb-1">${escapeHtml(t('What distinguishes project management from a team member?'))}</div><ul class="list-disc pl-4 space-y-1">${items.map(item => `<li>${escapeHtml(item)}</li>`).join('')}</ul></div>`
+})
+
 const updatePermission = (permission, event) => {
     emit('update-permission', {
         permission,
         value: event.target.checked,
     })
+
+    // Projektleitung impliziert Schreibrecht (siehe ProjectPolicy::update) — Häkchen mitziehen,
+    // damit der Payload an updateTeam() dem Backend-Verhalten entspricht
+    if (permission === 'pivot_is_manager' && event.target.checked && !props.user.pivot_can_write) {
+        emit('update-permission', {
+            permission: 'pivot_can_write',
+            value: true,
+        })
+    }
 }
 
 const closeOnEscape = (event) => {

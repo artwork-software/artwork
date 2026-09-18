@@ -3443,6 +3443,12 @@ class ProjectController extends Controller
 
                 $pivotData['roles'] = $validRoleIds->intersect($pivotData['roles'] ?? [])->values()->all();
 
+                // Projektleitung hat laut ProjectPolicy::update immer Schreibrecht — Pivot spiegelt das,
+                // damit Listen/Exports (writeUsers) nicht vom Frontend-Häkchen abhängen
+                if (!empty($pivotData['is_manager'])) {
+                    $pivotData['can_write'] = true;
+                }
+
                 return $pivotData;
             }
         );

@@ -8292,5 +8292,11 @@
     "Managing access": "Managing access",
     "CRM → External access lists every access: resend invitation, extend, switch tabs to read-only, end access, revoke, or re-link to another contact.": "CRM → External access lists every access: resend invitation, extend, switch tabs to read-only, end access, revoke, or re-link to another contact.",
     "On the contact page you see all accesses of a contact with their tabs, periods and the last submission.": "On the contact page you see all accesses of a contact with their tabs, periods and the last submission.",
-    "A few days before an access expires, the inviting person is notified (configurable under Settings → External access).": "A few days before an access expires, the inviting person is notified (configurable under Settings → External access)."
+    "A few days before an access expires, the inviting person is notified (configurable under Settings → External access).": "A few days before an access expires, the inviting person is notified (configurable under Settings → External access).",
+    "Project management automatically has write permission for the entire project": "Project management automatically has write permission for the entire project",
+    "What distinguishes project management from a team member?": "What distinguishes project management from a team member?",
+    "Always has write permission in the entire project, even without the “Write permission” checkbox.": "Always has write permission in the entire project, even without the “Write permission” checkbox.",
+    "Automatically sees the project’s contracts (“Contracts” component, separate from the “Documents” component) and linked funding sources.": "Automatically sees the project’s contracts (“Contracts” component, separate from the “Documents” component) and linked funding sources.",
+    "Receives notifications for room requests, room changes, unfilled shifts at the staffing deadline and submissions from external accesses.": "Receives notifications for room requests, room changes, unfilled shifts at the staffing deadline and submissions from external accesses.",
+    "Is shown as project management in the project header, on calendar and shift plan tiles and in exports.": "Is shown as project management in the project header, on calendar and shift plan tiles and in exports."
 }

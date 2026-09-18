@@ -8297,6 +8297,8 @@
     "CRM → External access lists every access: resend invitation, extend, switch tabs to read-only, end access, revoke, or re-link to another contact.": "Unter CRM → Externe Zugänge stehen alle Zugänge: Einladung erneut senden, verlängern, Tabs auf Nur-Lesen setzen, beenden, widerrufen oder mit einem anderen Kontakt verknüpfen.",
     "On the contact page you see all accesses of a contact with their tabs, periods and the last submission.": "Auf der Kontaktseite siehst du alle Zugänge eines Kontakts mit Tabs, Zeiträumen und dem letzten Absenden.",
     "A few days before an access expires, the inviting person is notified (configurable under Settings → External access).": "Einige Tage vor Ablauf eines Zugangs wird die einladende Person benachrichtigt (einstellbar unter Einstellungen → Externe Zugänge).",
+    "View all notifications in :app": "Alle Benachrichtigungen in :app ansehen",
+    "There is news in :app": "Es gibt Neuigkeiten in :app",
     "Project management automatically has write permission for the entire project": "Projektleitung hat automatisch Schreibrecht im gesamten Projekt",
     "What distinguishes project management from a team member?": "Was unterscheidet die Projektleitung von einem Teammitglied?",
     "Always has write permission in the entire project, even without the “Write permission” checkbox.": "Hat immer Schreibrecht im gesamten Projekt, auch ohne das Häkchen „Schreibrecht“.",

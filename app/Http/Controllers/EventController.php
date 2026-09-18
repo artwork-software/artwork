@@ -43,7 +43,9 @@ use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Event\Models\EventStatus;
 use Artwork\Modules\Event\Services\EventCollectionService;
 use Artwork\Modules\Event\Services\EventCollisionService;
+use Artwork\Modules\Event\Services\DirectBookingActivationService;
 use Artwork\Modules\Event\Services\EventService;
+use Artwork\Modules\Event\Services\EventSettingsService;
 use Artwork\Modules\Event\Services\EventCommentService;
 use Artwork\Modules\Event\Services\SeriesEventsService;
 use Artwork\Modules\Event\Models\EventProperty;
@@ -173,6 +175,7 @@ class EventController extends Controller
         private readonly WorkerShiftPlanService $workerShiftPlanService,
         private readonly RoomRequestNotificationService $roomRequestNotificationService,
         private readonly SeriesEventsService $seriesEventsService,
+        private readonly EventSettingsService $eventSettingsService,
     ) {
     }
 
@@ -1482,6 +1485,13 @@ class EventController extends Controller
         $user = auth()->user();
         $roomId = $request->get('roomId');
         $isOption = $request->booleanValue('isOption');
+        // "Termine immer direkt buchbar": es gibt keine Raumanfragen – jede Person, die anlegen darf
+        // (EventPolicy::create), bucht direkt; ein vom Client gesendetes isOption wird verworfen.
+        $alwaysDirectBooking = $this->eventSettingsService->alwaysDirectBooking();
+        if ($alwaysDirectBooking) {
+            $isOption = false;
+            $request->merge(['isOption' => false]);
+        }
 
         if (!$roomId && !$user->hasRole(RoleEnum::ARTWORK_ADMIN->value)) {
             // Kalender und Planungskalender sind getrennt berechtigt: geplante Termine direkt (ohne Raum)
@@ -1493,7 +1503,9 @@ class EventController extends Controller
             if (!$canCreateWithoutRoom) {
                 if ($user->can(PermissionEnum::EVENT_REQUEST->value)) {
                     throw ValidationException::withMessages([
-                        'roomId' => __('A room is required for a room request.'),
+                        'roomId' => $alwaysDirectBooking
+                            ? __('A room is required for this event.')
+                            : __('A room is required for a room request.'),
                     ]);
                 }
 
@@ -1501,7 +1513,7 @@ class EventController extends Controller
             }
         }
 
-        if ($roomId && !$user->hasRole(RoleEnum::ARTWORK_ADMIN->value)) {
+        if ($roomId && !$alwaysDirectBooking && !$user->hasRole(RoleEnum::ARTWORK_ADMIN->value)) {
             $room = Room::find($roomId);
             if ($room) {
                 $isRoomAdmin = $room->admins()->where('user_id', $user->id)->exists();
@@ -2218,7 +2230,11 @@ class EventController extends Controller
 
         // If room changed and new room requires approval, create a room request notification
         $roomRequestNotificationSent = false;
-        if ($event->room_id && $oldEventRoom !== $event->room_id) {
+        if (
+            $event->room_id
+            && $oldEventRoom !== $event->room_id
+            && !$this->eventSettingsService->alwaysDirectBooking()
+        ) {
             $newRoom = Room::find($event->room_id);
             if ($newRoom && !$newRoom->everyone_can_book) {
                 $user = Auth::user();
@@ -4095,7 +4111,11 @@ class EventController extends Controller
             return;
         }
 
+        // "Termine immer direkt buchbar": "Raumbelegungen anfragen" bedeutet dann "Termine anlegen"
+        // und schließt Bulk-Anlage und Serien ein (Entscheidung 18.09.2026).
         $mayCreateRegularEvent = $user->can(PermissionEnum::CREATE_EVENTS_WITHOUT_REQUEST->value)
+            || ($this->eventSettingsService->alwaysDirectBooking()
+                && $user->can(PermissionEnum::EVENT_REQUEST->value))
             || $room->everyone_can_book
             || $room->admins()->where('user_id', $user->id)->exists();
 
@@ -4614,16 +4634,28 @@ class EventController extends Controller
         return redirect()->back();
     }
 
-    public function standardEventValues()
+    public function standardEventValues(DirectBookingActivationService $directBookingActivationService)
     {
-        return Inertia::render('Settings/StandardEventValues', []);
+        // Zähler für die Warnung beim Aktivieren von "Termine immer direkt buchbar"
+        return Inertia::render('Settings/StandardEventValues', [
+            'openRoomRequestsCount' => $directBookingActivationService->openRoomRequestsCount(),
+            'pendingVerificationsCount' => $directBookingActivationService->pendingVerificationsCount(),
+        ]);
     }
 
     public function saveStandardEventValues(Request $request): void
     {
-        $this->generalSettingsService->updateEventTimeLengthMinutesFromRequest($request);
-        $this->generalSettingsService->updateEventStartTimeFromRequest($request);
-        $this->generalSettingsService->updateEventAllDayDefaultFromRequest($request);
+        // Standardwerte nur übernehmen, wenn sie mitgeschickt werden – der Schalter
+        // "Termine immer direkt buchbar" wird getrennt gespeichert (nur sein Feld im Request).
+        if ($request->has('event_time_length_minutes')) {
+            $this->generalSettingsService->updateEventTimeLengthMinutesFromRequest($request);
+        }
+        if ($request->has('event_start_time')) {
+            $this->generalSettingsService->updateEventStartTimeFromRequest($request);
+        }
+        if ($request->has('event_all_day_default')) {
+            $this->generalSettingsService->updateEventAllDayDefaultFromRequest($request);
+        }
 
         // Einlass-Feld instanzweit aktivieren/deaktivieren (kein Standardwert,
         // sondern Modul-Schalter — Werte bleiben beim Deaktivieren erhalten)
@@ -4631,6 +4663,12 @@ class EventController extends Controller
             $eventSettings = app(EventSettings::class);
             $eventSettings->enable_admission = $request->boolean('enable_admission');
             $eventSettings->save();
+        }
+
+        // "Termine immer direkt buchbar": beim Einschalten werden offene Raumanfragen und
+        // Verifizierungsanfragen übernommen (Warnung im Frontend), Menü-Caches werden geleert.
+        if ($request->has('always_direct_booking')) {
+            app(DirectBookingActivationService::class)->apply($request->boolean('always_direct_booking'));
         }
     }
 

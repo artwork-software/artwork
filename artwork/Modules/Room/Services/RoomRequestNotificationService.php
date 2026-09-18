@@ -3,6 +3,7 @@
 namespace Artwork\Modules\Room\Services;
 
 use Artwork\Modules\Event\Models\Event;
+use Artwork\Modules\Event\Services\EventSettingsService;
 use Artwork\Modules\Notification\Enums\NotificationEnum;
 use Artwork\Modules\Notification\Services\NotificationService;
 use Artwork\Modules\Project\Enum\ProjectTabComponentEnum;
@@ -17,6 +18,7 @@ class RoomRequestNotificationService
     public function __construct(
         private readonly NotificationService $notificationService,
         private readonly ProjectTabService $projectTabService,
+        private readonly EventSettingsService $eventSettingsService,
     ) {
     }
 
@@ -27,6 +29,11 @@ class RoomRequestNotificationService
      */
     public function notifyRoomAdmins(Event $event): void
     {
+        // "Termine immer direkt buchbar": es gibt keine Raumanfragen mehr – Sicherheitsnetz für alle Aufrufer
+        if ($this->eventSettingsService->alwaysDirectBooking()) {
+            return;
+        }
+
         /** @var Room|null $room */
         $room = $event->room;
         if (!$room) {

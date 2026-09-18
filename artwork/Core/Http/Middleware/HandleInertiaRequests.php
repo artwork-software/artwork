@@ -45,6 +45,8 @@ class HandleInertiaRequests extends Middleware
         $generalSettings = app(GeneralSettings::class);
         $generalCalendarSettings = app(GeneralCalendarSettings::class);
         $eventSettings = app(EventSettings::class);
+        // "Termine immer direkt buchbar": keine Raumanfragen, keine Verifizierung (Menü/Seiten/Dialoge)
+        $alwaysDirectBooking = (bool) ($eventSettings->always_direct_booking ?? false);
 
         $user = Auth::user();
         // Settings-Relationen werden hier (vor den Controllern) gelesen und sowohl als Top-Level-Props
@@ -190,7 +192,7 @@ class HandleInertiaRequests extends Middleware
             : [];
 
         // Drei exists()-Queries pro Request vermeiden — Ergebnis ändert sich selten, 5 Minuten cachen
-        $canSeeIncomingRequests = $user
+        $canSeeIncomingRequests = $user && !$alwaysDirectBooking
             ? Cache::remember(
                 "user:{$user->id}:can_see_incoming_requests",
                 now()->addMinutes(5),
@@ -202,7 +204,7 @@ class HandleInertiaRequests extends Middleware
             )
             : false;
 
-        $canSeeEventVerifications = (bool) $user;
+        $canSeeEventVerifications = $user && !$alwaysDirectBooking;
 
         $canViewBiDashboard = $user && (
             $user->hasRole(RoleEnum::ARTWORK_ADMIN->value)
@@ -274,6 +276,7 @@ class HandleInertiaRequests extends Middleware
                 ],
                 'event_status_module' => $eventSettings->enable_status,
                 'event_admission_module' => $eventSettings->enable_admission,
+                'event_direct_booking_only' => $alwaysDirectBooking,
                 'default_language' => config('app.fallback_locale'),
                 'selected_language' => app()->getLocale(),
                 'sageApiEnabled' => $sageApiEnabled,

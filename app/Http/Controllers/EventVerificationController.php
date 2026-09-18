@@ -12,6 +12,7 @@ use Artwork\Modules\Event\Models\EventProperty;
 use Artwork\Modules\Event\Models\EventStatus;
 use Artwork\Modules\Event\Models\EventVerification;
 use Artwork\Modules\Event\Services\EventService;
+use Artwork\Modules\Event\Services\EventSettingsService;
 use Artwork\Modules\Event\Services\EventVerificationService;
 use Artwork\Modules\EventType\Models\EventType;
 use Artwork\Modules\Permission\Enums\PermissionEnum;
@@ -30,6 +31,7 @@ class EventVerificationController extends Controller
 
     public function __construct(
         private readonly EventVerificationService $eventVerificationService,
+        private readonly EventSettingsService $eventSettingsService,
         private readonly AuthManager $authManager,
         private readonly EventService $eventService,
         private readonly ProjectTabService $projectTabService,
@@ -42,6 +44,11 @@ class EventVerificationController extends Controller
     //phpcs:ignore Generic.Metrics.CyclomaticComplexity.TooHigh
     public function index()
     {
+        // "Termine immer direkt buchbar": keine Anfragen, keine Verifizierung – Seite existiert nicht mehr
+        if ($this->eventSettingsService->alwaysDirectBooking()) {
+            return redirect()->route('events');
+        }
+
         /** @var User $user */
         $user = $this->authManager->user();
         $isAdmin = $user->hasRole('artwork admin');
@@ -126,6 +133,10 @@ class EventVerificationController extends Controller
      */
     public function sent()
     {
+        if ($this->eventSettingsService->alwaysDirectBooking()) {
+            return redirect()->route('events');
+        }
+
         $myRequestPaginate = request()?->integer('myRequestsPerPage', 5);
         /** @var User $user */
         $user = $this->authManager->user();

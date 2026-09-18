@@ -494,7 +494,8 @@ const props = defineProps({
 const emits = defineEmits(['closed']);
 
 let showEvents = ref(true);
-const hasCreateEventsPermission = ref(can('create events without request') || can('can edit planning calendar') || hasAdminRole());
+// "Termine immer direkt buchbar": "Raumbelegungen anfragen" schließt dann Bulk-Anlage ein (Backend: authorizeBulkEventCreation)
+const hasCreateEventsPermission = ref(can('create events without request') || can('can edit planning calendar') || hasAdminRole() || (!!usePage().props.event_direct_booking_only && can('request room occupancy')));
 const roomCollisions = ref([]);
 const timeArray = ref(true);
 

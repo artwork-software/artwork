@@ -9,6 +9,8 @@ use Artwork\Modules\Notification\Services\DatabaseNotificationService;
 use Artwork\Modules\Event\Http\Resources\CalendarEventResource;
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Event\Models\EventStatus;
+use Artwork\Modules\Event\Services\EventSettingsService;
+use Artwork\Modules\Notification\Enums\NotificationEnum;
 use Artwork\Modules\EventType\Http\Resources\EventTypeResource;
 use Artwork\Modules\EventType\Models\EventType;
 use Artwork\Modules\GlobalNotification\Services\GlobalNotificationService;
@@ -195,7 +197,21 @@ class NotificationController extends Controller
                     'number_of_participants', 'is_group', 'key_visual_path', 'cost_center_id'
                 ])->with(['groups', 'sectors', 'categories', 'genres', 'costCenter'])->get()
             )->resolve(),
-            'notificationSettings' => $user->notificationSettings()->get()->groupBy("group_type"),
+            // "Termine immer direkt buchbar": Anfrage-/Verifizierungs-Benachrichtigungen gibt es nicht mehr
+            'notificationSettings' => $user->notificationSettings()->get()
+                ->when(
+                    app(EventSettingsService::class)->alwaysDirectBooking(),
+                    static fn ($settings) => $settings->reject(
+                        static fn (NotificationSetting $setting): bool => in_array($setting->type, [
+                            NotificationEnum::NOTIFICATION_ROOM_REQUEST,
+                            NotificationEnum::NOTIFICATION_UPSERT_ROOM_REQUEST,
+                            NotificationEnum::NOTIFICATION_ROOM_ANSWER,
+                            NotificationEnum::NOTIFICATION_REMINDER_ROOM_REQUEST,
+                            NotificationEnum::NOTIFICATION_EVENT_VERIFICATION_REQUESTS,
+                        ], true)
+                    )
+                )
+                ->groupBy("group_type"),
             'notificationFrequencies' => array_map(fn (NotificationFrequencyEnum $frequency) => [
                 'title' => $frequency->title(),
                 'value' => $frequency->value,

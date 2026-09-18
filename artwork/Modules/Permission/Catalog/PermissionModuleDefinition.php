@@ -32,6 +32,8 @@ final readonly class PermissionModuleDefinition
         public array $adminOnly = [],
         public ?string $advancedTitle = null,
         public ?string $advancedHint = null,
+        /** @var array<string, string> Instanz-Einstellung (settings-Key) => Modul-Hinweis, der `hint` ersetzt, solange sie aktiv ist */
+        public array $settingHints = [],
     ) {
     }
 
@@ -54,6 +56,7 @@ final readonly class PermissionModuleDefinition
         if ($this->advancedHint !== null) {
             $keys[] = $this->advancedHint;
         }
+        $keys = [...$keys, ...array_values($this->settingHints)];
         foreach ($this->all() as $definition) {
             $keys = [...$keys, ...$definition->translationKeys()];
         }
@@ -73,6 +76,7 @@ final readonly class PermissionModuleDefinition
             'hint' => $this->hint,
             'advanced_title' => $this->advancedTitle,
             'advanced_hint' => $this->advancedHint,
+            'setting_hints' => $this->settingHints,
             'admin_only' => $this->adminOnly,
             'tiers' => array_map(static fn (PermissionDefinition $d): array => $d->toArray('tier'), $this->tiers),
             'extras' => array_map(static fn (PermissionDefinition $d): array => $d->toArray('extra'), $this->extras),

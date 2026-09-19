@@ -21,6 +21,7 @@ use Artwork\Modules\Crm\Console\Commands\CleanupCrmImportFilesCommand;
 use Artwork\Core\Console\Commands\SendNotificationsEmailSummariesCommand;
 use Artwork\Core\Console\Commands\SendScheduledNotificationsCommand;
 use Artwork\Modules\ExternalAccess\Console\Commands\CleanupExpiredLoginTokensCommand;
+use Artwork\Modules\ExternalAccess\Console\Commands\SendExternalAccessExpiryRemindersCommand;
 use Artwork\Modules\ExternalUserManagement\Console\Commands\SyncExternalUsersCommand;
 use Artwork\Modules\SageApiSettings\Services\SageApiSettingsService;
 use Illuminate\Console\Application as Artisan;
@@ -77,6 +78,9 @@ class Kernel extends ConsoleKernel
             ->runInBackground();
         $schedule->command(CleanupExpiredLoginTokensCommand::class)
             ->dailyAt('03:00')
+            ->runInBackground();
+        $schedule->command(SendExternalAccessExpiryRemindersCommand::class)
+            ->dailyAt('07:30')
             ->runInBackground();
 
         // ShiftRule validation - alle 5 Minuten für die nächsten 14 Tage

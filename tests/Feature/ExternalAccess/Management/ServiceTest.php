@@ -17,7 +17,7 @@ use Artwork\Modules\User\Models\User;
 use Carbon\Carbon;
 use PHPUnit\Framework\Attributes\Test;
 use Spatie\Activitylog\Models\Activity;
-use Tests\TestCase;
+use Tests\Feature\ExternalAccess\ExternalAccessTestCase as TestCase;
 
 final class ServiceTest extends TestCase
 {

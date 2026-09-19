@@ -139,13 +139,16 @@ class WorkTimeChangeRequestController extends Controller
     public function store(StoreWorkTimeChangeRequestRequest $request): void
     {
         $validated = $request->validated();
+        $shift = \Artwork\Modules\Shift\Models\Shift::findOrFail($validated['shift_id']);
+        $validated['requested_by'] = $request->user()->id;
+        $validated['user_id'] = $request->user()->id;
+        $validated['craft_id'] = $shift->craft_id;
 
         // Detect overnight shift: if end_time <= start_time, set end_date to next day
         $startTime = Carbon::createFromFormat('H:i', $validated['request_start_time']);
         $endTime = Carbon::createFromFormat('H:i', $validated['request_end_time']);
 
         if ($endTime->lte($startTime)) {
-            $shift = \Artwork\Modules\Shift\Models\Shift::findOrFail($validated['shift_id']);
             $pivot = $shift->users()
                 ->where('shift_workers.employable_id', $validated['user_id'])
                 ->first()
@@ -161,7 +164,7 @@ class WorkTimeChangeRequestController extends Controller
         $workTimeRequest = $this->workTimeChangeRequestService->createChangeRequest($validated);
 
         // send notification to craft planner
-        $craftId = $request->input('craft_id');
+        $craftId = $validated['craft_id'];
         $craft = Craft::findOrFail($craftId);
 
         // Determine who should receive notifications

@@ -41,6 +41,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property boolean $show_user_overview
  * @property boolean $user_overview_light_mode
  * @property boolean $show_craft_staffing
+ * @property boolean $show_events
  */
 class UserShiftPlanSettings extends Model
 {
@@ -85,6 +86,7 @@ class UserShiftPlanSettings extends Model
         'show_user_overview',
         'user_overview_light_mode',
         'show_craft_staffing',
+        'show_events',
     ];
 
     protected $casts = [
@@ -118,6 +120,7 @@ class UserShiftPlanSettings extends Model
         'show_user_overview' => 'boolean',
         'user_overview_light_mode' => 'boolean',
         'show_craft_staffing' => 'boolean',
+        'show_events' => 'boolean',
     ];
 
     public function user(): BelongsTo

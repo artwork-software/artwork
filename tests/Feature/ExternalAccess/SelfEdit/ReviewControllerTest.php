@@ -12,7 +12,7 @@ use Artwork\Modules\ExternalAccess\Models\ExternalPendingSubmission;
 use Artwork\Modules\Freelancer\Models\Freelancer;
 use Artwork\Modules\User\Models\User;
 use PHPUnit\Framework\Attributes\Test;
-use Tests\TestCase;
+use Tests\Feature\ExternalAccess\ExternalAccessTestCase as TestCase;
 
 final class ReviewControllerTest extends TestCase
 {
@@ -128,7 +128,10 @@ final class ReviewControllerTest extends TestCase
         $request->setUserResolver(fn ($guard = null) => $guard === 'external' ? $external : null);
         $request->setContainer($this->app)->validateResolved();
 
-        $response = app(\Artwork\Modules\ExternalAccess\Http\Controllers\ExternalCrmController::class)->submit($request);
+        $response = app(\Artwork\Modules\ExternalAccess\Http\Controllers\ExternalCrmController::class)->submit(
+            $request,
+            app(\Artwork\Modules\ExternalAccess\Services\ExternalSelfEditSubmissionService::class),
+        );
 
         $this->assertSame(302, $response->getStatusCode());
         $this->assertDatabaseHas('external_pending_submissions', [

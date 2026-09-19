@@ -63,11 +63,11 @@ class ExternalAccessServiceProvider extends ServiceProvider
 
         $registry->register(
             'artist',
-            // Artist has no email column; the email lives only on ExternalAccess.
             fn (InviteExternalCommand $cmd): Artist => Artist::create([
                 'name' => $cmd->publicFieldValues['name'] ?? '',
                 'first_name' => $cmd->publicFieldValues['first_name'] ?? null,
                 'last_name' => $cmd->publicFieldValues['last_name'] ?? null,
+                'email' => $cmd->normalizedEmail(),
             ]),
             ['name'],
         );

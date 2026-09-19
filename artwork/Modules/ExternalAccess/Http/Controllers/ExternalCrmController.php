@@ -3,7 +3,6 @@
 namespace Artwork\Modules\ExternalAccess\Http\Controllers;
 
 use App\Http\Controllers\Controller;
-use Artwork\Modules\Crm\Models\CrmPropertyGroup;
 use Artwork\Modules\ExternalAccess\Enums\ExternalSubmissionContext;
 use Artwork\Modules\ExternalAccess\Enums\ExternalSubmissionStatus;
 use Artwork\Modules\ExternalAccess\Http\Requests\SubmitCrmSelfEditRequest;
@@ -19,9 +18,13 @@ use Inertia\Response;
 
 class ExternalCrmController extends Controller
 {
+    /**
+     * Der Submission-Service (→ NotificationService) wird bewusst NICHT im Konstruktor injiziert:
+     * Laravel baut den Controller vor der Middleware-Pipeline, und die Kette würde den Session-Store
+     * mit dem internen Cookie-Namen anlegen (siehe SwapExternalSessionConfig).
+     */
     public function __construct(
         private readonly ExternalSelfEditFieldResolver $resolver,
-        private readonly ExternalSelfEditSubmissionService $submissionService,
     ) {
     }
 
@@ -29,38 +32,19 @@ class ExternalCrmController extends Controller
     {
         /** @var ExternalAccess $external */
         $external = $request->user('external');
-        $contact = $external->crmContact;
 
-        $groups = CrmPropertyGroup::query()
-            ->where('is_confidential', false)
-            ->whereHas(
-                'properties.contactTypes',
-                fn ($q) => $q->where('crm_contact_types.id', $contact->crm_contact_type_id),
-            )
-            ->with([
-                'properties' => function ($q) use ($contact): void {
-                    $q->whereHas(
-                        'contactTypes',
-                        fn ($cq) => $cq->where('crm_contact_types.id', $contact->crm_contact_type_id),
-                    )
-                        ->with([
-                            'values' => fn ($vq) => $vq->where('crm_contact_id', $contact->id),
-                        ]);
-                },
-            ])
-            ->orderBy('sort_order')
-            ->get()
-            ->map(fn (CrmPropertyGroup $group) => [
-                'id' => $group->id,
-                'name' => $group->name,
-                'properties' => $group->properties->map(fn ($property) => [
-                    'id' => $property->id,
-                    'name' => $property->name,
-                    'value' => $property->values->first()?->value,
-                ])->values()->all(),
-            ])
-            ->values()
-            ->all();
+        // Gleiche Quelle wie das Bearbeiten-Formular, damit Lese- und Bearbeitungsansicht nie driften.
+        $schema = $this->resolver->resolveFor($external);
+
+        $groups = array_map(static fn ($section) => [
+            'id' => $section['key'],
+            'name' => $section['label'],
+            'properties' => array_map(static fn ($field) => [
+                'id' => $field['key'],
+                'name' => $field['label'],
+                'value' => $field['value'],
+            ], $section['fields']),
+        ], $schema->toArray()['sections']);
 
         return Inertia::render('Crm/Show', [
             'groups' => $groups,
@@ -88,16 +72,18 @@ class ExternalCrmController extends Controller
         ]);
     }
 
-    public function submit(SubmitCrmSelfEditRequest $request): RedirectResponse
-    {
+    public function submit(
+        SubmitCrmSelfEditRequest $request,
+        ExternalSelfEditSubmissionService $submissionService,
+    ): RedirectResponse {
         /** @var ExternalAccess $external */
         $external = $request->user('external');
 
-        $submission = $this->submissionService->submit($external, $request->validated('values'));
+        $submission = $submissionService->submit($external, $request->validated('values'));
 
         return redirect()->route('external.crm.show')->with('status', $submission
             ? __('Your changes have been submitted for review.')
-            : __('Your changes have been saved.'));
+            : __('No changes detected.'));
     }
 
     public function submissionStatus(Request $request): JsonResponse

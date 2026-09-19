@@ -9,8 +9,17 @@
                 <ul role="list" class="flex flex-1 flex-col gap-y-7">
                     <li>
                         <Link
+                            :href="route('external.dashboard')"
+                            :class="navItemClasses(route().current('external.dashboard'))"
+                        >
+                            <PropertyIcon name="IconHome" class="size-6 shrink-0" />
+                            <span>{{ $t('Overview') }}</span>
+                        </Link>
+                    </li>
+                    <li v-if="page.props.crm_access_active">
+                        <Link
                             :href="route('external.crm.show')"
-                            :class="navItemClasses(route().current('external.crm.show'))"
+                            :class="navItemClasses(route().current('external.crm.*'))"
                         >
                             <PropertyIcon name="IconUser" class="size-6 shrink-0" />
                             <span>{{ $t('My data') }}</span>
@@ -30,7 +39,7 @@
                                     <li v-for="scope in group.scopes" :key="scope.id">
                                         <a
                                             href="#"
-                                            :class="navItemClasses(false)"
+                                            :class="navItemClasses(isCurrentScope(scope))"
                                             @click.prevent="onTabClick(scope)"
                                         >
                                             <span>{{ scope.tab.name }}</span>
@@ -48,7 +57,7 @@
                     </li>
 
                     <li class="mt-auto">
-                        <div v-if="page.props.crm_access_expires_at" class="text-xs text-white/70 mb-2">
+                        <div v-if="page.props.crm_access_active && page.props.crm_access_expires_at" class="text-xs text-white/70 mb-2">
                             {{ $t('CRM access valid until') }}: {{ formatDate(page.props.crm_access_expires_at) }}
                         </div>
                         <form @submit.prevent="logout">
@@ -88,6 +97,12 @@ const groupedScopes = computed(() => {
 
 function logout() {
     router.post(route('external.logout'))
+}
+
+function isCurrentScope(scope) {
+    if (!route().current('external.project.tab.show')) return false
+    const params = route().params ?? {}
+    return String(params.project) === String(scope.project.id) && String(params.tab) === String(scope.tab.id)
 }
 
 function onTabClick(scope) {

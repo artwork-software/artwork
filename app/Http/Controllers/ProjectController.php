@@ -2725,12 +2725,7 @@ class ProjectController extends Controller
                 'created_at' => $latestActivity->created_at->diffInHours() < 24
                     ? $latestActivity->created_at->diffForHumans()
                     : $latestActivity->created_at->format('d.m.Y, H:i'),
-                // Aktivitäten ohne Verursacher (System/Konsole): morphTo-Query wäre kaputtes SQL
-                'changer'    => $latestActivity->causer_type !== null && $latestActivity->causer_id !== null
-                    ? $latestActivity->causer()
-                        ->without(['roles', 'departments', 'calendar_settings', 'calendarAbo', 'shiftCalendarAbo'])
-                        ->first()
-                    : null,
+                'changer'    => $this->resolveHistoryChanger($latestActivity),
             ]];
         }
         $headerObject->project_history = $latestChange;
@@ -2879,7 +2874,7 @@ class ProjectController extends Controller
     public function history(Project $project): JsonResponse
     {
         $activities = $project->activities()->latest()->get();
-        $history = $activities->map(static function ($activity) {
+        $history = $activities->map(function ($activity) {
             $properties = $activity->properties;
 
             return [
@@ -2889,12 +2884,7 @@ class ProjectController extends Controller
                 'created_at' => $activity->created_at->diffInHours() < 24
                     ? $activity->created_at->diffForHumans()
                     : $activity->created_at->format('d.m.Y, H:i'),
-                // Aktivitäten ohne Verursacher (System/Konsole): morphTo-Query wäre kaputtes SQL
-                'changer'    => $activity->causer_type !== null && $activity->causer_id !== null
-                    ? $activity->causer()
-                        ->without(['roles', 'departments', 'calendar_settings', 'calendarAbo', 'shiftCalendarAbo'])
-                        ->first()
-                    : null,
+                'changer'    => $this->resolveHistoryChanger($activity),
             ];
         })->all();
 
@@ -3068,17 +3058,34 @@ class ProjectController extends Controller
             ->get()
             ->map(fn($request) => $this->mapDocumentRequest($request));
 
+        // Fremde Anfragen (nicht zugewiesen / an andere zugewiesen) sehen nur Personen,
+        // die Anfragen erstellen oder bearbeiten dürfen, sowie Admins – wie in der Dokumentenanfragen-Übersicht.
+        $canSeeForeignRequests = $authUser !== null && (
+            $authUser->hasRole(RoleEnum::ARTWORK_ADMIN->value)
+            || $authUser->can(PermissionEnum::DOCUMENT_REQUEST_CREATE->value)
+            || $authUser->can(PermissionEnum::DOCUMENT_REQUEST_EDIT->value)
+        );
+
         // Offene Anfragen mit Projektbezug, die noch niemandem zugewiesen sind.
-        // Sichtbarkeit wie der Tab "Nicht zugewiesen" in der Dokumentenanfragen-Übersicht.
         $unassignedRequests = collect();
-        if (
-            $authUser !== null && (
-                $authUser->hasRole(RoleEnum::ARTWORK_ADMIN->value)
-                || $authUser->can(PermissionEnum::DOCUMENT_REQUEST_CREATE->value)
-                || $authUser->can(PermissionEnum::DOCUMENT_REQUEST_EDIT->value)
-            )
-        ) {
+        if ($canSeeForeignRequests) {
             $unassignedRequests = \Artwork\Modules\DocumentRequest\Models\DocumentRequest::whereNull('requested_id')
+                ->where('project_id', $project->id)
+                ->where('status', '!=', \Artwork\Modules\DocumentRequest\Models\DocumentRequest::STATUS_COMPLETED)
+                ->with($docRequestEagerLoad)
+                ->orderBy('deadline_date')
+                ->orderBy('created_at')
+                ->get()
+                ->map(fn($request) => $this->mapDocumentRequest($request));
+        }
+
+        // Offene Anfragen mit Projektbezug, die anderen Personen zugewiesen sind (egal, wer sie erstellt hat).
+        // Sichtbarkeit wie der Tab "An andere zugewiesen" in der Dokumentenanfragen-Übersicht.
+        $assignedToOthersRequests = collect();
+        if ($canSeeForeignRequests) {
+            $assignedToOthersRequests = \Artwork\Modules\DocumentRequest\Models\DocumentRequest::query()
+                ->whereNotNull('requested_id')
+                ->where('requested_id', '!=', $userId)
                 ->where('project_id', $project->id)
                 ->where('status', '!=', \Artwork\Modules\DocumentRequest\Models\DocumentRequest::STATUS_COMPLETED)
                 ->with($docRequestEagerLoad)
@@ -3093,6 +3100,7 @@ class ProjectController extends Controller
             'projectCreatedRequests' => $createdRequests,
             'projectAssignedRequests' => $assignedRequests,
             'projectUnassignedRequests' => $unassignedRequests,
+            'projectAssignedToOthersRequests' => $assignedToOthersRequests,
             'contractTypes' => $contractTypeService->getAll(),
             'companyTypes' => $companyTypeService->getAll(),
             'currencies' => $currencyService->getAll(),
@@ -3434,6 +3442,12 @@ class ProjectController extends Controller
                 }
 
                 $pivotData['roles'] = $validRoleIds->intersect($pivotData['roles'] ?? [])->values()->all();
+
+                // Projektleitung hat laut ProjectPolicy::update immer Schreibrecht — Pivot spiegelt das,
+                // damit Listen/Exports (writeUsers) nicht vom Frontend-Häkchen abhängen
+                if (!empty($pivotData['is_manager'])) {
+                    $pivotData['can_write'] = true;
+                }
 
                 return $pivotData;
             }
@@ -5113,5 +5127,45 @@ class ProjectController extends Controller
     public function updateTimeline(Timeline $timeline, UpdateTimelineRequest $request): void
     {
         $this->timelineService->updateTimeline($timeline, collect($request->all()));
+    }
+
+    /**
+     * Verursacher eines Verlaufseintrags fürs Frontend (UserPopoverTooltip). Aktivitäten ohne
+     * Verursacher (System/Konsole) liefern null (morphTo-Query wäre kaputtes SQL). Externe Zugänge
+     * (Magic-Link-Personen) werden mit E-Mail bzw. CRM-Namen als Pseudo-User dargestellt.
+     *
+     * @return User|array<string, mixed>|null
+     */
+    private function resolveHistoryChanger(\Spatie\Activitylog\Models\Activity $activity): User|array|null
+    {
+        if ($activity->causer_type === null || $activity->causer_id === null) {
+            return null;
+        }
+
+        if ($activity->causer_type === (new \Artwork\Modules\ExternalAccess\Models\ExternalAccess())->getMorphClass()) {
+            /** @var \Artwork\Modules\ExternalAccess\Models\ExternalAccess|null $external */
+            $external = \Artwork\Modules\ExternalAccess\Models\ExternalAccess::query()
+                ->with('crmContact:id,display_name')
+                ->find($activity->causer_id);
+            if ($external === null) {
+                return null;
+            }
+            $name = $external->crmContact?->display_name ?: $external->email;
+
+            return [
+                'id' => 'external-' . $external->id,
+                'type' => 'external',
+                'is_external' => true,
+                'first_name' => $name,
+                'last_name' => '',
+                'email' => $external->email,
+                'position' => __('External access'),
+                'profile_photo_url' => route('generate-avatar-image', ['letters' => mb_substr($name, 0, 1)]),
+            ];
+        }
+
+        return $activity->causer()
+            ->without(['roles', 'departments', 'calendar_settings', 'calendarAbo', 'shiftCalendarAbo'])
+            ->first();
     }
 }

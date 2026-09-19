@@ -225,24 +225,55 @@ class CrmController extends Controller
      */
     private function resolveExternalAccessStatus(CrmContact $crmContact): ?array
     {
-        $external = $crmContact->externalAccess()->first();
-
-        if ($external === null) {
+        // Nur mit freigeschaltetem Feature laden — sonst bleibt die Kontaktseite frei von Zugangs-Queries.
+        if (!app(\Artwork\Modules\ExternalAccess\Services\ExternalAccessSettingsResolver::class)->isEnabled()) {
             return null;
         }
 
-        $pending = $external->pendingSubmissions()
-            ->where('status', \Artwork\Modules\ExternalAccess\Enums\ExternalSubmissionStatus::PENDING)
-            ->latest('submitted_at')
-            ->first();
+        // Ein Kontakt kann mehrere Zugänge (E-Mail-Adressen) haben; alle nicht widerrufenen anzeigen.
+        $accesses = $crmContact->externalAccesses()
+            ->whereNull('revoked_at')
+            ->with(['scopes.project:id,name', 'scopes.projectTab:id,name'])
+            ->orderByDesc('created_at')
+            ->get();
+
+        if ($accesses->isEmpty()) {
+            return null;
+        }
+
+        $pendingStatus = \Artwork\Modules\ExternalAccess\Enums\ExternalSubmissionStatus::PENDING;
 
         return [
-            'id' => $external->id,
-            'crm_access_expires_at' => $external->crm_access_expires_at?->toIso8601String(),
-            'revoked_at' => $external->revoked_at?->toIso8601String(),
-            'last_login_at' => $external->last_login_at?->toIso8601String(),
-            'has_pending_submission' => $pending !== null,
-            'pending_submission_id' => $pending?->id,
+            'accesses' => $accesses->map(function ($external) use ($pendingStatus) {
+                /** @var \Artwork\Modules\ExternalAccess\Models\ExternalAccess $external */
+                $pending = $external->pendingSubmissions()
+                    ->where('status', $pendingStatus)
+                    ->latest('submitted_at')
+                    ->first();
+
+                return [
+                    'id' => $external->id,
+                    'email' => $external->email,
+                    'crm_access_active' => $external->isCrmAccessActive(),
+                    'crm_access_expires_at' => $external->crm_access_expires_at?->toIso8601String(),
+                    'last_login_at' => $external->last_login_at?->toIso8601String(),
+                    'has_pending_submission' => $pending !== null,
+                    'pending_submission_id' => $pending?->id,
+                    'scopes' => $external->scopes
+                        ->filter(fn ($scope) => $scope->valid_to->isFuture())
+                        ->sortBy('valid_to')
+                        ->map(fn ($scope) => [
+                            'id' => $scope->id,
+                            'project_id' => $scope->project?->id,
+                            'project' => $scope->project?->name,
+                            'tab_id' => $scope->projectTab?->id,
+                            'tab' => $scope->projectTab?->name,
+                            'access_type' => $scope->access_type->value,
+                            'valid_to' => $scope->valid_to->toIso8601String(),
+                            'last_submitted_at' => $scope->last_submitted_at?->toIso8601String(),
+                        ])->values()->all(),
+                ];
+            })->values()->all(),
         ];
     }
 }

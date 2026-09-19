@@ -8,10 +8,13 @@ use Artwork\Modules\Project\Models\ComponentInTab;
 use Artwork\Modules\Project\Models\DisclosureComponents;
 use Artwork\Modules\Project\Models\ProjectComponentValue;
 use Artwork\Modules\Project\Models\ProjectTab;
+use Artwork\Modules\Project\TabTemplates\ProjectTabTemplateCatalog;
+use Artwork\Modules\Project\TabTemplates\ProjectTabTemplateService;
 use Artwork\Modules\Project\Models\ProjectTabSidebarTab;
 use Artwork\Modules\Project\Models\SidebarTabComponent;
 use Artwork\Modules\Project\Services\ComponentUsageService;
 use Artwork\Modules\SageApiSettings\Services\SageApiSettingsService;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Response;
 use Inertia\ResponseFactory;
@@ -138,7 +141,31 @@ class ProjectTabController extends Controller
             'components' => $components,
             'componentsSpecial' => $componentsSpecial,
             'componentUsages' => $componentUsageService->getUsages(),
+            'tabTemplates' => app(ProjectTabTemplateService::class)->listForUi(),
         ]);
+    }
+
+    /**
+     * Tab aus einer Vorlage anlegen: Ergebnis ist ein ganz normaler Tab mit normalen Komponenten.
+     */
+    public function applyTemplate(string $template, ProjectTabTemplateService $templateService): RedirectResponse
+    {
+        if (ProjectTabTemplateCatalog::find($template) === null) {
+            abort(404);
+        }
+
+        $tab = $templateService->apply($template);
+
+        $this->clearTabSettingsCache();
+        Cache::forget(self::CACHE_KEY_COMPONENTS);
+        Cache::forget('settings_components_not_special_component_settings');
+        Cache::forget('print_layout_components_not_special');
+        Cache::forget('print_layout_all_components');
+
+        return redirect()->back()->with(
+            'success',
+            __('Tab ":name" has been created from the template.', ['name' => $tab->name]),
+        );
     }
 
     public function store(Request $request): void

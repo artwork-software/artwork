@@ -28,6 +28,8 @@ class MoneySourceFileController extends Controller
         Request $request,
         MoneySource $moneySource
     ): RedirectResponse {
+        $this->authorize('update', $moneySource);
+
         if (!Storage::exists("money_source_files")) {
             Storage::makeDirectory("money_source_files");
         }
@@ -66,6 +68,8 @@ class MoneySourceFileController extends Controller
 
     public function download(MoneySourceFile $moneySourceFile): StreamedResponse
     {
+        $this->authorize('view', $moneySourceFile->money_source);
+
         return Storage::download('money_source_files/' . $moneySourceFile->basename, $moneySourceFile->name);
     }
 
@@ -73,6 +77,8 @@ class MoneySourceFileController extends Controller
         Request $request,
         MoneySourceFile $moneySourceFile
     ): RedirectResponse {
+        $this->authorize('update', $moneySourceFile->money_source);
+
         if ($request->file('file')) {
             Storage::delete('money_source_files/' . $moneySourceFile->basename);
             $file = $request->file('file');
@@ -103,6 +109,9 @@ class MoneySourceFileController extends Controller
         MoneySource $moneySource,
         MoneySourceFile $moneySourceFile
     ): RedirectResponse {
+        abort_unless($moneySourceFile->money_source_id === $moneySource->id, 404);
+        $this->authorize('update', $moneySourceFile->money_source);
+
         $this->changeService->saveFromBuilder(
             $this->changeService
                 ->createBuilder()

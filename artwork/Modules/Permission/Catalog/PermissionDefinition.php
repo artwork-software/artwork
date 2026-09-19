@@ -17,6 +17,9 @@ use Artwork\Modules\Permission\Enums\PermissionEnum;
  * - note:     Hinweis (Nebenwirkungen, Abgrenzung), optional
  * - defaultChecked: Standard-Recht für neue Personen
  * - hidden:   nicht anzeigen (Feature deaktiviert)
+ * - supersededBy: Instanz-Einstellung (Requirement::setting), die dieses Recht außer Kraft setzt –
+ *                 Gegenstück zu requires. Ist sie aktiv, zeigt der Editor "Ohne Wirkung: …".
+ * - supersededEffect: was das Recht bei aktiver Einstellung noch bewirkt (null = gar nichts mehr)
  */
 final readonly class PermissionDefinition
 {
@@ -39,6 +42,8 @@ final readonly class PermissionDefinition
         public ?string $note = null,
         public bool $defaultChecked = false,
         public bool $hidden = false,
+        public ?Requirement $supersededBy = null,
+        public ?string $supersededEffect = null,
     ) {
     }
 
@@ -54,6 +59,12 @@ final readonly class PermissionDefinition
         $keys = [$this->title, $this->effect, ...$this->unlocks, ...$this->allows];
         if ($this->note !== null) {
             $keys[] = $this->note;
+        }
+        if ($this->supersededBy !== null) {
+            $keys[] = $this->supersededBy->label;
+        }
+        if ($this->supersededEffect !== null) {
+            $keys[] = $this->supersededEffect;
         }
         foreach ($this->requires as $requirement) {
             if ($requirement->type !== Requirement::TYPE_PERMISSION) {
@@ -83,6 +94,8 @@ final readonly class PermissionDefinition
             'note' => $this->note,
             'default_checked' => $this->defaultChecked,
             'hidden' => $this->hidden,
+            'superseded_by' => $this->supersededBy?->toArray(),
+            'superseded_effect' => $this->supersededEffect,
         ];
     }
 }

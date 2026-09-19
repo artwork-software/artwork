@@ -1420,8 +1420,9 @@ const modalDescription = computed(() => {
 
 const checkedEventProperties = computed(() => (event_properties ?? []).filter(p => p.checked))
 
+// "Termine immer direkt buchbar" (Instanz-Setting): nie Anfrage-Modus, jede anlegeberechtigte Person bucht direkt
 const canCreateDirect = computed(
-    () => hasAdminRole() || selectedRoom.value?.everyone_can_book || roomAdminIds.value.includes(page.props.auth.user.id) || (props.isPlanning ? can('can plan fixed in planning calendar') : can('create events without request'))
+    () => !!page.props.event_direct_booking_only || hasAdminRole() || selectedRoom.value?.everyone_can_book || roomAdminIds.value.includes(page.props.auth.user.id) || (props.isPlanning ? can('can plan fixed in planning calendar') : can('create events without request'))
 )
 
 const isPrimaryDisabled = computed(() => {

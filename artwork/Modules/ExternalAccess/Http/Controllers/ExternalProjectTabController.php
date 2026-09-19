@@ -37,6 +37,7 @@ class ExternalProjectTabController extends Controller
             'scope' => [
                 'access_type' => $scope->access_type->value,
                 'valid_to' => $scope->valid_to->toIso8601String(),
+                'last_submitted_at' => $scope->last_submitted_at?->toIso8601String(),
             ],
             'components' => $components,
         ]);

@@ -2,10 +2,13 @@
 
 namespace Artwork\Modules\ExternalAccess\Http\Requests;
 
+use Artwork\Modules\Crm\Models\CrmContact;
 use Artwork\Modules\ExternalAccess\DTOs\InviteExternalCommand;
 use Artwork\Modules\ExternalAccess\DTOs\TabScopeInput;
 use Artwork\Modules\ExternalAccess\Enums\ExternalAccessType;
 use Artwork\Modules\ExternalAccess\Enums\InviteSource;
+use Artwork\Modules\ExternalAccess\Services\CrmContactEmailResolver;
+use Artwork\Modules\ExternalAccess\Services\ExternalAccessSettingsResolver;
 use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\User\Models\User;
@@ -18,7 +21,8 @@ class StoreExternalInvitationRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()?->can(PermissionEnum::INVITE_EXTERNAL->value) === true;
+        return app(ExternalAccessSettingsResolver::class)->isEnabled()
+            && $this->user()?->can(PermissionEnum::INVITE_EXTERNAL->value) === true;
     }
 
     /**
@@ -27,8 +31,16 @@ class StoreExternalInvitationRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'email' => ['required', 'email:rfc'],
-            'crm_contact_type_id' => ['required', 'integer', 'exists:crm_contact_types,id'],
+            // Bestehender Kontakt: E-Mail optional (fällt auf die hinterlegte Adresse zurück),
+            // Kontaktart ergibt sich aus dem Kontakt.
+            'crm_contact_id' => ['nullable', 'integer', 'exists:crm_contacts,id'],
+            'email' => [Rule::requiredIf(!$this->filled('crm_contact_id')), 'nullable', 'email:rfc'],
+            'crm_contact_type_id' => [
+                Rule::requiredIf(!$this->filled('crm_contact_id')),
+                'nullable',
+                'integer',
+                'exists:crm_contact_types,id',
+            ],
             'source' => ['required', Rule::enum(InviteSource::class)],
             'source_reference_project_id' => [
                 Rule::requiredIf($this->input('source') === InviteSource::PROJECT_TAB->value),
@@ -54,6 +66,16 @@ class StoreExternalInvitationRequest extends FormRequest
     public function withValidator(Validator $validator): void
     {
         $validator->after(function (Validator $validator): void {
+            if ($this->filled('crm_contact_id') && !$this->filled('email')) {
+                $contact = CrmContact::query()->find($this->input('crm_contact_id'));
+                if ($contact === null || app(CrmContactEmailResolver::class)->resolve($contact) === null) {
+                    $validator->errors()->add(
+                        'email',
+                        __('This contact has no email address yet. Please enter one.'),
+                    );
+                }
+            }
+
             if ($this->input('source') !== InviteSource::PROJECT_TAB->value) {
                 return;
             }
@@ -95,8 +117,8 @@ class StoreExternalInvitationRequest extends FormRequest
         );
 
         return new InviteExternalCommand(
-            email: (string) $this->input('email'),
-            crmContactTypeId: (int) $this->input('crm_contact_type_id'),
+            email: (string) $this->input('email', ''),
+            crmContactTypeId: $this->filled('crm_contact_type_id') ? (int) $this->input('crm_contact_type_id') : null,
             source: InviteSource::from($this->input('source')),
             sourceReferenceProjectId: $this->input('source_reference_project_id') !== null
                 ? (int) $this->input('source_reference_project_id')
@@ -106,6 +128,7 @@ class StoreExternalInvitationRequest extends FormRequest
             tabScopes: $tabScopes,
             confidentialFieldValues: $this->input('confidential_field_values', []),
             publicFieldValues: $this->input('public_field_values', []),
+            crmContactId: $this->filled('crm_contact_id') ? (int) $this->input('crm_contact_id') : null,
         );
     }
 }

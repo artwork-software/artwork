@@ -22,6 +22,7 @@ import ExternalDisclosure from './Types/ExternalDisclosure.vue'
 import ExternalProjectTitle from './Types/ExternalProjectTitle.vue'
 import ExternalProjectBasicData from './Types/ExternalProjectBasicData.vue'
 import ExternalArtistNameDisplay from './Types/ExternalArtistNameDisplay.vue'
+import ExternalDocuments from './Types/ExternalDocuments.vue'
 import ExternalUnknownType from './Types/ExternalUnknownType.vue'
 
 const props = defineProps({
@@ -45,6 +46,7 @@ const typeToComponent = {
     ProjectTitleComponent: ExternalProjectTitle,
     ProjectBasicDataDisplayComponent: ExternalProjectBasicData,
     ArtistNameDisplayComponent: ExternalArtistNameDisplay,
+    ProjectDocumentsComponent: ExternalDocuments,
 }
 
 const resolvedComponent = computed(() => typeToComponent[props.component.type] ?? ExternalUnknownType)

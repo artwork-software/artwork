@@ -190,7 +190,7 @@
             <!-- Zellen ausgewählt: erstellen bzw. (mit Terminen kombiniert) duplizieren -->
             <div class="flex flex-wrap items-center justify-center gap-2 px-4" v-if="selectedCellCount > 0">
                 <FormButton
-                    v-if="checkedCount === 0 && (isAdmin || can('create events without request') || can('can edit planning calendar'))"
+                    v-if="checkedCount === 0 && (isAdmin || can('create events without request') || can('can edit planning calendar') || (directBookingOnly && can('request room occupancy')))"
                     class="transition-all duration-300 ease-in-out pointer-events-auto"
                     @click="showMultiCellCreateModal = true"
                     :text="$t('Create event in {0} cells', [selectedCellCount])"
@@ -231,24 +231,25 @@
                         :text="checkedCount + ' ' + $t('Duplicate events')"
                     />
                 </template>
-                <!-- Verifizierungs-Workflow (nur Planungskalender) -->
+                <!-- Verifizierungs-Workflow (nur Planungskalender). Bei "Termine immer direkt buchbar"
+                     gibt es keine Verifizierung: derselbe Endpunkt übernimmt die Termine sofort als feste Termine. -->
                 <template v-if="isPlanning">
                     <FormButton
                         v-if="can('can see planning calendar') || isAdmin"
                         :disabled="checkedCount === 0"
                         @click="requestVerification"
-                        :text="checkedCount + ' ' + $t('request verification')"
+                        :text="checkedCount + ' ' + (directBookingOnly ? $t('Confirm as fixed events') : $t('request verification'))"
                         class="transition-all duration-300 ease-in-out pointer-events-auto"
                     />
                     <FormButton
-                        v-if="can('can edit planning calendar') || isAdmin"
+                        v-if="!directBookingOnly && (can('can edit planning calendar') || isAdmin)"
                         :disabled="checkedCount === 0"
                         @click="approveRequests"
                         :text="checkedCount + ' ' + $t('Approve events')"
                         class="transition-all duration-300 ease-in-out pointer-events-auto"
                     />
                     <FormButton
-                        v-if="can('can edit planning calendar') || isAdmin"
+                        v-if="!directBookingOnly && (can('can edit planning calendar') || isAdmin)"
                         class="bg-danger hover:bg-danger/70 transition-all duration-300 ease-in-out pointer-events-auto"
                         @click="showRejectEventVerificationRequestModal = true"
                         :disabled="checkedCount === 0"
@@ -527,6 +528,8 @@ const showMultiDuplicateModal = ref(false);
 const newCalendarData = ref(props.calendarData);
 const wantedDate = ref(null);
 const showRejectEventVerificationRequestModal = ref(false);
+// Instanz-Setting "Termine immer direkt buchbar": keine Raumanfragen, keine Verifizierung
+const directBookingOnly = computed(() => !!usePage().props.event_direct_booking_only);
 
 const first_project_calendar_tab_id = inject("first_project_calendar_tab_id");
 const first_project_tab_id = inject("first_project_tab_id");

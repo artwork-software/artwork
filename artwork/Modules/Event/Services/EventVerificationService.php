@@ -24,6 +24,7 @@ class EventVerificationService
         private readonly NotificationService $notificationService,
         private readonly ChangeService $changeService,
         private readonly RoomRequestNotificationService $roomRequestNotificationService,
+        private readonly EventSettingsService $eventSettingsService,
     ) {
     }
 
@@ -40,6 +41,29 @@ class EventVerificationService
         if ($event->occupancy_option && $event->room_id) {
             $this->roomRequestNotificationService->notifyRoomAdmins($event);
         }
+    }
+
+    /**
+     * Altbestand beim Aktivieren von "Termine immer direkt buchbar": alle offenen Verifizierungsanfragen
+     * gelten als genehmigt, die betroffenen geplanten Termine werden zu festen Terminen.
+     *
+     * @return int Anzahl übernommener Termine
+     */
+    public function approveAllPending(): int
+    {
+        $eventIds = EventVerification::where('status', 'pending')
+            ->whereHas('event')
+            ->pluck('event_id')
+            ->unique();
+
+        $count = 0;
+        foreach (Event::whereIn('id', $eventIds)->get() as $event) {
+            $event->verifications()->where('status', 'pending')->update(['status' => 'approved']);
+            $this->confirmEvent($event);
+            $count++;
+        }
+
+        return $count;
     }
 
     private function trackIsPlanningChange(Event $event, bool $newIsPlanning): void
@@ -371,8 +395,13 @@ class EventVerificationService
         $eventType = $event->event_type;
         $uuid = Str::uuid()->toString();
 
-        // Ohne Event-Typ gibt es keinen Verifizierungsmodus – wie 'none' behandeln
-        if ($eventType === null || $eventType->verification_mode === 'none') {
+        // Ohne Event-Typ gibt es keinen Verifizierungsmodus – wie 'none' behandeln.
+        // "Termine immer direkt buchbar" schaltet die Verifizierung instanzweit ab: sofort übernehmen.
+        if (
+            $eventType === null
+            || $eventType->verification_mode === 'none'
+            || $this->eventSettingsService->alwaysDirectBooking()
+        ) {
             $this->confirmEvent($event);
             return;
         }

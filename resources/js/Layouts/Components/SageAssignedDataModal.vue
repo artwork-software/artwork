@@ -10,7 +10,7 @@
                 </div>
                 <PropertyIcon
                     name="IconTrash"
-                    v-if="currentSageAssignedData && this.$canAny(['can view project sage data', 'can view global sage data'])"
+                    v-if="!readOnly && currentSageAssignedData && this.$canAny(['can view project sage data', 'can view global sage data'])"
                     class="w-6 h-6 hover:text-danger cursor-pointer"
                     @click="showDeleteConfirmation"
                 />
@@ -93,6 +93,9 @@
                             </div>
                         </div>
 
+                        <!-- Nur lesend (z. B. nicht zugeordnete Buchungen in der Sage-Rechnungsübersicht):
+                             keine Kommentare, kein Löschen -->
+                        <template v-if="!readOnly">
                         <hr class="mt-6 mb-6"/>
 
                         <div class="flex flex-col">
@@ -138,6 +141,7 @@
                                 <div class="text-sm">{{ comment.comment }}</div>
                             </div>
                         </div>
+                        </template>
                     </div>
                 </div>
             </div>
@@ -181,7 +185,9 @@ export default defineComponent({
         cell: {type: Object, required: true},
         // Startindex, wenn das Modal aus einer Liste heraus für eine bestimmte Buchung geöffnet wird
         // (Sage-Rechnungsübersicht); die Budgettabelle startet weiterhin bei 0.
-        initialIndex: {type: Number, default: 0}
+        initialIndex: {type: Number, default: 0},
+        // Nur anzeigen: verbirgt Löschen und Kommentare (Buchungen ohne Zuordnung haben beides nicht)
+        readOnly: {type: Boolean, default: false}
     },
     emits: ['close', 'budget-updated'],
     data() {

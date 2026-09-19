@@ -8,7 +8,7 @@ use Artwork\Modules\ExternalAccess\Models\ExternalLoginToken;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 use PHPUnit\Framework\Attributes\Test;
-use Tests\TestCase;
+use Tests\Feature\ExternalAccess\ExternalAccessTestCase as TestCase;
 
 final class RedeemTokenTest extends TestCase
 {

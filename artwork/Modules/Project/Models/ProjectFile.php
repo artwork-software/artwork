@@ -6,6 +6,7 @@ use Artwork\Core\Database\Models\Model;
 use Artwork\Modules\Project\Models\Traits\BelongsToProject;
 use Artwork\Modules\User\Models\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Storage;
@@ -32,6 +33,7 @@ class ProjectFile extends Model
         'name',
         'basename',
         'project_id',
+        'external_access_id',
     ];
 
     protected $guarded = [
@@ -55,6 +57,19 @@ class ProjectFile extends Model
     public function comments(): HasMany
     {
         return $this->hasMany(Comment::class);
+    }
+
+    /**
+     * Externe Person (Magic-Link-Zugang), die die Datei über einen freigegebenen Tab hochgeladen hat.
+     */
+    public function externalAccess(): BelongsTo
+    {
+        return $this->belongsTo(
+            \Artwork\Modules\ExternalAccess\Models\ExternalAccess::class,
+            'external_access_id',
+            'id',
+            'externalAccess'
+        );
     }
 
     public function getFileSizeAttribute(): ?string

@@ -10,6 +10,8 @@ class MoneySourceReminderController extends Controller
 {
     public function store(MoneySource $moneySource, Request $request): void
     {
+        $this->authorize('update', $moneySource);
+
         foreach ($request->get('expirationReminders', []) as $expirationReminder) {
             $moneySource->reminder()->create([
                 'type' => MoneySourceReminder::MONEY_SOURCE_REMINDER_TYPE_EXPIRATION,

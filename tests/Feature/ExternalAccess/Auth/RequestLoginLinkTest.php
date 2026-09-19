@@ -8,7 +8,7 @@ use Artwork\Modules\ExternalAccess\Notifications\ExternalLoginLinkNotification;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Notification;
 use PHPUnit\Framework\Attributes\Test;
-use Tests\TestCase;
+use Tests\Feature\ExternalAccess\ExternalAccessTestCase as TestCase;
 
 final class RequestLoginLinkTest extends TestCase
 {

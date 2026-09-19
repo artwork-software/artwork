@@ -433,10 +433,10 @@
                 <!-- Kontext-Menü -->
                 <div class="opacity-0 group-hover/singleEvent:opacity-100 transition-opacity duration-150">
                     <BaseMenu has-no-offset :dots-color="calSettings.high_contrast ? 'text-white' : ''" white-menu-background class="cursor-pointer">
-                        <BaseMenuItem white-menu-background v-if="event?.isPlanning && !event.hasVerification" @click="SendEventToVerification" :icon="IconLock" title="Request verification" />
+                        <BaseMenuItem white-menu-background v-if="event?.isPlanning && !event.hasVerification" @click="SendEventToVerification" :icon="IconLock" :title="directBookingOnly ? 'Confirm as fixed event' : 'Request verification'" />
                         <BaseMenuItem white-menu-background v-if="event?.isPlanning && event.hasVerification" @click="cancelVerification" :icon="IconLockOpen" title="Withdraw verification request" />
-                        <BaseMenuItem white-menu-background v-if="event.hasVerification && verifierForEventTypIds?.includes(event.eventType.id)" @click="approveRequest" :icon="IconChecks" title="Approve verification" />
-                        <BaseMenuItem white-menu-background v-if="event.hasVerification && verifierForEventTypIds?.includes(event.eventType.id)" @click="showRejectEventVerificationModal = true" :icon="IconCircleX" title="Reject verification" />
+                        <BaseMenuItem white-menu-background v-if="!directBookingOnly && event.hasVerification && verifierForEventTypIds?.includes(event.eventType.id)" @click="approveRequest" :icon="IconChecks" title="Approve verification" />
+                        <BaseMenuItem white-menu-background v-if="!directBookingOnly && event.hasVerification && verifierForEventTypIds?.includes(event.eventType.id)" @click="showRejectEventVerificationModal = true" :icon="IconCircleX" title="Reject verification" />
 
                         <BaseMenuItem white-menu-background v-if="event.occupancy_option && (isRoomAdmin || hasAdminRole)" @click="$emit('acceptRoomRequest', event)" :icon="IconChecks" title="Accept room request" />
                         <BaseMenuItem white-menu-background @click="$emit('editEvent', event)" :icon="IconEdit" title="edit" />
@@ -967,6 +967,8 @@ const heightZoom = computed(() => zoom_factor.value / contentZoom.value);
 const expandDays = computed(() => calSettings.value?.expand_days ?? false);
 const atAGlance = ref(pageProps.auth.user.at_a_glance ?? false);
 const showRejectEventVerificationModal = ref(false);
+// Instanz-Setting "Termine immer direkt buchbar": keine Verifizierung, "Zur Verifizierung" übernimmt sofort
+const directBookingOnly = computed(() => !!usePage().props.event_direct_booking_only);
 const showConvertToPlanningModal = ref(false);
 const showDeleteSeriesModal = ref(false);
 const showEditSeriesModal = ref(false);

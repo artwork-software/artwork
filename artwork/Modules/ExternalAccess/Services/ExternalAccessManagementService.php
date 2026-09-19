@@ -27,7 +27,8 @@ class ExternalAccessManagementService
         }
 
         $oldExpiry = $access->crm_access_expires_at;
-        $access->update(['crm_access_expires_at' => $newExpiry]);
+        // Verlängerung: Ablauf-Erinnerung darf erneut ausgelöst werden
+        $access->update(['crm_access_expires_at' => $newExpiry, 'crm_expiry_reminder_sent_at' => null]);
 
         activity('external_access_management')
             ->performedOn($access)
@@ -75,7 +76,7 @@ class ExternalAccessManagementService
         }
 
         $oldValidTo = $scope->valid_to;
-        $scope->update(['valid_to' => $newValidTo]);
+        $scope->update(['valid_to' => $newValidTo, 'expiry_reminder_sent_at' => null]);
 
         activity('external_access_management')
             ->performedOn($scope)

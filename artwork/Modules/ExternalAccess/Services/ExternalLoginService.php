@@ -20,6 +20,8 @@ use RuntimeException;
 
 class ExternalLoginService
 {
+    public const SESSION_LOGIN_AT_KEY = 'external_login_at';
+
     public function __construct(
         private readonly ExternalAccessRepository $externalAccessRepository,
         private readonly ExternalLoginTokenRepository $externalLoginTokenRepository,
@@ -102,6 +104,9 @@ class ExternalLoginService
         }
         $guard->login($external);
         Session::regenerate();
+        // Absolute Session-Lebensdauer: unabhängig von Aktivität endet die Sitzung nach
+        // session_absolute_lifetime_minutes (geprüft in CheckExternalAccessValid).
+        Session::put(self::SESSION_LOGIN_AT_KEY, now()->timestamp);
 
         return $external;
     }

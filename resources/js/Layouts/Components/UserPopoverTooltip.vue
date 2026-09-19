@@ -240,6 +240,10 @@ export default {
                 usePermission(this.$page.props).canViewExternalWorkerProfile();
 
             const type = this.user.type;
+            // Externe Zugänge (Magic-Link-Personen) haben keine Profilseite im internen Bereich.
+            if (type === 'external' || this.user.is_external) {
+                return;
+            }
             if (type === 'freelancer' || type === 1) {
                 if (canViewExternalWorkerProfile) {
                     router.visit(route('freelancer.show', {freelancer: this.user.id}));

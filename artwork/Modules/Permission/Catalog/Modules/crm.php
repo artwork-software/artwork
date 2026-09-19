@@ -57,16 +57,21 @@ return new PermissionModuleDefinition(
         new PermissionDefinition(
             name: PermissionEnum::INVITE_EXTERNAL,
             title: 'Invite externals',
-            effect: 'Can invite external people to maintain their own contact data',
-            unlocks: ['Currently hidden – the external access feature is disabled'],
-            allows: ['Send invitations and review external submissions'],
+            effect: 'Can invite external people to maintain their own contact data and fill in shared project tabs',
+            unlocks: [
+                'Button "Invite external" in the CRM, on contacts and on project tabs',
+                'Overview "External access" in the CRM',
+            ],
+            allows: [
+                'Send invitations and resend them',
+                'Review external submissions of contacts they invited',
+            ],
             requires: [
                 $module,
                 Requirement::feature('external_access', 'Feature "External access" enabled'),
             ],
             personas: [Persona::CRM],
-            note: 'Has no effect as long as the external access feature is disabled.',
-            hidden: true,
+            note: 'Has no effect as long as external access is disabled in the settings.',
         ),
     ],
 );

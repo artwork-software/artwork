@@ -1175,6 +1175,8 @@ class UserController extends Controller
 
     public function editUserTerms(User $user): Response|ResponseFactory
     {
+        $this->authorize('updateTerms', User::class);
+
         return inertia('Users/UserTermsPage', [
             'user_to_edit' => new UserShowResource($user),
             'currentTab' => 'terms',
@@ -1764,6 +1766,8 @@ class UserController extends Controller
 
     public function temporaryUserUpdate(User $user, Request $request): void
     {
+        $this->authorize('updateTerms', User::class);
+
         $user->update($request->only([
             'temporary',
             'employStart',
@@ -1843,6 +1847,8 @@ class UserController extends Controller
             'user_overview_light_mode',
             // Besetzungs-Pille je Gewerk (Wochenansicht, Spalte nur auf user_shift_plan_settings)
             'show_craft_staffing',
+            // Termin-Kacheln in der Wochenansicht (Spalte nur auf user_shift_plan_settings)
+            'show_events',
         ]);
 
         if ($request->boolean('is_shift_plan')) {

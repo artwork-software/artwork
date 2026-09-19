@@ -3,15 +3,20 @@
 namespace Artwork\Modules\ExternalAccess\Services;
 
 use Artwork\Modules\Accommodation\Models\Accommodation;
+use Artwork\Modules\ArtistResidency\Models\Artist;
 use Artwork\Modules\Crm\Models\CrmContact;
 use Artwork\Modules\Crm\Models\CrmContactType;
 use Artwork\Modules\Crm\Models\CrmProperty;
 use Artwork\Modules\Crm\Models\CrmPropertyValue;
 use Artwork\Modules\ExternalAccess\DTOs\InviteExternalCommand;
+use Artwork\Modules\ExternalAccess\Enums\InviteSource;
+use Artwork\Modules\ExternalAccess\Exceptions\AccessNotActiveException;
 use Artwork\Modules\ExternalAccess\Exceptions\ConfidentialMandatoryFieldsMissingException;
+use Artwork\Modules\ExternalAccess\Exceptions\EmailLinkedToOtherContactException;
 use Artwork\Modules\ExternalAccess\Exceptions\InternalUserEmailConflictException;
 use Artwork\Modules\ExternalAccess\Exceptions\UnsupportedContactTypeException;
 use Artwork\Modules\ExternalAccess\Models\ExternalAccess;
+use Artwork\Modules\ExternalAccess\Models\ExternalInvitation;
 use Artwork\Modules\ExternalAccess\Repositories\ExternalAccessRepository;
 use Artwork\Modules\ExternalAccess\Repositories\ExternalAccessScopeRepository;
 use Artwork\Modules\ExternalAccess\Repositories\ExternalInvitationRepository;
@@ -34,6 +39,7 @@ class ExternalAccessService
         private readonly ExternalAccessScopeRepository $scopeRepository,
         private readonly SourceEntityFactoryRegistry $factoryRegistry,
         private readonly ExternalContactTypeInvitabilityService $invitabilityService,
+        private readonly CrmContactEmailResolver $emailResolver,
         private readonly LoggerInterface $logger,
     ) {
     }
@@ -64,11 +70,24 @@ class ExternalAccessService
     public function invite(InviteExternalCommand $command): ExternalAccess
     {
         return DB::transaction(function () use ($command): ExternalAccess {
+            $contact = $command->crmContactId !== null
+                ? CrmContact::query()->findOrFail($command->crmContactId)
+                : null;
+
+            // Bestehender Kontakt ohne angegebene Adresse: die am Kontakt hinterlegte E-Mail nutzen.
             $email = $command->normalizedEmail();
+            if ($email === '' && $contact !== null) {
+                $email = (string) $this->emailResolver->resolve($contact);
+            }
+            if ($email === '') {
+                throw new \InvalidArgumentException('An email address is required to invite an external person.');
+            }
 
             $this->guardAgainstInternalUserEmail($email);
 
-            $external = $this->findOrCreateExternalAccess($command, $email);
+            $external = $contact !== null
+                ? $this->findOrCreateExternalAccessForContact($contact, $command, $email)
+                : $this->findOrCreateExternalAccess($command, $email);
 
             foreach ($command->tabScopes as $tabScope) {
                 $this->scopeRepository->addOrUpdateScope(
@@ -115,6 +134,80 @@ class ExternalAccessService
         });
     }
 
+    /**
+     * Schickt die Einladungsmail erneut (neuer Magic-Link). Nur möglich, solange der Zugang noch
+     * irgendeinen aktiven Bereich hat, sonst würde der Link ins Leere führen.
+     *
+     * @throws AccessNotActiveException
+     */
+    public function resendInvitation(ExternalAccess $external, User $actor): ExternalInvitation
+    {
+        if (!$external->hasAnyActiveAccess()) {
+            throw AccessNotActiveException::forAccess($external);
+        }
+
+        /** @var ExternalInvitation|null $lastInvitation */
+        $lastInvitation = $external->invitations()->latest('id')->first();
+        $projectId = $lastInvitation?->source_reference_id;
+        $project = $projectId !== null ? Project::query()->find($projectId) : null;
+
+        $invitation = $this->invitationRepository->create([
+            'external_access_id' => $external->id,
+            'invited_by_user_id' => $actor->id,
+            'source' => $lastInvitation?->source ?? InviteSource::CRM_INDEX->value,
+            'source_reference_id' => $project?->id,
+            'email_sent_at' => now(),
+        ]);
+
+        $request = request();
+        $this->externalLoginService->requestLoginLink(
+            email: $external->email,
+            ip: $request?->ip(),
+            userAgent: $request?->userAgent(),
+            isInvitation: true,
+            invitedBy: $actor,
+            invitedFromProject: $project,
+        );
+
+        activity('external_access_management')
+            ->performedOn($external)
+            ->causedBy($actor)
+            ->withProperties(['invitation_id' => $invitation->id])
+            ->log('invitation_resent');
+
+        return $invitation;
+    }
+
+    /**
+     * Einladung eines bestehenden CRM-Kontakts: Der Zugang hängt an der E-Mail. Gibt es für die
+     * Adresse schon einen Zugang an diesem Kontakt, wird er verlängert/reaktiviert; hängt er an
+     * einem anderen Kontakt, ist das ein Fehler (bewusst kein stilles Umhängen). Hat der Kontakt
+     * noch keine Adresse, wird die eingeladene Adresse am Kontakt nachgetragen.
+     */
+    private function findOrCreateExternalAccessForContact(
+        CrmContact $contact,
+        InviteExternalCommand $command,
+        string $email,
+    ): ExternalAccess {
+        $existing = $this->externalAccessRepository->findByEmail($email);
+        if ($existing !== null) {
+            if ((int) $existing->crm_contact_id !== (int) $contact->id) {
+                throw EmailLinkedToOtherContactException::forEmail($email);
+            }
+
+            return $this->reuseExistingExternalAccess($existing, $command);
+        }
+
+        $this->emailResolver->storeIfMissing($contact, $email);
+
+        return $this->externalAccessRepository->create([
+            'email' => $email,
+            'crm_contact_id' => $contact->id,
+            'invited_by_user_id' => $command->invitedBy->id,
+            'crm_access_expires_at' => $this->resolveCrmAccessExpiry($command),
+        ]);
+    }
+
     private function findOrCreateExternalAccess(InviteExternalCommand $command, string $email): ExternalAccess
     {
         // Path 1: already an external identity for this email -> reuse, extend scope additively.
@@ -151,6 +244,7 @@ class ExternalAccessService
             || $existing->crm_access_expires_at->lt($newExpiry)
         ) {
             $attributes['crm_access_expires_at'] = $newExpiry;
+            $attributes['crm_expiry_reminder_sent_at'] = null;
         }
 
         if ($existing->revoked_at !== null) {
@@ -174,6 +268,10 @@ class ExternalAccessService
 
     private function createFullSet(InviteExternalCommand $command, string $email): ExternalAccess
     {
+        if ($command->crmContactTypeId === null) {
+            throw new \InvalidArgumentException('A contact type is required to create a new external contact.');
+        }
+
         $contactType = CrmContactType::query()->findOrFail($command->crmContactTypeId);
 
         if (!$this->invitabilityService->isInvitable($contactType)) {
@@ -278,10 +376,10 @@ class ExternalAccessService
     private function resolveCrmContactByEmail(string $email): ?CrmContact
     {
         // Only entities that actually have an email column are resolvable by email.
-        // Artist has no email column and is therefore intentionally excluded here.
         $entityClasses = [
             Freelancer::class,
             ServiceProvider::class,
+            Artist::class,
             Accommodation::class,
             Manufacturer::class,
         ];

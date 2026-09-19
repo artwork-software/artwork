@@ -1258,6 +1258,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         ->name('shifts.events.for-rooms-by-days-and-project-no-workers');
     Route::get('/shifts/presets', [ShiftPresetController::class, 'index'])->name('shifts.presets');
     Route::post('/shift/{shiftPreset}/preset/store', [PresetShiftController::class, 'store'])
+        ->middleware('shift-settings-area:shift-templates,edit')
         ->name('shift.preset.store');
     Route::post('/shifts/commit', [EventController::class, 'commitShifts'])
         ->name('shifts.commit')
@@ -1435,8 +1436,10 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
 
     // MoneySourceCategories
     Route::post('/money_source/categories', [MoneySourceCategoryController::class, 'store'])
+        ->middleware('can:change money source settings')
         ->name('money_source_categories.store');
     Route::delete('/money_source/categories/{moneySourceCategory}', [MoneySourceCategoryController::class, 'destroy'])
+        ->middleware('can:change money source settings')
         ->name('money_source_categories.destroy');
 
     // MoneySourceReminder
@@ -2117,15 +2120,16 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
 
     // ContractTypes
     Route::get('/contract_types', [ContractTypeController::class, 'index'])->name('contract_types.index');
-    Route::post('/contract_types', [ContractTypeController::class, 'store'])->name('contract_types.store');
+    Route::post('/contract_types', [ContractTypeController::class, 'store'])
+        ->middleware('can:change project settings')->name('contract_types.store');
     Route::delete('/contract_types/{contract_type}', [ContractTypeController::class, 'destroy'])
-        ->name('contract_types.delete');
+        ->middleware('can:change project settings')->name('contract_types.delete');
     Route::patch('/contract_types/{contract_type}/restore', [ContractTypeController::class, 'restore'])
-        ->name('contract_types.restore');
+        ->middleware('can:change project settings')->name('contract_types.restore');
     Route::delete('/contract_types/{id}/force', [ContractTypeController::class, 'forceDelete'])
-        ->name('contract_types.force');
+        ->middleware('can:change project settings')->name('contract_types.force');
     Route::patch('/contract_types/{contract_type}/update', [ContractTypeController::class, 'update'])
-        ->name('contract_types.update');
+        ->middleware('can:change project settings')->name('contract_types.update');
 
     // CompanyTypes
     Route::get('/company_types', [CompanyTypeController::class, 'index'])->name('company_types.index');
@@ -3787,7 +3791,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::post(
         '/users/worktimes/store/{user}',
         [\Artwork\Modules\WorkTime\Http\Controllers\WorkTimeBookingController::class, 'store']
-    )->name('users.worktimes.store');
+    )->middleware('can:can manage workers')->name('users.worktimes.store');
 
     // shifts.requestWorkTimeChange
     Route::post(

@@ -11,7 +11,7 @@ class StoreWorkTimeBookingRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return true;
+        return $this->user()?->can('can manage workers') ?? false;
     }
 
     /**

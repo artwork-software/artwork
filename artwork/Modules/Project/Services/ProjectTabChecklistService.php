@@ -60,13 +60,18 @@ class ProjectTabChecklistService
             ->with(['users', 'tasks.task_users', 'tasks.user_who_done'])
             ->where('private', $private);
 
+        // Alle Listen teilen sich die Projekt-Instanz: ChecklistPolicy::update (can_update) liest
+        // project->users/writeUsers/managerUsers/departments dann einmal statt je Checkliste.
+        $shareProject = static fn (\Illuminate\Support\Collection $checklists) => $checklists
+            ->each(static fn ($checklist) => $checklist->setRelation('project', $project));
+
         if (!empty($scope)) {
             $query->whereIn('tab_id', $scope);
         }
 
         // Public checklists are visible to everyone who can view the component
         if (!$private) {
-            return ChecklistIndexResource::collection($query->get())->resolve();
+            return ChecklistIndexResource::collection($shareProject($query->get()))->resolve();
         }
 
         // Private checklists require user to be assigned, creator, or in project team
@@ -74,7 +79,7 @@ class ProjectTabChecklistService
             $project->load('users');
         }
 
-        $checklists = $query->get()->filter(function ($checklist) use ($userId, $project) {
+        $checklists = $shareProject($query->get())->filter(function ($checklist) use ($userId, $project) {
             $isInChecklistUsers = $checklist->users->contains('id', $userId);
             $isInTaskUsers = $checklist->tasks->contains(function ($task) use ($userId) {
                 return $task->task_users->contains('id', $userId);

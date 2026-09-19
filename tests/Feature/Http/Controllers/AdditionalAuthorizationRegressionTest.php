@@ -3,6 +3,7 @@
 namespace Tests\Feature\Http\Controllers;
 
 use App\Settings\ShiftSettings;
+use Artwork\Modules\Checklist\Http\Resources\ChecklistIndexResource;
 use Artwork\Modules\Checklist\Models\Checklist;
 use Artwork\Modules\Craft\Models\Craft;
 use Artwork\Modules\MoneySource\Models\MoneySource;
@@ -344,5 +345,42 @@ final class AdditionalAuthorizationRegressionTest extends FeatureTestCase
         yield 'spoofed author replaced' => ['spoofed author', true];
         yield 'no supplied author' => ['no supplied author', true];
         yield 'overnight' => ['overnight', true];
+    }
+
+    #[Test]
+    public function saving_a_profile_never_overwrites_hidden_contact_data(): void
+    {
+        $target = User::factory()->create([
+            'email' => 'private@example.test', 'email_private' => true,
+            'phone_number' => '0123456789', 'phone_private' => true,
+        ]);
+        // Ohne "Private Kontaktdaten einsehen" liefert UserShowResource null – das Formular schickt es zurück.
+        $this->actingAsUserWith(PermissionEnum::MA_MANAGER->value);
+
+        $this->patch(route('user.update', $target), [
+            'first_name' => 'Neu', 'last_name' => $target->last_name,
+            'position' => 'Bühne', 'business' => 'Haus',
+            'email' => null, 'phone_number' => null, 'departments' => [],
+        ])->assertRedirect();
+
+        $target->refresh();
+        $this->assertSame('Neu', $target->first_name);
+        $this->assertSame('private@example.test', $target->email);
+        $this->assertSame('0123456789', $target->phone_number);
+    }
+
+    #[Test]
+    public function checklist_payload_mirrors_the_update_right(): void
+    {
+        $owner = User::factory()->create();
+        $stranger = User::factory()->create();
+        $checklist = Checklist::factory()->create(['project_id' => null, 'user_id' => $owner->id, 'private' => true]);
+        Task::factory()->create(['checklist_id' => $checklist->id, 'order' => 1]);
+
+        $resolveAs = static fn (User $user): bool => ChecklistIndexResource::make($checklist->fresh())
+            ->resolve(request()->setUserResolver(static fn () => $user))['can_update'];
+
+        $this->assertTrue($resolveAs($owner));
+        $this->assertFalse($resolveAs($stranger));
     }
 }

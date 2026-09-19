@@ -18,16 +18,22 @@
                         {{ $t('Export') }}
                     </button>
                     -->
-                    <!-- TODO: Externe-Einladen-Feature vorerst ausgeblendet (noch nicht ausgereift)
                     <button
-                        v-if="can('can invite externals')"
-                        class="ui-button flex items-center gap-1.5"
+                        v-if="canInviteExternal"
+                        class="inline-flex items-center gap-1.5 h-[30px] px-3 rounded-md bg-white/8 hover:bg-white/16 text-text-inverse text-[13px] font-medium"
                         @click="showInviteModal = true"
                     >
                         <component :is="IconUserPlus" stroke-width="1" class="size-5" />
                         {{ $t('Invite external') }}
                     </button>
-                    -->
+                    <Link
+                        v-if="canInviteExternal"
+                        :href="route('crm.external-access.index')"
+                        class="inline-flex items-center gap-1.5 h-[30px] px-3 rounded-md bg-white/8 hover:bg-white/16 text-text-inverse text-[13px] font-medium"
+                    >
+                        <component :is="IconUserShield" stroke-width="1" class="size-5" />
+                        {{ $t('External access') }}
+                    </Link>
                     <Link v-if="canImport" :href="route('crm.duplicates')" class="inline-flex items-center gap-1.5 h-[30px] px-3 rounded-md bg-white/8 hover:bg-white/16 text-text-inverse text-[13px] font-medium">
                         <component :is="IconUsers" stroke-width="1" class="size-5" />
                         {{ $t('Find duplicates') }}
@@ -281,7 +287,6 @@
             @close="showExportModal = false"
         />
 
-        <!-- Invite External Modal — vorerst ausgeblendet (noch nicht ausgereift)
         <InviteExternalModal
             v-if="showInviteModal"
             source="crm_index"
@@ -289,7 +294,6 @@
             @close="showInviteModal = false"
             @success="showSuccess($t('Invitation sent.'))"
         />
-        -->
     </AppLayout>
 </template>
 
@@ -298,8 +302,7 @@ import { ref, watch, computed, onMounted } from 'vue'
 import { router, Link, usePage } from '@inertiajs/vue3'
 import { useTranslation } from '@/Composeables/Translation.js'
 import { usePermission } from '@/Composeables/Permission.js'
-// Externe-Einladen-Feature vorerst ausgeblendet (noch nicht ausgereift)
-// import InviteExternalModal from '@/Pages/CRM/Components/InviteExternalModal.vue'
+import InviteExternalModal from '@/Pages/CRM/Components/InviteExternalModal.vue'
 import AppLayout from '@/Layouts/AppLayout.vue'
 import ToolbarHeader from '@/Artwork/Toolbar/ToolbarHeader.vue'
 import BaseUIButton from '@/Artwork/Buttons/BaseUIButton.vue'
@@ -312,7 +315,7 @@ import CreateContactModal from '@/Pages/CRM/Components/CreateContactModal.vue'
 import CrmFilterModal from '@/Pages/CRM/Components/CrmFilterModal.vue'
 import CrmExportModal from '@/Pages/CRM/Components/CrmExportModal.vue'
 import ToolTipComponent from '@/Components/ToolTips/ToolTipComponent.vue'
-import { IconAddressBook, IconCirclePlus, IconEye, IconTrash, IconUpload, IconDownload, IconUserPlus, IconUsers } from '@tabler/icons-vue'
+import { IconAddressBook, IconCirclePlus, IconEye, IconTrash, IconUpload, IconDownload, IconUserPlus, IconUserShield, IconUsers } from '@tabler/icons-vue'
 import debounce from 'lodash.debounce'
 
 const props = defineProps({
@@ -344,6 +347,8 @@ const showDeleteModal = ref(false)
 const showFilterModal = ref(false)
 const showExportModal = ref(false)
 const showInviteModal = ref(false)
+// Nur mit Recht UND instanzweit freigeschaltetem Feature (Einstellungen → Externe Zugänge)
+const canInviteExternal = computed(() => usePage().props.externalAccessEnabled === true && can('can invite externals'))
 const showSkipped = ref(false)
 const contactToDelete = ref(null)
 const activeFilters = ref({})

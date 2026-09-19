@@ -14,7 +14,10 @@ class UpdateExternalAccessSettingsRequest extends FormRequest
 
     protected function prepareForValidation(): void
     {
-        $this->merge(['company_name_override' => (string) $this->input('company_name_override', '')]);
+        $this->merge([
+            'company_name_override' => (string) $this->input('company_name_override', ''),
+            'enabled' => filter_var($this->input('enabled', false), FILTER_VALIDATE_BOOLEAN),
+        ]);
     }
 
     /**
@@ -23,6 +26,8 @@ class UpdateExternalAccessSettingsRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'enabled' => ['required', 'boolean'],
+            'expiry_reminder_days' => ['required', 'integer', 'min:0', 'max:60'],
             'company_name_override' => ['nullable', 'string', 'max:255'],
             'default_crm_access_months' => ['required', 'integer', 'min:1', 'max:120'],
             'default_tab_access_days' => ['required', 'integer', 'min:1', 'max:3650'],

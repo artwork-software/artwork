@@ -52,7 +52,10 @@
                                        }}
                                    </div>
                                </div>
-                               <div class="text-text-subtle font-lexend font-extralight text-xs">
+                               <div v-if="$page.props.event_direct_booking_only" class="text-text-subtle font-lexend font-extralight text-xs">
+                                   {{ $t('Verification mode')}}: {{ $t('switched off by setting "Events always bookable directly"') }}
+                               </div>
+                               <div v-else class="text-text-subtle font-lexend font-extralight text-xs">
                                    {{ $t('Verification mode')}}: {{ $t(eventType.verification_mode) }}<span v-if="eventType.users?.length > 0">: </span>
                                    <span>
                                         {{ eventType.users.map((user) => { return user.name }).join(', ') }}

@@ -4,20 +4,27 @@ namespace Artwork\Modules\Project\Services;
 
 use Artwork\Modules\Budget\Models\BudgetManagementAccount;
 use Artwork\Modules\Budget\Models\SageAssignedData;
+use Artwork\Modules\Budget\Models\SageNotAssignedData;
 use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\SageApiSettings\Services\SageApiSettingsService;
 use Artwork\Modules\User\Models\User;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Collection as SupportCollection;
 
 /**
  * Liefert die Daten der Spezialkomponente "Sage-Rechnungsübersicht":
- * alle Sage-Buchungen, die einer Zelle in der Budgettabelle des Projekts zugeordnet sind,
- * sortiert nach Kostenstelle, Sachkonto und Belegdatum.
+ * alle Sage-Buchungen des Projekts – sowohl die einer Budgetzelle zugeordneten (sage_assigned_data)
+ * als auch die projektbezogenen, noch nicht zugeordneten (sage_not_assigned_data, Block
+ * „Projektbezogene Sage-Daten" im Budget-Tab) – sortiert nach Kostenstelle, KTO und Belegdatum.
  */
 class ProjectTabSageInvoiceOverviewService
 {
+    public const SOURCE_ASSIGNED = 'assigned';
+    public const SOURCE_UNASSIGNED = 'unassigned';
+
     public function __construct(
         private readonly SageApiSettingsService $sageApiSettingsService,
     ) {
@@ -48,15 +55,23 @@ class ProjectTabSageInvoiceOverviewService
             ];
         }
 
-        $bookings = $this->loadBookings($project);
+        $bookings = $this->loadAssignedBookings($project)
+            ->each(fn (SageAssignedData $booking) => $this->markSource($booking, self::SOURCE_ASSIGNED))
+            ->concat(
+                $this->loadUnassignedBookings($project)
+                    ->each(fn (SageNotAssignedData $booking) => $this->markSource($booking, self::SOURCE_UNASSIGNED))
+            );
+
+        $this->attachAccountNumbers($bookings);
         $this->attachAccountTitles($bookings);
+        $bookings = $this->sortBookings($bookings);
 
         return [
             'sage_enabled' => true,
             'access' => $access,
             'rows' => $bookings->values()->toArray(),
             'total' => round(
-                $bookings->sum(static fn (SageAssignedData $booking): float => (float) $booking->buchungsbetrag),
+                $bookings->sum(static fn (Model $booking): float => (float) $booking->buchungsbetrag),
                 2
             ),
         ];
@@ -76,9 +91,11 @@ class ProjectTabSageInvoiceOverviewService
     }
 
     /**
+     * Buchungen, die einer Zelle in der Budgettabelle des Projekts zugeordnet sind.
+     *
      * @return Collection<int, SageAssignedData>
      */
-    private function loadBookings(Project $project): Collection
+    private function loadAssignedBookings(Project $project): Collection
     {
         return SageAssignedData::query()
             ->whereNull('parent_booking_id')
@@ -97,28 +114,64 @@ class ProjectTabSageInvoiceOverviewService
                 },
                 'comments.user',
             ])
-            // Nummern liegen als Text vor: erst numerisch, dann textuell sortieren,
-            // damit "4000" vor "12000" nicht lexikografisch verrutscht.
-            ->orderByRaw('CAST(kst_stelle AS UNSIGNED), kst_stelle, CAST(sa_kto AS UNSIGNED), sa_kto')
-            ->orderBy('belegdatum')
-            ->orderBy('id')
             ->get();
     }
 
     /**
-     * Namen zu Sachkonten aus den Budget-Stammdaten (Konten) nachschlagen.
-     * Kein Treffer → sa_kto_title bleibt null, das Frontend zeigt nur die Nummer.
+     * Projektbezogene Buchungen, die (noch) keiner Budgetzeile zugeordnet werden konnten –
+     * dieselben Datensätze wie der Block „Projektbezogene Sage-Daten" im Budget-Tab.
      *
-     * @param Collection<int, SageAssignedData> $bookings
+     * @return Collection<int, SageNotAssignedData>
      */
-    private function attachAccountTitles(Collection $bookings): void
+    private function loadUnassignedBookings(Project $project): Collection
     {
-        $all = $bookings->flatMap(
-            static fn (SageAssignedData $booking): array => [$booking, ...$booking->findChildren->all()]
-        );
+        return SageNotAssignedData::query()
+            ->whereNull('parent_booking_id')
+            ->where('project_id', $project->id)
+            ->with([
+                'findChildren' => static function ($query): void {
+                    $query->orderBy('belegdatum')->orderBy('id');
+                },
+            ])
+            ->get();
+    }
+
+    /**
+     * Herkunft der Zeile plus ein tabellenübergreifend eindeutiger Schlüssel:
+     * IDs aus sage_assigned_data und sage_not_assigned_data können kollidieren.
+     */
+    private function markSource(Model $booking, string $source): void
+    {
+        $booking->setAttribute('source', $source);
+        $booking->setAttribute('row_key', $source . '-' . $booking->getKey());
+    }
+
+    /**
+     * KTO wie überall in artwork: Sachkonto (sa_kto), sonst Soll-Konto (kto_soll).
+     * Sage liefert das Sachkonto oft leer, das Konto steht dann im Soll-Konto.
+     *
+     * @param SupportCollection<int, Model> $bookings
+     */
+    private function attachAccountNumbers(SupportCollection $bookings): void
+    {
+        $this->withChildren($bookings)->each(static function (Model $booking): void {
+            $saKto = trim((string) $booking->sa_kto);
+            $booking->setAttribute('kto', $saKto !== '' ? $saKto : trim((string) $booking->kto_soll));
+        });
+    }
+
+    /**
+     * Namen zu Konten aus den Budget-Stammdaten (Konten) nachschlagen.
+     * Kein Treffer → kto_title bleibt null, das Frontend zeigt nur die Nummer.
+     *
+     * @param SupportCollection<int, Model> $bookings
+     */
+    private function attachAccountTitles(SupportCollection $bookings): void
+    {
+        $all = $this->withChildren($bookings);
 
         $accountNumbers = $all
-            ->map(static fn (SageAssignedData $booking): string => trim((string) $booking->sa_kto))
+            ->map(static fn (Model $booking): string => (string) $booking->kto)
             ->filter()
             ->unique()
             ->values();
@@ -129,8 +182,45 @@ class ProjectTabSageInvoiceOverviewService
                 ->whereIn('account_number', $accountNumbers)
                 ->pluck('title', 'account_number');
 
-        $all->each(static function (SageAssignedData $booking) use ($titles): void {
-            $booking->setAttribute('sa_kto_title', $titles->get(trim((string) $booking->sa_kto)));
+        $all->each(static function (Model $booking) use ($titles): void {
+            $booking->setAttribute('kto_title', $titles->get((string) $booking->kto));
         });
+    }
+
+    /**
+     * Kostenstelle → KTO → Belegdatum → ID. Nummern liegen als Text vor: erst numerisch,
+     * dann textuell vergleichen, damit "4000" vor "12000" nicht lexikografisch verrutscht.
+     *
+     * @param SupportCollection<int, Model> $bookings
+     * @return SupportCollection<int, Model>
+     */
+    private function sortBookings(SupportCollection $bookings): SupportCollection
+    {
+        return $bookings->sort(static function (Model $a, Model $b): int {
+            return self::compareNumber((string) $a->kst_stelle, (string) $b->kst_stelle)
+                ?: self::compareNumber((string) $a->kto, (string) $b->kto)
+                ?: strcmp((string) $a->belegdatum, (string) $b->belegdatum)
+                ?: strcmp((string) $a->source, (string) $b->source)
+                ?: ($a->getKey() <=> $b->getKey());
+        })->values();
+    }
+
+    private static function compareNumber(string $a, string $b): int
+    {
+        $a = trim($a);
+        $b = trim($b);
+
+        return ((int) $a <=> (int) $b) ?: strcmp($a, $b);
+    }
+
+    /**
+     * @param SupportCollection<int, Model> $bookings
+     * @return SupportCollection<int, Model>
+     */
+    private function withChildren(SupportCollection $bookings): SupportCollection
+    {
+        return $bookings->flatMap(
+            static fn (Model $booking): array => [$booking, ...$booking->findChildren->all()]
+        );
     }
 }

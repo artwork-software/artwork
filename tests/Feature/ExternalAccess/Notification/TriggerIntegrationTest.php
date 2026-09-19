@@ -21,7 +21,7 @@ use Artwork\Modules\Freelancer\Models\Freelancer;
 use Artwork\Modules\User\Models\User;
 use Illuminate\Support\Facades\Notification;
 use PHPUnit\Framework\Attributes\Test;
-use Tests\TestCase;
+use Tests\Feature\ExternalAccess\ExternalAccessTestCase as TestCase;
 
 final class TriggerIntegrationTest extends TestCase
 {

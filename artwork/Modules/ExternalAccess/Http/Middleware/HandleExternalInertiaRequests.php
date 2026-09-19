@@ -50,6 +50,7 @@ class HandleExternalInertiaRequests extends Middleware
                 ? $this->resolveAccessibleScopes($external)
                 : [],
             'crm_access_expires_at' => $external?->crm_access_expires_at?->toIso8601String(),
+            'crm_access_active' => $external?->isCrmAccessActive() ?? false,
             'page_title' => $this->generalSettings->page_title ?: config('app.name'),
             'small_logo' => $smallLogo,
             'big_logo' => $bigLogo,

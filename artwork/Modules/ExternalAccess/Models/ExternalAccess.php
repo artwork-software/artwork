@@ -21,6 +21,7 @@ use Illuminate\Notifications\Notifiable;
  * @property int $crm_contact_id
  * @property int|null $invited_by_user_id
  * @property Carbon|null $crm_access_expires_at
+ * @property Carbon|null $crm_expiry_reminder_sent_at
  * @property Carbon|null $revoked_at
  * @property Carbon|null $last_login_at
  * @property Carbon $created_at
@@ -41,6 +42,7 @@ class ExternalAccess extends Model implements AuthenticatableContract, Authoriza
         'crm_contact_id',
         'invited_by_user_id',
         'crm_access_expires_at',
+        'crm_expiry_reminder_sent_at',
         'revoked_at',
         'last_login_at',
     ];
@@ -49,6 +51,7 @@ class ExternalAccess extends Model implements AuthenticatableContract, Authoriza
     {
         return [
             'crm_access_expires_at' => 'datetime',
+            'crm_expiry_reminder_sent_at' => 'datetime',
             'revoked_at' => 'datetime',
             'last_login_at' => 'datetime',
         ];

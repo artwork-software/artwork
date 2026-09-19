@@ -1175,6 +1175,8 @@ class UserController extends Controller
 
     public function editUserTerms(User $user): Response|ResponseFactory
     {
+        $this->authorize('updateTerms', User::class);
+
         return inertia('Users/UserTermsPage', [
             'user_to_edit' => new UserShowResource($user),
             'currentTab' => 'terms',
@@ -1332,24 +1334,33 @@ class UserController extends Controller
         }
 
 
-        $user->update(
-            $request->only(
-                'first_name',
-                'last_name',
-                'phone_number',
-                'position',
-                'business',
-                'pronouns',
-                'description',
-                'email',
-                'language',
-                'email_private',
-                'phone_private',
-                'use_chat'
-            )
+        $attributes = $request->only(
+            'first_name',
+            'last_name',
+            'phone_number',
+            'position',
+            'business',
+            'pronouns',
+            'description',
+            'email',
+            'language',
+            'email_private',
+            'phone_private',
+            'use_chat'
         );
 
-        $user->calendar_settings->update([
+        // UserShowResource liefert private Kontaktdaten als null, wenn die bearbeitende Person sie nicht
+        // sehen darf; das Formular schickt diese null zurück. Ein null darf die gespeicherten Werte nie
+        // überschreiben (users.email ist NOT NULL, die Telefonnummer würde still gelöscht).
+        foreach (['email', 'phone_number'] as $privateField) {
+            if (array_key_exists($privateField, $attributes) && $attributes[$privateField] === null) {
+                unset($attributes[$privateField]);
+            }
+        }
+
+        $user->update($attributes);
+
+        $user->calendar_settings?->update([
             'high_contrast' => $request->get('high_contrast')
         ]);
 
@@ -1764,6 +1775,8 @@ class UserController extends Controller
 
     public function temporaryUserUpdate(User $user, Request $request): void
     {
+        $this->authorize('updateTerms', User::class);
+
         $user->update($request->only([
             'temporary',
             'employStart',
@@ -1843,6 +1856,8 @@ class UserController extends Controller
             'user_overview_light_mode',
             // Besetzungs-Pille je Gewerk (Wochenansicht, Spalte nur auf user_shift_plan_settings)
             'show_craft_staffing',
+            // Termin-Kacheln in der Wochenansicht (Spalte nur auf user_shift_plan_settings)
+            'show_events',
         ]);
 
         if ($request->boolean('is_shift_plan')) {

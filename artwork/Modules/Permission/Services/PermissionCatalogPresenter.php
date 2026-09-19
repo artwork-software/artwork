@@ -2,7 +2,9 @@
 
 namespace Artwork\Modules\Permission\Services;
 
+use App\Settings\EventSettings;
 use App\Settings\GeneralCalendarSettings;
+use Artwork\Modules\ExternalAccess\Services\ExternalAccessSettingsResolver;
 use App\Settings\ShiftSettings;
 use Artwork\Modules\GeneralSettings\Models\GeneralSettings;
 use Artwork\Modules\ModuleSettings\Services\ModuleSettingsService;
@@ -82,6 +84,7 @@ readonly class PermissionCatalogPresenter
         $shiftSettings = app(ShiftSettings::class);
         $calendarSettings = app(GeneralCalendarSettings::class);
         $generalSettings = app(GeneralSettings::class);
+        $eventSettings = app(EventSettings::class);
 
         $sageEnabled = false;
         if (config('services.sage.enabled')) {
@@ -96,11 +99,13 @@ readonly class PermissionCatalogPresenter
                 'hide_uncommitted_shifts' => (bool) ($shiftSettings->hide_uncommitted_shifts_from_own_roster ?? false),
                 'day_remarks_enabled' => (bool) ($calendarSettings->day_remarks_enabled ?? false),
                 'shift_commit_workflow' => (bool) ($generalSettings->shift_commit_workflow_enabled ?? false),
+                // "Termine immer direkt buchbar": setzt Anfrage-/Direktbuchungsrechte außer Kraft (supersededBy)
+                'event_direct_booking_only' => (bool) ($eventSettings->always_direct_booking ?? false),
             ],
             'features' => [
                 'sage_api' => $sageEnabled,
-                // Externe einladen: UI bewusst deaktiviert (CRM/Index.vue, TabContent.vue)
-                'external_access' => false,
+                // Externe Zugänge: instanzweiter Schalter in den Einstellungen (Externe Zugänge)
+                'external_access' => app(ExternalAccessSettingsResolver::class)->isEnabled(),
             ],
         ];
     }

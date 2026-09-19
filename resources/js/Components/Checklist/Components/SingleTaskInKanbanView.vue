@@ -12,10 +12,12 @@
                 <div class="pt-0.5">
                     <input
                         :id="checkboxId"
+                        :disabled="!canToggleDone"
                         @change="updateTaskStatus"
                         v-model="localTaskDone"
                         type="checkbox"
                         class="h-4 w-4 cursor-pointer rounded-full border-2 border-border text-success ring-0 focus:ring-0 focus:outline-none"
+                        :class="canToggleDone ? '' : 'cursor-not-allowed opacity-50'"
                         :aria-labelledby="titleId"
                     />
                 </div>
@@ -174,6 +176,9 @@ const canManage = computed(() => {
     const isManager = props.projectManagerIds?.includes(authId.value as number)
     return (canEdit && (isWriter || isManager || !!props.isAdmin)) || !!props.isInOwnTaskManagement
 })
+
+// Abhaken folgt ChecklistPolicy::update (Backend-Flag can_update); ohne Flag (z. B. eigene Aufgabenverwaltung) wie bisher canManage
+const canToggleDone = computed(() => props.checklist?.can_update ?? canManage.value)
 
 // Overdue detection
 const isOverdue = computed(() => {

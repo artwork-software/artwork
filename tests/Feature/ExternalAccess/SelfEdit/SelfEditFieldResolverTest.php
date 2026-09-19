@@ -13,7 +13,7 @@ use Artwork\Modules\ExternalAccess\Services\ExternalSelfEditFieldResolver;
 use Artwork\Modules\Freelancer\Models\Freelancer;
 use Artwork\Modules\ServiceProvider\Models\ServiceProvider;
 use PHPUnit\Framework\Attributes\Test;
-use Tests\TestCase;
+use Tests\Feature\ExternalAccess\ExternalAccessTestCase as TestCase;
 
 final class SelfEditFieldResolverTest extends TestCase
 {
@@ -77,17 +77,20 @@ final class SelfEditFieldResolverTest extends TestCase
     }
 
     #[Test]
-    public function resolves_crm_property_sections_with_direct_mode(): void
+    public function resolves_crm_property_sections_as_staged(): void
     {
         $type = CrmContactType::query()->create(['name' => 'Freelancer', 'slug' => 'freelancer']);
         $this->attachProperty($type, confidential: false);
         $external = $this->externalForEntity(Freelancer::factory()->create(), $type);
 
         $schema = $this->resolver()->resolveFor($external);
-        $direct = collect($schema->sections)->filter(fn ($s) => $s->mode === SelfEditSectionMode::DIRECT);
+        $propertySections = collect($schema->sections)->filter(fn ($s) => str_starts_with($s->key, 'crm_group_'));
 
-        $this->assertCount(1, $direct);
-        $this->assertStringStartsWith('crm_property:', $direct->first()->fields[0]->key);
+        // Seit der Freigabe-Vereinheitlichung laufen auch Eigenschaftswerte über die Prüfung
+        $this->assertCount(1, $propertySections);
+        $this->assertSame(SelfEditSectionMode::STAGED, $propertySections->first()->mode);
+        $this->assertStringStartsWith('crm_property:', $propertySections->first()->fields[0]->key);
+        $this->assertTrue(collect($schema->sections)->every(fn ($s) => $s->mode === SelfEditSectionMode::STAGED));
     }
 
     #[Test]
@@ -98,9 +101,9 @@ final class SelfEditFieldResolverTest extends TestCase
         $external = $this->externalForEntity(Freelancer::factory()->create(), $type);
 
         $schema = $this->resolver()->resolveFor($external);
-        $direct = collect($schema->sections)->filter(fn ($s) => $s->mode === SelfEditSectionMode::DIRECT);
+        $propertySections = collect($schema->sections)->filter(fn ($s) => str_starts_with($s->key, 'crm_group_'));
 
-        $this->assertCount(0, $direct);
+        $this->assertCount(0, $propertySections);
     }
 
     #[Test]
@@ -133,8 +136,12 @@ final class SelfEditFieldResolverTest extends TestCase
 
         $schema = $this->resolver()->resolveFor($external);
 
-        $this->assertNull(collect($schema->sections)->firstWhere('key', 'personal'));
-        $this->assertCount(1, $schema->sections);
-        $this->assertSame(SelfEditSectionMode::DIRECT, $schema->sections[0]->mode);
+        // Kontakte ohne Quell-Entität dürfen ihren Anzeigenamen vorschlagen + Eigenschaften pflegen
+        $personal = collect($schema->sections)->firstWhere('key', 'personal');
+        $this->assertNotNull($personal);
+        $this->assertSame('display_name', $personal->fields[0]->key);
+        $this->assertSame('Bare Contact', $personal->fields[0]->value);
+        $this->assertCount(2, $schema->sections);
+        $this->assertTrue(collect($schema->sections)->every(fn ($s) => $s->mode === SelfEditSectionMode::STAGED));
     }
 }

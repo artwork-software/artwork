@@ -2,8 +2,6 @@
 
 namespace Artwork\Modules\ExternalAccess\Services;
 
-use Artwork\Modules\Crm\Models\CrmProperty;
-use Artwork\Modules\Crm\Models\CrmPropertyValue;
 use Artwork\Modules\ExternalAccess\Enums\ExternalSubmissionContext;
 use Artwork\Modules\ExternalAccess\Enums\ExternalSubmissionStatus;
 use Artwork\Modules\ExternalAccess\Enums\FieldApprovalStatus;
@@ -26,9 +24,9 @@ class ExternalSelfEditSubmissionService
     /**
      * Processes a submit of the self-edit form.
      *
-     * - Staged fields (source entity) go to a new pending submission (old pending superseded).
-     * - Direct fields (CRM properties) are written immediately.
-     * - Returns the created pending submission, or null when only direct writes happened.
+     * Every changed field (source entity columns AND CRM property values) goes into ONE new
+     * pending submission (an older pending one is superseded). Nothing is written to the CRM
+     * until the inviting person approves. Returns null when nothing changed.
      *
      * @param array<string, array<string, mixed>> $submittedValues sectionKey => (fieldKey => value)
      */
@@ -39,7 +37,6 @@ class ExternalSelfEditSubmissionService
 
         $result = $this->db->transaction(function () use ($external, $schema, $submittedValues) {
             $stagedChanges = [];
-            $directWrites = [];
 
             foreach ($schema->sections as $section) {
                 foreach ($section->fields as $field) {
@@ -73,19 +70,15 @@ class ExternalSelfEditSubmissionService
                         'new_value' => $newValue,
                     ];
 
-                    if ($section->mode === SelfEditSectionMode::STAGED) {
-                        $stagedChanges[] = $change;
-                    } else {
-                        $directWrites[] = $change;
+                    if ($section->mode !== SelfEditSectionMode::STAGED) {
+                        // Defense in depth: seit der Freigabe-Vereinheitlichung gibt es keine
+                        // Direktschreib-Sektionen mehr; ein solcher Schema-Eintrag wäre ein Fehler.
+                        throw new \DomainException("Section {$section->key} is not staged");
                     }
+
+                    $stagedChanges[] = $change;
                 }
             }
-
-            foreach ($directWrites as $write) {
-                $this->persistDirectCrmPropertyWrite($write, $external);
-            }
-
-            $hadAnyChange = $stagedChanges !== [] || $directWrites !== [];
 
             $submission = null;
             if ($stagedChanges !== []) {
@@ -93,15 +86,13 @@ class ExternalSelfEditSubmissionService
                 $submission = $this->createPendingSubmission($external, $stagedChanges);
             }
 
-            return ['submission' => $submission, 'hadAnyChange' => $hadAnyChange];
+            return ['submission' => $submission];
         });
 
         // Notifications are dispatched AFTER commit so a mail/queue failure never rolls back
         // the persisted changes.
         if ($result['submission'] !== null) {
             $this->notificationSender->notifyCrmSubmissionCreated($result['submission'], $isFirstSubmission);
-        } elseif ($result['hadAnyChange']) {
-            $this->notificationSender->notifyCrmDirectUpdate($external);
         }
 
         return $result['submission'];
@@ -117,39 +108,6 @@ class ExternalSelfEditSubmissionService
                 ExternalSubmissionStatus::PARTIALLY_APPROVED,
             ])
             ->doesntExist();
-    }
-
-    /**
-     * @param array<string, mixed> $write
-     */
-    private function persistDirectCrmPropertyWrite(array $write, ExternalAccess $external): void
-    {
-        if (!str_starts_with($write['field_key'], 'crm_property:')) {
-            throw new \DomainException('Direct write only allowed for crm_property:* fields');
-        }
-        $propertyId = (int) substr($write['field_key'], strlen('crm_property:'));
-
-        $property = CrmProperty::with('group')->findOrFail($propertyId);
-        if ($property->group->is_confidential) {
-            throw new \DomainException("Cannot write to confidential property {$propertyId}");
-        }
-
-        CrmPropertyValue::updateOrCreate(
-            ['crm_contact_id' => $external->crm_contact_id, 'crm_property_id' => $propertyId],
-            ['value' => $write['new_value']],
-        );
-
-        activity('crm_self_edit')
-            ->performedOn($external->crmContact)
-            ->causedBy($external)
-            ->withProperties([
-                'field_key' => $write['field_key'],
-                'old' => $write['old_value'],
-                'new' => $write['new_value'],
-                'ip_address' => request()?->ip(),
-                'user_agent' => request()?->userAgent(),
-            ])
-            ->log('crm_property_updated');
     }
 
     private function markExistingPendingAsSuperseded(ExternalAccess $external): void

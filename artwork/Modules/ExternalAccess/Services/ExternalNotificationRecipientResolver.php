@@ -61,6 +61,30 @@ class ExternalNotificationRecipientResolver
     }
 
     /**
+     * Ablauf-Erinnerung: Einladende:r + (bei Tab-Scopes) wer den Scope erteilt hat + Pauschal-Empfänger.
+     *
+     * @return Collection<int, User>
+     */
+    public function resolveForExpiry(ExternalAccess $external, ?User $grantedBy): Collection
+    {
+        $recipients = collect();
+
+        $inviter = $external->invitedBy;
+        if ($inviter) {
+            $recipients->push($inviter);
+        }
+        if ($grantedBy) {
+            $recipients->push($grantedBy);
+        }
+
+        $recipients = $recipients->merge(
+            $this->resolveBlanketRecipients(NotificationEnum::NOTIFICATION_EXTERNAL_ACCESS_EXPIRING)
+        );
+
+        return $this->dedupeAndFilter($recipients);
+    }
+
+    /**
      * @return Collection<int, User>
      */
     private function resolveBlanketRecipients(NotificationEnum $type): Collection

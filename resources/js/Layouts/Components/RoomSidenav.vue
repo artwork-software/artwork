@@ -17,6 +17,9 @@
             {{$t('No room admins available yet')}}
         </div>
         <div class="text-text-subtle text-sm mt-4 uppercase">{{ $t('Authorized to request')}}</div>
+        <div v-if="$page.props.event_direct_booking_only" class="ui-hint mt-1">
+            {{ $t('No effect while "Events always bookable directly" is active.') }}
+        </div>
         <div class="flex" v-if="room.requestable_by?.length > 0">
             <div class="flex flex-wrap mt-2 -mr-3" v-for="user in room.requestable_by">
                 <UserPopoverTooltip :user="user" height="11" width="11" :id="user.id"/>

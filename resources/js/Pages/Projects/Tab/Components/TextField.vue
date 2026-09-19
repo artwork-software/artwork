@@ -66,7 +66,8 @@ watch(
 
 <template>
     <div class="my-2 flex items-start gap-x-4">
-        <div>
+        <!-- grow + min-w-0: als Flex-Kind sonst nur so breit wie der Platzhalter -->
+        <div class="grow min-w-0">
             <label
                 for="email"
                 class="componentLabel"
@@ -75,7 +76,8 @@ watch(
                 {{ projectData.data.label }}
             </label>
 
-            <div class="mt-2 w-96">
+            <!-- Volle Spaltenbreite (die Tab-Spalte begrenzt auf max-w-2xl), statt hartem w-96 -->
+            <div class="mt-2 w-full">
                 <BaseInput
                     :id="projectData.id"
                     type="text"

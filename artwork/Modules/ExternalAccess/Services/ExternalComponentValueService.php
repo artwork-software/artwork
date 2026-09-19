@@ -18,7 +18,6 @@ class ExternalComponentValueService
     public function __construct(
         private readonly ExternalScopeResolver $scopeResolver,
         private readonly DatabaseManager $db,
-        private readonly ExternalNotificationSender $notificationSender,
     ) {
     }
 
@@ -77,9 +76,8 @@ class ExternalComponentValueService
             return $value;
         });
 
-        // Notify inviter + project managers AFTER commit (mail/queue failure must not roll back).
-        $this->notificationSender->notifyTabComponentUpdated($external, $project, $tab, $component);
-
+        // Keine Benachrichtigung pro Feld: Einladende werden erst beim expliziten
+        // "Daten absenden" (ExternalTabSubmissionService) gesammelt informiert.
         return $value;
     }
 

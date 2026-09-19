@@ -24,9 +24,13 @@ class MoneySourcePolicy
         ]);
     }
 
+    /**
+     * Sehen darf mindestens, wer bearbeiten darf (Ersteller*in und globales Budgetrecht eingeschlossen),
+     * sonst zeigt das Frontend z. B. den Datei-Download (canManage) und das Backend lehnt ab.
+     */
     public function view(User $user, MoneySource $moneySource): bool
     {
-        return $this->viewAny($user) || $this->isMember($user, $moneySource);
+        return $this->viewAny($user) || $this->update($user, $moneySource);
     }
 
     public function create(User $user): bool

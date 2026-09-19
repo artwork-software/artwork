@@ -28,6 +28,8 @@ class ExternalAccessSettingsController extends Controller
     {
         return Inertia::render('Settings/ExternalAccess/Index', [
             'settings' => [
+                'enabled' => $this->resolver->isEnabled(),
+                'expiry_reminder_days' => $this->resolver->expiryReminderDays(),
                 'company_name_override' => $this->settings->company_name_override,
                 'effective_company_name' => $this->resolver->companyName(),
                 'effective_company_name_without_override' => $this->resolver->companyNameFallback(),
@@ -51,6 +53,8 @@ class ExternalAccessSettingsController extends Controller
     {
         $validated = $request->validated();
 
+        $this->settings->enabled = (bool) $validated['enabled'];
+        $this->settings->expiry_reminder_days = (int) $validated['expiry_reminder_days'];
         $this->settings->company_name_override = $validated['company_name_override'];
         $this->settings->default_crm_access_months = $validated['default_crm_access_months'];
         $this->settings->default_tab_access_days = $validated['default_tab_access_days'];
@@ -111,7 +115,11 @@ class ExternalAccessSettingsController extends Controller
             ],
             [
                 'value' => NotificationEnum::NOTIFICATION_EXTERNAL_TAB_COMPONENT_UPDATED->value,
-                'label' => __('External tab component update'),
+                'label' => __('External tab data submitted'),
+            ],
+            [
+                'value' => NotificationEnum::NOTIFICATION_EXTERNAL_ACCESS_EXPIRING->value,
+                'label' => __('External access about to expire'),
             ],
         ];
     }

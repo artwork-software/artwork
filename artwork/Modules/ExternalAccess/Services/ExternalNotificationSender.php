@@ -3,11 +3,11 @@
 namespace Artwork\Modules\ExternalAccess\Services;
 
 use Artwork\Modules\ExternalAccess\Models\ExternalAccess;
+use Artwork\Modules\ExternalAccess\Models\ExternalAccessScope;
 use Artwork\Modules\ExternalAccess\Models\ExternalPendingSubmission;
 use Artwork\Modules\ExternalAccess\Notifications\ExternalReviewResultNotification;
 use Artwork\Modules\Notification\Enums\NotificationEnum;
 use Artwork\Modules\Notification\Services\NotificationService;
-use Artwork\Modules\Project\Models\Component;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Models\ProjectTab;
 use Artwork\Modules\User\Models\User;
@@ -52,42 +52,31 @@ class ExternalNotificationSender
         );
     }
 
-    public function notifyCrmDirectUpdate(ExternalAccess $external): void
-    {
-        $recipients = $this->recipientResolver->resolveForCrmSubmission($external);
-
-        $name = $external->crmContact?->display_name ?? $external->email;
-        $title = __(':name has updated their data.', ['name' => $name]);
-
-        $description = [
-            ['type' => 'string', 'title' => __('Email') . ': ' . $external->email, 'href' => null],
-        ];
-
-        $this->dispatchToAll(
-            $recipients,
-            $title,
-            $description,
-            NotificationEnum::NOTIFICATION_EXTERNAL_CRM_SUBMITTED,
-        );
-    }
-
-    public function notifyTabComponentUpdated(
+    /**
+     * Sammelbenachrichtigung nach "Daten absenden" im Tab (nicht mehr pro Feld).
+     */
+    public function notifyTabSubmitted(
         ExternalAccess $external,
         Project $project,
         ProjectTab $tab,
-        Component $component,
+        int $changedComponents,
     ): void {
         $recipients = $this->recipientResolver->resolveForTabComponentUpdate($external, $project);
 
         $name = $external->crmContact?->display_name ?? $external->email;
-        $title = __(':name updated the component ":component" in project ":project".', [
+        $title = __(':name has submitted their data for tab ":tab" in project ":project".', [
             'name' => $name,
-            'component' => $component->name,
+            'tab' => $tab->name,
             'project' => $project->name,
         ]);
 
         $description = [
-            ['type' => 'string', 'title' => __('Tab') . ': ' . $tab->name, 'href' => null],
+            ['type' => 'string', 'title' => __('Email') . ': ' . $external->email, 'href' => null],
+            [
+                'type' => 'string',
+                'title' => __(':count field(s) changed since the last submission', ['count' => $changedComponents]),
+                'href' => null,
+            ],
             [
                 'type' => 'link',
                 'title' => __('Open project'),
@@ -101,6 +90,62 @@ class ExternalNotificationSender
             $description,
             NotificationEnum::NOTIFICATION_EXTERNAL_TAB_COMPONENT_UPDATED,
             $project->id,
+        );
+    }
+
+    public function notifyScopeExpiring(ExternalAccessScope $scope): void
+    {
+        $external = $scope->externalAccess;
+        $recipients = $this->recipientResolver->resolveForExpiry($external, $scope->grantedBy);
+
+        $name = $external->crmContact?->display_name ?? $external->email;
+        $title = __('The tab access of :name to ":tab" in project ":project" expires on :date.', [
+            'name' => $name,
+            'tab' => $scope->projectTab?->name,
+            'project' => $scope->project?->name,
+            'date' => $scope->valid_to->format('d.m.Y'),
+        ]);
+
+        $description = [
+            [
+                'type' => 'link',
+                'title' => __('Manage external access'),
+                'href' => route('crm.external-access.show', $external->id),
+            ],
+        ];
+
+        $this->dispatchToAll(
+            $recipients,
+            $title,
+            $description,
+            NotificationEnum::NOTIFICATION_EXTERNAL_ACCESS_EXPIRING,
+            $scope->project_id,
+        );
+    }
+
+    public function notifyCrmAccessExpiring(ExternalAccess $external): void
+    {
+        $recipients = $this->recipientResolver->resolveForExpiry($external, null);
+
+        $name = $external->crmContact?->display_name ?? $external->email;
+        $title = __('The CRM access of :name expires on :date.', [
+            'name' => $name,
+            'date' => $external->crm_access_expires_at?->format('d.m.Y'),
+        ]);
+
+        $description = [
+            [
+                'type' => 'link',
+                'title' => __('Manage external access'),
+                'href' => route('crm.external-access.show', $external->id),
+            ],
+        ];
+
+        $this->dispatchToAll(
+            $recipients,
+            $title,
+            $description,
+            NotificationEnum::NOTIFICATION_EXTERNAL_ACCESS_EXPIRING,
         );
     }
 

@@ -6,7 +6,7 @@ use Artwork\Modules\ExternalAccess\Settings\ExternalAccessSettings;
 use Artwork\Modules\User\Models\User;
 use PHPUnit\Framework\Attributes\Test;
 use Spatie\Activitylog\Models\Activity;
-use Tests\TestCase;
+use Tests\Feature\ExternalAccess\ExternalAccessTestCase as TestCase;
 
 final class SettingsControllerTest extends TestCase
 {
@@ -16,6 +16,8 @@ final class SettingsControllerTest extends TestCase
     private function validPayload(array $overrides = []): array
     {
         return array_merge([
+            'enabled' => true,
+            'expiry_reminder_days' => 3,
             'company_name_override' => 'Acme',
             'default_crm_access_months' => 12,
             'default_tab_access_days' => 90,

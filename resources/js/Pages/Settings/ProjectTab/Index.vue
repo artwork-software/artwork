@@ -5,6 +5,7 @@ import draggable from "vuedraggable";
 import SingleTabComponent from "@/Pages/Settings/Components/SingleTabComponent.vue";
 import DragComponentElement from "@/Pages/Settings/Components/DragComponentElement.vue";
 import AddEditTabModal from "@/Pages/Settings/Components/AddEditTabModal.vue";
+import TabTemplatesModal from "@/Pages/Settings/Components/TabTemplatesModal.vue";
 import PlusButton from "@/Layouts/Components/General/Buttons/PlusButton.vue";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
@@ -22,6 +23,8 @@ const props = defineProps({
     components: { type: Object, required: true },
     componentsSpecial: { type: Array, required: true },
     componentUsages: { type: Object, required: false, default: () => ({}) },
+    // Tab-Vorlagen (Katalog im Backend); Ergebnis sind ganz normale Tabs/Komponenten
+    tabTemplates: { type: Array, required: false, default: () => [] },
 });
 
 // i18n
@@ -30,6 +33,7 @@ const { t } = useI18n();
 // Lokale States
 const searchComponent = ref("");
 const showAddEditModal = ref(false);
+const showTemplatesModal = ref(false);
 const dragging = ref(false);
 
 // Lokale Kopie der Tabs (Vermeidung von Prop-Mutation)
@@ -176,6 +180,10 @@ function updateComponentOrder(components) {
 <template>
     <ProjectSettingsHeader :title="t('Tab Settings')" :description="t('Define global settings for projects.')">
         <template #actions>
+            <BaseUIButton v-if="tabTemplates.length" variant="secondary" hide-icon @click="showTemplatesModal = true">
+                <PropertyIcon name="IconTemplate" stroke-width="1" class="size-5" />
+                {{ t('Create tab from template') }}
+            </BaseUIButton>
             <BaseUIButton variant="primary" hide-icon @click="showAddEditModal = true">
                 <PropertyIcon name="IconCirclePlus" stroke-width="1" class="size-5" />
                 {{ t('Create tab') }}
@@ -301,6 +309,11 @@ function updateComponentOrder(components) {
             </div>
         </div>
         <AddEditTabModal v-if="showAddEditModal" @close="showAddEditModal = false" />
+        <TabTemplatesModal
+            v-if="showTemplatesModal"
+            :templates="tabTemplates"
+            @close="showTemplatesModal = false"
+        />
     </ProjectSettingsHeader>
 </template>
 

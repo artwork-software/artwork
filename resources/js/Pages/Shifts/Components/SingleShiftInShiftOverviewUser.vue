@@ -52,7 +52,8 @@
                         </transition>
                     </Float>
                 </Popover>
-                <div v-else class="font-lexend rounded-lg" @click="showRequestWorkTimeChangeModal = true">
+                <!-- Arbeitszeitänderung nur für die eigene Person (Backend bindet den Antrag an die angemeldete Person) -->
+                <div v-else class="font-lexend rounded-lg" :class="isOwnCell ? 'cursor-pointer' : ''" @click="isOwnCell && (showRequestWorkTimeChangeModal = true)">
                     <div class="rounded-l-lg">
                         <p class="text-xs text-left font-lexend">{{ shift.startPivot }} - {{ shift.endPivot  }}</p>
                     </div>

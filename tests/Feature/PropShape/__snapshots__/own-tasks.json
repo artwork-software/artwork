@@ -2,6 +2,7 @@
     "private_checklists": "[]",
     "public_checklists": {
         "[]": {
+            "can_update": ".",
             "checklist_tab_id": ".",
             "hasProject": ".",
             "id": ".",

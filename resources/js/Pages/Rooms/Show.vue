@@ -117,12 +117,16 @@
                             </div>
                         </div>
 
+                        <!-- "Termine immer direkt buchbar": Anfrage-Einstellungen des Raums sind ohne Wirkung -->
+                        <div v-if="$page.props.event_direct_booking_only" class="rounded-lg border border-warning-border bg-warning-surface px-3 py-2 text-xs text-warning">
+                            {{ $t('The setting "Events always bookable directly" is active. "Can be booked by anyone" and "Authorized to request" currently have no effect – everyone who may create events books this room directly. Room admins can still edit and delete other people\'s events in this room.') }}
+                        </div>
                         <div class="flex items-center">
                             <input v-model="editRoomForm.everyone_can_book"
                                    type="checkbox"
                                    class="input-checklist"/>
                             <p :class="[editRoomForm.everyone_can_book ? 'text-text font-black' : 'text-text-subtle']"
-                               class="ml-4 my-auto text-sm">{{ $t('Can be booked by anyone')}}</p>
+                               class="ml-4 my-auto text-sm">{{ $t('Can be booked by anyone')}}<span v-if="$page.props.event_direct_booking_only" class="ml-1 font-normal text-text-subtle">({{ $t('no effect') }})</span></p>
                             <div v-if="this.$page.props.show_hints" class="flex mt-1">
                                 <SvgCollection svgName="arrowLeft" class="h-6 w-6 ml-2 mr-2"/>
                                 <span

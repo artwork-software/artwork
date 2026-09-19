@@ -25,6 +25,10 @@ class ProjectInfoResource extends JsonResource
     {
         $historyArray = app(ChangeService::class)->historyForFrontend($this->resource);
 
+        // Checklisten teilen sich die Projekt-Instanz, damit ChecklistPolicy::update (can_update)
+        // die Projekt-Relationen einmal statt je Checkliste lädt.
+        $this->checklists->each(fn ($checklist) => $checklist->setRelation('project', $this->resource));
+
         return [
             'id' => $this->id,
             'name' => $this->name,

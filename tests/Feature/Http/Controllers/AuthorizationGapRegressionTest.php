@@ -32,6 +32,10 @@ final class AuthorizationGapRegressionTest extends FeatureTestCase
             $source->users()->attach($user, [$access => true]);
         } elseif ($access === 'other_source') {
             MoneySource::factory()->create()->users()->attach($user, ['write_access' => true]);
+        } elseif ($access === 'creator') {
+            $source->forceFill(['creator_id' => $user->id])->save();
+        } elseif ($access === 'budget_admin') {
+            $this->actingAsUserWith('can manage global project budgets', $user);
         }
 
         $payload = ['file' => UploadedFile::fake()->create('replacement.pdf', 1), 'comment' => 'Changed'];
@@ -72,7 +76,11 @@ final class AuthorizationGapRegressionTest extends FeatureTestCase
     public static function moneySourceAccess(): iterable
     {
         foreach (['store', 'update', 'download', 'delete'] as $operation) {
-            foreach (['none', 'other_source', 'permission', 'admin', 'write_access', 'competent'] as $access) {
+            $accessLevels = [
+                'none', 'other_source', 'permission', 'admin',
+                'write_access', 'competent', 'creator', 'budget_admin',
+            ];
+            foreach ($accessLevels as $access) {
                 yield "$operation $access" => [$operation, $access];
             }
         }

@@ -13,7 +13,6 @@ class ChecklistIndexResource extends JsonResource
     /**
      * @return array<string, mixed>
      */
-    // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.FoundInExtendedClass
     public function toArray($request): array
     {
         return [
@@ -30,6 +29,9 @@ class ChecklistIndexResource extends JsonResource
                 'name' => $this->project->name,
             ] : null,
             'checklist_tab_id' => $this->tab_id,
+            // Spiegel von ChecklistPolicy::update – das Frontend sperrt damit das Abhaken
+            // (tasks.done) statt erst am 403 zu scheitern.
+            'can_update' => $request->user()?->can('update', $this->resource) ?? false,
             'tasks' => $this->orderedTasks()->map(function (Task $task) {
                 return [
                     'id' => $task->id,
@@ -62,12 +64,11 @@ class ChecklistIndexResource extends JsonResource
      */
     private function orderedTasks(): \Illuminate\Database\Eloquent\Collection
     {
-        if (!$this->relationLoaded('tasks')) {
-            return $this->tasks()->with(['task_users', 'user_who_done'])->orderBy('order')->get();
-        }
+        // loadMissing statt Einzel-Query, damit die Relation am Modell hängt und
+        // ChecklistPolicy::update (can_update) die Aufgaben nicht erneut lädt.
+        $this->resource->loadMissing(['tasks.task_users', 'tasks.user_who_done']);
 
         $tasks = $this->tasks;
-        $tasks->loadMissing(['task_users', 'user_who_done']);
 
         return $tasks->sortBy('order')->values();
     }

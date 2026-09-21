@@ -8347,7 +8347,11 @@
     "Invited e-mail address": "Invited e-mail address",
     "External accesses": "External accesses",
     "Allow file upload for external accesses": "Allow file upload for external accesses",
-    "If enabled, externally invited persons may upload files in the document component of a shared project tab and remove their own uploads. Downloading existing documents is always possible. The file types and size limit of the 'project' area apply.": "If enabled, externally invited persons may upload files in the document component of a shared project tab and remove their own uploads. Downloading existing documents is always possible. The file types and size limit of the 'project' area apply.",
     "File upload for external accesses is disabled.": "File upload for external accesses is disabled.",
-    "Externally invited persons may only upload files in shared project tabs if the switch 'Allow file upload for external accesses' is enabled; it is off by default.": "Externally invited persons may only upload files in shared project tabs if the switch 'Allow file upload for external accesses' is enabled; it is off by default."
+    "If enabled, externally invited persons may upload files in the document component of a shared project tab and remove their own uploads. The file types and size limit of the 'project' area apply.": "If enabled, externally invited persons may upload files in the document component of a shared project tab and remove their own uploads. The file types and size limit of the 'project' area apply.",
+    "File upload": "File upload",
+    "Applies to the document component of shared project tabs. Downloading existing documents is always possible.": "Applies to the document component of shared project tabs. Downloading existing documents is always possible.",
+    "File upload disabled": "File upload disabled",
+    "The invited person cannot upload files in this tab because file upload for external accesses is disabled. If needed, enable it under Settings → External access.": "The invited person cannot upload files in this tab because file upload for external accesses is disabled. If needed, enable it under Settings → External access.",
+    "Uploading documents is not enabled for external accesses. You can view and download existing documents.": "Uploading documents is not enabled for external accesses. You can view and download existing documents."
 }

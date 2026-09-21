@@ -8356,7 +8356,11 @@
     "Invited e-mail address": "Eingeladene E-Mail-Adresse",
     "External accesses": "Externe Zugänge",
     "Allow file upload for external accesses": "Dateiupload für Externe erlauben",
-    "If enabled, externally invited persons may upload files in the document component of a shared project tab and remove their own uploads. Downloading existing documents is always possible. The file types and size limit of the 'project' area apply.": "Wenn aktiv, dürfen extern eingeladene Personen in der Dokument-Komponente eines freigegebenen Projekt-Tabs Dateien hochladen und eigene Uploads wieder entfernen. Das Herunterladen vorhandener Dokumente ist immer möglich. Es gelten Dateitypen und Größenlimit des Bereichs „project“.",
     "File upload for external accesses is disabled.": "Dateiupload für externe Zugänge ist deaktiviert.",
-    "Externally invited persons may only upload files in shared project tabs if the switch 'Allow file upload for external accesses' is enabled; it is off by default.": "Extern eingeladene Personen dürfen in freigegebenen Projekt-Tabs nur dann Dateien hochladen, wenn der Schalter „Dateiupload für Externe erlauben“ aktiv ist; standardmäßig ist er aus."
+    "If enabled, externally invited persons may upload files in the document component of a shared project tab and remove their own uploads. The file types and size limit of the 'project' area apply.": "Wenn aktiv, dürfen extern eingeladene Personen in der Dokument-Komponente eines freigegebenen Projekt-Tabs Dateien hochladen und eigene Uploads wieder entfernen. Es gelten Dateitypen und Größenlimit des Bereichs „project“.",
+    "File upload": "Dateiupload",
+    "Applies to the document component of shared project tabs. Downloading existing documents is always possible.": "Gilt für die Dokument-Komponente freigegebener Projekt-Tabs. Das Herunterladen vorhandener Dokumente ist immer möglich.",
+    "File upload disabled": "Dateiupload deaktiviert",
+    "The invited person cannot upload files in this tab because file upload for external accesses is disabled. If needed, enable it under Settings → External access.": "Die eingeladene Person kann in diesem Tab keine Dateien hochladen, da der Dateiupload für Externe deaktiviert ist. Aktivieren Sie ihn bei Bedarf unter Einstellungen → Externer Zugriff.",
+    "Uploading documents is not enabled for external accesses. You can view and download existing documents.": "Das Hochladen von Dokumenten ist für externe Zugänge nicht freigeschaltet. Vorhandene Dokumente können Sie ansehen und herunterladen."
 }

@@ -35,12 +35,6 @@ class DatabaseSettingsSeeder extends Seeder
                 'locked' => 0,
                 'payload' => json_encode(''),
             ],
-            [
-                'group' => 'general',
-                'name' => 'external_file_upload_enabled',
-                'locked' => 0,
-                'payload' => json_encode(false),
-            ],
         ];
 
         foreach (UploadSettingDefaults::all() as $name => $value) {

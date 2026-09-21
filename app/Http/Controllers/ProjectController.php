@@ -77,6 +77,7 @@ use Artwork\Modules\Event\Services\EventCommentService;
 use Artwork\Modules\Event\Services\EventPropertyService;
 use Artwork\Modules\EventType\Models\EventType;
 use Artwork\Modules\EventType\Services\EventTypeService;
+use Artwork\Modules\ExternalAccess\Services\ExternalAccessSettingsResolver;
 use Artwork\Modules\Filter\Services\FilterService;
 use Artwork\Modules\Freelancer\Models\Freelancer;
 use Artwork\Modules\Freelancer\Services\FreelancerService;
@@ -116,6 +117,7 @@ use Artwork\Modules\Project\Services\ProjectManagementBuilderService;
 use Artwork\Modules\Project\Services\ProjectPrintLayoutService;
 use Artwork\Modules\Project\Enum\ProjectTabComponentEnum;
 use Artwork\Modules\Project\Models\Component;
+use Artwork\Modules\Project\Models\ComponentInTab;
 use Artwork\Modules\Project\Models\ProjectTab;
 use Artwork\Modules\Project\Services\ProjectTabService;
 use Artwork\Modules\Project\Events\ProjectTeamUpdated;
@@ -2708,6 +2710,20 @@ class ProjectController extends Controller
         $headerObject->project->state = $project->status;
 
         $tabInformation = [];
+        // Tabs mit Dokument-Komponente (direkt oder in einer Disclosure): der Einladungsdialog für
+        // Externe warnt, wenn der Dateiupload für Externe deaktiviert ist.
+        $documentType = ProjectTabComponentEnum::PROJECT_DOCUMENTS->value;
+        $tabIdsWithDocuments = ComponentInTab::query()
+            ->where(function (Builder $query) use ($documentType): void {
+                $query->whereHas('component', fn (Builder $c) => $c->where('type', $documentType))
+                    ->orWhereHas(
+                        'disclosureComponents.component',
+                        fn (Builder $c) => $c->where('type', $documentType)
+                    );
+            })
+            ->distinct()
+            ->pluck('project_tab_id')
+            ->flip();
         // without(): ProjectTab::$with (components, sidebarTabs) würde je Abfrage die komplette
         // Komponentenstruktur mitladen — hier werden nur Id und Name gebraucht
         ProjectTab::query()
@@ -2715,8 +2731,12 @@ class ProjectController extends Controller
             ->visibleForUser($authUser)
             ->orderBy('order')
             ->get(['id', 'name'])
-            ->each(function ($tab) use (&$tabInformation): void {
-                $tabInformation[] = ['id' => $tab->id, 'name' => $tab->name];
+            ->each(function ($tab) use (&$tabInformation, $tabIdsWithDocuments): void {
+                $tabInformation[] = [
+                    'id' => $tab->id,
+                    'name' => $tab->name,
+                    'hasDocumentComponent' => $tabIdsWithDocuments->has($tab->id),
+                ];
             });
         $headerObject->tabs = $tabInformation;
 
@@ -2793,6 +2813,7 @@ class ProjectController extends Controller
                 : [],
             'event_properties'             => $eventPropertyService->getAll(),
             'projectId'                    => $project->id,
+            'externalFileUploadEnabled'    => app(ExternalAccessSettingsResolver::class)->isFileUploadEnabled(),
         ];
 
         $tabSpecificData = [];

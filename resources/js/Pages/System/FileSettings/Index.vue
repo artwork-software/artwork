@@ -11,7 +11,6 @@
         :paragraphs="[
             'For each application area you define which file types may be uploaded and how large a file may be. Both limits are enforced server-side on every upload.',
             'The maximum possible limit is additionally restricted by the server configuration (e.g. nginx client_max_body_size, PHP upload_max_filesize/post_max_size).',
-            'Externally invited persons may only upload files in shared project tabs if the switch \'Allow file upload for external accesses\' is enabled; it is off by default.',
             'Changes are saved automatically.',
         ]"
     />
@@ -22,18 +21,6 @@
         <span>
             {{ $t('With the current server settings a maximum of {0} MB per file is possible. If you need larger uploads, ask your IT to raise the server limits first.', [serverUploadLimitMb]) }}
         </span>
-    </div>
-    <div class="mt-8">
-      <h3 class="font-lexend font-semibold text-[clamp(16px,2vw,18px)]/[21px] text-text">{{ $t('External accesses') }}</h3>
-      <div class="mt-4 rounded-lg bg-surface border border-border-subtle w-full shadow-raised p-5">
-        <BaseCheckbox
-            id="external_file_upload_enabled"
-            v-model="externalFileUploadEnabled"
-            :label="$t('Allow file upload for external accesses')"
-            :description="$t('If enabled, externally invited persons may upload files in the document component of a shared project tab and remove their own uploads. Downloading existing documents is always possible. The file types and size limit of the \'project\' area apply.')"
-            @change="updateExternalFileUpload"
-        />
-      </div>
     </div>
     <div v-for="area in areas" :key="area.name" class="mt-8">
       <h3 class="font-lexend font-semibold text-[clamp(16px,2vw,18px)]/[21px] text-text">{{ $t(area.name) }}</h3>
@@ -116,7 +103,6 @@ import {Listbox, ListboxButton, ListboxOption, ListboxOptions} from "@headlessui
 import SliderInput from "@/Components/Form/SliderInput.vue";
 import debounce from "lodash.debounce";
 import SettingsGuideBanner from "@/Artwork/Guide/SettingsGuideBanner.vue";
-import BaseCheckbox from "@/Artwork/Inputs/BaseCheckbox.vue";
 
 const $t = useTranslation(),
     props = defineProps({
@@ -132,21 +118,9 @@ const $t = useTranslation(),
         type: Object,
         required: true
       },
-      externalFileUploadEnabled: {
-        type: Boolean,
-        default: false
-      },
     });
 
 const areas = ref(props.areas);
-const externalFileUploadEnabled = ref(props.externalFileUploadEnabled);
-
-const updateExternalFileUpload = (value) => {
-  externalFileUploadEnabled.value = value === true;
-  router.put(route('tool.file-settings.store', {}), {
-    external_file_upload_enabled: externalFileUploadEnabled.value
-  }, { preserveScroll: true });
-}
 
 // Effektives PHP-Upload-Limit des Servers (shared Inertia-Prop; nginx kann zusätzlich begrenzen)
 const serverUploadLimitMb = computed(() => usePage().props.server_upload_limit_mb ?? null);

@@ -89,9 +89,6 @@ class GeneralSettings extends Settings
     // Maximum size per inventory article image in MB (frontend check + backend validation).
     public int $inventory_article_image_max_size_mb = 10;
 
-    // Dürfen externe Zugänge in der Dokument-Komponente Dateien hochladen und eigene Uploads löschen?
-    public bool $external_file_upload_enabled = false;
-
     public static function group(): string
     {
         return 'general';

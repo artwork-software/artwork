@@ -5,6 +5,7 @@ namespace Tests\Feature\ExternalAccess;
 use Artwork\Modules\ExternalAccess\Http\Controllers\ExternalProjectTabController;
 use Artwork\Modules\ExternalAccess\Models\ExternalAccess;
 use Artwork\Modules\ExternalAccess\Models\ExternalAccessScope;
+use Artwork\Modules\ExternalAccess\Settings\ExternalAccessSettings;
 use Artwork\Modules\GeneralSettings\Models\GeneralSettings;
 use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Artwork\Modules\Project\Events\DeleteDocumentInProject;
@@ -21,8 +22,8 @@ use Illuminate\Support\Facades\Storage;
 use PHPUnit\Framework\Attributes\Test;
 
 /**
- * Tool-Setting external_file_upload_enabled: Upload und Löschen eigener Uploads durch externe Zugänge
- * nur bei aktivem Schalter, Download/Anzeige bleiben unverändert.
+ * Einstellung "Dateiupload für Externe erlauben" (Einstellungen → Externer Zugriff): Upload und Löschen
+ * eigener Uploads durch externe Zugänge nur bei aktivem Schalter, Download/Anzeige bleiben unverändert.
  */
 final class ExternalFileUploadSettingTest extends ExternalAccessTestCase
 {
@@ -40,9 +41,33 @@ final class ExternalFileUploadSettingTest extends ExternalAccessTestCase
 
     private function setUploadEnabled(bool $enabled): void
     {
-        $settings = app(GeneralSettings::class);
-        $settings->external_file_upload_enabled = $enabled;
+        $settings = app(ExternalAccessSettings::class);
+        $settings->file_upload_enabled = $enabled;
         $settings->save();
+    }
+
+    private function uploadEnabled(): bool
+    {
+        return app(ExternalAccessSettings::class)->refresh()->file_upload_enabled;
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function settingsPayload(array $overrides = []): array
+    {
+        return array_merge([
+            'enabled' => true,
+            'expiry_reminder_days' => 3,
+            'company_name_override' => '',
+            'default_crm_access_months' => 12,
+            'default_tab_access_days' => 90,
+            'login_token_lifetime_minutes' => 15,
+            'session_idle_timeout_minutes' => 120,
+            'session_absolute_lifetime_minutes' => 480,
+            'rate_limit_request_link_per_email_per_hour' => 3,
+            'rate_limit_request_link_per_ip_per_hour' => 10,
+        ], $overrides);
     }
 
     /**
@@ -127,7 +152,7 @@ final class ExternalFileUploadSettingTest extends ExternalAccessTestCase
     #[Test]
     public function setting_is_off_by_default(): void
     {
-        $this->assertFalse(app(GeneralSettings::class)->refresh()->external_file_upload_enabled);
+        $this->assertFalse($this->uploadEnabled());
     }
 
     #[Test]
@@ -225,54 +250,83 @@ final class ExternalFileUploadSettingTest extends ExternalAccessTestCase
             ->assertOk();
     }
 
-    // ---------------------------------------------------------------- Tool-Einstellungen
+    // ---------------------------------------------------------------- Einstellungen → Externer Zugriff
 
     #[Test]
-    public function settings_update_requires_change_tool_settings_permission(): void
-    {
-        $this->actingAsUserWith([]);
-
-        $this->put(route('tool.file-settings.store'), ['external_file_upload_enabled' => true])
-            ->assertForbidden();
-
-        $this->assertFalse(app(GeneralSettings::class)->refresh()->external_file_upload_enabled);
-    }
-
-    #[Test]
-    public function settings_update_with_permission_persists_the_flag(): void
+    public function settings_update_requires_admin_role(): void
     {
         $this->actingAsUserWith([PermissionEnum::SETTINGS_UPDATE]);
 
-        $this->put(route('tool.file-settings.store'), ['external_file_upload_enabled' => true])
-            ->assertSuccessful();
-        $this->assertTrue(app(GeneralSettings::class)->refresh()->external_file_upload_enabled);
+        $this->patch(
+            route('settings.external-access.update'),
+            $this->settingsPayload(['file_upload_enabled' => true]),
+        )->assertForbidden();
 
-        $this->put(route('tool.file-settings.store'), ['external_file_upload_enabled' => false])
-            ->assertSuccessful();
-        $this->assertFalse(app(GeneralSettings::class)->refresh()->external_file_upload_enabled);
+        $this->assertFalse($this->uploadEnabled());
     }
 
     #[Test]
-    public function settings_update_rejects_non_boolean_values(): void
+    public function admin_can_switch_the_flag_on_and_off(): void
     {
-        $this->actingAsUserWith([PermissionEnum::SETTINGS_UPDATE]);
+        $this->actingAsAdmin();
 
-        $this->put(route('tool.file-settings.store'), ['external_file_upload_enabled' => 'yes'])
-            ->assertSessionHasErrors('external_file_upload_enabled');
-        $this->assertFalse(app(GeneralSettings::class)->refresh()->external_file_upload_enabled);
+        $this->patch(
+            route('settings.external-access.update'),
+            $this->settingsPayload(['file_upload_enabled' => true]),
+        )->assertStatus(302)->assertSessionHasNoErrors();
+        $this->assertTrue($this->uploadEnabled());
+
+        $this->patch(
+            route('settings.external-access.update'),
+            $this->settingsPayload(['file_upload_enabled' => false]),
+        )->assertStatus(302)->assertSessionHasNoErrors();
+        $this->assertFalse($this->uploadEnabled());
     }
 
     #[Test]
-    public function file_settings_page_exposes_the_flag(): void
+    public function missing_key_resets_the_flag_to_off(): void
     {
-        $this->actingAsUserWith([PermissionEnum::SETTINGS_UPDATE]);
+        $this->actingAsAdmin();
         $this->setUploadEnabled(true);
+
+        $this->patch(route('settings.external-access.update'), $this->settingsPayload())
+            ->assertStatus(302)
+            ->assertSessionHasNoErrors();
+
+        $this->assertFalse($this->uploadEnabled());
+    }
+
+    #[Test]
+    public function file_settings_route_ignores_the_flag(): void
+    {
+        $this->actingAsUserWith([PermissionEnum::SETTINGS_UPDATE]);
+
+        $this->put(route('tool.file-settings.store'), [
+            'external_file_upload_enabled' => true,
+            'data' => ['name' => 'project', 'fileTypes' => [['name' => 'pdf']], 'fileSize' => 10],
+        ])->assertSuccessful();
+
+        $this->assertFalse($this->uploadEnabled());
+        $this->assertObjectNotHasProperty('external_file_upload_enabled', app(GeneralSettings::class));
 
         $props = $this->get(route('tool.file-settings.index'))
             ->assertOk()
             ->getOriginalContent()
             ->getData()['page']['props'];
+        $this->assertArrayNotHasKey('externalFileUploadEnabled', $props);
+    }
 
-        $this->assertTrue($props['externalFileUploadEnabled']);
+    #[Test]
+    public function external_access_settings_page_exposes_the_flag(): void
+    {
+        $this->actingAsAdmin();
+        $this->setUploadEnabled(true);
+
+        $props = $this->get(route('settings.external-access.index'))
+            ->assertOk()
+            ->getOriginalContent()
+            ->getData()['page']['props'];
+
+        $this->assertTrue($props['settings']['file_upload_enabled']);
     }
 }

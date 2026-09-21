@@ -27,18 +27,11 @@ class FileSettingsController extends Controller
             'areas' => $areas,
             'imageFileTypes' => array_keys(MimeTypeList::IMAGE_MIME_TYPES),
             'otherFileTypes' => array_keys(MimeTypeList::MIME_TYPES),
-            'externalFileUploadEnabled' => $this->generalSettingsService->isExternalFileUploadEnabled(),
         ]);
     }
 
     public function store(Request $request): void
     {
-        if ($request->has('external_file_upload_enabled')) {
-            $this->generalSettingsService->updateExternalFileUploadEnabledFromRequest($request);
-
-            return;
-        }
-
         $this->generalSettingsService->updateAllowedFileMimeTypesFromRequest($request);
     }
 }

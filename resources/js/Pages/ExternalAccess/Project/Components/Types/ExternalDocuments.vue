@@ -6,8 +6,8 @@
                 <p v-if="editable" class="text-xs text-text-subtle mt-0.5">
                     {{ $t('Upload documents such as PDFs, images or logos. You can remove your own uploads.') }}
                 </p>
-                <p v-else-if="writableScope && !uploadEnabled" class="text-xs text-text-subtle mt-0.5">
-                    {{ $t('File upload for external accesses is disabled.') }}
+                <p v-else-if="!uploadEnabled" class="text-xs text-text-subtle mt-0.5">
+                    {{ $t('Uploading documents is not enabled for external accesses. You can view and download existing documents.') }}
                 </p>
             </div>
         </div>

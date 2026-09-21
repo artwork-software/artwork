@@ -27,7 +27,7 @@ artwork is self-hosted software. Issues caused purely by misconfiguration of an 
 
 ## Coordinated Disclosure
 
-We follow coordinated disclosure: once a report is confirmed, we agree on a publication date with the reporter that fits the fix release. Advisories are published as GitHub Security Advisories for this repository; a CVE is requested through GitHub when the reporter or the severity calls for it. We do not run a paid bug bounty. Reporters are credited here and in the advisory unless they prefer to stay anonymous.
+We follow coordinated disclosure: once a report is confirmed, we agree on a publication date with the reporter that fits the fix release. Advisories are published as GitHub Security Advisories for this repository; a CVE is requested through GitHub when the reporter or the severity calls for it. We do not run a paid bug bounty. On request, reporters are credited in the Acknowledgements section below and in the advisory; without a request, reports are handled anonymously.
 
 ## Acknowledgements
 

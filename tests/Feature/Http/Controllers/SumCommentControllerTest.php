@@ -3,7 +3,9 @@
 namespace Tests\Feature\Http\Controllers;
 
 use Artwork\Modules\Budget\Models\BudgetSumDetails;
+use Artwork\Modules\Budget\Models\Column;
 use Artwork\Modules\Budget\Models\SumComment;
+use Artwork\Modules\Budget\Models\Table;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\Feature\FeatureTestCase;
 
@@ -23,10 +25,15 @@ final class SumCommentControllerTest extends FeatureTestCase
     public function admin_can_store_sum_comment(): void
     {
         $admin = $this->actingAsAdmin();
+        // Die Budget-Middleware löst das Kommentar-Ziel bis zum Projekt auf,
+        // daher muss die Summe real existieren (nicht erreichbare IDs → 404).
+        $table = Table::factory()->create(['is_template' => false]);
+        $column = Column::factory()->create(['table_id' => $table->id, 'position' => 0]);
+        $sumDetail = BudgetSumDetails::factory()->create(['column_id' => $column->id]);
 
         $response = $this->post(route('sum.comments.store'), [
             'comment' => 'A note',
-            'commentable_id' => 1,
+            'commentable_id' => $sumDetail->id,
             'commentable_type' => BudgetSumDetails::class,
         ]);
 

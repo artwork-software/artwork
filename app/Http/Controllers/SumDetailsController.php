@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use Artwork\Modules\Budget\Http\Middleware\EnsureUserCanAccessProjectBudget;
 use Artwork\Modules\Budget\Models\BudgetSumDetails;
 use Artwork\Modules\Budget\Models\MainPositionDetails;
 use Artwork\Modules\Budget\Models\SubPositionSumDetail;
@@ -14,6 +15,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Redirect;
+use Illuminate\Validation\Rule;
 
 class SumDetailsController extends Controller
 {
@@ -66,6 +68,19 @@ class SumDetailsController extends Controller
 
     public function store(Request $request): JsonResponse|RedirectResponse
     {
+        // Projektzugriff prüft die Budget-Middleware über das Morph-Paar; hier nur Form und Existenz
+        $validated = $request->validate([
+            'linked_type' => ['nullable', 'string'],
+            'money_source_id' => ['nullable', 'integer', 'exists:money_sources,id'],
+            'sourceable_id' => ['required', 'integer'],
+            'sourceable_type' => [
+                'required',
+                'string',
+                Rule::in(EnsureUserCanAccessProjectBudget::SUM_MORPH_ALLOWLIST),
+            ],
+        ]);
+        abort_unless($validated['sourceable_type']::query()->whereKey($validated['sourceable_id'])->exists(), 404);
+
         $sumMoneySource = SumMoneySource::create([
             'linked_type' => $request->linked_type,
             'money_source_id' => $request->money_source_id,

@@ -2,64 +2,55 @@
 
 namespace App\Policies;
 
+use App\Policies\Concerns\ChecksProjectAccess;
 use Artwork\Modules\ArtistResidency\Models\Artist;
 use Artwork\Modules\User\Models\User;
 
+/**
+ * Künstler*innen-Stammdaten: Lesen/Export für alle mit Projektzugriff, Verwalten für alle mit
+ * Projekt-Schreibrecht (wie Aufenthalte). Admins passieren via Gate::before.
+ */
 class ArtistPolicy
 {
-    /**
-     * Determine whether the user can view any models.
-     */
+    use ChecksProjectAccess;
+
     public function viewAny(User $user): bool
     {
-        return false;
+        return $this->hasAnyProjectAccess($user);
     }
 
-    /**
-     * Determine whether the user can view the model.
-     */
     public function view(User $user, Artist $artist): bool
     {
-        return false;
+        return $artist->exists && $this->hasAnyProjectAccess($user);
     }
 
-    /**
-     * Determine whether the user can create models.
-     */
+    public function export(User $user): bool
+    {
+        return $this->hasAnyProjectAccess($user);
+    }
+
     public function create(User $user): bool
     {
-        return false;
+        return $this->hasAnyProjectWriteAccess($user);
     }
 
-    /**
-     * Determine whether the user can update the model.
-     */
     public function update(User $user, Artist $artist): bool
     {
-        return false;
+        return $artist->exists && $this->hasAnyProjectWriteAccess($user);
     }
 
-    /**
-     * Determine whether the user can delete the model.
-     */
     public function delete(User $user, Artist $artist): bool
     {
-        return false;
+        return $artist->exists && $this->hasAnyProjectWriteAccess($user);
     }
 
-    /**
-     * Determine whether the user can restore the model.
-     */
     public function restore(User $user, Artist $artist): bool
     {
-        return false;
+        return $artist->exists && $this->hasAnyProjectWriteAccess($user);
     }
 
-    /**
-     * Determine whether the user can permanently delete the model.
-     */
     public function forceDelete(User $user, Artist $artist): bool
     {
-        return false;
+        return $artist->exists && $this->hasAnyProjectWriteAccess($user);
     }
 }

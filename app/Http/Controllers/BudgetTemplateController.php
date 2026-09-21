@@ -30,6 +30,7 @@ use Artwork\Modules\Budget\Services\SubPositionVerifiedService;
 use Artwork\Modules\Budget\Services\SumCommentService;
 use Artwork\Modules\Budget\Services\SumMoneySourceService;
 use Artwork\Modules\Budget\Services\TableService;
+use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Artwork\Modules\Project\Models\Project;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -104,6 +105,9 @@ class BudgetTemplateController extends Controller
 
     public function store(Table $table, Request $request): RedirectResponse
     {
+        // Vorlage aus Projekttabelle: Budgetzugriff (Middleware) reicht nicht, es braucht das Vorlagen-Schreibrecht
+        abort_unless($request->user()?->can(PermissionEnum::UPDATE_BUDGET_TEMPLATES->value), 403);
+
         $this->createTemplate($request->template_name, $table);
         return Redirect::back();
     }

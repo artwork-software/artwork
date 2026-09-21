@@ -69,15 +69,17 @@ return [
     | Consumed by Artwork\Core\Http\Middleware\TrustProxies. Customer setups
     | terminate TLS in front of the application, so the X-Forwarded-* headers
     | have to be honoured or Laravel generates http:// URLs behind an https
-    | proxy. "*" trusts every client's forwarded headers and is only safe while
-    | the container is reachable exclusively through the reverse proxy — which
-    | is the normal case inside a Docker network. Installations that expose the
-    | container directly must set TRUSTED_PROXIES to concrete IPs/CIDRs
-    | (comma separated).
+    | proxy. The default trusts loopback and the private ranges (RFC 1918 /
+    | Docker networks), which covers the usual reverse proxy inside the Docker
+    | stack or the intranet while public clients cannot forge X-Forwarded-For
+    | (and with it the IP based rate limits). Set TRUSTED_PROXIES to the
+    | concrete proxy IPs/CIDRs (comma separated) when the proxy sits on a
+    | public address; "*" trusts every client and must only be used when the
+    | container is reachable exclusively through the proxy.
     |
     */
 
-    'trusted_proxies' => env('TRUSTED_PROXIES', '*'),
+    'trusted_proxies' => env('TRUSTED_PROXIES', '127.0.0.1/8,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16,::1'),
 
     /*
     |--------------------------------------------------------------------------

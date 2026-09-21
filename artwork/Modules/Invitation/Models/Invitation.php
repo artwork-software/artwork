@@ -4,6 +4,7 @@ namespace Artwork\Modules\Invitation\Models;
 
 use Artwork\Core\Database\Models\Model;
 use Artwork\Modules\Department\Models\Department;
+use Illuminate\Support\Carbon;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -14,6 +15,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
  * @property string token
  * @property array permissions
  * @property array roles
+ * @property Carbon|null expires_at
  * @property string created_at
  * @property string updated_at
  * @property Collection<Department> $departments
@@ -26,13 +28,24 @@ class Invitation extends Model
         'email',
         'token',
         'permissions',
-        'roles'
+        'roles',
+        'expires_at',
     ];
 
     protected $casts = [
         'permissions' => 'array',
-        'roles' => 'array'
+        'roles' => 'array',
+        'expires_at' => 'datetime',
     ];
+
+    /**
+     * Abgelaufene Einladungen lassen sich nicht mehr annehmen; ohne Ablaufdatum (Altbestand vor der
+     * Migration wird dort nachgezogen) gilt die Einladung als abgelaufen.
+     */
+    public function isExpired(): bool
+    {
+        return $this->expires_at === null || $this->expires_at->isPast();
+    }
 
     public function departments(): BelongsToMany
     {

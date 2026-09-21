@@ -385,6 +385,8 @@ class InventoryArticleController extends Controller
             'inventory_article_status_id' => ['nullable', 'integer', 'exists:inventory_article_statuses,id'],
         ];
 
+        $this->authorizeDetailedArticleTagAccess($inventoryDetailedQuantityArticle);
+
         $field = $request->input('field');
         $value = $request->input('value');
 
@@ -418,6 +420,8 @@ class InventoryArticleController extends Controller
         Request $request,
         InventoryDetailedQuantityArticle $inventoryDetailedQuantityArticle
     ) {
+        $this->authorizeDetailedArticleTagAccess($inventoryDetailedQuantityArticle);
+
         $validated = $request->validate([
             'property_id' => ['required', 'integer', 'exists:inventory_article_properties,id'],
             'value' => ['nullable', 'max:255'],
@@ -497,6 +501,18 @@ class InventoryArticleController extends Controller
      * Tag-Freigaben ("eingeschränkte Tags") wurden bisher nur im ArticleDetailModal geprüft;
      * hier serverseitig nachgezogen. Admins passieren via Gate::before-Äquivalent (Rolle).
      */
+    /**
+     * Einzelbestände erben den Tag-Schutz ihres Artikels (Inline-Autosave lief bisher daran vorbei).
+     */
+    private function authorizeDetailedArticleTagAccess(InventoryDetailedQuantityArticle $detailedArticle): void
+    {
+        $article = InventoryArticle::query()->find($detailedArticle->inventory_article_id);
+
+        if ($article !== null) {
+            $this->authorizeTagAccess($article);
+        }
+    }
+
     private function authorizeTagAccess(InventoryArticle $inventoryArticle): void
     {
         /** @var \Artwork\Modules\User\Models\User $user */

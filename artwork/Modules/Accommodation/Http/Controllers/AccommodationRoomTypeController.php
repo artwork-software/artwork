@@ -5,6 +5,7 @@ namespace Artwork\Modules\Accommodation\Http\Controllers;
 use App\Http\Controllers\Controller;
 use Artwork\Modules\Accommodation\Http\Requests\StoreAccommodationRoomTypeRequest;
 use Artwork\Modules\Accommodation\Http\Requests\UpdateAccommodationRoomTypeRequest;
+use Artwork\Modules\Accommodation\Models\Accommodation;
 use Artwork\Modules\Accommodation\Models\AccommodationRoomType;
 
 class AccommodationRoomTypeController extends Controller
@@ -30,6 +31,9 @@ class AccommodationRoomTypeController extends Controller
      */
     public function store(StoreAccommodationRoomTypeRequest $request)
     {
+        // Zimmertypen sind Stammdaten der Unterkünfte — gleiches Recht wie Unterkunft anlegen.
+        $this->authorize('create', Accommodation::class);
+
         $roomType = AccommodationRoomType::create($request->validated());
 
         return back()->with([

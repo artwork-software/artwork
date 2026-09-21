@@ -7,7 +7,7 @@ import { usePage } from '@inertiajs/vue3';
 // projectId: ref oder getter für die Projekt-ID – nur Events dieses Projekts werden verarbeitet.
 //            Wenn null/undefined, werden alle Broadcasts ignoriert (z.B. bei Neuerstellung).
 // options: optionales Objekt { onEvent, onError }
-// Hört auf den Public Channel bulk.events und verarbeitet die Aktionen
+// Hört auf den Private Channel bulk.events (Auth über /broadcasting/auth) und verarbeitet die Aktionen
 // payload: { event, action: 'created'|'updated'|'deleted' }
 export function useBulkEventsBroadcastUpdater(eventsRef, projectId, options = {}) {
     let channel = null;
@@ -114,7 +114,7 @@ export function useBulkEventsBroadcastUpdater(eventsRef, projectId, options = {}
             if (options.onError) options.onError('Echo not found');
             return;
         }
-        channel = echo.channel('bulk.events')
+        channel = echo.private('bulk.events')
             .listen('.bulk.event.changed', handleBroadcast);
     });
 

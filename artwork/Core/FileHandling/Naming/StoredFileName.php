@@ -6,6 +6,7 @@ namespace Artwork\Core\FileHandling\Naming;
 
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Str;
+use Symfony\Component\Mime\MimeTypes;
 
 /**
  * Builds the name a file is stored under on disk.
@@ -24,10 +25,12 @@ final class StoredFileName
     private const MAX_EXTENSION_LENGTH = 16;
 
     /**
-     * Extensions a web server may hand to an interpreter. Files on the "public"
-     * disk are reachable under /storage/**, so these are rewritten rather than
-     * kept. Defence in depth - most, but not all, upload paths also run a mime
-     * allow list via HandlesFileUpload.
+     * Extensions a web server may hand to an interpreter OR serve with a
+     * script-capable content type (text/html, image/svg+xml, XML with XSLT).
+     * Files on the "public" disk are reachable under /storage/**, so these are
+     * rewritten to ".bin" rather than kept - the browser then never renders
+     * them on the application origin. Defence in depth - most, but not all,
+     * upload paths also run a mime allow list via HandlesFileUpload.
      *
      * @var list<string>
      */
@@ -35,9 +38,23 @@ final class StoredFileName
         'php', 'php3', 'php4', 'php5', 'php7', 'php8', 'phps', 'phtml', 'pht',
         'phar', 'shtml', 'cgi', 'pl', 'py', 'rb', 'sh', 'bash', 'htaccess',
         'htpasswd', 'jsp', 'jspx', 'asp', 'aspx', 'exe', 'bat', 'cmd', 'com',
+        'html', 'htm', 'xhtml', 'xht', 'svg', 'svgz', 'xml', 'xsl', 'xslt',
     ];
 
     private const DENIED_REPLACEMENT = 'bin';
+
+    /**
+     * Mime types the sniffer reports when it cannot tell what a file is. Their
+     * guessed extension carries no information, so the client extension is
+     * used instead (after the deny list).
+     *
+     * @var list<string>
+     */
+    private const GENERIC_MIME_TYPES = [
+        'application/octet-stream',
+        'application/x-empty',
+        'inode/x-empty',
+    ];
 
     private function __construct()
     {
@@ -67,16 +84,49 @@ final class StoredFileName
         return $extension === '' ? $hash : $hash . '.' . $extension;
     }
 
+    /**
+     * The extension is derived from the sniffed content, never from the client
+     * name alone: a PNG uploaded as "x.html" is stored as ".png", an HTML file
+     * uploaded as "x.png" ends up as ".bin". The client extension only wins
+     * when the content is unrecognisable (or generic binary) and it passes the
+     * deny list - or when it is one of the extensions registered for the
+     * detected mime type ("jpg" stays "jpg" instead of becoming "jpeg").
+     */
     private static function resolveUploadExtension(UploadedFile $file): string
     {
-        $extension = self::normaliseExtension($file->getClientOriginalExtension());
+        $clientExtension = self::normaliseExtension($file->getClientOriginalExtension());
+        $mimeType = self::detectMimeType($file);
 
-        if ($extension === '') {
-            // Symfony guesses from the detected mime type, never from the name.
-            $extension = self::normaliseExtension((string) $file->extension());
+        if ($mimeType === null || in_array($mimeType, self::GENERIC_MIME_TYPES, true)) {
+            return $clientExtension;
         }
 
-        return $extension;
+        $detectedExtensions = array_map(
+            static fn (string $extension): string => self::normaliseExtension($extension),
+            MimeTypes::getDefault()->getExtensions($mimeType)
+        );
+        $detectedExtensions = array_values(array_filter($detectedExtensions, static fn (string $e): bool => $e !== ''));
+
+        if ($detectedExtensions === []) {
+            return $clientExtension;
+        }
+
+        if ($clientExtension !== '' && in_array($clientExtension, $detectedExtensions, true)) {
+            return $clientExtension;
+        }
+
+        return $detectedExtensions[0];
+    }
+
+    private static function detectMimeType(UploadedFile $file): ?string
+    {
+        try {
+            $mimeType = $file->getMimeType();
+        } catch (\Throwable) {
+            return null;
+        }
+
+        return is_string($mimeType) && $mimeType !== '' ? strtolower($mimeType) : null;
     }
 
     private static function normaliseExtension(string $extension): string

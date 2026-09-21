@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Http\Controllers;
 
+use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Artwork\Modules\Room\Models\RoomAttribute;
 use Artwork\Modules\User\Models\User;
 use PHPUnit\Framework\Attributes\Test;
@@ -48,18 +49,32 @@ final class RoomAttributeControllerTest extends FeatureTestCase
     }
 
     #[Test]
-    public function authenticated_user_can_store_room_attribute(): void
+    public function user_without_room_permission_cannot_store_room_attribute(): void
     {
-        // Controller has no policy/permission — any auth'd user can store.
+        // Sicherheits-Audit 21.09.2026: Raumattribute sind Stammdaten und brauchen das Raumrecht.
         $this->actingAs(User::factory()->create());
 
-        $response = $this->post(route('room_attribute.store'), [
+        $this->post(route('room_attribute.store'), [
             'name' => 'Plain User Attr',
+        ])->assertForbidden();
+
+        $this->assertDatabaseMissing('room_attributes', [
+            'name' => 'Plain User Attr',
+        ]);
+    }
+
+    #[Test]
+    public function user_with_room_permission_can_store_room_attribute(): void
+    {
+        $this->actingAsUserWith([PermissionEnum::ROOM_UPDATE]);
+
+        $response = $this->post(route('room_attribute.store'), [
+            'name' => 'Room Manager Attr',
         ]);
 
         $response->assertSuccessful();
         $this->assertDatabaseHas('room_attributes', [
-            'name' => 'Plain User Attr',
+            'name' => 'Room Manager Attr',
         ]);
     }
 }

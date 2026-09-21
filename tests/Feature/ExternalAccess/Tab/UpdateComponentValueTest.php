@@ -227,13 +227,13 @@ final class UpdateComponentValueTest extends TestCase
     }
 
     #[Test]
-    public function text_data_gets_nl2br_normalization(): void
+    public function text_data_is_stored_as_raw_text_without_nl2br(): void
     {
         ['external' => $external, 'project' => $project, 'tab' => $tab, 'component' => $component] = $this->context();
 
         $this->service()->updateComponentValue($external, $project, $tab, $component, ['text' => "line1\nline2"]);
 
-        $stored = ProjectComponentValue::first()->data['text'];
-        $this->assertStringContainsString('<br', $stored);
+        // Sicherheits-Audit 21.09.2026: kein nl2br mehr, Umbrüche rendert das Frontend per white-space: pre-line.
+        $this->assertSame("line1\nline2", ProjectComponentValue::first()->data['text']);
     }
 }

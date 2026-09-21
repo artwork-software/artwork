@@ -28,7 +28,7 @@ class PresetTimeLineController extends Controller
             $findTimeLine->update([
                 'start' => $timeline['start'],
                 'end' => $timeline['end'],
-                'description' => nl2br($timeline['description_without_html'])
+                'description' => $timeline['description_without_html']
             ]);
         }
     }

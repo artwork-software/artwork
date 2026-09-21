@@ -5,8 +5,7 @@ namespace Artwork\Modules\Event\Events;
 use Artwork\Modules\Event\Models\Event;
 use Carbon\Carbon;
 use Illuminate\Broadcasting\InteractsWithSockets;
-use Illuminate\Broadcasting\Channel;
-use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
+use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcastNow;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
@@ -30,9 +29,9 @@ class BulkEventChanged implements ShouldBroadcastNow
         $this->action = $action;
     }
 
-    public function broadcastOn(): Channel
+    public function broadcastOn(): PrivateChannel
     {
-        return new Channel('bulk.events');
+        return new PrivateChannel('bulk.events');
     }
 
     public function broadcastAs(): string

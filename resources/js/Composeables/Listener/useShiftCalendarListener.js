@@ -416,7 +416,7 @@ export function useShiftCalendarListener(newShiftPlanData, { onWorkersNeedReload
         }
 
         // Multi-shifts channel
-        Echo.channel('shift-plan.multi-shifts')
+        Echo.private('shift-plan.multi-shifts')
             .listen('.multi-shifts-created', (data) => {
                 // Merge project/craft/group lookups first so newly assigned projects
                 // render immediately instead of only after a full reload.
@@ -433,7 +433,7 @@ export function useShiftCalendarListener(newShiftPlanData, { onWorkersNeedReload
             });
 
         // Individual times channel
-        Echo.channel('shift-plan.individual-times')
+        Echo.private('shift-plan.individual-times')
             .listen('.individual-time.changed', (data) => {
                 if (onWorkerNeedReload) {
                     onWorkerNeedReload(data.workerId, resolveWorkerType(data.workerType));
@@ -444,7 +444,7 @@ export function useShiftCalendarListener(newShiftPlanData, { onWorkersNeedReload
 
         // Verfügbarkeit/Abwesenheit einer Person geändert (Verfügbarkeitskalender, Tagesstatus,
         // Multi-Edit) → Personenzeile nachladen, damit Beschriftung und Konflikt-Ring aktuell sind.
-        Echo.channel('shift-plan.worker-availability')
+        Echo.private('shift-plan.worker-availability')
             .listen('.worker-availability.changed', (data) => {
                 if (onWorkerNeedReload) {
                     onWorkerNeedReload(data.workerId, resolveWorkerType(data.workerType));

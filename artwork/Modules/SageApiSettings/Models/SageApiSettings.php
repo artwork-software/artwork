@@ -13,6 +13,7 @@ use Artwork\Core\Database\Models\Model;
  * @property string|null $bookingDate
  * @property string|null $fetchTime
  * @property bool $enabled
+ * @property bool|null $verify_ssl
  * @property string $created_at
  * @property string $updated_at
  */
@@ -25,10 +26,25 @@ class SageApiSettings extends Model
         'password',
         'bookingDate',
         'fetchTime',
-        'enabled'
+        'enabled',
+        'verify_ssl',
+    ];
+
+    // Das Zugangspasswort verlässt das Backend nie (Inertia-Props, JSON, Logs).
+    protected $hidden = [
+        'password',
     ];
 
     protected $casts = [
-        'enabled' => 'boolean'
+        'enabled' => 'boolean',
+        'verify_ssl' => 'boolean',
     ];
+
+    /**
+     * TLS-Verifikation ist der sichere Default; nur ein explizit gespeichertes false schaltet sie ab.
+     */
+    public function shouldVerifySsl(): bool
+    {
+        return $this->verify_ssl !== false;
+    }
 }

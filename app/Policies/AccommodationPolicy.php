@@ -2,66 +2,62 @@
 
 namespace App\Policies;
 
+use App\Policies\Concerns\ChecksProjectAccess;
 use Artwork\Modules\Accommodation\Models\Accommodation;
+use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Artwork\Modules\User\Models\User;
-use Illuminate\Auth\Access\Response;
 
+/**
+ * Unterkünfte sind Stammdaten des Aufenthalts-Moduls und zugleich CRM-Kontakte: Lesen für alle
+ * mit Projektzugriff oder CRM-Leserecht, Verwalten für alle mit Projekt-Schreibrecht oder
+ * CRM-Verwaltungsrecht. Admins passieren via Gate::before.
+ */
 class AccommodationPolicy
 {
-    /**
-     * Determine whether the user can view any models.
-     */
+    use ChecksProjectAccess;
+
     public function viewAny(User $user): bool
     {
-        // Allow viewing if the user is authenticated
-        return $user->exists;
+        return $this->canRead($user);
     }
 
-    /**
-     * Determine whether the user can view the model.
-     */
     public function view(User $user, Accommodation $accommodation): bool
     {
-        return $user->exists && $accommodation->exists;
+        return $accommodation->exists && $this->canRead($user);
     }
 
-    /**
-     * Determine whether the user can create models.
-     */
     public function create(User $user): bool
     {
-        return $user->exists;
+        return $this->canManage($user);
     }
 
-    /**
-     * Determine whether the user can update the model.
-     */
     public function update(User $user, Accommodation $accommodation): bool
     {
-        return $user->exists && $accommodation->exists;
+        return $accommodation->exists && $this->canManage($user);
     }
 
-    /**
-     * Determine whether the user can delete the model.
-     */
     public function delete(User $user, Accommodation $accommodation): bool
     {
-        return $user->exists && $accommodation->exists;
+        return $accommodation->exists && $this->canManage($user);
     }
 
-    /**
-     * Determine whether the user can restore the model.
-     */
     public function restore(User $user, Accommodation $accommodation): bool
     {
-        return $user->exists && $accommodation->exists;
+        return $accommodation->exists && $this->canManage($user);
     }
 
-    /**
-     * Determine whether the user can permanently delete the model.
-     */
     public function forceDelete(User $user, Accommodation $accommodation): bool
     {
-        return $user->exists && $accommodation->exists;
+        return $accommodation->exists && $this->canManage($user);
+    }
+
+    private function canRead(User $user): bool
+    {
+        return $user->can(PermissionEnum::CRM_VIEW->value) || $this->hasAnyProjectAccess($user);
+    }
+
+    private function canManage(User $user): bool
+    {
+        return $user->can(PermissionEnum::CRM_MANAGER->value) || $this->hasAnyProjectWriteAccess($user);
     }
 }

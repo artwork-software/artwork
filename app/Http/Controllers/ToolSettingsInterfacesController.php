@@ -72,7 +72,7 @@ class ToolSettingsInterfacesController extends Controller
         return Inertia::render(
             'Interfaces/Index',
             [
-                'sageSettings' => $canManageTokens ? $this->sageApiSettingsService->getFirst() : null,
+                'sageSettings' => $canManageTokens ? $this->sageSettingsProps() : null,
                 'tableColumnOrder' => $this->tableColumnOrderService->getAllOrderedByPosition(),
                 'canManageTokens' => $canManageTokens,
                 'tokens' => $tokens,
@@ -98,6 +98,32 @@ class ToolSettingsInterfacesController extends Controller
                     : [],
             ]
         );
+    }
+
+    /**
+     * Sage-Zugang ohne Passwort: das Formular erfährt nur, OB eines hinterlegt ist
+     * (Muster MailSettingsController). null, solange noch keine Einstellungen existieren.
+     *
+     * @return array<string, mixed>|null
+     */
+    private function sageSettingsProps(): ?array
+    {
+        $settings = $this->sageApiSettingsService->getFirst();
+
+        if ($settings === null) {
+            return null;
+        }
+
+        return [
+            'host' => $settings->host,
+            'endpoint' => $settings->endpoint,
+            'user' => $settings->user,
+            'has_password' => ($settings->password ?? '') !== '',
+            'bookingDate' => $settings->bookingDate,
+            'fetchTime' => $settings->fetchTime,
+            'enabled' => (bool) $settings->enabled,
+            'verify_ssl' => $settings->shouldVerifySsl(),
+        ];
     }
 
     public function tokenLogs(Token $token): JsonResponse

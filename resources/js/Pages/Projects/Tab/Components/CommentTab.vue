@@ -84,8 +84,7 @@
                                                 <span class="text-xs text-text-subtle">•</span>
                                                 <time class="text-xs text-text-subtle">{{ comment.created_at }}</time>
                                             </div>
-                                            <p class="mt-1 text-sm font-normal leading-6 text-text-subtle subpixel-antialiased"
-                                               v-html="comment.text"></p>
+                                            <p class="mt-1 text-sm font-normal leading-6 text-text-subtle subpixel-antialiased whitespace-pre-line">{{ comment.text }}</p>
                                         </div>
                                     </div>
 

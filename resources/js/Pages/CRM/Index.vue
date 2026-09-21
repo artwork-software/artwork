@@ -169,7 +169,7 @@
                 <button type="button" class="text-sm text-text-subtle hover:text-text-muted" @click="selectedIds = new Set()">
                     {{ $t('Clear selection') }}
                 </button>
-                <button type="button" class="ml-auto flex items-center gap-1 text-sm font-medium text-danger hover:text-danger" @click="showBulkDeleteModal = true">
+                <button v-if="canDeleteContacts" type="button" class="ml-auto flex items-center gap-1 text-sm font-medium text-danger hover:text-danger" @click="showBulkDeleteModal = true">
                     <component :is="IconTrash" class="size-4" />
                     {{ $t('Delete selection') }}
                 </button>
@@ -216,7 +216,7 @@
                     <template #row-actions="{ row }">
                         <BaseMenu has-no-offset white-menu-background>
                             <BaseMenuItem :icon="IconEye" :title="$t('View')" white-menu-background @click="$inertia.visit(route('crm.contacts.show', row.id))" />
-                            <BaseMenuItem v-if="!isMirroredType" :icon="IconTrash" :title="$t('Delete')" white-menu-background @click="openDeleteModal(row)" />
+                            <BaseMenuItem v-if="!isMirroredType && canDeleteContacts" :icon="IconTrash" :title="$t('Delete')" white-menu-background @click="openDeleteModal(row)" />
                         </BaseMenu>
                     </template>
                 </BaseTable>
@@ -328,7 +328,9 @@ const props = defineProps({
 })
 
 const $t = useTranslation()
-const { can } = usePermission(usePage().props)
+const { can, hasAdminRole } = usePermission(usePage().props)
+// Löschen ist backendseitig auf 'crm manager' beschränkt — Buttons nur dann anbieten.
+const canDeleteContacts = computed(() => hasAdminRole() || can('crm manager'))
 
 const mirroredSlugs = ['user', 'freelancer', 'service_provider']
 

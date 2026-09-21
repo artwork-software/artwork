@@ -24,8 +24,16 @@ class InvitationFactory extends Factory
         return [
             'email' => $this->faker->unique()->safeEmail(),
             'token' => Str::random(20),
-            'permissions' => ['invitation permission factory']
+            'permissions' => ['invitation permission factory'],
+            'expires_at' => now()->addDays(7),
         ];
+    }
+
+    public function expired(): self
+    {
+        return $this->state([
+            'expires_at' => now()->subMinute(),
+        ]);
     }
 
     public function withToken(string $token): self

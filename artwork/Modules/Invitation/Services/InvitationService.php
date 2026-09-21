@@ -6,13 +6,19 @@ use Artwork\Core\Mail\MailService;
 use Artwork\Core\Str\StrService;
 use Artwork\Modules\Invitation\Models\Invitation;
 use Artwork\Modules\Invitation\Repositories\InvitationRepository;
+use Artwork\Modules\Role\Enums\RoleEnum;
+use Artwork\Modules\User\Models\User;
 use Artwork\Modules\User\Services\UserService;
 use Illuminate\Hashing\HashManager;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection as SupportCollection;
 use Psr\Log\LoggerInterface;
 
 class InvitationService
 {
+    /** Gültigkeitsdauer eines Einladungstokens in Tagen. */
+    public const EXPIRES_AFTER_DAYS = 7;
+
     public function __construct(
         private readonly InvitationRepository $invitationRepository,
         private readonly LoggerInterface $logger,
@@ -51,6 +57,7 @@ class InvitationService
         SupportCollection $departmentIds
     ): void {
         $admin_user = $this->userService->getAuthUser();
+        $permissions = $this->filterGrantablePermissions($permissions, $admin_user);
 
         foreach ($userEmails as $email) {
             do {
@@ -76,7 +83,8 @@ class InvitationService
                     [
                         'token' => $token['hash'],
                         'permissions' => $permissions,
-                        'roles' => $roles
+                        'roles' => $roles,
+                        'expires_at' => $this->newExpiresAt(),
                     ]
                 );
             } else {
@@ -85,7 +93,8 @@ class InvitationService
                         'email' => $email,
                         'token' => $token['hash'],
                         'permissions' => $permissions,
-                        'roles' => $roles
+                        'roles' => $roles,
+                        'expires_at' => $this->newExpiresAt(),
                     ]
                 );
             }
@@ -107,6 +116,32 @@ class InvitationService
                 )
             );
         }
+    }
+
+    /**
+     * Einladungen dürfen nur Rechte vergeben, die die einladende Person selbst besitzt (direkt oder
+     * über Rollen) — sonst ließe sich über eine Zweitadresse jedes Recht erschleichen. Admins vergeben
+     * uneingeschränkt. Wird serverseitig gefiltert, nicht nur validiert.
+     *
+     * @param array<int, string> $permissions
+     * @return array<int, string>
+     */
+    public function filterGrantablePermissions(array $permissions, ?User $inviter): array
+    {
+        if ($inviter === null) {
+            return [];
+        }
+
+        if ($inviter->hasRole(RoleEnum::ARTWORK_ADMIN->value)) {
+            return array_values(array_unique($permissions));
+        }
+
+        return array_values(array_unique(array_intersect($permissions, $inviter->allPermissions())));
+    }
+
+    public function newExpiresAt(): Carbon
+    {
+        return Carbon::now()->addDays(self::EXPIRES_AFTER_DAYS);
     }
 
     public function update(Invitation $invitation, array $attributes): Invitation

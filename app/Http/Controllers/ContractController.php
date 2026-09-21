@@ -18,6 +18,8 @@ use Artwork\Modules\Project\Events\UpdateProjectContractsDocuments;
 use Artwork\Modules\Project\Services\ProjectTabService;
 use Artwork\Modules\Role\Enums\RoleEnum;
 use Illuminate\Http\RedirectResponse;
+use Artwork\Modules\DocumentRequest\Models\DocumentRequest;
+use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
@@ -87,6 +89,8 @@ class ContractController extends Controller
 
     public function store(ContractStoreRequest $request, Project $project): RedirectResponse
     {
+        $this->authorizeContractStore($request, $project);
+
         $data = $request->data();
         $contract = $this->contractService->createContract(
             $data,
@@ -100,6 +104,44 @@ class ContractController extends Controller
         }
 
         return Redirect::back();
+    }
+
+    /**
+     * Vertrag anlegen: Schreibrecht im Projekt oder Vertragsrecht mit Projektsicht; alternativ als
+     * beteiligte Person (angefragt/anfragend) einer Dokumentenanfrage DIESES Projekts. Fremde Anfragen
+     * (anderes Projekt) dürfen nicht verknüpft werden.
+     */
+    private function authorizeContractStore(Request $request, Project $project): void
+    {
+        $user = $request->user();
+        abort_unless((bool) $user, 401);
+
+        // input() statt filled()/integer(): ContractStoreRequest überschreibt data(), was filled()/integer() aushebelt
+        $documentRequestId = $request->input('document_request_id');
+        $documentRequest = null;
+        if ($documentRequestId !== null && $documentRequestId !== '' && !is_array($documentRequestId)) {
+            $documentRequest = DocumentRequest::query()->find((int) $documentRequestId);
+            abort_unless(
+                $documentRequest !== null
+                && ($documentRequest->project_id === null || (int) $documentRequest->project_id === (int) $project->id),
+                403
+            );
+        }
+
+        $fulfilsOwnRequest = $documentRequest !== null
+            && (int) $documentRequest->project_id === (int) $project->id
+            && in_array(
+                (int) $user->id,
+                [(int) $documentRequest->requested_id, (int) $documentRequest->requester_id],
+                true
+            );
+
+        abort_unless(
+            $fulfilsOwnRequest
+            || $user->can('update', $project)
+            || ($user->can(PermissionEnum::CONTRACT_EDIT_UPLOAD->value) && $user->can('view', $project)),
+            403
+        );
     }
 
     public function download(Contract $contract): StreamedResponse

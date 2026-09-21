@@ -19,6 +19,8 @@ class ArtistController extends Controller
      */
     public function index()
     {
+        $this->authorize('viewAny', Artist::class);
+
         return Inertia::render('Artist/Index', [
             'artists' => Artist::all()
         ]);
@@ -37,6 +39,8 @@ class ArtistController extends Controller
      */
     public function store(StoreArtistRequest $request): void
     {
+        $this->authorize('create', Artist::class);
+
         Artist::create($request->validated());
     }
 
@@ -61,6 +65,8 @@ class ArtistController extends Controller
      */
     public function update(UpdateArtistRequest $request, Artist $artist): void
     {
+        $this->authorize('update', $artist);
+
         $artist->update($request->validated());
     }
 
@@ -69,6 +75,8 @@ class ArtistController extends Controller
      */
     public function destroy(Artist $artist): void
     {
+        $this->authorize('delete', $artist);
+
         // drop all residencies associated with this artist
         foreach ($artist->residencies as $residency) {
             $residency->update([
@@ -82,6 +90,8 @@ class ArtistController extends Controller
     // export via excel
     public function export(): BinaryFileResponse|null
     {
+        $this->authorize('export', Artist::class);
+
         $artists = Artist::all();
 
         return (new ArtistExport($artists))

@@ -13,7 +13,7 @@ class UpdateBudgetColumnSettingRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'column_name' => 'string'
+            'column_name' => 'string|max:65535'
         ];
     }
 }

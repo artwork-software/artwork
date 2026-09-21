@@ -4,47 +4,46 @@ namespace Artwork\Modules\Checklist\Http\Requests;
 
 use Artwork\Modules\Event\Http\Requests\EventStoreOrUpdateRequest;
 
+/**
+ * user_id ist nicht Teil des Requests; Projekt-/Tab-Wechsel autorisiert der Controller.
+ * Kein data()-Override: filled()/boolean()/integer() lesen über data().
+ */
 class ChecklistUpdateRequest extends EventStoreOrUpdateRequest
 {
     /**
-     * @return string[][]
+     * @return array<string, array<int, string>>
      */
     public function rules(): array
     {
         return [
-            'user_id' => ['sometimes', 'nullable', 'exists:users,id'],
-            'name' => ['sometimes', 'nullable', 'string'],
-            'private' => ['boolean'],
+            'name' => ['sometimes', 'nullable', 'string', 'max:255'],
+            'private' => ['sometimes', 'boolean'],
+            'project_id' => ['sometimes', 'nullable', 'integer', 'exists:projects,id'],
+            'tab_id' => ['sometimes', 'nullable', 'integer', 'exists:project_tabs,id'],
             'tasks' => ['sometimes', 'array'],
-            'tasks.*.name' => ['sometimes', 'nullable', 'string'],
-            'tasks.*.description' => ['sometimes', 'nullable', 'string'],
+            'tasks.*.name' => ['sometimes', 'nullable', 'string', 'max:255'],
+            'tasks.*.description' => ['sometimes', 'nullable', 'string', 'max:65535'],
             'tasks.*.done' => ['required', 'nullable', 'boolean'],
             'tasks.*.order' => ['required', 'nullable', 'int'],
+            'tasks.*.deadline' => ['sometimes', 'nullable', 'date'],
 
             'assigned_department_ids' => [
                 'sometimes',
                 'array',
             ],
             'assigned_department_ids.*.*' => ['required', 'exists:departments,id'],
+            'assigned_user_ids' => ['sometimes', 'array'],
+            'assigned_user_ids.*' => ['integer', 'exists:users,id'],
         ];
     }
 
     /**
-     * Get the request data.
+     * user_id bleibt beim Ersteller; project_id/tab_id setzt nur der Controller nach Autorisierung.
      *
-     * @param string|null $key
-     * @param mixed|null $default
-     * @return mixed
+     * @return array<string, mixed>
      */
-    // phpcs:ignore SlevomatCodingStandard.TypeHints.ParameterTypeHint.MissingNativeTypeHint -- Signatur der Elternklasse erlaubt keinen Typ
-    public function data($key = null, $default = null): mixed
+    public function fillableFields(): array
     {
-        $data = $this->only(['user_id', 'name']);
-
-        if ($key === null) {
-            return $data;
-        }
-
-        return $data[$key] ?? $default;
+        return $this->only(['name', 'private']);
     }
 }

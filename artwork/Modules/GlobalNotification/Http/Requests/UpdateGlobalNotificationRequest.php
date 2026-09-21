@@ -2,6 +2,7 @@
 
 namespace Artwork\Modules\GlobalNotification\Http\Requests;
 
+use Artwork\Core\FileHandling\Upload\SafeUploadFile;
 use Illuminate\Foundation\Http\FormRequest;
 
 class UpdateGlobalNotificationRequest extends FormRequest
@@ -16,6 +17,7 @@ class UpdateGlobalNotificationRequest extends FormRequest
             'notificationDeadlineDate' => 'string|nullable',
             'notificationDeadlineTime' => 'string|nullable',
             'notificationDescription' => 'string|nullable',
+            'notificationImage' => ['nullable', new SafeUploadFile()],
         ];
     }
 }

@@ -23,7 +23,7 @@ class UpdateMaterialSetRequest extends FormRequest
     {
         return [
             'name' => 'required|string|max:255',
-            'description' => 'nullable|string',
+            'description' => 'nullable|string|max:65535',
             'items' => 'required|array|min:1',
             'items.*.id' => 'required|exists:inventory_articles,id',
             'items.*.inventory_article_id' => 'nullable|exists:inventory_articles,id',

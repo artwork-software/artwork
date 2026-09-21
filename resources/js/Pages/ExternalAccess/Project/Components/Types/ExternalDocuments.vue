@@ -6,6 +6,9 @@
                 <p v-if="editable" class="text-xs text-text-subtle mt-0.5">
                     {{ $t('Upload documents such as PDFs, images or logos. You can remove your own uploads.') }}
                 </p>
+                <p v-else-if="!uploadEnabled" class="text-xs text-text-subtle mt-0.5">
+                    {{ $t('Uploading documents is not enabled for external accesses. You can view and download existing documents.') }}
+                </p>
             </div>
         </div>
 
@@ -63,6 +66,7 @@
 <script setup>
 import { computed, onMounted, ref } from 'vue'
 import axios from 'axios'
+import { usePage } from '@inertiajs/vue3'
 import { useTranslation } from '@/Composeables/Translation.js'
 
 const props = defineProps({
@@ -75,7 +79,10 @@ const props = defineProps({
 const $t = useTranslation()
 
 const label = computed(() => props.component.name || $t('Documents'))
-const editable = computed(() => props.component.is_writable && props.scope.access_type === 'write')
+const writableScope = computed(() => props.component.is_writable && props.scope.access_type === 'write')
+// Tool-Setting; das Backend lehnt Upload/Löschen unabhängig davon mit 403 ab.
+const uploadEnabled = computed(() => usePage().props.externalFileUploadEnabled === true)
+const editable = computed(() => writableScope.value && uploadEnabled.value)
 
 const documents = ref([])
 const loading = ref(true)

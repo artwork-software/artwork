@@ -81,6 +81,8 @@ class DepartmentController extends Controller
 
     public function removeAllMembers(Department $department)
     {
+        $this->authorize('update', $department);
+
         $this->departmentService->removeAllMembers($department);
         return Redirect::route('departments.show', $department->id);
     }

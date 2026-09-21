@@ -2,6 +2,7 @@
 
 namespace Artwork\Modules\ExternalIssue\Http\Requests;
 
+use Artwork\Core\FileHandling\Upload\SafeUploadFile;
 use Artwork\Modules\ExternalIssue\Models\ExternalIssue;
 use Illuminate\Foundation\Http\FormRequest;
 
@@ -39,7 +40,7 @@ class StoreExternalIssueRequest extends FormRequest
             'external_address' => 'nullable|string|max:255',
             'external_email' => 'nullable|email|max:255',
             'external_phone' => 'nullable|string|max:50',
-            'files.*' => 'file|max:20480',
+            'files.*' => ['file', 'mimes:pdf,jpg,jpeg,png,webp,doc,docx,xls,xlsx,csv,txt,zip', 'max:20480', new SafeUploadFile()],
             'special_items' => 'nullable|array',
             'special_items.*.name' => 'required|string|max:255',
             'special_items.*.quantity' => 'required|integer|min:1',

@@ -2,6 +2,7 @@
 
 namespace Artwork\Modules\InternalIssue\Services;
 
+use Artwork\Core\FileHandling\StoredFilePath;
 use Artwork\Core\FileHandling\Naming\StoredFileName;
 use Artwork\Modules\InternalIssue\Models\InternalIssue;
 use Artwork\Modules\InternalIssue\Models\InternalIssueFile;
@@ -145,7 +146,7 @@ class InternalIssueService
         ]);
 
         foreach ($issue->files as $file) {
-            Storage::disk('public')->delete($file->file_path);
+            $this->deleteStoredFile($file->file_path);
             $file->delete();
         }
 
@@ -163,7 +164,7 @@ class InternalIssueService
     protected function handleFiles(InternalIssue $issue, array $files): void
     {
         foreach ($files as $file) {
-            $path = $file->storeAs('material-issue', StoredFileName::forUpload($file), 'public');
+            $path = $file->storeAs('material-issue', StoredFileName::forUpload($file), 'local');
             InternalIssueFile::create([
                 'internal_issue_id' => $issue->id,
                 'file_path' => $path,
@@ -193,8 +194,24 @@ class InternalIssueService
 
     public function deleteFile(InternalIssueFile $file): void
     {
-        Storage::disk('public')->delete($file->file_path);
+        $this->deleteStoredFile($file->file_path);
         $file->delete();
+    }
+
+    /**
+     * "public" nur für Altbestand vor dem Move-Command.
+     */
+    private function deleteStoredFile(?string $path): void
+    {
+        $path = StoredFilePath::normalise($path);
+
+        if ($path === null) {
+            return;
+        }
+
+        foreach (['local', 'public'] as $disk) {
+            Storage::disk($disk)->delete($path);
+        }
     }
 
     protected function logActivity(

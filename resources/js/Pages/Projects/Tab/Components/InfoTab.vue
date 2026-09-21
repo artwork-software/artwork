@@ -6,9 +6,9 @@
                 <div >
                     <div class="text-base/5 font-semibold text-text">{{ $t('Short description') }}</div>
                     <div v-if="descriptionClicked === false"
-                         class="mt-2 subpixel-antialiased text-sm/5 font-semibold text-text"
-                         @click="handleDescriptionClick()" v-html="project.description ? project.description : $t('Click here to add text')">
-                    </div>
+                         class="mt-2 subpixel-antialiased text-sm/5 font-semibold text-text whitespace-pre-line"
+                         @click="handleDescriptionClick()"
+                    >{{ project.description ? project.description : $t('Click here to add text') }}</div>
                     <TextareaComponent
                         v-else
                         v-model="project.description_without_html"
@@ -24,7 +24,7 @@
                     <div class="text-base/5 font-semibold text-text" >{{ headline.name }}</div>
                     <div v-if="!headline.clicked" class="mt-2 subpixel-antialiased text-sm/5 font-semibold text-text"
                          @click="handleTextClick(headline)">
-                        <p v-if="headline.text" v-html="headline.text"></p>
+                        <p v-if="headline.text" class="whitespace-pre-line">{{ headline.text }}</p>
                         <p v-else>{{ $t('Click here to add text') }}</p>
                     </div>
                     <TextareaComponent

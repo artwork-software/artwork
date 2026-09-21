@@ -15,6 +15,7 @@
                 :project="project"
                 :available-tabs="headerObject.tabs ?? []"
                 :preselected-tab-id="currentTab.id"
+                :external-file-upload-enabled="pageProps.externalFileUploadEnabled === true"
                 @close="showInviteModal = false"
             />
             <div v-for="(component, idx) in currentTab.components" :key="component?.id ?? component?.component?.id ?? idx" :class="outerWidthClass(component.component?.type)">

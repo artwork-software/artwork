@@ -2,6 +2,7 @@
 
 namespace Artwork\Modules\ExternalIssue\Services;
 
+use Artwork\Core\FileHandling\StoredFilePath;
 use Artwork\Core\FileHandling\Naming\StoredFileName;
 use Artwork\Modules\ExternalIssue\Models\ExternalIssue;
 use Artwork\Modules\ExternalIssue\Models\ExternalIssueFile;
@@ -157,7 +158,7 @@ class ExternalIssueService
         ]);
 
         foreach ($issue->files as $file) {
-            Storage::disk('public')->delete($file->file_path);
+            $this->deleteStoredFile($file->file_path);
             $file->delete();
         }
 
@@ -178,7 +179,7 @@ class ExternalIssueService
             $path = $file->storeAs(
                 'external_material_issues',
                 StoredFileName::forUpload($file),
-                'public'
+                'local'
             );
             ExternalIssueFile::create([
                 'external_issue_id' => $issue->id,
@@ -208,8 +209,24 @@ class ExternalIssueService
 
     public function deleteFile(ExternalIssueFile $file): void
     {
-        Storage::disk('public')->delete($file->file_path);
+        $this->deleteStoredFile($file->file_path);
         $file->delete();
+    }
+
+    /**
+     * "public" nur für Altbestand vor dem Move-Command.
+     */
+    private function deleteStoredFile(?string $path): void
+    {
+        $path = StoredFilePath::normalise($path);
+
+        if ($path === null) {
+            return;
+        }
+
+        foreach (['local', 'public'] as $disk) {
+            Storage::disk($disk)->delete($path);
+        }
     }
 
     /**

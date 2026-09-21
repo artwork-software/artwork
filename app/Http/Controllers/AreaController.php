@@ -74,6 +74,8 @@ class AreaController extends Controller
 
     public function duplicate(Area $area, RoomService $roomService): RedirectResponse
     {
+        $this->authorize('create', Area::class);
+
         $this->areaService->duplicateByAreaModel($area, $roomService);
         return Redirect::route('areas.management');
     }
@@ -89,6 +91,8 @@ class AreaController extends Controller
 
     public function forceDelete(int $id): RedirectResponse
     {
+        $this->authorize('forceDelete', Area::class);
+
         $area = Area::onlyTrashed()->findOrFail($id);
         $area->forceDelete();
         return Redirect::route('areas.trashed');
@@ -96,6 +100,8 @@ class AreaController extends Controller
 
     public function forceDeleteAll(): RedirectResponse
     {
+        $this->authorize('forceDelete', Area::class);
+
         Area::onlyTrashed()->each(function ($area): void {
             $area->forceDelete();
         });
@@ -104,6 +110,8 @@ class AreaController extends Controller
 
     public function restore(int $id): RedirectResponse
     {
+        $this->authorize('restore', Area::class);
+
         /** @var Area $area */
         $area = Area::onlyTrashed()->findOrFail($id);
         $area->restore();

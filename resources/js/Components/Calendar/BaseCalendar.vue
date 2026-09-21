@@ -1120,7 +1120,10 @@ async function runInitialLoad() {
 onMounted(async () => {
     await runInitialLoad();
 
-    const ShiftCalendarListener = useShiftCalendarListener(newCalendarData);
+    // Schicht-Kanäle nur mit Dienstplan-Sichtrecht (Spiegel von CalendarShiftVisibility / routes/channels.php)
+    const ShiftCalendarListener = useShiftCalendarListener(newCalendarData, {
+        subscribeShiftChannels: isAdmin.value || can('can view shift plan') || can('can plan shifts'),
+    });
     ShiftCalendarListener.init();
     initMonthObserver();
     if (focusedMonthKey.value && !loadedMonths.value.has(focusedMonthKey.value)) {

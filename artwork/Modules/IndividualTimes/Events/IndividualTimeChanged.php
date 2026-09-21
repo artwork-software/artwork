@@ -2,7 +2,7 @@
 
 namespace Artwork\Modules\IndividualTimes\Events;
 
-use Illuminate\Broadcasting\Channel;
+use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcastNow;
 use Illuminate\Foundation\Events\Dispatchable;
@@ -30,12 +30,12 @@ class IndividualTimeChanged implements ShouldBroadcastNow
     }
 
     /**
-     * @return array<int, Channel>
+     * @return array<int, PrivateChannel>
      */
     public function broadcastOn(): array
     {
         return [
-            new Channel('shift-plan.individual-times'),
+            new PrivateChannel('shift-plan.individual-times'),
         ];
     }
 

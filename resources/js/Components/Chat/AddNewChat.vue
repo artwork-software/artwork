@@ -117,23 +117,13 @@ const deleteUserFromForm = (index) => {
 /** API unverändert */
 const createChat = async () => {
     try {
-        const response = await fetch('/api/chat/store', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-            },
-            body: JSON.stringify({
-                name: chatName.value,
-                users: chatUsers.value.map(user => user.id),
-            }),
+        // axios sendet X-XSRF-TOKEN aus dem Cookie; der Meta-Token im DOM veraltet nach Re-Login (419).
+        const { data } = await window.axios.post(route('chat.store'), {
+            name: chatName.value,
+            users: chatUsers.value.map(user => user.id),
         })
 
-        const contentType = response.headers.get('Content-Type')
-        const isJson = contentType && contentType.includes('application/json')
-        const data = isJson ? await response.json() : null
-
-        if (!response.ok || !data?.chat) return
+        if (!data?.chat) return
         emit('close', data.chat.id)
     } catch (err) {
         console.error('Fehler bei der Anfrage:', err)

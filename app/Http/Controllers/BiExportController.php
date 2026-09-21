@@ -67,14 +67,14 @@ class BiExportController extends Controller
         return response()->json(['token' => $token]);
     }
 
-    public function status(string $cacheToken): JsonResponse
+    public function status(Request $request, string $cacheToken): JsonResponse
     {
-        return response()->json($this->biExportService->getStatus($cacheToken));
+        return response()->json($this->biExportService->getStatus($cacheToken, $request->user()?->id));
     }
 
-    public function download(string $cacheToken): BinaryFileResponse|RedirectResponse
+    public function download(Request $request, string $cacheToken): BinaryFileResponse|RedirectResponse
     {
-        return $this->biExportService->downloadStored($cacheToken);
+        return $this->biExportService->downloadStored($cacheToken, $request->user()?->id);
     }
 
     private function authorizeBiExport(Request $request): void

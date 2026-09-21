@@ -8,4 +8,9 @@ class NullSageClient implements SageClient
     {
         return [];
     }
+
+    public function testConnection(): bool
+    {
+        return false;
+    }
 }

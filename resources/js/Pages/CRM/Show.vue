@@ -609,7 +609,10 @@ const createRoomType = () => {
 
 const updateRoomTypeName = (rt) => {
     if (!rt.name.trim()) return
-    router.patch(route('crm.contacts.room-types.update-name', rt.id), {
+    router.patch(route('crm.contacts.room-types.update-name', {
+        crmContact: props.contact.id,
+        roomType: rt.id,
+    }), {
         name: rt.name.trim(),
     }, {
         preserveState: true,

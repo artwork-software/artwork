@@ -31,9 +31,11 @@ class ProjectFileController extends Controller
     use HandlesFileUpload;
 
     /**
+     * Typen, die per ?inline=1 im Browser gerendert werden dürfen; alles andere geht als Attachment raus.
+     *
      * @var list<string>
      */
-    private const INLINE_PROJECT_FILE_MIME_TYPES = [
+    public const INLINE_PROJECT_FILE_MIME_TYPES = [
         'application/pdf',
         'image/avif',
         'image/bmp',
@@ -186,8 +188,9 @@ class ProjectFileController extends Controller
         }
 
         if ($request->file('file')) {
-            Storage::delete('project_files/' . $projectFile->basename);
             $file = $request->file('file');
+            $this->handleFile(ArtworkFileTypes::PROJECT, $file);
+            Storage::delete('project_files/' . $projectFile->basename);
             $original_name = $file->getClientOriginalName();
             $basename = StoredFileName::forUpload($file);
 

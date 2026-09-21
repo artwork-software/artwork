@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use Artwork\Core\FileHandling\Upload\UploadSettingDefaults;
 use Carbon\Carbon;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
@@ -13,6 +14,8 @@ class DatabaseSettingsSeeder extends Seeder
      */
     public function run(): void
     {
+        // Legt nur fehlende Einstellungen an; bestehende Upload-Allowlists setzt die Migration
+        // reset_upload_allowlists_to_defaults einmalig auf die Standardwerte.
         $settings = [
             [
                 'group' => 'general',
@@ -32,55 +35,16 @@ class DatabaseSettingsSeeder extends Seeder
                 'locked' => 0,
                 'payload' => json_encode(''),
             ],
-            [
-                'group' => 'general',
-                'name' => 'allowed_project_file_mimetypes',
-                'locked' => 0,
-                'payload' => json_encode(['*']),
-            ],
-            [
-                'group' => 'general',
-                'name' => 'allowed_room_file_mimetypes',
-                'locked' => 0,
-                'payload' => json_encode(['*']),
-            ],
-            [
-                'group' => 'general',
-                'name' => 'allowed_branding_file_mimetypes',
-                'locked' => 0,
-                'payload' => json_encode(['*']),
-            ],
-            [
-                'group' => 'general',
-                'name' => 'allowed_contract_file_mimetypes',
-                'locked' => 0,
-                'payload' => json_encode(['*']),
-            ],
-            [
-                'group' => 'general',
-                'name' => 'allowed_project_file_size',
-                'locked' => 0,
-                'payload' => json_encode(150),
-            ],
-            [
-                'group' => 'general',
-                'name' => 'allowed_room_file_size',
-                'locked' => 0,
-                'payload' => json_encode(150),
-            ],
-            [
-                'group' => 'general',
-                'name' => 'allowed_branding_file_size',
-                'locked' => 0,
-                'payload' => json_encode(150),
-            ],
-            [
-                'group' => 'general',
-                'name' => 'allowed_contract_file_size',
-                'locked' => 0,
-                'payload' => json_encode(150),
-            ],
         ];
+
+        foreach (UploadSettingDefaults::all() as $name => $value) {
+            $settings[] = [
+                'group' => UploadSettingDefaults::SETTINGS_GROUP,
+                'name' => $name,
+                'locked' => 0,
+                'payload' => json_encode($value),
+            ];
+        }
 
         foreach ($settings as $setting) {
             // Check if the setting already exists

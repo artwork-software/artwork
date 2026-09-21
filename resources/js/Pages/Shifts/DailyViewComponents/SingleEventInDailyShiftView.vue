@@ -134,7 +134,7 @@
                         </template>
                     </p>
                 </div>
-                <p class="text-xs" v-html="timeline.description"></p>
+                <p class="text-xs whitespace-pre-line">{{ timeline.description }}</p>
             </div>
         </div>
 

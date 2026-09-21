@@ -1,6 +1,8 @@
 import { getDaysInRange } from '@/Composeables/calendarDateUtils.js'
 
-export function useShiftCalendarListener(newShiftPlanData, { onWorkersNeedReload, onWorkerNeedReload, onEventsChanged, onShiftDataChanged, onLookupsReceived } = {}) {
+// subscribeShiftChannels: false → nur Termin-Kanäle. Die Schicht-Kanäle sind in routes/channels.php auf
+// Dienstplan-Sichtrecht beschränkt; ein Abonnement ohne Recht erzeugt nur 403-Konsolenfehler.
+export function useShiftCalendarListener(newShiftPlanData, { onWorkersNeedReload, onWorkerNeedReload, onEventsChanged, onShiftDataChanged, onLookupsReceived, subscribeShiftChannels = true } = {}) {
 
     function resolveWorkerType(entityType) {
         const map = { 0: 'user', 1: 'freelancer', 2: 'serviceProvider', 'service_provider': 'serviceProvider' }
@@ -340,6 +342,7 @@ export function useShiftCalendarListener(newShiftPlanData, { onWorkersNeedReload
 
         // Set up listeners for each room
         for (const room of newShiftPlanData.value) {
+            if (subscribeShiftChannels) {
             // Shift plan room events
             Echo.private('shift-plan.room.' + room.roomId)
                 .listen('.shift-created', (data) => {
@@ -373,6 +376,7 @@ export function useShiftCalendarListener(newShiftPlanData, { onWorkersNeedReload
                 .listen('.shift-destroyed.in.event', (data) => {
                     removeShiftFromRoomAndEvents(data);
                 });
+            }
 
             // Event room
             Echo.private('event.room.' + room.roomId)
@@ -416,7 +420,7 @@ export function useShiftCalendarListener(newShiftPlanData, { onWorkersNeedReload
         }
 
         // Multi-shifts channel
-        Echo.channel('shift-plan.multi-shifts')
+        if (subscribeShiftChannels) Echo.private('shift-plan.multi-shifts')
             .listen('.multi-shifts-created', (data) => {
                 // Merge project/craft/group lookups first so newly assigned projects
                 // render immediately instead of only after a full reload.
@@ -433,7 +437,7 @@ export function useShiftCalendarListener(newShiftPlanData, { onWorkersNeedReload
             });
 
         // Individual times channel
-        Echo.channel('shift-plan.individual-times')
+        Echo.private('shift-plan.individual-times')
             .listen('.individual-time.changed', (data) => {
                 if (onWorkerNeedReload) {
                     onWorkerNeedReload(data.workerId, resolveWorkerType(data.workerType));
@@ -444,7 +448,7 @@ export function useShiftCalendarListener(newShiftPlanData, { onWorkersNeedReload
 
         // Verfügbarkeit/Abwesenheit einer Person geändert (Verfügbarkeitskalender, Tagesstatus,
         // Multi-Edit) → Personenzeile nachladen, damit Beschriftung und Konflikt-Ring aktuell sind.
-        Echo.channel('shift-plan.worker-availability')
+        Echo.private('shift-plan.worker-availability')
             .listen('.worker-availability.changed', (data) => {
                 if (onWorkerNeedReload) {
                     onWorkerNeedReload(data.workerId, resolveWorkerType(data.workerType));

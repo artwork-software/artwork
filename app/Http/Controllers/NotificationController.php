@@ -268,8 +268,8 @@ class NotificationController extends Controller
         DatabaseNotificationService $databaseNotificationService,
         CarbonService $carbonService
     ): void {
-        /** @var DatabaseNotification $wantedNotification */
-        $wantedNotification = $databaseNotificationService->find($request->string('notificationId'));
+        /** @var DatabaseNotification|null $wantedNotification */
+        $wantedNotification = $request->user()?->notifications()->find($request->string('notificationId'));
 
         if (is_null($wantedNotification)) {
             return;

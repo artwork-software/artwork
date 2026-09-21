@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use Artwork\Modules\Project\Enum\ProjectTabComponentEnum;
+use Artwork\Modules\Project\Http\Requests\StoreComponentRequest;
+use Artwork\Modules\Project\Http\Requests\UpdateComponentRequest;
 use Artwork\Modules\Project\Models\Component;
 use Artwork\Modules\Project\Services\ComponentUsageService;
 use Artwork\Modules\SageApiSettings\Services\SageApiSettingsService;
@@ -71,7 +73,7 @@ class ComponentController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request): void
+    public function store(StoreComponentRequest $request): void
     {
         /** @var Component $component */
         $component = Component::create([
@@ -103,7 +105,7 @@ class ComponentController extends Controller
         Cache::forget('print_layout_all_components');
     }
 
-    public function update(Request $request, Component $component): void
+    public function update(UpdateComponentRequest $request, Component $component): void
     {
         $component->users()->detach();
         foreach ($request->get('users', []) as $user) {

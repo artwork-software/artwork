@@ -242,7 +242,7 @@ class DemoProjectSeeder extends Seeder
             [
                 'Technische Anforderungen',
                 'TextArea',
-                ['text' => nl2br(DemoProjectPools::TECH_REQUIREMENTS[$archetypeKey])],
+                ['text' => DemoProjectPools::TECH_REQUIREMENTS[$archetypeKey]],
             ],
             ['Barrierefrei', 'Checkbox', ['checked' => $rng->chance(0.5)]],
             ['Pressematerial', 'Link', ['text' => 'https://presse.testhaus.artwork.software/' . $project->id]],

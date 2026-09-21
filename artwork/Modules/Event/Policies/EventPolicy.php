@@ -37,6 +37,22 @@ class EventPolicy
         return false;
     }
 
+    /**
+     * Wer den Kalender sehen darf, darf jeden Termin lesen; ein Projekt-Sichtrecht wird nicht verlangt,
+     * auch bei privatem Projekt. Nur Planungstermine (is_planning) liegen hinter dem Planungskalender-Recht.
+     */
+    public function view(User $user, Event $event): bool
+    {
+        if (!$event->is_planning) {
+            return true;
+        }
+
+        return $user->canAny([
+            PermissionEnum::CAN_SEE_PLANNING_CALENDAR->value,
+            PermissionEnum::CAN_EDIT_PLANNING_CALENDAR->value,
+        ]);
+    }
+
     public function update(User $user, Event $event): bool
     {
         // "Projektleitung sein" (management projects) gab hier bisher systemweites Bearbeiten aller Termine —
@@ -82,6 +98,15 @@ class EventPolicy
                 ->where('user_id', $user->id)
                 ->exists() ||
             ($event->room?->user_id === $user->id && !$event->room->admins()->exists());
+    }
+
+    /**
+     * Schreibrecht am Termin ODER Dienstplanung: die Zeitleiste wird im Schichten-Tab auch von
+     * Planer:innen ohne Projekt-Schreibrecht gepflegt.
+     */
+    public function editTimeline(User $user, Event $event): bool
+    {
+        return $user->can(PermissionEnum::SHIFT_PLANNER->value) || $this->update($user, $event);
     }
 
     public function delete(User $user, Event $event): bool

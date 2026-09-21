@@ -2017,12 +2017,17 @@ class ShiftController extends Controller
 
     public function importTimelinePreset(Event $event, ShiftPresetTimeline $shiftPresetTimeline): void
     {
+        $this->authorize('editTimeline', $event);
+
         $this->eventTimelineService->importTimelinePreset($event, $shiftPresetTimeline);
     }
 
     public function storeTimelinePresetFormEvent(Event $event, Request $request): void
     {
-        $this->eventTimelineService->storeTimelinePresetFromEvent($event, $request->get('name'));
+        $this->authorize('view', $event);
+        $validated = $request->validate(['name' => ['required', 'string', 'max:255']]);
+
+        $this->eventTimelineService->storeTimelinePresetFromEvent($event, $validated['name']);
     }
 
     public function storeShiftWithoutEvent(

@@ -9,9 +9,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
 
 /**
- * Einmalige Übernahme der Legacy-Tabelle service_provider_contacts ins Contacts-Modul.
- * Liest die Alt-Tabelle direkt per Query-Builder — das Legacy-Model ServiceProviderContacts
- * wurde im Sicherheits-Audit 21.09.2026 entfernt.
+ * Einmalige Übernahme der Legacy-Tabelle service_provider_contacts ins Contacts-Modul (per Query-Builder, es gibt kein Model).
  */
 class UpdateServiceProviderContacts extends Command
 {

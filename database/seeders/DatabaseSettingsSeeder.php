@@ -13,9 +13,7 @@ class DatabaseSettingsSeeder extends Seeder
      */
     public function run(): void
     {
-        // Dateityp-Defaults gelten nur für NEUE Installationen (unten: insert nur, wenn die
-        // Einstellung fehlt). '*' bleibt wählbar, html/svg/xml/php werden unabhängig davon
-        // in HandlesFileUpload hart abgelehnt (Sicherheits-Audit 21.09.2026, F).
+        // Dateityp-Defaults gelten nur für neue Installationen (insert nur, wenn die Einstellung fehlt).
         $settings = [
             [
                 'group' => 'general',

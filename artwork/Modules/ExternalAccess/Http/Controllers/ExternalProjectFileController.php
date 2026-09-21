@@ -62,8 +62,7 @@ class ExternalProjectFileController extends Controller
         $projectFile = $this->service->findDownloadable($project, $tab, $file);
         $path = 'project_files/' . $projectFile->basename;
 
-        // Gleiche Inline-Allowlist wie intern (nur Bilder/PDF) - eine HTML-Projektdatei
-        // darf in der externen Sitzung nie inline gerendert werden.
+        // Inline nur für Bilder/PDF: HTML darf in der externen Sitzung nie inline gerendert werden.
         if ($request->boolean('inline') && $this->canDisplayInline($path)) {
             return Storage::response($path, $projectFile->name);
         }

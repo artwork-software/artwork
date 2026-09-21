@@ -985,8 +985,7 @@ function isPdf(file?: FileItem) {
 }
 function isPreviewable(file?: FileItem) { return !!file && (isImage(file) || isPdf(file)) }
 
-// Anhänge liegen auf der privaten Disk: Auslieferung nur über die autorisierte
-// Download-Route (inline=1 für die Bild-/PDF-Vorschau, sonst als Download).
+// Anhänge liegen auf der privaten Disk; inline=1 für die Bild-/PDF-Vorschau.
 function fileUrl(file: FileItem, inline = false) {
     return route('issue-of-material.file.download', {
         internalIssue: file.internal_issue_id,

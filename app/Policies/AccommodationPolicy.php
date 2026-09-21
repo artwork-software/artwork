@@ -8,9 +8,7 @@ use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Artwork\Modules\User\Models\User;
 
 /**
- * Unterkünfte sind Stammdaten des Aufenthalts-Moduls und zugleich CRM-Kontakte: Lesen für alle
- * mit Projektzugriff oder CRM-Leserecht, Verwalten für alle mit Projekt-Schreibrecht oder
- * CRM-Verwaltungsrecht. Admins passieren via Gate::before.
+ * Lesen mit Projektzugriff oder CRM-Leserecht, Verwalten mit Projekt-Schreibrecht oder CRM-Verwaltungsrecht.
  */
 class AccommodationPolicy
 {

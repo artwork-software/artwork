@@ -80,7 +80,7 @@ class BiBudgetExportService
     {
         $token = Str::uuid()->toString();
         Cache::put('bi_budget_export_' . $token, $config, now()->addMinutes(30));
-        // user_id bindet Status + Download an die anfragende Person (Sicherheits-Audit 21.09.2026, F)
+        // user_id bindet Status und Download an die anfragende Person.
         Cache::put(
             'bi_budget_export_status_' . $token,
             ['status' => 'pending', 'user_id' => $config['user_id'] ?? null],

@@ -15,8 +15,7 @@ use Tests\Concerns\ActsAsRole;
 use Tighten\Ziggy\Ziggy;
 
 /**
- * Regressionstests zu den Frontend-Datenabfluss-Befunden des Sicherheits-Audits vom 21.09.2026 (G):
- * Gehaltsfelder in auth.user, Ziggy-Routenkarte für Externe, Chat-Keypair, externe Font-Abrufe.
+ * Kein Datenabfluss ins Frontend: Gehaltsfelder in auth.user, Ziggy-Routenkarte für Externe, Chat-Keypair, externe Font-Abrufe.
  */
 final class SecurityAuditFrontendDataRegressionTest extends FeatureTestCase
 {
@@ -68,8 +67,7 @@ final class SecurityAuditFrontendDataRegressionTest extends FeatureTestCase
             $this->assertArrayNotHasKey($field, $array, $field . ' darf nicht in toArray() erscheinen');
         }
 
-        // Legitimer Pfad (Arbeitsvertrag-Tab): UserShowResource greift direkt auf das Attribut zu,
-        // gated über die Personalverwaltungs-Berechtigung.
+        // Legitimer Pfad: UserShowResource greift direkt auf das Attribut zu.
         $manager = $this->actingAsUserWith(PermissionEnum::MA_MANAGER->value);
         $request = request();
         $request->setUserResolver(fn () => $manager);

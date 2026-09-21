@@ -1,9 +1,7 @@
 import { getDaysInRange } from '@/Composeables/calendarDateUtils.js'
 
-// subscribeShiftChannels: false → nur Termin-Kanäle abonnieren. Die Schicht-Kanäle
-// (shift-plan.room.*, destroy.events.room.*, shift-plan.multi-shifts) sind in routes/channels.php
-// auf "can view shift plan"/"can plan shifts" beschränkt; ein Abonnement ohne Recht erzeugt nur
-// 403-Konsolenfehler (Kalender ohne Dienstplan-Sichtrecht bekommt ohnehin keinen Schicht-Payload).
+// subscribeShiftChannels: false → nur Termin-Kanäle. Die Schicht-Kanäle sind in routes/channels.php auf
+// Dienstplan-Sichtrecht beschränkt; ein Abonnement ohne Recht erzeugt nur 403-Konsolenfehler.
 export function useShiftCalendarListener(newShiftPlanData, { onWorkersNeedReload, onWorkerNeedReload, onEventsChanged, onShiftDataChanged, onLookupsReceived, subscribeShiftChannels = true } = {}) {
 
     function resolveWorkerType(entityType) {

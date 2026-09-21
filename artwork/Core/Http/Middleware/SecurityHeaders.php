@@ -8,9 +8,8 @@ use Illuminate\Support\Facades\Vite;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
- * Grundschutz-Header fuer alle Browser-Antworten (Gruppen web, external, external.guest —
- * nicht api). Erzeugt pro Request einen CSP-Nonce, den @vite, @routes und die Inline-Scripts
- * der Blade-Layouts tragen. Sicherheits-Audit 21.09.2026, Befunde D/G.
+ * Grundschutz-Header fuer alle Browser-Antworten (Gruppen web, external, external.guest; nicht api).
+ * Erzeugt pro Request einen CSP-Nonce, den @vite, @routes und die Inline-Scripts der Blade-Layouts tragen.
  */
 class SecurityHeaders
 {
@@ -64,9 +63,8 @@ class SecurityHeaders
     }
 
     /**
-     * Im local-Environment laeuft Vite als Dev-Server auf eigener Origin (public/hot, z. B.
-     * https://artwork.ddev.site:5173). Scripts, Styles, Assets und der HMR-WebSocket kommen
-     * von dort und muessen in der Policy erlaubt sein.
+     * Im local-Environment laeuft Vite auf eigener Origin (public/hot); Scripts, Styles, Assets und
+     * HMR-WebSocket muessen in der Policy erlaubt sein.
      */
     private function viteDevOrigin(): ?string
     {

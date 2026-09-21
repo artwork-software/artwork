@@ -20,14 +20,13 @@ use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
 /**
- * Sicherheits-Audit 21.09.2026 – Restpunkte (NIEDRIG / "bewusst offen" der ersten Runde):
  * Projektsuche ohne Gruppen, Termin-Detailrouten, Individualzeit-Serie anzeigen, CRM-Kontakt-Lookups,
- * entfernte tote Routen/Klassen, abgelaufene Einladung, Präsenzstatus.
+ * entfernte Routen/Klassen, abgelaufene Einladung, Präsenzstatus.
  */
 final class SecurityAuditAuthorizationRestRegressionTest extends TestCase
 {
     // ------------------------------------------------------------------
-    // 1. projects.search.single: viewAny + schlankes DTO
+    // projects.search.single: viewAny + schlankes DTO
     // ------------------------------------------------------------------
 
     #[Test]
@@ -51,9 +50,7 @@ final class SecurityAuditAuthorizationRestRegressionTest extends TestCase
     }
 
     // ------------------------------------------------------------------
-    // 2. Termin-Detailrouten: EventPolicy::view
-    //    Regel des Auftraggebers (21.09.2026): Kalender sichtbar = alle Termine sichtbar,
-    //    auch bei fremdem/privatem Projekt; nur Planungstermine brauchen das Planungskalender-Recht.
+    // Termin-Detailrouten: EventPolicy::view
     // ------------------------------------------------------------------
 
     #[Test]
@@ -62,7 +59,6 @@ final class SecurityAuditAuthorizationRestRegressionTest extends TestCase
         $event = Event::factory()->create();
         Timeline::factory()->create(['event_id' => $event->id]);
 
-        // Kein Projekt-Sichtrecht, kein Teammitglied — Termin trotzdem lesbar
         $this->actingAsUserWith([]);
         $this->getJson(route('events.description', $event))->assertOk();
         $this->getJson(route('events.timelines', $event))->assertOk();
@@ -112,7 +108,7 @@ final class SecurityAuditAuthorizationRestRegressionTest extends TestCase
     }
 
     // ------------------------------------------------------------------
-    // 3. Individualzeit-Serie anzeigen
+    // Individualzeit-Serie anzeigen
     // ------------------------------------------------------------------
 
     #[Test]
@@ -134,7 +130,7 @@ final class SecurityAuditAuthorizationRestRegressionTest extends TestCase
     }
 
     // ------------------------------------------------------------------
-    // 4. CRM-Kontakt-Lookups: Gate crm.contacts.lookup
+    // CRM-Kontakt-Lookups: Gate crm.contacts.lookup
     // ------------------------------------------------------------------
 
     #[Test]
@@ -209,19 +205,16 @@ final class SecurityAuditAuthorizationRestRegressionTest extends TestCase
         $project->users()->attach($member->id, ['can_write' => false]);
 
         $this->actingAsUserWith([], $member);
-        // Tooltip: Kontakt steht im Team eines sichtbaren Projekts → erlaubt …
         $this->getJson(route('crm.contacts.tooltip', $contact))->assertOk();
-        // … Suche/Daten bleiben ohne Lookup-Recht gesperrt
         $this->getJson(route('crm.contacts.search', ['search' => 'Lookup']))->assertForbidden();
         $this->getJson(route('crm.contacts.data', $contact))->assertForbidden();
 
-        // Kontakt außerhalb sichtbarer Teams → Tooltip gesperrt
         $foreignContact = $this->createCrmContact('Fremder Kontakt');
         $this->getJson(route('crm.contacts.tooltip', $foreignContact))->assertForbidden();
     }
 
     // ------------------------------------------------------------------
-    // 5. Tote Routen / Klassen entfernt
+    // Entfernte Routen / Klassen
     // ------------------------------------------------------------------
 
     #[Test]
@@ -239,15 +232,14 @@ final class SecurityAuditAuthorizationRestRegressionTest extends TestCase
         }
 
         $this->assertTrue(Route::has('service-provider.contact.store'));
-        // Dateiprüfung statt class_exists: die optimierte Composer-Classmap kennt die Klassen
-        // bis zum nächsten dump-autoload noch und würde ein include auf die fehlende Datei versuchen.
+        // Dateiprüfung statt class_exists: die optimierte Composer-Classmap kennt die Klassen bis zum nächsten dump-autoload.
         $this->assertFileDoesNotExist(base_path('artwork/Modules/Shift/Events/ShiftUpdated.php'));
         $this->assertFileDoesNotExist(base_path('artwork/Modules/Shift/Events/PushesShiftModification.php'));
         $this->assertFileDoesNotExist(base_path('artwork/Modules/ServiceProvider/Models/ServiceProviderContacts.php'));
     }
 
     // ------------------------------------------------------------------
-    // 6. Abgelaufene Einladung: Hinweisseite statt 401
+    // Abgelaufene Einladung: Hinweisseite statt 401
     // ------------------------------------------------------------------
 
     #[Test]
@@ -272,7 +264,7 @@ final class SecurityAuditAuthorizationRestRegressionTest extends TestCase
                     ->where('email', 'expired@example.test')
             );
 
-        // Falscher Token bleibt 401 – auch bei abgelaufener Einladung (keine Enumeration über die Hinweisseite)
+        // Falscher Token bleibt 401 (keine Enumeration über die Hinweisseite)
         $this->get('/users/invitations/accept?' . http_build_query([
             'email' => 'expired@example.test',
             'token' => 'wrong-token',
@@ -280,7 +272,7 @@ final class SecurityAuditAuthorizationRestRegressionTest extends TestCase
     }
 
     // ------------------------------------------------------------------
-    // 7. Präsenzstatus: eigener Status, gemeinsamer Chat oder Dienstplan-Sichtrecht
+    // Präsenzstatus: eigener Status, gemeinsamer Chat oder Dienstplan-Sichtrecht
     // ------------------------------------------------------------------
 
     #[Test]

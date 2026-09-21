@@ -28,17 +28,7 @@ final class StoredFileName
     private const MAX_EXTENSION_LENGTH = 16;
 
     /**
-     * Uploads whose client extension OR sniffed content is on the UploadDenyList
-     * are rejected here (DeniedUploadFileException = 422 in a request context)
-     * instead of being renamed - last line of defence for every upload path
-     * that reaches storeAs() without handleFile() / SafeUploadFile in front.
-     * The list itself lives in UploadDenyList and is shared with HandlesFileUpload.
-     */
-
-    /**
-     * Mime types the sniffer reports when it cannot tell what a file is. Their
-     * guessed extension carries no information, so the client extension is
-     * used instead (after the deny list).
+     * Mime types the sniffer reports when it cannot tell what a file is; the client extension is used instead.
      *
      * @var list<string>
      */
@@ -92,12 +82,8 @@ final class StoredFileName
     }
 
     /**
-     * The extension is derived from the sniffed content, never from the client
-     * name alone: a PNG uploaded as "x.jpg" is stored as ".png". The client
-     * extension only wins when the content is unrecognisable (or generic
-     * binary) - or when it is one of the extensions registered for the
-     * detected mime type ("jpg" stays "jpg" instead of becoming "jpeg").
-     * Denied names/contents never get here (see forUpload()).
+     * The extension follows the sniffed content ("x.jpg" containing PNG is stored as ".png"); the client
+     * extension only wins when the content is unrecognisable or it is registered for the detected mime type.
      */
     private static function resolveUploadExtension(UploadedFile $file): string
     {

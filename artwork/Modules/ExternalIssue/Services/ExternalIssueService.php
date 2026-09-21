@@ -176,7 +176,6 @@ class ExternalIssueService
     protected function handleFiles(ExternalIssue $issue, array $files): void
     {
         foreach ($files as $file) {
-            // Private Disk: Auslieferung nur über die autorisierte Download-Route
             $path = $file->storeAs(
                 'external_material_issues',
                 StoredFileName::forUpload($file),
@@ -215,11 +214,10 @@ class ExternalIssueService
     }
 
     /**
-     * Neue Dateien liegen auf "local"; "public" nur noch für Altbestand vor dem Move-Command.
+     * "public" nur für Altbestand vor dem Move-Command.
      */
     private function deleteStoredFile(?string $path): void
     {
-        // Altbestand kann "/storage/…"-Präfixe tragen
         $path = StoredFilePath::normalise($path);
 
         if ($path === null) {

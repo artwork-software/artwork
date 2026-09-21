@@ -41,9 +41,7 @@ Route::middleware('auth:sanctum')->post('/chat/messages/read', [
     'markMultipleAsRead',
 ])->name('chat-system.mark-multiple-as-read');
 
-// Präsenzstatus: Frontend nutzt den Endpunkt nur im Chat (PopupChat → useUserStatus) für den
-// Chat-Partner. Sicherheits-Audit 21.09.2026 (C, NIEDRIG): nur eigener Status, gemeinsamer Chat
-// oder Dienstplan-Sichtrecht (Anwesenheit ist dort ohnehin sichtbar).
+// Präsenzstatus (Chat): nur eigener Status, gemeinsamer Chat oder Dienstplan-Sichtrecht.
 Route::middleware('auth:sanctum')->get('/user-status/{id}', function (
     int $id,
     Request $request,

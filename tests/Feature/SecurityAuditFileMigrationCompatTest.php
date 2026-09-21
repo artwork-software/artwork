@@ -18,12 +18,8 @@ use Illuminate\Support\Facades\Storage;
 use PHPUnit\Framework\Attributes\Test;
 
 /**
- * Sicherheits-Audit 21.09.2026, Abschnitt F - Kompatibilität für bestehende Installationen.
- *
- * Vor dem Audit lagen CRM-Eigenschaftsdateien, Materialausgabe-Anhänge und Ausgabe-PDFs auf der
- * public-Disk (/storage/...). Nach dem Deploy sind die alten /storage-Links tot - die Dateien selbst
- * müssen aber in JEDEM Zustand über die neuen Download-Routen erreichbar bleiben:
- *   (a) vor dem Lauf von artwork:security:move-public-files (Datei noch auf public, DB-Pfad alt),
+ * Dateien bestehender Installationen bleiben in jedem Zustand über die Download-Routen erreichbar:
+ *   (a) vor dem Lauf von artwork:security:move-public-files (Datei auf public, DB-Pfad alt),
  *   (b) nach dem Lauf (Datei auf local, DB-Pfad normalisiert),
  *   (c) DB-Pfad mit "/storage/"-Präfix oder als absolute URL gespeichert.
  */
@@ -38,7 +34,7 @@ final class SecurityAuditFileMigrationCompatTest extends FeatureTestCase
     {
         parent::setUp();
 
-        // FeatureTestCase fakt "local"; "public" steht hier für den Altbestand vor dem Deploy.
+        // FeatureTestCase fakt bereits "local".
         Storage::fake('public');
     }
 
@@ -56,7 +52,7 @@ final class SecurityAuditFileMigrationCompatTest extends FeatureTestCase
     }
 
     /**
-     * Laravels altes store('crm-property-files', 'public') erzeugte 40-stellige alphanumerische Namen.
+     * store('crm-property-files', 'public') erzeugte 40-stellige alphanumerische Namen.
      */
     private function legacyCrmPath(string $extension = 'pdf'): string
     {
@@ -346,7 +342,6 @@ final class SecurityAuditFileMigrationCompatTest extends FeatureTestCase
         Storage::disk('local')->assertExists($path);
         $this->assertDownloadDelivers($this->internalDownloadUrl($issue, $file), $content);
 
-        // Löschen über die Route räumt auch nach Normalisierung sauber weg
         $this->delete(route('issue-of-material.file.delete', $file))->assertRedirect();
         Storage::disk('local')->assertMissing($path);
         $this->assertNull(InternalIssueFile::query()->find($file->id));
@@ -429,7 +424,7 @@ final class SecurityAuditFileMigrationCompatTest extends FeatureTestCase
         $this->assertSame($missingPath, $missing->fresh()->file_path);
         Storage::disk('local')->assertExists($present->fresh()->file_path);
 
-        // Zweiter Lauf: nichts mehr zu tun, weiterhin kein Fehler
+        // Zweiter Lauf
         $this->artisan(self::MOVE_COMMAND)
             ->expectsOutputToContain('Moved: 0, already private: 1, paths normalised: 0, missing on both disks: 1')
             ->assertSuccessful();
@@ -457,12 +452,11 @@ final class SecurityAuditFileMigrationCompatTest extends FeatureTestCase
             ->expectsOutputToContain('failed: 1')
             ->assertSuccessful();
 
-        // Der Rest wurde verschoben ...
         Storage::disk('local')->assertExists($okPath);
         Storage::disk('public')->assertMissing($okPath);
         $this->assertDownloadDelivers($this->internalDownloadUrl($issue, $ok), $okContent);
 
-        // ... die problematische Datei liegt weiter auf public und wird von dort ausgeliefert
+        // Die blockierte Datei liegt weiter auf public und wird von dort ausgeliefert
         Storage::disk('public')->assertExists($blockedPath);
         $this->assertDownloadDelivers($this->internalDownloadUrl($issue, $blocked), $blockedContent);
     }

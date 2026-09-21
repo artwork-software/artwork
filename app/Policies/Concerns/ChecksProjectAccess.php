@@ -8,11 +8,8 @@ use Artwork\Modules\Project\Policies\ProjectPolicy;
 use Artwork\Modules\User\Models\User;
 
 /**
- * Stammdaten des Aufenthalts-Moduls (Künstler*innen, Unterkünfte) hängen an keinem einzelnen
- * Projekt. Zugriff wird deshalb analog zum Aufenthalts-Tab hergeleitet: Lesen darf, wer
- * irgendein Projekt öffnen darf; Verwalten darf, wer in irgendeinem Projekt schreibberechtigt
- * ist (Spiegel von ProjectPolicy::view / ::update, ohne den Termin-Ersteller-Sonderfall).
- * Admins passieren via Gate::before.
+ * Künstler*innen und Unterkünfte hängen an keinem Projekt: Lesen darf, wer irgendein Projekt öffnen
+ * darf, Verwalten, wer in irgendeinem Projekt schreibberechtigt ist (Spiegel von ProjectPolicy).
  */
 trait ChecksProjectAccess
 {

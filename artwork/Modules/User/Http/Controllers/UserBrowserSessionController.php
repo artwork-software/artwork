@@ -14,14 +14,13 @@ use Illuminate\Validation\ValidationException;
 use Laravel\Jetstream\Agent;
 
 /**
- * Ersatz für Jetstreams „andere Browser-Sitzungen abmelden“: Jetstream läuft in dieser
- * Installation mit dem Passport-Guard „api“ und ist für Web-Sessions tot. Diese Routen
- * hängen an der normalen web/auth-Gruppe und betreffen ausschließlich den eingeloggten Nutzer.
+ * Ersatz für Jetstreams „andere Browser-Sitzungen abmelden“: Jetstream läuft hier mit dem Passport-Guard
+ * „api“ und ist für Web-Sessions tot. Betrifft ausschließlich den eingeloggten Nutzer.
  */
 class UserBrowserSessionController extends Controller
 {
     /**
-     * Aktive Sitzungen des eingeloggten Nutzers (nur mit Session-Driver „database“).
+     * Nur mit Session-Driver „database“.
      */
     public function index(Request $request): JsonResponse
     {
@@ -55,9 +54,6 @@ class UserBrowserSessionController extends Controller
         return response()->json(['sessions' => $sessions, 'supported' => true]);
     }
 
-    /**
-     * Meldet alle anderen Sitzungen des Nutzers ab (Passwort-Bestätigung Pflicht).
-     */
     public function destroy(Request $request, StatefulGuard $guard): RedirectResponse|JsonResponse
     {
         $request->validate(['password' => ['required', 'string']]);

@@ -33,14 +33,8 @@ class AuthUserSeeder extends Seeder
     }
 
     /**
-     * Run the database seeds.
-     *
-     * @return void
-     */
-    /**
-     * Bekanntes Demo-Passwort nur außerhalb von Produktion (Tests/Demo hängen daran). In
-     * Produktion bekommt jedes Seed-Konto ein zufälliges Passwort, das einmalig auf der
-     * Konsole ausgegeben wird (Sicherheits-Audit 21.09.2026, Abschnitt D).
+     * Bekanntes Demo-Passwort nur außerhalb von Produktion; dort bekommt jedes Seed-Konto ein
+     * zufälliges Passwort, das einmalig auf der Konsole ausgegeben wird.
      */
     private function seedPassword(string $email): string
     {
@@ -58,6 +52,11 @@ class AuthUserSeeder extends Seeder
         return $password;
     }
 
+    /**
+     * Run the database seeds.
+     *
+     * @return void
+     */
     public function run(): void
     {
         Storage::put(

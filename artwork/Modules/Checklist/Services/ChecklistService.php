@@ -30,8 +30,6 @@ readonly class ChecklistService
         ChecklistUpdateRequest $request,
         TaskService $taskService
     ): Checklist|Model {
-        // Nur Name/Privat-Flag aus dem Body; project_id/tab_id/user_id nie per Mass-Assignment
-        // (Sicherheits-Audit 21.09.2026, E HOCH: fremde Projekte/Nutzer waren zuweisbar).
         $checklist->fill($request->fillableFields());
 
         if ($request->get('tasks')) {

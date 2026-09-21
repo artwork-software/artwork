@@ -14,21 +14,14 @@ use Illuminate\Support\Facades\Storage;
 use Throwable;
 
 /**
- * Sicherheits-Audit 21.09.2026, Abschnitt F: CRM-Eigenschaftsdateien, Materialausgabe-Anhänge und
- * generierte Ausgabe-PDFs lagen auf der public-Disk (ohne Login unter /storage lesbar). Neue Dateien
- * landen auf "local"; dieses Command holt den Altbestand nach und normalisiert die DB-Pfade
- * (relativer Pfad ohne "/storage/"-, "public/"- oder Host-Präfix, siehe StoredFilePath).
- *
- * Idempotent: Was bereits auf "local" liegt, wird nur noch von "public" entfernt; fehlende Dateien
- * werden gemeldet, nicht angefasst. Ein Fehler an einer einzelnen Datei (Rechte, volle Platte, …)
- * wird gemeldet und übersprungen - der Rest läuft weiter, artwork:update bricht nicht ab.
- * Bis zum Lauf liefert PrivateFileResponse noch von "public" aus, es entsteht also keine Lücke.
+ * Verschiebt CRM-Eigenschaftsdateien, Materialausgabe-Anhänge und Ausgabe-PDFs von der public- auf die
+ * local-Disk und normalisiert die DB-Pfade (StoredFilePath). Idempotent; Fehler an einzelnen Dateien
+ * werden gemeldet und übersprungen. Bis zum Lauf liefert PrivateFileResponse noch von "public" aus.
  */
 class MovePublicFilesToPrivateDiskCommand extends Command
 {
     /**
-     * Erlaubte Verzeichnisse je Tabelle - alles andere (Fremdpfade, Traversal) wird nicht angefasst.
-     * "materialausgabe" ist ein frühes Verzeichnis der internen Materialausgabe.
+     * Erlaubte Verzeichnisse je Tabelle; "materialausgabe" ist ein frühes Verzeichnis der internen Materialausgabe.
      */
     private const CRM_PROPERTY_FILE_DIRECTORIES = ['crm-property-files'];
 
@@ -53,7 +46,7 @@ class MovePublicFilesToPrivateDiskCommand extends Command
 
     public function handle(): int
     {
-        // Zähler zurücksetzen - die Instanz kann im selben Prozess mehrfach laufen (Octane, Tests)
+        // Die Instanz kann im selben Prozess mehrfach laufen (Octane, Tests).
         $this->moved = $this->alreadyPrivate = $this->missing = $this->normalised = $this->failed = 0;
         $dryRun = (bool) $this->option('dry-run');
 

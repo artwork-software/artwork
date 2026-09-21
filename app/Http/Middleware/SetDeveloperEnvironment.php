@@ -12,9 +12,7 @@ class SetDeveloperEnvironment
     /**
      * Handle an incoming request.
      *
-     * Schaltet für Nutzer mit users.is_developer den Debug-Modus ein. In Produktion ist die
-     * Middleware bewusst wirkungslos: ein DB-Flag darf dort keine Stacktraces/Request-Daten
-     * auf Fehlerseiten freischalten (Sicherheits-Audit 21.09.2026, Abschnitt D).
+     * In Produktion wirkungslos: ein DB-Flag darf dort keine Stacktraces freischalten.
      *
      * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
      */

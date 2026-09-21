@@ -30,7 +30,6 @@ class SageApiSettings extends Model
         'verify_ssl',
     ];
 
-    // Das Zugangspasswort verlässt das Backend nie (Inertia-Props, JSON, Logs).
     protected $hidden = [
         'password',
     ];
@@ -41,7 +40,7 @@ class SageApiSettings extends Model
     ];
 
     /**
-     * TLS-Verifikation ist der sichere Default; nur ein explizit gespeichertes false schaltet sie ab.
+     * Nur ein explizit gespeichertes false schaltet die TLS-Verifikation ab.
      */
     public function shouldVerifySsl(): bool
     {

@@ -5,11 +5,6 @@ namespace Artwork\Modules\EventType\Http\Requests;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
-/**
- * Sicherheits-Audit 21.09.2026 (E, MITTEL): verification_mode und specific_verifier_id kamen ungeprüft
- * in die Terminart — ein ungültiger Modus schaltete die Verifizierung still ab
- * (EventVerificationService kennt nur none/specific/any/all).
- */
 class StoreOrUpdateEventTypeRequest extends FormRequest
 {
     public const VERIFICATION_MODES = ['none', 'specific', 'any', 'all'];

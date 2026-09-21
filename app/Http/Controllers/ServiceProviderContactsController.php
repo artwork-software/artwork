@@ -5,9 +5,7 @@ namespace App\Http\Controllers;
 use Artwork\Modules\ServiceProvider\Models\ServiceProvider;
 
 /**
- * Legt einen leeren Kontakt (Contacts-Modul, HasContacts) am Dienstleister an; Bearbeiten/Löschen
- * laufen über ArtworkSingleContact. update/destroy auf dem Legacy-Model ServiceProviderContacts
- * (Tabelle existiert nicht mehr) wurden im Sicherheits-Audit 21.09.2026 entfernt.
+ * Legt einen leeren Kontakt (Contacts-Modul) am Dienstleister an; Bearbeiten/Löschen laufen über ArtworkSingleContact.
  */
 class ServiceProviderContactsController extends Controller
 {

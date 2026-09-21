@@ -42,8 +42,6 @@ class ExternalProjectTabController extends Controller
                 'last_submitted_at' => $scope->last_submitted_at?->toIso8601String(),
             ],
             'components' => $components,
-            // Tool-Setting "Dateiupload für Externe erlauben": Frontend blendet Upload/Löschen aus,
-            // das Backend lehnt unabhängig davon mit 403 ab.
             'externalFileUploadEnabled' => $this->generalSettingsService->isExternalFileUploadEnabled(),
         ]);
     }

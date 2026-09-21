@@ -148,8 +148,7 @@ class ExternalSubmissionReviewController extends Controller
     }
 
     /**
-     * Einsehen folgt derselben Regel wie Entscheiden (ExternalSubmissionApprovalService):
-     * nur die einladende Person oder Admins – die Einreichung enthält CRM-Personendaten.
+     * Nur die einladende Person oder Admins (gleiche Regel wie ExternalSubmissionApprovalService).
      */
     private function authorizeReview(ExternalPendingSubmission $submission): void
     {

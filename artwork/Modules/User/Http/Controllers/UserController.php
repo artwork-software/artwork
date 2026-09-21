@@ -161,8 +161,7 @@ class UserController extends Controller
     {
         $request->validate([Fortify::email() => 'required|email']);
 
-        // Reset-Mails nur für die eigene Adresse oder mit Personalverwaltung (Admins via Gate::before) —
-        // vorher war authorize('update', User::class) ohne Model-Instanz immer wahr.
+        // Reset-Mails nur für die eigene Adresse oder mit Personalverwaltung.
         /** @var User $actor */
         $actor = Auth::user();
         abort_unless(
@@ -1262,7 +1261,7 @@ class UserController extends Controller
             abort(\Illuminate\Http\Response::HTTP_FORBIDDEN);
         }
 
-        // Nur echte Bilddateien (Inhalt geprüft, nicht Endung): sonst landet HTML/SVG unter /storage/profile-photos.
+        // Inhalt geprüft, nicht Endung: sonst landet HTML/SVG unter /storage/profile-photos.
         $request->validate([
             'photo' => ['required', 'image', 'mimes:jpg,jpeg,png', 'max:3072', new SafeUploadFile()],
         ]);
@@ -1351,9 +1350,7 @@ class UserController extends Controller
             abort(\Illuminate\Http\Response::HTTP_FORBIDDEN);
         }
 
-        // Privilege-Escalation-Schutz (Sicherheits-Audit 21.09.2026, B): Nicht-Admins dürfen keine
-        // Admin-Konten bearbeiten und die E-Mail-Adresse (= Login + Ziel des Passwort-Resets) fremder
-        // Nutzer*innen nicht ändern. Die eigene E-Mail bleibt änderbar.
+        // Nicht-Admins dürfen keine Admin-Konten bearbeiten und fremde E-Mail-Adressen (= Login + Reset-Ziel) nicht ändern.
         if (!$isSelf && !$actorIsAdmin) {
             abort_if(
                 $user->hasRole(RoleEnum::ARTWORK_ADMIN->value),
@@ -1892,9 +1889,8 @@ class UserController extends Controller
             'show_events',
         ]);
 
-        // "Schichten anzeigen" im Kalender nur mit Dienstplan-Sichtrecht (CalendarShiftVisibility):
-        // ein ohne Recht gesendeter Wert wird nicht abgelehnt, sondern auf false gezwungen, damit
-        // die übrigen Einstellungen des Dialogs weiterhin gespeichert werden.
+        // work_shifts ohne Dienstplan-Sichtrecht wird auf false gezwungen statt abgelehnt, damit die
+        // übrigen Einstellungen gespeichert werden.
         if (array_key_exists('work_shifts', $settingsFields) && !CalendarShiftVisibility::userMayViewShifts($user)) {
             $settingsFields['work_shifts'] = false;
         }

@@ -3,8 +3,7 @@
 namespace Artwork\Modules\Project\Http\Requests;
 
 /**
- * Beim Ändern bleibt der Typ fest (das Frontend sendet ihn nur beim Anlegen); der Controller
- * übernimmt nur name/data/permission_type.
+ * Beim Ändern bleibt der Typ fest; der Controller übernimmt nur name/data/permission_type.
  */
 class UpdateComponentRequest extends StoreComponentRequest
 {

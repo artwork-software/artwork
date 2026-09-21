@@ -9,7 +9,6 @@
             </p>
         </div>
 
-        <!-- Sitzungsliste -->
         <div v-if="sessions.length > 0" class="space-y-3">
             <div v-for="(session, i) in sessions" :key="i" class="flex items-center gap-3">
                 <component
@@ -30,7 +29,6 @@
             </div>
         </div>
 
-        <!-- Abmelden anderer Sitzungen (Passwort-Bestätigung) -->
         <div v-if="!confirming" class="flex items-center gap-3">
             <BaseUIButton
                 :label="$t('Log Out Other Browser Sessions')"
@@ -86,9 +84,7 @@ import BaseInput from '@/Artwork/Inputs/BaseInput.vue'
 import BaseUIButton from '@/Artwork/Buttons/BaseUIButton.vue'
 import JetInputError from '@/Jetstream/InputError.vue'
 
-// Eigenständige Komponente: lädt die Sitzungen des eingeloggten Nutzers selbst und meldet
-// andere Sitzungen über die Web-Route user.browser-sessions.destroy ab (die Jetstream-Route
-// other-browser-sessions.destroy hängt am api-Guard und ist für Web-Sessions tot).
+// Nutzt die Web-Route user.browser-sessions.destroy; die Jetstream-Route hängt am api-Guard und ist für Web-Sessions tot.
 const sessions = ref([])
 const confirming = ref(false)
 const recentlyLoggedOut = ref(false)

@@ -13,8 +13,7 @@ class UploadBrandingGraphicRequest extends FormRequest
      */
     public function rules(): array
     {
-        // Branding-Grafiken liegen auf der public-Disk: nur Rasterbilder (kein SVG/HTML),
-        // zusätzlich zur Einstellungs-Allowlist (HandlesFileUpload) im Controller.
+        // public-Disk: nur Rasterbilder, kein SVG/HTML.
         $imageRule = ['nullable', 'file', 'image', 'mimes:jpg,jpeg,png,webp', 'max:10240'];
 
         return [

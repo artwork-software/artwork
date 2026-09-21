@@ -10,8 +10,7 @@ use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
 /**
- * Broadcast-Payload der Schicht-Events. ShiftUpdated/PushesShiftModification (ungenutzt,
- * volles users-Relation-Array im Payload) wurden im Sicherheits-Audit 21.09.2026 entfernt.
+ * Broadcast-Payload der Schicht-Events.
  */
 final class PushesShiftModificationBroadcastTest extends TestCase
 {
@@ -28,8 +27,6 @@ final class PushesShiftModificationBroadcastTest extends TestCase
         $payload = (new ShiftAssigned($assignedUser, Shift::query()->findOrFail($shift->id)))
             ->broadcastWith();
 
-        // Sicherheits-Audit 21.09.2026 (G): kein shift->toArray()/user->toArray() mehr,
-        // sondern ShiftDTO + schlanker User-Auszug (keine Gehalts-/Kontaktdaten)
         foreach (['shift', 'roomId', 'user', 'event'] as $key) {
             $this->assertArrayHasKey($key, $payload, "ShiftAssigned-Payload muss '{$key}' enthalten");
         }

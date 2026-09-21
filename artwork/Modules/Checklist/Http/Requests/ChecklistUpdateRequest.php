@@ -5,13 +5,8 @@ namespace Artwork\Modules\Checklist\Http\Requests;
 use Artwork\Modules\Event\Http\Requests\EventStoreOrUpdateRequest;
 
 /**
- * Sicherheits-Audit 21.09.2026 (E, HOCH): Die Checkliste wurde per fill($request->all()) befüllt,
- * fillable waren project_id/user_id/tab_id. Jetzt gibt es eine feste Feldliste (fillableFields())
- * und user_id ist nicht mehr Teil des Requests. Projekt-/Tab-Wechsel werden im Controller
- * autorisiert (createProperties auf dem Zielprojekt, Tab = globale Projekttab-Definition).
- *
- * FALLE: kein data()-Override mehr — filled()/boolean()/integer() lesen über data(), ein Override
- * auf only([...]) machte project_id/tab_id für den Controller unsichtbar.
+ * user_id ist nicht Teil des Requests; Projekt-/Tab-Wechsel autorisiert der Controller.
+ * Kein data()-Override: filled()/boolean()/integer() lesen über data().
  */
 class ChecklistUpdateRequest extends EventStoreOrUpdateRequest
 {
@@ -43,8 +38,7 @@ class ChecklistUpdateRequest extends EventStoreOrUpdateRequest
     }
 
     /**
-     * Felder, die direkt auf das Modell geschrieben werden dürfen. user_id bleibt immer beim Ersteller;
-     * project_id/tab_id gehen nur nach expliziter Autorisierung im Controller auf das Modell.
+     * user_id bleibt beim Ersteller; project_id/tab_id setzt nur der Controller nach Autorisierung.
      *
      * @return array<string, mixed>
      */

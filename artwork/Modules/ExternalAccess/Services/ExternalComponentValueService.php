@@ -82,9 +82,8 @@ class ExternalComponentValueService
     }
 
     /**
-     * Mirrors the internal ProjectComponentValueController: when a 'text' key is
-     * present only that key is kept, as raw text (no nl2br - the frontend renders
-     * line breaks with white-space: pre-line and never interprets HTML).
+     * Mirrors ProjectComponentValueController: when a 'text' key is present only that key is kept,
+     * as raw text (the frontend renders line breaks with white-space: pre-line).
      *
      * @param array<string, mixed> $data
      * @return array<string, mixed>

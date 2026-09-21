@@ -8,16 +8,9 @@ use Illuminate\Http\UploadedFile;
 use Symfony\Component\Mime\MimeTypes;
 
 /**
- * Die EINE Denylist für Uploads (Sicherheits-Audit 21.09.2026, Abschnitt F).
- *
- * Erfasst alles, was ein Webserver an einen Interpreter reichen oder ein Browser auf der
- * App-Origin als Markup/Skript rendern könnte. Dateien, die hier hängen bleiben, werden an
- * jedem Upload-Pfad ABGELEHNT - nicht mehr umbenannt. Geprüft wird sowohl die Client-Endung
- * als auch der per finfo erkannte Inhalt (ein HTML-Dokument mit Endung ".png" fällt über den
- * MIME-Typ, ein Polyglot-PNG mit Endung ".php" über den Namen).
- *
- * Genutzt von HandlesFileUpload (422 mit Feldbezug), StoredFileName (letzte Verteidigungslinie
- * vor storeAs) und der Validierungsregel SafeUploadFile (FormRequests ohne handleFile).
+ * Zentrale Denylist für Uploads: alles, was ein Webserver an einen Interpreter reichen oder ein Browser
+ * auf der App-Origin als Markup/Skript rendern könnte. Geprüft werden Client-Endung und per finfo
+ * erkannter Inhalt; Treffer werden an jedem Upload-Pfad abgelehnt (HandlesFileUpload, StoredFileName, SafeUploadFile).
  */
 final class UploadDenyList
 {
@@ -60,8 +53,7 @@ final class UploadDenyList
     ];
 
     /**
-     * Sniffer-Ergebnisse ohne Aussagekraft: ihre registrierten Endungen (u. a. "exe", "bin")
-     * sagen nichts über den Inhalt und werden deshalb nicht gegen die Liste gehalten.
+     * Sniffer-Ergebnisse ohne Aussagekraft; ihre registrierten Endungen werden nicht gegen die Liste gehalten.
      *
      * @var list<string>
      */
@@ -76,8 +68,7 @@ final class UploadDenyList
     }
 
     /**
-     * Liefert das beanstandete Merkmal (Endung oder MIME-Typ) - oder null, wenn die Datei
-     * die Denylist passiert.
+     * Beanstandetes Merkmal (Endung oder MIME-Typ) oder null.
      */
     public static function deniedReason(UploadedFile $file): ?string
     {

@@ -268,7 +268,6 @@ class NotificationController extends Controller
         DatabaseNotificationService $databaseNotificationService,
         CarbonService $carbonService
     ): void {
-        // Nur eigene Benachrichtigungen (user-scoped wie destroy), kein globales find($id).
         /** @var DatabaseNotification|null $wantedNotification */
         $wantedNotification = $request->user()?->notifications()->find($request->string('notificationId'));
 

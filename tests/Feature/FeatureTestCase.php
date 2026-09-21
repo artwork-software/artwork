@@ -25,8 +25,7 @@ abstract class FeatureTestCase extends TestCase
         Bus::fake();
         Storage::fake('local');
 
-        // Kein echtes DNS in Feature-Tests: Beispiel-Hosts (*.example.test) gelten als öffentlich.
-        // Tests, die private Ziele prüfen wollen, setzen einen eigenen Resolver.
+        // Kein echtes DNS in Feature-Tests; Tests für private Ziele setzen einen eigenen Resolver.
         PublicUrlRule::resolveUsing(static fn (): array => ['203.0.113.10']);
     }
 

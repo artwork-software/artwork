@@ -110,7 +110,6 @@
                 <!-- Existing file -->
                 <div v-if="value" class="flex items-center gap-3 rounded-lg border border-border-subtle bg-white px-3 py-2 mb-2">
                     <component :is="IconFile" class="h-5 w-5 text-text-subtle shrink-0" />
-                    <!-- Eigenschaftsdateien liegen privat; Auslieferung nur über die autorisierte Download-Route -->
                     <a v-if="fileDownloadUrl" :href="fileDownloadUrl" target="_blank" download class="min-w-0 flex-1 truncate text-sm font-medium text-accent-700 hover:underline">
                         {{ fileName }}
                     </a>

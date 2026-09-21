@@ -16,8 +16,7 @@ class SumCommentController extends Controller
 {
     public function store(Request $request): JsonResponse|RedirectResponse
     {
-        // Projektzugriff prüft die Budget-Middleware über das Morph-Paar; commentable_type ist
-        // fillable, daher hier die Allowlist — sonst ließe sich jede Model-Klasse eintragen.
+        // commentable_type ist fillable: Allowlist, sonst ließe sich jede Model-Klasse eintragen.
         $validated = $request->validate([
             'comment' => ['required', 'string'],
             'commentable_id' => ['required', 'integer'],
@@ -50,7 +49,6 @@ class SumCommentController extends Controller
 
     public function destroy(SumComment $comment, Request $request): JsonResponse|RedirectResponse
     {
-        // Löschen nur durch Ersteller:in (oder Admin / globale Budgetverwaltung)
         $user = $request->user();
         abort_unless(
             (int) $comment->user_id === (int) $user?->id

@@ -12,8 +12,7 @@ use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
 /**
- * Sicherheits-Audit 21.09.2026 – Produktentscheidung: Schicht-Karten im Kalender
- * ("Schichten anzeigen", work_shifts) nur mit Dienstplan-Sichtrecht (CalendarShiftVisibility).
+ * Schicht-Karten im Kalender ("Schichten anzeigen", work_shifts) nur mit Dienstplan-Sichtrecht.
  */
 final class SecurityAuditCalendarShiftVisibilityTest extends TestCase
 {
@@ -51,7 +50,7 @@ final class SecurityAuditCalendarShiftVisibilityTest extends TestCase
 
         $admin = $this->actingAsAdmin();
         $admin->calendar_settings()->updateOrCreate([], ['work_shifts' => true]);
-        // adminUser() hat die Relation bereits (als null) geladen — Cache verwerfen
+        // adminUser() hat die Relation bereits (als null) geladen.
         $admin->unsetRelation('calendar_settings');
         $this->assertSame(1, $this->countShiftsInCalendarPayload($room, isPlanning: false));
     }

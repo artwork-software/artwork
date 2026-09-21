@@ -10,9 +10,7 @@ use Artwork\Modules\User\Models\User;
 use Illuminate\Database\Eloquent\Model;
 
 /**
- * Kontaktdaten hängen polymorph an User, Dienstleister oder Unterkunft. Schreiben darf, wer die
- * Eltern-Entität pflegen darf: eigenes Profil, Externe-Verwaltung (Dienstleister) bzw.
- * AccommodationPolicy::update (Unterkunft). Admins passieren via Gate::before.
+ * Schreiben darf, wer die Eltern-Entität (User, Dienstleister, Unterkunft) pflegen darf.
  */
 class ContactPolicy
 {

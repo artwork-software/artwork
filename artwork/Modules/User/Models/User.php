@@ -338,10 +338,8 @@ class User extends Model implements
     ];
 
     /**
-     * Gehaltsfelder sind versteckt (Sicherheits-Audit 21.09.2026, G): auth.user (Jetstream
-     * ShareInertiaData) und jedes toArray() eines User-Models liefern sie nicht mehr aus.
-     * Legitime Ausgabe ausschließlich über UserShowResource (greift per $this->salary_per_hour
-     * direkt auf das Attribut zu, unabhängig von $hidden) hinter der Vertrags-Sichtprüfung.
+     * Gehaltsfelder sind versteckt; legitime Ausgabe nur über UserShowResource (greift direkt auf das
+     * Attribut zu) hinter der Vertrags-Sichtprüfung.
      */
     protected $hidden = [
         'password',

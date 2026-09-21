@@ -14,10 +14,7 @@ trait HandlesFileUpload
     use RetrievesSettingsForFileType;
 
     /**
-     * Denylist-Treffer (Client-Endung ODER erkannter Inhalt, siehe UploadDenyList) werden
-     * IMMER abgelehnt - auch wenn die Einstellung '*' erlaubt (Sicherheits-Audit 21.09.2026,
-     * Abschnitt F). Die Liste liegt zentral in UploadDenyList und wird von StoredFileName
-     * als letzte Verteidigungslinie ein zweites Mal geprüft.
+     * Denylist-Treffer (Client-Endung oder erkannter Inhalt) werden immer abgelehnt, auch wenn die Einstellung '*' erlaubt.
      */
     public function handleFile(ArtworkFileTypes $type, UploadedFile $file): void
     {

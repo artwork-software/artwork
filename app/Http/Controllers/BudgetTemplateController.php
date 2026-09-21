@@ -105,7 +105,7 @@ class BudgetTemplateController extends Controller
 
     public function store(Table $table, Request $request): RedirectResponse
     {
-        // Vorlage aus Projekttabelle: Budgetzugriff (Middleware) reicht nicht, es braucht das Vorlagen-Schreibrecht
+        // Budget-Middleware reicht hier nicht: Vorlagen brauchen das Vorlagen-Schreibrecht.
         abort_unless($request->user()?->can(PermissionEnum::UPDATE_BUDGET_TEMPLATES->value), 403);
 
         $this->createTemplate($request->template_name, $table);

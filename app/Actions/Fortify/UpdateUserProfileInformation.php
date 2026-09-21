@@ -26,8 +26,7 @@ class UpdateUserProfileInformation implements UpdatesUserProfileInformation
             $user->updateProfilePhoto($input['photo']);
         }
 
-        // Keine E-Mail-Verifizierung (Konten nur per Einladung, LDAP oder OIDC) - eine geänderte
-        // Adresse wird direkt übernommen.
+        // Keine E-Mail-Verifizierung (Konten nur per Einladung, LDAP oder OIDC): die neue Adresse gilt sofort.
         $user->forceFill([
             'first_name' => $input['first_name'],
             'last_name' => $input['last_name'],

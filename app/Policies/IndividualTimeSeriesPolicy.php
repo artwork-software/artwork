@@ -10,12 +10,8 @@ use Artwork\Modules\User\Models\User;
 use Illuminate\Auth\Access\HandlesAuthorization;
 
 /**
- * Individualzeit-Serien: die Prüfung läuft pro betroffener Person ("Subject") und spiegelt den
- * Einzel-Endpunkt IndividualTimeController::store bzw. IndividualTimePolicy:
- *  - eigene Zeiten immer,
- *  - fremde Nutzer*innen nur mit "can manage availability",
- *  - Freelancer/Dienstleister (= Worker) zusätzlich mit "can manage workers"/"can manage external workers".
- * Artwork-Admins passieren über Gate::before.
+ * Prüfung pro betroffener Person wie IndividualTimePolicy: eigene Zeiten immer, fremde Nutzer*innen
+ * mit "can manage availability", Worker zusätzlich mit den Manager-Rechten.
  */
 class IndividualTimeSeriesPolicy
 {
@@ -31,9 +27,7 @@ class IndividualTimeSeriesPolicy
     }
 
     /**
-     * Anzeigen (individual-time-series.show): Serie mit Definition und Teilnehmerliste. Erlaubt, wenn
-     * mindestens eine Person der Serie verwaltbar ist — also die eigene Zeit dabei ist oder
-     * "can manage availability" bzw. für Externe die Manager-Rechte vorliegen.
+     * Erlaubt, wenn mindestens eine Person der Serie verwaltbar ist.
      */
     public function view(User $user, IndividualTimeSeries $individualTimeSeries): bool
     {
@@ -47,8 +41,7 @@ class IndividualTimeSeriesPolicy
     }
 
     /**
-     * Update legt eine neue Serie für die übergebenen Subjects an und löscht deren alte Einträge —
-     * geprüft werden deshalb die Subjects des Payloads.
+     * Geprüft werden die Subjects des Payloads (Update legt eine neue Serie an).
      *
      * @param array<int, array{type: string, id: int|string}> $subjects
      */
@@ -58,7 +51,7 @@ class IndividualTimeSeriesPolicy
     }
 
     /**
-     * Löschen entfernt die Zeiten ALLER Personen der Serie — jede davon muss verwaltbar sein.
+     * Jede Person der Serie muss verwaltbar sein.
      */
     public function delete(User $user, IndividualTimeSeries $individualTimeSeries): bool
     {
@@ -66,8 +59,6 @@ class IndividualTimeSeriesPolicy
     }
 
     /**
-     * Alle Personen (timeable_type/-id) der Serie.
-     *
      * @return array<int, array{type: string, id: int}>
      */
     private function subjectsOf(IndividualTimeSeries $individualTimeSeries): array

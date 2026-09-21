@@ -19,8 +19,7 @@ use Illuminate\Validation\ValidationException;
 use function Spatie\LaravelPdf\Support\pdf;
 
 /**
- * Aufenthalte hängen an einem Projekt; jede Mutation verlangt Schreibrecht in diesem Projekt
- * (ProjectPolicy::update), Exporte laufen über die CanViewProject-Middleware der {project}-Routen.
+ * Jede Mutation verlangt Schreibrecht im Projekt des Aufenthalts (ProjectPolicy::update).
  */
 class ArtistResidencyController extends Controller
 {
@@ -56,8 +55,7 @@ class ArtistResidencyController extends Controller
         $this->authorize('update', $project);
 
         $data = $request->validated();
-        // Die Route trägt das Projekt; ein abweichendes project_id im Body darf den Aufenthalt
-        // nicht in ein fremdes Projekt schreiben.
+        // project_id kommt aus der Route, nie aus dem Body.
         $data['project_id'] = $project->id;
 
         $this->artistResidencyService->create($data);
@@ -90,7 +88,6 @@ class ArtistResidencyController extends Controller
 
         $data = $request->validated();
 
-        // Umhängen in ein anderes Projekt nur mit Schreibrecht im Zielprojekt.
         if ((int) $data['project_id'] !== (int) $artistResidency->project_id) {
             $this->authorize('update', Project::query()->findOrFail($data['project_id']));
         }

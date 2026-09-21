@@ -225,10 +225,8 @@ Route::middleware(['guest', 'throttle:20,1'])->group(function (): void {
         ->name('auth.oidc.callback');
 });
 
-// Bewusst OHNE 'verified'-Middleware (Sicherheits-Audit 21.09.2026): Es gibt keine E-Mail-
-// Verifizierung. Konten entstehen ausschließlich per Einladung (Passwort-Setzen über Token),
-// LDAP oder OIDC - die Adresse ist damit bereits vom Einladenden bzw. vom Identity Provider
-// bestätigt. Das User-Model implementiert MustVerifyEmail nicht, Fortify::emailVerification ist aus.
+// Ohne 'verified'-Middleware: Konten entstehen nur per Einladung, LDAP oder OIDC; das User-Model
+// implementiert MustVerifyEmail nicht.
 Route::group(['middleware' => ['auth:sanctum']], function (): void {
 
     // Workflow routes - only accessible via direct URL
@@ -694,7 +692,7 @@ Route::group(['middleware' => ['auth:sanctum']], function (): void {
         ->name('user.checklists.update');
     Route::patch('/users/{user}/areas', [UserController::class, 'updateAreaStatus'])->name('user.areas.update');
     Route::delete('/users/{user}', [UserController::class, 'destroy'])->name('user.destroy');
-    // Eigene Browsersitzungen (Ersatz für die toten Jetstream-Routen unter dem api-Guard)
+    // Eigene Browsersitzungen (die Jetstream-Routen hängen am api-Guard)
     Route::get('/user/browser-sessions', [UserBrowserSessionController::class, 'index'])
         ->name('user.browser-sessions.index');
     Route::delete('/user/browser-sessions', [UserBrowserSessionController::class, 'destroy'])
@@ -1012,7 +1010,6 @@ Route::group(['middleware' => ['auth:sanctum']], function (): void {
     Route::post('/categories', [CategoryController::class, 'store'])->name('categories.store');
     Route::patch('/categories/{category}', [CategoryController::class, 'update'])->name('categories.update');
     Route::delete('/categories/{category}', [CategoryController::class, 'destroy']);
-    // restore/forceDelete werden von authorizeResource nicht abgedeckt
     Route::patch('/categories/{category}/restore', [CategoryController::class, 'restore'])
         ->middleware('can:change project settings');
     Route::delete('/categories/{id}/force', [CategoryController::class, 'forceDelete'])
@@ -1049,7 +1046,7 @@ Route::group(['middleware' => ['auth:sanctum']], function (): void {
     Route::delete('/comments/{comment}', [CommentController::class, 'destroy']);
 
     //SumComments
-    // Summen-Kommentare hängen an Budgetsummen — Budgetzugriff auf das Projekt (commentable → Spalte → Tabelle)
+    // Budgetzugriff über commentable → Spalte → Tabelle → Projekt
     Route::post('/sum/comments', [SumCommentController::class, 'store'])
         ->middleware(EnsureUserCanAccessProjectBudget::class)->name('sum.comments.store');
     Route::delete('/sum/comments/{comment}', [SumCommentController::class, 'destroy'])
@@ -1643,8 +1640,7 @@ Route::group(['middleware' => ['auth:sanctum']], function (): void {
             ->middleware('permission:can plan shifts|change event settings|shift.settings_view_edit')
             ->name('shifts.timeline-presets.index');
 
-        // Mutationen an Zeitleisten-Vorlagen: Dienstplanung ODER Termin-Einstellungen ODER Schichteinstellungen
-        // (Spatie-permission-Middleware = ODER; Admins via Gate::before)
+        // Dienstplanung ODER Termin-Einstellungen ODER Schichteinstellungen (Spatie-Middleware = ODER)
         // post: timeline-presets.store
         Route::post('/store', [TimelinePresetController::class, 'store'])
             ->middleware('permission:can plan shifts|change event settings|shift.settings_view_edit')
@@ -2408,8 +2404,6 @@ Route::group(['middleware' => ['auth:sanctum']], function (): void {
         '/service-provider/{serviceProvider}/removeCraft/{craft}',
         [ServiceProviderController::class, 'removeCraft']
     )->name('service_provider.remove.craft');
-    // service-provider.contact.delete/.update entfernt (Sicherheits-Audit 21.09.2026): Legacy-Model
-    // ServiceProviderContacts ohne Tabelle; Kontakte laufen über das Contacts-Modul (ArtworkSingleContact).
     Route::post(
         '/service-provider/contact/{serviceProvider}/add/',
         [ServiceProviderContactsController::class, 'store']
@@ -3226,8 +3220,7 @@ Route::group(['middleware' => ['auth:sanctum']], function (): void {
         ])
             ->middleware('can:crm manager')->name('crm.duplicates.merge-all');
 
-        // Kontakt-Lookups (search/data/tooltip) werden auch außerhalb des CRM genutzt (Projektteam,
-        // Dokumentanfragen, Verträge, Künstler-Verknüpfung) → Gate crm.contacts.lookup (AuthServiceProvider)
+        // Lookups werden auch außerhalb des CRM genutzt → Gate crm.contacts.lookup (AuthServiceProvider)
         Route::get('/contacts-search', [CrmContactController::class, 'search'])
             ->middleware('can:crm.contacts.lookup')->name('crm.contacts.search');
         // Papierkorb — muss vor den /contacts/{crmContact}-Routen stehen!
@@ -3265,8 +3258,7 @@ Route::group(['middleware' => ['auth:sanctum']], function (): void {
             ->middleware('can:can view crm')->name('crm.contacts.update');
         Route::delete('/contacts/{crmContact}', [CrmContactController::class, 'destroy'])
             ->middleware('can:crm manager')->name('crm.contacts.destroy');
-        // Profilbild/Eigenschaftsdateien: Seitenzugang + Gruppen-Editrecht (Controller);
-        // Zimmertypen (Unterkunfts-Stammdaten): nur CRM-Verwaltung, Zimmertyp muss zum Kontakt gehören.
+        // Profilbild/Eigenschaftsdateien: Gruppen-Editrecht im Controller; Zimmertypen: nur CRM-Verwaltung.
         Route::post('/contacts/{crmContact}/profile-image', [
             CrmContactController::class,
             'updateProfileImage',

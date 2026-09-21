@@ -9,7 +9,6 @@
                 {{ $t('Click the button to sign in with your login link. The link can only be used once.') }}
             </p>
 
-            <!-- Das Einmal-Token wird erst mit diesem POST eingelöst; ein GET (Link-Vorschau) verbraucht es nicht. -->
             <form @submit.prevent="submit">
                 <BaseUIButton
                     :label="$t('Sign in')"

@@ -7,8 +7,7 @@ use Artwork\Modules\ArtistResidency\Models\Artist;
 use Artwork\Modules\User\Models\User;
 
 /**
- * Künstler*innen-Stammdaten: Lesen/Export für alle mit Projektzugriff, Verwalten für alle mit
- * Projekt-Schreibrecht (wie Aufenthalte). Admins passieren via Gate::before.
+ * Lesen/Export mit Projektzugriff, Verwalten mit Projekt-Schreibrecht (wie Aufenthalte).
  */
 class ArtistPolicy
 {

@@ -51,7 +51,6 @@ final class RoomAttributeControllerTest extends FeatureTestCase
     #[Test]
     public function user_without_room_permission_cannot_store_room_attribute(): void
     {
-        // Sicherheits-Audit 21.09.2026: Raumattribute sind Stammdaten und brauchen das Raumrecht.
         $this->actingAs(User::factory()->create());
 
         $this->post(route('room_attribute.store'), [

@@ -74,7 +74,6 @@ class FortifyServiceProvider extends ServiceProvider
             return Limit::perMinute(5)->by($request->session()->get('login.id'));
         });
 
-        // „Passwort vergessen“: 5 Anfragen pro Minute je E-Mail+IP (Enumeration/Mail-Flut).
         RateLimiter::for('password-reset', function (Request $request) {
             $email = $request->input(Fortify::email());
             $email = is_string($email) ? Str::lower(trim($email)) : '';
@@ -82,8 +81,7 @@ class FortifyServiceProvider extends ServiceProvider
             return Limit::perMinute(5)->by($email . '|' . $request->ip());
         });
 
-        // Fortify registriert password.email ohne Throttle; die Route existiert erst nach dem
-        // Booten (auch aus dem Route-Cache), daher wird der Limiter hier nachträglich angehängt.
+        // Fortify registriert password.email ohne Throttle; die Route existiert erst nach dem Booten.
         $this->app->booted(function (): void {
             Route::getRoutes()->getByName('password.email')?->middleware('throttle:password-reset');
         });

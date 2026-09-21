@@ -26,10 +26,8 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
  * Dokumente im freigegebenen Tab für externe Personen: Liste, Upload, Download, Löschen eigener
  * Uploads. Dateien hängen wie intern am Projekt + tab_id; die interne Dokument-Komponente zeigt
  * sie über ihren Tab-Scope an. Größen-/Typ-Limits sind dieselben wie für interne Projektdateien.
- *
- * Upload und Löschen eigener Uploads stehen zusätzlich unter dem Tool-Setting
- * "Dateiupload für Externe erlauben" (GeneralSettings::external_file_upload_enabled, Default AUS);
- * Liste/Download bestehender Dokumente bleiben davon unberührt.
+ * Upload und Löschen eigener Uploads stehen zusätzlich unter dem Tool-Setting external_file_upload_enabled;
+ * Liste/Download bleiben davon unberührt.
  */
 class ExternalProjectFileService
 {
@@ -47,8 +45,6 @@ class ExternalProjectFileService
     }
 
     /**
-     * Zentrales Gate für Upload/Löschen durch Externe: 403 solange der Schalter aus ist.
-     *
      * @throws AuthorizationException
      */
     public function assertUploadEnabled(): void
@@ -128,8 +124,7 @@ class ExternalProjectFileService
     }
 
     /**
-     * Externe dürfen ausschließlich Dateien löschen, die sie selbst hochgeladen haben - und nur,
-     * solange der Upload-Schalter aktiv ist.
+     * Externe löschen nur eigene Uploads, und nur solange der Upload-Schalter aktiv ist.
      */
     public function deleteOwn(ExternalAccess $external, Project $project, ProjectTab $tab, int $fileId): void
     {

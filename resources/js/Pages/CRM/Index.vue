@@ -329,7 +329,6 @@ const props = defineProps({
 
 const $t = useTranslation()
 const { can, hasAdminRole } = usePermission(usePage().props)
-// Löschen ist backendseitig auf 'crm manager' beschränkt — Buttons nur dann anbieten.
 const canDeleteContacts = computed(() => hasAdminRole() || can('crm manager'))
 
 const mirroredSlugs = ['user', 'freelancer', 'service_provider']

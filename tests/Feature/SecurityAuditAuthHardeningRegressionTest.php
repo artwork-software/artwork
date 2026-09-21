@@ -25,8 +25,7 @@ use Mockery;
 use PHPUnit\Framework\Attributes\Test;
 
 /**
- * Regressionstests zu den MITTEL-/NIEDRIG-Befunden aus Abschnitt D (Authentifizierung /
- * Session / Identität / Konfiguration) des Sicherheits-Audits vom 21.09.2026.
+ * Härtung von Authentifizierung, Session, Identität und Konfiguration.
  */
 final class SecurityAuditAuthHardeningRegressionTest extends FeatureTestCase
 {
@@ -38,7 +37,7 @@ final class SecurityAuditAuthHardeningRegressionTest extends FeatureTestCase
     }
 
     // ---------------------------------------------------------------------------------------
-    // D-MITTEL: Debug-Modus per DB-Flag (SetDeveloperEnvironment)
+    // Debug-Modus per DB-Flag (SetDeveloperEnvironment)
     // ---------------------------------------------------------------------------------------
 
     #[Test]
@@ -68,7 +67,7 @@ final class SecurityAuditAuthHardeningRegressionTest extends FeatureTestCase
     }
 
     // ---------------------------------------------------------------------------------------
-    // D-MITTEL: „Passwort vergessen“ – keine Nutzer-Enumeration, Throttle
+    // „Passwort vergessen“ – keine Nutzer-Enumeration, Throttle
     // ---------------------------------------------------------------------------------------
 
     #[Test]
@@ -114,7 +113,7 @@ final class SecurityAuditAuthHardeningRegressionTest extends FeatureTestCase
     }
 
     // ---------------------------------------------------------------------------------------
-    // D-MITTEL: Demo-Admin mit bekanntem Passwort im Standard-Seeder / Demo-Commands
+    // Demo-Admin mit bekanntem Passwort im Standard-Seeder / Demo-Commands
     // ---------------------------------------------------------------------------------------
 
     #[Test]
@@ -149,7 +148,7 @@ final class SecurityAuditAuthHardeningRegressionTest extends FeatureTestCase
     }
 
     // ---------------------------------------------------------------------------------------
-    // D-MITTEL: DB-/Meilisearch-Ports nur auf Loopback (docker-compose.yml)
+    // DB-/Meilisearch-Ports nur auf Loopback (docker-compose.yml)
     // ---------------------------------------------------------------------------------------
 
     #[Test]
@@ -166,7 +165,7 @@ final class SecurityAuditAuthHardeningRegressionTest extends FeatureTestCase
     }
 
     // ---------------------------------------------------------------------------------------
-    // D-NIEDRIG: „Andere Browser-Sitzungen abmelden“ über Web-Route statt totem api-Guard
+    // „Andere Browser-Sitzungen abmelden“ über Web-Route
     // ---------------------------------------------------------------------------------------
 
     private function seedSessionRows(User $user, User $other): void
@@ -245,7 +244,7 @@ final class SecurityAuditAuthHardeningRegressionTest extends FeatureTestCase
     }
 
     // ---------------------------------------------------------------------------------------
-    // D-NIEDRIG: Timing-Enumeration beim Login (Dummy-Hash bei unbekannter E-Mail)
+    // Timing-Enumeration beim Login (Dummy-Hash bei unbekannter E-Mail)
     // ---------------------------------------------------------------------------------------
 
     #[Test]
@@ -277,7 +276,7 @@ final class SecurityAuditAuthHardeningRegressionTest extends FeatureTestCase
     }
 
     // ---------------------------------------------------------------------------------------
-    // D-NIEDRIG: Setup-Race (Cache-Lock + erneute Prüfung)
+    // Setup-Race (Cache-Lock + erneute Prüfung)
     // ---------------------------------------------------------------------------------------
 
     private function setupPayload(string $email): array
@@ -315,7 +314,7 @@ final class SecurityAuditAuthHardeningRegressionTest extends FeatureTestCase
     }
 
     // ---------------------------------------------------------------------------------------
-    // D-NIEDRIG: Reset-Link mit kodierter E-Mail
+    // Reset-Link mit kodierter E-Mail
     // ---------------------------------------------------------------------------------------
 
     #[Test]
@@ -332,7 +331,7 @@ final class SecurityAuditAuthHardeningRegressionTest extends FeatureTestCase
     }
 
     // ---------------------------------------------------------------------------------------
-    // D-NIEDRIG: Passwortregel (min 10, Buchstaben, Groß-/Klein, Ziffer; kein uncompromised)
+    // Passwortregel (min 10, Buchstaben, Groß-/Klein, Ziffer; kein uncompromised)
     // ---------------------------------------------------------------------------------------
 
     private function passwordRulesUnderTest(): array
@@ -387,7 +386,7 @@ final class SecurityAuditAuthHardeningRegressionTest extends FeatureTestCase
     }
 
     // ---------------------------------------------------------------------------------------
-    // D-NIEDRIG: OIDC-Login ohne Remember-Me-Cookie
+    // OIDC-Login ohne Remember-Me-Cookie
     // ---------------------------------------------------------------------------------------
 
     #[Test]
@@ -424,7 +423,7 @@ final class SecurityAuditAuthHardeningRegressionTest extends FeatureTestCase
     }
 
     // ---------------------------------------------------------------------------------------
-    // D-NIEDRIG: LDAP-Default StartTLS
+    // LDAP-Default StartTLS
     // ---------------------------------------------------------------------------------------
 
     #[Test]
@@ -448,7 +447,7 @@ final class SecurityAuditAuthHardeningRegressionTest extends FeatureTestCase
     }
 
     // ---------------------------------------------------------------------------------------
-    // D-NIEDRIG: Magic-Link-Einlösung per POST, GET zeigt Bestätigungsseite
+    // Magic-Link-Einlösung per POST, GET zeigt Bestätigungsseite
     // ---------------------------------------------------------------------------------------
 
     #[Test]
@@ -477,7 +476,7 @@ final class SecurityAuditAuthHardeningRegressionTest extends FeatureTestCase
     }
 
     // ---------------------------------------------------------------------------------------
-    // D-NIEDRIG: kein APP_KEY in .env.testing (Test-Key liegt in phpunit.xml)
+    // kein APP_KEY in .env.testing (Test-Key liegt in phpunit.xml)
     // ---------------------------------------------------------------------------------------
 
     #[Test]

@@ -591,9 +591,8 @@ class MoneySourceController extends Controller
     }
 
     /**
-     * Sicherheits-Audit 21.09.2026 (E): group_id und sub_money_source_ids dürfen nur Quellen referenzieren,
-     * auf die der/die Nutzer*in schreibend zugreifen darf — sonst ließen sich fremde Quellen als
-     * Untergruppe anhängen bzw. die eigene Quelle in eine fremde Gruppe schieben.
+     * group_id und sub_money_source_ids dürfen nur Quellen referenzieren, auf die schreibend
+     * zugegriffen werden darf.
      *
      * @throws AuthorizationException
      */

@@ -25,8 +25,7 @@ final class SumCommentControllerTest extends FeatureTestCase
     public function admin_can_store_sum_comment(): void
     {
         $admin = $this->actingAsAdmin();
-        // Die Budget-Middleware löst das Kommentar-Ziel bis zum Projekt auf,
-        // daher muss die Summe real existieren (nicht erreichbare IDs → 404).
+        // Die Budget-Middleware löst das Kommentar-Ziel bis zum Projekt auf; die Summe muss existieren.
         $table = Table::factory()->create(['is_template' => false]);
         $column = Column::factory()->create(['table_id' => $table->id, 'position' => 0]);
         $sumDetail = BudgetSumDetails::factory()->create(['column_id' => $column->id]);

@@ -55,7 +55,6 @@ class BiBudgetExportController extends Controller
             'restrict_bookings_to_range' => ['nullable', 'boolean'],
         ]);
 
-        // user_id bindet Status/Download an die anfragende Person (siehe BiBudgetExportService)
         $token = $this->biBudgetExportService->cacheExportConfiguration(
             $validated + ['user_id' => $request->user()->id]
         );

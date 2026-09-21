@@ -119,9 +119,7 @@ class InvitationService
     }
 
     /**
-     * Einladungen dürfen nur Rechte vergeben, die die einladende Person selbst besitzt (direkt oder
-     * über Rollen) — sonst ließe sich über eine Zweitadresse jedes Recht erschleichen. Admins vergeben
-     * uneingeschränkt. Wird serverseitig gefiltert, nicht nur validiert.
+     * Nur Rechte, die die einladende Person selbst besitzt (direkt oder über Rollen); Admins vergeben uneingeschränkt.
      *
      * @param array<int, string> $permissions
      * @return array<int, string>

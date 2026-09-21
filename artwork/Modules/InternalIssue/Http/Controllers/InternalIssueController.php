@@ -263,7 +263,6 @@ class InternalIssueController extends Controller
         if (!request()->boolean('preview')) {
             $storagePath = 'material-issue/' . StoredFileName::forGenerated('pdf', (string) $internalIssue->id);
 
-            // Private Disk (Personendaten): Download nur über fileDownload() mit Policy-Prüfung
             Storage::disk('local')->put($storagePath, $pdfContent);
 
             InternalIssueFile::create([
@@ -284,8 +283,7 @@ class InternalIssueController extends Controller
     }
 
     /**
-     * Anhänge und Ausgabe-PDFs liegen auf der privaten Disk: Zugriff nur mit MaterialIssuePolicy::view
-     * und nur für Dateien, die zur angefragten Ausgabe gehören (?inline=1 für Bilder/PDF-Vorschau).
+     * Nur mit MaterialIssuePolicy::view und nur für Dateien dieser Ausgabe (?inline=1 für Bilder/PDF).
      */
     public function fileDownload(
         Request $request,

@@ -100,8 +100,7 @@ class OidcAuthController extends Controller
             ]);
         }
 
-        // Kein Remember-Me (5-Jahres-Cookie) für SSO-Logins: die Sitzung endet mit der normalen
-        // Session-Lebensdauer; erneuter Zugriff läuft wieder über den IdP.
+        // Kein Remember-Me für SSO-Logins: erneuter Zugriff läuft über den IdP.
         Auth::guard(config('fortify.guard'))->login($user, false);
 
         // Session-Fixation verhindern: Fortifys eigener Login-Pfad regeneriert die

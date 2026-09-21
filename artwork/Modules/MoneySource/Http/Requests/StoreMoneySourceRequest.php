@@ -4,11 +4,6 @@ namespace Artwork\Modules\MoneySource\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-/**
- * Sicherheits-Audit 21.09.2026 (E, MITTEL): store/update liefen ohne Validierung — group_id und
- * sub_money_source_ids waren beliebig, amount nicht numerisch. Die Schreibrechte auf die verknüpften
- * Quellen prüft der Controller (MoneySourcePolicy::update je Quelle).
- */
 class StoreMoneySourceRequest extends FormRequest
 {
     /**

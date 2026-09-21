@@ -24,18 +24,14 @@ class InventoryArticleImageService
     private const HEIC_EXTENSIONS = ['heic', 'heif'];
 
     /**
-     * Obergrenze für die Dekodierung (Breite × Höhe). Die Validierung erlaubt bis 8192 px
-     * je Kante (= 67 MP); mehr als 25 MP werden weder konvertiert noch verkleinert, damit
-     * ein einzelnes Bild den Worker nicht in den Speicher-Limit treibt (Sicherheits-Audit 21.09.2026, F).
+     * Obergrenze für die Dekodierung (Breite × Höhe): die Validierung erlaubt 8192 px je Kante (67 MP),
+     * mehr als 25 MP werden weder konvertiert noch verkleinert.
      */
     public const MAX_PIXELS = 25_000_000;
 
     /**
-     * Store an uploaded article image as-is. Thumbnail generation AND the
-     * HEIC→JPEG conversion (iPhone photos, browsers cannot render HEIC) run in
-     * the queued job the repository dispatches after the database row exists -
-     * decoding never happens inside the request (DoS-Schutz). Until the job
-     * has run the frontend shows the placeholder logo (@error-Fallback).
+     * Store an uploaded article image as-is. Thumbnail generation and HEIC→JPEG conversion run in
+     * the queued job; decoding never happens inside the request.
      *
      * @return array{image: string, thumbnail: string|null}
      */
@@ -184,7 +180,7 @@ class InventoryArticleImageService
             $target->setResourceLimit(\Imagick::RESOURCETYPE_MAP, 512 * 1024 * 1024);
             $target->setResourceLimit(\Imagick::RESOURCETYPE_DISK, 1024 * 1024 * 1024);
         } catch (Throwable) {
-            // Limits sind Defence-in-Depth; ohne sie läuft die Verarbeitung wie bisher.
+            // Ohne Limits läuft die Verarbeitung weiter.
         }
     }
 

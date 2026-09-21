@@ -17,10 +17,8 @@ use Illuminate\Support\Facades\Broadcast;
 | application supports. The given channel authorization callbacks are
 | used to check if an authenticated user can listen to the channel.
 |
-| Sicherheits-Audit 21.09.2026 (Sofortmaßnahme 5): Kanäle, die Schichtdaten
-| (ShiftDTOs inkl. Zuweisungen) oder Projektinhalte transportieren, prüfen das
-| jeweilige Sichtrecht; Auth::check() bleibt nur für reine Reload-Signale.
-| Admins kommen über Gate::before (artwork admin) durch alle can()-Prüfungen.
+| Kanäle, die Schichtdaten oder Projektinhalte transportieren, prüfen das jeweilige
+| Sichtrecht; Auth::check() reicht nur für reine Reload-Signale.
 |
 */
 
@@ -117,10 +115,8 @@ Broadcast::channel('user-status', function () {
     return Auth::check();
 });
 
-// EventCreated/EventUpdated/RemoveEvent: Termin-DTOs. Der Kalender steht jedem
-// angemeldeten Nutzer offen und abonniert diese Kanäle für alle sichtbaren Räume;
-// eine raumbezogene Sichtbarkeit gibt es in artwork nicht (RoomPolicy::view ist das
-// Verwaltungsrecht). Daher Auth::check() plus Existenzprüfung des Raums.
+// Termin-DTOs. Der Kalender steht jedem angemeldeten Nutzer offen und eine raumbezogene Sichtbarkeit
+// gibt es nicht (RoomPolicy::view ist das Verwaltungsrecht): Auth::check() plus Existenz des Raums.
 Broadcast::channel('event.room.{roomId}', function ($user, $roomId) {
     return $user instanceof User
         && Room::query()->whereKey((int) $roomId)->exists();

@@ -293,8 +293,7 @@ class ShiftPlanRequestController extends Controller
         $cutoffYear = (int) $fourWeeksAgo->format('o');
         $cutoffWeek = (int) $fourWeeksAgo->format('W');
 
-        // Gleiche Zuständigkeitsregel wie requests(): Genehmiger*innen (Gate, Admins) sehen alles,
-        // sonst nur Anfragen zugänglicher Gewerke (für alle planbar / eigene Planer*in) oder eigene.
+        // Gleiche Zuständigkeitsregel wie requests().
         /** @var User $user */
         $user = $this->auth->user();
         $craftAccessible = $craft->assignable_by_all

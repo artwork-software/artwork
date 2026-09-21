@@ -29,7 +29,6 @@ final class ExternalDocumentsTest extends TestCase
         $settings = app(GeneralSettings::class);
         $settings->allowed_project_file_mimetypes = ['pdf'];
         $settings->allowed_project_file_size = 10;
-        // Tool-Setting "Dateiupload für Externe erlauben" (Default AUS) - siehe ExternalFileUploadSettingTest
         $settings->external_file_upload_enabled = true;
         $settings->save();
     }

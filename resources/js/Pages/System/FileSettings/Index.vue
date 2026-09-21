@@ -23,7 +23,6 @@
             {{ $t('With the current server settings a maximum of {0} MB per file is possible. If you need larger uploads, ask your IT to raise the server limits first.', [serverUploadLimitMb]) }}
         </span>
     </div>
-    <!-- Tool-Setting "Dateiupload für Externe erlauben" (GeneralSettings::external_file_upload_enabled) -->
     <div class="mt-8">
       <h3 class="font-lexend font-semibold text-[clamp(16px,2vw,18px)]/[21px] text-text">{{ $t('External accesses') }}</h3>
       <div class="mt-4 rounded-lg bg-surface border border-border-subtle w-full shadow-raised p-5">

@@ -68,7 +68,7 @@ class SumDetailsController extends Controller
 
     public function store(Request $request): JsonResponse|RedirectResponse
     {
-        // Projektzugriff prüft die Budget-Middleware über das Morph-Paar; hier nur Form und Existenz
+        // Projektzugriff prüft die Budget-Middleware; hier nur Form und Existenz.
         $validated = $request->validate([
             'linked_type' => ['nullable', 'string'],
             'money_source_id' => ['nullable', 'integer', 'exists:money_sources,id'],

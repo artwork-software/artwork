@@ -44,7 +44,6 @@ class MoneySourceFileController extends Controller
         }
 
         $file = $request->file('file');
-        // Finanzierungsquellen-Dokumente folgen der Projektdatei-Allowlist (Größe + Typen)
         $this->handleFile(ArtworkFileTypes::PROJECT, $file);
         $original_name = $file->getClientOriginalName();
         $basename = StoredFileName::forUpload($file);

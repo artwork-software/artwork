@@ -107,9 +107,8 @@ class ContractController extends Controller
     }
 
     /**
-     * Vertrag anlegen: Schreibrecht im Projekt oder Vertragsrecht mit Projektsicht; alternativ als
-     * beteiligte Person (angefragt/anfragend) einer Dokumentenanfrage DIESES Projekts. Fremde Anfragen
-     * (anderes Projekt) dürfen nicht verknüpft werden.
+     * Schreibrecht im Projekt, Vertragsrecht mit Projektsicht oder Beteiligung an einer
+     * Dokumentenanfrage desselben Projekts.
      */
     private function authorizeContractStore(Request $request, Project $project): void
     {

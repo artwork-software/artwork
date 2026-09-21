@@ -37,7 +37,6 @@ class ContactController extends Controller
     {
         $modelObject = $this->contactService->resolveModelInstance($model, $modelId);
 
-        // ContactPolicy::create prüft das Pflegerecht an der Eltern-Entität (User/Dienstleister/Unterkunft).
         $this->authorize('create', [Contact::class, $modelObject]);
 
         $this->contactService->createForModel($modelObject, $request->validated());

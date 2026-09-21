@@ -194,8 +194,7 @@ class AppController extends Controller
         // war bislang ungeschützt).
         abort_if($settings->setup_finished, 403);
 
-        // Setup-Race: zwei gleichzeitige POSTs dürfen nicht beide einen Admin anlegen.
-        // Der Lock serialisiert die Anlage, die Prüfung wird innerhalb des Locks wiederholt.
+        // Lock gegen parallele Setup-POSTs; die Prüfung wird innerhalb des Locks wiederholt.
         return Cache::lock('setup', 10)->block(
             5,
             function () use ($request, $settings, $guard): Redirector|Application|RedirectResponse {

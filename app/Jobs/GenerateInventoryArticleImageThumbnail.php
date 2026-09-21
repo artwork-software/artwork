@@ -20,8 +20,6 @@ class GenerateInventoryArticleImageThumbnail implements ShouldQueue
 
     public function handle(InventoryArticleImageService $imageService): void
     {
-        // HEIC/HEIF (iPhone) wird hier - nicht im Request - nach JPEG konvertiert; das Original
-        // wird ersetzt, sofern keine andere Zeile noch darauf zeigt.
         if ($this->articleImage->image && $imageService->isHeic($this->articleImage->image)) {
             $converted = $imageService->convertHeicToJpeg($this->articleImage->image);
 

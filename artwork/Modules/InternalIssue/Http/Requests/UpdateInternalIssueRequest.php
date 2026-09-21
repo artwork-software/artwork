@@ -19,8 +19,7 @@ class UpdateInternalIssueRequest extends FormRequest
             return false;
         }
 
-        // Umhängen in ein anderes Projekt nur, wenn dort auch angelegt werden dürfte
-        // (MaterialIssuePolicy::create prüft das Projekt-Schreibrecht).
+        // Projektwechsel nur, wenn im Zielprojekt angelegt werden dürfte.
         $newProjectId = $this->integer('project_id') ?: null;
 
         if ($newProjectId !== null && $newProjectId !== (int) $issue->project_id) {
@@ -50,7 +49,6 @@ class UpdateInternalIssueRequest extends FormRequest
             'responsible_user_ids' => 'nullable|array',
             'responsible_user_ids.*' => 'integer|exists:users,id',
             'special_items_done' => 'boolean',
-            // 20 MB pro Datei; Allowlist statt beliebiger Typen (Sicherheits-Audit 21.09.2026, F)
             'files.*' => ['file', 'mimes:pdf,jpg,jpeg,png,webp,doc,docx,xls,xlsx,csv,txt,zip', 'max:20480', new SafeUploadFile()],
             'special_items' => 'nullable|array',
             'special_items.*.name' => 'required|string|max:255',

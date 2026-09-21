@@ -424,8 +424,6 @@ class EventController extends Controller
                 : null,
             'filterType' => $calendarFilterType,
             'isDailyView' => $isDailyView,
-            // Daten für Schicht-Karten + Schicht-Bearbeiten-Modal (nur bei aktivem "Schichten anzeigen"
-            // UND Dienstplan-Sichtrecht, siehe CalendarShiftVisibility)
             'shiftQualifications' => fn () => CalendarShiftVisibility::isEnabled($user, $userCalendarSettings)
                 ? $this->shiftQualificationService->getAllOrderedByPosition()
                 : [],
@@ -717,8 +715,6 @@ class EventController extends Controller
             'verifierForEventTypIds' => $user->verifiableEventTypes->pluck('id'),
             'filterType' => $planningFilterType,
             'isDailyView' => $isDailyView,
-            // Daten für Schicht-Karten + Schicht-Bearbeiten-Modal (nur bei aktivem "Schichten anzeigen"
-            // UND Dienstplan-Sichtrecht, siehe CalendarShiftVisibility)
             'shiftQualifications' => fn () => CalendarShiftVisibility::isEnabled($user, $userCalendarSettings)
                 ? $this->shiftQualificationService->getAllOrderedByPosition()
                 : [],
@@ -2498,7 +2494,6 @@ class EventController extends Controller
 
     public function deleteOldNotifications(Request $request): void
     {
-        // Nur die eigenen Benachrichtigungen mit diesem Schlüssel – nicht die aller Nutzer*innen.
         $notifications = DatabaseNotification::query()
             ->where('notifiable_type', User::class)
             ->where('notifiable_id', Auth::id())
@@ -4242,8 +4237,7 @@ class EventController extends Controller
     /**
      * Beschreibung eines einzelnen Termins. Der Kalender liefert den Volltext nur
      * noch mit, wenn die Anzeigeeinstellung ihn in der Kachel zeigt — das Termin-Modal
-     * holt ihn hier nach. Sichtbarkeit wie EventPolicy::view: ohne Projekt reicht die
-     * Anmeldung (Kalender ist instanzweit), mit Projekt gilt dessen Sichtrecht.
+     * holt ihn hier nach.
      *
      * @throws AuthorizationException
      */

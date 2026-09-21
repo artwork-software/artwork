@@ -233,7 +233,6 @@ final class UpdateComponentValueTest extends TestCase
 
         $this->service()->updateComponentValue($external, $project, $tab, $component, ['text' => "line1\nline2"]);
 
-        // Sicherheits-Audit 21.09.2026: kein nl2br mehr, Umbrüche rendert das Frontend per white-space: pre-line.
         $this->assertSame("line1\nline2", ProjectComponentValue::first()->data['text']);
     }
 }

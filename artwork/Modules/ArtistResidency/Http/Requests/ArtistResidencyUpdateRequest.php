@@ -10,8 +10,8 @@ use Illuminate\Foundation\Http\FormRequest;
 class ArtistResidencyUpdateRequest extends FormRequest
 {
     /**
-     * Schreibrecht im Projekt des Aufenthalts VOR der Validierung (403 statt 422 bei fehlendem
-     * Recht); ein Projektwechsel wird zusätzlich im Controller gegen das Zielprojekt geprüft.
+     * Schreibrecht im Projekt des Aufenthalts vor der Validierung (403 statt 422); ein Projektwechsel
+     * wird im Controller gegen das Zielprojekt geprüft.
      */
     public function authorize(): bool
     {

@@ -143,7 +143,6 @@ class EventPlanningCalendarService
             $room->events = $eventDTOs[$room->id] ?? collect();
         }
 
-        // Schichten nur mit Dienstplan-Sichtrecht, unabhängig vom gespeicherten Setting
         if (CalendarShiftVisibility::isEnabled(Auth::user(), $userCalendarSettings)) {
             $this->attachStandaloneShiftsToRooms($rooms, $startDate, $endDate, $filter);
         } else {

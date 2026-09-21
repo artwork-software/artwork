@@ -249,7 +249,7 @@ class ChatController extends Controller
     {
         $this->authorize('view', $chat);
         $request->validate(['message' => ['required', 'string', 'max:10000']]);
-        // Rohtext (kein nl2br) - das Frontend rendert Umbrüche per white-space: pre-line.
+        // Rohtext; Umbrüche rendert das Frontend per white-space: pre-line.
         $plain = (string) $request->get('message');
 
         /** @var ChatMessage $message */

@@ -79,8 +79,7 @@ class LinkListTemplateController extends Controller
     }
 
     /**
-     * Vorlagen sind global (alle Projekte). Anlegen darf jede angemeldete Person (aus der Link-Listen-Komponente),
-     * ändern/löschen nur die Ersteller*in oder wer Projekt-Einstellungen verwalten darf.
+     * Vorlagen sind global: ändern/löschen nur Ersteller*in oder wer Projekt-Einstellungen verwalten darf.
      */
     private function authorizeTemplateChange(LinkListTemplate $linkListTemplate): void
     {

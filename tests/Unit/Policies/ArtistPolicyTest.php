@@ -12,8 +12,7 @@ use Spatie\Permission\Models\Permission;
 use Tests\TestCase;
 
 /**
- * Künstler*innen folgen dem Projektzugriff: Lesen/Export mit Projekt-Sichtrecht,
- * Verwalten mit Projekt-Schreibrecht (Sicherheits-Audit 21.09.2026, Abschnitt C).
+ * Künstler*innen folgen dem Projektzugriff: Lesen/Export mit Sicht-, Verwalten mit Schreibrecht.
  */
 final class ArtistPolicyTest extends TestCase
 {

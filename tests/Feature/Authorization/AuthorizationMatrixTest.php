@@ -23,12 +23,9 @@ use Tests\Feature\FeatureTestCase;
 use Throwable;
 
 /**
- * Autorisierungs-Matrix (dynamischer Rollen-Test, eingeführt 21.09.2026).
- *
- * Jede Web-Route wird als angemeldeter Nutzer OHNE jede Berechtigung, Rolle oder Zugehörigkeit
- * aufgerufen – mit IDs fremder Datensätze. Der Snapshot hält je Route fest, wie sie geantwortet
- * hat. Wird eine Route durchlässiger als im Snapshot (z. B. 403 → 200), schlägt der Test fehl.
- * Neue Routen müssen bewusst in den Snapshot aufgenommen werden.
+ * Jede Web-Route wird als angemeldeter Nutzer ohne Berechtigung, Rolle oder Zugehörigkeit aufgerufen,
+ * mit IDs fremder Datensätze; der Snapshot hält je Route die Antwortklasse fest. Wird eine Route
+ * durchlässiger als im Snapshot, schlägt der Test fehl; neue Routen müssen in den Snapshot aufgenommen werden.
  *
  * Bedeutung der Klassen:
  *   unauth/forbidden/confirm  geschützt (401/403/423 bzw. Redirect auf Login)
@@ -78,7 +75,7 @@ final class AuthorizationMatrixTest extends FeatureTestCase
     #[Test]
     public function no_web_route_is_more_permissive_than_the_snapshot(): void
     {
-        // Welt zuerst, damit der rechtelose Nutzer nirgends „erster Datensatz" ist
+        // Welt zuerst, damit der rechtelose Nutzer nirgends der erste Datensatz ist.
         $this->seedWorld();
         $this->nobody = $this->actingAsUserWith([]);
 

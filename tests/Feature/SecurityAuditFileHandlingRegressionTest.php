@@ -28,12 +28,8 @@ use Illuminate\Support\Facades\Storage;
 use PHPUnit\Framework\Attributes\Test;
 
 /**
- * Sicherheits-Audit 21.09.2026, Abschnitt F (Dateien – Uploads / Downloads / PDF / Export).
- *
- * CRM-Eigenschaftsdateien, Materialausgabe-Anhänge und Ausgabe-PDFs liegen auf der privaten
- * local-Disk und werden nur über autorisierte Routen ausgeliefert; Uploads folgen einer
- * Allowlist; HTML/SVG werden auch bei Wildcard-Einstellung abgelehnt; externe Gäste bekommen
- * Nicht-Bild/PDF-Dateien nie inline; BI-Export-Token sind an die anfragende Person gebunden.
+ * Private Dateien werden nur über autorisierte Routen ausgeliefert, Uploads folgen Allowlist und
+ * Denylist, externe Gäste bekommen Nicht-Bild/PDF-Dateien nie inline, BI-Export-Token sind personengebunden.
  */
 final class SecurityAuditFileHandlingRegressionTest extends FeatureTestCase
 {
@@ -46,16 +42,14 @@ final class SecurityAuditFileHandlingRegressionTest extends FeatureTestCase
     {
         parent::setUp();
 
-        // FeatureTestCase fakt bereits "local"; die public-Disk kommt für die "liegt NICHT unter
-        // /storage"-Nachweise und den Move-Command dazu.
+        // FeatureTestCase fakt bereits "local".
         Storage::fake('public');
     }
 
     // ---------------------------------------------------------------- Helpers
 
     /**
-     * Laravels Test-Fake rät den MIME-Typ aus dem Dateinamen - genau das Verhalten, das hier
-     * geprüft wird, wäre damit unsichtbar. Deshalb echte UploadedFile-Instanzen mit echtem Inhalt.
+     * Echte UploadedFile-Instanz: der Test-Fake rät den MIME-Typ aus dem Dateinamen.
      */
     private function realUpload(string $clientName, string $content): UploadedFile
     {
@@ -182,14 +176,12 @@ final class SecurityAuditFileHandlingRegressionTest extends FeatureTestCase
             ->assertOk()
             ->assertHeader('content-disposition', 'attachment; filename=' . basename($path));
 
-        // Ersetzen räumt die alte Datei weg
         $this->post(
             route('crm.contacts.property-file.upload', $contact),
             ['property_id' => $property->id, 'file' => $this->realUpload('neu.png', $this->pngBytes())]
         )->assertSessionHasNoErrors();
         Storage::disk('local')->assertMissing($path);
 
-        // Löschen entfernt Wert und Datei
         $newPath = (string) CrmPropertyValue::query()->where('crm_property_id', $property->id)->value('value');
         Storage::disk('local')->assertExists($newPath);
         $this->delete(route('crm.contacts.property-file.delete', $contact), ['property_id' => $property->id])
@@ -211,19 +203,15 @@ final class SecurityAuditFileHandlingRegressionTest extends FeatureTestCase
 
         $url = route('crm.contacts.property-file.download', ['crmContact' => $contact, 'property' => $property]);
 
-        // Ohne CRM-Recht: 403 (Route-Middleware)
         $this->actingAs(User::factory()->create());
         $this->get($url)->assertForbidden();
 
-        // Mit CRM-Recht, aber vertrauliche Gruppe ohne Freigabe: 403
         $this->actingAsUserWith('can view crm');
         $this->get($url)->assertForbidden();
 
-        // CRM-Manager sieht alle Gruppen: 200
         $this->actingAsUserWith(['can view crm', 'crm manager']);
         $this->get($url)->assertOk();
 
-        // Die Datei ist weiterhin nicht über /storage erreichbar
         Storage::disk('public')->assertMissing($path);
     }
 
@@ -290,31 +278,26 @@ final class SecurityAuditFileHandlingRegressionTest extends FeatureTestCase
             'original_name' => 'Ausgabe 1.pdf',
         ]);
 
-        // Ohne Recht: 403
         $this->actingAs(User::factory()->create());
         $this->get(route('issue-of-material.file.download', ['internalIssue' => $issue, 'internalIssueFile' => $file]))
             ->assertForbidden();
 
-        // Mit Dispositionsrecht: 200 als Attachment
         $this->actingAsUserWith('inventory.disposition');
         $this->get(route('issue-of-material.file.download', ['internalIssue' => $issue, 'internalIssueFile' => $file]))
             ->assertOk()
             ->assertHeader('content-disposition', 'attachment; filename="Ausgabe 1.pdf"');
 
-        // Inline nur für Bilder/PDF
         $this->get(route('issue-of-material.file.download', [
             'internalIssue' => $issue,
             'internalIssueFile' => $file,
             'inline' => 1,
         ]))->assertOk()->assertHeader('content-disposition', 'inline; filename="Ausgabe 1.pdf"');
 
-        // Datei einer anderen Ausgabe über deren ID: 404
         $this->get(route('issue-of-material.file.download', [
             'internalIssue' => $otherIssue,
             'internalIssueFile' => $file,
         ]))->assertNotFound();
 
-        // Projektlesende sehen die Dateien ihres Projekts (MaterialIssuePolicy::view)
         $project = Project::factory()->create();
         $issue->update(['project_id' => $project->id]);
         $reader = User::factory()->create();
@@ -350,8 +333,7 @@ final class SecurityAuditFileHandlingRegressionTest extends FeatureTestCase
     #[Test]
     public function issue_html_attachment_is_never_rendered_inline_even_from_legacy_public_disk(): void
     {
-        // Altbestand vor dem Move-Command: Datei liegt noch auf public; die Route liefert sie
-        // aus, aber nie inline.
+        // Datei noch auf public: die Route liefert sie aus, aber nie inline.
         $issue = InternalIssue::factory()->create();
         $path = 'material-issue/' . str_repeat('d', 32) . '.bin';
         Storage::disk('public')->put($path, self::HTML);
@@ -401,11 +383,9 @@ final class SecurityAuditFileHandlingRegressionTest extends FeatureTestCase
         $crmValue = CrmPropertyValue::query()->create([
             'crm_contact_id' => $contact->id,
             'crm_property_id' => $property->id,
-            // Präfix-Variante aus dem Altbestand wird normalisiert
             'value' => '/storage/' . $crmPath,
         ]);
 
-        // Bereits private Datei bleibt unangetastet, der public-Rest wird entfernt
         $alreadyPrivate = 'material-issue/' . str_repeat('9', 32) . '.pdf';
         Storage::disk('local')->put($alreadyPrivate, 'private');
         Storage::disk('public')->put($alreadyPrivate, 'stale copy');
@@ -426,12 +406,11 @@ final class SecurityAuditFileHandlingRegressionTest extends FeatureTestCase
         $this->assertSame($externalPath, $externalFile->fresh()->file_path);
         $this->assertSame($crmPath, $crmValue->fresh()->value);
 
-        // Idempotent: zweiter Lauf ändert nichts und meldet keinen Fehler
+        // Zweiter Lauf
         $this->artisan('artwork:security:move-public-files')->assertSuccessful();
         Storage::disk('local')->assertExists($crmPath);
         $this->assertSame($crmPath, $crmValue->fresh()->value);
 
-        // Verschobene CRM-Datei ist über die autorisierte Route erreichbar
         $this->actingAsUserWith('can view crm');
         $this->get(route('crm.contacts.property-file.download', ['crmContact' => $contact, 'property' => $property]))
             ->assertOk();
@@ -536,7 +515,7 @@ final class SecurityAuditFileHandlingRegressionTest extends FeatureTestCase
             $this->jsonHeaders()
         )->assertStatus(422);
 
-        // Server-seitig ausführbar / Webserver-Konfiguration: Endung reicht, Inhalt egal
+        // Endung reicht, Inhalt egal
         $this->post(
             route('project_files.store', $project),
             ['file' => $this->realUpload('archive.phar', "<?php echo 1;\n"), 'tabId' => $tab->id],
@@ -549,7 +528,7 @@ final class SecurityAuditFileHandlingRegressionTest extends FeatureTestCase
             $this->jsonHeaders()
         )->assertStatus(422)->assertJsonValidationErrors(['file']);
 
-        // Polyglot: gültiges PNG (finfo: image/png), Client-Name ".php" -> abgelehnt, nicht umbenannt
+        // Gültiges PNG mit Client-Name ".php"
         $this->post(
             route('project_files.store', $project),
             ['file' => $this->realUpload('bild.php', $this->pngBytes() . '<?php system($_GET["c"]); ?>'), 'tabId' => $tab->id],
@@ -559,7 +538,6 @@ final class SecurityAuditFileHandlingRegressionTest extends FeatureTestCase
         $this->assertSame(0, ProjectFile::query()->where('project_id', $project->id)->count());
         $this->assertSame([], Storage::disk('local')->allFiles('project_files'));
 
-        // Echtes PNG wird gespeichert - unter Hash-Namen mit Endung des erkannten Inhalts
         $this->post(
             route('project_files.store', $project),
             ['file' => $this->realUpload('bild.png', $this->pngBytes()), 'tabId' => $tab->id],
@@ -569,7 +547,6 @@ final class SecurityAuditFileHandlingRegressionTest extends FeatureTestCase
         $this->assertStringEndsWith('.png', $pngFile->basename);
         Storage::disk('local')->assertExists('project_files/' . $pngFile->basename);
 
-        // Wildcard lässt reguläre Dokumente weiterhin durch
         $this->post(
             route('project_files.store', $project),
             ['file' => $this->realUpload('doku.pdf', $this->pdfBytes()), 'tabId' => $tab->id],
@@ -618,7 +595,6 @@ final class SecurityAuditFileHandlingRegressionTest extends FeatureTestCase
         $this->actingAsAdmin();
         $moneySource = MoneySource::factory()->create();
 
-        // Ohne Datei: Validierungsfehler statt 500
         $this->post(route('money_sources_files.store', $moneySource), [], $this->jsonHeaders())
             ->assertStatus(422)->assertJsonValidationErrors(['file']);
 
@@ -677,7 +653,6 @@ final class SecurityAuditFileHandlingRegressionTest extends FeatureTestCase
         $this->getJson(route('bi.export.status', $token))->assertForbidden();
         $this->get(route('bi.export.download', $token))->assertForbidden();
 
-        // Token-Format wird an der Route erzwungen
         $this->getJson('/bi/export/status/' . rawurlencode('../x'))->assertNotFound();
         $this->getJson('/bi/export/status/short')->assertNotFound();
     }

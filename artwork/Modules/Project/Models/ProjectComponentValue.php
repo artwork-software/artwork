@@ -25,8 +25,7 @@ class ProjectComponentValue extends Model
     ];
 
     /**
-     * Historischer Name: Der Text wird seit dem XSS-Sammelfix (21.09.2026) roh gespeichert und
-     * per Text-Interpolation gerendert; strip_tags würde Eingaben wie "a<b" verstümmeln.
+     * Liefert den Rohtext (historischer Name); strip_tags würde Eingaben wie "a<b" verstümmeln.
      */
     public function getTextWithoutHtmlAttribute(): string
     {

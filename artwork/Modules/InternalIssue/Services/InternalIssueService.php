@@ -164,7 +164,6 @@ class InternalIssueService
     protected function handleFiles(InternalIssue $issue, array $files): void
     {
         foreach ($files as $file) {
-            // Private Disk: Auslieferung nur über die autorisierte Download-Route
             $path = $file->storeAs('material-issue', StoredFileName::forUpload($file), 'local');
             InternalIssueFile::create([
                 'internal_issue_id' => $issue->id,
@@ -200,11 +199,10 @@ class InternalIssueService
     }
 
     /**
-     * Neue Dateien liegen auf "local"; "public" nur noch für Altbestand vor dem Move-Command.
+     * "public" nur für Altbestand vor dem Move-Command.
      */
     private function deleteStoredFile(?string $path): void
     {
-        // Altbestand kann "/storage/…"-Präfixe tragen
         $path = StoredFilePath::normalise($path);
 
         if ($path === null) {

@@ -12,8 +12,7 @@ use Illuminate\Support\Facades\Auth;
 abstract class BaseDemoCommand extends Command
 {
     /**
-     * Demo-Daten legen Konten mit dem bekannten Passwort DemoDataPools::DEMO_PASSWORD an –
-     * in Produktion ist das ein Sicherheitsrisiko, daher harter Abbruch.
+     * Demo-Konten haben ein bekanntes Passwort (DemoDataPools::DEMO_PASSWORD), daher harter Abbruch in Produktion.
      */
     protected function abortInProduction(): bool
     {

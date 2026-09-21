@@ -6,14 +6,10 @@ use Closure;
 use Illuminate\Contracts\Validation\ValidationRule;
 
 /**
- * Lässt nur URLs zu, deren Host auf öffentliche Adressen zeigt. Gedacht für Ziele, die der Server
- * selbst aufruft (Webhooks, OIDC-Discovery) — sonst ließe sich über eine Admin-Eingabe das interne
- * Netz abfragen (SSRF: Loopback, RFC1918, Link-Local/Cloud-Metadata 169.254.0.0/16, ULA, NAT64 …).
- * Sicherheits-Audit 21.09.2026, E NIEDRIG.
- *
- * Der Hostname wird aufgelöst (A + AAAA); jede zurückgelieferte Adresse muss öffentlich sein.
- * Nicht auflösbare Hosts werden abgelehnt (kein "unbekannt = erlaubt"). Für Tests lässt sich der
- * Resolver per resolveUsing() ersetzen; DNS-Rebinding nach der Validierung deckt die Regel nicht ab.
+ * Lässt nur URLs zu, deren Host auf öffentliche Adressen zeigt (SSRF-Schutz für Ziele, die der Server
+ * selbst aufruft: Webhooks, OIDC-Discovery). Der Hostname wird aufgelöst (A + AAAA), jede Adresse muss
+ * öffentlich sein; nicht auflösbare Hosts werden abgelehnt. DNS-Rebinding nach der Validierung deckt
+ * die Regel nicht ab.
  */
 class PublicUrlRule implements ValidationRule
 {
@@ -28,7 +24,7 @@ class PublicUrlRule implements ValidationRule
     }
 
     /**
-     * Resolver ersetzen (Tests) — erhält den Hostnamen, liefert IP-Strings; null = System-DNS.
+     * Resolver ersetzen (Tests); null = System-DNS.
      *
      * @param (callable(string): array<int, string>)|null $resolver
      */

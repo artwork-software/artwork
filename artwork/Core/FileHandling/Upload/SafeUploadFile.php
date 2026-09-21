@@ -9,10 +9,8 @@ use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Http\UploadedFile;
 
 /**
- * Validierungsregel für Upload-Pfade ohne handleFile(): lehnt jede Datei ab, die auf der
- * UploadDenyList steht (Client-Endung ODER erkannter Inhalt). Nicht-Datei-Werte (z. B. eine
- * bereits gespeicherte Bild-URL als String) passieren die Regel unverändert - dafür sind
- * 'image' / 'file' / 'mimes' zuständig.
+ * Lehnt Dateien von der UploadDenyList ab (Client-Endung oder erkannter Inhalt). Nicht-Datei-Werte
+ * passieren unverändert; dafür sind 'image'/'file'/'mimes' zuständig.
  */
 final class SafeUploadFile implements ValidationRule
 {

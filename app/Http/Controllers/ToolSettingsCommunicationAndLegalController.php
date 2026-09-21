@@ -29,7 +29,7 @@ class ToolSettingsCommunicationAndLegalController extends Controller
     {
         $this->authorize('updateEmailSettings', $generalSettings);
 
-        // Sicherheits-Audit 21.09.2026 (E, NIEDRIG): Links landen als href im Footer/Mails — nur http(s).
+        // Links landen als href im Footer/Mails: nur http(s).
         $request->validate([
             'businessName' => ['nullable', 'string', 'max:255'],
             'page_title' => ['nullable', 'string', 'max:255'],

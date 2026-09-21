@@ -6,10 +6,8 @@ use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Storage;
 
 /**
- * Kalender-, Dienstplan- und Aufenthalts-Exporte (ExportPDFController, ArtistResidencyService)
- * werden unter storage/app/pdf abgelegt und normalerweise per deleteFileAfterSend entfernt.
- * Bricht der Download ab (Browser geschlossen, Timeout), bleibt die Datei liegen - dieser
- * Job räumt nach 24 h auf. Läuft täglich über den Scheduler (Muster: CleanupBiExportsCommand).
+ * Export-PDFs unter storage/app/pdf werden normalerweise per deleteFileAfterSend entfernt; bricht der
+ * Download ab, bleiben sie liegen und werden hier nach 24 h aufgeräumt. Läuft täglich über den Scheduler.
  */
 class CleanupExportPdfsCommand extends Command
 {
@@ -18,8 +16,6 @@ class CleanupExportPdfsCommand extends Command
     protected $description = 'Delete generated export PDFs (storage/app/pdf) older than the given number of hours';
 
     /**
-     * Verzeichnisse auf der local-Disk, in denen Export-PDFs entstehen.
-     *
      * @var list<string>
      */
     private const DIRECTORIES = ['pdf'];

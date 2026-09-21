@@ -172,8 +172,7 @@ class ChecklistController extends Controller
         TaskService $taskService
     ): RedirectResponse|JsonResponse {
 
-        // Projekt-/Tab-Wechsel nur explizit und autorisiert: null bedeutet "unverändert" (das Edit-Modal
-        // sendet ohne Projektauswahl null), ein fremdes Zielprojekt braucht createProperties.
+        // null = Projekt/Tab unverändert (das Edit-Modal sendet ohne Projektauswahl null).
         $targetProjectId = $request->filled('project_id') ? $request->integer('project_id') : null;
         if ($targetProjectId !== null && $targetProjectId !== (int) $checklist->project_id) {
             $this->authorize('createProperties', Project::findOrFail($targetProjectId));
@@ -243,7 +242,6 @@ class ChecklistController extends Controller
 
     public function duplicate(Checklist $checklist): RedirectResponse
     {
-        // nicht von authorizeResource abgedeckt
         $this->authorize('update', $checklist);
 
         $newChecklist = $this->checklistService->duplicate(
@@ -260,8 +258,6 @@ class ChecklistController extends Controller
 
         //$newChecklist->users()->sync($checklist->users->pluck('id'));
 
-        // Bewusst KEIN attach() der aufrufenden Person ans Projektteam mehr
-        // (war Selbstaufnahme über fremde Checklisten-Id).
         if ($newChecklist->hasProject()) {
             $this->changeService->saveFromBuilder(
                 $this->changeService

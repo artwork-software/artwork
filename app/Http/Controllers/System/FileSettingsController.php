@@ -33,8 +33,6 @@ class FileSettingsController extends Controller
 
     public function store(Request $request): void
     {
-        // Schalter "Dateiupload für Externe erlauben" nutzt denselben Endpunkt wie die
-        // Allowlists/Größenlimits (gleiches Recht "change tool settings").
         if ($request->has('external_file_upload_enabled')) {
             $this->generalSettingsService->updateExternalFileUploadEnabledFromRequest($request);
 

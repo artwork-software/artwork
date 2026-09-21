@@ -23,12 +23,11 @@ use InvalidArgumentException;
 use PHPUnit\Framework\Attributes\Test;
 
 /**
- * Sicherheits-Audit 21.09.2026, Abschnitt E (Eingabeverarbeitung): Mass Assignment, fehlende
- * Validierung, SSRF. Jeder Test bildet einen Befund ab; grün = Befund geschlossen.
+ * Eingabeverarbeitung: Mass Assignment, Validierung, SSRF.
  */
 final class SecurityAuditInputValidationRegressionTest extends FeatureTestCase
 {
-    // ---------- HOCH: Checklist-Mass-Assignment ----------
+    // ---------- Checklist-Mass-Assignment ----------
 
     #[Test]
     public function checklist_update_cannot_move_checklist_into_foreign_project_or_change_owner(): void
@@ -69,7 +68,6 @@ final class SecurityAuditInputValidationRegressionTest extends FeatureTestCase
             'tab_id' => 3,
         ]);
 
-        // Das Edit-Modal sendet ohne Projektauswahl project_id/tab_id/user_id = null
         $this->patch(route('checklists.update', $checklist), [
             'name' => 'neuer Name',
             'private' => false,
@@ -117,7 +115,7 @@ final class SecurityAuditInputValidationRegressionTest extends FeatureTestCase
             ->assertSessionHasErrors('name');
     }
 
-    // ---------- MITTEL: MoneySource ----------
+    // ---------- MoneySource ----------
 
     #[Test]
     public function money_source_store_validates_amount_and_group_references(): void
@@ -153,8 +151,7 @@ final class SecurityAuditInputValidationRegressionTest extends FeatureTestCase
     #[Test]
     public function money_source_cannot_attach_foreign_sources_as_sub_sources(): void
     {
-        // MONEY_SOURCE_EDIT_VIEW_ADD berechtigt in der Policy auch zum Bearbeiten aller Quellen — daher
-        // hier ein Nutzer, der nur über die eigene Quelle (creator) schreiben darf.
+        // MONEY_SOURCE_EDIT_VIEW_ADD berechtigt in der Policy zum Bearbeiten aller Quellen; daher nur creator-Recht.
         $user = $this->actingAsUserWith(PermissionEnum::MONEY_SOURCE_EDIT_VIEW_ADD->value);
         $own = MoneySource::factory()->create(['creator_id' => $user->id, 'is_group' => true]);
         $foreign = MoneySource::factory()->create();
@@ -192,7 +189,7 @@ final class SecurityAuditInputValidationRegressionTest extends FeatureTestCase
         $this->assertNull($own->fresh()->group_id);
     }
 
-    // ---------- MITTEL: Checklist-/Task-Templates ----------
+    // ---------- Checklist-/Task-Templates ----------
 
     #[Test]
     public function checklist_template_store_forces_creator_to_current_user(): void
@@ -247,7 +244,7 @@ final class SecurityAuditInputValidationRegressionTest extends FeatureTestCase
         $this->assertSame($template->id, $task->fresh()->checklist_template_id);
     }
 
-    // ---------- MITTEL: EventType ----------
+    // ---------- EventType ----------
 
     #[Test]
     public function event_type_rejects_unknown_verification_mode_and_verifier(): void
@@ -288,7 +285,7 @@ final class SecurityAuditInputValidationRegressionTest extends FeatureTestCase
         $this->assertSame($verifier->id, $eventType->specific_verifier_id);
     }
 
-    // ---------- NIEDRIG: PrintLayout ----------
+    // ---------- PrintLayout ----------
 
     #[Test]
     public function print_layout_update_ignores_owner_permission_default_and_order(): void
@@ -330,7 +327,7 @@ final class SecurityAuditInputValidationRegressionTest extends FeatureTestCase
         $this->assertSame(1, $layout->order);
     }
 
-    // ---------- NIEDRIG: SSRF Webhook / OIDC ----------
+    // ---------- SSRF Webhook / OIDC ----------
 
     #[Test]
     public function webhook_endpoint_rejects_private_and_unresolvable_targets(): void
@@ -362,7 +359,7 @@ final class SecurityAuditInputValidationRegressionTest extends FeatureTestCase
         $this->assertSame(1, WebhookEndpoint::query()->count());
     }
 
-    // ---------- NIEDRIG: ProjectRole / Component ----------
+    // ---------- ProjectRole / Component ----------
 
     #[Test]
     public function project_role_requires_name(): void
@@ -408,7 +405,7 @@ final class SecurityAuditInputValidationRegressionTest extends FeatureTestCase
         $this->assertDatabaseHas('components', ['name' => 'Feld', 'type' => 'TextField']);
     }
 
-    // ---------- NIEDRIG: Chat / Kommentar / Tool-Settings ----------
+    // ---------- Chat / Kommentar / Tool-Settings ----------
 
     #[Test]
     public function chat_message_is_limited(): void
@@ -464,7 +461,7 @@ final class SecurityAuditInputValidationRegressionTest extends FeatureTestCase
         ])->assertSessionHasNoErrors();
     }
 
-    // ---------- NIEDRIG: LDAP identifier whitelist ----------
+    // ---------- LDAP identifier whitelist ----------
 
     #[Test]
     public function ldap_identifier_attribute_is_whitelisted(): void

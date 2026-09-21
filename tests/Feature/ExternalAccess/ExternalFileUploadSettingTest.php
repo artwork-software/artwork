@@ -21,9 +21,8 @@ use Illuminate\Support\Facades\Storage;
 use PHPUnit\Framework\Attributes\Test;
 
 /**
- * Tool-Setting "Dateiupload für Externe erlauben" (GeneralSettings::external_file_upload_enabled,
- * Default AUS): Upload und Löschen eigener Uploads durch externe Zugänge nur bei aktivem Schalter
- * (sonst 403), Download/Anzeige bleiben unverändert; die Tab-Seite liefert das Flag als Prop.
+ * Tool-Setting external_file_upload_enabled: Upload und Löschen eigener Uploads durch externe Zugänge
+ * nur bei aktivem Schalter, Download/Anzeige bleiben unverändert.
  */
 final class ExternalFileUploadSettingTest extends ExternalAccessTestCase
 {
@@ -47,8 +46,7 @@ final class ExternalFileUploadSettingTest extends ExternalAccessTestCase
     }
 
     /**
-     * Echte UploadedFile-Instanz mit echtem PDF-Inhalt (kein fake(): der Test-Fake rät den MIME-Typ
-     * aus dem Dateinamen).
+     * Echte UploadedFile-Instanz: der Test-Fake rät den MIME-Typ aus dem Dateinamen.
      */
     private function realPdfUpload(string $clientName = 'rider.pdf'): UploadedFile
     {
@@ -111,8 +109,7 @@ final class ExternalFileUploadSettingTest extends ExternalAccessTestCase
     }
 
     /**
-     * Rendert die Tab-Seite wie TabShowTest direkt über den Controller (Scope wie von der
-     * Middleware gesetzt) und liefert die Inertia-Props.
+     * Rendert die Tab-Seite direkt über den Controller (Scope wie von der Middleware gesetzt).
      */
     private function tabProps(array $ctx): array
     {

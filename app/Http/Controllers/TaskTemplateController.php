@@ -17,9 +17,7 @@ class TaskTemplateController extends Controller
     }
 
     /**
-     * Regeln für Anlage/Änderung einer Aufgabenvorlage. Die Vorlagenzugehörigkeit wird nur per exists
-     * geprüft — die Routen liegen komplett hinter "can:admin checklistTemplates", ein feineres Recht
-     * pro Vorlage gibt es nicht (Sicherheits-Audit 21.09.2026, E).
+     * Vorlagenzugehörigkeit nur per exists: die Routen liegen komplett hinter "can:admin checklistTemplates".
      *
      * @return array<string, array<int, string>>
      */

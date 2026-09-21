@@ -12,13 +12,11 @@ return new class extends Migration
     {
         Schema::table('invitations', function (Blueprint $table): void {
             if (!Schema::hasColumn('invitations', 'expires_at')) {
-                // Sicherheits-Audit 21.09.2026 (D): Einladungstoken laufen nach 7 Tagen ab.
                 $table->timestamp('expires_at')->nullable()->after('roles');
             }
         });
 
-        // Altbestand: Ablauf ab dem letzten (Neu-)Versand nachziehen, damit offene Einladungen
-        // nicht schlagartig ungültig werden, aber trotzdem eine Frist bekommen.
+        // Altbestand: Ablauf ab dem letzten (Neu-)Versand nachziehen.
         foreach (DB::table('invitations')->whereNull('expires_at')->get(['id', 'created_at', 'updated_at']) as $row) {
             $sentAt = $row->updated_at ?? $row->created_at;
             DB::table('invitations')->where('id', $row->id)->update([

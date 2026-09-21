@@ -38,13 +38,8 @@ class EventPolicy
     }
 
     /**
-     * Einzelnen Termin lesen (events.description, events.timelines, events.series.show).
-     *
-     * Regel des Auftraggebers (21.09.2026): Wer den Kalender sehen darf, darf alle Termine sehen —
-     * unabhängig davon, ob das Projekt des Termins privat ist. Der Kalender ist instanzweit
-     * sichtbar, deshalb reicht die Anmeldung; ein Projekt-Sichtrecht wird NICHT verlangt.
-     * Einzige Ausnahme: Planungstermine (is_planning) liegen hinter dem Recht für den
-     * Planungskalender (sehen oder bearbeiten), analog zu EventController::viewPlanningCalendar.
+     * Wer den Kalender sehen darf, darf jeden Termin lesen; ein Projekt-Sichtrecht wird nicht verlangt,
+     * auch bei privatem Projekt. Nur Planungstermine (is_planning) liegen hinter dem Planungskalender-Recht.
      */
     public function view(User $user, Event $event): bool
     {
@@ -106,8 +101,8 @@ class EventPolicy
     }
 
     /**
-     * Zeitleisten-Zeilen an Terminen: Schreibrecht am Termin ODER Dienstplanung — die Zeitleiste wird
-     * im Schichten-Tab auch von Planer:innen ohne Projekt-Schreibrecht gepflegt.
+     * Schreibrecht am Termin ODER Dienstplanung: die Zeitleiste wird im Schichten-Tab auch von
+     * Planer:innen ohne Projekt-Schreibrecht gepflegt.
      */
     public function editTimeline(User $user, Event $event): bool
     {

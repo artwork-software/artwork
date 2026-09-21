@@ -101,8 +101,7 @@ class ToolSettingsInterfacesController extends Controller
     }
 
     /**
-     * Sage-Zugang ohne Passwort: das Formular erfährt nur, OB eines hinterlegt ist
-     * (Muster MailSettingsController). null, solange noch keine Einstellungen existieren.
+     * Das Formular erfährt nur, OB ein Sage-Passwort hinterlegt ist; null ohne Einstellungen.
      *
      * @return array<string, mixed>|null
      */

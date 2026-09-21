@@ -3,7 +3,7 @@
     <title>Per Diem Export</title>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
     <style>
-        /* Keine externen Font-Abrufe (Sicherheits-Audit 21.09.2026): System-Font-Stack wie die uebrigen PDF-Views. */
+        /* Keine externen Font-Abrufe: System-Font-Stack wie die uebrigen PDF-Views. */
         @page {
             size: portrait;
             margin: 12mm;

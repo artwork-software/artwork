@@ -99,16 +99,11 @@ class UpdateArtwork extends Command
         );
     }
 
-    /**
-     * Sicherheits-Audit 21.09.2026 (F): CRM-Eigenschaftsdateien, Materialausgabe-Anhänge und
-     * Ausgabe-PDFs lagen unter /storage ohne Login lesbar. Idempotent - verschiebt nur, was noch da liegt.
-     */
     private function movePublicFilesToPrivateDisk(): void
     {
         $this->section('Move public files to private disk');
 
-        // Einzelne Dateien fängt das Command selbst ab; ein unerwarteter Fehler (z. B. Disk nicht
-        // erreichbar) darf das Update nicht abbrechen - bis zum nächsten Lauf greift der public-Fallback.
+        // Ein unerwarteter Fehler darf das Update nicht abbrechen; bis zum nächsten Lauf greift der public-Fallback.
         try {
             $this->call('artwork:security:move-public-files');
         } catch (\Throwable $exception) {

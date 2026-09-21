@@ -6,15 +6,9 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 /**
- * Sicherheits-Audit 21.09.2026, Sofortmaßnahme 2 (Stored-XSS-Klasse):
- * Die Speicherpfade haben Nutzertext bisher mit nl2br() (ohne e()) versehen, das Frontend
- * hat ihn per v-html gerendert. Ab jetzt wird Rohtext gespeichert und per {{ }} +
- * white-space: pre-line ausgegeben. Altbestand enthält daher noch "<br />"-Fragmente,
- * die sichtbar würden - hier werden sie (case-insensitiv, alle Schreibweisen) durch
- * "\n" ersetzt. Weiteres HTML bleibt unangetastet: es wird ab jetzt als Text angezeigt.
- *
- * Läuft chunkweise in PHP (treiberneutral, JSON-Spalte und verschlüsselte Chat-Nachrichten
- * lassen sich so sauber behandeln) und ist idempotent - ein zweiter Lauf findet nichts mehr.
+ * Ersetzt "<br />"-Fragmente aus früherem nl2br() in Nutzertext durch "\n"; Rohtext wird per {{ }} +
+ * white-space: pre-line ausgegeben, weiteres HTML bleibt unangetastet. Läuft chunkweise in PHP
+ * (JSON-Spalte, verschlüsselte Chat-Nachrichten) und ist idempotent.
  */
 return new class extends Migration
 {
@@ -32,7 +26,7 @@ return new class extends Migration
 
     public function down(): void
     {
-        // Bewusst leer: Rohtext ist das neue Zielformat, ein Zurückschreiben von "<br />" wäre ein Rückschritt.
+        // Rohtext ist das Zielformat; kein Zurückschreiben von "<br />".
     }
 
     private function replaceInPlainColumn(string $table, string $column): void

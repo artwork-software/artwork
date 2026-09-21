@@ -32,10 +32,8 @@ class ShiftAssigned implements ShouldBroadcast
     }
 
     /**
-     * Schlanker Payload wie AssignUserToShift/UpdateShiftInShiftPlan: ShiftDTO (Worker nur mit
-     * id/type/name/Pivot) statt shift->toArray() + user->toArray(). Das User-Model trägt
-     * Gehalts- und Kontaktdaten (salary_per_hour, salary_description, email, phone_number …),
-     * die nicht über Broadcast laufen dürfen (Sicherheits-Audit 21.09.2026, G).
+     * Schlanker Payload (ShiftDTO, Worker nur mit id/type/name/Pivot): das User-Model trägt
+     * Gehalts- und Kontaktdaten, die nicht über Broadcast laufen dürfen.
      *
      * @return array<string, mixed>
      */

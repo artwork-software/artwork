@@ -40,9 +40,7 @@ class EnsureUserCanAccessProjectBudget
      * Request-Schlüssel (Body oder Query) => Model-Klasse zur Projekt-Auflösung.
      */
     /**
-     * Erlaubte Morph-Ziele der Budgetsummen: sourceable_type (SumMoneySource) und
-     * commentable_type (SumComment). Andere Klassen werden nie aufgelöst — und von
-     * den Controllern per Validierung abgewiesen.
+     * Erlaubte Morph-Ziele der Budgetsummen (sourceable_type/commentable_type); andere Klassen werden nie aufgelöst.
      */
     public const SUM_MORPH_ALLOWLIST = [
         BudgetSumDetails::class,
@@ -75,9 +73,8 @@ class EnsureUserCanAccessProjectBudget
     }
 
     /**
-     * Hat die Person irgendwo Budgetzugriff (Admin, globale Budgetrechte, Vorlagen-Rechte oder
-     * access_budget an mindestens einem Projekt)? Für projektlose Hilfsendpunkte wie die
-     * Konten-/Kostenstellen-Suche, die aus dem Projektbudget heraus aufgerufen werden.
+     * Budgetzugriff irgendwo (Admin, globale Budgetrechte, Vorlagen-Rechte, access_budget an einem
+     * Projekt); für projektlose Hilfsendpunkte wie die Konten-/Kostenstellen-Suche.
      */
     public static function hasAnyBudgetAccess(?User $user): bool
     {
@@ -247,7 +244,7 @@ class EnsureUserCanAccessProjectBudget
     }
 
     /**
-     * Morph-Ziel einer Budgetsumme laden — nur Klassen aus der Allowlist, nie beliebige Model-Namen.
+     * Nur Klassen aus der Allowlist, nie beliebige Model-Namen.
      */
     private function resolveSumMorph(?string $type, mixed $id): ?Model
     {

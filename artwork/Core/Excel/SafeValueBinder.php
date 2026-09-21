@@ -10,13 +10,9 @@ use PhpOffice\PhpSpreadsheet\Cell\DataType;
 use PhpOffice\PhpSpreadsheet\Shared\StringHelper;
 
 /**
- * Zentraler Value-Binder für alle Excel-Exporte (config/excel.php → value_binder.default).
- *
- * Schutz gegen Formel-Injection: Strings, die (ggf. nach führenden Leerzeichen) mit
- * "=", "+", "-", "@", Tab oder CR beginnen und nicht numerisch sind, werden explizit als
- * Text-Zelle gebunden. In XLSX werden String-Zellen nicht ausgewertet, ein Apostroph-Präfix
- * ist daher nicht nötig. Alles andere (Zahlen, Datumsobjekte, Arrays, Bools) geht unverändert
- * an den DefaultValueBinder, damit numerische Bindungen und Zahlenformate erhalten bleiben.
+ * Value-Binder für alle Excel-Exporte (config/excel.php). Strings, die mit "=", "+", "-", "@", Tab oder CR
+ * beginnen und nicht numerisch sind, werden als Text-Zelle gebunden (Formel-Injection); alles andere
+ * geht unverändert an den DefaultValueBinder.
  */
 class SafeValueBinder extends DefaultValueBinder
 {

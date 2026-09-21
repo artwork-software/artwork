@@ -1255,8 +1255,7 @@ const isImageFile = (filename) => {
 
 const isPdfFileName = (filename) => (filename || '').split('.').pop()?.toLowerCase() === 'pdf';
 
-// Anhänge liegen auf der privaten Disk: Auslieferung nur über die autorisierte
-// Download-Route (inline=1 für die Bild-/PDF-Vorschau, sonst als Download).
+// Anhänge liegen auf der privaten Disk; inline=1 für die Bild-/PDF-Vorschau.
 const issueFileUrl = (file, inline = false) => route('extern-issue-of-material.file.download', {
     externalIssue: file.external_issue_id ?? props.externMaterialIssue?.id,
     externalIssueFile: file.id,

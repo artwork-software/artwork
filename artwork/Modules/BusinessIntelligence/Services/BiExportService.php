@@ -300,7 +300,7 @@ class BiExportService
     {
         $token = Str::uuid()->toString();
         Cache::put('bi_export_' . $token, $config, now()->addMinutes(30));
-        // user_id bindet Status + Download an die anfragende Person (Sicherheits-Audit 21.09.2026, F)
+        // user_id bindet Status und Download an die anfragende Person.
         Cache::put(
             'bi_export_status_' . $token,
             ['status' => 'pending', 'user_id' => $config['user_id'] ?? null],
@@ -324,8 +324,7 @@ class BiExportService
     }
 
     /**
-     * 403, wenn der Export einer anderen Person gehört. Einträge ohne Bindung (Altbestand vor dem
-     * Deploy) bleiben für die Dauer ihrer TTL erreichbar.
+     * 403, wenn der Export einer anderen Person gehört; Einträge ohne Bindung bleiben für ihre TTL erreichbar.
      */
     private function assertOwnedBy(string $token, ?int $userId): void
     {

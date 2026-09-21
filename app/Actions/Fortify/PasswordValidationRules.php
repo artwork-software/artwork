@@ -7,8 +7,7 @@ use Illuminate\Validation\Rules\Password;
 trait PasswordValidationRules
 {
     /**
-     * Zentrale Passwortregel (Setup, Einladung, Passwort ändern/zurücksetzen).
-     * Bewusst ohne uncompromised(): Intranet-Installationen laufen ohne Internetzugang.
+     * Ohne uncompromised(): Intranet-Installationen laufen ohne Internetzugang.
      *
      * @return array<int, mixed>
      */

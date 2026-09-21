@@ -9,11 +9,8 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
 
 /**
- * Upload mit einer Endung / einem Inhalt von der UploadDenyList.
- *
- * Bewusst eine ValidationException: im Request-Kontext antwortet Laravel damit von selbst
- * mit 422 (JSON) bzw. Redirect + Fehlermeldung (Inertia) - auch dort, wo StoredFileName
- * ohne vorgeschaltete Validierung direkt vor storeAs() aufgerufen wird.
+ * Upload mit einer Endung/einem Inhalt von der UploadDenyList. Als ValidationException antwortet
+ * Laravel im Request-Kontext von selbst mit 422 bzw. Redirect + Fehlermeldung.
  */
 final class DeniedUploadFileException extends ValidationException
 {

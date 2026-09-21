@@ -180,11 +180,9 @@ class AuthServiceProvider extends ServiceProvider
             return ShiftCommitWorkflowUser::where('user_id', $user->id)->exists();
         });
 
-        // CRM-Kontakt-Lookups (crm.contacts.search/data/tooltip) werden außerhalb des CRM genutzt:
-        // Projektteam-Suche (Projekt-Schreibrecht/Teamverwaltung), Dokumentanfragen, Vertragsupload,
-        // Künstler-Verknüpfung (Projektanlage), externe Einladungen. Erlaubt ist, wer CRM sehen darf
-        // oder eines der Rechte hat, das diese Features voraussetzen; für den Tooltip zusätzlich,
-        // wenn der Kontakt im Team eines Projekts steht, das die Person sehen darf.
+        // Kontakt-Lookups werden auch außerhalb des CRM genutzt (Projektteam, Dokumentanfragen, Verträge,
+        // Künstler-Verknüpfung, externe Einladungen): erlaubt mit CRM-Sicht oder einem der Rechte dieser
+        // Features; der Tooltip zusätzlich für Kontakte im Team eines sichtbaren Projekts.
         Gate::define(
             'crm.contacts.lookup',
             function (User $user, ?CrmContact $crmContact = null): bool {
@@ -204,7 +202,6 @@ class AuthServiceProvider extends ServiceProvider
                     return true;
                 }
 
-                // Schreibrecht in mindestens einem Projektteam (ProjectEditTeamModal, Künstler-Verknüpfung)
                 if ($user->projects()->wherePivot('can_write', true)->exists()) {
                     return true;
                 }

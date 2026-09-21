@@ -57,7 +57,6 @@ class CommentController extends Controller
 
     public function update(Request $request, Comment $comment): RedirectResponse
     {
-        // gleiche Grenze wie StoreCommentRequest (Sicherheits-Audit 21.09.2026, E)
         $request->validate(['text' => 'required|string|max:5000']);
         $comment->text = $request->input('text');
         $this->commentService->save($comment);

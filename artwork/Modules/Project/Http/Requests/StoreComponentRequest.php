@@ -7,9 +7,7 @@ use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
 /**
- * Sicherheits-Audit 21.09.2026 (E, NIEDRIG): Komponenten-Einstellungen (type/permission_type/data,
- * Nutzer-/Abteilungs-Pivots) kamen ungeprüft in die Tabelle. Rechteprüfung liegt auf der
- * Routengruppe (can:change project settings).
+ * Rechteprüfung liegt auf der Routengruppe (can:change project settings).
  */
 class StoreComponentRequest extends FormRequest
 {

@@ -117,8 +117,7 @@ const deleteUserFromForm = (index) => {
 /** API unverändert */
 const createChat = async () => {
     try {
-        // axios statt fetch(): sendet X-XSRF-TOKEN aus dem Cookie, der Meta-Token
-        // im DOM veraltet nach Re-Login (419).
+        // axios sendet X-XSRF-TOKEN aus dem Cookie; der Meta-Token im DOM veraltet nach Re-Login (419).
         const { data } = await window.axios.post(route('chat.store'), {
             name: chatName.value,
             users: chatUsers.value.map(user => user.id),

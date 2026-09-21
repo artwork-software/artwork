@@ -8,8 +8,7 @@ use Illuminate\Foundation\Http\FormRequest;
 class ArtistResidencyCreateRequest extends FormRequest
 {
     /**
-     * Schreibrecht im Routen-Projekt VOR der Validierung (403 statt 422 bei fehlendem Recht);
-     * der Controller prüft zusätzlich und erzwingt project_id = Routen-Projekt.
+     * Schreibrecht im Routen-Projekt vor der Validierung (403 statt 422).
      */
     public function authorize(): bool
     {

@@ -501,9 +501,6 @@ class InventoryArticleController extends Controller
      * Tag-Freigaben ("eingeschränkte Tags") wurden bisher nur im ArticleDetailModal geprüft;
      * hier serverseitig nachgezogen. Admins passieren via Gate::before-Äquivalent (Rolle).
      */
-    /**
-     * Einzelbestände erben den Tag-Schutz ihres Artikels (Inline-Autosave lief bisher daran vorbei).
-     */
     private function authorizeDetailedArticleTagAccess(InventoryDetailedQuantityArticle $detailedArticle): void
     {
         $article = InventoryArticle::query()->find($detailedArticle->inventory_article_id);

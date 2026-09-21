@@ -39,8 +39,7 @@ class Invitation extends Model
     ];
 
     /**
-     * Abgelaufene Einladungen lassen sich nicht mehr annehmen; ohne Ablaufdatum (Altbestand vor der
-     * Migration wird dort nachgezogen) gilt die Einladung als abgelaufen.
+     * Ohne Ablaufdatum gilt die Einladung als abgelaufen.
      */
     public function isExpired(): bool
     {

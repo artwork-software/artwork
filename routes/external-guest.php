@@ -12,8 +12,7 @@ Route::middleware('external.guest')
         Route::post('login', [ExternalLoginController::class, 'requestLink'])
             ->middleware('throttle:external-request-link')
             ->name('login.request');
-        // GET zeigt nur eine Bestätigungsseite (Link-Vorschauen von Mailclients dürfen das
-        // Einmal-Token nicht verbrennen); erst der POST löst das Token ein.
+        // GET zeigt nur die Bestätigungsseite (Link-Vorschauen dürfen das Einmal-Token nicht verbrennen); der POST löst es ein.
         Route::get('login/{token}', [ExternalLoginController::class, 'showRedeemConfirmation'])
             ->where('token', '[A-Za-z0-9]{64}')
             ->name('login.redeem');

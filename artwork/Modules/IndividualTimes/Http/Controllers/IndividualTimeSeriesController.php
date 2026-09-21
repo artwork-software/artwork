@@ -55,7 +55,6 @@ class IndividualTimeSeriesController extends Controller
         // subjects: [{type: "user"|"freelancer"|"service_provider", id: 123}, ...]
         $subjectsInput = collect($data['subjects']);
 
-        // Gleiche Prüfung pro Person wie im Einzel-Endpunkt (IndividualTimeController::store).
         $this->authorize('createForSubjects', [IndividualTimeSeries::class, $subjectsInput->all()]);
 
         // Zeit-Subjekte aus DB laden
@@ -78,7 +77,6 @@ class IndividualTimeSeriesController extends Controller
 
     /**
      * Display the specified resource.
-     * Sicherheits-Audit 21.09.2026: IndividualTimeSeriesPolicy::view (eigene Serie oder Planungsrecht).
      *
      * @throws \Illuminate\Auth\Access\AuthorizationException
      */

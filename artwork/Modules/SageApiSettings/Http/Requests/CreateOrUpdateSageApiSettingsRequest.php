@@ -16,8 +16,6 @@ class CreateOrUpdateSageApiSettingsRequest extends FormRequest
     public function rules(): array
     {
         return [
-            // Basic-Auth geht nur an eine echte http(s)-Adresse; ohne Schema/Validierung ließe sich
-            // der Client auf beliebige Ziele umbiegen.
             'host' => ['required', 'string', 'max:2048', 'url:http,https'],
             'endpoint' => ['required', 'string', 'max:2048'],
             'user' => ['required', 'string', 'max:255'],

@@ -24,8 +24,7 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class CrmContactController extends Controller
 {
-    // Eigenschaftsdateien liegen auf der PRIVATEN local-Disk (Sicherheits-Audit 21.09.2026, F)
-    // und werden ausschließlich über downloadPropertyFile() ausgeliefert.
+    // Eigenschaftsdateien liegen auf der privaten local-Disk; Auslieferung nur über downloadPropertyFile().
     public const PROPERTY_FILE_DIR = 'crm-property-files';
 
     private const PROPERTY_FILE_MIMES = 'pdf,jpg,jpeg,png,webp,doc,docx,xls,xlsx,csv,txt';
@@ -448,8 +447,7 @@ class CrmContactController extends Controller
     }
 
     /**
-     * Autorisierter Download: Route-Middleware "can view crm" plus dieselbe Gruppen-Sichtbarkeit,
-     * mit der getData()/tooltipInfo() die Eigenschaftswerte filtern.
+     * Gleiche Gruppen-Sichtbarkeit wie getData()/tooltipInfo().
      */
     public function downloadPropertyFile(
         Request $request,
@@ -465,7 +463,6 @@ class CrmContactController extends Controller
         $visiblePropertyIds = $this->propertyGroupService->getVisiblePropertyIds($user->id, $deptIds, $isCrmManager);
         abort_unless(in_array($property->id, array_map('intval', $visiblePropertyIds), true), 403);
 
-        // Altbestand kann "/storage/…"-Präfixe tragen (StoredFilePath), erst danach die Muster-Prüfung
         $path = StoredFilePath::normalise(
             $crmContact->propertyValues()->where('crm_property_id', $property->id)->value('value')
         );
@@ -551,8 +548,7 @@ class CrmContactController extends Controller
         CrmContact $crmContact,
         AccommodationRoomType $roomType
     ): RedirectResponse {
-        // Nur Zimmertypen umbenennen, die diesem Unterkunfts-Kontakt zugeordnet sind — sonst ließe
-        // sich jede Zimmertyp-ID der Instanz über einen beliebigen Kontakt ändern.
+        // Nur Zimmertypen dieses Unterkunfts-Kontakts, sonst ließe sich jede Zimmertyp-ID ändern.
         $this->resolveAccommodationId($crmContact);
         abort_unless($crmContact->roomTypes()->whereKey($roomType->id)->exists(), 404);
 

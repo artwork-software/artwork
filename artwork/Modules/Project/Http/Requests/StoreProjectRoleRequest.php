@@ -5,8 +5,7 @@ namespace Artwork\Modules\Project\Http\Requests;
 use Illuminate\Foundation\Http\FormRequest;
 
 /**
- * Sicherheits-Audit 21.09.2026 (E, NIEDRIG): Projektrollen wurden ohne Validierung angelegt
- * (500 bei fehlendem/überlangem Namen). Rechteprüfung liegt auf der Resource-Route.
+ * Rechteprüfung liegt auf der Resource-Route.
  */
 class StoreProjectRoleRequest extends FormRequest
 {

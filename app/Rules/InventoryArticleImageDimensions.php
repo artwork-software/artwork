@@ -12,7 +12,7 @@ class InventoryArticleImageDimensions implements ValidationRule
 {
     private const int MAX_DIMENSION = 8192;
 
-    // Zusätzlich zur Kantenlänge: Gesamtpixel (8192² wären 67 MP) - Dekodierung im Job ist darauf begrenzt
+    // Gesamtpixel zusätzlich zur Kantenlänge (8192² wären 67 MP).
     private const int MAX_PIXELS = InventoryArticleImageService::MAX_PIXELS;
 
     /**

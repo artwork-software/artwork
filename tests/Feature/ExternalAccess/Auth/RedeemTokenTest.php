@@ -137,8 +137,6 @@ final class RedeemTokenTest extends TestCase
     #[Test]
     public function get_shows_confirmation_page_without_consuming_the_token(): void
     {
-        // Link-Vorschauen (Mailclient, Virenscanner) rufen den Link per GET auf – das darf das
-        // Einmal-Token nicht entwerten. Eingelöst wird erst per POST von der Bestätigungsseite.
         $external = ExternalAccess::factory()->active()->create();
         $plain = Str::random(64);
         $token = $this->makeToken($external, $plain);
@@ -147,8 +145,7 @@ final class RedeemTokenTest extends TestCase
 
         $response->assertOk();
         $response->assertInertia(fn ($page) => $page
-            // Externe Seiten liegen unter Pages/ExternalAccess (eigener Resolver in app-external.js),
-            // daher ohne Inertias Default-Existenzprüfung gegen resources/js/Pages.
+            // Externe Seiten liegen unter Pages/ExternalAccess, daher ohne Inertias Existenzprüfung.
             ->component('Auth/ConfirmLogin', false)
             ->where('token', $plain));
         $this->assertNull($token->fresh()->used_at);

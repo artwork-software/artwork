@@ -5,7 +5,7 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
 /**
- * Sage-Client prüft TLS-Zertifikate standardmäßig; der Schalter erlaubt das bewusste Abschalten
+ * Sage-Client prüft TLS-Zertifikate standardmäßig; der Schalter erlaubt das Abschalten
  * (z. B. Sage-Server mit selbstsigniertem Zertifikat im Intranet).
  */
 return new class extends Migration

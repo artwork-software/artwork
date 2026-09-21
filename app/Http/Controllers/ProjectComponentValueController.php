@@ -66,7 +66,7 @@ class ProjectComponentValueController extends Controller
 
         $valueInput = null;
         if (array_key_exists('text', $request->input('data'))) {
-            // Rohtext speichern (kein nl2br) - Umbrüche rendert das Frontend per white-space: pre-line.
+            // Rohtext; Umbrüche rendert das Frontend per white-space: pre-line.
             $valueInput = (string) $request->input('data')['text'];
             // return it ad array to be able to store it in the database
             $valueInput = ['text' => $valueInput];

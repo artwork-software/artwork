@@ -12,8 +12,7 @@ use Spatie\Permission\Models\Permission;
 use Tests\TestCase;
 
 /**
- * Unterkünfte folgen dem Projektzugriff bzw. den CRM-Rechten
- * (Sicherheits-Audit 21.09.2026, Abschnitt C).
+ * Unterkünfte folgen dem Projektzugriff bzw. den CRM-Rechten.
  */
 final class AccommodationPolicyTest extends TestCase
 {

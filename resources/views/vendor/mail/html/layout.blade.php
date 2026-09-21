@@ -152,7 +152,7 @@
     .mj-outlook-group-fix { width:100% !important; }
     </style>
     <![endif]-->
-    {{-- Keine externen Font-Abrufe (Datenschutz, Sicherheits-Audit 21.09.2026): System-Font-Stack. --}}
+    {{-- Keine externen Font-Abrufe: System-Font-Stack. --}}
     <style type="text/css">
         @media only screen and (min-width:480px) {
             .mj-column-per-50 {

@@ -9,8 +9,7 @@ use Illuminate\Http\Request;
 use PHPUnit\Framework\Attributes\Test;
 
 /**
- * Regressionstests zu den Grundschutz-Befunden des Sicherheits-Audits vom 21.09.2026
- * (Sofortmassnahmen 3 und 10): Security-Header, CSP-Nonce, HSTS, Trusted Proxies, CSRF, CORS.
+ * Security-Header, CSP-Nonce, HSTS, Trusted Proxies, CSRF, CORS.
  */
 final class SecurityAuditHeadersRegressionTest extends FeatureTestCase
 {

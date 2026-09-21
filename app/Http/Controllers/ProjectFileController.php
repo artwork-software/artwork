@@ -31,9 +31,7 @@ class ProjectFileController extends Controller
     use HandlesFileUpload;
 
     /**
-     * Typen, die per ?inline=1 im Browser gerendert werden dürfen. Alles andere geht als
-     * Attachment raus (HTML/SVG würden sonst auf der App-Origin ausgeführt). Wird auch vom
-     * externen Zugang (ExternalProjectFileController) genutzt.
+     * Typen, die per ?inline=1 im Browser gerendert werden dürfen; alles andere geht als Attachment raus.
      *
      * @var list<string>
      */
@@ -191,7 +189,6 @@ class ProjectFileController extends Controller
 
         if ($request->file('file')) {
             $file = $request->file('file');
-            // Ersatz-Upload unterliegt denselben Regeln wie der Erst-Upload (Allowlist + Größe)
             $this->handleFile(ArtworkFileTypes::PROJECT, $file);
             Storage::delete('project_files/' . $projectFile->basename);
             $original_name = $file->getClientOriginalName();

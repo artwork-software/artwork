@@ -615,8 +615,7 @@ class ProjectController extends Controller
     }
 
     /**
-     * Projektsuche ohne Projektgruppen. Sicherheits-Audit 21.09.2026 (A, NIEDRIG): wie search()
-     * mit viewAny-Prüfung und schlankem ProjectSearchDTO statt voller Modelle.
+     * Projektsuche ohne Projektgruppen.
      *
      * @throws AuthorizationException
      */
@@ -2060,8 +2059,7 @@ class ProjectController extends Controller
             ]);
         }
 
-        // Zeilen dürfen nur innerhalb DERSELBEN Budgettabelle verschoben werden: mit einer eigenen
-        // sub_position_id ließen sich sonst fremde row_ids in das eigene Budget "herüberziehen".
+        // Zeilen dürfen nur innerhalb derselben Budgettabelle verschoben werden.
         $targetTableIds = SubPosition::query()
             ->whereIn('id', collect($updates)->pluck('sub_position_id'))
             ->with('mainPosition:id,table_id')
@@ -2294,7 +2292,6 @@ class ProjectController extends Controller
                 // Prüfe ob Kalkulation eine ID hat (existierend) oder neu ist
                 if (isset($calculation['id']) && !empty($calculation['id']) && is_numeric($calculation['id'])) {
                     // Existierende Kalkulation aktualisieren
-                    // Nur Kalkulationen DIESER Zelle: fremde Ids im Payload dürfen nichts überschreiben
                     $cellCalculation = CellCalculation::where('cell_id', $cellId)->find($calculation['id']);
                     if ($cellCalculation) {
                         $cellCalculation->update([
@@ -4624,7 +4621,7 @@ class ProjectController extends Controller
 
         $oldKeyVisual = $project->key_visual_path;
         if ($request->file('keyVisual')) {
-            // Inhalt muss ein Bild sein (kein SVG/HTML auf der public-Disk), max. 10 MB.
+            // public-Disk: nur echte Bilder, kein SVG/HTML.
             $request->validate([
                 'keyVisual' => ['image', 'max:10240', new SafeUploadFile()]
             ]);
@@ -4728,7 +4725,6 @@ class ProjectController extends Controller
         $project->shiftRelevantEventTypes()->sync(collect($request->shiftRelevantEventTypeIds));
     }
 
-    /** Zeitleisten-Zeilen an Terminen: Regel in EventPolicy::editTimeline (Termin-Schreibrecht ODER Dienstplanung). */
     private function authorizeTimelineEdit(?Event $event): void
     {
         abort_unless((bool) $event, 404);

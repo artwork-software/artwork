@@ -21,8 +21,7 @@ use PHPUnit\Framework\Attributes\Test;
 use Tests\Feature\FeatureTestCase;
 
 /**
- * Regressionstests zum Sicherheits-Audit 21.09.2026, Abschnitt A
- * (Autorisierung Projekt / Termin / Finanzen / Budget).
+ * Autorisierung in Projekt, Termin, Finanzen und Budget.
  */
 final class SecurityAuditProjectBudgetRegressionTest extends FeatureTestCase
 {
@@ -53,7 +52,7 @@ final class SecurityAuditProjectBudgetRegressionTest extends FeatureTestCase
         return $user;
     }
 
-    // ---------- KRITISCH: Budget-Exporte ----------
+    // ---------- Budget-Exporte ----------
 
     #[Test]
     public function budget_export_by_deadline_requires_global_budget_permission(): void
@@ -89,7 +88,7 @@ final class SecurityAuditProjectBudgetRegressionTest extends FeatureTestCase
         $this->get(route('projects.export.budget', $table->project))->assertSuccessful();
     }
 
-    // ---------- HOCH: Budgetvorlage aus fremdem Projekt ----------
+    // ---------- Budgetvorlage aus fremdem Projekt ----------
 
     #[Test]
     public function budget_template_from_another_project_requires_budget_access_on_the_source(): void
@@ -111,7 +110,7 @@ final class SecurityAuditProjectBudgetRegressionTest extends FeatureTestCase
         ])->assertSuccessful();
     }
 
-    // ---------- HOCH: Zeilen aus fremdem Budget ziehen ----------
+    // ---------- Zeilen aus fremdem Budget ziehen ----------
 
     #[Test]
     public function rows_of_a_foreign_budget_cannot_be_pulled_into_an_own_sub_position(): void
@@ -135,7 +134,7 @@ final class SecurityAuditProjectBudgetRegressionTest extends FeatureTestCase
         $this->assertDatabaseHas('sub_position_rows', ['id' => $foreignRow->id, 'sub_position_id' => $foreignSub->id]);
     }
 
-    // ---------- HOCH: Projektgruppen ----------
+    // ---------- Projektgruppen ----------
 
     #[Test]
     public function project_group_membership_changes_require_write_access_on_the_group(): void
@@ -150,8 +149,6 @@ final class SecurityAuditProjectBudgetRegressionTest extends FeatureTestCase
         ])->assertForbidden();
         $this->assertDatabaseHas('project_groups', ['group_id' => $group->id, 'project_id' => $project->id]);
 
-        // projects.group.delete (deleteProjectFromGroup) wurde entfernt: kein Frontend-Aufrufer,
-        // Parameter waren vertauscht benannt (Sicherheits-Audit 21.09.2026).
         $this->actingAsUserWith('write projects');
         $this->postJson(route('project-group.add-projects', $group), [
             'projectIdsToAdd' => [['id' => $project->id]],
@@ -159,7 +156,7 @@ final class SecurityAuditProjectBudgetRegressionTest extends FeatureTestCase
         $this->assertDatabaseHas('project_groups', ['group_id' => $group->id, 'project_id' => $project->id]);
     }
 
-    // ---------- HOCH: Kostenstelle / Copyright ----------
+    // ---------- Kostenstelle / Copyright ----------
 
     #[Test]
     public function cost_center_and_copyright_require_write_access_on_the_project(): void
@@ -181,7 +178,7 @@ final class SecurityAuditProjectBudgetRegressionTest extends FeatureTestCase
         $this->assertNotNull($project->fresh()->cost_center_id);
     }
 
-    // ---------- HOCH: Finanzierungsquellen an Budgetsummen ----------
+    // ---------- Finanzierungsquellen an Budgetsummen ----------
 
     #[Test]
     public function sum_money_sources_require_budget_access_and_an_allowlisted_target(): void
@@ -204,7 +201,6 @@ final class SecurityAuditProjectBudgetRegressionTest extends FeatureTestCase
         $this->postJson(route('project.sum.money.source.store'), $payload)->assertSuccessful();
         $this->assertDatabaseCount('sum_money_sources', 1);
 
-        // Beliebige Morph-Klasse im Body: auch für Admins nicht erlaubt
         $this->actingAsAdmin();
         $this->postJson(route('project.sum.money.source.store'), array_merge($payload, [
             'sourceable_type' => User::class,
@@ -212,7 +208,7 @@ final class SecurityAuditProjectBudgetRegressionTest extends FeatureTestCase
         ]))->assertUnprocessable();
     }
 
-    // ---------- HOCH: Summen-Kommentare ----------
+    // ---------- Summen-Kommentare ----------
 
     #[Test]
     public function sum_comments_require_budget_access_and_only_the_author_may_delete(): void
@@ -234,12 +230,10 @@ final class SecurityAuditProjectBudgetRegressionTest extends FeatureTestCase
         $comment = SumComment::query()->firstOrFail();
         $this->assertSame($author->id, $comment->user_id);
 
-        // Beliebige Morph-Klasse im Body: auch für Admins nicht erlaubt
         $this->actingAsAdmin();
         $this->postJson(route('sum.comments.store'), array_merge($payload, ['commentable_type' => User::class]))
             ->assertUnprocessable();
 
-        // Anderes Budget-Teammitglied darf fremden Kommentar nicht löschen
         $this->userWithBudgetAccess($table->project);
         $this->deleteJson(route('sum.comments.delete', $comment))->assertForbidden();
         $this->assertNotSoftDeleted($comment);
@@ -249,7 +243,7 @@ final class SecurityAuditProjectBudgetRegressionTest extends FeatureTestCase
         $this->assertSoftDeleted($comment);
     }
 
-    // ---------- HOCH: Globale Termin-Standardwerte ----------
+    // ---------- Globale Termin-Standardwerte ----------
 
     #[Test]
     public function event_standard_values_require_event_settings_permission(): void
@@ -263,7 +257,7 @@ final class SecurityAuditProjectBudgetRegressionTest extends FeatureTestCase
         $this->patch(route('event.standard.values.update'), ['event_time_length_minutes' => 30])->assertSuccessful();
     }
 
-    // ---------- HOCH: Projekt-Anlage-/Aufenthalts-Settings ----------
+    // ---------- Projekt-Anlage-/Aufenthalts-Settings ----------
 
     #[Test]
     public function project_creation_settings_require_project_settings_permission(): void
@@ -291,7 +285,7 @@ final class SecurityAuditProjectBudgetRegressionTest extends FeatureTestCase
         $this->patch(route('project_settings.artist_residency.update'), $residencyPayload)->assertRedirect();
     }
 
-    // ---------- HOCH: Checkliste duplizieren ----------
+    // ---------- Checkliste duplizieren ----------
 
     #[Test]
     public function duplicating_a_checklist_requires_write_access_and_never_joins_the_project_team(): void
@@ -305,14 +299,13 @@ final class SecurityAuditProjectBudgetRegressionTest extends FeatureTestCase
         $this->assertFalse($project->users()->whereKey($outsider->id)->exists());
         $this->assertSame(1, Checklist::query()->count());
 
-        // "To-dos verwalten" erlaubt das Duplizieren fremder Listen — ohne Selbstaufnahme ins Team
         $editor = $this->actingAsUserWith('can edit checklist');
         $this->post(route('checklists.duplicate', $checklist))->assertRedirect();
         $this->assertSame(2, Checklist::query()->count());
         $this->assertFalse($project->users()->whereKey($editor->id)->exists());
     }
 
-    // ---------- HOCH: Termin-Papierkorb ----------
+    // ---------- Termin-Papierkorb ----------
 
     #[Test]
     public function event_trash_actions_require_trash_access_and_delete_permission(): void
@@ -325,7 +318,6 @@ final class SecurityAuditProjectBudgetRegressionTest extends FeatureTestCase
         $this->delete(route('events.force.all'))->assertForbidden();
         $this->assertSoftDeleted('events', ['id' => $event->id]);
 
-        // Papierkorb-Zugriff allein reicht für das Wiederherstellen nicht (EventPolicy::delete)
         $this->actingAsUserWith('can access trash');
         $this->patch(route('events.restore', ['id' => $event->id]))->assertForbidden();
         $this->assertSoftDeleted('events', ['id' => $event->id]);
@@ -339,7 +331,7 @@ final class SecurityAuditProjectBudgetRegressionTest extends FeatureTestCase
         $this->assertDatabaseMissing('events', ['id' => $event->id]);
     }
 
-    // ---------- HOCH: Vertrag an beliebigem Projekt ----------
+    // ---------- Vertrag an beliebigem Projekt ----------
 
     #[Test]
     public function storing_a_contract_requires_project_write_access_and_a_matching_document_request(): void
@@ -357,7 +349,6 @@ final class SecurityAuditProjectBudgetRegressionTest extends FeatureTestCase
 
         $writer = $this->actingAsUserWith('write projects');
 
-        // Dokumentenanfrage eines ANDEREN Projekts darf nicht verknüpft werden
         $foreignRequest = DocumentRequest::query()->create([
             'requester_id' => $writer->id,
             'requested_id' => $writer->id,

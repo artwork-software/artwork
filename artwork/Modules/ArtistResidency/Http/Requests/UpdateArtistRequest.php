@@ -9,9 +9,6 @@ class UpdateArtistRequest extends FormRequest
     /**
      * Determine if the user is authorized to make this request.
      */
-    /**
-     * Autorisierung VOR der Validierung, sonst antwortet ein fehlendes Recht mit 422 statt 403.
-     */
     public function authorize(): bool
     {
         $artist = $this->route('artist');

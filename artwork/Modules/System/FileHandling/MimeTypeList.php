@@ -3,10 +3,8 @@
 namespace Artwork\Modules\System\FileHandling;
 
 /**
- * Auswahlliste für die Dateityp-Einstellungen. Skript- bzw. markup-fähige Typen
- * (html/htm/xhtml/svg/xml/php/phar) sind bewusst NICHT enthalten: sie wären auf
- * der public-Disk als Stored XSS ausnutzbar und werden in HandlesFileUpload
- * zusätzlich hart abgelehnt - auch wenn eine Einstellung noch '*' enthält.
+ * Auswahlliste für die Dateityp-Einstellungen. Skript-/markup-fähige Typen (html, svg, xml, php, …) fehlen:
+ * sie wären auf der public-Disk als Stored XSS ausnutzbar und werden in HandlesFileUpload zusätzlich abgelehnt.
  */
 class MimeTypeList
 {

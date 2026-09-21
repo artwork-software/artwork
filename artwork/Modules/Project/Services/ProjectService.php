@@ -773,7 +773,7 @@ class ProjectService
             $timeline = $event->timelines->toArray();
 
             foreach ($timeline as &$singleTimeLine) {
-                // Rohtext (kein strip_tags: verstümmelt "a<b"; Frontend rendert per Text-Interpolation)
+                // Rohtext: strip_tags würde Eingaben wie "a<b" verstümmeln.
                 $singleTimeLine['description_without_html'] = $singleTimeLine['description'];
             }
 

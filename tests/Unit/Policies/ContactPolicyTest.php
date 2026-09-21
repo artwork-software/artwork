@@ -15,8 +15,7 @@ use Spatie\Permission\Models\Permission;
 use Tests\TestCase;
 
 /**
- * Kontaktdaten dürfen nur von denen gepflegt werden, die die Eltern-Entität pflegen dürfen
- * (Sicherheits-Audit 21.09.2026, Abschnitt C).
+ * Kontaktdaten dürfen nur von denen gepflegt werden, die die Eltern-Entität pflegen dürfen.
  */
 final class ContactPolicyTest extends TestCase
 {

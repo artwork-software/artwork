@@ -25,8 +25,7 @@ use PHPUnit\Framework\Attributes\Test;
 use Tests\Feature\FeatureTestCase;
 
 /**
- * Regressionstests zum Sicherheits-Audit 21.09.2026, Abschnitt C (CRM / Aufenthalte / Stammdaten /
- * Inventar) und Sofortmaßnahme 6 (Sage-Passwort, TLS-Verifikation).
+ * Autorisierung in CRM, Aufenthalten, Stammdaten, Inventar sowie Sage-Passwort und TLS-Verifikation.
  */
 final class SecurityAuditCrmResidencyRegressionTest extends FeatureTestCase
 {
@@ -111,7 +110,7 @@ final class SecurityAuditCrmResidencyRegressionTest extends FeatureTestCase
         ]);
     }
 
-    // ------------------------------------------- Künstler*innenaufenthalte (HOCH)
+    // ------------------------------------------- Künstler*innenaufenthalte
 
     #[Test]
     public function residency_store_requires_write_access_to_the_route_project(): void
@@ -216,7 +215,7 @@ final class SecurityAuditCrmResidencyRegressionTest extends FeatureTestCase
         $this->get(route('artist-residencies.export-excel', [$project, 'de']))->assertOk();
     }
 
-    // -------------------------------------------------- Künstler*innen (MITTEL)
+    // -------------------------------------------------- Künstler*innen
 
     #[Test]
     public function artist_master_data_follows_project_access(): void
@@ -249,7 +248,7 @@ final class SecurityAuditCrmResidencyRegressionTest extends FeatureTestCase
         $this->assertDatabaseHas('artists', ['id' => $artist->id, 'name' => 'Changed']);
     }
 
-    // ------------------------------------------------------ Unterkünfte (MITTEL)
+    // ------------------------------------------------------ Unterkünfte
 
     #[Test]
     public function accommodation_management_requires_project_write_or_crm_manager(): void
@@ -284,7 +283,7 @@ final class SecurityAuditCrmResidencyRegressionTest extends FeatureTestCase
         $this->assertDatabaseMissing('accommodations', ['id' => $accommodation->id]);
     }
 
-    // --------------------------------------------------- Kontakte-Modul (MITTEL)
+    // --------------------------------------------------- Kontakte-Modul
 
     #[Test]
     public function contacts_can_only_be_managed_by_whoever_may_edit_the_parent(): void
@@ -310,7 +309,6 @@ final class SecurityAuditCrmResidencyRegressionTest extends FeatureTestCase
         $this->deleteJson(route('contact.destroy', $foreignContact))->assertForbidden();
         $this->assertDatabaseHas('contacts', ['id' => $foreignContact->id, 'name' => 'Original']);
 
-        // Unterkunft: Projekt-Schreibrecht (AccommodationPolicy::update)
         $this->projectWriter(Project::factory()->create());
         $this->postJson(
             route('contact.store', ['model' => 'accommodation', 'modelId' => $accommodation->id]),
@@ -320,13 +318,12 @@ final class SecurityAuditCrmResidencyRegressionTest extends FeatureTestCase
             'contactable_type' => Accommodation::class, 'contactable_id' => $accommodation->id, 'name' => 'Injected',
         ]);
 
-        // Dienstleister: Externe-Verwaltung
         $this->actingAsUserWith(PermissionEnum::EXTERNAL_MANAGER->value);
         $this->postJson(route('contact.store', ['model' => 'provider', 'modelId' => $provider->id]), $payload)
             ->assertOk();
     }
 
-    // ----------------------------------------------------------- CRM (MITTEL)
+    // ----------------------------------------------------------- CRM
 
     #[Test]
     public function crm_contact_deletion_requires_crm_manager(): void
@@ -429,7 +426,6 @@ final class SecurityAuditCrmResidencyRegressionTest extends FeatureTestCase
         ])->assertForbidden();
         $this->assertDatabaseHas('internal_issues', ['id' => $issue->id, 'project_id' => $own->id]);
 
-        // Gleiches Projekt: Autorisierung passiert, es bleibt nur die Validierung.
         $this->patchJson(route('issue-of-material.update', $issue), [
             'id' => $issue->id,
             'project_id' => $own->id,

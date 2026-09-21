@@ -33,8 +33,8 @@ class ExternalLoginController extends Controller
     }
 
     /**
-     * Bestätigungsseite: Das Token wird hier bewusst NICHT angefasst, damit ein GET (Link-Vorschau,
-     * Virenscanner) das Einmal-Token nicht entwertet. Eingelöst wird erst per POST in redeem().
+     * Das Token wird hier nicht angefasst, damit ein GET (Link-Vorschau, Virenscanner) es nicht
+     * entwertet; eingelöst wird per POST in redeem().
      */
     public function showRedeemConfirmation(string $token): Response
     {

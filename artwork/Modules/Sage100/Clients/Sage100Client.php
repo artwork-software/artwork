@@ -9,8 +9,7 @@ use Illuminate\Support\Facades\Log;
 class Sage100Client implements SageClient
 {
     /**
-     * TLS-Verifikation ist standardmäßig an (Basic-Auth-Zugangsdaten gehen sonst an jeden
-     * MITM); nur der Schalter "verify_ssl" in den Schnittstellen-Einstellungen schaltet sie ab.
+     * TLS-Verifikation ist standardmäßig an; nur der Schalter verify_ssl in den Schnittstellen-Einstellungen schaltet sie ab.
      */
     public function __construct(
         private readonly ?string $domain,

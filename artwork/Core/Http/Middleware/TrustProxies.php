@@ -20,9 +20,8 @@ class TrustProxies extends Middleware
      * Ohne vertrauenswuerdige Proxies werden die X-Forwarded-*-Header ignoriert und
      * Laravel erzeugt hinter einem TLS-terminierenden Proxy http://-URLs. Die Liste
      * kommt aus der Config (app.trusted_proxies, ENV TRUSTED_PROXIES): kommagetrennte
-     * IPs/CIDRs, Default = private Netze + Loopback. '*' bleibt als expliziter Opt-in
-     * moeglich, ist aber nie Default — sonst kann jeder Client X-Forwarded-For faelschen
-     * und damit die IP-basierten Rate-Limits (Login, Magic-Link, API) aushebeln.
+     * IPs/CIDRs, Default = private Netze + Loopback. '*' nur als expliziter Opt-in, sonst
+     * kann jeder Client X-Forwarded-For faelschen und die IP-basierten Rate-Limits aushebeln.
      */
     public function __construct()
     {

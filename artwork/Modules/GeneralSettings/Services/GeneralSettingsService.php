@@ -136,9 +136,6 @@ class GeneralSettingsService
         $this->generalSettings->save();
     }
 
-    /**
-     * Zentraler Schalter: Dateiupload (und Löschen eigener Uploads) durch externe Zugänge.
-     */
     public function isExternalFileUploadEnabled(): bool
     {
         return $this->generalSettings->external_file_upload_enabled === true;

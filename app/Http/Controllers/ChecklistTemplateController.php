@@ -54,7 +54,6 @@ class ChecklistTemplateController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
-        // Sicherheits-Audit 21.09.2026 (E): user_id kam aus dem Body, task_templates ungeprüft.
         $request->validate([
             'checklist_id' => ['nullable', 'integer', 'exists:checklists,id'],
             'name' => ['required_without:checklist_id', 'nullable', 'string', 'max:255'],
@@ -100,7 +99,6 @@ class ChecklistTemplateController extends Controller
     {
         $checklist_template = ChecklistTemplate::create([
             'name' => $request->name,
-            // Ersteller*in ist immer die angemeldete Person, nie ein Body-Wert
             'user_id' => $this->authManager->id()
         ]);
 
@@ -145,9 +143,6 @@ class ChecklistTemplateController extends Controller
     }
 
     /**
-     * Nur die Felder, die eine Aufgabenvorlage aus dem Body übernehmen darf (kein checklist_template_id,
-     * keine Fremd-IDs).
-     *
      * @param array<int, array<string, mixed>> $taskTemplates
      * @return array<int, array<string, mixed>>
      */
@@ -171,7 +166,6 @@ class ChecklistTemplateController extends Controller
 
     public function duplicate(ChecklistTemplate $checklistTemplate): RedirectResponse
     {
-        // nicht von authorizeResource abgedeckt
         $this->authorize('create', ChecklistTemplate::class);
 
         $this->taskTemplateService->duplicateTaskTemplates(

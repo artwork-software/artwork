@@ -53,7 +53,6 @@
                                     </a>
                                 </template>
                                 <template v-else-if="property.type === 'upload' && getPropertyValue(property.id)">
-                                    <!-- Eigenschaftsdateien liegen privat; Auslieferung nur über die autorisierte Download-Route -->
                                     <a :href="route('crm.contacts.property-file.download', { crmContact: contact.id, property: property.id })" target="_blank" download class="inline-flex items-center gap-1.5 text-accent-700 hover:underline">
                                         <component :is="IconFile" class="h-4 w-4" />
                                         {{ getPropertyValue(property.id).split('/').pop() }}

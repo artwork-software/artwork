@@ -20,13 +20,12 @@ use Illuminate\Support\Str;
 use PHPUnit\Framework\Attributes\Test;
 
 /**
- * Regressionstests zu den Befunden des dynamischen Rollen-Tests vom 21.09.2026
- * (tests/Feature/Authorization/AuthorizationMatrixTest): Routen, die ein Nutzer ohne
- * Rechte erreichen konnte, obwohl sie globale Einstellungen oder fremde Daten berühren.
+ * Routen, die globale Einstellungen oder fremde Daten berühren, bleiben Nutzern ohne Rechte verschlossen
+ * (Ergänzung zur AuthorizationMatrixTest).
  */
 final class SecurityAuditDynamicRegressionTest extends FeatureTestCase
 {
-    // ---------- Dusk-Login-Hintertür (laravel/dusk registriert /_dusk/login/{userId} außerhalb von production)
+    // ---------- Dusk-Login (/_dusk/login/{userId})
 
     #[Test]
     public function dusk_login_routes_do_not_exist(): void

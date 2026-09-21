@@ -7,11 +7,9 @@ use Laravel\Fortify\Contracts\FailedPasswordResetLinkRequestResponse as FailedPa
 use Symfony\Component\HttpFoundation\Response;
 
 /**
- * Antwort auf „Passwort vergessen“, wenn der Password-Broker KEINEN Link verschickt hat
- * (unbekannte E-Mail, Broker-Throttle). Antwortet bewusst genauso wie der Erfolgsfall
- * (gleicher Redirect, gleicher Status-Flash, kein Validierungsfehler), damit sich über das
- * Formular nicht ermitteln lässt, ob zu einer E-Mail-Adresse ein Konto existiert
- * (Sicherheits-Audit 21.09.2026, Abschnitt D).
+ * Antwort auf „Passwort vergessen“, wenn der Password-Broker keinen Link verschickt hat
+ * (unbekannte E-Mail, Throttle). Antwortet wie der Erfolgsfall, damit sich über das Formular
+ * nicht ermitteln lässt, ob ein Konto existiert.
  */
 class NeutralPasswordResetLinkRequestResponse implements FailedPasswordResetLinkRequestResponseContract
 {
@@ -19,7 +17,7 @@ class NeutralPasswordResetLinkRequestResponse implements FailedPasswordResetLink
     {
     }
 
-    // Signatur ohne nativen Typ wie im Fortify-Contract (Parameter darf nicht verengt werden).
+    // Signatur ohne nativen Typ wie im Fortify-Contract.
     public function toResponse($request): Response
     {
         $message = trans('passwords.sent');

@@ -119,7 +119,6 @@ class EventTypeController extends Controller
             'relevant_for_project_period',
             $eventType->relevant_for_project_period
         );
-        // Nur validierte Werte (none/specific/any/all); ein fehlender Modus bleibt beim Bestand bzw. "none".
         $eventType->verification_mode = $request->validated('verification_mode')
             ?? $eventType->verification_mode
             ?? 'none';

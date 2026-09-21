@@ -5,9 +5,8 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
 /**
- * Sicherheits-Audit 21.09.2026 (G): Das RSA-Keypair des Chats wurde nie zum Ver-/Entschlüsseln
- * benutzt (Nachrichten laufen serverseitig über Crypt::encryptString); der private Schlüssel lag
- * unverschlüsselt im localStorage. Frontend, Route und Spalte werden entfernt.
+ * Das RSA-Keypair des Chats wurde nie zum Ver-/Entschlüsseln benutzt (Nachrichten laufen über
+ * Crypt::encryptString); Frontend, Route und Spalte entfallen.
  */
 return new class extends Migration
 {

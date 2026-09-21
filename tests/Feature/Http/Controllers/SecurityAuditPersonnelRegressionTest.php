@@ -23,8 +23,7 @@ use PHPUnit\Framework\Attributes\Test;
 use Tests\Feature\FeatureTestCase;
 
 /**
- * Regressionstests zum Sicherheits-Audit vom 21.09.2026, Abschnitt B (Personal/Schicht/User/Einladungen)
- * sowie die Privilege-Escalation-Befunde aus Abschnitt D (Einladungen).
+ * Autorisierung und Rechtevergabe rund um Personal, Schichten, Nutzer und Einladungen.
  */
 final class SecurityAuditPersonnelRegressionTest extends FeatureTestCase
 {
@@ -32,13 +31,12 @@ final class SecurityAuditPersonnelRegressionTest extends FeatureTestCase
     {
         parent::setUp();
 
-        // Mail::fake() (FeatureTestCase) ersetzt den MailManager durch ein MailFake, an dem der hart
-        // typisierte MailService-Konstruktor scheitert (InvitationController/-Service) — daher spyen.
+        // Mail::fake() (FeatureTestCase) liefert einen MailFake, an dem der typisierte MailService-Konstruktor scheitert.
         $this->spy(MailService::class);
     }
 
     // ------------------------------------------------------------------
-    // Sofortmaßnahme 4a: updateUserDetails (Admin-Übernahme via E-Mail)
+    // updateUserDetails (Admin-Übernahme via E-Mail)
     // ------------------------------------------------------------------
 
     #[Test]
@@ -104,7 +102,7 @@ final class SecurityAuditPersonnelRegressionTest extends FeatureTestCase
     }
 
     // ------------------------------------------------------------------
-    // Sofortmaßnahme 4b: Einladungs-Rechte auf eigene Rechte begrenzt
+    // Einladungs-Rechte auf eigene Rechte begrenzt
     // ------------------------------------------------------------------
 
     #[Test]
@@ -157,7 +155,7 @@ final class SecurityAuditPersonnelRegressionTest extends FeatureTestCase
     }
 
     // ------------------------------------------------------------------
-    // Sofortmaßnahme 4c: Einladungs-Ablauf + Throttle
+    // Einladungs-Ablauf + Throttle
     // ------------------------------------------------------------------
 
     #[Test]
@@ -171,7 +169,6 @@ final class SecurityAuditPersonnelRegressionTest extends FeatureTestCase
             'roles' => [],
         ]);
 
-        // Abgelaufen, aber Token gültig: Hinweisseite statt 401 (Sicherheits-Audit 21.09.2026, Restpunkt 6)
         $this->get($this->acceptUrl('late@example.test', $token))
             ->assertOk()
             ->assertInertia(static fn ($page) => $page->component('Users/InvitationExpired'));
@@ -219,7 +216,7 @@ final class SecurityAuditPersonnelRegressionTest extends FeatureTestCase
     }
 
     // ------------------------------------------------------------------
-    // HOCH: Individualzeit-Serien
+    // Individualzeit-Serien
     // ------------------------------------------------------------------
 
     #[Test]
@@ -292,7 +289,7 @@ final class SecurityAuditPersonnelRegressionTest extends FeatureTestCase
     }
 
     // ------------------------------------------------------------------
-    // HOCH: API-Duplikate der Regelverstoß-Endpunkte (ungenutzt → entfernt)
+    // API-Duplikate der Regelverstoß-Endpunkte
     // ------------------------------------------------------------------
 
     #[Test]
@@ -305,13 +302,9 @@ final class SecurityAuditPersonnelRegressionTest extends FeatureTestCase
     }
 
     // ------------------------------------------------------------------
-    // HOCH: Dienstleister-Kontaktpersonen
+    // Dienstleister-Kontaktpersonen
     // ------------------------------------------------------------------
 
-    /**
-     * update/destroy samt Legacy-Model ServiceProviderContacts (Tabelle existiert nicht mehr) wurden
-     * entfernt — store legt über HasContacts einen Kontakt des Contacts-Moduls an.
-     */
     #[Test]
     public function service_provider_contacts_require_external_management_rights(): void
     {
@@ -327,7 +320,7 @@ final class SecurityAuditPersonnelRegressionTest extends FeatureTestCase
     }
 
     // ------------------------------------------------------------------
-    // MITTEL: Dienstplan-JSON-APIs, Projektrollen, Abteilung leeren
+    // Dienstplan-JSON-APIs, Projektrollen, Abteilung leeren
     // ------------------------------------------------------------------
 
     #[Test]
@@ -386,7 +379,7 @@ final class SecurityAuditPersonnelRegressionTest extends FeatureTestCase
     }
 
     // ------------------------------------------------------------------
-    // NIEDRIG: Owner-Checks, eigene Einstellungen, user-scoped find
+    // Owner-Checks, eigene Einstellungen, user-scoped find
     // ------------------------------------------------------------------
 
     #[Test]

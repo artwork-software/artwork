@@ -8,8 +8,7 @@ use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
 /**
- * Sicherheits-Audit 21.09.2026 (E): SSRF-Schutz für serverseitig aufgerufene URLs (Webhooks, OIDC-Discovery).
- * Der Resolver wird pro Test ersetzt — kein echtes DNS.
+ * SSRF-Schutz für serverseitig aufgerufene URLs; der Resolver wird pro Test ersetzt, kein echtes DNS.
  */
 final class PublicUrlRuleTest extends TestCase
 {

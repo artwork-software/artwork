@@ -25,7 +25,7 @@ class EventSeriesController extends Controller
     /**
      * Seriendefinition + alle Termine der Serie (für Modal-Vorbelegung und Serien-Tab).
      * Wird beim Öffnen eines Serientermins nachgeladen, damit das Kalender-Paket schlank bleibt.
-     * Sichtbarkeit wie EventPolicy::view (Projekt-Sichtrecht, sonst Anmeldung).
+     *
      * @throws AuthorizationException
      */
     public function show(Event $event): JsonResponse

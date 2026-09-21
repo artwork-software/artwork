@@ -535,8 +535,7 @@ const sendMessage = async () => {
     };
 
     try {
-        // axios statt fetch(): sendet X-XSRF-TOKEN aus dem Cookie, der Meta-Token
-        // im DOM veraltet nach Re-Login (419).
+        // axios sendet X-XSRF-TOKEN aus dem Cookie; der Meta-Token im DOM veraltet nach Re-Login (419).
         const { data: result } = await axios.post(
             route('chat-system.send-message', { chat: chatPartner.value.id }),
             payload,

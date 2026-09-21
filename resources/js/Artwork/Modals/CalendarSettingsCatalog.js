@@ -242,8 +242,7 @@ export const SETTINGS = [
     },
     {
         // Nur Kalender: im Dienstplan sind Schichten immer sichtbar.
-        // Nur mit Dienstplan-Sichtrecht (Spiegel von CalendarShiftVisibility im Backend: ohne Recht
-        // liefert der Kalender keinen Schicht-Payload und das Speichern erzwingt false).
+        // Nur mit Dienstplan-Sichtrecht (Spiegel von CalendarShiftVisibility im Backend).
         key: 'work_shifts',
         section: 'visibility',
         views: CALENDAR_VIEWS,

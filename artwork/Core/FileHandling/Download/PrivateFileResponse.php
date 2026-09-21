@@ -10,13 +10,9 @@ use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /**
- * Liefert eine Datei aus, die auf der privaten "local"-Disk liegt (Sicherheits-Audit
- * 21.09.2026, F: CRM-Eigenschaftsdateien, Materialausgabe-Anhänge und Ausgabe-PDFs).
- *
- * Altbestand: Bis `artwork:security:move-public-files` gelaufen ist, kann eine Datei
- * noch auf der public-Disk liegen - dann wird sie von dort gelesen, damit kein Link
- * ins Leere läuft. Inline (im Browser rendern) gibt es nur für Bilder und PDF; alles
- * andere geht als Attachment raus, damit Markup nie auf der App-Origin ausgeführt wird.
+ * Liefert Dateien von der privaten "local"-Disk aus; was artwork:security:move-public-files noch nicht
+ * verschoben hat, wird von "public" gelesen. Inline gibt es nur für Bilder und PDF, alles andere geht
+ * als Attachment raus.
  */
 final class PrivateFileResponse
 {
@@ -39,7 +35,6 @@ final class PrivateFileResponse
 
     public static function make(string $path, ?string $downloadName = null, bool $inline = false): StreamedResponse
     {
-        // Altbestand kann "/storage/…"-Präfixe oder absolute URLs im Pfad tragen
         $path = StoredFilePath::normalise($path) ?? '';
         $disk = self::resolveDisk($path);
 
@@ -55,7 +50,7 @@ final class PrivateFileResponse
     }
 
     /**
-     * "local" hat Vorrang; "public" nur als Übergangs-Fallback für noch nicht verschobene Dateien.
+     * "local" hat Vorrang; "public" nur für noch nicht verschobene Dateien.
      */
     public static function resolveDisk(string $path): ?string
     {

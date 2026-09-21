@@ -30,7 +30,7 @@ readonly class CommentService
         ?int $tabId = null
     ): Comment {
         $comment = new Comment();
-        // Rohtext speichern - Zeilenumbrüche rendert das Frontend per white-space: pre-line (kein HTML im Feld).
+        // Rohtext; Umbrüche rendert das Frontend per white-space: pre-line.
         $comment->text = $text;
         $comment->user()->associate($user);
         $comment->tab_id = $tabId;

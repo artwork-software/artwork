@@ -36,7 +36,6 @@ class AreaPolicy
         return $user->can(PermissionEnum::ROOM_UPDATE->value);
     }
 
-    // Papierkorb-Aktionen (nicht von authorizeResource abgedeckt)
     public function restore(User $user): bool
     {
         return $user->can(PermissionEnum::ROOM_UPDATE->value);

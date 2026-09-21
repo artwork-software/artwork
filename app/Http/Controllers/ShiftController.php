@@ -2017,7 +2017,6 @@ class ShiftController extends Controller
 
     public function importTimelinePreset(Event $event, ShiftPresetTimeline $shiftPresetTimeline): void
     {
-        // Schreibt Zeitleisten-Zeilen an den Termin – gleiche Regel wie die Zeilen-Routen (Projekt-Timeline).
         $this->authorize('editTimeline', $event);
 
         $this->eventTimelineService->importTimelinePreset($event, $shiftPresetTimeline);
@@ -2025,7 +2024,6 @@ class ShiftController extends Controller
 
     public function storeTimelinePresetFormEvent(Event $event, Request $request): void
     {
-        // Liest die Zeitleiste des Termins in eine globale Vorlage (Route: Vorlagen-Berechtigung).
         $this->authorize('view', $event);
         $validated = $request->validate(['name' => ['required', 'string', 'max:255']]);
 

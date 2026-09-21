@@ -15,12 +15,8 @@ use Illuminate\Support\Facades\Storage;
 use PHPUnit\Framework\Attributes\Test;
 
 /**
- * Sicherheits-Audit 21.09.2026, Sofortmaßnahme 2 (Stored-XSS-Klasse).
- *
- * Nutzertext wird als Rohtext gespeichert (kein nl2br, kein HTML-Fragment) und vom Frontend
- * per {{ }} + white-space: pre-line gerendert. Die Datei-Endung auf der Platte folgt dem
- * erkannten Inhalt, nie dem Client-Namen; HTML/SVG/XML/PHP & Co. (UploadDenyList) werden an
- * jedem Upload-Pfad abgelehnt - nie umbenannt, nie gespeichert.
+ * Nutzertext wird als Rohtext gespeichert, die Datei-Endung folgt dem erkannten Inhalt und
+ * Dateien von der UploadDenyList werden an jedem Upload-Pfad abgelehnt.
  */
 final class SecurityAuditXssRegressionTest extends FeatureTestCase
 {
@@ -31,9 +27,7 @@ final class SecurityAuditXssRegressionTest extends FeatureTestCase
         'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==';
 
     /**
-     * Laravels Test-Fake (Illuminate\Http\Testing\File) rät den MIME-Typ aus dem NAMEN, nicht
-     * aus dem Inhalt - genau das Verhalten, das hier geprüft werden soll, wäre damit unsichtbar.
-     * Deshalb echte UploadedFile-Instanzen aus Temp-Dateien (Sniffing per finfo wie im Betrieb).
+     * Echte UploadedFile-Instanz: der Test-Fake rät den MIME-Typ aus dem Dateinamen.
      */
     private function realUpload(string $clientName, string $content): UploadedFile
     {
@@ -118,8 +112,6 @@ final class SecurityAuditXssRegressionTest extends FeatureTestCase
     #[Test]
     public function png_content_with_html_client_name_is_rejected(): void
     {
-        // Seit dem Audit zählt auch die Client-Endung: ein PNG "x.html" wird nicht mehr als
-        // ".png" gespeichert, sondern abgelehnt (Entscheidung Auftraggeber, 21.09.2026).
         $file = $this->realUpload('x.html', $this->pngBytes());
 
         $this->expectException(DeniedUploadFileException::class);
@@ -163,7 +155,7 @@ final class SecurityAuditXssRegressionTest extends FeatureTestCase
     #[Test]
     public function unrecognisable_content_with_html_client_name_is_rejected(): void
     {
-        // Nullbytes: finfo meldet application/octet-stream -> Client-Endung greift, ist gesperrt.
+        // finfo meldet application/octet-stream, die Client-Endung greift.
         $file = $this->realUpload('x.html', str_repeat("\0", 64));
 
         $this->expectException(DeniedUploadFileException::class);
@@ -174,7 +166,6 @@ final class SecurityAuditXssRegressionTest extends FeatureTestCase
     #[Test]
     public function polyglot_png_with_php_client_name_is_rejected(): void
     {
-        // Gültiges PNG (finfo: image/png), aber Client-Name ".php": die Endung allein reicht.
         $file = $this->realUpload('x.php', $this->pngBytes() . '<?php system($_GET["c"]); ?>');
 
         $this->expectException(DeniedUploadFileException::class);

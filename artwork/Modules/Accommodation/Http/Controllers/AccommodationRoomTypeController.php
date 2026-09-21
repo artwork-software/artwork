@@ -31,7 +31,6 @@ class AccommodationRoomTypeController extends Controller
      */
     public function store(StoreAccommodationRoomTypeRequest $request)
     {
-        // Zimmertypen sind Stammdaten der Unterkünfte — gleiches Recht wie Unterkunft anlegen.
         $this->authorize('create', Accommodation::class);
 
         $roomType = AccommodationRoomType::create($request->validated());

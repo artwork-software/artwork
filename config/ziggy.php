@@ -1,7 +1,7 @@
 <?php
 
 /*
- * Ziggy-Routenkarte für das Frontend (Sicherheits-Audit 21.09.2026, G).
+ * Ziggy-Routenkarte für das Frontend.
  *
  * - Ohne Gruppe (app.blade.php) erhält das interne Bundle alle benannten Routen
  *   abzüglich `except` (Tooling-/Auth-Server-Routen, die das Frontend nie per route() aufruft).

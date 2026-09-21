@@ -16,9 +16,8 @@ use LdapRecord\Query\Collection as LdapCollection;
 class LdapApi implements ExternalUserManagementApi
 {
     /**
-     * Attribute, die als Identifier in LDAP-Filter (auch whereRaw) dürfen. Der Name kommt aus der
-     * Admin-Konfiguration; ohne Whitelist ließe sich dort Filtersyntax unterbringen
-     * (Sicherheits-Audit 21.09.2026, E NIEDRIG).
+     * Attribute, die als Identifier in LDAP-Filter (auch whereRaw) dürfen; der Name kommt aus der
+     * Admin-Konfiguration und könnte sonst Filtersyntax enthalten.
      */
     public const ALLOWED_IDENTIFIER_ATTRIBUTES = [
         'objectGUID',

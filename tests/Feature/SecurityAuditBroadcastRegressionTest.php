@@ -22,7 +22,6 @@ use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
 /**
- * Sicherheits-Audit 21.09.2026, Sofortmaßnahme 5 (Broadcasting):
  * Kanal-Autorisierung in routes/channels.php und schlanke Payloads ohne Gehalts-/Kontaktdaten.
  */
 final class SecurityAuditBroadcastRegressionTest extends TestCase
@@ -33,9 +32,8 @@ final class SecurityAuditBroadcastRegressionTest extends TestCase
     {
         parent::setUp();
 
-        // In Tests läuft der log-Broadcaster, dessen auth() prüft nichts. Für /broadcasting/auth
-        // brauchen wir den Pusher-Broadcaster (verifyUserCanAccessChannel). Die Channel-Callbacks
-        // wurden beim Boot am Default-Driver registriert und werden hier übernommen.
+        // Der log-Broadcaster prüft in auth() nichts; die beim Boot registrierten Channel-Callbacks
+        // werden auf den Pusher-Broadcaster übernommen.
         $registered = Broadcast::driver();
 
         config([
@@ -228,8 +226,6 @@ final class SecurityAuditBroadcastRegressionTest extends TestCase
     }
 
     /**
-     * Alle Schlüssel des Payloads, rekursiv (auch verschachtelte Arrays).
-     *
      * @param array<mixed> $data
      * @return array<int, string>
      */

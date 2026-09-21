@@ -41,8 +41,6 @@ class InvitationController extends Controller
             'Users/Invite',
             [
                 'available_roles' => $this->roleService->getAllRoleNames(),
-                // Nur Rechte anbieten, die die einladende Person selbst vergeben darf (Service filtert
-                // beim Speichern ohnehin serverseitig).
                 'available_permissions' => collect($this->invitationService->filterGrantablePermissions(
                     $this->permissionService->getAllPermissionNames()->all(),
                     $this->userService->getAuthUser()
@@ -72,8 +70,7 @@ class InvitationController extends Controller
             throw new UnauthorizedException(401);
         }
 
-        // Gültiger Link, aber abgelaufen: Hinweisseite statt nackter 401 (Einladung neu anfordern).
-        // Das Anlegen (createUser) bleibt über AcceptInvitationRequest gesperrt.
+        // Abgelaufen, aber gültiger Link: Hinweisseite statt 401; createUser bleibt über AcceptInvitationRequest gesperrt.
         if ($invitation->isExpired()) {
             return $this->responseFactory->render('Users/InvitationExpired', [
                 'email' => $request->query('email'),

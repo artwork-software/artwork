@@ -39,14 +39,23 @@ class EventPolicy
 
     /**
      * Einzelnen Termin lesen (events.description, events.timelines, events.series.show).
-     * Der Kalender ist instanzweit sichtbar, deshalb reicht ohne Projekt die Anmeldung;
-     * hängt der Termin an einem Projekt, gilt dessen Sichtrecht (ProjectPolicy::view).
+     *
+     * Regel des Auftraggebers (21.09.2026): Wer den Kalender sehen darf, darf alle Termine sehen —
+     * unabhängig davon, ob das Projekt des Termins privat ist. Der Kalender ist instanzweit
+     * sichtbar, deshalb reicht die Anmeldung; ein Projekt-Sichtrecht wird NICHT verlangt.
+     * Einzige Ausnahme: Planungstermine (is_planning) liegen hinter dem Recht für den
+     * Planungskalender (sehen oder bearbeiten), analog zu EventController::viewPlanningCalendar.
      */
     public function view(User $user, Event $event): bool
     {
-        $project = $event->project;
+        if (!$event->is_planning) {
+            return true;
+        }
 
-        return $project === null || $user->can('view', $project);
+        return $user->canAny([
+            PermissionEnum::CAN_SEE_PLANNING_CALENDAR->value,
+            PermissionEnum::CAN_EDIT_PLANNING_CALENDAR->value,
+        ]);
     }
 
     public function update(User $user, Event $event): bool

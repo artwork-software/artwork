@@ -4,6 +4,7 @@ namespace Artwork\Modules\Crm\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use Artwork\Core\FileHandling\Download\PrivateFileResponse;
+use Artwork\Core\FileHandling\StoredFilePath;
 use Artwork\Core\FileHandling\Naming\StoredFileName;
 use Artwork\Modules\Accommodation\Models\AccommodationRoomType;
 use Artwork\Modules\Crm\Enums\CrmPropertyTypeEnum;
@@ -463,7 +464,10 @@ class CrmContactController extends Controller
         $visiblePropertyIds = $this->propertyGroupService->getVisiblePropertyIds($user->id, $deptIds, $isCrmManager);
         abort_unless(in_array($property->id, array_map('intval', $visiblePropertyIds), true), 403);
 
-        $path = $crmContact->propertyValues()->where('crm_property_id', $property->id)->value('value');
+        // Altbestand kann "/storage/…"-Präfixe tragen (StoredFilePath), erst danach die Muster-Prüfung
+        $path = StoredFilePath::normalise(
+            $crmContact->propertyValues()->where('crm_property_id', $property->id)->value('value')
+        );
         abort_unless(is_string($path) && preg_match(self::PROPERTY_FILE_PATH_PATTERN, $path) === 1, 404);
 
         return PrivateFileResponse::make($path, basename($path), $request->boolean('inline'));
@@ -471,6 +475,8 @@ class CrmContactController extends Controller
 
     private function deleteStoredPropertyFile(?string $path): void
     {
+        $path = StoredFilePath::normalise($path);
+
         if (!is_string($path) || preg_match(self::PROPERTY_FILE_PATH_PATTERN, $path) !== 1) {
             return;
         }

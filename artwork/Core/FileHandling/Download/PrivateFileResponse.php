@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Artwork\Core\FileHandling\Download;
 
 use Artwork\Core\FileHandling\Naming\DownloadFileName;
+use Artwork\Core\FileHandling\StoredFilePath;
 use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
@@ -38,6 +39,8 @@ final class PrivateFileResponse
 
     public static function make(string $path, ?string $downloadName = null, bool $inline = false): StreamedResponse
     {
+        // Altbestand kann "/storage/…"-Präfixe oder absolute URLs im Pfad tragen
+        $path = StoredFilePath::normalise($path) ?? '';
         $disk = self::resolveDisk($path);
 
         abort_if($disk === null, 404);
@@ -56,12 +59,14 @@ final class PrivateFileResponse
      */
     public static function resolveDisk(string $path): ?string
     {
-        if ($path === '' || str_contains($path, '..')) {
+        $path = StoredFilePath::normalise($path);
+
+        if ($path === null) {
             return null;
         }
 
         foreach (['local', 'public'] as $disk) {
-            if (Storage::disk($disk)->exists($path)) {
+            if (Storage::disk($disk)->fileExists($path)) {
                 return $disk;
             }
         }

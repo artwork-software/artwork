@@ -19,6 +19,7 @@ use Artwork\Modules\User\Models\UserCalendarSettings;
 use Artwork\Modules\User\Models\UserDailyViewCalendarSettings;
 use Artwork\Modules\Calendar\DTO\RoomDTO;
 use Artwork\Modules\Calendar\Services\CalendarDataService;
+use Artwork\Modules\Calendar\Services\CalendarShiftVisibility;
 use Artwork\Modules\Calendar\Services\EventCalendarService;
 use Artwork\Modules\Calendar\Services\EventPlanningCalendarService;
 use Artwork\Modules\Calendar\Services\ShiftCalendarService;
@@ -423,27 +424,28 @@ class EventController extends Controller
                 : null,
             'filterType' => $calendarFilterType,
             'isDailyView' => $isDailyView,
-            // Daten für Schicht-Karten + Schicht-Bearbeiten-Modal (nur bei aktivem "Schichten anzeigen")
-            'shiftQualifications' => fn () => $userCalendarSettings?->work_shifts
+            // Daten für Schicht-Karten + Schicht-Bearbeiten-Modal (nur bei aktivem "Schichten anzeigen"
+            // UND Dienstplan-Sichtrecht, siehe CalendarShiftVisibility)
+            'shiftQualifications' => fn () => CalendarShiftVisibility::isEnabled($user, $userCalendarSettings)
                 ? $this->shiftQualificationService->getAllOrderedByPosition()
                 : [],
-            'globalQualifications' => fn () => $userCalendarSettings?->work_shifts
+            'globalQualifications' => fn () => CalendarShiftVisibility::isEnabled($user, $userCalendarSettings)
                 ? $this->globalQualificationService->getAll()
                 : [],
-            'crafts' => fn () => $userCalendarSettings?->work_shifts
+            'crafts' => fn () => CalendarShiftVisibility::isEnabled($user, $userCalendarSettings)
                 ? Craft::query()
                     ->select(['id', 'name', 'abbreviation', 'color', 'universally_applicable', 'position'])
                     ->without(['craftShiftPlaner'])
                     ->orderBy('position')
                     ->get()
                 : [],
-            'currentUserCrafts' => fn () => $userCalendarSettings?->work_shifts
+            'currentUserCrafts' => fn () => CalendarShiftVisibility::isEnabled($user, $userCalendarSettings)
                 ? $this->getCurrentUserCrafts($user)
                 : [],
-            'shiftTimePresets' => fn () => $userCalendarSettings?->work_shifts
+            'shiftTimePresets' => fn () => CalendarShiftVisibility::isEnabled($user, $userCalendarSettings)
                 ? $this->shiftTimePresetService->getAll()
                 : [],
-            'shiftGroups' => fn () => $userCalendarSettings?->work_shifts
+            'shiftGroups' => fn () => CalendarShiftVisibility::isEnabled($user, $userCalendarSettings)
                 ? $this->shiftGroupService->getAllShiftGroups()
                 : [],
         ]);
@@ -715,27 +717,28 @@ class EventController extends Controller
             'verifierForEventTypIds' => $user->verifiableEventTypes->pluck('id'),
             'filterType' => $planningFilterType,
             'isDailyView' => $isDailyView,
-            // Daten für Schicht-Karten + Schicht-Bearbeiten-Modal (nur bei aktivem "Schichten anzeigen")
-            'shiftQualifications' => fn () => $userCalendarSettings?->work_shifts
+            // Daten für Schicht-Karten + Schicht-Bearbeiten-Modal (nur bei aktivem "Schichten anzeigen"
+            // UND Dienstplan-Sichtrecht, siehe CalendarShiftVisibility)
+            'shiftQualifications' => fn () => CalendarShiftVisibility::isEnabled($user, $userCalendarSettings)
                 ? $this->shiftQualificationService->getAllOrderedByPosition()
                 : [],
-            'globalQualifications' => fn () => $userCalendarSettings?->work_shifts
+            'globalQualifications' => fn () => CalendarShiftVisibility::isEnabled($user, $userCalendarSettings)
                 ? $this->globalQualificationService->getAll()
                 : [],
-            'crafts' => fn () => $userCalendarSettings?->work_shifts
+            'crafts' => fn () => CalendarShiftVisibility::isEnabled($user, $userCalendarSettings)
                 ? Craft::query()
                     ->select(['id', 'name', 'abbreviation', 'color', 'universally_applicable', 'position'])
                     ->without(['craftShiftPlaner'])
                     ->orderBy('position')
                     ->get()
                 : [],
-            'currentUserCrafts' => fn () => $userCalendarSettings?->work_shifts
+            'currentUserCrafts' => fn () => CalendarShiftVisibility::isEnabled($user, $userCalendarSettings)
                 ? $this->getCurrentUserCrafts($user)
                 : [],
-            'shiftTimePresets' => fn () => $userCalendarSettings?->work_shifts
+            'shiftTimePresets' => fn () => CalendarShiftVisibility::isEnabled($user, $userCalendarSettings)
                 ? $this->shiftTimePresetService->getAll()
                 : [],
-            'shiftGroups' => fn () => $userCalendarSettings?->work_shifts
+            'shiftGroups' => fn () => CalendarShiftVisibility::isEnabled($user, $userCalendarSettings)
                 ? $this->shiftGroupService->getAllShiftGroups()
                 : [],
         ]);

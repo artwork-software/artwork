@@ -17,6 +17,7 @@ use Artwork\Modules\ExternalUserManagement\Models\ExternalUserSource;
 use Artwork\Modules\EventType\Services\EventTypeService;
 use Artwork\Modules\Freelancer\Models\Freelancer;
 use Artwork\Modules\Invitation\Models\Invitation;
+use Artwork\Modules\Calendar\Services\CalendarShiftVisibility;
 use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Artwork\Modules\Permission\Models\Permission;
 use Artwork\Modules\Permission\Services\PermissionPresetService;
@@ -1889,6 +1890,13 @@ class UserController extends Controller
             // Termin-Kacheln in der Wochenansicht (Spalte nur auf user_shift_plan_settings)
             'show_events',
         ]);
+
+        // "Schichten anzeigen" im Kalender nur mit Dienstplan-Sichtrecht (CalendarShiftVisibility):
+        // ein ohne Recht gesendeter Wert wird nicht abgelehnt, sondern auf false gezwungen, damit
+        // die übrigen Einstellungen des Dialogs weiterhin gespeichert werden.
+        if (array_key_exists('work_shifts', $settingsFields) && !CalendarShiftVisibility::userMayViewShifts($user)) {
+            $settingsFields['work_shifts'] = false;
+        }
 
         if ($request->boolean('is_shift_plan')) {
             // updateOrCreate: die Tabellen haben unique(user_id), ein nacktes

@@ -52,23 +52,41 @@ final class SecurityAuditAuthorizationRestRegressionTest extends TestCase
 
     // ------------------------------------------------------------------
     // 2. Termin-Detailrouten: EventPolicy::view
+    //    Regel des Auftraggebers (21.09.2026): Kalender sichtbar = alle Termine sichtbar,
+    //    auch bei fremdem/privatem Projekt; nur Planungstermine brauchen das Planungskalender-Recht.
     // ------------------------------------------------------------------
 
     #[Test]
-    public function event_detail_routes_require_project_visibility(): void
+    public function event_detail_routes_are_open_regardless_of_project_visibility(): void
     {
         $event = Event::factory()->create();
         Timeline::factory()->create(['event_id' => $event->id]);
 
+        // Kein Projekt-Sichtrecht, kein Teammitglied — Termin trotzdem lesbar
         $this->actingAsUserWith([]);
+        $this->getJson(route('events.description', $event))->assertOk();
+        $this->getJson(route('events.timelines', $event))->assertOk();
+        $this->getJson(route('events.series.show', $event))->assertOk();
+    }
+
+    #[Test]
+    public function planning_event_detail_routes_require_planning_calendar_right(): void
+    {
+        $event = Event::factory()->create(['is_planning' => true]);
+        Timeline::factory()->create(['event_id' => $event->id]);
+
+        $this->actingAsUserWith([PermissionEnum::PROJECT_VIEW]);
         $this->getJson(route('events.description', $event))->assertForbidden();
         $this->getJson(route('events.timelines', $event))->assertForbidden();
         $this->getJson(route('events.series.show', $event))->assertForbidden();
 
-        $this->actingAsUserWith([PermissionEnum::PROJECT_VIEW]);
+        $this->actingAsUserWith([PermissionEnum::CAN_SEE_PLANNING_CALENDAR]);
         $this->getJson(route('events.description', $event))->assertOk();
         $this->getJson(route('events.timelines', $event))->assertOk();
         $this->getJson(route('events.series.show', $event))->assertOk();
+
+        $this->actingAsUserWith([PermissionEnum::CAN_EDIT_PLANNING_CALENDAR]);
+        $this->getJson(route('events.description', $event))->assertOk();
     }
 
     #[Test]

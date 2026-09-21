@@ -2,6 +2,7 @@
 
 namespace Artwork\Modules\InternalIssue\Services;
 
+use Artwork\Core\FileHandling\StoredFilePath;
 use Artwork\Core\FileHandling\Naming\StoredFileName;
 use Artwork\Modules\InternalIssue\Models\InternalIssue;
 use Artwork\Modules\InternalIssue\Models\InternalIssueFile;
@@ -203,7 +204,10 @@ class InternalIssueService
      */
     private function deleteStoredFile(?string $path): void
     {
-        if (!is_string($path) || $path === '') {
+        // Altbestand kann "/storage/…"-Präfixe tragen
+        $path = StoredFilePath::normalise($path);
+
+        if ($path === null) {
             return;
         }
 

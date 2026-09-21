@@ -2,6 +2,7 @@
 
 namespace Artwork\Core\Console\Commands;
 
+use Artwork\Core\FileHandling\StoredFilePath;
 use Artwork\Modules\Crm\Enums\CrmPropertyTypeEnum;
 use Artwork\Modules\Crm\Models\CrmPropertyValue;
 use Artwork\Modules\ExternalIssue\Models\ExternalIssueFile;
@@ -10,18 +11,31 @@ use Illuminate\Console\Command;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
+use Throwable;
 
 /**
  * Sicherheits-Audit 21.09.2026, Abschnitt F: CRM-Eigenschaftsdateien, Materialausgabe-Anhänge und
  * generierte Ausgabe-PDFs lagen auf der public-Disk (ohne Login unter /storage lesbar). Neue Dateien
  * landen auf "local"; dieses Command holt den Altbestand nach und normalisiert die DB-Pfade
- * (relativer Pfad ohne "/storage/"- oder "public/"-Präfix).
+ * (relativer Pfad ohne "/storage/"-, "public/"- oder Host-Präfix, siehe StoredFilePath).
  *
  * Idempotent: Was bereits auf "local" liegt, wird nur noch von "public" entfernt; fehlende Dateien
- * werden gemeldet, nicht angefasst. Läuft aus artwork:update heraus.
+ * werden gemeldet, nicht angefasst. Ein Fehler an einer einzelnen Datei (Rechte, volle Platte, …)
+ * wird gemeldet und übersprungen - der Rest läuft weiter, artwork:update bricht nicht ab.
+ * Bis zum Lauf liefert PrivateFileResponse noch von "public" aus, es entsteht also keine Lücke.
  */
 class MovePublicFilesToPrivateDiskCommand extends Command
 {
+    /**
+     * Erlaubte Verzeichnisse je Tabelle - alles andere (Fremdpfade, Traversal) wird nicht angefasst.
+     * "materialausgabe" ist ein frühes Verzeichnis der internen Materialausgabe.
+     */
+    private const CRM_PROPERTY_FILE_DIRECTORIES = ['crm-property-files'];
+
+    private const INTERNAL_ISSUE_DIRECTORIES = ['material-issue', 'materialausgabe'];
+
+    private const EXTERNAL_ISSUE_DIRECTORIES = ['external_material_issues'];
+
     protected $signature = 'artwork:security:move-public-files {--dry-run : Nur anzeigen, nichts verschieben}';
 
     protected $description = 'Move CRM property files and material issue attachments/PDFs from the public disk '
@@ -35,8 +49,12 @@ class MovePublicFilesToPrivateDiskCommand extends Command
 
     private int $normalised = 0;
 
+    private int $failed = 0;
+
     public function handle(): int
     {
+        // Zähler zurücksetzen - die Instanz kann im selben Prozess mehrfach laufen (Octane, Tests)
+        $this->moved = $this->alreadyPrivate = $this->missing = $this->normalised = $this->failed = 0;
         $dryRun = (bool) $this->option('dry-run');
 
         if (Schema::hasTable('crm_property_values') && Schema::hasTable('crm_properties')) {
@@ -45,7 +63,7 @@ class MovePublicFilesToPrivateDiskCommand extends Command
                 ->whereHas('property', fn ($query) => $query->where('type', CrmPropertyTypeEnum::UPLOAD->value))
                 ->chunkById(200, function ($values) use ($dryRun): void {
                     foreach ($values as $value) {
-                        $this->process($value, 'value', 'crm-property-files', $dryRun);
+                        $this->processSafely($value, 'value', self::CRM_PROPERTY_FILE_DIRECTORIES, $dryRun);
                     }
                 });
         }
@@ -53,7 +71,7 @@ class MovePublicFilesToPrivateDiskCommand extends Command
         if (Schema::hasTable('internal_issue_files')) {
             InternalIssueFile::query()->chunkById(200, function ($files) use ($dryRun): void {
                 foreach ($files as $file) {
-                    $this->process($file, 'file_path', 'material-issue', $dryRun);
+                    $this->processSafely($file, 'file_path', self::INTERNAL_ISSUE_DIRECTORIES, $dryRun);
                 }
             });
         }
@@ -61,47 +79,75 @@ class MovePublicFilesToPrivateDiskCommand extends Command
         if (Schema::hasTable('external_issue_files')) {
             ExternalIssueFile::query()->chunkById(200, function ($files) use ($dryRun): void {
                 foreach ($files as $file) {
-                    $this->process($file, 'file_path', 'external_material_issues', $dryRun);
+                    $this->processSafely($file, 'file_path', self::EXTERNAL_ISSUE_DIRECTORIES, $dryRun);
                 }
             });
         }
 
         $this->info(sprintf(
-            '%sMoved: %d, already private: %d, paths normalised: %d, missing on both disks: %d',
+            '%sMoved: %d, already private: %d, paths normalised: %d, missing on both disks: %d, failed: %d',
             $dryRun ? '[dry-run] ' : '',
             $this->moved,
             $this->alreadyPrivate,
             $this->normalised,
-            $this->missing
+            $this->missing,
+            $this->failed
         ));
+
+        if ($this->failed > 0) {
+            $this->warn('Some files could not be moved; they stay readable from the public disk '
+                . '(fallback) - re-run "artwork:security:move-public-files" after fixing the cause.');
+        }
 
         return self::SUCCESS;
     }
 
-    private function process(Model $model, string $attribute, string $expectedDirectory, bool $dryRun): void
+    /**
+     * @param list<string> $allowedDirectories
+     */
+    private function processSafely(Model $model, string $attribute, array $allowedDirectories, bool $dryRun): void
+    {
+        try {
+            $this->process($model, $attribute, $allowedDirectories, $dryRun);
+        } catch (Throwable $exception) {
+            $this->failed++;
+            $this->warn(sprintf(
+                'Failed to move %s (%s #%d): %s',
+                (string) $model->getAttribute($attribute),
+                $model::class,
+                $model->getKey(),
+                $exception->getMessage()
+            ));
+        }
+    }
+
+    /**
+     * @param list<string> $allowedDirectories
+     */
+    private function process(Model $model, string $attribute, array $allowedDirectories, bool $dryRun): void
     {
         $raw = (string) $model->getAttribute($attribute);
-        $path = $this->normalisePath($raw);
+        $path = StoredFilePath::normaliseWithin($raw, $allowedDirectories);
 
-        // Nur Pfade des erwarteten Verzeichnisses (keine Fremdpfade, keine Traversal-Muster)
-        if ($path === null || !str_starts_with($path, $expectedDirectory . '/')) {
+        if ($path === null) {
             return;
         }
 
         $local = Storage::disk('local');
         $public = Storage::disk('public');
 
-        if ($local->exists($path)) {
+        if ($local->fileExists($path)) {
             $this->alreadyPrivate++;
 
-            if ($public->exists($path) && !$dryRun) {
+            if ($public->fileExists($path) && !$dryRun) {
                 $public->delete($path);
             }
-        } elseif ($public->exists($path)) {
+        } elseif ($public->fileExists($path)) {
             if (!$dryRun) {
                 $stream = $public->readStream($path);
 
                 if ($stream === null) {
+                    $this->failed++;
                     $this->warn(sprintf(
                         'Cannot read %s on public disk (%s #%d)',
                         $path,
@@ -112,10 +158,25 @@ class MovePublicFilesToPrivateDiskCommand extends Command
                     return;
                 }
 
-                $local->writeStream($path, $stream);
+                try {
+                    $written = $local->writeStream($path, $stream);
+                } finally {
+                    if (is_resource($stream)) {
+                        fclose($stream);
+                    }
+                }
 
-                if (is_resource($stream)) {
-                    fclose($stream);
+                // Nur löschen, wenn die private Kopie wirklich da ist - sonst bleibt der public-Fallback
+                if ($written === false || !$local->fileExists($path)) {
+                    $this->failed++;
+                    $this->warn(sprintf(
+                        'Could not write %s to local disk (%s #%d) - left on public disk',
+                        $path,
+                        $model::class,
+                        $model->getKey()
+                    ));
+
+                    return;
                 }
 
                 $public->delete($path);
@@ -134,26 +195,5 @@ class MovePublicFilesToPrivateDiskCommand extends Command
                 $model->forceFill([$attribute => $path])->save();
             }
         }
-    }
-
-    /**
-     * "/storage/x/y", "storage/x/y", "public/x/y" → "x/y"; Traversal und absolute Pfade werden verworfen.
-     */
-    private function normalisePath(string $raw): ?string
-    {
-        $path = trim($raw);
-
-        if ($path === '') {
-            return null;
-        }
-
-        $path = preg_replace('#^(https?://[^/]+)?/?(storage/|public/)?#', '', $path) ?? $path;
-        $path = ltrim($path, '/');
-
-        if ($path === '' || str_contains($path, '..') || str_contains($path, "\0")) {
-            return null;
-        }
-
-        return $path;
     }
 }

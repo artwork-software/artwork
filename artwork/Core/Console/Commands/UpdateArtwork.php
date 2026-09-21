@@ -106,7 +106,16 @@ class UpdateArtwork extends Command
     private function movePublicFilesToPrivateDisk(): void
     {
         $this->section('Move public files to private disk');
-        $this->call('artwork:security:move-public-files');
+
+        // Einzelne Dateien fängt das Command selbst ab; ein unerwarteter Fehler (z. B. Disk nicht
+        // erreichbar) darf das Update nicht abbrechen - bis zum nächsten Lauf greift der public-Fallback.
+        try {
+            $this->call('artwork:security:move-public-files');
+        } catch (\Throwable $exception) {
+            $this->warn(
+                'Moving public files failed and will be retried on the next update: ' . $exception->getMessage()
+            );
+        }
     }
 
     private function generateInventoryArticleThumbnails(): void

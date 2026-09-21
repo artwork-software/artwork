@@ -2498,7 +2498,10 @@ class EventController extends Controller
 
     public function deleteOldNotifications(Request $request): void
     {
+        // Nur die eigenen Benachrichtigungen mit diesem Schlüssel – nicht die aller Nutzer*innen.
         $notifications = DatabaseNotification::query()
+            ->where('notifiable_type', User::class)
+            ->where('notifiable_id', Auth::id())
             ->whereJsonContains("data->notificationKey", $request->notificationKey)
             ->get();
 

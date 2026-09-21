@@ -536,7 +536,38 @@ final class SecurityAuditFileHandlingRegressionTest extends FeatureTestCase
             $this->jsonHeaders()
         )->assertStatus(422);
 
+        // Server-seitig ausführbar / Webserver-Konfiguration: Endung reicht, Inhalt egal
+        $this->post(
+            route('project_files.store', $project),
+            ['file' => $this->realUpload('archive.phar', "<?php echo 1;\n"), 'tabId' => $tab->id],
+            $this->jsonHeaders()
+        )->assertStatus(422)->assertJsonValidationErrors(['file']);
+
+        $this->post(
+            route('project_files.store', $project),
+            ['file' => $this->realUpload('.htaccess', "AddType application/x-httpd-php .png\n"), 'tabId' => $tab->id],
+            $this->jsonHeaders()
+        )->assertStatus(422)->assertJsonValidationErrors(['file']);
+
+        // Polyglot: gültiges PNG (finfo: image/png), Client-Name ".php" -> abgelehnt, nicht umbenannt
+        $this->post(
+            route('project_files.store', $project),
+            ['file' => $this->realUpload('bild.php', $this->pngBytes() . '<?php system($_GET["c"]); ?>'), 'tabId' => $tab->id],
+            $this->jsonHeaders()
+        )->assertStatus(422)->assertJsonValidationErrors(['file']);
+
         $this->assertSame(0, ProjectFile::query()->where('project_id', $project->id)->count());
+        $this->assertSame([], Storage::disk('local')->allFiles('project_files'));
+
+        // Echtes PNG wird gespeichert - unter Hash-Namen mit Endung des erkannten Inhalts
+        $this->post(
+            route('project_files.store', $project),
+            ['file' => $this->realUpload('bild.png', $this->pngBytes()), 'tabId' => $tab->id],
+            $this->jsonHeaders()
+        )->assertSuccessful();
+        $pngFile = ProjectFile::query()->where('project_id', $project->id)->firstOrFail();
+        $this->assertStringEndsWith('.png', $pngFile->basename);
+        Storage::disk('local')->assertExists('project_files/' . $pngFile->basename);
 
         // Wildcard lässt reguläre Dokumente weiterhin durch
         $this->post(
@@ -544,7 +575,7 @@ final class SecurityAuditFileHandlingRegressionTest extends FeatureTestCase
             ['file' => $this->realUpload('doku.pdf', $this->pdfBytes()), 'tabId' => $tab->id],
             $this->jsonHeaders()
         )->assertSuccessful();
-        $this->assertSame(1, ProjectFile::query()->where('project_id', $project->id)->count());
+        $this->assertSame(2, ProjectFile::query()->where('project_id', $project->id)->count());
     }
 
     #[Test]

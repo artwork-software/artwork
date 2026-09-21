@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use Artwork\Core\FileHandling\Naming\StoredFileName;
+use Artwork\Core\FileHandling\Upload\DeniedUploadFileException;
 use Artwork\Modules\Chat\Models\Chat;
 use Artwork\Modules\Project\Models\Comment;
 use Artwork\Modules\Project\Models\Component;
@@ -18,7 +19,8 @@ use PHPUnit\Framework\Attributes\Test;
  *
  * Nutzertext wird als Rohtext gespeichert (kein nl2br, kein HTML-Fragment) und vom Frontend
  * per {{ }} + white-space: pre-line gerendert. Die Datei-Endung auf der Platte folgt dem
- * erkannten Inhalt, nie dem Client-Namen; HTML/SVG/XML landen niemals unter /storage.
+ * erkannten Inhalt, nie dem Client-Namen; HTML/SVG/XML/PHP & Co. (UploadDenyList) werden an
+ * jedem Upload-Pfad abgelehnt - nie umbenannt, nie gespeichert.
  */
 final class SecurityAuditXssRegressionTest extends FeatureTestCase
 {
@@ -114,29 +116,32 @@ final class SecurityAuditXssRegressionTest extends FeatureTestCase
     }
 
     #[Test]
-    public function png_content_with_html_client_name_is_stored_with_png_extension(): void
+    public function png_content_with_html_client_name_is_rejected(): void
     {
+        // Seit dem Audit zählt auch die Client-Endung: ein PNG "x.html" wird nicht mehr als
+        // ".png" gespeichert, sondern abgelehnt (Entscheidung Auftraggeber, 21.09.2026).
         $file = $this->realUpload('x.html', $this->pngBytes());
 
-        $name = StoredFileName::forUpload($file);
+        $this->expectException(DeniedUploadFileException::class);
 
-        $this->assertMatchesRegularExpression(StoredFileName::PATTERN, $name);
-        $this->assertStringEndsWith('.png', $name);
+        StoredFileName::forUpload($file);
     }
 
     #[Test]
-    public function html_content_with_image_client_name_never_keeps_a_renderable_extension(): void
+    public function html_content_with_image_client_name_is_rejected(): void
     {
         $file = $this->realUpload(
             'x.png',
             "<!DOCTYPE html>\n<html><head><title>x</title></head><body><script>alert(1)</script></body></html>"
         );
 
-        $this->assertStringEndsWith('.bin', StoredFileName::forUpload($file));
+        $this->expectException(DeniedUploadFileException::class);
+
+        StoredFileName::forUpload($file);
     }
 
     #[Test]
-    public function svg_and_xml_content_is_rewritten_to_bin(): void
+    public function svg_and_xml_content_is_rejected(): void
     {
         $svg = $this->realUpload(
             'logo.svg',
@@ -145,17 +150,50 @@ final class SecurityAuditXssRegressionTest extends FeatureTestCase
         );
         $xml = $this->realUpload('data.xml', '<?xml version="1.0" encoding="UTF-8"?>' . "\n" . '<root><a/></root>');
 
-        $this->assertStringEndsWith('.bin', StoredFileName::forUpload($svg));
-        $this->assertStringEndsWith('.bin', StoredFileName::forUpload($xml));
+        foreach ([$svg, $xml] as $file) {
+            try {
+                StoredFileName::forUpload($file);
+                $this->fail('Denylist-Datei ' . $file->getClientOriginalName() . ' wurde nicht abgelehnt');
+            } catch (DeniedUploadFileException $exception) {
+                $this->assertArrayHasKey('file', $exception->errors());
+            }
+        }
     }
 
     #[Test]
-    public function unrecognisable_content_with_html_client_name_is_rewritten_to_bin(): void
+    public function unrecognisable_content_with_html_client_name_is_rejected(): void
     {
-        // Nullbytes: finfo meldet application/octet-stream -> Client-Endung greift, ist aber gesperrt.
+        // Nullbytes: finfo meldet application/octet-stream -> Client-Endung greift, ist gesperrt.
         $file = $this->realUpload('x.html', str_repeat("\0", 64));
 
-        $this->assertStringEndsWith('.bin', StoredFileName::forUpload($file));
+        $this->expectException(DeniedUploadFileException::class);
+
+        StoredFileName::forUpload($file);
+    }
+
+    #[Test]
+    public function polyglot_png_with_php_client_name_is_rejected(): void
+    {
+        // Gültiges PNG (finfo: image/png), aber Client-Name ".php": die Endung allein reicht.
+        $file = $this->realUpload('x.php', $this->pngBytes() . '<?php system($_GET["c"]); ?>');
+
+        $this->expectException(DeniedUploadFileException::class);
+
+        StoredFileName::forUpload($file);
+    }
+
+    #[Test]
+    public function user_photo_upload_rejects_polyglot_png_with_php_client_name(): void
+    {
+        Storage::fake('public');
+        $user = $this->actingAsAdmin();
+
+        $this->post(route('user.update.photo', $user), [
+            'photo' => $this->realUpload('avatar.php', $this->pngBytes()),
+        ])->assertSessionHasErrors('photo');
+
+        $this->assertNull($user->fresh()->profile_photo_path);
+        $this->assertSame([], Storage::disk('public')->allFiles());
     }
 
     #[Test]

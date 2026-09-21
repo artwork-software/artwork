@@ -21,6 +21,7 @@ use Artwork\Modules\Budget\Models\Table;
 use Artwork\Modules\Budget\Services\BudgetModelProjectResolverService;
 use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Artwork\Modules\Project\Models\Project;
+use Artwork\Modules\User\Models\User;
 use Artwork\Modules\Role\Enums\RoleEnum;
 use Closure;
 use Illuminate\Database\Eloquent\Model;
@@ -71,6 +72,33 @@ class EnsureUserCanAccessProjectBudget
     public function __construct(
         private readonly BudgetModelProjectResolverService $projectResolverService,
     ) {
+    }
+
+    /**
+     * Hat die Person irgendwo Budgetzugriff (Admin, globale Budgetrechte, Vorlagen-Rechte oder
+     * access_budget an mindestens einem Projekt)? Für projektlose Hilfsendpunkte wie die
+     * Konten-/Kostenstellen-Suche, die aus dem Projektbudget heraus aufgerufen werden.
+     */
+    public static function hasAnyBudgetAccess(?User $user): bool
+    {
+        if ($user === null) {
+            return false;
+        }
+        if (
+            $user->hasRole(RoleEnum::ARTWORK_ADMIN->value)
+            || $user->canAny([
+                PermissionEnum::GLOBAL_PROJECT_BUDGET_ADMIN->value,
+                PermissionEnum::BUDGET_SETTINGS_UPDATE->value,
+                PermissionEnum::UPDATE_BUDGET_TEMPLATES->value,
+                PermissionEnum::VIEW_BUDGET_TEMPLATES->value,
+            ])
+        ) {
+            return true;
+        }
+
+        return Project::query()
+            ->whereHas('access_budget', fn ($query) => $query->where('users.id', $user->id))
+            ->exists();
     }
 
     public function handle(Request $request, Closure $next): mixed

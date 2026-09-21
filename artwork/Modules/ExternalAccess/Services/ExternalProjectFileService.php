@@ -16,6 +16,7 @@ use Artwork\Modules\Project\Models\Component;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Models\ProjectFile;
 use Artwork\Modules\Project\Models\ProjectTab;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Storage;
@@ -25,6 +26,10 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
  * Dokumente im freigegebenen Tab für externe Personen: Liste, Upload, Download, Löschen eigener
  * Uploads. Dateien hängen wie intern am Projekt + tab_id; die interne Dokument-Komponente zeigt
  * sie über ihren Tab-Scope an. Größen-/Typ-Limits sind dieselben wie für interne Projektdateien.
+ *
+ * Upload und Löschen eigener Uploads stehen zusätzlich unter dem Tool-Setting
+ * "Dateiupload für Externe erlauben" (GeneralSettings::external_file_upload_enabled, Default AUS);
+ * Liste/Download bestehender Dokumente bleiben davon unberührt.
  */
 class ExternalProjectFileService
 {
@@ -34,6 +39,23 @@ class ExternalProjectFileService
         protected readonly GeneralSettingsService $generalSettingsService,
         private readonly ExternalScopeResolver $scopeResolver,
     ) {
+    }
+
+    public function isUploadEnabled(): bool
+    {
+        return $this->generalSettingsService->isExternalFileUploadEnabled();
+    }
+
+    /**
+     * Zentrales Gate für Upload/Löschen durch Externe: 403 solange der Schalter aus ist.
+     *
+     * @throws AuthorizationException
+     */
+    public function assertUploadEnabled(): void
+    {
+        if (!$this->isUploadEnabled()) {
+            throw new AuthorizationException(__('File upload for external accesses is disabled.'));
+        }
     }
 
     /**
@@ -56,6 +78,7 @@ class ExternalProjectFileService
         Component $component,
         UploadedFile $file,
     ): ProjectFile {
+        $this->assertUploadEnabled();
         $this->assertDocumentComponentInTab($component, $tab);
         $this->handleFile(ArtworkFileTypes::PROJECT, $file);
 
@@ -105,10 +128,13 @@ class ExternalProjectFileService
     }
 
     /**
-     * Externe dürfen ausschließlich Dateien löschen, die sie selbst hochgeladen haben.
+     * Externe dürfen ausschließlich Dateien löschen, die sie selbst hochgeladen haben - und nur,
+     * solange der Upload-Schalter aktiv ist.
      */
     public function deleteOwn(ExternalAccess $external, Project $project, ProjectTab $tab, int $fileId): void
     {
+        $this->assertUploadEnabled();
+
         /** @var ProjectFile|null $file */
         $file = $this->filesQuery($project, $tab)
             ->whereKey($fileId)

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use Artwork\Modules\Budget\Http\Middleware\EnsureUserCanAccessProjectBudget;
 use Artwork\Modules\Budget\Services\ColumnCellService;
 use Artwork\Modules\Budget\Http\Requests\StoreBudgetManagementCostUnitRequest;
 use Artwork\Modules\Budget\Http\Requests\UpdateBudgetManagementCostUnitRequest;
@@ -136,6 +137,10 @@ class BudgetManagementCostUnitController extends Controller
 
     public function search(Request $request): Collection
     {
+        // Stammdaten-Suche aus dem Projektbudget: nur wer irgendwo Budgetzugriff hat (analog Budget-Middleware).
+        abort_unless(EnsureUserCanAccessProjectBudget::hasAnyBudgetAccess($request->user()), 403);
+        $request->validate(['search' => ['required', 'string', 'max:255']]);
+
         return $this->budgetManagementCostUnitService->searchByRequest($request);
     }
 }

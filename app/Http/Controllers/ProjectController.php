@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use Artwork\Core\FileHandling\Upload\SafeUploadFile;
 use App\Settings\EventSettings;
 use Artwork\Core\FileHandling\Naming\StoredFileName;
 use Artwork\Core\Http\Requests\SearchRequest;
@@ -4625,7 +4626,7 @@ class ProjectController extends Controller
         if ($request->file('keyVisual')) {
             // Inhalt muss ein Bild sein (kein SVG/HTML auf der public-Disk), max. 10 MB.
             $request->validate([
-                'keyVisual' => ['image', 'max:10240']
+                'keyVisual' => ['image', 'max:10240', new SafeUploadFile()]
             ]);
 
             $file = $request->file('keyVisual');
@@ -4727,19 +4728,12 @@ class ProjectController extends Controller
         $project->shiftRelevantEventTypes()->sync(collect($request->shiftRelevantEventTypeIds));
     }
 
-    /**
-     * Zeitleisten-Zeilen an Terminen: Schreibrecht am Termin (EventPolicy::update) ODER Dienstplanung —
-     * die Zeitleiste wird im Schichten-Tab auch von Planer:innen ohne Projekt-Schreibrecht gepflegt.
-     */
+    /** Zeitleisten-Zeilen an Terminen: Regel in EventPolicy::editTimeline (Termin-Schreibrecht ODER Dienstplanung). */
     private function authorizeTimelineEdit(?Event $event): void
     {
         abort_unless((bool) $event, 404);
 
-        $user = Auth::user();
-        abort_unless(
-            $user?->can(PermissionEnum::SHIFT_PLANNER->value) || $user?->can('update', $event),
-            403
-        );
+        $this->authorize('editTimeline', $event);
     }
 
     public function deleteTimeLineRow(Timeline $timeline, TimelineService $timelineService): void

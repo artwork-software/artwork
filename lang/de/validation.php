@@ -331,6 +331,7 @@ return [
         'failed' => 'Der Upload ist fehlgeschlagen. Bitte versuche es erneut.',
         'max_size' => 'Die maximal freigegebene Dateigröße ist aktuell :size MB, lasse es entweder von einem Admin hochsetzen oder versuche es mit einer kleineren Datei',
         'invalid_file_type' => 'Dieses Dateiformat :format ist nicht freigegeben, bitte einen Admin es freizugeben oder nutze ein anderes Format',
+        'denied_file_type' => 'Dateien dieses Typs (:format) werden aus Sicherheitsgründen grundsätzlich nicht angenommen - auch nicht, wenn alle Formate freigegeben sind. Bitte nutze ein anderes Format (z. B. PDF, PNG oder JPG).',
     ],
     'timeline' => [
         'name_required' => 'Der Name des Zeitplans ist erforderlich.',

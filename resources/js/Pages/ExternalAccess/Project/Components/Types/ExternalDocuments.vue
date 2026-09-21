@@ -6,6 +6,10 @@
                 <p v-if="editable" class="text-xs text-text-subtle mt-0.5">
                     {{ $t('Upload documents such as PDFs, images or logos. You can remove your own uploads.') }}
                 </p>
+                <!-- Schreib-Scope vorhanden, aber Tool-Setting "Dateiupload für Externe erlauben" ist aus -->
+                <p v-else-if="writableScope && !uploadEnabled" class="text-xs text-text-subtle mt-0.5">
+                    {{ $t('File upload for external accesses is disabled.') }}
+                </p>
             </div>
         </div>
 
@@ -63,6 +67,7 @@
 <script setup>
 import { computed, onMounted, ref } from 'vue'
 import axios from 'axios'
+import { usePage } from '@inertiajs/vue3'
 import { useTranslation } from '@/Composeables/Translation.js'
 
 const props = defineProps({
@@ -75,7 +80,11 @@ const props = defineProps({
 const $t = useTranslation()
 
 const label = computed(() => props.component.name || $t('Documents'))
-const editable = computed(() => props.component.is_writable && props.scope.access_type === 'write')
+const writableScope = computed(() => props.component.is_writable && props.scope.access_type === 'write')
+// Seiten-Prop aus ExternalProjectTabController (Tool-Setting external_file_upload_enabled).
+// Das Backend lehnt Upload/Löschen unabhängig davon mit 403 ab.
+const uploadEnabled = computed(() => usePage().props.externalFileUploadEnabled === true)
+const editable = computed(() => writableScope.value && uploadEnabled.value)
 
 const documents = ref([])
 const loading = ref(true)

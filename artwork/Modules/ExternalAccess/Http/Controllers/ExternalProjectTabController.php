@@ -5,6 +5,7 @@ namespace Artwork\Modules\ExternalAccess\Http\Controllers;
 use App\Http\Controllers\Controller;
 use Artwork\Modules\ExternalAccess\Models\ExternalAccessScope;
 use Artwork\Modules\ExternalAccess\Services\ExternalTabComponentResolver;
+use Artwork\Modules\GeneralSettings\Services\GeneralSettingsService;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Models\ProjectTab;
 use Illuminate\Http\Request;
@@ -15,6 +16,7 @@ class ExternalProjectTabController extends Controller
 {
     public function __construct(
         private readonly ExternalTabComponentResolver $componentResolver,
+        private readonly GeneralSettingsService $generalSettingsService,
     ) {
     }
 
@@ -40,6 +42,9 @@ class ExternalProjectTabController extends Controller
                 'last_submitted_at' => $scope->last_submitted_at?->toIso8601String(),
             ],
             'components' => $components,
+            // Tool-Setting "Dateiupload für Externe erlauben": Frontend blendet Upload/Löschen aus,
+            // das Backend lehnt unabhängig davon mit 403 ab.
+            'externalFileUploadEnabled' => $this->generalSettingsService->isExternalFileUploadEnabled(),
         ]);
     }
 }

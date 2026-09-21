@@ -2,6 +2,7 @@
 
 namespace Artwork\Modules\User\Http\Controllers;
 
+use Artwork\Core\FileHandling\Upload\SafeUploadFile;
 use App\Http\Controllers\Controller;
 use Spatie\Activitylog\Models\Activity;
 use Artwork\Core\Http\Requests\SearchRequest;
@@ -1263,7 +1264,7 @@ class UserController extends Controller
 
         // Nur echte Bilddateien (Inhalt geprüft, nicht Endung): sonst landet HTML/SVG unter /storage/profile-photos.
         $request->validate([
-            'photo' => ['required', 'image', 'mimes:jpg,jpeg,png', 'max:3072'],
+            'photo' => ['required', 'image', 'mimes:jpg,jpeg,png', 'max:3072', new SafeUploadFile()],
         ]);
 
         $user->updateProfilePhoto($request->file('photo'));
@@ -2305,6 +2306,8 @@ class UserController extends Controller
 
     public function updateChecklistFilter(User $user, Request $request): void
     {
+        $this->authorize('updateOwnPreferences', $user);
+
         $user->update($request->only([
             'checklist_has_projects',
             'checklist_no_projects',

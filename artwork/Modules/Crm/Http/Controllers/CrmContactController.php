@@ -2,6 +2,7 @@
 
 namespace Artwork\Modules\Crm\Http\Controllers;
 
+use Artwork\Core\FileHandling\Upload\SafeUploadFile;
 use App\Http\Controllers\Controller;
 use Artwork\Core\FileHandling\Download\PrivateFileResponse;
 use Artwork\Core\FileHandling\StoredFilePath;
@@ -392,7 +393,7 @@ class CrmContactController extends Controller
         $this->abortIfMirrored($crmContact);
 
         $request->validate([
-            'profile_image' => 'required|image|max:2048',
+            'profile_image' => ['required', 'image', 'max:2048', new SafeUploadFile()],
         ]);
 
         $profileImage = $request->file('profile_image');
@@ -412,7 +413,7 @@ class CrmContactController extends Controller
 
         $request->validate([
             'property_id' => 'required|integer|exists:crm_properties,id',
-            'file' => 'required|file|mimes:' . self::PROPERTY_FILE_MIMES . '|max:10240',
+            'file' => ['required', 'file', 'mimes:' . self::PROPERTY_FILE_MIMES, 'max:10240', new SafeUploadFile()],
         ]);
 
         $propertyId = (int) $request->input('property_id');

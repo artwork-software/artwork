@@ -41,6 +41,8 @@ class ExternalProjectFileController extends Controller
 
     public function store(Request $request, Project $project, ProjectTab $tab, Component $component): JsonResponse
     {
+        // Gate vor der Validierung: bei abgeschaltetem Upload immer 403, nie 422.
+        $this->service->assertUploadEnabled();
         $request->validate(['file' => ['required', 'file']]);
 
         /** @var ExternalAccess $external */

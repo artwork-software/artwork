@@ -225,7 +225,11 @@ Route::middleware(['guest', 'throttle:20,1'])->group(function (): void {
         ->name('auth.oidc.callback');
 });
 
-Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
+// Bewusst OHNE 'verified'-Middleware (Sicherheits-Audit 21.09.2026): Es gibt keine E-Mail-
+// Verifizierung. Konten entstehen ausschließlich per Einladung (Passwort-Setzen über Token),
+// LDAP oder OIDC - die Adresse ist damit bereits vom Einladenden bzw. vom Identity Provider
+// bestätigt. Das User-Model implementiert MustVerifyEmail nicht, Fortify::emailVerification ist aus.
+Route::group(['middleware' => ['auth:sanctum']], function (): void {
 
     // Workflow routes - only accessible via direct URL
     Route::group(['prefix' => 'workflow', 'middleware' => 'role:artwork admin'], function (): void {
@@ -1636,6 +1640,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::group(['prefix' => 'timeline-preset'], function (): void {
         //shifts.timeline-presets.index
         Route::get('/', [TimelinePresetController::class, 'index'])
+            ->middleware('permission:can plan shifts|change event settings|shift.settings_view_edit')
             ->name('shifts.timeline-presets.index');
 
         // Mutationen an Zeitleisten-Vorlagen: Dienstplanung ODER Termin-Einstellungen ODER Schichteinstellungen
@@ -1671,6 +1676,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
 
         // post timeline-preset.store
         Route::post('/{event}/timeline-preset/store', [ShiftController::class, 'storeTimelinePresetFormEvent'])
+            ->middleware('permission:can plan shifts|change event settings|shift.settings_view_edit')
             ->name('timeline-preset.store.form.event');
     });
 
@@ -2826,7 +2832,8 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
             Route::delete('/{component}/destroy', [ComponentController::class, 'destroy'])
                 ->name('component.destroy');
         });
-        Route::group(['prefix' => 'sidebar'], function (): void {
+        // Sidebar-Konfiguration der Projekt-Tabs ist globale Projekt-Einstellung (wie 'tab' und 'component')
+        Route::group(['prefix' => 'sidebar', 'middleware' => 'can:change project settings'], function (): void {
             Route::delete('/component/{sidebarTabComponent}/remove', [
                 SidebarTabComponentController::class,
                 'removeComponent'
@@ -4169,7 +4176,7 @@ Route::get(
 
 
 // /shift/check-collisions — liefert Zuweisungs-/Zeitdaten beliebiger Worker, daher zwingend hinter Auth
-Route::middleware(['auth:sanctum', 'verified'])
+Route::middleware(['auth:sanctum'])
     ->post('/shift/check-collisions', [ShiftController::class, 'checkCollisions'])
     ->can('can plan shifts')
     ->name('shift.check-collisions');

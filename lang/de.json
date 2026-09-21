@@ -8353,5 +8353,10 @@
     "Unknown browser": "Unbekannter Browser",
     "Invitation expired": "Einladung abgelaufen",
     "This invitation has expired. Please ask the person who invited you to send a new invitation.": "Diese Einladung ist abgelaufen. Bitte fordere bei der einladenden Person eine neue Einladung an.",
-    "Invited e-mail address": "Eingeladene E-Mail-Adresse"
+    "Invited e-mail address": "Eingeladene E-Mail-Adresse",
+    "External accesses": "Externe Zugänge",
+    "Allow file upload for external accesses": "Dateiupload für Externe erlauben",
+    "If enabled, externally invited persons may upload files in the document component of a shared project tab and remove their own uploads. Downloading existing documents is always possible. The file types and size limit of the 'project' area apply.": "Wenn aktiv, dürfen extern eingeladene Personen in der Dokument-Komponente eines freigegebenen Projekt-Tabs Dateien hochladen und eigene Uploads wieder entfernen. Das Herunterladen vorhandener Dokumente ist immer möglich. Es gelten Dateitypen und Größenlimit des Bereichs „project“.",
+    "File upload for external accesses is disabled.": "Dateiupload für externe Zugänge ist deaktiviert.",
+    "Externally invited persons may only upload files in shared project tabs if the switch 'Allow file upload for external accesses' is enabled; it is off by default.": "Extern eingeladene Personen dürfen in freigegebenen Projekt-Tabs nur dann Dateien hochladen, wenn der Schalter „Dateiupload für Externe erlauben“ aktiv ist; standardmäßig ist er aus."
 }

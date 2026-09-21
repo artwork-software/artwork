@@ -26,12 +26,21 @@ class FileSettingsController extends Controller
         return \inertia('System/FileSettings/Index', [
             'areas' => $areas,
             'imageFileTypes' => array_keys(MimeTypeList::IMAGE_MIME_TYPES),
-            'otherFileTypes' => array_keys(MimeTypeList::MIME_TYPES)
+            'otherFileTypes' => array_keys(MimeTypeList::MIME_TYPES),
+            'externalFileUploadEnabled' => $this->generalSettingsService->isExternalFileUploadEnabled(),
         ]);
     }
 
     public function store(Request $request): void
     {
+        // Schalter "Dateiupload für Externe erlauben" nutzt denselben Endpunkt wie die
+        // Allowlists/Größenlimits (gleiches Recht "change tool settings").
+        if ($request->has('external_file_upload_enabled')) {
+            $this->generalSettingsService->updateExternalFileUploadEnabledFromRequest($request);
+
+            return;
+        }
+
         $this->generalSettingsService->updateAllowedFileMimeTypesFromRequest($request);
     }
 }

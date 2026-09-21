@@ -135,4 +135,22 @@ class GeneralSettingsService
             (int) $validated['inventory_article_image_max_size_mb'];
         $this->generalSettings->save();
     }
+
+    /**
+     * Zentraler Schalter: Dateiupload (und Löschen eigener Uploads) durch externe Zugänge.
+     */
+    public function isExternalFileUploadEnabled(): bool
+    {
+        return $this->generalSettings->external_file_upload_enabled === true;
+    }
+
+    public function updateExternalFileUploadEnabledFromRequest(Request $request): void
+    {
+        $validated = $request->validate([
+            'external_file_upload_enabled' => ['required', 'boolean'],
+        ]);
+
+        $this->generalSettings->external_file_upload_enabled = (bool) $validated['external_file_upload_enabled'];
+        $this->generalSettings->save();
+    }
 }

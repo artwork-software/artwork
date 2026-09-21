@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use Artwork\Core\FileHandling\Upload\SafeUploadFile;
 use Artwork\Core\FileHandling\Naming\StoredFileName;
 use Artwork\Modules\Craft\Models\Craft;
 use Artwork\Modules\Event\Services\EventService;
@@ -254,7 +255,7 @@ class ServiceProviderController extends Controller
     public function updateProfileImage(Request $request, ServiceProvider $serviceProvider): void
     {
         $this->authorize('updateWorkProfile', ServiceProvider::class);
-        $request->validate(['profileImage' => 'required|image']);
+        $request->validate(['profileImage' => ['required', 'image', new SafeUploadFile()]]);
         if (!Storage::exists("public/profile-photos")) {
             Storage::makeDirectory("public/profile-photos");
         }

@@ -105,6 +105,15 @@ class EventPolicy
             ($event->room?->user_id === $user->id && !$event->room->admins()->exists());
     }
 
+    /**
+     * Zeitleisten-Zeilen an Terminen: Schreibrecht am Termin ODER Dienstplanung — die Zeitleiste wird
+     * im Schichten-Tab auch von Planer:innen ohne Projekt-Schreibrecht gepflegt.
+     */
+    public function editTimeline(User $user, Event $event): bool
+    {
+        return $user->can(PermissionEnum::SHIFT_PLANNER->value) || $this->update($user, $event);
+    }
+
     public function delete(User $user, Event $event): bool
     {
         return $this->canWriteProjectOf($user, $event) ||

@@ -13,7 +13,10 @@ use Artwork\Modules\ExternalAccess\Models\ExternalPendingFieldChange;
 use Artwork\Modules\ExternalAccess\Models\ExternalPendingSubmission;
 use Artwork\Modules\ExternalAccess\Services\ExternalSubmissionApprovalService;
 use Artwork\Modules\Crm\Models\CrmContact;
+use Artwork\Modules\Role\Enums\RoleEnum;
+use Artwork\Modules\User\Models\User;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -33,6 +36,7 @@ class ExternalSubmissionReviewController extends Controller
             ->first();
 
         abort_if($pending === null, 404);
+        $this->authorizeReview($pending);
 
         return redirect()->route('crm.contacts.external-submissions.show', [$contact, $pending]);
     }
@@ -40,6 +44,7 @@ class ExternalSubmissionReviewController extends Controller
     public function show(CrmContact $contact, ExternalPendingSubmission $submission): Response
     {
         $this->guardSubmissionBelongsToContact($contact, $submission);
+        $this->authorizeReview($submission);
 
         $submission->load('fieldChanges', 'externalAccess.crmContact');
 
@@ -140,6 +145,24 @@ class ExternalSubmissionReviewController extends Controller
         return redirect()
             ->route('crm.contacts.external-submissions.show', [$contact, $submission])
             ->with('status', $okMessage);
+    }
+
+    /**
+     * Einsehen folgt derselben Regel wie Entscheiden (ExternalSubmissionApprovalService):
+     * nur die einladende Person oder Admins – die Einreichung enthält CRM-Personendaten.
+     */
+    private function authorizeReview(ExternalPendingSubmission $submission): void
+    {
+        /** @var User|null $user */
+        $user = Auth::user();
+        $invitedById = $submission->externalAccess?->invited_by_user_id;
+
+        abort_unless(
+            $user !== null
+            && (($invitedById !== null && (int) $invitedById === (int) $user->id)
+                || $user->hasRole(RoleEnum::ARTWORK_ADMIN->value)),
+            403
+        );
     }
 
     private function guardSubmissionBelongsToContact(CrmContact $contact, ExternalPendingSubmission $submission): void

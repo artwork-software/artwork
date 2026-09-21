@@ -121,7 +121,7 @@ class Shift extends Model
     // Kein globales $with mehr: craft/users/freelancer/serviceProvider/committedBy wurden
     // vorher bei JEDER Shift-Query mitgeladen — auch bei internen Operationen (Rule-Checks,
     // Observer, Bulk-Aktionen), die sie nie brauchen. Serialisierende Pfade laden sie
-    // explizit eager (Kalender, ShiftPlan, Projekt-Tab, PushesShiftModification::broadcastWith()).
+    // explizit eager (Kalender, ShiftPlan, Projekt-Tab, Broadcast-Payloads).
 
     protected $appends = [
         'break_formatted',

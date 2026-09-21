@@ -82,8 +82,8 @@ class ExternalComponentValueService
     }
 
     /**
-     * Replicates the legacy normalization from the internal
-     * ProjectComponentValueController: when a 'text' key is present, apply nl2br.
+     * Mirrors ProjectComponentValueController: when a 'text' key is present only that key is kept,
+     * as raw text (the frontend renders line breaks with white-space: pre-line).
      *
      * @param array<string, mixed> $data
      * @return array<string, mixed>
@@ -91,7 +91,7 @@ class ExternalComponentValueService
     private function normalizeData(array $data): array
     {
         if (array_key_exists('text', $data)) {
-            return ['text' => nl2br((string) $data['text'])];
+            return ['text' => (string) $data['text']];
         }
 
         return $data;

@@ -3,6 +3,7 @@
 namespace Artwork\Modules\InternalIssue\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use Artwork\Core\FileHandling\Download\PrivateFileResponse;
 use Artwork\Core\FileHandling\Naming\DownloadFileName;
 use Artwork\Core\FileHandling\Naming\StoredFileName;
 use Artwork\Modules\InternalIssue\Http\Requests\StoreInternalIssueRequest;
@@ -16,10 +17,12 @@ use Artwork\Modules\Inventory\Services\InventoryUserFilterShareService;
 use Artwork\Modules\MaterialSet\Models\MaterialSet;
 use Barryvdh\Snappy\Facades\SnappyPdf;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Illuminate\Auth\AuthManager;
 use Symfony\Component\HttpFoundation\HeaderUtils;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class InternalIssueController extends Controller
 {
@@ -260,7 +263,7 @@ class InternalIssueController extends Controller
         if (!request()->boolean('preview')) {
             $storagePath = 'material-issue/' . StoredFileName::forGenerated('pdf', (string) $internalIssue->id);
 
-            Storage::disk('public')->put($storagePath, $pdfContent);
+            Storage::disk('local')->put($storagePath, $pdfContent);
 
             InternalIssueFile::create([
                 'internal_issue_id' => $internalIssue->id,
@@ -277,6 +280,24 @@ class InternalIssueController extends Controller
                 'materialausgabe.pdf'
             ),
         ]);
+    }
+
+    /**
+     * Nur mit MaterialIssuePolicy::view und nur für Dateien dieser Ausgabe (?inline=1 für Bilder/PDF).
+     */
+    public function fileDownload(
+        Request $request,
+        InternalIssue $internalIssue,
+        InternalIssueFile $internalIssueFile
+    ): StreamedResponse {
+        $this->authorize('view', $internalIssue);
+        abort_unless((int) $internalIssueFile->internal_issue_id === (int) $internalIssue->id, 404);
+
+        return PrivateFileResponse::make(
+            (string) $internalIssueFile->file_path,
+            $internalIssueFile->original_name,
+            $request->boolean('inline')
+        );
     }
 
     public function setSpecialItemsDone(InternalIssue $internalIssue): \Illuminate\Http\RedirectResponse

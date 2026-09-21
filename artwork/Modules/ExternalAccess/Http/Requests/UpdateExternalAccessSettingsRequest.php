@@ -17,6 +17,7 @@ class UpdateExternalAccessSettingsRequest extends FormRequest
         $this->merge([
             'company_name_override' => (string) $this->input('company_name_override', ''),
             'enabled' => filter_var($this->input('enabled', false), FILTER_VALIDATE_BOOLEAN),
+            'file_upload_enabled' => filter_var($this->input('file_upload_enabled', false), FILTER_VALIDATE_BOOLEAN),
         ]);
     }
 
@@ -36,6 +37,7 @@ class UpdateExternalAccessSettingsRequest extends FormRequest
             'session_absolute_lifetime_minutes' => ['required', 'integer', 'min:60', 'max:1440'],
             'rate_limit_request_link_per_email_per_hour' => ['required', 'integer', 'min:1', 'max:100'],
             'rate_limit_request_link_per_ip_per_hour' => ['required', 'integer', 'min:1', 'max:1000'],
+            'file_upload_enabled' => ['required', 'boolean'],
         ];
     }
 

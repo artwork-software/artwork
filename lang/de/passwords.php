@@ -13,10 +13,10 @@ return [
     |
     */
 
-    'password' => 'Passwörter müssen mindestens 6 Zeichen lang sein und korrekt bestätigt werden.',
+    'password' => 'Das Passwort muss mindestens 10 Zeichen lang sein, Groß- und Kleinbuchstaben sowie eine Ziffer enthalten und korrekt bestätigt werden.',
     'reset'    => 'Das Passwort wurde zurückgesetzt!',
-    'sent'     => 'Passworterinnerung wurde gesendet!',
+    'sent'     => 'Falls ein Konto mit dieser E-Mail-Adresse existiert, wurde ein Link zum Zurücksetzen des Passworts gesendet.',
     'token'    => 'Der Passwort-Wiederherstellungs-Schlüssel ist ungültig oder abgelaufen.',
-    'user'     => 'Es konnte leider keine Person mit dieser E-Mail-Adresse gefunden werden.',
+    'user'     => 'Falls ein Konto mit dieser E-Mail-Adresse existiert, wurde ein Link zum Zurücksetzen des Passworts gesendet.',
     'sentToUser' => 'Ein Link zum Zurücksetzen des Passworts wurde an deine E-Mail-Adresse gesendet.'
 ];

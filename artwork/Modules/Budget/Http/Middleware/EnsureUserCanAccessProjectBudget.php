@@ -2,20 +2,26 @@
 
 namespace Artwork\Modules\Budget\Http\Middleware;
 
+use Artwork\Modules\Budget\Models\BudgetSumDetails;
 use Artwork\Modules\Budget\Models\CellCalculation;
 use Artwork\Modules\Budget\Models\CellComment;
 use Artwork\Modules\Budget\Models\Column;
 use Artwork\Modules\Budget\Models\ColumnCell;
 use Artwork\Modules\Budget\Models\MainPosition;
+use Artwork\Modules\Budget\Models\MainPositionDetails;
 use Artwork\Modules\Budget\Models\RowComment;
 use Artwork\Modules\Budget\Models\SageAssignedData;
 use Artwork\Modules\Budget\Models\SageAssignedDataComment;
 use Artwork\Modules\Budget\Models\SubPosition;
 use Artwork\Modules\Budget\Models\SubPositionRow;
+use Artwork\Modules\Budget\Models\SubPositionSumDetail;
+use Artwork\Modules\Budget\Models\SumComment;
+use Artwork\Modules\Budget\Models\SumMoneySource;
 use Artwork\Modules\Budget\Models\Table;
 use Artwork\Modules\Budget\Services\BudgetModelProjectResolverService;
 use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Artwork\Modules\Project\Models\Project;
+use Artwork\Modules\User\Models\User;
 use Artwork\Modules\Role\Enums\RoleEnum;
 use Closure;
 use Illuminate\Database\Eloquent\Model;
@@ -33,6 +39,15 @@ class EnsureUserCanAccessProjectBudget
     /**
      * Request-Schlüssel (Body oder Query) => Model-Klasse zur Projekt-Auflösung.
      */
+    /**
+     * Erlaubte Morph-Ziele der Budgetsummen (sourceable_type/commentable_type); andere Klassen werden nie aufgelöst.
+     */
+    public const SUM_MORPH_ALLOWLIST = [
+        BudgetSumDetails::class,
+        MainPositionDetails::class,
+        SubPositionSumDetail::class,
+    ];
+
     private const INPUT_KEY_MODEL_MAP = [
         'table_id' => Table::class,
         'column_id' => Column::class,
@@ -55,6 +70,32 @@ class EnsureUserCanAccessProjectBudget
     public function __construct(
         private readonly BudgetModelProjectResolverService $projectResolverService,
     ) {
+    }
+
+    /**
+     * Budgetzugriff irgendwo (Admin, globale Budgetrechte, Vorlagen-Rechte, access_budget an einem
+     * Projekt); für projektlose Hilfsendpunkte wie die Konten-/Kostenstellen-Suche.
+     */
+    public static function hasAnyBudgetAccess(?User $user): bool
+    {
+        if ($user === null) {
+            return false;
+        }
+        if (
+            $user->hasRole(RoleEnum::ARTWORK_ADMIN->value)
+            || $user->canAny([
+                PermissionEnum::GLOBAL_PROJECT_BUDGET_ADMIN->value,
+                PermissionEnum::BUDGET_SETTINGS_UPDATE->value,
+                PermissionEnum::UPDATE_BUDGET_TEMPLATES->value,
+                PermissionEnum::VIEW_BUDGET_TEMPLATES->value,
+            ])
+        ) {
+            return true;
+        }
+
+        return Project::query()
+            ->whereHas('access_budget', fn ($query) => $query->where('users.id', $user->id))
+            ->exists();
     }
 
     public function handle(Request $request, Closure $next): mixed
@@ -140,6 +181,12 @@ class EnsureUserCanAccessProjectBudget
             $projectIds[] = (int) $directProjectId;
         }
 
+        // 2b) Vorlage aus fremdem Projekt kopieren: das Quellprojekt braucht ebenfalls Budgetzugriff
+        $templateProjectId = $request->input('template_project_id');
+        if ($templateProjectId !== null && !is_array($templateProjectId)) {
+            $projectIds[] = (int) $templateProjectId;
+        }
+
         // 3) Ids im Body/Query (table_id, column_id, cell_id, ...)
         foreach (self::INPUT_KEY_MODEL_MAP as $key => $modelClass) {
             $id = $request->input($key);
@@ -178,7 +225,34 @@ class EnsureUserCanAccessProjectBudget
             }
         }
 
+        // 6) Budgetsummen-Endpunkte senden Morph-Paare {sourceable_type, sourceable_id} bzw. {commentable_*}
+        foreach (['sourceable', 'commentable'] as $morph) {
+            $type = $request->input($morph . '_type');
+            $id = $request->input($morph . '_id');
+            if (!is_string($type) || $id === null || is_array($id)) {
+                continue;
+            }
+
+            $model = $this->resolveSumMorph($type, $id);
+            $projectId = $model !== null ? $this->projectResolverService->resolveProjectId($model) : null;
+            if ($projectId !== null) {
+                $projectIds[] = $projectId;
+            }
+        }
+
         return array_values(array_unique($projectIds));
+    }
+
+    /**
+     * Nur Klassen aus der Allowlist, nie beliebige Model-Namen.
+     */
+    private function resolveSumMorph(?string $type, mixed $id): ?Model
+    {
+        if ($type === null || $id === null || !in_array($type, self::SUM_MORPH_ALLOWLIST, true)) {
+            return null;
+        }
+
+        return $type::withTrashed()->find($id);
     }
 
     /**
@@ -210,6 +284,10 @@ class EnsureUserCanAccessProjectBudget
             $model instanceof RowComment =>
                 SubPositionRow::withTrashed()->find($model->sub_position_row_id) ?? $model,
             $model instanceof SageAssignedDataComment => $model->sageAssignedData ?? $model,
+            $model instanceof SumMoneySource =>
+                $this->resolveSumMorph($model->sourceable_type, $model->sourceable_id) ?? $model,
+            $model instanceof SumComment =>
+                $this->resolveSumMorph($model->commentable_type, $model->commentable_id) ?? $model,
             default => $model,
         };
     }

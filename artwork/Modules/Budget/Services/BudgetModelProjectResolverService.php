@@ -2,13 +2,16 @@
 
 namespace Artwork\Modules\Budget\Services;
 
+use Artwork\Modules\Budget\Models\BudgetSumDetails;
 use Artwork\Modules\Budget\Models\Column;
 use Artwork\Modules\Budget\Models\ColumnCell;
 use Artwork\Modules\Budget\Models\MainPosition;
+use Artwork\Modules\Budget\Models\MainPositionDetails;
 use Artwork\Modules\Budget\Models\SageAssignedData;
 use Artwork\Modules\Budget\Models\SageNotAssignedData;
 use Artwork\Modules\Budget\Models\SubPosition;
 use Artwork\Modules\Budget\Models\SubPositionRow;
+use Artwork\Modules\Budget\Models\SubPositionSumDetail;
 use Artwork\Modules\Budget\Models\Table;
 use Illuminate\Database\Eloquent\Model;
 
@@ -51,8 +54,23 @@ class BudgetModelProjectResolverService
             $model instanceof ColumnCell => $this->resolveFromColumnCell($model),
             $model instanceof SageAssignedData => $this->resolveFromSageAssignedData($model),
             $model instanceof SageNotAssignedData => $model->project_id,
+            // Budgetsummen (Detail-Datensätze je Spalte) hängen über column_id an der Tabelle
+            $model instanceof BudgetSumDetails,
+            $model instanceof MainPositionDetails,
+            $model instanceof SubPositionSumDetail => $this->resolveFromColumnId($model->column_id),
             default => null,
         };
+    }
+
+    private function resolveFromColumnId(mixed $columnId): ?int
+    {
+        if ($columnId === null) {
+            return null;
+        }
+
+        $column = Column::withTrashed()->find($columnId);
+
+        return $column !== null ? $this->resolveFromColumn($column) : null;
     }
 
     private function resolveFromColumn(Column $column): ?int

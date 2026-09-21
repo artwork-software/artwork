@@ -15,8 +15,8 @@ class StoreBudgetManagementAccountRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'account_number' => 'string',
-            'title' => 'string',
+            'account_number' => 'string|max:255',
+            'title' => 'string|max:255',
             'is_account_for_revenue' => 'boolean'
         ];
     }

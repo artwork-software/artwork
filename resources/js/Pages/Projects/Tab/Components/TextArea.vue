@@ -19,10 +19,9 @@
             >
                 <component v-if="!projectData.project_value?.data?.text" :is="IconBlockquote" class="size-4 shrink-0" :class="inSidebar ? 'text-white/70' : 'text-text-subtle'" />
                 <div
-                    class="subpixel-antialiased flex-1"
+                    class="subpixel-antialiased flex-1 whitespace-pre-line"
                     :class="[projectData.project_value?.data?.text ? inSidebar ? 'text-white/70 text-sm' : 'text-text text-sm' : inSidebar ? 'text-white/70 text-sm italic' : 'text-text-subtle text-sm italic', ]"
-                    v-html="projectData.project_value?.data?.text ? projectData.project_value.data.text : (canEditComponent ? t('Click here to add text') : '')">
-                </div>
+                >{{ projectData.project_value?.data?.text ? projectData.project_value.data.text : (canEditComponent ? t('Click here to add text') : '') }}</div>
             </div>
 
             <!-- Editor -->

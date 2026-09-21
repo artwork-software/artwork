@@ -20,7 +20,7 @@ class EventStoreOrUpdateRequest extends FormRequest
     {
         return [
             'title' => ['sometimes','nullable', 'string'],
-            'eventName' => ['required_if:eventNameMandatory,true','nullable','string'],
+            'eventName' => ['required_if:eventNameMandatory,true','nullable','string', 'max:255'],
             'start' => ['required', 'date'],
             'end' => ['required', 'date', 'after:start'],
             // Einlass: bewusst ohne Abgleich mit start (Einlass am Vortag möglich)

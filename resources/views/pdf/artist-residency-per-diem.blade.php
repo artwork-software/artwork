@@ -6,13 +6,13 @@
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
 
     <style>
-        @import url(https://fonts.bunny.net/css?family=poppins:100,100i,200,200i,300,300i,400,400i,500,500i,600,600i,700,700i,800,800i,900,900i);
+        /* Keine externen Font-Abrufe: System-Font-Stack wie die uebrigen PDF-Views. */
         @page {
             size: landscape;
             margin: 10mm;
         }
         body {
-            font-family: 'poppins', sans-serif;
+            font-family: "DejaVu Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             font-size: 6px;
         }
 

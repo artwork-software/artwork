@@ -42,6 +42,7 @@ class ExternalAccessSettingsController extends Controller
                     $this->settings->rate_limit_request_link_per_email_per_hour,
                 'rate_limit_request_link_per_ip_per_hour' =>
                     $this->settings->rate_limit_request_link_per_ip_per_hour,
+                'file_upload_enabled' => $this->resolver->isFileUploadEnabled(),
             ],
             'notificationRecipients' => $this->recipientService->indexForUi(),
             'availableNotificationTypes' => $this->availableNotificationTypes(),
@@ -65,6 +66,7 @@ class ExternalAccessSettingsController extends Controller
             $validated['rate_limit_request_link_per_email_per_hour'];
         $this->settings->rate_limit_request_link_per_ip_per_hour =
             $validated['rate_limit_request_link_per_ip_per_hour'];
+        $this->settings->file_upload_enabled = (bool) $validated['file_upload_enabled'];
         $this->settings->save();
 
         activity('external_access_settings')

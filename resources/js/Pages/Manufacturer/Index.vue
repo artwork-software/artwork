@@ -55,7 +55,7 @@
 
                 <!-- Title + Department -->
                 <template #cell-address="{ row }">
-                    <p class="truncate" v-html="newLineAddress(row.address)"></p>
+                    <p class="line-clamp-2 whitespace-pre-line">{{ row.address }}</p>
                 </template>
 
 
@@ -138,10 +138,6 @@ const searchManufacturers = debounce(() => {
 watch(searchManufacturerInput, () => searchManufacturers())
 
 // ne line add \n on address
-const newLineAddress = (address: string) => {
-    return address.replace('\n', '<br>')
-}
-
 function onPageChange({ page: newPage, pageSize }: { page: number; pageSize: number }) {
 
     router.reload({

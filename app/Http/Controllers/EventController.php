@@ -19,6 +19,7 @@ use Artwork\Modules\User\Models\UserCalendarSettings;
 use Artwork\Modules\User\Models\UserDailyViewCalendarSettings;
 use Artwork\Modules\Calendar\DTO\RoomDTO;
 use Artwork\Modules\Calendar\Services\CalendarDataService;
+use Artwork\Modules\Calendar\Services\CalendarShiftVisibility;
 use Artwork\Modules\Calendar\Services\EventCalendarService;
 use Artwork\Modules\Calendar\Services\EventPlanningCalendarService;
 use Artwork\Modules\Calendar\Services\ShiftCalendarService;
@@ -423,27 +424,26 @@ class EventController extends Controller
                 : null,
             'filterType' => $calendarFilterType,
             'isDailyView' => $isDailyView,
-            // Daten für Schicht-Karten + Schicht-Bearbeiten-Modal (nur bei aktivem "Schichten anzeigen")
-            'shiftQualifications' => fn () => $userCalendarSettings?->work_shifts
+            'shiftQualifications' => fn () => CalendarShiftVisibility::isEnabled($user, $userCalendarSettings)
                 ? $this->shiftQualificationService->getAllOrderedByPosition()
                 : [],
-            'globalQualifications' => fn () => $userCalendarSettings?->work_shifts
+            'globalQualifications' => fn () => CalendarShiftVisibility::isEnabled($user, $userCalendarSettings)
                 ? $this->globalQualificationService->getAll()
                 : [],
-            'crafts' => fn () => $userCalendarSettings?->work_shifts
+            'crafts' => fn () => CalendarShiftVisibility::isEnabled($user, $userCalendarSettings)
                 ? Craft::query()
                     ->select(['id', 'name', 'abbreviation', 'color', 'universally_applicable', 'position'])
                     ->without(['craftShiftPlaner'])
                     ->orderBy('position')
                     ->get()
                 : [],
-            'currentUserCrafts' => fn () => $userCalendarSettings?->work_shifts
+            'currentUserCrafts' => fn () => CalendarShiftVisibility::isEnabled($user, $userCalendarSettings)
                 ? $this->getCurrentUserCrafts($user)
                 : [],
-            'shiftTimePresets' => fn () => $userCalendarSettings?->work_shifts
+            'shiftTimePresets' => fn () => CalendarShiftVisibility::isEnabled($user, $userCalendarSettings)
                 ? $this->shiftTimePresetService->getAll()
                 : [],
-            'shiftGroups' => fn () => $userCalendarSettings?->work_shifts
+            'shiftGroups' => fn () => CalendarShiftVisibility::isEnabled($user, $userCalendarSettings)
                 ? $this->shiftGroupService->getAllShiftGroups()
                 : [],
         ]);
@@ -715,27 +715,26 @@ class EventController extends Controller
             'verifierForEventTypIds' => $user->verifiableEventTypes->pluck('id'),
             'filterType' => $planningFilterType,
             'isDailyView' => $isDailyView,
-            // Daten für Schicht-Karten + Schicht-Bearbeiten-Modal (nur bei aktivem "Schichten anzeigen")
-            'shiftQualifications' => fn () => $userCalendarSettings?->work_shifts
+            'shiftQualifications' => fn () => CalendarShiftVisibility::isEnabled($user, $userCalendarSettings)
                 ? $this->shiftQualificationService->getAllOrderedByPosition()
                 : [],
-            'globalQualifications' => fn () => $userCalendarSettings?->work_shifts
+            'globalQualifications' => fn () => CalendarShiftVisibility::isEnabled($user, $userCalendarSettings)
                 ? $this->globalQualificationService->getAll()
                 : [],
-            'crafts' => fn () => $userCalendarSettings?->work_shifts
+            'crafts' => fn () => CalendarShiftVisibility::isEnabled($user, $userCalendarSettings)
                 ? Craft::query()
                     ->select(['id', 'name', 'abbreviation', 'color', 'universally_applicable', 'position'])
                     ->without(['craftShiftPlaner'])
                     ->orderBy('position')
                     ->get()
                 : [],
-            'currentUserCrafts' => fn () => $userCalendarSettings?->work_shifts
+            'currentUserCrafts' => fn () => CalendarShiftVisibility::isEnabled($user, $userCalendarSettings)
                 ? $this->getCurrentUserCrafts($user)
                 : [],
-            'shiftTimePresets' => fn () => $userCalendarSettings?->work_shifts
+            'shiftTimePresets' => fn () => CalendarShiftVisibility::isEnabled($user, $userCalendarSettings)
                 ? $this->shiftTimePresetService->getAll()
                 : [],
-            'shiftGroups' => fn () => $userCalendarSettings?->work_shifts
+            'shiftGroups' => fn () => CalendarShiftVisibility::isEnabled($user, $userCalendarSettings)
                 ? $this->shiftGroupService->getAllShiftGroups()
                 : [],
         ]);
@@ -2496,6 +2495,8 @@ class EventController extends Controller
     public function deleteOldNotifications(Request $request): void
     {
         $notifications = DatabaseNotification::query()
+            ->where('notifiable_type', User::class)
+            ->where('notifiable_id', Auth::id())
             ->whereJsonContains("data->notificationKey", $request->notificationKey)
             ->get();
 
@@ -3468,6 +3469,8 @@ class EventController extends Controller
         /** @var Event $event */
         $event = Event::onlyTrashed()->findOrFail($id);
 
+        $this->authorize('delete', $event);
+
         // Stale Projekt-Zeiger vor dem Restore bereinigen: EventService::restore
         // greift bei gesetzter project_id auf $event->project->id zu und würde bei
         // einem zwischenzeitlich gelöschten Projekt crashen.
@@ -4234,11 +4237,14 @@ class EventController extends Controller
     /**
      * Beschreibung eines einzelnen Termins. Der Kalender liefert den Volltext nur
      * noch mit, wenn die Anzeigeeinstellung ihn in der Kachel zeigt — das Termin-Modal
-     * holt ihn hier nach. Bewusst ohne zusaetzliche Policy: die Kachel-Daten desselben
-     * Termins bekommt jede angemeldete Person ohnehin ueber events.all.
+     * holt ihn hier nach.
+     *
+     * @throws AuthorizationException
      */
     public function showDescription(Event $event): JsonResponse
     {
+        $this->authorize('view', $event);
+
         return new JsonResponse(['description' => $event->description]);
     }
 
@@ -4974,8 +4980,13 @@ class EventController extends Controller
         ]);
     }
 
+    /**
+     * @throws AuthorizationException
+     */
     public function getTimelines(Event $event): JsonResponse
     {
+        $this->authorize('view', $event);
+
         $event->load('timelines');
 
         return response()->json([

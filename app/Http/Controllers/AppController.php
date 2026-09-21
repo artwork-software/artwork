@@ -21,6 +21,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Redirector;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Redirect;
 use Inertia\Response;
 use Inertia\ResponseFactory;
@@ -193,6 +194,23 @@ class AppController extends Controller
         // war bislang ungeschützt).
         abort_if($settings->setup_finished, 403);
 
+        // Lock gegen parallele Setup-POSTs; die Prüfung wird innerhalb des Locks wiederholt.
+        return Cache::lock('setup', 10)->block(
+            5,
+            function () use ($request, $settings, $guard): Redirector|Application|RedirectResponse {
+                $settings->refresh();
+                abort_if($settings->setup_finished, 403);
+
+                return $this->createInitialAdmin($request, $settings, $guard);
+            }
+        );
+    }
+
+    private function createInitialAdmin(
+        UserCreateRequest $request,
+        GeneralSettings $settings,
+        StatefulGuard $guard
+    ): Redirector|Application|RedirectResponse {
         /** @var User $user */
         $user = User::create($request->userData());
 

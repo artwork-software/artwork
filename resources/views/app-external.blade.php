@@ -14,7 +14,9 @@
         {{-- Bewusst weggelassen: window.Laravel.jsPermissions, auth()->user()-Aufrufe.
              Externe Sessions duerfen keinerlei interne Permission-/Rollen-Information ins Browser-DOM bekommen. --}}
 
-        @routes
+        {{-- CSP-Nonce, siehe Artwork\Core\Http\Middleware\SecurityHeaders. --}}
+        {{-- Nur die Routen der Gruppe `external` (config/ziggy.php), keine interne Routenkarte. --}}
+        @routes(group: 'external', nonce: Vite::cspNonce())
         @vite(['resources/js/app-external.js'])
         @inertiaHead
     </head>

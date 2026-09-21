@@ -241,12 +241,14 @@ export const SETTINGS = [
         description: 'Shows the associated project group of an event in the calendar, helpful for assignment and overview with several groups.',
     },
     {
-        // Nur Kalender: im Dienstplan sind Schichten immer sichtbar
+        // Nur Kalender: im Dienstplan sind Schichten immer sichtbar.
+        // Nur mit Dienstplan-Sichtrecht (Spiegel von CalendarShiftVisibility im Backend).
         key: 'work_shifts',
         section: 'visibility',
         views: CALENDAR_VIEWS,
         label: 'Show shifts',
         description: 'Shows standalone shifts as separate cards in the matching room-day cells of the calendar, mixed with the events and sorted by start time.',
+        when: (ctx) => ctx.can('can view shift plan') || ctx.can('can plan shifts') || ctx.is('artwork admin'),
     },
     {
         // Dienstplan-Tagesansicht: Timelines sind immer Teil der Karte

@@ -30,12 +30,20 @@ readonly class ChecklistService
         ChecklistUpdateRequest $request,
         TaskService $taskService
     ): Checklist|Model {
-        $checklist->fill($request->all());
+        $checklist->fill($request->fillableFields());
 
         if ($request->get('tasks')) {
             $taskService->deleteByChecklist($checklist);
             $checklist->tasks()->delete();
-            $checklist->tasks()->createMany($request->tasks);
+            $checklist->tasks()->createMany(
+                array_map(
+                    static fn (array $task): array => array_intersect_key(
+                        $task,
+                        array_flip(['name', 'description', 'done', 'order', 'deadline'])
+                    ),
+                    (array) $request->input('tasks', [])
+                )
+            );
         }
 
         return $this->checklistRepository->save($checklist);

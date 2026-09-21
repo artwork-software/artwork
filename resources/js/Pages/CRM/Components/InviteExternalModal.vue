@@ -247,6 +247,16 @@
                         {{ $t('The external person will see all components of the selected tab(s), regardless of their visibility settings. Consider creating a dedicated tab for external access.') }}
                     </p>
                 </div>
+
+                <div
+                    v-if="selectedTabsWithoutUpload"
+                    class="rounded-lg bg-warning-surface border border-warning-border p-4 text-sm text-warning"
+                >
+                    <p class="font-semibold">{{ $t('File upload disabled') }}</p>
+                    <p class="mt-1">
+                        {{ $t('The invited person cannot upload files in this tab because file upload for external accesses is disabled. If needed, enable it under Settings → External access.') }}
+                    </p>
+                </div>
             </template>
 
             <p v-if="form.errors.source_reference_project_id" class="text-xs text-danger">
@@ -291,6 +301,8 @@ const props = defineProps({
     project: { type: Object, default: null },
     availableTabs: { type: Array, default: () => [] },
     preselectedTabId: { type: Number, default: null },
+    /** Einstellung "Dateiupload für Externe erlauben" (Einstellungen → Externer Zugriff) */
+    externalFileUploadEnabled: { type: Boolean, default: false },
     /** Fester Kontakt (Einstieg von der CRM-Kontaktseite): { id, display_name } */
     contact: { type: Object, default: null },
 })
@@ -438,6 +450,12 @@ function tabDefaults() {
     }
 }
 props.availableTabs.forEach((tab) => { tabConfig.value[tab.id] = tabDefaults() })
+
+// Ausgewählte Tabs mit Dokument-Komponente können ohne den Upload-Schalter nur lesend genutzt werden.
+const selectedTabsWithoutUpload = computed(() =>
+    !props.externalFileUploadEnabled
+    && props.availableTabs.some((tab) => tab.hasDocumentComponent === true && selectedTabIds.value.includes(tab.id)),
+)
 
 function toggleTab(tabId, checked) {
     if (checked) {

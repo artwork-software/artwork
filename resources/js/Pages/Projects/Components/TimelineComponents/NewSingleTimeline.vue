@@ -55,7 +55,7 @@
                             <IconNote  class="h-5 w-5 cursor-pointer text-text-muted hover:text-accent-700 transition-all duration-150 ease-in-out" stroke-width="2" />
                         </div>
                         <div v-else>
-                            <p class="text-xs" v-html="timeLineForm.description"></p>
+                            <p class="text-xs whitespace-pre-line">{{ timeLineForm.description }}</p>
                         </div>
                     </div>
                     <div v-else class="py-3">

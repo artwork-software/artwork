@@ -22,8 +22,8 @@ class CreateEventPropertyRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'icon' => 'required|string',
-            'name' => 'required|string'
+            'icon' => 'required|string|max:255',
+            'name' => 'required|string|max:255'
         ];
     }
 }

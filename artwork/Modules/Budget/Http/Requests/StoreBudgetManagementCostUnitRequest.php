@@ -15,8 +15,8 @@ class StoreBudgetManagementCostUnitRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'cost_unit_number' => 'string',
-            'title' => 'string'
+            'cost_unit_number' => 'string|max:255',
+            'title' => 'string|max:255'
         ];
     }
 }

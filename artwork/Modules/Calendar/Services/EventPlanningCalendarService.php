@@ -13,6 +13,7 @@ use Artwork\Modules\User\Models\UserCalendarSettings;
 use Artwork\Modules\User\Models\UserDailyViewCalendarSettings;
 use Artwork\Modules\User\Models\UserFilter;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Auth;
 
 class EventPlanningCalendarService
 {
@@ -142,7 +143,7 @@ class EventPlanningCalendarService
             $room->events = $eventDTOs[$room->id] ?? collect();
         }
 
-        if ($userCalendarSettings?->work_shifts) {
+        if (CalendarShiftVisibility::isEnabled(Auth::user(), $userCalendarSettings)) {
             $this->attachStandaloneShiftsToRooms($rooms, $startDate, $endDate, $filter);
         } else {
             foreach ($rooms as $room) {

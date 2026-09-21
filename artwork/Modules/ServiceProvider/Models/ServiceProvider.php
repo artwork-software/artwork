@@ -11,7 +11,6 @@ use Artwork\Modules\Crm\Traits\HasCrmFields;
 use Artwork\Modules\DayService\Models\DayServiceable;
 use Artwork\Modules\DayService\Models\Traits\CanHasDayServices;
 use Artwork\Modules\IndividualTimes\Models\Traits\HasIndividualTimes;
-use Artwork\Modules\ServiceProvider\Models\ServiceProviderContacts;
 use Artwork\Modules\Shift\Contracts\Employable;
 use Artwork\Modules\Shift\Models\Traits\HasShiftPlanComments;
 use Artwork\Modules\Shift\Models\Traits\HasShifts;
@@ -19,7 +18,6 @@ use Artwork\Modules\User\Models\Traits\HasProfilePhotoCustom;
 use Artwork\Modules\Vacation\Models\GoesOnVacation;
 use Artwork\Modules\Vacation\Models\Vacationer;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Str;
 use Laravel\Scout\Searchable;
 
@@ -82,11 +80,6 @@ class ServiceProvider extends Model implements Vacationer, DayServiceable, Emplo
     protected $casts = [
         'can_work_shifts' => 'boolean'
     ];
-
-    public function oldContacts(): HasMany
-    {
-        return $this->hasMany(ServiceProviderContacts::class);
-    }
 
 
     public function getNameAttribute(): string

@@ -16,6 +16,7 @@ class ExternalAccessSettings extends Settings
     public int $session_absolute_lifetime_minutes;
     public int $rate_limit_request_link_per_email_per_hour;
     public int $rate_limit_request_link_per_ip_per_hour;
+    public bool $file_upload_enabled;
 
     public static function group(): string
     {

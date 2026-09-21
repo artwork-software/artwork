@@ -300,9 +300,38 @@ class BiExportService
     {
         $token = Str::uuid()->toString();
         Cache::put('bi_export_' . $token, $config, now()->addMinutes(30));
-        Cache::put('bi_export_status_' . $token, ['status' => 'pending'], now()->addMinutes(60));
+        // user_id bindet Status und Download an die anfragende Person.
+        Cache::put(
+            'bi_export_status_' . $token,
+            ['status' => 'pending', 'user_id' => $config['user_id'] ?? null],
+            now()->addMinutes(60)
+        );
 
         return $token;
+    }
+
+    /**
+     * Statuswechsel behalten die Nutzerbindung des ursprünglichen Eintrags.
+     *
+     * @param array<string, mixed> $status
+     */
+    private function putStatus(string $token, array $status, \DateTimeInterface $ttl): void
+    {
+        $previous = Cache::get('bi_export_status_' . $token);
+        $userId = is_array($previous) ? ($previous['user_id'] ?? null) : null;
+
+        Cache::put('bi_export_status_' . $token, $status + ['user_id' => $userId], $ttl);
+    }
+
+    /**
+     * 403, wenn der Export einer anderen Person gehört; Einträge ohne Bindung bleiben für ihre TTL erreichbar.
+     */
+    private function assertOwnedBy(string $token, ?int $userId): void
+    {
+        $status = Cache::get('bi_export_status_' . $token);
+        $owner = is_array($status) ? ($status['user_id'] ?? null) : null;
+
+        abort_if($owner !== null && ($userId === null || (int) $owner !== $userId), 403);
     }
 
     /**
@@ -314,7 +343,7 @@ class BiExportService
         $config = Cache::get('bi_export_' . $token);
 
         if (!$config) {
-            Cache::put('bi_export_status_' . $token, ['status' => 'failed'], now()->addMinutes(30));
+            $this->putStatus($token, ['status' => 'failed'], now()->addMinutes(30));
 
             return;
         }
@@ -323,14 +352,14 @@ class BiExportService
             $export = $this->buildExport($config);
             $export->store($this->storagePath($token), 'local');
 
-            Cache::put(
-                'bi_export_status_' . $token,
+            $this->putStatus(
+                $token,
                 ['status' => 'ready', 'filename' => $this->buildFilename($config)],
                 now()->addHours(24)
             );
         } catch (\Throwable $exception) {
-            Cache::put(
-                'bi_export_status_' . $token,
+            $this->putStatus(
+                $token,
                 ['status' => 'failed', 'message' => $exception->getMessage()],
                 now()->addMinutes(30)
             );
@@ -342,9 +371,12 @@ class BiExportService
     /**
      * @return array<string, mixed>
      */
-    public function getStatus(string $token): array
+    public function getStatus(string $token, ?int $userId = null): array
     {
+        $this->assertOwnedBy($token, $userId);
+
         $status = Cache::get('bi_export_status_' . $token) ?? ['status' => 'unknown'];
+        unset($status['user_id']);
 
         // Datei vom Aufräum-Job entfernt → "abgelaufen" statt eines scheinbar fertigen Exports
         if (($status['status'] ?? null) === 'ready' && !Storage::disk('local')->exists($this->storagePath($token))) {
@@ -358,8 +390,12 @@ class BiExportService
      * Datei bleibt bis zum Aufräum-Job (artwork:bi-exports:cleanup) liegen, damit
      * ein zweiter Download oder ein Browser-Retry nicht ins Leere läuft.
      */
-    public function downloadStored(string $token): BinaryFileResponse|\Illuminate\Http\RedirectResponse
-    {
+    public function downloadStored(
+        string $token,
+        ?int $userId = null
+    ): BinaryFileResponse|\Illuminate\Http\RedirectResponse {
+        $this->assertOwnedBy($token, $userId);
+
         $path = $this->storagePath($token);
 
         if (!Storage::disk('local')->exists($path)) {

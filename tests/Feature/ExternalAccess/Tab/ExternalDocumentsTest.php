@@ -4,6 +4,7 @@ namespace Tests\Feature\ExternalAccess\Tab;
 
 use Artwork\Modules\ExternalAccess\Models\ExternalAccess;
 use Artwork\Modules\ExternalAccess\Models\ExternalAccessScope;
+use Artwork\Modules\ExternalAccess\Settings\ExternalAccessSettings;
 use Artwork\Modules\GeneralSettings\Models\GeneralSettings;
 use Artwork\Modules\Project\Events\DeleteDocumentInProject;
 use Artwork\Modules\Project\Events\UploadNewDocumentInProject;
@@ -30,6 +31,10 @@ final class ExternalDocumentsTest extends TestCase
         $settings->allowed_project_file_mimetypes = ['pdf'];
         $settings->allowed_project_file_size = 10;
         $settings->save();
+
+        $externalSettings = app(ExternalAccessSettings::class);
+        $externalSettings->file_upload_enabled = true;
+        $externalSettings->save();
     }
 
     /**

@@ -37,6 +37,15 @@ class ExternalAccessSettingsResolver
     }
 
     /**
+     * Dürfen externe Zugänge in der Dokument-Komponente Dateien hochladen und eigene Uploads löschen?
+     * Liste und Download bleiben davon unberührt.
+     */
+    public function isFileUploadEnabled(): bool
+    {
+        return (bool) ($this->settings->file_upload_enabled ?? false);
+    }
+
+    /**
      * Company name for invitation wording: override -> GeneralSettings.business_name -> app.name.
      */
     public function companyName(): string

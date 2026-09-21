@@ -2,9 +2,13 @@
 
 namespace App\Actions\Fortify;
 
+use Illuminate\Validation\Rules\Password;
+
 trait PasswordValidationRules
 {
     /**
+     * Ohne uncompromised(): Intranet-Installationen laufen ohne Internetzugang.
+     *
      * @return array<int, mixed>
      */
     protected function passwordRules(): array
@@ -12,7 +16,7 @@ trait PasswordValidationRules
         return [
             'required',
             'string',
-            'min:10'
+            Password::min(10)->letters()->mixedCase()->numbers(),
         ];
     }
 }

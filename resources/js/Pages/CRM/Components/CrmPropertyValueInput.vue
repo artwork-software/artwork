@@ -110,9 +110,10 @@
                 <!-- Existing file -->
                 <div v-if="value" class="flex items-center gap-3 rounded-lg border border-border-subtle bg-white px-3 py-2 mb-2">
                     <component :is="IconFile" class="h-5 w-5 text-text-subtle shrink-0" />
-                    <a :href="'/storage/' + value" target="_blank" download class="min-w-0 flex-1 truncate text-sm font-medium text-accent-700 hover:underline">
+                    <a v-if="fileDownloadUrl" :href="fileDownloadUrl" target="_blank" download class="min-w-0 flex-1 truncate text-sm font-medium text-accent-700 hover:underline">
                         {{ fileName }}
                     </a>
+                    <span v-else class="min-w-0 flex-1 truncate text-sm font-medium text-text">{{ fileName }}</span>
                     <button
                         v-if="contactId"
                         type="button"
@@ -220,6 +221,11 @@ const deleting = ref(false)
 const fileName = computed(() => {
     if (!props.value) return ''
     return props.value.split('/').pop()
+})
+
+const fileDownloadUrl = computed(() => {
+    if (!props.value || !props.contactId) return null
+    return route('crm.contacts.property-file.download', { crmContact: props.contactId, property: props.property.id })
 })
 
 const uploadFile = (event) => {

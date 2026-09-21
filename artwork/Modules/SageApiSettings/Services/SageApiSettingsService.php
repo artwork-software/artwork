@@ -42,15 +42,22 @@ class SageApiSettingsService
     public function createOrUpdateFromRequest(
         CreateOrUpdateSageApiSettingsRequest $createOrUpdateSageApiSettingsRequest
     ): SageApiSettings {
+        $attributes = $createOrUpdateSageApiSettingsRequest->validated();
+
+        // Leeres Passwortfeld = gespeichertes Passwort behalten (das Formular bekommt es nie zu sehen).
+        if (($attributes['password'] ?? '') === '') {
+            unset($attributes['password']);
+        }
+
         if (!$sageApiSettings = $this->getFirst()) {
-            $sageApiSettings = new SageApiSettings($createOrUpdateSageApiSettingsRequest->all());
+            $sageApiSettings = new SageApiSettings($attributes);
 
             $this->sageApiSettingsRepository->saveOrFail($sageApiSettings);
 
             return $sageApiSettings;
         }
 
-        $this->sageApiSettingsRepository->updateOrFail($sageApiSettings, $createOrUpdateSageApiSettingsRequest->all());
+        $this->sageApiSettingsRepository->updateOrFail($sageApiSettings, $attributes);
 
         return $sageApiSettings;
     }

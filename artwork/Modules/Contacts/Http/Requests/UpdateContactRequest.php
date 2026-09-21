@@ -6,9 +6,15 @@ use Illuminate\Foundation\Http\FormRequest;
 
 class UpdateContactRequest extends FormRequest
 {
+    /**
+     * Autorisierung VOR der Validierung, sonst antwortet ein fehlendes Recht mit 422 statt 403.
+     */
     public function authorize(): bool
     {
-        return true;
+        $contact = $this->route('contact');
+
+        return $contact instanceof \Artwork\Modules\Contacts\Models\Contact
+            && ($this->user()?->can('update', $contact) ?? false);
     }
 
     public function rules(): array

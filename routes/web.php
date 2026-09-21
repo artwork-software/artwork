@@ -182,6 +182,7 @@ use Artwork\Modules\User\Http\Controllers\UserCalendarFilterController;
 use Artwork\Modules\User\Http\Controllers\UserCalenderAboController;
 use Artwork\Modules\User\Http\Controllers\UserCommentedBudgetItemsSettingController;
 use Artwork\Modules\User\Http\Controllers\UserContractController;
+use Artwork\Modules\User\Http\Controllers\UserBrowserSessionController;
 use Artwork\Modules\User\Http\Controllers\UserController;
 use Artwork\Modules\User\Http\Controllers\UserFilterController;
 use Artwork\Modules\User\Http\Controllers\UserFilterTemplateController;
@@ -209,8 +210,10 @@ Route::get('/password_feedback', [AppController::class, 'getPasswordScore']);
 Route::get('/setup', [AppController::class, 'showSetupPage'])->name('setup');
 Route::post('/setup', [AppController::class, 'createAdmin'])->name('setup.create');
 
-Route::get('/users/invitations/accept', [InvitationController::class, 'accept']);
-Route::post('/users/invitations/accept', [InvitationController::class, 'createUser'])->name('invitation.accept');
+Route::get('/users/invitations/accept', [InvitationController::class, 'accept'])->middleware('throttle:10,1');
+Route::post('/users/invitations/accept', [InvitationController::class, 'createUser'])
+    ->middleware('throttle:10,1')
+    ->name('invitation.accept');
 
 Route::get('/reset-password', [UserController::class, 'resetPassword'])->name('reset_user_password');
 
@@ -222,7 +225,9 @@ Route::middleware(['guest', 'throttle:20,1'])->group(function (): void {
         ->name('auth.oidc.callback');
 });
 
-Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
+// Ohne 'verified'-Middleware: Konten entstehen nur per Einladung, LDAP oder OIDC; das User-Model
+// implementiert MustVerifyEmail nicht.
+Route::group(['middleware' => ['auth:sanctum']], function (): void {
 
     // Workflow routes - only accessible via direct URL
     Route::group(['prefix' => 'workflow', 'middleware' => 'role:artwork admin'], function (): void {
@@ -687,12 +692,20 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         ->name('user.checklists.update');
     Route::patch('/users/{user}/areas', [UserController::class, 'updateAreaStatus'])->name('user.areas.update');
     Route::delete('/users/{user}', [UserController::class, 'destroy'])->name('user.destroy');
+    // Eigene Browsersitzungen (die Jetstream-Routen hängen am api-Guard)
+    Route::get('/user/browser-sessions', [UserBrowserSessionController::class, 'index'])
+        ->name('user.browser-sessions.index');
+    Route::delete('/user/browser-sessions', [UserBrowserSessionController::class, 'destroy'])
+        ->middleware('throttle:10,1')
+        ->name('user.browser-sessions.destroy');
     Route::patch('/users/{user}', [UserController::class, 'temporaryUserUpdate'])->name('update.user.temporary');
     Route::patch('/users/{user}/conditions', [UserController::class, 'updateUserTerms'])->name('user.update.terms');
     Route::post('/users/{user}/photo', [UserController::class, 'updateUserPhoto'])->name('user.update.photo');
     Route::delete('/users/{user}/photo', [UserController::class, 'deleteUserPhoto'])->name('user.delete.photo');
 
-    Route::post('/users/reset-password', [UserController::class, 'resetUserPassword'])->name('user.reset.password');
+    Route::post('/users/reset-password', [UserController::class, 'resetUserPassword'])
+        ->middleware('throttle:10,1')
+        ->name('user.reset.password');
     Route::patch('/users/{user}/updateCraftSettings', [UserController::class, 'updateCraftSettings'])
         ->name('user.update.craftSettings');
     Route::patch('/users/{user}/defaultProjectRoles', [UserController::class, 'updateDefaultProjectRoles'])
@@ -744,8 +757,11 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::get('/projects/export/project-role-matrix', ProjectRoleMatrixExportController::class)
         ->name('projects.export.project-role-matrix')
         ->can('view projects');
-    Route::get('/projects/{project}/basic', [ProjectController::class, 'showBasic'])->name('projects.show.basic');
+    Route::get('/projects/{project}/basic', [ProjectController::class, 'showBasic'])
+        ->middleware(CanViewProject::class)
+        ->name('projects.show.basic');
     Route::get('/projects/{project}/rooms-with-event-periods', [ProjectController::class, 'roomsWithEventPeriods'])
+        ->middleware(CanViewProject::class)
         ->name('projects.rooms-with-event-periods');
 
     // Projektzuordnungen im Dienstplan (+ Wünsche); Autorisierung im Controller
@@ -795,7 +811,9 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::get(
         '/projects/export/budget/{startBudgetDeadline}/{endBudgetDeadline}',
         [ProjectController::class, 'projectsBudgetByBudgetDeadlineExport']
-    )->name('projects.export.budgetByBudgetDeadline');
+    )->name('projects.export.budgetByBudgetDeadline')
+        // Liest Budgets ALLER Projekte im Zeitraum — nur globale Budgetverwaltung
+        ->middleware('can:can manage global project budgets');
     Route::post('/projects/{project}/updateKeyVisual', [ProjectController::class, 'updateKeyVisual'])
         ->name('projects_key_visual.update');
     Route::post('/projects/{project}/duplicate', [ProjectController::class, 'duplicate'])->name('projects.duplicate');
@@ -824,6 +842,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::patch('/projects/{project}/team', [ProjectController::class, 'updateTeam'])
         ->name('projects.update_team');
     Route::get('/projects/{project}/export/budget', [ProjectController::class, 'projectBudgetExport'])
+        ->middleware(EnsureUserCanAccessProjectBudget::class)
         ->name('projects.export.budget');
     Route::post('/project/{project}/bulk/event/store', [EventController::class, 'bulkProjectEventStore'])
         ->name('events.bulk.store');
@@ -991,26 +1010,34 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::post('/categories', [CategoryController::class, 'store'])->name('categories.store');
     Route::patch('/categories/{category}', [CategoryController::class, 'update'])->name('categories.update');
     Route::delete('/categories/{category}', [CategoryController::class, 'destroy']);
-    Route::patch('/categories/{category}/restore', [CategoryController::class, 'restore']);
-    Route::delete('/categories/{id}/force', [CategoryController::class, 'forceDelete'])->name('categories.force');
+    Route::patch('/categories/{category}/restore', [CategoryController::class, 'restore'])
+        ->middleware('can:change project settings');
+    Route::delete('/categories/{id}/force', [CategoryController::class, 'forceDelete'])
+        ->middleware('can:change project settings')->name('categories.force');
     Route::patch('/project/create/settings', [ProjectController::class, 'updateSettings'])
+        ->middleware('can:change project settings')
         ->name('project_settings.update');
     Route::patch('/project/artist-residency-settings', [ProjectController::class, 'updateArtistResidencySettings'])
+        ->middleware('can:change project settings')
         ->name('project_settings.artist_residency.update');
 
     //Genres
     Route::post('/genres', [GenreController::class, 'store'])->name('genres.store');
     Route::patch('/genres/{genre}', [GenreController::class, 'update'])->name('genres.update');
     Route::delete('/genres/{genre}', [GenreController::class, 'destroy']);
-    Route::patch('/genres/{genre}/restore', [GenreController::class, 'restore']);
-    Route::delete('/genres/{id}/force', [GenreController::class, 'forceDelete'])->name('genres.force');
+    Route::patch('/genres/{genre}/restore', [GenreController::class, 'restore'])
+        ->middleware('can:change project settings');
+    Route::delete('/genres/{id}/force', [GenreController::class, 'forceDelete'])
+        ->middleware('can:change project settings')->name('genres.force');
 
     //Sectors
     Route::post('/sectors', [SectorController::class, 'store'])->name('sectors.store');
     Route::patch('/sectors/{sector}', [SectorController::class, 'update'])->name('sectors.update');
     Route::delete('/sectors/{sector}', [SectorController::class, 'destroy']);
-    Route::patch('/sectors/{sector}/restore', [SectorController::class, 'restore']);
-    Route::delete('/sectors/{id}/force', [SectorController::class, 'forceDelete'])->name('sectors.force');
+    Route::patch('/sectors/{sector}/restore', [SectorController::class, 'restore'])
+        ->middleware('can:change project settings');
+    Route::delete('/sectors/{id}/force', [SectorController::class, 'forceDelete'])
+        ->middleware('can:change project settings')->name('sectors.force');
 
     //Comments
     Route::get('/comments/create', [CommentController::class, 'create'])->name('comments.create');
@@ -1019,8 +1046,11 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::delete('/comments/{comment}', [CommentController::class, 'destroy']);
 
     //SumComments
-    Route::post('/sum/comments', [SumCommentController::class, 'store'])->name('sum.comments.store');
-    Route::delete('/sum/comments/{comment}', [SumCommentController::class, 'destroy'])->name('sum.comments.delete');
+    // Budgetzugriff über commentable → Spalte → Tabelle → Projekt
+    Route::post('/sum/comments', [SumCommentController::class, 'store'])
+        ->middleware(EnsureUserCanAccessProjectBudget::class)->name('sum.comments.store');
+    Route::delete('/sum/comments/{comment}', [SumCommentController::class, 'destroy'])
+        ->middleware(EnsureUserCanAccessProjectBudget::class)->name('sum.comments.delete');
 
     //Areas
     Route::get('/areas', [AreaController::class, 'index'])->name('areas.management');
@@ -1064,16 +1094,21 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::delete('/room_files/{room_file}', [RoomFileController::class, 'destroy']);
     Route::delete('/room_files/{id}/force_delete', [RoomFileController::class, 'forceDelete']);
 
-    //Room Categories
+    //Room Categories (Raumrecht via RoomPolicy::create; der Permission-Name
+    // enthält Kommas und ist daher nicht als can:-String nutzbar)
     Route::post('/rooms/categories', [RoomCategoryController::class, 'store'])
+        ->can('create', \Artwork\Modules\Room\Models\Room::class)
         ->name('room_categories.store');
     Route::delete('/rooms/categories/{roomCategory}', [RoomCategoryController::class, 'destroy'])
+        ->can('create', \Artwork\Modules\Room\Models\Room::class)
         ->name('room_categories.destroy');
 
     //Room Attributes
     Route::post('/rooms/attributes', [RoomAttributeController::class, 'store'])
+        ->can('create', \Artwork\Modules\Room\Models\Room::class)
         ->name('room_attribute.store');
     Route::delete('/rooms/attributes/{roomAttribute}', [RoomAttributeController::class, 'destroy'])
+        ->can('create', \Artwork\Modules\Room\Models\Room::class)
         ->name('room_attribute.destroy');
 
     //Filters
@@ -1097,13 +1132,17 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::get('/response/all/shift-plan-events', [
         EventController::class,
         'shiftPlanEventAPI',
-    ])->name('shift.plan.all');
-    Route::get('/response/shift-plan-meta', [EventController::class, 'shiftPlanMetaAPI'])->name('shift.plan.meta');
-    Route::get('/response/shift-plan-room', [EventController::class, 'shiftPlanRoomAPI'])->name('shift.plan.room');
+    ])->name('shift.plan.all')->can('can view shift plan');
+    Route::get('/response/shift-plan-meta', [EventController::class, 'shiftPlanMetaAPI'])
+        ->name('shift.plan.meta')
+        ->can('can view shift plan');
+    Route::get('/response/shift-plan-room', [EventController::class, 'shiftPlanRoomAPI'])
+        ->name('shift.plan.room')
+        ->can('can view shift plan');
     Route::get('/response/shift-plan-rooms', [
         EventController::class,
         'shiftPlanRoomsBatchAPI',
-    ])->name('shift.plan.rooms.batch');
+    ])->name('shift.plan.rooms.batch')->can('can view shift plan');
     Route::get('/calendar/room/events', [EventController::class, 'getEventsForRoomsByDaysAndProject'])
         ->name('events.for-rooms-by-days-and-project');
     // Tagesbemerkungen: Upsert pro Datum (leerer Text löscht); Feature-Check im Controller
@@ -1151,9 +1190,12 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         ->name('event.bulk.multi-edit.delete');
 
     //Trash - muss vor /events/{event} stehen!
-    Route::delete('/events/force-all', [EventController::class, 'forceDeleteAll'])->name('events.force.all');
-    Route::delete('/events/{id}/force', [EventController::class, 'forceDelete'])->name('events.force');
-    Route::patch('/events/{id}/restore', [EventController::class, 'restore'])->name('events.restore');
+    Route::delete('/events/force-all', [EventController::class, 'forceDeleteAll'])
+        ->middleware('can:can access trash')->name('events.force.all');
+    Route::delete('/events/{id}/force', [EventController::class, 'forceDelete'])
+        ->middleware('can:can access trash')->name('events.force');
+    Route::patch('/events/{id}/restore', [EventController::class, 'restore'])
+        ->middleware('can:can access trash')->name('events.restore');
 
     Route::delete('/events/{event}', [EventController::class, 'destroy'])->name('events.delete');
     Route::delete('/events/{event}/bulk', [EventController::class, 'destroyWithoutReturn'])->name('event.bulk.delete');
@@ -1253,10 +1295,14 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
 
 
     Route::get('/shifts/view/events-and-workers', [EventController::class, 'getEventsForRoomsByDaysWithUser'])
-        ->name('shifts.events.for-rooms-by-days-and-project');
+        ->name('shifts.events.for-rooms-by-days-and-project')
+        ->can('can view shift plan');
     Route::get('/shifts/view/events-and-no-workers', [EventController::class, 'getEventsForRoomsByDaysWithoutUser'])
-        ->name('shifts.events.for-rooms-by-days-and-project-no-workers');
-    Route::get('/shifts/presets', [ShiftPresetController::class, 'index'])->name('shifts.presets');
+        ->name('shifts.events.for-rooms-by-days-and-project-no-workers')
+        ->can('can view shift plan');
+    Route::get('/shifts/presets', [ShiftPresetController::class, 'index'])
+        ->middleware('shift-settings-area:shift-templates,view')
+        ->name('shifts.presets');
     Route::post('/shift/{shiftPreset}/preset/store', [PresetShiftController::class, 'store'])
         ->middleware('shift-settings-area:shift-templates,edit')
         ->name('shift.preset.store');
@@ -1591,26 +1637,33 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::group(['prefix' => 'timeline-preset'], function (): void {
         //shifts.timeline-presets.index
         Route::get('/', [TimelinePresetController::class, 'index'])
+            ->middleware('permission:can plan shifts|change event settings|shift.settings_view_edit')
             ->name('shifts.timeline-presets.index');
 
+        // Dienstplanung ODER Termin-Einstellungen ODER Schichteinstellungen (Spatie-Middleware = ODER)
         // post: timeline-presets.store
         Route::post('/store', [TimelinePresetController::class, 'store'])
+            ->middleware('permission:can plan shifts|change event settings|shift.settings_view_edit')
             ->name('timeline-presets.store');
 
         // patch timeline-presets.update
         Route::patch('/{shiftPresetTimeline}', [TimelinePresetController::class, 'update'])
+            ->middleware('permission:can plan shifts|change event settings|shift.settings_view_edit')
             ->name('timeline-presets.update');
 
         // POST: timeline-preset.copy
         Route::post('/{shiftPresetTimeline}/duplicate', [TimelinePresetController::class, 'duplicate'])
+            ->middleware('permission:can plan shifts|change event settings|shift.settings_view_edit')
             ->name('timeline-preset.duplicate');
 
         // delete timeline-preset.destroy
         Route::delete('/{shiftPresetTimeline}', [TimelinePresetController::class, 'destroy'])
+            ->middleware('permission:can plan shifts|change event settings|shift.settings_view_edit')
             ->name('timeline-preset.destroy');
 
         // timeline-preset.time.delete
         Route::delete('/{presetTimelineTime}/time/destroy', [PresetTimelineTimeController::class, 'destroy'])
+            ->middleware('permission:can plan shifts|change event settings|shift.settings_view_edit')
             ->name('timeline-preset.time.destroy');
 
         // post timeline-preset.import
@@ -1619,6 +1672,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
 
         // post timeline-preset.store
         Route::post('/{event}/timeline-preset/store', [ShiftController::class, 'storeTimelinePresetFormEvent'])
+            ->middleware('permission:can plan shifts|change event settings|shift.settings_view_edit')
             ->name('timeline-preset.store.form.event');
     });
 
@@ -1628,6 +1682,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         Route::group(['prefix' => 'artist-residencies'], function (): void {
             // store
             Route::post('/{project}/artist-residencies', [ArtistResidencyController::class, 'store'])
+                ->middleware(CanViewProject::class)
                 ->name('artist-residencies.store');
 
             // patch
@@ -1647,9 +1702,11 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
 
             //artist-residencies.export-pdf
             Route::post('/{project}/{language}/export-pdf', [ArtistResidencyController::class, 'exportPdf'])
+                ->middleware(CanViewProject::class)
                 ->name('artist-residencies.export-pdf');
             //artist-residencies.export-excel
             Route::get('/{project}/{language}/export-excel', [ArtistResidencyController::class, 'exportExcel'])
+                ->middleware(CanViewProject::class)
                 ->name('artist-residencies.export-excel');
 
             //artist-residencies.export-per-diem-pdf
@@ -1657,6 +1714,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
                 ArtistResidencyController::class,
                 'exportPerDiemPdf',
             ])
+                ->middleware(CanViewProject::class)
                 ->name('artist-residencies.export-per-diem-pdf');
 
             //artist-residency.export.pdf.download
@@ -1671,6 +1729,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         // GET
         Route::get('/user/search', [ProjectController::class, 'projectUserSearch'])->name('project.user.search');
         Route::get('/{project}/download/keyVisual', [ProjectController::class, 'downloadKeyVisual'])
+            ->middleware(CanViewProject::class)
             ->name('project.download.keyVisual');
 
         Route::get('/{project}/exports/shifts-personal-plan', ProjectShiftPersonalPlanExportController::class)
@@ -1701,6 +1760,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
             ->can('can plan shifts')
             ->name('create.timeline.event');
         Route::post('/sums/money-source', [SumDetailsController::class, 'store'])
+            ->middleware(EnsureUserCanAccessProjectBudget::class)
             ->name('project.sum.money.source.store');
 
         // PATCH
@@ -1721,8 +1781,10 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
             ->name('event.shift.update.updateDescription')
             ->can('can plan shifts');
         Route::patch('/sums/money-source/{sumMoneySource}', [SumDetailsController::class, 'update'])
+            ->middleware(EnsureUserCanAccessProjectBudget::class)
             ->name('project.sum.money.source.update');
         Route::patch('/{presetShift}/preset/update/description', [ShiftPresetController::class, 'updateDescription'])
+            ->middleware('shift-settings-area:shift-templates,edit')
             ->name('preset.shift.update.updateDescription');
         // DELETE
         Route::delete('/{shift}/destroy', [ShiftController::class, 'destroy'])
@@ -1744,9 +1806,8 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         Route::delete('/timeline/delete/{timeline}', [ProjectController::class, 'deleteTimeLineRow'])
             ->name('delete.timeline.row');
         Route::delete('/sums/money-source/{sumMoneySource}', [SumDetailsController::class, 'destroy'])
+            ->middleware(EnsureUserCanAccessProjectBudget::class)
             ->name('project.sum.money.source.destroy');
-        Route::delete('/group/{project}/{projectGroup}', [ProjectController::class, 'deleteProjectFromGroup'])
-            ->name('projects.group.delete');
         Route::post('/group/{projectGroup}/add/projects', [ProjectController::class, 'addProjectsToGroup'])
             ->name('project-group.add-projects');
         Route::delete('/{project}/delete/keyVisual', [ProjectController::class, 'deleteKeyVisual'])
@@ -2048,50 +2109,58 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
                 BudgetManagementAccountController::class,
                 'indexTrash'
             ]
-        )->name('budget-settings.account-management.trash-accounts');
+        )->middleware('can:change budget settings')
+            ->name('budget-settings.account-management.trash-accounts');
         Route::patch(
             '/account-management/accounts/trashed/{budgetManagementAccount}',
             [
                 BudgetManagementAccountController::class,
                 'restore'
             ]
-        )->withTrashed()->name('budget-settings.account-management.trash-accounts.restore');
+        )->withTrashed()->middleware('can:change budget settings')
+            ->name('budget-settings.account-management.trash-accounts.restore');
         Route::delete(
             '/account-management/accounts/trashed/{budgetManagementAccount}',
             [
                 BudgetManagementAccountController::class,
                 'forceDelete'
             ]
-        )->withTrashed()->name('budget-settings.account-management.trash-accounts.forceDelete');
+        )->withTrashed()->middleware('can:change budget settings')
+            ->name('budget-settings.account-management.trash-accounts.forceDelete');
         Route::delete(
             '/account-management/accounts/force-all',
             [BudgetManagementAccountController::class, 'forceDeleteAll']
-        )->name('budget-settings.account-management.trash-accounts.forceDeleteAll');
+        )->middleware('can:change budget settings')
+            ->name('budget-settings.account-management.trash-accounts.forceDeleteAll');
         Route::get(
             '/account-management/cost-units/trashed',
             [
                 BudgetManagementCostUnitController::class,
                 'indexTrash'
             ]
-        )->name('budget-settings.account-management.trash-cost-units');
+        )->middleware('can:change budget settings')
+            ->name('budget-settings.account-management.trash-cost-units');
         Route::patch(
             '/account-management/cost-units/trashed/{budgetManagementCostUnit}',
             [
                 BudgetManagementCostUnitController::class,
                 'restore'
             ]
-        )->withTrashed()->name('budget-settings.account-management.trash-cost-units.restore');
+        )->withTrashed()->middleware('can:change budget settings')
+            ->name('budget-settings.account-management.trash-cost-units.restore');
         Route::delete(
             '/account-management/cost-units/trashed/{budgetManagementCostUnit}',
             [
                 BudgetManagementCostUnitController::class,
                 'forceDelete'
             ]
-        )->withTrashed()->name('budget-settings.account-management.trash-cost-units.forceDelete');
+        )->withTrashed()->middleware('can:change budget settings')
+            ->name('budget-settings.account-management.trash-cost-units.forceDelete');
         Route::delete(
             '/account-management/cost-units/force-all',
             [BudgetManagementCostUnitController::class, 'forceDeleteAll']
-        )->name('budget-settings.account-management.trash-cost-units.forceDeleteAll');
+        )->middleware('can:change budget settings')
+            ->name('budget-settings.account-management.trash-cost-units.forceDeleteAll');
         Route::get(
             '/account-management/accounts/search',
             [
@@ -2113,9 +2182,11 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     });
 
     Route::post('/project/{project}/copyright/update', [ProjectController::class, 'updateCopyright'])
+        ->middleware(CanViewProject::class)
         ->name('project.copyright.update');
 
     Route::post('/project/{project}/cost-center/update', [ProjectController::class, 'updateCostCenter'])
+        ->middleware(CanViewProject::class)
         ->name('projects.update.cost-center');
 
     // ContractTypes
@@ -2202,6 +2273,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         ->middleware('can:can access trash')
         ->name('projects.settings.trashed');
     Route::delete('/trashedProjects/settings/force-all', [ProjectController::class, 'forceDeleteAllSettings'])
+        ->middleware(['can:can access trash', 'can:change project settings'])
         ->name('projects.settings.force.all');
 
     // Sub Event
@@ -2332,18 +2404,10 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         '/service-provider/{serviceProvider}/removeCraft/{craft}',
         [ServiceProviderController::class, 'removeCraft']
     )->name('service_provider.remove.craft');
-    Route::delete(
-        '/service-provider/contact/{serviceProviderContacts}/delete/',
-        [ServiceProviderContactsController::class, 'destroy']
-    )->name('service-provider.contact.delete');
     Route::post(
         '/service-provider/contact/{serviceProvider}/add/',
         [ServiceProviderContactsController::class, 'store']
     )->name('service-provider.contact.store');
-    Route::patch(
-        '/service-provider/contact/{serviceProviderContacts}/update/',
-        [ServiceProviderContactsController::class, 'update']
-    )->name('service-provider.contact.update');
 
     // Vacation
 
@@ -2457,7 +2521,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         Route::patch(
             'inventory/update/relevant/event-type/{eventType}',
             [EventTypeController::class, 'updateRelevantForInventory']
-        )->name('event-type.update.inventory.relevant');
+        )->middleware('can:change event settings')->name('event-type.update.inventory.relevant');
 
 
         Route::group(
@@ -2634,9 +2698,11 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         ->can('can view shift plan');
 
     Route::get('/event/standard-values', [EventController::class, 'standardEventValues'])
+        ->middleware('can:change event settings')
         ->name('event.standard.values');
 
     Route::patch('/event/standard-values/update', [EventController::class, 'saveStandardEventValues'])
+        ->middleware('can:change event settings')
         ->name('event.standard.values.update');
 
     Route::group([
@@ -2760,7 +2826,8 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
             Route::delete('/{component}/destroy', [ComponentController::class, 'destroy'])
                 ->name('component.destroy');
         });
-        Route::group(['prefix' => 'sidebar'], function (): void {
+        // Sidebar-Konfiguration der Projekt-Tabs ist globale Projekt-Einstellung (wie 'tab' und 'component')
+        Route::group(['prefix' => 'sidebar', 'middleware' => 'can:change project settings'], function (): void {
             Route::delete('/component/{sidebarTabComponent}/remove', [
                 SidebarTabComponentController::class,
                 'removeComponent'
@@ -2899,7 +2966,8 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     });
 
     Route::resource('project-roles', ProjectRoleController::class)
-        ->only(['index', 'store', 'update', 'destroy']);
+        ->only(['index', 'store', 'update', 'destroy'])
+        ->middleware('can:change project settings');
 
     // route for shift time preset
     Route::group(['prefix' => 'shift-time-preset'], function (): void {
@@ -3152,7 +3220,9 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         ])
             ->middleware('can:crm manager')->name('crm.duplicates.merge-all');
 
-        Route::get('/contacts-search', [CrmContactController::class, 'search'])->name('crm.contacts.search');
+        // Lookups werden auch außerhalb des CRM genutzt → Gate crm.contacts.lookup (AuthServiceProvider)
+        Route::get('/contacts-search', [CrmContactController::class, 'search'])
+            ->middleware('can:crm.contacts.lookup')->name('crm.contacts.search');
         // Papierkorb — muss vor den /contacts/{crmContact}-Routen stehen!
         Route::get('/contacts/trashed', [CrmContactController::class, 'getTrashed'])
             ->middleware('can:crm manager')->name('crm.contacts.trashed');
@@ -3164,11 +3234,13 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
             ->middleware('can:crm manager')->name('crm.contacts.restore');
         Route::get('/contact-mask', [CrmContactController::class, 'createMask'])
             ->middleware('can:can view crm')->name('crm.contacts.mask');
-        Route::get('/contacts/{crmContact}/data', [CrmContactController::class, 'getData'])->name('crm.contacts.data');
+        Route::get('/contacts/{crmContact}/data', [CrmContactController::class, 'getData'])
+            ->middleware('can:crm.contacts.lookup')->name('crm.contacts.data');
+        // Tooltip bekommt den Kontakt mit: Mitglieder eines sichtbaren Projektteams sind auch ohne Lookup-Recht erlaubt
         Route::get('/contacts/{crmContact}/tooltip', [
             CrmContactController::class,
             'tooltipInfo',
-        ])->name('crm.contacts.tooltip');
+        ])->middleware('can:crm.contacts.lookup,crmContact')->name('crm.contacts.tooltip');
         Route::get('/contacts/{crmContact}', [
             CrmController::class,
             'show',
@@ -3179,41 +3251,47 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         Route::post('/contacts', [CrmContactController::class, 'store'])
             ->middleware('can:can view crm')->name('crm.contacts.store');
         Route::post('/contacts/bulk-delete', [CrmContactController::class, 'bulkDestroy'])
-            ->middleware('can:can view crm')->name('crm.contacts.bulk-destroy');
+            ->middleware('can:crm manager')->name('crm.contacts.bulk-destroy');
         Route::patch('/contacts/{crmContact}/type', [CrmContactController::class, 'changeType'])
             ->middleware('can:crm manager')->name('crm.contacts.change-type');
         Route::patch('/contacts/{crmContact}', [CrmContactController::class, 'update'])
             ->middleware('can:can view crm')->name('crm.contacts.update');
         Route::delete('/contacts/{crmContact}', [CrmContactController::class, 'destroy'])
-            ->middleware('can:can view crm')->name('crm.contacts.destroy');
+            ->middleware('can:crm manager')->name('crm.contacts.destroy');
+        // Profilbild/Eigenschaftsdateien: Gruppen-Editrecht im Controller; Zimmertypen: nur CRM-Verwaltung.
         Route::post('/contacts/{crmContact}/profile-image', [
             CrmContactController::class,
             'updateProfileImage',
-        ])->name('crm.contacts.profile-image');
+        ])->middleware('can:can view crm')->name('crm.contacts.profile-image');
         Route::post('/contacts/{crmContact}/property-file', [
             CrmContactController::class,
             'uploadPropertyFile',
-        ])->name('crm.contacts.property-file.upload');
+        ])->middleware('can:can view crm')->name('crm.contacts.property-file.upload');
         Route::delete('/contacts/{crmContact}/property-file', [
             CrmContactController::class,
             'deletePropertyFile',
-        ])->name('crm.contacts.property-file.delete');
+        ])->middleware('can:can view crm')->name('crm.contacts.property-file.delete');
+        // Eigenschaftsdateien liegen privat: Download nur hier (Gruppen-Sichtbarkeit im Controller)
+        Route::get('/contacts/{crmContact}/property-file/{property}', [
+            CrmContactController::class,
+            'downloadPropertyFile',
+        ])->middleware('can:can view crm')->name('crm.contacts.property-file.download');
         Route::patch('/contacts/{crmContact}/room-types', [
             CrmContactController::class,
             'updateRoomTypes',
-        ])->name('crm.contacts.room-types.update');
+        ])->middleware('can:crm manager')->name('crm.contacts.room-types.update');
         Route::post('/contacts/{crmContact}/room-types', [
             CrmContactController::class,
             'storeRoomType',
-        ])->name('crm.contacts.room-types.store');
-        Route::patch('/room-types/{roomType}/name', [
+        ])->middleware('can:crm manager')->name('crm.contacts.room-types.store');
+        Route::patch('/contacts/{crmContact}/room-types/{roomType}/name', [
             CrmContactController::class,
             'updateRoomTypeName',
-        ])->name('crm.contacts.room-types.update-name');
+        ])->middleware('can:crm manager')->name('crm.contacts.room-types.update-name');
         Route::delete('/contacts/{crmContact}/room-types/{roomType}', [
             CrmContactController::class,
             'destroyRoomType',
-        ])->name('crm.contacts.room-types.destroy');
+        ])->middleware('can:crm manager')->name('crm.contacts.room-types.destroy');
 
         // External access invitations (requires the "invite externals" permission, enforced in the request)
         Route::post('/externals/invitations', [ExternalInvitationController::class, 'store'])
@@ -3666,6 +3744,15 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         Route::get('/print/{externalIssue}', 'print')->name('extern-issue-of-material.print');
     });
 
+    // Anhänge/Ausgabe-PDFs liegen auf der privaten Disk: Download nur über MaterialIssuePolicy::view
+    Route::get('/issue-of-material/{internalIssue}/files/{internalIssueFile}', [
+        InternalIssueController::class,
+        'fileDownload',
+    ])->name('issue-of-material.file.download');
+    Route::get('/extern-issue-of-material/{externalIssue}/files/{externalIssueFile}', [
+        ExternalIssueController::class,
+        'fileDownload',
+    ])->name('extern-issue-of-material.file.download');
     Route::delete('/issue-of-material/file/{internalIssueFile}/delete', [InternalIssueController::class, 'fileDelete'])
         ->middleware('can:inventory.disposition')->name('issue-of-material.file.delete');
     Route::delete('/extern-issue-of-material/file/{externalIssueFile}/delete', [
@@ -3838,11 +3925,6 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         Route::delete('/{artist}/destroy', [ArtistController::class, 'destroy'])->name('artist.destroy');
         // export artists
         Route::get('/export', [ArtistController::class, 'export'])->name('artist.export');
-        // artist.toggle-active
-        Route::patch('/{artist}/toggle-active', [
-            ArtistController::class,
-            'toggleActive',
-        ])->name('artist.toggle-active');
     });
 
     // user.update.craft-shift-qualification
@@ -4086,7 +4168,7 @@ Route::get(
 
 
 // /shift/check-collisions — liefert Zuweisungs-/Zeitdaten beliebiger Worker, daher zwingend hinter Auth
-Route::middleware(['auth:sanctum', 'verified'])
+Route::middleware(['auth:sanctum'])
     ->post('/shift/check-collisions', [ShiftController::class, 'checkCollisions'])
     ->can('can plan shifts')
     ->name('shift.check-collisions');
@@ -4161,8 +4243,10 @@ Route::middleware(['auth'])->prefix('bi/export')->group(function (): void {
     Route::get('/options', [BiExportController::class, 'options'])->name('bi.export.options');
     Route::post('/cache', [BiExportController::class, 'cacheExportConfiguration'])->name('bi.export.cache');
     Route::get('/status/{cacheToken}', [BiExportController::class, 'status'])
+        ->where('cacheToken', '[A-Za-z0-9\-_]{16,128}')
         ->middleware('can:can export bi data')->name('bi.export.status');
     Route::get('/download/{cacheToken}', [BiExportController::class, 'download'])
+        ->where('cacheToken', '[A-Za-z0-9\-_]{16,128}')
         ->middleware('can:can export bi data')->name('bi.export.download');
 
     // Projektunabhängiger Budget-Export (KTO/KST/Kostenträger, Baustein G)
@@ -4173,8 +4257,10 @@ Route::middleware(['auth'])->prefix('bi/export')->group(function (): void {
         Route::post('/cache', [BiBudgetExportController::class, 'cacheExportConfiguration'])
             ->name('bi.budget-export.cache');
         Route::get('/status/{cacheToken}', [BiBudgetExportController::class, 'status'])
+            ->where('cacheToken', '[A-Za-z0-9\-_]{16,128}')
             ->name('bi.budget-export.status');
         Route::get('/download/{cacheToken}', [BiBudgetExportController::class, 'download'])
+            ->where('cacheToken', '[A-Za-z0-9\-_]{16,128}')
             ->name('bi.budget-export.download');
     });
 

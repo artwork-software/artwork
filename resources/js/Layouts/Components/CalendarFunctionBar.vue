@@ -112,7 +112,7 @@
                                     <p :class="userCalendarSettings.repeating_events ? ' subpixel-antialiased' : 'text-text-subtle'"
                                        class=" ml-4 my-auto text-text-subtle">{{ $t('Repeat event')}}</p>
                                 </div>
-                                <div class="flex py-1" v-if="this.$canAny(['can manage workers', 'can plan shifts'])">
+                                <div class="flex py-1" v-if="this.$canAny(['can view shift plan', 'can plan shifts']) || this.$role('artwork admin')">
                                     <input v-model="userCalendarSettings.work_shifts"
                                            type="checkbox"
                                            class="size-6 cursor-pointer rounded border-2 border-border-strong text-success"/>

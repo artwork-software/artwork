@@ -37,6 +37,8 @@ class ContactController extends Controller
     {
         $modelObject = $this->contactService->resolveModelInstance($model, $modelId);
 
+        $this->authorize('create', [Contact::class, $modelObject]);
+
         $this->contactService->createForModel($modelObject, $request->validated());
     }
 
@@ -61,6 +63,8 @@ class ContactController extends Controller
      */
     public function update(UpdateContactRequest $request, Contact $contact): void
     {
+        $this->authorize('update', $contact);
+
         $this->contactService->updateForModel($contact, $request->validated());
     }
 
@@ -69,6 +73,8 @@ class ContactController extends Controller
      */
     public function destroy(Contact $contact): void
     {
+        $this->authorize('delete', $contact);
+
         $this->contactService->deleteFromModel($contact);
     }
 }

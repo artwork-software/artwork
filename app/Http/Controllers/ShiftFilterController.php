@@ -55,6 +55,8 @@ class ShiftFilterController extends Controller
 
     public function destroy(ShiftFilter $filter): void
     {
+        abort_unless((int) $filter->user_id === (int) Auth::id(), 403);
+
         $filter->delete();
     }
 }

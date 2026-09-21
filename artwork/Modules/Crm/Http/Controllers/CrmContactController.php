@@ -2,22 +2,36 @@
 
 namespace Artwork\Modules\Crm\Http\Controllers;
 
+use Artwork\Core\FileHandling\Upload\SafeUploadFile;
 use App\Http\Controllers\Controller;
+use Artwork\Core\FileHandling\Download\PrivateFileResponse;
+use Artwork\Core\FileHandling\StoredFilePath;
 use Artwork\Core\FileHandling\Naming\StoredFileName;
 use Artwork\Modules\Accommodation\Models\AccommodationRoomType;
 use Artwork\Modules\Crm\Enums\CrmPropertyTypeEnum;
 use Artwork\Modules\Crm\Enums\CrmSystemContactTypeEnum;
 use Artwork\Modules\Crm\Models\CrmContact;
 use Artwork\Modules\Crm\Models\CrmContactType;
+use Artwork\Modules\Crm\Models\CrmProperty;
 use Artwork\Modules\Crm\Services\CrmContactService;
 use Artwork\Modules\Crm\Services\CrmPropertyGroupService;
 use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class CrmContactController extends Controller
 {
+    // Eigenschaftsdateien liegen auf der privaten local-Disk; Auslieferung nur über downloadPropertyFile().
+    public const PROPERTY_FILE_DIR = 'crm-property-files';
+
+    private const PROPERTY_FILE_MIMES = 'pdf,jpg,jpeg,png,webp,doc,docx,xls,xlsx,csv,txt';
+
+    // Gespeicherte Pfade: StoredFileName (32 hex) oder Laravel-hashName (40 alnum) aus dem Altbestand.
+    private const PROPERTY_FILE_PATH_PATTERN = '#^crm-property-files/[A-Za-z0-9]{1,64}(\.[A-Za-z0-9]{1,16})?$#';
+
     // Kontakte dieser Typen werden aus User-/Freelancer-/Dienstleister-Profilen
     // gespiegelt und sind im CRM read-only — Schreibzugriffe würden sonst in die
     // Quell-Entität zurückgeschrieben.
@@ -378,7 +392,7 @@ class CrmContactController extends Controller
         $this->abortIfMirrored($crmContact);
 
         $request->validate([
-            'profile_image' => 'required|image|max:2048',
+            'profile_image' => ['required', 'image', 'max:2048', new SafeUploadFile()],
         ]);
 
         $profileImage = $request->file('profile_image');
@@ -398,14 +412,18 @@ class CrmContactController extends Controller
 
         $request->validate([
             'property_id' => 'required|integer|exists:crm_properties,id',
-            'file' => 'required|file|max:10240',
+            'file' => ['required', 'file', 'mimes:' . self::PROPERTY_FILE_MIMES, 'max:10240', new SafeUploadFile()],
         ]);
 
         $propertyId = (int) $request->input('property_id');
         $this->authorizePropertyEdits([$propertyId]);
 
-        $path = $request->file('file')->store('crm-property-files', 'public');
+        $file = $request->file('file');
+        $path = $file->storeAs(self::PROPERTY_FILE_DIR, StoredFileName::forUpload($file), 'local');
+
+        $previousPath = $crmContact->propertyValues()->where('crm_property_id', $propertyId)->value('value');
         $this->contactService->savePropertyValue($crmContact, $propertyId, $path);
+        $this->deleteStoredPropertyFile($previousPath);
 
         return redirect()->back();
     }
@@ -421,9 +439,49 @@ class CrmContactController extends Controller
         $propertyId = (int) $request->input('property_id');
         $this->authorizePropertyEdits([$propertyId]);
 
+        $previousPath = $crmContact->propertyValues()->where('crm_property_id', $propertyId)->value('value');
         $this->contactService->savePropertyValue($crmContact, $propertyId, null);
+        $this->deleteStoredPropertyFile($previousPath);
 
         return redirect()->back();
+    }
+
+    /**
+     * Gleiche Gruppen-Sichtbarkeit wie getData()/tooltipInfo().
+     */
+    public function downloadPropertyFile(
+        Request $request,
+        CrmContact $crmContact,
+        CrmProperty $property
+    ): StreamedResponse {
+        abort_unless($property->type === CrmPropertyTypeEnum::UPLOAD, 404);
+
+        $user = auth()->user();
+        $deptIds = $user->departments?->pluck('id')->toArray() ?? [];
+        $isCrmManager = $user->can(PermissionEnum::CRM_MANAGER->value);
+
+        $visiblePropertyIds = $this->propertyGroupService->getVisiblePropertyIds($user->id, $deptIds, $isCrmManager);
+        abort_unless(in_array($property->id, array_map('intval', $visiblePropertyIds), true), 403);
+
+        $path = StoredFilePath::normalise(
+            $crmContact->propertyValues()->where('crm_property_id', $property->id)->value('value')
+        );
+        abort_unless(is_string($path) && preg_match(self::PROPERTY_FILE_PATH_PATTERN, $path) === 1, 404);
+
+        return PrivateFileResponse::make($path, basename($path), $request->boolean('inline'));
+    }
+
+    private function deleteStoredPropertyFile(?string $path): void
+    {
+        $path = StoredFilePath::normalise($path);
+
+        if (!is_string($path) || preg_match(self::PROPERTY_FILE_PATH_PATTERN, $path) !== 1) {
+            return;
+        }
+
+        foreach (['local', 'public'] as $disk) {
+            Storage::disk($disk)->delete($path);
+        }
     }
 
     /**
@@ -485,8 +543,15 @@ class CrmContactController extends Controller
         return redirect()->back();
     }
 
-    public function updateRoomTypeName(Request $request, AccommodationRoomType $roomType): RedirectResponse
-    {
+    public function updateRoomTypeName(
+        Request $request,
+        CrmContact $crmContact,
+        AccommodationRoomType $roomType
+    ): RedirectResponse {
+        // Nur Zimmertypen dieses Unterkunfts-Kontakts, sonst ließe sich jede Zimmertyp-ID ändern.
+        $this->resolveAccommodationId($crmContact);
+        abort_unless($crmContact->roomTypes()->whereKey($roomType->id)->exists(), 404);
+
         $validated = $request->validate([
             'name' => 'required|string|max:255',
         ]);
@@ -498,6 +563,8 @@ class CrmContactController extends Controller
 
     public function destroyRoomType(CrmContact $crmContact, AccommodationRoomType $roomType): RedirectResponse
     {
+        $this->resolveAccommodationId($crmContact);
+
         $crmContact->roomTypes()->detach($roomType->id);
 
         return redirect()->back();

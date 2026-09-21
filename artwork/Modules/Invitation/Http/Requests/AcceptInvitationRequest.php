@@ -17,7 +17,7 @@ class AcceptInvitationRequest extends UserCreateRequest
             ->where('email', $this->request->get('email'))
             ->firstOrFail();
 
-        return Hash::check($this->request->get('token'), $invitation->token);
+        return !$invitation->isExpired() && Hash::check($this->request->get('token'), $invitation->token);
     }
 
     /**

@@ -293,7 +293,17 @@ class ShiftPlanRequestController extends Controller
         $cutoffYear = (int) $fourWeeksAgo->format('o');
         $cutoffWeek = (int) $fourWeeksAgo->format('W');
 
+        // Gleiche Zuständigkeitsregel wie requests().
+        /** @var User $user */
+        $user = $this->auth->user();
+        $craftAccessible = $craft->assignable_by_all
+            || $craft->craftShiftPlaner()->where('user_id', $user->id)->exists();
+
         $requests = ShiftPlanRequest::where('craft_id', $craft->id)
+            ->when(
+                !$user->can('approve-shift-plan-requests') && !$craftAccessible,
+                fn ($q) => $q->where('requested_by_user_id', $user->id)
+            )
             ->where('status', $status)
             ->where(function ($q) use ($cutoffYear, $cutoffWeek): void {
                 $q->where('year', '<', $cutoffYear)

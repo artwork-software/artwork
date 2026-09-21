@@ -373,8 +373,8 @@ class ProjectPrintLayoutController extends Controller
      */
     public function update(UpdateProjectPrintLayoutRequest $request, ProjectPrintLayout $projectPrintLayout): void
     {
-        if ($request->validated() && $projectPrintLayout->exists) {
-            $projectPrintLayout->update($request->all());
+        if ($projectPrintLayout->exists) {
+            $projectPrintLayout->update($request->safe()->except(['id']));
         }
     }
 

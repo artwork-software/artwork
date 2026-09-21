@@ -18,7 +18,8 @@ class SageClientFactory
             $sageApiSettings?->host,
             $sageApiSettings?->endpoint,
             $sageApiSettings?->user,
-            $sageApiSettings?->password
+            $sageApiSettings?->password,
+            $sageApiSettings?->shouldVerifySsl() ?? true
         );
     }
 }

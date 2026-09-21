@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use Artwork\Core\FileHandling\Upload\SafeUploadFile;
 use Illuminate\Foundation\Http\FormRequest;
 
 class UploadInventoryFileRequest extends FormRequest
@@ -22,7 +23,7 @@ class UploadInventoryFileRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'file' => 'required|max:2097152'
+            'file' => ['required', 'max:2097152', new SafeUploadFile()]
         ];
     }
 }

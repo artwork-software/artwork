@@ -773,7 +773,8 @@ class ProjectService
             $timeline = $event->timelines->toArray();
 
             foreach ($timeline as &$singleTimeLine) {
-                $singleTimeLine['description_without_html'] = strip_tags($singleTimeLine['description']);
+                // Rohtext: strip_tags würde Eingaben wie "a<b" verstümmeln.
+                $singleTimeLine['description_without_html'] = $singleTimeLine['description'];
             }
 
             foreach ($event->shifts as $shift) {

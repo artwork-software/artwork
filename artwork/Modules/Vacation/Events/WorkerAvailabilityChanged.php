@@ -4,7 +4,7 @@ namespace Artwork\Modules\Vacation\Events;
 
 use Artwork\Modules\Freelancer\Models\Freelancer;
 use Artwork\Modules\ServiceProvider\Models\ServiceProvider;
-use Illuminate\Broadcasting\Channel;
+use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcastNow;
 use Illuminate\Foundation\Events\Dispatchable;
@@ -51,12 +51,12 @@ class WorkerAvailabilityChanged implements ShouldBroadcastNow
     }
 
     /**
-     * @return array<int, Channel>
+     * @return array<int, PrivateChannel>
      */
     public function broadcastOn(): array
     {
         return [
-            new Channel('shift-plan.worker-availability'),
+            new PrivateChannel('shift-plan.worker-availability'),
         ];
     }
 

@@ -24,3 +24,15 @@ Security fixes are provided for the latest release. If you run an older version,
 ## Scope
 
 artwork is self-hosted software. Issues caused purely by misconfiguration of an individual installation (e.g. exposed `.env` files, missing TLS) are outside the scope of this policy — but if artwork's defaults or documentation make such a misconfiguration likely, we do want to hear about it.
+
+## Coordinated Disclosure
+
+We follow coordinated disclosure: once a report is confirmed, we agree on a publication date with the reporter that fits the fix release. Advisories are published as GitHub Security Advisories for this repository; a CVE is requested through GitHub when the reporter or the severity calls for it. We do not run a paid bug bounty. On request, reporters are credited in the Acknowledgements section below and in the advisory; without a request, reports are handled anonymously.
+
+## Acknowledgements
+
+We thank the following people for responsibly reporting security issues in artwork:
+
+| Date | Reporter | Report |
+| --- | --- | --- |
+| September 2026 | kta1kri | Three missing server-side authorization checks (personnel, tasks and funding sources), reported privately with reproduction steps and handled under coordinated disclosure. |

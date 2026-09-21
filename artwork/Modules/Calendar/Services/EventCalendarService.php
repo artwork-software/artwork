@@ -97,7 +97,7 @@ readonly class EventCalendarService
             $room->events = $eventDTOs[$room->id] ?? collect();
         }
 
-        if ($userCalendarSettings?->work_shifts) {
+        if (CalendarShiftVisibility::isEnabled(Auth::user(), $userCalendarSettings)) {
             $this->attachStandaloneShiftsToRooms($rooms, $startDate, $endDate, $filter);
         } else {
             foreach ($rooms as $room) {

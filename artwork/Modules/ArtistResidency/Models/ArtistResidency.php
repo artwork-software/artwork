@@ -8,6 +8,7 @@ use Artwork\Modules\Accommodation\Models\Accommodation;
 use Artwork\Modules\Accommodation\Models\AccommodationRoomType;
 use Artwork\Modules\ArtistResidency\Models\Artist;
 use Artwork\Modules\Crm\Models\CrmContact;
+use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\ServiceProvider\Models\ServiceProvider;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -143,6 +144,11 @@ class ArtistResidency extends Model
             'id',
             'accommodationContact'
         );
+    }
+
+    public function project(): BelongsTo
+    {
+        return $this->belongsTo(Project::class, 'project_id');
     }
 
     public function accommodation(): BelongsTo

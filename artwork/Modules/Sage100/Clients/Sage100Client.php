@@ -8,11 +8,15 @@ use Illuminate\Support\Facades\Log;
 
 class Sage100Client implements SageClient
 {
+    /**
+     * TLS-Verifikation ist standardmäßig an; nur der Schalter verify_ssl in den Schnittstellen-Einstellungen schaltet sie ab.
+     */
     public function __construct(
-        private readonly string $domain,
-        private readonly string $endpoint,
-        private readonly string $user,
-        private readonly string $password
+        private readonly ?string $domain,
+        private readonly ?string $endpoint,
+        private readonly ?string $user,
+        private readonly ?string $password,
+        private readonly bool $verifySsl = true
     ) {
     }
 
@@ -25,7 +29,7 @@ class Sage100Client implements SageClient
         return Http::baseUrl($this->domain)
             ->withBasicAuth($this->user, $this->password)
             ->withOptions([
-                'verify' => false
+                'verify' => $this->verifySsl,
             ])
             ->acceptJson()
             ->throw();

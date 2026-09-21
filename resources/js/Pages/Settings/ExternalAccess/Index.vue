@@ -74,6 +74,22 @@
                     </div>
                 </section>
 
+                <!-- File upload -->
+                <section class="rounded-2xl border border-border-subtle bg-white p-6">
+                    <h2 class="text-lg font-semibold">{{ $t('File upload') }}</h2>
+                    <p class="mt-1 text-sm text-text-subtle">
+                        {{ $t('Applies to the document component of shared project tabs. Downloading existing documents is always possible.') }}
+                    </p>
+                    <div class="mt-4">
+                        <BaseCheckbox
+                            id="external_file_upload_enabled"
+                            v-model="form.file_upload_enabled"
+                            :label="$t('Allow file upload for external accesses')"
+                            :description="$t('If enabled, externally invited persons may upload files in the document component of a shared project tab and remove their own uploads. The file types and size limit of the \'project\' area apply.')"
+                        />
+                    </div>
+                </section>
+
                 <!-- Security -->
                 <section class="rounded-2xl border border-border-subtle bg-white p-6">
                     <button type="button" class="flex w-full items-center justify-between" @click="securityOpen = !securityOpen">
@@ -246,6 +262,7 @@ const form = useForm({
     session_absolute_lifetime_minutes: props.settings.session_absolute_lifetime_minutes,
     rate_limit_request_link_per_email_per_hour: props.settings.rate_limit_request_link_per_email_per_hour,
     rate_limit_request_link_per_ip_per_hour: props.settings.rate_limit_request_link_per_ip_per_hour,
+    file_upload_enabled: props.settings.file_upload_enabled === true,
 })
 
 function save() {

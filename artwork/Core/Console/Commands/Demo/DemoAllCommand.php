@@ -17,6 +17,10 @@ class DemoAllCommand extends BaseDemoCommand
 
     public function handle(): int
     {
+        if ($this->abortInProduction()) {
+            return self::FAILURE;
+        }
+
         $this->actAsSeedUser();
 
         $from = $this->option('from') ?? Carbon::now()->subMonths(2)->format('Y-m');

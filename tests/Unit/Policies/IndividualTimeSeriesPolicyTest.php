@@ -3,15 +3,17 @@
 namespace Tests\Unit\Policies;
 
 use App\Policies\IndividualTimeSeriesPolicy;
+use Artwork\Modules\Freelancer\Models\Freelancer;
+use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Artwork\Modules\User\Models\User;
 use PHPUnit\Framework\Attributes\Test;
+use Spatie\Permission\Models\Permission;
 use Tests\TestCase;
 
 /**
- * NOTE: This policy class imports `App\IndividualTimeSeries`, which does not exist.
- * The actual model lives at `Artwork\Modules\IndividualTimes\Models\IndividualTimeSeries`.
- * The methods that take this parameter cannot be invoked without the missing class.
- * Methods that only take a User are exercised normally.
+ * Serien-Policy spiegelt die Regel des Einzel-Endpunkts (IndividualTimeController::store):
+ * eigene Zeiten immer, fremde Nutzer*innen nur mit "can manage availability",
+ * Freelancer/Dienstleister zusätzlich mit "can manage workers"/"can manage external workers".
  */
 final class IndividualTimeSeriesPolicyTest extends TestCase
 {
@@ -24,30 +26,58 @@ final class IndividualTimeSeriesPolicyTest extends TestCase
     }
 
     #[Test]
-    public function admin_cannot_view_any_due_to_locked_policy(): void
+    public function users_may_create_series_for_themselves_only(): void
     {
-        $this->assertFalse($this->policy->viewAny($this->adminUser()));
+        $user = User::factory()->create();
+        $other = User::factory()->create();
+
+        $this->assertTrue($this->policy->createForSubjects($user, [['type' => 'user', 'id' => $user->id]]));
+        $this->assertFalse($this->policy->createForSubjects($user, [['type' => 'user', 'id' => $other->id]]));
+        $this->assertFalse($this->policy->createForSubjects($user, [
+            ['type' => 'user', 'id' => $user->id],
+            ['type' => 'user', 'id' => $other->id],
+        ]));
+        $this->assertFalse($this->policy->createForSubjects($user, []));
     }
 
     #[Test]
-    public function user_cannot_view_any(): void
+    public function availability_management_allows_foreign_users_and_workers(): void
     {
-        $this->assertFalse($this->policy->viewAny(User::factory()->create()));
+        $user = $this->userWith(PermissionEnum::AVAILABILITY_MANAGEMENT);
+        $other = User::factory()->create();
+        $freelancer = Freelancer::factory()->create();
+
+        $this->assertTrue($this->policy->createForSubjects($user, [
+            ['type' => 'user', 'id' => $other->id],
+            ['type' => 'freelancer', 'id' => $freelancer->id],
+        ]));
     }
 
     #[Test]
-    public function user_cannot_create(): void
+    public function worker_managers_may_manage_workers_but_not_foreign_users(): void
     {
-        $this->assertFalse($this->policy->create(User::factory()->create()));
+        $user = $this->userWith(PermissionEnum::EXTERNAL_MANAGER);
+        $other = User::factory()->create();
+        $freelancer = Freelancer::factory()->create();
+
+        $this->assertTrue($this->policy->createForSubjects($user, [['type' => 'freelancer', 'id' => $freelancer->id]]));
+        $this->assertFalse($this->policy->createForSubjects($user, [['type' => 'user', 'id' => $other->id]]));
     }
 
     #[Test]
-    public function policy_imports_missing_class_app_individual_time_series(): void
+    public function unknown_subject_types_are_rejected(): void
     {
-        // Documented bug: IndividualTimeSeriesPolicy imports App\IndividualTimeSeries
-        // but no such class exists. The actual model is
-        // Artwork\Modules\IndividualTimes\Models\IndividualTimeSeries.
-        $this->assertFalse(class_exists(\App\IndividualTimeSeries::class));
-        $this->assertTrue(class_exists(\Artwork\Modules\IndividualTimes\Models\IndividualTimeSeries::class));
+        $user = $this->userWith(PermissionEnum::AVAILABILITY_MANAGEMENT);
+
+        $this->assertFalse($this->policy->createForSubjects($user, [['type' => 'room', 'id' => 1]]));
+    }
+
+    private function userWith(PermissionEnum $permission): User
+    {
+        Permission::findOrCreate($permission->value, 'web');
+        $user = User::factory()->create();
+        $user->givePermissionTo($permission->value);
+
+        return $user;
     }
 }

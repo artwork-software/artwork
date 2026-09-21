@@ -2,6 +2,7 @@
 
 namespace Artwork\Modules\User\Http\Controllers;
 
+use Artwork\Core\FileHandling\Upload\SafeUploadFile;
 use App\Http\Controllers\Controller;
 use Spatie\Activitylog\Models\Activity;
 use Artwork\Core\Http\Requests\SearchRequest;
@@ -17,6 +18,7 @@ use Artwork\Modules\ExternalUserManagement\Models\ExternalUserSource;
 use Artwork\Modules\EventType\Services\EventTypeService;
 use Artwork\Modules\Freelancer\Models\Freelancer;
 use Artwork\Modules\Invitation\Models\Invitation;
+use Artwork\Modules\Calendar\Services\CalendarShiftVisibility;
 use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Artwork\Modules\Permission\Models\Permission;
 use Artwork\Modules\Permission\Services\PermissionPresetService;
@@ -157,9 +159,16 @@ class UserController extends Controller
      */
     public function resetUserPassword(Request $request): mixed
     {
-        $this->authorize('update', User::class);
-
         $request->validate([Fortify::email() => 'required|email']);
+
+        // Reset-Mails nur für die eigene Adresse oder mit Personalverwaltung.
+        /** @var User $actor */
+        $actor = Auth::user();
+        abort_unless(
+            strcasecmp((string) $request->input(Fortify::email()), (string) $actor->email) === 0
+            || $actor->can(PermissionEnum::MA_MANAGER->value),
+            \Illuminate\Http\Response::HTTP_FORBIDDEN
+        );
 
         $status = Password::broker()->sendResetLink(
             $request->only(Fortify::email())
@@ -1252,9 +1261,12 @@ class UserController extends Controller
             abort(\Illuminate\Http\Response::HTTP_FORBIDDEN);
         }
 
-        if (isset($request['photo'])) {
-            $user->updateProfilePhoto($request['photo']);
-        }
+        // Inhalt geprüft, nicht Endung: sonst landet HTML/SVG unter /storage/profile-photos.
+        $request->validate([
+            'photo' => ['required', 'image', 'mimes:jpg,jpeg,png', 'max:3072', new SafeUploadFile()],
+        ]);
+
+        $user->updateProfilePhoto($request->file('photo'));
     }
 
     public function deleteUserPhoto(User $user): void
@@ -1329,10 +1341,27 @@ class UserController extends Controller
 
     public function updateUserDetails(Request $request, User $user): RedirectResponse
     {
-        if ($user->id !== Auth::user()->id && !Auth::user()->can(PermissionEnum::MA_MANAGER->value)) {
+        /** @var User $actor */
+        $actor = Auth::user();
+        $isSelf = $user->id === $actor->id;
+        $actorIsAdmin = $actor->hasRole(RoleEnum::ARTWORK_ADMIN->value);
+
+        if (!$isSelf && !$actor->can(PermissionEnum::MA_MANAGER->value)) {
             abort(\Illuminate\Http\Response::HTTP_FORBIDDEN);
         }
 
+        // Nicht-Admins dürfen keine Admin-Konten bearbeiten und fremde E-Mail-Adressen (= Login + Reset-Ziel) nicht ändern.
+        if (!$isSelf && !$actorIsAdmin) {
+            abort_if(
+                $user->hasRole(RoleEnum::ARTWORK_ADMIN->value),
+                \Illuminate\Http\Response::HTTP_FORBIDDEN
+            );
+            abort_if(
+                $request->filled('email')
+                && strcasecmp((string) $request->input('email'), (string) $user->email) !== 0,
+                \Illuminate\Http\Response::HTTP_FORBIDDEN
+            );
+        }
 
         $attributes = $request->only(
             'first_name',
@@ -1860,6 +1889,12 @@ class UserController extends Controller
             'show_events',
         ]);
 
+        // work_shifts ohne Dienstplan-Sichtrecht wird auf false gezwungen statt abgelehnt, damit die
+        // übrigen Einstellungen gespeichert werden.
+        if (array_key_exists('work_shifts', $settingsFields) && !CalendarShiftVisibility::userMayViewShifts($user)) {
+            $settingsFields['work_shifts'] = false;
+        }
+
         if ($request->boolean('is_shift_plan')) {
             // updateOrCreate: die Tabellen haben unique(user_id), ein nacktes
             // create() würde im Race mit den parallelen Schichtplan-Requests
@@ -1925,6 +1960,8 @@ class UserController extends Controller
 
     public function updateSidebar(User $user, Request $request): void
     {
+        $this->authorize('updateOwnPreferences', $user);
+
         $user->update($request->only([
             'is_sidebar_opened'
         ]));
@@ -1941,6 +1978,8 @@ class UserController extends Controller
 
     public function updateChecklistStyle(User $user, Request $request): void
     {
+        $this->authorize('updateOwnPreferences', $user);
+
         $user->update($request->only([
             'checklist_style'
         ]));
@@ -2154,16 +2193,22 @@ class UserController extends Controller
 
     public function compactMode(User $user, Request $request): void
     {
+        $this->authorize('updateOwnPreferences', $user);
+
         $user->update($request->only('compact_mode'));
     }
 
     public function toggleShowProjectTeamNames(User $user, Request $request): void
     {
+        $this->authorize('updateOwnPreferences', $user);
+
         $user->update($request->only('show_project_team_names'));
     }
 
     public function updateShowCrafts(User $user, Request $request): void
     {
+        $this->authorize('updateOwnPreferences', $user);
+
         $user->userFilters()->updateOrCreate(
             ['filter_type' => 'shift_filter'],
             [
@@ -2185,11 +2230,15 @@ class UserController extends Controller
 
     public function updateShowShiftQualifications(User $user, Request $request): void
     {
+        $this->authorize('updateOwnPreferences', $user);
+
         $user->update($request->only('show_qualifications'));
     }
 
     public function calendarGoToStepper(User $user, Request $request): void
     {
+        $this->authorize('updateOwnPreferences', $user);
+
         $user->update($request->only('goto_mode'));
     }
 
@@ -2200,6 +2249,8 @@ class UserController extends Controller
         User $user,
         Request $request
     ): void {
+        $this->authorize('updateOwnPreferences', $user);
+
         $request->validate(
             [
                 'sortBy' => [
@@ -2222,6 +2273,8 @@ class UserController extends Controller
         User $user,
         Request $request
     ): void {
+        $this->authorize('updateOwnPreferences', $user);
+
         $request->validate(
             [
                 'sortBy' => [
@@ -2242,11 +2295,15 @@ class UserController extends Controller
 
     public function updateUserOverviewHeight(User $user, Request $request): void
     {
+        $this->authorize('updateOwnPreferences', $user);
+
         $user->update($request->only('drawer_height'));
     }
 
     public function updateChecklistFilter(User $user, Request $request): void
     {
+        $this->authorize('updateOwnPreferences', $user);
+
         $user->update($request->only([
             'checklist_has_projects',
             'checklist_no_projects',
@@ -2341,6 +2398,8 @@ class UserController extends Controller
 
     public function updateOpenedCrafts(User $user, Request $request): void
     {
+        $this->authorize('updateOwnPreferences', $user);
+
         $user->update($request->only('opened_crafts'));
     }
 

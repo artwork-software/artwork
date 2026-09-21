@@ -139,9 +139,8 @@
                     <div class="flex w-full">
                         <div class="mt-4">
                             <div
-                                class="space-y-6 text-sm text-text-subtle font-lexend"
-                                v-html="article.description"
-                            />
+                                class="space-y-6 text-sm text-text-subtle font-lexend whitespace-pre-line"
+                            >{{ article.description }}</div>
                         </div>
                     </div>
                 </div>
@@ -359,9 +358,8 @@
                                 >
                                     <div class="border-b pb-2 border-border-subtle">
                                         <div
-                                            class="space-y-6 text-sm italic text-text-subtle font-lexend font-extralight"
-                                            v-html="detailedArticle.description"
-                                        />
+                                            class="space-y-6 text-sm italic text-text-subtle font-lexend font-extralight whitespace-pre-line"
+                                        >{{ detailedArticle.description }}</div>
                                     </div>
 
                                     <dl class="border-b border-border-subtle">

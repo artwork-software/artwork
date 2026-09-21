@@ -71,6 +71,7 @@ class UpdateArtwork extends Command
         $this->backfillShiftPlanRequestShifts();
         $this->backfillShiftWorkerAssignedBy();
         $this->generateInventoryArticleThumbnails();
+        $this->movePublicFilesToPrivateDisk();
         $this->warnAboutSynchronousQueue();
 
         $this->info('--- Artwork Update Finished ---');
@@ -96,6 +97,20 @@ class UpdateArtwork extends Command
             . 'synchronously without retries. Set QUEUE_CONNECTION to a real driver (e.g. "database" or '
             . '"redis") and make sure a worker consumes the "webhooks" queue.'
         );
+    }
+
+    private function movePublicFilesToPrivateDisk(): void
+    {
+        $this->section('Move public files to private disk');
+
+        // Ein unerwarteter Fehler darf das Update nicht abbrechen; bis zum nächsten Lauf greift der public-Fallback.
+        try {
+            $this->call('artwork:security:move-public-files');
+        } catch (\Throwable $exception) {
+            $this->warn(
+                'Moving public files failed and will be retried on the next update: ' . $exception->getMessage()
+            );
+        }
     }
 
     private function generateInventoryArticleThumbnails(): void

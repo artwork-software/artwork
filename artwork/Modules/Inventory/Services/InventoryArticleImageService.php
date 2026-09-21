@@ -21,25 +21,45 @@ class InventoryArticleImageService
 
     private const HEIC_MIME_TYPES = ['image/heic', 'image/heif'];
 
+    private const HEIC_EXTENSIONS = ['heic', 'heif'];
+
     /**
-     * Store an uploaded article image. Thumbnail generation is dispatched by
-     * the repository after the database row exists. HEIC/HEIF uploads (iPhone
-     * photos) are converted to JPEG because browsers cannot render HEIC.
+     * Obergrenze für die Dekodierung (Breite × Höhe): die Validierung erlaubt 8192 px je Kante (67 MP),
+     * mehr als 25 MP werden weder konvertiert noch verkleinert.
+     */
+    public const MAX_PIXELS = 25_000_000;
+
+    /**
+     * Store an uploaded article image as-is. Thumbnail generation and HEIC→JPEG conversion run in
+     * the queued job; decoding never happens inside the request.
      *
      * @return array{image: string, thumbnail: string|null}
      */
     public function store(UploadedFile $file): array
     {
-        if (in_array($file->getMimeType(), self::HEIC_MIME_TYPES, true)) {
-            $path = $this->storeConvertedHeic($file);
-        } else {
-            $path = $file->storeAs(self::STORAGE_DIR, StoredFileName::forUpload($file), 'public');
-        }
-
         return [
-            'image' => $path,
+            'image' => $file->storeAs(self::STORAGE_DIR, StoredFileName::forUpload($file), 'public'),
             'thumbnail' => null,
         ];
+    }
+
+    public function isHeic(string $imagePath): bool
+    {
+        if (Str::endsWith(strtolower($imagePath), array_map(static fn ($e) => '.' . $e, self::HEIC_EXTENSIONS))) {
+            return true;
+        }
+
+        $disk = Storage::disk('public');
+
+        if (!$disk->exists($imagePath)) {
+            return false;
+        }
+
+        try {
+            return in_array(strtolower((string) $disk->mimeType($imagePath)), self::HEIC_MIME_TYPES, true);
+        } catch (Throwable) {
+            return false;
+        }
     }
 
     /**
@@ -56,6 +76,8 @@ class InventoryArticleImageService
         }
 
         try {
+            $this->assertPixelBudget($disk->path($imagePath));
+
             $image = $this->makeImageManager()->make($disk->path($imagePath));
             $image->resize(
                 self::THUMBNAIL_MAX_DIMENSION,
@@ -95,6 +117,8 @@ class InventoryArticleImageService
         }
 
         try {
+            $this->assertPixelBudget($disk->path($imagePath));
+
             $image = $this->makeImageManager('imagick')->make($disk->path($imagePath));
             $newPath = self::STORAGE_DIR . '/' . StoredFileName::forGenerated('jpg', $imagePath);
             $disk->put($newPath, (string) $image->encode('jpg', 90));
@@ -105,24 +129,65 @@ class InventoryArticleImageService
         }
     }
 
-    private function storeConvertedHeic(UploadedFile $file): string
+    /**
+     * Header-only-Check (ping) vor dem Dekodieren: mehr als MAX_PIXELS werden nicht verarbeitet.
+     */
+    private function assertPixelBudget(string $absolutePath): void
     {
-        try {
-            $image = $this->makeImageManager('imagick')->make($file->getRealPath());
-            $path = self::STORAGE_DIR . '/'
-                . StoredFileName::forGenerated('jpg', $file->getClientOriginalName());
-            Storage::disk('public')->put($path, (string) $image->encode('jpg', 90));
+        $dimensions = null;
 
-            return $path;
+        try {
+            // Bei ungültigen Bildern warnt getimagesize (Laravel macht daraus eine Exception → catch)
+            $size = getimagesize($absolutePath);
+            if ($size !== false) {
+                $dimensions = [(int) $size[0], (int) $size[1]];
+            }
         } catch (Throwable) {
-            // Without Imagick/HEIC support store the original — the frontend
-            // falls back to the placeholder logo when it cannot render it.
-            return $file->storeAs(self::STORAGE_DIR, StoredFileName::forUpload($file), 'public');
+            $dimensions = null;
+        }
+
+        if ($dimensions === null && class_exists(\Imagick::class)) {
+            $ping = new \Imagick();
+            self::applyImagickResourceLimits($ping);
+            $ping->pingImage($absolutePath);
+            $dimensions = [$ping->getImageWidth(), $ping->getImageHeight()];
+            $ping->clear();
+        }
+
+        if ($dimensions !== null && ($dimensions[0] * $dimensions[1]) > self::MAX_PIXELS) {
+            throw new \RuntimeException(sprintf(
+                'Image exceeds the pixel budget (%d x %d > %d).',
+                $dimensions[0],
+                $dimensions[1],
+                self::MAX_PIXELS
+            ));
+        }
+    }
+
+    /**
+     * Imagick-Ressourcenlimits (gelten prozessweit): Speicher 256 MB, Map 512 MB, Disk 1 GB.
+     * Die ImageMagick policy.xml des Containers ist nicht Teil des Repos - deshalb hier.
+     */
+    public static function applyImagickResourceLimits(?\Imagick $imagick = null): void
+    {
+        if (!class_exists(\Imagick::class)) {
+            return;
+        }
+
+        try {
+            $target = $imagick ?? new \Imagick();
+            $target->setResourceLimit(\Imagick::RESOURCETYPE_MEMORY, 256 * 1024 * 1024);
+            $target->setResourceLimit(\Imagick::RESOURCETYPE_MAP, 512 * 1024 * 1024);
+            $target->setResourceLimit(\Imagick::RESOURCETYPE_DISK, 1024 * 1024 * 1024);
+        } catch (Throwable) {
+            // Ohne Limits läuft die Verarbeitung weiter.
         }
     }
 
     private function makeImageManager(?string $driver = null): ImageManager
     {
+        self::applyImagickResourceLimits();
+
         return new ImageManager([
             'driver' => $driver ?? (extension_loaded('imagick') ? 'imagick' : 'gd'),
         ]);

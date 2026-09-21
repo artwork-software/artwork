@@ -2,6 +2,7 @@
 
 namespace Artwork\Modules\InternalIssue\Http\Requests;
 
+use Artwork\Core\FileHandling\Upload\SafeUploadFile;
 use Artwork\Modules\InternalIssue\Models\InternalIssue;
 use Illuminate\Foundation\Http\FormRequest;
 
@@ -14,7 +15,18 @@ class UpdateInternalIssueRequest extends FormRequest
     {
         $issue = $this->route('internalIssue');
 
-        return $issue instanceof InternalIssue && ($this->user()?->can('update', $issue) ?? false);
+        if (!$issue instanceof InternalIssue || !($this->user()?->can('update', $issue) ?? false)) {
+            return false;
+        }
+
+        // Projektwechsel nur, wenn im Zielprojekt angelegt werden dürfte.
+        $newProjectId = $this->integer('project_id') ?: null;
+
+        if ($newProjectId !== null && $newProjectId !== (int) $issue->project_id) {
+            return $this->user()->can('create', [InternalIssue::class, $newProjectId]);
+        }
+
+        return true;
     }
 
     /**
@@ -37,7 +49,7 @@ class UpdateInternalIssueRequest extends FormRequest
             'responsible_user_ids' => 'nullable|array',
             'responsible_user_ids.*' => 'integer|exists:users,id',
             'special_items_done' => 'boolean',
-            'files.*' => 'file|max:20480', // 20 MB pro Datei
+            'files.*' => ['file', 'mimes:pdf,jpg,jpeg,png,webp,doc,docx,xls,xlsx,csv,txt,zip', 'max:20480', new SafeUploadFile()],
             'special_items' => 'nullable|array',
             'special_items.*.name' => 'required|string|max:255',
             'special_items.*.quantity' => 'required|integer|min:1',

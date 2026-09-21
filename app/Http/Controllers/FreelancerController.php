@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use Artwork\Core\FileHandling\Upload\SafeUploadFile;
 use Artwork\Core\FileHandling\Naming\StoredFileName;
 use Artwork\Modules\Calendar\Services\CalendarService;
 use Artwork\Modules\Craft\Models\Craft;
@@ -275,7 +276,7 @@ class FreelancerController extends Controller
     public function updateProfileImage(Request $request, Freelancer $freelancer): void
     {
         $this->authorize('updateWorkProfile', Freelancer::class);
-        $request->validate(['profileImage' => 'required|image']);
+        $request->validate(['profileImage' => ['required', 'image', new SafeUploadFile()]]);
         if (!Storage::exists("public/profile-photos")) {
             Storage::makeDirectory("public/profile-photos");
         }

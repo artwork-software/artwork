@@ -421,7 +421,7 @@
                                     <!-- Thumbnail -->
                                     <FilePreview
                                         v-if="isPreviewable(f)"
-                                        :src="fileUrl(f)"
+                                        :src="fileUrl(f, true)"
                                         :name="displayName(f)"
                                         :type="isPdf(f) ? 'pdf' : 'image'"
                                         size="sm"
@@ -950,6 +950,7 @@ function statusChipClass(a: any) {
 }
 type FileItem = {
     id: number
+    internal_issue_id?: number
     name?: string | null
     original_name?: string | null
     file_path?: string | null
@@ -984,16 +985,20 @@ function isPdf(file?: FileItem) {
 }
 function isPreviewable(file?: FileItem) { return !!file && (isImage(file) || isPdf(file)) }
 
-function fileUrl(file: FileItem) {
-    // Server sollte optional ?inline=1 o.ä. erlauben, falls du direkt einbetten willst.
-    return '/storage/' + (file.file_path || '')
+// Anhänge liegen auf der privaten Disk; inline=1 für die Bild-/PDF-Vorschau.
+function fileUrl(file: FileItem, inline = false) {
+    return route('issue-of-material.file.download', {
+        internalIssue: file.internal_issue_id,
+        internalIssueFile: file.id,
+        ...(inline ? { inline: 1 } : {}),
+    })
 }
 
 function openPreview(file: FileItem) {
     if (!isPreviewable(file)) return
     lightboxType.value = isPdf(file) ? 'pdf' : 'image'
     lightboxName.value = displayName(file)
-    lightboxSrc.value = fileUrl(file)
+    lightboxSrc.value = fileUrl(file, true)
     lightboxOpen.value = true
 }
 

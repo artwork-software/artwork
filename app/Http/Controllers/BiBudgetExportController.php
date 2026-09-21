@@ -55,20 +55,23 @@ class BiBudgetExportController extends Controller
             'restrict_bookings_to_range' => ['nullable', 'boolean'],
         ]);
 
-        $token = $this->biBudgetExportService->cacheExportConfiguration($validated);
+        // user_id bindet Status/Download an die anfragende Person (siehe BiBudgetExportService)
+        $token = $this->biBudgetExportService->cacheExportConfiguration(
+            $validated + ['user_id' => $request->user()->id]
+        );
 
         GenerateBiBudgetExportJob::dispatch($token);
 
         return response()->json(['token' => $token]);
     }
 
-    public function status(string $cacheToken): JsonResponse
+    public function status(Request $request, string $cacheToken): JsonResponse
     {
-        return response()->json($this->biBudgetExportService->getStatus($cacheToken));
+        return response()->json($this->biBudgetExportService->getStatus($cacheToken, $request->user()?->id));
     }
 
-    public function download(string $cacheToken): BinaryFileResponse
+    public function download(Request $request, string $cacheToken): BinaryFileResponse
     {
-        return $this->biBudgetExportService->downloadStored($cacheToken);
+        return $this->biBudgetExportService->downloadStored($cacheToken, $request->user()?->id);
     }
 }

@@ -2,10 +2,17 @@
 
 namespace Artwork\Core\Console\Commands;
 
+use Artwork\Modules\ServiceProvider\Models\ServiceProvider;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
 
+/**
+ * Einmalige Übernahme der Legacy-Tabelle service_provider_contacts ins Contacts-Modul.
+ * Liest die Alt-Tabelle direkt per Query-Builder — das Legacy-Model ServiceProviderContacts
+ * wurde im Sicherheits-Audit 21.09.2026 entfernt.
+ */
 class UpdateServiceProviderContacts extends Command
 {
     protected $signature = 'artwork:update-service-provider-contacts';
@@ -21,11 +28,14 @@ class UpdateServiceProviderContacts extends Command
             $this->warn('Tabelle service_provider_contacts existiert nicht. Migration wird übersprungen.');
             return;
         }
-        $serviceProviders = \Artwork\Modules\ServiceProvider\Models\ServiceProvider::with('oldContacts')->get();
 
-        $serviceProviders->each(function ($serviceProvider): void {
+        $oldContactsByProvider = DB::table('service_provider_contacts')
+            ->get()
+            ->groupBy('service_provider_id');
+
+        ServiceProvider::query()->get()->each(function (ServiceProvider $serviceProvider) use ($oldContactsByProvider): void {
             try {
-                $contacts = $serviceProvider->oldContacts;
+                $contacts = $oldContactsByProvider->get($serviceProvider->id, collect());
 
                 if ($contacts->isEmpty()) {
                     Log::info("Keine alten Kontakte gefunden für ServiceProvider ID {$serviceProvider->id}");
@@ -65,7 +75,7 @@ class UpdateServiceProviderContacts extends Command
         $this->info('Migration abgeschlossen. Versuche, alte Tabelle zu löschen...');
 
         try {
-            \Illuminate\Support\Facades\Schema::dropIfExists('service_provider_contacts');
+            Schema::dropIfExists('service_provider_contacts');
             $this->info('Alte Kontakt-Tabelle erfolgreich gelöscht.');
         } catch (\Throwable $e) {
             Log::error('Fehler beim Löschen der alten Tabelle: ' . $e->getMessage());

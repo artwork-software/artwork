@@ -37,6 +37,18 @@ class EventPolicy
         return false;
     }
 
+    /**
+     * Einzelnen Termin lesen (events.description, events.timelines, events.series.show).
+     * Der Kalender ist instanzweit sichtbar, deshalb reicht ohne Projekt die Anmeldung;
+     * hängt der Termin an einem Projekt, gilt dessen Sichtrecht (ProjectPolicy::view).
+     */
+    public function view(User $user, Event $event): bool
+    {
+        $project = $event->project;
+
+        return $project === null || $user->can('view', $project);
+    }
+
     public function update(User $user, Event $event): bool
     {
         // "Projektleitung sein" (management projects) gab hier bisher systemweites Bearbeiten aller Termine —

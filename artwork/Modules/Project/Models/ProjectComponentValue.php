@@ -24,12 +24,15 @@ class ProjectComponentValue extends Model
         'text_without_html',
     ];
 
+    /**
+     * Historischer Name: Der Text wird seit dem XSS-Sammelfix (21.09.2026) roh gespeichert und
+     * per Text-Interpolation gerendert; strip_tags würde Eingaben wie "a<b" verstümmeln.
+     */
     public function getTextWithoutHtmlAttribute(): string
     {
-        // check if the data is an array and has a key 'text'
         if (!is_array($this->data) || !array_key_exists('text', $this->data)) {
             return '';
         }
-        return strip_tags($this->data['text']);
+        return (string) ($this->data['text'] ?? '');
     }
 }

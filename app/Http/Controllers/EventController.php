@@ -3468,6 +3468,8 @@ class EventController extends Controller
         /** @var Event $event */
         $event = Event::onlyTrashed()->findOrFail($id);
 
+        $this->authorize('delete', $event);
+
         // Stale Projekt-Zeiger vor dem Restore bereinigen: EventService::restore
         // greift bei gesetzter project_id auf $event->project->id zu und würde bei
         // einem zwischenzeitlich gelöschten Projekt crashen.
@@ -4234,11 +4236,15 @@ class EventController extends Controller
     /**
      * Beschreibung eines einzelnen Termins. Der Kalender liefert den Volltext nur
      * noch mit, wenn die Anzeigeeinstellung ihn in der Kachel zeigt — das Termin-Modal
-     * holt ihn hier nach. Bewusst ohne zusaetzliche Policy: die Kachel-Daten desselben
-     * Termins bekommt jede angemeldete Person ohnehin ueber events.all.
+     * holt ihn hier nach. Sichtbarkeit wie EventPolicy::view: ohne Projekt reicht die
+     * Anmeldung (Kalender ist instanzweit), mit Projekt gilt dessen Sichtrecht.
+     *
+     * @throws AuthorizationException
      */
     public function showDescription(Event $event): JsonResponse
     {
+        $this->authorize('view', $event);
+
         return new JsonResponse(['description' => $event->description]);
     }
 
@@ -4974,8 +4980,13 @@ class EventController extends Controller
         ]);
     }
 
+    /**
+     * @throws AuthorizationException
+     */
     public function getTimelines(Event $event): JsonResponse
     {
+        $this->authorize('view', $event);
+
         $event->load('timelines');
 
         return response()->json([

@@ -373,8 +373,10 @@ class ProjectPrintLayoutController extends Controller
      */
     public function update(UpdateProjectPrintLayoutRequest $request, ProjectPrintLayout $projectPrintLayout): void
     {
-        if ($request->validated() && $projectPrintLayout->exists) {
-            $projectPrintLayout->update($request->all());
+        // Nur validierte Felder; user_id/permission/is_default/order sind fillable, aber nicht Teil des Formulars
+        // (Sicherheits-Audit 21.09.2026, E NIEDRIG).
+        if ($projectPrintLayout->exists) {
+            $projectPrintLayout->update($request->safe()->except(['id']));
         }
     }
 

@@ -174,7 +174,6 @@ use Spatie\Permission\Traits\HasRoles;
  * @property array $bulk_column_size
  * @property boolean $show_description_in_bulk
  * @property boolean $shift_period_on_start_date_change
- * @property string $chat_public_key
  * @property boolean $use_chat
  * @property string $work_name
  * @property string $work_description
@@ -282,7 +281,6 @@ class User extends Model implements
         'show_description_in_bulk',
         'shift_period_on_start_date_change',
         'show_project_team_names',
-        'chat_public_key',
         'use_chat',
         'work_time_balance',
         'chat_popup_position',
@@ -341,11 +339,20 @@ class User extends Model implements
         'ad_managed' => 'boolean',
     ];
 
+    /**
+     * Gehaltsfelder sind versteckt (Sicherheits-Audit 21.09.2026, G): auth.user (Jetstream
+     * ShareInertiaData) und jedes toArray() eines User-Models liefern sie nicht mehr aus.
+     * Legitime Ausgabe ausschließlich über UserShowResource (greift per $this->salary_per_hour
+     * direkt auf das Attribut zu, unabhängig von $hidden) hinter der Vertrags-Sichtprüfung.
+     */
     protected $hidden = [
         'password',
         'remember_token',
         'two_factor_recovery_codes',
         'two_factor_secret',
+        'salary_per_hour',
+        'salary_description',
+        'weekly_working_hours',
     ];
 
     protected $appends = [
@@ -698,7 +705,6 @@ class User extends Model implements
             'business' => $this->business,
             'phone_number' => $this->phone_number,
             'email' => $this->email,
-            'chat_public_key' => $this->chat_public_key,
             'use_chat' => $this->use_chat,
         ];
     }

@@ -13,6 +13,9 @@ class DatabaseSettingsSeeder extends Seeder
      */
     public function run(): void
     {
+        // Dateityp-Defaults gelten nur für NEUE Installationen (unten: insert nur, wenn die
+        // Einstellung fehlt). '*' bleibt wählbar, html/svg/xml/php werden unabhängig davon
+        // in HandlesFileUpload hart abgelehnt (Sicherheits-Audit 21.09.2026, F).
         $settings = [
             [
                 'group' => 'general',
@@ -36,25 +39,25 @@ class DatabaseSettingsSeeder extends Seeder
                 'group' => 'general',
                 'name' => 'allowed_project_file_mimetypes',
                 'locked' => 0,
-                'payload' => json_encode(['*']),
+                'payload' => json_encode(['pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'txt', 'csv', 'zip', 'png', 'jpg', 'jpeg', 'gif', 'webp']),
             ],
             [
                 'group' => 'general',
                 'name' => 'allowed_room_file_mimetypes',
                 'locked' => 0,
-                'payload' => json_encode(['*']),
+                'payload' => json_encode(['pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'txt', 'csv', 'zip', 'png', 'jpg', 'jpeg', 'gif', 'webp']),
             ],
             [
                 'group' => 'general',
                 'name' => 'allowed_branding_file_mimetypes',
                 'locked' => 0,
-                'payload' => json_encode(['*']),
+                'payload' => json_encode(['png', 'jpg', 'jpeg', 'webp']),
             ],
             [
                 'group' => 'general',
                 'name' => 'allowed_contract_file_mimetypes',
                 'locked' => 0,
-                'payload' => json_encode(['*']),
+                'payload' => json_encode(['pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'txt', 'csv', 'zip', 'png', 'jpg', 'jpeg', 'gif', 'webp']),
             ],
             [
                 'group' => 'general',

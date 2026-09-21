@@ -535,16 +535,12 @@ const sendMessage = async () => {
     };
 
     try {
-        const response = await fetch(route('chat-system.send-message', { chat: chatPartner.value.id }), {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-            },
-            body: JSON.stringify(payload),
-        });
-
-        const result = await response.json();
+        // axios statt fetch(): sendet X-XSRF-TOKEN aus dem Cookie, der Meta-Token
+        // im DOM veraltet nach Re-Login (419).
+        const { data: result } = await axios.post(
+            route('chat-system.send-message', { chat: chatPartner.value.id }),
+            payload,
+        );
 
         chatPartner.value.messages.push({
             ...result.message,
@@ -620,7 +616,7 @@ onMounted(() => {
     setupEchoListeners()
     // Only set up user status listener on mount
     // Chat loading and chat-related Echo listeners will be set up when chat is opened
-    window.Echo.channel('users.status')
+    window.Echo.private('users.status')
         .listen('UserStatusUpdated', (data) => {
             const userId = data?.userId;
             const newStatus = data?.status;

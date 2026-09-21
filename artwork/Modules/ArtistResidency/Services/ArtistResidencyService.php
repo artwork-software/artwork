@@ -431,7 +431,6 @@ readonly class ArtistResidencyService
         )->setPaper('a4', 'portrait')
             ->setOptions([
                 'dpi' => 72,
-                'enable-local-file-access' => true,
             ]);
 
         $filename = $this->createFilename();

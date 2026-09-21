@@ -35,11 +35,18 @@ class InvitationController extends Controller
 
     public function invite(): Response|ResponseFactory
     {
+        $this->authorize('create', Invitation::class);
+
         return $this->responseFactory->render(
             'Users/Invite',
             [
                 'available_roles' => $this->roleService->getAllRoleNames(),
-                'available_permissions' => $this->permissionService->getAllPermissionNames(),
+                // Nur Rechte anbieten, die die einladende Person selbst vergeben darf (Service filtert
+                // beim Speichern ohnehin serverseitig).
+                'available_permissions' => collect($this->invitationService->filterGrantablePermissions(
+                    $this->permissionService->getAllPermissionNames()->all(),
+                    $this->userService->getAuthUser()
+                )),
             ]
         );
     }
@@ -63,6 +70,14 @@ class InvitationController extends Controller
             !$this->hashManager->check($request->query('token'), $invitation->getAttribute('token'))
         ) {
             throw new UnauthorizedException(401);
+        }
+
+        // Gültiger Link, aber abgelaufen: Hinweisseite statt nackter 401 (Einladung neu anfordern).
+        // Das Anlegen (createUser) bleibt über AcceptInvitationRequest gesperrt.
+        if ($invitation->isExpired()) {
+            return $this->responseFactory->render('Users/InvitationExpired', [
+                'email' => $request->query('email'),
+            ]);
         }
 
         return $this->responseFactory->render(

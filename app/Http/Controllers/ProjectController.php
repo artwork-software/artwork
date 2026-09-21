@@ -614,18 +614,19 @@ class ProjectController extends Controller
     }
 
     /**
-     * @return Project[]
+     * Projektsuche ohne Projektgruppen. Sicherheits-Audit 21.09.2026 (A, NIEDRIG): wie search()
+     * mit viewAny-Prüfung und schlankem ProjectSearchDTO statt voller Modelle.
+     *
+     * @throws AuthorizationException
      */
-    public function searchProjectsWithoutGroup(Request $request): array
+    public function searchProjectsWithoutGroup(SearchRequest $request, ProjectService $projectService): Collection
     {
-        $filteredObjects = [];
-        $projects = Project::search($request->input('query'))->get();
-        foreach ($projects as $project) {
-            if ($project->is_group !== 1 || $project->is_group !== true) {
-                $filteredObjects[] = $project;
-            }
-        }
-        return $filteredObjects;
+        $this->authorize('viewAny', Project::class);
+
+        return $projectService->searchProjectsByNameOrArtists((string) $request->get('query'))
+            ->reject(static fn (Project $project): bool => (bool) $project->is_group)
+            ->values()
+            ->map(static fn (Project $project): ProjectSearchDTO => ProjectSearchDTO::fromModel($project));
     }
 
     /**
@@ -2058,6 +2059,28 @@ class ProjectController extends Controller
             ]);
         }
 
+        // Zeilen dürfen nur innerhalb DERSELBEN Budgettabelle verschoben werden: mit einer eigenen
+        // sub_position_id ließen sich sonst fremde row_ids in das eigene Budget "herüberziehen".
+        $targetTableIds = SubPosition::query()
+            ->whereIn('id', collect($updates)->pluck('sub_position_id'))
+            ->with('mainPosition:id,table_id')
+            ->get()
+            ->map(fn (SubPosition $subPosition) => $subPosition->mainPosition?->table_id)
+            ->unique();
+        $rowTableIds = SubPositionRow::query()
+            ->whereIn('id', $allRowIds)
+            ->with('subPosition.mainPosition:id,table_id')
+            ->get()
+            ->map(fn (SubPositionRow $row) => $row->subPosition?->mainPosition?->table_id)
+            ->unique();
+        abort_unless(
+            $targetTableIds->count() === 1
+            && $rowTableIds->count() === 1
+            && $targetTableIds->first() !== null
+            && $targetTableIds->first() === $rowTableIds->first(),
+            403
+        );
+
         DB::transaction(function () use ($updates): void {
             foreach ($updates as $update) {
                 $subPositionId = (int)$update['sub_position_id'];
@@ -2270,7 +2293,8 @@ class ProjectController extends Controller
                 // Prüfe ob Kalkulation eine ID hat (existierend) oder neu ist
                 if (isset($calculation['id']) && !empty($calculation['id']) && is_numeric($calculation['id'])) {
                     // Existierende Kalkulation aktualisieren
-                    $cellCalculation = CellCalculation::find($calculation['id']);
+                    // Nur Kalkulationen DIESER Zelle: fremde Ids im Payload dürfen nichts überschreiben
+                    $cellCalculation = CellCalculation::where('cell_id', $cellId)->find($calculation['id']);
                     if ($cellCalculation) {
                         $cellCalculation->update([
                             'name' => $calculation['name'] ?? '',
@@ -3230,6 +3254,8 @@ class ProjectController extends Controller
 
     public function addTimeLineRow(Event $event): void
     {
+        $this->authorizeTimelineEdit($event);
+
         $startTime = Carbon::parse($event->start_time);
         $endTime = Carbon::parse($event->end_time);
         $startDate = Carbon::parse($event->start_time);
@@ -3279,7 +3305,7 @@ class ProjectController extends Controller
                 'end_date' => $timeline['end_date'],
                 'start' => $timeline['start'],
                 'end' => $timeline['end'],
-                'description' => nl2br($timeline['description_without_html'])
+                'description' => $timeline['description_without_html']
             ]);
             if ($event = $findTimeLine->event()->first()) {
                 $event->touchQuietly();
@@ -3560,7 +3586,7 @@ class ProjectController extends Controller
         $oldDescription = $project->description;
 
         $project->update([
-            'description' => nl2br($request->description)
+            'description' => $request->description
         ]);
 
         $project->save();
@@ -3612,14 +3638,13 @@ class ProjectController extends Controller
         $this->setPublicChangesNotification($projectId);
     }
 
-    public function deleteProjectFromGroup(Project $project, Project $projectGroup): void
-    {
-        $project->projectsOfGroup()->detach($projectGroup->id);
-    }
-
     public function addProjectsToGroup(Request $request, Project $projectGroup): void
     {
         $projectIdsToAdd = $request->collect('projectIdsToAdd')->pluck('id');
+        $this->authorize('update', $projectGroup);
+        Project::query()->whereIn('id', $projectIdsToAdd)->get()
+            ->each(fn (Project $project) => $this->authorize('view', $project));
+
         $projectGroup->projectsOfGroup()->sync($projectIdsToAdd);
 
         // Ensure the project group's is_group flag is set to true if there are projects to add
@@ -4598,8 +4623,9 @@ class ProjectController extends Controller
 
         $oldKeyVisual = $project->key_visual_path;
         if ($request->file('keyVisual')) {
+            // Inhalt muss ein Bild sein (kein SVG/HTML auf der public-Disk), max. 10 MB.
             $request->validate([
-                'keyVisual' => ['max:' . 1_024 * 100]
+                'keyVisual' => ['image', 'max:10240']
             ]);
 
             $file = $request->file('keyVisual');
@@ -4701,8 +4727,24 @@ class ProjectController extends Controller
         $project->shiftRelevantEventTypes()->sync(collect($request->shiftRelevantEventTypeIds));
     }
 
+    /**
+     * Zeitleisten-Zeilen an Terminen: Schreibrecht am Termin (EventPolicy::update) ODER Dienstplanung —
+     * die Zeitleiste wird im Schichten-Tab auch von Planer:innen ohne Projekt-Schreibrecht gepflegt.
+     */
+    private function authorizeTimelineEdit(?Event $event): void
+    {
+        abort_unless((bool) $event, 404);
+
+        $user = Auth::user();
+        abort_unless(
+            $user?->can(PermissionEnum::SHIFT_PLANNER->value) || $user?->can('update', $event),
+            403
+        );
+    }
+
     public function deleteTimeLineRow(Timeline $timeline, TimelineService $timelineService): void
     {
+        $this->authorizeTimelineEdit($timeline->event);
         $timelineService->forceDelete($timeline);
     }
 
@@ -4908,6 +4950,8 @@ class ProjectController extends Controller
 
     public function updateCopyright(Request $request, Project $project): RedirectResponse
     {
+        $this->authorize('update', $project);
+
         $oldCostCenter = $project->cost_center_id;
         if (!empty($request->cost_center_name)) {
             $costCenter = CostCenter::firstOrCreate(['name' => $request->cost_center_name]);
@@ -4925,6 +4969,8 @@ class ProjectController extends Controller
 
     public function updateCostCenter(Request $request, Project $project): RedirectResponse
     {
+        $this->authorize('update', $project);
+
         $oldCostCenter = $project->cost_center_id;
         $costCenter = null;
 
@@ -5126,6 +5172,7 @@ class ProjectController extends Controller
 
     public function updateTimeline(Timeline $timeline, UpdateTimelineRequest $request): void
     {
+        $this->authorizeTimelineEdit($timeline->event);
         $this->timelineService->updateTimeline($timeline, collect($request->all()));
     }
 

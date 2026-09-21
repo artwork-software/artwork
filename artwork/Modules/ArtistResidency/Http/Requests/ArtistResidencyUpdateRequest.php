@@ -2,10 +2,34 @@
 
 namespace Artwork\Modules\ArtistResidency\Http\Requests;
 
+use Artwork\Modules\ArtistResidency\Models\ArtistResidency;
+use Artwork\Modules\Permission\Enums\PermissionEnum;
+use Artwork\Modules\Project\Models\Project;
 use Illuminate\Foundation\Http\FormRequest;
 
 class ArtistResidencyUpdateRequest extends FormRequest
 {
+    /**
+     * Schreibrecht im Projekt des Aufenthalts VOR der Validierung (403 statt 422 bei fehlendem
+     * Recht); ein Projektwechsel wird zusätzlich im Controller gegen das Zielprojekt geprüft.
+     */
+    public function authorize(): bool
+    {
+        $residency = $this->route('artistResidency');
+
+        if (!$residency instanceof ArtistResidency) {
+            return false;
+        }
+
+        $project = $residency->project_id !== null ? Project::query()->find($residency->project_id) : null;
+
+        if ($project === null) {
+            return $this->user()?->can(PermissionEnum::WRITE_PROJECTS->value) ?? false;
+        }
+
+        return $this->user()?->can('update', $project) ?? false;
+    }
+
     protected function prepareForValidation(): void
     {
         $this->merge([
@@ -44,7 +68,7 @@ class ArtistResidencyUpdateRequest extends FormRequest
             'cost_per_night' => 'required|numeric|min:0',
             'daily_allowance' => 'required|numeric|min:0',
             'additional_daily_allowance' => 'nullable|numeric|min:0',
-            'description' => 'nullable|string',
+            'description' => 'nullable|string|max:65535',
             'breakfast_count' => 'nullable|integer|min:0',
             'breakfast_deduction_per_day' => 'nullable|numeric|min:0',
             'days' => 'required|integer|min:0',

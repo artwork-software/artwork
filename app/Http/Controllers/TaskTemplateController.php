@@ -16,8 +16,30 @@ class TaskTemplateController extends Controller
         return inertia('TaskTemplates/Create');
     }
 
+    /**
+     * Regeln für Anlage/Änderung einer Aufgabenvorlage. Die Vorlagenzugehörigkeit wird nur per exists
+     * geprüft — die Routen liegen komplett hinter "can:admin checklistTemplates", ein feineres Recht
+     * pro Vorlage gibt es nicht (Sicherheits-Audit 21.09.2026, E).
+     *
+     * @return array<string, array<int, string>>
+     */
+    private static function rules(bool $update): array
+    {
+        $sometimes = $update ? ['sometimes'] : [];
+
+        return [
+            'checklist_template_id' => [...$sometimes, 'required', 'integer', 'exists:checklist_templates,id'],
+            'name' => [...$sometimes, 'required', 'string', 'max:255'],
+            'description' => ['nullable', 'string', 'max:65535'],
+            'done' => ['nullable', 'boolean'],
+            'deadline_days_after_creation' => ['nullable', 'integer', 'min:0', 'max:36500'],
+        ];
+    }
+
     public function store(Request $request): RedirectResponse
     {
+        $request->validate(self::rules(false));
+
         $nextOrder = TaskTemplate::where('checklist_template_id', $request->checklist_template_id)
             ->max('order');
 
@@ -46,6 +68,8 @@ class TaskTemplateController extends Controller
 
     public function update(Request $request, TaskTemplate $taskTemplate): RedirectResponse
     {
+        $request->validate(self::rules(true));
+
         $taskTemplate->update(
             $request->only('name', 'description', 'done', 'checklist_template_id', 'deadline_days_after_creation')
         );
@@ -55,6 +79,12 @@ class TaskTemplateController extends Controller
 
     public function updateOrder(Request $request): RedirectResponse
     {
+        $request->validate([
+            'taskTemplates' => ['required', 'array'],
+            'taskTemplates.*.id' => ['required', 'integer', 'exists:task_templates,id'],
+            'taskTemplates.*.order' => ['required', 'integer', 'min:0'],
+        ]);
+
         foreach ($request->collect('taskTemplates') as $taskTemplate) {
             TaskTemplate::where('id', $taskTemplate['id'])->update(['order' => $taskTemplate['order']]);
         }

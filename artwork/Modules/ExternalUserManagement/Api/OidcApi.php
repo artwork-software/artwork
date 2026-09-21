@@ -177,6 +177,8 @@ class OidcApi implements ExternalUserManagementApi
         return Http::acceptJson()
             ->connectTimeout(5)
             ->timeout(10)
+            // Keine Redirects (SSRF): die Discovery-URL ist gegen private Netze geprüft, ein 302 nicht.
+            ->withoutRedirecting()
             ->retry(2, 200)
             ->get($url)
             ->throw()

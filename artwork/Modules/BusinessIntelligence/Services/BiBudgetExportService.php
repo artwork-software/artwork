@@ -80,9 +80,33 @@ class BiBudgetExportService
     {
         $token = Str::uuid()->toString();
         Cache::put('bi_budget_export_' . $token, $config, now()->addMinutes(30));
-        Cache::put('bi_budget_export_status_' . $token, ['status' => 'pending'], now()->addMinutes(60));
+        // user_id bindet Status + Download an die anfragende Person (Sicherheits-Audit 21.09.2026, F)
+        Cache::put(
+            'bi_budget_export_status_' . $token,
+            ['status' => 'pending', 'user_id' => $config['user_id'] ?? null],
+            now()->addMinutes(60)
+        );
 
         return $token;
+    }
+
+    /**
+     * @param array<string, mixed> $status
+     */
+    private function putStatus(string $token, array $status, \DateTimeInterface $ttl): void
+    {
+        $previous = Cache::get('bi_budget_export_status_' . $token);
+        $userId = is_array($previous) ? ($previous['user_id'] ?? null) : null;
+
+        Cache::put('bi_budget_export_status_' . $token, $status + ['user_id' => $userId], $ttl);
+    }
+
+    private function assertOwnedBy(string $token, ?int $userId): void
+    {
+        $status = Cache::get('bi_budget_export_status_' . $token);
+        $owner = is_array($status) ? ($status['user_id'] ?? null) : null;
+
+        abort_if($owner !== null && ($userId === null || (int) $owner !== $userId), 403);
     }
 
     public function generateAndStore(string $token): void
@@ -90,7 +114,7 @@ class BiBudgetExportService
         $config = Cache::get('bi_budget_export_' . $token);
 
         if (!$config) {
-            Cache::put('bi_budget_export_status_' . $token, ['status' => 'failed'], now()->addMinutes(30));
+            $this->putStatus($token, ['status' => 'failed'], now()->addMinutes(30));
 
             return;
         }
@@ -99,10 +123,10 @@ class BiBudgetExportService
             $export = $this->buildExport($config);
             $export->store($this->storagePath($token), 'local');
 
-            Cache::put('bi_budget_export_status_' . $token, ['status' => 'ready'], now()->addMinutes(60));
+            $this->putStatus($token, ['status' => 'ready'], now()->addMinutes(60));
         } catch (Throwable $exception) {
-            Cache::put(
-                'bi_budget_export_status_' . $token,
+            $this->putStatus(
+                $token,
                 ['status' => 'failed', 'message' => $exception->getMessage()],
                 now()->addMinutes(30)
             );
@@ -114,13 +138,20 @@ class BiBudgetExportService
     /**
      * @return array<string, mixed>
      */
-    public function getStatus(string $token): array
+    public function getStatus(string $token, ?int $userId = null): array
     {
-        return Cache::get('bi_budget_export_status_' . $token) ?? ['status' => 'unknown'];
+        $this->assertOwnedBy($token, $userId);
+
+        $status = Cache::get('bi_budget_export_status_' . $token) ?? ['status' => 'unknown'];
+        unset($status['user_id']);
+
+        return $status;
     }
 
-    public function downloadStored(string $token): BinaryFileResponse
+    public function downloadStored(string $token, ?int $userId = null): BinaryFileResponse
     {
+        $this->assertOwnedBy($token, $userId);
+
         $path = $this->storagePath($token);
 
         if (!Storage::disk('local')->exists($path)) {

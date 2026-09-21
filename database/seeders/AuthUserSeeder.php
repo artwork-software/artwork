@@ -20,6 +20,7 @@ use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class AuthUserSeeder extends Seeder
 {
@@ -36,6 +37,27 @@ class AuthUserSeeder extends Seeder
      *
      * @return void
      */
+    /**
+     * Bekanntes Demo-Passwort nur außerhalb von Produktion (Tests/Demo hängen daran). In
+     * Produktion bekommt jedes Seed-Konto ein zufälliges Passwort, das einmalig auf der
+     * Konsole ausgegeben wird (Sicherheits-Audit 21.09.2026, Abschnitt D).
+     */
+    private function seedPassword(string $email): string
+    {
+        if (!app()->isProduction()) {
+            return 'TestPass1234!$';
+        }
+
+        $password = Str::random(24);
+        $this->command?->warn(sprintf(
+            'Produktion: zufälliges Passwort für %s: %s (wird nur einmal angezeigt – jetzt notieren und ändern)',
+            $email,
+            $password
+        ));
+
+        return $password;
+    }
+
     public function run(): void
     {
         Storage::put(
@@ -55,7 +77,7 @@ class AuthUserSeeder extends Seeder
             'last_name' => 'Schmidt',
             'email' => 'max.mustermann@artwork.software',
             'phone_number' => null,
-            'password' => Hash::make('TestPass1234!$'),
+            'password' => Hash::make($this->seedPassword('max.mustermann@artwork.software')),
             'position' => 'Administrator',
             'business' => 'Theater XY',
             'description' => null,
@@ -130,7 +152,7 @@ class AuthUserSeeder extends Seeder
             'last_name' => 'Müller',
             'email' => 'lisa.musterfrau@artwork.software',
             'phone_number' => null,
-            'password' => Hash::make('TestPass1234!$'),
+            'password' => Hash::make($this->seedPassword('lisa.musterfrau@artwork.software')),
             'position' => 'Technikerin',
             'business' => 'Museum XY',
             'description' => null,
@@ -197,7 +219,7 @@ class AuthUserSeeder extends Seeder
             'last_name' => 'Admin',
             'email' => 'anna.musterfrau@artwork.software',
             'phone_number' => null,
-            'password' => Hash::make('TestPass1234!$'),
+            'password' => Hash::make($this->seedPassword('anna.musterfrau@artwork.software')),
             'position' => 'Chefin',
             'business' => 'Veranstaltungshaus XY',
             'description' => null,

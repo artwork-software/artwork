@@ -2,17 +2,20 @@
 
 namespace Artwork\Modules\System\FileHandling;
 
+/**
+ * Auswahlliste für die Dateityp-Einstellungen. Skript- bzw. markup-fähige Typen
+ * (html/htm/xhtml/svg/xml/php/phar) sind bewusst NICHT enthalten: sie wären auf
+ * der public-Disk als Stored XSS ausnutzbar und werden in HandlesFileUpload
+ * zusätzlich hart abgelehnt - auch wenn eine Einstellung noch '*' enthält.
+ */
 class MimeTypeList
 {
     public const MIME_TYPES = [
         'txt' => 'text/plain',
-        'html' => 'text/html',
-        'htm' => 'text/html',
-        'php' => 'text/php',
+        'csv' => 'text/csv',
         'css' => 'text/css',
         'js' => 'application/javascript',
         'json' => 'application/json',
-        'xml' => 'application/xml',
         'swf' => 'application/x-shockwave-flash',
         'flv' => 'video/x-flv',
 
@@ -60,7 +63,7 @@ class MimeTypeList
         'ico' => 'image/vnd.microsoft.icon',
         'tiff' => 'image/tiff',
         'tif' => 'image/tiff',
-        'svg' => 'image/svg+xml',
-        'svgz' => 'image/svg+xml',
+        'webp' => 'image/webp',
+        'avif' => 'image/avif',
     ];
 }

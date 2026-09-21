@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Artwork\Modules\Event\Models\Event;
+use Artwork\Modules\EventType\Http\Requests\StoreOrUpdateEventTypeRequest;
 use Artwork\Modules\EventType\Http\Resources\EventTypeResource;
 use Artwork\Modules\EventType\Models\EventType;
 use Artwork\Modules\EventType\Services\EventTypeService;
@@ -31,7 +32,7 @@ class EventTypeController extends Controller
         ]);
     }
 
-    public function store(Request $request, EventTypeService $eventTypeService): RedirectResponse
+    public function store(StoreOrUpdateEventTypeRequest $request, EventTypeService $eventTypeService): RedirectResponse
     {
         $eventTypeService->save($this->setProperties(new EventType(), $request));
         return Redirect::back();
@@ -44,8 +45,11 @@ class EventTypeController extends Controller
         ]);
     }
 
-    public function update(Request $request, EventType $eventType, EventTypeService $eventTypeService): RedirectResponse
-    {
+    public function update(
+        StoreOrUpdateEventTypeRequest $request,
+        EventType $eventType,
+        EventTypeService $eventTypeService
+    ): RedirectResponse {
         $previousSpecificVerifierId = $eventType->getOriginal('specific_verifier_id');
         $previousVerifierIds = $eventType->verifiers()->pluck('users.id')->all();
 
@@ -94,28 +98,34 @@ class EventTypeController extends Controller
 
     public function updateRelevant(Request $request, EventType $eventType): void
     {
-        $eventType->update(['relevant_for_shift' => $request->relevant_for_shift]);
+        $request->validate(['relevant_for_shift' => ['required', 'boolean']]);
+        $eventType->update(['relevant_for_shift' => $request->boolean('relevant_for_shift')]);
     }
 
     public function updateRelevantForInventory(Request $request, EventType $eventType): void
     {
-        $eventType->update(['relevant_for_inventory' => $request->relevant_for_inventory]);
+        $request->validate(['relevant_for_inventory' => ['required', 'boolean']]);
+        $eventType->update(['relevant_for_inventory' => $request->boolean('relevant_for_inventory')]);
     }
 
-    private function setProperties(EventType $eventType, Request $request): EventType
+    private function setProperties(EventType $eventType, StoreOrUpdateEventTypeRequest $request): EventType
     {
         $eventType->name = $request->get('name', $eventType->name);
         $eventType->hex_code = $request->get('hex_code') ?? $eventType->hex_code ?: '#EC7A3D';
         $eventType->project_mandatory = $request->get('project_mandatory', $eventType->project_mandatory);
         $eventType->individual_name = $request->get('individual_name', $eventType->individual_name);
         $eventType->abbreviation = $request->get('abbreviation', $eventType->abbreviation);
-        $eventType->abbreviation = $request->get('abbreviation', $eventType->abbreviation);
         $eventType->relevant_for_project_period = $request->get(
             'relevant_for_project_period',
             $eventType->relevant_for_project_period
         );
-        $eventType->verification_mode = $request->get('verification_mode', $eventType->verification_mode);
-        $eventType->specific_verifier_id = $request->get('specific_verifier_id', $eventType->specific_verifier_id);
+        // Nur validierte Werte (none/specific/any/all); ein fehlender Modus bleibt beim Bestand bzw. "none".
+        $eventType->verification_mode = $request->validated('verification_mode')
+            ?? $eventType->verification_mode
+            ?? 'none';
+        $eventType->specific_verifier_id = $eventType->verification_mode === 'specific'
+            ? $request->validated('specific_verifier_id', $eventType->specific_verifier_id)
+            : null;
         return $eventType;
     }
 }

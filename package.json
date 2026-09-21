@@ -35,7 +35,6 @@
         "lodash.debounce": "^4.0.8",
         "mathjax": "4.0.0",
         "primevue": "^4.4.1",
-        "puppeteer": "^24.33.1",
         "vue": "^3.5.22",
         "vue-cal": "^4.8.1",
         "vue-i18n": "^11.1.12",

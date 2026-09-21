@@ -38,7 +38,8 @@ class StoreInternalIssueRequest extends FormRequest
             'responsible_user_ids' => 'nullable|array',
             'responsible_user_ids.*' => 'integer|exists:users,id',
             'special_items_done' => 'boolean',
-            'files.*' => 'file|max:20480', // 20 MB pro Datei
+            // 20 MB pro Datei; Allowlist statt beliebiger Typen (Sicherheits-Audit 21.09.2026, F)
+            'files.*' => 'file|mimes:pdf,jpg,jpeg,png,webp,doc,docx,xls,xlsx,csv,txt,zip|max:20480',
             'special_items' => 'nullable|array',
             'special_items.*.name' => 'required|string|max:255',
             'special_items.*.quantity' => 'required|integer|min:1',

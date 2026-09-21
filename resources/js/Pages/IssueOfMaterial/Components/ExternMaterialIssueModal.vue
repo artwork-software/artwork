@@ -383,7 +383,7 @@
                                      (Abnahme MAT-03 Ref. 1.16, gleiches Muster wie Projekt-Dokumente) -->
                                 <FilePreview
                                     v-if="isImageFile(file.original_name) || isPdfFileName(file.original_name)"
-                                    :src="'/storage/' + file.file_path"
+                                    :src="issueFileUrl(file, true)"
                                     :name="file.original_name"
                                     :type="isPdfFileName(file.original_name) ? 'pdf' : 'image'"
                                     size="sm"
@@ -391,7 +391,7 @@
                                     @open="openAttachmentPreview(file)"
                                 />
                                 <div class="min-w-0 flex-1">
-                                    <a :href="'/storage/' + file.file_path" target="_blank" download class="truncate text-sm font-medium text-accent-700 hover:underline">
+                                    <a :href="issueFileUrl(file)" target="_blank" download class="truncate text-sm font-medium text-accent-700 hover:underline">
                                         {{ file.original_name }}
                                     </a>
                                 </div>
@@ -1255,11 +1255,19 @@ const isImageFile = (filename) => {
 
 const isPdfFileName = (filename) => (filename || '').split('.').pop()?.toLowerCase() === 'pdf';
 
+// Anhänge liegen auf der privaten Disk: Auslieferung nur über die autorisierte
+// Download-Route (inline=1 für die Bild-/PDF-Vorschau, sonst als Download).
+const issueFileUrl = (file, inline = false) => route('extern-issue-of-material.file.download', {
+    externalIssue: file.external_issue_id ?? props.externMaterialIssue?.id,
+    externalIssueFile: file.id,
+    ...(inline ? { inline: 1 } : {}),
+});
+
 // Bild-/PDF-Vorschau für gespeicherte Anhänge (Abnahme MAT-03 Ref. 1.16)
 const attachmentPreview = ref(null);
 const openAttachmentPreview = (file) => {
     attachmentPreview.value = {
-        src: '/storage/' + file.file_path,
+        src: issueFileUrl(file, true),
         name: file.original_name,
         type: isPdfFileName(file.original_name) ? 'pdf' : 'image',
     };

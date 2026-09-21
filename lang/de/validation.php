@@ -115,12 +115,12 @@ return [
     'not_in' => 'Das ausgewählte :attribute ist ungültig.',
     'not_regex' => 'Das :attribute-Feldformat ist ungültig.',
     'numeric' => 'Das :attribute-Feld muss eine Zahl sein.',
-    'passwort' => [
-        'letters' => 'Das :attribute field muss mindestens einen Buchstaben enthalten.',
+    'password' => [
+        'letters' => 'Das :attribute-Feld muss mindestens einen Buchstaben enthalten.',
         'mixed' => 'Das :attribute-Feld muss mindestens einen Groß- und einen Kleinbuchstaben enthalten.',
-            'numbers' => 'Das :attribute-Feld muss mindestens eine Zahl enthalten.',
-            'symbols' => 'Das :attribute-Feld muss mindestens ein Symbol enthalten.',
-            'uncompromised' => 'Das angegebene :attribute ist in einem Datenleck aufgetaucht. Bitte wählen Sie ein anderes :Attribut.',
+        'numbers' => 'Das :attribute-Feld muss mindestens eine Ziffer enthalten.',
+        'symbols' => 'Das :attribute-Feld muss mindestens ein Sonderzeichen enthalten.',
+        'uncompromised' => 'Das angegebene :attribute ist in einem Datenleck aufgetaucht. Bitte ein anderes :attribute wählen.',
     ],
     'present' => 'Das :attribute-Feld muss vorhanden sein.',
     'present_if' => 'Das :attribute-Feld muss vorhanden sein, wenn :other :value ist.',

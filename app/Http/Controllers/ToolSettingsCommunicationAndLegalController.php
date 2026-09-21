@@ -29,6 +29,24 @@ class ToolSettingsCommunicationAndLegalController extends Controller
     {
         $this->authorize('updateEmailSettings', $generalSettings);
 
+        // Sicherheits-Audit 21.09.2026 (E, NIEDRIG): Links landen als href im Footer/Mails — nur http(s).
+        $request->validate([
+            'businessName' => ['nullable', 'string', 'max:255'],
+            'page_title' => ['nullable', 'string', 'max:255'],
+            'impressumLink' => ['nullable', 'url:http,https', 'max:2048'],
+            'privacyLink' => ['nullable', 'url:http,https', 'max:2048'],
+            'emailFooter' => ['nullable', 'string', 'max:5000'],
+            'invitationEmail' => ['nullable', 'email', 'max:255'],
+            'businessEmail' => ['nullable', 'email', 'max:255'],
+            'playingTimeWindowStart' => ['nullable', 'string', 'max:255'],
+            'playingTimeWindowEnd' => ['nullable', 'string', 'max:255'],
+            'letterheadName' => ['nullable', 'string', 'max:255'],
+            'letterheadStreet' => ['nullable', 'string', 'max:255'],
+            'letterheadZipCode' => ['nullable', 'string', 'max:255'],
+            'letterheadCity' => ['nullable', 'string', 'max:255'],
+            'letterheadEmail' => ['nullable', 'email', 'max:255'],
+        ]);
+
         $generalSettings->business_name = $request->get('businessName') ?? '';
         $generalSettings->page_title = $request->get('page_title') ?? '';
         $generalSettings->impressum_link = $request->get('impressumLink') ?? '';

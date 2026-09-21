@@ -13,6 +13,43 @@ trait HandlesFileUpload
 {
     use RetrievesSettingsForFileType;
 
+    /**
+     * Inhalte, die ein Browser auf der App-Origin als Markup/Skript rendern oder ein
+     * Webserver an einen Interpreter reichen könnte. Werden IMMER abgelehnt - auch wenn
+     * die Einstellung '*' erlaubt (Sicherheits-Audit 21.09.2026, Abschnitt F).
+     *
+     * @var list<string>
+     */
+    private const HARD_DENIED_MIME_TYPES = [
+        'text/html',
+        'application/xhtml+xml',
+        'image/svg+xml',
+        'text/xml',
+        'application/xml',
+        'application/xslt+xml',
+        'text/php',
+        'text/x-php',
+        'application/php',
+        'application/x-php',
+        'application/x-httpd-php',
+        'application/x-httpd-php-source',
+        'application/x-phar',
+        'text/javascript',
+        'application/javascript',
+        'application/x-javascript',
+        'application/x-sh',
+        'application/x-shellscript',
+    ];
+
+    /**
+     * @var list<string>
+     */
+    private const HARD_DENIED_EXTENSIONS = [
+        'html', 'htm', 'xhtml', 'xht', 'shtml', 'svg', 'svgz', 'xml', 'xsl', 'xslt',
+        'php', 'php3', 'php4', 'php5', 'php7', 'php8', 'phps', 'phtml', 'pht', 'phar',
+        'cgi', 'sh', 'bash', 'htaccess', 'htpasswd', 'jsp', 'jspx', 'asp', 'aspx',
+    ];
+
 
     public function handleFile(ArtworkFileTypes $type, UploadedFile $file): void
     {
@@ -51,7 +88,7 @@ trait HandlesFileUpload
             );
         }
 
-        if (!$this->checkMimeType($settings['mime_types'], $file)) {
+        if ($this->isHardDenied($file) || !$this->checkMimeType($settings['mime_types'], $file)) {
             //throw ValidationException::withMessages(['Invalid file type ' . $file->getMimeType()]);
             $fileType = __(
                 'validation.file_upload.invalid_file_type',
@@ -66,6 +103,19 @@ trait HandlesFileUpload
                 $fileSize,
             ]);
         }
+    }
+
+    /**
+     * Sniffed MIME UND Client-Endung prüfen: ein HTML-Dokument mit Endung ".png"
+     * wird über den Inhalt erkannt, ein Polyglot mit Endung ".html" über den Namen.
+     */
+    private function isHardDenied(UploadedFile $file): bool
+    {
+        $mimeType = strtolower((string) $file->getMimeType());
+        $extension = strtolower((string) $file->getClientOriginalExtension());
+
+        return in_array($mimeType, self::HARD_DENIED_MIME_TYPES, true)
+            || in_array($extension, self::HARD_DENIED_EXTENSIONS, true);
     }
 
     private function checkMimeType(array $allowedFileTypes, UploadedFile $file): bool

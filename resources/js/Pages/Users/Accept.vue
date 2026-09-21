@@ -66,7 +66,7 @@
                     <div class="flex items-center text-text-subtle mt-2 ml-3">
                         <SvgCollection svgName="arrowTopLeft"/>
                         <div class="w-full ml-2 mt-1">
-                            {{ $t('The password must be at least 10 characters long.') }}
+                            {{ $t('The password must be at least 10 characters long and contain upper and lower case letters as well as at least one digit.') }}
                         </div>
                     </div>
                 </div>

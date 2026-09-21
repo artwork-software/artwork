@@ -54,6 +54,18 @@ class ChecklistTemplateController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
+        // Sicherheits-Audit 21.09.2026 (E): user_id kam aus dem Body, task_templates ungeprüft.
+        $request->validate([
+            'checklist_id' => ['nullable', 'integer', 'exists:checklists,id'],
+            'name' => ['required_without:checklist_id', 'nullable', 'string', 'max:255'],
+            'users' => ['nullable', 'array'],
+            'users.*.id' => ['required', 'integer', 'exists:users,id'],
+            'task_templates' => ['nullable', 'array'],
+            'task_templates.*.name' => ['required', 'string', 'max:255'],
+            'task_templates.*.description' => ['nullable', 'string', 'max:65535'],
+            'task_templates.*.deadline_days_after_creation' => ['nullable', 'integer', 'min:0', 'max:36500'],
+        ]);
+
         if ($request->checklist_id) {
             $this->createFromChecklist($request);
         } else {
@@ -88,18 +100,31 @@ class ChecklistTemplateController extends Controller
     {
         $checklist_template = ChecklistTemplate::create([
             'name' => $request->name,
-            'user_id' => $request->user_id
+            // Ersteller*in ist immer die angemeldete Person, nie ein Body-Wert
+            'user_id' => $this->authManager->id()
         ]);
 
         $checklist_template->users()->sync(Collection::make($request->users)->pluck('id'));
 
         if ($request->task_templates) {
-            $checklist_template->task_templates()->createMany($request->task_templates);
+            $checklist_template->task_templates()->createMany(
+                self::onlyTaskTemplateFields($request->task_templates)
+            );
         }
     }
 
     public function update(Request $request, ChecklistTemplate $checklistTemplate): RedirectResponse
     {
+        $request->validate([
+            'name' => ['sometimes', 'required', 'string', 'max:255'],
+            'users' => ['nullable', 'array'],
+            'users.*.id' => ['required', 'integer', 'exists:users,id'],
+            'task_templates' => ['nullable', 'array'],
+            'task_templates.*.name' => ['required', 'string', 'max:255'],
+            'task_templates.*.description' => ['nullable', 'string', 'max:65535'],
+            'task_templates.*.deadline_days_after_creation' => ['nullable', 'integer', 'min:0', 'max:36500'],
+        ]);
+
         $checklistTemplate->update($request->only('name'));
 
         if ($request->has('users')) {
@@ -110,13 +135,31 @@ class ChecklistTemplateController extends Controller
         if ($request->task_templates) {
             $userIdsToSync = Collection::make($request->users)->pluck('id');
             $checklistTemplate->task_templates()->delete();
-            foreach ($request->task_templates as $task_template) {
+            foreach (self::onlyTaskTemplateFields($request->task_templates) as $task_template) {
                 $task_template_new = $checklistTemplate->task_templates()->create($task_template);
                 $task_template_new->task_users()->sync($userIdsToSync);
             }
         }
 
         return Redirect::back();
+    }
+
+    /**
+     * Nur die Felder, die eine Aufgabenvorlage aus dem Body übernehmen darf (kein checklist_template_id,
+     * keine Fremd-IDs).
+     *
+     * @param array<int, array<string, mixed>> $taskTemplates
+     * @return array<int, array<string, mixed>>
+     */
+    private static function onlyTaskTemplateFields(array $taskTemplates): array
+    {
+        return array_map(
+            static fn (array $taskTemplate): array => array_intersect_key(
+                $taskTemplate,
+                array_flip(['name', 'description', 'deadline_days_after_creation'])
+            ),
+            array_values($taskTemplates)
+        );
     }
 
     public function destroy(ChecklistTemplate $checklistTemplate): RedirectResponse
@@ -128,6 +171,9 @@ class ChecklistTemplateController extends Controller
 
     public function duplicate(ChecklistTemplate $checklistTemplate): RedirectResponse
     {
+        // nicht von authorizeResource abgedeckt
+        $this->authorize('create', ChecklistTemplate::class);
+
         $this->taskTemplateService->duplicateTaskTemplates(
             $checklistTemplate,
             $this->checklistTemplateService->duplicate(

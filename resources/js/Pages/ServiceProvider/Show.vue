@@ -167,7 +167,6 @@ import {
 } from "@headlessui/vue";
 import {router, useForm, usePage} from "@inertiajs/vue3";
 import Permissions from "@/Mixins/Permissions.vue";
-import SingleContact from "@/Pages/ServiceProvider/Components/SingleContact.vue";
 import UserTermsTab from "@/Pages/Users/Tabs/UserTermsTab.vue";
 import UserShiftPlan from "@/Layouts/Components/ShiftPlanComponents/UserShiftPlan.vue";
 import BaseSidenav from "@/Layouts/Components/BaseSidenav.vue";
@@ -205,7 +204,6 @@ export default defineComponent({
         BaseSidenav,
         UserShiftPlan,
         UserTermsTab,
-        SingleContact,
         IconEdit,
         IconDotsVertical,
         IconTrash,

@@ -176,20 +176,6 @@ class ChatController extends Controller
         ]);
     }
 
-    public function setPublicKey(Request $request)
-    {
-        /** @var User $user */
-        $user = $this->auth->user();
-
-        $user->update([
-            'chat_public_key' => $request->get('public_key'),
-        ]);
-
-        return response()->json([
-            'message' => 'Public key updated successfully',
-        ]);
-    }
-
     public function getChats()
     {
         /** @var User $user */
@@ -262,8 +248,9 @@ class ChatController extends Controller
     public function sendMessage(Chat $chat, Request $request)
     {
         $this->authorize('view', $chat);
-        // Ursprünglichen Text (mit aktuellem nl2br-Verhalten) holen
-        $plain = nl2br($request->get('message'));
+        $request->validate(['message' => ['required', 'string', 'max:10000']]);
+        // Rohtext (kein nl2br) - das Frontend rendert Umbrüche per white-space: pre-line.
+        $plain = (string) $request->get('message');
 
         /** @var ChatMessage $message */
         $message = $chat->messages()->create([

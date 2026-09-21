@@ -157,7 +157,7 @@ class ExternalIssueService
         ]);
 
         foreach ($issue->files as $file) {
-            Storage::disk('public')->delete($file->file_path);
+            $this->deleteStoredFile($file->file_path);
             $file->delete();
         }
 
@@ -175,10 +175,11 @@ class ExternalIssueService
     protected function handleFiles(ExternalIssue $issue, array $files): void
     {
         foreach ($files as $file) {
+            // Private Disk: Auslieferung nur über die autorisierte Download-Route
             $path = $file->storeAs(
                 'external_material_issues',
                 StoredFileName::forUpload($file),
-                'public'
+                'local'
             );
             ExternalIssueFile::create([
                 'external_issue_id' => $issue->id,
@@ -208,8 +209,22 @@ class ExternalIssueService
 
     public function deleteFile(ExternalIssueFile $file): void
     {
-        Storage::disk('public')->delete($file->file_path);
+        $this->deleteStoredFile($file->file_path);
         $file->delete();
+    }
+
+    /**
+     * Neue Dateien liegen auf "local"; "public" nur noch für Altbestand vor dem Move-Command.
+     */
+    private function deleteStoredFile(?string $path): void
+    {
+        if (!is_string($path) || $path === '') {
+            return;
+        }
+
+        foreach (['local', 'public'] as $disk) {
+            Storage::disk($disk)->delete($path);
+        }
     }
 
     /**

@@ -55,6 +55,9 @@ class IndividualTimeSeriesController extends Controller
         // subjects: [{type: "user"|"freelancer"|"service_provider", id: 123}, ...]
         $subjectsInput = collect($data['subjects']);
 
+        // Gleiche Prüfung pro Person wie im Einzel-Endpunkt (IndividualTimeController::store).
+        $this->authorize('createForSubjects', [IndividualTimeSeries::class, $subjectsInput->all()]);
+
         // Zeit-Subjekte aus DB laden
         $timeables = $this->resolveTimeables($subjectsInput);
 
@@ -75,9 +78,14 @@ class IndividualTimeSeriesController extends Controller
 
     /**
      * Display the specified resource.
+     * Sicherheits-Audit 21.09.2026: IndividualTimeSeriesPolicy::view (eigene Serie oder Planungsrecht).
+     *
+     * @throws \Illuminate\Auth\Access\AuthorizationException
      */
     public function show(IndividualTimeSeries $series, Request $request)
     {
+        $this->authorize('view', $series);
+
         $subjectType = $request->query('subject_type'); // 'user' | 'freelancer' | 'service_provider'
         $subjectId   = $request->query('subject_id');
 
@@ -157,6 +165,8 @@ class IndividualTimeSeriesController extends Controller
     {
         $data = $this->validatePayload($request);
 
+        $this->authorize('update', [$series, $data['subjects']]);
+
         // Wer bearbeitet?
         $createdBy = $this->auth->id();
 
@@ -195,6 +205,8 @@ class IndividualTimeSeriesController extends Controller
      */
     public function destroy(IndividualTimeSeries $series): void
     {
+        $this->authorize('delete', $series);
+
         // Collect affected workers before deleting
         $affectedWorkers = $series->individualTimes()
             ->select('timeable_id', 'timeable_type')

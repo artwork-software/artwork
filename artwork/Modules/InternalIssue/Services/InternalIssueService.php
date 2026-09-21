@@ -145,7 +145,7 @@ class InternalIssueService
         ]);
 
         foreach ($issue->files as $file) {
-            Storage::disk('public')->delete($file->file_path);
+            $this->deleteStoredFile($file->file_path);
             $file->delete();
         }
 
@@ -163,7 +163,8 @@ class InternalIssueService
     protected function handleFiles(InternalIssue $issue, array $files): void
     {
         foreach ($files as $file) {
-            $path = $file->storeAs('material-issue', StoredFileName::forUpload($file), 'public');
+            // Private Disk: Auslieferung nur über die autorisierte Download-Route
+            $path = $file->storeAs('material-issue', StoredFileName::forUpload($file), 'local');
             InternalIssueFile::create([
                 'internal_issue_id' => $issue->id,
                 'file_path' => $path,
@@ -193,8 +194,22 @@ class InternalIssueService
 
     public function deleteFile(InternalIssueFile $file): void
     {
-        Storage::disk('public')->delete($file->file_path);
+        $this->deleteStoredFile($file->file_path);
         $file->delete();
+    }
+
+    /**
+     * Neue Dateien liegen auf "local"; "public" nur noch für Altbestand vor dem Move-Command.
+     */
+    private function deleteStoredFile(?string $path): void
+    {
+        if (!is_string($path) || $path === '') {
+            return;
+        }
+
+        foreach (['local', 'public'] as $disk) {
+            Storage::disk($disk)->delete($path);
+        }
     }
 
     protected function logActivity(

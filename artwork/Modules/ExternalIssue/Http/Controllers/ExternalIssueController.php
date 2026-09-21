@@ -3,6 +3,7 @@
 namespace Artwork\Modules\ExternalIssue\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use Artwork\Core\FileHandling\Download\PrivateFileResponse;
 use Artwork\Core\FileHandling\Naming\StoredFileName;
 use Artwork\Modules\ExternalIssue\Http\Requests\StoreExternalIssueRequest;
 use Artwork\Modules\ExternalIssue\Http\Requests\UpdateExternalIssueRequest;
@@ -22,6 +23,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Symfony\Component\HttpFoundation\HeaderUtils;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class ExternalIssueController extends Controller
 {
@@ -284,7 +286,8 @@ class ExternalIssueController extends Controller
             $storagePath = 'external_material_issues/'
                 . StoredFileName::forGenerated('pdf', (string) $externalIssue->id);
 
-            Storage::disk('public')->put($storagePath, $pdfContent);
+            // Private Disk (Personendaten): Download nur über fileDownload() mit Policy-Prüfung
+            Storage::disk('local')->put($storagePath, $pdfContent);
 
             ExternalIssueFile::create([
                 'external_issue_id' => $externalIssue->id,
@@ -301,6 +304,25 @@ class ExternalIssueController extends Controller
                 'materialausgabe.pdf'
             ),
         ]);
+    }
+
+    /**
+     * Anhänge und Ausgabe-PDFs liegen auf der privaten Disk: Zugriff nur mit MaterialIssuePolicy::view
+     * und nur für Dateien, die zur angefragten Ausgabe gehören (?inline=1 für Bilder/PDF-Vorschau).
+     */
+    public function fileDownload(
+        Request $request,
+        ExternalIssue $externalIssue,
+        ExternalIssueFile $externalIssueFile
+    ): StreamedResponse {
+        $this->authorize('view', $externalIssue);
+        abort_unless((int) $externalIssueFile->external_issue_id === (int) $externalIssue->id, 404);
+
+        return PrivateFileResponse::make(
+            (string) $externalIssueFile->file_path,
+            $externalIssueFile->original_name,
+            $request->boolean('inline')
+        );
     }
 
     public function fileDelete(ExternalIssueFile $externalIssueFile): \Illuminate\Http\JsonResponse

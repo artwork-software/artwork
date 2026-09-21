@@ -1,145 +1,127 @@
 <template>
-    <jet-action-section>
-        <template #title>
-            {{$t('Browser Sessions')}}
-        </template>
+    <div class="space-y-4">
+        <div>
+            <h4 class="text-sm font-semibold text-text">
+                {{ $t('Active browser sessions') }}
+            </h4>
+            <p class="mt-1 text-sm text-text-muted">
+                {{ $t('If necessary, you can log out of all other browser sessions on all your devices. If you suspect your account has been compromised, you should also change your password.') }}
+            </p>
+        </div>
 
-        <template #description>
-            {{$t('Manage and log out your active sessions on other browsers and devices.')}}
-        </template>
-
-        <template #content>
-            <div class="max-w-xl text-sm text-text-muted">
-                {{ $t('If necessary, you may log out of all of your other browser sessions across all of your devices. Some of your recent sessions are listed below; however, this list may not be exhaustive. If you feel your account has been compromised, you should also update your password.')}}
-            </div>
-
-            <!-- Other Browser Sessions -->
-            <div class="mt-5 space-y-6" v-if="sessions.length > 0">
-                <div class="flex items-center" v-for="(session, i) in sessions" :key="i">
-                    <div>
-                        <svg fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" stroke="currentColor" class="w-8 h-8 text-text-subtle" v-if="session.agent.is_desktop">
-                            <path d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
-                        </svg>
-
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round" class="w-8 h-8 text-text-subtle" v-else>
-                            <path d="M0 0h24v24H0z" stroke="none"></path><rect x="7" y="4" width="10" height="16" rx="1"></rect><path d="M11 5h2M12 17v.01"></path>
-                        </svg>
+        <!-- Sitzungsliste -->
+        <div v-if="sessions.length > 0" class="space-y-3">
+            <div v-for="(session, i) in sessions" :key="i" class="flex items-center gap-3">
+                <component
+                    :is="session.agent.is_desktop ? IconDeviceDesktop : IconDeviceMobile"
+                    class="h-6 w-6 shrink-0 text-text-subtle"
+                    stroke-width="1.5"
+                />
+                <div class="min-w-0">
+                    <div class="text-sm text-text-muted">
+                        {{ session.agent.platform || $t('Unknown device') }} – {{ session.agent.browser || $t('Unknown browser') }}
                     </div>
-
-                    <div class="ml-3">
-                        <div class="text-sm text-text-muted">
-                            {{ session.agent.platform ? session.agent.platform : $t('Unknown') }} - {{ session.agent.browser ? session.agent.browser : $t('Unknown') }}
-                        </div>
-
-                        <div>
-                            <div class="text-xs text-text-subtle">
-                                {{ session.ip_address }},
-
-                                <span class="text-success font-semibold" v-if="session.is_current_device">{{ $t('This device')}}</span>
-                                <span v-else>{{$t('Last active')}} {{ session.last_active }}</span>
-                            </div>
-                        </div>
+                    <div class="text-xs text-text-subtle">
+                        {{ session.ip_address }},
+                        <span v-if="session.is_current_device" class="font-semibold text-success">{{ $t('This device') }}</span>
+                        <span v-else>{{ $t('Last active') }} {{ session.last_active }}</span>
                     </div>
                 </div>
             </div>
+        </div>
 
-            <div class="flex items-center mt-5">
-                <jet-button @click="confirmLogout">
-                    {{ $t('Log Out Other Browser Sessions')}}
-                </jet-button>
+        <!-- Abmelden anderer Sitzungen (Passwort-Bestätigung) -->
+        <div v-if="!confirming" class="flex items-center gap-3">
+            <BaseUIButton
+                :label="$t('Log Out Other Browser Sessions')"
+                use-translation
+                variant="secondary"
+                hide-icon
+                @click="confirming = true"
+            />
+            <span v-if="recentlyLoggedOut" class="text-sm text-success">{{ $t('Other browser sessions have been logged out.') }}</span>
+        </div>
 
-                <jet-action-message :on="form.recentlySuccessful" class="ml-3">
-                    {{ $t('Done.')}}
-                </jet-action-message>
+        <form v-else class="space-y-3" @submit.prevent="logoutOtherBrowserSessions">
+            <p class="text-sm text-text-muted">
+                {{ $t('Please enter your password to confirm that you want to log out of all other browser sessions.') }}
+            </p>
+            <BaseInput
+                id="logout_other_sessions_password"
+                v-model="form.password"
+                type="password"
+                autocomplete="current-password"
+                :label="$t('Password')"
+                required
+            />
+            <JetInputError :message="form.errors.password" />
+            <div class="flex items-center gap-3">
+                <BaseUIButton
+                    :label="$t('Log Out Other Browser Sessions')"
+                    use-translation
+                    is-add-button
+                    hide-icon
+                    type="submit"
+                    :disabled="form.processing || !form.password"
+                />
+                <BaseUIButton
+                    :label="$t('Cancel')"
+                    use-translation
+                    is-cancel-button
+                    hide-icon
+                    type="button"
+                    @click="cancel"
+                />
             </div>
-
-            <!-- Log Out Other Devices Confirmation Modal -->
-            <jet-dialog-modal :show="confirmingLogout" @close="closeModal">
-                <template #title>
-                    {{ $t('Log Out Other Browser Sessions')}}
-                </template>
-
-                <template #content>
-                    {{$t('Please enter your password to confirm you would like to log out of your other browser sessions across all of your devices.')}}
-
-                    <div class="mt-4">
-                        <jet-input type="password" class="mt-1 block w-3/4" :placeholder="$t('Password')"
-                                    ref="password"
-                                    v-model="form.password"
-                                    @keyup.enter="logoutOtherBrowserSessions" />
-
-                        <jet-input-error :message="form.errors.password" class="mt-2" />
-                    </div>
-                </template>
-
-                <template #footer>
-                    <jet-secondary-button @click="closeModal">
-                        {{ $t('Cancel')}}
-                    </jet-secondary-button>
-
-                    <jet-button class="ml-3" @click="logoutOtherBrowserSessions" :class="{ 'opacity-25': form.processing }" :disabled="form.processing">
-                        {{ $t('Log Out Other Browser Sessions')}}
-                    </jet-button>
-                </template>
-            </jet-dialog-modal>
-        </template>
-    </jet-action-section>
+        </form>
+    </div>
 </template>
 
-<script>
-    import { defineComponent } from 'vue'
-    import JetActionMessage from '@/Jetstream/ActionMessage.vue'
-    import JetActionSection from '@/Jetstream/ActionSection.vue'
-    import JetButton from '@/Jetstream/Button.vue'
-    import JetDialogModal from '@/Jetstream/DialogModal.vue'
-    import JetInput from '@/Jetstream/Input.vue'
-    import JetInputError from '@/Jetstream/InputError.vue'
-    import JetSecondaryButton from '@/Jetstream/SecondaryButton.vue'
+<script setup>
+import { onMounted, ref } from 'vue'
+import { useForm } from '@inertiajs/vue3'
+import axios from 'axios'
+import { IconDeviceDesktop, IconDeviceMobile } from '@tabler/icons-vue'
+import BaseInput from '@/Artwork/Inputs/BaseInput.vue'
+import BaseUIButton from '@/Artwork/Buttons/BaseUIButton.vue'
+import JetInputError from '@/Jetstream/InputError.vue'
 
-    export default defineComponent({
-        props: ['sessions'],
+// Eigenständige Komponente: lädt die Sitzungen des eingeloggten Nutzers selbst und meldet
+// andere Sitzungen über die Web-Route user.browser-sessions.destroy ab (die Jetstream-Route
+// other-browser-sessions.destroy hängt am api-Guard und ist für Web-Sessions tot).
+const sessions = ref([])
+const confirming = ref(false)
+const recentlyLoggedOut = ref(false)
 
-        components: {
-            JetActionMessage,
-            JetActionSection,
-            JetButton,
-            JetDialogModal,
-            JetInput,
-            JetInputError,
-            JetSecondaryButton,
+const form = useForm({ password: '' })
+
+async function loadSessions() {
+    try {
+        const { data } = await axios.get(route('user.browser-sessions.index'))
+        sessions.value = data?.sessions ?? []
+    } catch (e) {
+        sessions.value = []
+    }
+}
+
+function cancel() {
+    confirming.value = false
+    form.reset()
+    form.clearErrors()
+}
+
+function logoutOtherBrowserSessions() {
+    form.delete(route('user.browser-sessions.destroy'), {
+        preserveScroll: true,
+        onSuccess: () => {
+            confirming.value = false
+            recentlyLoggedOut.value = true
+            setTimeout(() => (recentlyLoggedOut.value = false), 4000)
+            loadSessions()
         },
-
-        data() {
-            return {
-                confirmingLogout: false,
-
-                form: this.$inertia.form({
-                    password: '',
-                })
-            }
-        },
-
-        methods: {
-            confirmLogout() {
-                this.confirmingLogout = true
-
-                setTimeout(() => this.$refs.password.focus(), 250)
-            },
-
-            logoutOtherBrowserSessions() {
-                this.form.delete(route('other-browser-sessions.destroy'), {
-                    preserveScroll: true,
-                    onSuccess: () => this.closeModal(),
-                    onError: () => this.$refs.password.focus(),
-                    onFinish: () => this.form.reset(),
-                })
-            },
-
-            closeModal() {
-                this.confirmingLogout = false
-
-                this.form.reset()
-            },
-        },
+        onFinish: () => form.reset(),
     })
+}
+
+onMounted(loadSessions)
 </script>

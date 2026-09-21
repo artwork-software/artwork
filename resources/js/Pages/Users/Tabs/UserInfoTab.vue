@@ -318,6 +318,9 @@
                     <div v-if="password_reset_status" class="mt-3 text-sm font-medium text-success">
                         {{ password_reset_status }}
                     </div>
+                    <div v-if="isSignedInUser()" class="mt-5 border-t border-border-subtle pt-5">
+                        <LogoutOtherBrowserSessionsForm />
+                    </div>
                 </div>
             </aside>
         </section>
@@ -485,12 +488,12 @@ import BaseMenu from '@/Components/Menu/BaseMenu.vue'
 import BaseModal from '@/Components/Modals/BaseModal.vue'
 import VisualFeedback from '@/Components/Feedback/VisualFeedback.vue'
 import BaseMenuItem from '@/Components/Menu/BaseMenuItem.vue'
-import SaveChatKeyButton from '@/Pages/Users/Components/SaveChatKeyButton.vue'
 import BaseInput from '@/Artwork/Inputs/BaseInput.vue'
 import BaseTextarea from '@/Artwork/Inputs/BaseTextarea.vue'
 import {IconCheck, IconChevronDown, IconDotsVertical, IconEdit, IconTrash, IconX} from "@tabler/icons-vue"
 import {is, can} from "laravel-permission-to-vuejs";
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
+import LogoutOtherBrowserSessionsForm from "@/Pages/Profile/Partials/LogoutOtherBrowserSessionsForm.vue";
 
 const props = defineProps({
     user_to_edit: { type: Object, required: true },

@@ -178,7 +178,6 @@ class UserRepository extends BaseRepository
                 'project_manager_permission' => $user->getHasProjectManagerPermission(),
                 'profile_photo_url' => $user->getAttribute('profile_photo_url'),
                 'manager_type' => $user::class,
-                'chat_public_key' => $user->getAttribute('chat_public_key'),
                 'use_chat' => $user->getAttribute('use_chat'),
                 'position' => $user->getAttribute('position'),
             ]);

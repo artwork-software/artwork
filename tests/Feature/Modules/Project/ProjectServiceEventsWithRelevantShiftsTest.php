@@ -132,8 +132,8 @@ final class ProjectServiceEventsWithRelevantShiftsTest extends FeatureTestCase
         $timeline = $result[0]['timeline'];
 
         $this->assertSame([$earlier->id, $later->id], array_column($timeline, 'id'));
-        // strip_tags-Aufbereitung bleibt erhalten
-        $this->assertSame('Früher', $timeline[0]['description_without_html']);
+        // description_without_html liefert den Rohtext (kein strip_tags mehr, Sicherheits-Audit 21.09.2026)
+        $this->assertSame('<p>Früher</p>', $timeline[0]['description_without_html']);
 
         $resultRoom = $result[0]['room'];
         $this->assertSame($room->id, $resultRoom->id);

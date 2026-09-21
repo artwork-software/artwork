@@ -2,10 +2,7 @@
 
 namespace Tests\Unit\Modules\Shift\Events;
 
-use Artwork\Modules\Craft\Models\Craft;
-use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Shift\Events\ShiftAssigned;
-use Artwork\Modules\Shift\Events\ShiftUpdated;
 use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\Shift\Models\ShiftQualification;
 use Artwork\Modules\User\Models\User;
@@ -13,56 +10,13 @@ use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
 /**
- * Regression nach Entfernung des globalen Shift-$with: der Broadcast-Payload
- * (PushesShiftModification::broadcastWith) muss die Worker-Relationen weiterhin
- * enthalten (loadMissing) und Schichten ohne Event dürfen nicht crashen.
+ * Broadcast-Payload der Schicht-Events. ShiftUpdated/PushesShiftModification (ungenutzt,
+ * volles users-Relation-Array im Payload) wurden im Sicherheits-Audit 21.09.2026 entfernt.
  */
 final class PushesShiftModificationBroadcastTest extends TestCase
 {
     #[Test]
-    public function broadcast_payload_contains_worker_relations_and_event(): void
-    {
-        $craft = Craft::factory()->create();
-        $event = Event::factory()->create();
-        $shift = Shift::factory()->create([
-            'event_id' => $event->id,
-            'craft_id' => $craft->id,
-        ]);
-        $worker = User::factory()->create();
-        $shift->users()->attach($worker->id, [
-            'shift_qualification_id' => ShiftQualification::factory()->create()->id,
-            'shift_count' => 1,
-        ]);
-
-        // Frisch laden, damit garantiert KEINE Relationen vorgeladen sind —
-        // broadcastWith() muss sie selbst nachladen
-        $freshShift = Shift::query()->findOrFail($shift->id);
-
-        $payload = (new ShiftUpdated($freshShift))->broadcastWith();
-
-        foreach (['craft', 'users', 'freelancer', 'service_provider', 'committed_by', 'event'] as $key) {
-            $this->assertArrayHasKey($key, $payload, "Broadcast-Payload muss '{$key}' enthalten");
-        }
-
-        $this->assertSame($craft->id, $payload['craft']['id']);
-        $this->assertCount(1, $payload['users']);
-        $this->assertSame($worker->id, $payload['users'][0]['id']);
-        $this->assertSame($event->id, $payload['event']['id']);
-    }
-
-    #[Test]
-    public function broadcast_payload_handles_shift_without_event(): void
-    {
-        $shift = Shift::factory()->create(['event_id' => null]);
-
-        $payload = (new ShiftUpdated(Shift::query()->findOrFail($shift->id)))->broadcastWith();
-
-        $this->assertNull($payload['event']);
-        $this->assertArrayHasKey('users', $payload);
-    }
-
-    #[Test]
-    public function shift_assigned_broadcast_contains_worker_relations(): void
+    public function shift_assigned_broadcast_uses_slim_shift_dto_payload(): void
     {
         $shift = Shift::factory()->create();
         $assignedUser = User::factory()->create();
@@ -74,9 +28,15 @@ final class PushesShiftModificationBroadcastTest extends TestCase
         $payload = (new ShiftAssigned($assignedUser, Shift::query()->findOrFail($shift->id)))
             ->broadcastWith();
 
-        foreach (['craft', 'users', 'freelancer', 'service_provider', 'committed_by', 'user', 'event'] as $key) {
+        // Sicherheits-Audit 21.09.2026 (G): kein shift->toArray()/user->toArray() mehr,
+        // sondern ShiftDTO + schlanker User-Auszug (keine Gehalts-/Kontaktdaten)
+        foreach (['shift', 'roomId', 'user', 'event'] as $key) {
             $this->assertArrayHasKey($key, $payload, "ShiftAssigned-Payload muss '{$key}' enthalten");
         }
-        $this->assertCount(1, $payload['users']);
+        $this->assertSame($shift->id, $payload['shift']->id);
+        $this->assertCount(1, $payload['shift']->workers);
+        $this->assertSame($assignedUser->id, $payload['shift']->workers[0]['id']);
+        $this->assertSame($assignedUser->id, $payload['user']['id']);
+        $this->assertArrayNotHasKey('email', $payload['user']);
     }
 }

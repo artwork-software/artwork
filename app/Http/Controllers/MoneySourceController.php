@@ -12,6 +12,8 @@ use Artwork\Modules\Budget\Models\SubPositionRow;
 use Artwork\Modules\Budget\Models\SubPositionSumDetail;
 use Artwork\Modules\Budget\Models\Table;
 use Artwork\Modules\Change\Services\ChangeService;
+use Artwork\Modules\MoneySource\Http\Requests\StoreMoneySourceRequest;
+use Artwork\Modules\MoneySource\Http\Requests\UpdateMoneySourceRequest;
 use Artwork\Modules\MoneySource\Http\Resources\MoneySourceFileResource;
 use Artwork\Modules\MoneySource\Models\MoneySource;
 use Artwork\Modules\MoneySource\Services\MoneySourceCalculationService;
@@ -119,11 +121,12 @@ class MoneySourceController extends Controller
     {
     }
 
-    public function store(Request $request, LoggerInterface $logger): RedirectResponse
+    public function store(StoreMoneySourceRequest $request, LoggerInterface $logger): RedirectResponse
     {
         $this->authorize('create', MoneySource::class);
+        $this->authorizeLinkedMoneySources($request);
 
-        foreach ($request->users as $requestUser) {
+        foreach ($request->input('users', []) ?? [] as $requestUser) {
             $user = User::find($requestUser['user_id']);
             if ($user === null) {
                 continue;
@@ -168,14 +171,14 @@ class MoneySourceController extends Controller
             'funding_end_date' => $request->funding_end_date,
             'source_name' => $request->source_name,
             'description' => $request->description,
-            'is_group' => $request->is_group,
-            'icon' => $request->is_group ? $request->icon : null
+            'is_group' => $request->boolean('is_group'),
+            'icon' => $request->boolean('is_group') ? $request->icon : null
         ]);
 
         $moneySource->users()->sync(collect($request->users));
 
-        if ($request->is_group) {
-            foreach ($request->sub_money_source_ids as $sub_money_source_id) {
+        if ($request->boolean('is_group')) {
+            foreach ($request->input('sub_money_source_ids', []) ?? [] as $sub_money_source_id) {
                 $money_source = MoneySource::find($sub_money_source_id);
                 $money_source->update(['group_id' => $moneySource->id]);
             }
@@ -483,9 +486,10 @@ class MoneySourceController extends Controller
     {
     }
 
-    public function update(Request $request, MoneySource $moneySource): void
+    public function update(UpdateMoneySourceRequest $request, MoneySource $moneySource): void
     {
         $this->authorize('update', $moneySource);
+        $this->authorizeLinkedMoneySources($request, $moneySource);
 
         $oldName = $moneySource->name;
         $oldDescription = $moneySource->description;
@@ -513,8 +517,8 @@ class MoneySourceController extends Controller
             'end_date' => $request->end_date,
             'source_name' => $request->source_name,
             'description' => $request->description,
-            'is_group' => $request->is_group,
-            'icon' => $request->is_group ? $request->icon : null,
+            'is_group' => $request->boolean('is_group'),
+            'icon' => $request->boolean('is_group') ? $request->icon : null,
             'group_id' => $request->group_id,
             'funding_start_date' => $request->funding_start_date,
             'funding_end_date' => $request->funding_end_date,
@@ -528,8 +532,8 @@ class MoneySourceController extends Controller
 
         $newAmount = $moneySource->amount;
 
-        if ($request->is_group) {
-            foreach ($request->sub_money_source_ids as $sub_money_source_id) {
+        if ($request->boolean('is_group')) {
+            foreach ($request->input('sub_money_source_ids', []) ?? [] as $sub_money_source_id) {
                 $money_source = MoneySource::find($sub_money_source_id);
                 $money_source->update(['group_id' => $moneySource->id]);
             }
@@ -583,6 +587,34 @@ class MoneySourceController extends Controller
                     ->setModelId($moneySource->id)
                     ->setTranslationKey('Changed original volume')
             );
+        }
+    }
+
+    /**
+     * Sicherheits-Audit 21.09.2026 (E): group_id und sub_money_source_ids dürfen nur Quellen referenzieren,
+     * auf die der/die Nutzer*in schreibend zugreifen darf — sonst ließen sich fremde Quellen als
+     * Untergruppe anhängen bzw. die eigene Quelle in eine fremde Gruppe schieben.
+     *
+     * @throws AuthorizationException
+     */
+    private function authorizeLinkedMoneySources(Request $request, ?MoneySource $self = null): void
+    {
+        $linkedIds = collect($request->input('sub_money_source_ids', []) ?? [])
+            ->map(static fn ($id): int => (int) $id)
+            ->when($request->filled('group_id'), static fn ($ids) => $ids->push($request->integer('group_id')))
+            ->unique()
+            ->values();
+
+        if ($linkedIds->isEmpty()) {
+            return;
+        }
+
+        if ($self !== null && $linkedIds->contains((int) $self->getKey())) {
+            throw new AuthorizationException('A money source cannot be linked to itself.');
+        }
+
+        foreach (MoneySource::query()->findMany($linkedIds) as $linked) {
+            $this->authorize('update', $linked);
         }
     }
 

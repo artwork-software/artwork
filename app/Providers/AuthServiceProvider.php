@@ -2,8 +2,16 @@
 
 namespace App\Providers;
 
+use App\Policies\AccommodationPolicy;
+use App\Policies\ArtistPolicy;
+use App\Policies\ContactPolicy;
+use Artwork\Modules\Accommodation\Models\Accommodation;
 use Artwork\Modules\Area\Models\Area;
 use Artwork\Modules\Area\Policies\AreaPolicy;
+use Artwork\Modules\ArtistResidency\Models\Artist;
+use Artwork\Modules\Contacts\Models\Contact;
+use Artwork\Modules\Crm\Models\CrmContact;
+use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Artwork\Modules\Budget\Models\SageAssignedDataComment;
 use Artwork\Modules\Budget\Models\SageNotAssignedData;
 use Artwork\Modules\Budget\Policies\SageAssignedDataCommentPolicy;
@@ -120,10 +128,15 @@ class AuthServiceProvider extends ServiceProvider
             \Artwork\Modules\Vacation\Policies\VacationPolicy::class,
         \Artwork\Modules\IndividualTimes\Models\IndividualTime::class =>
             \Artwork\Modules\IndividualTimes\Policies\IndividualTimePolicy::class,
+        \Artwork\Modules\IndividualTimes\Models\IndividualTimeSeries::class =>
+            \App\Policies\IndividualTimeSeriesPolicy::class,
         \Artwork\Modules\Availability\Models\Availability::class =>
             \Artwork\Modules\Availability\Policies\AvailabilityPolicy::class,
         \Artwork\Modules\WorkTime\Models\WorkTimeChangeRequest::class =>
             \Artwork\Modules\WorkTime\Policies\WorkTimeChangeRequestPolicy::class,
+        Accommodation::class => AccommodationPolicy::class,
+        Artist::class => ArtistPolicy::class,
+        Contact::class => ContactPolicy::class,
     ];
 
     public function boot(): void
@@ -166,5 +179,44 @@ class AuthServiceProvider extends ServiceProvider
         Gate::define('approve-shift-plan-requests', function (User $user): bool {
             return ShiftCommitWorkflowUser::where('user_id', $user->id)->exists();
         });
+
+        // CRM-Kontakt-Lookups (crm.contacts.search/data/tooltip) werden außerhalb des CRM genutzt:
+        // Projektteam-Suche (Projekt-Schreibrecht/Teamverwaltung), Dokumentanfragen, Vertragsupload,
+        // Künstler-Verknüpfung (Projektanlage), externe Einladungen. Erlaubt ist, wer CRM sehen darf
+        // oder eines der Rechte hat, das diese Features voraussetzen; für den Tooltip zusätzlich,
+        // wenn der Kontakt im Team eines Projekts steht, das die Person sehen darf.
+        Gate::define(
+            'crm.contacts.lookup',
+            function (User $user, ?CrmContact $crmContact = null): bool {
+                if (
+                    $user->canAny([
+                        PermissionEnum::CRM_VIEW->value,
+                        PermissionEnum::CRM_MANAGER->value,
+                        PermissionEnum::TEAM_UPDATE->value,
+                        PermissionEnum::WRITE_PROJECTS->value,
+                        PermissionEnum::ADD_EDIT_OWN_PROJECT->value,
+                        PermissionEnum::DOCUMENT_REQUEST_CREATE->value,
+                        PermissionEnum::DOCUMENT_REQUEST_EDIT->value,
+                        PermissionEnum::CONTRACT_EDIT_UPLOAD->value,
+                        PermissionEnum::INVITE_EXTERNAL->value,
+                    ])
+                ) {
+                    return true;
+                }
+
+                // Schreibrecht in mindestens einem Projektteam (ProjectEditTeamModal, Künstler-Verknüpfung)
+                if ($user->projects()->wherePivot('can_write', true)->exists()) {
+                    return true;
+                }
+
+                if ($crmContact === null) {
+                    return false;
+                }
+
+                return $crmContact->teamProjects()
+                    ->get()
+                    ->contains(static fn ($project): bool => $user->can('view', $project));
+            }
+        );
     }
 }

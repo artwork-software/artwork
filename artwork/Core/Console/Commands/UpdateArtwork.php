@@ -71,6 +71,7 @@ class UpdateArtwork extends Command
         $this->backfillShiftPlanRequestShifts();
         $this->backfillShiftWorkerAssignedBy();
         $this->generateInventoryArticleThumbnails();
+        $this->movePublicFilesToPrivateDisk();
         $this->warnAboutSynchronousQueue();
 
         $this->info('--- Artwork Update Finished ---');
@@ -96,6 +97,16 @@ class UpdateArtwork extends Command
             . 'synchronously without retries. Set QUEUE_CONNECTION to a real driver (e.g. "database" or '
             . '"redis") and make sure a worker consumes the "webhooks" queue.'
         );
+    }
+
+    /**
+     * Sicherheits-Audit 21.09.2026 (F): CRM-Eigenschaftsdateien, Materialausgabe-Anhänge und
+     * Ausgabe-PDFs lagen unter /storage ohne Login lesbar. Idempotent - verschiebt nur, was noch da liegt.
+     */
+    private function movePublicFilesToPrivateDisk(): void
+    {
+        $this->section('Move public files to private disk');
+        $this->call('artwork:security:move-public-files');
     }
 
     private function generateInventoryArticleThumbnails(): void

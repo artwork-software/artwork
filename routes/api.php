@@ -8,7 +8,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Laravel\Passport\Http\Middleware\CheckToken;
 use Artwork\Modules\Inventory\Http\Controllers\Api\InventoryCategoryApiController;
-use Artwork\Modules\Shift\Http\Controllers\ShiftRuleController;
 
 /*
 |--------------------------------------------------------------------------
@@ -32,10 +31,6 @@ Route::middleware('auth:sanctum')->get('/timeline-presets', function () {
 })->name('timeline-presets.all');
 
 
-Route::middleware('auth:sanctum')->post('/user/set-public-key', [
-    ChatController::class,
-    'setPublicKey',
-])->name('keypair.store');
 Route::middleware('auth:sanctum')->post('/chat/store', [ChatController::class, 'storeChat'])->name('chat.store');
 Route::middleware('auth:sanctum')->post('/chat/message/{message}/read', [
     ChatController::class,
@@ -46,9 +41,24 @@ Route::middleware('auth:sanctum')->post('/chat/messages/read', [
     'markMultipleAsRead',
 ])->name('chat-system.mark-multiple-as-read');
 
-Route::middleware('auth:sanctum')->get('/user-status/{id}', function ($id, UserStatusService $service) {
+// Präsenzstatus: Frontend nutzt den Endpunkt nur im Chat (PopupChat → useUserStatus) für den
+// Chat-Partner. Sicherheits-Audit 21.09.2026 (C, NIEDRIG): nur eigener Status, gemeinsamer Chat
+// oder Dienstplan-Sichtrecht (Anwesenheit ist dort ohnehin sichtbar).
+Route::middleware('auth:sanctum')->get('/user-status/{id}', function (
+    int $id,
+    Request $request,
+    UserStatusService $service
+) {
+    $user = $request->user();
+    abort_unless(
+        $user->id === $id
+        || $user->can(\Artwork\Modules\Permission\Enums\PermissionEnum::VIEW_SHIFT_PLAN->value)
+        || $user->chats()->whereHas('users', static fn ($query) => $query->whereKey($id))->exists(),
+        403
+    );
+
     return response()->json(['status' => $service->getStatus($id)]);
-})->name('user-status.show');
+})->whereNumber('id')->name('user-status.show');
 
 Route::get('/inventory/categories', [
     \Artwork\Modules\Inventory\Http\Controllers\InventoryCategoryController::class,
@@ -82,20 +92,4 @@ Route::middleware(['auth:api', CheckToken::using('inventory:read')])->group(func
     Route::get('/inventory', [InventoryCategoryApiController::class, 'index']);
     Route::get('/inventory/articles', [InventoryArticleApiController::class, 'index']);
     Route::get('/inventory/articles/{article}', [InventoryArticleApiController::class, 'show']);
-});
-
-// Shift Rules API routes
-Route::middleware('auth:sanctum')->group(function (): void {
-    Route::post('/shift-rules/validate', [
-        ShiftRuleController::class,
-        'validateRules',
-    ])->name('api.shift-rules.validate');
-    Route::get('/shift-rules/pending', [
-        ShiftRuleController::class,
-        'getPendingViolations',
-    ])->name('api.shift-rules.pending');
-    Route::patch('/shift-rules/violations/{violationId}/status', [
-        ShiftRuleController::class,
-        'updateViolationStatus',
-    ])->name('api.shift-rules.update-status');
 });

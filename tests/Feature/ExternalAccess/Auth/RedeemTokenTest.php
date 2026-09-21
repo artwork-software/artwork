@@ -28,7 +28,7 @@ final class RedeemTokenTest extends TestCase
         $plain = Str::random(64);
         $this->makeToken($external, $plain);
 
-        $response = $this->get(route('external.login.redeem', ['token' => $plain]));
+        $response = $this->post(route('external.login.redeem.store', ['token' => $plain]));
 
         $response->assertRedirect(route('external.dashboard'));
         $this->assertSame($external->id, Auth::guard('external')->id());
@@ -44,7 +44,7 @@ final class RedeemTokenTest extends TestCase
             'token_hash' => hash('sha256', $plain),
         ]);
 
-        $response = $this->get(route('external.login.redeem', ['token' => $plain]));
+        $response = $this->post(route('external.login.redeem.store', ['token' => $plain]));
 
         $response->assertRedirect(route('external.login.invalid'));
         $this->assertFalse(Auth::guard('external')->check());
@@ -61,7 +61,7 @@ final class RedeemTokenTest extends TestCase
             'expires_at' => now()->addMinutes(15),
         ]);
 
-        $response = $this->get(route('external.login.redeem', ['token' => $plain]));
+        $response = $this->post(route('external.login.redeem.store', ['token' => $plain]));
 
         $response->assertRedirect(route('external.login.invalid'));
         $this->assertFalse(Auth::guard('external')->check());
@@ -74,7 +74,7 @@ final class RedeemTokenTest extends TestCase
         $plain = Str::random(64);
         $this->makeToken($external, $plain);
 
-        $response = $this->get(route('external.login.redeem', ['token' => $plain]));
+        $response = $this->post(route('external.login.redeem.store', ['token' => $plain]));
 
         $response->assertRedirect(route('external.login.invalid'));
         $this->assertFalse(Auth::guard('external')->check());
@@ -87,7 +87,7 @@ final class RedeemTokenTest extends TestCase
         $plain = Str::random(64);
         $token = $this->makeToken($external, $plain);
 
-        $this->get(route('external.login.redeem', ['token' => $plain]));
+        $this->post(route('external.login.redeem.store', ['token' => $plain]));
 
         $this->assertNotNull($token->fresh()->used_at);
         $this->assertNotNull($external->fresh()->last_login_at);
@@ -104,7 +104,7 @@ final class RedeemTokenTest extends TestCase
         $plain = Str::random(64);
         $this->makeToken($external, $plain);
 
-        $this->get(route('external.login.redeem', ['token' => $plain]));
+        $this->post(route('external.login.redeem.store', ['token' => $plain]));
 
         $this->assertNotNull($invitation->fresh()->first_redeemed_at);
     }
@@ -116,13 +116,13 @@ final class RedeemTokenTest extends TestCase
         $plain = Str::random(64);
         $this->makeToken($external, $plain);
 
-        $first = $this->get(route('external.login.redeem', ['token' => $plain]));
+        $first = $this->post(route('external.login.redeem.store', ['token' => $plain]));
         $first->assertRedirect(route('external.dashboard'));
 
         // Force the guard to clear so the next call goes back through redemption.
         Auth::guard('external')->logout();
 
-        $second = $this->get(route('external.login.redeem', ['token' => $plain]));
+        $second = $this->post(route('external.login.redeem.store', ['token' => $plain]));
         $second->assertRedirect(route('external.login.invalid'));
         $this->assertFalse(Auth::guard('external')->check());
     }
@@ -130,8 +130,33 @@ final class RedeemTokenTest extends TestCase
     #[Test]
     public function redeem_token_route_validates_token_length(): void
     {
-        $response = $this->get('/external/login/short');
+        $this->get('/external/login/short')->assertNotFound();
+        $this->post('/external/login/short')->assertNotFound();
+    }
 
-        $response->assertNotFound();
+    #[Test]
+    public function get_shows_confirmation_page_without_consuming_the_token(): void
+    {
+        // Link-Vorschauen (Mailclient, Virenscanner) rufen den Link per GET auf – das darf das
+        // Einmal-Token nicht entwerten. Eingelöst wird erst per POST von der Bestätigungsseite.
+        $external = ExternalAccess::factory()->active()->create();
+        $plain = Str::random(64);
+        $token = $this->makeToken($external, $plain);
+
+        $response = $this->get(route('external.login.redeem', ['token' => $plain]));
+
+        $response->assertOk();
+        $response->assertInertia(fn ($page) => $page
+            // Externe Seiten liegen unter Pages/ExternalAccess (eigener Resolver in app-external.js),
+            // daher ohne Inertias Default-Existenzprüfung gegen resources/js/Pages.
+            ->component('Auth/ConfirmLogin', false)
+            ->where('token', $plain));
+        $this->assertNull($token->fresh()->used_at);
+        $this->assertFalse(Auth::guard('external')->check());
+
+        $this->post(route('external.login.redeem.store', ['token' => $plain]))
+            ->assertRedirect(route('external.dashboard'));
+        $this->assertNotNull($token->fresh()->used_at);
+        $this->assertSame($external->id, Auth::guard('external')->id());
     }
 }

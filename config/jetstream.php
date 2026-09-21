@@ -59,7 +59,9 @@ return [
         Features::profilePhotos(),
         // Features::api(),
         // Features::teams(['invitations' => true]),
-        Features::accountDeletion(),
+        // Kontolöschung nur durch Admins/Personalverwaltung über die Nutzerverwaltung
+        // (Produktentscheidung, Sicherheits-Audit 21.09.2026); Selbstlöschung bewusst aus.
+        // Features::accountDeletion(),
     ],
 
     /*

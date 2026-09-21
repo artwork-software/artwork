@@ -49,7 +49,7 @@
         .notification,
         .email-content {
             padding: 10px;
-            font-family: Inter, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
         }
 
         .notification {
@@ -152,12 +152,7 @@
     .mj-outlook-group-fix { width:100% !important; }
     </style>
     <![endif]-->
-    <!--[if !mso]><!-->
-    <link href="https://fonts.googleapis.com/css?family=Inter" rel="stylesheet" type="text/css">
-    <style type="text/css">
-        @import url(https://fonts.googleapis.com/css?family=Inter);
-    </style>
-    <!--<![endif]-->
+    {{-- Keine externen Font-Abrufe (Datenschutz, Sicherheits-Audit 21.09.2026): System-Font-Stack. --}}
     <style type="text/css">
         @media only screen and (min-width:480px) {
             .mj-column-per-50 {
@@ -276,10 +271,10 @@
             <tbody>
                 <tr>
                     <td align="left" style="font-size:0px;padding:25px 50px;word-break:break-word;">
-                        <a href="{{$settings->impressum_link}}" style="font-family:Inter;font-size:14px;line-height:1;text-align:left;color:#A7A6B1;">
+                        <a href="{{$settings->impressum_link}}" style="font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;font-size:14px;line-height:1;text-align:left;color:#A7A6B1;">
                             Impressum
                         </a>
-                        <a href="{{ $settings->privacy_link}}" style="font-family:Inter;font-size:14px;line-height:1;text-align:left;color:#A7A6B1; margin-left: 3em">
+                        <a href="{{ $settings->privacy_link}}" style="font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;font-size:14px;line-height:1;text-align:left;color:#A7A6B1; margin-left: 3em">
                             Datenschutz
                         </a>
                     </td>

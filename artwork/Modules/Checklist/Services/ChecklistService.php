@@ -30,12 +30,22 @@ readonly class ChecklistService
         ChecklistUpdateRequest $request,
         TaskService $taskService
     ): Checklist|Model {
-        $checklist->fill($request->all());
+        // Nur Name/Privat-Flag aus dem Body; project_id/tab_id/user_id nie per Mass-Assignment
+        // (Sicherheits-Audit 21.09.2026, E HOCH: fremde Projekte/Nutzer waren zuweisbar).
+        $checklist->fill($request->fillableFields());
 
         if ($request->get('tasks')) {
             $taskService->deleteByChecklist($checklist);
             $checklist->tasks()->delete();
-            $checklist->tasks()->createMany($request->tasks);
+            $checklist->tasks()->createMany(
+                array_map(
+                    static fn (array $task): array => array_intersect_key(
+                        $task,
+                        array_flip(['name', 'description', 'done', 'order', 'deadline'])
+                    ),
+                    (array) $request->input('tasks', [])
+                )
+            );
         }
 
         return $this->checklistRepository->save($checklist);

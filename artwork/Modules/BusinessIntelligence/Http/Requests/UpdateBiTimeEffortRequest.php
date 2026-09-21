@@ -17,7 +17,7 @@ class UpdateBiTimeEffortRequest extends FormRequest
     {
         return [
             'label' => ['required', 'string', 'max:255'],
-            'effort_bucket' => ['required', 'string', Rule::enum(BiEffortBucketEnum::class)],
+            'effort_bucket' => ['required', 'string', 'max:20', Rule::enum(BiEffortBucketEnum::class)],
         ];
     }
 }

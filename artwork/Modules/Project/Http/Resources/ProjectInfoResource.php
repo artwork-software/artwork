@@ -33,7 +33,8 @@ class ProjectInfoResource extends JsonResource
             'id' => $this->id,
             'name' => $this->name,
             'description' => $this->description,
-            'description_without_html' => strip_tags($this->description),
+            // Rohtext (kein strip_tags: verstümmelt "a<b"; Frontend rendert per Text-Interpolation)
+            'description_without_html' => $this->description,
             'isMemberOfADepartment' => $this->departments
                 ->contains(fn ($department) => $department->users->contains(Auth::user())),
             'key_visual_path' => $this->key_visual_path,

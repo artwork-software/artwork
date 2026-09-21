@@ -3,13 +3,13 @@
     <title>Per Diem Export</title>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
     <style>
-        @import url(https://fonts.bunny.net/css?family=poppins:300,400,500,600,700);
+        /* Keine externen Font-Abrufe (Sicherheits-Audit 21.09.2026): System-Font-Stack wie die uebrigen PDF-Views. */
         @page {
             size: portrait;
             margin: 12mm;
         }
         body {
-            font-family: 'poppins', sans-serif;
+            font-family: "DejaVu Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             font-size: 8px;
             color: #1a1a1a;
         }

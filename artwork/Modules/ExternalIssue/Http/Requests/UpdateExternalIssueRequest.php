@@ -14,7 +14,19 @@ class UpdateExternalIssueRequest extends FormRequest
     {
         $issue = $this->route('externalIssue');
 
-        return $issue instanceof ExternalIssue && ($this->user()?->can('update', $issue) ?? false);
+        if (!$issue instanceof ExternalIssue || !($this->user()?->can('update', $issue) ?? false)) {
+            return false;
+        }
+
+        // Umhängen in ein anderes Projekt nur, wenn dort auch angelegt werden dürfte
+        // (MaterialIssuePolicy::create prüft das Projekt-Schreibrecht).
+        $newProjectId = $this->integer('project_id') ?: null;
+
+        if ($newProjectId !== null && $newProjectId !== (int) $issue->project_id) {
+            return $this->user()->can('create', [ExternalIssue::class, $newProjectId]);
+        }
+
+        return true;
     }
 
     /**
@@ -37,7 +49,8 @@ class UpdateExternalIssueRequest extends FormRequest
             'external_address' => 'nullable|string|max:255',
             'external_email' => 'nullable|email|max:255',
             'external_phone' => 'nullable|string|max:50',
-            'files.*' => 'file|max:20480',
+            // 20 MB pro Datei; Allowlist statt beliebiger Typen (Sicherheits-Audit 21.09.2026, F)
+            'files.*' => 'file|mimes:pdf,jpg,jpeg,png,webp,doc,docx,xls,xlsx,csv,txt,zip|max:20480',
             'special_items' => 'nullable|array',
             'special_items.*.name' => 'required|string|max:255',
             'special_items.*.quantity' => 'required|integer|min:1',

@@ -172,17 +172,18 @@ class ChecklistController extends Controller
         TaskService $taskService
     ): RedirectResponse|JsonResponse {
 
-        $setTabId = null;
-        if ($request->tab_id === null && $checklist->tab_id !== null) {
-            $setTabId = $checklist->tab_id;
+        // Projekt-/Tab-Wechsel nur explizit und autorisiert: null bedeutet "unverändert" (das Edit-Modal
+        // sendet ohne Projektauswahl null), ein fremdes Zielprojekt braucht createProperties.
+        $targetProjectId = $request->filled('project_id') ? $request->integer('project_id') : null;
+        if ($targetProjectId !== null && $targetProjectId !== (int) $checklist->project_id) {
+            $this->authorize('createProperties', Project::findOrFail($targetProjectId));
+            $checklist->project_id = $targetProjectId;
+        }
+        if ($request->filled('tab_id')) {
+            $checklist->tab_id = $request->integer('tab_id');
         }
 
         $this->checklistService->updateByRequest($checklist, $request, $taskService);
-
-        if ($setTabId !== null) {
-            $checklist->tab_id = $setTabId;
-            $checklist->save();
-        }
         if ($request->missing('assigned_user_ids')) {
             return $this->checklistUpdateResponse($request, $checklist);
         }
@@ -242,6 +243,9 @@ class ChecklistController extends Controller
 
     public function duplicate(Checklist $checklist): RedirectResponse
     {
+        // nicht von authorizeResource abgedeckt
+        $this->authorize('update', $checklist);
+
         $newChecklist = $this->checklistService->duplicate(
             $checklist
         );
@@ -256,11 +260,9 @@ class ChecklistController extends Controller
 
         //$newChecklist->users()->sync($checklist->users->pluck('id'));
 
+        // Bewusst KEIN attach() der aufrufenden Person ans Projektteam mehr
+        // (war Selbstaufnahme über fremde Checklisten-Id).
         if ($newChecklist->hasProject()) {
-            $project = $checklist->project;
-            if (!$project->users->contains($this->authManager->id())) {
-                $project->users()->attach($this->authManager->id());
-            }
             $this->changeService->saveFromBuilder(
                 $this->changeService
                     ->createBuilder()
@@ -281,6 +283,8 @@ class ChecklistController extends Controller
         Checklist $checklist,
         DoneOrUndoneTaskRequest $request
     ): RedirectResponse {
+        $this->authorize('update', $checklist);
+
         $this->taskService->doneOrUndoneAllTasks(
             $checklist,
             $request->boolean('done'),

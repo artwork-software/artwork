@@ -175,6 +175,7 @@ use Artwork\Modules\Shift\Http\Controllers\ShiftGroupController;
 use Artwork\Modules\Shift\Http\Controllers\ShiftHistoryController;
 use Artwork\Modules\Shift\Http\Controllers\ShiftWorkerConfirmationController;
 use Artwork\Modules\System\ApiManagement\Http\Controller\ApiManagementController;
+use Artwork\Modules\Timeline\Http\Controllers\EventTimelineController;
 use Artwork\Modules\Webhook\Http\Controllers\WebhookEndpointController;
 use Artwork\Modules\WorkTime\Http\Controllers\CraftDistributionExportController;
 use Artwork\Modules\WorkTime\Http\Controllers\WorkTimeOverviewExportController;
@@ -1667,12 +1668,13 @@ Route::group(['middleware' => ['auth:sanctum']], function (): void {
             ->name('timeline-preset.time.destroy');
 
         // post timeline-preset.import
-        Route::post('/import/{event}/{shiftPresetTimeline}', [ShiftController::class, 'importTimelinePreset'])
+        Route::post('/import/{event}/{shiftPresetTimeline}', [EventTimelineController::class, 'importPreset'])
             ->name('timeline-preset.import');
 
-        // post timeline-preset.store
-        Route::post('/{event}/timeline-preset/store', [ShiftController::class, 'storeTimelinePresetFormEvent'])
-            ->middleware('permission:can plan shifts|change event settings|shift.settings_view_edit')
+        // Vorlage aus dem Ablaufplan eines Termins: gleiche Gate wie das Bearbeiten des
+        // Ablaufplans selbst (EventPolicy::editTimeline) — die Einstellungsrechte gelten
+        // nur für die Vorlagenverwaltung in den Einstellungen.
+        Route::post('/{event}/timeline-preset/store', [EventTimelineController::class, 'storePresetFromEvent'])
             ->name('timeline-preset.store.form.event');
     });
 
@@ -1753,11 +1755,9 @@ Route::group(['middleware' => ['auth:sanctum']], function (): void {
             ->name('shift.assignment-preflight');
 
         Route::post('/timeline/add/{event}', [ProjectController::class, 'addTimeLineRow'])->name('add.timeline.row');
-        Route::post('/timeline/update/magic/{event}', [ShiftController::class, 'updateTimeLine'])
-            ->can('can plan shifts')
+        Route::post('/timeline/update/magic/{event}', [EventTimelineController::class, 'update'])
             ->name('edit.timeline.event');
-        Route::post('/timeline/add/magic/{event}', [ShiftController::class, 'addTimeLine'])
-            ->can('can plan shifts')
+        Route::post('/timeline/add/magic/{event}', [EventTimelineController::class, 'store'])
             ->name('create.timeline.event');
         Route::post('/sums/money-source', [SumDetailsController::class, 'store'])
             ->middleware(EnsureUserCanAccessProjectBudget::class)

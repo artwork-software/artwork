@@ -8,12 +8,17 @@ use Throwable;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\Route;
+use League\OAuth2\Server\Exception\OAuthServerException;
 use Inertia\Inertia;
 use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 
 class Handler extends ExceptionHandler
 {
-    protected $dontReport = [];
+    protected $dontReport = [
+        // Passport meldet abgelehnte/abgelaufene API-Tokens über den Handler; das ist
+        // normales Client-Verhalten (401), kein Anwendungsfehler für Sentry
+        OAuthServerException::class,
+    ];
 
     protected $dontFlash = [
         'current_password',

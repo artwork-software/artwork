@@ -23,6 +23,6 @@ class WorkflowLog extends Model
 
     public function workflowInstance(): BelongsTo
     {
-        return $this->belongsTo(WorkflowInstance::class);
+        return $this->belongsTo(WorkflowInstance::class, 'workflow_instance_id', 'id', 'workflowInstance');
     }
 }

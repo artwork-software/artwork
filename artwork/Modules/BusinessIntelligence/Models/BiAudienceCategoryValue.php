@@ -34,7 +34,7 @@ class BiAudienceCategoryValue extends Model
 
     public function category(): BelongsTo
     {
-        return $this->belongsTo(BiAudienceCategory::class, 'bi_audience_category_id');
+        return $this->belongsTo(BiAudienceCategory::class, 'bi_audience_category_id', 'id', 'category');
     }
 
     public function event(): BelongsTo

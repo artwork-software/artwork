@@ -206,6 +206,10 @@
                             :label="tab.name"
                             @update:model-value="(checked) => toggleTab(tab.id, checked)"
                         />
+                        <p v-if="tab.hasExternalComponents === false" class="mt-1 ml-6 text-xs text-text-subtle">
+                            {{ $t('No externally visible components') }}
+                            {{ '· ' + $t('This tab contains no components that external persons could see. It is not preselected.') }}
+                        </p>
 
                         <div v-if="selectedTabIds.includes(tab.id)" class="mt-3 grid grid-cols-2 gap-3">
                             <div class="col-span-2">
@@ -439,7 +443,14 @@ const accessTypeItems = computed(() => [
     { id: 'read', name: $t('Read only') },
     { id: 'write', name: $t('Read and write') },
 ])
-const selectedTabIds = ref(props.preselectedTabId ? [props.preselectedTabId] : [])
+// Der aktuelle Tab wird nur vorausgewählt, wenn externe Personen darin überhaupt etwas sehen könnten.
+function tabHasExternalContent(tabId) {
+    const tab = props.availableTabs.find((entry) => entry.id === tabId)
+    return tab ? tab.hasExternalComponents !== false : true
+}
+const selectedTabIds = ref(
+    props.preselectedTabId && tabHasExternalContent(props.preselectedTabId) ? [props.preselectedTabId] : [],
+)
 const tabConfig = ref({})
 
 function tabDefaults() {

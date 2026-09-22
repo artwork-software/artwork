@@ -323,8 +323,10 @@ class ProjectService
             $search,
             $sortEnum,
             $projectStateIds,
-            //phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.FoundBeforeLastUsed
-            $projectFilters->filter(fn($filter, $enabled) => $enabled)->keys()
+            // Collection::filter liefert (Wert, Schlüssel): nur aktivierte Filter (true) durchlassen.
+            // Vorher wurde auf den Schlüssel geprüft, dadurch griff auch ein gespeichertes
+            // `showOnlyWithBiData => false` (Standardwerte beim ersten Aufruf) als aktiver Filter.
+            $projectFilters->filter(fn ($enabled) => (bool) $enabled)->keys()
         );
         return $projectQuery->paginate($perPage);
     }

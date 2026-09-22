@@ -84,7 +84,7 @@ class InventoryArticleController extends Controller
                 'category',
                 'subCategory',
                 'images' => fn ($query) => $query->withTrashed(),
-                'detailedArticleQuantities' => fn ($query) => $query->withTrashed(),
+                'detailedArticleQuantities' => fn ($query) => $query->withTrashed()->with('properties'),
             ])
             ->when($search !== '', fn ($query) => $query->where('name', 'like', '%' . $search . '%'))
             ->orderBy('name')

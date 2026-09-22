@@ -142,7 +142,9 @@ class IndividualTimeController extends Controller
             }
         }
 
-        broadcast(new IndividualTimeChanged($modelInstance->id, $this->resolveWorkerType($modelInstance)));
+        // Broadcast erst nach der Antwort: ein nicht erreichbarer Websocket-Server (Pusher/soketi 502)
+        // darf die bereits gespeicherte Änderung nicht als Fehler an den Client zurückgeben.
+        $this->broadcastChangedAfterResponse($modelInstance);
 
         return response()->json([
             'individual_times' => $modelInstance->individualTimes()->get(),
@@ -219,7 +221,7 @@ class IndividualTimeController extends Controller
                 WorkingHourCacheService::entityType($owner),
                 $owner->id
             );
-            broadcast(new IndividualTimeChanged($owner->id, $this->resolveWorkerType($owner)));
+            $this->broadcastChangedAfterResponse($owner);
         }
 
         return redirect()->back()->with('success', 'Individual time updated successfully.');
@@ -239,7 +241,17 @@ class IndividualTimeController extends Controller
                 WorkingHourCacheService::entityType($owner),
                 $owner->id
             );
-            broadcast(new IndividualTimeChanged($owner->id, $this->resolveWorkerType($owner)));
+            $this->broadcastChangedAfterResponse($owner);
         }
+    }
+
+    private function broadcastChangedAfterResponse(Model $owner): void
+    {
+        $ownerId = $owner->id;
+        $workerType = $this->resolveWorkerType($owner);
+
+        dispatch(function () use ($ownerId, $workerType): void {
+            broadcast(new IndividualTimeChanged($ownerId, $workerType));
+        })->afterResponse();
     }
 }

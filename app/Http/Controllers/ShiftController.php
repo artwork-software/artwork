@@ -8,7 +8,6 @@ use Artwork\Modules\Availability\Services\AvailabilityConflictService;
 use Artwork\Modules\Change\Services\ChangeService;
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Event\Services\EventService;
-use Artwork\Modules\Event\Services\EventTimelineService;
 use Artwork\Modules\Freelancer\Models\Freelancer;
 use Artwork\Modules\Freelancer\Services\FreelancerService;
 use Artwork\Modules\Craft\Models\Craft;
@@ -52,7 +51,6 @@ use Artwork\Modules\Shift\Services\ShiftUserService;
 use Artwork\Modules\Shift\Services\ShiftWorkerService;
 use Artwork\Modules\Shift\Services\ShiftPlanCommentService;
 use Artwork\Modules\Shift\Services\ShiftReplacementService;
-use Artwork\Modules\Shift\Models\ShiftPresetTimeline;
 use Artwork\Modules\Shift\Services\ShiftRuleService;
 use Artwork\Modules\User\Models\User;
 use Artwork\Modules\User\Services\UserService;
@@ -86,7 +84,6 @@ class ShiftController extends Controller
         private readonly IndividualTimeService $individualTimeService,
         private readonly ShiftPlanCommentService $shiftPlanCommentService,
         private readonly VacationService $vacationService,
-        private readonly EventTimelineService $eventTimelineService,
         private readonly EventService $eventService,
         private readonly GeneralSettings $generalSettings,
         private readonly WorkingHourCacheService $workingHourCacheService,
@@ -1996,38 +1993,6 @@ class ShiftController extends Controller
         if ($shifts->isNotEmpty()) {
             broadcast(new MultiShiftCreateInShiftPlan($shifts));
         }
-    }
-
-
-    public function updateTimeLine(Event $event, Request $request): void
-    {
-        $this->eventTimelineService->updateTimeLines($event, $request->get('dataset'));
-
-        $freshEvent = $event->fresh();
-        broadcast(new \Artwork\Modules\Event\Events\EventCreated($freshEvent, $freshEvent?->room_id));
-    }
-
-    public function addTimeLine(Event $event, Request $request): void
-    {
-        $this->eventTimelineService->addTimeLines($event, $request->get('dataset'));
-
-        $freshEvent = $event->fresh();
-        broadcast(new \Artwork\Modules\Event\Events\EventCreated($freshEvent, $freshEvent?->room_id));
-    }
-
-    public function importTimelinePreset(Event $event, ShiftPresetTimeline $shiftPresetTimeline): void
-    {
-        $this->authorize('editTimeline', $event);
-
-        $this->eventTimelineService->importTimelinePreset($event, $shiftPresetTimeline);
-    }
-
-    public function storeTimelinePresetFormEvent(Event $event, Request $request): void
-    {
-        $this->authorize('view', $event);
-        $validated = $request->validate(['name' => ['required', 'string', 'max:255']]);
-
-        $this->eventTimelineService->storeTimelinePresetFromEvent($event, $validated['name']);
     }
 
     public function storeShiftWithoutEvent(

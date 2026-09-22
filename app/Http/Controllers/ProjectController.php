@@ -106,6 +106,7 @@ use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Policies\ProjectPolicy;
 use Artwork\Modules\Project\Models\ProjectCreateSettings;
 use Artwork\Modules\Project\Models\ProjectRole;
+use Artwork\Modules\Project\Models\ProjectComponentValue;
 use Artwork\Modules\Project\Models\ProjectState;
 use Artwork\Modules\Project\Services\CommentService;
 use Artwork\Modules\Project\Services\ProjectFileService;
@@ -341,6 +342,13 @@ class ProjectController extends Controller
 
         $projectPeriods = $this->prepareProjectsForComponentMapping($projects, $components);
 
+        // Komponentenwerte einmal für alle Projekte laden (statt einer Query pro Projekt × Komponente)
+        $componentValues = ProjectComponentValue::query()
+            ->whereIn('project_id', $projects->pluck('id'))
+            ->whereIn('component_id', collect($componentData)->keys())
+            ->get()
+            ->keyBy(fn (ProjectComponentValue $value) => $value->component_id . ':' . $value->project_id);
+
         // Zutritt (Projektseite öffnen): globales Recht ODER Projektteam (User/Abteilung).
         // Ein Sammel-Query statt ProjectPolicy::view pro Zeile — die Übersicht bleibt für
         // alle sichtbar, nur der Einstieg wird im Frontend über dieses Flag gegated.
@@ -363,6 +371,7 @@ class ProjectController extends Controller
         $mapped = $projects->map(function ($project) use (
             $components,
             $componentData,
+            $componentValues,
             $firstTabId,
             $projectStates,
             $projectPeriods,
@@ -451,9 +460,7 @@ class ProjectController extends Controller
 
                 if ($componentFullData && !$componentFullData->special) {
                     $projectData->{$component->type}[$componentFullData->id] =
-                        $componentFullData->projectValue()
-                            ->where('project_id', $project->id)
-                            ->first();
+                        $componentValues->get($componentFullData->id . ':' . $project->id);
                 }
             }
 
@@ -2724,6 +2731,23 @@ class ProjectController extends Controller
             ->distinct()
             ->pluck('project_tab_id')
             ->flip();
+        // Tabs mit mindestens einer extern lesbaren Komponente (direkt oder in einer Disclosure):
+        // der Einladungsdialog wählt nur solche Tabs vor und markiert die anderen.
+        $externallyReadableTypes = collect(ProjectTabComponentEnum::cases())
+            ->filter(fn (ProjectTabComponentEnum $type) => $type->isExternallyReadable())
+            ->map(fn (ProjectTabComponentEnum $type) => $type->value)
+            ->all();
+        $tabIdsWithExternalComponents = ComponentInTab::query()
+            ->where(function (Builder $query) use ($externallyReadableTypes): void {
+                $query->whereHas('component', fn (Builder $c) => $c->whereIn('type', $externallyReadableTypes))
+                    ->orWhereHas(
+                        'disclosureComponents.component',
+                        fn (Builder $c) => $c->whereIn('type', $externallyReadableTypes)
+                    );
+            })
+            ->distinct()
+            ->pluck('project_tab_id')
+            ->flip();
         // without(): ProjectTab::$with (components, sidebarTabs) würde je Abfrage die komplette
         // Komponentenstruktur mitladen — hier werden nur Id und Name gebraucht
         ProjectTab::query()
@@ -2731,11 +2755,12 @@ class ProjectController extends Controller
             ->visibleForUser($authUser)
             ->orderBy('order')
             ->get(['id', 'name'])
-            ->each(function ($tab) use (&$tabInformation, $tabIdsWithDocuments): void {
+            ->each(function ($tab) use (&$tabInformation, $tabIdsWithDocuments, $tabIdsWithExternalComponents): void {
                 $tabInformation[] = [
                     'id' => $tab->id,
                     'name' => $tab->name,
                     'hasDocumentComponent' => $tabIdsWithDocuments->has($tab->id),
+                    'hasExternalComponents' => $tabIdsWithExternalComponents->has($tab->id),
                 ];
             });
         $headerObject->tabs = $tabInformation;

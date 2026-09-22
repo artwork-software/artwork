@@ -36,3 +36,4 @@ We thank the following people for responsibly reporting security issues in artwo
 | Date | Reporter | Report |
 | --- | --- | --- |
 | September 2026 | kta1kri | Three missing server-side authorization checks (personnel, tasks and funding sources), reported privately with reproduction steps and handled under coordinated disclosure. |
+| September 2026 | archnexus707 | Missing authorization on funding source file actions (download, replace, delete), reported privately via GitHub with reproduction steps and handled under coordinated disclosure. |

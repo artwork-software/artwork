@@ -38,7 +38,7 @@ class ApiLog extends Model
 
     public function token(): BelongsTo
     {
-        return $this->belongsTo(Token::class, 'passport_token_id');
+        return $this->belongsTo(Token::class, 'passport_token_id', 'id', 'token');
     }
 
     /**

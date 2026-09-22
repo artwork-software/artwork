@@ -148,7 +148,7 @@ class ArtistResidency extends Model
 
     public function project(): BelongsTo
     {
-        return $this->belongsTo(Project::class, 'project_id');
+        return $this->belongsTo(Project::class, 'project_id', 'id', 'project');
     }
 
     public function accommodation(): BelongsTo

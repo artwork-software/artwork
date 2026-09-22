@@ -30,6 +30,8 @@ class SendScheduledNotificationsCommand extends Command
                 'exception' => $e,
             ]);
 
+            report($e);
+
             // Keep exit code SUCCESS to avoid failing schedule:run
             return CommandAlias::SUCCESS;
         }

@@ -10,6 +10,8 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\Log;
+use Symfony\Component\Mailer\Exception\TransportExceptionInterface;
 use Throwable;
 
 class ExternalUserImported extends Mailable implements ShouldQueue
@@ -48,8 +50,35 @@ class ExternalUserImported extends Mailable implements ShouldQueue
 
     public function failed(Throwable $exception): void
     {
+        // Dauerhafte Ablehnung durch den Mailserver (SMTP 5xx, z. B. "550 Message rejected"):
+        // Flag NICHT zurücksetzen, sonst versucht jeder Sync-Lauf den Versand erneut und
+        // erzeugt eine Endlosschleife aus failed_jobs und Sentry-Meldungen. Nur bei
+        // vorübergehenden Fehlern (SMTP down, 4xx) wird der Versand beim nächsten Lauf wiederholt.
+        if (self::isPermanentTransportFailure($exception)) {
+            Log::warning('[ExternalUserImported] Willkommens-Mail dauerhaft abgelehnt, kein erneuter Versuch', [
+                'external_user_id' => $this->externalUser->getKey(),
+                'user_id' => $this->user->getKey(),
+                'message' => $exception->getMessage(),
+            ]);
+
+            return;
+        }
+
         ExternalUser::query()
             ->whereKey($this->externalUser->getKey())
             ->update(['import_notification_sent_at' => null]);
+    }
+
+    private static function isPermanentTransportFailure(Throwable $exception): bool
+    {
+        for ($e = $exception; $e !== null; $e = $e->getPrevious()) {
+            if ($e instanceof TransportExceptionInterface) {
+                $code = (int) $e->getCode();
+
+                return $code >= 500 && $code < 600;
+            }
+        }
+
+        return false;
     }
 }

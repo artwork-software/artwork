@@ -102,6 +102,39 @@ final class InviteModalTabPropsTest extends ExternalAccessTestCase
     }
 
     #[Test]
+    public function tabs_carry_has_external_components_flag(): void
+    {
+        $this->actingAsAdmin();
+        $ctx = $this->context();
+
+        $nonReadable = collect(ProjectTabComponentEnum::cases())
+            ->first(fn (ProjectTabComponentEnum $type) => !$type->isExternallyReadable());
+        $this->assertNotNull($nonReadable, 'Vorbedingung: es gibt einen nicht extern lesbaren Komponententyp');
+
+        $internalOnly = ProjectTab::factory()->create(['order' => 4]);
+        $this->attach($internalOnly, $this->makeComponent($nonReadable, 'Intern'));
+
+        $empty = ProjectTab::factory()->create(['order' => 5]);
+
+        $tabs = $this->tabPageProps($ctx['project'], $ctx['plain'])['headerObject']['tabs'];
+        $flag = function (ProjectTab $tab) use ($tabs): bool {
+            foreach ($tabs as $entry) {
+                if ($entry['id'] === $tab->id) {
+                    $this->assertArrayHasKey('hasExternalComponents', $entry);
+
+                    return $entry['hasExternalComponents'];
+                }
+            }
+            $this->fail('Tab fehlt im Header-Objekt');
+        };
+
+        $this->assertTrue($flag($ctx['plain']), 'Textfeld ist extern lesbar');
+        $this->assertTrue($flag($ctx['disclosure']), 'Disclosure mit lesbarem Kind zählt');
+        $this->assertFalse($flag($internalOnly), 'Nur interne Komponenten → kein externer Inhalt');
+        $this->assertFalse($flag($empty), 'Leerer Tab → kein externer Inhalt');
+    }
+
+    #[Test]
     public function page_exposes_the_external_file_upload_flag(): void
     {
         $this->actingAsAdmin();

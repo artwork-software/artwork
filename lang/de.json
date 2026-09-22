@@ -8362,5 +8362,19 @@
     "Applies to the document component of shared project tabs. Downloading existing documents is always possible.": "Gilt für die Dokument-Komponente freigegebener Projekt-Tabs. Das Herunterladen vorhandener Dokumente ist immer möglich.",
     "File upload disabled": "Dateiupload deaktiviert",
     "The invited person cannot upload files in this tab because file upload for external accesses is disabled. If needed, enable it under Settings → External access.": "Die eingeladene Person kann in diesem Tab keine Dateien hochladen, da der Dateiupload für Externe deaktiviert ist. Aktivieren Sie ihn bei Bedarf unter Einstellungen → Externer Zugriff.",
-    "Uploading documents is not enabled for external accesses. You can view and download existing documents.": "Das Hochladen von Dokumenten ist für externe Zugänge nicht freigeschaltet. Vorhandene Dokumente können Sie ansehen und herunterladen."
+    "Uploading documents is not enabled for external accesses. You can view and download existing documents.": "Das Hochladen von Dokumenten ist für externe Zugänge nicht freigeschaltet. Vorhandene Dokumente können Sie ansehen und herunterladen.",
+    "scope access type changed": "Zugriffsart des Tab-Zugriffs geändert",
+    "submission created": "Datenänderung zur Prüfung eingereicht",
+    "submission superseded": "Frühere Einreichung durch neue ersetzt",
+    "crm access extended": "CRM-Zugriff verlängert",
+    "access revoked": "Zugriff widerrufen",
+    "access reactivated": "Zugriff reaktiviert",
+    "scope extended": "Tab-Zugriff verlängert",
+    "scope ended": "Tab-Zugriff beendet",
+    "access relinked": "Zugang mit anderem Kontakt verknüpft",
+    "approved all": "Alle Änderungen übernommen",
+    "rejected all": "Alle Änderungen abgelehnt",
+    "partial decision": "Änderungen teilweise übernommen",
+    "No externally visible components": "Keine extern anzeigbaren Komponenten",
+    "This tab contains no components that external persons could see. It is not preselected.": "Dieser Tab enthält keine Komponenten, die externe Personen sehen könnten. Er ist deshalb nicht vorausgewählt."
 }

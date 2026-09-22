@@ -841,6 +841,8 @@
     "Click here to add a timeline": "Hier klicken um eine Timeline hinzuzufügen",
     "Create timeline": "Timeline erstellen",
     "Define the shift-relevant times. You can create shifts along this timeline.": "Lege die Schichtrelevanten Zeiten fest. Du kannst Schichten jeweils entlang dieser Timeline erstellen.",
+    "You are not allowed to edit the timeline of this date.": "Du darfst die Timeline dieses Termins nicht bearbeiten.",
+    "The timeline could not be saved. Please try again.": "Die Timeline konnte nicht gespeichert werden. Bitte versuche es erneut.",
     "Start*": "Start*",
     "End*": "Ende*",
     "Please fill in both fields.": "Bitte fülle beide Felder aus.",

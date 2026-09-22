@@ -834,6 +834,8 @@
     "Click here to add a timeline": "Click here to add a timeline",
     "Create timeline": "Create timeline",
     "Define the shift-relevant times. You can create shifts along this timeline.": "Define the shift-relevant times. You can create shifts along this timeline.",
+    "You are not allowed to edit the timeline of this date.": "You are not allowed to edit the timeline of this date.",
+    "The timeline could not be saved. Please try again.": "The timeline could not be saved. Please try again.",
     "Start*": "Start*",
     "End*": "End*",
     "Please fill in both fields.": "Please fill in both fields.",

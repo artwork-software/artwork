@@ -42,6 +42,8 @@ class ProjectTabBulkEditService
                 'shifts.shiftsQualifications',
                 'eventProperties',
             ])
+            // hasTimelines im Resource ohne exists()-Query pro Termin
+            ->withExists('timelines')
             ->orderBy('start_time', 'asc')
             // Eventtypen filtern (nur diese zulassen, wenn gesetzt)
             ->when(!empty($userCalendarFilter?->event_type_ids), function ($q) use ($userCalendarFilter): void {

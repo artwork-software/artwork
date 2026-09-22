@@ -18,6 +18,7 @@ class TicketingProjectService
     public function __construct(
         private readonly TicketingConnectionService $connections,
         private readonly TicketingProductionService $productions,
+        private readonly TicketingBillingService $billing,
     ) {
     }
 
@@ -29,6 +30,7 @@ class TicketingProjectService
         $venues = [];
         $reductions = [];
         $detail = null;
+        $billingComplete = null;
         $ticketsError = null;
 
         if ($connection) {
@@ -39,6 +41,8 @@ class TicketingProjectService
             } catch (TicketingConnectionException $exception) {
                 $ticketsError = $exception->getMessage();
             }
+
+            $billingComplete = $this->billing->completeness($connection);
         }
 
         $links = TicketingRoomLink::query()->pluck('venue_id', 'room_id');
@@ -47,6 +51,7 @@ class TicketingProjectService
             'connection' => [
                 'connected' => $connection !== null,
                 'dashboardUrl' => $connection?->dashboard_url,
+                'billingComplete' => $billingComplete,
             ],
             'ticketsError' => $ticketsError,
             'hasSellingEventTypes' => EventType::query()->where('relevant_for_ticketing', true)->exists(),

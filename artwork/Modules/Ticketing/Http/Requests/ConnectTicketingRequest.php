@@ -5,7 +5,7 @@ namespace Artwork\Modules\Ticketing\Http\Requests;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Validator;
 
-/** Der Entwurf aus dem Verbindungs-Assistenten: Haus, Räume mit Preisklassen, Ermäßigungen. */
+/** Der Entwurf aus dem Verbindungs-Assistenten: Haus, Angaben (oder null), Räume mit Preisklassen, Ermäßigungen. */
 class ConnectTicketingRequest extends FormRequest
 {
     public function authorize(): bool
@@ -22,6 +22,9 @@ class ConnectTicketingRequest extends FormRequest
         return [
             'house.name' => 'required|string|min:2|max:120',
             'house.slug' => ['required', 'string', 'min:2', 'max:60', 'regex:/^[a-z0-9]+(-[a-z0-9]+)*$/'],
+            // Übersprungen kommt der Block als null; sonst gilt er ganz.
+            'billing' => 'present|nullable|array',
+            ...($this->input('billing') === null ? [] : TicketingDraftRules::billing()),
             ...TicketingDraftRules::rooms(),
             ...TicketingDraftRules::reductions(),
         ];

@@ -60,6 +60,7 @@ final class TicketingReleaseTest extends FeatureTestCase
     private function fakeTickets(array $stubs = []): void
     {
         Http::fake($stubs + [
+            self::TICKETS_URL . '/api/integration/v1/house/billing' => Http::response(['profile' => [], 'legalComplete' => true, 'bankComplete' => true]),
             self::TICKETS_URL . '/api/integration/v1/venues' => Http::response(['venues' => [[
                 'id' => self::VENUE_ID,
                 'name' => 'Großer Saal',

@@ -119,8 +119,14 @@ class TicketsClient
             return (array) $response->json();
         }
 
-        $message = $response->json('error.message')
-            ?? __('artwork tickets rejected the request.') . " (HTTP {$response->status()})";
+        // Die Geschäftsregeln kommen als Code; die beiden, an denen eine Freigabe scheitern kann, in Worten.
+        $message = match ($response->json('error.code')) {
+            'HOUSE_DETAILS_MISSING' => __('artwork tickets is still missing the legal details or the bank account of the house. Until they are filled in, nothing can be released for sale.'),
+            'HOUSE_IN_REVIEW' => __('artwork tickets is still reviewing the house. Until it is approved, nothing can be released for sale.'),
+            'HOUSE_DETAILS_LOCKED' => __('artwork tickets keeps the legal details and the bank account once they are complete. They can be changed, but not removed.'),
+            default => $response->json('error.message')
+                ?? __('artwork tickets rejected the request.') . " (HTTP {$response->status()})",
+        };
 
         // Validierungsfehler nennen das Feld, sonst bleibt "The request is invalid." ein Rätsel.
         if (is_array($fields = $response->json('error.fields'))) {

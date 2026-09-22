@@ -40,6 +40,14 @@
                         :text="$t('This project has no dates of an event type that sells tickets. Create them in the calendar; they appear here automatically.')" />
 
             <template v-else>
+                <div v-if="payload.connection.billingComplete === false" class="mb-4 flex items-start gap-2.5 rounded-md border border-warning-border bg-warning-surface px-3.5 py-3 text-[13px] leading-5 text-text">
+                    <IconAlertTriangle class="size-4 shrink-0 mt-0.5 text-warning" />
+                    <span>
+                        {{ $t('The legal details or the bank account of the ticket house are still missing in artwork tickets. Until they are filled in, no date can be released for sale.') }}
+                        <Link v-if="canManageTicketing" :href="route('settings.tickets.billing')" class="font-medium text-accent-600 hover:underline">{{ $t('Fill in now') }}</Link>
+                    </span>
+                </div>
+
                 <div v-if="payload.ticketsError" class="mb-4 flex items-start gap-2.5 rounded-md border border-warning-border bg-warning-surface px-3.5 py-3 text-[13px] leading-5 text-text">
                     <IconAlertTriangle class="size-4 shrink-0 mt-0.5 text-warning" />
                     <span>{{ $t('artwork tickets could not be reached: {message} Venue defaults are missing until it is back.', { message: payload.ticketsError }) }}</span>

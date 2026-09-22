@@ -11,6 +11,7 @@ use Artwork\Modules\Ticketing\Http\Requests\SyncRoomsRequest;
 use Artwork\Modules\Ticketing\Http\Requests\TicketingDraftRules;
 use Artwork\Modules\Ticketing\Models\TicketingConnection;
 use Artwork\Modules\Ticketing\Models\TicketingRoomLink;
+use Artwork\Modules\Ticketing\Services\TicketingBillingService;
 use Artwork\Modules\Ticketing\Services\TicketingConnectionService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -25,22 +26,31 @@ use Inertia\Response;
  */
 class TicketingConnectionController extends Controller
 {
-    public function __construct(private readonly TicketingConnectionService $connections)
-    {
+    public function __construct(
+        private readonly TicketingConnectionService $connections,
+        private readonly TicketingBillingService $billing,
+    ) {
     }
 
-    public function index(): Response
+    public function index(Request $request): Response
     {
+        $connection = $this->connections->current();
+
         return Inertia::render('Settings/Tickets/Index', [
-            'connection' => $this->connectionProps(),
-            'houseDefaults' => $this->connections->houseDefaults(),
+            'connection' => [
+                ...$this->connectionProps(),
+                'billingComplete' => $connection ? $this->billing->completeness($connection) : null,
+            ],
+            'houseDefaults' => $this->connections->houseDefaults($request->user()),
             'countries' => TicketingDraftRules::COUNTRIES,
+            'legalForms' => TicketingDraftRules::LEGAL_FORMS,
             'rooms' => $this->permanentRooms(),
+            'linkedRooms' => TicketingRoomLink::query()->count(),
         ]);
     }
 
     /** Nach dem Verbinden: die Räume mit dem Stand aus tickets vorbelegt, damit ein Abgleich nichts überschreibt. */
-    public function rooms(): Response
+    public function rooms(Request $request): Response
     {
         $connection = $this->connections->current();
         $venues = [];
@@ -58,7 +68,7 @@ class TicketingConnectionController extends Controller
 
         return Inertia::render('Settings/Tickets/Rooms', [
             'connection' => $this->connectionProps(),
-            'houseDefaults' => $this->connections->houseDefaults(),
+            'houseDefaults' => $this->connections->houseDefaults($request->user()),
             'countries' => TicketingDraftRules::COUNTRIES,
             'rooms' => $this->permanentRooms()->map(static fn (array $room): array => [
                 ...$room,

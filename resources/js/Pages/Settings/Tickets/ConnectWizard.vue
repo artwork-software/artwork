@@ -50,19 +50,31 @@
             </div>
         </section>
 
-        <!-- 2 · Rooms -->
-        <section v-else-if="step === 1" class="max-w-[1040px]">
+        <!-- 2 · Details -->
+        <section v-else-if="step === 1" class="max-w-[900px]">
+            <BillingFieldsEditor :billing="form.billing" :countries="countries" :legal-forms="legalForms" />
+            <label class="mt-6 flex items-start gap-3 rounded-md border px-3.5 py-3 cursor-pointer" :class="skipBilling ? 'border-warning-border bg-warning-surface' : 'border-border-subtle bg-surface-sunken'">
+                <input v-model="skipBilling" type="checkbox" class="aw-checklist-input mt-0.5 cursor-pointer" />
+                <span class="text-[13px] leading-5 text-text">
+                    <strong class="font-lexend block font-medium">{{ $t('Add the details later') }}</strong>
+                    {{ $t('The house is connected without them. Until they are filled in — here under "Details & bank account" or in artwork tickets — no date can be released for sale and nothing is paid out.') }}
+                </span>
+            </label>
+        </section>
+
+        <!-- 3 · Rooms -->
+        <section v-else-if="step === 2" class="max-w-[1040px]">
             <RoomSyncEditor :rooms="roomDrafts" :countries="countries" />
         </section>
 
-        <!-- 3 · Reductions -->
-        <section v-else-if="step === 2" class="max-w-[1040px]">
+        <!-- 4 · Reductions -->
+        <section v-else-if="step === 3" class="max-w-[1040px]">
             <ReductionsEditor :reductions="reductionDrafts">
                 <template #hint>{{ $t('Optional. Without reductions everyone pays the price of the price class; you can add them in artwork tickets at any time.') }}</template>
             </ReductionsEditor>
         </section>
 
-        <!-- 4 · Summary -->
+        <!-- 5 · Summary -->
         <section v-else class="max-w-[1040px] text-[13px]">
             <div class="grid gap-4 sm:grid-cols-2">
                 <SummaryCard :title="$t('House')" @edit="step = 0">
@@ -72,7 +84,7 @@
                         <dt class="text-text-subtle">{{ $t('Owner') }}</dt><dd>{{ userEmail }}</dd>
                     </dl>
                 </SummaryCard>
-                <SummaryCard :title="$t('Reductions')" @edit="step = 2">
+                <SummaryCard :title="$t('Reductions')" @edit="step = 3">
                     <span v-if="reductionDrafts.length === 0" class="text-text-subtle">{{ $t('None') }}</span>
                     <ul v-else class="flex flex-col gap-2">
                         <li v-for="(r, ri) in reductionDrafts" :key="ri" class="flex justify-between gap-4">
@@ -83,7 +95,22 @@
                 </SummaryCard>
             </div>
             <div class="mt-4">
-                <SummaryCard :title="$t('Rooms · {selected} of {total}', { selected: selectedRooms.length, total: roomDrafts.length })" @edit="step = 1">
+                <SummaryCard :title="$t('Legal details and bank account')" @edit="step = 1">
+                    <p v-if="skipBilling" class="flex items-start gap-2 text-warning-ink">
+                        <IconAlertTriangle class="size-4 shrink-0 mt-0.5 text-warning" />
+                        <span>{{ $t('Left for later. The house cannot release dates for sale until the details are filled in.') }}</span>
+                    </p>
+                    <dl v-else class="grid grid-cols-[140px_minmax(0,1fr)] gap-x-3 gap-y-2">
+                        <dt class="text-text-subtle">{{ $t('Legal name') }}</dt><dd>{{ form.billing.legal_name }} <span class="text-text-subtle">· {{ legalFormLabel(form.billing.legal_form) }}</span></dd>
+                        <dt class="text-text-subtle">{{ $t('Address') }}</dt><dd>{{ form.billing.street }}, {{ form.billing.postal_code }} {{ form.billing.city }}</dd>
+                        <dt class="text-text-subtle">{{ $t('Tax') }}</dt><dd>{{ [form.billing.vat_id, form.billing.tax_number].filter(Boolean).join(' · ') }}</dd>
+                        <dt class="text-text-subtle">{{ $t('Responsible person') }}</dt><dd>{{ form.billing.contact_name }} <span class="text-text-subtle">· {{ form.billing.contact_phone }}</span></dd>
+                        <dt class="text-text-subtle">{{ $t('Bank account') }}</dt><dd>{{ form.billing.account_holder }} <span class="font-mono text-xs text-text-subtle">· {{ form.billing.iban }}</span></dd>
+                    </dl>
+                </SummaryCard>
+            </div>
+            <div class="mt-4">
+                <SummaryCard :title="$t('Rooms · {selected} of {total}', { selected: selectedRooms.length, total: roomDrafts.length })" @edit="step = 2">
                     <span v-if="selectedRooms.length === 0" class="text-text-subtle">{{ $t('None selected') }}</span>
                     <div v-else class="grid gap-x-8 gap-y-4 sm:grid-cols-2">
                         <div v-for="room in selectedRooms" :key="room.id">
@@ -137,12 +164,14 @@ import { IconAlertTriangle, IconArrowLeft, IconArrowRight, IconCheck, IconInfoCi
 import BaseInput from '@/Artwork/Inputs/BaseInput.vue'
 import RoomSyncEditor from '@/Pages/Settings/Tickets/RoomSyncEditor.vue'
 import ReductionsEditor from '@/Pages/Settings/Tickets/ReductionsEditor.vue'
-import { formatEuro, reductionPayload, reductionsValid, roomDraft, roomPayload, roomsValid, toCents, zonePlaces } from '@/Pages/Settings/Tickets/drafts.js'
+import BillingFieldsEditor from '@/Pages/Settings/Tickets/BillingFieldsEditor.vue'
+import { billingValid, formatEuro, legalFormNames, reductionPayload, reductionsValid, roomDraft, roomPayload, roomsValid, toCents, zonePlaces } from '@/Pages/Settings/Tickets/drafts.js'
 
 const props = defineProps({
     rooms: { type: Array, default: () => [] },
     houseDefaults: { type: Object, required: true },
     countries: { type: Array, required: true },
+    legalForms: { type: Array, required: true },
     userEmail: { type: String, required: true },
     ticketsUrl: { type: String, default: '' },
 })
@@ -151,9 +180,10 @@ defineEmits(['cancel'])
 
 const { t } = useI18n()
 
-const steps = [t('House'), t('Rooms'), t('Reductions'), t('Summary')]
+const steps = [t('House'), t('Details'), t('Rooms'), t('Reductions'), t('Summary')]
 const intros = [
     t('This is how the house appears in artwork tickets. Both can be changed there later.'),
+    t('Who stands behind the house and where it is paid out. artwork tickets needs this for the credit notes on its fee and for payouts. You can leave it for later, but until it is filled in no date can be released for sale.'),
     t('Which rooms sell tickets? Each becomes a venue in artwork tickets with its address and the price classes you define here. Rooms can be synced again later.'),
     t('Reductions apply house-wide; which ones a production grants is decided per production. Percent of the ticket price or a fixed amount off.'),
     t('Check what will be created. Only "Connect now" creates anything in artwork tickets.'),
@@ -205,9 +235,16 @@ function slugify(value) {
 
 const form = useForm({
     house: { name: props.houseDefaults.name, slug: props.houseDefaults.slug },
+    billing: { ...props.houseDefaults.billing },
     rooms: [],
     reductions: [],
 })
+
+const legalFormLabel = (form) => legalFormNames(t)[form] ?? form
+
+/* The details may wait: the step then passes without them and the request gets null. */
+const skipBilling = ref(false)
+form.transform((data) => ({ ...data, billing: skipBilling.value ? null : data.billing }))
 
 /* The address follows the name until someone edits it by hand. */
 const slugTouched = ref(false)
@@ -284,8 +321,9 @@ function reductionSummary(r) {
 
 const stepValid = computed(() => {
     if (step.value === 0) return nameState.value === 'available' && slugState.value === 'available' && ownerState.value === 'available'
-    if (step.value === 1) return roomsValid(selectedRooms.value)
-    if (step.value === 2) return reductionsValid(reductionDrafts.value)
+    if (step.value === 1) return skipBilling.value || billingValid(form.billing)
+    if (step.value === 2) return roomsValid(selectedRooms.value)
+    if (step.value === 3) return reductionsValid(reductionDrafts.value)
     return true
 })
 

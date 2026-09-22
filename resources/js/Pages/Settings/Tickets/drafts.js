@@ -92,3 +92,50 @@ export function reductionPayload(reduction) {
 export function reductionsValid(reductions) {
     return reductions.every((r) => r.name.trim() !== '' && Number(String(r.value).replace(',', '.')) > 0)
 }
+
+/* Legal details and bank account — the wizard step and the billing tab check alike. */
+
+/** Grouped in fours as it is typed, the way it is printed on the card. */
+export function formatIban(value) {
+    return String(value ?? '').replace(/\s+/g, '').toUpperCase().replace(/(.{4})(?=.)/g, '$1 ')
+}
+
+/** ISO 7064 mod 97-10 — the same check the request runs, so a button waits for a valid IBAN. */
+export function isValidIban(value) {
+    const iban = String(value ?? '').replace(/\s+/g, '').toUpperCase()
+    if (!/^[A-Z]{2}\d{2}[A-Z0-9]{11,30}$/.test(iban)) return false
+    const digits = (iban.slice(4) + iban.slice(0, 4)).replace(/[A-Z]/g, (letter) => String(letter.charCodeAt(0) - 55))
+    let remainder = 0
+    for (const digit of digits) remainder = (remainder * 10 + Number(digit)) % 97
+    return remainder === 1
+}
+
+const filled = (value) => String(value ?? '').trim() !== ''
+
+/** What tickets calls a complete legal block: register and website stay optional, one tax id is enough. */
+export function legalComplete(b) {
+    return ['legal_name', 'legal_form', 'street', 'postal_code', 'city', 'country', 'contact_name', 'contact_phone'].every((key) => filled(b[key]))
+        && (filled(b.vat_id) || filled(b.tax_number))
+}
+
+/** A stored IBAN counts; a typed one has to pass the check. */
+export function bankComplete(b, ibanLast4 = null) {
+    return filled(b.account_holder) && (filled(b.iban) ? isValidIban(b.iban) : ibanLast4 !== null)
+}
+
+export function billingValid(b) {
+    return legalComplete(b) && bankComplete(b)
+}
+
+/** The legal forms tickets knows (`house_legal_form`), in the words of the interface. */
+export function legalFormNames(t) {
+    return {
+        verein: t('Registered association (e.V.)'),
+        ggmbh: 'gGmbH',
+        gmbh: 'GmbH',
+        einzelunternehmen: t('Sole proprietorship'),
+        gbr: 'GbR',
+        oeffentlich: t('Public body (city, state, federal)'),
+        sonstige: t('Other legal form'),
+    }
+}

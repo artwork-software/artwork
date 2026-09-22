@@ -49,6 +49,7 @@ final class TicketingProjectTabTest extends FeatureTestCase
     {
         $this->connect();
         Http::fake([
+            self::TICKETS_URL . '/api/integration/v1/house/billing' => Http::response(['profile' => [], 'legalComplete' => true, 'bankComplete' => true]),
             self::TICKETS_URL . '/api/integration/v1/reductions' => Http::response(['reductions' => [
                 ['id' => '3b9f1a2c-0d4e-4f5a-8b6c-7d8e9f0a1b2c', 'name' => 'Ermäßigt', 'kind' => 'percent', 'value' => 5000, 'requiresProof' => true, 'defaultEnabled' => true],
             ]]),
@@ -115,6 +116,7 @@ final class TicketingProjectTabTest extends FeatureTestCase
     {
         $this->connect();
         Http::fake([
+            self::TICKETS_URL . '/api/integration/v1/house/billing' => Http::response(['profile' => [], 'legalComplete' => true, 'bankComplete' => true]),
             self::TICKETS_URL . '/api/integration/v1/venues' => Http::response(null, 503),
             self::TICKETS_URL . '/api/integration/v1/reductions' => Http::response(['reductions' => []]),
         ]);

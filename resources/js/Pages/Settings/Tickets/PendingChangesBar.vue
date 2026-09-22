@@ -9,10 +9,10 @@
                 </span>
                 <div class="flex items-center gap-1.5">
                     <button type="button" class="rounded-full px-3 h-8 text-[13px] font-medium text-text-subtle hover:text-text hover:bg-surface-sunken" :disabled="processing" @click="$emit('discard')">
-                        {{ $t('Discard') }}
+                        {{ discardLabel ?? $t('Discard') }}
                     </button>
                     <button type="button" class="ui-button-add rounded-full h-8 px-3.5" :disabled="!canSubmit" @click="$emit('submit')">
-                        <IconRefresh class="size-4" />{{ processing ? $t('Syncing…') : submitLabel }}
+                        <component :is="icon" class="size-4" />{{ processing ? (processingLabel ?? $t('Syncing…')) : submitLabel }}
                     </button>
                 </div>
             </div>
@@ -23,14 +23,20 @@
 <script setup>
 import { IconRefresh } from '@tabler/icons-vue'
 
-/* Floats in as soon as the drafts differ from what tickets holds — the sync button in the
-   toolbar stays, but nobody has to know it is there. */
+/* Floats in as soon as there is something to send to tickets — drafts that differ from what
+   it holds, or people picked for an invitation. The button in the toolbar stays, but nobody
+   has to know it is there. */
 defineProps({
     visible: { type: Boolean, required: true },
     message: { type: String, required: true },
     submitLabel: { type: String, required: true },
     canSubmit: { type: Boolean, required: true },
     processing: { type: Boolean, default: false },
+    /** The verb of the tab: sync by default, save or invite where that is what happens. */
+    // Tabler icons are functional components; a bare function default would be called as a factory.
+    icon: { type: [Object, Function], default: () => IconRefresh },
+    processingLabel: { type: String, default: null },
+    discardLabel: { type: String, default: null },
 })
 
 defineEmits(['discard', 'submit'])

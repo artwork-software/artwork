@@ -121,8 +121,10 @@ use App\Http\Controllers\ToolSettingsCommunicationAndLegalController;
 use App\Http\Controllers\ToolSettingsFormatsController;
 use App\Http\Controllers\ToolSettingsExternalUserManagementController;
 use App\Http\Controllers\ToolSettingsInterfacesController;
+use Artwork\Modules\Ticketing\Http\Controllers\TicketingBillingController;
 use Artwork\Modules\Ticketing\Http\Controllers\TicketingConnectionController;
 use Artwork\Modules\Ticketing\Http\Controllers\TicketingProjectController;
+use Artwork\Modules\Ticketing\Http\Controllers\TicketingTeamController;
 use Artwork\Modules\ExternalUserManagement\Http\Controllers\ExternalUserGroupMappingController;
 use Artwork\Modules\ExternalUserManagement\Http\Controllers\ExternalUserSourceController;
 use Artwork\Modules\Mail\Http\Controllers\MailSettingsController;
@@ -409,11 +411,16 @@ Route::group(['middleware' => ['auth:sanctum']], function (): void {
             ->name('settings.tickets.availability');
         Route::post('/connection', [TicketingConnectionController::class, 'store'])->name('settings.tickets.connect');
         Route::delete('/connection', [TicketingConnectionController::class, 'destroy'])->name('settings.tickets.disconnect');
+        Route::get('/billing', [TicketingBillingController::class, 'index'])->name('settings.tickets.billing');
+        Route::put('/billing', [TicketingBillingController::class, 'update'])->name('settings.tickets.billing.save');
         Route::get('/rooms', [TicketingConnectionController::class, 'rooms'])->name('settings.tickets.rooms');
         Route::post('/rooms', [TicketingConnectionController::class, 'syncRooms'])->name('settings.tickets.rooms.sync');
         Route::get('/reductions', [TicketingConnectionController::class, 'reductions'])->name('settings.tickets.reductions');
         Route::post('/reductions', [TicketingConnectionController::class, 'syncReductions'])
             ->name('settings.tickets.reductions.sync');
+        Route::get('/team', [TicketingTeamController::class, 'index'])->name('settings.tickets.team');
+        Route::post('/team/invitations', [TicketingTeamController::class, 'invite'])
+            ->name('settings.tickets.team.invite');
     });
 
     // TOOL SETTING ROUTE

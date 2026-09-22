@@ -37,7 +37,9 @@ const { t } = useI18n()
 
 const tabs = [
     { name: t('Overview'), href: route('settings.tickets'), current: route().current('settings.tickets'), permission: true },
+    { name: t('Details & bank account'), href: route('settings.tickets.billing'), current: route().current('settings.tickets.billing'), permission: true },
     { name: t('Rooms & price classes'), href: route('settings.tickets.rooms'), current: route().current('settings.tickets.rooms'), permission: true },
     { name: t('Reductions'), href: route('settings.tickets.reductions'), current: route().current('settings.tickets.reductions'), permission: true },
+    { name: t('Team'), href: route('settings.tickets.team'), current: route().current('settings.tickets.team'), permission: true },
 ]
 </script>

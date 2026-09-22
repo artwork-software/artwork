@@ -47,24 +47,43 @@ class TicketingConnectionService
      * aus dem Briefkopf — eine eigene Raumadresse kennt artwork nicht, die meisten Räume liegen
      * ohnehin im Haus.
      *
+     * Vorbelegung des Assistenten aus dem, was dieses artwork über sich weiß: Firmenname und
+     * Briefkopf. Was das artwork nicht kennt (Rechtsform, Steuer, Bank), bleibt leer.
+     *
      * @return array{
      *     name: string,
      *     slug: string,
-     *     address: array{street: string, postal_code: string, city: string, country: string}
+     *     address: array{street: string, postal_code: string, city: string, country: string},
+     *     billing: array<string, string>
      * }
      */
-    public function houseDefaults(): array
+    public function houseDefaults(User $user): array
     {
         $name = $this->generalSettings->company_name ?: (string) config('app.name');
+        $address = [
+            'street' => $this->generalSettings->letterhead_street,
+            'postal_code' => $this->generalSettings->letterhead_zip_code,
+            'city' => $this->generalSettings->letterhead_city,
+            'country' => 'DE',
+        ];
 
         return [
             'name' => $name,
             'slug' => self::slugify($name),
-            'address' => [
-                'street' => $this->generalSettings->letterhead_street,
-                'postal_code' => $this->generalSettings->letterhead_zip_code,
-                'city' => $this->generalSettings->letterhead_city,
-                'country' => 'DE',
+            'address' => $address,
+            'billing' => [
+                'legal_name' => $this->generalSettings->letterhead_name ?: $name,
+                'legal_form' => '',
+                ...$address,
+                'register_number' => '',
+                'register_court' => '',
+                'vat_id' => '',
+                'tax_number' => '',
+                'contact_name' => $user->full_name,
+                'contact_phone' => (string) ($user->phone_number ?? ''),
+                'website' => '',
+                'account_holder' => $this->generalSettings->letterhead_name ?: $name,
+                'iban' => '',
             ],
         ];
     }
@@ -89,6 +108,7 @@ class TicketingConnectionService
     /**
      * @param array{
      *     house: array{name: string, slug: string},
+     *     billing: array<string, string|null>|null,
      *     rooms: list<array<string, mixed>>,
      *     reductions: list<array<string, mixed>>
      * } $draft
@@ -109,6 +129,7 @@ class TicketingConnectionService
                 'slug' => $draft['house']['slug'],
                 'ownerEmail' => $user->email,
                 'ownerName' => $user->full_name,
+                'billing' => $draft['billing'] === null ? null : TicketingBillingService::payload($draft['billing']),
                 'coreUrl' => config('app.url'),
                 // Als String: je nach Installation ist der Client-Schlüssel numerisch oder eine UUID.
                 'coreClientId' => (string) $client->getKey(),

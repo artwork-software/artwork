@@ -27,12 +27,35 @@ final class TicketingConnectionTest extends FeatureTestCase
     private const TICKETS_URL = 'https://tickets.test';
 
     /** @return array<string, mixed> */
-    private function draft(array $rooms = [], array $reductions = []): array
+    private function draft(array $rooms = [], array $reductions = [], array $billing = []): array
     {
         return [
             'house' => ['name' => 'Theater Süd', 'slug' => 'theater-sued'],
+            'billing' => $billing + self::billing(),
             'rooms' => $rooms,
             'reductions' => $reductions,
+        ];
+    }
+
+    /** Vollständige Angaben, wie der Assistent sie schickt. */
+    private static function billing(): array
+    {
+        return [
+            'legal_name' => 'Theater Süd gGmbH',
+            'legal_form' => 'ggmbh',
+            'street' => 'Theaterstraße 1',
+            'postal_code' => '20095',
+            'city' => 'Hamburg',
+            'country' => 'DE',
+            'register_number' => 'HRB 12345',
+            'register_court' => 'Hamburg',
+            'vat_id' => 'DE123456789',
+            'tax_number' => null,
+            'contact_name' => 'Erika Muster',
+            'contact_phone' => '+49 40 123456',
+            'website' => null,
+            'account_holder' => 'Theater Süd gGmbH',
+            'iban' => 'DE89 3704 0044 0532 0130 00',
         ];
     }
 
@@ -87,6 +110,10 @@ final class TicketingConnectionTest extends FeatureTestCase
                 && $request['slug'] === 'theater-sued'
                 && $request['ownerEmail'] === $user->email
                 && $request['coreUrl'] === config('app.url')
+                && $request['billing']['legalName'] === 'Theater Süd gGmbH'
+                && $request['billing']['legalForm'] === 'ggmbh'
+                && $request['billing']['iban'] === 'DE89370400440532013000'
+                && $request['billing']['taxNumber'] === null
                 && (string) $request['coreClientId'] === (string) DB::table('oauth_clients')->value('id')
                 && is_string($request['coreClientSecret']) && $request['coreClientSecret'] !== '';
         });
@@ -262,6 +289,69 @@ final class TicketingConnectionTest extends FeatureTestCase
 
         Http::assertNothingSent();
         $this->assertDatabaseCount('ticketing_connections', 0);
+    }
+
+    #[Test]
+    public function a_draft_without_the_details_or_with_a_wrong_iban_is_refused_before_any_call(): void
+    {
+        Http::fake();
+        $this->actingAsUserWith(PermissionEnum::TICKETING_MANAGE->value);
+
+        $this->from(route('settings.tickets'))
+            ->post(route('settings.tickets.connect'), $this->draft(billing: [
+                'legal_form' => 'ag',
+                'vat_id' => null,
+                'tax_number' => null,
+                'iban' => 'DE88 3704 0044 0532 0130 00',
+            ]))
+            ->assertSessionHasErrors(['billing.legal_form', 'billing.vat_id', 'billing.tax_number', 'billing.iban']);
+
+        Http::assertNothingSent();
+    }
+
+    #[Test]
+    public function the_details_may_be_left_for_later_and_the_overview_then_warns(): void
+    {
+        $this->fakeHappyTickets([
+            self::TICKETS_URL . '/api/integration/v1/house/billing' => Http::response(['profile' => [], 'legalComplete' => false, 'bankComplete' => false]),
+        ]);
+        $this->actingAsUserWith(PermissionEnum::TICKETING_MANAGE->value);
+
+        $this->from(route('settings.tickets'))
+            ->post(route('settings.tickets.connect'), ['billing' => null] + $this->draft())
+            ->assertSessionHasNoErrors()
+            ->assertSessionHas('success');
+
+        Http::assertSent(static fn (Request $request): bool => str_ends_with($request->url(), '/houses')
+            && array_key_exists('billing', $request->data())
+            && $request['billing'] === null);
+
+        $this->get(route('settings.tickets'))
+            ->assertInertia(fn ($page) => $page
+                ->where('connection.connected', true)
+                ->where('connection.billingComplete', false));
+    }
+
+    #[Test]
+    public function the_house_defaults_prefill_the_details_from_the_letterhead(): void
+    {
+        $user = $this->actingAsUserWith(PermissionEnum::TICKETING_MANAGE->value);
+        $settings = app(GeneralSettings::class);
+        $settings->letterhead_name = 'Theater Süd gGmbH';
+        $settings->letterhead_street = 'Theaterstraße 1';
+        $settings->letterhead_zip_code = '20095';
+        $settings->letterhead_city = 'Hamburg';
+        $settings->save();
+
+        $this->get(route('settings.tickets'))
+            ->assertOk()
+            ->assertInertia(fn ($page) => $page
+                ->component('Settings/Tickets/Index')
+                ->where('houseDefaults.billing.legal_name', 'Theater Süd gGmbH')
+                ->where('houseDefaults.billing.account_holder', 'Theater Süd gGmbH')
+                ->where('houseDefaults.billing.street', 'Theaterstraße 1')
+                ->where('houseDefaults.billing.contact_name', $user->full_name)
+                ->where('houseDefaults.billing.iban', ''));
     }
 
     #[Test]

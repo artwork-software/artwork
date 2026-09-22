@@ -345,6 +345,22 @@ class NotificationService
         $this->setCreatedBy(null);
     }
 
+    /**
+     * Handelnde interne Nutzer*in. Im externen Gastkontext (Default-Guard „external“) liefert Auth::user()
+     * das ExternalAccess-Modell — dessen ID darf nie mit einer User-ID verglichen oder als created_by
+     * gespeichert werden.
+     */
+    private function actingUser(): ?User
+    {
+        $user = Auth::user();
+
+        return $user instanceof User ? $user : null;
+    }
+
+    private function actingUserId(): ?int
+    {
+        return $this->actingUser()?->id;
+    }
     //@todo: fix phpcs error - refactor function because complexity exceeds allowed maximum
     //phpcs:ignore Generic.Metrics.CyclomaticComplexity.MaxExceeded
     public function createNotification(): void
@@ -370,7 +386,7 @@ class NotificationService
         $body->projectId = $this->getProjectId();
         $body->departmentId = $this->departmentId;
         $body->taskId = $this->getTaskId();
-        $body->created_by = $this->createdBy ?? (Auth::user() ? Auth::user()->withoutRelations() : null);
+        $body->created_by = $this->createdBy ?? $this->actingUser()?->withoutRelations();
         $body->created_at = Carbon::now()->translatedFormat('d.m.Y H:i');
         $body->budgetData = $this->getBudgetData();
         $body->notificationKey = $this->getNotificationKey();
@@ -382,7 +398,7 @@ class NotificationService
             case NotificationEnum::NOTIFICATION_UPSERT_ROOM_REQUEST:
             case NotificationEnum::NOTIFICATION_ROOM_REQUEST:
             case NotificationEnum::NOTIFICATION_ROOM_ANSWER:
-                if ($this->getNotificationTo()->id !== Auth::id()) {
+                if ($this->getNotificationTo()->id !== $this->actingUserId()) {
                     Notification::send(
                         $this->getNotificationTo(),
                         new RoomRequestNotification($body, $this->getBroadcastMessage())
@@ -390,7 +406,7 @@ class NotificationService
                 }
                 break;
             case NotificationEnum::NOTIFICATION_EVENT_CHANGED:
-                if ($this->getNotificationTo()->id !== Auth::id()) {
+                if ($this->getNotificationTo()->id !== $this->actingUserId()) {
                     Notification::send(
                         $this->getNotificationTo(),
                         new EventNotification($body, $this->getBroadcastMessage())
@@ -399,7 +415,7 @@ class NotificationService
                 break;
             case NotificationEnum::NOTIFICATION_NEW_TASK:
             case NotificationEnum::NOTIFICATION_TASK_CHANGED:
-                if ($this->getNotificationTo()->id !== Auth::id()) {
+                if ($this->getNotificationTo()->id !== $this->actingUserId()) {
                     Notification::send(
                         $this->getNotificationTo(),
                         new TaskNotification($body, $this->getBroadcastMessage())
@@ -408,7 +424,7 @@ class NotificationService
                 break;
             case NotificationEnum::NOTIFICATION_PROJECT:
             case NotificationEnum::NOTIFICATION_PUBLIC_RELEVANT:
-                if ($this->getNotificationTo()->id !== Auth::id()) {
+                if ($this->getNotificationTo()->id !== $this->actingUserId()) {
                     Notification::send(
                         $this->getNotificationTo(),
                         new ProjectNotification($body, $this->getBroadcastMessage())
@@ -416,7 +432,7 @@ class NotificationService
                 }
                 break;
             case NotificationEnum::NOTIFICATION_TEAM:
-                if ($this->getNotificationTo()->id !== Auth::id()) {
+                if ($this->getNotificationTo()->id !== $this->actingUserId()) {
                     Notification::send(
                         $this->getNotificationTo(),
                         new TeamNotification($body, $this->getBroadcastMessage())
@@ -424,7 +440,7 @@ class NotificationService
                 }
                 break;
             case NotificationEnum::NOTIFICATION_ROOM_CHANGED:
-                if ($this->getNotificationTo()->id !== Auth::id()) {
+                if ($this->getNotificationTo()->id !== $this->actingUserId()) {
                     Notification::send(
                         $this->getNotificationTo(),
                         new RoomNotification($body, $this->getBroadcastMessage())
@@ -433,7 +449,7 @@ class NotificationService
                 break;
             case NotificationEnum::NOTIFICATION_CONFLICT:
             case NotificationEnum::NOTIFICATION_LOUD_ADJOINING_EVENT:
-                if ($this->getNotificationTo()->id !== Auth::id()) {
+                if ($this->getNotificationTo()->id !== $this->actingUserId()) {
                     Notification::send(
                         $this->getNotificationTo(),
                         new ConflictNotification($body, $this->getBroadcastMessage())
@@ -441,7 +457,7 @@ class NotificationService
                 }
                 break;
             case NotificationEnum::NOTIFICATION_TASK_REMINDER:
-                if ($this->getNotificationTo()->id !== Auth::id()) {
+                if ($this->getNotificationTo()->id !== $this->actingUserId()) {
                     Notification::send(
                         $this->getNotificationTo(),
                         new DeadlineNotification($body, $this->getBroadcastMessage())
@@ -450,7 +466,7 @@ class NotificationService
                 break;
             case NotificationEnum::NOTIFICATION_BUDGET_MONEY_SOURCE_AUTH_CHANGED:
             case NotificationEnum::NOTIFICATION_BUDGET_MONEY_SOURCE_CHANGED:
-                if ($this->getNotificationTo()->id !== Auth::id()) {
+                if ($this->getNotificationTo()->id !== $this->actingUserId()) {
                     Notification::send(
                         $this->getNotificationTo(),
                         new MoneySourceNotification($body, $this->getBroadcastMessage())
@@ -466,7 +482,7 @@ class NotificationService
                 break;
             case NotificationEnum::NOTIFICATION_BUDGET_STATE_CHANGED:
             case NotificationEnum::NOTIFICATION_CONTRACTS_DOCUMENT_CHANGED:
-                if ($this->getNotificationTo()->id !== Auth::id()) {
+                if ($this->getNotificationTo()->id !== $this->actingUserId()) {
                     Notification::send(
                         $this->getNotificationTo(),
                         new BudgetVerified($body, $this->getBroadcastMessage())
@@ -485,7 +501,7 @@ class NotificationService
             case NotificationEnum::NOTIFICATION_SHIFT_WORKTIME_GET_REQUEST:
             case NotificationEnum::NOTIFICATION_NEW_SHIFT_COMMIT_WORKFLOW_REQUEST:
             case NotificationEnum::NOTIFICATION_SHIFT_WORKER_CONFIRMATION:
-                if ($this->getNotificationTo()->id !== Auth::id()) {
+                if ($this->getNotificationTo()->id !== $this->actingUserId()) {
                     Notification::send(
                         $this->getNotificationTo(),
                         new ShiftNotification($body, $this->getBroadcastMessage())
@@ -493,7 +509,7 @@ class NotificationService
                 }
                 break;
             case NotificationEnum::NOTIFICATION_EVENT_VERIFICATION_REQUESTS:
-                if ($this->getNotificationTo()->id !== Auth::id()) {
+                if ($this->getNotificationTo()->id !== $this->actingUserId()) {
                     Notification::send(
                         $this->getNotificationTo(),
                         new EventNotification($body, $this->getBroadcastMessage())
@@ -502,7 +518,7 @@ class NotificationService
                 break;
             case NotificationEnum::NOTIFICATION_INVENTORY_OVERBOOKED:
             case NotificationEnum::NOTIFICATION_INVENTORY_ARTICLE_CHANGED:
-                if ($this->getNotificationTo()->id !== Auth::id()) {
+                if ($this->getNotificationTo()->id !== $this->actingUserId()) {
                     Notification::send(
                         $this->getNotificationTo(),
                         new InventoryArticleNotification($body, $this->getBroadcastMessage())
@@ -518,7 +534,7 @@ class NotificationService
                 break;
             case NotificationEnum::NOTIFICATION_DOCUMENT_REQUEST_CREATED:
             case NotificationEnum::NOTIFICATION_DOCUMENT_REQUEST_COMPLETED:
-                if ($this->getNotificationTo()->id !== Auth::id()) {
+                if ($this->getNotificationTo()->id !== $this->actingUserId()) {
                     Notification::send(
                         $this->getNotificationTo(),
                         new BudgetVerified($body, $this->getBroadcastMessage())
@@ -526,7 +542,7 @@ class NotificationService
                 }
                 break;
             case NotificationEnum::NOTIFICATION_EXTERNAL_CRM_SUBMITTED:
-                if ($this->getNotificationTo()->id !== Auth::id()) {
+                if ($this->getNotificationTo()->id !== $this->actingUserId()) {
                     Notification::send(
                         $this->getNotificationTo(),
                         new ExternalCrmSubmissionNotification($body, $this->getBroadcastMessage())
@@ -534,7 +550,7 @@ class NotificationService
                 }
                 break;
             case NotificationEnum::NOTIFICATION_EXTERNAL_TAB_COMPONENT_UPDATED:
-                if ($this->getNotificationTo()->id !== Auth::id()) {
+                if ($this->getNotificationTo()->id !== $this->actingUserId()) {
                     Notification::send(
                         $this->getNotificationTo(),
                         new ExternalTabComponentUpdatedNotification($body, $this->getBroadcastMessage())
@@ -542,7 +558,7 @@ class NotificationService
                 }
                 break;
             case NotificationEnum::NOTIFICATION_EXTERNAL_ACCESS_EXPIRING:
-                if ($this->getNotificationTo()->id !== Auth::id()) {
+                if ($this->getNotificationTo()->id !== $this->actingUserId()) {
                     Notification::send(
                         $this->getNotificationTo(),
                         new ExternalAccessExpiringNotification($body, $this->getBroadcastMessage())

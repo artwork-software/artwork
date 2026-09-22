@@ -66,7 +66,17 @@ final class ExternalGuardIdCollisionTest extends TestCase
 
         app(ExternalNotificationSender::class)->notifyTabSubmitted($external, $project, $tab, 2);
 
-        Notification::assertSentTo($inviter, ExternalTabComponentUpdatedNotification::class);
+        Notification::assertSentTo(
+            $inviter,
+            ExternalTabComponentUpdatedNotification::class,
+            function (ExternalTabComponentUpdatedNotification $notification): bool {
+                // Im Gastkontext gibt es keine handelnde interne Person — das ExternalAccess-Modell
+                // darf nicht als created_by in den Meldungsdaten landen (kaputte Avatare im Frontend).
+                $this->assertNull($notification->toArray()->created_by);
+
+                return true;
+            },
+        );
     }
 
     #[Test]

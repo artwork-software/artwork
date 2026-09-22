@@ -162,6 +162,22 @@
                                                           :first_project_calendar_tab_id="first_project_calendar_tab_id"
                                                           :event-statuses="eventStatuses"
                                                           />
+                            <!-- External access -->
+                            <NotificationSectionComponent group-type="EXTERNAL_ACCESS"
+                                                          :unread-count="notificationCounts['EXTERNAL_ACCESS'].unread"
+                                                          :archived-count="notificationCounts['EXTERNAL_ACCESS'].archived"
+                                                          :name="$t('External access')" :rooms="rooms" :projects="projects"
+                                                          :event-types="eventTypes"
+                                                          :history-objects="historyObjects"
+                                                          :event="event"
+                                                          :wanted-split="wantedSplit"
+                                                          :project="project"
+                                                          :room-collisions="roomCollisions"
+                                                          :first_project_shift_tab_id="first_project_shift_tab_id"
+                                                          :first_project_budget_tab_id="first_project_budget_tab_id"
+                                                          :first_project_calendar_tab_id="first_project_calendar_tab_id"
+                                                          :event-statuses="eventStatuses"
+                                                          />
                         </div>
                         <div  class="col-span-4 pr-8">
                             <div v-if="globalNotification.image_url || globalNotification.title">

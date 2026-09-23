@@ -47,6 +47,14 @@ class EventPolicy
             return true;
         }
 
+        return $this->viewPlanning($user);
+    }
+
+    /**
+     * Planungstermine (Planungskalender, Termin-Listen, Exporte) nur mit Planungskalender-Recht.
+     */
+    public function viewPlanning(User $user): bool
+    {
         return $user->canAny([
             PermissionEnum::CAN_SEE_PLANNING_CALENDAR->value,
             PermissionEnum::CAN_EDIT_PLANNING_CALENDAR->value,

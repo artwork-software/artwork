@@ -19,6 +19,7 @@ use Artwork\Modules\Budget\Models\ColumnCell;
 use Artwork\Modules\Budget\Models\MainPosition;
 use Artwork\Modules\Budget\Models\SubPosition;
 use Artwork\Modules\Budget\Models\SubPositionRow;
+use Artwork\Modules\Budget\Models\SageNotAssignedData;
 use Artwork\Modules\Budget\Models\Table;
 use Artwork\Modules\Budget\Services\BudgetCacheService;
 use Artwork\Modules\Budget\Services\BudgetService;
@@ -223,17 +224,18 @@ class ProjectController extends Controller
      */
     public function projectUserSearch(Request $request): array
     {
-        $users = User::search($request->input('query'))->get();
-        $project = Project::find($request->input('projectId'));
+        $validated = $request->validate([
+            'query' => ['nullable', 'string', 'max:255'],
+            'projectId' => ['required', 'integer', 'exists:projects,id'],
+        ]);
 
-        $returnUser = [];
-        foreach ($users as $user) {
-            $projectUser = $project->users()->where('user_id', $user->id)->first();
-            if ($projectUser !== null) {
-                $returnUser[] = $projectUser;
-            }
-        }
-        return $returnUser;
+        $project = Project::findOrFail($validated['projectId']);
+        // Liefert Team-Pivots (Budgetzugriff, Rollen) – nur für Personen, die das Projekt sehen dürfen.
+        $this->authorize('view', $project);
+
+        $userIds = User::search((string) ($validated['query'] ?? ''))->keys();
+
+        return $project->users()->whereIn('users.id', $userIds)->get()->all();
     }
 
     public function saveProjectManagementFilter(ProjectIndexPaginateRequest $request): void
@@ -2194,6 +2196,20 @@ class ProjectController extends Controller
     public function dropSageData(
         Request $request,
     ): void {
+        $request->validate([
+            'table_id' => ['required', 'integer', 'exists:tables,id'],
+            'sub_position_id' => ['required', 'integer', 'exists:sub_positions,id'],
+            'sage_data_id' => ['required', 'integer'],
+        ]);
+
+        $sageNotAssignedData = SageNotAssignedData::find($request->integer('sage_data_id'));
+        if ($sageNotAssignedData instanceof SageNotAssignedData) {
+            $this->authorize('assignToProject', [
+                $sageNotAssignedData,
+                Table::find($request->integer('table_id'))?->project_id,
+            ]);
+        }
+
         $this->sage100Service->dropData($request);
     }
 
@@ -3247,11 +3263,11 @@ class ProjectController extends Controller
                 'first_name'          => $user->first_name,
                 'last_name'           => $user->last_name,
                 'profile_photo_url'   => $user->profile_photo_url,
-                'email'               => $user->email,
+                'email'               => $user->visibleEmailFor(Auth::user()),
                 'departments'         => $user->departments,
                 'position'            => $user->position,
                 'business'            => $user->business,
-                'phone_number'        => $user->phone_number,
+                'phone_number'        => $user->visiblePhoneNumberFor(Auth::user()),
                 'project_management'  => $user->can(PermissionEnum::PROJECT_MANAGEMENT->value),
                 'pivot_access_budget' => (bool) ($user->pivot?->access_budget),
                 'pivot_is_manager'    => (bool) ($user->pivot?->is_manager),
@@ -3362,7 +3378,9 @@ class ProjectController extends Controller
     {
         return inertia('Projects/Edit', [
             'project' => new ProjectEditResource($project),
-            'users' => User::select(['id', 'first_name', 'last_name', 'email', 'profile_photo_path'])->get(),
+            // email_private mitladen: User::toArray() blendet private Adressen sonst nicht aus
+            'users' => User::select(['id', 'first_name', 'last_name', 'email', 'email_private', 'profile_photo_path'])
+                ->get(),
             'departments' => Department::select(['id', 'name'])->get()
         ]);
     }

@@ -15,6 +15,7 @@ use Artwork\Modules\User\Models\User;
 use Illuminate\Broadcasting\BroadcastEvent;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 
 class EventVerificationService
@@ -127,6 +128,8 @@ class EventVerificationService
                     $verifier = $verification->verifier;
 
                     // Erstelle ein sauberes Objekt mit nur den nötigen Daten + rejection_reason
+                    $viewer = Auth::user();
+
                     return (object) array_merge(
                         $verifier->only([
                             'first_name',
@@ -141,6 +144,10 @@ class EventVerificationService
                             'profile_photo_url',
                             'full_name',
                         ]), // erweitere hier bei Bedarf
+                        [
+                            'email' => $verifier->visibleEmailFor($viewer),
+                            'phone_number' => $verifier->visiblePhoneNumberFor($viewer),
+                        ],
                         ['rejection_reason' => $status === 'rejected' ? $verification->rejection_reason : null]
                     );
                 });

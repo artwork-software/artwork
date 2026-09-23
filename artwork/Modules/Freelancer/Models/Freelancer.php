@@ -91,6 +91,16 @@ class Freelancer extends Model implements Vacationer, Available, DayServiceable,
         'can_work_shifts'
     ];
 
+    /**
+     * Gage und interne Notiz nie roh serialisieren (Personenlisten, Schicht-Tab, Broadcasts); die Profilseite
+     * gibt sie explizit über die ShowResource aus.
+     */
+    protected $hidden = [
+        'salary_per_hour',
+        'salary_description',
+        'note',
+    ];
+
     protected $appends = [
         'name',
         'display_name',

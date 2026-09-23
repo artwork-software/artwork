@@ -28,6 +28,8 @@ class FilterController extends Controller
         // IDOR-Schutz: ein Filter darf nur auf den EIGENEN Account angewendet werden,
         // nicht auf einen beliebigen per URL übergebenen User.
         abort_unless((int) Auth::id() === (int) $user->id, 403);
+        // Vorlagen sind persönlich (FilterService liefert nur eigene); fremde per ID nicht anwendbar.
+        abort_unless((int) $filter->user_id === (int) $user->id, 403);
 
         $user->userFilters()->updateOrCreate([
             'filter_type' => $filter->filter_type

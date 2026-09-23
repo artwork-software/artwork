@@ -468,6 +468,8 @@ class EventController extends Controller
         }
 
         $isPlanning           = $request->boolean('isPlanning', false);
+        // Gleiche Schranke wie viewPlanningCalendar(): die Daten-API darf nicht mehr zeigen als die Seite.
+        abort_if($isPlanning && !$user->can('viewPlanning', Event::class), 403);
 
         if ($isPlanning) {
             $filterType = $isDailyView

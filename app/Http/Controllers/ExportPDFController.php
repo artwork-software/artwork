@@ -24,6 +24,7 @@ use Artwork\Modules\Craft\Models\Craft;
 use Artwork\Modules\Shift\Services\DailyShiftPlanPdfBuilder;
 use Artwork\Modules\User\Enums\UserFilterTypes;
 use Artwork\Modules\User\Models\User;
+use Illuminate\Support\Facades\Auth;
 use Artwork\Modules\User\Models\UserFilter;
 use Artwork\Modules\User\Policies\UserPolicy;
 use Artwork\Modules\User\Services\UserService;
@@ -1358,7 +1359,7 @@ class ExportPDFController extends Controller
             $userPayload = [
                 'id'        => $projUser->id,
                 'full_name' => $projUser->full_name ?? '',
-                'email'     => $projUser->email,
+                'email'     => $projUser->visibleEmailFor(Auth::user()),
             ];
 
             foreach ($roleIds as $roleId) {

@@ -4,6 +4,7 @@ namespace Artwork\Modules\Department\Http\Resources;
 
 use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Artwork\Modules\User\Http\Resources\UserIndexResource;
+use Artwork\Modules\User\Models\User;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\Collection;
 
@@ -34,7 +35,7 @@ class DepartmentIndexResource extends JsonResource
         $usersRaw = data_get($resource, 'users', []);
         $usersCol = $usersRaw instanceof Collection ? $usersRaw : collect($usersRaw);
 
-        $users = $usersCol->map(static function ($user) {
+        $users = $usersCol->map(static function ($user) use ($request) {
             $isObject = is_object($user);
 
             $projectManagement = false;
@@ -67,11 +68,13 @@ class DepartmentIndexResource extends JsonResource
                 'first_name' => data_get($user, 'first_name'),
                 'last_name' => data_get($user, 'last_name'),
                 'profile_photo_url' => data_get($user, 'profile_photo_url'),
-                'email' => data_get($user, 'email'),
+                'email' => $user instanceof User ? $user->visibleEmailFor($request->user()) : data_get($user, 'email'),
                 'departments' => data_get($user, 'departments'),
                 'position' => data_get($user, 'position'),
                 'business' => data_get($user, 'business'),
-                'phone_number' => data_get($user, 'phone_number'),
+                'phone_number' => $user instanceof User
+                    ? $user->visiblePhoneNumberFor($request->user())
+                    : data_get($user, 'phone_number'),
                 'project_management' => $projectManagement,
                 'display_name' => $displayName,
                 'type' => $type,

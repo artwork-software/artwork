@@ -54,7 +54,9 @@ class ShiftDTO extends Data
             roomId: $shift->room_id,
             isCommitted: $shift->is_committed,
             inWorkflow: $shift->in_workflow,
-            projectId: $resolvedProject?->id,
+            // Fremdschlüssel als Rückfall: Ist das Projekt nicht auflösbar (z.B. im Papierkorb), darf die
+            // ID nicht verschwinden — das Bearbeiten-Modal würde sonst project_id = null speichern.
+            projectId: $resolvedProject?->id ?? $shift->project_id,
             globalQualifications: self::serializeGlobalQualifications($shift),
             shiftGroupId: $shift->shift_group_id,
             craft: self::serializeCraft($shift),

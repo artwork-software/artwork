@@ -9,25 +9,27 @@ use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Models\ProjectCreateSettings;
 use Artwork\Modules\Project\Models\ProjectRole;
 use Artwork\Modules\User\Models\User;
+use Illuminate\Support\Facades\Auth;
 
 class ProjectTabTeamService
 {
     public function buildTeamPayload(Project $project): array
     {
+        $viewer = Auth::user();
         $users = $project->users()->get()->map(
             fn(User $user) => [
                 'id'                      => $user->id,
                 'first_name'              => $user->first_name,
                 'last_name'               => $user->last_name,
                 'profile_photo_url'       => $user->profile_photo_url,
-                'email'                   => $user->email,
+                'email'                   => $user->visibleEmailFor($viewer),
                 'departments'             => $user->departments,
                 'description'             => $user->description,
                 'position'                => $user->position,
                 'pronouns'                => $user->pronouns,
                 'email_private'           => (bool)$user->email_private,
                 'phone_private'           => (bool)$user->phone_private,
-                'phone_number'            => $user->phone_number,
+                'phone_number'            => $user->visiblePhoneNumberFor($viewer),
                 'project_management'      => $user->can(PermissionEnum::PROJECT_MANAGEMENT->value),
                 'pivot_access_budget'     => (bool)($user->pivot?->access_budget),
                 'pivot_is_manager'        => (bool)($user->pivot?->is_manager),

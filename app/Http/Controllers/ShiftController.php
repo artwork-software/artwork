@@ -178,9 +178,23 @@ class ShiftController extends Controller
                 'exists:shift_qualifications,id',
             ],
             'shiftsQualifications.*.value' => ['nullable', 'integer', 'min:0'],
+            // Ein mitgeschicktes null darf bestehende Zuordnungen nicht still löschen: Eine eventlose
+            // Schicht ohne Raum verschwindet aus dem Dienstplan und lässt sich nicht mehr löschen.
+            'room_id' => [
+                'sometimes',
+                Rule::requiredIf($shift->event_id === null),
+                'nullable',
+                'integer',
+                'exists:rooms,id',
+            ],
+            'project_id' => ['sometimes', 'nullable', 'integer', 'exists:projects,id'],
+            'shift_group_id' => ['sometimes', 'nullable', 'integer', 'exists:shift_groups,id'],
+            'start' => ['sometimes', 'required', 'date_format:H:i,H:i:s'],
+            'end' => ['sometimes', 'required', 'date_format:H:i,H:i:s'],
         ]);
 
         $projectId = $shift?->project_id;
+        $previousRoomId = $shift->room_id;
         if ($shift->is_committed) {
             $event = $shift?->event;
 
@@ -205,7 +219,9 @@ class ShiftController extends Controller
                 $notificationTitle = __(
                     'notification.shift.locked_changes',
                     [
-                        'projectName' => $shift?->event?->project?->name ?? __('notification.shift.without_project'),
+                        'projectName' => $shift?->project?->name
+                            ?? $shift?->event?->project?->name
+                            ?? __('notification.shift.without_project'),
                         'craftAbbreviation' => $shift->craft->abbreviation
                     ],
                     $user?->language
@@ -241,7 +257,7 @@ class ShiftController extends Controller
                     $notificationTitle = __(
                         'notification.shift.locked_changes',
                         [
-                            'projectName' => $shift?->event?->project?->name ??
+                            'projectName' => $shift?->project?->name ?? $shift?->event?->project?->name ??
                                 __('notification.shift.without_project'),
                             'craftAbbreviation' => $shift->craft->abbreviation
                         ],
@@ -340,18 +356,24 @@ class ShiftController extends Controller
 
         $projectTab = $projectTabService->findFirstProjectTabWithShiftsComponent();
 
+        $shiftPlanUpdate = null;
         if ($shift->event_id) {
-            broadcast(new UpdateEventShiftInShiftPlan($shift, $shift->event?->room_id));
-        } else {
-            broadcast(new UpdateShiftInShiftPlan($shift, $shift->room_id));
+            if ($shift->event?->room_id !== null) {
+                $shiftPlanUpdate = new UpdateEventShiftInShiftPlan($shift, $shift->event->room_id);
+            }
+        } elseif ($shift->room_id !== null) {
+            $shiftPlanUpdate = new UpdateShiftInShiftPlan($shift, $shift->room_id, $previousRoomId);
         }
-
+        if ($shiftPlanUpdate !== null) {
+            broadcast($shiftPlanUpdate);
+        }
 
         // Der Dienstplan speichert per axios (kein Inertia-Request): ein 302 würde vom Browser mit
         // PATCH auf die Dienstplan-URL weiterverfolgt (405 "PATCH not supported for shifts/view").
-        // Deshalb JSON statt Redirect; die Oberfläche aktualisiert sich über den Broadcast.
+        // Deshalb JSON statt Redirect. Die Antwort trägt denselben Stand wie der Broadcast, damit die
+        // Ansicht des Speichernden nicht vom WebSocket abhängt.
         if ($request->boolean('updateOrCreateInShiftPlan') || $request->expectsJson()) {
-            return response()->json(['id' => $shift->id]);
+            return response()->json(['id' => $shift->id, ...($shiftPlanUpdate?->broadcastWith() ?? [])]);
         }
 
         if ($projectTab && $projectId) {
@@ -732,7 +754,7 @@ class ShiftController extends Controller
                     $notificationTitle = __(
                         'notification.shift.deleted_where_locked',
                         [
-                            'projectName' => $shift?->event?->project?->name ??
+                            'projectName' => $shift?->project?->name ?? $shift?->event?->project?->name ??
                                 __('notification.shift.without_project'),
                             'craftAbbreviation' => $shift->craft->abbreviation
                         ],
@@ -769,7 +791,7 @@ class ShiftController extends Controller
                     $notificationTitle = __(
                         'notification.shift.deleted_where_locked',
                         [
-                            'projectName' => $shift?->event?->project?->name ??
+                            'projectName' => $shift?->project?->name ?? $shift?->event?->project?->name ??
                                 __('notification.shift.without_project'),
                             'craftAbbreviation' => $shift->craft->abbreviation
                         ],
@@ -814,10 +836,11 @@ class ShiftController extends Controller
         $shiftStart = Carbon::parse($shift->start_date);
         $shiftEnd = Carbon::parse($shift->end_date);
 
-        broadcast(new DestroyShift(
-            $shift,
-            $shift->event_id ? $shift->event?->room_id : $shift->room_id
-        ));
+        $broadcastRoomId = $shift->event_id ? $shift->event?->room_id : $shift->room_id;
+        // Altdaten ohne Raum müssen trotzdem löschbar sein (DestroyShift verlangt eine Raum-ID)
+        if ($broadcastRoomId !== null) {
+            broadcast(new DestroyShift($shift, $broadcastRoomId));
+        }
         $this->shiftService->forceDelete($shift);
 
         $this->revalidateShiftRules($affectedUsers, $shiftStart, $shiftEnd);
@@ -2375,8 +2398,8 @@ class ShiftController extends Controller
     {
         $request->validate([
             'shiftPivotId' => ['required', 'integer'],
-            'start_time' => ['required', 'string'],
-            'end_time' => ['required', 'string'],
+            'start_time' => ['required', 'date_format:H:i,H:i:s'],
+            'end_time' => ['required', 'date_format:H:i,H:i:s'],
         ]);
 
         $shiftId = $request->get('shiftPivotId');
@@ -2388,69 +2411,7 @@ class ShiftController extends Controller
             return response()->json(['error' => 'Shift pivot not found'], 404);
         }
 
-        if (!$pivot->relationLoaded('shift')) {
-            $pivot->load('shift');
-        }
-
-        // end_date immer aus start_date neu ableiten: das alte Pivot-end_date kann
-        // von einer früheren Über-Mitternacht-Zeit stammen (+1 Tag) — bei Korrektur
-        // auf eine normale Tageszeit entstand sonst eine 32h-Zuweisung.
-        $startDate = Carbon::parse($pivot->start_date ?? $pivot->shift->start_date)->toDateString();
-        $startDateTime = Carbon::parse($startDate . ' ' . $startTime);
-        $endDateTime = Carbon::parse($startDate . ' ' . $endTime);
-
-        if ($endDateTime <= $startDateTime) {
-            $endDateTime->addDay();
-        }
-
-        $beforeLabel = ($pivot->start_time || $pivot->end_time)
-            ? Carbon::parse($pivot->start_time)->format('H:i') . ' - ' . Carbon::parse($pivot->end_time)->format('H:i')
-            : null;
-
-        // Update the pivot with new start and end times
-        $pivot->update([
-            'start_time' => $startTime,
-            'end_time' => $endTime,
-            'start_date' => $startDateTime->format('Y-m-d'),
-            'end_date' => $endDateTime->format('Y-m-d'),
-        ]);
-
-        // Änderung im Workflow-/Festschreibungs-Verlauf protokollieren (B13)
-        app(ShiftWorkerService::class)->logIndividualPivotChange(
-            $pivot,
-            'individual_time',
-            $beforeLabel,
-            $startDateTime->format('H:i') . ' - ' . $endDateTime->format('H:i')
-        );
-
-        // Individuelle Zeit geändert → eine bereits abgegebene Zu-/Absage bezog
-        // sich auf die alte Zeit und wird auf "ausstehend" zurückgesetzt.
-        if ($pivot->wasChanged(['start_time', 'end_time', 'start_date', 'end_date'])) {
-            app(\Artwork\Modules\Shift\Services\ShiftWorkerConfirmationService::class)
-                ->resetConfirmation($pivot);
-        }
-
-        $this->workingHourCacheService->forgetForEntity(
-            WorkingHourCacheService::entityType($pivot->employable),
-            $pivot->employable_id
-        );
-
-        // Broadcast the updated shift so the frontend updates in real-time
-        $pivot->shift->load([
-            'shiftsQualifications',
-            'globalQualifications',
-            'users.globalQualifications',
-            'freelancer.globalQualifications',
-            'serviceProvider.globalQualifications',
-            'project',
-        ]);
-
-        if (!$pivot->shift->event_id) {
-            broadcast(new UpdateShiftInShiftPlan($pivot->shift, $pivot->shift->room_id));
-        } else {
-            $pivot->shift->load('event');
-            broadcast(new UpdateShiftInShiftPlan($pivot->shift, $pivot->shift->event?->room_id));
-        }
+        app(ShiftWorkerService::class)->applyIndividualTime($pivot, $startTime, $endTime);
     }
 
     public function updateShortDescription(Request $request): void

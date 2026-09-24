@@ -199,11 +199,14 @@ watch(() => props.globalQualifications, () => {
 }, { deep: true })
 
 // Projekt vorbelegen: Priorität -> Schicht-Projekt (Edit) > übergebenes Projekt (Projekt-Tab) > Event-Projekt
+// Schicht-DTOs liefern die Projekt-ID je nach Ansicht als projectId (Dienstplan/Kalender) oder project_id
+// (Listenansicht) — fehlt sie hier, würde beim Speichern project_id = null geschrieben.
+const shiftProjectId = props.shift?.projectId ?? props.shift?.project_id ?? null
 const selectedProject = ref(
     props.shift?.project
         ? props.shift.project
-        : (props.shift?.projectId
-            ? (resolveProjectLookup(props.shift.projectId) ?? { id: props.shift.projectId, name: '...' })
+        : (shiftProjectId
+            ? (resolveProjectLookup(shiftProjectId) ?? { id: shiftProjectId, name: '...' })
             : (props.project ?? (props.event?.project ?? null)))
 );
 
@@ -378,7 +381,7 @@ const shiftForm = useForm({
     roomsAndDatesForMultiEdit: props.roomsAndDatesForMultiEdit ? props.roomsAndDatesForMultiEdit : null,
     updateOrCreateInShiftPlan: props.shiftPlanModal,
     project_id: props.shift
-        ? (props.shift.project?.id ?? props.shift.projectId ?? null)
+        ? (props.shift.project?.id ?? shiftProjectId)
         : (props.event && props.event.project
             ? props.event.project.id
             : (props.project ? props.project.id : null)),
@@ -524,7 +527,9 @@ watch(selectedRoom, (r) => {
 })
 
 // Reagiere auf Änderungen an rooms/room-Prop (spätes Laden möglich)
-watch(() => props.rooms, () => initSelectedRoom(), { deep: true })
+// Nur auf die Raum-IDs reagieren: props.rooms ist in der Wochenansicht das komplette Plan-Array —
+// ein deep-Watcher lief bei jedem Broadcast über alle Schichten und Personen.
+watch(() => roomsList.value.map((r: any) => r?.id ?? r?.roomId).join(','), () => initSelectedRoom())
 watch(() => props.room, (newVal, oldVal) => {
     // Beim Editieren niemals den bereits ermittelten Shift-Raum „wegwerfen“,
     // nur weil das room-Prop (z. B. null/stale) wechselt.
@@ -540,11 +545,13 @@ watch(() => props.room, (newVal, oldVal) => {
     }
 })
 
-watch(() => props.shift, () => {
-    // Wenn der Shift im Modal wechselt (Edit), neu initialisieren
+// Nur bei einer ANDEREN Schicht neu initialisieren. Ein Live-Update derselben Schicht (Broadcast,
+// z.B. jemand wird eingeplant) ersetzt das Objekt — ein deep-Watcher setzte dabei die bereits
+// geänderte Raumauswahl still auf den alten Raum zurück.
+watch(() => props.shift?.id, () => {
     selectedRoom.value = null
     initSelectedRoom()
-}, { deep: true })
+})
 
 onMounted(() => initSelectedRoom())
 
@@ -726,11 +733,15 @@ const saveDisabledReason = computed(() =>
 
 
 // ----- Methods (funktional + UI) -----
+// axios statt router.delete: der Endpunkt liefert keine Inertia-Antwort — Fehler (403/500) wurden
+// verschluckt und das Modal schloss trotzdem, als wäre die Schicht gelöscht.
 function deleteShift() {
-    router.delete(route('shifts.destroy', { shift: props.shift.id}), {
-        onSuccess: () => closeModal(true),
-        onFinish: () => closeModal(true),
-    })
+    serverErrors.value = {}
+    axiosProcessing.value = true
+    axios.delete(route('shifts.destroy', { shift: props.shift.id }))
+        .then(() => closeModal(true))
+        .catch((e) => applyServerErrors(e))
+        .finally(() => { axiosProcessing.value = false })
 }
 
 // kompakte Stats für Schichtvorlagen (Total-Menge & Anzahl Qualis)
@@ -814,13 +825,27 @@ function takeTimePreset(preset) {
     ;(props.shiftTimePresets || []).forEach((p) => { p.active = p.id === preset.id })
 }
 
-function closeModal(bool = false){
+/**
+ * Leeres shiftsQualifications löscht serverseitig ALLE Plätze und Zuweisungen. Hatte die Schicht schon
+ * vorher keine Plätze (z.B. Gewerk ohne Funktionen, Personen über die generische Qualifikation
+ * zugewiesen), darf ein reines Bearbeiten (Raum, Zeit, Projekt) die Besetzung nicht mitlöschen.
+ */
+function withoutUnchangedEmptyQualifications(data: Record<string, any>): Record<string, any> {
+    const hadQualifications = (props.shift?.shifts_qualifications ?? []).length > 0
+    if (props.edit && !hadQualifications && (data.shiftsQualifications ?? []).length === 0) {
+        const { shiftsQualifications, ...rest } = data
+        return rest
+    }
+    return data
+}
+
+function closeModal(bool = false, savedShift: any = null){
     // Modal sofort ausblenden, um UI-Latenz zu vermeiden
     open.value = false
     ;(props.shiftTimePresets || []).forEach((p) => { p.active = false })
     singleShiftPresets.value.forEach(p => { p.active = false })
     // Parent benachrichtigen (true = erfolgreich gespeichert, false = nur geschlossen)
-    emit('closed', bool)
+    emit('closed', bool, savedShift)
 }
 
 function appendComputedShiftQualificationsToShiftForm() {
@@ -995,11 +1020,16 @@ function saveShift() {
     shiftForm.shiftsQualifications = []
     shiftForm.globalQualifications = []
 
+    // Beim Bearbeiten auch auf 0 gesetzte, bisher angefragte Qualifikationen mitschicken — sonst kommt
+    // eine leere Liste an und der Server lässt die alten Mengen unverändert stehen.
+    const previouslyRequestedGlobalIds = new Set(
+        props.edit ? (props.shift?.globalQualifications ?? []).map((q: any) => q.id) : []
+    )
     globalQualifications.value.forEach( (qualification) => {
-        if(qualification.quantity > 0) {
+        if (qualification.quantity > 0 || previouslyRequestedGlobalIds.has(qualification.id)) {
             shiftForm.globalQualifications.push({
                 global_qualification_id: qualification.id,
-                quantity: qualification.quantity,
+                quantity: qualification.quantity > 0 ? qualification.quantity : 0,
             });
         }
     })
@@ -1034,17 +1064,19 @@ function saveShift() {
         // The WebSocket broadcast handles the real-time UI update.
         axiosProcessing.value = true
         axios.patch(route('event.shift.update', props.shift.id), {
-            ...shiftForm.data(),
+            ...withoutUnchangedEmptyQualifications(shiftForm.data()),
             updateOrCreateInShiftPlan: true,
         })
-            .then(() => {
+            .then(({ data }) => {
                 shiftForm.reset()
-                closeModal(true)
+                // Gespeicherter Stand ({ shift, roomId, lookups }) → Ansicht aktualisiert sofort,
+                // unabhängig vom Broadcast
+                closeModal(true, data?.shift ? data : null)
             })
             .catch((e) => applyServerErrors(e))
             .finally(() => { axiosProcessing.value = false })
     } else {
-        shiftForm.patch(route('event.shift.update', props.shift.id), {
+        shiftForm.transform(withoutUnchangedEmptyQualifications).patch(route('event.shift.update', props.shift.id), {
             preserveScroll: true,
             preserveState: true,
             onSuccess: () => {
@@ -1810,7 +1842,7 @@ const lockOrUnlockShift = (commit = false) => {
                  nicht vom Footer-Hintergrund überlagert werden -->
             <div class="sticky bottom-0 left-0 right-0 z-10 mt-5">
                 <!-- px wie die Karte: Buttons bündig mit den Feldern, nicht mit der Kartenkante -->
-                <div class="py-3 px-4 sm:px-5 bg-white/90 backdrop-blur flex items-center gap-3" :class="!props.shift?.roomId ? 'justify-center' : 'justify-between'">
+                <div class="py-3 px-4 sm:px-5 bg-white/90 backdrop-blur flex items-center gap-3" :class="!(props.shift?.roomId ?? props.shift?.room_id) ? 'justify-center' : 'justify-between'">
 
                     <div class="flex items-center gap-3 min-w-0" :title="saveDisabledReason">
                         <BaseUIButton
@@ -1826,7 +1858,7 @@ const lockOrUnlockShift = (commit = false) => {
                     </div>
 
                     <BaseUIButton
-                        v-if="props.shift?.roomId"
+                        v-if="props.shift?.roomId ?? props.shift?.room_id"
                         type="button"
                         @click="showComfirmDeleteModal = true"
                         is-delete-button

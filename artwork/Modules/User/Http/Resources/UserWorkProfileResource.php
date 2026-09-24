@@ -59,7 +59,7 @@ class UserWorkProfileResource extends JsonResource
             'shiftQualifications' => $this->getAttribute('shiftQualifications'),
             'defaultProjectRoleIds' => $this->getAttribute('defaultProjectRoles')->pluck('id')->toArray(),
             'is_freelancer' => $this->getAttribute('is_freelancer'),
-            'email' => $this->getAttribute('email'),
+            'email' => $this->visibleEmailFor($request->user()),
         ];
     }
 }

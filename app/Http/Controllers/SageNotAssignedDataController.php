@@ -92,6 +92,11 @@ class SageNotAssignedDataController extends Controller
         SageNotAssignedData $sageNotAssignedData,
         ColumnCell $columnCell
     ): RedirectResponse {
+        $this->authorize('assignToProject', [
+            $sageNotAssignedData,
+            $columnCell->column?->table?->project_id,
+        ]);
+
         $this->sageNotAssignedDataService->moveSageData($sageNotAssignedData, $columnCell);
         return Redirect::back();
     }

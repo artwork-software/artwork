@@ -2,7 +2,62 @@ import { getDaysInRange } from '@/Composeables/calendarDateUtils.js'
 
 // subscribeShiftChannels: false → nur Termin-Kanäle. Die Schicht-Kanäle sind in routes/channels.php auf
 // Dienstplan-Sichtrecht beschränkt; ein Abonnement ohne Recht erzeugt nur 403-Konsolenfehler.
-export function useShiftCalendarListener(newShiftPlanData, { onWorkersNeedReload, onWorkerNeedReload, onEventsChanged, onShiftDataChanged, onLookupsReceived, subscribeShiftChannels = true } = {}) {
+// projectFilterId: Getter für die Projekt-ID, auf die die Ansicht eingeschränkt ist (Projekt-Schichten-Tab
+// ohne „Schichten anderer Projekte anzeigen") — null = keine Einschränkung. Spiegelt den Server-Filter,
+// sonst tauchen live Schichten fremder Projekte auf bzw. bleiben nach einem Projektwechsel stehen.
+export function useShiftCalendarListener(newShiftPlanData, { onWorkersNeedReload, onWorkerNeedReload, onEventsChanged, onShiftDataChanged, onLookupsReceived, subscribeShiftChannels = true, projectFilterId = null } = {}) {
+
+    function isShiftVisibleInView(shift) {
+        const projectId = typeof projectFilterId === 'function' ? projectFilterId() : projectFilterId;
+        if (projectId === null || projectId === undefined) return true;
+        return Number(shift.projectId ?? shift.project_id) === Number(projectId);
+    }
+
+    function findLoadedShift(shiftId) {
+        for (const room of newShiftPlanData.value || []) {
+            const shift = room.shiftsById?.[shiftId];
+            if (shift) return shift;
+        }
+        return null;
+    }
+
+    function workerKeys(shift) {
+        return (shift?.workers ?? []).map((w) => `${w.type}:${w.id}`);
+    }
+
+    /**
+     * Personenzeilen der Wochenansicht nachladen, wenn sich an der Schicht etwas geändert hat, das dort
+     * sichtbar ist (Zeit, Datum, Gewerk, Besetzung). Beim Gewerkwechsel entfernt der Server alle
+     * Personen ohne eigenen Broadcast — daher alte UND neue Besetzung nachladen.
+     */
+    function reloadWorkersAffectedByShiftChange(previousShift, shift) {
+        if (!onWorkerNeedReload && !onWorkersNeedReload) return;
+
+        const relevantFields = ['startDate', 'endDate', 'start', 'end', 'break_minutes', 'craftId'];
+        const fieldsChanged = !previousShift
+            || relevantFields.some((field) => previousShift[field] !== shift[field]);
+        const previousKeys = workerKeys(previousShift);
+        const nextKeys = workerKeys(shift);
+        const workersChanged = previousKeys.length !== nextKeys.length
+            || previousKeys.some((key) => !nextKeys.includes(key));
+
+        if (!fieldsChanged && !workersChanged) return;
+
+        const workers = [...(previousShift?.workers ?? []), ...(shift.workers ?? [])];
+        if (workers.length === 0) return;
+
+        if (!onWorkerNeedReload) {
+            onWorkersNeedReload();
+            return;
+        }
+        const seen = new Set();
+        for (const worker of workers) {
+            const key = `${worker.type}:${worker.id}`;
+            if (seen.has(key)) continue;
+            seen.add(key);
+            onWorkerNeedReload(worker.id, resolveWorkerType(worker.type));
+        }
+    }
 
     function resolveWorkerType(entityType) {
         const map = { 0: 'user', 1: 'freelancer', 2: 'serviceProvider', 'service_provider': 'serviceProvider' }
@@ -55,10 +110,49 @@ export function useShiftCalendarListener(newShiftPlanData, { onWorkersNeedReload
         room.__v = (room.__v ?? 0) + 1;
     }
 
-    function updateShiftInRoomAndEvents(data, roomId) {
-        const room = findRoomById(roomId);
-        if (!room) return;
+    /**
+     * Entfernt eine eigenständige Schicht aus allen Räumen/Tagen, an denen sie laut neuem Stand
+     * nicht mehr liegt. Ohne das bliebe sie nach einem Raum- oder Datumswechsel als Geist an der
+     * alten Stelle stehen (der Broadcast kommt nur mit dem neuen Raum/Datum).
+     */
+    function removeShiftFromStalePositions(shift, targetRoom) {
+        const targetDays = new Set(targetRoom ? getShiftDays(shift) : []);
+        // Ohne auflösbares Datum (Altdaten) die Tage im Zielraum nicht anfassen
+        const keepTargetDays = targetRoom && targetDays.size === 0;
+        let updated = false;
 
+        for (const room of newShiftPlanData.value) {
+            const isTarget = room === targetRoom;
+            let roomTouched = false;
+
+            if (!isTarget && room.shiftsById && room.shiftsById[shift.id] !== undefined) {
+                delete room.shiftsById[shift.id];
+                roomTouched = true;
+            }
+
+            if (isTarget && keepTargetDays) continue;
+
+            for (const day in room.content || {}) {
+                if (isTarget && targetDays.has(day)) continue;
+                const ids = room.content[day]?.shiftIds;
+                if (!Array.isArray(ids)) continue;
+                const i = ids.indexOf(shift.id);
+                if (i !== -1) {
+                    ids.splice(i, 1);
+                    roomTouched = true;
+                }
+            }
+
+            if (roomTouched) {
+                bumpRoomVersion(room);
+                updated = true;
+            }
+        }
+
+        return updated;
+    }
+
+    function updateShiftInRoomAndEvents(data, roomId, { reloadWorkers = false } = {}) {
         // Projekt-/Gewerk-/Gruppen-Lookups zuerst einmischen: Nach einem Projektwechsel kennt der
         // Client das neue Projekt sonst nicht (nicht im Initial-Load) und zeigt die Schicht bis zum
         // Neuladen als "ohne Projekt".
@@ -66,12 +160,37 @@ export function useShiftCalendarListener(newShiftPlanData, { onWorkersNeedReload
             onLookupsReceived(data.lookups);
         }
 
-        let updated = false;
-
         // Nur event-LOSE Schichten ins Raum-Raster upserten: Der Server-Load filtert
         // whereNull(event_id) — eine per Broadcast eingefügte Event-Schicht würde nach
         // dem nächsten Reload wieder verschwinden (Live-Ansicht ≠ Server-Wahrheit).
         const isStandaloneShift = !(data.shift.eventId ?? data.shift.event_id);
+
+        if (reloadWorkers) {
+            reloadWorkersAffectedByShiftChange(findLoadedShift(data.shift.id), data.shift);
+        }
+
+        // Gehört die Schicht (nicht mehr) in diese Ansicht, nur alte Positionen räumen
+        if (isStandaloneShift && !isShiftVisibleInView(data.shift)) {
+            if (removeShiftFromStalePositions(data.shift, null) && onShiftDataChanged) onShiftDataChanged();
+            return;
+        }
+
+        // Zielraum = aktueller Raum der Schicht (nach Raumwechsel ≠ Kanal, auf dem der
+        // Broadcast für den alten Raum ankommt)
+        const room = findRoomById(data.shift.roomId ?? roomId);
+
+        let updated = false;
+
+        // Raum-/Datumswechsel: alte Positionen räumen — auch wenn der neue Raum in dieser
+        // Ansicht gar nicht geladen ist (Raumfilter), sonst bleibt die Schicht im alten Raum stehen.
+        if (isStandaloneShift && removeShiftFromStalePositions(data.shift, room ?? null)) {
+            updated = true;
+        }
+
+        if (!room) {
+            if (updated && onShiftDataChanged) onShiftDataChanged();
+            return;
+        }
 
         if (room.shiftsById && isStandaloneShift) {
             // Always upsert into shiftsById (handles both new and existing standalone shifts)
@@ -225,6 +344,7 @@ export function useShiftCalendarListener(newShiftPlanData, { onWorkersNeedReload
         let updated = false;
 
         for (const shift of shifts) {
+            if (!isShiftVisibleInView(shift)) continue;
             const room = findRoomById(shift.roomId);
             if (!room) continue;
 
@@ -333,7 +453,87 @@ export function useShiftCalendarListener(newShiftPlanData, { onWorkersNeedReload
         }
     }
 
+    // Registrierte Handler — für dispose(). Echo.private() liefert pro Kanal dasselbe Objekt; ohne
+    // stopListening hängt jeder Remount (Filterwechsel mit preserveState:false) einen weiteren Handler
+    // mit veralteter Closure an. Bewusst kein Echo.leave(): das träfe andere Abonnenten desselben Kanals.
+    const registeredHandlers = [];
+    let disposed = false;
+
+    function listen(channelName, eventName, handler) {
+        Echo.private(channelName).listen(eventName, handler);
+        registeredHandlers.push({ channelName, eventName, handler });
+    }
+
+    function onWorkerEntityChanged(data) {
+        updateShiftInRoomAndEvents(data, data.roomId);
+        if (onWorkerNeedReload && data.entity && data.entityType !== undefined) {
+            onWorkerNeedReload(data.entity, resolveWorkerType(data.entityType));
+        } else if (onWorkersNeedReload) {
+            onWorkersNeedReload();
+        }
+    }
+
+    function onShiftChanged(data) {
+        updateShiftInRoomAndEvents(data, data.roomId, { reloadWorkers: true });
+    }
+
+    function onEventRemoved(data) {
+        for (const currentRoom of newShiftPlanData.value) {
+            let roomTouched = false;
+            // ShiftPlan structure
+            if (currentRoom.eventsById && currentRoom.eventsById[data.event.id]) {
+                delete currentRoom.eventsById[data.event.id];
+                roomTouched = true;
+            }
+            for (const day in currentRoom.content || {}) {
+                // ShiftPlan structure: eventIds
+                const ids = currentRoom.content[day].eventIds;
+                if (Array.isArray(ids)) {
+                    const i = ids.indexOf(data.event.id);
+                    if (i !== -1) {
+                        ids.splice(i, 1);
+                        roomTouched = true;
+                    }
+                }
+                // BaseCalendar structure: events array
+                const events = currentRoom.content[day].events;
+                if (Array.isArray(events)) {
+                    const idx = events.findIndex(e => e.id === data.event.id);
+                    if (idx !== -1) events.splice(idx, 1);
+                }
+            }
+            // room.__v ist der Cache-Key der ShiftPlan-Zellen — ohne Bump
+            // bleibt der gelöschte Termin dort sichtbar.
+            if (roomTouched) bumpRoomVersion(currentRoom);
+        }
+        if (onEventsChanged) onEventsChanged();
+    }
+
+    function onMultiShiftsCreated(data) {
+        // Merge project/craft/group lookups first so newly assigned projects
+        // render immediately instead of only after a full reload.
+        if (data.lookups && onLookupsReceived) {
+            onLookupsReceived(data.lookups);
+        }
+
+        const updated = addShiftsToRoomAndDay(data.shifts);
+
+        // If shifts were added, we might want to reload certain data
+        if (updated && onWorkersNeedReload) {
+            onWorkersNeedReload();
+        }
+    }
+
+    function onWorkerRowChanged(data) {
+        if (onWorkerNeedReload) {
+            onWorkerNeedReload(data.workerId, resolveWorkerType(data.workerType));
+        } else if (onWorkersNeedReload) {
+            onWorkersNeedReload();
+        }
+    }
+
     function init() {
+        if (disposed) return;
         // Check if newShiftPlanData.value is iterable before attempting to iterate
         if (!newShiftPlanData.value || !Array.isArray(newShiftPlanData.value)) {
             console.warn('useShiftCalendarListener: newShiftPlanData.value is not an array or is null/undefined:', newShiftPlanData.value);
@@ -343,120 +543,55 @@ export function useShiftCalendarListener(newShiftPlanData, { onWorkersNeedReload
         // Set up listeners for each room
         for (const room of newShiftPlanData.value) {
             if (subscribeShiftChannels) {
-            // Shift plan room events
-            Echo.private('shift-plan.room.' + room.roomId)
-                .listen('.shift-created', (data) => {
-                    updateShiftInRoomAndEvents(data, data.roomId);
-                })
-                .listen('.shift-assign-entity', (data) => {
-                    updateShiftInRoomAndEvents(data, data.roomId);
-                    if (onWorkerNeedReload && data.entity && data.entityType !== undefined) {
-                        onWorkerNeedReload(data.entity, resolveWorkerType(data.entityType));
-                    } else if (onWorkersNeedReload) {
-                        onWorkersNeedReload();
-                    }
-                })
-                .listen('.shift-remove-entity', (data) => {
-                    updateShiftInRoomAndEvents(data, data.roomId);
-                    if (onWorkerNeedReload && data.entity && data.entityType !== undefined) {
-                        onWorkerNeedReload(data.entity, resolveWorkerType(data.entityType));
-                    } else if (onWorkersNeedReload) {
-                        onWorkersNeedReload();
-                    }
-                })
-                .listen('.shift-updated', (data) => {
-                    updateShiftInRoomAndEvents(data, data.roomId);
-                })
-                .listen('.shift-updated.in.event', (data) => {
-                    updateShiftInRoomAndEvents(data, data.roomId);
-                });
+                // Shift plan room events
+                const shiftChannel = 'shift-plan.room.' + room.roomId;
+                listen(shiftChannel, '.shift-created', onShiftChanged);
+                listen(shiftChannel, '.shift-assign-entity', onWorkerEntityChanged);
+                listen(shiftChannel, '.shift-remove-entity', onWorkerEntityChanged);
+                listen(shiftChannel, '.shift-updated', onShiftChanged);
+                listen(shiftChannel, '.shift-updated.in.event', onShiftChanged);
 
-            // Destroy events room
-            Echo.private('destroy.events.room.' + room.roomId)
-                .listen('.shift-destroyed.in.event', (data) => {
-                    removeShiftFromRoomAndEvents(data);
-                });
+                // Destroy events room
+                listen('destroy.events.room.' + room.roomId, '.shift-destroyed.in.event', removeShiftFromRoomAndEvents);
             }
 
             // Event room
-            Echo.private('event.room.' + room.roomId)
-                .listen('.event.created', (data) => {
-                    addEventToRoomAndDay(data.event);
-                })
-                .listen('.event.updated', (data) => {
-                    addEventToRoomAndDay(data.event);
-                })
-                .listen('.event.removed', (data) => {
-                    for (const currentRoom of newShiftPlanData.value) {
-                        let roomTouched = false;
-                        // ShiftPlan structure
-                        if (currentRoom.eventsById && currentRoom.eventsById[data.event.id]) {
-                            delete currentRoom.eventsById[data.event.id];
-                            roomTouched = true;
-                        }
-                        for (const day in currentRoom.content || {}) {
-                            // ShiftPlan structure: eventIds
-                            const ids = currentRoom.content[day].eventIds;
-                            if (Array.isArray(ids)) {
-                                const i = ids.indexOf(data.event.id);
-                                if (i !== -1) {
-                                    ids.splice(i, 1);
-                                    roomTouched = true;
-                                }
-                            }
-                            // BaseCalendar structure: events array
-                            const events = currentRoom.content[day].events;
-                            if (Array.isArray(events)) {
-                                const idx = events.findIndex(e => e.id === data.event.id);
-                                if (idx !== -1) events.splice(idx, 1);
-                            }
-                        }
-                        // room.__v ist der Cache-Key der ShiftPlan-Zellen — ohne Bump
-                        // bleibt der gelöschte Termin dort sichtbar.
-                        if (roomTouched) bumpRoomVersion(currentRoom);
-                    }
-                    if (onEventsChanged) onEventsChanged();
-                });
+            const eventChannel = 'event.room.' + room.roomId;
+            listen(eventChannel, '.event.created', (data) => addEventToRoomAndDay(data.event));
+            listen(eventChannel, '.event.updated', (data) => addEventToRoomAndDay(data.event));
+            listen(eventChannel, '.event.removed', onEventRemoved);
         }
 
         // Multi-shifts channel
-        if (subscribeShiftChannels) Echo.private('shift-plan.multi-shifts')
-            .listen('.multi-shifts-created', (data) => {
-                // Merge project/craft/group lookups first so newly assigned projects
-                // render immediately instead of only after a full reload.
-                if (data.lookups && onLookupsReceived) {
-                    onLookupsReceived(data.lookups);
-                }
-
-                const updated = addShiftsToRoomAndDay(data.shifts);
-
-                // If shifts were added, we might want to reload certain data
-                if (updated && onWorkersNeedReload) {
-                    onWorkersNeedReload();
-                }
-            });
+        if (subscribeShiftChannels) {
+            listen('shift-plan.multi-shifts', '.multi-shifts-created', onMultiShiftsCreated);
+        }
 
         // Individual times channel
-        Echo.private('shift-plan.individual-times')
-            .listen('.individual-time.changed', (data) => {
-                if (onWorkerNeedReload) {
-                    onWorkerNeedReload(data.workerId, resolveWorkerType(data.workerType));
-                } else if (onWorkersNeedReload) {
-                    onWorkersNeedReload();
-                }
-            });
+        listen('shift-plan.individual-times', '.individual-time.changed', onWorkerRowChanged);
 
         // Verfügbarkeit/Abwesenheit einer Person geändert (Verfügbarkeitskalender, Tagesstatus,
         // Multi-Edit) → Personenzeile nachladen, damit Beschriftung und Konflikt-Ring aktuell sind.
-        Echo.private('shift-plan.worker-availability')
-            .listen('.worker-availability.changed', (data) => {
-                if (onWorkerNeedReload) {
-                    onWorkerNeedReload(data.workerId, resolveWorkerType(data.workerType));
-                } else if (onWorkersNeedReload) {
-                    onWorkersNeedReload();
-                }
-            });
+        listen('shift-plan.worker-availability', '.worker-availability.changed', onWorkerRowChanged);
     }
 
-    return { init };
+    /** Alle von dieser Instanz registrierten Handler abmelden (onBeforeUnmount der Ansicht). */
+    function dispose() {
+        disposed = true;
+        for (const { channelName, eventName, handler } of registeredHandlers.splice(0)) {
+            Echo.private(channelName).stopListening(eventName, handler);
+        }
+    }
+
+    /**
+     * Antwort des eigenen Speicherns sofort anwenden (gleiche Form wie der Broadcast) — die Ansicht
+     * aktualisiert sich so auch, wenn der Broadcast verspätet kommt oder ausbleibt. Idempotent zum
+     * späteren Broadcast.
+     */
+    function applyShiftUpdate(data) {
+        if (!data?.shift) return;
+        updateShiftInRoomAndEvents(data, data.roomId ?? data.shift.roomId, { reloadWorkers: true });
+    }
+
+    return { init, dispose, applyShiftUpdate };
 }

@@ -10,6 +10,7 @@ use Artwork\Modules\Notification\Services\NotificationService;
 use Artwork\Modules\ServiceProvider\Models\ServiceProvider;
 use Artwork\Modules\Shift\Contracts\Employable;
 use Artwork\Modules\Shift\Events\ShiftAssigned;
+use Artwork\Modules\Shift\Events\UpdateShiftInShiftPlan;
 use Artwork\Modules\Shift\Models\CommittedShiftChange;
 use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\Shift\Models\ShiftFreelancer;
@@ -218,6 +219,71 @@ class ShiftWorkerService
                 ]);
             })
             ->log($logMessage);
+    }
+
+    /**
+     * Individuelle Arbeitszeit einer Person in einer Schicht setzen — einziger Schreibweg für
+     * Dienstplan-Änderung und genehmigte Zeitanpassungs-Anfrage, damit beide dieselben Folgen haben:
+     * Datum über Mitternacht aus dem Starttag neu ableiten, Verlauf, Zu-/Absage zurücksetzen,
+     * Stunden-Cache leeren und die Dienstplan-Ansichten live aktualisieren.
+     *
+     * @param string $startTime H:i
+     * @param string $endTime H:i
+     */
+    public function applyIndividualTime(
+        ShiftWorker $pivot,
+        string $startTime,
+        string $endTime,
+        ?string $endDate = null
+    ): void {
+        $pivot->loadMissing('shift');
+
+        // end_date immer aus start_date neu ableiten: das alte Pivot-end_date kann
+        // von einer früheren Über-Mitternacht-Zeit stammen (+1 Tag) — bei Korrektur
+        // auf eine normale Tageszeit entstand sonst eine 32h-Zuweisung.
+        $startDate = Carbon::parse($pivot->start_date ?? $pivot->shift->start_date)->toDateString();
+        $startDateTime = Carbon::parse($startDate . ' ' . $startTime);
+        $endDateTime = Carbon::parse(($endDate ?? $startDate) . ' ' . $endTime);
+
+        if ($endDateTime <= $startDateTime) {
+            $endDateTime->addDay();
+        }
+
+        $beforeLabel = ($pivot->start_time || $pivot->end_time)
+            ? Carbon::parse($pivot->start_time)->format('H:i') . ' - ' . Carbon::parse($pivot->end_time)->format('H:i')
+            : null;
+
+        $pivot->update([
+            'start_time' => $startDateTime->format('H:i'),
+            'end_time' => $endDateTime->format('H:i'),
+            'start_date' => $startDateTime->format('Y-m-d'),
+            'end_date' => $endDateTime->format('Y-m-d'),
+        ]);
+
+        // Änderung im Workflow-/Festschreibungs-Verlauf protokollieren (B13)
+        $this->logIndividualPivotChange(
+            $pivot,
+            'individual_time',
+            $beforeLabel,
+            $startDateTime->format('H:i') . ' - ' . $endDateTime->format('H:i')
+        );
+
+        // Individuelle Zeit geändert → eine bereits abgegebene Zu-/Absage bezog
+        // sich auf die alte Zeit und wird auf "ausstehend" zurückgesetzt.
+        if ($pivot->wasChanged(['start_time', 'end_time', 'start_date', 'end_date'])) {
+            app(ShiftWorkerConfirmationService::class)->resetConfirmation($pivot);
+        }
+
+        $this->workingHourCacheService->forgetForEntity(
+            WorkingHourCacheService::entityType($pivot->employable),
+            $pivot->employable_id
+        );
+
+        $shift = $pivot->shift;
+        $roomId = $shift->event_id ? $shift->event?->room_id : $shift->room_id;
+        if ($roomId !== null) {
+            broadcast(new UpdateShiftInShiftPlan($shift, (int) $roomId));
+        }
     }
 
     /**

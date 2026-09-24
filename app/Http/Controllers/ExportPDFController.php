@@ -24,6 +24,7 @@ use Artwork\Modules\Craft\Models\Craft;
 use Artwork\Modules\Shift\Services\DailyShiftPlanPdfBuilder;
 use Artwork\Modules\User\Enums\UserFilterTypes;
 use Artwork\Modules\User\Models\User;
+use Illuminate\Support\Facades\Auth;
 use Artwork\Modules\User\Models\UserFilter;
 use Artwork\Modules\User\Policies\UserPolicy;
 use Artwork\Modules\User\Services\UserService;
@@ -1227,8 +1228,9 @@ class ExportPDFController extends Controller
             'color' => $color,
             'craft' => $craft,
             'function' => $function,
-            'start' => !empty($shift['start']) ? substr((string) $shift['start'], 0, 5) : null,
-            'end' => !empty($shift['end']) ? substr((string) $shift['end'], 0, 5) : null,
+            // Individuelle Arbeitszeit der Person (worker_start/-end) vor der Schichtzeit
+            'start' => $this->shiftTimeForExport($shift['worker_start'] ?? null, $shift['start'] ?? null),
+            'end' => $this->shiftTimeForExport($shift['worker_end'] ?? null, $shift['end'] ?? null),
             'room' => $room,
             'project' => $project,
             'event' => $eventName,
@@ -1237,6 +1239,13 @@ class ExportPDFController extends Controller
             'colleagues' => $colleagues,
             'committed' => (bool) ($shift['is_committed'] ?? false),
         ];
+    }
+
+    private function shiftTimeForExport(mixed $workerTime, mixed $shiftTime): ?string
+    {
+        $time = !empty($workerTime) ? $workerTime : $shiftTime;
+
+        return !empty($time) ? substr((string) $time, 0, 5) : null;
     }
 
     private function workerName(mixed $worker): string
@@ -1358,7 +1367,7 @@ class ExportPDFController extends Controller
             $userPayload = [
                 'id'        => $projUser->id,
                 'full_name' => $projUser->full_name ?? '',
-                'email'     => $projUser->email,
+                'email'     => $projUser->visibleEmailFor(Auth::user()),
             ];
 
             foreach ($roleIds as $roleId) {

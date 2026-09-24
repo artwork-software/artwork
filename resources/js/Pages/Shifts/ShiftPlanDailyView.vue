@@ -1297,17 +1297,37 @@ function progressivelyRevealRooms(dayKey: string) {
     const day = daysLocal.value.find(d => d.withoutFormat === dayKey)
     if (!day) return
     const totalRooms = roomsForDayMap.value.get(day.fullDay)?.length ?? 0
-    const current = visibleRoomCounts.value.get(dayKey) ?? 0
-    if (current >= totalRooms) return
+    const current = visibleRoomCounts.value.get(dayKey)
+    if (current === undefined) return
+    if (current >= totalRooms) {
+        finishRoomReveal(dayKey)
+        return
+    }
 
     requestAnimationFrame(() => {
-        if (_isUnmounted) return
+        if (_isUnmounted || !visibleRoomCounts.value.has(dayKey)) return
         const next = Math.min(current + 4, totalRooms)
+        if (next >= totalRooms) {
+            finishRoomReveal(dayKey)
+            return
+        }
         const updated = new Map(visibleRoomCounts.value)
         updated.set(dayKey, next)
         visibleRoomCounts.value = updated
-        if (next < totalRooms) progressivelyRevealRooms(dayKey)
+        progressivelyRevealRooms(dayKey)
     })
+}
+
+/**
+ * Aufdecken abgeschlossen → Limit entfernen. Ein fest gespeichertes Limit würde Räume abschneiden,
+ * die erst später belegt werden (z.B. Schicht per Raumwechsel in einen bisher leeren Raum bei
+ * „Leere Räume ausblenden") — die Schicht bliebe bis zum Neuladen unsichtbar.
+ */
+function finishRoomReveal(dayKey: string) {
+    if (!visibleRoomCounts.value.has(dayKey)) return
+    const updated = new Map(visibleRoomCounts.value)
+    updated.delete(dayKey)
+    visibleRoomCounts.value = updated
 }
 
 function getRoomsToRender(day: any): any[] {
@@ -1705,8 +1725,12 @@ watch(() => props.days, (v) => { daysLocal.value = withoutExtraRows(v as any[]) 
 
 // Zeitraum geändert (z.B. Schicht außerhalb des Projektzeitraums angelegt → headerObject/dateRange
 // aktualisiert): Daten für den neuen Zeitraum nachladen
-watch(() => [props.dateValue?.[0], props.dateValue?.[1]], ([newStart, newEnd], [oldStart, oldEnd]) => {
-    if (newStart !== oldStart || newEnd !== oldEnd) initializeDailyShiftPlan()
+watch(() => [props.dateValue?.[0], props.dateValue?.[1]], async ([newStart, newEnd], [oldStart, oldEnd]) => {
+    if (newStart !== oldStart || newEnd !== oldEnd) {
+        await initializeDailyShiftPlan()
+        // Nur wenn der Listener schon lief (sonst übernimmt onMounted)
+        if (shiftCalendarListener) startShiftCalendarListener()
+    }
 })
 watch(() => props.shiftPlan, (v) => {
     shiftPlanCopy.value = Array.isArray(v) ? v : Object.values(v ?? {})
@@ -1990,6 +2014,38 @@ const roomsArray = computed(() => {
 // Provide rooms for child components (e.g. SingleShiftInDailyShiftView's AddShiftModal)
 provide("shiftPlanRooms", roomsArray)
 
+// Echo-Handler dieser Instanz (in onMounted angelegt, beim Verlassen abgemeldet)
+let shiftCalendarListener: ReturnType<typeof useShiftCalendarListener> | null = null
+
+/**
+ * Echo-Handler für die aktuell geladenen Räume (neu) anmelden — auch nach einem Nachladen mit
+ * anderem Zeitraum/Raumsatz, sonst kämen Updates für neu geladene Räume nie an.
+ */
+function startShiftCalendarListener() {
+    shiftCalendarListener?.dispose()
+    shiftCalendarListener = null
+    if (_isUnmounted) return
+    shiftCalendarListener = useShiftCalendarListener(shiftPlanCopy as any, {
+        onEventsChanged: () => { eventsVersion.value++ },
+        onShiftDataChanged: () => { triggerRef(shiftPlanCopy) },
+        onLookupsReceived: mergeLookups,
+        // Projekt-Schichten-Tab ohne „Schichten anderer Projekte anzeigen": wie der Server-Load nur
+        // Schichten dieses Projekts live einspielen (sonst bleibt eine weg-verschobene Schicht stehen)
+        projectFilterId: () => (
+            props.isInProjectView
+            && props.project?.id
+            && (page.props as any).shift_plan_daily_settings?.show_unrelated_shifts !== true
+        ) ? (props.project as any).id : null,
+    })
+    shiftCalendarListener.init()
+}
+
+/** Speicher-Antwort einer Schicht sofort ins Raster übernehmen (auch für SingleShiftInDailyShiftView) */
+const applySavedShift = (savedShift: any) => {
+    shiftCalendarListener?.applyShiftUpdate(savedShift)
+}
+provide("applySavedShift", applySavedShift)
+
 const shiftQualificationsArray = computed(() =>
     Array.isArray(shiftQualificationsResolved.value)
         ? shiftQualificationsResolved.value
@@ -2012,7 +2068,11 @@ const openAddShiftByPresetOrGroup = (day: any, room: any) => {
     showAddShiftByPresetOrGroupModal.value = true
 }
 
-const closeAddShiftModal = (success = false, shift = null) => {
+/**
+ * @param savedShift Antwort des Speicherns ({ shift, roomId, lookups } wie der Broadcast) — sofort
+ *                   anwenden, damit die Ansicht nicht allein vom Broadcast abhängt
+ */
+const closeAddShiftModal = (success = false, savedShift: any = null) => {
     // Erstellung über den Topbar-Button (freie Datumswahl, kein Tag/keine Schicht vorgegeben):
     // Der Store-Request liefert keine neuen Props; der Broadcast erreicht nur bereits
     // gerenderte Tage. Daher headerObject (Zeitraum-Quelle) nachladen und Daten neu holen.
@@ -2021,19 +2081,8 @@ const closeAddShiftModal = (success = false, shift = null) => {
         && shiftToEdit.value === null
         && dayForShiftAdd.value === null
 
-    if (success && shift) {
-        const room = shiftPlanCopy.value.find((r: any) => (r.roomId ?? r.id) === shift.roomId)
-        if (room) {
-            if (room.shiftsById) room.shiftsById[shift.id] = shift
-            if (room.eventsById && shift.eventId && room.eventsById[shift.eventId]) {
-                const event = room.eventsById[shift.eventId]
-                if (Array.isArray(event.shifts)) {
-                    const idx = event.shifts.findIndex((s: any) => s.id === shift.id)
-                    if (idx !== -1) event.shifts[idx] = shift
-                }
-            }
-        }
-        triggerRef(shiftPlanCopy)
+    if (success && savedShift?.shift) {
+        applySavedShift(savedShift)
     }
     showAddShiftModal.value = false
     shiftToEdit.value = null
@@ -2216,12 +2265,7 @@ onMounted(async () => {
         loadProjectDayAssignments(),
     ])
 
-    const ShiftCalendarListener = useShiftCalendarListener(shiftPlanCopy as any, {
-        onEventsChanged: () => { eventsVersion.value++ },
-        onShiftDataChanged: () => { triggerRef(shiftPlanCopy) },
-        onLookupsReceived: mergeLookups,
-    })
-    ShiftCalendarListener.init()
+    startShiftCalendarListener()
 
     if (props.isInProjectView && props.project?.id) {
         projectAssignmentEchoChannel = Echo.private(`project.${props.project.id}`)
@@ -2243,6 +2287,8 @@ onMounted(async () => {
 })
 
 onUnmounted(() => {
+    shiftCalendarListener?.dispose()
+    shiftCalendarListener = null
     projectAssignmentEchoChannel?.stopListening('.project-day-assignments.changed', loadProjectDayAssignments)
     projectAssignmentEchoChannel = null
     if (ro && topBarEl.value) ro.unobserve(topBarEl.value)

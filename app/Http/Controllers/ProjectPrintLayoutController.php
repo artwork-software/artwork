@@ -104,9 +104,7 @@ class ProjectPrintLayoutController extends Controller
      */
     public function store(StoreProjectPrintLayoutRequest $request): void
     {
-        if ($request->validated()) {
-            $this->projectService->storeProjectPrintLayout($request->all());
-        }
+        $this->projectService->storeProjectPrintLayout($request->validated());
     }
 
     /**

@@ -141,7 +141,7 @@
                                     <ShiftInCalendarCell
                                         :shift="item.data"
                                         :day="dayKey(day)"
-                                        @shift-edited="refetchMonthForDay(day)"
+                                        @shift-edited="(_shift, targetDate) => refetchMonthForDay(day, targetDate)"
                                     />
                                 </div>
                                 <div v-else class="py-0.5" @click="onEventClick(item.data, $event)">
@@ -1117,14 +1117,19 @@ async function runInitialLoad() {
 }
 
 
+// Echo-Handler dieser Instanz — beim Verlassen abmelden, sonst laufen sie mit veralteten Daten weiter
+let shiftCalendarListener: ReturnType<typeof useShiftCalendarListener> | null = null;
+let isCalendarUnmounted = false;
+
 onMounted(async () => {
     await runInitialLoad();
+    if (isCalendarUnmounted) return;
 
     // Schicht-Kanäle nur mit Dienstplan-Sichtrecht (Spiegel von CalendarShiftVisibility / routes/channels.php)
-    const ShiftCalendarListener = useShiftCalendarListener(newCalendarData, {
+    shiftCalendarListener = useShiftCalendarListener(newCalendarData, {
         subscribeShiftChannels: isAdmin.value || can('can view shift plan') || can('can plan shifts'),
     });
-    ShiftCalendarListener.init();
+    shiftCalendarListener.init();
     initMonthObserver();
     if (focusedMonthKey.value && !loadedMonths.value.has(focusedMonthKey.value)) {
         const idx = monthIndexByKey.value.get(focusedMonthKey.value)!;
@@ -1156,6 +1161,9 @@ onMounted(async () => {
 });
 
 onBeforeUnmount(() => {
+    isCalendarUnmounted = true;
+    shiftCalendarListener?.dispose();
+    shiftCalendarListener = null;
     calendarRef.value?.removeEventListener('wheel', handleWheelZoom);
     if (monthObserver) monthObserver.disconnect();
     monthObserver = null;
@@ -1546,14 +1554,21 @@ const openAddSubEventModal = (mainEvent, mode, desiredEvent) => {
 // Zell-Logik (dayKey/itemsInCell/deKeyToIso) kommt aus calendarCellItems.js —
 // geteilt mit CalendarDayRow und der At-a-Glance-Ansicht.
 
-// Nach Schicht-Bearbeitung den betroffenen Monat neu laden
-async function refetchMonthForDay(day: any) {
+// Nach Schicht-Bearbeitung den betroffenen Monat neu laden — bei einem Datumswechsel in einen
+// anderen Monat (targetDate = neues Startdatum, Y-m-d) auch den Zielmonat
+async function refetchMonthForDay(day: any, targetDate: string | null = null) {
+    const keys = new Set<string>();
     const key = monthKeyFromDay(day);
-    if (!key) return;
-    abortInflightMonth(key);
-    loadedMonths.value.delete(key);
-    failedMonths.value.delete(key);
-    await loadMonth(key, ++currentEpoch);
+    if (key) keys.add(key);
+    if (typeof targetDate === 'string' && /^\d{4}-\d{2}/.test(targetDate)) keys.add(targetDate.slice(0, 7));
+
+    const epoch = ++currentEpoch;
+    await Promise.allSettled([...keys].map((monthKey) => {
+        abortInflightMonth(monthKey);
+        loadedMonths.value.delete(monthKey);
+        failedMonths.value.delete(monthKey);
+        return loadMonth(monthKey, epoch);
+    }));
 }
 
 // When multi-edit is enabled, clicking an event toggles its selection

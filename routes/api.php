@@ -5,6 +5,7 @@ use Artwork\Modules\Chat\Http\Controllers\ChatController;
 use Artwork\Modules\Inventory\Http\Controllers\Api\InventoryArticleApiController;
 use Artwork\Modules\User\Services\UserStatusService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Route;
 use Laravel\Passport\Http\Middleware\CheckToken;
 use Artwork\Modules\Inventory\Http\Controllers\Api\InventoryCategoryApiController;
@@ -26,7 +27,11 @@ Route::middleware('auth:api')->get('/user', function (Request $request) {
 
 
 // get all timeline presets with times count
-Route::middleware('auth:sanctum')->get('/timeline-presets', function () {
+// Die Liste dient dem Import in den Ablaufplan eines Termins: gleiche Schranke wie der Import selbst.
+Route::middleware('auth:sanctum')->get('/timeline-presets', function (Request $request) {
+    $event = \Artwork\Modules\Event\Models\Event::findOrFail($request->integer('event'));
+    Gate::authorize('editTimeline', $event);
+
     return \Artwork\Modules\Shift\Models\ShiftPresetTimeline::withCount('times')->get();
 })->name('timeline-presets.all');
 

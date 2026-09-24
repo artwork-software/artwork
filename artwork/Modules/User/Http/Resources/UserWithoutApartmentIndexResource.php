@@ -26,11 +26,11 @@ class UserWithoutApartmentIndexResource extends JsonResource
             'first_name' => $this->first_name,
             'last_name' => $this->last_name,
             'profile_photo_url' => $this->profile_photo_url,
-            'email' => $this->email,
+            'email' => $this->visibleEmailFor($request->user()),
             'description' => $this->description,
             'position' => $this->position,
             'business' => $this->business,
-            'phone_number' => $this->phone_number,
+            'phone_number' => $this->visiblePhoneNumberFor($request->user()),
         ];
 
         if ($pivot) {

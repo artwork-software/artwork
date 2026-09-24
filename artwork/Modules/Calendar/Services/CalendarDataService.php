@@ -359,15 +359,16 @@ readonly class CalendarDataService
     ): array {
         $today = Carbon::now();
 
+        // Projekt gelöscht → resolveTimePeriodProject setzt den Projektmodus zurück, Filterzeitraum greift
+        if ($userCalendarSettings->getAttribute('use_project_time_period') && !$project) {
+            $project = $this->projectService->resolveTimePeriodProject($userCalendarSettings);
+        }
+
         if (!$userCalendarSettings->getAttribute('use_project_time_period')) {
             if ($userCalendarFilter === null) {
                 return [$today->copy()->startOfDay(), $today->copy()->addWeeks(1)->endOfDay()];
             }
             return $this->userService->getUserCalendarFilterDatesOrDefault($userCalendarFilter);
-        }
-
-        if (!$project) {
-            $project = $this->projectService->findById($userCalendarSettings->getAttribute('time_period_project_id'));
         }
 
         return $this->getProjectDateRange($project, $today);

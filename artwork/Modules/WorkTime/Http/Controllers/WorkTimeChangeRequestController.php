@@ -9,6 +9,8 @@ use Artwork\Modules\Notification\Services\NotificationService;
 use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Artwork\Modules\Project\Enum\ProjectTabComponentEnum;
 use Artwork\Modules\Role\Enums\RoleEnum;
+use Artwork\Modules\Shift\Models\ShiftWorker;
+use Artwork\Modules\Shift\Services\ShiftWorkerService;
 use Artwork\Modules\User\Models\User;
 use Artwork\Modules\WorkTime\Http\Requests\StoreWorkTimeChangeRequestRequest;
 use Artwork\Modules\WorkTime\Http\Requests\UpdateWorkTimeChangeRequestRequest;
@@ -27,7 +29,8 @@ class WorkTimeChangeRequestController extends Controller
     public function __construct(
         protected WorkTimeChangeRequestService $workTimeChangeRequestService,
         protected WorkTimeBookingRepository $workTimeBookingRepository,
-        protected NotificationService $notificationService
+        protected NotificationService $notificationService,
+        protected ShiftWorkerService $shiftWorkerService
     ) {
     }
 
@@ -295,18 +298,26 @@ class WorkTimeChangeRequestController extends Controller
         $newDuration = $newStart->diffInMinutes($newEnd);
         $balanceDelta = $newDuration - $oldDuration;
 
-        $pivotUpdate = [
-            'start_time' => $newStart->format('H:i:s'),
-            'end_time' => $newEnd->format('H:i:s'),
-        ];
-
-        // Only update end_date when the request crosses midnight
-        if ($workTimeChangeRequest->request_end_date) {
-            $pivotUpdate['end_date'] = $workTimeChangeRequest->request_end_date;
-        }
+        // Gleicher Schreibweg wie die individuelle Zeit im Dienstplan: Datum über Mitternacht neu
+        // ableiten (sonst blieb ein altes +1-Tag-end_date stehen), Verlauf, Zu-/Absage-Reset,
+        // Stunden-Cache und Live-Update. Die Person sieht die genehmigte Zeit so im Einsatzplan.
+        $applyIndividualTime = function () use ($oldPivot, $newStart, $newEnd, $workTimeChangeRequest): void {
+            $shiftWorker = ShiftWorker::withoutTrashed()->find($oldPivot->id);
+            if ($shiftWorker === null) {
+                abort(404, 'Ursprüngliche Schicht nicht gefunden.');
+            }
+            $this->shiftWorkerService->applyIndividualTime(
+                $shiftWorker,
+                $newStart->format('H:i'),
+                $newEnd->format('H:i'),
+                $workTimeChangeRequest->request_end_date
+                    ? Carbon::parse($workTimeChangeRequest->request_end_date)->toDateString()
+                    : null
+            );
+        };
 
         if ($shiftDate->gte($now)) {
-            $shift->users()->updateExistingPivot($user->id, $pivotUpdate);
+            $applyIndividualTime();
         } else {
             // For past shifts, create an adjustment booking to reflect the time change
             $repository->storeOrUpdateBooking($user, now(), now()->dayOfWeek, [
@@ -327,7 +338,7 @@ class WorkTimeChangeRequestController extends Controller
                 $repository->updateUserBalance($user, $balanceDelta);
             }
 
-            $shift->users()->updateExistingPivot($user->id, $pivotUpdate);
+            $applyIndividualTime();
         }
 
         $workTimeChangeRequest->update([

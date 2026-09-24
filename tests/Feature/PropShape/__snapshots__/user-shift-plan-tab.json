@@ -126,6 +126,8 @@
                         }
                     },
                     "start": ".",
+                    "worker_end": ".",
+                    "worker_start": ".",
                     "worker_unavailable_status": ".",
                     "workers": {
                         "[]": {

@@ -2398,8 +2398,8 @@ class ShiftController extends Controller
     {
         $request->validate([
             'shiftPivotId' => ['required', 'integer'],
-            'start_time' => ['required', 'string'],
-            'end_time' => ['required', 'string'],
+            'start_time' => ['required', 'date_format:H:i,H:i:s'],
+            'end_time' => ['required', 'date_format:H:i,H:i:s'],
         ]);
 
         $shiftId = $request->get('shiftPivotId');
@@ -2411,69 +2411,7 @@ class ShiftController extends Controller
             return response()->json(['error' => 'Shift pivot not found'], 404);
         }
 
-        if (!$pivot->relationLoaded('shift')) {
-            $pivot->load('shift');
-        }
-
-        // end_date immer aus start_date neu ableiten: das alte Pivot-end_date kann
-        // von einer früheren Über-Mitternacht-Zeit stammen (+1 Tag) — bei Korrektur
-        // auf eine normale Tageszeit entstand sonst eine 32h-Zuweisung.
-        $startDate = Carbon::parse($pivot->start_date ?? $pivot->shift->start_date)->toDateString();
-        $startDateTime = Carbon::parse($startDate . ' ' . $startTime);
-        $endDateTime = Carbon::parse($startDate . ' ' . $endTime);
-
-        if ($endDateTime <= $startDateTime) {
-            $endDateTime->addDay();
-        }
-
-        $beforeLabel = ($pivot->start_time || $pivot->end_time)
-            ? Carbon::parse($pivot->start_time)->format('H:i') . ' - ' . Carbon::parse($pivot->end_time)->format('H:i')
-            : null;
-
-        // Update the pivot with new start and end times
-        $pivot->update([
-            'start_time' => $startTime,
-            'end_time' => $endTime,
-            'start_date' => $startDateTime->format('Y-m-d'),
-            'end_date' => $endDateTime->format('Y-m-d'),
-        ]);
-
-        // Änderung im Workflow-/Festschreibungs-Verlauf protokollieren (B13)
-        app(ShiftWorkerService::class)->logIndividualPivotChange(
-            $pivot,
-            'individual_time',
-            $beforeLabel,
-            $startDateTime->format('H:i') . ' - ' . $endDateTime->format('H:i')
-        );
-
-        // Individuelle Zeit geändert → eine bereits abgegebene Zu-/Absage bezog
-        // sich auf die alte Zeit und wird auf "ausstehend" zurückgesetzt.
-        if ($pivot->wasChanged(['start_time', 'end_time', 'start_date', 'end_date'])) {
-            app(\Artwork\Modules\Shift\Services\ShiftWorkerConfirmationService::class)
-                ->resetConfirmation($pivot);
-        }
-
-        $this->workingHourCacheService->forgetForEntity(
-            WorkingHourCacheService::entityType($pivot->employable),
-            $pivot->employable_id
-        );
-
-        // Broadcast the updated shift so the frontend updates in real-time
-        $pivot->shift->load([
-            'shiftsQualifications',
-            'globalQualifications',
-            'users.globalQualifications',
-            'freelancer.globalQualifications',
-            'serviceProvider.globalQualifications',
-            'project',
-        ]);
-
-        if (!$pivot->shift->event_id) {
-            broadcast(new UpdateShiftInShiftPlan($pivot->shift, $pivot->shift->room_id));
-        } else {
-            $pivot->shift->load('event');
-            broadcast(new UpdateShiftInShiftPlan($pivot->shift, $pivot->shift->event?->room_id));
-        }
+        app(ShiftWorkerService::class)->applyIndividualTime($pivot, $startTime, $endTime);
     }
 
     public function updateShortDescription(Request $request): void

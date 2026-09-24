@@ -2,6 +2,13 @@
 
 namespace Tests\Feature\Console;
 
+use Artwork\Modules\Budget\Models\Column;
+use Artwork\Modules\Budget\Models\ColumnCell;
+use Artwork\Modules\Budget\Models\MainPosition;
+use Artwork\Modules\Budget\Models\SubPosition;
+use Artwork\Modules\Budget\Models\SubPositionRow;
+use Artwork\Modules\Budget\Models\Table;
+use Artwork\Modules\Budget\Services\TableService;
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Genre\Models\Genre;
 use Artwork\Modules\Project\Jobs\ForceDeleteProjectJob;
@@ -76,5 +83,31 @@ final class PurgeTrashCommandTest extends FeatureTestCase
     public function the_command_is_scheduled_daily(): void
     {
         $this->artisan('schedule:list')->expectsOutputToContain('artwork:purge-trash')->assertSuccessful();
+    }
+
+    #[Test]
+    public function trashed_budget_templates_are_deleted_including_their_positions_and_cells(): void
+    {
+        $template = Table::factory()->create(['is_template' => true]);
+        $column = Column::factory()->create(['table_id' => $template->id]);
+        $mainPosition = MainPosition::factory()->create(['table_id' => $template->id]);
+        $subPosition = SubPosition::factory()->create(['main_position_id' => $mainPosition->id]);
+        $row = SubPositionRow::factory()->create(['sub_position_id' => $subPosition->id]);
+        $cell = ColumnCell::factory()->create(['column_id' => $column->id, 'sub_position_row_id' => $row->id]);
+
+        // wie "In den Papierkorb" in der Oberfläche: der ganze Baum wird soft-gelöscht
+        app()->call([app(TableService::class), 'softDelete'], ['table' => $template]);
+        DB::table('tables')->where('id', $template->id)->update(['deleted_at' => now()->subDays(31)]);
+
+        $this->artisan('artwork:purge-trash')
+            ->expectsOutputToContain('Budget-Vorlagen: 1 gelöscht')
+            ->assertSuccessful();
+
+        $this->assertDatabaseMissing('tables', ['id' => $template->id]);
+        $this->assertDatabaseMissing('main_positions', ['id' => $mainPosition->id]);
+        $this->assertDatabaseMissing('sub_positions', ['id' => $subPosition->id]);
+        $this->assertDatabaseMissing('sub_position_rows', ['id' => $row->id]);
+        $this->assertDatabaseMissing('column_sub_position_row', ['id' => $cell->id]);
+        $this->assertDatabaseMissing('columns', ['id' => $column->id]);
     }
 }

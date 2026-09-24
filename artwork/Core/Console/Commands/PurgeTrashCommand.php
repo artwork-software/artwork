@@ -6,9 +6,11 @@ use Artwork\Modules\Area\Models\Area;
 use Artwork\Modules\Budget\Models\BudgetManagementAccount;
 use Artwork\Modules\Budget\Models\BudgetManagementCostUnit;
 use Artwork\Modules\Budget\Models\SageNotAssignedData;
+use Artwork\Modules\Budget\Models\Table;
 use Artwork\Modules\Budget\Services\BudgetManagementAccountService;
 use Artwork\Modules\Budget\Services\BudgetManagementCostUnitService;
 use Artwork\Modules\Budget\Services\SageNotAssignedDataService;
+use Artwork\Modules\Budget\Services\TableService;
 use Artwork\Modules\Category\Models\Category;
 use Artwork\Modules\CollectingSociety\Models\CollectingSociety;
 use Artwork\Modules\CompanyType\Models\CompanyType;
@@ -129,6 +131,16 @@ class PurgeTrashCommand extends Command
                 static fn (BudgetManagementCostUnit $costUnit): mixed => app()->call(
                     [app(BudgetManagementCostUnitService::class), 'forceDelete'],
                     ['budgetManagementCostUnit' => $costUnit]
+                ),
+            ],
+            // Budget-Papierkorb: gelöschte Budget-Vorlagen (Projekt-Budgettabellen gehen mit dem Projekt)
+            'Budget-Vorlagen' => [
+                static fn (CarbonInterface $cutoff): Builder => Table::onlyTrashed()
+                    ->where('is_template', true)
+                    ->where('deleted_at', '<=', $cutoff),
+                static fn (Table $table): mixed => app()->call(
+                    [app(TableService::class), 'forceDelete'],
+                    ['table' => $table]
                 ),
             ],
             'Genres' => [$trashedBefore(Genre::class), $forceDelete],

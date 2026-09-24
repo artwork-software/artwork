@@ -94,6 +94,13 @@ const tabsMap = computed(() => {
             href: route("events.trashed"),
             available: can('can access trash') || is('artwork admin'),
         },
+        "Trash/Shifts": {
+            key: "Trash/Shifts",
+            name: proxy?.$t ? proxy.$t("Shifts") : "Shifts",
+            href: route("shifts.trashed"),
+            // Papierkorb-Recht + Dienstplanung (Gewerks-Scoping serverseitig)
+            available: (can('can access trash') && can('can plan shifts')) || is('artwork admin'),
+        },
         "Trash/ProjectSettings": {
             key: "Trash/ProjectSettings",
             name: proxy?.$t ? proxy.$t("Project Settings") : "Project Settings",

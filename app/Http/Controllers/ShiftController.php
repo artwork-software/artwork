@@ -182,41 +182,12 @@ class ShiftController extends Controller
             );
 
             if ($shift->is_committed) {
-                $this->recheckAvailabilityConflicts($shift);
+                $this->shiftService->recheckAvailabilityConflicts($shift);
             }
         }
 
         if ($shift->is_committed && ($changedFields !== [] || $slotsChanged)) {
             $this->notifyCommittedShiftChanged($shift);
-        }
-    }
-
-    /**
-     * Urlaubs-/Verfügbarkeitskonflikte einer festgeschriebenen Schicht nach Zeit-/Datumsänderung neu
-     * ermitteln — alte Konflikte bezogen sich auf die alte Zeit.
-     */
-    private function recheckAvailabilityConflicts(Shift $shift): void
-    {
-        VacationConflict::query()->where('shift_id', $shift->id)->get()->each->delete();
-        AvailabilitiesConflict::query()->where('shift_id', $shift->id)->get()->each->delete();
-
-        $vacationConflictService = app(VacationConflictService::class);
-        $availabilityConflictService = app(AvailabilityConflictService::class);
-        foreach ([...$shift->users()->get(), ...$shift->freelancer()->get()] as $worker) {
-            $user = $worker instanceof User ? $worker : null;
-            $freelancer = $worker instanceof Freelancer ? $worker : null;
-            $vacationConflictService->checkVacationConflictsShifts(
-                $shift,
-                $this->notificationService,
-                $user,
-                $freelancer
-            );
-            $availabilityConflictService->checkAvailabilityConflictsShifts(
-                $shift,
-                $this->notificationService,
-                $user,
-                $freelancer
-            );
         }
     }
 

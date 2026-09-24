@@ -135,6 +135,7 @@ use Artwork\Modules\Event\Http\Controllers\EventPropertyController;
 use Artwork\Modules\ExternalIssue\Http\Controllers\ExternalIssueController;
 use Artwork\Modules\GlobalNotification\Http\Controller\GlobalNotificationController;
 use Artwork\Modules\IndividualTimes\Http\Controllers\IndividualTimeSeriesController;
+use Artwork\Modules\Shift\Http\Controllers\ShiftTrashController;
 use Artwork\Modules\IndividualTimes\Http\Controllers\IndividualTimeSubjectsSearchController;
 use Artwork\Modules\InternalIssue\Http\Controllers\InternalIssueController;
 use Artwork\Modules\Inventory\Http\Controllers\MaterialIssueLogController;
@@ -1155,6 +1156,15 @@ Route::group(['middleware' => ['auth:sanctum']], function (): void {
     })->name('events.requests');
     Route::get('/trashedEvents', [EventController::class, 'getTrashed'])
         ->middleware('can:can access trash')->name('events.trashed');
+    // Papierkorb "Schichten": eigenständige Schichten (Dienstplanung + Gewerks-Scoping im Controller/Service)
+    Route::get('/trashedShifts', [ShiftTrashController::class, 'index'])
+        ->middleware('can:can access trash')->name('shifts.trashed');
+    Route::patch('/trashedShifts/{shiftId}/restore', [ShiftTrashController::class, 'restore'])
+        ->middleware('can:can access trash')->whereNumber('shiftId')->name('shifts.trashed.restore');
+    Route::delete('/trashedShifts/{shiftId}/force', [ShiftTrashController::class, 'forceDelete'])
+        ->middleware('can:can access trash')->whereNumber('shiftId')->name('shifts.trashed.force');
+    Route::delete('/trashedShifts/force-all', [ShiftTrashController::class, 'forceDeleteAll'])
+        ->middleware('can:can access trash')->name('shifts.trashed.force-all');
 
     // Event Api
     Route::post('/events', [EventController::class, 'storeEvent'])->name('events.store');

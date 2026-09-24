@@ -8,6 +8,7 @@ use Artwork\Modules\Change\Services\ChangeService;
 use Artwork\Modules\Craft\Models\Craft;
 use Artwork\Modules\Craft\Services\CraftService;
 use Artwork\Modules\Event\Models\Event;
+use Artwork\Modules\Availability\Models\AvailabilitiesConflict;
 use Artwork\Modules\Freelancer\Models\Freelancer;
 use Artwork\Modules\Notification\Enums\NotificationEnum;
 use Artwork\Modules\Notification\Services\NotificationService;
@@ -27,6 +28,7 @@ use Artwork\Modules\Shift\Repositories\ShiftRepository;
 use Artwork\Modules\Shift\Services\ShiftNotificationLinkService;
 use Artwork\Modules\User\Models\User;
 use Artwork\Modules\User\Services\WorkingHourCacheService;
+use Artwork\Modules\Vacation\Models\VacationConflict;
 use Artwork\Modules\Vacation\Services\VacationConflictService;
 use Carbon\Carbon;
 use Illuminate\Auth\AuthManager;
@@ -590,6 +592,34 @@ class ShiftService
 
                 $confirmationService->resetConfirmation($pivot);
             });
+    }
+
+    /**
+     * Urlaubs-/Verfügbarkeitskonflikte einer festgeschriebenen Schicht neu ermitteln (nach Zeit-/
+     * Datumsänderung oder Wiederherstellung) — alte Konflikte bezogen sich auf die alte Zeit bzw.
+     * sind inzwischen entstanden.
+     */
+    public function recheckAvailabilityConflicts(Shift $shift): void
+    {
+        VacationConflict::query()->where('shift_id', $shift->id)->get()->each->delete();
+        AvailabilitiesConflict::query()->where('shift_id', $shift->id)->get()->each->delete();
+
+        foreach ([...$shift->users()->get(), ...$shift->freelancer()->get()] as $worker) {
+            $user = $worker instanceof User ? $worker : null;
+            $freelancer = $worker instanceof Freelancer ? $worker : null;
+            $this->vacationConflictService->checkVacationConflictsShifts(
+                $shift,
+                $this->notificationService,
+                $user,
+                $freelancer
+            );
+            $this->availabilityConflictService->checkAvailabilityConflictsShifts(
+                $shift,
+                $this->notificationService,
+                $user,
+                $freelancer
+            );
+        }
     }
 
     /**

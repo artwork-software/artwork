@@ -8377,5 +8377,10 @@
     "Are you sure you want to delete the selected craft? All shifts of this craft will be deleted as well; assigned people of committed shifts are notified.": "Are you sure you want to delete the selected craft? All shifts of this craft will be deleted as well; assigned people of committed shifts are notified.",
     "Activated": "Activated",
     "If deactivated, all buttons and displays for project assignments and project wishes are hidden in the shift plan, the personal roster and the project shift tab. Existing assignments are kept and reappear when the function is reactivated.": "If deactivated, all buttons and displays for project assignments and project wishes are hidden in the shift plan, the personal roster and the project shift tab. Existing assignments are kept and reappear when the function is reactivated.",
-    "Apply availability and individual times to all selected days at once.": "Apply availability and individual times to all selected days at once."
+    "Apply availability and individual times to all selected days at once.": "Apply availability and individual times to all selected days at once.",
+    "room in recycle bin": "room in recycle bin",
+    "The shift has been restored.": "The shift has been restored.",
+    "There are no deleted shifts in the recycle bin.": "There are no deleted shifts in the recycle bin.",
+    "{count} assigned persons are restored as well": "{count} assigned persons are restored as well",
+    "The room of this shift is in the recycle bin or no longer exists. Restore the room first.": "The room of this shift is in the recycle bin or no longer exists. Restore the room first."
 }

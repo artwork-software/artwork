@@ -8386,5 +8386,10 @@
     "Are you sure you want to delete the selected craft? All shifts of this craft will be deleted as well; assigned people of committed shifts are notified.": "Möchtest du das Gewerk wirklich löschen? Alle Schichten dieses Gewerks werden ebenfalls gelöscht; eingeplante Personen festgeschriebener Schichten werden benachrichtigt.",
     "Activated": "Aktiviert",
     "If deactivated, all buttons and displays for project assignments and project wishes are hidden in the shift plan, the personal roster and the project shift tab. Existing assignments are kept and reappear when the function is reactivated.": "Ist die Funktion deaktiviert, werden alle Buttons und Anzeigen zu Projektzuordnungen und Projektwünschen im Dienstplan, im Einsatzplan und im Schichten-Tab der Projekte ausgeblendet. Bestehende Zuordnungen bleiben erhalten und erscheinen wieder, sobald die Funktion erneut aktiviert wird.",
-    "Apply availability and individual times to all selected days at once.": "Verfügbarkeit und individuelle Zeiten auf alle ausgewählten Tage gleichzeitig anwenden."
+    "Apply availability and individual times to all selected days at once.": "Verfügbarkeit und individuelle Zeiten auf alle ausgewählten Tage gleichzeitig anwenden.",
+    "room in recycle bin": "Raum im Papierkorb",
+    "The shift has been restored.": "Die Schicht wurde wiederhergestellt.",
+    "There are no deleted shifts in the recycle bin.": "Im Papierkorb liegen keine gelöschten Schichten.",
+    "{count} assigned persons are restored as well": "{count} eingeplante Personen werden mit wiederhergestellt",
+    "The room of this shift is in the recycle bin or no longer exists. Restore the room first.": "Der Raum dieser Schicht liegt im Papierkorb oder existiert nicht mehr. Stelle zuerst den Raum wieder her."
 }

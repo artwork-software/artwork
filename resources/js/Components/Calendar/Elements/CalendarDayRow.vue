@@ -88,7 +88,7 @@
                                             <ShiftInCalendarCell
                                                 :shift="item.data"
                                                 :day="rowDayKey"
-                                                @shift-edited="emit('shift-edited', day)"
+                                                @shift-edited="(_shift, targetDate) => emit('shift-edited', day, targetDate)"
                                             />
                                         </div>
                                         <div

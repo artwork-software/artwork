@@ -92,7 +92,7 @@
                                                     :shift="event.shift"
                                                     :day="day.fullDay"
                                                     :is-in-daily-view="true"
-                                                    @shift-edited="emits('shiftEdited', day)"
+                                                    @shift-edited="(_shift, targetDate) => emits('shiftEdited', day, targetDate)"
                                                 />
                                             </div>
                                             <div v-else-if="event && shouldRenderEvent(event, day, hour)"

@@ -178,9 +178,23 @@ class ShiftController extends Controller
                 'exists:shift_qualifications,id',
             ],
             'shiftsQualifications.*.value' => ['nullable', 'integer', 'min:0'],
+            // Ein mitgeschicktes null darf bestehende Zuordnungen nicht still löschen: Eine eventlose
+            // Schicht ohne Raum verschwindet aus dem Dienstplan und lässt sich nicht mehr löschen.
+            'room_id' => [
+                'sometimes',
+                Rule::requiredIf($shift->event_id === null),
+                'nullable',
+                'integer',
+                'exists:rooms,id',
+            ],
+            'project_id' => ['sometimes', 'nullable', 'integer', 'exists:projects,id'],
+            'shift_group_id' => ['sometimes', 'nullable', 'integer', 'exists:shift_groups,id'],
+            'start' => ['sometimes', 'required', 'date_format:H:i,H:i:s'],
+            'end' => ['sometimes', 'required', 'date_format:H:i,H:i:s'],
         ]);
 
         $projectId = $shift?->project_id;
+        $previousRoomId = $shift->room_id;
         if ($shift->is_committed) {
             $event = $shift?->event;
 
@@ -205,7 +219,9 @@ class ShiftController extends Controller
                 $notificationTitle = __(
                     'notification.shift.locked_changes',
                     [
-                        'projectName' => $shift?->event?->project?->name ?? __('notification.shift.without_project'),
+                        'projectName' => $shift?->project?->name
+                            ?? $shift?->event?->project?->name
+                            ?? __('notification.shift.without_project'),
                         'craftAbbreviation' => $shift->craft->abbreviation
                     ],
                     $user?->language
@@ -241,7 +257,7 @@ class ShiftController extends Controller
                     $notificationTitle = __(
                         'notification.shift.locked_changes',
                         [
-                            'projectName' => $shift?->event?->project?->name ??
+                            'projectName' => $shift?->project?->name ?? $shift?->event?->project?->name ??
                                 __('notification.shift.without_project'),
                             'craftAbbreviation' => $shift->craft->abbreviation
                         ],
@@ -340,18 +356,24 @@ class ShiftController extends Controller
 
         $projectTab = $projectTabService->findFirstProjectTabWithShiftsComponent();
 
+        $shiftPlanUpdate = null;
         if ($shift->event_id) {
-            broadcast(new UpdateEventShiftInShiftPlan($shift, $shift->event?->room_id));
-        } else {
-            broadcast(new UpdateShiftInShiftPlan($shift, $shift->room_id));
+            if ($shift->event?->room_id !== null) {
+                $shiftPlanUpdate = new UpdateEventShiftInShiftPlan($shift, $shift->event->room_id);
+            }
+        } elseif ($shift->room_id !== null) {
+            $shiftPlanUpdate = new UpdateShiftInShiftPlan($shift, $shift->room_id, $previousRoomId);
         }
-
+        if ($shiftPlanUpdate !== null) {
+            broadcast($shiftPlanUpdate);
+        }
 
         // Der Dienstplan speichert per axios (kein Inertia-Request): ein 302 würde vom Browser mit
         // PATCH auf die Dienstplan-URL weiterverfolgt (405 "PATCH not supported for shifts/view").
-        // Deshalb JSON statt Redirect; die Oberfläche aktualisiert sich über den Broadcast.
+        // Deshalb JSON statt Redirect. Die Antwort trägt denselben Stand wie der Broadcast, damit die
+        // Ansicht des Speichernden nicht vom WebSocket abhängt.
         if ($request->boolean('updateOrCreateInShiftPlan') || $request->expectsJson()) {
-            return response()->json(['id' => $shift->id]);
+            return response()->json(['id' => $shift->id, ...($shiftPlanUpdate?->broadcastWith() ?? [])]);
         }
 
         if ($projectTab && $projectId) {
@@ -732,7 +754,7 @@ class ShiftController extends Controller
                     $notificationTitle = __(
                         'notification.shift.deleted_where_locked',
                         [
-                            'projectName' => $shift?->event?->project?->name ??
+                            'projectName' => $shift?->project?->name ?? $shift?->event?->project?->name ??
                                 __('notification.shift.without_project'),
                             'craftAbbreviation' => $shift->craft->abbreviation
                         ],
@@ -769,7 +791,7 @@ class ShiftController extends Controller
                     $notificationTitle = __(
                         'notification.shift.deleted_where_locked',
                         [
-                            'projectName' => $shift?->event?->project?->name ??
+                            'projectName' => $shift?->project?->name ?? $shift?->event?->project?->name ??
                                 __('notification.shift.without_project'),
                             'craftAbbreviation' => $shift->craft->abbreviation
                         ],
@@ -814,10 +836,11 @@ class ShiftController extends Controller
         $shiftStart = Carbon::parse($shift->start_date);
         $shiftEnd = Carbon::parse($shift->end_date);
 
-        broadcast(new DestroyShift(
-            $shift,
-            $shift->event_id ? $shift->event?->room_id : $shift->room_id
-        ));
+        $broadcastRoomId = $shift->event_id ? $shift->event?->room_id : $shift->room_id;
+        // Altdaten ohne Raum müssen trotzdem löschbar sein (DestroyShift verlangt eine Raum-ID)
+        if ($broadcastRoomId !== null) {
+            broadcast(new DestroyShift($shift, $broadcastRoomId));
+        }
         $this->shiftService->forceDelete($shift);
 
         $this->revalidateShiftRules($affectedUsers, $shiftStart, $shiftEnd);

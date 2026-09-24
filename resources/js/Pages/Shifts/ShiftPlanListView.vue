@@ -633,6 +633,8 @@ const localGroupedShifts = shallowRef(props.groupedShifts || []);
 watch(() => props.groupedShifts, (newVal) => {
     localGroupedShifts.value = newVal || [];
     shiftsVersion.value++;
+    // Neu hinzugekommene Räume (Raumwechsel, Filter) ebenfalls abonnieren
+    setupListeners();
 });
 
 // --- L4: Version counter for cache invalidation ---
@@ -670,6 +672,23 @@ function cleanupListeners() {
     activeChannels.clear();
 }
 
+function shiftMovedToAnotherGroup(existing, shiftData, targetRoomId) {
+    const existingProjectId = existing.project_id ?? existing.project?.id ?? null;
+    return (targetRoomId != null && Number(existing.room_id) !== Number(targetRoomId))
+        || (shiftData.startDate && existing.start_date && shiftData.startDate !== String(existing.start_date).slice(0, 10))
+        || ('projectId' in shiftData && (shiftData.projectId ?? null) !== existingProjectId)
+        || (shiftData.shiftGroupId !== undefined && (shiftData.shiftGroupId ?? null) !== (existing.shift_group_id ?? null));
+}
+
+let groupedShiftsReloadTimer = null;
+function scheduleGroupedShiftsReload() {
+    if (groupedShiftsReloadTimer) clearTimeout(groupedShiftsReloadTimer);
+    groupedShiftsReloadTimer = setTimeout(() => {
+        groupedShiftsReloadTimer = null;
+        router.reload({ only: ['groupedShifts'], preserveScroll: true });
+    }, 300);
+}
+
 function updateShiftLocally(data) {
     if (!data?.shift) return;
     const shiftData = data.shift;
@@ -680,10 +699,19 @@ function updateShiftLocally(data) {
             const idx = (roomData.shifts || []).findIndex(s => s.id === shiftData.id);
             if (idx !== -1) {
                 const existing = roomData.shifts[idx];
+
+                // Raum, Tag, Projekt oder Gruppe geändert: die Schicht gehört in eine andere Gruppierung —
+                // Liste neu laden statt sie an der alten Stelle mit alten Daten stehen zu lassen
+                if (shiftMovedToAnotherGroup(existing, shiftData, targetRoomId)) {
+                    scheduleGroupedShiftsReload();
+                    return;
+                }
+
                 existing.workers = shiftData.workers ?? existing.workers;
                 existing.shifts_qualifications = shiftData.shifts_qualifications ?? existing.shifts_qualifications;
                 existing.globalQualifications = shiftData.globalQualifications ?? existing.globalQualifications;
-                existing.description = shiftData.description ?? existing.description;
+                // 'in' statt ??: eine geleerte Beschreibung (null) muss ankommen
+                existing.description = 'description' in shiftData ? shiftData.description : existing.description;
                 existing.start = shiftData.start ?? existing.start;
                 existing.end = shiftData.end ?? existing.end;
                 existing.is_committed = shiftData.isCommitted ?? shiftData.is_committed ?? existing.is_committed;
@@ -744,7 +772,10 @@ function updateShiftLocally(data) {
                             shift_group_id: shiftData.shiftGroupId,
                             craft: shiftData.craft,
                             shift_group: shiftData.shift_group,
-                            project: shiftData.project,
+                            project_id: shiftData.projectId ?? null,
+                            project: shiftData.projectId
+                                ? { id: shiftData.projectId, name: shiftData.projectName ?? '' }
+                                : null,
                             event: shiftData.event,
                             workers: shiftData.workers || [],
                             shifts_qualifications: shiftData.shifts_qualifications || [],
@@ -840,6 +871,7 @@ onBeforeUnmount(() => {
 });
 
 onUnmounted(() => {
+    if (groupedShiftsReloadTimer) clearTimeout(groupedShiftsReloadTimer);
     cleanupListeners();
     dayObserver?.disconnect();
 });

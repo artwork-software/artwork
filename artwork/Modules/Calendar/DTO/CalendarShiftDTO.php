@@ -66,7 +66,7 @@ class CalendarShiftDTO extends Data
             assignedWorkersTotal: $assignedTotal,
             isCommitted: $shift->is_committed,
             inWorkflow: $shift->in_workflow,
-            projectId: $resolvedProject?->id,
+            projectId: $resolvedProject?->id ?? $shift->project_id,
             globalQualifications: self::serializeGlobalQualifications($shift),
             shiftGroupId: $shift->shift_group_id,
             craft: self::serializeCraft($shift),

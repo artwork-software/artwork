@@ -2874,6 +2874,11 @@ async function initializeShiftPlan() {
 }
 
 
+// Echo-Handler dieser Instanz — beim Verlassen abmelden (Remount bei Filterwechsel hängte sonst
+// jedes Mal weitere Handler mit veralteten Daten an)
+let shiftCalendarListener: ReturnType<typeof useShiftCalendarListener> | null = null
+let isShiftPlanUnmounted = false
+
 onMounted(async () => {
     // Crafts + Workers sofort parallel zum Meta/Batch-Load starten — die drei
     // Endpunkte sind unabhängig; vorher liefen alle vier Requests seriell
@@ -2991,12 +2996,14 @@ onMounted(async () => {
 
     attach()
 
-    const ShiftCalendarListener = useShiftCalendarListener(shiftPlanArrayRef, {
-        onWorkersNeedReload: debouncedLoadShiftPlanWorkers,
-        onWorkerNeedReload: reloadSingleWorker,
-        onLookupsReceived: mergeLookups,
-    })
-    ShiftCalendarListener.init()
+    if (!isShiftPlanUnmounted) {
+        shiftCalendarListener = useShiftCalendarListener(shiftPlanArrayRef, {
+            onWorkersNeedReload: debouncedLoadShiftPlanWorkers,
+            onWorkerNeedReload: reloadSingleWorker,
+            onLookupsReceived: mergeLookups,
+        })
+        shiftCalendarListener.init()
+    }
 
     setupInertiaNavigationGuard()
 
@@ -3008,6 +3015,9 @@ onMounted(async () => {
 
 
 onBeforeUnmount(() => {
+    isShiftPlanUnmounted = true
+    shiftCalendarListener?.dispose()
+    shiftCalendarListener = null
     if (userOverviewScrollSaveTimer) clearTimeout(userOverviewScrollSaveTimer)
     if (userOverviewScrollRestoreTimer) clearTimeout(userOverviewScrollRestoreTimer)
     saveUserOverviewScroll()
@@ -3315,22 +3325,14 @@ function openAddShiftForRoomAndDay(day: any, roomId: number) {
     showAddShiftModal.value = true
 }
 
-function closeAddShiftModal(success = false, shift = null) {
-    if (success && shift) {
-        for (const room of newShiftPlanData.value) {
-            if (room.shiftsById && room.shiftsById[shift.id]) {
-                room.shiftsById[shift.id] = shift;
-            }
-            if (room.eventsById) {
-                for (const eventId of Object.keys(room.eventsById)) {
-                    const event = room.eventsById[eventId];
-                    if (Array.isArray(event.shifts)) {
-                        const idx = event.shifts.findIndex((s) => s.id === shift.id);
-                        if (idx !== -1) event.shifts[idx] = shift;
-                    }
-                }
-            }
-        }
+/**
+ * @param success Speichern erfolgreich
+ * @param savedShift Antwort des Speicherns ({ shift, roomId, lookups } wie der Broadcast) — sofort
+ *                   anwenden, damit die Ansicht nicht allein vom Broadcast abhängt
+ */
+function closeAddShiftModal(success = false, savedShift: any = null) {
+    if (success && savedShift?.shift) {
+        shiftCalendarListener?.applyShiftUpdate(savedShift)
     }
     showAddShiftModal.value = false
     roomForShiftAdd.value = null

@@ -1100,7 +1100,10 @@ class ShiftController extends Controller
         // "Person dem gesamten Projekt zuweisen" neben dem Projekttitel)
         $fullPeriodProjectIds = $validated['fullPeriodProjectAssignments'] ?? [];
 
-        if (!empty($fullPeriodProjectIds)) {
+        if (
+            !empty($fullPeriodProjectIds)
+            && \Artwork\Modules\Project\Services\ProjectDayAssignmentService::isEnabled()
+        ) {
             $employableType = match ($validated['userType']) {
                 1 => Freelancer::class,
                 2 => ServiceProvider::class,
@@ -2015,7 +2018,10 @@ class ShiftController extends Controller
             // Vacation-Update, damit ein gleichzeitig gesetzter Status die frisch
             // angelegte Zuordnung nicht sofort wieder auflöst. Route ist bereits
             // auf "can plan shifts" gegated.
-            if ($assignmentProject !== null) {
+            if (
+                $assignmentProject !== null
+                && \Artwork\Modules\Project\Services\ProjectDayAssignmentService::isEnabled()
+            ) {
                 app(\Artwork\Modules\Project\Services\ProjectDayAssignmentService::class)->createAssignments(
                     $assignmentProject,
                     $modelClass,

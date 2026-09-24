@@ -2494,6 +2494,12 @@ Route::group(['middleware' => ['auth:sanctum']], function (): void {
             ->name('shift.settings.update.shift-confirmation');
 
         Route::patch(
+            'shift-settings/updateProjectAssignmentsEnabled',
+            [ShiftSettingsController::class, 'updateProjectAssignmentsEnabled']
+        )->middleware('shift-settings-area:general,edit')
+            ->name('shift.settings.update.project-assignments-enabled');
+
+        Route::patch(
             'shift-settings/updateNightTimes',
             [ShiftSettingsController::class, 'updateNightTimes']
         )->middleware('shift-settings-area:general,edit')

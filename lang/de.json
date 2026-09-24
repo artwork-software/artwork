@@ -8383,5 +8383,8 @@
     "You are currently not registered as a shift planner for the craft \":crafts\".": "Du bist aktuell nicht als Gewerksplaner:in für das Gewerk „:crafts“ hinterlegt.",
     "The shift could not be deleted.": "Die Schicht konnte nicht gelöscht werden.",
     "The action could not be carried out.": "Die Aktion konnte nicht ausgeführt werden.",
-    "Are you sure you want to delete the selected craft? All shifts of this craft will be deleted as well; assigned people of committed shifts are notified.": "Möchtest du das Gewerk wirklich löschen? Alle Schichten dieses Gewerks werden ebenfalls gelöscht; eingeplante Personen festgeschriebener Schichten werden benachrichtigt."
+    "Are you sure you want to delete the selected craft? All shifts of this craft will be deleted as well; assigned people of committed shifts are notified.": "Möchtest du das Gewerk wirklich löschen? Alle Schichten dieses Gewerks werden ebenfalls gelöscht; eingeplante Personen festgeschriebener Schichten werden benachrichtigt.",
+    "Activated": "Aktiviert",
+    "If deactivated, all buttons and displays for project assignments and project wishes are hidden in the shift plan, the personal roster and the project shift tab. Existing assignments are kept and reappear when the function is reactivated.": "Ist die Funktion deaktiviert, werden alle Buttons und Anzeigen zu Projektzuordnungen und Projektwünschen im Dienstplan, im Einsatzplan und im Schichten-Tab der Projekte ausgeblendet. Bestehende Zuordnungen bleiben erhalten und erscheinen wieder, sobald die Funktion erneut aktiviert wird.",
+    "Apply availability and individual times to all selected days at once.": "Verfügbarkeit und individuelle Zeiten auf alle ausgewählten Tage gleichzeitig anwenden."
 }

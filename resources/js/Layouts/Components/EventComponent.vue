@@ -1925,7 +1925,8 @@ function timingSnapshot() {
 }
 
 async function checkProjectAssignmentImpact(data) {
-    if (!props.event?.id || assignmentImpactConfirmed) return true
+    // Globaler Schalter „Projektzuordnungen“ aus → nichts zu bestätigen
+    if (!props.event?.id || assignmentImpactConfirmed || page.props.project_assignments_enabled === false) return true
 
     // Zuordnungen fallen nur durch verschobene Zeiten oder einen Projektwechsel
     // heraus. Bleibt beides gleich, gibt es nichts zu bestaetigen.

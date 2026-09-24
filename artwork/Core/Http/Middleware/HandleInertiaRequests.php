@@ -303,6 +303,8 @@ class HandleInertiaRequests extends Middleware
                     ->allow_shift_overbooking,
                 'shift_confirmation_enabled'   => (bool) app(\App\Settings\ShiftSettings::class)
                     ->shift_confirmation_enabled,
+                'project_assignments_enabled'  => (bool) app(\App\Settings\ShiftSettings::class)
+                    ->project_assignments_enabled,
                 'shift_settings_access'        => [
                     'granular_permissions_enabled' => (bool) app(\App\Settings\ShiftSettings::class)
                         ->granular_permissions_enabled,

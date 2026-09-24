@@ -807,8 +807,11 @@ const projectAssignmentActionKey = ref<string | null>(null)
 const projectAssignmentError = ref('')
 let projectAssignmentEchoChannel: any = null
 
+// Globaler Schalter (Schichteinstellungen) — aus = Feature komplett ausgeblendet
+const projectAssignmentsEnabled = computed(() => page.props.project_assignments_enabled !== false)
+
 const showProjectAssignments = computed(() => {
-    if (!props.isInProjectView || !props.project?.id) return false
+    if (!projectAssignmentsEnabled.value || !props.isInProjectView || !props.project?.id) return false
     const settings = page.props.shift_plan_daily_settings
         ?? page.props.shift_plan_settings
         ?? (page.props.auth as any)?.user?.calendar_settings
@@ -819,7 +822,7 @@ const showProjectAssignments = computed(() => {
 const hasAnyProjectAssignments = computed(() => projectDayAssignments.value.length > 0)
 
 const loadProjectDayAssignments = async () => {
-    if (!props.isInProjectView || !props.project?.id) return
+    if (!projectAssignmentsEnabled.value || !props.isInProjectView || !props.project?.id) return
     try {
         const { data } = await axios.get(route('projects.day-assignments', { project: props.project.id }))
         projectDayAssignments.value = data.assignments ?? []
@@ -2044,9 +2047,6 @@ function startShiftCalendarListener() {
 /** Speicher-Antwort einer Schicht sofort ins Raster übernehmen (auch für SingleShiftInDailyShiftView) */
 const applySavedShift = (savedShift: any) => {
     shiftCalendarListener?.applyShiftUpdate(savedShift)
-}
-provide("applySavedShift", applySavedShift)
-
     reloadIfShiftRoomNotLoaded(savedShift)
 }
 
@@ -2063,6 +2063,9 @@ async function reloadIfShiftRoomNotLoaded(savedShift: any) {
     if (!missesRoom) return
     await initializeDailyShiftPlan()
     startShiftCalendarListener()
+}
+provide("applySavedShift", applySavedShift)
+
 const shiftQualificationsArray = computed(() =>
     Array.isArray(shiftQualificationsResolved.value)
         ? shiftQualificationsResolved.value
@@ -2284,7 +2287,7 @@ onMounted(async () => {
 
     startShiftCalendarListener()
 
-    if (props.isInProjectView && props.project?.id) {
+    if (projectAssignmentsEnabled.value && props.isInProjectView && props.project?.id) {
         projectAssignmentEchoChannel = Echo.private(`project.${props.project.id}`)
         projectAssignmentEchoChannel.listen('.project-day-assignments.changed', loadProjectDayAssignments)
     }

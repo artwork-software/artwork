@@ -1845,6 +1845,11 @@ readonly class EventService
         //do not rely on user calendar filter dates
         $today = Carbon::now();
 
+        // Setzt den Projektmodus zurück, falls das gewählte Projekt gelöscht wurde
+        $timePeriodProject = !$project && $userCalendarSettings->getAttribute('use_project_time_period')
+            ? $projectService->resolveTimePeriodProject($userCalendarSettings)
+            : null;
+
         if (
             !($useProjectTimePeriod = $userCalendarSettings->getAttribute('use_project_time_period')) &&
             !$project
@@ -1852,7 +1857,7 @@ readonly class EventService
             [$startDate, $endDate] = $userService->getUserCalendarFilterDatesOrDefault($userCalendarFilter);
         } else {
             if (!$project && $useProjectTimePeriod) {
-                $project = $projectService->findById($userCalendarSettings->getAttribute('time_period_project_id'));
+                $project = $timePeriodProject;
 
                 [$startDate, $endDate] = [
                     ($firstEventInProject = $projectService->getFirstEventInProject($project)) ?
@@ -1992,6 +1997,11 @@ readonly class EventService
         //do not rely on user calendar filter dates
         $today = Carbon::now();
 
+        // Setzt den Projektmodus zurück, falls das gewählte Projekt gelöscht wurde
+        $timePeriodProject = !$project && $userCalendarSettings->getAttribute('use_project_time_period')
+            ? $projectService->resolveTimePeriodProject($userCalendarSettings)
+            : null;
+
         if (
             !($useProjectTimePeriod = $userCalendarSettings->getAttribute('use_project_time_period')) &&
             !$project
@@ -1999,7 +2009,7 @@ readonly class EventService
             [$startDate, $endDate] = $userService->getUserCalendarFilterDatesOrDefault($userCalendarFilter);
         } else {
             if (!$project && $useProjectTimePeriod) {
-                $project = $projectService->findById($userCalendarSettings->getAttribute('time_period_project_id'));
+                $project = $timePeriodProject;
 
                 [$startDate, $endDate] = [
                     ($firstEventInProject = $projectService->getFirstEventInProject($project)) ?

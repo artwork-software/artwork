@@ -77,7 +77,7 @@ class HandleInertiaRequests extends Middleware
 
         $projectName = null;
         if ($calendarSettings?->use_project_time_period) {
-            $projectName = $this->projectService->findById($calendarSettings->time_period_project_id)?->name;
+            $projectName = $this->projectService->resolveTimePeriodProject($calendarSettings)?->name;
         }
 
         $storage = Storage::disk('public');

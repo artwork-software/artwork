@@ -1008,7 +1008,7 @@ export default defineComponent({
         openDeleteCraftModal(craft){
             this.craftToDelete = craft;
             this.confirmDeleteTitle = this.$t('Delete craft');
-            this.confirmDeleteDescription = this.$t('Are you sure you want to delete the selected craft?');
+            this.confirmDeleteDescription = this.$t('Are you sure you want to delete the selected craft? All shifts of this craft will be deleted as well; assigned people of committed shifts are notified.');
             this.deleteType = 'craft';
             this.openConfirmDeleteModal = true;
         },

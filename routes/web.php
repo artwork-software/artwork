@@ -1283,11 +1283,12 @@ Route::group(['middleware' => ['auth:sanctum']], function (): void {
         // POST:: shifts.updateIndividualShiftTime
         Route::post('/update/individual/shift/time', [ShiftController::class, 'updateIndividualShiftTime'])
             ->name('shifts.updateIndividualShiftTime');
-
-        // post shifts.updateShortDescription
-        Route::post('/update/short/description', [ShiftController::class, 'updateShortDescription'])
-            ->name('shifts.updateShortDescription');
     });
+
+    // Eigene Schichtnotiz dürfen auch Personen ohne Planungsrecht bearbeiten — die Prüfung
+    // (eigene Zuweisung ODER Planungsrecht + Gewerk) liegt im Controller
+    Route::post('/shift-plan/update/short/description', [ShiftController::class, 'updateShortDescription'])
+        ->name('shifts.updateShortDescription');
 
     // Bewusst OHNE 'can plan shifts': eingeplante Personen bestätigen ihre
     // eigene Zuweisung selbst; Proxy-Erfassung wird im Controller autorisiert.

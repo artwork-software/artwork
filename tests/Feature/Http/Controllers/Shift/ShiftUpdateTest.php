@@ -425,7 +425,7 @@ final class ShiftUpdateTest extends FeatureTestCase
 
         $this->delete(route('shifts.destroy', $shift))->assertSuccessful();
 
-        $this->assertDatabaseMissing('shifts', ['id' => $shift->id]);
+        $this->assertSoftDeleted('shifts', ['id' => $shift->id]);
     }
 
     #[Test]

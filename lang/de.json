@@ -8378,5 +8378,10 @@
     "rejected all": "Alle Änderungen abgelehnt",
     "partial decision": "Änderungen teilweise übernommen",
     "No externally visible components": "Keine extern anzeigbaren Komponenten",
-    "This tab contains no components that external persons could see. It is not preselected.": "Dieser Tab enthält keine Komponenten, die externe Personen sehen könnten. Er ist deshalb nicht vorausgewählt."
+    "This tab contains no components that external persons could see. It is not preselected.": "Dieser Tab enthält keine Komponenten, die externe Personen sehen könnten. Er ist deshalb nicht vorausgewählt.",
+    "You are currently not registered as a shift planner for this craft.": "Du bist aktuell nicht als Gewerksplaner:in für dieses Gewerk hinterlegt.",
+    "You are currently not registered as a shift planner for the craft \":crafts\".": "Du bist aktuell nicht als Gewerksplaner:in für das Gewerk „:crafts“ hinterlegt.",
+    "The shift could not be deleted.": "Die Schicht konnte nicht gelöscht werden.",
+    "The action could not be carried out.": "Die Aktion konnte nicht ausgeführt werden.",
+    "Are you sure you want to delete the selected craft? All shifts of this craft will be deleted as well; assigned people of committed shifts are notified.": "Möchtest du das Gewerk wirklich löschen? Alle Schichten dieses Gewerks werden ebenfalls gelöscht; eingeplante Personen festgeschriebener Schichten werden benachrichtigt."
 }

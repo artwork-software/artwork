@@ -57,6 +57,7 @@ use Artwork\Modules\ServiceProvider\Http\Resources\ServiceProviderShiftPlanResou
 use Artwork\Modules\ServiceProvider\Models\ServiceProvider;
 use Artwork\Modules\ServiceProvider\Services\ServiceProviderService;
 use Artwork\Modules\Shift\Models\Shift;
+use Artwork\Modules\Shift\Services\ShiftDeletionService;
 use Artwork\Modules\Shift\Services\ShiftWorkerAvailability;
 use Artwork\Modules\Shift\Models\ShiftFilter;
 use Artwork\Modules\Shift\Models\ShiftQualification;
@@ -139,13 +140,9 @@ readonly class EventService
 
         $eventCommentService->deleteEventComments($event->comments);
         $timelineService->deleteTimelines($event->timelines);
-        $shiftService->deleteShifts(
-            $event->shifts,
-            $shiftsQualificationsService,
-            $shiftUserService,
-            $shiftFreelancerService,
-            $shiftServiceProviderService
-        );
+        // Gemeinsamer Lösch-Weg: Benachrichtigung der Besetzung festgeschriebener Schichten,
+        // Konflikte, Projekt-Tageszuordnungen, Regel-Neuprüfung, Live-Update
+        app(ShiftDeletionService::class)->deleteMany($event->shifts);
         $subEventService->deleteSubEvents($event->subEvents);
 
         broadcast(new OccupancyUpdated())->toOthers();
@@ -204,13 +201,7 @@ readonly class EventService
 
             $eventCommentService->deleteEventComments($event->comments);
             $timelineService->deleteTimelines($event->timelines);
-            $shiftService->deleteShifts(
-                $event->shifts,
-                $shiftsQualificationsService,
-                $shiftUserService,
-                $shiftFreelancerService,
-                $shiftServiceProviderService
-            );
+            app(ShiftDeletionService::class)->deleteMany($event->shifts, $sendPerEventNotifications);
             $subEventService->deleteSubEvents($event->subEvents);
 
             $notificationService->deleteUpsertRoomRequestNotificationByEventId($event->id);

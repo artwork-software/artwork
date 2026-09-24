@@ -8369,5 +8369,10 @@
     "rejected all": "All changes rejected",
     "partial decision": "Changes partially accepted",
     "No externally visible components": "No externally visible components",
-    "This tab contains no components that external persons could see. It is not preselected.": "This tab contains no components that external persons could see. It is not preselected."
+    "This tab contains no components that external persons could see. It is not preselected.": "This tab contains no components that external persons could see. It is not preselected.",
+    "You are currently not registered as a shift planner for this craft.": "You are currently not registered as a shift planner for this craft.",
+    "You are currently not registered as a shift planner for the craft \":crafts\".": "You are currently not registered as a shift planner for the craft \":crafts\".",
+    "The shift could not be deleted.": "The shift could not be deleted.",
+    "The action could not be carried out.": "The action could not be carried out.",
+    "Are you sure you want to delete the selected craft? All shifts of this craft will be deleted as well; assigned people of committed shifts are notified.": "Are you sure you want to delete the selected craft? All shifts of this craft will be deleted as well; assigned people of committed shifts are notified."
 }

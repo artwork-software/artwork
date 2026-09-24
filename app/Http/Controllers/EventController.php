@@ -61,6 +61,9 @@ use Artwork\Modules\GeneralSettings\Services\GeneralSettingsService;
 use Artwork\Modules\GlobalNotification\Services\GlobalNotificationService;
 use Artwork\Modules\Notification\Enums\NotificationEnum;
 use Artwork\Modules\Permission\Enums\PermissionEnum;
+use Artwork\Modules\Shift\Services\ShiftDeletionService;
+use Artwork\Modules\Shift\Events\UpdateShiftInShiftPlan;
+use Artwork\Modules\Shift\Support\SafeBroadcast;
 use Artwork\Modules\Role\Enums\RoleEnum;
 use Artwork\Modules\Notification\Services\NotificationService;
 use Artwork\Modules\Project\Models\Project;
@@ -1644,6 +1647,8 @@ class EventController extends Controller
             abort(422, __('While the approval workflow is active, shifts can only be committed via a request.'));
         }
 
+        app(CraftScopeService::class)->assertCanPlanShifts(Auth::user(), [$shift]);
+
         $shift->update([
             'is_committed' => $committed,
             'committing_user_id' => $committed ? Auth::id() : null,
@@ -1651,6 +1656,12 @@ class EventController extends Controller
 
         // is_committed ist nicht in logOnly — Einzel-Toggle explizit loggen.
         $this->shiftService->logSingleCommitActivity($shift, $committed);
+
+        // Schloss-Symbol in offenen Dienstplan-Ansichten ohne Neuladen aktualisieren
+        $roomId = $shift->event_id ? $shift->event?->room_id : $shift->room_id;
+        if ($roomId !== null) {
+            SafeBroadcast::send(new UpdateShiftInShiftPlan($shift, (int) $roomId));
+        }
     }
 
 
@@ -3064,8 +3075,13 @@ class EventController extends Controller
     public function destroyShifts(Event $event): RedirectResponse
     {
         $this->authorize('update', $event);
+        // Schichten löschen ist Dienstplanung — das Termin-Schreibrecht allein genügt nicht
+        abort_unless(
+            $this->authManager->user()?->can(PermissionEnum::SHIFT_PLANNER->value),
+            403
+        );
 
-        $this->shiftService->forceDeleteShifts($event->shifts);
+        app(ShiftDeletionService::class)->deleteMany($event->shifts);
         $this->timelineService->forceDeleteTimelines($event->timelines);
 
         return Redirect::back();

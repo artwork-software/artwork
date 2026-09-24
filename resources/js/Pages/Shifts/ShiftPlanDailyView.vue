@@ -627,6 +627,7 @@
                 :initial-project-id="initialProjectIdResolved"
                 :initial-project="props.project ?? page.props?.currentProject ?? null"
                 @close="showAddShiftByPresetOrGroupModal = false"
+                @added="applySavedShift($event)"
             />
 
             <EventComponent
@@ -2046,6 +2047,22 @@ const applySavedShift = (savedShift: any) => {
 }
 provide("applySavedShift", applySavedShift)
 
+    reloadIfShiftRoomNotLoaded(savedShift)
+}
+
+/**
+ * Neu angelegte/verschobene Schicht in einem Raum, der hier nicht geladen ist (z.B. „leere Räume
+ * ausblenden" oder Raumfilter): der Listener kann sie nirgends einfügen — Plan nachladen statt sie
+ * still zu verwerfen.
+ */
+async function reloadIfShiftRoomNotLoaded(savedShift: any) {
+    if (savedShift?.removed) return
+    const shifts = Array.isArray(savedShift?.shifts) ? savedShift.shifts : [savedShift?.shift]
+    const loadedRoomIds = new Set((shiftPlanCopy.value || []).map((room: any) => room.roomId ?? room.id))
+    const missesRoom = shifts.some((shift: any) => shift?.roomId != null && !loadedRoomIds.has(shift.roomId))
+    if (!missesRoom) return
+    await initializeDailyShiftPlan()
+    startShiftCalendarListener()
 const shiftQualificationsArray = computed(() =>
     Array.isArray(shiftQualificationsResolved.value)
         ? shiftQualificationsResolved.value
@@ -2081,7 +2098,7 @@ const closeAddShiftModal = (success = false, savedShift: any = null) => {
         && shiftToEdit.value === null
         && dayForShiftAdd.value === null
 
-    if (success && savedShift?.shift) {
+    if (success && (savedShift?.shift || savedShift?.shifts)) {
         applySavedShift(savedShift)
     }
     showAddShiftModal.value = false

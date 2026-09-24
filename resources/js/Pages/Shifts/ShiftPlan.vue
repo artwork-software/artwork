@@ -403,7 +403,7 @@
                                                         <span class="flex items-center gap-1.5 min-w-0">
                                                             <!-- Personen-Multiedit: Person dem GESAMTEN Projekt (Zeitraum) zuweisen -->
                                                             <input
-                                                                v-if="multiEditMode && userForMultiEdit"
+                                                                v-if="projectAssignmentsEnabled && multiEditMode && userForMultiEdit"
                                                                 type="checkbox"
                                                                 class="input-checklist h-3.5 w-3.5 shrink-0"
                                                                 :checked="fullPeriodAssignedProjects.has(group.projectId)"
@@ -1077,6 +1077,7 @@
         :initial-project="pageProps?.currentProject ?? null"
         v-if="showAddShiftByPresetOrGroupModal"
         @close="showAddShiftByPresetOrGroupModal = false"
+        @added="closeAddShiftModalApply($event)"
         />
 
     <DayRemarkEditModal
@@ -2879,6 +2880,19 @@ async function initializeShiftPlan() {
 let shiftCalendarListener: ReturnType<typeof useShiftCalendarListener> | null = null
 let isShiftPlanUnmounted = false
 
+/** Echo-Handler für die aktuell geladenen Räume (neu) anmelden — auch nach einem Nachladen */
+function startShiftCalendarListener() {
+    shiftCalendarListener?.dispose()
+    shiftCalendarListener = null
+    if (isShiftPlanUnmounted) return
+    shiftCalendarListener = useShiftCalendarListener(shiftPlanArrayRef, {
+        onWorkersNeedReload: debouncedLoadShiftPlanWorkers,
+        onWorkerNeedReload: reloadSingleWorker,
+        onLookupsReceived: mergeLookups,
+    })
+    shiftCalendarListener.init()
+}
+
 onMounted(async () => {
     // Crafts + Workers sofort parallel zum Meta/Batch-Load starten — die drei
     // Endpunkte sind unabhängig; vorher liefen alle vier Requests seriell
@@ -2996,14 +3010,7 @@ onMounted(async () => {
 
     attach()
 
-    if (!isShiftPlanUnmounted) {
-        shiftCalendarListener = useShiftCalendarListener(shiftPlanArrayRef, {
-            onWorkersNeedReload: debouncedLoadShiftPlanWorkers,
-            onWorkerNeedReload: reloadSingleWorker,
-            onLookupsReceived: mergeLookups,
-        })
-        shiftCalendarListener.init()
-    }
+    startShiftCalendarListener()
 
     setupInertiaNavigationGuard()
 
@@ -3331,14 +3338,33 @@ function openAddShiftForRoomAndDay(day: any, roomId: number) {
  *                   anwenden, damit die Ansicht nicht allein vom Broadcast abhängt
  */
 function closeAddShiftModal(success = false, savedShift: any = null) {
-    if (success && savedShift?.shift) {
-        shiftCalendarListener?.applyShiftUpdate(savedShift)
-    }
+    if (success) closeAddShiftModalApply(savedShift)
     showAddShiftModal.value = false
     roomForShiftAdd.value = null
     dayForShiftAdd.value = null
     shiftToEdit.value = null
     multiEditCalendarDays.value = []
+}
+
+/** Speicher-Antwort (Anlegen/Bearbeiten/Löschen) sofort ins Raster übernehmen */
+function closeAddShiftModalApply(savedShift: any) {
+    if (!savedShift?.shift && !savedShift?.shifts) return
+    shiftCalendarListener?.applyShiftUpdate(savedShift)
+    reloadIfShiftRoomNotLoaded(savedShift)
+}
+
+/**
+ * Neu angelegte/verschobene Schicht in einem Raum, der hier nicht geladen ist (z.B. „leere Räume
+ * ausblenden"): der Listener kann sie nirgends einfügen — Plan nachladen statt sie still zu verwerfen.
+ */
+async function reloadIfShiftRoomNotLoaded(savedShift: any) {
+    if (savedShift?.removed) return
+    const shifts = Array.isArray(savedShift?.shifts) ? savedShift.shifts : [savedShift?.shift]
+    const loadedRoomIds = new Set((shiftPlanArrayRef.value || []).map((room: any) => room.roomId ?? room.id))
+    const missesRoom = shifts.some((shift: any) => shift?.roomId != null && !loadedRoomIds.has(shift.roomId))
+    if (!missesRoom) return
+    await initializeShiftPlan()
+    startShiftCalendarListener()
 }
 
 function checkIfRoomAndDayIsInMultiEditCalendar(day: string, roomId: number) {
@@ -4506,6 +4532,8 @@ function addUserToMultiEdit(item: any) {
  * Assignment-ID der Gruppe (Referenz für das Gruppen-Delete beim Abhaken).
  */
 const fullPeriodAssignedProjects = ref<Map<number, string>>(new Map())
+// Globaler Schalter „Projektzuordnungen“ (Schichteinstellungen)
+const projectAssignmentsEnabled = computed<boolean>(() => (page.props as any).project_assignments_enabled !== false)
 const savingFullPeriodProjectIds = ref<Set<number>>(new Set())
 let fullPeriodAssignmentRequestSequence = 0
 
@@ -4515,7 +4543,7 @@ async function refreshFullPeriodAssignedProjects() {
     const item = userForMultiEdit.value
 
     try {
-        if (item) {
+        if (item && projectAssignmentsEnabled.value) {
             const { data } = await axios.get(route('project-day-assignments.full-period.index'), {
                 params: { worker_type: item.type, worker_id: item.id },
             })

@@ -1063,7 +1063,7 @@
     "POST shift-plan/export/pdf": "forbidden",
     "POST shift-plan/export/worker-matrix-pdf": "forbidden",
     "POST shift-plan/update/individual/shift/time": "forbidden",
-    "POST shift-plan/update/short/description": "forbidden",
+    "POST shift-plan/update/short/description": "validation",
     "POST shift-preset-groups": "forbidden",
     "POST shift-qualifications": "forbidden",
     "POST shift-qualifications/reorder": "forbidden",

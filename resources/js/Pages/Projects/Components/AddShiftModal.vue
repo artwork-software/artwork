@@ -739,7 +739,8 @@ function deleteShift() {
     serverErrors.value = {}
     axiosProcessing.value = true
     axios.delete(route('shifts.destroy', { shift: props.shift.id }))
-        .then(() => closeModal(true))
+        // Antwort { removed, shift, roomId } → Ansicht nimmt die Schicht sofort heraus
+        .then(({ data }) => closeModal(true, data?.shift ? data : null))
         .catch((e) => applyServerErrors(e))
         .finally(() => { axiosProcessing.value = false })
 }
@@ -1041,7 +1042,8 @@ function saveShift() {
         shiftForm.post(route('event.shift.store.multi.add'), {
             preserveScroll: true,
             preserveState: true,
-            onSuccess: () => { shiftForm.reset(); closeModal(true) },
+            // flash.shiftPlanUpdate = neu angelegte Schichten → Ansicht zeigt sie sofort (nicht nur per WebSocket)
+            onSuccess: (page) => { shiftForm.reset(); closeModal(true, page?.props?.flash?.shiftPlanUpdate ?? null) },
             onError: (e) => applyServerErrors(e),
         })
         return
@@ -1051,7 +1053,7 @@ function saveShift() {
         shiftForm.post(route('event.shift.store.without.event'), {
             preserveScroll: true,
             preserveState: true,
-            onSuccess: () => { shiftForm.reset(); closeModal(true) },
+            onSuccess: (page) => { shiftForm.reset(); closeModal(true, page?.props?.flash?.shiftPlanUpdate ?? null) },
             onError: (e) => applyServerErrors(e),
         })
         return

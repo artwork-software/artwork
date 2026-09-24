@@ -273,6 +273,8 @@ class HandleInertiaRequests extends Middleware
                     'plainTextToken' => fn() => $request->session()->get('plainTextToken'),
                     // Ebenso einmalig: das Signaturgeheimnis eines neu angelegten Webhook-Endpunkts.
                     'webhookSecret' => fn() => $request->session()->get('webhookSecret'),
+                    // Neu angelegte Schichten (MultiShiftCreateInShiftPlan-Payload) für die anlegende Ansicht
+                    'shiftPlanUpdate' => fn() => $request->session()->get('shiftPlanUpdate'),
                 ],
                 'event_status_module' => $eventSettings->enable_status,
                 'event_admission_module' => $eventSettings->enable_admission,

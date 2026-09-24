@@ -300,7 +300,7 @@
         :shift-qualifications="usePage().props.shiftQualifications"
         :shift-groups="usePage().props.shiftGroups"
         :global-qualifications="usePage().props.globalQualifications"
-        @closed="showAddShiftModal = false"
+        @closed="onEditShiftModalClosed"
         :shift-time-presets="usePage().props.shiftTimePresets"
         :shift-plan-modal="true"
         :edit="shift !== null"
@@ -411,6 +411,8 @@ const { resolveCraft, resolveShiftGroup } = useShiftPlanLookups();
 
 // Rooms provided by ShiftPlanDailyView for AddShiftModal
 const injectedRooms = inject("shiftPlanRooms", ref([]))
+// Speicher-Antwort direkt ins Raster übernehmen (ShiftPlanDailyView) — nicht nur auf den Broadcast warten
+const applySavedShift = inject("applySavedShift", null)
 
 const ConfirmationComponent = defineAsyncComponent({
     loader: () => import('@/Layouts/Components/ConfirmationComponent.vue'),
@@ -518,6 +520,13 @@ const { t } = useI18n();
 
 const showShiftDetails = ref(true);
 const showAddShiftModal = ref(false);
+
+function onEditShiftModalClosed(success = false, savedShift = null) {
+    showAddShiftModal.value = false
+    if (success && savedShift?.shift) {
+        applySavedShift?.(savedShift)
+    }
+}
 const showAddFunctionModal = ref(false);
 const showAddOverbookingModal = ref(false);
 const allowOverbooking = computed(() => !!usePage().props.allow_shift_overbooking);

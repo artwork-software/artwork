@@ -27,6 +27,10 @@ use Artwork\Modules\Event\Services\SubEventService;
 use Artwork\Modules\Task\Services\TaskService;
 use Artwork\Modules\Timeline\Services\TimelineService;
 use Artwork\Modules\User\Models\User;
+use Artwork\Modules\User\Models\UserCalendarSettings;
+use Artwork\Modules\User\Models\UserDailyViewCalendarSettings;
+use Artwork\Modules\User\Models\UserShiftPlanDailySettings;
+use Artwork\Modules\User\Models\UserShiftPlanSettings;
 use Artwork\Modules\User\Services\UserService;
 use Artwork\Modules\User\Services\UserProjectManagementSettingService;
 use Illuminate\Database\Eloquent\Builder;
@@ -361,6 +365,32 @@ class ProjectService
     public function findById(int $id): Project
     {
         return $this->projectRepository->findOrFail($id);
+    }
+
+    /**
+     * Projekt des Projektmodus (Zeitraum) einer Kalender-/Dienstplan-Einstellung.
+     * Verweist die Einstellung auf ein gelöschtes Projekt (Papierkorb oder endgültig), wird der Projektmodus
+     * zurückgesetzt statt einen 404 zu werfen — sonst sperrt ein gelöschtes Projekt
+     * den User dauerhaft aus Kalender/Planungskalender aus.
+     */
+    public function resolveTimePeriodProject(
+        // phpcs:ignore Generic.Files.LineLength.TooLong -- Union-Typ ohne Alias nicht umbrechbar
+        UserCalendarSettings|UserDailyViewCalendarSettings|UserShiftPlanSettings|UserShiftPlanDailySettings $settings
+    ): ?Project {
+        $projectId = (int) $settings->getAttribute('time_period_project_id');
+
+        /** @var Project|null $project */
+        $project = $projectId > 0 ? $this->projectRepository->find($projectId) : null;
+        // Repository-Query umgeht Global Scopes → Papierkorb-Projekte explizit ausschließen
+        if ($project?->trashed()) {
+            $project = null;
+        }
+
+        if ($project === null && ($projectId > 0 || $settings->getAttribute('use_project_time_period'))) {
+            $settings->forceFill(['use_project_time_period' => false, 'time_period_project_id' => 0])->save();
+        }
+
+        return $project;
     }
 
     public function save(Project $project): Project

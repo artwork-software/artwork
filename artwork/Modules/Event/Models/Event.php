@@ -566,6 +566,19 @@ class Event extends Model
         return $builder->where('is_planning', false);
     }
 
+    /**
+     * Planungstermine nur für Personen mit Planungskalender-Recht (EventPolicy::viewPlanning).
+     * Ohne Person (Jobs, Konsole) bleibt die Abfrage ungefiltert.
+     */
+    public function scopeVisiblePlanningFor(Builder $builder, ?User $user): Builder
+    {
+        if ($user === null || $user->can('viewPlanning', self::class)) {
+            return $builder;
+        }
+
+        return $builder->where('is_planning', false);
+    }
+
     public function verifications(): HasMany
     {
         return $this->hasMany(EventVerification::class);

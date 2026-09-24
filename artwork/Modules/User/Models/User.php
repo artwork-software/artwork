@@ -68,6 +68,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\MorphToMany;
 use Illuminate\Foundation\Auth\Access\Authorizable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 use Laravel\Fortify\TwoFactorAuthenticatable;
 use Laravel\Passport\HasApiTokens;
@@ -364,6 +365,60 @@ class User extends Model implements
     public function inventoryUserFilter()
     {
         return $this->hasOne(\Artwork\Modules\Inventory\Models\InventoryUserFilter::class, 'user_id');
+    }
+
+    /**
+     * Als privat markierte Kontaktdaten sieht nur die Person selbst oder wer "can view private user info"
+     * hat (Admins via Gate::before). Ohne Betrachter*in (Jobs, Konsole) gibt es keine Freigabe.
+     */
+    public function privateContactDataVisibleTo(?self $viewer): bool
+    {
+        if ($viewer === null) {
+            return false;
+        }
+
+        return $viewer->is($this) || $viewer->can(PermissionEnum::CAN_VIEW_PRIVATE_USER_INFO->value);
+    }
+
+    public function visibleEmailFor(?self $viewer): ?string
+    {
+        return !$this->getAttribute('email_private') || $this->privateContactDataVisibleTo($viewer)
+            ? $this->getAttribute('email')
+            : null;
+    }
+
+    public function visiblePhoneNumberFor(?self $viewer): ?string
+    {
+        return !$this->getAttribute('phone_private') || $this->privateContactDataVisibleTo($viewer)
+            ? $this->getAttribute('phone_number')
+            : null;
+    }
+
+    /**
+     * Rohe Serialisierung (Inertia-Props, JSON, Broadcasts) blendet private Kontaktdaten für die
+     * angemeldete Person aus. Ohne Web-Login (Jobs, Konsole) bleibt die Ausgabe unverändert.
+     * FALLE: Das greift nur, wenn email_private/phone_private mitgeladen sind – bei select()-Listen mit
+     * email/phone_number die Flags mit selektieren.
+     *
+     * @return array<string, mixed>
+     */
+    public function toArray(): array
+    {
+        $attributes = parent::toArray();
+        $viewer = Auth::guard('web')->user();
+
+        if (!$viewer instanceof self) {
+            return $attributes;
+        }
+
+        if (array_key_exists('email', $attributes)) {
+            $attributes['email'] = $this->visibleEmailFor($viewer);
+        }
+        if (array_key_exists('phone_number', $attributes)) {
+            $attributes['phone_number'] = $this->visiblePhoneNumberFor($viewer);
+        }
+
+        return $attributes;
     }
 
     public function getTypeAttribute(): string

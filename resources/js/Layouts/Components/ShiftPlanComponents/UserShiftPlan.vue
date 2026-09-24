@@ -236,7 +236,7 @@
                                     <template v-if="itemsForDay(day).length">
                                         <div v-for="i in itemsForDay(day)" :key="i._key" class="space-y-1">
                                             <div class="text-[11px] text-text-muted">
-                                                {{ i.start }}–{{ i.end }}
+                                                {{ i._displayStart ?? i.start }}–{{ i._displayEnd ?? i.end }}
                                                 <span v-if="i._crossesMidnight" class="ml-1 inline-block rounded bg-surface-sunken px-1 py-0.5">
                                                     → +1&nbsp;Tag
                                                 </span>
@@ -718,6 +718,14 @@ const weeks = computed(() => {
     return result
 })
 
+/** Arbeitszeit der angezeigten Person (worker_start/worker_end vom Server, sonst Schichtzeit) */
+function workerStart(shift) {
+    return String(shift?.worker_start || shift?.start || '').slice(0, 5)
+}
+function workerEnd(shift) {
+    return String(shift?.worker_end || shift?.end || '').slice(0, 5)
+}
+
 /** ---------- Items (Schichten + Individualzeiten) eines einzelnen Tages ---------- **/
 function itemsForDay(day) {
     const out = []
@@ -725,14 +733,19 @@ function itemsForDay(day) {
     for (const s of (Array.isArray(day?.shifts) ? day.shifts : [])) {
         if (!s?.start || !s?.end) continue
 
-        const startAt = toDateTime(day.date, s.start)
-        let endAt = toDateTime(day.date, s.end)
+        // Individuelle Arbeitszeit der Person hat Vorrang vor der Schichtzeit
+        const displayStart = workerStart(s)
+        const displayEnd = workerEnd(s)
+        const startAt = toDateTime(day.date, displayStart)
+        let endAt = toDateTime(day.date, displayEnd)
         if (endAt < startAt) endAt = addDays(endAt, 1)
 
         out.push({
             ...s,
             _type: 'shift',
             _day: day.date,
+            _displayStart: displayStart,
+            _displayEnd: displayEnd,
             _startAt: startAt,
             _endAt: endAt,
             _project: s.project,
@@ -783,8 +796,8 @@ const workItemsInRange = computed(() => {
         for (const s of shifts) {
             if (!s?.start || !s?.end) continue
 
-            const startAt = toDateTime(day.date, s.start)
-            let endAt = toDateTime(day.date, s.end)
+            const startAt = toDateTime(day.date, workerStart(s))
+            let endAt = toDateTime(day.date, workerEnd(s))
 
             // Übernacht-Schicht: Ende < Start ⇒ +1 Tag
             if (endAt < startAt) endAt = addDays(endAt, 1)

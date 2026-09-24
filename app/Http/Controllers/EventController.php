@@ -416,12 +416,8 @@ class EventController extends Controller
             'first_project_shift_tab_id' => fn () => $this->projectTabService
                 ->getFirstProjectTabWithTypeIdOrFirstProjectTabId(ProjectTabComponentEnum::SHIFT_TAB),
 
-            'projectNameUsedForProjectTimePeriod' => fn () =>
-            $userCalendarSettings->getAttribute('time_period_project_id')
-                ? $this->projectService->findById(
-                    $userCalendarSettings->getAttribute('time_period_project_id')
-                )->name
-                : null,
+            'projectNameUsedForProjectTimePeriod' => fn () => $this->projectService
+                ->resolveTimePeriodProject($userCalendarSettings)?->name,
             'filterType' => $calendarFilterType,
             'isDailyView' => $isDailyView,
             'shiftQualifications' => fn () => CalendarShiftVisibility::isEnabled($user, $userCalendarSettings)
@@ -468,6 +464,8 @@ class EventController extends Controller
         }
 
         $isPlanning           = $request->boolean('isPlanning', false);
+        // Gleiche Schranke wie viewPlanningCalendar(): die Daten-API darf nicht mehr zeigen als die Seite.
+        abort_if($isPlanning && !$user->can('viewPlanning', Event::class), 403);
 
         if ($isPlanning) {
             $filterType = $isDailyView
@@ -706,10 +704,8 @@ class EventController extends Controller
                 ->getFirstProjectTabWithTypeIdOrFirstProjectTabId(ProjectTabComponentEnum::CALENDAR),
             'first_project_shift_tab_id' => $this->projectTabService
                 ->getFirstProjectTabWithTypeIdOrFirstProjectTabId(ProjectTabComponentEnum::SHIFT_TAB),
-            'projectNameUsedForProjectTimePeriod' => $userCalendarSettings->getAttribute('time_period_project_id') ?
-                $this->projectService->findById(
-                    $userCalendarSettings->getAttribute('time_period_project_id')
-                )->name : null,
+            'projectNameUsedForProjectTimePeriod' => $this->projectService
+                ->resolveTimePeriodProject($userCalendarSettings)?->name,
             'calendarWarningText' => $calendarWarningText,
             'months' => $months,
             'verifierForEventTypIds' => $user->verifiableEventTypes->pluck('id'),
@@ -1028,10 +1024,8 @@ class EventController extends Controller
             'dayServices' => $this->dayServicesService->getAll(),
             'firstProjectShiftTabId' => $this->projectTabService
                 ->getFirstProjectTabWithTypeIdOrFirstProjectTabId(ProjectTabComponentEnum::SHIFT_TAB),
-            'projectNameUsedForProjectTimePeriod' => $userCalendarSettings->getAttribute('time_period_project_id') ?
-                $this->projectService->findById(
-                    $userCalendarSettings->getAttribute('time_period_project_id')
-                )->name : null,
+            'projectNameUsedForProjectTimePeriod' => $this->projectService
+                ->resolveTimePeriodProject($userCalendarSettings)?->name,
             'projectId' => $project->id ?? null,
             'shiftPlanWorkerSortEnums' => array_map(
                 static function (ShiftPlanWorkerSortEnum $enum): string {

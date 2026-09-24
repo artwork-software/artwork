@@ -222,9 +222,11 @@ const projectShiftTabId = computed(() =>
 
 const showAddShiftModal = ref(false);
 
-const onShiftModalClosed = () => {
+// Zweites Argument: neues Startdatum nach dem Speichern — liegt es in einem anderen Monat,
+// lädt der Kalender auch diesen nach (sonst fehlt die Schicht dort bis zum Neuladen)
+const onShiftModalClosed = (success = false, savedShift = null) => {
     showAddShiftModal.value = false;
-    emit("shift-edited", props.shift);
+    emit("shift-edited", props.shift, success ? (savedShift?.shift?.startDate ?? null) : null);
 };
 
 const craftColor = computed(() => props.shift?.craft?.color ?? "#999999");

@@ -17,6 +17,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Collection as SupportCollection;
+use Illuminate\Support\Facades\Auth;
 
 class EventCollectionService
 {
@@ -126,6 +127,7 @@ class EventCollectionService
                 ->with($this->calendarEventEagerLoads())
                 ->withExists('timelines')
                 ->when($project, fn($builder) => $builder->where('project_id', $project->id))
+                ->visiblePlanningFor(Auth::user())
                 ->whereDate('start_time', '<=', $maxDay)
                 ->whereDate('end_time', '>=', $minDay)
                 ->whereNull('deleted_at')

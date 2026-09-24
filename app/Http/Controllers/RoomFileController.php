@@ -31,7 +31,8 @@ class RoomFileController extends Controller
      */
     public function store(FileUpload $request, Room $room): RedirectResponse
     {
-        $this->authorize('view', $room->area);
+        // Dokumente gehören zur Raumseite: wer den Raum sieht (Raumverwaltung oder Raum-Admin), verwaltet sie.
+        $this->authorize('view', $room);
 
         if (!Storage::exists("room_files")) {
             Storage::makeDirectory("room_files");
@@ -63,7 +64,7 @@ class RoomFileController extends Controller
 
     public function download(RoomFile $roomFile): StreamedResponse
     {
-        $this->authorize('view projects');
+        $this->authorize('view', $roomFile->room);
 
         $this->changeService->saveFromBuilder(
             $this->changeService
@@ -79,7 +80,7 @@ class RoomFileController extends Controller
 
     public function destroy(RoomFile $roomFile): RedirectResponse
     {
-        $this->authorize('view', $roomFile->room->area);
+        $this->authorize('view', $roomFile->room);
 
         $this->changeService->saveFromBuilder(
             $this->changeService
@@ -98,7 +99,7 @@ class RoomFileController extends Controller
     public function forceDelete(int $id): RedirectResponse
     {
         $roomFile = RoomFile::onlyTrashed()->findOrFail($id);
-        $this->authorize('view', $roomFile->room->area);
+        $this->authorize('view', $roomFile->room);
 
         Storage::delete('room_files/' . $roomFile->basename);
 

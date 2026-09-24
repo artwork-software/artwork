@@ -26,6 +26,9 @@ use Artwork\Modules\Sector\Models\Sector;
 use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\User\Models\User;
 use Artwork\Modules\User\Models\UserCalendarSettings;
+use Artwork\Modules\User\Models\UserDailyViewCalendarSettings;
+use Artwork\Modules\User\Models\UserShiftPlanDailySettings;
+use Artwork\Modules\User\Models\UserShiftPlanSettings;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
@@ -136,21 +139,26 @@ class Project extends Model
 
     public static function booting(): void
     {
-        static::softDeleted(function ($project): void {
-            UserCalendarSettings::query()->where('time_period_project_id', $project->id)->update(
-                ['time_period_project_id' => 0, 'use_project_time_period' => 0]
-            );
-        });
-
         static::deleting(function ($project): void {
             // Delete all artist residencies before deleting the project
             $project->artistResidencies()->delete();
         });
 
+        // feuert auch beim Soft-Delete; alle vier Projektmodus-Einstellungen (Kalender,
+        // Kalender-Tagesansicht, Dienstplan, Dienstplan-Tagesansicht) zurücksetzen
         static::deleted(function ($project): void {
-            UserCalendarSettings::query()->where('time_period_project_id', $project->id)->update(
-                ['time_period_project_id' => 0, 'use_project_time_period' => 0]
-            );
+            foreach (
+                [
+                    UserCalendarSettings::class,
+                    UserDailyViewCalendarSettings::class,
+                    UserShiftPlanSettings::class,
+                    UserShiftPlanDailySettings::class,
+                ] as $settingsClass
+            ) {
+                $settingsClass::query()->where('time_period_project_id', $project->id)->update(
+                    ['time_period_project_id' => 0, 'use_project_time_period' => 0]
+                );
+            }
         });
     }
 

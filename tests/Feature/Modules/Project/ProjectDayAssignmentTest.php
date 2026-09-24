@@ -351,6 +351,40 @@ final class ProjectDayAssignmentTest extends FeatureTestCase
     }
 
     #[Test]
+    public function deleting_a_shift_restores_the_assignments_it_superseded(): void
+    {
+        // Regression: shifts.destroy löschte die Schicht per forceDelete; die Zuweisungen fielen per
+        // Cascade weg, ohne restoreForShiftRemoval — die Projektzuordnung blieb für immer gelöscht.
+        $this->actingAsAdmin();
+        $project = $this->createProjectWithPeriod('2026-08-01', '2026-08-10');
+        $worker = User::factory()->create(['can_work_shifts' => true]);
+
+        $assignment = $this->service()->createAssignments(
+            $project,
+            User::class,
+            $worker->id,
+            ProjectDayAssignmentType::BINDING,
+            ['2026-08-02'],
+            false
+        )->first();
+
+        $shift = Shift::factory()->create([
+            'project_id' => $project->id,
+            'start_date' => '2026-08-02',
+            'end_date' => '2026-08-02',
+        ]);
+        $this->service()->supersedeForShiftAssignment($shift, User::class, $worker->id);
+        $this->assertSoftDeleted('project_day_assignments', ['id' => $assignment->id]);
+
+        $this->delete(route('shifts.destroy', $shift))->assertSuccessful();
+
+        $this->assertDatabaseMissing('shifts', ['id' => $shift->id]);
+        $restored = ProjectDayAssignment::find($assignment->id);
+        $this->assertNotNull($restored);
+        $this->assertNull($restored->superseded_by_shift_id);
+    }
+
+    #[Test]
     public function deleted_group_is_not_restored_after_shift_removal(): void
     {
         $this->actingAsAdmin();

@@ -12,6 +12,8 @@ use Artwork\Modules\Freelancer\Models\Freelancer;
 use Artwork\Modules\Notification\Enums\NotificationEnum;
 use Artwork\Modules\Notification\Services\NotificationService;
 use Artwork\Modules\Project\Models\Project;
+use Artwork\Modules\Project\Models\ProjectDayAssignment;
+use Artwork\Modules\Project\Services\ProjectDayAssignmentService;
 use Artwork\Modules\Shift\Events\UpdateEventShiftInShiftPlan;
 use Artwork\Modules\Shift\Models\CommittedShiftChange;
 use Artwork\Modules\Shift\Models\GlobalQualification;
@@ -224,8 +226,37 @@ class ShiftService
     public function forceDelete(Shift $shift): bool
     {
         $this->workingHourCacheService->forgetForShift($shift);
+        $this->restoreSupersededProjectDayAssignments($shift);
 
         return $this->shiftRepository->forceDelete($shift);
+    }
+
+    /**
+     * Von dieser Schicht verdrängte Projekt-Tageszuordnungen zurückholen, bevor sie gelöscht wird.
+     * Die Zuweisungen verschwinden sonst per Cascade ohne restoreForShiftRemoval und
+     * superseded_by_shift_id wird per nullOnDelete geleert — die Zuordnung wäre endgültig weg.
+     */
+    private function restoreSupersededProjectDayAssignments(Shift $shift): void
+    {
+        $employables = ProjectDayAssignment::onlyTrashed()
+            ->where('superseded_by_shift_id', $shift->id)
+            ->get(['employable_type', 'employable_id'])
+            ->unique(
+                static fn (ProjectDayAssignment $row): string => $row->employable_type . ':' . $row->employable_id
+            );
+
+        if ($employables->isEmpty()) {
+            return;
+        }
+
+        $projectDayAssignmentService = app(ProjectDayAssignmentService::class);
+        foreach ($employables as $row) {
+            $projectDayAssignmentService->restoreForShiftRemoval(
+                $shift,
+                $row->employable_type,
+                (int) $row->employable_id
+            );
+        }
     }
 
     public function forceDeleteShifts(Collection|array $shifts): void
@@ -696,8 +727,9 @@ class ShiftService
             ->mapWithKeys(fn ($qty, $id) => [(int) $id => (int) $qty])
             ->toArray();
 
+        // Menge 0 = Anforderung entfernen (das Modal schickt bisher angefragte Qualifikationen mit 0 mit)
         $syncPayload = $globalQualification
-            ->filter(fn ($item) => !empty($item['global_qualification_id']))
+            ->filter(fn ($item) => !empty($item['global_qualification_id']) && (int) ($item['quantity'] ?? 0) > 0)
             ->mapWithKeys(fn ($item) => [
                 (int) $item['global_qualification_id'] => ['quantity' => (int) $item['quantity']],
             ])

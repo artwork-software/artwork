@@ -70,6 +70,16 @@ class ServiceProvider extends Model implements Vacationer, DayServiceable, Emplo
         'type_of_provider'
     ];
 
+    /**
+     * Gage und interne Notiz nie roh serialisieren (Personenlisten, Schicht-Tab, Broadcasts); die Profilseite
+     * gibt sie explizit über die ShowResource aus.
+     */
+    protected $hidden = [
+        'salary_per_hour',
+        'salary_description',
+        'note',
+    ];
+
     protected $appends = [
         'name',
         'type',

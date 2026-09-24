@@ -729,6 +729,21 @@ readonly class EventService
 
         $relationToFind = $mapping[$modelType] ?? 'users';
 
+        // Zeiten der angezeigten Person: individuelle Arbeitszeit (shift_workers-Pivot) vor Schichtzeit.
+        // Die Stundensummen des Einsatzplans rechneten sonst mit der Schichtzeit, während Karte,
+        // Soll/Ist und Kalender-Abo die individuelle Zeit zeigen.
+        $ownTimes = static function (Shift $shift) use ($relationToFind, $modelId): array {
+            $pivot = $shift->{$relationToFind}?->firstWhere('id', $modelId)?->pivot;
+
+            return [
+                'start_date' => $pivot?->start_date ?? $shift->start_date,
+                'end_date' => $pivot?->end_date ?? $shift->end_date,
+                'start' => $pivot?->start_time ?? $shift->start,
+                'end' => $pivot?->end_time ?? $shift->end,
+                'break_minutes' => $shift->break_minutes,
+            ];
+        };
+
         // Verfügbarkeitsstatus am Schichttag aus derselben Quelle wie das Warndreieck im
         // Schichtplan: Wer trotz Abwesenheitseintrag eingeplant ist, soll das auch im
         // Einsatzplan sehen — dort war der Eintrag bislang nur unten in der Liste sichtbar.
@@ -887,7 +902,8 @@ readonly class EventService
                     continue;
                 }
 
-                $plannedData = $calculatePlannedWorkingHours([$shift]);
+                $ownShiftTimes = $ownTimes($shift);
+                $plannedData = $calculatePlannedWorkingHours([$ownShiftTimes]);
                 $unavailableStatus = $resolveUnavailableStatus($shift);
                 $this->markUnavailableAssignment($daysWithData[$shiftDate], $unavailableStatus, $shift);
 
@@ -905,6 +921,9 @@ readonly class EventService
                     'name' => $shift->name ?? '',
                     'start' => $shift->start,
                     'end' => $shift->end,
+                    // Arbeitszeit der angezeigten Person (individuelle Zeit, sonst Schichtzeit)
+                    'worker_start' => substr((string) $ownShiftTimes['start'], 0, 5),
+                    'worker_end' => substr((string) $ownShiftTimes['end'], 0, 5),
                     'break_minutes' => $shift->break_minutes,
                     'description' => $shift->description,
                     'is_committed' => (bool) $shift->is_committed,
@@ -962,7 +981,8 @@ readonly class EventService
                 if (!isset($daysWithData[$shiftDate])) {
                     continue;
                 }
-                $plannedData = $calculatePlannedWorkingHours([$shift]);
+                $ownShiftTimes = $ownTimes($shift);
+                $plannedData = $calculatePlannedWorkingHours([$ownShiftTimes]);
                 $unavailableStatus = $resolveUnavailableStatus($shift);
                 $this->markUnavailableAssignment($daysWithData[$shiftDate], $unavailableStatus, $shift);
 
@@ -980,6 +1000,9 @@ readonly class EventService
                     'name' => $shift->name ?? '',
                     'start' => $shift->start,
                     'end' => $shift->end,
+                    // Arbeitszeit der angezeigten Person (individuelle Zeit, sonst Schichtzeit)
+                    'worker_start' => substr((string) $ownShiftTimes['start'], 0, 5),
+                    'worker_end' => substr((string) $ownShiftTimes['end'], 0, 5),
                     'break_minutes' => $shift->break_minutes,
                     'description' => $shift->description,
                     'is_committed' => (bool) $shift->is_committed,
@@ -1822,6 +1845,11 @@ readonly class EventService
         //do not rely on user calendar filter dates
         $today = Carbon::now();
 
+        // Setzt den Projektmodus zurück, falls das gewählte Projekt gelöscht wurde
+        $timePeriodProject = !$project && $userCalendarSettings->getAttribute('use_project_time_period')
+            ? $projectService->resolveTimePeriodProject($userCalendarSettings)
+            : null;
+
         if (
             !($useProjectTimePeriod = $userCalendarSettings->getAttribute('use_project_time_period')) &&
             !$project
@@ -1829,7 +1857,7 @@ readonly class EventService
             [$startDate, $endDate] = $userService->getUserCalendarFilterDatesOrDefault($userCalendarFilter);
         } else {
             if (!$project && $useProjectTimePeriod) {
-                $project = $projectService->findById($userCalendarSettings->getAttribute('time_period_project_id'));
+                $project = $timePeriodProject;
 
                 [$startDate, $endDate] = [
                     ($firstEventInProject = $projectService->getFirstEventInProject($project)) ?
@@ -1969,6 +1997,11 @@ readonly class EventService
         //do not rely on user calendar filter dates
         $today = Carbon::now();
 
+        // Setzt den Projektmodus zurück, falls das gewählte Projekt gelöscht wurde
+        $timePeriodProject = !$project && $userCalendarSettings->getAttribute('use_project_time_period')
+            ? $projectService->resolveTimePeriodProject($userCalendarSettings)
+            : null;
+
         if (
             !($useProjectTimePeriod = $userCalendarSettings->getAttribute('use_project_time_period')) &&
             !$project
@@ -1976,7 +2009,7 @@ readonly class EventService
             [$startDate, $endDate] = $userService->getUserCalendarFilterDatesOrDefault($userCalendarFilter);
         } else {
             if (!$project && $useProjectTimePeriod) {
-                $project = $projectService->findById($userCalendarSettings->getAttribute('time_period_project_id'));
+                $project = $timePeriodProject;
 
                 [$startDate, $endDate] = [
                     ($firstEventInProject = $projectService->getFirstEventInProject($project)) ?

@@ -263,13 +263,18 @@ class CrmContactController extends Controller
     {
         $this->abortIfMirrored($crmContact);
 
+        // Profilbild nur über den Upload-Endpunkt (kein frei wählbarer Pfad).
         $validated = $request->validate([
             'display_name' => 'sometimes|string|max:255',
-            'profile_image' => 'nullable|string',
             'is_active' => 'sometimes|boolean',
             'property_values' => 'array',
             'property_values.*' => 'nullable',
         ]);
+
+        // Deaktivieren wirkt wie Löschen und ist wie dieses der CRM-Verwaltung vorbehalten.
+        if (array_key_exists('is_active', $validated)) {
+            abort_unless($request->user()->can(PermissionEnum::CRM_MANAGER->value), 403);
+        }
 
         $propertyValues = $validated['property_values'] ?? [];
         $this->authorizePropertyEdits(array_keys($propertyValues));

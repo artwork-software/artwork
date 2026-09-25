@@ -21,6 +21,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphToMany;
+use Illuminate\Database\Eloquent\Prunable;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Collection;
 use Spatie\Activitylog\Contracts\Activity;
@@ -67,6 +68,18 @@ class Shift extends Model
     use HasFactory;
     use SoftDeletes;
     use LogsActivity;
+    use Prunable;
+
+    /**
+     * Papierkorb: eigenständige Schichten nach einem Monat endgültig entfernen (wie Termine/Projekte).
+     * Termin-Schichten gehen mit ihrem Termin.
+     */
+    public function prunable(): Builder
+    {
+        return static::onlyTrashed()
+            ->whereNull('event_id')
+            ->where('deleted_at', '<=', now()->subMonth());
+    }
 
     protected static function booted(): void
     {

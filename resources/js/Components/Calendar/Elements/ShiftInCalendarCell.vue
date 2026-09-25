@@ -25,6 +25,7 @@
     <div
         v-else
         class="w-full rounded-sm select-none border font-lexend"
+        :class="adaptsToTileWidth ? '@container/shift overflow-hidden' : ''"
         :style="{ backgroundColor: `${craftColor}${isFollowUpDay ? '30' : '50'}`, borderColor: isFollowUpDay ? '#d1d5db' : craftColor, zoom: contentZoom }"
     >
         <div class="flex flex-col w-full">
@@ -32,13 +33,13 @@
             <div class="flex items-center min-w-0 justify-between">
                 <div class="flex items-center min-w-0">
                     <div
-                        class="flex items-center gap-x-1.5 rounded-sm whitespace-nowrap px-1.5 py-0.5 text-[11px] font-semibold"
+                        class="flex items-center gap-x-1.5 min-w-0 rounded-sm whitespace-nowrap px-1.5 py-0.5 text-[11px] font-semibold"
                         :style="{ backgroundColor: `${craftColor}90` }"
                         v-tooltip.bottom="{ value: craftTitleFull, class: 'aw-tooltip' }"
                         :aria-label="craftTitleFull"
                     >
                         <span class="text-text">{{ craftAbbreviation }}</span>
-                        <span class="tabular-nums"><span v-if="dayRole === 'end' || dayRole === 'middle'" class="opacity-60">→ </span>{{ displayStartTime }} - {{ displayEndTime }}<span v-if="dayRole === 'start' || dayRole === 'middle'" class="opacity-60"> →</span></span>
+                        <span class="tabular-nums @max-[8rem]/shift:hidden"><span v-if="dayRole === 'end' || dayRole === 'middle'" class="opacity-60">→ </span>{{ displayStartTime }} - {{ displayEndTime }}<span v-if="dayRole === 'start' || dayRole === 'middle'" class="opacity-60"> →</span></span>
                     </div>
                 </div>
                 <div v-if="!isFollowUpDay && canPlanShifts" class="flex items-center shrink-0 pr-1">
@@ -46,6 +47,11 @@
                         <BaseMenuItem white-menu-background @click="showAddShiftModal = true" :icon="IconEdit" title="edit" />
                     </BaseMenu>
                 </div>
+            </div>
+
+            <!-- Schmale Tagesansicht-Kachel: Zeit rutscht aus der Pill in eine eigene Zeile -->
+            <div v-if="adaptsToTileWidth" class="hidden ml-1.5 truncate text-[10px] font-semibold tabular-nums @max-[8rem]/shift:block">
+                <span v-if="dayRole === 'end' || dayRole === 'middle'" class="opacity-60">→</span>{{ displayStartTime }}-{{ displayEndTime }}<span v-if="dayRole === 'start' || dayRole === 'middle'" class="opacity-60">→</span>
             </div>
 
             <!-- Zeile 2: Projektname (klickbar → Projekt-Tab mit Schichtenkomponente bzw. Fallback-Tab) -->
@@ -69,8 +75,8 @@
             </div>
 
             <!-- Zeile 2: Auslastung pro Funktion + globale Qualifikationen -->
-            <div class="flex justify-between flex-wrap items-center gap-1 ml-2">
-                <div class="flex gap-x-2">
+            <div class="flex justify-between flex-wrap items-center gap-1 ml-2 @max-[8rem]/shift:ml-1.5">
+                <div class="flex flex-wrap gap-x-2">
                     <div v-for="qualification in shift.shifts_qualifications" :key="qualification.shift_qualification_id">
                         <div class="text-text-muted text-[11px] tabular-nums flex items-center gap-x-1">
                             <div :class="{ 'text-warning font-semibold': getAssignedCountForQualification(qualification.shift_qualification_id) > (qualification.value ?? 0) }">
@@ -88,7 +94,7 @@
                     </div>
                 </div>
 
-                <div class="flex gap-x-2 pr-4">
+                <div class="flex flex-wrap gap-x-2 pr-4 @max-[8rem]/shift:pr-1">
                     <div v-for="gq in demandedGlobalQualifications" :key="'gq-' + gq.id">
                         <div class="text-text-muted text-[11px] tabular-nums flex items-center gap-x-1">
                             <div>
@@ -170,7 +176,14 @@ const props = defineProps({
         type: Boolean,
         default: false,
     },
+    // Schmale Kachel (Wochenansicht mit schmaler Raumspalte): Zeit in eigene Zeile per Container-Query
+    adaptToTileWidth: {
+        type: Boolean,
+        default: false,
+    },
 });
+
+const adaptsToTileWidth = computed(() => props.isInDailyView || props.adaptToTileWidth);
 
 const emit = defineEmits(["shift-edited"]);
 

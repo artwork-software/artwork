@@ -6,6 +6,7 @@ use Artwork\Modules\ExternalAccess\Enums\ExternalAccessType;
 use Artwork\Modules\ExternalAccess\Models\ExternalAccess;
 use Artwork\Modules\ExternalAccess\Models\ExternalAccessScope;
 use Artwork\Modules\Project\Models\ComponentInTab;
+use Artwork\Modules\Project\Models\DisclosureComponents;
 use Illuminate\Support\Collection;
 
 class ExternalScopeResolver
@@ -57,11 +58,28 @@ class ExternalScopeResolver
      * Defense in depth against cross-tab manipulation: external has a scope on
      * tab A but tries to write a component that belongs to tab B.
      */
+    /**
+     * Liegt die Komponente im Tab — direkt oder in einem Ordner (Disclosure-Komponente) des Tabs?
+     * Ordner sind reine Gliederung; ihr Inhalt gehört zum Tab.
+     */
     public function componentBelongsToTab(int $componentId, int $projectTabId): bool
     {
-        return ComponentInTab::query()
+        $directlyInTab = ComponentInTab::query()
             ->where('component_id', $componentId)
             ->where('project_tab_id', $projectTabId)
+            ->exists();
+
+        if ($directlyInTab) {
+            return true;
+        }
+
+        $disclosureIdsInTab = ComponentInTab::query()
+            ->where('project_tab_id', $projectTabId)
+            ->pluck('component_id');
+
+        return DisclosureComponents::query()
+            ->where('component_id', $componentId)
+            ->whereIn('disclosure_id', $disclosureIdsInTab)
             ->exists();
     }
 }

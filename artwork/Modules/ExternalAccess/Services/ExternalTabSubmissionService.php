@@ -7,19 +7,24 @@ use Artwork\Modules\ExternalAccess\Models\ExternalAccessScope;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Models\ProjectComponentValue;
 use Artwork\Modules\Project\Models\ProjectTab;
+use Artwork\Modules\Project\Services\ProjectComponentCrmContactService;
+use Artwork\Modules\ExternalAccess\Enums\ExternalTabSubmissionStatus;
 use Illuminate\Database\DatabaseManager;
 use Spatie\Activitylog\Models\Activity;
 
 /**
- * "Daten absenden" im freigegebenen Tab: Feldwerte werden weiterhin bei jeder Eingabe direkt
- * gespeichert (Zwischenstand), die Benachrichtigung an Einladende/Projektleitung geht aber erst
- * mit diesem expliziten Absenden raus. Der Absende-Zeitpunkt steht am Scope und im Projektverlauf.
+ * "Eingegebene Daten absenden" im freigegebenen Tab: Feldwerte werden weiterhin bei jeder Eingabe
+ * direkt gespeichert (eine Wahrheit, intern sofort sichtbar), die Benachrichtigung an
+ * Einladende/Projektleitung geht aber erst mit diesem expliziten Absenden raus. Danach ist der Tab
+ * für die externe Person gesperrt, bis intern bestätigt oder zur Überarbeitung zurückgegeben wird
+ * (ExternalTabReviewService). Absende-Zeitpunkt und Status stehen am Scope und im Projektverlauf.
  */
 class ExternalTabSubmissionService
 {
     public function __construct(
         private readonly DatabaseManager $db,
         private readonly ExternalNotificationSender $notificationSender,
+        private readonly ProjectComponentCrmContactService $crmContactService,
     ) {
     }
 
@@ -32,7 +37,12 @@ class ExternalTabSubmissionService
         $changedComponents = $this->countChangedComponentsSinceLastSubmission($external, $project, $scope);
 
         $this->db->transaction(function () use ($external, $project, $tab, $scope, $changedComponents): void {
-            $scope->forceFill(['last_submitted_at' => now()])->save();
+            $scope->forceFill([
+                'last_submitted_at' => now(),
+                'submission_status' => ExternalTabSubmissionStatus::SUBMITTED,
+                'reviewed_at' => null,
+                'reviewed_by_user_id' => null,
+            ])->save();
 
             // Audit-Log am Scope (Verwaltungsseite)
             activity('external_tab_submission')
@@ -49,7 +59,7 @@ class ExternalTabSubmissionService
 
             // Projektverlauf (gleiche Property-Form wie ChangeBuilder, damit ProjectHistoryComponent
             // den Eintrag rendert; Verursacher ist der externe Zugang, nicht ein User)
-            $name = $external->crmContact?->display_name ?? $external->email;
+            $name = $external->displayName();
             Activity::query()->create([
                 'log_name' => 'project',
                 'description' => 'External person submitted data in tab',
@@ -66,7 +76,13 @@ class ExternalTabSubmissionService
             ]);
         });
 
-        $this->notificationSender->notifyTabSubmitted($external, $project, $tab, $changedComponents);
+        $this->notificationSender->notifyTabSubmitted(
+            $external,
+            $project,
+            $tab,
+            $changedComponents,
+            $this->crmContactService->countCreatedByExternal($project, $tab, $external),
+        );
 
         return $scope->refresh();
     }

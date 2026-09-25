@@ -378,7 +378,7 @@ final class ProjectDayAssignmentTest extends FeatureTestCase
 
         $this->delete(route('shifts.destroy', $shift))->assertSuccessful();
 
-        $this->assertDatabaseMissing('shifts', ['id' => $shift->id]);
+        $this->assertSoftDeleted('shifts', ['id' => $shift->id]);
         $restored = ProjectDayAssignment::find($assignment->id);
         $this->assertNotNull($restored);
         $this->assertNull($restored->superseded_by_shift_id);

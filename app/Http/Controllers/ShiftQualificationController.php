@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use Artwork\Modules\Craft\Services\CraftScopeService;
 use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\Shift\Models\ShiftsQualifications;
 use Artwork\Modules\Shift\Services\ShiftsQualificationsService;
@@ -84,6 +85,8 @@ class ShiftQualificationController extends Controller
 
     public function updateValue(Shift $shift, Request $request): void
     {
+        app(CraftScopeService::class)->assertCanPlanShifts($request->user(), [$shift]);
+
         // Unbekannte qualification_id würde sonst als FK-Verletzung mit 500 enden
         $request->validate([
             'qualification_id' => ['required', 'integer', 'exists:shift_qualifications,id'],
@@ -100,6 +103,8 @@ class ShiftQualificationController extends Controller
 
     public function increaseOverbookedValue(Shift $shift, Request $request): void
     {
+        app(CraftScopeService::class)->assertCanPlanShifts($request->user(), [$shift]);
+
         if (!app(\App\Settings\ShiftSettings::class)->allow_shift_overbooking) {
             abort(403, 'Shift overbooking is not enabled for this instance.');
         }
@@ -119,6 +124,8 @@ class ShiftQualificationController extends Controller
 
     public function decreaseOverbookedValue(Shift $shift, Request $request): void
     {
+        app(CraftScopeService::class)->assertCanPlanShifts($request->user(), [$shift]);
+
         if (!app(\App\Settings\ShiftSettings::class)->allow_shift_overbooking) {
             abort(403, 'Shift overbooking is not enabled for this instance.');
         }
@@ -145,50 +152,57 @@ class ShiftQualificationController extends Controller
 
         try {
             DB::transaction(function () use ($shiftQualification, $shiftQualificationIdToDelete): void {
-                $shiftsQualificationsToHandle = $this->shiftsQualificationsService->findAllByShiftQualificationId(
-                    $shiftQualificationIdToDelete
-                );
+                // Schichtplätze dieser Funktion (auch im Papierkorb) auf die Standard-Funktion (id 1)
+                // übertragen — die Anzahl bleibt erhalten, die eingeplanten Personen wandern mit.
+                $shiftsQualificationsToHandle = ShiftsQualifications::withTrashed()
+                    ->where('shift_qualification_id', $shiftQualificationIdToDelete)
+                    ->get();
 
                 /** @var ShiftsQualifications $shiftsQualification */
                 foreach ($shiftsQualificationsToHandle as $shiftsQualification) {
-                    /** @var Shift|null $shiftByQualification */
-                    $shiftByQualification = $shiftsQualification
-                        ->shift()
-                        ->withTrashed()
-                        ->first();
+                    // Aktiver Platz → aktiver Standard-Platz; Platz im Papierkorb → Standard-Platz im
+                    // Papierkorb. Sonst verschwänden aktive Plätze in einem gelöschten Standard-Platz.
+                    $sourceTrashed = $shiftsQualification->trashed();
+                    $defaultSlots = ShiftsQualifications::withTrashed()
+                        ->where('shift_id', $shiftsQualification->shift_id)
+                        ->where('shift_qualification_id', 1);
+                    $defaultSlot = $sourceTrashed
+                        ? (clone $defaultSlots)->whereNotNull('deleted_at')->first()
+                        : (clone $defaultSlots)->whereNull('deleted_at')->first();
 
-                    if ($shiftByQualification === null) {
-                        $this->shiftsQualificationsService->forceDelete($shiftsQualification);
-                        continue;
+                    if ($defaultSlot !== null) {
+                        $defaultSlot->update([
+                            'value' => (int) $defaultSlot->value + (int) $shiftsQualification->value,
+                        ]);
+                    } elseif (!$sourceTrashed && ($trashedDefault = (clone $defaultSlots)->first()) !== null) {
+                        // Nur ein gelöschter Standard-Platz vorhanden: wiederbeleben, mit genau diesen Plätzen
+                        $trashedDefault->restore();
+                        $trashedDefault->update(['value' => (int) $shiftsQualification->value]);
+                    } else {
+                        $created = ShiftsQualifications::query()->create([
+                            'shift_id' => $shiftsQualification->shift_id,
+                            'shift_qualification_id' => 1,
+                            'value' => (int) $shiftsQualification->value,
+                        ]);
+                        if ($sourceTrashed) {
+                            // gehört zur gelöschten Schicht und kommt mit ihr zurück
+                            $created->forceFill(['deleted_at' => $shiftsQualification->deleted_at])->save();
+                        }
                     }
 
-                    $shiftHasDefaultQualification = $shiftByQualification
-                            ->shiftsQualifications()
-                            ->where('shift_qualification_id', 1)
-                            ->count() > 0;
-
-                    if (!$shiftHasDefaultQualification) {
-                        $this->shiftsQualificationsService->createShiftsQualificationForShift(
-                            $shiftByQualification->getAttribute('id'),
-                            [
-                                'shift_qualification_id' => 1,
-                                'value' => 1
-                            ]
-                        );
-                    }
-
-                    $this->shiftWorkerService->updateShiftWorkerQualificationToDefault(
-                        $shiftByQualification,
-                        $shiftQualificationIdToDelete,
-                    );
-
-                    $this->shiftsQualificationsService->increaseValueOrCreateWithOne(
-                        $shiftByQualification->getAttribute('id'),
-                        1
-                    );
-
-                    $this->shiftsQualificationsService->forceDelete($shiftsQualification);
+                    $shiftsQualification->forceDelete();
                 }
+
+                // Zuweisungen (Source of Truth + Legacy-Pivots, inkl. Papierkorb) umhängen — die
+                // Fremdschlüssel haben keine Löschregel und blockierten das Löschen sonst.
+                foreach (['shift_workers', 'shift_user', 'shifts_freelancers', 'shifts_service_providers'] as $table) {
+                    DB::table($table)
+                        ->where('shift_qualification_id', $shiftQualificationIdToDelete)
+                        ->update(['shift_qualification_id' => 1]);
+                }
+                DB::table('preset_shift_shifts_qualifications')
+                    ->where('shift_qualification_id', $shiftQualificationIdToDelete)
+                    ->delete();
 
                 $this->shiftQualificationService->delete($shiftQualification);
             });

@@ -1,7 +1,7 @@
 <template>
     <div class="">
         <div v-if="component.data?.label" class="text-sm font-bold text-text mb-0.5">{{ component.data.label }}</div>
-        <p class="line-clamp-2 text-xs print:line-clamp-none ">
+        <p class="line-clamp-2 whitespace-pre-line text-xs print:line-clamp-none">
             {{ project['TextArea']?.[component.id]?.data?.text }}
         </p>
     </div>

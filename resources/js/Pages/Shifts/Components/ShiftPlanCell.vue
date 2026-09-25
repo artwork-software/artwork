@@ -373,6 +373,7 @@ const compensationHalfPeriod = computed(() => {
 
 /** Projektzuordnungen am Tag (verbindlich + Wunsch), sortiert für stabile Lanes */
 const assignmentsToday = computed(() => {
+    if (page.props.project_assignments_enabled === false) return []
     const list = props.user?.project_assignments?.[props.day.withoutFormat] ?? []
     if (!list.length) return []
     return [...list].sort((a, b) =>

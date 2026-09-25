@@ -85,9 +85,11 @@ class ExternalAccessService
 
             $this->guardAgainstInternalUserEmail($email);
 
-            $external = $contact !== null
-                ? $this->findOrCreateExternalAccessForContact($contact, $command, $email)
-                : $this->findOrCreateExternalAccess($command, $email);
+            $external = match (true) {
+                $contact !== null => $this->findOrCreateExternalAccessForContact($contact, $command, $email),
+                $command->isTabOnlyInvitation() => $this->findOrCreateTabOnlyAccess($command, $email),
+                default => $this->findOrCreateExternalAccess($command, $email),
+            };
 
             foreach ($command->tabScopes as $tabScope) {
                 $this->scopeRepository->addOrUpdateScope(
@@ -191,6 +193,14 @@ class ExternalAccessService
     ): ExternalAccess {
         $existing = $this->externalAccessRepository->findByEmail($email);
         if ($existing !== null) {
+            // Reiner Tab-Zugang (ohne eigenen Kontakt): jetzt an diesen Kontakt binden
+            if ($existing->crm_contact_id === null) {
+                $this->emailResolver->storeIfMissing($contact, $email);
+                $existing->forceFill(['crm_contact_id' => $contact->id])->save();
+
+                return $this->reuseExistingExternalAccess($existing, $command);
+            }
+
             if ((int) $existing->crm_contact_id !== (int) $contact->id) {
                 throw EmailLinkedToOtherContactException::forEmail($email);
             }
@@ -208,11 +218,49 @@ class ExternalAccessService
         ]);
     }
 
+    /**
+     * Einladung aus dem Projekt-Tab: Der Zugang hängt nur an der E-Mail (plus optionalem Namen). Es wird
+     * kein CRM-Kontakt angelegt und kein CRM-Zugang vergeben; ein bestehender Zugang wird wiederverwendet
+     * (bei Widerruf reaktiviert), ohne seinen CRM-Zugang zu verlängern.
+     */
+    private function findOrCreateTabOnlyAccess(InviteExternalCommand $command, string $email): ExternalAccess
+    {
+        $existing = $this->externalAccessRepository->findByEmail($email);
+        if ($existing !== null) {
+            $attributes = [];
+            if ($existing->revoked_at !== null) {
+                $attributes['revoked_at'] = null;
+            }
+            if ($command->name !== null && trim((string) $existing->name) === '') {
+                $attributes['name'] = $command->name;
+            }
+            if ($attributes !== []) {
+                $existing->forceFill($attributes)->save();
+            }
+
+            return $existing;
+        }
+
+        return $this->externalAccessRepository->create([
+            'email' => $email,
+            'name' => $command->name,
+            'crm_contact_id' => null,
+            'invited_by_user_id' => $command->invitedBy->id,
+            'crm_access_expires_at' => null,
+        ]);
+    }
+
     private function findOrCreateExternalAccess(InviteExternalCommand $command, string $email): ExternalAccess
     {
         // Path 1: already an external identity for this email -> reuse, extend scope additively.
         $existing = $this->externalAccessRepository->findByEmail($email);
         if ($existing !== null) {
+            // Bisher reiner Tab-Zugang: Selbstpflege braucht einen eigenen Kontakt (sonst Fehler 500 bei „Meine Daten“)
+            if ($existing->crm_contact_id === null) {
+                $crmContact = $this->resolveCrmContactByEmail($email) ?? $this->createCrmContactFor($command, $email);
+                $existing->forceFill(['crm_contact_id' => $crmContact->id])->save();
+            }
+
             return $this->reuseExistingExternalAccess($existing, $command);
         }
 
@@ -268,6 +316,22 @@ class ExternalAccessService
 
     private function createFullSet(InviteExternalCommand $command, string $email): ExternalAccess
     {
+        $crmContact = $this->createCrmContactFor($command, $email);
+
+        return $this->externalAccessRepository->create([
+            'email' => $email,
+            'name' => $command->name,
+            'crm_contact_id' => $crmContact->id,
+            'invited_by_user_id' => $command->invitedBy->id,
+            'crm_access_expires_at' => $this->resolveCrmAccessExpiry($command),
+        ]);
+    }
+
+    /**
+     * Neuer CRM-Kontakt der gewählten Kontaktart für eine Einladung zur Selbstpflege.
+     */
+    private function createCrmContactFor(InviteExternalCommand $command, string $email): CrmContact
+    {
         if ($command->crmContactTypeId === null) {
             throw new \InvalidArgumentException('A contact type is required to create a new external contact.');
         }
@@ -286,12 +350,7 @@ class ExternalAccessService
 
         $this->writeConfidentialValues($crmContact, $command->confidentialFieldValues);
 
-        return $this->externalAccessRepository->create([
-            'email' => $email,
-            'crm_contact_id' => $crmContact->id,
-            'invited_by_user_id' => $command->invitedBy->id,
-            'crm_access_expires_at' => $this->resolveCrmAccessExpiry($command),
-        ]);
+        return $crmContact;
     }
 
     /**

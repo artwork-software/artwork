@@ -63,7 +63,7 @@ class ExternalProjectFileService
         $this->assertDocumentComponentInTab($component, $tab);
 
         return $this->filesQuery($project, $tab)
-            ->with('externalAccess:id,email,crm_contact_id', 'externalAccess.crmContact:id,display_name')
+            ->with('externalAccess:id,email,name,crm_contact_id', 'externalAccess.crmContact:id,display_name')
             ->orderByDesc('created_at')
             ->get();
     }

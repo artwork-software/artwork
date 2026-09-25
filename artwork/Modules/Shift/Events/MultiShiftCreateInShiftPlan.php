@@ -20,6 +20,10 @@ class MultiShiftCreateInShiftPlan implements ShouldBroadcastNow
 
 
     public Collection $shifts;
+
+    /** Einmal berechnete Nutzlast (Flash für die anlegende Ansicht + Broadcast nutzen dieselbe). */
+    private ?array $payload = null;
+
     /**
      * Create a new event instance.
      */
@@ -47,6 +51,14 @@ class MultiShiftCreateInShiftPlan implements ShouldBroadcastNow
     }
 
     public function broadcastWith(): array
+    {
+        return $this->payload ??= $this->buildPayload();
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function buildPayload(): array
     {
         $shifts = Shift::query()
             ->whereIn('id', $this->shifts->pluck('id')->all())

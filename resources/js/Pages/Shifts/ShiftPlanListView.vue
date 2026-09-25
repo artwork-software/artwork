@@ -542,12 +542,19 @@
             :description="$t('Are you sure you want to delete the selected shifts?')"
             :button="$t('Delete')"
         />
+
+        <NotificationToast
+            v-model:show="bulkActionErrorVisible"
+            :title="bulkActionError"
+            type="error"
+        />
     </ShiftHeader>
 </template>
 
 <script setup>
 import {ref, shallowRef, computed, watch, onMounted, onBeforeUnmount, onUnmounted, nextTick, defineAsyncComponent} from 'vue';
 import {Link, router, usePage} from '@inertiajs/vue3';
+import NotificationToast from '@/Artwork/Feedback/NotificationToast.vue';
 import {useI18n} from 'vue-i18n';
 import {usePermission} from '@/Composeables/Permission.js';
 import axios from 'axios';
@@ -1177,13 +1184,22 @@ const toggleShiftSelection = (shiftId) => {
     }
 };
 
+// Fehler (z.B. fehlende Gewerksplanung) anzeigen statt still zu schlucken
+const bulkActionError = ref('');
+const bulkActionErrorVisible = ref(false);
+const showBulkActionError = (error) => {
+    bulkActionError.value = error?.response?.data?.message || 'The action could not be carried out.';
+    bulkActionErrorVisible.value = true;
+};
+
 const deleteSelectedShifts = () => {
     axios.post(route('shifts.multi.delete'), {
         shift_ids: selectedShiftIds.value,
     }).then(() => {
         selectedShiftIds.value = [];
-        showDeleteConfirm.value = false;
         router.reload({ only: ['groupedShifts'], preserveScroll: true });
+    }).catch(showBulkActionError).finally(() => {
+        showDeleteConfirm.value = false;
     });
 };
 
@@ -1199,7 +1215,7 @@ const duplicateSelectedShifts = () => {
     }).then(() => {
         selectedShiftIds.value = [];
         router.reload({ only: ['groupedShifts'], preserveScroll: true });
-    }).finally(() => {
+    }).catch(showBulkActionError).finally(() => {
         duplicateInFlight.value = false;
     });
 };

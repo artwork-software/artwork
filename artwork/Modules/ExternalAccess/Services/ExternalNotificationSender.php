@@ -6,6 +6,7 @@ use Artwork\Modules\ExternalAccess\Models\ExternalAccess;
 use Artwork\Modules\ExternalAccess\Models\ExternalAccessScope;
 use Artwork\Modules\ExternalAccess\Models\ExternalPendingSubmission;
 use Artwork\Modules\ExternalAccess\Notifications\ExternalReviewResultNotification;
+use Artwork\Modules\ExternalAccess\Notifications\ExternalTabReviewResultNotification;
 use Artwork\Modules\Notification\Enums\NotificationEnum;
 use Artwork\Modules\Notification\Services\NotificationService;
 use Artwork\Modules\Project\Models\Project;
@@ -27,7 +28,7 @@ class ExternalNotificationSender
         $external = $submission->externalAccess;
         $recipients = $this->recipientResolver->resolveForCrmSubmission($external);
 
-        $name = $external->crmContact?->display_name ?? $external->email;
+        $name = $external->displayName();
         $title = $isFirstSubmission
             ? __(':name has filled in their data for the first time.', ['name' => $name])
             : __(':name has updated their data.', ['name' => $name]);
@@ -60,10 +61,11 @@ class ExternalNotificationSender
         Project $project,
         ProjectTab $tab,
         int $changedComponents,
+        int $createdContacts = 0,
     ): void {
         $recipients = $this->recipientResolver->resolveForTabComponentUpdate($external, $project);
 
-        $name = $external->crmContact?->display_name ?? $external->email;
+        $name = $external->displayName();
         $title = __(':name has submitted their data for tab ":tab" in project ":project".', [
             'name' => $name,
             'tab' => $tab->name,
@@ -75,6 +77,17 @@ class ExternalNotificationSender
             [
                 'type' => 'string',
                 'title' => __(':count field(s) changed since the last submission', ['count' => $changedComponents]),
+                'href' => null,
+            ],
+            ...($createdContacts > 0 ? [[
+                'type' => 'string',
+                'title' => __(':count contact(s) added', ['count' => $createdContacts]),
+                'href' => null,
+            ]] : []),
+
+            [
+                'type' => 'string',
+                'title' => __('Please review the data and confirm it in the tab or return it for revision.'),
                 'href' => null,
             ],
             [
@@ -98,7 +111,7 @@ class ExternalNotificationSender
         $external = $scope->externalAccess;
         $recipients = $this->recipientResolver->resolveForExpiry($external, $scope->grantedBy);
 
-        $name = $external->crmContact?->display_name ?? $external->email;
+        $name = $external->displayName();
         $title = __('The tab access of :name to ":tab" in project ":project" expires on :date.', [
             'name' => $name,
             'tab' => $scope->projectTab?->name,
@@ -127,7 +140,7 @@ class ExternalNotificationSender
     {
         $recipients = $this->recipientResolver->resolveForExpiry($external, null);
 
-        $name = $external->crmContact?->display_name ?? $external->email;
+        $name = $external->displayName();
         $title = __('The CRM access of :name expires on :date.', [
             'name' => $name,
             'date' => $external->crm_access_expires_at?->format('d.m.Y'),
@@ -146,6 +159,19 @@ class ExternalNotificationSender
             $title,
             $description,
             NotificationEnum::NOTIFICATION_EXTERNAL_ACCESS_EXPIRING,
+        );
+    }
+
+    /**
+     * Mail an die externe Person, wenn ihr abgesendeter Tab bestätigt oder zurückgegeben wurde.
+     */
+    public function notifyExternalTabReviewed(ExternalAccessScope $scope): void
+    {
+        $scope->loadMissing(['externalAccess', 'project', 'projectTab', 'reviewedBy']);
+        // Sprache der auslösenden Anfrage mitgeben: Externe haben keine Spracheinstellung, und ein
+        // Queue-Worker hätte sonst seine eigene (zufällige) Sprache.
+        $scope->externalAccess?->notify(
+            (new ExternalTabReviewResultNotification($scope))->locale(app()->getLocale())
         );
     }
 

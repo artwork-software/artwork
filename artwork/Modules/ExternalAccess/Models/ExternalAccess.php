@@ -18,7 +18,8 @@ use Illuminate\Notifications\Notifiable;
 /**
  * @property int $id
  * @property string $email
- * @property int $crm_contact_id
+ * @property string|null $name
+ * @property int|null $crm_contact_id
  * @property int|null $invited_by_user_id
  * @property Carbon|null $crm_access_expires_at
  * @property Carbon|null $crm_expiry_reminder_sent_at
@@ -26,7 +27,7 @@ use Illuminate\Notifications\Notifiable;
  * @property Carbon|null $last_login_at
  * @property Carbon $created_at
  * @property Carbon $updated_at
- * @property-read CrmContact $crmContact
+ * @property-read CrmContact|null $crmContact
  * @property-read User|null $invitedBy
  */
 class ExternalAccess extends Model implements AuthenticatableContract, AuthorizableContract
@@ -39,6 +40,7 @@ class ExternalAccess extends Model implements AuthenticatableContract, Authoriza
 
     protected $fillable = [
         'email',
+        'name',
         'crm_contact_id',
         'invited_by_user_id',
         'crm_access_expires_at',
@@ -92,9 +94,24 @@ class ExternalAccess extends Model implements AuthenticatableContract, Authoriza
         return $this->hasMany(ExternalPendingSubmission::class, 'external_access_id');
     }
 
+    /**
+     * Anzeigename für Benachrichtigungen, Verlauf und Tooltips: hinterlegter Name, sonst der Name
+     * des verknüpften CRM-Kontakts, sonst die E-Mail-Adresse.
+     */
+    public function displayName(): string
+    {
+        $name = trim((string) $this->name);
+        if ($name !== '') {
+            return $name;
+        }
+
+        return $this->crmContact?->display_name ?? $this->email;
+    }
+
     public function isCrmAccessActive(): bool
     {
-        if ($this->revoked_at !== null) {
+        // Reiner Tab-Zugang (ohne eigenen Kontakt) hat nie CRM-Selbstpflege
+        if ($this->revoked_at !== null || $this->crm_contact_id === null) {
             return false;
         }
         return $this->crm_access_expires_at !== null

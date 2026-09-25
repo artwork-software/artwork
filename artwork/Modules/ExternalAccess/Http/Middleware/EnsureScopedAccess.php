@@ -52,6 +52,13 @@ class EnsureScopedAccess
             abort(403, __('You do not have write access to this tab.'));
         }
 
+        // Nach „Eingegebene Daten absenden“ ist der Tab gesperrt, bis intern zurückgegeben wird.
+        if ($requiredAccess === 'write' && $scope->isLockedForExternal()) {
+            $message = 'Your data has been submitted. '
+                . 'Changes are possible again once it has been returned to you for revision.';
+            abort(423, __($message));
+        }
+
         // Attach the scope to the request for downstream controllers.
         $request->attributes->set('external_scope', $scope);
 

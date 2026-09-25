@@ -220,6 +220,7 @@ readonly class CrmDuplicateService
 
                 $this->reassignProjectPivot('crm_contact_project', $primary, $duplicate);
                 $this->reassignProjectPivot('crm_contact_project_team', $primary, $duplicate, mergeRoles: true);
+                $this->reassignComponentContacts($primary, $duplicate);
 
                 DB::table('artist_residencies')
                     ->where('artist_crm_contact_id', $duplicate->id)
@@ -239,6 +240,38 @@ readonly class CrmDuplicateService
                 $duplicate->delete();
             }
         });
+    }
+
+    /**
+     * CRM-Kontaktlisten im Projekt (je Komponente): Zeilen des Duplikats auf den Hauptkontakt umhängen.
+     * Steht der Hauptkontakt schon in derselben Liste, fällt die Duplikat-Zeile weg. Bestätigt wird durch
+     * das Zusammenführen implizit — eine CRM-Verwaltung hat den Kontakt ja gerade geprüft.
+     */
+    private function reassignComponentContacts(CrmContact $primary, CrmContact $duplicate): void
+    {
+        $rows = DB::table('project_component_crm_contacts')->where('crm_contact_id', $duplicate->id)->get();
+
+        foreach ($rows as $row) {
+            $primaryExists = DB::table('project_component_crm_contacts')
+                ->where('crm_contact_id', $primary->id)
+                ->where('project_id', $row->project_id)
+                ->where('component_id', $row->component_id)
+                ->exists();
+
+            if ($primaryExists) {
+                DB::table('project_component_crm_contacts')->where('id', $row->id)->delete();
+                continue;
+            }
+
+            // Die Zeile zeigt danach auf einen bestehenden Kontakt: externe Urheberschaft entfällt, sonst
+            // dürfte die externe Person den bestehenden Kontakt bearbeiten oder löschen.
+            DB::table('project_component_crm_contacts')->where('id', $row->id)->update([
+                'crm_contact_id' => $primary->id,
+                'created_by_external_access_id' => null,
+                'reviewed_at' => $row->reviewed_at ?? now(),
+                'reviewed_by_user_id' => $row->reviewed_by_user_id ?? auth()->id(),
+            ]);
+        }
     }
 
     /**

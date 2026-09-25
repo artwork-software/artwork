@@ -210,6 +210,8 @@ export const SETTINGS = [
         description: 'Shows the assigned persons overview and the avatars in the day bars of the project shift tab.',
         default: (ctx) => ctx.settings?.show_project_assignments ?? true,
         indicator: false,
+        // Globaler Schalter in den Schichteinstellungen
+        when: (ctx) => ctx.page.project_assignments_enabled !== false,
     },
     {
         key: 'show_unrelated_events',

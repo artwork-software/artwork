@@ -109,6 +109,7 @@
                                                     :multi-edit="multiEdit"
                                                     :width="roomWidthPx(room)"
                                                     :is-height-full="true"
+                                                    :is-in-daily-view="true"
                                                     :cell-day="day.withoutFormat"
                                                     @edit-event="showEditEventModel"
                                                     @edit-sub-event="openAddSubEventModal"

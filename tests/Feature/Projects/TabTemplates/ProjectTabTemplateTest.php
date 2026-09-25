@@ -45,9 +45,10 @@ final class ProjectTabTemplateTest extends TestCase
     }
 
     #[Test]
-    public function every_template_component_type_is_externally_readable(): void
+    public function every_production_inquiry_component_type_is_externally_readable(): void
     {
-        foreach (ProjectTabTemplateCatalog::all() as $template) {
+        // Die Abfrage-Vorlage ist für Externe gedacht; die Standard-Tabs (Werkzeuge) sind es nicht.
+        foreach ([ProjectTabTemplateCatalog::find(ProjectTabTemplateCatalog::PRODUCTION_INQUIRY)] as $template) {
             foreach ($template['components'] as $component) {
                 $type = ProjectTabComponentEnum::from($component['type'] ?? $component['special']);
                 $this->assertTrue($type->isExternallyReadable(), "{$type->value} is not externally readable");
@@ -75,7 +76,11 @@ final class ProjectTabTemplateTest extends TestCase
         $this->actingAsAdmin();
 
         $this->get(route('tab.index'))->assertInertia(fn ($page) => $page
-            ->has('tabTemplates', 1)
-            ->where('tabTemplates.0.key', ProjectTabTemplateCatalog::PRODUCTION_INQUIRY));
+            ->has('tabTemplates', count(ProjectTabTemplateCatalog::all()))
+            ->where('tabTemplates.0.key', ProjectTabTemplateCatalog::PROJECT_INFORMATION)
+            ->where(
+                'tabTemplates.' . (count(ProjectTabTemplateCatalog::all()) - 1) . '.key',
+                ProjectTabTemplateCatalog::PRODUCTION_INQUIRY,
+            ));
     }
 }

@@ -179,4 +179,61 @@ final class ProjectIndexTest extends FeatureTestCase
         // saveProjectManagementFilter returns void -> 200 OK
         $this->assertContains($response->getStatusCode(), [200, 201, 302]);
     }
+
+    #[Test]
+    public function pinned_project_matching_the_search_is_shown_in_pinned_section(): void
+    {
+        $admin = $this->actingAsAdmin();
+        $admin->update(['entities_per_page' => 25]);
+
+        $pinned = Project::factory()->create([
+            'name' => 'Gepinnte Traumproduktion',
+            'pinned_by_users' => [$admin->id],
+        ]);
+        Project::factory()->create(['name' => 'Gepinnt ohne Treffer', 'pinned_by_users' => [$admin->id]]);
+        $unpinnedHit = Project::factory()->create(['name' => 'Ungepinnte Traumproduktion']);
+
+        $this->get(route('projects', ['query' => 'Traumproduktion']))
+            ->assertOk()
+            ->assertInertia(fn ($page) => $page
+                ->where('pinnedProjects', fn ($pins) => collect($pins)->pluck('id')->all() === [$pinned->id])
+                ->where('projects.data', fn ($projects) => collect($projects)->pluck('id')->all() === [$unpinnedHit->id]));
+    }
+
+    #[Test]
+    public function pinned_search_hit_is_not_hidden_by_overview_filters(): void
+    {
+        $admin = $this->actingAsAdmin();
+        $admin->update(['entities_per_page' => 25]);
+
+        // "Nur meine Projekte" würde das gepinnte Projekt (Admin nicht im Team) aus der Liste filtern
+        $this->post(route('projects.filter'), [
+            'project_state_ids' => [],
+            'project_filters' => ['showOnlyMyProjects' => true],
+        ]);
+
+        $pinned = Project::factory()->create([
+            'name' => 'Gepinnte Traumproduktion',
+            'pinned_by_users' => [$admin->id],
+        ]);
+
+        $this->get(route('projects', ['query' => 'Traumproduktion']))
+            ->assertOk()
+            ->assertInertia(fn ($page) => $page->where('pinnedProjects.0.id', $pinned->id));
+    }
+
+    #[Test]
+    public function pinned_project_is_only_in_pinned_section_without_search(): void
+    {
+        $admin = $this->actingAsAdmin();
+        $admin->update(['entities_per_page' => 25]);
+
+        $pinned = Project::factory()->create(['pinned_by_users' => [$admin->id]]);
+
+        $this->get(route('projects'))
+            ->assertOk()
+            ->assertInertia(fn ($page) => $page
+                ->where('pinnedProjects.0.id', $pinned->id)
+                ->where('projects.data', fn ($projects) => !collect($projects)->pluck('id')->contains($pinned->id)));
+    }
 }

@@ -1,5 +1,5 @@
 <template>
-    <div class="rounded-2xl border border-border-subtle bg-white p-5">
+    <div>
         <p class="text-xs uppercase tracking-wide text-text-subtle">{{ $t('Project') }}</p>
         <h2 class="text-xl font-bold text-text mt-1">{{ displayValue }}</h2>
     </div>

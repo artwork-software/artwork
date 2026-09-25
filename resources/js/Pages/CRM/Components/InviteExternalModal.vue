@@ -28,45 +28,10 @@
                 </div>
             </div>
 
-            <!-- Bestehenden Kontakt wählen (nur aus dem Projekt-Tab heraus; von der Kontaktseite ist er fix) -->
-            <div v-if="source === 'project_tab' && !fixedContact" class="rounded-lg border border-border-subtle p-3 space-y-2">
-                <BaseCheckbox
-                    id="invite-use-existing"
-                    v-model="useExistingContact"
-                    :label="$t('Invite an existing CRM contact')"
-                />
-                <template v-if="useExistingContact">
-                    <BaseInput
-                        id="invite-contact-search"
-                        v-model="contactSearch"
-                        :label="$t('Search contact')"
-                        :placeholder="$t('Name or email')"
-                        :show-loading="contactSearchLoading"
-                    />
-                    <ul v-if="contactResults.length && !selectedContact" class="max-h-48 overflow-auto rounded-md border border-border-subtle divide-y divide-border-subtle">
-                        <li
-                            v-for="result in contactResults"
-                            :key="result.id"
-                            class="flex items-center gap-3 px-3 py-2 text-sm cursor-pointer hover:bg-accent-50"
-                            @click="selectContact(result)"
-                        >
-                            <img :src="result.profile_photo_url" alt="" class="size-6 rounded-full object-cover" />
-                            <span class="font-medium">{{ result.display_name }}</span>
-                            <span v-if="result.contact_type" class="text-xs text-text-subtle">{{ result.contact_type.name }}</span>
-                        </li>
-                    </ul>
-                    <p v-else-if="contactSearch.length >= 2 && !contactSearchLoading && !selectedContact" class="text-xs text-text-subtle">
-                        {{ $t('No results') }}
-                    </p>
-                    <div v-if="selectedContact" class="flex items-center justify-between rounded-md bg-surface-sunken px-3 py-2 text-sm">
-                        <span>
-                            <span class="font-medium">{{ selectedContact.display_name }}</span>
-                            <span v-if="selectedContact.contact_type" class="ml-2 text-xs text-text-subtle">{{ selectedContact.contact_type.name }}</span>
-                        </span>
-                        <button type="button" class="text-xs text-danger hover:underline" @click="clearContact">{{ $t('Remove') }}</button>
-                    </div>
-                </template>
-            </div>
+            <!-- Zweck der Funktion (Selbstpflege) — bei Einladungen aus dem Tab gibt es keine eigene CRM-Maske -->
+            <p v-if="!isTabInvite" class="rounded-lg border border-info-border bg-info-surface px-3 py-2 text-xs text-info">
+                {{ $t('This invitation is meant for contacts who should maintain their own master data (e.g. address, bank details) in the CRM. To let someone fill in a project tab, use “Invite external to this tab” in the project instead.') }}
+            </p>
 
             <!-- Fixer Kontakt (Einstieg von der Kontaktseite) -->
             <div v-if="fixedContact" class="rounded-md bg-surface-sunken px-3 py-2 text-sm">
@@ -109,6 +74,16 @@
                     :label="$t('Email')"
                     required
                 />
+                <BaseInput
+                    v-if="isTabInvite"
+                    id="invite-name"
+                    v-model="form.name"
+                    class="mt-3"
+                    :label="$t('Name (optional)')"
+                />
+                <p v-if="isTabInvite" class="text-xs text-text-subtle mt-1">
+                    {{ $t('Shown in notifications and in the tab status. No CRM contact is created for the invited person.') }}
+                </p>
                 <p v-if="selectedContact && !contactEmail" class="text-xs text-text-subtle mt-1">
                     {{ $t('This contact has no email address yet; the address you enter will be stored on the contact.') }}
                 </p>
@@ -132,7 +107,7 @@
             </div>
 
             <!-- Kontaktart + Pflichtfelder (nur für neue Kontakte) -->
-            <template v-if="!selectedContact">
+            <template v-if="!selectedContact && !isTabInvite">
                 <div>
                     <BaseCombobox
                         v-model="form.crm_contact_type_id"
@@ -176,8 +151,8 @@
                 </template>
             </template>
 
-            <!-- CRM-Zugriff -->
-            <div>
+            <!-- CRM-Zugriff (nur Selbstpflege, nicht bei Einladungen aus dem Tab) -->
+            <div v-if="!isTabInvite">
                 <BaseInput
                     id="invite-crm-until"
                     v-model="form.crm_access_expires_at"
@@ -288,7 +263,6 @@
 import { ref, computed, watch, onMounted } from 'vue'
 import { useForm } from '@inertiajs/vue3'
 import axios from 'axios'
-import debounce from 'lodash.debounce'
 import ArtworkBaseModal from '@/Artwork/Modals/ArtworkBaseModal.vue'
 import BaseUIButton from '@/Artwork/Buttons/BaseUIButton.vue'
 import BaseInput from '@/Artwork/Inputs/BaseInput.vue'
@@ -316,6 +290,9 @@ const $t = useTranslation()
 
 const contactTypes = ref([...props.contactTypes])
 const fixedContact = computed(() => (props.source === 'crm_contact' ? props.contact : null))
+// Einladung aus dem Projekt-Tab: nur E-Mail, optionaler Name und Tabs — kein eigener CRM-Kontakt,
+// keine Selbstpflege. Kontakte entstehen im Tab über die Komponente „CRM-Kontaktliste“.
+const isTabInvite = computed(() => props.source === 'project_tab')
 
 // Hilfetexte (aufklappbar) — bewusst ausführlich, weil der Ablauf mehrere Beteiligte hat
 const showHelp = ref(false)
@@ -328,24 +305,7 @@ const helpSections = computed(() => [
             $t('Access is always tied to the email address. Inviting the same address again extends the access and adds the selected tabs.'),
         ],
     },
-    {
-        title: $t('What the invited person can see and do'),
-        lines: [
-            $t('Only the tabs you share here, only for this project. Inside a shared tab the person sees ALL components of that tab, regardless of internal visibility settings – a dedicated tab for external exchange is recommended.'),
-            $t('With "Read and write" the person can fill in text fields, dropdowns, checkboxes and links and upload documents; entries are saved immediately as a draft.'),
-            $t('With "Submit data" in the tab the person signals completion: you and the project managers receive a notification (not for every single field).'),
-            $t('Under "My data" the person sees and edits their own CRM contact. Those changes are NOT applied directly – you review and approve them in the CRM.'),
-        ],
-    },
-    {
-        title: $t('How the CRM is linked'),
-        lines: [
-            $t('New person: a CRM contact of the selected contact type is created with this email address. Existing contact: the access is linked to that contact; if the contact has no email yet, the address is stored on it.'),
-            $t('A different address can be used for the access only; the contact\'s own email stays unchanged.'),
-            $t('The CRM access period defines how long the person may maintain their own data; tab access has its own period per tab. When both have expired, the login stops working.'),
-            $t('Confidential mandatory properties of the contact type are never shown to the person and must be filled in by you when inviting.'),
-        ],
-    },
+    ...(isTabInvite.value ? tabInviteHelp() : selfEditHelp()),
     {
         title: $t('Managing access'),
         lines: [
@@ -356,9 +316,51 @@ const helpSections = computed(() => [
     },
 ])
 
+function tabInviteHelp() {
+    return [
+        {
+            title: $t('What the invited person can see and do'),
+            lines: [
+                $t('Only the tabs you share here, only for this project. Inside a shared tab the person sees ALL components of that tab, regardless of internal visibility settings – a dedicated tab for external exchange is recommended.'),
+                $t('With "Read and write" the person can fill in text fields, dropdowns, checkboxes and links and upload documents; entries are saved immediately and are visible to you right away.'),
+                $t('In a "CRM contact list" the person can add contacts of the allowed contact types (e.g. every artist travelling). Confidential fields stay hidden. They can only edit or remove contacts they added themselves.'),
+                $t('With "Submit entered data" the person marks their entries as final: you and the project managers are notified and the tab is locked for the person.'),
+            ],
+        },
+        {
+            title: $t('Confirming the data'),
+            lines: [
+                $t('Next to the invite button you see every invited person with their status. Click it to confirm submitted data or to return it for revision (with an optional comment).'),
+                $t('Confirming marks the contacts added by the person as reviewed. Returning unlocks the tab for the person again. The person is informed by email in both cases.'),
+                $t('No CRM contact is created for the invited person themselves.'),
+            ],
+        },
+    ]
+}
+
+function selfEditHelp() {
+    return [
+        {
+            title: $t('What the invited person can see and do'),
+            lines: [
+                $t('Under "My data" the person sees and edits their own CRM contact. Those changes are NOT applied directly – you review and approve them in the CRM.'),
+            ],
+        },
+        {
+            title: $t('How the CRM is linked'),
+            lines: [
+                $t('New person: a CRM contact of the selected contact type is created with this email address. Existing contact: the access is linked to that contact; if the contact has no email yet, the address is stored on it.'),
+                $t('A different address can be used for the access only; the contact\'s own email stays unchanged.'),
+                $t('The CRM access period defines how long the person may maintain their own data. When it has expired, the login stops working.'),
+                $t('Confidential mandatory properties of the contact type are never shown to the person and must be filled in by you when inviting.'),
+            ],
+        },
+    ]
+}
+
 const modalTitle = computed(() => fixedContact.value ? $t('Invite contact for external access') : $t('Invite external'))
 const modalDescription = computed(() => {
-    if (props.source === 'project_tab') return $t('The person receives a link by email and can fill in the shared tabs and maintain their own contact data without an account.')
+    if (props.source === 'project_tab') return $t('The person receives a link by email and can fill in the shared tabs without an account.')
     if (fixedContact.value) return $t('The contact receives a link by email and can maintain their own contact data without an account.')
     return $t('Invite an external person to maintain their own data.')
 })
@@ -380,36 +382,13 @@ const requirements = ref(null)
 const serverError = ref('')
 const submitting = ref(false)
 
-// --- Bestehender Kontakt ---------------------------------------------------------------
-const useExistingContact = ref(false)
-const contactSearch = ref('')
-const contactSearchLoading = ref(false)
-const contactResults = ref([])
+// --- Bestehender Kontakt (fix, Einstieg von der Kontaktseite) ---------------------------
 const selectedContact = ref(fixedContact.value ? { ...fixedContact.value } : null)
 const inviteInfo = ref(null)
 const overrideEmail = ref(false)
 
 const contactEmail = computed(() => inviteInfo.value?.contact?.email ?? null)
 const existingAccesses = computed(() => inviteInfo.value?.accesses ?? [])
-
-const searchContacts = debounce(async () => {
-    if (contactSearch.value.trim().length < 2) {
-        contactResults.value = []
-        return
-    }
-    contactSearchLoading.value = true
-    try {
-        const { data } = await axios.get(route('crm.contacts.search'), { params: { search: contactSearch.value.trim() } })
-        contactResults.value = data ?? []
-    } catch (e) {
-        contactResults.value = []
-    } finally {
-        contactSearchLoading.value = false
-    }
-}, 300)
-
-watch(contactSearch, () => { if (!selectedContact.value) searchContacts() })
-watch(useExistingContact, (on) => { if (!on) clearContact() })
 
 async function loadInviteInfo(contactId) {
     try {
@@ -419,23 +398,6 @@ async function loadInviteInfo(contactId) {
     } catch (e) {
         inviteInfo.value = null
     }
-}
-
-async function selectContact(result) {
-    selectedContact.value = result
-    contactResults.value = []
-    overrideEmail.value = false
-    form.email = ''
-    await loadInviteInfo(result.id)
-}
-
-function clearContact() {
-    if (fixedContact.value) return
-    selectedContact.value = null
-    inviteInfo.value = null
-    contactSearch.value = ''
-    contactResults.value = []
-    overrideEmail.value = false
 }
 
 // --- Tabs ------------------------------------------------------------------------------
@@ -489,6 +451,7 @@ function applyDefaults(d) {
 // --- Form -------------------------------------------------------------------------------
 const form = useForm({
     email: '',
+    name: '',
     crm_contact_type_id: contactTypes.value[0]?.id ?? null,
     source: props.source,
     source_reference_project_id: props.project?.id ?? null,
@@ -508,12 +471,13 @@ const canSubmit = computed(() => {
         if (overrideEmail.value || !contactEmail.value) return !!form.email
         return true
     }
+    if (isTabInvite.value) return !!form.email && selectedTabIds.value.length > 0
     if (!form.email || !form.crm_contact_type_id) return false
     return !(requirements.value && !requirements.value.invitable)
 })
 
 const loadRequirements = async () => {
-    if (!form.crm_contact_type_id || selectedContact.value) return
+    if (!form.crm_contact_type_id || selectedContact.value || isTabInvite.value) return
     serverError.value = ''
     form.public_field_values = {}
     form.confidential_field_values = {}
@@ -567,6 +531,14 @@ const submit = () => {
         if (!overrideEmail.value && contactEmail.value) payload.email = ''
     } else {
         payload.crm_contact_id = null
+    }
+    if (isTabInvite.value) {
+        payload.crm_contact_type_id = null
+        payload.crm_access_expires_at = null
+        payload.public_field_values = {}
+        payload.confidential_field_values = {}
+    } else {
+        payload.name = null
     }
     if (!payload.crm_access_expires_at) payload.crm_access_expires_at = null
 

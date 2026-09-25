@@ -2,6 +2,7 @@
 
 namespace Artwork\Modules\Project\Services;
 
+use Artwork\Modules\Budget\Services\TableService;
 use Artwork\Core\Carbon\Service\CarbonService;
 use Artwork\Modules\Budget\Services\ColumnRelevanceService;
 use Artwork\Modules\Change\Services\ChangeService;
@@ -48,6 +49,7 @@ class ProjectService
         private readonly EventService $eventService,
         private readonly UserService $userService,
         private readonly CarbonService $carbonService,
+        private readonly ProjectTeamNotificationService $projectTeamNotificationService,
     ) {
     }
 
@@ -112,22 +114,7 @@ class ProjectService
                 /** @todo für Jason:
                  * search muss raus wenn das mit Meilisearch klappt
                  */
-                ->when(
-                    strlen($search) > 0,
-                    function (Builder $builder) use ($search): void {
-                        $builder->where(function (Builder $query) use ($search): void {
-                            $like = '%' . $search . '%';
-
-                            $query
-                                ->where('name', 'like', $like)
-                                ->orWhere('artists', 'like', $like)
-                                ->orWhereHas(
-                                    'crmContacts',
-                                    fn(Builder $crmQuery) => $crmQuery->where('display_name', 'like', $like)
-                                );
-                        });
-                    }
-                )
+                ->tap(fn(Builder $builder) => $this->projectRepository->applyOverviewSearch($builder, $search))
                 ->when(
                     $useSort,
                     function (Builder $builder) use ($sortEnum): void {
@@ -282,17 +269,13 @@ class ProjectService
                         }
                     }
                 )
-                // Gepinnte Projekte laufen normal oben in der eigenen Pinned-Sektion und werden
-                // deshalb aus der Liste ausgeschlossen. Bei aktiver SUCHE zeigt die Übersicht
-                // keine Pinned-Sektion (Abnahme PROJ-01: Pins ohne Treffer verwirren) — dann
-                // müssen matchende gepinnte Projekte als normale Treffer erscheinen.
-                // trim() wie in ProjectController::index — sonst zeigt eine reine
-                // Leerzeichen-Suche gepinnte Projekte doppelt (Sektion UND Liste)
-                ->when(trim($search) === '', function (Builder $builder): void {
-                    $builder->where(function (Builder $builder): void {
-                        $builder->whereJsonDoesntContain('pinned_by_users', Auth::id())
-                            ->orWhereNull('pinned_by_users');
-                    });
+                // Gepinnte Projekte stehen immer in der eigenen Pinned-Sektion (bei aktiver Suche
+                // auf die Treffer gefiltert) und werden deshalb aus der Liste ausgeschlossen. So
+                // greifen Übersichtsfilter und Paginierung nicht auf Pins — ein gepinntes Projekt,
+                // das zur Suche passt, ist immer zu sehen.
+                ->where(function (Builder $builder): void {
+                    $builder->whereJsonDoesntContain('pinned_by_users', Auth::id())
+                        ->orWhereNull('pinned_by_users');
                 })
                 ->without(['shiftRelevantEventTypes']);
         };
@@ -521,9 +504,10 @@ class ProjectService
         // force delete the checklists and their tasks
         $checklistService->forceDeleteAll($checkLists, $taskService);
 
-        // force delete the events and their shifts
+        // force delete the events and their shifts — inkl. der Termine, die beim Löschen des Projekts
+        // in den Papierkorb gelegt wurden (sonst blieben sie mit project_id = NULL verwaist zurück)
         $eventService->forceDeleteAll(
-            $project->events,
+            $project->events()->withTrashed()->get(),
             $eventCommentService,
             $timelineService,
             $shiftService,
@@ -531,53 +515,18 @@ class ProjectService
             $notificationService
         );
 
-        // force delete the project files
-        $projectFileService->forceDeleteAll($project->project_files);
+        // force delete the project files (auch Dateien im Papierkorb)
+        $projectFileService->forceDeleteAll($project->project_files()->withTrashed()->get());
 
         // force delete the comments
         $comments = Comment::onlyTrashed()->where('project_id', $project->id)->get();
         $commentService->forceDeleteAll($comments);
 
-        // Soft delete the budget with all its relations
-        $table = $project->table;
+        // Budgettabelle endgültig löschen — auch eine bereits weich gelöschte (die frühere Kaskade lief nur
+        // über nicht gelöschte Kinder und ließ Positionen/Zellen als Datenleichen zurück)
+        $table = $project->table()->withTrashed()->first();
         if ($table) {
-            // Soft delete the budget
-            $mainPositions = $table->mainPositions()->get();
-            foreach ($mainPositions as $mainPosition) {
-                $subPositions = $mainPosition->subPositions()->get();
-                foreach ($subPositions as $subPosition) {
-                    $subPositionRows = $subPosition->subPositionRows()->get();
-                    foreach ($subPositionRows as $subPositionRow) {
-                        $cells = $subPositionRow->cells()->get();
-                        $comments = $subPositionRow->comments()->get();
-                        foreach ($comments as $comment) {
-                            $comment->forceDelete();
-                        }
-                        foreach ($cells as $cell) {
-                            $cell->comments()->forceDelete();
-                            $cell->calculations()->forceDelete();
-                            $cell->forceDelete();
-                        }
-                        $subPositionRow->forceDelete();
-                    }
-                    $subPosition->verified()->forceDelete();
-                    $subPosition->subPositionSumDetails()->forceDelete();
-                    $subPosition->forceDelete();
-                }
-                $mainPosition->verified()->forceDelete();
-                $mainPosition->mainPositionSumDetails()->forceDelete();
-                $mainPosition->forceDelete();
-            }
-            $columns = $table->columns()->get();
-            foreach ($columns as $column) {
-                $budgetSumDetails = $column->budgetSumDetails()->get();
-                foreach ($budgetSumDetails as $budgetSumDetail) {
-                    $budgetSumDetail->comments()->forceDelete();
-                    $budgetSumDetail->forceDelete();
-                }
-                $column->forceDelete();
-            }
-            $table->forceDelete();
+            app()->call([app(TableService::class), 'forceDelete'], ['table' => $table]);
         }
 
         // force delete the project
@@ -950,9 +899,9 @@ class ProjectService
             ->all();
     }
 
-    public function pinnedProjects(int $userId): Collection
+    public function pinnedProjects(int $userId, string $search = ''): Collection
     {
-        return $this->projectRepository->pinnedProjects($userId);
+        return $this->projectRepository->pinnedProjects($userId, $search);
     }
 
     public function attachManagementUsersWithoutSelf(Project $project, IlluminateCollection $userIds, int $authId): void
@@ -966,6 +915,8 @@ class ProjectService
             ]]);
 
         $project->users()->attach($usersToAttach);
+
+        $this->projectTeamNotificationService->notifyAddedToTeam($project, $usersToAttach->keys(), true);
     }
 
     public function attachManagementUsers(Project $project, array $userIds): void
@@ -1053,6 +1004,13 @@ class ProjectService
         }
 
         $existingUserIds = $project->users()->pluck('users.id');
+
+        // neu ernannte Projektleitungen (auch bisherige Teammitglieder) erfahren davon
+        $this->projectTeamNotificationService->notifyAddedToTeam(
+            $project,
+            $newManagerIds->diff($currentManagerIds),
+            true
+        );
 
         foreach ($newManagerIds as $userId) {
             if ($existingUserIds->contains($userId)) {

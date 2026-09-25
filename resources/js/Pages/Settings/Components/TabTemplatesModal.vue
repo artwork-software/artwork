@@ -25,9 +25,12 @@
                     </BaseUIButton>
                 </div>
 
-                <div class="mt-3 rounded-lg bg-accent-50 px-3 py-2 text-xs text-accent-700">
+                <div v-if="template.prerequisites" class="mt-3 rounded-lg bg-accent-50 px-3 py-2 text-xs text-accent-700">
                     {{ template.prerequisites }}
                 </div>
+                <p v-if="template.sidebar_tabs?.length" class="mt-2 text-xs text-text-subtle">
+                    {{ $t('Including sidebar: {names}', { names: template.sidebar_tabs.join(', ') }) }}
+                </p>
 
                 <button
                     type="button"

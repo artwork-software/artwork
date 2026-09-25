@@ -1,7 +1,7 @@
 <template>
-    <div class="rounded-2xl border border-border-subtle bg-white p-5">
+    <div>
         <div class="flex items-center justify-between mb-3">
-            <label class="block text-sm font-medium text-text-muted">{{ label }}</label>
+            <label class="block text-sm font-semibold text-text">{{ label }}</label>
             <button
                 v-if="editable && links.length < maxItems"
                 type="button"
@@ -23,7 +23,7 @@
                     type="text"
                     :placeholder="schema.placeholder_label"
                     :disabled="!editable"
-                    class="block w-full rounded-lg border-border text-sm disabled:bg-surface-sunken disabled:text-text-subtle"
+                    class="block w-full rounded-lg border border-border bg-white px-3 py-2 text-sm focus:border-accent-600 focus:outline-none focus:ring-1 focus:ring-accent-600 disabled:bg-surface-sunken disabled:text-text-subtle"
                     @blur="saveLinks"
                 />
                 <input
@@ -31,7 +31,7 @@
                     type="url"
                     :placeholder="schema.placeholder_url"
                     :disabled="!editable"
-                    class="block w-full rounded-lg border-border text-sm disabled:bg-surface-sunken disabled:text-text-subtle"
+                    class="block w-full rounded-lg border border-border bg-white px-3 py-2 text-sm focus:border-accent-600 focus:outline-none focus:ring-1 focus:ring-accent-600 disabled:bg-surface-sunken disabled:text-text-subtle"
                     @blur="saveLinks"
                 />
                 <button

@@ -35,8 +35,13 @@ class StoreExternalInvitationRequest extends FormRequest
             // Kontaktart ergibt sich aus dem Kontakt.
             'crm_contact_id' => ['nullable', 'integer', 'exists:crm_contacts,id'],
             'email' => [Rule::requiredIf(!$this->filled('crm_contact_id')), 'nullable', 'email:rfc'],
+            // Einladung aus dem Projekt-Tab braucht keinen eigenen CRM-Kontakt mehr (nur E-Mail + Tabs);
+            // Kontakte entstehen dort über die Komponente „CRM-Kontaktliste“.
+            'name' => ['nullable', 'string', 'max:255'],
             'crm_contact_type_id' => [
-                Rule::requiredIf(!$this->filled('crm_contact_id')),
+                Rule::requiredIf(
+                    !$this->filled('crm_contact_id') && $this->input('source') !== InviteSource::PROJECT_TAB->value
+                ),
                 'nullable',
                 'integer',
                 'exists:crm_contact_types,id',
@@ -129,6 +134,7 @@ class StoreExternalInvitationRequest extends FormRequest
             confidentialFieldValues: $this->input('confidential_field_values', []),
             publicFieldValues: $this->input('public_field_values', []),
             crmContactId: $this->filled('crm_contact_id') ? (int) $this->input('crm_contact_id') : null,
+            name: $this->filled('name') ? trim((string) $this->input('name')) : null,
         );
     }
 }

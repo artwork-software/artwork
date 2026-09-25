@@ -1,5 +1,5 @@
 <template>
-    <div class="rounded-2xl border border-border-subtle bg-white p-5">
+    <div>
         <p class="text-xs uppercase tracking-wide text-text-subtle">{{ component.name }}</p>
         <p class="text-base font-semibold text-text mt-1">{{ displayValue }}</p>
     </div>

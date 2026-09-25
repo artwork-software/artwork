@@ -17,6 +17,7 @@ use Artwork\Modules\Shift\Models\ShiftWorker;
 use Artwork\Modules\User\Models\User;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
+use App\Settings\ShiftSettings;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Notifications\DatabaseNotification;
 use Illuminate\Support\Collection as SupportCollection;
@@ -35,6 +36,17 @@ class ProjectDayAssignmentService
         private readonly NotificationService $notificationService,
         private readonly ChangeService $changeService,
     ) {
+    }
+
+    /**
+     * Globaler Schalter in den Schichteinstellungen. Ausgeschaltet laufen die
+     * Datenpflege-Hooks (Verdrängen/Auflösen/Re-Materialisieren) weiter, damit
+     * die Daten beim Wiedereinschalten stimmen — nur Benachrichtigungen über
+     * ein unsichtbares Feature werden unterdrückt und nichts Neues angelegt.
+     */
+    public static function isEnabled(): bool
+    {
+        return (bool) app(ShiftSettings::class)->project_assignments_enabled;
     }
 
     /**
@@ -843,7 +855,11 @@ class ProjectDayAssignmentService
         array $dates,
         string $vacationType
     ): array {
-        if ($vacationType === \Artwork\Modules\Vacation\Enums\Vacation::AVAILABLE->value || $dates === []) {
+        if (
+            $vacationType === \Artwork\Modules\Vacation\Enums\Vacation::AVAILABLE->value
+            || $dates === []
+            || !self::isEnabled()
+        ) {
             return [];
         }
 
@@ -892,7 +908,7 @@ class ProjectDayAssignmentService
      */
     public function getAssignmentsDissolvedByVacationBulk(array $workers, string $vacationType): array
     {
-        if ($vacationType === \Artwork\Modules\Vacation\Enums\Vacation::AVAILABLE->value) {
+        if ($vacationType === \Artwork\Modules\Vacation\Enums\Vacation::AVAILABLE->value || !self::isEnabled()) {
             return [];
         }
 
@@ -1018,6 +1034,11 @@ class ProjectDayAssignmentService
         Carbon $startDate,
         Carbon $endDate
     ): SupportCollection {
+        // Anzeige-Payload (Dienstplan, Einsatzplan, PDF) — Feature aus = nichts anzeigen
+        if (!self::isEnabled()) {
+            return collect();
+        }
+
         $rows = ProjectDayAssignment::query()
             ->with('project:id,name')
             // Zuordnungen von Papierkorb-Projekten ausblenden (kommen beim Restore
@@ -1059,6 +1080,10 @@ class ProjectDayAssignmentService
         Carbon $endDate,
         ?ProjectDayAssignmentType $filterType = null
     ): array {
+        if (!self::isEnabled()) {
+            return [];
+        }
+
         $rows = ProjectDayAssignment::query()
             ->with('project:id,name')
             ->whereHas('project')
@@ -1217,6 +1242,10 @@ class ProjectDayAssignmentService
         string $datesLabel,
         string $reason
     ): void {
+        if (!self::isEnabled()) {
+            return;
+        }
+
         // Nach der Response: der Mail-Kanal versendet synchron per SMTP (BaseNotification
         // ist nicht queued) und darf den auslösenden Request nicht blockieren (502-Klasse)
         $this->deferAfterCommit(
@@ -1288,7 +1317,7 @@ class ProjectDayAssignmentService
         string $datesLabel,
         ?string $reasonKey = null
     ): void {
-        if ($employableType !== User::class || $employableId === Auth::id()) {
+        if ($employableType !== User::class || $employableId === Auth::id() || !self::isEnabled()) {
             return;
         }
 

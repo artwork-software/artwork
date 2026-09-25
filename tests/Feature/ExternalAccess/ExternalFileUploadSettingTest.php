@@ -304,7 +304,7 @@ final class ExternalFileUploadSettingTest extends ExternalAccessTestCase
         $this->put(route('tool.file-settings.store'), [
             'external_file_upload_enabled' => true,
             'data' => ['name' => 'project', 'fileTypes' => [['name' => 'pdf']], 'fileSize' => 10],
-        ])->assertSuccessful();
+        ])->assertRedirect()->assertSessionHasNoErrors();
 
         $this->assertFalse($this->uploadEnabled());
         $this->assertObjectNotHasProperty('external_file_upload_enabled', app(GeneralSettings::class));

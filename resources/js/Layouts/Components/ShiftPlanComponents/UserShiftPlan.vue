@@ -152,7 +152,7 @@
                                         </span>
                                         <!-- Projektwunsch für diesen Tag eintragen (nur eigener Einsatzplan) -->
                                         <button
-                                            v-if="isOwnPlan"
+                                            v-if="isOwnPlan && projectAssignmentsEnabled"
                                             type="button"
                                             class="p-0.5 rounded hover:bg-surface-sunken transition"
                                             :title="$t('Enter project wish')"
@@ -436,8 +436,10 @@ const page = usePage()
 const daysWithData = computed(() => props.daysWithData ?? (page.props?.daysWithData || {}))
 
 // --- Projektzuordnungen + Wünsche (Map Y-m-d => Einträge, aus dem Page-Payload) ---
+// Globaler Schalter „Projektzuordnungen“ (Schichteinstellungen)
+const projectAssignmentsEnabled = computed(() => page.props?.project_assignments_enabled !== false)
 const projectAssignments = computed(() => page.props?.projectAssignments || {})
-const assignmentsForDay = (day) => projectAssignments.value?.[day.date] ?? []
+const assignmentsForDay = (day) => projectAssignmentsEnabled.value ? (projectAssignments.value?.[day.date] ?? []) : []
 
 // Wünsche darf nur die Person selbst eintragen (eigener Einsatzplan)
 const isOwnPlan = computed(() => props.type === 'user' && page.props?.auth?.user?.id === props.userToEditId)

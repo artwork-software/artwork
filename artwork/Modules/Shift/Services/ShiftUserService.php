@@ -22,6 +22,7 @@ use Artwork\Modules\Shift\Services\ShiftNotificationLinkService;
 use Artwork\Modules\Shift\Services\ShiftWorkerService;
 use Artwork\Modules\User\Models\User;
 use Artwork\Modules\Vacation\Services\VacationConflictService;
+use Artwork\Modules\Project\Services\ProjectTeamNotificationService;
 use Carbon\Carbon;
 use Illuminate\Auth\AuthManager;
 use Illuminate\Support\Str;
@@ -38,6 +39,7 @@ class ShiftUserService
         private readonly ShiftsQualificationsService $shiftsQualificationsService,
         private readonly ShiftWorkerService $shiftWorkerService,
         protected AuthManager $auth,
+        private readonly ProjectTeamNotificationService $projectTeamNotificationService,
     ) {
     }
 
@@ -148,6 +150,7 @@ class ShiftUserService
 
         if ($project && ! $project->users->contains($user->id)) {
             $project->users()->attach($user->id);
+            $this->projectTeamNotificationService->notifyAddedToTeam($project, [$user->id]);
         }
     }
 

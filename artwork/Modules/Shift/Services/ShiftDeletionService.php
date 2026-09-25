@@ -40,13 +40,71 @@ class ShiftDeletionService
      */
     public function delete(Shift $shift, bool $notifyAffectedPeople = true): ?array
     {
+        $result = $this->deleteOne($shift, $notifyAffectedPeople, true);
+        if ($result === null) {
+            return null;
+        }
+
+        $this->revalidateShiftRules($result['users'], $result['start'], $result['end']);
+
+        return $result['payload'];
+    }
+
+    /**
+     * Mehrere Schichten löschen. Regeln werden am Ende EINMAL je betroffener Person über den gesamten
+     * Zeitraum neu geprüft. $broadcastEach = false für Massenpfade (Projekt/Serie/Gewerk löschen): kein
+     * Live-Update je Schicht — früher die Hauptursache für Timeouts; die Aufrufer schicken danach
+     * einen gemeinsamen OccupancyUpdated-Ping.
+     *
+     * @param iterable<Shift> $shifts
+     * @return array<int, array<string, mixed>>
+     */
+    public function deleteMany(iterable $shifts, bool $notifyAffectedPeople = true, bool $broadcastEach = true): array
+    {
+        $payloads = [];
+        /** @var array<int, array{user: User, start: Carbon, end: Carbon}> $rangesByUser */
+        $rangesByUser = [];
+
+        foreach ($shifts as $shift) {
+            $result = $this->deleteOne($shift, $notifyAffectedPeople, $broadcastEach);
+            if ($result === null) {
+                continue;
+            }
+            if ($result['payload'] !== null) {
+                $payloads[] = $result['payload'];
+            }
+            foreach ($result['users'] as $user) {
+                $range = $rangesByUser[$user->id]
+                    ?? ['user' => $user, 'start' => $result['start'], 'end' => $result['end']];
+                $range['start'] = $result['start']->lt($range['start']) ? $result['start'] : $range['start'];
+                $range['end'] = $result['end']->gt($range['end']) ? $result['end'] : $range['end'];
+                $rangesByUser[$user->id] = $range;
+            }
+        }
+
+        foreach ($rangesByUser as $range) {
+            $this->shiftRuleService->validateRulesForUser(
+                $range['user'],
+                $range['start']->copy(),
+                $range['end']->copy()
+            );
+        }
+
+        return $payloads;
+    }
+
+    /**
+     * @return array{payload: array<string, mixed>|null, users: Collection<int, User>, start: Carbon, end: Carbon}|null
+     */
+    private function deleteOne(Shift $shift, bool $notifyAffectedPeople, bool $broadcast): ?array
+    {
         if ($shift->trashed()) {
             return null;
         }
 
         $shift->loadMissing(['craft', 'project', 'event.project']);
         $affectedUsers = $shift->users()->get();
-        $affectedWorkers = $this->affectedWorkersPayload($shift);
+        $affectedWorkers = $broadcast ? $this->affectedWorkersPayload($shift) : [];
         $shiftStart = Carbon::parse($shift->start_date);
         $shiftEnd = Carbon::parse($shift->end_date ?? $shift->start_date);
         $roomId = $shift->event_id ? $shift->event?->room_id : $shift->room_id;
@@ -65,34 +123,14 @@ class ShiftDeletionService
             $this->shiftService->delete($shift, $this->shiftsQualificationsService);
         });
 
-        $this->revalidateShiftRules($affectedUsers, $shiftStart, $shiftEnd);
-
-        if ($roomId === null) {
-            return null;
+        $payload = null;
+        if ($broadcast && $roomId !== null) {
+            $event = new DestroyShift($shift, (int) $roomId, $affectedWorkers);
+            $payload = $event->broadcastWith();
+            SafeBroadcast::send($event);
         }
 
-        $event = new DestroyShift($shift, (int) $roomId, $affectedWorkers);
-        $payload = $event->broadcastWith();
-        SafeBroadcast::send($event);
-
-        return $payload;
-    }
-
-    /**
-     * @param iterable<Shift> $shifts
-     * @return array<int, array<string, mixed>>
-     */
-    public function deleteMany(iterable $shifts, bool $notifyAffectedPeople = true): array
-    {
-        $payloads = [];
-        foreach ($shifts as $shift) {
-            $payload = $this->delete($shift, $notifyAffectedPeople);
-            if ($payload !== null) {
-                $payloads[] = $payload;
-            }
-        }
-
-        return $payloads;
+        return ['payload' => $payload, 'users' => $affectedUsers, 'start' => $shiftStart, 'end' => $shiftEnd];
     }
 
     /**

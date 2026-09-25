@@ -52,14 +52,12 @@
                             </span>
                             <component :is="isExpanded(contact) ? IconChevronUp : IconChevronDown" class="size-4 shrink-0 text-text-subtle" />
                         </button>
-                        <template v-if="contact.can_edit">
-                            <button type="button" class="shrink-0 text-text-subtle hover:text-text" :title="$t('Edit')" :aria-label="$t('Edit')" @click="openEdit(contact)">
-                                <IconPencil class="size-4" stroke-width="1.5" />
-                            </button>
-                            <button type="button" class="shrink-0 text-text-subtle hover:text-danger" :title="$t('Remove from list')" :aria-label="$t('Remove from list')" @click="remove(contact)">
-                                <IconLinkOff class="size-4" stroke-width="1.5" />
-                            </button>
-                        </template>
+                        <button v-if="contact.can_edit" type="button" class="shrink-0 text-text-subtle hover:text-text" :title="$t('Edit')" :aria-label="$t('Edit')" @click="openEdit(contact)">
+                            <IconPencil class="size-4" stroke-width="1.5" />
+                        </button>
+                        <button v-if="contact.can_remove" type="button" class="shrink-0 text-text-subtle hover:text-danger" :title="$t('Remove from list')" :aria-label="$t('Remove from list')" @click="remove(contact)">
+                            <IconLinkOff class="size-4" stroke-width="1.5" />
+                        </button>
                     </div>
 
                     <!-- Mögliche Dubletten extern angelegter Kontakte -->
@@ -79,7 +77,7 @@
                             <div v-for="field in contact.fields" :key="field.property_id">
                                 <dt class="text-xs text-text-subtle">{{ $t(field.name) }}</dt>
                                 <dd class="whitespace-pre-line break-words text-sm text-text">
-                                    <a v-if="field.type === 'link'" :href="field.value" target="_blank" rel="noopener" class="text-accent-600 hover:underline">{{ field.value }}</a>
+                                    <a v-if="field.type === 'link' && isSafeHttpUrl(field.value)" :href="field.value" target="_blank" rel="noopener" class="text-accent-600 hover:underline">{{ field.value }}</a>
                                     <template v-else>{{ formatValue(field) }}</template>
                                 </dd>
                             </div>
@@ -175,6 +173,7 @@ import BaseUIButton from '@/Artwork/Buttons/BaseUIButton.vue'
 import InfoButtonComponent from '@/Pages/Projects/Tab/Components/InfoButtonComponent.vue'
 import CrmContactFormModal from '@/Pages/Projects/Tab/Components/CrmContactFormModal.vue'
 import { usePermission } from '@/Composeables/Permission.js'
+import { isSafeHttpUrl } from '@/Helper/SafeUrl.js'
 import { useTranslation } from '@/Composeables/Translation.js'
 import {
     IconChevronDown,

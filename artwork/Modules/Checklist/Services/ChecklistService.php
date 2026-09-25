@@ -15,14 +15,17 @@ use Artwork\Modules\Project\Services\ProjectTabService;
 use Artwork\Modules\Task\Models\Task;
 use Artwork\Modules\Task\Services\TaskService;
 use Artwork\Modules\User\Models\User;
+use Artwork\Modules\Project\Services\ProjectTeamNotificationService;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Auth;
 use stdClass;
 
 readonly class ChecklistService
 {
-    public function __construct(private ChecklistRepository $checklistRepository)
-    {
+    public function __construct(
+        private ChecklistRepository $checklistRepository,
+        private ProjectTeamNotificationService $projectTeamNotificationService,
+    ) {
     }
 
     public function updateByRequest(
@@ -169,11 +172,14 @@ readonly class ChecklistService
         $checklist->users()->sync($ids);
         if ($checklist->hasProject()) {
             $project = $checklist->project;
+            $addedUserIds = [];
             foreach ($ids as $id) {
                 if (!$project->users->contains($id)) {
                     $project->users()->attach($id);
+                    $addedUserIds[] = $id;
                 }
             }
+            $this->projectTeamNotificationService->notifyAddedToTeam($project, $addedUserIds);
         }
     }
 

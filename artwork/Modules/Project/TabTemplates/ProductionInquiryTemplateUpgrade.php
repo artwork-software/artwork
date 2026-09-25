@@ -5,7 +5,6 @@ namespace Artwork\Modules\Project\TabTemplates;
 use Artwork\Modules\Project\Enum\ProjectTabComponentEnum;
 use Artwork\Modules\Project\Models\Component;
 use Artwork\Modules\Project\Models\ComponentInTab;
-use Artwork\Modules\Project\Models\ProjectComponentValue;
 use Artwork\Modules\Project\Models\ProjectTab;
 use Illuminate\Database\DatabaseManager;
 use Illuminate\Support\Collection;
@@ -67,6 +66,7 @@ class ProductionInquiryTemplateUpgrade
     public function __construct(
         private readonly DatabaseManager $db,
         private readonly ProjectTabTemplateService $templateService,
+        private readonly TabTemplateUpgradeSupport $support,
     ) {
     }
 
@@ -90,8 +90,20 @@ class ProductionInquiryTemplateUpgrade
                 continue;
             }
 
-            $this->db->transaction(fn () => $this->upgradeTab($tab, $rows, $matched));
+            // In der Sprache umstellen, in der der Tab angelegt wurde (Namen, Hinweise, Dropdown-Optionen)
+            $locale = $this->support->localeOf(
+                (string) $matched['Contact & company']->component->name,
+                'Contact & company',
+            );
+            $this->support->withLocale(
+                $locale,
+                fn () => $this->db->transaction(fn () => $this->upgradeTab($tab, $rows, $matched)),
+            );
             $upgraded++;
+        }
+
+        if ($upgraded > 0) {
+            $this->support->clearComponentCaches();
         }
 
         return $upgraded;
@@ -178,11 +190,27 @@ class ProductionInquiryTemplateUpgrade
                 continue;
             }
 
+            // Kontaktliste ohne auflösbaren Kontakttyp (kein „Künstler*in“ in der Instanz) wäre leer und
+            // gesperrt → dann bleibt der bisherige Eintrag an seiner Stelle.
+            if (
+                $existing !== null
+                && ($definition['type'] ?? null) === ProjectTabComponentEnum::CRM_CONTACT_LIST->value
+                && ($this->templateService->buildComponentData($definition)['contact_type_ids'] ?? []) === []
+            ) {
+                $existing->note = $existing->note ?? $note;
+                $finalRows[] = $existing;
+                $consumedIds[] = $existing->id;
+                continue;
+            }
+
             $component = isset($definition['special'])
                 ? $this->templateService->resolveSpecialComponent($definition['special'])
                 : $this->templateService->createComponent($definition);
             if ($component === null) {
                 continue;
+            }
+            if ($existing !== null && !isset($definition['special']) && $existing->component !== null) {
+                $this->support->copyPermissions($existing->component, $component);
             }
 
             $finalRows[] = new ComponentInTab([
@@ -193,17 +221,20 @@ class ProductionInquiryTemplateUpgrade
             ]);
 
             // Ersetzter Eintrag der Erstfassung (z. B. Textbereich → Kontaktliste) bleibt nur, wenn er
-            // Inhalte hat; sonst verschwindet er aus dem Tab.
+            // Inhalte hat; sonst verschwindet er aus dem Tab (Komponente nur löschen, wenn sie nirgends
+            // mehr steckt — Drucklayout-/Ordner-Verweise haben keine Kaskade).
             if ($existing !== null) {
                 $consumedIds[] = $existing->id;
-                if ($this->hasEnteredValues($existing->component)) {
+                if ($this->support->hasEnteredText($existing->component)) {
                     $finalRows[] = $existing;
+                    $existing->component->update(['data' => array_merge(
+                        $existing->component->data ?? [],
+                        [ProductionInquiryArrivingPersonsUpgrade::MIGRATED_FLAG => true],
+                    )]);
                 } else {
                     $replacedComponent = $existing->component;
                     $existing->delete();
-                    if (!ComponentInTab::query()->where('component_id', $replacedComponent->id)->exists()) {
-                        $replacedComponent->delete();
-                    }
+                    $this->support->deleteIfUnused($replacedComponent);
                 }
             }
         }
@@ -234,18 +265,6 @@ class ProductionInquiryTemplateUpgrade
         $type = $definition['special'] ?? $definition['type'];
 
         return $existing->component?->type === $type;
-    }
-
-    private function hasEnteredValues(?Component $component): bool
-    {
-        if ($component === null) {
-            return false;
-        }
-
-        return ProjectComponentValue::query()
-            ->where('component_id', $component->id)
-            ->get()
-            ->contains(fn (ProjectComponentValue $value) => trim((string) ($value->data['text'] ?? '')) !== '');
     }
 
     /**

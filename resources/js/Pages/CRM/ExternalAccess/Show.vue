@@ -4,7 +4,7 @@
             <!-- Header -->
             <header class="flex items-start justify-between">
                 <div>
-                    <h1 class="text-xl font-semibold">{{ access.crm_contact?.display_name ?? access.name ?? access.email }}</h1>
+                    <h1 class="text-xl font-semibold">{{ access.display_name ?? access.crm_contact?.display_name ?? access.email }}</h1>
                     <p class="text-sm text-text-subtle">{{ access.email }}</p>
                     <div class="mt-2 flex items-center gap-2">
                         <StatusBadge :status="resolveStatus()" />
@@ -26,11 +26,14 @@
             <section class="rounded-2xl border border-border-subtle bg-white p-6">
                 <header class="flex items-center justify-between">
                     <h2 class="text-lg font-semibold">{{ $t('CRM access') }}</h2>
-                    <BaseUIButton v-if="canManage" hide-icon @click="extendCrmOpen = true">{{ $t('Extend') }}</BaseUIButton>
+                    <BaseUIButton v-if="canManage && access.crm_contact" hide-icon @click="extendCrmOpen = true">{{ $t('Extend') }}</BaseUIButton>
                 </header>
-                <p class="mt-4 text-sm">
+                <p v-if="access.crm_contact" class="mt-4 text-sm">
                     <strong>{{ $t('Valid until') }}:</strong>
                     {{ formatDate(access.crm_access_expires_at) ?? $t('No expiry') }}
+                </p>
+                <p v-else class="mt-4 text-sm text-text-subtle">
+                    {{ $t('Tab access only (no own CRM contact)') }}
                 </p>
             </section>
 

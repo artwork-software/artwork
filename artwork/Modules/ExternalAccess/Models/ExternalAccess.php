@@ -110,7 +110,8 @@ class ExternalAccess extends Model implements AuthenticatableContract, Authoriza
 
     public function isCrmAccessActive(): bool
     {
-        if ($this->revoked_at !== null) {
+        // Reiner Tab-Zugang (ohne eigenen Kontakt) hat nie CRM-Selbstpflege
+        if ($this->revoked_at !== null || $this->crm_contact_id === null) {
             return false;
         }
         return $this->crm_access_expires_at !== null

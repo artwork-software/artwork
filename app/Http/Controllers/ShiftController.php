@@ -607,6 +607,8 @@ class ShiftController extends Controller
         $notificationUsers = [];
 
         $shifts = Shift::whereIn('id', $shiftIds)->get();
+        // Wie das Einzel-Schloss (EventController): nur Schichten planbarer Gewerke festschreiben
+        $this->ensureCanPlanShifts($shifts);
 
         // is_committed ist nicht in logOnly — ohne den Sammel-Eintrag wäre das
         // (Bulk-)Festschreiben bzw. Aufheben im Schichtverlauf unsichtbar.

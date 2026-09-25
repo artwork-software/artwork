@@ -15,8 +15,11 @@ use Artwork\Modules\ExternalAccess\Models\ExternalAccess;
 use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Artwork\Modules\Project\Enum\ProjectTabComponentEnum;
 use Artwork\Modules\Project\Models\Component;
+use Artwork\Modules\Project\Models\ComponentInTab;
+use Artwork\Modules\Project\Models\DisclosureComponents;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Models\ProjectComponentCrmContact;
+use Artwork\Modules\Project\Models\ProjectTab;
 use Artwork\Modules\User\Models\User;
 use Illuminate\Database\DatabaseManager;
 use Illuminate\Database\Eloquent\Builder;
@@ -44,6 +47,23 @@ class ProjectComponentCrmContactService
         CrmSystemContactTypeEnum::FREELANCER->value,
         CrmSystemContactTypeEnum::SERVICE_PROVIDER->value,
     ];
+
+    /** Tabellen mit Spalte crm_contact_id (FK auf crm_contacts) außer den oben gesondert geprüften. */
+    private const CONTACT_REFERENCE_TABLES = [
+        'crm_contact_project_team',
+        'external_accesses',
+        'document_requests',
+        'accommodations',
+        'accommodation_accommodation_room_type',
+        'artists',
+        'freelancers',
+        'manufacturers',
+        'service_providers',
+        'users',
+    ];
+
+    /** Obergrenze je Eigenschaftswert (Spalte ist TEXT). */
+    private const MAX_VALUE_LENGTH = 10000;
 
     public function __construct(
         private readonly CrmContactService $contactService,
@@ -235,7 +255,6 @@ class ProjectComponentCrmContactService
         User|ExternalAccess $actor,
     ): ProjectComponentCrmContact {
         $this->assertTypeAllowed($component, $contactType);
-        $this->assertCapacity($project, $component);
 
         $allowedPropertyIds = $this->writablePropertyIdsFor($actor);
         $values = $this->filterValues($propertyValues, $allowedPropertyIds, $contactType);
@@ -249,6 +268,8 @@ class ProjectComponentCrmContactService
             $values,
             $actor,
         ): ProjectComponentCrmContact {
+            $this->assertCapacity($project, $component);
+
             $contact = $this->contactService->store([
                 'crm_contact_type_id' => $contactType->id,
                 'display_name' => trim($displayName),
@@ -302,14 +323,14 @@ class ProjectComponentCrmContactService
             return $existing;
         }
 
-        $this->assertCapacity($project, $component);
-
         return $this->db->transaction(function () use (
             $project,
             $component,
             $contact,
             $actor,
         ): ProjectComponentCrmContact {
+            $this->assertCapacity($project, $component);
+
             $entry = ProjectComponentCrmContact::query()->create([
                 'project_id' => $project->id,
                 'component_id' => $component->id,
@@ -354,8 +375,13 @@ class ProjectComponentCrmContactService
         $name = $displayName !== null ? trim($displayName) : $contact->display_name;
         $this->validateRequired($contactType, $allowedPropertyIds, $name, $values, $contact);
 
-        $this->db->transaction(function () use ($contact, $name, $values): void {
+        $this->db->transaction(function () use ($contact, $name, $values, $entry, $actor): void {
             $this->contactService->update($contact, ['display_name' => $name], $values);
+
+            // Nach externer Änderung muss erneut geprüft werden (z. B. nach Rückgabe zur Überarbeitung)
+            if ($actor instanceof ExternalAccess && $entry->reviewed_at !== null) {
+                $entry->forceFill(['reviewed_at' => null, 'reviewed_by_user_id' => null])->save();
+            }
         });
 
         return $entry->refresh();
@@ -367,7 +393,9 @@ class ProjectComponentCrmContactService
      */
     public function remove(ProjectComponentCrmContact $entry, User|ExternalAccess $actor): void
     {
-        $this->assertCanEdit($entry, $actor);
+        if (!$this->canRemove($entry, $actor)) {
+            abort(403, __('You can only change contacts you have added yourself.'));
+        }
 
         $this->db->transaction(function () use ($entry, $actor): void {
             /** @var CrmContact|null $contact */
@@ -404,24 +432,42 @@ class ProjectComponentCrmContactService
     }
 
     /**
-     * Mit der internen Bestätigung eines Tabs gelten die Kontakte dieser Person im Projekt als geprüft.
+     * Mit der internen Bestätigung eines Tabs gelten die Kontakte dieser Person in den Kontaktlisten
+     * DIESES Tabs (direkt oder im Ordner) als geprüft.
      */
-    public function markReviewedForExternal(Project $project, ExternalAccess $external, User $reviewer): int
-    {
+    public function markReviewedForExternal(
+        Project $project,
+        ProjectTab $tab,
+        ExternalAccess $external,
+        User $reviewer,
+    ): int {
         return ProjectComponentCrmContact::query()
             ->where('project_id', $project->id)
+            ->whereIn('component_id', $this->componentIdsInTab($tab))
             ->where('created_by_external_access_id', $external->id)
             ->whereNull('reviewed_at')
             ->update(['reviewed_at' => now(), 'reviewed_by_user_id' => $reviewer->id]);
     }
 
-    public function countCreatedByExternal(Project $project, ExternalAccess $external): int
+    public function countCreatedByExternal(Project $project, ProjectTab $tab, ExternalAccess $external): int
     {
         return ProjectComponentCrmContact::query()
             ->where('project_id', $project->id)
+            ->whereIn('component_id', $this->componentIdsInTab($tab))
             ->where('created_by_external_access_id', $external->id)
             ->whereHas('crmContact')
             ->count();
+    }
+
+    /**
+     * @return array<int, int> Komponenten des Tabs inklusive Inhalt von Ordnern (Disclosure)
+     */
+    private function componentIdsInTab(ProjectTab $tab): array
+    {
+        $direct = ComponentInTab::query()->where('project_tab_id', $tab->id)->pluck('component_id')->all();
+        $inFolders = DisclosureComponents::query()->whereIn('disclosure_id', $direct)->pluck('component_id')->all();
+
+        return array_values(array_unique(array_map('intval', array_merge($direct, $inFolders))));
     }
 
     /**
@@ -552,6 +598,7 @@ class ProjectComponentCrmContactService
             'reviewed_at' => $entry->reviewed_at?->toIso8601String(),
             'reviewed_by' => $entry->reviewedBy?->full_name,
             'can_edit' => $canWrite && $this->canEdit($entry, $viewer),
+            'can_remove' => $canWrite && $this->canRemove($entry, $viewer),
             'possible_duplicates' => !$isExternalViewer && $entry->created_by_external_access_id !== null
                 && $entry->reviewed_at === null
                 ? $this->possibleDuplicates($contact)
@@ -573,13 +620,37 @@ class ProjectComponentCrmContactService
         ];
     }
 
+    /**
+     * Extern: nur Kontakte, die diese Person selbst angelegt hat — an der Listenzeile UND am CRM-Kontakt
+     * (nach dem Zusammenführen mit einer Dublette zeigt die Zeile auf einen bestehenden Kontakt).
+     * Intern: Stammdaten eines Kontakts, der auch anderswo genutzt wird, nur mit CRM-Zugang.
+     */
     public function canEdit(ProjectComponentCrmContact $entry, User|ExternalAccess $actor): bool
     {
         if ($actor instanceof ExternalAccess) {
-            return $entry->isCreatedByExternal($actor);
+            $contact = $entry->crmContact;
+
+            return $entry->isCreatedByExternal($actor)
+                && $contact !== null
+                && (int) $contact->created_by_external_access_id === (int) $actor->id;
         }
 
-        return true;
+        if ($actor->can(PermissionEnum::CRM_VIEW->value)) {
+            return true;
+        }
+
+        $contact = $entry->crmContact;
+        $project = $entry->project;
+
+        return $contact !== null && $project !== null && !$this->isUsedElsewhere($contact, $project, $entry->id);
+    }
+
+    /**
+     * Intern entfernen = Verknüpfung lösen; dafür reicht das Schreibrecht an der Komponente.
+     */
+    public function canRemove(ProjectComponentCrmContact $entry, User|ExternalAccess $actor): bool
+    {
+        return $actor instanceof ExternalAccess ? $this->canEdit($entry, $actor) : true;
     }
 
     /**
@@ -615,6 +686,9 @@ class ProjectComponentCrmContactService
         if ($max === null) {
             return;
         }
+
+        // Sperre auf die Komponente: parallele Anfragen zählen nacheinander (läuft in der Transaktion)
+        Component::query()->whereKey($component->id)->lockForUpdate()->first();
 
         $count = ProjectComponentCrmContact::query()
             ->where('project_id', $project->id)
@@ -657,10 +731,39 @@ class ProjectComponentCrmContactService
             if (is_bool($value)) {
                 $value = $value ? '1' : '0';
             }
-            $values[$propertyId] = $value !== null ? (string) $value : null;
+            $value = $value !== null ? (string) $value : null;
+            $this->assertValidValue($propertyId, $property->type, $value);
+            $values[$propertyId] = $value;
         }
 
         return $values;
+    }
+
+    /**
+     * Länge begrenzen; Links nur als http(s) — sonst würden z. B. javascript:-URLs intern anklickbar.
+     *
+     * @throws ValidationException
+     */
+    private function assertValidValue(int $propertyId, CrmPropertyTypeEnum $type, ?string $value): void
+    {
+        if ($value === null || trim($value) === '') {
+            return;
+        }
+
+        if (mb_strlen($value) > self::MAX_VALUE_LENGTH) {
+            throw ValidationException::withMessages([
+                'property_values.' . $propertyId => __(
+                    'The text is too long (max. :max characters).',
+                    ['max' => self::MAX_VALUE_LENGTH]
+                ),
+            ]);
+        }
+
+        if ($type === CrmPropertyTypeEnum::LINK && preg_match('#^https?://#i', trim($value)) !== 1) {
+            throw ValidationException::withMessages([
+                'property_values.' . $propertyId => __('Please enter a link starting with http:// or https://.'),
+            ]);
+        }
     }
 
     /**
@@ -720,16 +823,44 @@ class ProjectComponentCrmContactService
      * Wird der Kontakt außerhalb dieses Projekts genutzt (andere Listen/Projekte, Team, Aufenthalte,
      * Zugänge)? Dann entfernt eine externe Person nur die Verknüpfung.
      */
-    private function isUsedElsewhere(CrmContact $contact, Project $project): bool
+    private function isUsedElsewhere(CrmContact $contact, Project $project, ?int $exceptEntryId = null): bool
     {
         $id = $contact->id;
 
-        return ProjectComponentCrmContact::query()->where('crm_contact_id', $id)->exists()
-            || $this->db->table('crm_contact_project')->where('crm_contact_id', $id)
+        // An einem Quell-Datensatz hängende Kontakte (User, Freelancer, Künstler-Stammdaten …) sind nie „frei“
+        if ($contact->entity_type !== null) {
+            return true;
+        }
+
+        if (
+            ProjectComponentCrmContact::query()
+                ->where('crm_contact_id', $id)
+                ->when($exceptEntryId !== null, fn (Builder $q) => $q->where('id', '!=', $exceptEntryId))
+                ->exists()
+        ) {
+            return true;
+        }
+
+        if (
+            $this->db->table('crm_contact_project')->where('crm_contact_id', $id)
                 ->where('project_id', '!=', $project->id)->exists()
-            || $this->db->table('crm_contact_project_team')->where('crm_contact_id', $id)->exists()
-            || $this->db->table('artist_residencies')->where('artist_crm_contact_id', $id)->exists()
-            || $this->db->table('external_accesses')->where('crm_contact_id', $id)->exists();
+            || $this->db->table('artist_residencies')
+                ->where(fn ($query) => $query
+                    ->where('artist_crm_contact_id', $id)
+                    ->orWhere('accommodation_crm_contact_id', $id))
+                ->exists()
+        ) {
+            return true;
+        }
+
+        // Alle weiteren Tabellen mit Fremdschlüssel auf crm_contacts
+        foreach (self::CONTACT_REFERENCE_TABLES as $table) {
+            if ($this->db->table($table)->where('crm_contact_id', $id)->exists()) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**

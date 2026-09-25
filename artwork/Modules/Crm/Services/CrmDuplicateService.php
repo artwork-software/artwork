@@ -263,8 +263,11 @@ readonly class CrmDuplicateService
                 continue;
             }
 
+            // Die Zeile zeigt danach auf einen bestehenden Kontakt: externe Urheberschaft entfällt, sonst
+            // dürfte die externe Person den bestehenden Kontakt bearbeiten oder löschen.
             DB::table('project_component_crm_contacts')->where('id', $row->id)->update([
                 'crm_contact_id' => $primary->id,
+                'created_by_external_access_id' => null,
                 'reviewed_at' => $row->reviewed_at ?? now(),
                 'reviewed_by_user_id' => $row->reviewed_by_user_id ?? auth()->id(),
             ]);

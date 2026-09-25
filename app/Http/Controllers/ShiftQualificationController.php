@@ -160,21 +160,34 @@ class ShiftQualificationController extends Controller
 
                 /** @var ShiftsQualifications $shiftsQualification */
                 foreach ($shiftsQualificationsToHandle as $shiftsQualification) {
-                    $defaultSlot = ShiftsQualifications::withTrashed()
+                    // Aktiver Platz → aktiver Standard-Platz; Platz im Papierkorb → Standard-Platz im
+                    // Papierkorb. Sonst verschwänden aktive Plätze in einem gelöschten Standard-Platz.
+                    $sourceTrashed = $shiftsQualification->trashed();
+                    $defaultSlots = ShiftsQualifications::withTrashed()
                         ->where('shift_id', $shiftsQualification->shift_id)
-                        ->where('shift_qualification_id', 1)
-                        ->first();
+                        ->where('shift_qualification_id', 1);
+                    $defaultSlot = $sourceTrashed
+                        ? (clone $defaultSlots)->whereNotNull('deleted_at')->first()
+                        : (clone $defaultSlots)->whereNull('deleted_at')->first();
 
                     if ($defaultSlot !== null) {
                         $defaultSlot->update([
                             'value' => (int) $defaultSlot->value + (int) $shiftsQualification->value,
                         ]);
+                    } elseif (!$sourceTrashed && ($trashedDefault = (clone $defaultSlots)->first()) !== null) {
+                        // Nur ein gelöschter Standard-Platz vorhanden: wiederbeleben, mit genau diesen Plätzen
+                        $trashedDefault->restore();
+                        $trashedDefault->update(['value' => (int) $shiftsQualification->value]);
                     } else {
-                        ShiftsQualifications::query()->create([
+                        $created = ShiftsQualifications::query()->create([
                             'shift_id' => $shiftsQualification->shift_id,
                             'shift_qualification_id' => 1,
                             'value' => (int) $shiftsQualification->value,
                         ]);
+                        if ($sourceTrashed) {
+                            // gehört zur gelöschten Schicht und kommt mit ihr zurück
+                            $created->forceFill(['deleted_at' => $shiftsQualification->deleted_at])->save();
+                        }
                     }
 
                     $shiftsQualification->forceDelete();

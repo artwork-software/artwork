@@ -201,7 +201,8 @@ readonly class EventService
 
             $eventCommentService->deleteEventComments($event->comments);
             $timelineService->deleteTimelines($event->timelines);
-            app(ShiftDeletionService::class)->deleteMany($event->shifts, $sendPerEventNotifications);
+            // Massenpfad: kein Live-Update je Schicht, am Ende ein OccupancyUpdated (s. unten)
+            app(ShiftDeletionService::class)->deleteMany($event->shifts, $sendPerEventNotifications, false);
             $subEventService->deleteSubEvents($event->subEvents);
 
             $notificationService->deleteUpsertRoomRequestNotificationByEventId($event->id);
@@ -229,6 +230,7 @@ readonly class EventService
         ShiftService $shiftService,
         SubEventService $subEventService,
     ): void {
+        $eventDeletedAt = $event->deleted_at?->copy();
         $this->eventRepository->restore($event);
         if (!empty($event->project_id)) {
             $changeService->saveFromBuilder(
@@ -241,7 +243,10 @@ readonly class EventService
         }
         $eventCommentService->restoreEventComments($event->comments()->onlyTrashed()->get());
         $timelineService->restoreTimelines($event->timelines()->onlyTrashed()->get());
-        $shiftService->restoreShifts($event->shifts()->onlyTrashed()->get(), $shiftsQualificationsService);
+        $shiftService->restoreShifts(
+            $shiftService->trashedWithEvent($event, $eventDeletedAt),
+            $shiftsQualificationsService
+        );
         $subEventService->restoreSubEvents($event->subEvents()->onlyTrashed()->get());
 
         broadcast(new OccupancyUpdated())->toOthers();
@@ -284,6 +289,7 @@ readonly class EventService
     ): void {
         /** @var Event $event */
         foreach ($events as $event) {
+            $eventDeletedAt = $event->deleted_at?->copy();
             $this->eventRepository->restore($event);
             if (!empty($event->project_id)) {
                 $changeService->saveFromBuilder(
@@ -297,7 +303,10 @@ readonly class EventService
 
             $eventCommentService->restoreEventComments($event->comments()->onlyTrashed()->get());
             $timelineService->restoreTimelines($event->timelines()->onlyTrashed()->get());
-            $shiftService->restoreShifts($event->shifts()->onlyTrashed()->get(), $shiftsQualificationsService);
+            $shiftService->restoreShifts(
+                $shiftService->trashedWithEvent($event, $eventDeletedAt),
+                $shiftsQualificationsService,
+            );
             $subEventService->restoreSubEvents($event->subEvents()->onlyTrashed()->get());
 
             broadcast(new OccupancyUpdated())->toOthers();

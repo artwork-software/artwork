@@ -5251,7 +5251,7 @@ class ProjectController extends Controller
             if ($external === null) {
                 return null;
             }
-            $name = $external->crmContact?->display_name ?: $external->email;
+            $name = $external->displayName();
 
             return [
                 'id' => 'external-' . $external->id,

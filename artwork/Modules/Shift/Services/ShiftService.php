@@ -41,6 +41,9 @@ use Illuminate\Support\Collection as SupportCollection;
 
 class ShiftService
 {
+    /** Zeitfenster, in dem beim Löschen eines Termins seine Schichten mitgelöscht werden. */
+    private const EVENT_CASCADE_WINDOW_SECONDS = 120;
+
     public function __construct(
         private readonly ShiftRepository $shiftRepository,
         private readonly CraftService $craftService,
@@ -222,7 +225,31 @@ class ShiftService
                 ->where('shift_id', $shift->id)
                 ->get()
                 ->each(static fn (ShiftWorker $shiftWorker): ?bool => $shiftWorker->restore());
+
+            // Wie im Schichten-Papierkorb neu bewerten: beim Löschen gelöschte Konflikte und zurückgegebene
+            // Projekt-Tageszuordnungen gelten wieder bzw. werden wieder verdrängt.
+            $this->resyncProjectDayAssignments($shift);
+            if ($shift->is_committed) {
+                $this->recheckAvailabilityConflicts($shift);
+            }
         }
+    }
+
+    /**
+     * Schichten eines Termins, die ZUSAMMEN mit dem Termin gelöscht wurden. Vorher einzeln gelöschte
+     * Schichten liegen im Papierkorb und dürfen beim Wiederherstellen des Termins nicht zurückkommen.
+     *
+     * @return Collection<int, Shift>
+     */
+    public function trashedWithEvent(Event $event, ?\Carbon\CarbonInterface $eventDeletedAt): Collection
+    {
+        return Shift::onlyTrashed()
+            ->where('event_id', $event->id)
+            ->when($eventDeletedAt !== null, static fn ($query) => $query->whereBetween('deleted_at', [
+                $eventDeletedAt->copy()->subSeconds(self::EVENT_CASCADE_WINDOW_SECONDS),
+                $eventDeletedAt->copy()->addSeconds(self::EVENT_CASCADE_WINDOW_SECONDS),
+            ]))
+            ->get();
     }
 
     public function forceDelete(Shift $shift): bool

@@ -77,10 +77,11 @@
                                                 :class="propertyValue(contact.id, property.id) === '1' ? 'text-success' : 'text-text-subtle'"
                                             />
                                         </template>
-                                        <template v-else-if="property.type === 'link'">
+                                        <template v-else-if="property.type === 'link' && isSafeHttpUrl(propertyValue(contact.id, property.id))">
                                             <a
                                                 :href="propertyValue(contact.id, property.id)"
                                                 target="_blank"
+                                                rel="noopener"
                                                 class="text-accent-600 hover:underline"
                                             >
                                                 {{ propertyValue(contact.id, property.id) }}
@@ -198,6 +199,7 @@ import axios from 'axios';
 import BaseInput from '@/Artwork/Inputs/BaseInput.vue';
 import CreateCrmArtistModal from '@/Components/Crm/CreateCrmArtistModal.vue';
 import { usePermission } from '@/Composeables/Permission.js';
+import { isSafeHttpUrl } from '@/Helper/SafeUrl.js';
 import {
     IconCheck,
     IconChevronDown,

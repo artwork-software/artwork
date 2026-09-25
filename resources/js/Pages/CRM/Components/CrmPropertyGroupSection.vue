@@ -47,8 +47,8 @@
                                 <template v-if="property.type === 'checkbox'">
                                     <component :is="getPropertyValue(property.id) === '1' ? IconCheck : IconX" class="h-5 w-5" :class="getPropertyValue(property.id) === '1' ? 'text-success' : 'text-text-subtle'" />
                                 </template>
-                                <template v-else-if="property.type === 'link' && getPropertyValue(property.id)">
-                                    <a :href="getPropertyValue(property.id)" target="_blank" class="text-accent-600 hover:text-accent-600">
+                                <template v-else-if="property.type === 'link' && isSafeHttpUrl(getPropertyValue(property.id))">
+                                    <a :href="getPropertyValue(property.id)" target="_blank" rel="noopener" class="text-accent-600 hover:text-accent-600">
                                         {{ getPropertyValue(property.id) }}
                                     </a>
                                 </template>
@@ -74,6 +74,7 @@
 </template>
 
 <script setup>
+import { isSafeHttpUrl } from '@/Helper/SafeUrl.js'
 import { ref } from 'vue'
 import PropertyIcon from '@/Artwork/Icon/PropertyIcon.vue'
 import ToolTipComponent from '@/Components/ToolTips/ToolTipComponent.vue'

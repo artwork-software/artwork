@@ -6,6 +6,7 @@ use Artwork\Modules\Checklist\Models\Checklist;
 use Artwork\Modules\Checklist\Repositories\ChecklistRepository;
 use Artwork\Modules\Task\Models\Task;
 use Artwork\Modules\Task\Repositories\TaskRepository;
+use Artwork\Modules\Project\Services\ProjectTeamNotificationService;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Collection as SupportCollection;
@@ -14,7 +15,8 @@ class TaskService
 {
     public function __construct(
         private readonly TaskRepository $taskRepository,
-        private readonly ChecklistRepository $checklistRepository
+        private readonly ChecklistRepository $checklistRepository,
+        private readonly ProjectTeamNotificationService $projectTeamNotificationService,
     ) {
     }
     public function createNewTask(array $attributes): Task
@@ -45,11 +47,14 @@ class TaskService
 
         // add all users to $checklist->project when they not in project
         if ($checklist->hasProject()) {
+            $addedUserIds = [];
             foreach ($userIds as $userId) {
                 if (!$checklist->project->users->contains($userId)) {
                     $checklist->project->users()->attach($userId);
+                    $addedUserIds[] = $userId;
                 }
             }
+            $this->projectTeamNotificationService->notifyAddedToTeam($checklist->project, $addedUserIds);
         }
 
         // remove $userId from $userIds
@@ -186,11 +191,14 @@ class TaskService
         $checklist = $task->checklist;
         $userIds = $data->get('users');
         if ($checklist->hasProject()) {
+            $addedUserIds = [];
             foreach ($userIds as $userId) {
                 if (!$checklist->project->users->contains($userId)) {
                     $checklist->project->users()->attach($userId);
+                    $addedUserIds[] = $userId;
                 }
             }
+            $this->projectTeamNotificationService->notifyAddedToTeam($checklist->project, $addedUserIds);
         }
 
         $this->taskRepository->save($task);

@@ -42,7 +42,7 @@
             </div>
 
             <div class="grid grid-cols-2 gap-4">
-                <BaseInput id="booking_hours" v-model="durationParts.hours" type="number" label="Hours" :min="0" :step="1" required />
+                <BaseInput id="booking_hours" v-model="durationParts.hours" type="number" label="Hours" :min="0" :max="99999" :step="1" />
                 <BaseInput id="booking_minutes" v-model="durationParts.minutes" type="number" label="Minutes" :min="0" :max="59" :step="1" />
             </div>
 

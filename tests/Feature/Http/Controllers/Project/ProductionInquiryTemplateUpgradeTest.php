@@ -16,12 +16,23 @@ use Tests\TestCase;
 
 final class ProductionInquiryTemplateUpgradeTest extends TestCase
 {
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        // Die Kontaktliste der Vorlage erlaubt den Typ „Künstler*in“ — ohne ihn wird nichts umgestellt.
+        \Artwork\Modules\Crm\Models\CrmContactType::withTrashed()->firstOrCreate(
+            ['slug' => 'artist'],
+            ['name' => 'Künstler*in', 'is_system' => true, 'is_active' => true],
+        )->restore();
+    }
+
     /**
      * Tab wie aus der Erstfassung der Vorlage angelegt (deutsche Namen).
      *
      * @return array{tab: ProjectTab, rows: array<string, ComponentInTab>}
      */
-    private function firstVersionTab(): array
+    private function firstVersionTab(string $locale = 'de'): array
     {
         $firstVersion = (new ReflectionClassConstant(ProductionInquiryTemplateUpgrade::class, 'FIRST_VERSION'))->getValue();
         $tab = ProjectTab::factory()->create();
@@ -34,11 +45,11 @@ final class ProductionInquiryTemplateUpgradeTest extends TestCase
                     ['name' => 'Dokumente', 'data' => []],
                 )
                 : Component::create([
-                    'name' => __($name, [], 'de'),
+                    'name' => __($name, [], $locale),
                     'type' => $type,
                     'data' => $type === 'Title'
-                        ? ['title' => __($name, [], 'de'), 'title_size' => 16]
-                        : ['label' => __($name, [], 'de'), 'text' => '', 'placeholder' => 'alt'],
+                        ? ['title' => __($name, [], $locale), 'title_size' => 16]
+                        : ['label' => __($name, [], $locale), 'text' => '', 'placeholder' => 'alt'],
                 ]);
             $rows[$name ?? $type] = ComponentInTab::create([
                 'project_tab_id' => $tab->id,
@@ -131,5 +142,39 @@ final class ProductionInquiryTemplateUpgradeTest extends TestCase
 
         $this->assertSame(1, app(ProductionInquiryTemplateUpgrade::class)->run());
         $this->assertSame(0, app(ProductionInquiryTemplateUpgrade::class)->run());
+    }
+
+    #[Test]
+    public function tabs_created_in_english_stay_english(): void
+    {
+        ['rows' => $rows] = $this->firstVersionTab('en');
+
+        app(ProductionInquiryTemplateUpgrade::class)->run();
+
+        $this->assertSame('Contact & company', $rows['Contact & company']->component->fresh()->name);
+        $this->assertSame(
+            ['Yes', 'No', 'Other'],
+            array_column($rows['Wardrobe service required?']->component->fresh()->data['options'], 'value'),
+        );
+    }
+
+    #[Test]
+    public function replaced_text_area_in_a_print_layout_does_not_break_the_upgrade(): void
+    {
+        ['tab' => $tab, 'rows' => $rows] = $this->firstVersionTab();
+        $legacyId = $rows['Names of everyone arriving']->component_id;
+        $layout = \Artwork\Modules\Project\Models\ProjectPrintLayout::create([
+            'name' => 'Abfrage', 'description' => '', 'columns_header' => 1, 'columns_body' => 1,
+            'columns_footer' => 1, 'order' => 1, 'user_id' => $this->adminUser()->id,
+            'notes' => ['header' => [], 'footer' => []],
+        ]);
+        \Artwork\Modules\Project\Models\PrintLayoutComponents::create([
+            'project_print_layout_id' => $layout->id, 'component_id' => $legacyId,
+            'type' => 'body', 'row' => 1, 'position' => 1,
+        ]);
+
+        $this->assertSame(1, app(ProductionInquiryTemplateUpgrade::class)->run());
+        $this->assertNotNull(Component::query()->find($legacyId));
+        $this->assertContains(ProjectTabComponentEnum::CRM_CONTACT_LIST->value, $this->typesInTab($tab));
     }
 }

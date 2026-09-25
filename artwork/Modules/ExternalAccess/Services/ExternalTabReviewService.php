@@ -52,18 +52,18 @@ class ExternalTabReviewService
     /**
      * Einladende Person (bzw. wer den Tab freigegeben hat) oder alle mit Schreibrecht im Projekt.
      */
+    /**
+     * Alle mit Schreibrecht im Projekt; außerdem, wer genau diesen Tab freigegeben hat — aber nur,
+     * solange die Person das Projekt noch sehen darf (nicht, wer den Zugang einmal für ein anderes
+     * Projekt angelegt hat).
+     */
     public function canReview(User $user, ExternalAccessScope $scope, Project $project): bool
     {
         if ($user->can('update', $project)) {
             return true;
         }
 
-        $inviterIds = array_filter([
-            (int) $scope->granted_by_user_id,
-            (int) $scope->externalAccess?->invited_by_user_id,
-        ]);
-
-        return in_array((int) $user->id, $inviterIds, true);
+        return (int) $scope->granted_by_user_id === (int) $user->id && $user->can('view', $project);
     }
 
     /**
@@ -82,7 +82,12 @@ class ExternalTabReviewService
             ])->save();
 
             $project = $scope->project()->firstOrFail();
-            $this->crmContactService->markReviewedForExternal($project, $scope->externalAccess, $reviewer);
+            $this->crmContactService->markReviewedForExternal(
+                $project,
+                $scope->projectTab()->firstOrFail(),
+                $scope->externalAccess,
+                $reviewer,
+            );
             $this->logProjectHistory($scope, $reviewer, 'Data of external person {0} in tab {1} was confirmed');
         });
 

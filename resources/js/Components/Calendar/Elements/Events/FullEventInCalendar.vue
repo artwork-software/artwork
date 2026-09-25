@@ -18,9 +18,9 @@
       isEmphasized ? 'border-[rgba(0,0,0,0.18)]' : (isDimmed ? 'border-dashed border-border text-[#3F424A]' : 'border-black/5'),
       isHeightFull ? 'h-full' : (expandDays ? '' : 'h-full'),
       pageProps.auth.user.calendar_daily_view ? 'overflow-y-auto' : '',
-      // Tagesansicht: überlappende Termine teilen sich die Raumspalte — schmale Kacheln
+      // Tages-/Wochenansicht: schmale Kacheln (überlappende Termine, schmale Raumspalten)
       // blenden unter 10rem Details aus (Info-Icon) statt über den Rand hinauszuwachsen
-      isInDailyView ? '@container/event overflow-x-hidden' : '',
+      adaptsToTileWidth ? '@container/event overflow-x-hidden' : '',
       multiEdit ? 'relative' : ''
     ]"
     >
@@ -353,7 +353,7 @@
 
                         <!-- Schmale Tagesansicht-Kachel: alles außer Name + Zeit steckt hinter dem Info-Icon -->
                         <component
-                            v-if="isInDailyView"
+                            v-if="adaptsToTileWidth"
                             :is="IconInfoCircle"
                             class="mt-1 hidden size-5 cursor-pointer @max-[10rem]/event:block"
                             stroke-width="1.5"
@@ -1038,6 +1038,10 @@ const props = defineProps({
     firstProjectShiftTabId: { type: [Number, String], default: null },
     isHeightFull: { type: Boolean, default: false },
     isInDailyView: { type: Boolean, default: false },
+    // Kachel reagiert per Container-Query auf ihre Breite (Wochenansicht); nur setzen,
+    // wenn der Elternblock eine feste Breite vorgibt — inline-size-Containment lässt
+    // Shrink-to-fit-Container sonst auf 0 kollabieren
+    adaptToTileWidth: { type: Boolean, default: false },
     verifierForEventTypIds: { type: Array, default: [] },
     isPlanning: { type: Boolean, default: false },
     // "YYYY-MM-DD" der Tageszelle, in der die Kachel gespiegelt wird —
@@ -1054,6 +1058,7 @@ const innerLineHeight = computed(() => (contentZoom.value > 1 ? "1.25rem" : prop
 // die Zoom-Schwellen (Info-Icon statt Inhalt, ausgeblendete Detailzeilen) greifen dort nicht.
 const showFullContent = computed(() => props.isInDailyView || zoom_factor.value > 0.6);
 const showDetailRows = computed(() => props.isInDailyView || zoom_factor.value >= 0.8);
+const adaptsToTileWidth = computed(() => props.isInDailyView || props.adaptToTileWidth);
 
 const resolvedFormattedDates = computed(() =>
     props.event.formattedDates ?? computeEventFormattedDates(props.event.start, props.event.end)

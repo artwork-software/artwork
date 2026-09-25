@@ -25,7 +25,7 @@
     <div
         v-else
         class="w-full rounded-sm select-none border font-lexend"
-        :class="isInDailyView ? '@container/shift overflow-hidden' : ''"
+        :class="adaptsToTileWidth ? '@container/shift overflow-hidden' : ''"
         :style="{ backgroundColor: `${craftColor}${isFollowUpDay ? '30' : '50'}`, borderColor: isFollowUpDay ? '#d1d5db' : craftColor, zoom: contentZoom }"
     >
         <div class="flex flex-col w-full">
@@ -50,7 +50,7 @@
             </div>
 
             <!-- Schmale Tagesansicht-Kachel: Zeit rutscht aus der Pill in eine eigene Zeile -->
-            <div v-if="isInDailyView" class="hidden ml-1.5 truncate text-[10px] font-semibold tabular-nums @max-[8rem]/shift:block">
+            <div v-if="adaptsToTileWidth" class="hidden ml-1.5 truncate text-[10px] font-semibold tabular-nums @max-[8rem]/shift:block">
                 <span v-if="dayRole === 'end' || dayRole === 'middle'" class="opacity-60">→</span>{{ displayStartTime }}-{{ displayEndTime }}<span v-if="dayRole === 'start' || dayRole === 'middle'" class="opacity-60">→</span>
             </div>
 
@@ -176,7 +176,14 @@ const props = defineProps({
         type: Boolean,
         default: false,
     },
+    // Schmale Kachel (Wochenansicht mit schmaler Raumspalte): Zeit in eigene Zeile per Container-Query
+    adaptToTileWidth: {
+        type: Boolean,
+        default: false,
+    },
 });
+
+const adaptsToTileWidth = computed(() => props.isInDailyView || props.adaptToTileWidth);
 
 const emit = defineEmits(["shift-edited"]);
 

@@ -122,7 +122,7 @@
                                 <input
                                     type="color"
                                     class="h-7 w-10 cursor-pointer rounded border border-border-subtle bg-white p-0.5"
-                                    :value="textData.bar_color || '#FFB6E1'"
+                                    :value="textData.bar_color || '#EB7A3D'"
                                     @input="textData.bar_color = $event.target.value.toUpperCase()"
                                 />
                                 {{ $t('Custom color') }}
@@ -893,9 +893,9 @@ async function searchUsersAndTeams() {
     }
 }
 
-/* Überschrift: Balkenfarben (Vorschläge; Rosa = Abfrageformular-Vorlage) */
+/* Überschrift: Balkenfarben (Vorschläge; zuerst Artwork-Orange wie in den Systemvorlagen) */
 const { getTextColorBasedOnBackground } = useColorHelper()
-const barColorSwatches = ['#FFB6E1', '#BFE3F5', '#C8EBC9', '#FFE3A3', '#E3D5F7', '#E5E7EB']
+const barColorSwatches = ['#EB7A3D', '#27233C', '#FFB6E1', '#BFE3F5', '#C8EBC9', '#FFE3A3', '#E5E7EB']
 
 /* Felder, die ältere Komponenten eines Typs noch nicht in data haben (Bearbeiten zeigt sie trotzdem an) */
 const FIELD_DEFAULTS_BY_TYPE = {

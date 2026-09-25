@@ -8487,5 +8487,21 @@
     "Section bar": "Section bar",
     "Text below the heading": "Text below the heading",
     "Optional explanatory text shown directly below the heading, e.g. an introduction to the section.": "Optional explanatory text shown directly below the heading, e.g. an introduction to the section.",
-    "With a color the heading is shown as a colored bar across the full width, with some space above it. This divides a tab into clearly separated sections.": "With a color the heading is shown as a colored bar across the full width, with some space above it. This divides a tab into clearly separated sections."
+    "With a color the heading is shown as a colored bar across the full width, with some space above it. This divides a tab into clearly separated sections.": "With a color the heading is shown as a colored bar across the full width, with some space above it. This divides a tab into clearly separated sections.",
+    "Including sidebar: {names}": "Including sidebar: {names}",
+    "Tab with the descriptive texts of the project (short description, website text, press) and the project documents, divided into colored sections. A good starting point to see how a tab can be structured.": "Tab with the descriptive texts of the project (short description, website text, press) and the project documents, divided into colored sections. A good starting point to see how a tab can be structured.",
+    "Descriptions": "Descriptions",
+    "Texts about the project for internal use and for publication.": "Texts about the project for internal use and for publication.",
+    "A few sentences about the project, e.g. for internal overviews.": "A few sentences about the project, e.g. for internal overviews.",
+    "Website text": "Website text",
+    "Text for the website and the program booklet.": "Text for the website and the program booklet.",
+    "Press & public relations": "Press & public relations",
+    "Notes for press and public relations work.": "Notes for press and public relations work.",
+    "Contracts, riders, images and other files for this project.": "Contracts, riders, images and other files for this project.",
+    "Tab with the schedule of the project: create and edit all events of the project in a table.": "Tab with the schedule of the project: create and edit all events of the project in a table.",
+    "Tab with the checklists and to-dos of the project.": "Tab with the checklists and to-dos of the project.",
+    "Tab with the shifts of the project and a sidebar with the relevant dates, contact persons and general information for shift planning.": "Tab with the shifts of the project and a sidebar with the relevant dates, contact persons and general information for shift planning.",
+    "Tab with the budget of the project and a sidebar with the budget information.": "Tab with the budget of the project and a sidebar with the budget information.",
+    "Budget information": "Budget information",
+    "Tab for comments on the project.": "Tab for comments on the project."
 }

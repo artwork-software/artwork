@@ -7,6 +7,7 @@ use Artwork\Modules\Project\Enum\ProjectTabComponentEnum;
 use Artwork\Modules\Project\Models\Component;
 use Artwork\Modules\Project\Models\ComponentInTab;
 use Artwork\Modules\Project\Models\ProjectTab;
+use Artwork\Modules\Project\Models\ProjectTabSidebarTab;
 use Illuminate\Database\DatabaseManager;
 use InvalidArgumentException;
 
@@ -31,8 +32,12 @@ class ProjectTabTemplateService
             'key' => $template['key'],
             'name' => __($template['name']),
             'description' => __($template['description']),
-            'prerequisites' => __($template['prerequisites']),
+            'prerequisites' => ($template['prerequisites'] ?? '') !== '' ? __($template['prerequisites']) : '',
             'component_count' => count($template['components']),
+            'sidebar_tabs' => array_map(
+                static fn (array $sidebarTab): string => __($sidebarTab['name']),
+                $template['sidebar'] ?? [],
+            ),
             'components' => array_map(static fn (array $component): array => [
                 'type' => $component['type'] ?? $component['special'],
                 'name' => isset($component['special'])
@@ -73,11 +78,15 @@ class ProjectTabTemplateService
                     'project_tab_id' => $tab->id,
                     'component_id' => $component->id,
                     'order' => $order++,
-                    // Dokument-/Sammel-Komponenten zeigen die Inhalte DIESES Tabs
-                    'scope' => isset($definition['special']) ? [$tab->id] : [],
+                    // Dokument-/Sammel-Komponenten zeigen die Inhalte DIESES Tabs (Werkzeuge: kein Tab-Bezug)
+                    'scope' => isset($definition['special']) && ($definition['scope'] ?? 'tab') === 'tab'
+                        ? [$tab->id]
+                        : [],
                     'note' => isset($definition['note']) && $definition['note'] !== '' ? __($definition['note']) : null,
                 ]);
             }
+
+            $this->createSidebarTabs($tab, $template['sidebar'] ?? []);
 
             return $tab;
         });
@@ -152,10 +161,66 @@ class ProjectTabTemplateService
         return $component;
     }
 
+    /**
+     * @param array<int, array<string, mixed>> $sidebarTabs
+     */
+    private function createSidebarTabs(ProjectTab $tab, array $sidebarTabs): void
+    {
+        foreach (array_values($sidebarTabs) as $index => $sidebarTab) {
+            /** @var ProjectTabSidebarTab $sidebar */
+            $sidebar = $tab->sidebarTabs()->create([
+                'name' => __($sidebarTab['name']),
+                'order' => $index + 1,
+            ]);
+
+            $order = 1;
+            foreach ($sidebarTab['components'] as $type) {
+                $component = $type === ProjectTabComponentEnum::SEPARATOR->value
+                    ? $this->sidebarSeparator()
+                    : $this->resolveSpecialComponent($type);
+                if ($component === null) {
+                    continue;
+                }
+                $sidebar->componentsInSidebar()->create([
+                    'component_id' => $component->id,
+                    'order' => $order++,
+                ]);
+            }
+        }
+    }
+
+    /**
+     * Trennlinie für Seitenleisten: die vorhandene Standard-Trenn-Komponente, sonst neu angelegt.
+     */
+    private function sidebarSeparator(): Component
+    {
+        /** @var Component $separator */
+        $separator = Component::query()
+            ->where('type', ProjectTabComponentEnum::SEPARATOR->value)
+            ->orderByRaw("name = 'Separator 10 Pixel' desc")
+            ->orderBy('id')
+            ->first()
+            ?? Component::query()->create([
+                'name' => 'Separator 10 Pixel',
+                'type' => ProjectTabComponentEnum::SEPARATOR->value,
+                'data' => ['height' => '10', 'showLine' => true],
+                'special' => false,
+                'sidebar_enabled' => true,
+                'permission_type' => 'allSeeAndEdit',
+            ]);
+
+        return $separator;
+    }
+
     private static function specialLabel(string $type): string
     {
         return match ($type) {
             ProjectTabComponentEnum::PROJECT_DOCUMENTS->value => 'Documents',
+            ProjectTabComponentEnum::BULK_EDIT->value => 'Schedule',
+            ProjectTabComponentEnum::CHECKLIST->value => 'ChecklistComponent',
+            ProjectTabComponentEnum::SHIFT_TAB->value => 'ShiftTab',
+            ProjectTabComponentEnum::BUDGET->value => 'BudgetTab',
+            ProjectTabComponentEnum::COMMENT_TAB->value => 'CommentTab',
             default => $type,
         };
     }

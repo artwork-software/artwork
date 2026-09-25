@@ -19,13 +19,34 @@ use Artwork\Modules\Project\Enum\ProjectTabComponentEnum;
  *      ['special' => Enum-Wert, 'note' => ...]  → vorhandene System-Komponente
  *  - Bei CRM-Kontaktlisten nennt data.contact_type_slugs die erlaubten Kontakttypen; beim Anwenden werden
  *    daraus die IDs der Instanz (contact_type_ids).
+ *  - System-Komponenten zeigen standardmäßig die Inhalte DIESES Tabs (scope = Tab); 'scope' => 'none'
+ *    für Werkzeuge ohne Tab-Bezug (Ablaufplan, Schichten, Budget).
+ *  - optional 'sidebar' => [['name' => ..., 'components' => [Enum-Werte]]] → Seitenleisten-Reiter.
+ *
+ * Die Standard-Tabs (STANDARD_TABS) legt auch der Seeder einer neuen Installation aus diesen Vorlagen an.
  */
 final class ProjectTabTemplateCatalog
 {
+    public const PROJECT_INFORMATION = 'project_information';
+    public const SCHEDULE = 'schedule';
+    public const CHECKLISTS = 'checklists';
+    public const SHIFTS = 'shifts';
+    public const BUDGET = 'budget';
+    public const COMMENTS = 'comments';
     public const PRODUCTION_INQUIRY = 'production_inquiry';
 
-    /** Farbe der Abschnittsbalken der Vorlage (Rosa wie im Abfrageformular des Kunden). */
-    public const PRODUCTION_INQUIRY_BAR_COLOR = '#FFB6E1';
+    /** Tabs einer neuen Installation (DefaultComponentSeeder), in dieser Reihenfolge. */
+    public const STANDARD_TABS = [
+        self::PROJECT_INFORMATION,
+        self::SCHEDULE,
+        self::CHECKLISTS,
+        self::SHIFTS,
+        self::BUDGET,
+        self::COMMENTS,
+    ];
+
+    /** Farbe der Abschnittsbalken in allen Systemvorlagen: Artwork-Orange (Halbbogen im Logo). */
+    public const SECTION_BAR_COLOR = '#EB7A3D';
 
     /**
      * @return array<string, array<string, mixed>>
@@ -33,6 +54,45 @@ final class ProjectTabTemplateCatalog
     public static function all(): array
     {
         return [
+            self::PROJECT_INFORMATION => self::projectInformation(),
+            self::SCHEDULE => self::toolTab(
+                self::SCHEDULE,
+                'Schedule',
+                'Tab with the schedule of the project: create and edit all events of the project in a table.',
+                ProjectTabComponentEnum::BULK_EDIT,
+                scoped: false,
+            ),
+            self::CHECKLISTS => self::toolTab(
+                self::CHECKLISTS,
+                'Checklists',
+                'Tab with the checklists and to-dos of the project.',
+                ProjectTabComponentEnum::CHECKLIST,
+                scoped: true,
+            ),
+            self::SHIFTS => self::toolTab(
+                self::SHIFTS,
+                'Shifts',
+                'Tab with the shifts of the project and a sidebar with the relevant dates, contact persons '
+                    . 'and general information for shift planning.',
+                ProjectTabComponentEnum::SHIFT_TAB,
+                scoped: false,
+                sidebar: self::shiftSidebar(),
+            ),
+            self::BUDGET => self::toolTab(
+                self::BUDGET,
+                'Budget',
+                'Tab with the budget of the project and a sidebar with the budget information.',
+                ProjectTabComponentEnum::BUDGET,
+                scoped: false,
+                sidebar: self::budgetSidebar(),
+            ),
+            self::COMMENTS => self::toolTab(
+                self::COMMENTS,
+                'Comments',
+                'Tab for comments on the project.',
+                ProjectTabComponentEnum::COMMENT_TAB,
+                scoped: true,
+            ),
             self::PRODUCTION_INQUIRY => self::productionInquiry(),
         ];
     }
@@ -43,6 +103,138 @@ final class ProjectTabTemplateCatalog
     public static function find(string $key): ?array
     {
         return self::all()[$key] ?? null;
+    }
+
+    /**
+     * Projektinformationen: Texte zum Projekt in einem Abschnitt, Dokumente in einem zweiten — Beispiel für
+     * die Gliederung mit Abschnittsbalken, Hinweisen und Trennlinien.
+     *
+     * @return array<string, mixed>
+     */
+    private static function projectInformation(): array
+    {
+        $area = static fn (string $name, string $label, string $note): array => [
+            'type' => ProjectTabComponentEnum::TEXT_AREA->value,
+            'name' => $name,
+            'data' => ['label' => $label, 'text' => '', 'placeholder' => ''],
+            'note' => $note,
+        ];
+
+        return [
+            'key' => self::PROJECT_INFORMATION,
+            'name' => 'Project Information',
+            'description' => 'Tab with the descriptive texts of the project (short description, website text, '
+                . 'press) and the project documents, divided into colored sections. A good starting point to see '
+                . 'how a tab can be structured.',
+            'prerequisites' => '',
+            'components' => [
+                self::sectionTitle('Descriptions', 'Texts about the project for internal use and for publication.'),
+                // Name bleibt „Short Description“: Demo-/Inhalts-Seeder finden die Komponente darüber
+                $area(
+                    'Short Description',
+                    'Short description',
+                    'A few sentences about the project, e.g. for internal overviews.',
+                ),
+                $area('Website text', 'Website text', 'Text for the website and the program booklet.'),
+                $area(
+                    'Press & public relations',
+                    'Press & public relations',
+                    'Notes for press and public relations work.',
+                ),
+                self::sectionTitle('Documents'),
+                [
+                    'special' => ProjectTabComponentEnum::PROJECT_DOCUMENTS->value,
+                    'note' => 'Contracts, riders, images and other files for this project.',
+                ],
+            ],
+            'sidebar' => self::projectInformationSidebar(),
+        ];
+    }
+
+    /**
+     * Werkzeug-Tab mit einer System-Komponente (Ablaufplan, To-do-Listen, Schichten, Budget, Kommentare).
+     *
+     * @param array<int, array<string, mixed>>|null $sidebar
+     * @return array<string, mixed>
+     */
+    private static function toolTab(
+        string $key,
+        string $name,
+        string $description,
+        ProjectTabComponentEnum $component,
+        bool $scoped,
+        ?array $sidebar = null,
+    ): array {
+        return [
+            'key' => $key,
+            'name' => $name,
+            'description' => $description,
+            'prerequisites' => '',
+            'components' => [
+                ['special' => $component->value, 'scope' => $scoped ? 'tab' : 'none'],
+            ],
+            'sidebar' => $sidebar ?? self::projectInformationSidebar(),
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private static function sectionTitle(string $name, string $subtitle = ''): array
+    {
+        return [
+            'type' => ProjectTabComponentEnum::TITLE->value,
+            'name' => $name,
+            'data' => [
+                'title' => $name,
+                'title_size' => 15,
+                'subtitle' => $subtitle,
+                'bar_color' => self::SECTION_BAR_COLOR,
+            ],
+        ];
+    }
+
+    /**
+     * @return array<int, array<string, mixed>>
+     */
+    private static function projectInformationSidebar(): array
+    {
+        return [[
+            'name' => 'Project Information',
+            'components' => [
+                ProjectTabComponentEnum::PROJECT_TEAM->value,
+                ProjectTabComponentEnum::SEPARATOR->value,
+                ProjectTabComponentEnum::PROJECT_ATTRIBUTES->value,
+            ],
+        ]];
+    }
+
+    /**
+     * @return array<int, array<string, mixed>>
+     */
+    private static function shiftSidebar(): array
+    {
+        return [[
+            'name' => 'Shift information',
+            'components' => [
+                ProjectTabComponentEnum::RELEVANT_DATES_FOR_SHIFT_PLANNING->value,
+                ProjectTabComponentEnum::SEPARATOR->value,
+                ProjectTabComponentEnum::SHIFT_CONTACT_PERSONS->value,
+                ProjectTabComponentEnum::SEPARATOR->value,
+                ProjectTabComponentEnum::GENERAL_SHIFT_INFORMATION->value,
+            ],
+        ]];
+    }
+
+    /**
+     * @return array<int, array<string, mixed>>
+     */
+    private static function budgetSidebar(): array
+    {
+        return [[
+            'name' => 'Budget information',
+            'components' => [ProjectTabComponentEnum::BUDGET_INFORMATIONS->value],
+        ]];
     }
 
     /**
@@ -81,14 +273,7 @@ final class ProjectTabTemplateCatalog
     private static function productionInquiry(): array
     {
         $section = static fn (string $name, string $subtitle = '', ?string $legacy = null): array => [
-            'type' => ProjectTabComponentEnum::TITLE->value,
-            'name' => $name,
-            'data' => [
-                'title' => $name,
-                'title_size' => 15,
-                'subtitle' => $subtitle,
-                'bar_color' => self::PRODUCTION_INQUIRY_BAR_COLOR,
-            ],
+            ...self::sectionTitle($name, $subtitle),
             'legacy' => $legacy ?? $name,
         ];
         $text = static fn (string $name, string $note = '', ?string $legacy = null): array => [

@@ -101,27 +101,29 @@
             <p v-if="actionError" class="mt-2 text-xs text-danger">{{ actionError }}</p>
 
             <!-- Aktionen -->
-            <div v-if="canWrite && contactTypes.length && !limitReached" class="mt-2">
-                <div v-if="!showSearch" class="flex flex-wrap items-center gap-x-4 gap-y-1">
-                    <button
+            <div v-if="canWrite && contactTypes.length && !limitReached" class="mt-3">
+                <div v-if="!showSearch" class="flex flex-wrap items-center gap-2">
+                    <BaseUIButton
                         v-for="type in contactTypes"
                         :key="type.id"
                         type="button"
-                        class="inline-flex items-center gap-x-1.5 text-xs text-accent-600 transition-colors hover:text-accent-700"
+                        variant="secondary"
+                        size="sm"
+                        :icon="IconUserPlus"
                         @click="openCreate(type)"
                     >
-                        <IconUserPlus class="size-4" stroke-width="1.5" />
                         {{ $t('Add {type}', { type: $t(type.name) }) }}
-                    </button>
-                    <button
+                    </BaseUIButton>
+                    <BaseUIButton
                         v-if="canLinkExisting"
                         type="button"
-                        class="inline-flex items-center gap-x-1.5 text-xs text-accent-600 transition-colors hover:text-accent-700"
+                        variant="secondary"
+                        size="sm"
+                        :icon="IconLink"
                         @click="showSearch = true"
                     >
-                        <IconLink class="size-4" stroke-width="1.5" />
                         {{ $t('Link existing CRM contact') }}
-                    </button>
+                    </BaseUIButton>
                 </div>
                 <div v-else class="relative">
                     <div class="flex items-center gap-x-2">
@@ -169,6 +171,7 @@ import axios from 'axios'
 import { router, usePage } from '@inertiajs/vue3'
 import debounce from 'lodash.debounce'
 import BaseInput from '@/Artwork/Inputs/BaseInput.vue'
+import BaseUIButton from '@/Artwork/Buttons/BaseUIButton.vue'
 import InfoButtonComponent from '@/Pages/Projects/Tab/Components/InfoButtonComponent.vue'
 import CrmContactFormModal from '@/Pages/Projects/Tab/Components/CrmContactFormModal.vue'
 import { usePermission } from '@/Composeables/Permission.js'

@@ -87,7 +87,7 @@ final class ProductionInquiryTemplateUpgradeTest extends TestCase
 
         // Abschnittsüberschriften bekommen den Balken
         $sectionTitle = $rows['Contact & company']->component->fresh();
-        $this->assertSame(ProjectTabTemplateCatalog::PRODUCTION_INQUIRY_BAR_COLOR, $sectionTitle->data['bar_color']);
+        $this->assertSame(ProjectTabTemplateCatalog::SECTION_BAR_COLOR, $sectionTitle->data['bar_color']);
 
         // Textbereich „Anreisende Personen“ ohne Inhalt ist durch die Kontaktliste ersetzt
         $this->assertNull(Component::query()->find($rows['Names of everyone arriving']->component_id));

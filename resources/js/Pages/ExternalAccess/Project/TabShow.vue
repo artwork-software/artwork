@@ -44,9 +44,10 @@
                         :project-id="project.id"
                         :tab-id="tab.id"
                         :scope="effectiveScope"
-                        :class="section.items.length ? 'mb-6' : ''"
+                        :class="section.items.length ? 'mb-5' : ''"
                     />
-                    <div class="space-y-6">
+                    <!-- Dünne Linie zwischen den Bausteinen (Frage + Feld + Hinweis), damit klar ist, was zusammengehört -->
+                    <div class="divide-y divide-border-subtle">
                         <ExternalComponentRenderer
                             v-for="comp in section.items"
                             :key="comp.component_in_tab_id"
@@ -54,6 +55,7 @@
                             :project-id="project.id"
                             :tab-id="tab.id"
                             :scope="effectiveScope"
+                            class="py-5 first:pt-0 last:pb-0"
                         />
                     </div>
                 </section>

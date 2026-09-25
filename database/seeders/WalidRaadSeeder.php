@@ -112,7 +112,7 @@ class WalidRaadSeeder extends Seeder
 
         /** @var Component $shortDescriptionComponent */
         $shortDescriptionComponent = Component::query()
-            ->where('name', 'Short Description')
+            ->whereIn('name', ['Short Description', __('Short Description')])
             ->where('type', 'TextArea')
             ->first();
 
@@ -126,7 +126,7 @@ class WalidRaadSeeder extends Seeder
 
 
         $firstChecklistTabWithChecklistComponentId = ProjectTab::query()
-            ->where('name', 'Checklists')
+            ->whereIn('name', ['Checklists', __('Checklists')])
             ->whereRelation('components.component', 'type', ProjectTabComponentEnum::CHECKLIST->value)
             ->first()
             ->id;

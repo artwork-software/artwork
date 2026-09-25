@@ -38,7 +38,9 @@
                 @close="onInviteModalClosed"
             />
             <div v-for="(component, idx) in currentTab.components" :key="component?.id ?? component?.component?.id ?? idx" :class="outerWidthClass(component.component?.type)">
-                <div :class="innerWidthClass(component.component?.type)">
+                <!-- Eingebaute Trennlinie zwischen Eingabe-Bausteinen, volle Breite wie die Abschnittsbalken -->
+                <div v-if="hasGroupDivider(idx)" class="mt-3 mb-4 border-t border-border-subtle" aria-hidden="true"></div>
+                <div :class="innerWidthClass(component.component)">
                 <Component
                     v-if="canSeeComponent(component.component) && componentMapping[component.component?.type]"
                     :is="componentMapping[component.component?.type]"
@@ -331,8 +333,32 @@ const outerWidthClass = (componentType) => {
     return TOOL_COMPONENT_TYPES.includes(componentType) ? 'artwork-anchored-page' : 'artwork-anchored-column';
 };
 
-const innerWidthClass = (componentType) => {
-    return PROSE_COMPONENT_TYPES.includes(componentType) ? 'max-w-2xl' : '';
+const innerWidthClass = (component) => {
+    // Überschrift mit Abschnittsbalken läuft über die ganze Spaltenbreite („Kapitel“)
+    if (component?.type === 'Title' && component?.data?.bar_color) {
+        return '';
+    }
+    return PROSE_COMPONENT_TYPES.includes(component?.type) ? 'max-w-2xl' : '';
+};
+
+/*
+ * Eingebaute Trennlinie zwischen aufeinanderfolgenden Eingabe-Bausteinen (Beschriftung + Feld + Hinweis),
+ * damit klar ist, was zusammengehört. Keine Linie direkt unter einer Überschrift/einem Trenner und
+ * nicht über unsichtbaren Komponenten.
+ */
+const hasGroupDivider = (idx) => {
+    const current = props.currentTab.components[idx]?.component;
+    if (!current || !showsInlineHint(current.type) || !canSeeComponent(current)) {
+        return false;
+    }
+    for (let previousIdx = idx - 1; previousIdx >= 0; previousIdx--) {
+        const previous = props.currentTab.components[previousIdx]?.component;
+        if (!previous || !canSeeComponent(previous) || !componentMapping[previous.type]) {
+            continue;
+        }
+        return showsInlineHint(previous.type);
+    }
+    return false;
 };
 
 onMounted(() => {

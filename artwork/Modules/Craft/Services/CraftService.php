@@ -12,6 +12,9 @@ use Artwork\Modules\User\Models\User;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Facades\Log;
+use Artwork\Modules\Shift\Services\ShiftDeletionService;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 class CraftService
 {
@@ -211,11 +214,37 @@ class CraftService
         }
     }
 
+    /**
+     * Pivot-Tabellen mit Fremdschlüssel auf crafts OHNE Löschregel — sie blockierten das Löschen
+     * (500, nachdem die Planer:innen schon entfernt waren).
+     */
+    private const BLOCKING_CRAFT_PIVOT_TABLES = [
+        'craft_managers',
+        'craft_inventory_categories',
+        'users_assigned_crafts',
+        'freelancer_assigned_crafts',
+        'service_provider_assigned_crafts',
+    ];
+
     public function delete(Craft $craft): void
     {
         $previousPlanerIds = $craft->craftShiftPlaner()->pluck('users.id')->all();
-        $this->craftRepository->detachUsers($craft);
-        $this->craftRepository->delete($craft);
+
+        // Schichten des Gewerks sauber über den gemeinsamen Lösch-Weg entfernen (Benachrichtigung
+        // der Besetzung festgeschriebener Schichten, Konflikte, Projekt-Tageszuordnungen,
+        // Regel-Neuprüfung, Live-Update) — sonst löschte die DB-Kaskade sie still mit.
+        app(ShiftDeletionService::class)->deleteMany($craft->shifts()->get());
+
+        DB::transaction(function () use ($craft): void {
+            $this->craftRepository->detachUsers($craft);
+            foreach (self::BLOCKING_CRAFT_PIVOT_TABLES as $table) {
+                if (Schema::hasTable($table)) {
+                    DB::table($table)->where('craft_id', $craft->id)->delete();
+                }
+            }
+            $this->craftRepository->delete($craft);
+        });
+
         // Craft-Planer-Status steckt im gecachten shift_workflow_flags-Prop
         User::forgetCachedShareDataForIds($previousPlanerIds);
     }

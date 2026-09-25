@@ -66,6 +66,8 @@ use App\Http\Controllers\PresetTimelineTimeController;
 use App\Http\Controllers\ProjectComponentValueController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\ProjectCrmContactController;
+use App\Http\Controllers\ProjectComponentCrmContactController;
+use Artwork\Modules\ExternalAccess\Http\Controllers\ExternalTabReviewController;
 use App\Http\Controllers\ProjectDayAssignmentController;
 use App\Http\Controllers\ProjectFileController;
 use App\Http\Controllers\ProjectManagementBuilderController;
@@ -135,6 +137,7 @@ use Artwork\Modules\Event\Http\Controllers\EventPropertyController;
 use Artwork\Modules\ExternalIssue\Http\Controllers\ExternalIssueController;
 use Artwork\Modules\GlobalNotification\Http\Controller\GlobalNotificationController;
 use Artwork\Modules\IndividualTimes\Http\Controllers\IndividualTimeSeriesController;
+use Artwork\Modules\Shift\Http\Controllers\ShiftTrashController;
 use Artwork\Modules\IndividualTimes\Http\Controllers\IndividualTimeSubjectsSearchController;
 use Artwork\Modules\InternalIssue\Http\Controllers\InternalIssueController;
 use Artwork\Modules\Inventory\Http\Controllers\MaterialIssueLogController;
@@ -901,6 +904,38 @@ Route::group(['middleware' => ['auth:sanctum']], function (): void {
     Route::delete('/projects/{project}/crm-contacts/{crmContact}', [ProjectCrmContactController::class, 'destroy'])
         ->name('projects.crm-contacts.destroy');
 
+    // Komponente „CRM-Kontaktliste“ (Autorisierung im Controller: view / writeComponent / CRM-Zugang)
+    Route::prefix('/projects/{project}/components/{component}/crm-contacts')
+        ->name('projects.components.crm-contacts.')
+        ->controller(ProjectComponentCrmContactController::class)
+        ->group(function (): void {
+            Route::get('/', 'index')->name('index');
+            Route::get('/search', 'search')->name('search');
+            Route::get('/mask', 'mask')->name('mask');
+            Route::post('/', 'store')->name('store');
+            Route::post('/link', 'link')->name('link');
+            Route::patch('/{crmContact}', 'update')->name('update');
+            Route::delete('/{crmContact}', 'destroy')->name('destroy');
+        });
+
+    // Auswahl der Kontakttypen in den Komponenten-Einstellungen (nur Stammdaten der Typen)
+    Route::get('/components/crm-contact-list/contact-types', [
+        ProjectComponentCrmContactController::class,
+        'contactTypeOptions',
+    ])->name('components.crm-contact-list.contact-types');
+
+    // Externe eines Tabs: Status neben „Externen zu diesem Tab einladen“, Bestätigen/Zurückgeben
+    Route::get('/projects/{project}/tabs/{projectTab}/externals', [ExternalTabReviewController::class, 'index'])
+        ->name('projects.tabs.externals.index');
+    Route::post('/projects/{project}/tabs/{projectTab}/externals/{scope}/confirm', [
+        ExternalTabReviewController::class,
+        'confirm',
+    ])->name('projects.tabs.externals.confirm');
+    Route::post('/projects/{project}/tabs/{projectTab}/externals/{scope}/return', [
+        ExternalTabReviewController::class,
+        'returnForRevision',
+    ])->name('projects.tabs.externals.return');
+
     Route::get('/projects/{project}/history', [ProjectController::class, 'history'])
         ->name('projects.history')
         ->middleware(CanViewProject::class);
@@ -1155,6 +1190,15 @@ Route::group(['middleware' => ['auth:sanctum']], function (): void {
     })->name('events.requests');
     Route::get('/trashedEvents', [EventController::class, 'getTrashed'])
         ->middleware('can:can access trash')->name('events.trashed');
+    // Papierkorb "Schichten": eigenständige Schichten (Dienstplanung + Gewerks-Scoping im Controller/Service)
+    Route::get('/trashedShifts', [ShiftTrashController::class, 'index'])
+        ->middleware('can:can access trash')->name('shifts.trashed');
+    Route::patch('/trashedShifts/{shiftId}/restore', [ShiftTrashController::class, 'restore'])
+        ->middleware('can:can access trash')->whereNumber('shiftId')->name('shifts.trashed.restore');
+    Route::delete('/trashedShifts/{shiftId}/force', [ShiftTrashController::class, 'forceDelete'])
+        ->middleware('can:can access trash')->whereNumber('shiftId')->name('shifts.trashed.force');
+    Route::delete('/trashedShifts/force-all', [ShiftTrashController::class, 'forceDeleteAll'])
+        ->middleware('can:can access trash')->name('shifts.trashed.force-all');
 
     // Event Api
     Route::post('/events', [EventController::class, 'storeEvent'])->name('events.store');
@@ -1283,11 +1327,12 @@ Route::group(['middleware' => ['auth:sanctum']], function (): void {
         // POST:: shifts.updateIndividualShiftTime
         Route::post('/update/individual/shift/time', [ShiftController::class, 'updateIndividualShiftTime'])
             ->name('shifts.updateIndividualShiftTime');
-
-        // post shifts.updateShortDescription
-        Route::post('/update/short/description', [ShiftController::class, 'updateShortDescription'])
-            ->name('shifts.updateShortDescription');
     });
+
+    // Eigene Schichtnotiz dürfen auch Personen ohne Planungsrecht bearbeiten — die Prüfung
+    // (eigene Zuweisung ODER Planungsrecht + Gewerk) liegt im Controller
+    Route::post('/shift-plan/update/short/description', [ShiftController::class, 'updateShortDescription'])
+        ->name('shifts.updateShortDescription');
 
     // Bewusst OHNE 'can plan shifts': eingeplante Personen bestätigen ihre
     // eigene Zuweisung selbst; Proxy-Erfassung wird im Controller autorisiert.
@@ -2491,6 +2536,12 @@ Route::group(['middleware' => ['auth:sanctum']], function (): void {
             [ShiftSettingsController::class, 'updateShiftConfirmationSettings']
         )->middleware('shift-settings-area:general,edit')
             ->name('shift.settings.update.shift-confirmation');
+
+        Route::patch(
+            'shift-settings/updateProjectAssignmentsEnabled',
+            [ShiftSettingsController::class, 'updateProjectAssignmentsEnabled']
+        )->middleware('shift-settings-area:general,edit')
+            ->name('shift.settings.update.project-assignments-enabled');
 
         Route::patch(
             'shift-settings/updateNightTimes',

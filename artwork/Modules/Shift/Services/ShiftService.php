@@ -8,6 +8,7 @@ use Artwork\Modules\Change\Services\ChangeService;
 use Artwork\Modules\Craft\Models\Craft;
 use Artwork\Modules\Craft\Services\CraftService;
 use Artwork\Modules\Event\Models\Event;
+use Artwork\Modules\Availability\Models\AvailabilitiesConflict;
 use Artwork\Modules\Freelancer\Models\Freelancer;
 use Artwork\Modules\Notification\Enums\NotificationEnum;
 use Artwork\Modules\Notification\Services\NotificationService;
@@ -27,6 +28,7 @@ use Artwork\Modules\Shift\Repositories\ShiftRepository;
 use Artwork\Modules\Shift\Services\ShiftNotificationLinkService;
 use Artwork\Modules\User\Models\User;
 use Artwork\Modules\User\Services\WorkingHourCacheService;
+use Artwork\Modules\Vacation\Models\VacationConflict;
 use Artwork\Modules\Vacation\Services\VacationConflictService;
 use Carbon\Carbon;
 use Illuminate\Auth\AuthManager;
@@ -81,7 +83,7 @@ class ShiftService
             'start' => $start->format('H:i'),
             'end' => $end->format('H:i'),
             'break_minutes' => $data['break_minutes'],
-            'description' => $data['description'],
+            'description' => $data['description'] ?? null,
             'room_id' => $data['room_id'],
             'project_id' => $this->resolveExistingProjectId($data['project_id'] ?? null),
             'shift_group_id' => $data['shift_group_id'] ?? null,
@@ -125,7 +127,7 @@ class ShiftService
             'start' => $start->format('H:i'),
             'end' => $end->format('H:i'),
             'break_minutes' => $data['break_minutes'],
-            'description' => $data['description'],
+            'description' => $data['description'] ?? null,
             'room_id' => $data['room_id'],
         ]);
 
@@ -236,7 +238,7 @@ class ShiftService
      * Die Zuweisungen verschwinden sonst per Cascade ohne restoreForShiftRemoval und
      * superseded_by_shift_id wird per nullOnDelete geleert — die Zuordnung wäre endgültig weg.
      */
-    private function restoreSupersededProjectDayAssignments(Shift $shift): void
+    public function restoreSupersededProjectDayAssignments(Shift $shift): void
     {
         $employables = ProjectDayAssignment::onlyTrashed()
             ->where('superseded_by_shift_id', $shift->id)
@@ -554,6 +556,95 @@ class ShiftService
                 }
             }
         }
+
+        $this->followShiftWithIndividualTimesAndResetConfirmations($shift, $originalStartDate);
+    }
+
+    /**
+     * Nach einer Zeit-/Datumsänderung der Schicht:
+     *  - individuelle Zeiten (oben bewusst nicht überschrieben) wandern bei einem Datumswechsel um
+     *    dieselbe Tagesdifferenz mit — sonst blieben sie am alten Tag hängen und die Stunden zählten
+     *    dort (Soll/Ist, Kalender-Abo), während die Schicht woanders liegt;
+     *  - abgegebene Zu-/Absagen beziehen sich auf die alte Zeit und werden zurückgesetzt.
+     */
+    private function followShiftWithIndividualTimesAndResetConfirmations(Shift $shift, mixed $originalStartDate): void
+    {
+        $dayOffset = (int) round(
+            Carbon::parse($originalStartDate)->startOfDay()
+                ->diffInDays(Carbon::parse($shift->start_date)->startOfDay(), false)
+        );
+        $newStartDate = Carbon::parse($shift->start_date)->toDateString();
+        $confirmationService = app(ShiftWorkerConfirmationService::class);
+
+        ShiftWorker::query()
+            ->where('shift_id', $shift->id)
+            ->get()
+            ->each(static function (ShiftWorker $pivot) use ($dayOffset, $newStartDate, $confirmationService): void {
+                $pivotStartDate = Carbon::parse($pivot->start_date ?? $newStartDate);
+                if ($dayOffset !== 0 && $pivotStartDate->toDateString() !== $newStartDate) {
+                    $pivot->update([
+                        'start_date' => $pivotStartDate->copy()->addDays($dayOffset)->toDateString(),
+                        'end_date' => Carbon::parse($pivot->end_date ?? $pivotStartDate)
+                            ->addDays($dayOffset)
+                            ->toDateString(),
+                    ]);
+                }
+
+                $confirmationService->resetConfirmation($pivot);
+            });
+    }
+
+    /**
+     * Urlaubs-/Verfügbarkeitskonflikte einer festgeschriebenen Schicht neu ermitteln (nach Zeit-/
+     * Datumsänderung oder Wiederherstellung) — alte Konflikte bezogen sich auf die alte Zeit bzw.
+     * sind inzwischen entstanden.
+     */
+    public function recheckAvailabilityConflicts(Shift $shift): void
+    {
+        VacationConflict::query()->where('shift_id', $shift->id)->get()->each->delete();
+        AvailabilitiesConflict::query()->where('shift_id', $shift->id)->get()->each->delete();
+
+        foreach ([...$shift->users()->get(), ...$shift->freelancer()->get()] as $worker) {
+            $user = $worker instanceof User ? $worker : null;
+            $freelancer = $worker instanceof Freelancer ? $worker : null;
+            $this->vacationConflictService->checkVacationConflictsShifts(
+                $shift,
+                $this->notificationService,
+                $user,
+                $freelancer
+            );
+            $this->availabilityConflictService->checkAvailabilityConflictsShifts(
+                $shift,
+                $this->notificationService,
+                $user,
+                $freelancer
+            );
+        }
+    }
+
+    /**
+     * Projekt-Tageszuordnungen der Besetzung nach Projekt- oder Datumswechsel neu bewerten: durch diese
+     * Schicht verdrängte Zuordnungen zurückholen und für das neue Projekt/die neuen Tage neu verdrängen.
+     */
+    public function resyncProjectDayAssignments(Shift $shift): void
+    {
+        $projectDayAssignmentService = app(ProjectDayAssignmentService::class);
+
+        ShiftWorker::query()
+            ->where('shift_id', $shift->id)
+            ->get(['employable_type', 'employable_id'])
+            ->each(static function (ShiftWorker $pivot) use ($projectDayAssignmentService, $shift): void {
+                $projectDayAssignmentService->restoreForShiftRemoval(
+                    $shift,
+                    $pivot->employable_type,
+                    (int) $pivot->employable_id
+                );
+                $projectDayAssignmentService->supersedeForShiftAssignment(
+                    $shift,
+                    $pivot->employable_type,
+                    (int) $pivot->employable_id
+                );
+            });
     }
 
     /**

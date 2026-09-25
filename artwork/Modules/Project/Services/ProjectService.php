@@ -112,22 +112,7 @@ class ProjectService
                 /** @todo für Jason:
                  * search muss raus wenn das mit Meilisearch klappt
                  */
-                ->when(
-                    strlen($search) > 0,
-                    function (Builder $builder) use ($search): void {
-                        $builder->where(function (Builder $query) use ($search): void {
-                            $like = '%' . $search . '%';
-
-                            $query
-                                ->where('name', 'like', $like)
-                                ->orWhere('artists', 'like', $like)
-                                ->orWhereHas(
-                                    'crmContacts',
-                                    fn(Builder $crmQuery) => $crmQuery->where('display_name', 'like', $like)
-                                );
-                        });
-                    }
-                )
+                ->tap(fn(Builder $builder) => $this->projectRepository->applyOverviewSearch($builder, $search))
                 ->when(
                     $useSort,
                     function (Builder $builder) use ($sortEnum): void {
@@ -282,17 +267,13 @@ class ProjectService
                         }
                     }
                 )
-                // Gepinnte Projekte laufen normal oben in der eigenen Pinned-Sektion und werden
-                // deshalb aus der Liste ausgeschlossen. Bei aktiver SUCHE zeigt die Übersicht
-                // keine Pinned-Sektion (Abnahme PROJ-01: Pins ohne Treffer verwirren) — dann
-                // müssen matchende gepinnte Projekte als normale Treffer erscheinen.
-                // trim() wie in ProjectController::index — sonst zeigt eine reine
-                // Leerzeichen-Suche gepinnte Projekte doppelt (Sektion UND Liste)
-                ->when(trim($search) === '', function (Builder $builder): void {
-                    $builder->where(function (Builder $builder): void {
-                        $builder->whereJsonDoesntContain('pinned_by_users', Auth::id())
-                            ->orWhereNull('pinned_by_users');
-                    });
+                // Gepinnte Projekte stehen immer in der eigenen Pinned-Sektion (bei aktiver Suche
+                // auf die Treffer gefiltert) und werden deshalb aus der Liste ausgeschlossen. So
+                // greifen Übersichtsfilter und Paginierung nicht auf Pins — ein gepinntes Projekt,
+                // das zur Suche passt, ist immer zu sehen.
+                ->where(function (Builder $builder): void {
+                    $builder->whereJsonDoesntContain('pinned_by_users', Auth::id())
+                        ->orWhereNull('pinned_by_users');
                 })
                 ->without(['shiftRelevantEventTypes']);
         };
@@ -950,9 +931,9 @@ class ProjectService
             ->all();
     }
 
-    public function pinnedProjects(int $userId): Collection
+    public function pinnedProjects(int $userId, string $search = ''): Collection
     {
-        return $this->projectRepository->pinnedProjects($userId);
+        return $this->projectRepository->pinnedProjects($userId, $search);
     }
 
     public function attachManagementUsersWithoutSelf(Project $project, IlluminateCollection $userIds, int $authId): void

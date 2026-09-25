@@ -7,7 +7,8 @@ use Artwork\Core\FileHandling\Upload\ArtworkFileTypes;
 use Artwork\Modules\GeneralSettings\Services\GeneralSettingsService;
 use Artwork\Modules\System\FileHandling\MimeTypeList;
 use Artwork\Modules\System\FileHandling\Service\FileHandlingFrontendService;
-use Illuminate\Http\Request;
+use App\Http\Requests\UpdateFileSettingsRequest;
+use Illuminate\Http\RedirectResponse;
 
 class FileSettingsController extends Controller
 {
@@ -30,8 +31,10 @@ class FileSettingsController extends Controller
         ]);
     }
 
-    public function store(Request $request): void
+    public function store(UpdateFileSettingsRequest $request): RedirectResponse
     {
         $this->generalSettingsService->updateAllowedFileMimeTypesFromRequest($request);
+
+        return redirect()->back();
     }
 }

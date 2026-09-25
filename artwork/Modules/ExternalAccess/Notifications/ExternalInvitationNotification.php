@@ -20,6 +20,8 @@ class ExternalInvitationNotification extends Notification implements ShouldQueue
         public readonly string $plainToken,
         public readonly ?User $invitedBy = null,
         public readonly ?Project $invitedFromProject = null,
+        /** false = reine Tab-Einladung (Projektdaten ausfüllen), true = auch eigene Stammdaten pflegen */
+        public readonly bool $maintainsOwnData = true,
     ) {
     }
 
@@ -63,6 +65,7 @@ class ExternalInvitationNotification extends Notification implements ShouldQueue
                 'invitedByName' => $invitedByName,
                 'projectName' => $this->invitedFromProject?->name,
                 'lifetimeMinutes' => $lifetimeMinutes,
+                'maintainsOwnData' => $this->maintainsOwnData || $this->invitedFromProject === null,
             ]);
     }
 }

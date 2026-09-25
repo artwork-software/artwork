@@ -1,8 +1,8 @@
 <template>
-    <div class="rounded-2xl border border-border-subtle bg-white p-5">
+    <div>
         <div class="flex items-center justify-between mb-3">
             <div>
-                <label class="block text-sm font-medium text-text-muted">{{ label }}</label>
+                <label class="block text-sm font-semibold text-text">{{ label }}</label>
                 <p v-if="editable" class="text-xs text-text-subtle mt-0.5">
                     {{ $t('Upload documents such as PDFs, images or logos. You can remove your own uploads.') }}
                 </p>

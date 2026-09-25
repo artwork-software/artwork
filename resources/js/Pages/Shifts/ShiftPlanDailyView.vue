@@ -627,6 +627,7 @@
                 :initial-project-id="initialProjectIdResolved"
                 :initial-project="props.project ?? page.props?.currentProject ?? null"
                 @close="showAddShiftByPresetOrGroupModal = false"
+                @added="applySavedShift($event)"
             />
 
             <EventComponent
@@ -806,8 +807,11 @@ const projectAssignmentActionKey = ref<string | null>(null)
 const projectAssignmentError = ref('')
 let projectAssignmentEchoChannel: any = null
 
+// Globaler Schalter (Schichteinstellungen) — aus = Feature komplett ausgeblendet
+const projectAssignmentsEnabled = computed(() => page.props.project_assignments_enabled !== false)
+
 const showProjectAssignments = computed(() => {
-    if (!props.isInProjectView || !props.project?.id) return false
+    if (!projectAssignmentsEnabled.value || !props.isInProjectView || !props.project?.id) return false
     const settings = page.props.shift_plan_daily_settings
         ?? page.props.shift_plan_settings
         ?? (page.props.auth as any)?.user?.calendar_settings
@@ -818,7 +822,7 @@ const showProjectAssignments = computed(() => {
 const hasAnyProjectAssignments = computed(() => projectDayAssignments.value.length > 0)
 
 const loadProjectDayAssignments = async () => {
-    if (!props.isInProjectView || !props.project?.id) return
+    if (!projectAssignmentsEnabled.value || !props.isInProjectView || !props.project?.id) return
     try {
         const { data } = await axios.get(route('projects.day-assignments', { project: props.project.id }))
         projectDayAssignments.value = data.assignments ?? []
@@ -2043,6 +2047,22 @@ function startShiftCalendarListener() {
 /** Speicher-Antwort einer Schicht sofort ins Raster übernehmen (auch für SingleShiftInDailyShiftView) */
 const applySavedShift = (savedShift: any) => {
     shiftCalendarListener?.applyShiftUpdate(savedShift)
+    reloadIfShiftRoomNotLoaded(savedShift)
+}
+
+/**
+ * Neu angelegte/verschobene Schicht in einem Raum, der hier nicht geladen ist (z.B. „leere Räume
+ * ausblenden" oder Raumfilter): der Listener kann sie nirgends einfügen — Plan nachladen statt sie
+ * still zu verwerfen.
+ */
+async function reloadIfShiftRoomNotLoaded(savedShift: any) {
+    if (savedShift?.removed) return
+    const shifts = Array.isArray(savedShift?.shifts) ? savedShift.shifts : [savedShift?.shift]
+    const loadedRoomIds = new Set((shiftPlanCopy.value || []).map((room: any) => room.roomId ?? room.id))
+    const missesRoom = shifts.some((shift: any) => shift?.roomId != null && !loadedRoomIds.has(shift.roomId))
+    if (!missesRoom) return
+    await initializeDailyShiftPlan()
+    startShiftCalendarListener()
 }
 provide("applySavedShift", applySavedShift)
 
@@ -2081,7 +2101,7 @@ const closeAddShiftModal = (success = false, savedShift: any = null) => {
         && shiftToEdit.value === null
         && dayForShiftAdd.value === null
 
-    if (success && savedShift?.shift) {
+    if (success && (savedShift?.shift || savedShift?.shifts)) {
         applySavedShift(savedShift)
     }
     showAddShiftModal.value = false
@@ -2267,7 +2287,7 @@ onMounted(async () => {
 
     startShiftCalendarListener()
 
-    if (props.isInProjectView && props.project?.id) {
+    if (projectAssignmentsEnabled.value && props.isInProjectView && props.project?.id) {
         projectAssignmentEchoChannel = Echo.private(`project.${props.project.id}`)
         projectAssignmentEchoChannel.listen('.project-day-assignments.changed', loadProjectDayAssignments)
     }

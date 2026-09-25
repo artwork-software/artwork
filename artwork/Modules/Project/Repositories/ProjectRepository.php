@@ -166,9 +166,32 @@ class ProjectRepository extends BaseRepository
             ->get();
     }
 
-    public function pinnedProjects(int $userId): Collection
+    /**
+     * Freitextsuche der Projektübersicht (Name, Künstler*innen, verknüpfte CRM-Kontakte).
+     * Eine Quelle für Liste und Pinned-Sektion, damit beide dieselben Treffer liefern.
+     */
+    public function applyOverviewSearch(EloquentBuilder $builder, string $search): EloquentBuilder
     {
-        return Project::query()
+        if (trim($search) === '') {
+            return $builder;
+        }
+
+        return $builder->where(function (EloquentBuilder $query) use ($search): void {
+            $like = '%' . $search . '%';
+
+            $query
+                ->where('name', 'like', $like)
+                ->orWhere('artists', 'like', $like)
+                ->orWhereHas(
+                    'crmContacts',
+                    fn(EloquentBuilder $crmQuery) => $crmQuery->where('display_name', 'like', $like)
+                );
+        });
+    }
+
+    public function pinnedProjects(int $userId, string $search = ''): Collection
+    {
+        return $this->applyOverviewSearch(Project::query(), $search)
             ->whereNotNull('pinned_by_users')
             ->whereJsonContains('pinned_by_users', [$userId])
             ->without(['shiftRelevantEventTypes'])

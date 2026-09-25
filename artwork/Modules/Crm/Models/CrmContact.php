@@ -29,6 +29,7 @@ class CrmContact extends Model
         'is_active',
         'entity_type',
         'entity_id',
+        'created_by_external_access_id',
     ];
 
     protected $casts = [
@@ -81,6 +82,19 @@ class CrmContact extends Model
     public function externalAccess(): HasOne
     {
         return $this->hasOne(\Artwork\Modules\ExternalAccess\Models\ExternalAccess::class, 'crm_contact_id');
+    }
+
+    /**
+     * Externer Zugang, der diesen Kontakt über eine CRM-Kontaktliste im Projekt angelegt hat.
+     */
+    public function createdByExternalAccess(): BelongsTo
+    {
+        return $this->belongsTo(
+            \Artwork\Modules\ExternalAccess\Models\ExternalAccess::class,
+            'created_by_external_access_id',
+            'id',
+            'createdByExternalAccess'
+        );
     }
 
     public function externalAccesses(): HasMany

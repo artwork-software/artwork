@@ -589,7 +589,17 @@ export function useShiftCalendarListener(newShiftPlanData, { onWorkersNeedReload
      * späteren Broadcast.
      */
     function applyShiftUpdate(data) {
+        // Antwort eines Anlegens (gleiche Form wie der multi-shifts-created-Broadcast)
+        if (Array.isArray(data?.shifts)) {
+            onMultiShiftsCreated(data);
+            return;
+        }
         if (!data?.shift) return;
+        // Antwort eines Löschens (gleiche Form wie der DestroyShift-Broadcast)
+        if (data.removed) {
+            removeShiftFromRoomAndEvents({ ...data, roomId: data.roomId ?? data.shift.roomId });
+            return;
+        }
         updateShiftInRoomAndEvents(data, data.roomId ?? data.shift.roomId, { reloadWorkers: true });
     }
 

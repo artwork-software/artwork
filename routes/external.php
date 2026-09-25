@@ -1,6 +1,7 @@
 <?php
 
 use Artwork\Modules\ExternalAccess\Http\Controllers\ExternalComponentValueController;
+use Artwork\Modules\ExternalAccess\Http\Controllers\ExternalCrmContactListController;
 use Artwork\Modules\ExternalAccess\Http\Controllers\ExternalCrmController;
 use Artwork\Modules\ExternalAccess\Http\Controllers\ExternalDashboardController;
 use Artwork\Modules\ExternalAccess\Http\Controllers\ExternalLoginController;
@@ -64,6 +65,38 @@ Route::middleware('external')
             ->middleware(['external.scoped:write', 'throttle:external'])
             ->whereNumber('file')
             ->name('project.tab.documents.destroy');
+
+        // CRM-Kontaktliste im freigegebenen Tab (eigene Kontakte anlegen/bearbeiten/entfernen)
+        Route::get('projects/{project}/tabs/{tab}/components/{component}/crm-contacts', [
+            ExternalCrmContactListController::class,
+            'index',
+        ])
+            ->middleware('external.scoped:read')
+            ->name('project.tab.crm-contacts.index');
+        Route::get('projects/{project}/tabs/{tab}/components/{component}/crm-contacts/mask', [
+            ExternalCrmContactListController::class,
+            'mask',
+        ])
+            ->middleware('external.scoped:write')
+            ->name('project.tab.crm-contacts.mask');
+        Route::post('projects/{project}/tabs/{tab}/components/{component}/crm-contacts', [
+            ExternalCrmContactListController::class,
+            'store',
+        ])
+            ->middleware(['external.scoped:write', 'throttle:external'])
+            ->name('project.tab.crm-contacts.store');
+        Route::patch('projects/{project}/tabs/{tab}/components/{component}/crm-contacts/{crmContact}', [
+            ExternalCrmContactListController::class,
+            'update',
+        ])
+            ->middleware(['external.scoped:write', 'throttle:external'])
+            ->name('project.tab.crm-contacts.update');
+        Route::delete('projects/{project}/tabs/{tab}/components/{component}/crm-contacts/{crmContact}', [
+            ExternalCrmContactListController::class,
+            'destroy',
+        ])
+            ->middleware(['external.scoped:write', 'throttle:external'])
+            ->name('project.tab.crm-contacts.destroy');
 
         Route::post('projects/{project}/tabs/{tab}/submit', [ExternalTabSubmissionController::class, 'store'])
             ->middleware(['external.scoped:write', 'throttle:external'])

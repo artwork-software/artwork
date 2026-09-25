@@ -18,6 +18,7 @@ use Artwork\Core\Console\Commands\SendDeadlineNotificationsCommand;
 use Artwork\Core\Console\Commands\SendExternalIssueReturnDueNotificationsCommand;
 use Artwork\Core\Console\Commands\TrackShiftKpisCommand;
 use Artwork\Core\Console\Commands\MarkPayableOvertimeCommand;
+use Artwork\Core\Console\Commands\PurgeTrashCommand;
 use Artwork\Modules\Crm\Console\Commands\CleanupCrmImportFilesCommand;
 use Artwork\Core\Console\Commands\SendNotificationsEmailSummariesCommand;
 use Artwork\Core\Console\Commands\SendScheduledNotificationsCommand;
@@ -64,6 +65,9 @@ class Kernel extends ConsoleKernel
         // BI-Exportdateien bleiben für Re-Downloads liegen und werden nach 24 h entfernt
         $schedule->command(CleanupBiExportsCommand::class)->dailyAt('03:30')->runInBackground();
         $schedule->command(CleanupExportPdfsCommand::class)->dailyAt('03:40')->runInBackground();
+        // Papierkorb: nach 30 Tagen endgültig löschen (so kündigt es die Papierkorb-Seite an) —
+        // über dieselben Wege wie "Endgültig löschen", nicht per Modell-Pruning
+        $schedule->command(PurgeTrashCommand::class)->dailyAt('03:15')->withoutOverlapping()->runInBackground();
         $schedule->command(CalculateDailyWorkingHoursOfUsers::class)->dailyAt('23:59')->runInBackground();
         // DP-18: spielzeitbezogene Kennzahlen nach der Arbeitszeitberechnung tracken (Tag ist dann abgeschlossen)
         $schedule->command(TrackShiftKpisCommand::class)->dailyAt('00:30')->runInBackground();

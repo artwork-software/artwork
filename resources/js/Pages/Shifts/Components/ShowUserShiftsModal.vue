@@ -110,8 +110,8 @@
                         </div>
                     </section>
 
-                    <!-- Projekte (Zuordnungen + Wünsche an diesem Tag) -->
-                    <section class="space-y-3">
+                    <!-- Projekte (Zuordnungen + Wünsche an diesem Tag); globaler Schalter in den Schichteinstellungen -->
+                    <section v-if="projectAssignmentsEnabled" class="space-y-3">
                         <div class="flex items-center justify-between">
                             <div>
                                 <h3 class="text-xs font-semibold tracking-wide text-text-subtle uppercase">
@@ -1023,6 +1023,7 @@ const emit = defineEmits(['closed', 'delete', 'desiresReload', 'openHistory']);
 
 const { t } = useI18n();
 const page = usePage();
+const projectAssignmentsEnabled = computed(() => page.props.project_assignments_enabled !== false);
 const { can, hasAdminRole } = usePermission(page.props);
 
 // Verfügbarkeits-Typen

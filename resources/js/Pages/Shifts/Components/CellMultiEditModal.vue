@@ -1,7 +1,9 @@
 <template>
     <ArtworkBaseModal
         :title="$t('Multi-entry')"
-        :description="$t('Apply availability, individual times and a project assignment to all selected days at once.')"
+        :description="projectAssignmentsEnabled
+            ? $t('Apply availability, individual times and a project assignment to all selected days at once.')
+            : $t('Apply availability and individual times to all selected days at once.')"
         modal-size="sm:max-w-xl"
         @close="$emit('close', { saved: false })"
     >
@@ -186,8 +188,8 @@
                 </div>
             </section>
 
-            <!-- Projekt zuordnen -->
-            <section class="space-y-3 rounded-xl border border-border-subtle bg-white px-3.5 py-3">
+            <!-- Projekt zuordnen (globaler Schalter in den Schichteinstellungen) -->
+            <section v-if="projectAssignmentsEnabled" class="space-y-3 rounded-xl border border-border-subtle bg-white px-3.5 py-3">
                 <div>
                     <h4 class="text-xs font-semibold tracking-wide text-text-subtle uppercase">
                         {{ $t('Assign project') }}
@@ -341,7 +343,7 @@ import {
     ListboxOption,
     ListboxOptions,
 } from '@headlessui/vue';
-import { useForm } from '@inertiajs/vue3';
+import { useForm, usePage } from '@inertiajs/vue3';
 import axios from 'axios';
 import { colorForProjectId, formatAssignmentDate } from '@/Composeables/UseProjectDayAssignments.js';
 
@@ -351,6 +353,8 @@ import BaseTextarea from '@/Artwork/Inputs/BaseTextarea.vue';
 import BaseUIButton from '@/Artwork/Buttons/BaseUIButton.vue';
 import ArtworkBaseModal from '@/Artwork/Modals/ArtworkBaseModal.vue';
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
+
+const projectAssignmentsEnabled = computed(() => usePage().props.project_assignments_enabled !== false);
 
 const props = defineProps({
     multiEditCellByDayAndUser: {

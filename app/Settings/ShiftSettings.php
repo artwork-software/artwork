@@ -12,6 +12,7 @@ use Spatie\LaravelSettings\Settings;
  * @property bool $hide_uncommitted_shifts_from_own_roster
  * @property bool $shift_confirmation_enabled
  * @property bool $shift_confirmation_in_history
+ * @property bool $project_assignments_enabled
  */
 class ShiftSettings extends Settings
 {
@@ -36,6 +37,11 @@ class ShiftSettings extends Settings
 
     // Zu-/Absagen zusätzlich im Schichtverlauf anzeigen (geloggt wird immer).
     public bool $shift_confirmation_in_history;
+
+    // Globaler Schalter für Projektzuordnungen/Wünsche im Dienstplan. Aus =
+    // sämtliche Buttons/Anzeigen ausgeblendet, keine neuen Zuordnungen;
+    // bestehende Daten bleiben erhalten und sind beim Wiedereinschalten zurück.
+    public bool $project_assignments_enabled;
 
     public static function group(): string
     {

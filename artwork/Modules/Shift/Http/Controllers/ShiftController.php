@@ -3,7 +3,6 @@
 namespace Artwork\Modules\Shift\Http\Controllers;
 
 use App\Http\Controllers\Controller;
-use Artwork\Modules\Shift\Events\MultiShiftCreateInShiftPlan;
 use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\Shift\Models\SingleShiftPreset;
 use Artwork\Modules\Shift\Models\ShiftQualification;
@@ -13,6 +12,8 @@ use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Artwork\Modules\Craft\Services\CraftScopeService;
+use Artwork\Modules\Shift\Support\CreatedShiftsPublisher;
 
 class ShiftController extends Controller
 {
@@ -24,17 +25,14 @@ class ShiftController extends Controller
     public function createFromPresets(Request $request): RedirectResponse
     {
         $data = $request->validate([
-            'room_id'        => ['required', 'integer'],
-            'day'            => ['required'],
+            'room_id'        => ['required', 'integer', 'exists:rooms,id'],
+            'day'            => ['required', 'date'],
             'preset_ids'     => ['required', 'array', 'min:1'],
             'preset_ids.*'   => ['integer', 'exists:single_shift_presets,id'],
             'project_id'     => ['nullable', 'integer', 'exists:projects,id'],
         ]);
 
         $dayDate = Carbon::parse($data['day']);
-        if (!$dayDate) {
-            return redirect()->back()->with('error', __('Invalid date. Expected format: DD.MM.YYYY.'));
-        }
 
         $presetIds = collect($data['preset_ids'])
             ->filter()
@@ -50,6 +48,9 @@ class ShiftController extends Controller
                 'shiftsQualifications',
             ])
             ->get();
+
+        // Nur Vorlagen planbarer Gewerke — sonst konnte man über Vorlagen Schichten für jedes Gewerk anlegen
+        app(CraftScopeService::class)->assertCanPlan($request->user(), $presets->pluck('craft_id'));
 
         $createdShifts = collect();
         // Übersprungene Vorlagen (ohne gültige Zeiten oder ohne Gewerk) für die Rückmeldung
@@ -139,7 +140,7 @@ class ShiftController extends Controller
             );
         }
 
-        broadcast(new MultiShiftCreateInShiftPlan($createdShifts));
+        CreatedShiftsPublisher::publish($createdShifts);
 
         // „12 Schichten angelegt." + optional „3 Vorlagen übersprungen: …" (globaler Flash-Toast)
         $createdCount = $createdShifts->count();

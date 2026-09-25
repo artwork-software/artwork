@@ -295,12 +295,12 @@ class ProjectController extends Controller
         $componentData = Component::whereIn('id', $components->pluck('component_id'))->get()
             ->keyBy('id');
 
-        // Bei aktiver Suche keine Pinned-Sektion: Pins ohne Suchtreffer verwirren (Abnahme
-        // PROJ-01); matchende gepinnte Projekte erscheinen dann als normale Treffer in der
-        // Liste (siehe ProjectService::getProjects).
-        $pinnedProjects = trim($request->string('query')->toString()) === ''
-            ? $this->projectService->pinnedProjects($this->authManager->id())
-            : new \Illuminate\Database\Eloquent\Collection();
+        // Bei aktiver Suche zeigt die Pinned-Sektion nur passende Pins (Abnahme PROJ-01: Pins
+        // ohne Treffer verwirren). Pins stehen nie in der Liste, s. ProjectService::getProjects.
+        $pinnedProjects = $this->projectService->pinnedProjects(
+            $this->authManager->id(),
+            $request->string('query')->toString()
+        );
 
         $pinnedProjectsComponents = $this->mapProjectsToComponents($pinnedProjects, $components, $componentData);
         $projectComponents = $this->mapProjectsToComponents($projects, $components, $componentData);

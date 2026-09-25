@@ -8515,5 +8515,8 @@
     "Tab for comments on the project.": "Tab for comments on the project.",
     "Allowed: {0} to {1} MB per file.": "Allowed: {0} to {1} MB per file.",
     ":invitedBy has invited you to fill in information for the project \":project\" at :company.": ":invitedBy has invited you to fill in information for the project \":project\" at :company.",
-    "No account or password is needed. Your entries are saved automatically; once everything is complete, submit them in the form.": "No account or password is needed. Your entries are saved automatically; once everything is complete, submit them in the form."
+    "No account or password is needed. Your entries are saved automatically; once everything is complete, submit them in the form.": "No account or password is needed. Your entries are saved automatically; once everything is complete, submit them in the form.",
+    "This access has no own CRM contact.": "This access has no own CRM contact.",
+    "The text is too long (max. :max characters).": "The text is too long (max. :max characters).",
+    "Please enter a link starting with http:// or https://.": "Please enter a link starting with http:// or https://."
 }

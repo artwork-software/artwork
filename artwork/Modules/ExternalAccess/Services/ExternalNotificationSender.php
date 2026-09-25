@@ -79,11 +79,12 @@ class ExternalNotificationSender
                 'title' => __(':count field(s) changed since the last submission', ['count' => $changedComponents]),
                 'href' => null,
             ],
-            [
+            ...($createdContacts > 0 ? [[
                 'type' => 'string',
                 'title' => __(':count contact(s) added', ['count' => $createdContacts]),
                 'href' => null,
-            ],
+            ]] : []),
+
             [
                 'type' => 'string',
                 'title' => __('Please review the data and confirm it in the tab or return it for revision.'),

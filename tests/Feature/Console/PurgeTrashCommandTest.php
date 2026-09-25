@@ -110,4 +110,77 @@ final class PurgeTrashCommandTest extends FeatureTestCase
         $this->assertDatabaseMissing('column_sub_position_row', ['id' => $cell->id]);
         $this->assertDatabaseMissing('columns', ['id' => $column->id]);
     }
+
+    #[Test]
+    public function rooms_with_live_events_or_shifts_are_skipped(): void
+    {
+        $roomWithEvent = Room::factory()->create();
+        Event::factory()->create(['room_id' => $roomWithEvent->id, 'project_id' => null]);
+        $roomWithShift = Room::factory()->create();
+        Shift::factory()->create(['event_id' => null, 'room_id' => $roomWithShift->id]);
+        $emptyRoom = Room::factory()->create();
+        foreach ([$roomWithEvent, $roomWithShift, $emptyRoom] as $room) {
+            $this->trashedDaysAgo($room, 31);
+        }
+
+        $this->artisan('artwork:purge-trash')
+            ->expectsOutputToContain('Räume: 2 übersprungen')
+            ->assertSuccessful();
+
+        $this->assertSoftDeleted('rooms', ['id' => $roomWithEvent->id]);
+        $this->assertSoftDeleted('rooms', ['id' => $roomWithShift->id]);
+        $this->assertDatabaseMissing('rooms', ['id' => $emptyRoom->id]);
+    }
+
+    #[Test]
+    public function projects_with_live_events_are_skipped(): void
+    {
+        Bus::fake([ForceDeleteProjectJob::class]);
+        $project = Project::factory()->create();
+        Event::factory()->create(['project_id' => $project->id]);
+        $this->trashedDaysAgo($project, 31);
+
+        $this->artisan('artwork:purge-trash')->expectsOutputToContain('Projekte: 1 übersprungen')->assertSuccessful();
+
+        Bus::assertNotDispatched(ForceDeleteProjectJob::class);
+    }
+
+    #[Test]
+    public function accounts_whose_number_is_in_use_again_are_skipped(): void
+    {
+        $reused = \Artwork\Modules\Budget\Models\BudgetManagementAccount::factory()->create(['account_number' => '4711']);
+        \Artwork\Modules\Budget\Models\BudgetManagementAccount::factory()->create(['account_number' => '4711']);
+        $unique = \Artwork\Modules\Budget\Models\BudgetManagementAccount::factory()->create(['account_number' => '9999']);
+        $this->trashedDaysAgo($reused, 31);
+        $this->trashedDaysAgo($unique, 31);
+
+        $this->artisan('artwork:purge-trash')->assertSuccessful();
+
+        $this->assertSoftDeleted('budget_management_accounts', ['id' => $reused->id]);
+        $this->assertDatabaseMissing('budget_management_accounts', ['id' => $unique->id]);
+    }
+
+    #[Test]
+    public function currencies_used_by_contracts_are_skipped_instead_of_failing(): void
+    {
+        $currency = \Artwork\Modules\Currency\Models\Currency::factory()->create();
+        \Artwork\Modules\Contract\Models\Contract::factory()->create(['currency_id' => $currency->id]);
+        $this->trashedDaysAgo($currency, 31);
+
+        $this->artisan('artwork:purge-trash')->assertSuccessful();
+
+        $this->assertSoftDeleted('currencies', ['id' => $currency->id]);
+    }
+
+    #[Test]
+    public function failures_make_the_command_fail(): void
+    {
+        $genre = Genre::factory()->create();
+        $this->trashedDaysAgo($genre, 31);
+        Genre::forceDeleting(static fn () => throw new \RuntimeException('kaputt'));
+
+        $this->artisan('artwork:purge-trash')->assertFailed();
+
+        $this->assertSoftDeleted('genres', ['id' => $genre->id]);
+    }
 }

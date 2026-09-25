@@ -76,6 +76,8 @@ class ExternalAccessManagementController extends Controller
     public function extendCrmAccess(ExtendCrmAccessRequest $request, ExternalAccess $access): RedirectResponse
     {
         $this->authorize('manage', $access);
+        // Reine Tab-Zugänge haben keinen eigenen Kontakt und damit keine CRM-Selbstpflege
+        abort_if($access->crm_contact_id === null, 422, __('This access has no own CRM contact.'));
 
         $this->service->extendCrmAccess($access, Carbon::parse($request->validated('expires_at')), $request->user());
 
@@ -171,12 +173,15 @@ class ExternalAccessManagementController extends Controller
         return [
             'id' => $access->id,
             'email' => $access->email,
+            'name' => $access->name,
+            'display_name' => $access->displayName(),
             'crm_contact_id' => $access->crm_contact_id,
-            'crm_contact' => [
-                'id' => $access->crmContact?->id,
-                'display_name' => $access->crmContact?->display_name,
-                'entity_type' => $access->crmContact?->entity_type,
-            ],
+            // null bei reinem Tab-Zugang (ohne eigenen Kontakt)
+            'crm_contact' => $access->crmContact ? [
+                'id' => $access->crmContact->id,
+                'display_name' => $access->crmContact->display_name,
+                'entity_type' => $access->crmContact->entity_type,
+            ] : null,
             'crm_access_expires_at' => $access->crm_access_expires_at?->toIso8601String(),
             'revoked_at' => $access->revoked_at?->toIso8601String(),
             'last_login_at' => $access->last_login_at?->toIso8601String(),
@@ -259,7 +264,7 @@ class ExternalAccessManagementController extends Controller
             return [
                 'type' => 'external',
                 'id' => $causer->id,
-                'label' => $causer->crmContact?->display_name ?? $causer->email,
+                'label' => $causer->displayName(),
                 'is_external' => true,
             ];
         }

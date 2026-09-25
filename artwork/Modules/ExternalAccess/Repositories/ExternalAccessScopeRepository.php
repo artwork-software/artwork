@@ -6,6 +6,7 @@ use Artwork\Core\Database\Models\Model;
 use Artwork\Core\Database\Models\Pivot;
 use Artwork\Core\Database\Repository\BaseRepository;
 use Artwork\Modules\ExternalAccess\Enums\ExternalAccessType;
+use Artwork\Modules\ExternalAccess\Enums\ExternalTabSubmissionStatus;
 use Artwork\Modules\ExternalAccess\Models\ExternalAccess;
 use Artwork\Modules\ExternalAccess\Models\ExternalAccessScope;
 use Carbon\CarbonInterface;
@@ -61,6 +62,12 @@ class ExternalAccessScopeRepository extends BaseRepository
                 'expiry_reminder_sent_at' => null,
             ],
         );
+
+        // Erneute Einladung in einen abgesendeten/bestätigten Tab: wieder zum Ausfüllen freigeben,
+        // sonst käme die Person per Einladungsmail in einen gesperrten Tab.
+        if ($scope->isLockedForExternal() && $accessType === ExternalAccessType::WRITE) {
+            $scope->forceFill(['submission_status' => ExternalTabSubmissionStatus::OPEN])->save();
+        }
 
         return $scope;
     }

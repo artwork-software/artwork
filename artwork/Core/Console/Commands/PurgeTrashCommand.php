@@ -33,6 +33,7 @@ use Carbon\CarbonInterface;
 use Illuminate\Console\Command;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\DB;
 use Throwable;
 
 /**
@@ -40,6 +41,10 @@ use Throwable;
  * endgültig gelöscht — über DENSELBEN Weg wie "Endgültig löschen" in der Oberfläche (Services/Jobs),
  * nicht per Modell-Pruning, das die Aufräumarbeiten (Schichten, Timelines, Budgetzellen,
  * Dateien …) überspringen würde. Ein fehlschlagender Eintrag wird gemeldet und übersprungen.
+ *
+ * Schutz lebender Daten: Einträge, deren endgültiges Löschen noch genutzte Daten verändern würde,
+ * werden übersprungen und nur gemeldet — Räume mit lebenden Terminen/Schichten, Projekte mit lebenden
+ * Terminen, Konten/Kostenstellen, deren Nummer wieder vergeben ist, Stammdaten, auf die Verträge zeigen.
  */
 class PurgeTrashCommand extends Command
 {
@@ -51,6 +56,8 @@ class PurgeTrashCommand extends Command
 
     private int $failures = 0;
 
+    private int $skipped = 0;
+
     public function handle(): int
     {
         $cutoff = now()->subDays(max(1, (int) $this->option('days')));
@@ -58,8 +65,22 @@ class PurgeTrashCommand extends Command
 
         // Reihenfolge wie in der Oberfläche sinnvoll: erst Inhalte (Schichten, Termine), dann Projekte,
         // Räume und Areale, zuletzt Stammdaten.
-        foreach ($this->categories() as $label => [$query, $purge]) {
-            $count = $this->purge($query($cutoff), $purge, $dryRun);
+        foreach ($this->categories() as $label => $category) {
+            [$query, $purge] = $category;
+            $guard = $category[2] ?? null;
+
+            $candidates = $query($cutoff);
+            $eligible = $guard !== null ? $guard(clone $candidates) : $candidates;
+
+            if ($guard !== null) {
+                $skippedHere = (clone $candidates)->count() - (clone $eligible)->count();
+                if ($skippedHere > 0) {
+                    $this->skipped += $skippedHere;
+                    $this->warn(sprintf('%s: %d übersprungen (noch in Verwendung)', $label, $skippedHere));
+                }
+            }
+
+            $count = $this->purge($eligible, $purge, $dryRun);
             if ($count > 0) {
                 $this->line(sprintf('%s: %d %s', $label, $count, $dryRun ? 'würden gelöscht' : 'gelöscht'));
             }
@@ -67,13 +88,21 @@ class PurgeTrashCommand extends Command
 
         if ($this->failures > 0) {
             $this->warn($this->failures . ' Einträge konnten nicht gelöscht werden (siehe Log).');
+
+            return self::FAILURE;
         }
 
         return self::SUCCESS;
     }
 
     /**
-     * @return array<string, array{0: callable(CarbonInterface): Builder, 1: callable(Model): void}>
+     * [Abfrage, Löschen, optional Schutzfilter (nur Einträge, deren Löschen keine lebenden Daten berührt)]
+     *
+     * @return array<string, array{
+     *     0: callable(CarbonInterface): Builder,
+     *     1: callable(Model): void,
+     *     2?: callable(Builder): Builder
+     * }>
      */
     private function categories(): array
     {
@@ -81,6 +110,10 @@ class PurgeTrashCommand extends Command
             static fn (CarbonInterface $cutoff): Builder => $modelClass::onlyTrashed()
                 ->where('deleted_at', '<=', $cutoff);
         $forceDelete = static fn (Model $model): mixed => $model->forceDelete();
+        $unreferencedBy = static fn (string $table, string $column, string $ownTable): callable =>
+            static fn (Builder $query): Builder => $query->whereNotExists(static fn ($sub) => $sub
+                ->from($table)
+                ->whereColumn($table . '.' . $column, $ownTable . '.id'));
 
         return [
             'Schichten' => [
@@ -101,13 +134,25 @@ class PurgeTrashCommand extends Command
                     ['events' => [$event]]
                 ),
             ],
-            // Wie "Endgültig löschen": ein Job je Projekt (Kaskade kann sehr groß sein)
+            // Wie "Endgültig löschen": ein Job je Projekt (Kaskade kann sehr groß sein). Projekte mit noch
+            // lebenden Terminen (z. B. fehlgeschlagener Lösch-Job) nicht anfassen.
             'Projekte' => [
                 $trashedBefore(Project::class),
                 static fn (Project $project): mixed => ForceDeleteProjectJob::dispatch($project->id),
+                static fn (Builder $query): Builder => $query->whereDoesntHave('events'),
             ],
-            'Räume' => [$trashedBefore(Room::class), $forceDelete],
-            'Areale' => [$trashedBefore(Area::class), $forceDelete],
+            // Räume mit lebenden Terminen/Schichten: FK „set null“ würde sie aus dem Raumkalender werfen
+            'Räume' => [
+                $trashedBefore(Room::class),
+                $forceDelete,
+                static fn (Builder $query): Builder => $query->whereDoesntHave('events')->whereDoesntHave('shifts'),
+            ],
+            // Area::forceDeleting löscht seine Räume hart — nicht, solange lebende Räume daran hängen
+            'Areale' => [
+                $trashedBefore(Area::class),
+                $forceDelete,
+                static fn (Builder $query): Builder => $query->whereDoesntHave('rooms'),
+            ],
             'Artikel' => [
                 $trashedBefore(InventoryArticle::class),
                 static fn (InventoryArticle $article): mixed => app(InventoryArticleService::class)
@@ -125,6 +170,12 @@ class PurgeTrashCommand extends Command
                     [app(BudgetManagementAccountService::class), 'forceDelete'],
                     ['budgetManagementAccount' => $account]
                 ),
+                // Endgültiges Löschen setzt alle Budgetzellen mit dieser Kontonummer zurück → nicht, wenn
+                // die Nummer inzwischen wieder an ein lebendes Konto vergeben ist
+                static fn (Builder $query): Builder => $query->whereNotExists(static fn ($sub) => $sub
+                    ->from('budget_management_accounts as live')
+                    ->whereColumn('live.account_number', 'budget_management_accounts.account_number')
+                    ->whereNull('live.deleted_at')),
             ],
             'Kostenstellen' => [
                 $trashedBefore(BudgetManagementCostUnit::class),
@@ -132,6 +183,10 @@ class PurgeTrashCommand extends Command
                     [app(BudgetManagementCostUnitService::class), 'forceDelete'],
                     ['budgetManagementCostUnit' => $costUnit]
                 ),
+                static fn (Builder $query): Builder => $query->whereNotExists(static fn ($sub) => $sub
+                    ->from('budget_management_cost_units as live')
+                    ->whereColumn('live.cost_unit_number', 'budget_management_cost_units.cost_unit_number')
+                    ->whereNull('live.deleted_at')),
             ],
             // Budget-Papierkorb: gelöschte Budget-Vorlagen (Projekt-Budgettabellen gehen mit dem Projekt)
             'Budget-Vorlagen' => [
@@ -147,9 +202,22 @@ class PurgeTrashCommand extends Command
             'Kategorien' => [$trashedBefore(Category::class), $forceDelete],
             'Bereiche' => [$trashedBefore(Sector::class), $forceDelete],
             'Projektstatus' => [$trashedBefore(ProjectState::class), $forceDelete],
-            'Vertragsarten' => [$trashedBefore(ContractType::class), $forceDelete],
-            'Unternehmensarten' => [$trashedBefore(CompanyType::class), $forceDelete],
-            'Währungen' => [$trashedBefore(Currency::class), $forceDelete],
+            // Verträge (auch im Papierkorb) verweisen ohne Kaskade darauf → Löschen würde scheitern
+            'Vertragsarten' => [
+                $trashedBefore(ContractType::class),
+                $forceDelete,
+                $unreferencedBy('contracts', 'contract_type_id', 'contract_types'),
+            ],
+            'Unternehmensarten' => [
+                $trashedBefore(CompanyType::class),
+                $forceDelete,
+                $unreferencedBy('contracts', 'company_type_id', 'company_types'),
+            ],
+            'Währungen' => [
+                $trashedBefore(Currency::class),
+                $forceDelete,
+                $unreferencedBy('contracts', 'currency_id', 'currencies'),
+            ],
             'Verwertungsgesellschaften' => [$trashedBefore(CollectingSociety::class), $forceDelete],
         ];
     }
@@ -172,7 +240,8 @@ class PurgeTrashCommand extends Command
             }
 
             try {
-                $purge($model);
+                // Je Eintrag eine Transaktion: bricht die Kaskade mittendrin ab, bleibt nichts halb gelöscht
+                DB::transaction(static fn () => $purge($model));
                 $count++;
             } catch (Throwable $exception) {
                 $this->failures++;

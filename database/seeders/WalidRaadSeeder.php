@@ -271,7 +271,7 @@ class WalidRaadSeeder extends Seeder
         $moneySourceTolleQuelle->projects()->attach($project->id);
 
         $firstCommentsTabWithCommentsComponentId = ProjectTab::query()
-            ->where('name', 'Comments')
+            ->whereIn('name', ['Comments', __('Comments')])
             ->whereRelation('components.component', 'type', ProjectTabComponentEnum::COMMENT_TAB->value)
             ->first()
             ->id;

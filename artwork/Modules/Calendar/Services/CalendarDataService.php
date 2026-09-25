@@ -296,6 +296,8 @@ readonly class CalendarDataService
             $shiftQuery->selectRaw('1')
                 ->from('shifts')
                 ->whereNull('shifts.event_id')
+                // Schichten im Papierkorb belegen keinen Raum
+                ->whereNull('shifts.deleted_at')
                 ->whereColumn('shifts.room_id', 'rooms.id')
                 // "Projektfremde Schichten anzeigen": auch Räume behalten, die nur durch fremde Schichten belegt sind
                 ->when(

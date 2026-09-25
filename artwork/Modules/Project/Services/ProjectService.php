@@ -2,6 +2,7 @@
 
 namespace Artwork\Modules\Project\Services;
 
+use Artwork\Modules\Budget\Services\TableService;
 use Artwork\Core\Carbon\Service\CarbonService;
 use Artwork\Modules\Budget\Services\ColumnRelevanceService;
 use Artwork\Modules\Change\Services\ChangeService;
@@ -502,9 +503,10 @@ class ProjectService
         // force delete the checklists and their tasks
         $checklistService->forceDeleteAll($checkLists, $taskService);
 
-        // force delete the events and their shifts
+        // force delete the events and their shifts — inkl. der Termine, die beim Löschen des Projekts
+        // in den Papierkorb gelegt wurden (sonst blieben sie mit project_id = NULL verwaist zurück)
         $eventService->forceDeleteAll(
-            $project->events,
+            $project->events()->withTrashed()->get(),
             $eventCommentService,
             $timelineService,
             $shiftService,
@@ -512,53 +514,18 @@ class ProjectService
             $notificationService
         );
 
-        // force delete the project files
-        $projectFileService->forceDeleteAll($project->project_files);
+        // force delete the project files (auch Dateien im Papierkorb)
+        $projectFileService->forceDeleteAll($project->project_files()->withTrashed()->get());
 
         // force delete the comments
         $comments = Comment::onlyTrashed()->where('project_id', $project->id)->get();
         $commentService->forceDeleteAll($comments);
 
-        // Soft delete the budget with all its relations
-        $table = $project->table;
+        // Budgettabelle endgültig löschen — auch eine bereits weich gelöschte (die frühere Kaskade lief nur
+        // über nicht gelöschte Kinder und ließ Positionen/Zellen als Datenleichen zurück)
+        $table = $project->table()->withTrashed()->first();
         if ($table) {
-            // Soft delete the budget
-            $mainPositions = $table->mainPositions()->get();
-            foreach ($mainPositions as $mainPosition) {
-                $subPositions = $mainPosition->subPositions()->get();
-                foreach ($subPositions as $subPosition) {
-                    $subPositionRows = $subPosition->subPositionRows()->get();
-                    foreach ($subPositionRows as $subPositionRow) {
-                        $cells = $subPositionRow->cells()->get();
-                        $comments = $subPositionRow->comments()->get();
-                        foreach ($comments as $comment) {
-                            $comment->forceDelete();
-                        }
-                        foreach ($cells as $cell) {
-                            $cell->comments()->forceDelete();
-                            $cell->calculations()->forceDelete();
-                            $cell->forceDelete();
-                        }
-                        $subPositionRow->forceDelete();
-                    }
-                    $subPosition->verified()->forceDelete();
-                    $subPosition->subPositionSumDetails()->forceDelete();
-                    $subPosition->forceDelete();
-                }
-                $mainPosition->verified()->forceDelete();
-                $mainPosition->mainPositionSumDetails()->forceDelete();
-                $mainPosition->forceDelete();
-            }
-            $columns = $table->columns()->get();
-            foreach ($columns as $column) {
-                $budgetSumDetails = $column->budgetSumDetails()->get();
-                foreach ($budgetSumDetails as $budgetSumDetail) {
-                    $budgetSumDetail->comments()->forceDelete();
-                    $budgetSumDetail->forceDelete();
-                }
-                $column->forceDelete();
-            }
-            $table->forceDelete();
+            app()->call([app(TableService::class), 'forceDelete'], ['table' => $table]);
         }
 
         // force delete the project

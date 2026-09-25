@@ -81,7 +81,7 @@ class ExternalTabSubmissionService
             $project,
             $tab,
             $changedComponents,
-            $this->crmContactService->countCreatedByExternal($project, $external),
+            $this->crmContactService->countCreatedByExternal($project, $tab, $external),
         );
 
         return $scope->refresh();

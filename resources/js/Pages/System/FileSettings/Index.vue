@@ -189,6 +189,8 @@ const updateArea = (area) => {
   }, {
     preserveScroll: true,
     preserveState: true,
+    // Abgelehnte Änderung (Validierung): lokal geänderten Stand verwerfen und Server-Stand neu laden
+    onError: () => router.reload({ preserveScroll: true }),
   })
 }
 </script>

@@ -233,7 +233,8 @@ class CraftService
         // Schichten des Gewerks sauber über den gemeinsamen Lösch-Weg entfernen (Benachrichtigung
         // der Besetzung festgeschriebener Schichten, Konflikte, Projekt-Tageszuordnungen,
         // Regel-Neuprüfung, Live-Update) — sonst löschte die DB-Kaskade sie still mit.
-        app(ShiftDeletionService::class)->deleteMany($craft->shifts()->get());
+        app(ShiftDeletionService::class)->deleteMany($craft->shifts()->get(), true, false);
+        broadcast(new \Artwork\Modules\Event\Events\OccupancyUpdated())->toOthers();
 
         DB::transaction(function () use ($craft): void {
             $this->craftRepository->detachUsers($craft);

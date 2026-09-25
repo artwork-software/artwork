@@ -18,6 +18,8 @@ class Handler extends ExceptionHandler
         // Passport meldet abgelehnte/abgelaufene API-Tokens über den Handler; das ist
         // normales Client-Verhalten (401), kein Anwendungsfehler für Sentry
         OAuthServerException::class,
+        // Gewollte Ablehnung (keine Gewerksplaner:in) mit Meldung an die Person — kein Fehler für Sentry
+        \Artwork\Modules\Craft\Exceptions\CraftNotPlannableException::class,
     ];
 
     protected $dontFlash = [

@@ -47,7 +47,7 @@ class ShiftTrashService
 
     public function paginate(User $user, string $search, int $perPage): LengthAwarePaginator
     {
-        return $this->trashedQuery($user)
+        $paginator = $this->trashedQuery($user)
             ->with([
                 'craft:id,name,abbreviation,color',
                 'room' => static fn ($query) => $query->withTrashed()->select(['id', 'name', 'deleted_at']),
@@ -69,14 +69,47 @@ class ShiftTrashService
             })
             ->orderByDesc('deleted_at')
             ->paginate($perPage)
-            ->withQueryString()
-            ->through(fn (Shift $shift): array => $this->present($shift));
+            ->withQueryString();
+
+        // Besetzung je Schicht in EINER Abfrage zählen (statt einer Zählabfrage pro Zeile)
+        $workerCounts = $this->workerCountsDeletedWithShifts($paginator->getCollection());
+
+        return $paginator->through(fn (Shift $shift): array => $this->present($shift, $workerCounts[$shift->id] ?? 0));
+    }
+
+    /**
+     * @param \Illuminate\Support\Collection<int, Shift> $shifts
+     * @return array<int, int> shift_id => Anzahl mit der Schicht gelöschter Personen
+     */
+    private function workerCountsDeletedWithShifts(\Illuminate\Support\Collection $shifts): array
+    {
+        if ($shifts->isEmpty()) {
+            return [];
+        }
+
+        $deletedAtByShift = $shifts->mapWithKeys(fn (Shift $shift) => [$shift->id => $shift->deleted_at]);
+        $counts = [];
+        ShiftWorker::onlyTrashed()
+            ->whereIn('shift_id', $deletedAtByShift->keys())
+            ->get(['shift_id', 'deleted_at'])
+            ->each(function (ShiftWorker $worker) use ($deletedAtByShift, &$counts): void {
+                $shiftDeletedAt = $deletedAtByShift[$worker->shift_id] ?? null;
+                if (
+                    $shiftDeletedAt !== null
+                    && $worker->deleted_at !== null
+                    && $worker->deleted_at->gte($shiftDeletedAt->copy()->subSeconds(self::CASCADE_WINDOW_SECONDS))
+                ) {
+                    $counts[$worker->shift_id] = ($counts[$worker->shift_id] ?? 0) + 1;
+                }
+            });
+
+        return $counts;
     }
 
     /**
      * @return array<string, mixed>
      */
-    private function present(Shift $shift): array
+    private function present(Shift $shift, int $workerCount): array
     {
         $startDate = Carbon::parse($shift->start_date);
         $endDate = Carbon::parse($shift->end_date ?? $shift->start_date);
@@ -97,7 +130,7 @@ class ShiftTrashService
             'project_name' => $shift->project?->name,
             'description' => $shift->description,
             'is_committed' => (bool) $shift->is_committed,
-            'worker_count' => $this->deletedWithShift(ShiftWorker::onlyTrashed(), $shift)->count(),
+            'worker_count' => $workerCount,
             'deleted_at' => $shift->deleted_at?->format('d.m.Y, H:i'),
         ];
     }

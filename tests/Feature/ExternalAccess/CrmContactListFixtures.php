@@ -77,6 +77,8 @@ trait CrmContactListFixtures
 
         $project = Project::factory()->create();
         $inviter = User::factory()->create();
+        // Einladende Person sieht das Projekt (Team ohne Schreibrecht)
+        $project->users()->attach($inviter->id, ['can_write' => false]);
         $external = ExternalAccess::factory()->active()->create([
             'invited_by_user_id' => $inviter->id,
             'crm_contact_id' => null,

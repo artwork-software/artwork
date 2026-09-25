@@ -133,7 +133,7 @@ final class TabReviewTest extends TestCase
         Notification::assertSentTo(
             $context['external'],
             ExternalTabReviewResultNotification::class,
-            fn (ExternalTabReviewResultNotification $notification) => $notification->scope->review_comment === 'Bitte Telefonnummern ergänzen',
+            fn (ExternalTabReviewResultNotification $notification) => $notification->comment === 'Bitte Telefonnummern ergänzen',
         );
 
         $this->actingAs($context['external'], 'external');
@@ -184,5 +184,15 @@ final class TabReviewTest extends TestCase
             'projectTab' => $context['tab']->id,
             'scope' => $other['scope']->id,
         ]))->assertNotFound();
+    }
+
+    #[Test]
+    public function inviter_without_access_to_the_project_cannot_review(): void
+    {
+        $context = $this->submittedContext();
+        $context['project']->users()->detach($context['inviter']->id);
+        $this->actAsInternal($context['inviter']);
+
+        $this->postJson($this->reviewRoute('projects.tabs.externals.confirm', $context))->assertForbidden();
     }
 }

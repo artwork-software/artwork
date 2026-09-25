@@ -9,7 +9,7 @@
                 {{ projectData.data.label }}
             </label>
             <!-- Mit Schreibrecht immer direkt das Eingabefeld (leer = sofort erkennbar, dass man hier eintragen kann) -->
-            <div v-if="canEditComponent" class="mt-2 w-full flex">
+            <div v-if="canEditComponent" class="mt-2 w-full flex" @focusin="isFocused = true" @focusout="isFocused = false">
                 <BaseTextarea
                     :placeholder="data.data.placeholder"
                     :rows="4"
@@ -68,6 +68,8 @@ const text = ref(
 );
 // Nur bei tatsächlicher Änderung speichern (das Feld ist jetzt dauerhaft offen, Fokuswechsel sind häufig)
 let lastSavedText = text.value;
+// Während getippt wird, überschreiben Live-Updates (Broadcast) die ungespeicherte Eingabe nicht
+const isFocused = ref(false);
 
 // Listener initialisieren (wie zuvor im mounted)
 onMounted(() => {
@@ -78,6 +80,9 @@ onMounted(() => {
 watch(
     () => props.data,
     (newVal) => {
+        if (isFocused.value && (text.value ?? '') !== (lastSavedText ?? '')) {
+            return;
+        }
         text.value = newVal.project_value?.text_without_html
             ? newVal.project_value.text_without_html
             : newVal.data.text;

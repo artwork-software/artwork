@@ -202,4 +202,6 @@ function closeModal() {
 defineExpose({ reload: load })
 
 onMounted(load)
+// TabContent wird beim Tab-Wechsel ggf. wiederverwendet → Status des neuen Tabs laden
+watch(() => [props.projectId, props.tabId], load)
 </script>

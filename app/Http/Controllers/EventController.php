@@ -3081,6 +3081,9 @@ class EventController extends Controller
             403
         );
 
+        // Wie alle Schicht-Aktionen: nur Schichten der Gewerke, die die Person planen darf
+        app(CraftScopeService::class)->assertCanPlanShifts($this->authManager->user(), $event->shifts);
+
         app(ShiftDeletionService::class)->deleteMany($event->shifts);
         $this->timelineService->forceDeleteTimelines($event->timelines);
 

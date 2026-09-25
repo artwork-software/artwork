@@ -154,6 +154,8 @@ class ShiftPlanWorkflowStatusService
     ): void {
         $changes = CommittedShiftChange::query()
             ->join('shifts', 'shifts.id', '=', 'committed_shift_changes.shift_id')
+            // Änderungen an Schichten im Papierkorb verlangen keine Aufmerksamkeit mehr
+            ->whereNull('shifts.deleted_at')
             ->whereNull('committed_shift_changes.acknowledged_at')
             ->whereBetween('shifts.start_date', [$rangeStart, $rangeEnd])
             ->when($craftIds !== [], fn ($query) => $query->whereIn('shifts.craft_id', $craftIds))

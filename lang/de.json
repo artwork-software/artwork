@@ -8514,5 +8514,6 @@
     "Budget information": "Budgetinformationen",
     "Tab for comments on the project.": "Tab für Kommentare zum Projekt.",
     ":invitedBy has invited you to fill in information for the project \":project\" at :company.": ":invitedBy hat dich eingeladen, Angaben zum Projekt „:project“ bei :company auszufüllen.",
-    "No account or password is needed. Your entries are saved automatically; once everything is complete, submit them in the form.": "Du brauchst weder Account noch Passwort. Deine Eingaben werden automatisch gespeichert; wenn alles vollständig ist, sende sie im Formular ab."
+    "No account or password is needed. Your entries are saved automatically; once everything is complete, submit them in the form.": "Du brauchst weder Account noch Passwort. Deine Eingaben werden automatisch gespeichert; wenn alles vollständig ist, sende sie im Formular ab.",
+    "Allowed: {0} to {1} MB per file.": "Erlaubt: {0} bis {1} MB pro Datei."
 }

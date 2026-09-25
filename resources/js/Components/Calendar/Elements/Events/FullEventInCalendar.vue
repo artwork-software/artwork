@@ -19,8 +19,10 @@
       isHeightFull ? 'h-full' : (expandDays ? '' : 'h-full'),
       pageProps.auth.user.calendar_daily_view ? 'overflow-y-auto' : '',
       // Tages-/Wochenansicht: schmale Kacheln (überlappende Termine, schmale Raumspalten)
-      // blenden unter 10rem Details aus (Info-Icon) statt über den Rand hinauszuwachsen
-      adaptsToTileWidth ? '@container/event overflow-x-hidden' : '',
+      // blenden unter 10rem Details aus (Info-Icon) statt über den Rand hinauszuwachsen.
+      // Tagesansicht zusätzlich Höhen-Container (Kachelhöhe = Termindauer, per Wrapper fix):
+      // niedrige Kacheln zeigen die Statusleiste nur als Farbstreifen
+      isInDailyView ? '[container:event/size] overflow-x-hidden' : (adaptsToTileWidth ? '@container/event overflow-x-hidden' : ''),
       multiEdit ? 'relative' : ''
     ]"
     >
@@ -48,11 +50,20 @@
         </div>
 
         <!-- Status-Leiste oben (kompakt) -->
-        <div v-if="event.isPlanning && !event.hasVerification" class="w-full rounded-t-lg bg-accent-600 px-2 py-1 text-[10px] font-lexend text-white select-none">
-            {{ $t('Planned Event') }}
+        <!-- Niedrige Tagesansicht-Kachel (< 5rem): nur Farbstreifen, Text im title -->
+        <div
+            v-if="event.isPlanning && !event.hasVerification"
+            class="w-full rounded-t-lg bg-accent-600 px-2 py-1 text-[10px] font-lexend text-white select-none [@container_event_(height_<_5rem)]:h-1 [@container_event_(height_<_5rem)]:py-0"
+            :title="$t('Planned Event')"
+        >
+            <span class="[@container_event_(height_<_5rem)]:hidden">{{ $t('Planned Event') }}</span>
         </div>
-        <div v-else-if="event.hasVerification" class="w-full rounded-t-lg bg-special-orange px-2 py-1 text-[10px] font-lexend text-white select-none">
-            {{ $t('Verification requested') }}
+        <div
+            v-else-if="event.hasVerification"
+            class="w-full rounded-t-lg bg-special-orange px-2 py-1 text-[10px] font-lexend text-white select-none [@container_event_(height_<_5rem)]:h-1 [@container_event_(height_<_5rem)]:py-0"
+            :title="$t('Verification requested')"
+        >
+            <span class="[@container_event_(height_<_5rem)]:hidden">{{ $t('Verification requested') }}</span>
         </div>
 
         <!-- Projektgruppen-Balken (nur wenn display_project_groups aktiv UND Projekt einer Gruppe zugeordnet ist) -->

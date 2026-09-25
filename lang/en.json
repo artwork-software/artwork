@@ -8503,5 +8503,7 @@
     "Tab with the shifts of the project and a sidebar with the relevant dates, contact persons and general information for shift planning.": "Tab with the shifts of the project and a sidebar with the relevant dates, contact persons and general information for shift planning.",
     "Tab with the budget of the project and a sidebar with the budget information.": "Tab with the budget of the project and a sidebar with the budget information.",
     "Budget information": "Budget information",
-    "Tab for comments on the project.": "Tab for comments on the project."
+    "Tab for comments on the project.": "Tab for comments on the project.",
+    ":invitedBy has invited you to fill in information for the project \":project\" at :company.": ":invitedBy has invited you to fill in information for the project \":project\" at :company.",
+    "No account or password is needed. Your entries are saved automatically; once everything is complete, submit them in the form.": "No account or password is needed. Your entries are saved automatically; once everything is complete, submit them in the form."
 }

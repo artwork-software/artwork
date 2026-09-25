@@ -167,7 +167,11 @@ class ExternalNotificationSender
     public function notifyExternalTabReviewed(ExternalAccessScope $scope): void
     {
         $scope->loadMissing(['externalAccess', 'project', 'projectTab', 'reviewedBy']);
-        $scope->externalAccess?->notify(new ExternalTabReviewResultNotification($scope));
+        // Sprache der auslösenden Anfrage mitgeben: Externe haben keine Spracheinstellung, und ein
+        // Queue-Worker hätte sonst seine eigene (zufällige) Sprache.
+        $scope->externalAccess?->notify(
+            (new ExternalTabReviewResultNotification($scope))->locale(app()->getLocale())
+        );
     }
 
     public function notifyExternalReviewResult(ExternalPendingSubmission $submission): void

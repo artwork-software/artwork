@@ -56,8 +56,14 @@ class ExternalLoginService
             'user_agent' => $userAgent,
         ]);
 
+        // Ohne CRM-Zugang ist es eine reine Tab-Einladung (kein „eigene Daten erfassen“ in der Mail)
         $notification = $isInvitation
-            ? new ExternalInvitationNotification($plainToken, $invitedBy, $invitedFromProject)
+            ? new ExternalInvitationNotification(
+                $plainToken,
+                $invitedBy,
+                $invitedFromProject,
+                maintainsOwnData: $external->isCrmAccessActive(),
+            )
             : new ExternalLoginLinkNotification($plainToken);
 
         Notification::route('mail', $external->routeNotificationForMail())

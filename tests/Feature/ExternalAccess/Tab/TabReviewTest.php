@@ -111,7 +111,12 @@ final class TabReviewTest extends TestCase
         $this->assertNotNull($entry->reviewed_at);
         $this->assertSame($writer->id, (int) $entry->reviewed_by_user_id);
 
-        Notification::assertSentTo($context['external'], ExternalTabReviewResultNotification::class);
+        // Sprache der auslösenden Anfrage wird mitgegeben (unabhängig vom Queue-Worker)
+        Notification::assertSentTo(
+            $context['external'],
+            ExternalTabReviewResultNotification::class,
+            fn (ExternalTabReviewResultNotification $notification) => $notification->locale === app()->getLocale(),
+        );
     }
 
     #[Test]

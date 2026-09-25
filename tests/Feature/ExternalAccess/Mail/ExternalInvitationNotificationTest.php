@@ -49,6 +49,21 @@ final class ExternalInvitationNotificationTest extends TestCase
     }
 
     #[Test]
+    public function tab_only_invitation_asks_to_fill_in_project_information_instead_of_own_data(): void
+    {
+        $inviter = User::factory()->create();
+        $project = Project::factory()->create(['name' => 'Gastspiel Luna']);
+
+        $mail = (new ExternalInvitationNotification(Str::random(64), $inviter, $project, maintainsOwnData: false))
+            ->toMail(null);
+        $rendered = (string) $mail->render();
+
+        $this->assertStringContainsString('to fill in information for the project', $rendered);
+        $this->assertStringContainsString('Gastspiel Luna', $rendered);
+        $this->assertStringNotContainsString('enter your data', $rendered);
+    }
+
+    #[Test]
     public function subsequent_login_uses_the_plain_login_notification(): void
     {
         $token = Str::random(64);

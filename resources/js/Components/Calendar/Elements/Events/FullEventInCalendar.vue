@@ -18,6 +18,9 @@
       isEmphasized ? 'border-[rgba(0,0,0,0.18)]' : (isDimmed ? 'border-dashed border-border text-[#3F424A]' : 'border-black/5'),
       isHeightFull ? 'h-full' : (expandDays ? '' : 'h-full'),
       pageProps.auth.user.calendar_daily_view ? 'overflow-y-auto' : '',
+      // Tagesansicht: überlappende Termine teilen sich die Raumspalte — schmale Kacheln
+      // blenden unter 10rem Details aus (Info-Icon) statt über den Rand hinauszuwachsen
+      isInDailyView ? '@container/event overflow-x-hidden' : '',
       multiEdit ? 'relative' : ''
     ]"
     >
@@ -146,9 +149,9 @@
             </div>
         </div>
         <!-- CONTENT: Detailliert ab mittlerem Zoom -->
-        <div v-if="zoom_factor > 0.6" class="grid grid-cols-1 md:grid-cols-3 gap-x-3 px-2.5 py-2">
-            <!-- Linke 2/3 Spalte -->
-            <div class="col-span-2">
+        <div v-if="showFullContent" class="grid grid-cols-1 md:grid-cols-3 gap-x-3 px-2.5 py-2 @max-[10rem]/event:grid-cols-1! @max-[10rem]/event:px-1.5">
+            <!-- Linke 2/3 Spalte (schmale Tagesansicht-Kachel: volle Breite) -->
+            <div class="col-span-2 min-w-0 @max-[10rem]/event:col-span-1!">
                 <div class="flex items-start">
                     <!-- Text-Block -->
                     <div
@@ -219,8 +222,8 @@
 
                             <!-- Terminstatus (Anzeigeeinstellung "Terminstatus ausgeschrieben", eigene Zeile unter dem Terminnamen) -->
                             <div
-                                v-if="showEventStatusName && !project && zoom_factor >= 0.8"
-                                class="flex items-center gap-1.5 text-xs/5 min-w-0"
+                                v-if="showEventStatusName && !project && showDetailRows"
+                                class="flex items-center gap-1.5 text-xs/5 min-w-0 @max-[10rem]/event:hidden"
                             >
                                 <span
                                     class="size-2.5 shrink-0 rounded-full border"
@@ -265,8 +268,8 @@
 
                         <!-- Einlass (Anzeigeeinstellung "Einlass", nur Starttag-Kachel, nicht bei kleinem Zoom) -->
                         <div
-                            v-if="showAdmissionTime && !project && zoom_factor >= 0.8"
-                            class="mt-0.5 flex items-center gap-1.5 text-xs/5"
+                            v-if="showAdmissionTime && !project && showDetailRows"
+                            class="mt-0.5 flex items-center gap-1.5 text-xs/5 @max-[10rem]/event:hidden"
                         >
                             <component
                                 :is="IconDoorEnter"
@@ -296,7 +299,7 @@
                                 :style="{ color: eventTextColor }"
                             />
                             <div
-                                class="subpixel-antialiased"
+                                class="subpixel-antialiased min-w-0 @max-[10rem]/event:truncate"
                                 :class="[zoom_factor >= 1 ? 'text-xs/[18px]' : '', isSameDay && !project && !atAGlance ? 'whitespace-nowrap' : '']"
                                 :style="{ color: eventTypeTextColor }"
                             >
@@ -334,7 +337,7 @@
                             </div>
 
                             <!-- Options -->
-                            <div v-if="event.option_string && calSettings.options" class=" text-xs/5">
+                            <div v-if="event.option_string && calSettings.options" class=" text-xs/5 @max-[10rem]/event:hidden">
                                 <span
                                     v-if="!atAGlance && isSameDay"
                                     class="text-xs/[18px] font-medium subpixel-antialiased"
@@ -348,12 +351,22 @@
                             </div>
                         </div>
 
+                        <!-- Schmale Tagesansicht-Kachel: alles außer Name + Zeit steckt hinter dem Info-Icon -->
+                        <component
+                            v-if="isInDailyView"
+                            :is="IconInfoCircle"
+                            class="mt-1 hidden size-5 cursor-pointer @max-[10rem]/event:block"
+                            stroke-width="1.5"
+                            :style="{ color: eventTextColor }"
+                            @click.stop="toggleSmallZoomTooltip"
+                        />
+
                         <!-- Projektleiter -->
                         <div
                             v-if="calSettings.project_management && event?.project?.leaders?.length > 0"
-                            class="mt-2 -ml-1.5"
+                            class="mt-2 -ml-1.5 @max-[10rem]/event:hidden"
                         >
-                            <div v-if="event?.project?.leaders && !project && zoom_factor >= 0.8" class="ml-2 flex flex-wrap items-center gap-1">
+                            <div v-if="event?.project?.leaders && !project && showDetailRows" class="ml-2 flex flex-wrap items-center gap-1">
                                 <span v-if="showCreatorLeaderLabels" class="text-[10px] font-semibold opacity-80">{{ $t('PM:') }}</span>
                                 <UserPopoverTooltip
                                     v-for="user in event?.project?.leaders?.slice(0,3)"
@@ -403,8 +416,8 @@
 
                         <!-- Terminersteller*in (Anzeigeeinstellung "Terminersteller*in") -->
                         <div
-                            v-if="calSettings.show_event_creator && event?.created_by && !project && zoom_factor >= 0.8"
-                            class="mt-1 ml-0.5 flex flex-wrap items-center gap-1"
+                            v-if="calSettings.show_event_creator && event?.created_by && !project && showDetailRows"
+                            class="mt-1 ml-0.5 flex flex-wrap items-center gap-1 @max-[10rem]/event:hidden"
                         >
                             <span v-if="showCreatorLeaderLabels" class="text-[10px] font-semibold opacity-80">{{ $t('Creator:') }}</span>
                             <UserPopoverTooltip
@@ -418,7 +431,7 @@
                         <!-- Beschreibung -->
                         <div
                             v-if="calSettings.description"
-                            class="mt-2"
+                            class="mt-2 @max-[10rem]/event:hidden"
                             :style="{ color: eventTypeTextColor }"
                         >
                             <EventNoteComponent :event="event" />
@@ -428,8 +441,8 @@
                 </div>
             </div>
 
-            <!-- Rechte 1/3 Spalte: Properties + Aktionen -->
-            <div class="pt-1 flex flex-col justify-start items-end">
+            <!-- Rechte 1/3 Spalte: Properties + Aktionen (schmale Tagesansicht-Kachel: im Info-Tooltip) -->
+            <div class="pt-1 flex flex-col justify-start items-end @max-[10rem]/event:hidden">
                 <!-- Kontext-Menü -->
                 <div class="opacity-0 group-hover/singleEvent:opacity-100 transition-opacity duration-150">
                     <BaseMenu has-no-offset :dots-color="calSettings.high_contrast ? 'text-white' : ''" white-menu-background class="cursor-pointer">
@@ -524,239 +537,240 @@
                 </div>
             </div>
 
-            <!-- Teleport: Vollständiges Event-Div als Tooltip -->
-            <Teleport to="body">
-                <div
-                    v-if="showSmallZoomTooltip"
-                    class="fixed z-[9999]"
-                    :style="{ top: smallZoomTooltipPosition.top + 'px', left: smallZoomTooltipPosition.left + 'px' }"
-                >
-                    <div
-                        class="w-[280px] rounded-lg shadow-xl ring-1 ring-black/10 bg-white"
-                        @click.stop
-                    >
-                        <!-- Vollständiges Event-Rendering wie bei normalem Zoom -->
-                        <div
-                            :style="{
-                                backgroundColor: eventBgColor,
-                            }"
-                            class="rounded-lg border border-black/5"
-                        >
-                            <!-- Status-Leiste oben -->
-                            <div v-if="event.isPlanning && !event.hasVerification" class="w-full rounded-t-lg bg-accent-600 px-2 py-1 text-[10px] font-lexend text-white select-none">
-                                {{ $t('Planned Event') }}
-                            </div>
-                            <div v-else-if="event.hasVerification" class="w-full rounded-t-lg bg-special-orange px-2 py-1 text-[10px] font-lexend text-white select-none">
-                                {{ $t('Verification requested') }}
-                            </div>
+        </div>
 
-                            <!-- Projektgruppen-Balken -->
-                            <div
-                                v-if="calSettings.display_project_groups && event.project?.isInGroup && event.project?.group && event.project?.group.length > 0 && !event.project?.isGroup"
-                                class="w-full px-2 py-1 border-b border-black/15"
-                                :style="{ backgroundColor: event.project.group[0].color ? event.project.group[0].color + '40' : 'transparent' }"
+        <!-- Teleport: Vollständiges Event-Div als Tooltip (Info-Icon bei kleinem Zoom bzw. schmaler Kachel in der Tagesansicht) -->
+        <Teleport to="body">
+            <div
+                v-if="showSmallZoomTooltip"
+                class="fixed z-[9999]"
+                :style="{ top: smallZoomTooltipPosition.top + 'px', left: smallZoomTooltipPosition.left + 'px' }"
+            >
+                <div
+                    class="w-[280px] rounded-lg shadow-xl ring-1 ring-black/10 bg-white"
+                    @click.stop
+                >
+                    <!-- Vollständiges Event-Rendering wie bei normalem Zoom -->
+                    <div
+                        :style="{
+                            backgroundColor: eventBgColor,
+                        }"
+                        class="rounded-lg border border-black/5"
+                    >
+                        <!-- Status-Leiste oben -->
+                        <div v-if="event.isPlanning && !event.hasVerification" class="w-full rounded-t-lg bg-accent-600 px-2 py-1 text-[10px] font-lexend text-white select-none">
+                            {{ $t('Planned Event') }}
+                        </div>
+                        <div v-else-if="event.hasVerification" class="w-full rounded-t-lg bg-special-orange px-2 py-1 text-[10px] font-lexend text-white select-none">
+                            {{ $t('Verification requested') }}
+                        </div>
+
+                        <!-- Projektgruppen-Balken -->
+                        <div
+                            v-if="calSettings.display_project_groups && event.project?.isInGroup && event.project?.group && event.project?.group.length > 0 && !event.project?.isGroup"
+                            class="w-full px-2 py-1 border-b border-black/15"
+                            :style="{ backgroundColor: event.project.group[0].color ? event.project.group[0].color + '40' : 'transparent' }"
+                        >
+                            <a
+                                :href="getEditHref(event.project.group[0].id)"
+                                class="block w-full min-w-0 hover:text-accent-700 hover:underline underline-offset-2"
+                                @mouseenter="showProjectGroupTooltipHandler"
+                                @mouseleave="hideProjectGroupTooltip"
                             >
+                                <span ref="projectGroupNameSpan" class="block w-full truncate font-semibold text-xs text-black">
+                                    {{ event.project.group[0].name }}
+                                </span>
+                            </a>
+                        </div>
+
+                        <!-- Projektname-Balken -->
+                        <div
+                            v-if="event.project?.name && event.project?.id"
+                            class="w-full px-2 py-1 border-b border-black/15"
+                            :style="{ backgroundColor: event.project?.isGroup && event.project?.color ? event.project.color + '40' : 'transparent' }"
+                        >
+                            <div class="flex items-center gap-1.5 min-w-0">
+                                <div
+                                    v-if="calSettings.project_status && event.project?.status"
+                                    class="shrink-0 flex-none size-3.5 rounded-full border"
+                                    :style="{ backgroundColor: event?.project?.status?.color + '33', borderColor: event?.project?.status?.color }"
+                                ></div>
                                 <a
-                                    :href="getEditHref(event.project.group[0].id)"
-                                    class="block w-full min-w-0 hover:text-accent-700 hover:underline underline-offset-2"
-                                    @mouseenter="showProjectGroupTooltipHandler"
-                                    @mouseleave="hideProjectGroupTooltip"
+                                    :href="getEditHref(event.project?.id)"
+                                    class="flex-1 min-w-0 hover:text-accent-700 hover:underline underline-offset-2"
                                 >
-                                    <span ref="projectGroupNameSpan" class="block w-full truncate font-semibold text-xs text-black">
-                                        {{ event.project.group[0].name }}
-                                    </span>
+                                    <span class="block w-full truncate font-semibold text-xs">{{ event.project?.name }}</span>
                                 </a>
                             </div>
+                        </div>
 
-                            <!-- Projektname-Balken -->
-                            <div
-                                v-if="event.project?.name && event.project?.id"
-                                class="w-full px-2 py-1 border-b border-black/15"
-                                :style="{ backgroundColor: event.project?.isGroup && event.project?.color ? event.project.color + '40' : 'transparent' }"
-                            >
-                                <div class="flex items-center gap-1.5 min-w-0">
+                        <!-- Content -->
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-x-3 px-2.5 py-2">
+                            <div class="col-span-2">
+                                <div class="flex items-start gap-2">
                                     <div
-                                        v-if="calSettings.project_status && event.project?.status"
-                                        class="shrink-0 flex-none size-3.5 rounded-full border"
-                                        :style="{ backgroundColor: event?.project?.status?.color + '33', borderColor: event?.project?.status?.color }"
+                                        v-if="!calSettings.high_contrast"
+                                        class="w-[4px] rounded-sm mt-[2px] self-stretch"
+                                        :style="{ backgroundColor: getColorBasedOnUserSettings }"
                                     ></div>
-                                    <a
-                                        :href="getEditHref(event.project?.id)"
-                                        class="flex-1 min-w-0 hover:text-accent-700 hover:underline underline-offset-2"
+                                    <div
+                                        class="min-w-0 flex-1"
+                                        :style="{ color: eventTextColor }"
                                     >
-                                        <span class="block w-full truncate font-semibold text-xs">{{ event.project?.name }}</span>
-                                    </a>
-                                </div>
-                            </div>
-
-                            <!-- Content -->
-                            <div class="grid grid-cols-1 md:grid-cols-3 gap-x-3 px-2.5 py-2">
-                                <div class="col-span-2">
-                                    <div class="flex items-start gap-2">
-                                        <div
-                                            v-if="!calSettings.high_contrast"
-                                            class="w-[4px] rounded-sm mt-[2px] self-stretch"
-                                            :style="{ backgroundColor: getColorBasedOnUserSettings }"
-                                        ></div>
-                                        <div
-                                            class="min-w-0 flex-1"
-                                            :style="{ color: eventTextColor }"
-                                        >
-                                            <div class="relative space-y-0.5">
-                                                <!-- Artists -->
-                                                <div v-if="calSettings.project_artists && event.project?.artistNames" class="truncate text-xs/5 font-bold">
-                                                    {{ event.project?.artistNames }}
+                                        <div class="relative space-y-0.5">
+                                            <!-- Artists -->
+                                            <div v-if="calSettings.project_artists && event.project?.artistNames" class="truncate text-xs/5 font-bold">
+                                                {{ event.project?.artistNames }}
+                                            </div>
+                                            <!-- Eventname -->
+                                            <div v-if="calSettings.event_name && event.eventName" class="truncate text-xs/4 font-semibold">
+                                                {{ event.eventName }}
+                                            </div>
+                                            <!-- Terminstatus (Anzeigeeinstellung "Terminstatus ausgeschrieben") -->
+                                            <div v-if="showEventStatusName" class="flex items-center gap-1.5 text-xs/5 min-w-0">
+                                                <span
+                                                    class="size-2.5 shrink-0 rounded-full border"
+                                                    :style="{ backgroundColor: event.eventStatus.color + '33', borderColor: event.eventStatus.color }"
+                                                ></span>
+                                                <span class="truncate subpixel-antialiased opacity-90">{{ event.eventStatus.name }}</span>
+                                            </div>
+                                            <!-- Eventtyp -->
+                                            <div class="flex items-center justify-between">
+                                                <div
+                                                    class="truncate text-xs/5 opacity-90 min-w-0 flex-1"
+                                                    @mouseenter="showEventTypeTooltipHandler"
+                                                    @mouseleave="hideEventTypeTooltip"
+                                                >
+                                                    <span ref="eventTypeSpan" class="block w-full truncate">
+                                                        {{ event?.eventType?.name }}
+                                                    </span>
                                                 </div>
-                                                <!-- Eventname -->
-                                                <div v-if="calSettings.event_name && event.eventName" class="truncate text-xs/4 font-semibold">
-                                                    {{ event.eventName }}
-                                                </div>
-                                                <!-- Terminstatus (Anzeigeeinstellung "Terminstatus ausgeschrieben") -->
-                                                <div v-if="showEventStatusName" class="flex items-center gap-1.5 text-xs/5 min-w-0">
-                                                    <span
-                                                        class="size-2.5 shrink-0 rounded-full border"
-                                                        :style="{ backgroundColor: event.eventStatus.color + '33', borderColor: event.eventStatus.color }"
-                                                    ></span>
-                                                    <span class="truncate subpixel-antialiased opacity-90">{{ event.eventStatus.name }}</span>
-                                                </div>
-                                                <!-- Eventtyp -->
-                                                <div class="flex items-center justify-between">
-                                                    <div
-                                                        class="truncate text-xs/5 opacity-90 min-w-0 flex-1"
-                                                        @mouseenter="showEventTypeTooltipHandler"
-                                                        @mouseleave="hideEventTypeTooltip"
-                                                    >
-                                                        <span ref="eventTypeSpan" class="block w-full truncate">
-                                                            {{ event?.eventType?.name }}
-                                                        </span>
-                                                    </div>
-                                                    <div v-if="calSettings.project_status && event.projectStateColor" class="ml-2">
-                                                        <div :class="[event.projectStateColor, 'border-2']" class="rounded-full"></div>
-                                                    </div>
+                                                <div v-if="calSettings.project_status && event.projectStateColor" class="ml-2">
+                                                    <div :class="[event.projectStateColor, 'border-2']" class="rounded-full"></div>
                                                 </div>
                                             </div>
+                                        </div>
 
-                                            <!-- Einlass (Anzeigeeinstellung "Einlass", nur Starttag) -->
-                                            <div v-if="showAdmissionTime" class="mt-0.5 flex items-center gap-1.5 text-xs/5">
-                                                <component
-                                                    :is="IconDoorEnter"
-                                                    class="size-3.5 shrink-0"
-                                                    stroke-width="2"
-                                                />
-                                                <span class="subpixel-antialiased">{{ $t('Admission') }} {{ event.admission_time }}</span>
+                                        <!-- Einlass (Anzeigeeinstellung "Einlass", nur Starttag) -->
+                                        <div v-if="showAdmissionTime" class="mt-0.5 flex items-center gap-1.5 text-xs/5">
+                                            <component
+                                                :is="IconDoorEnter"
+                                                class="size-3.5 shrink-0"
+                                                stroke-width="2"
+                                            />
+                                            <span class="subpixel-antialiased">{{ $t('Admission') }} {{ event.admission_time }}</span>
+                                        </div>
+
+                                        <!-- Zeit -->
+                                        <div class="mt-0.5 flex items-center gap-1.5 text-xs/5 flex-wrap">
+                                            <component
+                                                :is="IconRepeat"
+                                                v-if="calSettings.repeating_events && event.is_series"
+                                                class="size-3.5 shrink-0"
+                                                stroke-width="2"
+                                            />
+                                            <component
+                                                :is="IconClock"
+                                                v-if="!event.allDay && isSameDay"
+                                                class="size-3.5 shrink-0"
+                                                stroke-width="2"
+                                            />
+                                            <div class="subpixel-antialiased">
+                                                <template v-if="isSameDay">
+                                                    <span v-if="event.allDay">{{ $t('Full day') }}</span>
+                                                    <span v-else>{{ resolvedFormattedDates.startTime + ' - ' + resolvedFormattedDates.endTime }}</span>
+                                                </template>
+                                                <template v-else>
+                                                    <span v-if="event.allDay">
+                                                        {{ $t('Full day') }}, {{ resolvedFormattedDates.start_without_year }} - {{ resolvedFormattedDates.end_without_year }}
+                                                    </span>
+                                                    <span v-else>
+                                                        <span class="text-danger pr-0.5">!</span>
+                                                        {{ resolvedFormattedDates.startDateTime_without_year + ' - ' + resolvedFormattedDates.endDateTime_without_year }}
+                                                    </span>
+                                                </template>
                                             </div>
-
-                                            <!-- Zeit -->
-                                            <div class="mt-0.5 flex items-center gap-1.5 text-xs/5 flex-wrap">
-                                                <component
-                                                    :is="IconRepeat"
-                                                    v-if="calSettings.repeating_events && event.is_series"
-                                                    class="size-3.5 shrink-0"
-                                                    stroke-width="2"
-                                                />
-                                                <component
-                                                    :is="IconClock"
-                                                    v-if="!event.allDay && isSameDay"
-                                                    class="size-3.5 shrink-0"
-                                                    stroke-width="2"
-                                                />
-                                                <div class="subpixel-antialiased">
-                                                    <template v-if="isSameDay">
-                                                        <span v-if="event.allDay">{{ $t('Full day') }}</span>
-                                                        <span v-else>{{ resolvedFormattedDates.startTime + ' - ' + resolvedFormattedDates.endTime }}</span>
-                                                    </template>
-                                                    <template v-else>
-                                                        <span v-if="event.allDay">
-                                                            {{ $t('Full day') }}, {{ resolvedFormattedDates.start_without_year }} - {{ resolvedFormattedDates.end_without_year }}
-                                                        </span>
-                                                        <span v-else>
-                                                            <span class="text-danger pr-0.5">!</span>
-                                                            {{ resolvedFormattedDates.startDateTime_without_year + ' - ' + resolvedFormattedDates.endDateTime_without_year }}
-                                                        </span>
-                                                    </template>
-                                                </div>
-                                                <div v-if="event.option_string && calSettings.options" class="text-xs/5">
-                                                    , {{ event.option_string }}
-                                                </div>
+                                            <div v-if="event.option_string && calSettings.options" class="text-xs/5">
+                                                , {{ event.option_string }}
                                             </div>
+                                        </div>
 
-                                            <!-- Projektleiter -->
-                                            <div v-if="calSettings.project_management && event?.project?.leaders?.length > 0" class="mt-2 -ml-1.5">
-                                                <div class="ml-2 flex flex-wrap items-center gap-1">
-                                                    <span v-if="showCreatorLeaderLabels" class="text-[10px] font-semibold opacity-80">{{ $t('PM:') }}</span>
-                                                    <UserPopoverTooltip
-                                                        v-for="user in event?.project?.leaders?.slice(0,3)"
-                                                        :key="'tooltip-leader-'+user.id"
-                                                        :user="user"
-                                                        lazy-load
-                                                        width="5"
-                                                        height="5"
-                                                    />
-                                                    <div v-if="event?.project?.leaders.length >= 4" class="ml-1 text-xs">
-                                                        +{{ event?.project?.leaders.length - 3 }}
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            <!-- Terminersteller*in (Anzeigeeinstellung "Terminersteller*in") -->
-                                            <div v-if="calSettings.show_event_creator && event?.created_by" class="mt-1 ml-0.5 flex flex-wrap items-center gap-1">
-                                                <span v-if="showCreatorLeaderLabels" class="text-[10px] font-semibold opacity-80">{{ $t('Creator:') }}</span>
+                                        <!-- Projektleiter -->
+                                        <div v-if="calSettings.project_management && event?.project?.leaders?.length > 0" class="mt-2 -ml-1.5">
+                                            <div class="ml-2 flex flex-wrap items-center gap-1">
+                                                <span v-if="showCreatorLeaderLabels" class="text-[10px] font-semibold opacity-80">{{ $t('PM:') }}</span>
                                                 <UserPopoverTooltip
-                                                    :user="event.created_by"
+                                                    v-for="user in event?.project?.leaders?.slice(0,3)"
+                                                    :key="'tooltip-leader-'+user.id"
+                                                    :user="user"
                                                     lazy-load
                                                     width="5"
                                                     height="5"
                                                 />
-                                            </div>
-
-                                            <!-- Beschreibung -->
-                                            <div v-if="calSettings.description" class="mt-2">
-                                                <EventNoteComponent :event="event" />
+                                                <div v-if="event?.project?.leaders.length >= 4" class="ml-1 text-xs">
+                                                    +{{ event?.project?.leaders.length - 3 }}
+                                                </div>
                                             </div>
                                         </div>
 
-                                    </div>
-                                </div>
-
-                                <!-- Rechte Spalte: Properties -->
-                                <div class="pt-1 flex flex-col justify-start items-end">
-                                    <div class="grid grid-cols-2 gap-2">
-                                        <div v-for="property in event.eventProperties" :key="'tooltip-prop-'+property.id" class="col-span-1">
-                                            <PropertyIcon
-                                                :name="property.icon"
-                                                class="size-3.5 opacity-90"
-                                                :style="{ color: eventTextColor }"
+                                        <!-- Terminersteller*in (Anzeigeeinstellung "Terminersteller*in") -->
+                                        <div v-if="calSettings.show_event_creator && event?.created_by" class="mt-1 ml-0.5 flex flex-wrap items-center gap-1">
+                                            <span v-if="showCreatorLeaderLabels" class="text-[10px] font-semibold opacity-80">{{ $t('Creator:') }}</span>
+                                            <UserPopoverTooltip
+                                                :user="event.created_by"
+                                                lazy-load
+                                                width="5"
+                                                height="5"
                                             />
                                         </div>
+
+                                        <!-- Beschreibung -->
+                                        <div v-if="calSettings.description" class="mt-2">
+                                            <EventNoteComponent :event="event" />
+                                        </div>
                                     </div>
-                                    <!-- Timeline Icon -->
-                                    <div
-                                        v-if="calSettings.show_timeline"
-                                        class="mt-2 cursor-pointer"
-                                        @click.stop="openTimelineModal"
-                                    >
-                                        <component
-                                            :is="IconTimeline"
-                                            class="size-5"
-                                            stroke-width="1.5"
-                                            :class="event.hasTimelines ? '' : 'text-gray-400'"
+
+                                </div>
+                            </div>
+
+                            <!-- Rechte Spalte: Properties -->
+                            <div class="pt-1 flex flex-col justify-start items-end">
+                                <div class="grid grid-cols-2 gap-2">
+                                    <div v-for="property in event.eventProperties" :key="'tooltip-prop-'+property.id" class="col-span-1">
+                                        <PropertyIcon
+                                            :name="property.icon"
+                                            class="size-3.5 opacity-90"
+                                            :style="{ color: eventTextColor }"
                                         />
                                     </div>
                                 </div>
+                                <!-- Timeline Icon -->
+                                <div
+                                    v-if="calSettings.show_timeline"
+                                    class="mt-2 cursor-pointer"
+                                    @click.stop="openTimelineModal"
+                                >
+                                    <component
+                                        :is="IconTimeline"
+                                        class="size-5"
+                                        stroke-width="1.5"
+                                        :class="event.hasTimelines ? '' : 'text-gray-400'"
+                                    />
+                                </div>
                             </div>
                         </div>
-
-                        <!-- Schließen-Button -->
-                        <button
-                            @click.stop="showSmallZoomTooltip = false"
-                            class="absolute -top-2 -right-2 bg-white rounded-full p-1 shadow-md hover:bg-gray-100"
-                        >
-                            <component :is="IconX" class="size-4" />
-                        </button>
                     </div>
+
+                    <!-- Schließen-Button -->
+                    <button
+                        @click.stop="showSmallZoomTooltip = false"
+                        class="absolute -top-2 -right-2 bg-white rounded-full p-1 shadow-md hover:bg-gray-100"
+                    >
+                        <component :is="IconX" class="size-4" />
+                    </button>
                 </div>
-            </Teleport>
-        </div>
+            </div>
+        </Teleport>
 
         <!-- SUB-EVENTS -->
         <div v-if="event.subEvents?.length > 0" class="space-y-1.5 border-t border-black/5 px-2.5 py-2">
@@ -1035,6 +1049,11 @@ const props = defineProps({
 // hereingereichten Werte skalieren bereits mit dem Zoom-Faktor.
 const innerFontSize = computed(() => (contentZoom.value > 1 ? "0.875rem" : props.fontSize));
 const innerLineHeight = computed(() => (contentZoom.value > 1 ? "1.25rem" : props.lineHeight));
+
+// In der Tagesansicht ist die Kachel so breit wie die Raumspalte und scrollt vertikal —
+// die Zoom-Schwellen (Info-Icon statt Inhalt, ausgeblendete Detailzeilen) greifen dort nicht.
+const showFullContent = computed(() => props.isInDailyView || zoom_factor.value > 0.6);
+const showDetailRows = computed(() => props.isInDailyView || zoom_factor.value >= 0.8);
 
 const resolvedFormattedDates = computed(() =>
     props.event.formattedDates ?? computeEventFormattedDates(props.event.start, props.event.end)

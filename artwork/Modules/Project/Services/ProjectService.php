@@ -49,6 +49,7 @@ class ProjectService
         private readonly EventService $eventService,
         private readonly UserService $userService,
         private readonly CarbonService $carbonService,
+        private readonly ProjectTeamNotificationService $projectTeamNotificationService,
     ) {
     }
 
@@ -914,6 +915,8 @@ class ProjectService
             ]]);
 
         $project->users()->attach($usersToAttach);
+
+        $this->projectTeamNotificationService->notifyAddedToTeam($project, $usersToAttach->keys(), true);
     }
 
     public function attachManagementUsers(Project $project, array $userIds): void
@@ -1001,6 +1004,13 @@ class ProjectService
         }
 
         $existingUserIds = $project->users()->pluck('users.id');
+
+        // neu ernannte Projektleitungen (auch bisherige Teammitglieder) erfahren davon
+        $this->projectTeamNotificationService->notifyAddedToTeam(
+            $project,
+            $newManagerIds->diff($currentManagerIds),
+            true
+        );
 
         foreach ($newManagerIds as $userId) {
             if ($existingUserIds->contains($userId)) {

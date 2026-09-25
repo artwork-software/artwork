@@ -470,10 +470,18 @@ import {useBulkEventsBroadcastUpdater} from '@/Composeables/Listener/useBulkEven
 import FunctionBarFilter from "@/Artwork/Filter/FunctionBarFilter.vue";
 import SwitchIconTooltip from "@/Artwork/Toggles/SwitchIconTooltip.vue";
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
-import {DynamicScroller} from 'vue-virtual-scroller';
+import VueVirtualScroller, {DynamicScroller} from 'vue-virtual-scroller';
 import BulkScrollerItem from '@/Pages/Projects/Components/BulkComponents/BulkScrollerItem.vue';
 import 'vue-virtual-scroller/dist/vue-virtual-scroller.css';
 import axios from 'axios';
+
+// Bibliotheks-Bug (vue-virtual-scroller 2.0.1): DynamicScroller betreibt intern eine
+// zweite Scroller-Engine, reicht `page-mode` aber nur an die sichtbare weiter. Die interne
+// hält darum die komplette Liste für sichtbar und wirft ab 1000 Zeilen "Rendered items
+// limit reached" — das bricht jedes weitere Update ab: gemessene Zeilenhöhen kommen nie
+// an, Zeilen überlappen (Beschreibungszeile unter dem nächsten Termin, nicht klickbar).
+// Die interne Engine rendert kein DOM, das Limit ist für sie bedeutungslos.
+VueVirtualScroller.install(null, {installComponents: false, itemsLimit: Number.POSITIVE_INFINITY});
 
 const exportTabEnums = useExportTabEnums();
 const {hasAdminRole, can} = usePermission(usePage().props);

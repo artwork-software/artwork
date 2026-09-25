@@ -85,9 +85,11 @@ class ExternalAccessService
 
             $this->guardAgainstInternalUserEmail($email);
 
-            $external = $contact !== null
-                ? $this->findOrCreateExternalAccessForContact($contact, $command, $email)
-                : $this->findOrCreateExternalAccess($command, $email);
+            $external = match (true) {
+                $contact !== null => $this->findOrCreateExternalAccessForContact($contact, $command, $email),
+                $command->isTabOnlyInvitation() => $this->findOrCreateTabOnlyAccess($command, $email),
+                default => $this->findOrCreateExternalAccess($command, $email),
+            };
 
             foreach ($command->tabScopes as $tabScope) {
                 $this->scopeRepository->addOrUpdateScope(
@@ -205,6 +207,38 @@ class ExternalAccessService
             'crm_contact_id' => $contact->id,
             'invited_by_user_id' => $command->invitedBy->id,
             'crm_access_expires_at' => $this->resolveCrmAccessExpiry($command),
+        ]);
+    }
+
+    /**
+     * Einladung aus dem Projekt-Tab: Der Zugang hängt nur an der E-Mail (plus optionalem Namen). Es wird
+     * kein CRM-Kontakt angelegt und kein CRM-Zugang vergeben; ein bestehender Zugang wird wiederverwendet
+     * (bei Widerruf reaktiviert), ohne seinen CRM-Zugang zu verlängern.
+     */
+    private function findOrCreateTabOnlyAccess(InviteExternalCommand $command, string $email): ExternalAccess
+    {
+        $existing = $this->externalAccessRepository->findByEmail($email);
+        if ($existing !== null) {
+            $attributes = [];
+            if ($existing->revoked_at !== null) {
+                $attributes['revoked_at'] = null;
+            }
+            if ($command->name !== null && trim((string) $existing->name) === '') {
+                $attributes['name'] = $command->name;
+            }
+            if ($attributes !== []) {
+                $existing->forceFill($attributes)->save();
+            }
+
+            return $existing;
+        }
+
+        return $this->externalAccessRepository->create([
+            'email' => $email,
+            'name' => $command->name,
+            'crm_contact_id' => null,
+            'invited_by_user_id' => $command->invitedBy->id,
+            'crm_access_expires_at' => null,
         ]);
     }
 

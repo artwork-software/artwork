@@ -55,6 +55,8 @@ enum ProjectTabComponentEnum: string
     case BUSINESS_INTELLIGENCE = 'BusinessIntelligenceComponent';
     case BI_KEY_FIGURES = 'BiKeyFiguresDisplay';
     case SAGE_INVOICE_OVERVIEW = 'SageInvoiceOverviewComponent';
+    // CRM-Kontakte des Projekts je Komponente (anlegen/verknüpfen, auch durch Externe)
+    case CRM_CONTACT_LIST = 'CrmContactListComponent';
 
     /**
      * Component types that may be rendered in the external tab view.
@@ -79,6 +81,7 @@ enum ProjectTabComponentEnum: string
         self::ARTIST_NAME_DISPLAY,
         // Dokumente des freigegebenen Tabs (Upload/Download über eigene externe Endpunkte)
         self::PROJECT_DOCUMENTS,
+        self::CRM_CONTACT_LIST,
     ];
 
     /**
@@ -95,6 +98,8 @@ enum ProjectTabComponentEnum: string
         self::DISCLOSURE_COMPONENT,
         // Schreibend = Dateien hochladen/eigene Uploads löschen (ExternalProjectFileService)
         self::PROJECT_DOCUMENTS,
+        // Schreibend = eigene Kontakte anlegen/bearbeiten/entfernen (ProjectComponentCrmContactService)
+        self::CRM_CONTACT_LIST,
     ];
 
     /**
@@ -142,6 +147,7 @@ enum ProjectTabComponentEnum: string
         self::PROJECT_COST_CENTER_DISPLAY,
         self::PROJECT_MATERIAL_ISSUE_COMPONENT,
         self::PROJECT_CONTRACTS_DOCUMENTS,
+        self::CRM_CONTACT_LIST,
     ];
 
     public function isPrintable(): bool
@@ -223,6 +229,10 @@ enum ProjectTabComponentEnum: string
                 'availableFields' => [
                     'title' => '',
                     'title_size' => 12,
+                    // optionaler Text unter der Überschrift (z. B. Erklärung zum Abschnitt)
+                    'subtitle' => '',
+                    // Hex-Farbe: Überschrift als farbiger Abschnittsbalken; leer = schlichte Überschrift
+                    'bar_color' => '',
                 ]
             ],
             self::SEPARATOR->value => [
@@ -246,6 +256,17 @@ enum ProjectTabComponentEnum: string
                     'placeholder_label' => 'Anzeige',
                     'placeholder_url' => 'https://…',
                     'max_items' => 20,
+                ],
+            ],
+            self::CRM_CONTACT_LIST->value => [
+                'name' => self::CRM_CONTACT_LIST->value,
+                'availableFields' => [
+                    'title' => '',
+                    'description' => '',
+                    // Kontakttypen, die in dieser Liste angelegt/verknüpft werden dürfen
+                    'contact_type_ids' => [],
+                    // leer = unbegrenzt
+                    'max_contacts' => null,
                 ],
             ],
         ];

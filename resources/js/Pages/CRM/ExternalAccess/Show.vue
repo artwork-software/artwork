@@ -4,7 +4,7 @@
             <!-- Header -->
             <header class="flex items-start justify-between">
                 <div>
-                    <h1 class="text-xl font-semibold">{{ access.crm_contact.display_name }}</h1>
+                    <h1 class="text-xl font-semibold">{{ access.crm_contact?.display_name ?? access.name ?? access.email }}</h1>
                     <p class="text-sm text-text-subtle">{{ access.email }}</p>
                     <div class="mt-2 flex items-center gap-2">
                         <StatusBadge :status="resolveStatus()" />

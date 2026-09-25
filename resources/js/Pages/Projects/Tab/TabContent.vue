@@ -1,13 +1,32 @@
 <template>
     <ProjectHeaderComponent :header-object="headerObject" :project="project" :current-tab="currentTab" :create-settings="createSettings" :first_project_tab_id="first_project_tab_id" :print-layouts="printLayouts">
         <div class="my-10 w-full">
-            <div v-if="canInviteExternal" class="flex justify-end mb-4">
-                <BaseUIButton variant="secondary" hide-icon @click="showInviteModal = true">
+            <div v-if="externalAccessEnabled" class="flex items-center justify-end gap-3 mb-4">
+                <!-- Externe dieses Tabs mit Abgabe-Status (Hover: wer/wann, Klick: bestätigen/zurückgeben) -->
+                <ExternalTabStatus
+                    ref="externalTabStatusRef"
+                    :project-id="project.id"
+                    :tab-id="currentTab.id"
+                    @update:open-writers="(writers) => (openExternalWriters = writers)"
+                    @reviewed="externalReviewVersion++"
+                />
+                <BaseUIButton v-if="canInviteExternal" variant="secondary" hide-icon @click="showInviteModal = true">
                     <span class="flex items-center gap-1.5">
                         <IconUserPlus stroke-width="1" class="size-5" />
                         {{ $t('Invite external to this tab') }}
                     </span>
                 </BaseUIButton>
+            </div>
+            <div
+                v-if="openExternalWriters.length"
+                class="artwork-anchored-column mb-4"
+            >
+                <div class="flex max-w-2xl items-start gap-2 rounded-lg border border-info-border bg-info-surface px-3 py-2 text-xs text-info">
+                    <IconInfoCircle class="mt-0.5 size-4 shrink-0" stroke-width="1.5" />
+                    <span>
+                        {{ $t('This tab is currently being filled in externally by {names}. The entries are visible immediately but have not been submitted as final yet.', { names: openExternalWriters.map((writer) => writer.name).join(', ') }) }}
+                    </span>
+                </div>
             </div>
             <InviteExternalModal
                 v-if="showInviteModal"
@@ -16,7 +35,7 @@
                 :available-tabs="headerObject.tabs ?? []"
                 :preselected-tab-id="currentTab.id"
                 :external-file-upload-enabled="pageProps.externalFileUploadEnabled === true"
-                @close="showInviteModal = false"
+                @close="onInviteModalClosed"
             />
             <div v-for="(component, idx) in currentTab.components" :key="component?.id ?? component?.component?.id ?? idx" :class="outerWidthClass(component.component?.type)">
                 <div :class="innerWidthClass(component.component?.type)">
@@ -56,6 +75,10 @@
                     :component="component"
                     :materials="headerObject.materials"
                 />
+                <p
+                    v-if="component.note && showsInlineHint(component.component?.type) && canSeeComponent(component.component)"
+                    class="-mt-1 mb-3 whitespace-pre-line text-xs text-text-subtle"
+                >{{ component.note }}</p>
                 </div>
             </div>
         </div>
@@ -104,6 +127,10 @@
                             :eventStatuses="headerObject.eventStatuses"
                             :event_properties="headerObject.event_properties"
                         />
+                        <p
+                            v-if="component.note && showsInlineHint(component.component?.type) && canSeeComponent(component.component)"
+                            class="-mt-1 mb-3 whitespace-pre-line text-xs text-white/70"
+                        >{{ component.note }}</p>
                     </div>
                 </div>
             </div>
@@ -160,7 +187,10 @@ import BusinessIntelligenceComponent from "@/Pages/Projects/Tab/Components/Busin
 import SageInvoiceOverviewComponent from "@/Pages/Projects/Components/SageInvoiceOverviewComponent.vue";
 import InviteExternalModal from "@/Pages/CRM/Components/InviteExternalModal.vue";
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
-import { IconUserPlus } from "@tabler/icons-vue";
+import { IconInfoCircle, IconUserPlus } from "@tabler/icons-vue";
+import ExternalTabStatus from "@/Pages/Projects/Tab/Components/ExternalTabStatus.vue";
+import CrmContactListComponent from "@/Pages/Projects/Tab/Components/CrmContactListComponent.vue";
+import { showsInlineHint } from "@/Helper/ComponentInlineHints.js";
 import { useTranslation } from "@/Composeables/Translation.js";
 
 const pageProps = usePage().props;
@@ -171,8 +201,19 @@ const $t = useTranslation();
 const { canSeeComponent, canEditComponent, can } = usePermission(usePage().props);
 
 const showInviteModal = ref(false);
+const externalAccessEnabled = computed(() => pageProps.externalAccessEnabled === true);
 // Einladen-Button nur mit Recht UND instanzweit freigeschaltetem Feature (Einstellungen → Externe Zugänge)
-const canInviteExternal = computed(() => pageProps.externalAccessEnabled === true && can('can invite externals'));
+const canInviteExternal = computed(() => externalAccessEnabled.value && can('can invite externals'));
+const externalTabStatusRef = ref(null);
+// Nach Bestätigen/Zurückgeben laden CRM-Kontaktlisten neu (Markierung „ungeprüft“)
+const externalReviewVersion = ref(0);
+provide('externalReviewVersion', externalReviewVersion);
+const openExternalWriters = ref([]);
+
+const onInviteModalClosed = () => {
+    showInviteModal.value = false;
+    externalTabStatusRef.value?.reload();
+};
 
 const componentMapping = {
     TextField,
@@ -214,6 +255,7 @@ const componentMapping = {
     ProjectContractsDocumentsComponent,
     BusinessIntelligenceComponent,
     SageInvoiceOverviewComponent,
+    CrmContactListComponent,
 };
 
 const props = defineProps({
@@ -282,6 +324,7 @@ const PROSE_COMPONENT_TYPES = [
     'TextField', 'TextArea', 'Title', 'Checkbox', 'DropDown', 'Link', 'LinkList',
     'ProjectStateComponent', 'ProjectBudgetDeadlineComponent', 'ArtistNameDisplayComponent',
     'ProjectBasicDataDisplayComponent', 'ProjectCostCenterDisplayComponent', 'ProjectAttributesComponent',
+    'CrmContactListComponent',
 ];
 
 const outerWidthClass = (componentType) => {

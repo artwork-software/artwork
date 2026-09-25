@@ -381,7 +381,7 @@ function closePreview() {
                                     class="inline-flex items-center rounded-full bg-warning-surface px-2 py-0.5 text-[11px] font-medium text-warning"
                                     :title="file.external_access.email"
                                 >
-                                    {{ $t('Uploaded externally by {name}', { name: file.external_access.crm_contact?.display_name ?? file.external_access.email }) }}
+                                    {{ $t('Uploaded externally by {name}', { name: file.external_access.name ?? file.external_access.crm_contact?.display_name ?? file.external_access.email }) }}
                                 </span>
                             </div>
                         </div>

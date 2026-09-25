@@ -2,6 +2,7 @@
 
 namespace Artwork\Modules\Project\TabTemplates;
 
+use Artwork\Modules\Crm\Models\CrmContactType;
 use Artwork\Modules\Project\Enum\ProjectTabComponentEnum;
 use Artwork\Modules\Project\Models\Component;
 use Artwork\Modules\Project\Models\ComponentInTab;
@@ -85,13 +86,46 @@ class ProjectTabTemplateService
     /**
      * @param array<string, mixed> $definition
      */
-    private function createComponent(array $definition): Component
+    public function createComponent(array $definition): Component
     {
         $type = ProjectTabComponentEnum::from($definition['type']);
+
+        /** @var Component $component */
+        $component = Component::query()->create([
+            'name' => __($definition['name']),
+            'type' => $type->value,
+            'data' => $this->buildComponentData($definition),
+            'special' => false,
+            'sidebar_enabled' => true,
+            'permission_type' => 'allSeeAndEdit',
+        ]);
+
+        return $component;
+    }
+
+    /**
+     * Komponenten-Daten einer Vorlagen-Definition: Texte in der aktuellen Sprache, Kontakttypen per Slug
+     * als IDs dieser Instanz (fehlende Typen fallen weg).
+     *
+     * @param array<string, mixed> $definition
+     * @return array<string, mixed>
+     */
+    public function buildComponentData(array $definition): array
+    {
         $data = $definition['data'];
 
+        if (array_key_exists('contact_type_slugs', $data)) {
+            $data['contact_type_ids'] = CrmContactType::query()
+                ->whereIn('slug', (array) $data['contact_type_slugs'])
+                ->pluck('id')
+                ->map(fn ($id) => (int) $id)
+                ->values()
+                ->all();
+            unset($data['contact_type_slugs']);
+        }
+
         // Beschriftungen, Platzhalter und Optionen in der Sprache der anlegenden Person speichern
-        foreach (['label', 'placeholder', 'title'] as $textKey) {
+        foreach (['label', 'placeholder', 'title', 'description', 'subtitle'] as $textKey) {
             if (isset($data[$textKey]) && $data[$textKey] !== '') {
                 $data[$textKey] = __($data[$textKey]);
             }
@@ -103,20 +137,10 @@ class ProjectTabTemplateService
             );
         }
 
-        /** @var Component $component */
-        $component = Component::query()->create([
-            'name' => __($definition['name']),
-            'type' => $type->value,
-            'data' => $data,
-            'special' => false,
-            'sidebar_enabled' => true,
-            'permission_type' => 'allSeeAndEdit',
-        ]);
-
-        return $component;
+        return $data;
     }
 
-    private function resolveSpecialComponent(string $type): ?Component
+    public function resolveSpecialComponent(string $type): ?Component
     {
         /** @var Component|null $component */
         $component = Component::query()

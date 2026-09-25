@@ -19,6 +19,8 @@ use Artwork\Modules\Project\Models\PrintLayoutComponents;
 use Artwork\Modules\Project\Models\ProjectPrintLayout;
 use Artwork\Modules\Project\Services\ProjectPrintLayoutService;
 use Artwork\Modules\Project\Enum\ProjectTabComponentEnum;
+use Artwork\Modules\Project\Models\ProjectComponentCrmContact;
+use Artwork\Modules\Project\Services\ProjectComponentCrmContactService;
 use Artwork\Modules\Project\Models\Component;
 use Artwork\Modules\Project\Services\ProjectTabService;
 use Artwork\Modules\Room\Models\Room;
@@ -333,6 +335,13 @@ class ProjectPrintLayoutController extends Controller
                     case ProjectTabComponentEnum::PROJECT_CONTRACTS_DOCUMENTS->value:
                         $projectData->contracts_documents = $project->contracts;
                         break;
+                    case ProjectTabComponentEnum::CRM_CONTACT_LIST->value:
+                        // Kontakte der Liste mit den Feldern, die die druckende Person sehen darf
+                        $projectData->crm_contact_lists[$componentFullData->id] = $this->crmContactListPrintData(
+                            $project,
+                            $componentFullData,
+                        );
+                        break;
                 }
 
 
@@ -356,6 +365,27 @@ class ProjectPrintLayoutController extends Controller
             'components' => Component::all(),
             'loadedProjectInformation' => $loadedProjectInformation
         ]);
+    }
+
+    /**
+     * @return array<int, array<string, mixed>>
+     */
+    private function crmContactListPrintData(Project $project, Component $component): array
+    {
+        /** @var \Artwork\Modules\User\Models\User $user */
+        $user = auth()->user();
+        $service = app(ProjectComponentCrmContactService::class);
+        $visiblePropertyIds = $service->visiblePropertyIdsFor($user);
+
+        return $service->entries($project, $component)
+            ->map(fn (ProjectComponentCrmContact $entry) => $service->serializeEntry(
+                $entry,
+                $visiblePropertyIds,
+                $user,
+                false,
+            ))
+            ->values()
+            ->all();
     }
 
     /**

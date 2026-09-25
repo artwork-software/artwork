@@ -4,6 +4,7 @@ namespace Artwork\Modules\ExternalAccess\Models;
 
 use Artwork\Core\Database\Models\Model;
 use Artwork\Modules\ExternalAccess\Enums\ExternalAccessType;
+use Artwork\Modules\ExternalAccess\Enums\ExternalTabSubmissionStatus;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Models\ProjectTab;
 use Artwork\Modules\User\Models\User;
@@ -22,6 +23,10 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property Carbon $valid_from
  * @property Carbon $valid_to
  * @property Carbon|null $last_submitted_at
+ * @property ExternalTabSubmissionStatus $submission_status
+ * @property Carbon|null $reviewed_at
+ * @property int|null $reviewed_by_user_id
+ * @property string|null $review_comment
  * @property Carbon|null $expiry_reminder_sent_at
  * @property int|null $granted_by_user_id
  */
@@ -37,6 +42,10 @@ class ExternalAccessScope extends Model
         'valid_from',
         'valid_to',
         'last_submitted_at',
+        'submission_status',
+        'reviewed_at',
+        'reviewed_by_user_id',
+        'review_comment',
         'expiry_reminder_sent_at',
         'granted_by_user_id',
     ];
@@ -47,6 +56,8 @@ class ExternalAccessScope extends Model
             'valid_from' => 'datetime',
             'valid_to' => 'datetime',
             'last_submitted_at' => 'datetime',
+            'submission_status' => ExternalTabSubmissionStatus::class,
+            'reviewed_at' => 'datetime',
             'expiry_reminder_sent_at' => 'datetime',
             'access_type' => ExternalAccessType::class,
         ];
@@ -75,6 +86,19 @@ class ExternalAccessScope extends Model
     public function grantedBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'granted_by_user_id', 'id', 'grantedBy');
+    }
+
+    public function reviewedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'reviewed_by_user_id', 'id', 'reviewedBy');
+    }
+
+    /**
+     * Nach dem Absenden (bis zur Rückgabe) darf die externe Person im Tab nichts mehr ändern.
+     */
+    public function isLockedForExternal(): bool
+    {
+        return ($this->submission_status ?? ExternalTabSubmissionStatus::OPEN)->locksExternalEditing();
     }
 
     public function scopeCurrentlyValid(Builder $query): Builder

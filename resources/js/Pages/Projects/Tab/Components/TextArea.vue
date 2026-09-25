@@ -8,29 +8,11 @@
             >
                 {{ projectData.data.label }}
             </label>
-            <!-- Anzeige (HTML) bis geklickt wird -->
-            <div
-                v-if="descriptionClicked === false"
-                @click="handleDescriptionClick()"
-                @focus="handleDescriptionClick()"
-                @keydown.enter.prevent="handleDescriptionClick()"
-                :tabindex="canEditComponent ? 0 : undefined"
-                class="flex items-center gap-x-1 w-full focus:ring-2 focus:ring-accent-600 rounded"
-            >
-                <component v-if="!projectData.project_value?.data?.text" :is="IconBlockquote" class="size-4 shrink-0" :class="inSidebar ? 'text-white/70' : 'text-text-subtle'" />
-                <div
-                    class="subpixel-antialiased flex-1 whitespace-pre-line"
-                    :class="[projectData.project_value?.data?.text ? inSidebar ? 'text-white/70 text-sm' : 'text-text text-sm' : inSidebar ? 'text-white/70 text-sm italic' : 'text-text-subtle text-sm italic', ]"
-                >{{ projectData.project_value?.data?.text ? projectData.project_value.data.text : (canEditComponent ? t('Click here to add text') : '') }}</div>
-            </div>
-
-            <!-- Editor -->
-            <div v-else class="w-full flex" ref="descriptionWrapRef">
+            <!-- Mit Schreibrecht immer direkt das Eingabefeld (leer = sofort erkennbar, dass man hier eintragen kann) -->
+            <div v-if="canEditComponent" class="mt-2 w-full flex">
                 <BaseTextarea
-                    :disabled="!canEditComponent"
                     :placeholder="data.data.placeholder"
-                    ref="descriptionRef"
-                    :rows="5"
+                    :rows="4"
                     :bg-color="inSidebar ? '!bg-surface-inverse !border-white/10 !w-80' : 'bg-white'"
                     class="w-full"
                     :class="inSidebar ? '!w-80' : 'w-full'"
@@ -41,6 +23,12 @@
                     :maxlength="2000"
                 />
             </div>
+            <!-- Nur-Lesen: Text anzeigen -->
+            <div
+                v-else
+                class="mt-1 subpixel-antialiased whitespace-pre-line text-sm"
+                :class="inSidebar ? 'text-white/70' : (text ? 'text-text' : 'text-text-subtle')"
+            >{{ text || '–' }}</div>
         </div>
 
         <InfoButtonComponent :component="component" v-if="component" />
@@ -48,14 +36,12 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, onMounted, nextTick, getCurrentInstance } from "vue";
+import { ref, computed, watch, onMounted } from "vue";
 import axios from 'axios';
-import { useI18n } from "vue-i18n";
 import { useProjectDataListener } from "@/Composeables/Listener/useProjectDataListener.js";
 
 import InfoButtonComponent from "@/Pages/Projects/Tab/Components/InfoButtonComponent.vue";
 import BaseTextarea from "@/Artwork/Inputs/BaseTextarea.vue";
-import {IconBlockquote} from "@tabler/icons-vue";
 
 defineOptions({ name: "TextArea" });
 
@@ -71,12 +57,6 @@ const props = defineProps({
     component: { type: Object, default: null },
 });
 
-// i18n
-const { t } = useI18n();
-
-// Zugriff auf globale Helfer ($can, $role, route) aus Mixins/Plugins
-const { proxy } = getCurrentInstance();
-
 // Ableitungen/State
 const projectData = computed(() => props.data);
 
@@ -86,13 +66,8 @@ const text = ref(
         ? props.data.project_value.text_without_html
         : props.data.data.text
 );
-
-// Toggle zwischen Anzeige und Bearbeitung
-const descriptionClicked = ref(false);
-
-// Ref auf das Textarea (falls du Fokus/Selection wieder aktivieren willst)
-const descriptionRef = ref(null);
-const descriptionWrapRef = ref(null)
+// Nur bei tatsächlicher Änderung speichern (das Feld ist jetzt dauerhaft offen, Fokuswechsel sind häufig)
+let lastSavedText = text.value;
 
 // Listener initialisieren (wie zuvor im mounted)
 onMounted(() => {
@@ -106,12 +81,14 @@ watch(
         text.value = newVal.project_value?.text_without_html
             ? newVal.project_value.text_without_html
             : newVal.data.text;
+        lastSavedText = text.value;
     },
     { deep: true }
 );
 
 // Patch-Aufruf mit axios (ohne Page Reload)
 async function updateTextData() {
+    if ((text.value ?? '') === (lastSavedText ?? '')) return;
     try {
         await axios.patch(
             route("project.tab.component.update", {
@@ -120,52 +97,13 @@ async function updateTextData() {
             }),
             { data: { text: text.value } }
         );
-        // Editor schließen nach erfolgreichem Update
-        descriptionClicked.value = false;
+        lastSavedText = text.value;
         // Keine weitere Aktion nötig - der Broadcast aktualisiert die Komponente
     } catch (error) {
         console.error('Fehler beim Aktualisieren:', error);
     }
 }
 
-// Klick-Handler: nur bei Berechtigung in den Edit-Modus
-function handleDescriptionClick() {
-    if (!props.canEditComponent) return;
-
-    const canWriteGlobally =
-        proxy?.$can?.("write projects") ||
-        proxy?.$role?.("artwork admin") ||
-        proxy?.$can?.("admin projects");
-
-    const userId = proxy?.$page?.props?.auth?.user?.id;
-    const hasProjectWrite =
-        Array.isArray(props.projectWriteIds) && userId
-            ? props.projectWriteIds.includes(userId)
-            : false;
-
-    const isProjectManager =
-        Array.isArray(props.projectManagerIds) && userId
-            ? props.projectManagerIds.includes(userId)
-            : false;
-
-    const isDeptMember = !!props.project?.isMemberOfADepartment;
-
-    if (props.canEditComponent || canWriteGlobally || hasProjectWrite || isProjectManager || isDeptMember) {
-        descriptionClicked.value = true;
-
-        nextTick(() => {
-            requestAnimationFrame(() => {
-                const root = descriptionWrapRef.value
-                const ta = root?.querySelector?.("textarea")
-                ta?.focus()
-                // Cursor ans Ende setzen, statt den gesamten Inhalt zu markieren
-                // (markierter Text könnte sonst versehentlich überschrieben/gelöscht werden)
-                const end = ta?.value?.length ?? 0
-                ta?.setSelectionRange?.(end, end)
-            })
-        })
-    }
-}
 </script>
 
 <style scoped>

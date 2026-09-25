@@ -66,6 +66,8 @@ use App\Http\Controllers\PresetTimelineTimeController;
 use App\Http\Controllers\ProjectComponentValueController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\ProjectCrmContactController;
+use App\Http\Controllers\ProjectComponentCrmContactController;
+use Artwork\Modules\ExternalAccess\Http\Controllers\ExternalTabReviewController;
 use App\Http\Controllers\ProjectDayAssignmentController;
 use App\Http\Controllers\ProjectFileController;
 use App\Http\Controllers\ProjectManagementBuilderController;
@@ -901,6 +903,38 @@ Route::group(['middleware' => ['auth:sanctum']], function (): void {
         ->name('projects.crm-contacts.store');
     Route::delete('/projects/{project}/crm-contacts/{crmContact}', [ProjectCrmContactController::class, 'destroy'])
         ->name('projects.crm-contacts.destroy');
+
+    // Komponente „CRM-Kontaktliste“ (Autorisierung im Controller: view / writeComponent / CRM-Zugang)
+    Route::prefix('/projects/{project}/components/{component}/crm-contacts')
+        ->name('projects.components.crm-contacts.')
+        ->controller(ProjectComponentCrmContactController::class)
+        ->group(function (): void {
+            Route::get('/', 'index')->name('index');
+            Route::get('/search', 'search')->name('search');
+            Route::get('/mask', 'mask')->name('mask');
+            Route::post('/', 'store')->name('store');
+            Route::post('/link', 'link')->name('link');
+            Route::patch('/{crmContact}', 'update')->name('update');
+            Route::delete('/{crmContact}', 'destroy')->name('destroy');
+        });
+
+    // Auswahl der Kontakttypen in den Komponenten-Einstellungen (nur Stammdaten der Typen)
+    Route::get('/components/crm-contact-list/contact-types', [
+        ProjectComponentCrmContactController::class,
+        'contactTypeOptions',
+    ])->name('components.crm-contact-list.contact-types');
+
+    // Externe eines Tabs: Status neben „Externen zu diesem Tab einladen“, Bestätigen/Zurückgeben
+    Route::get('/projects/{project}/tabs/{projectTab}/externals', [ExternalTabReviewController::class, 'index'])
+        ->name('projects.tabs.externals.index');
+    Route::post('/projects/{project}/tabs/{projectTab}/externals/{scope}/confirm', [
+        ExternalTabReviewController::class,
+        'confirm',
+    ])->name('projects.tabs.externals.confirm');
+    Route::post('/projects/{project}/tabs/{projectTab}/externals/{scope}/return', [
+        ExternalTabReviewController::class,
+        'returnForRevision',
+    ])->name('projects.tabs.externals.return');
 
     Route::get('/projects/{project}/history', [ProjectController::class, 'history'])
         ->name('projects.history')

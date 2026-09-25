@@ -8497,6 +8497,15 @@
     "Text below the heading": "Text unter der Überschrift",
     "Optional explanatory text shown directly below the heading, e.g. an introduction to the section.": "Optionaler Erklärtext direkt unter der Überschrift, z. B. eine Einleitung zum Abschnitt.",
     "With a color the heading is shown as a colored bar across the full width, with some space above it. This divides a tab into clearly separated sections.": "Mit einer Farbe wird die Überschrift als farbiger Balken über die ganze Breite angezeigt, mit etwas Abstand nach oben. So lässt sich ein Tab in klar getrennte Abschnitte gliedern.",
+    "Booking type": "Buchungsart",
+    "Add hours": "Stunden gutschreiben",
+    "Deduct hours": "Stunden abziehen",
+    "The time account will be changed by {0} hours.": "Das Zeitkonto wird um {0} Stunden verändert.",
+    "Please enter whole numbers only.": "Bitte nur ganze Zahlen eingeben.",
+    "Minutes must be between 0 and 59.": "Minuten müssen zwischen 0 und 59 liegen.",
+    "The night hours cannot exceed the booked hours.": "Die Nachtstunden dürfen die gebuchten Stunden nicht übersteigen.",
+    "Please enter a duration greater than zero.": "Bitte eine Dauer größer als null eingeben.",
+    "Please enter the duration as hours:minutes (e.g. 150:30).": "Bitte die Dauer als Stunden:Minuten angeben (z. B. 150:30).",
     "Including sidebar: {names}": "Inklusive Seitenleiste: {names}",
     "Tab with the descriptive texts of the project (short description, website text, press) and the project documents, divided into colored sections. A good starting point to see how a tab can be structured.": "Tab mit den beschreibenden Texten zum Projekt (Kurzbeschreibung, Websitetext, Presse) und den Projektdokumenten, gegliedert in farbige Abschnitte. Ein guter Ausgangspunkt, um zu sehen, wie sich ein Tab aufbauen lässt.",
     "Descriptions": "Beschreibungen",
@@ -8513,7 +8522,7 @@
     "Tab with the budget of the project and a sidebar with the budget information.": "Tab mit dem Budget des Projekts und einer Seitenleiste mit den Budgetinformationen.",
     "Budget information": "Budgetinformationen",
     "Tab for comments on the project.": "Tab für Kommentare zum Projekt.",
+    "Allowed: {0} to {1} MB per file.": "Erlaubt: {0} bis {1} MB pro Datei.",
     ":invitedBy has invited you to fill in information for the project \":project\" at :company.": ":invitedBy hat dich eingeladen, Angaben zum Projekt „:project“ bei :company auszufüllen.",
-    "No account or password is needed. Your entries are saved automatically; once everything is complete, submit them in the form.": "Du brauchst weder Account noch Passwort. Deine Eingaben werden automatisch gespeichert; wenn alles vollständig ist, sende sie im Formular ab.",
-    "Allowed: {0} to {1} MB per file.": "Erlaubt: {0} bis {1} MB pro Datei."
+    "No account or password is needed. Your entries are saved automatically; once everything is complete, submit them in the form.": "Du brauchst weder Account noch Passwort. Deine Eingaben werden automatisch gespeichert; wenn alles vollständig ist, sende sie im Formular ab."
 }

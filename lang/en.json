@@ -8488,6 +8488,15 @@
     "Text below the heading": "Text below the heading",
     "Optional explanatory text shown directly below the heading, e.g. an introduction to the section.": "Optional explanatory text shown directly below the heading, e.g. an introduction to the section.",
     "With a color the heading is shown as a colored bar across the full width, with some space above it. This divides a tab into clearly separated sections.": "With a color the heading is shown as a colored bar across the full width, with some space above it. This divides a tab into clearly separated sections.",
+    "Booking type": "Booking type",
+    "Add hours": "Add hours",
+    "Deduct hours": "Deduct hours",
+    "The time account will be changed by {0} hours.": "The time account will be changed by {0} hours.",
+    "Please enter whole numbers only.": "Please enter whole numbers only.",
+    "Minutes must be between 0 and 59.": "Minutes must be between 0 and 59.",
+    "The night hours cannot exceed the booked hours.": "The night hours cannot exceed the booked hours.",
+    "Please enter a duration greater than zero.": "Please enter a duration greater than zero.",
+    "Please enter the duration as hours:minutes (e.g. 150:30).": "Please enter the duration as hours:minutes (e.g. 150:30).",
     "Including sidebar: {names}": "Including sidebar: {names}",
     "Tab with the descriptive texts of the project (short description, website text, press) and the project documents, divided into colored sections. A good starting point to see how a tab can be structured.": "Tab with the descriptive texts of the project (short description, website text, press) and the project documents, divided into colored sections. A good starting point to see how a tab can be structured.",
     "Descriptions": "Descriptions",
@@ -8504,7 +8513,7 @@
     "Tab with the budget of the project and a sidebar with the budget information.": "Tab with the budget of the project and a sidebar with the budget information.",
     "Budget information": "Budget information",
     "Tab for comments on the project.": "Tab for comments on the project.",
+    "Allowed: {0} to {1} MB per file.": "Allowed: {0} to {1} MB per file.",
     ":invitedBy has invited you to fill in information for the project \":project\" at :company.": ":invitedBy has invited you to fill in information for the project \":project\" at :company.",
-    "No account or password is needed. Your entries are saved automatically; once everything is complete, submit them in the form.": "No account or password is needed. Your entries are saved automatically; once everything is complete, submit them in the form.",
-    "Allowed: {0} to {1} MB per file.": "Allowed: {0} to {1} MB per file."
+    "No account or password is needed. Your entries are saved automatically; once everything is complete, submit them in the form.": "No account or password is needed. Your entries are saved automatically; once everything is complete, submit them in the form."
 }

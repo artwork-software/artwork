@@ -48,3 +48,6 @@ cachegrind.*
 !/LICENSE.md
 !/AGENTS.md
 /public/icons/tabler
+
+# Sicherheits-Audit-Berichte (beschreiben offene Schwachstellen) nie committen
+/docs/security/

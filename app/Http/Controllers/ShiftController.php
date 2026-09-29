@@ -101,6 +101,8 @@ class ShiftController extends Controller
 
     public function update(Request $request, Shift $shift): RedirectResponse
     {
+        $request->validate(['description' => ['sometimes', 'nullable', 'string', 'max:10000']]);
+
         if ($shift->is_committed) {
             $event = $shift->event;
 
@@ -366,6 +368,7 @@ class ShiftController extends Controller
             'shift_group_id' => ['sometimes', 'nullable', 'integer', 'exists:shift_groups,id'],
             'start' => ['sometimes', 'required', 'date_format:H:i,H:i:s'],
             'end' => ['sometimes', 'required', 'date_format:H:i,H:i:s'],
+            'description' => ['sometimes', 'nullable', 'string', 'max:10000'],
         ]);
 
         // Aktuelles UND Ziel-Gewerk müssen planbar sein
@@ -1918,7 +1921,7 @@ class ShiftController extends Controller
 
     public function updateDescription(Request $request, Shift $shift): \Illuminate\Http\JsonResponse
     {
-        $request->validate(['description' => ['nullable', 'string', 'max:255']]);
+        $request->validate(['description' => ['nullable', 'string', 'max:10000']]);
         $this->ensureCanPlanShifts([$shift]);
         $shift->update($request->only(['description']));
 
@@ -2088,7 +2091,7 @@ class ShiftController extends Controller
             'day' => ['required', 'date'],
             'start' => ['required', 'date_format:H:i,H:i:s'],
             'end' => ['required', 'date_format:H:i,H:i:s'],
-            'description' => ['nullable', 'string', 'max:255'],
+            'description' => ['nullable', 'string', 'max:10000'],
             'break_minutes' => ['nullable', 'integer', 'min:0'],
             'globalQualifications' => ['sometimes', 'array'],
             'globalQualifications.*.global_qualification_id' => [
@@ -2368,7 +2371,7 @@ class ShiftController extends Controller
             'roomsAndDatesForMultiEdit.*.roomId' => ['required', 'integer', 'exists:rooms,id'],
             'roomsAndDatesForMultiEdit.*.day' => ['required', 'date'],
             'shift_group_id' => ['nullable', 'integer', 'exists:shift_groups,id'],
-            'description' => ['nullable', 'string', 'max:255'],
+            'description' => ['nullable', 'string', 'max:10000'],
             'globalQualifications' => ['sometimes', 'array'],
             'globalQualifications.*.global_qualification_id' => [
                 'required',

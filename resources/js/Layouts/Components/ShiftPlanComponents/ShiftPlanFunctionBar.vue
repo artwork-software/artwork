@@ -71,7 +71,7 @@
                                             white-menu-background
                                             without-translation
                                             :icon="userGotoMode === mode.key ? 'IconCheck' : mode.icon"
-                                            :title="$t('Jump around') + ' ' + $t(mode.label)"
+                                            :title="$t(mode.label)"
                                             @click="changeUserSelectedGoTo(mode.key)"
                                         />
                                     </div>
@@ -419,9 +419,9 @@ const openHelpPanel = () => helpPanel.value?.open();
 
 // Scrollmodus der Pfeiltasten (Tag / KW / Monat)
 const gotoModes = [
-    { key: 'day', icon: 'IconCalendar', label: 'Day' },
-    { key: 'week', icon: 'IconCalendarWeek', label: 'Calendar week' },
-    { key: 'month', icon: 'IconCalendarMonth', label: 'Month' },
+    { key: 'day', icon: 'IconCalendar', label: 'Jump by day' },
+    { key: 'week', icon: 'IconCalendarWeek', label: 'Jump by calendar week' },
+    { key: 'month', icon: 'IconCalendarMonth', label: 'Jump by month' },
 ];
 
 // Data properties

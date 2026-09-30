@@ -132,7 +132,7 @@ final class ColumnRelevanceTest extends FeatureTestCase
 
         $this->post(route('project.budget.column.duplicate', ['column' => $relevantColumn->id]));
 
-        $copy = $table->columns()->where('name', 'like', '%(Kopie)')->first();
+        $copy = $table->columns()->where('name', 'like', '%' . __('(Copy)'))->first();
         $this->assertNotNull($copy);
         $this->assertSame([$copy->id], $this->relevantColumnIds($table));
     }
@@ -153,7 +153,7 @@ final class ColumnRelevanceTest extends FeatureTestCase
 
         $this->post(route('project.budget.column.duplicate', ['column' => $sumColumn->id]));
 
-        $copy = $table->columns()->where('name', 'like', '%(Kopie)')->first();
+        $copy = $table->columns()->where('name', 'like', '%' . __('(Copy)'))->first();
         $this->assertFalse($copy->relevant_for_project_groups);
     }
 

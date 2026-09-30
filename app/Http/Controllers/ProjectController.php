@@ -4181,7 +4181,7 @@ class ProjectController extends Controller
         }
 
         $newProject = Project::create([
-            'name' => '(Kopie) ' . $project->name,
+            'name' => __('(Copy)') . ' ' . $project->name,
             'description' => $project->description,
             'number_of_participants' => $project->number_of_participants,
             'cost_center' => $project->cost_center,
@@ -4807,7 +4807,7 @@ class ProjectController extends Controller
         $newColumn = $column->replicate();
         $newColumn->relevant_for_project_groups = false;
         $newColumn->save();
-        $newColumn->update(['name' => $column->name . ' (Kopie)']);
+        $newColumn->update(['name' => $column->name . ' ' . __('(Copy)')]);
         $newColumn->cells()->forceDelete();
         // Verifizierungen und Finanzierungsquellen-Verknüpfungen dürfen nicht in die
         // Kopie wandern (sonst gilt die Kopie als verifiziert bzw. zählt doppelt auf
@@ -4849,7 +4849,7 @@ class ProjectController extends Controller
     {
         $newSubPosition = $subPosition->replicate();
         $newSubPosition->save();
-        $newSubPosition->update(['name' => $subPosition->name . ' (Kopie)']);
+        $newSubPosition->update(['name' => $subPosition->name . ' ' . __('(Copy)')]);
 
         if ($mainPositionId !== null) {
             $newSubPosition->update(['main_position_id' => $mainPositionId]);
@@ -4859,7 +4859,7 @@ class ProjectController extends Controller
         $rows = $subPosition->subPositionRows()->with('cells')->get();
         foreach ($rows as $subPositionRow) {
             $newSubPositionRow = $subPositionRow->replicate();
-            $newSubPositionRow->name = $subPositionRow->name . ' (Kopie)';
+            $newSubPositionRow->name = $subPositionRow->name . ' ' . __('(Copy)');
             $newSubPositionRow->sub_position_id = $newSubPosition->id;
             $newSubPositionRow->save();
             $newSubPositionRow->cells()->forceDelete();
@@ -4882,7 +4882,7 @@ class ProjectController extends Controller
     {
         $newMainPosition = $mainPosition->replicate();
         $newMainPosition->save();
-        $newMainPosition->update(['name' => $mainPosition->name . ' (Kopie)']);
+        $newMainPosition->update(['name' => $mainPosition->name . ' ' . __('(Copy)')]);
 
         // duplicate sub positions
         foreach ($mainPosition->subPositions()->get() as $subPosition) {

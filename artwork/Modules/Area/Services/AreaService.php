@@ -43,7 +43,7 @@ class AreaService
     public function duplicateByAreaModel(Area $area, RoomService $roomService): void
     {
         $new_area = $area->replicate();
-        $new_area->name = '(Kopie) ' . $area->name;
+        $new_area->name = __('(Copy)') . ' ' . $area->name;
 
         $this->areaRepository->save($new_area);
 

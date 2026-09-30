@@ -50,7 +50,7 @@ final class ProjectShowTest extends FeatureTestCase
 
         $response->assertRedirect();
         $this->assertGreaterThan($before, Project::query()->count());
-        $this->assertDatabaseHas('projects', ['name' => '(Kopie) Original']);
+        $this->assertDatabaseHas('projects', ['name' => __('(Copy)') . ' Original']);
     }
 
     #[Test]

@@ -40,7 +40,7 @@ final class ChecklistTemplateServiceTest extends TestCase
         $copy = $this->service->duplicate($template, $newOwner->id);
 
         $this->assertTrue($copy->exists);
-        $this->assertSame('Source (Kopie)', $copy->name);
+        $this->assertSame('Source ' . __('(Copy)'), $copy->name);
         $this->assertSame($newOwner->id, $copy->user_id);
     }
 }

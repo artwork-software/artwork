@@ -85,7 +85,7 @@ final class AreaServiceTest extends TestCase
         $roomService = app(RoomService::class);
         $this->service->duplicateByAreaModel($area->fresh('rooms'), $roomService);
 
-        $this->assertDatabaseHas('areas', ['name' => '(Kopie) Stage']);
-        $this->assertDatabaseHas('rooms', ['name' => '(Kopie) Room A']);
+        $this->assertDatabaseHas('areas', ['name' => __('(Copy)') . ' Stage']);
+        $this->assertDatabaseHas('rooms', ['name' => __('(Copy)') . ' Room A']);
     }
 }

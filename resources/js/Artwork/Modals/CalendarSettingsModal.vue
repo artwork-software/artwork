@@ -100,7 +100,7 @@ const emit = defineEmits(["close"]);
 
 const page = usePage().props;
 const view = resolveView(props);
-const { locale } = useI18n();
+const { t, locale } = useI18n();
 const manualHref = computed(() => manualUrl(displaySettingsManualPath(view), locale.value));
 
 // Gespeicherte Settings-Zeile der Ansicht (mit derselben Fallback-Kette wie die Ansichten selbst)
@@ -150,15 +150,15 @@ const modalDescription = computed(() => (isShiftPlanView(view) || view === VIEW.
     : 'Configure your calendar settings here.'));
 
 // Raumspaltenbreite: feste Presets, gespeichert als px-Wert
-const columnWidthOptions = [
-    { id: 160, name: 'Schmal (160 px)' },
-    { id: 212, name: 'Standard (212 px)' },
-    { id: 280, name: 'Breit (280 px)' },
-    { id: 320, name: 'Sehr breit (320 px)' },
-];
+const columnWidthOptions = computed(() => [
+    { id: 160, name: `${t('Narrow')} (160 px)` },
+    { id: 212, name: `${t('Standard')} (212 px)` },
+    { id: 280, name: `${t('Wide')} (280 px)` },
+    { id: 320, name: `${t('Very wide')} (320 px)` },
+]);
 
 const selectedColumnWidthOption = computed(() =>
-    columnWidthOptions.find((option) => option.id === form.calendar_column_width) ?? columnWidthOptions[1]
+    columnWidthOptions.value.find((option) => option.id === form.calendar_column_width) ?? columnWidthOptions.value[1]
 );
 
 const onColumnWidthChange = (option) => {

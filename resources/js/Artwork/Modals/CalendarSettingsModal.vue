@@ -52,7 +52,17 @@
             </template>
         </div>
 
-        <div class="flex justify-end px-5 pb-5">
+        <div class="flex flex-col-reverse gap-3 px-5 pb-5 sm:flex-row sm:items-center sm:justify-between">
+            <a
+                :href="manualHref"
+                target="_blank"
+                rel="noopener"
+                class="inline-flex items-center gap-1.5 text-xs font-medium text-accent-600 hover:text-accent-700"
+            >
+                <PropertyIcon name="IconBook" class="h-4 w-4" />
+                {{ $t('What does each option do? Open the manual') }}
+                <PropertyIcon name="IconExternalLink" class="h-3.5 w-3.5" />
+            </a>
             <BaseUIButton :label="$t('Save')" is-add-button @click="save"/>
         </div>
     </ArtworkBaseModal>
@@ -66,6 +76,9 @@ import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 import BaseCheckbox from "@/Artwork/Inputs/BaseCheckbox.vue";
 import ArtworkBaseListbox from "@/Artwork/Listbox/ArtworkBaseListbox.vue";
 import { computed } from "vue";
+import { useI18n } from "vue-i18n";
+import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
+import { displaySettingsManualPath, manualUrl } from "@/Helper/manualLinks.js";
 import {
     VIEW,
     resolveView,
@@ -87,6 +100,8 @@ const emit = defineEmits(["close"]);
 
 const page = usePage().props;
 const view = resolveView(props);
+const { locale } = useI18n();
+const manualHref = computed(() => manualUrl(displaySettingsManualPath(view), locale.value));
 
 // Gespeicherte Settings-Zeile der Ansicht (mit derselben Fallback-Kette wie die Ansichten selbst)
 const activeSettings = (() => {

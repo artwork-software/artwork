@@ -8518,5 +8518,9 @@
     "No account or password is needed. Your entries are saved automatically; once everything is complete, submit them in the form.": "No account or password is needed. Your entries are saved automatically; once everything is complete, submit them in the form.",
     "This access has no own CRM contact.": "This access has no own CRM contact.",
     "The text is too long (max. :max characters).": "The text is too long (max. :max characters).",
-    "Please enter a link starting with http:// or https://.": "Please enter a link starting with http:// or https://."
+    "Please enter a link starting with http:// or https://.": "Please enter a link starting with http:// or https://.",
+    "User manual": "User manual",
+    "What does each option do? Open the manual": "What does each option do? Open the manual",
+    "More in the manual": "More in the manual",
+    "Views and display settings in the manual": "Views and display settings in the manual"
 }

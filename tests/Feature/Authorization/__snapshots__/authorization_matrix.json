@@ -725,6 +725,7 @@
     "PATCH settings/shift-settings/updateProjectAssignmentsEnabled": "forbidden",
     "PATCH settings/shift-settings/updateShiftConfirmationSettings": "forbidden",
     "PATCH settings/shift-settings/updateShiftSettingsUseFirstNameForSort": "forbidden",
+    "PATCH settings/shift-settings/updateWorkTimeAccountingEnabled": "forbidden",
     "PATCH settings/shift/update/craft/{craft}": "forbidden",
     "PATCH settings/shift/update/relevant/event-type/{eventType}": "forbidden",
     "PATCH settings/sidebar/{projectTabSidebarTab}/update": "forbidden",

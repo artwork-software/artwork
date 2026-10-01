@@ -8539,5 +8539,8 @@
     "Book working hours": "Arbeitsstunden buchen",
     "Jump by day": "Springen um Tag",
     "Jump by calendar week": "Springen um Kalenderwoche",
-    "Jump by month": "Springen um Monat"
+    "Jump by month": "Springen um Monat",
+    "Work time accounting": "Arbeitszeitberechnung",
+    "If deactivated, the shift plan is only used to create and staff shifts: no target hours from work time patterns, no work time balance, no overtime and no nightly booking. Planned hours stay visible. Stored patterns, contracts and balances are kept; days while the calculation is off are not booked afterwards.": "Ausgeschaltet dient der Dienstplan nur zum Anlegen und Besetzen von Schichten: kein Soll aus Arbeitszeitmustern, kein Stundenkonto, keine Überstunden und keine nächtliche Buchung. Geplante Stunden bleiben sichtbar. Gespeicherte Muster, Verträge und Stundenkonten bleiben erhalten; Tage, an denen die Berechnung aus ist, werden nicht nachgebucht.",
+    "Work time accounting is deactivated in the shift settings. Working hours are stored but not used for target hours, work time balance or overtime. Contracts still decide which shift rules apply.": "Die Arbeitszeitberechnung ist in den Schichteinstellungen ausgeschaltet. Arbeitszeiten werden gespeichert, aber nicht für Soll, Stundenkonto oder Überstunden verwendet. Verträge entscheiden weiterhin, welche Schichtregeln gelten."
 }

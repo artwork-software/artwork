@@ -2544,6 +2544,12 @@ Route::group(['middleware' => ['auth:sanctum']], function (): void {
             ->name('shift.settings.update.project-assignments-enabled');
 
         Route::patch(
+            'shift-settings/updateWorkTimeAccountingEnabled',
+            [ShiftSettingsController::class, 'updateWorkTimeAccountingEnabled']
+        )->middleware('shift-settings-area:general,edit')
+            ->name('shift.settings.update.work-time-accounting-enabled');
+
+        Route::patch(
             'shift-settings/updateNightTimes',
             [ShiftSettingsController::class, 'updateNightTimes']
         )->middleware('shift-settings-area:general,edit')

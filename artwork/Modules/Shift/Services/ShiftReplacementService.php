@@ -25,6 +25,7 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpKernel\Exception\ConflictHttpException;
+use Artwork\Modules\WorkTime\Support\WorkTimeAccounting;
 
 /**
  * „Ersatz suchen" nach einer Absage: schlägt freie Personen mit passender
@@ -173,7 +174,10 @@ class ShiftReplacementService
                 $hints[] = $this->individualTimeHint($individualTime, $slotStart, $slotEnd);
             }
 
-            $balanceMinutes = $candidate instanceof User ? (int) ($candidate->work_time_balance ?? 0) : null;
+            // Arbeitszeitberechnung aus: kein Stundenkonto anzeigen und nicht danach sortieren
+            $balanceMinutes = $candidate instanceof User && WorkTimeAccounting::isEnabled()
+                ? (int) ($candidate->work_time_balance ?? 0)
+                : null;
             $fullName = $candidate instanceof User
                 ? $candidate->getFullNameAttribute()
                 : $candidate->getNameAttribute();

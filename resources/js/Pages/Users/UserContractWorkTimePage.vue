@@ -20,6 +20,11 @@
 
         <VisualFeedback :show-save-success="showVisualFeedback" />
 
+        <!-- Arbeitszeitberechnung aus: Muster werden gespeichert, aber nicht verrechnet -->
+        <div v-if="!workTimeAccountingEnabled" class="mt-5 rounded-lg border border-info-border bg-info-surface px-4 py-3 text-xs text-info">
+            {{ $t('Work time accounting is deactivated in the shift settings. Working hours are stored but not used for target hours, work time balance or overtime. Contracts still decide which shift rules apply.') }}
+        </div>
+
         <!-- Leerzustand -->
         <div v-if="segments.length === 0" class="mt-5 rounded-lg border border-dashed border-warning-border bg-warning-surface px-4 py-4">
             <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
@@ -120,6 +125,8 @@
 
 <script setup>
 import {computed, ref} from "vue";
+import {usePage} from "@inertiajs/vue3";
+import {isWorkTimeAccountingEnabled} from "@/Helper/workTimeAccounting.js";
 import UserEditHeader from "@/Pages/Users/Components/UserEditHeader.vue";
 import TinyPageHeadline from "@/Components/Headlines/TinyPageHeadline.vue";
 import VisualFeedback from "@/Components/Feedback/VisualFeedback.vue";
@@ -134,6 +141,8 @@ import {
     formatDate,
     formatPeriod
 } from "@/Pages/Users/ContractWorkTime/contractWorkTimeFields.js";
+
+const workTimeAccountingEnabled = computed(() => isWorkTimeAccountingEnabled(usePage().props));
 
 const props = defineProps({
     userToEdit: { type: Object, required: true },

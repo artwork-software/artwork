@@ -11,6 +11,7 @@ use Artwork\Modules\WorkTime\Repositories\WorkTimeBookingRepository;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
+use Artwork\Modules\WorkTime\Support\WorkTimeAccounting;
 
 class OvertimeService
 {
@@ -30,6 +31,10 @@ class OvertimeService
      */
     public function recomputeForUser(User $user): void
     {
+        if (!WorkTimeAccounting::isEnabled()) {
+            return; // Arbeitszeitberechnung aus: Überstunden werden nicht fortgeschrieben
+        }
+
         // Historie einmalig laden: der Resolver löst danach je Tag ohne weitere Abfrage auf.
         $user->loadMissing('contractAssigns.userContract');
         if ($user->contractAssigns->isEmpty()) {

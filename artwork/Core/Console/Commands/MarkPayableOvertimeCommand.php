@@ -5,6 +5,7 @@ namespace Artwork\Core\Console\Commands;
 use Artwork\Modules\User\Models\User;
 use Artwork\Modules\WorkTime\Services\OvertimeService;
 use Illuminate\Console\Command;
+use Artwork\Modules\WorkTime\Support\WorkTimeAccounting;
 
 /**
  * Nächtlicher Recompute der Überstunden-Einträge je User: kippt offene Einträge mit
@@ -18,6 +19,12 @@ class MarkPayableOvertimeCommand extends Command
 
     public function handle(OvertimeService $service): int
     {
+        if (!WorkTimeAccounting::isEnabled()) {
+            $this->info('Work time accounting is disabled, skipping.');
+
+            return self::SUCCESS;
+        }
+
         $this->info('Recomputing overtime entries...');
 
         $users = User::query()->where('can_work_shifts', true)->get();

@@ -48,7 +48,6 @@ use Artwork\Modules\Calendar\DTO\ProjectDTO;
 use Artwork\Modules\Calendar\DTO\RoomDTO;
 use Artwork\Modules\Calendar\Services\CalendarService;
 use Artwork\Modules\Calendar\Services\CalendarDataService;
-use Artwork\Modules\Calendar\Services\ShiftCalendarService;
 use Artwork\Modules\Category\Models\Category;
 use Artwork\Modules\Category\Services\CategoryService;
 use Artwork\Modules\Change\Services\ChangeService;
@@ -2907,8 +2906,6 @@ class ProjectController extends Controller
                 $endDate ? $endDate->format('Y-m-d') : null,
             ];
 
-            $history = app(ShiftCalendarService::class)->getEventShiftsHistoryChanges();
-
             $tabSpecificData = array_merge($tabSpecificData, $this->getShiftTabInertiaData(
                 $project,
                 $craftService,
@@ -2918,8 +2915,7 @@ class ProjectController extends Controller
                 $shiftTimePresetService,
                 $user,
                 $userService,
-                $dateValue,
-                $history
+                $dateValue
             ));
 
             $tabSpecificData['rooms'] = $roomDTOs;
@@ -3012,8 +3008,7 @@ class ProjectController extends Controller
         ShiftTimePresetService $shiftTimePresetService,
         User $user,
         UserService $userService,
-        array $dateValue,
-        array $history
+        array $dateValue
     ): array {
         return [
             // Crafts mit users/freelancers/serviceProviders (+ shift_qualifications) für

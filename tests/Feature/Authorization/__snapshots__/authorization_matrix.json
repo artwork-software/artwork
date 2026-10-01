@@ -226,7 +226,7 @@
     "GET calendar/export/pdf/{filename}/download": "not_found",
     "GET calendar/redirect/day/{day}": "error",
     "GET calendar/room/events": "allowed",
-    "GET calendar/view": "error",
+    "GET calendar/view": "allowed",
     "GET calendars/filters": "allowed",
     "GET chat/get-chat-messages/{chat}": "forbidden",
     "GET chat/get-chats": "allowed",

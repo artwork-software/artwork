@@ -66,7 +66,21 @@ final class CalendarDataServiceTest extends TestCase
         $this->assertSame([], $this->holidayNamesByDate('2027-03-09', '2027-03-12')['2027-03-10']);
     }
 
-    private function createHoliday(string $name, string $date, string $endDate, bool $yearly): void
+    #[Test]
+    public function holiday_without_end_date_is_shown_as_single_day(): void
+    {
+        // end_date ist im HolidayRequest optional; vorher warf der Kalender dann einen 500er
+        $this->createHoliday('Ohne Ende', '2026-05-04', null, false);
+        $this->createHoliday('Jährlich ohne Ende', '2020-05-06', null, true);
+
+        $holidaysByDate = $this->holidayNamesByDate('2026-05-03', '2026-05-07');
+
+        $this->assertSame(['Ohne Ende'], $holidaysByDate['2026-05-04']);
+        $this->assertSame(['Jährlich ohne Ende'], $holidaysByDate['2026-05-06']);
+        $this->assertSame([], $holidaysByDate['2026-05-05']);
+    }
+
+    private function createHoliday(string $name, string $date, ?string $endDate, bool $yearly): void
     {
         Holiday::create([
             'name' => $name,

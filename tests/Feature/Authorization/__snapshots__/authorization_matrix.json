@@ -224,7 +224,7 @@
     "GET budget-settings/templates": "forbidden",
     "GET calendar/abo/{calendar_abo_id}": "not_found",
     "GET calendar/export/pdf/{filename}/download": "not_found",
-    "GET calendar/redirect/day/{day}": "error",
+    "GET calendar/redirect/day/{day}": "redirect",
     "GET calendar/room/events": "allowed",
     "GET calendar/view": "allowed",
     "GET calendars/filters": "allowed",

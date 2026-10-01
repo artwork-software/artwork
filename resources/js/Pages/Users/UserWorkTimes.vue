@@ -9,7 +9,7 @@
             </div>
 
             <div>
-                <BaseUIButton label="Arbeitszeit Buchen" is-add-button :icon="IconAlarmPlus" @click="showWorkingTimePostEntryModal = true" />
+                <BaseUIButton :label="$t('Book working hours')" is-add-button :icon="IconAlarmPlus" @click="showWorkingTimePostEntryModal = true" />
             </div>
         </div>
         <div class="flex items-center justify-between mb-5">

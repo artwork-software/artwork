@@ -20,6 +20,7 @@ const KEYS = {
     'Jump by day': ['Springen um Tag', 'Jump by day'],
     'Jump by calendar week': ['Springen um Kalenderwoche', 'Jump by calendar week'],
     'Jump by month': ['Springen um Monat', 'Jump by month'],
+    'Work time accounting': ['Arbeitszeitberechnung', 'Work time accounting'],
 };
 
 test('new translation keys exist in German and English', () => {
@@ -48,4 +49,10 @@ test('no hardcoded German UI text remains in the fixed components', () => {
     assert.doesNotMatch(read('resources/js/Artwork/Modals/CalendarSettingsModal.vue'), /Schmal|Sehr breit|'Breit/);
     assert.doesNotMatch(read('resources/js/Pages/Settings/Holidays/Index.vue'), /name: "Deutschland"|name: "Schweiz"/);
     assert.doesNotMatch(read('resources/js/Pages/Inventory/Components/Article/Modals/AddEditArticleModal.vue'), /aria-label="Kopieren"/);
+});
+
+test('the manual booking button in the user profile is translated', () => {
+    const source = read('resources/js/Pages/Users/UserWorkTimes.vue');
+    assert.ok(!source.includes('label="Arbeitszeit Buchen"'), 'hardcoded German label');
+    assert.ok(source.includes("$t('Book working hours')"));
 });

@@ -15,7 +15,7 @@ final class ProjectTabDocumentServiceTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->service = new ProjectTabDocumentService();
+        $this->service = app(ProjectTabDocumentService::class);
     }
 
     #[Test]

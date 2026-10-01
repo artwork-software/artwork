@@ -58,7 +58,8 @@ class ProjectFileController extends Controller
      */
     public function store(FileUpload $request, Project $project, ProjectController $projectController): void
     {
-        $this->authorize('create', [ProjectFile::class, $project]);
+        $tabId = $request->filled('tabId') ? $request->integer('tabId') : null;
+        $this->authorize('create', [ProjectFile::class, $project, $tabId]);
 
         if (!Storage::exists("project_files")) {
             Storage::makeDirectory("project_files");
@@ -72,7 +73,7 @@ class ProjectFileController extends Controller
         Storage::putFileAs('project_files', $file, $basename);
 
         $projectFile = $project->project_files()->create([
-            'tab_id' => $request->input('tabId'),
+            'tab_id' => $tabId,
             'name' => $original_name,
             'basename' => $basename,
 

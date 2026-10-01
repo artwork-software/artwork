@@ -109,6 +109,7 @@ use Artwork\Modules\Project\Models\ProjectCreateSettings;
 use Artwork\Modules\Project\Models\ProjectRole;
 use Artwork\Modules\Project\Models\ProjectComponentValue;
 use Artwork\Modules\Project\Models\ProjectState;
+use Artwork\Modules\Project\Services\ProjectComponentVisibilityService;
 use Artwork\Modules\Project\Services\CommentService;
 use Artwork\Modules\Project\Services\ProjectFileService;
 use Artwork\Modules\Project\Services\ProjectService;
@@ -2623,6 +2624,10 @@ class ProjectController extends Controller
                 'You do not have permission to access this project tab.'
             );
         }
+
+        // Komponenten mit "Sehen dürfen nur die Folgenden" samt Projektwerten gar nicht erst
+        // ausliefern — vorher filterte nur das Frontend (canSeeComponent).
+        app(ProjectComponentVisibilityService::class)->filterTabPayload($projectTab, $authUser);
 
         $this->inventoryUserFilterShareService->getFilterDataForUser($authUser);
 

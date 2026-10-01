@@ -69,6 +69,37 @@ final class EventUpdateTest extends FeatureTestCase
     }
 
     #[Test]
+    public function room_change_without_notifications_does_not_fail(): void
+    {
+        $this->actingAsAdmin();
+        $project = Project::factory()->create();
+        $room = Room::factory()->create();
+        $eventType = EventType::factory()->create();
+        $event = Event::factory()->create(['project_id' => $project->id, 'room_id' => $room->id]);
+
+        // Vorher: $projectManagers wurde nur im Benachrichtigungs-Block gesetzt → 500 (Undefined variable)
+        $this->putJson(route('events.update', $event), [
+            'start' => '2026-11-10 10:00',
+            'end' => '2026-11-10 12:00',
+            'projectIdMandatory' => false,
+            'creatingProject' => false,
+            'eventNameMandatory' => false,
+            'eventTypeId' => $eventType->id,
+            'roomId' => $room->id,
+            'title' => 'Raumwechsel',
+            'eventName' => 'Probe',
+            'isOption' => false,
+            'audience' => false,
+            'isLoud' => false,
+            'allDay' => false,
+            'is_series' => false,
+            'isPlanning' => false,
+            'noNotifications' => true,
+            'roomChange' => true,
+        ])->assertSuccessful();
+    }
+
+    #[Test]
     public function guest_cannot_convert_event_to_planning(): void
     {
         $event = Event::factory()->create();

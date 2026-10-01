@@ -2052,6 +2052,8 @@ class EventController extends Controller
         if ($request->roomChange) {
             $room = Room::find($event->room_id);
             $project = Project::find($event->project_id);
+            // Nicht aus dem Benachrichtigungs-Block übernehmen: mit noNotifications ist die Variable dort nie gesetzt
+            $projectManagers = $project?->managerUsers()->get() ?? collect();
 
             $this->notificationService->setIcon('green');
             $this->notificationService->setPriority(3);

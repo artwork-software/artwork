@@ -362,6 +362,32 @@ class UserService
     }
 
     /**
+     * Springt im Kalender auf einen Zeitraum (z. B. "zum Termin im Kalender"): schreibt in den Filter
+     * der gerade aktiven Kalenderansicht (Woche oder Tag), legt ihn bei Bedarf an und überträgt den
+     * Zeitraum bei "Zeitraum in allen Ansichten teilen" auf alle Ansichten.
+     *
+     * @param array<string, mixed> $resetAttributes weitere Filterspalten, die zurückgesetzt werden
+     */
+    public function focusCalendarOnPeriod(User $user, Carbon $start, Carbon $end, array $resetAttributes = []): void
+    {
+        $filterType = $user->getAttribute('calendar_daily_view')
+            ? UserFilterTypes::CALENDAR_DAILY_FILTER
+            : UserFilterTypes::CALENDAR_FILTER;
+
+        $startDate = $start->format('Y-m-d');
+        $endDate = $end->format('Y-m-d');
+
+        $user->userFilters()->updateOrCreate(
+            ['filter_type' => $filterType->value],
+            array_merge($resetAttributes, ['start_date' => $startDate, 'end_date' => $endDate])
+        );
+
+        if ($user->getAttribute('share_calendar_date')) {
+            $this->syncSharedCalendarFilterDates($user, $startDate, $endDate);
+        }
+    }
+
+    /**
      * Speichert das "Zeitraum in allen Ansichten teilen"-Setting. Beim
      * Einschalten werden alle Ansichten sofort auf den Zeitraum der Ansicht
      * gesetzt, aus der das Setting geändert wurde ($sourceFilterType).

@@ -25,6 +25,7 @@ use Carbon\Carbon;
 use Illuminate\Auth\AuthManager;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use Artwork\Modules\User\Services\UserService;
 
 class EventVerificationController extends Controller
 {
@@ -35,6 +36,7 @@ class EventVerificationController extends Controller
         private readonly AuthManager $authManager,
         private readonly EventService $eventService,
         private readonly ProjectTabService $projectTabService,
+        private readonly UserService $userService,
     ) {
     }
 
@@ -380,9 +382,7 @@ class EventVerificationController extends Controller
         $startOfWeek = Carbon::parse($event->start_time)->startOfWeek(Carbon::MONDAY);
         $endOfWeek = Carbon::parse($event->end_time)->endOfWeek(Carbon::SUNDAY);
 
-        $user->userFilters()->calendarFilter()->first()->update([
-            'start_date' => $startOfWeek->format('Y-m-d'),
-            'end_date' => $endOfWeek->format('Y-m-d'),
+        $this->userService->focusCalendarOnPeriod($user, $startOfWeek, $endOfWeek, [
             'event_type_ids' => null,
             'room_ids' => null,
             'area_ids' => null,

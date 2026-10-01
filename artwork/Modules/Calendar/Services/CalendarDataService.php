@@ -402,38 +402,69 @@ readonly class CalendarDataService
     }
 
     /**
-     * Feiertage einmal für Range
+     * Feiertage einmal für Range. Jährliche Einträge werden in jedes betroffene Jahr projiziert
+     * (auch über den Jahreswechsel), damit sie unter dem Datum des angezeigten Jahres erscheinen.
      * @return SupportCollection<CalendarHolidayDTO>
      */
     private function getHolidaysForRange(Carbon $start, Carbon $end): SupportCollection
     {
-        return Holiday::select(['id','name','date','end_date','color','yearly','treatAsSpecialDay'])
-            ->where(function (Builder $q) use ($start, $end): void {
-                $q->whereBetween('date', [$start->toDateString(), $end->toDateString()])
-                    ->orWhereBetween('end_date', [$start->toDateString(), $end->toDateString()])
-                    ->orWhere(function (Builder $nested) use ($start, $end): void {
-                        $nested->where('date', '<=', $start->toDateString())
-                            ->where('end_date', '>=', $end->toDateString());
-                    })
-                    ->orWhere(function (Builder $nested) use ($start, $end): void {
-                        // jährliche Gedenktage
-                        $nested->where('yearly', true)
-                            ->whereBetween(\DB::raw('DATE_FORMAT(date, "%m-%d")'), [
-                                $start->format('m-d'),
-                                $end->format('m-d'),
-                            ]);
+        $rangeStart = $start->copy()->startOfDay();
+        $rangeEnd = $end->copy()->startOfDay();
+
+        $holidays = Holiday::select(['id','name','date','end_date','color','yearly','treatAsSpecialDay'])
+            ->where(function (Builder $q) use ($rangeStart, $rangeEnd): void {
+                $q->where('yearly', true)
+                    ->orWhere(function (Builder $fixed) use ($rangeStart, $rangeEnd): void {
+                        $fixed->where('date', '<=', $rangeEnd->toDateString())
+                            ->where(function (Builder $ends) use ($rangeStart): void {
+                                $ends->where('end_date', '>=', $rangeStart->toDateString())
+                                    ->orWhere(function (Builder $single) use ($rangeStart): void {
+                                        $single->whereNull('end_date')
+                                            ->where('date', '>=', $rangeStart->toDateString());
+                                    });
+                            });
                     });
             })
             ->with(['subdivisions' => fn($q) => $q->select('name')])
-            ->get()
-            ->map(fn($holiday) => new CalendarHolidayDTO(
-                name: $holiday->name,
-                date: $holiday->date->toDateString(),
-                end_date: $holiday->end_date->toDateString(),
-                color: $holiday->color,
-                subdivisions: $holiday->subdivisions->pluck('name')->toArray(),
-                treatAsSpecialDay: (bool) $holiday->treatAsSpecialDay,
-            ));
+            ->get();
+
+        $result = collect();
+        foreach ($holidays as $holiday) {
+            $holidayStart = $holiday->date->copy()->startOfDay();
+            $holidayEnd = ($holiday->end_date ?? $holiday->date)->copy()->startOfDay();
+            if ($holidayEnd->lt($holidayStart)) {
+                $holidayEnd = $holidayStart->copy();
+            }
+
+            if (!$holiday->yearly) {
+                $result->push($this->toCalendarHolidayDto($holiday, $holidayStart, $holidayEnd));
+                continue;
+            }
+
+            $lengthInDays = (int) $holidayStart->diffInDays($holidayEnd);
+            // Vorjahr mitnehmen: ein Block ab z. B. 30.12. reicht in den Januar des Zeitraums hinein
+            for ($year = $rangeStart->year - 1; $year <= $rangeEnd->year; $year++) {
+                $projectedStart = Carbon::create($year, $holidayStart->month, $holidayStart->day)->startOfDay();
+                $projectedEnd = $projectedStart->copy()->addDays($lengthInDays);
+                if ($projectedStart->lte($rangeEnd) && $projectedEnd->gte($rangeStart)) {
+                    $result->push($this->toCalendarHolidayDto($holiday, $projectedStart, $projectedEnd));
+                }
+            }
+        }
+
+        return $result;
+    }
+
+    private function toCalendarHolidayDto(Holiday $holiday, Carbon $start, Carbon $end): CalendarHolidayDTO
+    {
+        return new CalendarHolidayDTO(
+            name: $holiday->name,
+            date: $start->toDateString(),
+            end_date: $end->toDateString(),
+            color: $holiday->color,
+            subdivisions: $holiday->subdivisions->pluck('name')->toArray(),
+            treatAsSpecialDay: (bool) $holiday->treatAsSpecialDay,
+        );
     }
 
     /**

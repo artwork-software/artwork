@@ -305,6 +305,8 @@ class HandleInertiaRequests extends Middleware
                     ->shift_confirmation_enabled,
                 'project_assignments_enabled'  => (bool) app(\App\Settings\ShiftSettings::class)
                     ->project_assignments_enabled,
+                'work_time_accounting_enabled' => (bool) app(\App\Settings\ShiftSettings::class)
+                    ->work_time_accounting_enabled,
                 'shift_settings_access'        => [
                     'granular_permissions_enabled' => (bool) app(\App\Settings\ShiftSettings::class)
                         ->granular_permissions_enabled,

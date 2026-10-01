@@ -347,6 +347,7 @@ import {
 import BaseFilterTag from "@/Layouts/Components/BaseFilterTag.vue";
 import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
 import {router, Link, usePage} from "@inertiajs/vue3";
+import {isWorkTimeAccountingEnabled} from "@/Helper/workTimeAccounting.js";
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 import DateRangeControl from "@/Artwork/DateRange/DateRangeControl.vue";
@@ -441,7 +442,11 @@ const activeSettings = computed(() => {
 
 // Configuration handed to the export modal.
 const shiftPlanExportTabs = computed(() => {
-    const tabs = [exportTabEnums.PDF_SHIFT_PLAN_EXPORT, exportTabEnums.EXCEL_WORK_TIME_OVERVIEW_EXPORT];
+    const tabs = [exportTabEnums.PDF_SHIFT_PLAN_EXPORT];
+    // Soll/Ist-Übersicht nur mit eingeschalteter Arbeitszeitberechnung
+    if (isWorkTimeAccountingEnabled(usePage().props)) {
+        tabs.push(exportTabEnums.EXCEL_WORK_TIME_OVERVIEW_EXPORT);
+    }
     // Gewerke-Verteilung enthält namentliche Stunden — Backend-Route verlangt dieselbe Permission
     if (can('can view shift worker hours') || hasAdminRole()) {
         tabs.push(exportTabEnums.EXCEL_CRAFT_DISTRIBUTION_EXPORT);

@@ -22,6 +22,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Random\RandomException;
+use Artwork\Modules\WorkTime\Support\WorkTimeAccounting;
 
 class WorkTimeChangeRequestController extends Controller
 {
@@ -316,7 +317,9 @@ class WorkTimeChangeRequestController extends Controller
             );
         };
 
-        if ($shiftDate->gte($now)) {
+        if ($shiftDate->gte($now) || !WorkTimeAccounting::isEnabled()) {
+            // Zukünftige Schicht oder Arbeitszeitberechnung aus: nur die Zeit an der Schicht ändern,
+            // keine Korrekturbuchung aufs Stundenkonto
             $applyIndividualTime();
         } else {
             // For past shifts, create an adjustment booking to reflect the time change

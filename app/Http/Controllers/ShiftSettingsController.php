@@ -172,6 +172,16 @@ class ShiftSettingsController extends Controller
         return $this->redirector->back();
     }
 
+    public function updateWorkTimeAccountingEnabled(
+        Request $request,
+        ShiftSettings $shiftSettings
+    ): RedirectResponse {
+        $shiftSettings->work_time_accounting_enabled = $request->boolean('work_time_accounting_enabled');
+        $shiftSettings->save();
+
+        return $this->redirector->back();
+    }
+
     /**
      * Nachtarbeitszeitraum (GeneralSettings start_night_time/end_night_time):
      * Stunden in diesem Fenster bucht der WorkTimeBookingService als Nachtstunden.

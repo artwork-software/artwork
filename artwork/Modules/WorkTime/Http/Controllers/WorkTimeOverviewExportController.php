@@ -7,6 +7,7 @@ use Artwork\Modules\WorkTime\Http\Requests\WorkTimeOverviewExportRequest;
 use Artwork\Modules\WorkTime\Services\WorkTimeOverviewExportService;
 use Carbon\Carbon;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
+use Artwork\Modules\WorkTime\Support\WorkTimeAccounting;
 
 class WorkTimeOverviewExportController
 {
@@ -17,6 +18,8 @@ class WorkTimeOverviewExportController
 
     public function __invoke(WorkTimeOverviewExportRequest $request): BinaryFileResponse
     {
+        abort_unless(WorkTimeAccounting::isEnabled(), 403);
+
         $validated = $request->validated();
         // 'Y-m' ohne Tag erbt den heutigen Monatstag (am 31. → Overflow in den Folgemonat),
         // daher explizit auf den Monatsersten parsen

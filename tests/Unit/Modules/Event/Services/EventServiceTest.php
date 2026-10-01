@@ -5,6 +5,7 @@ namespace Tests\Unit\Modules\Event\Services;
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Event\Models\EventProperty;
 use Artwork\Modules\Event\Services\EventService;
+use Artwork\Modules\Holidays\Models\Holiday;
 use Artwork\Modules\Project\Enum\ProjectDayAssignmentType;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Models\ProjectDayAssignment;
@@ -227,5 +228,37 @@ final class EventServiceTest extends TestCase
 
         $this->assertTrue($events->contains('id', $withoutRoom->id));
         $this->assertFalse($events->contains('id', $withRoom->id));
+    }
+
+    #[Test]
+    public function period_array_places_yearly_holidays_over_the_turn_of_the_year_on_every_day(): void
+    {
+        // Projekt-Kalender-Tab: vorher galt "Monat aus date, Tag aus end_date" → 02.12. statt 30.12.–02.01.
+        Holiday::create([
+            'name' => 'Betriebsferien',
+            'date' => '2024-12-30',
+            'end_date' => '2025-01-02',
+            'yearly' => true,
+            'from_api' => false,
+            'treatAsSpecialDay' => false,
+        ]);
+
+        $periods = $this->service->generatePeriodArray(
+            Carbon::parse('2026-11-30'),
+            Carbon::parse('2027-01-04'),
+            User::factory()->create(),
+            false,
+            false
+        );
+
+        $namesByDay = collect($periods)->mapWithKeys(fn (array $period) => [
+            $period['withoutFormat'] => collect($period['holidays'])->pluck('name')->all(),
+        ]);
+
+        $this->assertSame([], $namesByDay['2026-12-02']);
+        foreach (['2026-12-30', '2026-12-31', '2027-01-01', '2027-01-02'] as $day) {
+            $this->assertSame(['Betriebsferien'], $namesByDay[$day], $day);
+        }
+        $this->assertSame([], $namesByDay['2027-01-03']);
     }
 }

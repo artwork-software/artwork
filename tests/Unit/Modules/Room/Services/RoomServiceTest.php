@@ -62,7 +62,7 @@ final class RoomServiceTest extends TestCase
         $copy = $this->service->duplicateByRoomModel($room);
 
         $this->assertNotSame($room->id, $copy->id);
-        $this->assertStringStartsWith('(Kopie) ', $copy->name);
+        $this->assertStringStartsWith(__('(Copy)') . ' ', $copy->name);
     }
 
     #[Test]
@@ -73,8 +73,27 @@ final class RoomServiceTest extends TestCase
         $copy = $this->service->duplicateByRoomModelWithoutArea($room);
 
         $this->assertNotSame($room->id, $copy->id);
-        $this->assertStringStartsWith('(Kopie) ', $copy->name);
+        $this->assertStringStartsWith(__('(Copy)') . ' ', $copy->name);
         $this->assertDatabaseHas('rooms', ['id' => $copy->id]);
+    }
+
+    #[Test]
+    public function duplicate_by_room_model_uses_the_language_of_the_request(): void
+    {
+        $room = Room::factory()->create(['name' => 'Studio']);
+        $previousLocale = app()->getLocale();
+        $names = [];
+
+        try {
+            foreach (['de', 'en'] as $locale) {
+                app()->setLocale($locale);
+                $names[$locale] = $this->service->duplicateByRoomModelWithoutArea($room)->name;
+            }
+        } finally {
+            app()->setLocale($previousLocale);
+        }
+
+        $this->assertSame(['de' => '(Kopie) Studio', 'en' => '(Copy) Studio'], $names);
     }
 
     #[Test]

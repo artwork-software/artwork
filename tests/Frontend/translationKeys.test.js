@@ -1,0 +1,51 @@
+import assert from 'node:assert/strict';
+import test from 'node:test';
+import { readFileSync } from 'node:fs';
+
+const de = JSON.parse(readFileSync(new URL('../../lang/de.json', import.meta.url), 'utf8'));
+const en = JSON.parse(readFileSync(new URL('../../lang/en.json', import.meta.url), 'utf8'));
+const read = (path) => readFileSync(new URL(`../../${path}`, import.meta.url), 'utf8');
+
+// Keys introduced to replace hardcoded German text and concatenated labels.
+const KEYS = {
+    '(Copy)': ['(Kopie)', '(Copy)'],
+    Narrow: ['Schmal', 'Narrow'],
+    Wide: ['Breit', 'Wide'],
+    'Very wide': ['Sehr breit', 'Very wide'],
+    Germany: ['Deutschland', 'Germany'],
+    Switzerland: ['Schweiz', 'Switzerland'],
+    'Via interface': ['Über Schnittstelle', 'Via interface'],
+    'Event history': ['Terminverlauf', 'Event history'],
+    'Book working hours': ['Arbeitsstunden buchen', 'Book working hours'],
+    'Jump by day': ['Springen um Tag', 'Jump by day'],
+    'Jump by calendar week': ['Springen um Kalenderwoche', 'Jump by calendar week'],
+    'Jump by month': ['Springen um Monat', 'Jump by month'],
+};
+
+test('new translation keys exist in German and English', () => {
+    for (const [key, [german, english]] of Object.entries(KEYS)) {
+        assert.equal(de[key], german, `de.json: ${key}`);
+        assert.equal(en[key], english, `en.json: ${key}`);
+    }
+});
+
+test('English values of previously awkward labels are fixed', () => {
+    assert.equal(en['Request appointments verification'], 'Request event verification');
+    assert.equal(en['My Operational plan'], 'My operational plan');
+});
+
+test('scroll-mode labels are single keys, not "Jump around" + unit', () => {
+    for (const file of [
+        'resources/js/Components/FunctionBars/InventoryFunctionBar.vue',
+        'resources/js/Layouts/Components/ShiftPlanComponents/ShiftPlanFunctionBar.vue',
+        'resources/js/Layouts/Components/ShiftPlanComponents/ShiftPlanListViewFunctionBar.vue',
+    ]) {
+        assert.doesNotMatch(read(file), /Jump around/, file);
+    }
+});
+
+test('no hardcoded German UI text remains in the fixed components', () => {
+    assert.doesNotMatch(read('resources/js/Artwork/Modals/CalendarSettingsModal.vue'), /Schmal|Sehr breit|'Breit/);
+    assert.doesNotMatch(read('resources/js/Pages/Settings/Holidays/Index.vue'), /name: "Deutschland"|name: "Schweiz"/);
+    assert.doesNotMatch(read('resources/js/Pages/Inventory/Components/Article/Modals/AddEditArticleModal.vue'), /aria-label="Kopieren"/);
+});

@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Lang;
 
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Lang;
 use PHPUnit\Framework\Attributes\Test;
 use RecursiveDirectoryIterator;
@@ -42,6 +43,24 @@ final class BackendTranslationKeysTest extends TestCase
         }
 
         $this->assertSame([], $missing, "Fehlende Übersetzungen:\n" . implode("\n", $missing));
+    }
+
+    #[Test]
+    public function every_english_language_file_key_exists_in_german(): void
+    {
+        $missing = [];
+        foreach (glob(lang_path('en/*.php')) as $englishFile) {
+            $group = basename($englishFile, '.php');
+            $germanFile = lang_path('de/' . $group . '.php');
+            $german = file_exists($germanFile) ? Arr::dot(require $germanFile) : [];
+            foreach (array_keys(Arr::dot(require $englishFile)) as $key) {
+                if (!array_key_exists($key, $german)) {
+                    $missing[] = $group . '.' . $key;
+                }
+            }
+        }
+
+        $this->assertSame([], $missing, "Fehlt auf Deutsch:\n" . implode("\n", $missing));
     }
 
     /**

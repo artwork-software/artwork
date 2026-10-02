@@ -146,6 +146,7 @@ return [
         'concerns_shift' => 'Betrifft Schicht: ',
         'your_shift' => 'Deine Schicht: ',
         'not_available' => ':username ist nicht verfügbar',
+        'time_room' => 'Zeitraum: ',
         'time_period' => 'Zeitraum: :from :to',
         'concerns_time_period' => 'Betrifft Zeitraum: :start - :end',
     ],

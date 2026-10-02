@@ -81,3 +81,11 @@ test('shift settings texts only promise what the code does', () => {
     assert.match(de[confirmation], /Freelancer und Dienstleister nehmen nicht teil/);
     assert.match(de[confirmation], /Darf Schichten annehmen\/ablehnen/);
 });
+
+test('aria-labels in the craft modal are bound, not literal text', () => {
+    const source = read('resources/js/Layouts/Components/AddCraftsModal.vue');
+    // ohne Doppelpunkt landet "$t(...)" bzw. "{{...}}" wörtlich im Attribut
+    assert.doesNotMatch(source, /(?<!:)aria-label="(\{\{|\$t\()/);
+    assert.ok(source.includes(`:aria-label="$t('Remove')"`));
+    assert.ok(source.includes(`:aria-label="$t('Delete department management')"`));
+});

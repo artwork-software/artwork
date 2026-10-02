@@ -4,6 +4,7 @@ namespace Tests\Unit\Modules\Project\Services;
 
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Services\ProjectTabBudgetInformationService;
+use Artwork\Modules\User\Models\User;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
@@ -22,7 +23,7 @@ final class ProjectTabBudgetInformationServiceTest extends TestCase
     {
         $project = Project::factory()->create();
 
-        $payload = $this->service->buildBudgetInformationPayload($project);
+        $payload = $this->service->buildBudgetInformationPayload($project, User::factory()->create());
 
         $this->assertArrayHasKey('BudgetInformation', $payload);
         $this->assertIsArray($payload['BudgetInformation']);

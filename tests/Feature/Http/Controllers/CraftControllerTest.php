@@ -3,6 +3,9 @@
 namespace Tests\Feature\Http\Controllers;
 
 use Artwork\Modules\Craft\Models\Craft;
+use Artwork\Modules\Freelancer\Models\Freelancer;
+use Artwork\Modules\ServiceProvider\Models\ServiceProvider;
+use Artwork\Modules\User\Models\User;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\Feature\FeatureTestCase;
 
@@ -32,6 +35,85 @@ final class CraftControllerTest extends FeatureTestCase
 
         $response->assertRedirect();
         $this->assertDatabaseHas('crafts', ['name' => 'Lighting']);
+    }
+
+    #[Test]
+    public function admin_can_store_craft_with_managers(): void
+    {
+        $this->actingAsAdmin();
+        $user = User::factory()->create();
+        $freelancer = Freelancer::factory()->create();
+        $serviceProvider = ServiceProvider::factory()->create();
+
+        $response = $this->post(route('craft.store'), [
+            'name' => 'Sound',
+            'abbreviation' => 'SD',
+            'universally_applicable' => false,
+            'assignable_by_all' => true,
+            'users' => [],
+            'managersToBeAssigned' => [
+                ['manager_id' => $user->id, 'manager_type' => User::class],
+                ['manager_id' => $freelancer->id, 'manager_type' => Freelancer::class],
+                ['manager_id' => $serviceProvider->id, 'manager_type' => ServiceProvider::class],
+            ],
+        ]);
+
+        $response->assertRedirect()->assertSessionHasNoErrors();
+        $craft = Craft::query()->where('name', 'Sound')->firstOrFail();
+        $this->assertEqualsCanonicalizing([$user->id], $craft->managingUsers()->pluck('users.id')->all());
+        $this->assertEqualsCanonicalizing(
+            [$freelancer->id],
+            $craft->managingFreelancers()->pluck('freelancers.id')->all()
+        );
+        $this->assertEqualsCanonicalizing(
+            [$serviceProvider->id],
+            $craft->managingServiceProviders()->pluck('service_providers.id')->all()
+        );
+    }
+
+    #[Test]
+    public function store_craft_rejects_unknown_manager_type(): void
+    {
+        $this->actingAsAdmin();
+
+        $response = $this->post(route('craft.store'), [
+            'name' => 'Sound',
+            'abbreviation' => 'SD',
+            'universally_applicable' => false,
+            'assignable_by_all' => true,
+            'users' => [],
+            'managersToBeAssigned' => [
+                ['manager_id' => 1, 'manager_type' => Craft::class],
+            ],
+        ]);
+
+        $response->assertSessionHasErrors('managersToBeAssigned.0.manager_type');
+        $this->assertDatabaseMissing('crafts', ['name' => 'Sound']);
+    }
+
+    #[Test]
+    public function admin_can_update_craft_managers(): void
+    {
+        $this->actingAsAdmin();
+        $craft = Craft::factory()->create();
+        $previousManager = User::factory()->create();
+        $craft->managingUsers()->attach($previousManager->id);
+        $freelancer = Freelancer::factory()->create();
+
+        $response = $this->patch(route('craft.update', $craft), [
+            'name' => $craft->name,
+            'abbreviation' => 'UPD',
+            'universally_applicable' => false,
+            'assignable_by_all' => true,
+            'users' => [],
+            'managersToBeAssigned' => [
+                ['manager_id' => $freelancer->id, 'manager_type' => Freelancer::class],
+            ],
+        ]);
+
+        $response->assertRedirect()->assertSessionHasNoErrors();
+        $this->assertSame([], $craft->managingUsers()->pluck('users.id')->all());
+        $this->assertSame([$freelancer->id], $craft->managingFreelancers()->pluck('freelancers.id')->all());
     }
 
     #[Test]

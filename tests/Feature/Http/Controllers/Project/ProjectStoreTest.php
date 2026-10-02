@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Http\Controllers\Project;
 
+use Artwork\Modules\EventType\Models\EventType;
 use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Models\ProjectCreateSettings;
@@ -33,6 +34,24 @@ final class ProjectStoreTest extends FeatureTestCase
 
         $response->assertRedirect();
         $this->assertDatabaseHas('projects', ['name' => 'My New Project']);
+    }
+
+    #[Test]
+    public function store_preselects_globally_shift_relevant_event_types(): void
+    {
+        $this->actingAsAdmin();
+        $relevant = EventType::factory()->create(['relevant_for_shift' => true]);
+        $notRelevant = EventType::factory()->create(['relevant_for_shift' => false]);
+
+        $this->post(route('projects.store'), [
+            'name' => 'Shift Relevant Project',
+            'isGroup' => false,
+        ])->assertRedirect();
+
+        $project = Project::query()->where('name', 'Shift Relevant Project')->firstOrFail();
+        $selectedIds = $project->shiftRelevantEventTypes()->pluck('event_types.id')->all();
+        $this->assertContains($relevant->id, $selectedIds);
+        $this->assertNotContains($notRelevant->id, $selectedIds);
     }
 
     #[Test]

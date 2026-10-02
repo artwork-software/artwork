@@ -5,7 +5,11 @@ namespace Tests\Feature\Http\Controllers\ProjectTab;
 use Artwork\Modules\Contract\Models\Contract;
 use Artwork\Modules\MoneySource\Models\MoneySource;
 use Artwork\Modules\Permission\Enums\PermissionEnum;
+use Artwork\Modules\Project\Enum\ProjectTabComponentEnum;
+use Artwork\Modules\Project\Models\Component;
+use Artwork\Modules\Project\Models\ComponentInTab;
 use Artwork\Modules\Project\Models\Project;
+use Artwork\Modules\Project\Models\ProjectTab;
 use Artwork\Modules\Project\Models\ProjectFile;
 use Artwork\Modules\User\Models\User;
 use PHPUnit\Framework\Attributes\Test;
@@ -119,6 +123,18 @@ final class ProjectBudgetInformationControllerTest extends FeatureTestCase
         ProjectFile::factory()->create(['project_id' => $project->id, 'name' => 'budget.pdf']);
         Contract::factory()->create(['project_id' => $project->id, 'name' => 'Secret contract']);
         $project->moneySources()->attach(MoneySource::factory()->create()->id);
+
+        // Der Endpunkt setzt eine sichtbare Platzierung der Budgetinformationen voraus
+        ComponentInTab::create([
+            'project_tab_id' => ProjectTab::factory()->create(['visible_for_all' => true])->id,
+            'component_id' => Component::create([
+                'name' => 'Budget informations ' . uniqid(),
+                'type' => ProjectTabComponentEnum::BUDGET_INFORMATIONS->value,
+                'data' => [],
+                'special' => true,
+            ])->id,
+            'order' => 1,
+        ]);
 
         return $project;
     }

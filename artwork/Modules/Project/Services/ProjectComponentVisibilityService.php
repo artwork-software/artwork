@@ -174,6 +174,29 @@ class ProjectComponentVisibilityService
         return $tabIds === null || $tabIds->intersect($this->visibleTabIds($user))->isNotEmpty();
     }
 
+    /**
+     * Für die typgebundenen Daten-Endpunkte (Team, Status, Budget …): sichtbar, wenn die Person
+     * mindestens eine Komponente dieser Typen sehen darf, die in einem für sie sichtbaren Tab liegt
+     * (direkt, im Ordner oder in der Seitenleiste). Nicht platzierte Typen zeigt keine Oberfläche an.
+     *
+     * @param array<int, string> $types
+     */
+    public function canSeeComponentTypeInProject(User $user, array $types): bool
+    {
+        if ($user->hasRole(RoleEnum::ARTWORK_ADMIN->value)) {
+            return true;
+        }
+
+        $visibleTabIds = $this->visibleTabIds($user);
+
+        return Component::query()
+            ->whereIn('type', $types)
+            ->with(['users', 'departments.users'])
+            ->get()
+            ->contains(fn (Component $component) => $this->canSeeComponent($user, $component) &&
+                ($this->placementTabIds($user, $component) ?? collect())->intersect($visibleTabIds)->isNotEmpty());
+    }
+
     private function canSeeFolderPlacement(User $user, DisclosureComponents $folderPlacement): bool
     {
         $folder = Component::query()->find($folderPlacement->disclosure_id);

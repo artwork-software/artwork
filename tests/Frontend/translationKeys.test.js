@@ -89,3 +89,9 @@ test('aria-labels in the craft modal are bound, not literal text', () => {
     assert.ok(source.includes(`:aria-label="$t('Remove')"`));
     assert.ok(source.includes(`:aria-label="$t('Delete department management')"`));
 });
+
+test('craft modal uses "Gewerkleitung" consistently in German', () => {
+    assert.equal(de['Craft manager'], 'Gewerkleitung');
+    assert.equal(de['Add department management'], 'Gewerkleitung hinzufügen');
+    assert.equal(de['Delete department management'], 'Gewerkleitung löschen');
+});

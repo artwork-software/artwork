@@ -195,9 +195,7 @@ class EventController extends Controller
 
 
 
-        $user->userFilters()->calendarFilter()->first()->update([
-            'start_date' => $startOfWeek->format('Y-m-d'),
-            'end_date' => $endOfWeek->format('Y-m-d'),
+        $this->userService->focusCalendarOnPeriod($user, $startOfWeek, $endOfWeek, [
             'event_type_ids' => null,
             'room_ids' => null,
             'area_ids' => null,
@@ -222,10 +220,7 @@ class EventController extends Controller
         $startDate = Carbon::parse($day);
         $endDate = $startDate->copy()->addDays(7);
 
-        $user->userFilters()->calendarFilter()->first()->update([
-            'start_date' => $startDate->format('Y-m-d'),
-            'end_date' => $endDate->format('Y-m-d'),
-        ]);
+        $this->userService->focusCalendarOnPeriod($user, $startDate, $endDate);
 
         return redirect()->route('events');
     }
@@ -2057,6 +2052,8 @@ class EventController extends Controller
         if ($request->roomChange) {
             $room = Room::find($event->room_id);
             $project = Project::find($event->project_id);
+            // Nicht aus dem Benachrichtigungs-Block übernehmen: mit noNotifications ist die Variable dort nie gesetzt
+            $projectManagers = $project?->managerUsers()->get() ?? collect();
 
             $this->notificationService->setIcon('green');
             $this->notificationService->setPriority(3);

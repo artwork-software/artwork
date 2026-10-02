@@ -119,6 +119,7 @@ return [
         'new_room_request' => 'Neue Raumanfrage',
         'admin_message' => 'Nachricht von Raumadmin',
         'room_request_with_changed_room' => 'Raumanfrage mit Raumänderung bestätigt',
+        'room_change_confirmed' => 'Raumänderung bestätigt',
         'new_message' => 'Neue Nachricht zu Raumanfrage',
         'room_request_accept' => 'Raumanfrage bestätigt',
         'room_request_declined' => 'Raumanfrage abgesagt',

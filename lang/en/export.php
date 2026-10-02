@@ -77,6 +77,7 @@ return [
     'breakfast_deduction_total' => 'Less Breakfast at Hotel',
     'payout_per_diem' => 'Payout Per Diem',
     'per_diem_number' => 'Per Diem Number',
+    'per_diem_list' => 'Per Diem List',
     'production' => 'Production',
     'cost_bearer' => 'Cost Bearer',
     'details' => 'Details',

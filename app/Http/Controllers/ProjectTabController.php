@@ -6,7 +6,6 @@ use Artwork\Modules\Project\Enum\ProjectTabComponentEnum;
 use Artwork\Modules\Project\Models\Component;
 use Artwork\Modules\Project\Models\ComponentInTab;
 use Artwork\Modules\Project\Models\DisclosureComponents;
-use Artwork\Modules\Project\Models\ProjectComponentValue;
 use Artwork\Modules\Project\Models\ProjectTab;
 use Artwork\Modules\Project\TabTemplates\ProjectTabTemplateCatalog;
 use Artwork\Modules\Project\TabTemplates\ProjectTabTemplateService;
@@ -238,11 +237,10 @@ class ProjectTabController extends Controller
             $componentInTab->save();
         }
 
-        foreach ($projectTab->components as $component) {
-            ProjectComponentValue::where('component_id', $component->id)->delete();
-            $component->delete();
-        }
-
+        // Nur die Platzierungen entfernen: Projektwerte hängen an (project_id, component_id) und gehören der
+        // Komponente, die in anderen Tabs/Ordnern/der Sidebar weiter platziert sein kann. Werte werden
+        // ausschließlich beim Löschen der Komponente selbst (Komponenteneinstellungen) entfernt.
+        $projectTab->components()->delete();
 
         $projectTab->delete();
 

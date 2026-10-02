@@ -206,4 +206,12 @@ class Component extends Model
     {
         return $this->hasMany(DisclosureComponents::class, 'component_id', 'id');
     }
+
+    /**
+     * Inhalte dieses Ordners (nur bei type = DisclosureComponent befüllt).
+     */
+    public function disclosureContents(): HasMany
+    {
+        return $this->hasMany(DisclosureComponents::class, 'disclosure_id', 'id');
+    }
 }

@@ -1575,7 +1575,6 @@ Route::group(['middleware' => ['auth:sanctum']], function (): void {
     Route::post('/contracts/filter/save', [ContractController::class, 'saveFilter'])->name('contracts.filter.save');
 
     //ContractModules
-    Route::get('/contract_modules', [ContractModuleController::class, 'index'])->name('contracts.module.management');
     Route::post('/contract_modules/store', [ContractModuleController::class, 'store'])->name('contracts.module.store');
     Route::get('/contract_modules/{module}/download', [ContractModuleController::class, 'download'])
         ->name('contracts.module.download');
@@ -1898,10 +1897,6 @@ Route::group(['middleware' => ['auth:sanctum']], function (): void {
             'prefix' => 'budget',
             'middleware' => EnsureUserCanAccessProjectBudget::class,
         ], function (): void {
-            // GET
-            Route::get('/cell/comments', [CellCommentsController::class, 'get'])
-                ->name('project.budget.cell.comment.get');
-
             Route::get('/sum-details', [SumDetailsController::class, 'show'])
                 ->name('project.budget.sum-details.show');
 
@@ -2274,7 +2269,6 @@ Route::group(['middleware' => ['auth:sanctum']], function (): void {
         ->middleware('can:change project settings')->name('contract_types.update');
 
     // CompanyTypes
-    Route::get('/company_types', [CompanyTypeController::class, 'index'])->name('company_types.index');
     Route::post('/company_types', [CompanyTypeController::class, 'store'])
         ->middleware('can:change project settings')->name('company_types.store');
     Route::delete('/company_types/{company_type}', [CompanyTypeController::class, 'destroy'])
@@ -2304,7 +2298,6 @@ Route::group(['middleware' => ['auth:sanctum']], function (): void {
         [CollectingSocietyController::class, 'update']
     )->middleware('can:change project settings')->name('collecting_societies.update');
     // Currencies
-    Route::get('/currencies', [CurrencyController::class, 'index'])->name('currencies.index');
     Route::post('/currencies', [CurrencyController::class, 'store'])
         ->middleware('can:change project settings')->name('currencies.store');
     Route::delete('/currencies/{currency}', [CurrencyController::class, 'destroy'])

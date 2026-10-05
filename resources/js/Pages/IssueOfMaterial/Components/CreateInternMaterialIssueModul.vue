@@ -1902,7 +1902,8 @@ function addBasketArticlesToIssue(basket) {
 
     for (const ba of basket.basket_articles) {
         const art = ba?.article;
-        if (!art?.id) continue;
+        // Artikel im Papierkorb (article = null) bzw. Menge 0 nicht übernehmen
+        if (!art?.id || Number(ba?.quantity ?? 0) < 1) continue;
 
         const idx = internMaterialIssue.articles.findIndex(a => a.id === art.id);
 

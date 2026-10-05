@@ -658,10 +658,18 @@ export default {
             this.endTime = null;
             this.selectedRoom = null;
             this.selectedProject = null;
-            if(bool){
+            // Erst nach gespeicherter Antwort „geschlossen“ melden: die Benachrichtigung startet darauf
+            // sofort einen eigenen Inertia-Request (Benachrichtigung entfernen), der diesen sonst
+            // abbrach – die Antwort ging verloren
+            if (bool && this.newComment) {
                 this.$inertia.post(this.route('event.answer', {event: this.event.id}), {
                     comment: this.newComment,
-                }, {preserveState: true, preserveScroll: true})
+                }, {
+                    preserveState: true,
+                    preserveScroll: true,
+                    onSuccess: () => this.$emit('closed', true),
+                })
+                return;
             }
             this.$emit('closed', bool);
         },

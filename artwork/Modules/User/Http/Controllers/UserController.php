@@ -2147,6 +2147,11 @@ class UserController extends Controller
         // Dienstplan-Sichtrechten (UserPolicy::viewOperationPlan).
         $this->authorize('viewOperationPlan', $user);
 
+        // Deep-Link aus Schicht-Benachrichtigungen (ShiftNotificationLinkService::ownOperationPlan*) zeigt
+        // auf DIESE Route – der Zeitraum wurde bisher nur im Profil-Einsatzplan übernommen, „Schicht
+        // ansehen“ öffnete dadurch den zuletzt gespeicherten Zeitraum statt der betroffenen Woche.
+        $this->applyOperationPlanPeriodFromRequest($request, $userService);
+
         $showVacationsAndAvailabilities = $request->get('showVacationsAndAvailabilities');
         $vacationMonth = $request->get('vacationMonth');
         $selectedDate = $showVacationsAndAvailabilities ?

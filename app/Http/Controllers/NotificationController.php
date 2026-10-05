@@ -141,6 +141,8 @@ class NotificationController extends Controller
                 'title' => $frequency->title(),
                 'value' => $frequency->value,
             ], NotificationFrequencyEnum::cases()),
+            // Fallback für „Zum Projekt“, wenn die Benachrichtigung keinen Link mitbringt
+            'first_project_tab_id' => $projectTabService->getDefaultOrFirstProjectTabId(),
             'first_project_shift_tab_id' => $projectTabService
                 ->getFirstProjectTabWithTypeIdOrFirstProjectTabId(ProjectTabComponentEnum::SHIFT_TAB),
             'first_project_budget_tab_id' => $projectTabService

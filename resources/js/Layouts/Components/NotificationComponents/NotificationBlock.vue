@@ -36,6 +36,11 @@
                         </p>
                     </div>
                 </div>
+                <!-- Kommentare (z. B. Begründung einer Absage) eigene Zeile – früher fest description[5] -->
+                <p v-for="(comment, index) in commentRows" :key="'comment-' + index"
+                   class="mt-2 text-xs/[18px] text-text-subtle italic">
+                    „{{ comment.title }}“
+                </p>
                 <span v-if="notification.data.isModified" class="text-special-orange bg-special-orange-surface px-2 py-1 rounded text-xs font-medium">
                     {{ $t('modified') }}
                 </span>
@@ -248,7 +253,14 @@ export default {
             answering: false,
         }
     },
-    computed: {},
+    computed: {
+        commentRows() {
+            const description = this.notification.data?.description;
+            return description
+                ? Object.values(description).filter((row) => row?.type === 'comment' && row?.title)
+                : [];
+        },
+    },
     methods: {
         isArchivable,
         declineMaterialReturn() {
@@ -349,7 +361,7 @@ export default {
         },
         /** „Schicht ansehen“: erstes Ziel aus der Beschreibung, sonst Schichten-Tab des Projekts */
         openShift() {
-            const target = Object.values(this.notification.data?.description ?? {}).find((row) => row?.href);
+            const target = this.descriptionRows().find((row) => row.href);
             if (target) {
                 window.location.href = target.href;
                 return;
@@ -411,59 +423,65 @@ export default {
             }
         },
         deleteEvent() {
-            if (this.checkNotificationKey(this.notification.data?.notificationKey)) {
-                router.post(route('events.delete.by.notification', this.notification.data?.eventId), {
-                    notificationKey: this.notification.data?.notificationKey
+            // Schlüssel ist optional (räumt nur die Benachrichtigung mit auf) – ohne ihn passierte vorher
+            // nichts und der Bestätigungsdialog blieb offen
+            if (this.notification.data?.eventId) {
+                router.post(route('events.delete.by.notification', this.notification.data.eventId), {
+                    notificationKey: this.notification.data?.notificationKey ?? ''
                 }, {
                     preserveScroll: true,
                     preserveState: true
                 });
-                this.showDeleteConfirmModal = false;
             }
+            this.showDeleteConfirmModal = false;
         },
         checkNotificationKey(key){
-            return key !== null && key.length > 0;
+            // ältere Einträge haben gar keinen Schlüssel (undefined) – vorher TypeError bei .length
+            return typeof key === 'string' && key.length > 0;
         },
         openProjectBudget(projectId) {
-            if (this.first_project_budget_tab_id) {
-                window.location.href = route(
-                    'projects.tab',
-                    {
-                        project: projectId,
-                        projectTab: this.first_project_budget_tab_id
-                    }
-                );
+            const projectTab = this.first_project_budget_tab_id ?? this.$page.props.first_project_budget_tab_id;
+            if (projectId && projectTab) {
+                window.location.href = route('projects.tab', {project: projectId, projectTab});
             }
         },
+        /**
+         * Beschreibungszeilen als Liste – gespeichert ist meist ein Objekt mit Schlüsseln 1, 2, …
+         * (vorher .find() direkt darauf → TypeError, „Zum Projekt“ tat nichts).
+         */
+        descriptionRows() {
+            const description = this.notification.data?.description;
+            return description ? Object.values(description).filter(Boolean) : [];
+        },
         openProject(projectId) {
-            // Use the project link from the notification description if available (contains correct tab)
-            const desc = this.notification.data?.description || [];
-            const projectLink = desc.find(d => d.type === 'link' && d.href);
+            // Link aus der Beschreibung (zeigt auf den passenden Reiter), sonst ein vorhandener Reiter
+            const projectLink = this.descriptionRows().find((row) => row.type === 'link' && row.href);
             if (projectLink?.href) {
                 window.location.href = projectLink.href;
                 return;
             }
-            // Fallback: navigate to project main page
-            if (projectId) {
-                window.location.href = route('projects.tab', {
-                    project: projectId,
-                    projectTab: 1
-                });
+            const props = this.$page.props;
+            const projectTab = this.notification.data?.groupType === 'SHIFTS'
+                ? (this.first_project_shift_tab_id ?? props.first_project_shift_tab_id)
+                : (props.first_project_tab_id ?? this.first_project_calendar_tab_id ?? props.first_project_calendar_tab_id);
+            // vorher fest Reiter-ID 1 – die gibt es nicht in jeder Instanz (404)
+            if (projectId && projectTab) {
+                window.location.href = route('projects.tab', {project: projectId, projectTab});
             }
         },
         openProjectShift(projectId, eventId, shiftId) {
-            if (this.first_project_shift_tab_id) {
-                window.location.href = route(
-                    'projects.tab',
-                    {
-                        project: projectId,
-                        projectTab: this.first_project_shift_tab_id
-                    }
-                ) + '?eventId=' + eventId + '&shiftId=' + shiftId;
+            const projectTab = this.first_project_shift_tab_id ?? this.$page.props.first_project_shift_tab_id;
+            if (!projectId || !projectTab) {
+                return;
             }
+            // nur vorhandene IDs anhängen (vorher „?eventId=undefined&shiftId=undefined“)
+            const query = new URLSearchParams(
+                Object.entries({eventId, shiftId}).filter(([, value]) => value !== null && value !== undefined)
+            ).toString();
+            window.location.href = route('projects.tab', {project: projectId, projectTab}) + (query ? '?' + query : '');
         },
         openProjectTasks(taskId){
-            window.location.href = route('tasks.own') + '?taskId=' + taskId;
+            window.location.href = route('tasks.own') + (taskId ? '?taskId=' + taskId : '');
         },
         showInCalendar() {
             if (this.notification.data?.eventId) {

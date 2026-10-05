@@ -734,17 +734,23 @@ class ShiftRuleController extends Controller
         // records and notifications fire like a manual removal from the shift plan.
         if (!empty($validated['remove_shifts']) && $shiftsOnDate > 0) {
             $shiftWorkerService = app(\Artwork\Modules\Shift\Services\ShiftWorkerService::class);
-            $this->userShiftWorkersOnDateQuery($compensationDayOff->user_id, $grantedDate)
+            $pivots = $this->userShiftWorkersOnDateQuery($compensationDayOff->user_id, $grantedDate)
                 ->with('shift')
-                ->get()
-                ->each(fn (\Artwork\Modules\Shift\Models\ShiftWorker $pivot) => $shiftWorkerService->removeFromShift(
+                ->get();
+            // Nur aus Schichten planbarer Gewerke entfernen – sonst wird gar nichts geändert
+            app(\Artwork\Modules\Craft\Services\CraftScopeService::class)
+                ->assertCanPlanShifts($request->user(), $pivots->pluck('shift')->filter());
+            /** @var \Artwork\Modules\Shift\Models\ShiftWorker $pivot */
+            foreach ($pivots as $pivot) {
+                $shiftWorkerService->removeFromShift(
                     $pivot,
                     true,
                     app(\Artwork\Modules\Notification\Services\NotificationService::class),
                     app(\Artwork\Modules\Vacation\Services\VacationConflictService::class),
                     app(\Artwork\Modules\Availability\Services\AvailabilityConflictService::class),
                     app(\Artwork\Modules\Change\Services\ChangeService::class)
-                ));
+                );
+            }
         }
 
         $period = $validated['half_day_period'] ?? null;

@@ -1661,6 +1661,11 @@ function handleCloseAttempt() {
     // Headless-UI-Falle: Schließt ein innerer Dialog (Warnung, Lösch-/Lösen-Rückfrage) per Klick,
     // wertet der äußere Dialog denselben Klick als „außerhalb“ und würde das Termin-Modal mitschließen.
     if (innerDialogOpen.value || Date.now() < suppressOuterCloseUntil) return
+    // Raumanfrage ist schon gespeichert (Erfolgsanzeige): Schließen wie über „Schließen“, damit der Kalender neu lädt
+    if (requestSubmitted.value) {
+        closeModal(true)
+        return
+    }
     if (!props.event?.id) {
         showDiscardConfirmation.value = true
         return
@@ -1875,7 +1880,8 @@ function payload() {
         description: description.value,
         isOption: isOption.value,
         eventNameMandatory: !!selectedEventType.value?.individual_name,
-        projectId: showProjectInfo.value ? selectedProject.value?.id : null,
+        // null statt undefined: ein weggelassenes Feld lässt das Backend unverändert (Projekt entfernen)
+        projectId: showProjectInfo.value ? (selectedProject.value?.id ?? null) : null,
         projectName: showProjectInfo.value ? (creatingProject.value ? projectName.value : '') : '',
         eventTypeId: selectedEventType.value?.id,
         projectIdMandatory: !!(selectedEventType.value?.project_mandatory && !creatingProject.value),

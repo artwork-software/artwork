@@ -406,7 +406,7 @@
                 </div>
                 <div>
                     <div class="flex justify-center w-full py-4">
-                        <button :disabled="this.selectedRoom === null || endDate > seriesEndDate || series && !seriesEndDate || newComment === ''"
+                        <button :disabled="sendingAnswer || this.selectedRoom === null || endDate > seriesEndDate || series && !seriesEndDate || newComment === ''"
                                 :class="this.selectedRoom === null || endDate > seriesEndDate || series && !seriesEndDate || this.startTime === null || this.startDate === null || this.endTime === null || this.endDate === null || newComment === '' ? 'bg-text-subtle hover:bg-text-subtle' : ''"
                                 class="bg-accent-600 hover:bg-accent-700 py-2 px-8 rounded-full text-white"
                                 @click="updateAndAnswerEvent()">
@@ -485,6 +485,7 @@ export default {
     },
     data() {
         return {
+            sendingAnswer: false,
             startDate: null,
             startTime: null,
             endDate: null,
@@ -651,13 +652,15 @@ export default {
 
             this.checkCollisions();
         },
-        closeModal(bool) {
+        resetForm() {
             this.startDate = null;
             this.startTime = null;
             this.endDate = null;
             this.endTime = null;
             this.selectedRoom = null;
             this.selectedProject = null;
+        },
+        closeModal(bool) {
             // Erst nach gespeicherter Antwort „geschlossen“ melden: die Benachrichtigung startet darauf
             // sofort einen eigenen Inertia-Request (Benachrichtigung entfernen), der diesen sonst
             // abbrach – die Antwort ging verloren
@@ -667,10 +670,20 @@ export default {
                 }, {
                     preserveState: true,
                     preserveScroll: true,
-                    onSuccess: () => this.$emit('closed', true),
+                    onSuccess: () => {
+                        this.resetForm();
+                        this.$emit('closed', true);
+                    },
+                    // Termin ist gespeichert, nur die Antwort nicht: Dialog offen und ausgefüllt lassen,
+                    // damit erneut gesendet werden kann (Fehlermeldung kommt global)
+                    onFinish: () => {
+                        this.sendingAnswer = false;
+                    },
                 })
                 return;
             }
+            this.sendingAnswer = false;
+            this.resetForm();
             this.$emit('closed', bool);
         },
         formatDate(date, time) {
@@ -771,10 +784,17 @@ export default {
             }
         },
         async updateAndAnswerEvent() {
+            if (this.sendingAnswer) {
+                return;
+            }
+            this.sendingAnswer = true;
             return await axios
                 .put('/events/' + this.event?.id, this.eventData())
                 .then(() => { this.closeModal(true);})
-                .catch(error => this.error = error.response.data.errors);
+                .catch(error => {
+                    this.sendingAnswer = false;
+                    this.error = error.response?.data?.errors;
+                });
         },
         async singleSaveEvent(){
             return await axios
@@ -838,7 +858,7 @@ export default {
                 isLoud: this.isLoud,
                 isOption: this.isOption,
                 eventNameMandatory: this.selectedEventType?.individual_name,
-                projectId: this.selectedProject?.id,
+                projectId: this.selectedProject?.id ?? null,
                 projectName: this.creatingProject ? this.projectName : '',
                 eventTypeId: this.selectedEventType?.id,
                 projectIdMandatory: this.selectedEventType?.project_mandatory && !this.creatingProject,

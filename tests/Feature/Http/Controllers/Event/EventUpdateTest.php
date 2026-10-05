@@ -388,4 +388,35 @@ final class EventUpdateTest extends FeatureTestCase
         $this->assertSame('18:30', substr((string) $event->admission_time, 0, 5));
         $this->assertSame([$property->id], $event->eventProperties()->pluck('event_properties.id')->all());
     }
+
+    #[Test]
+    public function an_explicit_null_project_id_removes_the_project(): void
+    {
+        $this->actingAsAdmin();
+        $room = Room::factory()->create();
+        $eventType = EventType::factory()->create();
+        $event = Event::factory()->create([
+            'room_id' => $room->id,
+            'project_id' => Project::factory()->create()->id,
+        ]);
+
+        // Projekt-Chip „entfernen“ im Termin-Dialog: projectId muss als null ankommen – ein fehlendes
+        // Feld lässt das Projekt seit der Teil-Update-Semantik bewusst stehen
+        $this->putJson(route('events.update', $event), [
+            'start' => '2026-11-10 10:00',
+            'end' => '2026-11-10 12:00',
+            'projectIdMandatory' => false,
+            'creatingProject' => false,
+            'eventNameMandatory' => false,
+            'eventTypeId' => $eventType->id,
+            'roomId' => $room->id,
+            'title' => 'Ohne Projekt',
+            'isOption' => false,
+            'projectId' => null,
+            'projectName' => '',
+            'noNotifications' => true,
+        ])->assertSuccessful();
+
+        $this->assertNull($event->fresh()->project_id);
+    }
 }

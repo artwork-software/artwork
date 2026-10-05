@@ -90,6 +90,9 @@ import UserPopoverTooltip from '@/Layouts/Components/UserPopoverTooltip.vue'
 const props = defineProps({
     requestToDecline: {type: Object, default: null},
     eventTypes: {type: [Object, Array], default: null},
+    // Nur aus der Benachrichtigung: dort muss die Seite bestehen bleiben, damit „declined“ ankommt.
+    // Kalender laden ihre Termine beim Neu-Mounten – mit erhaltenem State bliebe der Termin stehen.
+    preserveState: {type: Boolean, default: false},
 })
 
 const emit = defineEmits(['closed', 'declined'])
@@ -122,8 +125,7 @@ const declineRequest = () => {
         comment: comment.value,
     }, {
         preserveScroll: true,
-        // Seite bleibt bestehen, damit „declined“ ankommt und die Benachrichtigung entfernt wird
-        preserveState: true,
+        preserveState: props.preserveState,
         onSuccess: () => {
             emit('declined')
             close()

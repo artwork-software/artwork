@@ -3428,6 +3428,13 @@ class EventController extends Controller
             $subEventService
         );
 
+        // Beim Löschen wurde die offene Raumanfrage als erledigt markiert – wiederhergestellt ist sie
+        // wieder offen, die Raumadmins brauchen Annehmen/Ablehnen zurück
+        $event->refresh();
+        if ($event->occupancy_option && $event->room_id !== null) {
+            $this->roomRequestNotificationService->notifyRoomAdmins($event);
+        }
+
         return Redirect::route('events.trashed');
     }
 

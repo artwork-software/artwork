@@ -48,8 +48,12 @@ class SchedulingService
 
         if ($scheduling instanceof Scheduling) {
             $scheduling->increment('count');
-            if ($createdById !== null) {
-                $scheduling->update(['created_by_id' => $createdById]);
+            // Urheber nur behalten, solange alle gesammelten Änderungen von derselben Person stammen.
+            // Sonst gälte die zuletzt handelnde Person als Urheberin und bekäme die Änderungen der
+            // anderen nicht gemeldet (keine Selbstbenachrichtigung) – gemischt = null = zustellen.
+            $previousCreatorId = $scheduling->created_by_id === null ? null : (int) $scheduling->created_by_id;
+            if ($previousCreatorId !== $createdById) {
+                $scheduling->update(['created_by_id' => null]);
             }
             return true;
         }
@@ -168,8 +172,10 @@ class SchedulingService
                     'type' => 'success',
                     'message' => $notificationTitle
                 ];
-                // Load the creator from the scheduling's created_by_id
-                $creatorId = $userSchedulings[0]->created_by_id;
+                // Urheber nur, wenn alle gesammelten Aufgaben von derselben Person stammen – sonst würde
+                // die Meldung unterdrückt, sobald die erste davon von der Empfängerin selbst kommt
+                $creatorIds = collect($userSchedulings)->pluck('created_by_id')->unique();
+                $creatorId = $creatorIds->count() === 1 ? $creatorIds->first() : null;
                 $creator = $creatorId ? User::find($creatorId) : null;
 
                 $notificationService->setTitle($notificationTitle);

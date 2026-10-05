@@ -2190,7 +2190,7 @@ parameters:
 		-
 			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$created_by_id\.$#'
 			identifier: property.notFound
-			count: 2
+			count: 1
 			path: artwork/Modules/Scheduling/Services/SchedulingService.php
 
 		-

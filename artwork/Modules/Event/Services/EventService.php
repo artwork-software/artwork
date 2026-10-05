@@ -2398,7 +2398,19 @@ readonly class EventService
                 ->distinct()
                 ->pluck('project_id');
 
+            // Offene Raumanfragen wie beim Einzel-Löschen als erledigt markieren – sonst blieben
+            // Annehmen/Ablehnen stehen und führten auf einen Termin im Papierkorb (404)
+            $openRequestIds = Event::query()
+                ->whereIn('id', $eventIds)
+                ->where('occupancy_option', true)
+                ->pluck('id');
+
             $this->eventRepository->deleteEvents($eventIds);
+
+            $notificationService = app(NotificationService::class);
+            foreach ($openRequestIds as $openRequestId) {
+                $notificationService->markOpenRoomRequestsHandled($openRequestId, 'deleted', $this->deletingUser());
+            }
 
             $projectDayAssignmentService = app(ProjectDayAssignmentService::class);
 

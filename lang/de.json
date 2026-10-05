@@ -8686,5 +8686,6 @@
     "Funding source: :name": "Finanzquelle: :name",
     "Funding source running out": "Finanzquelle läuft aus",
     "The source \":name\" has only :percent% of its budget left.": "Die Quelle „:name“ besitzt nur noch :percent % des Budgets.",
-    "View shift": "Schicht ansehen"
+    "View shift": "Schicht ansehen",
+    "This room request has already been answered.": "Diese Raumanfrage wurde bereits beantwortet."
 }

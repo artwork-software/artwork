@@ -82,6 +82,36 @@ final class NotificationRobustnessTest extends FeatureTestCase
     }
 
     #[Test]
+    public function changes_by_someone_else_are_reported_even_if_the_recipient_changed_it_afterwards(): void
+    {
+        $recipient = $this->recipient();
+        $colleague = User::factory()->create();
+        $project = Project::factory()->create();
+
+        // Kollegin ändert, danach die Empfängerin selbst – beides im selben Sammelfenster
+        app(SchedulingService::class)->create($recipient->id, 'PROJECT_CHANGES', 'Project', $project->id, $colleague->id);
+        app(SchedulingService::class)->create($recipient->id, 'PROJECT_CHANGES', 'Project', $project->id, $recipient->id);
+
+        $this->sendScheduled();
+
+        $this->assertSame(1, $recipient->notifications()->count());
+    }
+
+    #[Test]
+    public function repeated_own_changes_stay_unreported(): void
+    {
+        $actor = $this->recipient();
+        $project = Project::factory()->create();
+
+        app(SchedulingService::class)->create($actor->id, 'PROJECT_CHANGES', 'Project', $project->id, $actor->id);
+        app(SchedulingService::class)->create($actor->id, 'PROJECT_CHANGES', 'Project', $project->id, $actor->id);
+
+        $this->sendScheduled();
+
+        $this->assertSame(0, $actor->notifications()->count());
+    }
+
+    #[Test]
     public function scheduled_notifications_do_not_inherit_data_from_the_previous_one(): void
     {
         $eventRecipient = $this->recipient();
@@ -151,6 +181,25 @@ final class NotificationRobustnessTest extends FeatureTestCase
                         ->etc());
             }
         }
+    }
+
+    #[Test]
+    public function room_request_comments_are_only_shown_to_the_people_involved(): void
+    {
+        $requester = User::factory()->create();
+        $event = Event::factory()->create(['user_id' => $requester->id, 'is_planning' => false]);
+        $event->comments()->create(['user_id' => $requester->id, 'comment' => 'Rückfrage', 'is_admin_comment' => true]);
+        $query = ['openEditEvent' => true, 'eventId' => $event->id];
+
+        $this->actingAs(User::factory()->create());
+        $this->get(route('notifications.index', $query))
+            ->assertOk()
+            ->assertInertia(fn ($page) => $page->where('event.id', $event->id)->where('event.comments', [])->etc());
+
+        $this->actingAs($requester);
+        $this->get(route('notifications.index', $query))
+            ->assertOk()
+            ->assertInertia(fn ($page) => $page->where('event.comments.0.comment', 'Rückfrage')->etc());
     }
 
     #[Test]
@@ -232,5 +281,44 @@ final class NotificationRobustnessTest extends FeatureTestCase
         $this->assertSame('deleted', $handled->data['handledStatus']);
         $this->assertSame([], $handled->data['buttons']);
         $this->assertSame(2, $admin->notifications()->count());
+    }
+
+    #[Test]
+    public function bulk_deleting_a_requested_event_closes_its_room_request(): void
+    {
+        $this->actingAsAdmin();
+        $roomAdmin = $this->recipient();
+        $event = Event::factory()->create(['occupancy_option' => true]);
+        $roomAdmin->notifications()->create([
+            'id' => (string) \Illuminate\Support\Str::uuid(),
+            'type' => \Artwork\Modules\Room\Notifications\RoomRequestNotification::class,
+            'data' => ['type' => NotificationEnum::NOTIFICATION_ROOM_REQUEST->value, 'eventId' => $event->id,
+                'groupType' => 'ROOMS', 'buttons' => ['accept', 'decline']],
+        ]);
+
+        $this->deleteJson(route('event.bulk.multi-edit.delete'), ['eventIds' => [$event->id]])->assertSuccessful();
+
+        $data = $roomAdmin->notifications()->sole()->data;
+        $this->assertSame('deleted', $data['handledStatus']);
+        $this->assertSame([], $data['buttons']);
+    }
+
+    #[Test]
+    public function restoring_a_requested_event_reopens_the_room_request(): void
+    {
+        $this->actingAsAdmin();
+        $roomAdmin = $this->recipient();
+        $room = \Artwork\Modules\Room\Models\Room::factory()->create();
+        $room->users()->attach($roomAdmin->id, ['is_admin' => true]);
+        $event = Event::factory()->create(['occupancy_option' => true, 'room_id' => $room->id]);
+        $event->delete();
+
+        $this->patch(route('events.restore', $event->id))->assertRedirect();
+
+        $open = $roomAdmin->notifications()->get()
+            ->filter(fn ($n) => ($n->data['type'] ?? null) === NotificationEnum::NOTIFICATION_ROOM_REQUEST->value
+                && !isset($n->data['handledStatus']));
+        $this->assertCount(1, $open);
+        $this->assertContains('accept', $open->first()->data['buttons']);
     }
 }

@@ -3159,6 +3159,11 @@ Route::group(['middleware' => ['auth:sanctum']], function (): void {
             ->middleware('can:' . PermissionEnum::INVENTORY_DELETE->value)
             ->name('articles.destroy');
 
+        // Warnhinweis vor dem Löschen: künftige Ausgaben, in denen der Artikel reserviert ist
+        Route::get('/articles/{inventoryArticle}/future-issues', [InventoryArticleController::class, 'futureIssues'])
+            ->middleware('can:' . PermissionEnum::INVENTORY_DELETE->value)
+            ->name('articles.future-issues');
+
         // get inventory.articles.trash
         Route::get('/articles/trash', [InventoryArticleController::class, 'indexTrash'])
             ->middleware('can:' . PermissionEnum::INVENTORY_DELETE->value)

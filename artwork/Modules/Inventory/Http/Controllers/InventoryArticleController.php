@@ -25,6 +25,7 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Inertia\Inertia;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class InventoryArticleController extends Controller
@@ -136,6 +137,21 @@ class InventoryArticleController extends Controller
     {
         $this->authorizeTagAccess($inventoryArticle);
         $this->inventoryArticleService->delete($inventoryArticle);
+    }
+
+    /**
+     * Anzahl künftiger (noch nicht beendeter) interner und externer Ausgaben mit diesem Artikel –
+     * der Löschdialog warnt damit, dass die Reservierungen am Papierkorb-Artikel hängen bleiben.
+     */
+    public function futureIssues(InventoryArticle $inventoryArticle): JsonResponse
+    {
+        $this->authorizeTagAccess($inventoryArticle);
+
+        $today = now()->toDateString();
+        $internal = $inventoryArticle->internalIssues()->where('end_date', '>=', $today)->count();
+        $external = $inventoryArticle->externalIssues()->where('return_date', '>=', $today)->count();
+
+        return response()->json(['count' => $internal + $external]);
     }
 
     public function forceDelete(int $inventoryArticle): void

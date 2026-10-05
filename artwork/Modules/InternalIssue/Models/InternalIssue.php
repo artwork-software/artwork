@@ -51,7 +51,12 @@ class InternalIssue extends Model
             InventoryArticle::class,
             'issuable',
             'issuable_inventory_article'
-        )->withPivot('quantity')->withTimestamps();
+        )
+            // Artikel im Papierkorb bleiben Teil der Ausgabe (Entscheidung 05.10.2026); vorher
+            // verschwanden sie aus der Anzeige und das nächste Speichern löste die Verknüpfung.
+            ->withTrashed()
+            ->withPivot('quantity')
+            ->withTimestamps();
     }
 
     public function specialItems(): \Illuminate\Database\Eloquent\Relations\MorphMany

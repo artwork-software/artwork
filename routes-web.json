@@ -1,0 +1,1136 @@
+[
+    {
+        "name": "accommodation.index",
+        "path": "/accommodation",
+        "label": null,
+        "area": null
+    },
+    {
+        "name": "areas.management",
+        "path": "/areas",
+        "label": "Räume",
+        "area": "System"
+    },
+    {
+        "name": "areas.trashed",
+        "path": "/trashedAreas",
+        "label": null,
+        "area": null
+    },
+    {
+        "name": "artist.index",
+        "path": "/artist",
+        "label": null,
+        "area": null
+    },
+    {
+        "name": "bi.audience-categories.index",
+        "path": "/settings/bi/audience-categories",
+        "label": null,
+        "area": null
+    },
+    {
+        "name": "bi.budget-export.match-counts",
+        "path": "/bi/export/budget/match-counts",
+        "label": null,
+        "area": null
+    },
+    {
+        "name": "bi.budget-export.options",
+        "path": "/bi/export/budget/options",
+        "label": null,
+        "area": null
+    },
+    {
+        "name": "bi.dashboard",
+        "path": "/bi/dashboard",
+        "label": "BI-Dashboard",
+        "area": "BI-Dashboard"
+    },
+    {
+        "name": "bi.settings.index",
+        "path": "/settings/bi",
+        "label": null,
+        "area": null
+    },
+    {
+        "name": "bi.tags.index",
+        "path": "/bi/tags",
+        "label": null,
+        "area": null
+    },
+    {
+        "name": "budget-settings.account-management",
+        "path": "/budget-settings/account-management",
+        "label": null,
+        "area": null
+    },
+    {
+        "name": "budget-settings.account-management.search-accounts",
+        "path": "/budget-settings/account-management/accounts/search",
+        "label": null,
+        "area": null
+    },
+    {
+        "name": "budget-settings.account-management.search-cost-units",
+        "path": "/budget-settings/account-management/cost-units/search",
+        "label": null,
+        "area": null
+    },
+    {
+        "name": "budget-settings.account-management.trash-accounts",
+        "path": "/budget-settings/account-management/accounts/trashed",
+        "label": null,
+        "area": null
+    },
+    {
+        "name": "budget-settings.account-management.trash-cost-units",
+        "path": "/budget-settings/account-management/cost-units/trashed",
+        "label": null,
+        "area": null
+    },
+    {
+        "name": "budget-settings.general",
+        "path": "/budget-settings/general",
+        "label": null,
+        "area": null
+    },
+    {
+        "name": "budget-settings.templates",
+        "path": "/budget-settings/templates",
+        "label": null,
+        "area": null
+    },
+    {
+        "name": "calendar.filters",
+        "path": "/calendars/filters",
+        "label": null,
+        "area": null
+    },
+    {
+        "name": "calendar.settings",
+        "path": "/settings/calendar",
+        "label": "Kalender",
+        "area": "System"
+    },
+    {
+        "name": "chat-system.get-chats",
+        "path": "/chat/get-chats",
+        "label": null,
+        "area": null
+    },
+    {
+        "name": "checklist_templates.create",
+        "path": "/checklist_templates/create",
+        "label": null,
+        "area": null
+    },
+    {
+        "name": "checklist_templates.management",
+        "path": "/checklist_templates",
+        "label": "To-do-Listen",
+        "area": "System"
+    },
+    {
+        "name": "checklist_templates.search",
+        "path": "/checklist_templates/search",
+        "label": null,
+        "area": null
+    },
+    {
+        "name": "checklists.create",
+        "path": "/checklists/create",
+        "label": null,
+        "area": null
+    },
+    {
+        "name": "collecting_societies.index",
+        "path": "/collecting_societies",
+        "label": null,
+        "area": null
+    },
+    {
+        "name": "comments.create",
+        "path": "/comments/create",
+        "label": null,
+        "area": null
+    },
+    {
+        "name": "company_types.index",
+        "path": "/company_types",
+        "label": null,
+        "area": null
+    },
+    {
+        "name": "compensation-day-offs.dashboard",
+        "path": "/compensation-day-offs/dashboard",
+        "label": "Übersicht ersatzfreie Tage",
+        "area": "Dienstplan"
+    },
+    {
+        "name": "component.index",
+        "path": "/settings/component/index",
+        "label": null,
+        "area": null
+    },
+    {
+        "name": "contract_types.index",
+        "path": "/contract_types",
+        "label": null,
+        "area": null
+    },
+    {
+        "name": "contracts.index",
+        "path": "/contracts/view",
+        "label": "Verträge",
+        "area": "Dokumente"
+    },
+    {
+        "name": "contracts.module.management",
+        "path": "/contract_modules",
+        "label": null,
+        "area": null
+    },
+    {
+        "name": "crm.contacts.mask",
+        "path": "/crm/contact-mask",
+        "label": null,
+        "area": null
+    },
+    {
+        "name": "crm.contacts.search",
+        "path": "/crm/contacts-search",
+        "label": null,
+        "area": null
+    },
+    {
+        "name": "crm.contacts.trashed",
+        "path": "/crm/contacts/trashed",
+        "label": null,
+        "area": null
+    },
+    {
+        "name": "crm.duplicates",
+        "path": "/crm/duplicates",
+        "label": null,
+        "area": null
+    },
+    {
+        "name": "crm.external-access.index",
+        "path": "/crm/external-access",
+        "label": null,
+        "area": null
+    },
+    {
+        "name": "crm.externals.contact-types.index",
+        "path": "/crm/externals/contact-types",
+        "label": null,
+        "area": null
+    },
+    {
+        "name": "crm.import",
+        "path": "/crm/import",
+        "label": null,
+        "area": null
+    },
+    {
+        "name": "crm.index",
+        "path": "/crm",
+        "label": "CRM",
+        "area": "CRM"
+    },
+    {
+        "name": "crm.settings.index",
+        "path": "/crm/settings",
+        "label": "CRM-Einstellungen",
+        "area": "System"
+    },
+    {
+        "name": "currencies.index",
+        "path": "/currencies",
+        "label": null,
+        "area": null
+    },
+    {
+        "name": "dashboard",
+        "path": "/dashboard",
+        "label": "Dashboard",
+        "area": "Dashboard"
+    },
+    {
+        "name": "day-service.index",
+        "path": "/day-service/index",
+        "label": null,
+        "area": null
+    },
+    {
+        "name": "departments",
+        "path": "/departments",
+        "label": null,
+        "area": null
+    },
+    {
+        "name": "departments.search",
+        "path": "/departments/search",
+        "label": null,
+        "area": null
+    },
+    {
+        "name": "design.catalog",
+        "path": "/_design",
+        "label": null,
+        "area": null
+    },
+    {
+        "name": "document-requests.index",
+        "path": "/document-requests",
+        "label": "Dokumentenanfragen",
+        "area": "Dokumente"
+    },
+    {
+        "name": "event-verifications.index",
+        "path": "/event-verifications",
+        "label": "Terminüberprüfungen",
+        "area": "Kalender"
+    },
+    {
+        "name": "event-verifications.requests",
+        "path": "/event-verifications/requests",
+        "label": null,
+        "area": null
+    },
+    {
+        "name": "event-verifications.sent",
+        "path": "/event-verifications/sent",
+        "label": null,
+        "area": null
+    },
+    {
+        "name": "event.standard.values",
+        "path": "/event/standard-values",
+        "label": null,
+        "area": null
+    },
+    {
+        "name": "event_settings.event_properties.index",
+        "path": "/settings/event_properties",
+        "label": null,
+        "area": null
+    },
+    {
+        "name": "event_status.management",
+        "path": "/settings/event-status",
+        "label": null,
+        "area": null
+    },
+    {
+        "name": "event_types.bi_tags",
+        "path": "/settings/event_types/bi-tags",
+        "label": null,
+        "area": null
+    },
+    {
+        "name": "event_types.management",
+        "path": "/settings/event_types",
+        "label": "Termine",
+        "area": "System"
+    },
+    {
+        "name": "events",
+        "path": "/calendar/view",
+        "label": "Kalender",
+        "area": "Kalender"
+    },
+    {
+        "name": "events.all",
+        "path": "/response/all/events",
+        "label": null,
+        "area": null
+    },
+    {
+        "name": "events.for-rooms-by-days-and-project",
+        "path": "/calendar/room/events",
+        "label": null,
+        "area": null
+    },
+    {
+        "name": "events.requests",
+        "path": "/events/requests",
+        "label": null,
+        "area": null
+    },
+    {
+        "name": "events.trashed",
+        "path": "/trashedEvents",
+        "label": null,
+        "area": null
+    },
+    {
+        "name": "extern-issue-of-material.index",
+        "path": "/extern-issue-of-material",
+        "label": null,
+        "area": null
+    },
+    {
+        "name": "extern-issue-of-material.search-for-copy",
+        "path": "/extern-issue-of-material/search/for-copy",
+        "label": null,
+        "area": null
+    },
+    {
+        "name": "holiday.management",
+        "path": "/settings/holiday",
+        "label": null,
+        "area": null
+    },
+    {
+        "name": "holidays.index",
+        "path": "/holidays",
+        "label": null,
+        "area": null
+    },
+    {
+        "name": "inventory-management.article.planning",
+        "path": "/inventory-management/article/planning",
+        "label": "Artikelplanung",
+        "area": "Inventarsystem"
+    },
+    {
+        "name": "inventory-management.settings.category",
+        "path": "/inventory-management/settings/categories",
+        "label": null,
+        "area": null
+    },
+    {
+        "name": "inventory-management.settings.general",
+        "path": "/inventory-management/settings/general",
+        "label": null,
+        "area": null
+    },
+    {
+        "name": "inventory-management.settings.properties",
+        "path": "/inventory-management/settings/properties",
+        "label": null,
+        "area": null
+    },
+    {
+        "name": "inventory-management.settings.status",
+        "path": "/inventory-management/settings/status",
+        "label": null,
+        "area": null
+    },
+    {
+        "name": "inventory.articles.api",
+        "path": "/inventory/articles",
+        "label": null,
+        "area": null
+    },
+    {
+        "name": "inventory.articles.planning-cell",
+        "path": "/inventory/articles/planning-cell",
+        "label": null,
+        "area": null
+    },
+    {
+        "name": "inventory.articles.trash",
+        "path": "/inventory/articles/trash",
+        "label": null,
+        "area": null
+    },
+    {
+        "name": "inventory.articles.usage",
+        "path": "/inventory/articles/usage",
+        "label": null,
+        "area": null
+    },
+    {
+        "name": "inventory.index",
+        "path": "/inventory",
+        "label": "Inventar",
+        "area": "Inventarsystem"
+    },
+    {
+        "name": "inventory.product_basket.get_baskets",
+        "path": "/basket/get_baskets",
+        "label": null,
+        "area": null
+    },
+    {
+        "name": "issue-of-material.index",
+        "path": "/issue-of-material",
+        "label": "Materialausgaben",
+        "area": "Inventarsystem"
+    },
+    {
+        "name": "issue-of-material.search-for-copy",
+        "path": "/issue-of-material/search/for-copy",
+        "label": null,
+        "area": null
+    },
+    {
+        "name": "link_list_templates.index",
+        "path": "/link_list_templates",
+        "label": null,
+        "area": null
+    },
+    {
+        "name": "login",
+        "path": "/login",
+        "label": null,
+        "area": null
+    },
+    {
+        "name": "manufacturers.index",
+        "path": "/manufacturers",
+        "label": null,
+        "area": null
+    },
+    {
+        "name": "material-issue-log.index",
+        "path": "/material-issue-log",
+        "label": null,
+        "area": null
+    },
+    {
+        "name": "material-sets.index",
+        "path": "/material-sets",
+        "label": null,
+        "area": null
+    },
+    {
+        "name": "money_source.task.index",
+        "path": "/money_source/task",
+        "label": null,
+        "area": null
+    },
+    {
+        "name": "money_sources.index",
+        "path": "/money_sources",
+        "label": "Finanzierungsquellen",
+        "area": "Finanzierungsquellen"
+    },
+    {
+        "name": "money_sources.search",
+        "path": "/money_sources/search/money_source",
+        "label": null,
+        "area": null
+    },
+    {
+        "name": "money_sources.settings",
+        "path": "/settings/money_sources",
+        "label": "Finanzierungsquellen",
+        "area": "System"
+    },
+    {
+        "name": "notifications.index",
+        "path": "/notifications",
+        "label": null,
+        "area": null
+    },
+    {
+        "name": "notifications.list",
+        "path": "/notifications/list",
+        "label": null,
+        "area": null
+    },
+    {
+        "name": "notifications.today",
+        "path": "/notifications/today",
+        "label": null,
+        "area": null
+    },
+    {
+        "name": "passport.authorizations.authorize",
+        "path": "/oauth/authorize",
+        "label": null,
+        "area": null
+    },
+    {
+        "name": "passport.device",
+        "path": "/oauth/device",
+        "label": null,
+        "area": null
+    },
+    {
+        "name": "passport.device.authorizations.authorize",
+        "path": "/oauth/device/authorize",
+        "label": null,
+        "area": null
+    },
+    {
+        "name": "password.confirm",
+        "path": "/user/confirm-password",
+        "label": null,
+        "area": null
+    },
+    {
+        "name": "password.confirmation",
+        "path": "/user/confirmed-password-status",
+        "label": null,
+        "area": null
+    },
+    {
+        "name": "password.request",
+        "path": "/forgot-password",
+        "label": null,
+        "area": null
+    },
+    {
+        "name": "pdf-export-user-filters.index",
+        "path": "/pdf-export-user-filters",
+        "label": null,
+        "area": null
+    },
+    {
+        "name": "permission-presets.index",
+        "path": "/permission-presets",
+        "label": null,
+        "area": null
+    },
+    {
+        "name": "permissions.reference",
+        "path": "/permissions/reference",
+        "label": null,
+        "area": null
+    },
+    {
+        "name": "planning-event-calendar.index",
+        "path": "/planning-event-calendar",
+        "label": "Planungskalender",
+        "area": "Kalender"
+    },
+    {
+        "name": "profile.show",
+        "path": "/user/profile",
+        "label": null,
+        "area": null
+    },
+    {
+        "name": "project-day-assignments.full-period.index",
+        "path": "/project-day-assignments/full-period",
+        "label": null,
+        "area": null
+    },
+    {
+        "name": "project-day-assignments.projects",
+        "path": "/project-day-assignments/projects",
+        "label": null,
+        "area": null
+    },
+    {
+        "name": "project-management-builder.index",
+        "path": "/project-management-builder",
+        "label": null,
+        "area": null
+    },
+    {
+        "name": "project-print-layout.index",
+        "path": "/project-print-layout",
+        "label": null,
+        "area": null
+    },
+    {
+        "name": "project-roles.index",
+        "path": "/project-roles",
+        "label": null,
+        "area": null
+    },
+    {
+        "name": "project.budget.cell.comment.get",
+        "path": "/project/budget/cell/comments",
+        "label": null,
+        "area": null
+    },
+    {
+        "name": "project.budget.sum-details.show",
+        "path": "/project/budget/sum-details",
+        "label": null,
+        "area": null
+    },
+    {
+        "name": "project.budget.trashed",
+        "path": "/project/budget/trashed",
+        "label": null,
+        "area": null
+    },
+    {
+        "name": "project.settings",
+        "path": "/settings/projects",
+        "label": "Projekte",
+        "area": "System"
+    },
+    {
+        "name": "project.settings.artist_residencies",
+        "path": "/settings/projects/artist-residencies",
+        "label": null,
+        "area": null
+    },
+    {
+        "name": "project.user.search",
+        "path": "/project/user/search",
+        "label": null,
+        "area": null
+    },
+    {
+        "name": "projects",
+        "path": "/projects",
+        "label": "Projekte",
+        "area": "Projekte"
+    },
+    {
+        "name": "projects.create",
+        "path": "/projects/create",
+        "label": null,
+        "area": null
+    },
+    {
+        "name": "projects.search",
+        "path": "/projects/search",
+        "label": null,
+        "area": null
+    },
+    {
+        "name": "projects.search.single",
+        "path": "/projects/search/single",
+        "label": null,
+        "area": null
+    },
+    {
+        "name": "projects.settings.trashed",
+        "path": "/trashedProjects/settings",
+        "label": null,
+        "area": null
+    },
+    {
+        "name": "projects.trashed",
+        "path": "/trashedProjects",
+        "label": "Papierkorb",
+        "area": "Papierkorb"
+    },
+    {
+        "name": "reset_user_password",
+        "path": "/reset-password",
+        "label": null,
+        "area": null
+    },
+    {
+        "name": "rooms.free",
+        "path": "/rooms/free",
+        "label": null,
+        "area": null
+    },
+    {
+        "name": "rooms.move",
+        "path": "/rooms/move",
+        "label": null,
+        "area": null
+    },
+    {
+        "name": "rooms.trashed",
+        "path": "/trashedRooms",
+        "label": null,
+        "area": null
+    },
+    {
+        "name": "sageNotAssignedData.trashed",
+        "path": "/project/budget/sageNotAssignedData/trashed",
+        "label": null,
+        "area": null
+    },
+    {
+        "name": "sanctum.csrf-cookie",
+        "path": "/sanctum/csrf-cookie",
+        "label": null,
+        "area": null
+    },
+    {
+        "name": "settings.external-access.index",
+        "path": "/settings/external-access",
+        "label": null,
+        "area": null
+    },
+    {
+        "name": "settings.inventory-tags.index",
+        "path": "/settings/inventory-tags",
+        "label": null,
+        "area": null
+    },
+    {
+        "name": "setup",
+        "path": "/setup",
+        "label": null,
+        "area": null
+    },
+    {
+        "name": "shift-groups.index",
+        "path": "/shift-groups",
+        "label": null,
+        "area": null
+    },
+    {
+        "name": "shift-plan-requests.my.index",
+        "path": "/shift-plan-requests/my",
+        "label": null,
+        "area": null
+    },
+    {
+        "name": "shift-preset-groups.index",
+        "path": "/shift-preset-groups",
+        "label": null,
+        "area": null
+    },
+    {
+        "name": "shift-rule-violations.date-range",
+        "path": "/shift-rule-violations/date-range",
+        "label": null,
+        "area": null
+    },
+    {
+        "name": "shift-rules.active",
+        "path": "/shift-rules/active",
+        "label": null,
+        "area": null
+    },
+    {
+        "name": "shift-rules.contracts.index",
+        "path": "/shift-rules/contracts/assignments",
+        "label": null,
+        "area": null
+    },
+    {
+        "name": "shift-rules.index",
+        "path": "/shift-rules",
+        "label": null,
+        "area": null
+    },
+    {
+        "name": "shift-rules.pending",
+        "path": "/shift-rules/pending",
+        "label": null,
+        "area": null
+    },
+    {
+        "name": "shift.dayAssignments",
+        "path": "/project/dayAssignments",
+        "label": null,
+        "area": null
+    },
+    {
+        "name": "shift.history.index",
+        "path": "/shift-history",
+        "label": null,
+        "area": null
+    },
+    {
+        "name": "shift.plan.all",
+        "path": "/response/all/shift-plan-events",
+        "label": null,
+        "area": null
+    },
+    {
+        "name": "shift.plan.meta",
+        "path": "/response/shift-plan-meta",
+        "label": null,
+        "area": null
+    },
+    {
+        "name": "shift.plan.room",
+        "path": "/response/shift-plan-room",
+        "label": null,
+        "area": null
+    },
+    {
+        "name": "shift.plan.rooms.batch",
+        "path": "/response/shift-plan-rooms",
+        "label": null,
+        "area": null
+    },
+    {
+        "name": "shift.settings",
+        "path": "/settings/shift",
+        "label": "Schichteinstellungen",
+        "area": "System"
+    },
+    {
+        "name": "shift.template.search",
+        "path": "/shift/template/search",
+        "label": null,
+        "area": null
+    },
+    {
+        "name": "shift.work-time-pattern",
+        "path": "/shift/work-time-pattern",
+        "label": null,
+        "area": null
+    },
+    {
+        "name": "shifts.approvals.changes",
+        "path": "/shifts/approvals/changes",
+        "label": "Änderungen nach Festschreibung",
+        "area": "Dienstplan"
+    },
+    {
+        "name": "shifts.approvals.requests",
+        "path": "/shifts/approvals/requests",
+        "label": "Meine Freigabe-Anfragen",
+        "area": "Dienstplan"
+    },
+    {
+        "name": "shifts.approvals.review",
+        "path": "/shifts/approvals/review",
+        "label": "Freigabe-Anfragen prüfen",
+        "area": "Dienstplan"
+    },
+    {
+        "name": "shifts.copy-week.preview",
+        "path": "/project/copy-week/preview",
+        "label": null,
+        "area": null
+    },
+    {
+        "name": "shifts.crafts",
+        "path": "/shifts/crafts",
+        "label": null,
+        "area": null
+    },
+    {
+        "name": "shifts.events.for-rooms-by-days-and-project",
+        "path": "/shifts/view/events-and-workers",
+        "label": null,
+        "area": null
+    },
+    {
+        "name": "shifts.events.for-rooms-by-days-and-project-no-workers",
+        "path": "/shifts/view/events-and-no-workers",
+        "label": null,
+        "area": null
+    },
+    {
+        "name": "shifts.plan",
+        "path": "/shifts/view",
+        "label": "Dienstpläne",
+        "area": "Dienstplan"
+    },
+    {
+        "name": "shifts.plan.list-view",
+        "path": "/shifts/list-view",
+        "label": "Dienstplan-Listenansicht",
+        "area": "Dienstplan"
+    },
+    {
+        "name": "shifts.presets",
+        "path": "/shifts/presets",
+        "label": "Schichtvorlagen",
+        "area": "Dienstplan"
+    },
+    {
+        "name": "shifts.timeline-presets.index",
+        "path": "/timeline-preset",
+        "label": null,
+        "area": null
+    },
+    {
+        "name": "shifts.week-status",
+        "path": "/shifts/week-status",
+        "label": "Wochenstatus",
+        "area": "Dienstplan"
+    },
+    {
+        "name": "shifts.worker.single",
+        "path": "/shifts/worker-single",
+        "label": null,
+        "area": null
+    },
+    {
+        "name": "shifts.workers",
+        "path": "/shifts/workers",
+        "label": null,
+        "area": null
+    },
+    {
+        "name": "single-shift-presets.index",
+        "path": "/single-shift-presets",
+        "label": null,
+        "area": null
+    },
+    {
+        "name": "tab.index",
+        "path": "/settings/tab/index",
+        "label": null,
+        "area": null
+    },
+    {
+        "name": "tab.list",
+        "path": "/settings/tab/list",
+        "label": null,
+        "area": null
+    },
+    {
+        "name": "task_templates.create",
+        "path": "/task_templates/create",
+        "label": null,
+        "area": null
+    },
+    {
+        "name": "tasks.create",
+        "path": "/tasks/create",
+        "label": null,
+        "area": null
+    },
+    {
+        "name": "tasks.own",
+        "path": "/tasks/own",
+        "label": "To-dos",
+        "area": "To-dos"
+    },
+    {
+        "name": "tool.ai-assistant",
+        "path": "/tool/ai-assistant",
+        "label": null,
+        "area": null
+    },
+    {
+        "name": "tool.branding",
+        "path": "/tool/branding",
+        "label": "Tool-Einstellungen",
+        "area": "System"
+    },
+    {
+        "name": "tool.communication-and-legal",
+        "path": "/tool/communication-and-legal",
+        "label": null,
+        "area": null
+    },
+    {
+        "name": "tool.external-user-management",
+        "path": "/tool/external-user-management",
+        "label": null,
+        "area": null
+    },
+    {
+        "name": "tool.external-user-management.sources.index",
+        "path": "/tool/external-user-management/sources",
+        "label": null,
+        "area": null
+    },
+    {
+        "name": "tool.file-settings.index",
+        "path": "/tool/system/file-settings",
+        "label": null,
+        "area": null
+    },
+    {
+        "name": "tool.interfaces",
+        "path": "/tool/interfaces",
+        "label": null,
+        "area": null
+    },
+    {
+        "name": "tool.interfaces.sage.logs",
+        "path": "/tool/interfaces/sage/logs",
+        "label": null,
+        "area": null
+    },
+    {
+        "name": "tool.mail",
+        "path": "/tool/mail",
+        "label": null,
+        "area": null
+    },
+    {
+        "name": "tool.module-settings.index",
+        "path": "/tool/module-settings",
+        "label": null,
+        "area": null
+    },
+    {
+        "name": "two-factor.login",
+        "path": "/two-factor-challenge",
+        "label": null,
+        "area": null
+    },
+    {
+        "name": "two-factor.qr-code",
+        "path": "/user/two-factor-qr-code",
+        "label": null,
+        "area": null
+    },
+    {
+        "name": "two-factor.recovery-codes",
+        "path": "/user/two-factor-recovery-codes",
+        "label": null,
+        "area": null
+    },
+    {
+        "name": "two-factor.secret-key",
+        "path": "/user/two-factor-secret-key",
+        "label": null,
+        "area": null
+    },
+    {
+        "name": "user-contract-settings.index",
+        "path": "/user-contracts",
+        "label": null,
+        "area": null
+    },
+    {
+        "name": "user.invite",
+        "path": "/users/invitations/invite",
+        "label": null,
+        "area": null
+    },
+    {
+        "name": "users",
+        "path": "/users",
+        "label": "Nutzer*innen",
+        "area": "Nutzer*innen"
+    },
+    {
+        "name": "users.addresses",
+        "path": "/users/addresses",
+        "label": null,
+        "area": null
+    },
+    {
+        "name": "users.money_source_search",
+        "path": "/users/money_source_search",
+        "label": null,
+        "area": null
+    },
+    {
+        "name": "users.search",
+        "path": "/users/search",
+        "label": null,
+        "area": null
+    },
+    {
+        "name": "users_departments.search",
+        "path": "/projects/users_departments/search",
+        "label": null,
+        "area": null
+    },
+    {
+        "name": "work-time-request.index",
+        "path": "/work-time-request",
+        "label": "Arbeitszeitänderungsanfragen",
+        "area": "Dienstplan"
+    },
+    {
+        "name": "work-time-request.received",
+        "path": "/work-time-request/received",
+        "label": null,
+        "area": null
+    },
+    {
+        "name": "workflow.definitions.create",
+        "path": "/workflow/definitions/create",
+        "label": null,
+        "area": null
+    },
+    {
+        "name": "workflow.index",
+        "path": "/workflow",
+        "label": null,
+        "area": null
+    }
+]

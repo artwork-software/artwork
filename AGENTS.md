@@ -1,4 +1,29 @@
 <laravel-boost-guidelines>
+=== .ai/artwork-project rules ===
+
+# artwork – Projektkonventionen
+
+## Laravel-10-Verzeichnisstruktur beibehalten
+
+- Das Projekt wurde von Laravel 10 hochgezogen, ohne auf die neue, verschlankte Struktur zu migrieren. Das bleibt so, solange es nicht ausdrücklich anders gewünscht ist.
+- Middleware liegt in `app/Http/Middleware/` bzw. `artwork/Core/Http/Middleware/`, Service Provider in `app/Providers/`.
+- Es gibt keine Anwendungskonfiguration in `bootstrap/app.php`:
+    - Middleware-Registrierung: `app/Http/Kernel.php`
+    - Exception-Handling: `app/Exceptions/Handler.php`
+    - Commands und Schedule: `app/Console/Kernel.php`
+    - Rate Limits: `RouteServiceProvider` bzw. `app/Http/Kernel.php`
+- Fachlicher Code liegt in Modulen unter `artwork/Modules/*` (Models, Services, Repositories, Http, Policies); Altbestand unter `app/`.
+
+## Lokale Umgebung (DDEV)
+
+- PHP, Artisan und Tests laufen im Container: `ddev exec php artisan …`, Tests mit `ddev exec php artisan test --compact <datei>`. Direkt auf dem Host scheitert die DB-Verbindung (Host `db`).
+- Die Test-Datenbank `artwork_test` wird nicht pro Lauf migriert: nach neuen Migrationen `ddev exec "DB_DATABASE=artwork_test php artisan migrate --force"`.
+- Nie zwei Testläufe gleichzeitig starten (gemeinsame Test-DB und Storage-Fakes → Schein-Fehlschläge).
+
+## Datenbank
+
+- Beim Ändern einer Spalte müssen alle bisherigen Attribute (nullable, default, …) im Migrationscode wiederholt werden, sonst gehen sie verloren.
+
 === foundation rules ===
 
 # Laravel Boost Guidelines
@@ -12,28 +37,28 @@ This application is a Laravel application and its main Laravel ecosystems packag
 - php - 8.4
 - inertiajs/inertia-laravel (INERTIA_LARAVEL) - v2
 - laravel/fortify (FORTIFY) - v1
-- laravel/framework (LARAVEL) - v12
+- laravel/framework (LARAVEL) - v13
 - laravel/horizon (HORIZON) - v5
-- laravel/passport (PASSPORT) - v12
+- laravel/passport (PASSPORT) - v13
 - laravel/prompts (PROMPTS) - v0
 - laravel/reverb (REVERB) - v1
 - laravel/sanctum (SANCTUM) - v4
 - laravel/scout (SCOUT) - v10
-- pestphp/pest (PEST) - v3
-- phpunit/phpunit (PHPUNIT) - v11
-- tightenco/ziggy (ZIGGY) - v1
+- laravel/socialite (SOCIALITE) - v5
+- tightenco/ziggy (ZIGGY) - v2
 - larastan/larastan (LARASTAN) - v3
 - laravel/boost (BOOST) - v2
-- laravel/dusk (DUSK) - v8
 - laravel/mcp (MCP) - v0
 - laravel/sail (SAIL) - v1
+- phpunit/phpunit (PHPUNIT) - v12
+- @inertiajs/vue3 (INERTIA_VUE) - v2
+- vue (VUE) - v3
+- laravel-echo (ECHO) - v2
+- tailwindcss (TAILWINDCSS) - v4
 
 ## Skills Activation
 
-This project has domain-specific skills available. You MUST activate the relevant skill whenever you work in that domain—don't wait until you're stuck.
-
-- `laravel-best-practices` — Apply this skill whenever writing, reviewing, or refactoring Laravel PHP code. This includes creating or modifying controllers, models, migrations, form requests, policies, jobs, scheduled commands, service classes, and Eloquent queries. Triggers for N+1 and query performance issues, caching strategies, authorization and security patterns, validation, error handling, queue and job configuration, route definitions, and architectural decisions. Also use for Laravel code reviews and refactoring existing Laravel code to follow best practices. Covers any task involving Laravel backend PHP code patterns.
-- `pest-testing` — Use this skill for Pest PHP testing in Laravel projects only. Trigger whenever any test is being written, edited, fixed, or refactored — including fixing tests that broke after a code change, adding assertions, converting PHPUnit to Pest, adding datasets, and TDD workflows. Always activate when the user asks how to write something in Pest, mentions test files or directories (tests/Feature, tests/Unit) or architecture tests. Covers: test()/it()/expect() syntax, datasets, mocking, browser testing, arch(), Livewire component tests, RefreshDatabase, and all Pest 3 features. Do not use for editing factories, seeders, migrations, controllers, models, or non-test PHP code.
+This project has domain-specific skills available in `**/skills/**`. You MUST activate the relevant skill whenever you work in that domain—don't wait until you're stuck.
 
 ## Conventions
 
@@ -93,7 +118,6 @@ This project has domain-specific skills available. You MUST activate the relevan
 - Run Artisan commands directly via the command line (e.g., `php artisan route:list`). Use `php artisan list` to discover available commands and `php artisan [command] --help` to check parameters.
 - Inspect routes with `php artisan route:list`. Filter with: `--method=GET`, `--name=users`, `--path=api`, `--except-vendor`, `--only-vendor`.
 - Read configuration values using dot notation: `php artisan config:show app.name`, `php artisan config:show database.default`. Or read config files directly from the `config/` directory.
-- To check environment variables, read the `.env` file directly.
 
 ## Tinker
 
@@ -112,6 +136,12 @@ This project has domain-specific skills available. You MUST activate the relevan
 - Prefer PHPDoc blocks over inline comments. Only add inline comments for exceptionally complex logic.
 - Use array shape type definitions in PHPDoc blocks.
 
+=== deployments rules ===
+
+# Deployment
+
+- Laravel can be deployed using [Laravel Cloud](https://cloud.laravel.com/), which is the fastest way to deploy and scale production Laravel applications.
+
 === tests rules ===
 
 # Test Enforcement
@@ -126,43 +156,13 @@ This project has domain-specific skills available. You MUST activate the relevan
 - Inertia creates fully client-side rendered SPAs without modern SPA complexity, leveraging existing server-side patterns.
 - Components live in `resources/js/Pages` (unless specified in `vite.config.js`). Use `Inertia::render()` for server-side routing instead of Blade views.
 - ALWAYS use `search-docs` tool for version-specific Inertia documentation and updated code examples.
+- IMPORTANT: Activate `inertia-vue-development` when working with Inertia Vue client-side patterns.
 
 # Inertia v2
 
 - Use all Inertia features from v1 and v2. Check the documentation before making changes to ensure the correct approach.
-- New features: deferred props, infinite scrolling (merging props + `WhenVisible`), lazy loading on scroll, polling, prefetching.
+- New features: deferred props, infinite scroll, merging props, polling, prefetching, once props, flash data.
 - When using deferred props, add an empty state with a pulsing or animated skeleton.
-
-=== fortify/core rules ===
-
-## Laravel Fortify
-
-Fortify is a headless authentication backend that provides authentication routes and controllers for Laravel applications.
-
-**Before implementing any authentication features, use the `search-docs` tool to get the latest docs for that specific feature.**
-
-### Configuration & Setup
-
-- Check `config/fortify.php` to see what's enabled. Use `search-docs` for detailed information on specific features.
-- Enable features by adding them to the `'features' => []` array: `Features::registration()`, `Features::resetPasswords()`, etc.
-- To see the all Fortify registered routes, use the `list-routes` tool with the `only_vendor: true` and `action: "Fortify"` parameters.
-- Fortify includes view routes by default (login, register). Set `'views' => false` in the configuration file to disable them if you're handling views yourself.
-
-### Customization
-
-- Views can be customized in `FortifyServiceProvider`'s `boot()` method using `Fortify::loginView()`, `Fortify::registerView()`, etc.
-- Customize authentication logic with `Fortify::authenticateUsing()` for custom user retrieval / validation.
-- Actions in `app/Actions/Fortify/` handle business logic (user creation, password reset, etc.). They're fully customizable, so you can modify them to change feature behavior.
-
-## Available Features
-
-- `Features::registration()` for user registration.
-- `Features::emailVerification()` to verify new user emails.
-- `Features::twoFactorAuthentication()` for 2FA with QR codes and recovery codes.
-  - Add options: `['confirmPassword' => true, 'confirm' => true]` to require password confirmation and OTP confirmation before enabling 2FA.
-- `Features::updateProfileInformation()` to let users update their profile.
-- `Features::updatePasswords()` to let users change their passwords.
-- `Features::resetPasswords()` for password reset via email.
 
 === laravel/core rules ===
 
@@ -194,42 +194,29 @@ Fortify is a headless authentication backend that provides authentication routes
 
 - If you receive an "Illuminate\Foundation\ViteException: Unable to locate file in Vite manifest" error, you can run `npm run build` or ask the user to run `npm run dev` or `composer run dev`.
 
-## Deployment
+=== phpunit/core rules ===
 
-- Laravel can be deployed using [Laravel Cloud](https://cloud.laravel.com/), which is the fastest way to deploy and scale production Laravel applications.
+# PHPUnit
 
-=== laravel/v12 rules ===
+- This application uses PHPUnit for testing. All tests must be written as PHPUnit classes. Use `php artisan make:test --phpunit {name}` to create a new test.
+- If you see a test using "Pest", convert it to PHPUnit.
+- Every time a test has been updated, run that singular test.
+- When the tests relating to your feature are passing, ask the user if they would like to also run the entire test suite to make sure everything is still passing.
+- Tests should cover all happy paths, failure paths, and edge cases.
+- You must not remove any tests or test files from the tests directory without approval. These are not temporary or helper files; these are core to the application.
 
-# Laravel 12
+## Running Tests
 
-- CRITICAL: ALWAYS use `search-docs` tool for version-specific Laravel documentation and updated code examples.
-- This project upgraded from Laravel 10 without migrating to the new streamlined Laravel file structure.
-- This is perfectly fine and recommended by Laravel. Follow the existing structure from Laravel 10. We do not need to migrate to the new Laravel structure unless the user explicitly requests it.
+- Run the minimal number of tests, using an appropriate filter, before finalizing.
+- To run all tests: `php artisan test --compact`.
+- To run all tests in a file: `php artisan test --compact tests/Feature/ExampleTest.php`.
+- To filter on a particular test name: `php artisan test --compact --filter=testName` (recommended after making a change to a related file).
 
-## Laravel 10 Structure
+=== inertia-vue/core rules ===
 
-- Middleware typically lives in `app/Http/Middleware/` and service providers in `app/Providers/`.
-- There is no `bootstrap/app.php` application configuration in a Laravel 10 structure:
-    - Middleware registration happens in `app/Http/Kernel.php`
-    - Exception handling is in `app/Exceptions/Handler.php`
-    - Console commands and schedule register in `app/Console/Kernel.php`
-    - Rate limits likely exist in `RouteServiceProvider` or `app/Http/Kernel.php`
+# Inertia + Vue
 
-## Database
-
-- When modifying a column, the migration must include all of the attributes that were previously defined on the column. Otherwise, they will be dropped and lost.
-- Laravel 12 allows limiting eagerly loaded records natively, without external packages: `$query->latest()->limit(10);`.
-
-### Models
-
-- Casts can and likely should be set in a `casts()` method on a model rather than the `$casts` property. Follow existing conventions from other models.
-
-=== pest/core rules ===
-
-## Pest
-
-- This project uses Pest for testing. Create tests: `php artisan make:test --pest {name}`.
-- Run tests: `php artisan test --compact` or filter: `php artisan test --compact --filter=testName`.
-- Do NOT delete tests without approval.
+Vue components must have a single root element.
+- IMPORTANT: Activate `inertia-vue-development` when working with Inertia Vue client-side patterns.
 
 </laravel-boost-guidelines>

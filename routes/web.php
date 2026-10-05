@@ -76,7 +76,6 @@ use App\Http\Controllers\ProjectRoleController;
 use App\Http\Controllers\ProjectStatesController;
 use App\Http\Controllers\ProjectTab\ProjectArtistNameController;
 use App\Http\Controllers\ProjectTab\ProjectArtistResidenciesController;
-use App\Http\Controllers\ProjectTab\ProjectBudgetController;
 use App\Http\Controllers\ProjectTab\ProjectBudgetInformationController;
 use App\Http\Controllers\ProjectTab\ProjectBulkEditController;
 use App\Http\Controllers\ProjectTab\ProjectCalendarController;
@@ -85,7 +84,6 @@ use App\Http\Controllers\ProjectTab\ProjectCommentController;
 use App\Http\Controllers\ProjectTab\ProjectDocumentsController;
 use App\Http\Controllers\ProjectTab\ProjectMaterialIssueController;
 use App\Http\Controllers\ProjectTab\ProjectShiftContactsController;
-use App\Http\Controllers\ProjectTab\ProjectShiftController;
 use App\Http\Controllers\ProjectTab\ProjectSageInvoiceOverviewController;
 use App\Http\Controllers\ProjectTab\ProjectStatusController;
 use App\Http\Controllers\ProjectTab\ProjectTeamController;
@@ -906,12 +904,6 @@ Route::group(['middleware' => ['auth:sanctum']], function (): void {
         Route::get('/calendar', [ProjectCalendarController::class, 'show'])
             ->name('projects.tabs.calendar')
             ->middleware(EnsureUserCanSeeProjectComponent::for(ProjectTabComponentEnum::CALENDAR));
-        Route::get('/budget', [ProjectBudgetController::class, 'show'])
-            ->name('projects.tabs.budget')
-            ->middleware(EnsureUserCanSeeProjectComponent::for(ProjectTabComponentEnum::BUDGET));
-        Route::get('/shift', [ProjectShiftController::class, 'show'])
-            ->name('projects.tabs.shift')
-            ->middleware(EnsureUserCanSeeProjectComponent::for(ProjectTabComponentEnum::SHIFT_TAB));
         Route::get('/sage-invoices', [ProjectSageInvoiceOverviewController::class, 'show'])
             ->name('projects.tabs.sage-invoices')
             ->middleware(EnsureUserCanSeeProjectComponent::for(ProjectTabComponentEnum::SAGE_INVOICE_OVERVIEW));

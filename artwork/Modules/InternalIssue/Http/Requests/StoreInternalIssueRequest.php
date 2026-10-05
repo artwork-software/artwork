@@ -8,6 +8,8 @@ use Illuminate\Foundation\Http\FormRequest;
 
 class StoreInternalIssueRequest extends FormRequest
 {
+    use ValidatesInternalIssuePeriod;
+
     /**
      * Determine if the user is authorized to make this request.
      */
@@ -49,6 +51,8 @@ class StoreInternalIssueRequest extends FormRequest
             'articles' => 'nullable|array',
             'articles.*.id' => [
                 'required',
+                // Doppelte Einträge überschrieben sich beim Speichern (letzter gewinnt, Mengen gingen verloren)
+                'distinct',
                 \Illuminate\Validation\Rule::exists('inventory_articles', 'id')->whereNull('deleted_at'),
             ],
             'articles.*.quantity' => 'required|integer|min:1',

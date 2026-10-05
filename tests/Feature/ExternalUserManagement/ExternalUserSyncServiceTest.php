@@ -135,4 +135,26 @@ final class ExternalUserSyncServiceTest extends FeatureTestCase
         $this->assertSame('ldap', $local->fresh()->auth_provider);
         $this->assertTrue($local->fresh()->hasPermissionTo($this->permission));
     }
+
+    #[Test]
+    public function deleting_or_changing_a_mapping_revokes_what_the_sync_granted_before(): void
+    {
+        $other = Permission::findOrCreate(PermissionEnum::SETTINGS_UPDATE->value, 'web');
+        $mapping = ExternalUserGroupMapping::query()->where('source_id', $this->source->id)->sole();
+        $mapping->update(['permission_ids' => [$this->permission->id, $other->id]]);
+        $this->syncWith([$this->entry('lia', 'lia@example.test', [self::GROUP_DN])]);
+        $user = User::query()->where('email', 'lia@example.test')->sole();
+        $this->assertTrue($user->fresh()->hasPermissionTo($other));
+
+        // Recht aus dem Mapping entfernt → beim nächsten Lauf weg (vorher: blieb für immer)
+        $mapping->update(['permission_ids' => [$this->permission->id]]);
+        $this->syncWith([$this->entry('lia', 'lia@example.test', [self::GROUP_DN])]);
+        $this->assertFalse($user->fresh()->hasPermissionTo($other));
+        $this->assertTrue($user->fresh()->hasPermissionTo($this->permission));
+
+        // Mapping gelöscht → auch das übrige Recht wird entzogen
+        $mapping->delete();
+        $this->syncWith([$this->entry('lia', 'lia@example.test', [self::GROUP_DN])]);
+        $this->assertFalse($user->fresh()->hasPermissionTo($this->permission));
+    }
 }

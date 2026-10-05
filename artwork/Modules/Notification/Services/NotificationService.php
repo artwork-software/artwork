@@ -25,7 +25,7 @@ class NotificationService
 
     public ?NotificationEnum $notificationConstEnum = null;
 
-    public string $title;
+    public string $title = '';
 
     public array|null $description = [];
 
@@ -91,7 +91,7 @@ class NotificationService
         $this->shiftId = $shiftId;
     }
 
-    public function getNotificationTo(): User
+    public function getNotificationTo(): ?User
     {
         return $this->notificationTo;
     }
@@ -344,6 +344,8 @@ class NotificationService
         $this->setPositionVerifyRequestId(null);
         $this->setPositionVerifyRequestType(null);
         $this->setCreatedBy(null);
+        $this->setPriority(0);
+        $this->notificationTo = null;
     }
 
     /**
@@ -356,6 +358,27 @@ class NotificationService
         $user = Auth::user();
 
         return $user instanceof User ? $user : null;
+    }
+
+    /**
+     * Nur, was die Kopfzeile braucht. Vorher landete das ganze User-Modell (E-Mail, Telefon,
+     * Stundenkonto, Login-IDs …) in notifications.data und ging so an alle Empfänger*innen;
+     * Kontaktdaten lädt der Tooltip rechtegeprüft nach (user.tooltip.info).
+     *
+     * @return array{id: int, first_name: ?string, last_name: ?string, profile_photo_url: ?string}|null
+     */
+    private function creatorSummary(?User $creator): ?array
+    {
+        if ($creator === null) {
+            return null;
+        }
+
+        return [
+            'id' => $creator->id,
+            'first_name' => $creator->first_name,
+            'last_name' => $creator->last_name,
+            'profile_photo_url' => $creator->profile_photo_url,
+        ];
     }
 
     private function actingUserId(): ?int
@@ -386,7 +409,7 @@ class NotificationService
         $body->projectId = $this->getProjectId();
         $body->departmentId = $this->departmentId;
         $body->taskId = $this->getTaskId();
-        $body->created_by = $this->createdBy ?? $this->actingUser()?->withoutRelations();
+        $body->created_by = $this->creatorSummary($this->createdBy ?? $this->actingUser());
         $body->created_at = Carbon::now()->translatedFormat('d.m.Y H:i');
         $body->budgetData = $this->getBudgetData();
         $body->notificationKey = $this->getNotificationKey();
@@ -396,8 +419,11 @@ class NotificationService
 
         $type = $this->getNotificationConstEnum();
         $notificationClass = $type->notificationClass();
+        // Handelnd ist auch die Person, die eine geplante Änderung ausgelöst hat (Scheduler ohne Auth) –
+        // sonst bekam sie ihre eigenen Projekt-/Termin-/Aufgabenänderungen gemeldet
+        $actingUserId = $this->createdBy?->id ?? $this->actingUserId();
         $isDelivered = $notificationClass !== null &&
-            ($type->notifiesActingUser() || $this->getNotificationTo()->id !== $this->actingUserId());
+            ($type->notifiesActingUser() || $this->getNotificationTo()->id !== $actingUserId);
 
         if ($isDelivered) {
             $this->sendNotification(

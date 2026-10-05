@@ -46,6 +46,7 @@ use Artwork\Modules\Event\Services\EventCommentService;
 use Artwork\Modules\Event\Services\SeriesEventsService;
 use Artwork\Modules\Event\Models\EventProperty;
 use Artwork\Modules\Event\Services\EventPropertyService;
+use Artwork\Modules\Notification\Services\NotificationDialogDataService;
 use Artwork\Modules\EventType\Http\Resources\EventTypeResource;
 use Artwork\Modules\EventType\Models\EventType;
 use Artwork\Modules\Filter\Services\FilterService;
@@ -1242,7 +1243,6 @@ class EventController extends Controller
         CarbonService $carbonService,
         EventPropertyService $eventPropertyService
     ): Response {
-        $event = null;
         $tasks = Task::query()
             ->where('done', false)
             ->where(function ($query): void {
@@ -1351,52 +1351,11 @@ class EventController extends Controller
             ->where('read_at', null)
             ->orderBy('created_at', 'desc');
 
-        if (request('openEditEvent')) {
-            $event = Event::with([
-                'room',
-                'creator',
-                'project',
-                'project.managerUsers',
-                'project.status',
-                'event_type',
-                'eventStatus',
-                'eventProperties',
-                'shifts',
-                'shifts.craft',
-                'shifts.users',
-                'shifts.freelancer',
-                'shifts.serviceProvider',
-                'shifts.shiftsQualifications',
-                'subEvents.event',
-                'subEvents.event.room',
-                'series',
-            ])->find(request('eventId'));
-        }
+        // Dialoge der Benachrichtigungen – dieselbe Logik wie im Benachrichtigungscenter (vorher eigene
+        // Kopie: Termin in {data: …} verpackt → „Bearbeiten & annehmen“ legte einen NEUEN Termin an,
+        // „Belegung absagen“ und der Abwesenheitsverlauf fehlten ganz)
+        $dialogData = app(NotificationDialogDataService::class)->forRequest(request(), $user);
 
-        $historyObjects = [];
-
-        // reload functions
-        if (request('showHistory')) {
-            if (request('historyType') === 'project') {
-                $project = Project::find(request('modelId'));
-                if ($project !== null) {
-                    $historyObjects = array_merge(
-                        $historyObjects,
-                        $this->changeService->historyForFrontend($project)
-                    );
-                }
-            }
-
-            if (request('historyType') === 'event') {
-                $event = Event::find(request('modelId'));
-                if ($event !== null) {
-                    $historyObjects = array_merge(
-                        $historyObjects,
-                        $this->changeService->historyForFrontend($event)
-                    );
-                }
-            }
-        }
         return inertia('Dashboard', [
             'tasks' => TaskDashboardResource::collection($tasks)->resolve(),
             // Pivot-Spalte ist DATE — Vergleich mit vollem Timestamp ($now) würde nur um
@@ -1412,11 +1371,13 @@ class EventController extends Controller
             // notifications does not bloat the payload. Keep perPage (5) in sync with Dashboard.vue.
             'notificationCount' => $notification->count(),
             'notificationOfToday' => $notification->take(5)->get(),
-            'event' => $event !== null ? new CalendarEventResource($event) : null,
+            'event' => $dialogData['event'],
+            'wantedSplit' => $dialogData['wantedSplit'],
+            'roomCollisions' => [],
             'eventTypes' => EventTypeResource::collection(EventType::query()->with('verifiers')->get())->resolve(),
             'rooms' => Room::select(['id', 'name', 'area_id', 'order'])->get(),
             'projects' => Project::select(['id', 'name'])->get(),
-            'historyObjects' => $historyObjects,
+            'historyObjects' => $dialogData['historyObjects'],
             'eventStatuses' => EventStatus::orderBy('order')->get(),
             'first_project_tab_id' => $this->projectTabService->getFirstProjectTabId(),
             'first_project_shift_tab_id' => $this->projectTabService

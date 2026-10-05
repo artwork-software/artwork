@@ -15,6 +15,7 @@ use Artwork\Modules\User\Services\UserService;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Broadcasting\BroadcastException;
 use Illuminate\Support\Facades\Notification;
 use stdClass;
 
@@ -435,8 +436,16 @@ class NotificationService
         }
 
         $pushEnabled = (bool) $user->notificationSettings()->where('type', $type->value)->value('enabled_push');
-        if ($pushEnabled) {
+        if (!$pushEnabled) {
+            return;
+        }
+
+        // Wie bei den Sofort-Mails: ist der WebSocket-Server nicht erreichbar, fällt nur der
+        // Live-Hinweis aus – nicht die bereits gespeicherte Aktion (vorher 500 nach dem Speichern)
+        try {
             broadcast(new NewNotificationBroadcast($user, $broadcastMessage));
+        } catch (BroadcastException $exception) {
+            report($exception);
         }
     }
 

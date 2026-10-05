@@ -187,7 +187,9 @@ class NotificationController extends Controller
 
         return inertia('Notifications/Show', [
             'historyObjects' => $historyObjects,
-            'event' => $event !== null ? new CalendarEventResource($event) : null,
+            // resolve(): als JsonResource käme das Objekt in {data: …} verpackt an – die Dialoge
+            // (Absagen, Bearbeiten/Annehmen) lesen event.id und fanden nichts
+            'event' => $event !== null ? (new CalendarEventResource($event))->resolve() : null,
             'project' => null,
             'wantedSplit' => $event?->room_id,
             'roomCollisions' => [],

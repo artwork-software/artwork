@@ -50,15 +50,17 @@ class BaseNotification extends Notification implements ShouldBroadcast
             return $channels;
         }
 
+        if (!empty($this->broadcastMessage) && $notificationSetting->getAttribute('enabled_push')) {
+            $channels[] = 'broadcast';
+        }
+
+        // Mail zuletzt: schlägt der (synchrone) Versand fehl, sind Datenbank- und
+        // Push-Benachrichtigung schon zugestellt.
         if (
             $notificationSetting->getAttribute('enabled_email') &&
             $notificationSetting->getAttribute('frequency') === NotificationFrequencyEnum::IMMEDIATELY
         ) {
             $channels[] = 'mail';
-        }
-
-        if (!empty($this->broadcastMessage) && $notificationSetting->getAttribute('enabled_push')) {
-            $channels[] = 'broadcast';
         }
 
         return $channels;

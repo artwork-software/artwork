@@ -2,6 +2,8 @@
 
 namespace Artwork\Modules\Notification\Services;
 
+use Illuminate\Notifications\Notification as LaravelNotification;
+use Symfony\Component\Mailer\Exception\TransportExceptionInterface;
 use Artwork\Modules\Budget\Notifications\BudgetVerified;
 use Artwork\Modules\Department\Notifications\TeamNotification;
 use Artwork\Modules\Event\Models\Event;
@@ -399,7 +401,7 @@ class NotificationService
             case NotificationEnum::NOTIFICATION_ROOM_REQUEST:
             case NotificationEnum::NOTIFICATION_ROOM_ANSWER:
                 if ($this->getNotificationTo()->id !== $this->actingUserId()) {
-                    Notification::send(
+                    $this->sendNotification(
                         $this->getNotificationTo(),
                         new RoomRequestNotification($body, $this->getBroadcastMessage())
                     );
@@ -407,7 +409,7 @@ class NotificationService
                 break;
             case NotificationEnum::NOTIFICATION_EVENT_CHANGED:
                 if ($this->getNotificationTo()->id !== $this->actingUserId()) {
-                    Notification::send(
+                    $this->sendNotification(
                         $this->getNotificationTo(),
                         new EventNotification($body, $this->getBroadcastMessage())
                     );
@@ -416,7 +418,7 @@ class NotificationService
             case NotificationEnum::NOTIFICATION_NEW_TASK:
             case NotificationEnum::NOTIFICATION_TASK_CHANGED:
                 if ($this->getNotificationTo()->id !== $this->actingUserId()) {
-                    Notification::send(
+                    $this->sendNotification(
                         $this->getNotificationTo(),
                         new TaskNotification($body, $this->getBroadcastMessage())
                     );
@@ -425,7 +427,7 @@ class NotificationService
             case NotificationEnum::NOTIFICATION_PROJECT:
             case NotificationEnum::NOTIFICATION_PUBLIC_RELEVANT:
                 if ($this->getNotificationTo()->id !== $this->actingUserId()) {
-                    Notification::send(
+                    $this->sendNotification(
                         $this->getNotificationTo(),
                         new ProjectNotification($body, $this->getBroadcastMessage())
                     );
@@ -433,7 +435,7 @@ class NotificationService
                 break;
             case NotificationEnum::NOTIFICATION_TEAM:
                 if ($this->getNotificationTo()->id !== $this->actingUserId()) {
-                    Notification::send(
+                    $this->sendNotification(
                         $this->getNotificationTo(),
                         new TeamNotification($body, $this->getBroadcastMessage())
                     );
@@ -441,7 +443,7 @@ class NotificationService
                 break;
             case NotificationEnum::NOTIFICATION_ROOM_CHANGED:
                 if ($this->getNotificationTo()->id !== $this->actingUserId()) {
-                    Notification::send(
+                    $this->sendNotification(
                         $this->getNotificationTo(),
                         new RoomNotification($body, $this->getBroadcastMessage())
                     );
@@ -450,7 +452,7 @@ class NotificationService
             case NotificationEnum::NOTIFICATION_CONFLICT:
             case NotificationEnum::NOTIFICATION_LOUD_ADJOINING_EVENT:
                 if ($this->getNotificationTo()->id !== $this->actingUserId()) {
-                    Notification::send(
+                    $this->sendNotification(
                         $this->getNotificationTo(),
                         new ConflictNotification($body, $this->getBroadcastMessage())
                     );
@@ -458,7 +460,7 @@ class NotificationService
                 break;
             case NotificationEnum::NOTIFICATION_TASK_REMINDER:
                 if ($this->getNotificationTo()->id !== $this->actingUserId()) {
-                    Notification::send(
+                    $this->sendNotification(
                         $this->getNotificationTo(),
                         new DeadlineNotification($body, $this->getBroadcastMessage())
                     );
@@ -467,7 +469,7 @@ class NotificationService
             case NotificationEnum::NOTIFICATION_BUDGET_MONEY_SOURCE_AUTH_CHANGED:
             case NotificationEnum::NOTIFICATION_BUDGET_MONEY_SOURCE_CHANGED:
                 if ($this->getNotificationTo()->id !== $this->actingUserId()) {
-                    Notification::send(
+                    $this->sendNotification(
                         $this->getNotificationTo(),
                         new MoneySourceNotification($body, $this->getBroadcastMessage())
                     );
@@ -475,7 +477,7 @@ class NotificationService
                 break;
             case NotificationEnum::NOTIFICATION_MONEY_SOURCE_EXPIRATION:
             case NotificationEnum::NOTIFICATION_MONEY_SOURCE_BUDGET_THRESHOLD_REACHED:
-                Notification::send(
+                $this->sendNotification(
                     $this->getNotificationTo(),
                     new MoneySourceNotification($body, $this->getBroadcastMessage())
                 );
@@ -483,7 +485,7 @@ class NotificationService
             case NotificationEnum::NOTIFICATION_BUDGET_STATE_CHANGED:
             case NotificationEnum::NOTIFICATION_CONTRACTS_DOCUMENT_CHANGED:
                 if ($this->getNotificationTo()->id !== $this->actingUserId()) {
-                    Notification::send(
+                    $this->sendNotification(
                         $this->getNotificationTo(),
                         new BudgetVerified($body, $this->getBroadcastMessage())
                     );
@@ -502,7 +504,7 @@ class NotificationService
             case NotificationEnum::NOTIFICATION_NEW_SHIFT_COMMIT_WORKFLOW_REQUEST:
             case NotificationEnum::NOTIFICATION_SHIFT_WORKER_CONFIRMATION:
                 if ($this->getNotificationTo()->id !== $this->actingUserId()) {
-                    Notification::send(
+                    $this->sendNotification(
                         $this->getNotificationTo(),
                         new ShiftNotification($body, $this->getBroadcastMessage())
                     );
@@ -510,7 +512,7 @@ class NotificationService
                 break;
             case NotificationEnum::NOTIFICATION_EVENT_VERIFICATION_REQUESTS:
                 if ($this->getNotificationTo()->id !== $this->actingUserId()) {
-                    Notification::send(
+                    $this->sendNotification(
                         $this->getNotificationTo(),
                         new EventNotification($body, $this->getBroadcastMessage())
                     );
@@ -519,7 +521,7 @@ class NotificationService
             case NotificationEnum::NOTIFICATION_INVENTORY_OVERBOOKED:
             case NotificationEnum::NOTIFICATION_INVENTORY_ARTICLE_CHANGED:
                 if ($this->getNotificationTo()->id !== $this->actingUserId()) {
-                    Notification::send(
+                    $this->sendNotification(
                         $this->getNotificationTo(),
                         new InventoryArticleNotification($body, $this->getBroadcastMessage())
                     );
@@ -527,7 +529,7 @@ class NotificationService
                 break;
             case NotificationEnum::NOTIFICATION_EXTERNAL_ISSUE_RETURN_DUE:
                 // Kommt aus einem Scheduled Command (kein Auth-User) — immer senden.
-                Notification::send(
+                $this->sendNotification(
                     $this->getNotificationTo(),
                     new InventoryArticleNotification($body, $this->getBroadcastMessage())
                 );
@@ -535,7 +537,7 @@ class NotificationService
             case NotificationEnum::NOTIFICATION_DOCUMENT_REQUEST_CREATED:
             case NotificationEnum::NOTIFICATION_DOCUMENT_REQUEST_COMPLETED:
                 if ($this->getNotificationTo()->id !== $this->actingUserId()) {
-                    Notification::send(
+                    $this->sendNotification(
                         $this->getNotificationTo(),
                         new BudgetVerified($body, $this->getBroadcastMessage())
                     );
@@ -543,7 +545,7 @@ class NotificationService
                 break;
             case NotificationEnum::NOTIFICATION_EXTERNAL_CRM_SUBMITTED:
                 if ($this->getNotificationTo()->id !== $this->actingUserId()) {
-                    Notification::send(
+                    $this->sendNotification(
                         $this->getNotificationTo(),
                         new ExternalCrmSubmissionNotification($body, $this->getBroadcastMessage())
                     );
@@ -551,7 +553,7 @@ class NotificationService
                 break;
             case NotificationEnum::NOTIFICATION_EXTERNAL_TAB_COMPONENT_UPDATED:
                 if ($this->getNotificationTo()->id !== $this->actingUserId()) {
-                    Notification::send(
+                    $this->sendNotification(
                         $this->getNotificationTo(),
                         new ExternalTabComponentUpdatedNotification($body, $this->getBroadcastMessage())
                     );
@@ -559,7 +561,7 @@ class NotificationService
                 break;
             case NotificationEnum::NOTIFICATION_EXTERNAL_ACCESS_EXPIRING:
                 if ($this->getNotificationTo()->id !== $this->actingUserId()) {
-                    Notification::send(
+                    $this->sendNotification(
                         $this->getNotificationTo(),
                         new ExternalAccessExpiringNotification($body, $this->getBroadcastMessage())
                     );
@@ -743,5 +745,19 @@ class NotificationService
             ->where('data->type', NotificationEnum::NOTIFICATION_UPSERT_ROOM_REQUEST->value)
             ->where('data->eventId', $eventId)
             ->delete();
+    }
+
+    /**
+     * Sofort-Mails laufen synchron (viaQueues mail=sync). Ist der Mailserver nicht
+     * erreichbar, soll nur die Mail ausfallen und gemeldet werden – nicht die Aktion,
+     * die die Benachrichtigung ausgelöst hat (Termin speichern, Raumanfrage …).
+     */
+    private function sendNotification(User $notifiable, LaravelNotification $notification): void
+    {
+        try {
+            Notification::send($notifiable, $notification);
+        } catch (TransportExceptionInterface $exception) {
+            report($exception);
+        }
     }
 }

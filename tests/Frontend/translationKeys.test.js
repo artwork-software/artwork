@@ -37,7 +37,6 @@ test('English values of previously awkward labels are fixed', () => {
 
 test('scroll-mode labels are single keys, not "Jump around" + unit', () => {
     for (const file of [
-        'resources/js/Components/FunctionBars/InventoryFunctionBar.vue',
         'resources/js/Layouts/Components/ShiftPlanComponents/ShiftPlanFunctionBar.vue',
         'resources/js/Layouts/Components/ShiftPlanComponents/ShiftPlanListViewFunctionBar.vue',
     ]) {

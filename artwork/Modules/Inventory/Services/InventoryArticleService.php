@@ -1046,7 +1046,7 @@ class InventoryArticleService
             return;
         }
 
-        /** @var \Artwork\Modules\User\Models\User|\App\Models\User|null $user */
+        /** @var \Artwork\Modules\User\Models\User|null $user */
         $user = $this->auth->user();
 
         if (! $user) {

@@ -16,24 +16,27 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Artwork\Modules\Inventory\Services\TypeNumberGenerator;
 use Illuminate\Support\Collection;
 use Laravel\Scout\Searchable;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\MorphToMany;
 
 /**
- * @property string name
- * @property string description
- * @property int inventory_category_id
- * @property int inventory_sub_category_id
- * @property int quantity
- * @property bool is_detailed_quantity
- * @property string external_id
- * @property string inventory_number
+ * @property string $name
+ * @property string $description
+ * @property int $inventory_category_id
+ * @property int $inventory_sub_category_id
+ * @property int $quantity
+ * @property bool $is_detailed_quantity
+ * @property string $external_id
+ * @property string $inventory_number
  * @property \Illuminate\Database\Eloquent\Collection<int,
  *     \Artwork\Modules\Inventory\Models\InventoryArticleProperty> properties
  * @property \Illuminate\Database\Eloquent\Collection|\Artwork\Modules\Inventory\Models\InventoryArticleImage[] images
- * @property \Artwork\Modules\Inventory\Models\InventoryCategory category
+ * @property \Artwork\Modules\Inventory\Models\InventoryCategory $category
  * @property \Artwork\Modules\Inventory\Models\InventorySubCategory subCategory
- * @property int id
- * @property \Illuminate\Support\Carbon|null created_at
- * @property \Illuminate\Support\Carbon|null updated_at
+ * @property int $id
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
  * @extends \Illuminate\Database\Eloquent\Model
  * @uses \Illuminate\Database\Eloquent\Factories\HasFactory
  * @uses \Artwork\Modules\Inventory\Models\InventoryArticleFactory
@@ -83,26 +86,41 @@ class InventoryArticle extends Model
             }
         });
     }
+    /**
+     * @return BelongsTo<InventoryCategory, $this>
+     */
     public function category(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
         return $this->belongsTo(InventoryCategory::class, 'inventory_category_id', 'id');
     }
 
+    /**
+     * @return BelongsTo<InventorySubCategory, $this>
+     */
     public function subCategory(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
         return $this->belongsTo(InventorySubCategory::class, 'inventory_sub_category_id', 'id');
     }
 
+    /**
+     * @return HasMany<InventoryArticleImage, $this>
+     */
     public function images(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
         return $this->hasMany(InventoryArticleImage::class, 'inventory_article_id', 'id');
     }
 
+    /**
+     * @return HasMany<InventoryDetailedQuantityArticle, $this>
+     */
     public function detailedArticleQuantities(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
         return $this->hasMany(InventoryDetailedQuantityArticle::class, 'inventory_article_id', 'id');
     }
 
+    /**
+     * @return BelongsToMany<InventoryArticleStatus, $this>
+     */
     public function statusValues(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
     {
         return $this->belongsToMany(
@@ -113,6 +131,9 @@ class InventoryArticle extends Model
         )->withPivot('value')->orderBy('order');
     }
 
+    /**
+     * @return MorphToMany<InternalIssue, $this>
+     */
     public function internalIssues(): \Illuminate\Database\Eloquent\Relations\MorphToMany
     {
         return $this->morphedByMany(InternalIssue::class, 'issuable', 'issuable_inventory_article')
@@ -120,6 +141,9 @@ class InventoryArticle extends Model
             ->withTimestamps();
     }
 
+    /**
+     * @return MorphToMany<ExternalIssue, $this>
+     */
     public function externalIssues(): \Illuminate\Database\Eloquent\Relations\MorphToMany
     {
         return $this->morphedByMany(ExternalIssue::class, 'issuable', 'issuable_inventory_article')
@@ -529,6 +553,9 @@ class InventoryArticle extends Model
         $events[] = [$end, -$quantity];   // issue ends: remove quantity
     }
 
+    /**
+     * @return BelongsToMany<InventoryTag, $this>
+     */
     public function tags(): BelongsToMany
     {
         return $this->belongsToMany(

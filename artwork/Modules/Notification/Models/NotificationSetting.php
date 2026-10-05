@@ -36,6 +36,9 @@ class NotificationSetting extends Model
         'enabled_push' => 'boolean'
     ];
 
+    /**
+     * @return BelongsTo<User, $this>
+     */
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class, 'user_id', 'id', 'user');

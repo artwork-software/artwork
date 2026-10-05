@@ -39,6 +39,9 @@ class MoneySourceTask extends Model
         'done' => 'boolean'
     ];
 
+    /**
+     * @return BelongsTo<MoneySource, $this>
+     */
     //@todo: fix phpcs error - refactor function name to moneySource
     //phpcs:ignore PSR1.Methods.CamelCapsMethodName.NotCamelCaps
     public function money_source(): BelongsTo
@@ -51,6 +54,9 @@ class MoneySourceTask extends Model
         );
     }
 
+    /**
+     * @return BelongsToMany<User, $this>
+     */
     //@todo: fix phpcs error - refactor function name to moneySourceTaskUsers
     //phpcs:ignore PSR1.Methods.CamelCapsMethodName.NotCamelCaps
     public function money_source_task_users(): BelongsToMany

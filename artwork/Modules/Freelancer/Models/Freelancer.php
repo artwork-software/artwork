@@ -18,6 +18,7 @@ use Artwork\Modules\Crm\Traits\HasCrmFields;
 use Artwork\Modules\User\Models\Traits\HasProfilePhotoCustom;
 use Artwork\Modules\Vacation\Models\GoesOnVacation;
 use Artwork\Modules\Vacation\Models\Vacationer;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Support\Str;
 use Laravel\Scout\Searchable;

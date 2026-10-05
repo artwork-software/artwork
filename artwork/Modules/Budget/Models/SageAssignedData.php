@@ -57,6 +57,9 @@ class SageAssignedData extends Model implements CollectiveBooking
         'parent_booking_id',
     ];
 
+    /**
+     * @return BelongsTo<ColumnCell, $this>
+     */
     public function columnCell(): BelongsTo
     {
         return $this->belongsTo(
@@ -67,6 +70,9 @@ class SageAssignedData extends Model implements CollectiveBooking
         );
     }
 
+    /**
+     * @return HasMany<SageAssignedDataComment, $this>
+     */
     public function comments(): HasMany
     {
         return $this->hasMany(

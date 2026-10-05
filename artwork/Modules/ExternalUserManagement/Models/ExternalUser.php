@@ -39,11 +39,17 @@ class ExternalUser extends Model
         'import_notification_sent_at' => 'datetime',
     ];
 
+    /**
+     * @return BelongsTo<ExternalUserSource, $this>
+     */
     public function source(): BelongsTo
     {
         return $this->belongsTo(ExternalUserSource::class, 'source_id', 'id', 'source');
     }
 
+    /**
+     * @return BelongsTo<User, $this>
+     */
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class, 'user_id', 'id', 'user');

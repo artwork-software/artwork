@@ -10,10 +10,6 @@ use Artwork\Core\Casts\TimeAgoCast;
 use Artwork\Core\Services\HelperService;
 use Artwork\Modules\Area\Services\AreaService;
 use Artwork\Modules\Budget\Services\BudgetService;
-use Artwork\Modules\Budget\Services\ColumnService;
-use Artwork\Modules\Budget\Services\MainPositionService;
-use Artwork\Modules\Budget\Services\TableService;
-use Artwork\Modules\Budget\Services\BudgetColumnSettingService;
 use Artwork\Modules\Calendar\DTO\EventWithoutRoomDTO;
 use Artwork\Modules\User\Models\UserCalendarSettings;
 use Artwork\Modules\User\Models\UserDailyViewCalendarSettings;
@@ -72,7 +68,6 @@ use Artwork\Modules\Project\Services\ProjectTabService;
 use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\Room\Services\RoomRequestNotificationService;
 use Artwork\Modules\Room\Services\RoomService;
-use Artwork\Modules\SageApiSettings\Services\SageApiSettingsService;
 use Artwork\Modules\Scheduling\Services\SchedulingService;
 use Artwork\Modules\Event\Models\SeriesEvents;
 use Artwork\Modules\ServiceProvider\Http\Resources\ServiceProviderShiftPlanResource;
@@ -1438,14 +1433,8 @@ class EventController extends Controller
 
     //@todo: fix phpcs error - refactor function because complexity is rising
     //phpcs:ignore Generic.Metrics.CyclomaticComplexity.TooHigh
-    public function storeEvent(
-        EventStoreRequest $request,
-        TableService $tableService,
-        ColumnService $columnService,
-        MainPositionService $mainPositionService,
-        BudgetColumnSettingService $columnSettingService,
-        SageApiSettingsService $sageApiSettingsService
-    ): CalendarEventResource | RedirectResponse {
+    public function storeEvent(EventStoreRequest $request): CalendarEventResource | RedirectResponse
+    {
         $this->authorize('create', Event::class);
 
         if ($request->filled('projectId')) {
@@ -1529,16 +1518,7 @@ class EventController extends Controller
         $firstEvent->eventProperties()->sync($request->input('event_properties', []));
         $this->adjoiningRoomsCheck($request, $firstEvent);
         if ($request->get('projectName')) {
-            $this->associateProject(
-                $request,
-                $firstEvent,
-                $this->budgetService,
-                $tableService,
-                $columnService,
-                $mainPositionService,
-                $columnSettingService,
-                $sageApiSettingsService
-            );
+            $this->associateProject($request, $firstEvent, $this->budgetService);
         }
 
         /** @var Project $projectFirstEvent */
@@ -1850,25 +1830,10 @@ class EventController extends Controller
         }
     }
 
-    private function associateProject(
-        $request,
-        $event,
-        BudgetService $budgetService,
-        TableService $tableService,
-        ColumnService $columnService,
-        MainPositionService $mainPositionService,
-        BudgetColumnSettingService $columnSettingService,
-        SageApiSettingsService $sageApiSettingsService
-    ): void {
+    private function associateProject($request, $event, BudgetService $budgetService): void
+    {
         $project = Project::create(['name' => $request->get('projectName')]);
-        $budgetService->generateBasicBudgetValues(
-            $project,
-            $tableService,
-            $columnService,
-            $mainPositionService,
-            $columnSettingService,
-            $sageApiSettingsService
-        );
+        $budgetService->generateBasicBudgetValues($project);
         $event->project()->associate($project);
         $event->save();
     }

@@ -1,16 +1,1348 @@
 parameters:
 	ignoreErrors:
 		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Model\:\:restore\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Http/Controllers/AreaController.php
+
+		-
+			message: '#^Access to an undefined property Artwork\\Modules\\Event\\Models\\Event\:\:\$min_start\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/BiProjectDataController.php
+
+		-
+			message: '#^Access to an undefined property Artwork\\Modules\\Budget\\Models\\CellComment\:\:\$cell\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/CellCommentsController.php
+
+		-
+			message: '#^Call to an undefined method Artwork\\Modules\\DayService\\Models\\DayServiceable\:\:getAttribute\(\)\.$#'
+			identifier: method.notFound
+			count: 4
+			path: app/Http/Controllers/DayServiceController.php
+
+		-
+			message: '#^Access to an undefined property Artwork\\Modules\\Room\\Models\\Room\:\:\$label\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/EventController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/EventController.php
+
+		-
+			message: '#^Call to an undefined method Artwork\\Modules\\Shift\\Services\\ShiftWorkerService\:\:getResolvedWorkerShiftPlanResourcesByIdsAndTypesWithPlannedWorkingHours\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Http/Controllers/EventController.php
+
+		-
+			message: '#^Call to an undefined method Carbon\\Carbon\:\:diffInRealMinutes\(\)\.$#'
+			identifier: method.notFound
+			count: 2
+			path: app/Http/Controllers/EventController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$icon\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/FreelancerController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Http/Controllers/FreelancerController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$name\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/FreelancerController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Http/Controllers/IndividualTimeController.php
+
+		-
 			message: '#^Variable \$breakMinutes on left side of \?\? always exists and is not nullable\.$#'
 			identifier: nullCoalesce.variable
 			count: 1
 			path: app/Http/Controllers/IndividualTimeController.php
 
 		-
+			message: '#^Access to an undefined property Artwork\\Modules\\MoneySource\\Models\\MoneySource\:\:\$history\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/MoneySourceController.php
+
+		-
+			message: '#^Access to an undefined property Artwork\\Modules\\MoneySource\\Models\\MoneySource\:\:\$sumOfPositions\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/MoneySourceController.php
+
+		-
+			message: '#^Access to an undefined property Artwork\\Modules\\MoneySource\\Models\\MoneySourceTask\:\:\$pivot\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/MoneySourceController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$column\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/MoneySourceController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$created_at\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Http/Controllers/MoneySourceController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$linked_type\.$#'
+			identifier: property.notFound
+			count: 4
+			path: app/Http/Controllers/MoneySourceController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$subPositionRow\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Http/Controllers/MoneySourceController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$value\.$#'
+			identifier: property.notFound
+			count: 6
+			path: app/Http/Controllers/MoneySourceController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Notifications\\DatabaseNotification\:\:\$archived\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/NotificationController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Notifications\\DatabaseNotification\:\:\$group_type\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/NotificationController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Notifications\\DatabaseNotification\:\:\$unread\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/NotificationController.php
+
+		-
+			message: '#^Access to an undefined property Artwork\\Modules\\Budget\\Models\\SubPositionRow\:\:\$name\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Http/Controllers/ProjectController.php
+
+		-
+			message: '#^Access to an undefined property Artwork\\Modules\\DocumentRequest\\Models\\DocumentRequest\:\:\$description\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/ProjectController.php
+
+		-
+			message: '#^Access to an undefined property Artwork\\Modules\\DocumentRequest\\Models\\DocumentRequest\:\:\$title\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/ProjectController.php
+
+		-
+			message: '#^Access to an undefined property Artwork\\Modules\\Event\\Models\\Event\:\:\$first_start\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/ProjectController.php
+
+		-
+			message: '#^Access to an undefined property Artwork\\Modules\\Event\\Models\\Event\:\:\$last_end\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/ProjectController.php
+
+		-
+			message: '#^Access to an undefined property Artwork\\Modules\\Project\\Models\\Project\:\:\$cost_center\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Http/Controllers/ProjectController.php
+
+		-
+			message: '#^Access to an undefined property Artwork\\Modules\\Project\\Models\\Project\:\:\$project_managers\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/ProjectController.php
+
+		-
+			message: '#^Access to an undefined property Artwork\\Modules\\User\\Models\\User\:\:\$pivot\.$#'
+			identifier: property.notFound
+			count: 4
+			path: app/Http/Controllers/ProjectController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$created_at\.$#'
+			identifier: property.notFound
+			count: 6
+			path: app/Http/Controllers/ProjectController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Http/Controllers/ProjectController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$pivot\.$#'
+			identifier: property.notFound
+			count: 5
+			path: app/Http/Controllers/ProjectController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$properties\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Http/Controllers/ProjectController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Support\\HigherOrderCollectionProxy\<string, Illuminate\\Database\\Eloquent\\Model, Illuminate\\Database\\Eloquent\\Collection&iterable\<Artwork\\Modules\\Project\\Models\\ProjectTabSidebarTab\>\>\:\:\$componentsInSidebar\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/ProjectController.php
+
+		-
+			message: '#^Cannot call method format\(\) on string\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: app/Http/Controllers/ProjectController.php
+
+		-
+			message: '#^Cannot cast Artwork\\Modules\\Project\\Models\\ProjectState to int\.$#'
+			identifier: cast.int
+			count: 1
+			path: app/Http/Controllers/ProjectController.php
+
+		-
+			message: '#^PHPDoc tag @return with type array\<string, mixed\> is incompatible with native type Illuminate\\Support\\Collection\.$#'
+			identifier: return.phpDocType
+			count: 1
+			path: app/Http/Controllers/ProjectController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$tab_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/ProjectPrintLayoutController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$tasks\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Http/Controllers/ProjectPrintLayoutController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$user_id\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Http/Controllers/ProjectPrintLayoutController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$users\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Http/Controllers/ProjectPrintLayoutController.php
+
+		-
+			message: '#^Call to an undefined method Artwork\\Modules\\Budget\\Services\\RowCommentService\:\:delete\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Http/Controllers/RowCommentController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$icon\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/ServiceProviderController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Http/Controllers/ServiceProviderController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$name\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/ServiceProviderController.php
+
+		-
+			message: '#^Access to an undefined property Artwork\\Core\\Database\\Models\\Model\:\:\$shift_uuid\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Http/Controllers/ShiftController.php
+
+		-
+			message: '#^Access to an undefined property Artwork\\Modules\\Shift\\Models\\GlobalQualification\:\:\$pivot\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/ShiftController.php
+
+		-
+			message: '#^Access to an undefined property Artwork\\Modules\\Shift\\Models\\Shift\:\:\$max_end\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/ShiftController.php
+
+		-
+			message: '#^Access to an undefined property Artwork\\Modules\\Shift\\Models\\Shift\:\:\$min_start\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/ShiftController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 4
+			path: app/Http/Controllers/ShiftController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$language\.$#'
+			identifier: property.notFound
+			count: 8
+			path: app/Http/Controllers/ShiftController.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Model\:\:availabilities\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Http/Controllers/ShiftController.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Model\:\:vacations\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Http/Controllers/ShiftController.php
+
+		-
+			message: '#^Access to an undefined property Artwork\\Modules\\IndividualTimes\\Models\\IndividualTime\:\:\$timeable_type_short\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Http/Controllers/ShiftPlanRequestController.php
+
+		-
+			message: '#^PHPDoc tag @param references unknown parameter\: \$changeId$#'
+			identifier: parameter.notFound
+			count: 1
+			path: app/Http/Controllers/ShiftPlanRequestController.php
+
+		-
+			message: '#^PHPDoc tag @param references unknown parameter\: \$requestId$#'
+			identifier: parameter.notFound
+			count: 1
+			path: app/Http/Controllers/ShiftPlanRequestController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$comment\.$#'
+			identifier: property.notFound
+			count: 3
+			path: app/Http/Controllers/VacationController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$language\.$#'
+			identifier: property.notFound
+			count: 3
+			path: artwork/Core/Console/Commands/NotifyShiftPlanRequestDeadlineReached.php
+
+		-
+			message: '#^Variable \$typeSettings in PHPDoc tag @var does not match assigned variable \$notificationSetting\.$#'
+			identifier: varTag.differentVariable
+			count: 1
+			path: artwork/Core/Notifications/BaseNotification.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Model\:\:rooms\(\)\.$#'
+			identifier: method.notFound
+			count: 2
+			path: artwork/Modules/Area/Models/Area.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Model\:\:trashedRooms\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: artwork/Modules/Area/Models/Area.php
+
+		-
+			message: '#^PHPDoc tag @property has invalid value \(ServiceProvider serviceProvider\)\: Unexpected token "serviceProvider", expected variable at offset 628 on line 19$#'
+			identifier: phpDoc.parseError
+			count: 1
+			path: artwork/Modules/ArtistResidency/Models/ArtistResidency.php
+
+		-
+			message: '#^Access to an undefined property Artwork\\Modules\\Availability\\Models\\Availability\:\:\$available\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Availability/Services/AvailabilityService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$date\.$#'
+			identifier: property.notFound
+			count: 2
+			path: artwork/Modules/Availability/Services/AvailabilityService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$mainPositions\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Budget/Exports/BudgetExport.php
+
+		-
+			message: '#^Call to an undefined static method Illuminate\\Database\\Eloquent\\Model\:\:withTrashed\(\)\.$#'
+			identifier: staticMethod.notFound
+			count: 1
+			path: artwork/Modules/Budget/Http/Middleware/EnsureUserCanAccessProjectBudget.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$comments_count\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Budget/Models/MainPosition.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$sum_money_source_count\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Budget/Models/MainPosition.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$comments_count\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Budget/Models/SubPosition.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$sum_money_source_count\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Budget/Models/SubPosition.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Builder\|Illuminate\\Database\\Query\\Builder\:\:byColumnPosition\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: artwork/Modules/Budget/Repositories/BudgetColumnSettingRepository.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$value\.$#'
+			identifier: property.notFound
+			count: 2
+			path: artwork/Modules/Budget/Services/BudgetManagementAccountService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$value\.$#'
+			identifier: property.notFound
+			count: 2
+			path: artwork/Modules/Budget/Services/BudgetManagementCostUnitService.php
+
+		-
+			message: '#^Access to an undefined property Artwork\\Modules\\Budget\\Models\\SubPositionRow\:\:\$name\.$#'
+			identifier: property.notFound
+			count: 2
+			path: artwork/Modules/Budget/Services/BudgetService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 3
+			path: artwork/Modules/Budget/Services/BudgetService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$project_id\.$#'
+			identifier: property.notFound
+			count: 2
+			path: artwork/Modules/Budget/Services/BudgetService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$sageAssignedData\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Budget/Services/BudgetService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$value\.$#'
+			identifier: property.notFound
+			count: 2
+			path: artwork/Modules/Budget/Services/BudgetService.php
+
+		-
+			message: '#^Call to an undefined method Artwork\\Core\\Database\\Models\\Model\:\:mainPositionSumDetails\(\)\.$#'
+			identifier: method.notFound
+			count: 2
+			path: artwork/Modules/Budget/Services/BudgetService.php
+
+		-
+			message: '#^Call to an undefined method Artwork\\Core\\Database\\Models\\Model\:\:mainPositions\(\)\.$#'
+			identifier: method.notFound
+			count: 2
+			path: artwork/Modules/Budget/Services/BudgetService.php
+
+		-
+			message: '#^Call to an undefined method Artwork\\Core\\Database\\Models\\Model\:\:subPositions\(\)\.$#'
+			identifier: method.notFound
+			count: 4
+			path: artwork/Modules/Budget/Services/BudgetService.php
+
+		-
+			message: '#^Cannot access property \$id on null\.$#'
+			identifier: property.nonObject
+			count: 6
+			path: artwork/Modules/Budget/Services/BudgetService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$commented\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Budget/Services/BudgetSumCalculator.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Relations\\HasMany\<Artwork\\Modules\\Budget\\Models\\SageAssignedData, Artwork\\Modules\\Budget\\Models\\ColumnCell\>\:\:withTrashed\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: artwork/Modules/Budget/Services/ColumnCellService.php
+
+		-
+			message: '#^Access to an undefined property Artwork\\Modules\\Budget\\Models\\CollectiveBookings\\CollectiveBooking\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 2
+			path: artwork/Modules/Budget/Services/SageAssignedDataService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$is_collective_booking\.$#'
+			identifier: property.notFound
+			count: 2
+			path: artwork/Modules/Budget/Services/SageBookingDataDeleteService.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Model\:\:findChildren\(\)\.$#'
+			identifier: method.notFound
+			count: 2
+			path: artwork/Modules/Budget/Services/SageBookingDataDeleteService.php
+
+		-
+			message: '#^Access to an undefined property Artwork\\Modules\\Budget\\Models\\CollectiveBookings\\CollectiveBooking\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 2
+			path: artwork/Modules/Budget/Services/SageNotAssignedDataService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$column\.$#'
+			identifier: property.notFound
+			count: 3
+			path: artwork/Modules/BusinessIntelligence/Services/BiBudgetExportService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$value\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/BusinessIntelligence/Services/BiBudgetExportService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$end_time\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/BusinessIntelligence/Services/BiDashboardService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$name\.$#'
+			identifier: property.notFound
+			count: 2
+			path: artwork/Modules/BusinessIntelligence/Services/BiDashboardService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$start_time\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/BusinessIntelligence/Services/BiDashboardService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$cells\.$#'
+			identifier: property.notFound
+			count: 2
+			path: artwork/Modules/BusinessIntelligence/Services/BiDerivedValuesService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$color\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/BusinessIntelligence/Services/BiDerivedValuesService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$end_time\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/BusinessIntelligence/Services/BiDerivedValuesService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/BusinessIntelligence/Services/BiDerivedValuesService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$name\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/BusinessIntelligence/Services/BiDerivedValuesService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$name_de\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/BusinessIntelligence/Services/BiDerivedValuesService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$start_time\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/BusinessIntelligence/Services/BiDerivedValuesService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$type\.$#'
+			identifier: property.notFound
+			count: 2
+			path: artwork/Modules/BusinessIntelligence/Services/BiDerivedValuesService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Collection&iterable\<Artwork\\Modules\\Project\\Models\\ProjectState\>\:\:\$name\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/BusinessIntelligence/Services/BiExportService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$name\.$#'
+			identifier: property.notFound
+			count: 2
+			path: artwork/Modules/BusinessIntelligence/Services/BiExportService.php
+
+		-
+			message: '#^Cannot access property \$value on string\.$#'
+			identifier: property.nonObject
+			count: 3
+			path: artwork/Modules/BusinessIntelligence/Services/BiProjectDataService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$end_time\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/BusinessIntelligence/Services/BiProjectMetricsService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$start_time\.$#'
+			identifier: property.notFound
+			count: 4
+			path: artwork/Modules/BusinessIntelligence/Services/BiProjectMetricsService.php
+
+		-
 			message: '#^Variable \$data on left side of \?\? always exists and is not nullable\.$#'
 			identifier: nullCoalesce.variable
 			count: 1
 			path: artwork/Modules/BusinessIntelligence/Services/BiProjectMetricsService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$allDay\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Calendar/DTO/BroadcastEventDTO.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$eventName\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Calendar/DTO/BroadcastEventDTO.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$eventProperties\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Calendar/DTO/BroadcastEventDTO.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$formattedDates\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Calendar/DTO/BroadcastEventDTO.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Calendar/DTO/BroadcastEventDTO.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$type\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Calendar/DTO/BroadcastEventDTO.php
+
+		-
+			message: '#^Call to an undefined method Artwork\\Modules\\Event\\Models\\EventProperty\:\:map\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: artwork/Modules/Calendar/DTO/BroadcastEventDTO.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$allDay\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Calendar/DTO/BroadcastEventDTOWithVerifications.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$eventName\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Calendar/DTO/BroadcastEventDTOWithVerifications.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$eventProperties\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Calendar/DTO/BroadcastEventDTOWithVerifications.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$formattedDates\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Calendar/DTO/BroadcastEventDTOWithVerifications.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 2
+			path: artwork/Modules/Calendar/DTO/BroadcastEventDTOWithVerifications.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$type\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Calendar/DTO/BroadcastEventDTOWithVerifications.php
+
+		-
+			message: '#^Call to an undefined method Artwork\\Modules\\Event\\Models\\EventProperty\:\:map\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: artwork/Modules/Calendar/DTO/BroadcastEventDTOWithVerifications.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$allDay\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Calendar/DTO/EventDTO.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$eventName\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Calendar/DTO/EventDTO.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$eventProperties\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Calendar/DTO/EventDTO.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$formattedDates\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Calendar/DTO/EventDTO.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Calendar/DTO/EventDTO.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$type\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Calendar/DTO/EventDTO.php
+
+		-
+			message: '#^Call to an undefined method Artwork\\Modules\\Event\\Models\\EventProperty\:\:map\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: artwork/Modules/Calendar/DTO/EventDTO.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$allDay\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Calendar/DTO/EventDTOWithVerifications.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$eventName\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Calendar/DTO/EventDTOWithVerifications.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$eventProperties\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Calendar/DTO/EventDTOWithVerifications.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$formattedDates\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Calendar/DTO/EventDTOWithVerifications.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Calendar/DTO/EventDTOWithVerifications.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$type\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Calendar/DTO/EventDTOWithVerifications.php
+
+		-
+			message: '#^Call to an undefined method Artwork\\Modules\\Event\\Models\\EventProperty\:\:map\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: artwork/Modules/Calendar/DTO/EventDTOWithVerifications.php
+
+		-
+			message: '#^Access to an undefined property Artwork\\Modules\\Event\\Models\\Event\:\:\$timelines_exists\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Calendar/DTO/EventShiftPlanDTO.php
+
+		-
+			message: '#^Call to an undefined method Artwork\\Modules\\Event\\Models\\EventProperty\:\:map\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: artwork/Modules/Calendar/DTO/EventShiftPlanDTO.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$allDay\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Calendar/DTO/EventWithoutRoomDTO.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$eventName\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Calendar/DTO/EventWithoutRoomDTO.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$eventProperties\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Calendar/DTO/EventWithoutRoomDTO.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$formattedDates\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Calendar/DTO/EventWithoutRoomDTO.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Calendar/DTO/EventWithoutRoomDTO.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$type\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Calendar/DTO/EventWithoutRoomDTO.php
+
+		-
+			message: '#^Call to an undefined method Artwork\\Modules\\Event\\Models\\EventProperty\:\:map\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: artwork/Modules/Calendar/DTO/EventWithoutRoomDTO.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Collection&iterable\<Artwork\\Modules\\Project\\Models\\ProjectState\>\:\:\$color\.$#'
+			identifier: property.notFound
+			count: 2
+			path: artwork/Modules/Calendar/DTO/ProjectDTO.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Collection&iterable\<Artwork\\Modules\\Project\\Models\\ProjectState\>\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 2
+			path: artwork/Modules/Calendar/DTO/ProjectDTO.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Collection&iterable\<Artwork\\Modules\\Project\\Models\\ProjectState\>\:\:\$name\.$#'
+			identifier: property.notFound
+			count: 2
+			path: artwork/Modules/Calendar/DTO/ProjectDTO.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$color\.$#'
+			identifier: property.notFound
+			count: 2
+			path: artwork/Modules/Calendar/DTO/ProjectDTO.php
+
+		-
+			message: '#^Access to an undefined property Artwork\\Modules\\Freelancer\\Models\\Freelancer\|Artwork\\Modules\\ServiceProvider\\Models\\ServiceProvider\|Artwork\\Modules\\User\\Models\\User\:\:\$pivot\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Calendar/DTO/ShiftDTO.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Calendar/DTO/ShiftDTO.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$end_time\.$#'
+			identifier: property.notFound
+			count: 2
+			path: artwork/Modules/Calendar/Services/CalendarService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$room\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Calendar/Services/CalendarService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$room_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Calendar/Services/CalendarService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$start_time\.$#'
+			identifier: property.notFound
+			count: 2
+			path: artwork/Modules/Calendar/Services/CalendarService.php
+
+		-
+			message: '#^Call to an undefined method Artwork\\Modules\\Availability\\Models\\Available\:\:vacations\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: artwork/Modules/Calendar/Services/CalendarService.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Builder\:\:startAndEndTimeOverlap\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: artwork/Modules/Calendar/Services/CalendarService.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Relations\\MorphMany\:\:betweenDates\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: artwork/Modules/Calendar/Services/CalendarService.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Builder\<Illuminate\\Database\\Eloquent\\Model\>\:\:byProjectStateIds\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: artwork/Modules/Calendar/Services/EventCalendarService.php
+
+		-
+			message: '#^Access to an undefined property Artwork\\Modules\\Shift\\Models\\Shift\:\:\$endDate\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Calendar/Services/ShiftCalendarService.php
+
+		-
+			message: '#^Access to an undefined property Artwork\\Modules\\Shift\\Models\\Shift\:\:\$startDate\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Calendar/Services/ShiftCalendarService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Collection&iterable\<Artwork\\Modules\\Project\\Models\\ProjectState\>\:\:\$color\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Calendar/Services/ShiftCalendarService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Collection&iterable\<Artwork\\Modules\\Project\\Models\\ProjectState\>\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Calendar/Services/ShiftCalendarService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Collection&iterable\<Artwork\\Modules\\Project\\Models\\ProjectState\>\:\:\$name\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Calendar/Services/ShiftCalendarService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$first_name\.$#'
+			identifier: property.notFound
+			count: 3
+			path: artwork/Modules/Calendar/Services/ShiftCalendarService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 2
+			path: artwork/Modules/Calendar/Services/ShiftCalendarService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$last_name\.$#'
+			identifier: property.notFound
+			count: 3
+			path: artwork/Modules/Calendar/Services/ShiftCalendarService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$profile_photo_url\.$#'
+			identifier: property.notFound
+			count: 2
+			path: artwork/Modules/Calendar/Services/ShiftCalendarService.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Support\\Collection\:\:modelKeys\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: artwork/Modules/Calendar/Services/ShiftCalendarService.php
+
+		-
+			message: '#^Access to an undefined property Spatie\\Activitylog\\Contracts\\Activity\:\:\$causer_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Change/DTO/ChangeDTO.php
+
+		-
+			message: '#^Access to an undefined property Spatie\\Activitylog\\Contracts\\Activity\:\:\$causer_type\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Change/DTO/ChangeDTO.php
+
+		-
+			message: '#^Access to an undefined property Spatie\\Activitylog\\Contracts\\Activity\:\:\$created_at\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Change/DTO/ChangeDTO.php
+
+		-
+			message: '#^Access to an undefined property Spatie\\Activitylog\\Contracts\\Activity\:\:\$event\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Change/DTO/ChangeDTO.php
+
+		-
+			message: '#^Access to an undefined property Spatie\\Activitylog\\Contracts\\Activity\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Change/DTO/ChangeDTO.php
+
+		-
+			message: '#^Access to an undefined property Spatie\\Activitylog\\Contracts\\Activity\:\:\$log_name\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Change/DTO/ChangeDTO.php
+
+		-
+			message: '#^Access to an undefined property Spatie\\Activitylog\\Contracts\\Activity\:\:\$properties\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Change/DTO/ChangeDTO.php
+
+		-
+			message: '#^Access to an undefined property Spatie\\Activitylog\\Contracts\\Activity\:\:\$subject_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Change/DTO/ChangeDTO.php
+
+		-
+			message: '#^Access to an undefined property Spatie\\Activitylog\\Contracts\\Activity\:\:\$subject_type\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Change/DTO/ChangeDTO.php
+
+		-
+			message: '#^Call to an undefined method Spatie\\Activitylog\\Contracts\\Activity\:\:save\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: artwork/Modules/Change/Repositories/ChangeRepository.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$activities\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Change/Services/ChangeService.php
+
+		-
+			message: '#^Access to an undefined property Spatie\\Activitylog\\Contracts\\Activity\:\:\$causer\.$#'
+			identifier: property.notFound
+			count: 2
+			path: artwork/Modules/Change/Services/ChangeService.php
+
+		-
+			message: '#^Access to an undefined property Spatie\\Activitylog\\Contracts\\Activity\:\:\$created_at\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Change/Services/ChangeService.php
+
+		-
+			message: '#^Access to an undefined property Spatie\\Activitylog\\Contracts\\Activity\:\:\$properties\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Change/Services/ChangeService.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Model\:\:activities\(\)\.$#'
+			identifier: method.notFound
+			count: 2
+			path: artwork/Modules/Change/Services/ChangeService.php
+
+		-
+			message: '#^Access to an undefined property Artwork\\Modules\\User\\Models\\User\|Illuminate\\Database\\Eloquent\\Collection\<int, Artwork\\Modules\\User\\Models\\User\>\:\:\$name\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Chat/Http/Controllers/ChatController.php
+
+		-
+			message: '#^Cannot call method format\(\) on string\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: artwork/Modules/Checklist/Http/Resources/ChecklistTemplateIndexResource.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$project\.$#'
+			identifier: property.notFound
+			count: 4
+			path: artwork/Modules/Checklist/Services/ChecklistService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$tasks\.$#'
+			identifier: property.notFound
+			count: 4
+			path: artwork/Modules/Checklist/Services/ChecklistService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$user_id\.$#'
+			identifier: property.notFound
+			count: 4
+			path: artwork/Modules/Checklist/Services/ChecklistService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$users\.$#'
+			identifier: property.notFound
+			count: 4
+			path: artwork/Modules/Checklist/Services/ChecklistService.php
+
+		-
+			message: '#^Access to an undefined property Artwork\\Modules\\User\\Models\\User\:\:\$pivot\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Contract/Http/Resources/ContractResource.php
+
+		-
+			message: '#^Class Artwork\\Modules\\Contract\\Models\\Contract referenced with incorrect case\: Artwork\\Modules\\Contract\\Models\\contract\.$#'
+			identifier: class.nameCase
+			count: 1
+			path: artwork/Modules/Contract/Policies/ContractPolicy.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 2
+			path: artwork/Modules/Contract/Services/ContractService.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Model\:\:comments\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: artwork/Modules/Contract/Services/ContractService.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Relations\\Relation\:\:withAssignedCraftIds\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: artwork/Modules/Craft/Services/CraftService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$contactType\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Crm/Http/Controllers/CrmContactController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$display_name\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Crm/Http/Controllers/CrmContactController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$icon\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Crm/Http/Controllers/CrmContactController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 2
+			path: artwork/Modules/Crm/Http/Controllers/CrmContactController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$name\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Crm/Http/Controllers/CrmContactController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$profile_photo_url\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Crm/Http/Controllers/CrmContactController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$properties\.$#'
+			identifier: property.notFound
+			count: 3
+			path: artwork/Modules/Crm/Http/Controllers/CrmContactController.php
+
+		-
+			message: '#^Access to an undefined property Artwork\\Modules\\Project\\Models\\Project\:\:\$pivot\.$#'
+			identifier: property.notFound
+			count: 3
+			path: artwork/Modules/Crm/Http/Controllers/CrmController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Crm/Http/Controllers/CrmController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$properties\.$#'
+			identifier: property.notFound
+			count: 3
+			path: artwork/Modules/Crm/Http/Controllers/CrmController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$slug\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Crm/Http/Controllers/CrmController.php
+
+		-
+			message: '#^Call to an undefined method Artwork\\Modules\\Crm\\Contracts\\CrmEntity\:\:refresh\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: artwork/Modules/Crm/Services/CrmContactService.php
+
+		-
+			message: '#^Access to an undefined property Artwork\\Modules\\Crm\\Models\\CrmProperty\:\:\$pivot\.$#'
+			identifier: property.notFound
+			count: 3
+			path: artwork/Modules/Crm/Services/CrmContactTypeService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$name\.$#'
+			identifier: property.notFound
+			count: 2
+			path: artwork/Modules/Crm/Services/CrmImportService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$slug\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Crm/Services/CrmImportService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$type\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Crm/Services/CrmImportService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$is_confidential\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Crm/Services/CrmPropertyGroupService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$permissions\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Crm/Services/CrmPropertyGroupService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$properties\.$#'
+			identifier: property.notFound
+			count: 2
+			path: artwork/Modules/Crm/Services/CrmPropertyGroupService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Department/Services/DepartmentService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$language\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Department/Services/DepartmentService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$name\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Department/Services/DepartmentService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$svg_name\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Department/Services/DepartmentService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$users\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Department/Services/DepartmentService.php
+
+		-
+			message: '#^Cannot call method format\(\) on string\.$#'
+			identifier: method.nonObject
+			count: 3
+			path: artwork/Modules/DocumentRequest/Http/Resources/DocumentRequestResource.php
+
+		-
+			message: '#^Access to an undefined property Artwork\\Modules\\Event\\DTOs\\CalendarEventDto\:\:\$filter\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Event/Http/Resources/CalendarEventCollectionResource.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Collection&iterable\<Artwork\\Modules\\Project\\Models\\ProjectState\>\:\:getAttribute\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: artwork/Modules/Event/Http/Resources/CalendarEventResource.php
 
 		-
 			message: '#^Access to an undefined property Artwork\\Modules\\Event\\Http\\Resources\\EventCalendarDayResource\:\:\$metaDate\.$#'
@@ -25,10 +1357,565 @@ parameters:
 			path: artwork/Modules/Event/Http/Resources/EventCalendarDayResource.php
 
 		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Collection&iterable\<Artwork\\Modules\\Project\\Models\\ProjectState\>\:\:getAttribute\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: artwork/Modules/Event/Http/Resources/MinimalCalendarEventResource.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Builder\:\:byProjectId\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: artwork/Modules/Event/Repositories/EventRepository.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Builder\:\:visiblePlanningFor\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: artwork/Modules/Event/Repositories/EventRepository.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Builder\|Illuminate\\Database\\Query\\Builder\:\:getOrderBySubQueryBuilder\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: artwork/Modules/Event/Repositories/EventRepository.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$end_time\.$#'
+			identifier: property.notFound
+			count: 2
+			path: artwork/Modules/Event/Services/EventCollectionService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$start_time\.$#'
+			identifier: property.notFound
+			count: 2
+			path: artwork/Modules/Event/Services/EventCollectionService.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Builder\<Illuminate\\Database\\Eloquent\\Model\>\:\:byProjectStateIds\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: artwork/Modules/Event/Services/EventCollectionService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$created_at\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Event/Services/EventCollisionService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$creator\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Event/Services/EventCollisionService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$eventName\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Event/Services/EventCollisionService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Event/Services/EventCollisionService.php
+
+		-
+			message: '#^Access to an undefined property Artwork\\Core\\Database\\Models\\CanSubstituteBaseModel\|Artwork\\Core\\Database\\Models\\Model\|Artwork\\Core\\Database\\Models\\Pivot\:\:\$room_id\.$#'
+			identifier: property.notFound
+			count: 2
+			path: artwork/Modules/Event/Services/EventService.php
+
+		-
+			message: '#^Access to an undefined property Artwork\\Modules\\DayService\\Models\\DayService\:\:\$pivot\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Event/Services/EventService.php
+
+		-
+			message: '#^Access to an undefined property Artwork\\Modules\\User\\Models\\UserFilter\:\:\$adjoining_no_audience\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Event/Services/EventService.php
+
+		-
+			message: '#^Access to an undefined property Artwork\\Modules\\User\\Models\\UserFilter\:\:\$adjoining_not_loud\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Event/Services/EventService.php
+
+		-
+			message: '#^Access to an undefined property Artwork\\Modules\\User\\Models\\UserFilter\:\:\$areas\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Event/Services/EventService.php
+
+		-
+			message: '#^Access to an undefined property Artwork\\Modules\\User\\Models\\UserFilter\:\:\$room_attributes\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Event/Services/EventService.php
+
+		-
+			message: '#^Access to an undefined property Artwork\\Modules\\User\\Models\\UserFilter\:\:\$room_categories\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Event/Services/EventService.php
+
+		-
+			message: '#^Access to an undefined property Artwork\\Modules\\User\\Models\\UserFilter\:\:\$rooms\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Event/Services/EventService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$events\.$#'
+			identifier: property.notFound
+			count: 2
+			path: artwork/Modules/Event/Services/EventService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 3
+			path: artwork/Modules/Event/Services/EventService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$name\.$#'
+			identifier: property.notFound
+			count: 2
+			path: artwork/Modules/Event/Services/EventService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$shifts\.$#'
+			identifier: property.notFound
+			count: 2
+			path: artwork/Modules/Event/Services/EventService.php
+
+		-
+			message: '#^Binary operation "\*" between string and 60 results in an error\.$#'
+			identifier: binaryOp.invalid
+			count: 2
+			path: artwork/Modules/Event/Services/EventService.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Model\:\:getEffectiveColor\(\)\.$#'
+			identifier: method.notFound
+			count: 2
+			path: artwork/Modules/Event/Services/EventService.php
+
+		-
+			message: '#^Cannot call method copy\(\) on string\.$#'
+			identifier: method.nonObject
+			count: 2
+			path: artwork/Modules/Event/Services/EventService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$description\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Event/Services/EventTimelineService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$end\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Event/Services/EventTimelineService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$start\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Event/Services/EventTimelineService.php
+
+		-
+			message: '#^Access to an undefined property Artwork\\Modules\\Event\\Models\\Event\:\:\$status_color\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Event/Services/EventVerificationService.php
+
+		-
+			message: '#^Access to an undefined property Artwork\\Modules\\Event\\Models\\Event\:\:\$verification_status_counts\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Event/Services/EventVerificationService.php
+
+		-
+			message: '#^Access to an undefined property Artwork\\Modules\\Event\\Models\\Event\:\:\$verification_status_percentages\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Event/Services/EventVerificationService.php
+
+		-
+			message: '#^Access to an undefined property Artwork\\Modules\\Event\\Models\\Event\:\:\$verifier_grouped_by_status\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Event/Services/EventVerificationService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$full_name\.$#'
+			identifier: property.notFound
+			count: 2
+			path: artwork/Modules/Event/Services/EventVerificationService.php
+
+		-
+			message: '#^Call to an undefined method Artwork\\Modules\\Event\\Models\\EventVerification\:\:sortByDesc\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: artwork/Modules/Event/Services/EventVerificationService.php
+
+		-
+			message: '#^Unsafe call to private method Artwork\\Modules\\EventType\\Cache\\EventTypeArrayCache\:\:rememberItem\(\) through static\:\:\.$#'
+			identifier: staticClassAccess.privateMethod
+			count: 4
+			path: artwork/Modules/EventType/Cache/EventTypeArrayCache.php
+
+		-
+			message: '#^Call to an undefined method Artwork\\Modules\\User\\Models\\User\:\:map\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: artwork/Modules/EventType/Http/Resources/EventTypeResource.php
+
+		-
+			message: '#^Call to an undefined method Artwork\\Modules\\Crm\\Contracts\\CrmEntity\:\:forceFill\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: artwork/Modules/ExternalAccess/Services/CrmContactEmailResolver.php
+
+		-
+			message: '#^Call to an undefined method Artwork\\Modules\\Crm\\Contracts\\CrmEntity\:\:getAttribute\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: artwork/Modules/ExternalAccess/Services/CrmContactEmailResolver.php
+
+		-
+			message: '#^Call to an undefined method Artwork\\Modules\\Crm\\Contracts\\CrmEntity\:\:createCrmContact\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: artwork/Modules/ExternalAccess/Services/ExternalAccessService.php
+
+		-
+			message: '#^Call to an undefined method Artwork\\Modules\\Crm\\Contracts\\CrmEntity\:\:crmContact\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: artwork/Modules/ExternalAccess/Services/ExternalAccessService.php
+
+		-
+			message: '#^Call to an undefined method Artwork\\Modules\\Crm\\Contracts\\CrmEntity\:\:syncToCrm\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: artwork/Modules/ExternalAccess/Services/ExternalAccessService.php
+
+		-
+			message: '#^Cannot call method toIso8601String\(\) on string\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: artwork/Modules/ExternalAccess/Services/ExternalProjectFileService.php
+
+		-
+			message: '#^Access to an undefined property Artwork\\Modules\\Crm\\Models\\CrmContactType\:\:\$pivot\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/ExternalAccess/Services/ExternalSelfEditFieldResolver.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/ExternalAccess/Services/ExternalSubmissionApprovalService.php
+
+		-
+			message: '#^Access to an undefined property Artwork\\Modules\\Inventory\\Models\\InventoryArticle\:\:\$pivot\.$#'
+			identifier: property.notFound
+			count: 3
+			path: artwork/Modules/ExternalIssue/Services/ExternalIssueService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 2
+			path: artwork/Modules/ExternalUserManagement/Console/Commands/SyncExternalUsersCommand.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$name\.$#'
+			identifier: property.notFound
+			count: 3
+			path: artwork/Modules/ExternalUserManagement/Console/Commands/SyncExternalUsersCommand.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Builder\|Illuminate\\Database\\Query\\Builder\:\:withTrashed\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: artwork/Modules/ExternalUserManagement/Repository/ExternalUserRepository.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$ad_group_dn\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/ExternalUserManagement/Service/ExternalUserService.php
+
+		-
 			message: '#^Access to an undefined property Artwork\\Modules\\Freelancer\\Models\\Freelancer\:\:\$profile_photo_path\.$#'
 			identifier: property.notFound
 			count: 2
 			path: artwork/Modules/Freelancer/Models/Freelancer.php
+
+		-
+			message: '#^Access to property \$end_date on an unknown class Artwork\\Modules\\Freelancer\\Models\\Shift\.$#'
+			identifier: class.notFound
+			count: 2
+			path: artwork/Modules/Freelancer/Models/Freelancer.php
+
+		-
+			message: '#^Access to property \$event_end_day on an unknown class Artwork\\Modules\\Freelancer\\Models\\Shift\.$#'
+			identifier: class.notFound
+			count: 2
+			path: artwork/Modules/Freelancer/Models/Freelancer.php
+
+		-
+			message: '#^Access to property \$event_start_day on an unknown class Artwork\\Modules\\Freelancer\\Models\\Shift\.$#'
+			identifier: class.notFound
+			count: 2
+			path: artwork/Modules/Freelancer/Models/Freelancer.php
+
+		-
+			message: '#^Access to property \$start_date on an unknown class Artwork\\Modules\\Freelancer\\Models\\Shift\.$#'
+			identifier: class.notFound
+			count: 2
+			path: artwork/Modules/Freelancer/Models/Freelancer.php
+
+		-
+			message: '#^PHPDoc tag @property\-read for property Artwork\\Modules\\Freelancer\\Models\\Freelancer\:\:\$shiftQualifications contains unknown class Artwork\\Modules\\Freelancer\\Models\\ShiftQualification\.$#'
+			identifier: class.notFound
+			count: 1
+			path: artwork/Modules/Freelancer/Models/Freelancer.php
+
+		-
+			message: '#^PHPDoc tag @property\-read for property Artwork\\Modules\\Freelancer\\Models\\Freelancer\:\:\$shifts contains unknown class Artwork\\Modules\\Freelancer\\Models\\Shift\.$#'
+			identifier: class.notFound
+			count: 1
+			path: artwork/Modules/Freelancer/Models/Freelancer.php
+
+		-
+			message: '#^Type Artwork\\Modules\\Freelancer\\Models\\Shift in generic type Illuminate\\Database\\Eloquent\\Collection\<int, Artwork\\Modules\\Freelancer\\Models\\Shift\> in PHPDoc tag @property\-read for property Artwork\\Modules\\Freelancer\\Models\\Freelancer\:\:\$shifts is not subtype of template type TModel of Illuminate\\Database\\Eloquent\\Model of class Illuminate\\Database\\Eloquent\\Collection\.$#'
+			identifier: generics.notSubtype
+			count: 1
+			path: artwork/Modules/Freelancer/Models/Freelancer.php
+
+		-
+			message: '#^Type Artwork\\Modules\\Freelancer\\Models\\ShiftQualification in generic type Illuminate\\Database\\Eloquent\\Collection\<int, Artwork\\Modules\\Freelancer\\Models\\ShiftQualification\> in PHPDoc tag @property\-read for property Artwork\\Modules\\Freelancer\\Models\\Freelancer\:\:\$shiftQualifications is not subtype of template type TModel of Illuminate\\Database\\Eloquent\\Model of class Illuminate\\Database\\Eloquent\\Collection\.$#'
+			identifier: generics.notSubtype
+			count: 1
+			path: artwork/Modules/Freelancer/Models/Freelancer.php
+
+		-
+			message: '#^Call to an undefined method Artwork\\Core\\Database\\Models\\CanSubstituteBaseModel\|Artwork\\Core\\Database\\Models\\Model\|Artwork\\Core\\Database\\Models\\Pivot\:\:availabilities\(\)\.$#'
+			identifier: method.notFound
+			count: 3
+			path: artwork/Modules/Freelancer/Repositories/FreelancerRepository.php
+
+		-
+			message: '#^Call to an undefined method Artwork\\Core\\Database\\Models\\CanSubstituteBaseModel\|Artwork\\Core\\Database\\Models\\Model\|Artwork\\Core\\Database\\Models\\Pivot\:\:vacations\(\)\.$#'
+			identifier: method.notFound
+			count: 2
+			path: artwork/Modules/Freelancer/Repositories/FreelancerRepository.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Model\:\:subdivisions\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: artwork/Modules/Holidays/Services/HolidayService.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Support\\Carbon\:\:floatDiffInWeeks\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: artwork/Modules/IndividualTimes/Http/Controllers/IndividualTimeSeriesController.php
+
+		-
+			message: '#^PHPDoc tag @return contains unresolvable type\.$#'
+			identifier: return.unresolvableType
+			count: 1
+			path: artwork/Modules/IndividualTimes/Models/IndividualTime.php
+
+		-
+			message: '#^Call to an undefined method Carbon\\Carbon\:\:floatDiffInWeeks\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: artwork/Modules/IndividualTimes/Services/IndividualTimeSeriesService.php
+
+		-
+			message: '#^Cannot access property \$id on class\-string\|object\.$#'
+			identifier: property.nonObject
+			count: 3
+			path: artwork/Modules/IndividualTimes/Services/IndividualTimeService.php
+
+		-
+			message: '#^Access to an undefined property Artwork\\Modules\\Inventory\\Models\\InventoryArticle\:\:\$pivot\.$#'
+			identifier: property.notFound
+			count: 3
+			path: artwork/Modules/InternalIssue/Services/InternalIssueService.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Model\:\:getAbsoluteImageUrl\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: artwork/Modules/Inventory/DTOs/InventoryArticleImageDTO.php
+
+		-
+			message: '#^Cannot call method toArray\(\) on array\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: artwork/Modules/Inventory/DTOs/InventoryCategoryDTO.php
+
+		-
+			message: '#^Cannot call method toArray\(\) on array\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: artwork/Modules/Inventory/DTOs/InventorySubCategoryDTO.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Contracts\\Pagination\\LengthAwarePaginator\:\:getCollection\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: artwork/Modules/Inventory/DTOs/PaginatedInventoryArticleDTO.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Contracts\\Pagination\\LengthAwarePaginator\:\:toArray\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: artwork/Modules/Inventory/DTOs/PaginatedInventoryArticleDTO.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Contracts\\Pagination\\LengthAwarePaginator\:\:getCollection\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: artwork/Modules/Inventory/DTOs/PaginatedInventoryCategoryDTO.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Contracts\\Pagination\\LengthAwarePaginator\:\:toArray\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: artwork/Modules/Inventory/DTOs/PaginatedInventoryCategoryDTO.php
+
+		-
+			message: '#^Access to an undefined property Artwork\\Modules\\Inventory\\Models\\InventoryArticleStatus\:\:\$pivot\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Inventory/Http/Controllers/InventoryArticleController.php
+
+		-
+			message: '#^Access to an undefined property Artwork\\Modules\\Inventory\\Models\\InventoryArticleProperties\:\:\$pivot\.$#'
+			identifier: property.notFound
+			count: 5
+			path: artwork/Modules/Inventory/Models/InventoryArticle.php
+
+		-
+			message: '#^Access to an undefined property Artwork\\Modules\\Inventory\\Models\\InventoryArticleStatus\:\:\$pivot\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Inventory/Models/InventoryArticle.php
+
+		-
+			message: '#^PHPDoc tag @extends has invalid value \(\\Illuminate\\Database\\Eloquent\\Model\)\: Unexpected token "\\n \* ", expected ''\<'' at offset 878 on line 18$#'
+			identifier: phpDoc.parseError
+			count: 1
+			path: artwork/Modules/Inventory/Models/InventoryArticle.php
+
+		-
+			message: '#^PHPDoc tag @property has invalid value \(\\Artwork\\Modules\\Inventory\\Models\\InventorySubCategory subCategory\)\: Unexpected token "subCategory", expected variable at offset 684 on line 14$#'
+			identifier: phpDoc.parseError
+			count: 1
+			path: artwork/Modules/Inventory/Models/InventoryArticle.php
+
+		-
+			message: '''
+				#^PHPDoc tag @property has invalid value \(\\Illuminate\\Database\\Eloquent\\Collection\<int,
+				    \\Artwork\\Modules\\Inventory\\Models\\InventoryArticleProperty\> properties\)\: Unexpected token "properties", expected variable at offset 411 on line 11$#
+			'''
+			identifier: phpDoc.parseError
+			count: 1
+			path: artwork/Modules/Inventory/Models/InventoryArticle.php
+
+		-
+			message: '#^PHPDoc tag @property has invalid value \(\\Illuminate\\Database\\Eloquent\\Collection\|\\Artwork\\Modules\\Inventory\\Models\\InventoryArticleImage\[\] images\)\: Unexpected token "images", expected variable at offset 534 on line 12$#'
+			identifier: phpDoc.parseError
+			count: 1
+			path: artwork/Modules/Inventory/Models/InventoryArticle.php
+
+		-
+			message: '#^PHPDoc tag @var has invalid value \(string\<\> The table associated with the model\.\)\: Unexpected token "\>", expected type at offset 23 on line 2$#'
+			identifier: phpDoc.parseError
+			count: 1
+			path: artwork/Modules/Inventory/Models/InventoryArticleProperties.php
+
+		-
+			message: '#^PHPDoc tag @extends has invalid value \(\\Illuminate\\Database\\Eloquent\\Model\)\: Unexpected token "\\n ", expected ''\<'' at offset 370 on line 8$#'
+			identifier: phpDoc.parseError
+			count: 1
+			path: artwork/Modules/Inventory/Models/InventoryCategory.php
+
+		-
+			message: '#^PHPDoc tag @property has invalid value \(\\Illuminate\\Database\\Eloquent\\Collection\<InventorySubCategory\> subCategories\)\: Unexpected token "subCategories", expected variable at offset 194 on line 6$#'
+			identifier: phpDoc.parseError
+			count: 1
+			path: artwork/Modules/Inventory/Models/InventoryCategory.php
+
+		-
+			message: '#^PHPDoc tag @property has invalid value \(\\Illuminate\\Database\\Eloquent\\Collection\<\\Artwork\\Modules\\Inventory\\Models\\InventoryArticle\> articles\)\: Unexpected token "articles", expected variable at offset 314 on line 7$#'
+			identifier: phpDoc.parseError
+			count: 1
+			path: artwork/Modules/Inventory/Models/InventoryCategory.php
+
+		-
+			message: '#^Access to an undefined property Artwork\\Modules\\Inventory\\Models\\InventoryArticleProperties\:\:\$pivot\.$#'
+			identifier: property.notFound
+			count: 4
+			path: artwork/Modules/Inventory/Models/InventoryDetailedQuantityArticle.php
+
+		-
+			message: '#^PHPDoc tag @extends has invalid value \(\\Illuminate\\Database\\Eloquent\\Model\)\: Unexpected token "\\n \* ", expected ''\<'' at offset 395 on line 9$#'
+			identifier: phpDoc.parseError
+			count: 1
+			path: artwork/Modules/Inventory/Models/InventorySubCategory.php
+
+		-
+			message: '#^PHPDoc tag @property has invalid value \(\)\: Unexpected token "\\n ", expected type at offset 746 on line 16$#'
+			identifier: phpDoc.parseError
+			count: 1
+			path: artwork/Modules/Inventory/Models/InventorySubCategory.php
+
+		-
+			message: '#^PHPDoc tag @property has invalid value \(\\Illuminate\\Database\\Eloquent\\Collection\<\\Artwork\\Modules\\Inventory\\Models\\InventoryArticle\> articles\)\: Unexpected token "articles", expected variable at offset 339 on line 8$#'
+			identifier: phpDoc.parseError
+			count: 1
+			path: artwork/Modules/Inventory/Models/InventorySubCategory.php
+
+		-
+			message: '#^PHPDoc tag @return with type Illuminate\\Database\\Eloquent\\Builder\|Illuminate\\Database\\Eloquent\\Relations\\HasMany is not subtype of native type Illuminate\\Database\\Eloquent\\Builder\.$#'
+			identifier: return.phpDocType
+			count: 1
+			path: artwork/Modules/Inventory/Services/InventoryArticleService.php
+
+		-
+			message: '#^Access to an undefined property Artwork\\Modules\\Inventory\\Models\\InventoryArticle\:\:\$pivot\.$#'
+			identifier: property.notFound
+			count: 4
+			path: artwork/Modules/Inventory/Services/InventoryPlanningService.php
+
+		-
+			message: '#^Variable \$invitation in PHPDoc tag @var does not exist\.$#'
+			identifier: varTag.variableNotFound
+			count: 1
+			path: artwork/Modules/Invitation/Services/InvitationService.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Support\\ServiceProvider\:\:applyMailConfig\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: artwork/Modules/Mail/Http/Controllers/MailSettingsController.php
 
 		-
 			message: '#^Access to an undefined property Artwork\\Modules\\Manufacturer\\Models\\Manufacturer\:\:\$profile_photo_path\.$#'
@@ -37,10 +1924,118 @@ parameters:
 			path: artwork/Modules/Manufacturer/Models/Manufacturer.php
 
 		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$linked_type\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/MoneySource/Services/MoneySourceCalculationService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$value\.$#'
+			identifier: property.notFound
+			count: 2
+			path: artwork/Modules/MoneySource/Services/MoneySourceCalculationService.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Support\\Carbon\:\:diffInRealHours\(\)\.$#'
+			identifier: method.notFound
+			count: 2
+			path: artwork/Modules/Notification/Services/NotificationService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$users\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Permission/Services/ShiftSettingsPermissionService.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Model\:\:forgetCachedShareData\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: artwork/Modules/Permission/Services/ShiftSettingsPermissionService.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Model\:\:givePermissionTo\(\)\.$#'
+			identifier: method.notFound
+			count: 2
+			path: artwork/Modules/Permission/Services/ShiftSettingsPermissionService.php
+
+		-
+			message: '#^Unsafe call to private method Artwork\\Modules\\Project\\Cache\\ProjectTabArrayCache\:\:rememberItem\(\) through static\:\:\.$#'
+			identifier: staticClassAccess.privateMethod
+			count: 4
+			path: artwork/Modules/Project/Cache/ProjectTabArrayCache.php
+
+		-
+			message: '#^Cannot call method format\(\) on string\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: artwork/Modules/Project/Http/Resources/CommentResource.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$users\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Project/Http/Resources/ProjectBudgetResource.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$pivot\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Project/Http/Resources/ProjectCalendarResource.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$users\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Project/Http/Resources/ProjectCalendarResource.php
+
+		-
 			message: '#^Access to an undefined property Artwork\\Modules\\Project\\Http\\Resources\\ProjectCalendarShowEventResource\:\:\$collision_count\.$#'
 			identifier: property.notFound
 			count: 1
 			path: artwork/Modules/Project/Http/Resources/ProjectCalendarShowEventResource.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$users\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Project/Http/Resources/ProjectChecklistResource.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$created_at\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Project/Http/Resources/ProjectCommentResource.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Project/Http/Resources/ProjectCommentResource.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$text\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Project/Http/Resources/ProjectCommentResource.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$user\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Project/Http/Resources/ProjectCommentResource.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$users\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Project/Http/Resources/ProjectCommentResource.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$users\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Project/Http/Resources/ProjectInEventResource.php
 
 		-
 			message: '#^Call to an undefined method Artwork\\Modules\\Project\\Http\\Resources\\ProjectInEventResource\:\:state\(\)\.$#'
@@ -55,16 +2050,796 @@ parameters:
 			path: artwork/Modules/Project/Http/Resources/ProjectIndexShowResource.php
 
 		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$users\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Project/Http/Resources/ProjectIndexShowResource.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$created_at\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Project/Http/Resources/ProjectInfoResource.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Project/Http/Resources/ProjectInfoResource.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$text\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Project/Http/Resources/ProjectInfoResource.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$user\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Project/Http/Resources/ProjectInfoResource.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$users\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Project/Http/Resources/ProjectInfoResource.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$users\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Project/Http/Resources/ProjectShiftResource.php
+
+		-
 			message: '#^Access to an undefined property Artwork\\Modules\\Project\\Http\\Resources\\ProjectShowResource\:\:\$money_sources\.$#'
 			identifier: property.notFound
 			count: 1
 			path: artwork/Modules/Project/Http/Resources/ProjectShowResource.php
 
 		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$created_at\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Project/Http/Resources/ProjectShowResource.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Project/Http/Resources/ProjectShowResource.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$project\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Project/Http/Resources/ProjectShowResource.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$tasks\.$#'
+			identifier: property.notFound
+			count: 2
+			path: artwork/Modules/Project/Http/Resources/ProjectShowResource.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$text\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Project/Http/Resources/ProjectShowResource.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$user\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Project/Http/Resources/ProjectShowResource.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$user_id\.$#'
+			identifier: property.notFound
+			count: 2
+			path: artwork/Modules/Project/Http/Resources/ProjectShowResource.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$users\.$#'
+			identifier: property.notFound
+			count: 3
+			path: artwork/Modules/Project/Http/Resources/ProjectShowResource.php
+
+		-
+			message: '#^Access to an undefined property Artwork\\Modules\\Department\\Models\\Department\:\:\$pivot\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Project/Models/Component.php
+
+		-
+			message: '#^Access to an undefined property Artwork\\Modules\\User\\Models\\User\:\:\$pivot\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Project/Models/Component.php
+
+		-
+			message: '#^Access to an undefined property Artwork\\Modules\\Event\\Models\\Event\:\:\$created_by\.$#'
+			identifier: property.notFound
+			count: 2
+			path: artwork/Modules/Project/Policies/ProjectPolicy.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Relations\\Pivot\:\:\$is_manager\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Project/Policies/ProjectPolicy.php
+
+		-
+			message: '#^Call to an undefined method Artwork\\Core\\Database\\Models\\CanSubstituteBaseModel\|Artwork\\Core\\Database\\Models\\Model\|Artwork\\Core\\Database\\Models\\Pivot\:\:events\(\)\.$#'
+			identifier: method.notFound
+			count: 6
+			path: artwork/Modules/Project/Repositories/ProjectRepository.php
+
+		-
+			message: '#^Variable \$projectTab in PHPDoc tag @var does not match assigned variable \$query\.$#'
+			identifier: varTag.differentVariable
+			count: 2
+			path: artwork/Modules/Project/Repositories/ProjectTabRepository.php
+
+		-
+			message: '#^Cannot call method format\(\) on string\.$#'
+			identifier: method.nonObject
+			count: 4
+			path: artwork/Modules/Project/Services/ProjectDayAssignmentService.php
+
+		-
+			message: '#^Access to an undefined property Artwork\\Modules\\Crm\\Models\\CrmProperty\:\:\$pivot\.$#'
+			identifier: property.notFound
+			count: 2
+			path: artwork/Modules/Project/Services/ProjectTabArtistResidenciesService.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Builder\<Illuminate\\Database\\Eloquent\\Model\>\:\:unlessRoomIds\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: artwork/Modules/Project/Services/ProjectTabBulkEditService.php
+
+		-
+			message: '#^Cannot call method toDateString\(\) on string\.$#'
+			identifier: method.nonObject
+			count: 4
+			path: artwork/Modules/Project/Services/ProjectTabMaterialIssueService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$belegdatum\.$#'
+			identifier: property.notFound
+			count: 2
+			path: artwork/Modules/Project/Services/ProjectTabSageInvoiceOverviewService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$buchungsbetrag\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Project/Services/ProjectTabSageInvoiceOverviewService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$findChildren\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Project/Services/ProjectTabSageInvoiceOverviewService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$kst_stelle\.$#'
+			identifier: property.notFound
+			count: 2
+			path: artwork/Modules/Project/Services/ProjectTabSageInvoiceOverviewService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$kto\.$#'
+			identifier: property.notFound
+			count: 4
+			path: artwork/Modules/Project/Services/ProjectTabSageInvoiceOverviewService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$kto_soll\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Project/Services/ProjectTabSageInvoiceOverviewService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$sa_kto\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Project/Services/ProjectTabSageInvoiceOverviewService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$source\.$#'
+			identifier: property.notFound
+			count: 2
+			path: artwork/Modules/Project/Services/ProjectTabSageInvoiceOverviewService.php
+
+		-
+			message: '#^Access to an undefined property Artwork\\Modules\\Crm\\Models\\CrmContact\:\:\$pivot\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Project/Services/ProjectTabTeamService.php
+
+		-
+			message: '#^Access to an undefined property Artwork\\Modules\\User\\Models\\User\:\:\$pivot\.$#'
+			identifier: property.notFound
+			count: 5
+			path: artwork/Modules/Project/Services/ProjectTabTeamService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 2
+			path: artwork/Modules/Project/TabTemplates/TabTemplateUpgradeSupport.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$pivot\.$#'
+			identifier: property.notFound
+			count: 2
+			path: artwork/Modules/Project/TabTemplates/TabTemplateUpgradeSupport.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Builder\:\:startAndEndTimeOverlap\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: artwork/Modules/Room/Models/Room.php
+
+		-
+			message: '#^Call to an undefined method Artwork\\Core\\Database\\Models\\CanSubstituteBaseModel\|Artwork\\Core\\Database\\Models\\Model\|Artwork\\Core\\Database\\Models\\Pivot\:\:adjoining_rooms\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: artwork/Modules/Room/Repositories/RoomRepository.php
+
+		-
+			message: '#^Call to an undefined method Artwork\\Core\\Database\\Models\\CanSubstituteBaseModel\|Artwork\\Core\\Database\\Models\\Model\|Artwork\\Core\\Database\\Models\\Pivot\:\:attributes\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: artwork/Modules/Room/Repositories/RoomRepository.php
+
+		-
+			message: '#^Call to an undefined method Artwork\\Core\\Database\\Models\\CanSubstituteBaseModel\|Artwork\\Core\\Database\\Models\\Model\|Artwork\\Core\\Database\\Models\\Pivot\:\:categories\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: artwork/Modules/Room/Repositories/RoomRepository.php
+
+		-
+			message: '#^Call to an undefined method Artwork\\Core\\Database\\Models\\CanSubstituteBaseModel\|Artwork\\Core\\Database\\Models\\Model\|Artwork\\Core\\Database\\Models\\Pivot\:\:users\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: artwork/Modules/Room/Repositories/RoomRepository.php
+
+		-
+			message: '#^Access to an undefined property Artwork\\Modules\\Calendar\\Filter\\CalendarFilter\:\:\$adjoining_no_audience\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Room/Services/RoomService.php
+
+		-
+			message: '#^Access to an undefined property Artwork\\Modules\\Calendar\\Filter\\CalendarFilter\:\:\$adjoining_not_loud\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Room/Services/RoomService.php
+
+		-
+			message: '#^Access to an undefined property Artwork\\Modules\\Calendar\\Filter\\CalendarFilter\:\:\$areas\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Room/Services/RoomService.php
+
+		-
+			message: '#^Access to an undefined property Artwork\\Modules\\Calendar\\Filter\\CalendarFilter\:\:\$room_attributes\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Room/Services/RoomService.php
+
+		-
+			message: '#^Access to an undefined property Artwork\\Modules\\Calendar\\Filter\\CalendarFilter\:\:\$room_categories\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Room/Services/RoomService.php
+
+		-
+			message: '#^Access to an undefined property Artwork\\Modules\\Calendar\\Filter\\CalendarFilter\:\:\$rooms\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Room/Services/RoomService.php
+
+		-
+			message: '#^Method Artwork\\Modules\\Room\\Repositories\\RoomRepository\:\:getFilteredRoomsBy\(\) invoked with 8 parameters, 4 required\.$#'
+			identifier: arguments.count
+			count: 1
+			path: artwork/Modules/Room/Services/RoomService.php
+
+		-
+			message: '#^Variable \$eventsForRoom in PHPDoc tag @var does not match any variable in the foreach loop\: \$calendarPeriod, \$date$#'
+			identifier: varTag.differentVariable
+			count: 1
+			path: artwork/Modules/Room/Services/RoomService.php
+
+		-
+			message: '#^Access to an undefined property Artwork\\Modules\\Budget\\Models\\CollectiveBookings\\CollectiveBooking\:\:\$buchungsbetrag\.$#'
+			identifier: property.notFound
+			count: 2
+			path: artwork/Modules/Sage100/Services/Sage100Service.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 5
+			path: artwork/Modules/Sage100/Services/Sage100Service.php
+
+		-
+			message: '#^Call to an undefined method Artwork\\Core\\Database\\Models\\Model\:\:budgetSumDetails\(\)\.$#'
+			identifier: method.notFound
+			count: 2
+			path: artwork/Modules/Sage100/Services/Sage100Service.php
+
+		-
+			message: '#^Call to an undefined method Artwork\\Modules\\Budget\\Models\\CollectiveBookings\\CollectiveBooking\:\:save\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: artwork/Modules/Sage100/Services/Sage100Service.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$count\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Scheduling/Services/SchedulingService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$created_by_id\.$#'
+			identifier: property.notFound
+			count: 2
+			path: artwork/Modules/Scheduling/Services/SchedulingService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Scheduling/Services/SchedulingService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$model_id\.$#'
+			identifier: property.notFound
+			count: 13
+			path: artwork/Modules/Scheduling/Services/SchedulingService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$type\.$#'
+			identifier: property.notFound
+			count: 3
+			path: artwork/Modules/Scheduling/Services/SchedulingService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$user_id\.$#'
+			identifier: property.notFound
+			count: 3
+			path: artwork/Modules/Scheduling/Services/SchedulingService.php
+
+		-
 			message: '#^Access to an undefined property Artwork\\Modules\\ServiceProvider\\Models\\ServiceProvider\:\:\$profile_photo_path\.$#'
 			identifier: property.notFound
 			count: 2
 			path: artwork/Modules/ServiceProvider/Models/ServiceProvider.php
+
+		-
+			message: '#^Access to an undefined property Artwork\\Modules\\Shift\\Models\\Shift\:\:\$pivot\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Shift/Abstracts/WorkerShiftPlanResource.php
+
+		-
+			message: '#^Access to an undefined property Artwork\\Modules\\User\\Models\\User\:\:\$name\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Shift/Console/Commands/BackfillShiftWorkerAssignedByCommand.php
+
+		-
+			message: '#^PHPDoc tag @return with type array\<int, Illuminate\\Broadcasting\\Channel\> is incompatible with native type Illuminate\\Broadcasting\\PrivateChannel\.$#'
+			identifier: return.phpDocType
+			count: 1
+			path: artwork/Modules/Shift/Events/AssignUserToShift.php
+
+		-
+			message: '#^PHPDoc tag @return with type array\<int, Illuminate\\Broadcasting\\Channel\> is incompatible with native type Illuminate\\Broadcasting\\PrivateChannel\.$#'
+			identifier: return.phpDocType
+			count: 1
+			path: artwork/Modules/Shift/Events/RemoveEntityFormShiftEvent.php
+
+		-
+			message: '#^Cannot call method format\(\) on string\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: artwork/Modules/Shift/Exports/CommittedShiftChangesExcelExport.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$first_name\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Shift/Http/Controllers/ShiftRuleController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$last_name\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Shift/Http/Controllers/ShiftRuleController.php
+
+		-
+			message: '#^Access to an undefined property Spatie\\Activitylog\\Contracts\\Activity\:\:\$properties\.$#'
+			identifier: property.notFound
+			count: 2
+			path: artwork/Modules/Shift/Models/Shift.php
+
+		-
+			message: '#^Cannot call method format\(\) on string\.$#'
+			identifier: method.nonObject
+			count: 2
+			path: artwork/Modules/Shift/Models/Shift.php
+
+		-
+			message: '#^Access to an undefined property Spatie\\Activitylog\\Contracts\\Activity\:\:\$properties\.$#'
+			identifier: property.notFound
+			count: 2
+			path: artwork/Modules/Shift/Observers/ShiftsQualificationsObserver.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Builder\:\:granted\(\)\.$#'
+			identifier: method.notFound
+			count: 2
+			path: artwork/Modules/Shift/Repositories/CompensationDayOffRepository.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Builder\:\:open\(\)\.$#'
+			identifier: method.notFound
+			count: 2
+			path: artwork/Modules/Shift/Repositories/CompensationDayOffRepository.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Builder\:\:overdue\(\)\.$#'
+			identifier: method.notFound
+			count: 2
+			path: artwork/Modules/Shift/Repositories/CompensationDayOffRepository.php
+
+		-
+			message: '#^Call to an undefined method Artwork\\Modules\\Shift\\QueryBuilders\\ShiftsQualificationsBuilder\<Artwork\\Modules\\Shift\\Models\\ShiftsQualifications\>\:\:byShiftIdAndShiftQualificationId\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: artwork/Modules/Shift/Repositories/ShiftsQualificationsRepository.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$granted_date\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Shift/RuleChecks/AbstractRuleCheck.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$granted_date\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Shift/RuleChecks/ShiftRuleCheckContext.php
+
+		-
+			message: '#^Cannot call method format\(\) on string\.$#'
+			identifier: method.nonObject
+			count: 2
+			path: artwork/Modules/Shift/Serializers/ShiftHistorySerializer.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$earliest_start_datetime\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Shift/Services/DailyShiftPlanPdfBuilder.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Support\\Collection\<int, mixed\>\:\:loadMissing\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: artwork/Modules/Shift/Services/DailyShiftPlanPdfBuilder.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Shift/Services/ShiftDeletionService.php
+
+		-
+			message: '#^Access to an undefined property Artwork\\Modules\\Freelancer\\Models\\Freelancer\:\:\$pivot\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Shift/Services/ShiftFreelancerService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Shift/Services/ShiftFreelancerService.php
+
+		-
+			message: '#^Access to an undefined property Artwork\\Modules\\Vacation\\Models\\Vacation\:\:\$day_part\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Shift/Services/ShiftKpiTrackingService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$currentRequest\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Shift/Services/ShiftPlanRequestService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$current_request_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Shift/Services/ShiftPlanRequestService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$event\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Shift/Services/ShiftPlanRequestService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 2
+			path: artwork/Modules/Shift/Services/ShiftPlanRequestService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$in_workflow\.$#'
+			identifier: property.notFound
+			count: 2
+			path: artwork/Modules/Shift/Services/ShiftPlanRequestService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$workflow_rejection_reason\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Shift/Services/ShiftPlanRequestService.php
+
+		-
+			message: '#^Cannot call method toDateString\(\) on string\.$#'
+			identifier: method.nonObject
+			count: 4
+			path: artwork/Modules/Shift/Services/ShiftPlanRequestService.php
+
+		-
+			message: '#^Access to an undefined property Artwork\\Modules\\Shift\\Models\\CommittedShiftChange\:\:\$shift_craft_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Shift/Services/ShiftPlanWorkflowStatusService.php
+
+		-
+			message: '#^Access to an undefined property Artwork\\Modules\\Shift\\Models\\CommittedShiftChange\:\:\$shift_start_date\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Shift/Services/ShiftPlanWorkflowStatusService.php
+
+		-
+			message: '#^Variable \$shiftPreset in PHPDoc tag @var does not exist\.$#'
+			identifier: varTag.variableNotFound
+			count: 1
+			path: artwork/Modules/Shift/Services/ShiftPresetService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 2
+			path: artwork/Modules/Shift/Services/ShiftReplacementService.php
+
+		-
+			message: '#^Call to an undefined method Artwork\\Modules\\Shift\\Contracts\\Employable\:\:getKey\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: artwork/Modules/Shift/Services/ShiftReplacementService.php
+
+		-
+			message: '#^Call to an undefined method Artwork\\Modules\\Shift\\Contracts\\Employable\:\:getMorphClass\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: artwork/Modules/Shift/Services/ShiftReplacementService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Shift/Services/ShiftRuleService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$violation_date\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Shift/Services/ShiftRuleService.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Contracts\\Pagination\\LengthAwarePaginator\:\:through\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: artwork/Modules/Shift/Services/ShiftRuleService.php
+
+		-
+			message: '#^Cannot call method format\(\) on string\.$#'
+			identifier: method.nonObject
+			count: 2
+			path: artwork/Modules/Shift/Services/ShiftRuleService.php
+
+		-
+			message: '#^Access to an undefined property Artwork\\Modules\\Freelancer\\Models\\Freelancer\:\:\$pivot\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Shift/Services/ShiftService.php
+
+		-
+			message: '#^Access to an undefined property Artwork\\Modules\\ServiceProvider\\Models\\ServiceProvider\:\:\$pivot\.$#'
+			identifier: property.notFound
+			count: 9
+			path: artwork/Modules/Shift/Services/ShiftService.php
+
+		-
+			message: '#^Access to an undefined property Artwork\\Modules\\User\\Models\\User\:\:\$pivot\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Shift/Services/ShiftService.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Relations\\HasMany\<Artwork\\Modules\\Shift\\Models\\ShiftsQualifications, Artwork\\Modules\\Shift\\Models\\Shift\>\:\:onlyTrashed\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: artwork/Modules/Shift/Services/ShiftService.php
+
+		-
+			message: '#^Cannot call method format\(\) on string\.$#'
+			identifier: method.nonObject
+			count: 3
+			path: artwork/Modules/Shift/Services/ShiftService.php
+
+		-
+			message: '#^Access to an undefined property Artwork\\Modules\\ServiceProvider\\Models\\ServiceProvider\:\:\$pivot\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Shift/Services/ShiftServiceProviderService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Shift/Services/ShiftServiceProviderService.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Builder\<Illuminate\\Database\\Eloquent\\Model\>\:\:withTrashed\(\)\.$#'
+			identifier: method.notFound
+			count: 2
+			path: artwork/Modules/Shift/Services/ShiftTrashService.php
+
+		-
+			message: '#^Access to an undefined property Artwork\\Modules\\User\\Models\\User\:\:\$pivot\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Shift/Services/ShiftUserService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Shift/Services/ShiftUserService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$craft_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Shift/Services/ShiftWeekStatusService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Shift/Services/ShiftWeekStatusService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$in_workflow\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Shift/Services/ShiftWeekStatusService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$is_committed\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Shift/Services/ShiftWeekStatusService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$shift_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Shift/Services/ShiftWeekStatusService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$shift_qualification_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Shift/Services/ShiftWeekStatusService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$start_date\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Shift/Services/ShiftWeekStatusService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$value\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Shift/Services/ShiftWeekStatusService.php
+
+		-
+			message: '#^Call to an undefined method DateTime\:\:toIso8601String\(\)\.$#'
+			identifier: method.notFound
+			count: 2
+			path: artwork/Modules/Shift/Services/ShiftWeekStatusService.php
+
+		-
+			message: '#^Access to an undefined property Artwork\\Modules\\Freelancer\\Models\\Freelancer\|Artwork\\Modules\\ServiceProvider\\Models\\ServiceProvider\|Artwork\\Modules\\User\\Models\\User\:\:\$pivot\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Shift/Services/ShiftWorkerAvailability.php
+
+		-
+			message: '#^Access to an undefined property Artwork\\Modules\\Shift\\Contracts\\Employable\:\:\$full_name\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Shift/Services/ShiftWorkerConfirmationService.php
+
+		-
+			message: '#^Access to an undefined property Artwork\\Modules\\Shift\\Contracts\\Employable\:\:\$name\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Shift/Services/ShiftWorkerConfirmationService.php
+
+		-
+			message: '#^Access to an undefined property Artwork\\Modules\\Shift\\Contracts\\Employable\:\:\$full_name\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Shift/Services/ShiftWorkerService.php
+
+		-
+			message: '#^Access to an undefined property Artwork\\Modules\\Shift\\Contracts\\Employable\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 7
+			path: artwork/Modules/Shift/Services/ShiftWorkerService.php
+
+		-
+			message: '#^Access to an undefined property Artwork\\Modules\\Shift\\Contracts\\Employable\:\:\$name\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Shift/Services/ShiftWorkerService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 4
+			path: artwork/Modules/Shift/Services/ShiftWorkerService.php
+
+		-
+			message: '#^Call to an undefined method Artwork\\Modules\\Shift\\Contracts\\Employable\:\:getFullNameAttribute\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: artwork/Modules/Shift/Services/ShiftWorkerService.php
+
+		-
+			message: '#^Access to an undefined property Artwork\\Modules\\DayService\\Models\\DayService\:\:\$pivot\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Shift/Services/WorkerShiftPlanPdfBuilder.php
+
+		-
+			message: '#^Access to an undefined property Artwork\\Modules\\Shift\\Models\\Shift\:\:\$pivot\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Shift/Services/WorkerShiftPlanPdfBuilder.php
+
+		-
+			message: '#^Access to protected property Laravel\\Passport\\PersonalAccessTokenResult\:\:\$token\.$#'
+			identifier: property.protected
+			count: 1
+			path: artwork/Modules/System/ApiManagement/Http/Controller/ApiManagementController.php
 
 		-
 			message: '#^Access to an undefined property Artwork\\Modules\\Task\\Http\\Resources\\ShowOwnTasksResource\:\:\$project\.$#'
@@ -85,13 +2860,439 @@ parameters:
 			path: artwork/Modules/Task/Http/Resources/ShowOwnTasksResource.php
 
 		-
+			message: '#^Call to an undefined method Artwork\\Core\\Database\\Models\\Model\:\:tasks\(\)\.$#'
+			identifier: method.notFound
+			count: 2
+			path: artwork/Modules/Task/Repositories/TaskRepository.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$checklist_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Task/Services/TaskService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$task_users\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Task/Services/TaskService.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Model\:\:task_users\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: artwork/Modules/Task/Services/TaskService.php
+
+		-
+			message: '#^PHPDoc tag @param references unknown parameter\: \$day$#'
+			identifier: parameter.notFound
+			count: 1
+			path: artwork/Modules/Timeline/Services/TimelineService.php
+
+		-
+			message: '#^Call to an undefined method Spatie\\IcalendarGenerator\\Components\\Component\:\:get\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: artwork/Modules/User/Http/Controllers/UserCalenderAboController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Collection&iterable\<Artwork\\Modules\\User\\Models\\UserContractAssign\>\:\:\$overtime_compensation_period\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/User/Http/Controllers/UserController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Collection&iterable\<Artwork\\Modules\\User\\Models\\UserContractAssign\>\:\:\$overtime_rule_active\.$#'
+			identifier: property.notFound
+			count: 2
+			path: artwork/Modules/User/Http/Controllers/UserController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$icon\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/User/Http/Controllers/UserController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 4
+			path: artwork/Modules/User/Http/Controllers/UserController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$name\.$#'
+			identifier: property.notFound
+			count: 3
+			path: artwork/Modules/User/Http/Controllers/UserController.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Collection&iterable\<Artwork\\Modules\\User\\Models\\UserCalendarAbo\>\:\:delete\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: artwork/Modules/User/Http/Controllers/UserController.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Collection&iterable\<Artwork\\Modules\\User\\Models\\UserShiftCalendarAbo\>\:\:delete\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: artwork/Modules/User/Http/Controllers/UserController.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Model\:\:permissionNames\(\)\.$#'
+			identifier: method.notFound
+			count: 2
+			path: artwork/Modules/User/Http/Controllers/UserController.php
+
+		-
+			message: '#^Call to an undefined method Spatie\\IcalendarGenerator\\Components\\Component\:\:get\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: artwork/Modules/User/Http/Controllers/UserShiftCalendarAboController.php
+
+		-
 			message: '#^Access to an undefined property Artwork\\Modules\\User\\Http\\Resources\\UserWithoutShiftsResource\:\:\$pivot\.$#'
 			identifier: property.notFound
 			count: 5
 			path: artwork/Modules/User/Http/Resources/UserWithoutShiftsResource.php
 
 		-
+			message: '#^Access to an undefined property Artwork\\Modules\\Shift\\Models\\Shift\:\:\$end_time\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/User/Models/User.php
+
+		-
+			message: '#^Access to an undefined property Artwork\\Modules\\Shift\\Models\\Shift\:\:\$start_time\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/User/Models/User.php
+
+		-
+			message: '#^Access to an undefined property Artwork\\Modules\\Vacation\\Models\\Vacation\:\:\$from\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/User/Models/User.php
+
+		-
+			message: '#^Access to an undefined property Artwork\\Modules\\Vacation\\Models\\Vacation\:\:\$until\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/User/Models/User.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$end_date\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/User/Models/User.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$event_end_day\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/User/Models/User.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$event_start_day\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/User/Models/User.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$start_date\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/User/Models/User.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Builder\:\:validOn\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: artwork/Modules/User/Models/User.php
+
+		-
+			message: '#^Class Illuminate\\Database\\Eloquent\\Relations\\HasOne referenced with incorrect case\: Illuminate\\Database\\Eloquent\\Relations\\hasOne\.$#'
+			identifier: class.nameCase
+			count: 2
+			path: artwork/Modules/User/Models/User.php
+
+		-
+			message: '#^PHPDoc tag @property for property Artwork\\Modules\\User\\Models\\User\:\:\$allPermissions contains unresolvable type\.$#'
+			identifier: propertyTag.unresolvableType
+			count: 1
+			path: artwork/Modules/User/Models/User.php
+
+		-
+			message: '#^Trait Laravel\\Passport\\HasApiTokens requires using class to implement Laravel\\Passport\\Contracts\\OAuthenticatable, but Artwork\\Modules\\User\\Models\\User does not\.$#'
+			identifier: class.missingImplements
+			count: 1
+			path: artwork/Modules/User/Models/User.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Collection&iterable\<Artwork\\Modules\\User\\Models\\UserContractAssign\>\:\:coversDate\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: artwork/Modules/User/Services/ContractSettingsResolver.php
+
+		-
+			message: '#^Variable \$user in PHPDoc tag @var does not exist\.$#'
+			identifier: varTag.variableNotFound
+			count: 1
+			path: artwork/Modules/User/Services/UserService.php
+
+		-
+			message: '#^Access to an undefined property Artwork\\Modules\\DayService\\Models\\DayService\:\:\$pivot\.$#'
+			identifier: property.notFound
+			count: 2
+			path: artwork/Modules/User/Services/UserShiftCalendarAboService.php
+
+		-
+			message: '#^PHPDoc tag @var with type Illuminate\\Http\\Resources\\Json\\JsonResource is not subtype of native type string\.$#'
+			identifier: varTag.nativeType
+			count: 1
+			path: artwork/Modules/User/Services/WorkingHourService.php
+
+		-
+			message: '#^PHPDoc tag @property has invalid value \(mixed type          ''vacation'' \| ''available'' \(Abwesenheit oder Verfügbarkeit\)\)\: Unexpected token "type", expected variable at offset 23 on line 2$#'
+			identifier: phpDoc.parseError
+			count: 1
+			path: artwork/Modules/Vacation/Https/Requests/CreateVacationRequest.php
+
+		-
+			message: '#^PHPDoc tag @property has invalid value \(mixed id\)\: Unexpected token "id", expected variable at offset 22 on line 2$#'
+			identifier: phpDoc.parseError
+			count: 1
+			path: artwork/Modules/Vacation/Https/Requests/UpdateVacationRequest.php
+
+		-
+			message: '#^Access to an undefined property Artwork\\Modules\\Vacation\\Models\\Vacation\:\:\$vacationer\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Vacation/Services/VacationService.php
+
+		-
+			message: '#^Access to an undefined property Artwork\\Modules\\Vacation\\Models\\Vacationer\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Vacation/Services/VacationService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$date\.$#'
+			identifier: property.notFound
+			count: 2
+			path: artwork/Modules/Vacation/Services/VacationService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$is_active\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Webhook/Jobs/SendWebhookJob.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$secret\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Webhook/Jobs/SendWebhookJob.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$url\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Webhook/Jobs/SendWebhookJob.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Relations\\MorphPivot\:\:\$end_time\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/WorkTime/Http/Controllers/WorkTimeChangeRequestController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Relations\\MorphPivot\:\:\$start_date\.$#'
+			identifier: property.notFound
+			count: 3
+			path: artwork/Modules/WorkTime/Http/Controllers/WorkTimeChangeRequestController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Relations\\MorphPivot\:\:\$start_time\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/WorkTime/Http/Controllers/WorkTimeChangeRequestController.php
+
+		-
+			message: '#^Cannot call method pluck\(\) on array\<Artwork\\Modules\\User\\Models\\User\>\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: artwork/Modules/WorkTime/Services/CraftDistributionExportService.php
+
+		-
+			message: '#^Cannot call method unique\(\) on array\<Artwork\\Modules\\User\\Models\\User\>\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: artwork/Modules/WorkTime/Services/CraftDistributionExportService.php
+
+		-
+			message: '#^Access to an undefined property Artwork\\Modules\\Shift\\Models\\Shift\:\:\$pivot\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/WorkTime/Services/WorkTimeBookingService.php
+
+		-
+			message: '#^Access to an undefined property Artwork\\Modules\\WorkTime\\Models\\WorkTimeBooking\:\:\$ist_minutes\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/WorkTime/Services/WorkTimeOverviewExportService.php
+
+		-
+			message: '#^Access to an undefined property Artwork\\Modules\\WorkTime\\Models\\WorkTimeBooking\:\:\$month\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/WorkTime/Services/WorkTimeOverviewExportService.php
+
+		-
+			message: '#^Access to an undefined property Artwork\\Modules\\WorkTime\\Models\\WorkTimeBooking\:\:\$soll_minutes\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/WorkTime/Services/WorkTimeOverviewExportService.php
+
+		-
+			message: '#^Cannot call method pluck\(\) on array\<Artwork\\Modules\\User\\Models\\User\>\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: artwork/Modules/WorkTime/Services/WorkTimeOverviewExportService.php
+
+		-
+			message: '#^Cannot call method unique\(\) on array\<Artwork\\Modules\\User\\Models\\User\>\.$#'
+			identifier: method.nonObject
+			count: 2
+			path: artwork/Modules/WorkTime/Services/WorkTimeOverviewExportService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$break_minutes\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Worker/Services/WorkerService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$end_date\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Worker/Services/WorkerService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$end_time\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Worker/Services/WorkerService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$full_day\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Worker/Services/WorkerService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$hex_color\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Worker/Services/WorkerService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$icon\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Worker/Services/WorkerService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 2
+			path: artwork/Modules/Worker/Services/WorkerService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$name\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Worker/Services/WorkerService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$series_uuid\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Worker/Services/WorkerService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$shifts\.$#'
+			identifier: property.notFound
+			count: 3
+			path: artwork/Modules/Worker/Services/WorkerService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$start_date\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Worker/Services/WorkerService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$start_time\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Worker/Services/WorkerService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$title\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Worker/Services/WorkerService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$working_time_minutes\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Worker/Services/WorkerService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$shiftQualifications\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Worker/Services/WorkerShiftPlanService.php
+
+		-
+			message: '#^Cannot call method setDescription\(\) on null\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: artwork/Modules/Workflow/Actions/NotificationAction.php
+
+		-
+			message: '#^Result of method Artwork\\Modules\\Notification\\Services\\NotificationService\:\:setTitle\(\) \(void\) is used\.$#'
+			identifier: method.void
+			count: 1
+			path: artwork/Modules/Workflow/Actions/NotificationAction.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 2
+			path: artwork/Modules/Workflow/Console/Commands/WorkflowManagementCommand.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 2
+			path: artwork/Modules/Workflow/Listeners/AutoStartWorkflowListener.php
+
+		-
 			message: '#^Variable \$violationDate on left side of \?\? is never defined\.$#'
 			identifier: nullCoalesce.variable
 			count: 1
 			path: artwork/Modules/Workflow/Notifications/ShiftRuleViolationNotification.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 3
+			path: artwork/Modules/Workflow/Repositories/WorkflowInstanceRepository.php
+
+		-
+			message: '#^Access to an undefined property Artwork\\Modules\\Workflow\\Contracts\\WorkflowSubject\|Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Workflow/Services/WorkflowService.php

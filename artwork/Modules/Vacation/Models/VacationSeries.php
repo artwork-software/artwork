@@ -24,6 +24,9 @@ class VacationSeries extends Model
         'end_date',
     ];
 
+    /**
+     * @return HasMany<Vacation, $this>
+     */
     public function vacations(): HasMany
     {
         return $this->hasMany(Vacation::class, 'series_id', 'id');

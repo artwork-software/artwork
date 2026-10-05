@@ -7,6 +7,7 @@ use Artwork\Modules\Crm\Traits\HasCrmContact;
 use Artwork\Modules\Crm\Traits\HasCrmFields;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Artist extends Model implements CrmEntity
 {
@@ -29,6 +30,9 @@ class Artist extends Model implements CrmEntity
         'display_name',
     ];
 
+    /**
+     * @return HasMany<ArtistResidency, $this>
+     */
     public function residencies(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
         return $this->hasMany(ArtistResidency::class);

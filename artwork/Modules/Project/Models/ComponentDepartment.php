@@ -19,11 +19,17 @@ class ComponentDepartment extends Pivot
         'can_write' => 'boolean'
     ];
 
+    /**
+     * @return BelongsTo<User, $this>
+     */
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class, 'user_id', 'id', 'component');
     }
 
+    /**
+     * @return BelongsTo<Component, $this>
+     */
     public function component(): BelongsTo
     {
         return $this->belongsTo(Component::class, 'component_id', 'id', 'component');

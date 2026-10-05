@@ -58,25 +58,40 @@ class EventType extends Model
         'relevant_for_project_period' => 'boolean'
     ];
 
+    /**
+     * @return HasMany<Event, $this>
+     */
     public function events(): HasMany
     {
         return $this->hasMany(Event::class, 'event_type_id', 'id');
     }
 
+    /**
+     * @return BelongsToMany<User, $this>
+     */
     public function verifiers(): BelongsToMany
     {
         return $this->belongsToMany(User::class, 'event_type_user');
     }
 
+    /**
+     * @return BelongsTo<User, $this>
+     */
     public function specificVerifier(): BelongsTo
     {
         return $this->belongsTo(User::class, 'specific_verifier_id', 'id', 'users');
     }
+    /**
+     * @return HasMany<Event, $this>
+     */
     public function subEvents(): HasMany
     {
         return $this->hasMany(Event::class, 'event_type_id', 'id');
     }
 
+    /**
+     * @return BelongsToMany<BiEventTypeTag, $this>
+     */
     public function biTags(): BelongsToMany
     {
         return $this->belongsToMany(

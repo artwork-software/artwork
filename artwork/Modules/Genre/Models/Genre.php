@@ -29,6 +29,9 @@ class Genre extends Model
         'color'
     ];
 
+    /**
+     * @return BelongsToMany<Project, $this>
+     */
     public function projects(): BelongsToMany
     {
         return $this->belongsToMany(Project::class);

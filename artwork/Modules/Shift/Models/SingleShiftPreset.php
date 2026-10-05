@@ -37,6 +37,9 @@ class SingleShiftPreset extends Model
         static::deleted($flush);
     }
 
+    /**
+     * @return BelongsTo<Craft, $this>
+     */
     public function craft(): BelongsTo
     {
         return $this->belongsTo(
@@ -47,6 +50,9 @@ class SingleShiftPreset extends Model
         )->without(['users']);
     }
 
+    /**
+     * @return BelongsToMany<ShiftQualification, $this>
+     */
     // map shift qualifications relation
     public function shiftsQualifications(): BelongsToMany
     {

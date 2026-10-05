@@ -22,11 +22,17 @@ class MoneySourceCategoryMapping extends Pivot
 
     protected $table = 'money_source_category_mappings';
 
+    /**
+     * @return BelongsTo<MoneySource, $this>
+     */
     public function moneySource(): BelongsTo
     {
         return $this->belongsTo(MoneySource::class);
     }
 
+    /**
+     * @return BelongsTo<MoneySourceCategory, $this>
+     */
     public function moneySourceCategory(): BelongsTo
     {
         return $this->belongsTo(MoneySourceCategory::class);

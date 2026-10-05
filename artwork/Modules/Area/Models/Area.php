@@ -32,6 +32,9 @@ class Area extends Model
         'color'
     ];
 
+    /**
+     * @return HasMany<Room, $this>
+     */
     public function rooms(): HasMany
     {
         return $this->hasMany(Room::class);

@@ -336,7 +336,7 @@ class ShiftPlanRequestController extends Controller
     {
         $data = $request->validated();
 
-        /** @var \App\Models\User $user */
+        /** @var \Artwork\Modules\User\Models\User $user */
         $user = $this->auth->user();
 
         // Mehrfachauswahl im Modal: craft_ids (Array) ODER einzelnes craft_id (Altbestand).
@@ -535,7 +535,7 @@ class ShiftPlanRequestController extends Controller
         ShiftPlanRequest $shiftPlanRequest,
         Request $request
     ): \Illuminate\Http\RedirectResponse {
-        /** @var \App\Models\User $user */
+        /** @var \Artwork\Modules\User\Models\User $user */
         $user = $this->auth->user();
 
         // Optionaler Hinweis an die anfragende Person — wird gespeichert und
@@ -784,7 +784,7 @@ class ShiftPlanRequestController extends Controller
         \Artwork\Modules\Shift\Models\ShiftPlanRequest $shiftPlanRequest,
         \Illuminate\Http\Request $request
     ): \Illuminate\Http\RedirectResponse {
-        /** @var \App\Models\User $user */
+        /** @var \Artwork\Modules\User\Models\User $user */
         $user = $this->auth->user();
 
         $payload = $request->validate([

@@ -181,6 +181,9 @@ class UserContractAssign extends Model
     ];
 
 
+    /**
+     * @return BelongsTo<User, $this>
+     */
     public function user(): BelongsTo
     {
         return $this->belongsTo(
@@ -191,6 +194,9 @@ class UserContractAssign extends Model
         );
     }
 
+    /**
+     * @return BelongsTo<UserContract, $this>
+     */
     public function userContract(): BelongsTo
     {
         return $this->belongsTo(

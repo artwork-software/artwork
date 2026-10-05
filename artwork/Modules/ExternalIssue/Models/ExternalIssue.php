@@ -8,20 +8,24 @@ use Artwork\Modules\User\Models\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Carbon;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
+use Illuminate\Database\Eloquent\Relations\MorphToMany;
 
 /**
- * @property string material_value
- * @property int issued_by_id
- * @property int received_by_id
- * @property \Illuminate\Support\Carbon|null issue_date
- * @property \Illuminate\Support\Carbon|null return_date
- * @property string return_remarks
- * @property string external_name
- * @property string external_address
- * @property string external_email
- * @property string external_phone
- * @property \Illuminate\Support\Carbon|null created_at
- * @property \Illuminate\Support\Carbon|null updated_at
+ * @property string $material_value
+ * @property int $issued_by_id
+ * @property int $received_by_id
+ * @property \Illuminate\Support\Carbon|null $issue_date
+ * @property \Illuminate\Support\Carbon|null $return_date
+ * @property string $return_remarks
+ * @property string $external_name
+ * @property string $external_address
+ * @property string $external_email
+ * @property string $external_phone
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
  */
 class ExternalIssue extends Model
 {
@@ -53,26 +57,41 @@ class ExternalIssue extends Model
         'return_date_formatted'
     ];
 
+    /**
+     * @return BelongsTo<User, $this>
+     */
     public function issuedBy(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
         return $this->belongsTo(User::class, 'issued_by_id', 'id', 'user');
     }
 
+    /**
+     * @return BelongsTo<User, $this>
+     */
     public function receivedBy(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
         return $this->belongsTo(User::class, 'received_by_id', 'id', 'user');
     }
 
+    /**
+     * @return BelongsTo<\Artwork\Modules\Project\Models\Project, $this>
+     */
     public function project(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
         return $this->belongsTo(\Artwork\Modules\Project\Models\Project::class, 'project_id');
     }
 
+    /**
+     * @return HasMany<ExternalIssueFile, $this>
+     */
     public function files(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
         return $this->hasMany(ExternalIssueFile::class, 'external_issue_id', 'id');
     }
 
+    /**
+     * @return MorphToMany<InventoryArticle, $this>
+     */
     public function articles(): \Illuminate\Database\Eloquent\Relations\MorphToMany
     {
         return $this->morphToMany(
@@ -87,6 +106,9 @@ class ExternalIssue extends Model
             ->withTimestamps();
     }
 
+    /**
+     * @return MorphMany<SpecialItem, $this>
+     */
     public function specialItems(): \Illuminate\Database\Eloquent\Relations\MorphMany
     {
         return $this->morphMany(SpecialItem::class, 'issuable');

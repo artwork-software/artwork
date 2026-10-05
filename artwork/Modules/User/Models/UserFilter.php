@@ -75,6 +75,9 @@ class UserFilter extends CalendarFilter
         'project_state_ids' => 'array',
     ];
 
+    /**
+     * @return BelongsTo<User, $this>
+     */
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class, 'user_id', 'id', 'user_filters');

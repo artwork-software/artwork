@@ -9,6 +9,7 @@ trait HasCategoryProperties
 {
     /**
      * Definiert eine morphToMany Beziehung zu InventoryArticleProperties.
+     * @return MorphToMany<InventoryArticleProperties, $this>
      */
     public function properties(): MorphToMany
     {

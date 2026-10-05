@@ -4,6 +4,7 @@ namespace Artwork\Modules\Accommodation\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class AccommodationRoomType extends Model
 {
@@ -14,6 +15,9 @@ class AccommodationRoomType extends Model
         'name',
     ];
 
+    /**
+     * @return BelongsToMany<Accommodation, $this>
+     */
     // mapping room types to accommodation (many to many)
     public function accommodations(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
     {

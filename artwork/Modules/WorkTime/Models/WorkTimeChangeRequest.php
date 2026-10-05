@@ -9,6 +9,7 @@ use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\User\Models\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
  * @property int $id
@@ -59,6 +60,9 @@ class WorkTimeChangeRequest extends Model
         'created_at' => TranslatedDateTimeCast::class,
     ];
 
+    /**
+     * @return BelongsTo<User, $this>
+     */
     public function user(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
         return $this->belongsTo(
@@ -69,6 +73,9 @@ class WorkTimeChangeRequest extends Model
         );
     }
 
+    /**
+     * @return BelongsTo<Shift, $this>
+     */
     public function shift(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
         return $this->belongsTo(
@@ -79,6 +86,9 @@ class WorkTimeChangeRequest extends Model
         )->without(['freelancer', 'users', 'service_provider', 'craft']);
     }
 
+    /**
+     * @return BelongsTo<Craft, $this>
+     */
     public function craft(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
         return $this->belongsTo(
@@ -89,6 +99,9 @@ class WorkTimeChangeRequest extends Model
         )->with(['craftShiftPlaner']);
     }
 
+    /**
+     * @return BelongsTo<User, $this>
+     */
     public function requestedBy(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
         return $this->belongsTo(
@@ -99,6 +112,9 @@ class WorkTimeChangeRequest extends Model
         );
     }
 
+    /**
+     * @return BelongsTo<User, $this>
+     */
     public function approvedBy(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
         return $this->belongsTo(
@@ -109,6 +125,9 @@ class WorkTimeChangeRequest extends Model
         );
     }
 
+    /**
+     * @return BelongsTo<User, $this>
+     */
     public function declinedBy(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
         return $this->belongsTo(

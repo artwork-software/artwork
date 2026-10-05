@@ -32,6 +32,9 @@ class IndividualTimeSeries extends Model
         'weekdays'   => 'array',
     ];
 
+    /**
+     * @return HasMany<IndividualTime, $this>
+     */
     public function individualTimes(): HasMany
     {
         return $this->hasMany(IndividualTime::class, 'series_uuid', 'uuid');

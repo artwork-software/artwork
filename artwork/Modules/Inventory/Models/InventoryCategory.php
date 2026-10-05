@@ -9,10 +9,10 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
- * @property string name
- * @property string description
- * @property int order
- * @property array properties
+ * @property string $name
+ * @property string $description
+ * @property int $order
+ * @property array $properties
  * @property \Illuminate\Database\Eloquent\Collection<InventorySubCategory> subCategories
  * @property \Illuminate\Database\Eloquent\Collection<\Artwork\Modules\Inventory\Models\InventoryArticle> articles
  * @extends \Illuminate\Database\Eloquent\Model
@@ -30,11 +30,17 @@ class InventoryCategory extends Model
         'created_at' => TranslatedDateTimeCast::class,
     ];
 
+    /**
+     * @return HasMany<InventorySubCategory, $this>
+     */
     public function subCategories(): HasMany
     {
         return $this->hasMany(InventorySubCategory::class, 'inventory_category_id', 'id');
     }
 
+    /**
+     * @return HasMany<InventoryArticle, $this>
+     */
     public function articles(): HasMany
     {
         return $this->hasMany(InventoryArticle::class, 'inventory_category_id', 'id');

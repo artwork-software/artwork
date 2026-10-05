@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Storage;
 use League\Flysystem\FilesystemException;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 /**
  * @property int $id
@@ -49,11 +50,17 @@ class ProjectFile extends Model
 
     private ?int $storedFileSizeInBytes = null;
 
+    /**
+     * @return BelongsToMany<User, $this>
+     */
     public function accessingUsers(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
     {
         return $this->belongsToMany(User::class);
     }
 
+    /**
+     * @return HasMany<Comment, $this>
+     */
     public function comments(): HasMany
     {
         return $this->hasMany(Comment::class);
@@ -61,6 +68,7 @@ class ProjectFile extends Model
 
     /**
      * Externe Person (Magic-Link-Zugang), die die Datei über einen freigegebenen Tab hochgeladen hat.
+     * @return BelongsTo<\Artwork\Modules\ExternalAccess\Models\ExternalAccess, $this>
      */
     public function externalAccess(): BelongsTo
     {

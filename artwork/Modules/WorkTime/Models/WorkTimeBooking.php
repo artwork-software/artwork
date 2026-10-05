@@ -5,6 +5,7 @@ namespace Artwork\Modules\WorkTime\Models;
 use Artwork\Modules\User\Models\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
  * @property int $id
@@ -67,6 +68,9 @@ class WorkTimeBooking extends Model
         'nightly_working_hours' => 'integer'
     ];
 
+    /**
+     * @return BelongsTo<User, $this>
+     */
     public function user(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
         return $this->belongsTo(
@@ -77,6 +81,9 @@ class WorkTimeBooking extends Model
         );
     }
 
+    /**
+     * @return BelongsTo<User, $this>
+     */
     public function booker(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
         return $this->belongsTo(

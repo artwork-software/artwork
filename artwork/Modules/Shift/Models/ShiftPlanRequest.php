@@ -9,6 +9,9 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Prunable;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
  * @property int $id
@@ -70,6 +73,9 @@ class ShiftPlanRequest extends Model
         });
     }
 
+    /**
+     * @return HasMany<Shift, $this>
+     */
     public function shifts(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
         return $this->hasMany(Shift::class, 'shift_plan_request_id', 'id');
@@ -77,6 +83,7 @@ class ShiftPlanRequest extends Model
 
     /**
      * Historical requested shifts (snapshot/pivot)
+     * @return BelongsToMany<\Artwork\Modules\Shift\Models\Shift, $this>
      */
     public function requestedShifts(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
     {
@@ -88,16 +95,25 @@ class ShiftPlanRequest extends Model
         )->withPivot(['snapshot'])->withTimestamps();
     }
 
+    /**
+     * @return BelongsTo<Craft, $this>
+     */
     public function craft(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
         return $this->belongsTo(Craft::class, 'craft_id', 'id', 'crafts');
     }
 
+    /**
+     * @return BelongsTo<User, $this>
+     */
     public function requestedBy(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
         return $this->belongsTo(User::class, 'requested_by_user_id', 'id', 'users');
     }
 
+    /**
+     * @return BelongsTo<User, $this>
+     */
     public function reviewedBy(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
         return $this->belongsTo(User::class, 'reviewed_by_user_id', 'id', 'users');

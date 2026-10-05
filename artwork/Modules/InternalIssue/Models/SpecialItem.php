@@ -7,6 +7,7 @@ use Artwork\Modules\Inventory\Models\InventorySubCategory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class SpecialItem extends Model
 {
@@ -21,12 +22,18 @@ class SpecialItem extends Model
         return $this->morphTo();
     }
 
-    public function category()
+    /**
+     * @return BelongsTo<InventoryCategory, $this>
+     */
+    public function category(): BelongsTo
     {
         return $this->belongsTo(InventoryCategory::class);
     }
 
-    public function subCategory()
+    /**
+     * @return BelongsTo<InventorySubCategory, $this>
+     */
+    public function subCategory(): BelongsTo
     {
         return $this->belongsTo(InventorySubCategory::class);
     }

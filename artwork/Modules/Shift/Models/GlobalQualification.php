@@ -6,6 +6,8 @@ use Artwork\Modules\Shift\QueryBuilders\ShiftsQualificationsBuilder;
 use Artwork\Modules\User\Models\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\MorphToMany;
 
 /**
  * * @property int $id
@@ -26,6 +28,9 @@ class GlobalQualification extends Model
         'icon',
     ];
 
+    /**
+     * @return BelongsToMany<User, $this>
+     */
     public function users(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
     {
         return $this->belongsToMany(
@@ -35,6 +40,9 @@ class GlobalQualification extends Model
             'global_qualification_id'
         );
     }
+    /**
+     * @return MorphToMany<\Artwork\Modules\User\Models\User, $this>
+     */
     public function qualifiables(): \Illuminate\Database\Eloquent\Relations\MorphToMany
     {
         return $this->morphedByMany(
@@ -45,6 +53,9 @@ class GlobalQualification extends Model
             'qualifiable_id'
         );
     }
+    /**
+     * @return MorphToMany<\Artwork\Modules\Freelancer\Models\Freelancer, $this>
+     */
     public function freelancers(): \Illuminate\Database\Eloquent\Relations\MorphToMany
     {
         return $this->morphedByMany(
@@ -55,6 +66,9 @@ class GlobalQualification extends Model
             'qualifiable_id'
         );
     }
+    /**
+     * @return MorphToMany<\Artwork\Modules\ServiceProvider\Models\ServiceProvider, $this>
+     */
     public function serviceProviders(): \Illuminate\Database\Eloquent\Relations\MorphToMany
     {
         return $this->morphedByMany(

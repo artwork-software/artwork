@@ -5,6 +5,7 @@ namespace Artwork\Modules\User\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
  *
@@ -74,11 +75,17 @@ class UserContract extends Model
         'annual_vacation_days' => 'integer',
     ];
 
+    /**
+     * @return HasMany<UserContractAssign, $this>
+     */
     public function userContractAssigns(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
         return $this->hasMany(UserContractAssign::class, 'user_contract_id');
     }
 
+    /**
+     * @return BelongsToMany<\Artwork\Modules\Shift\Models\ShiftRule, $this>
+     */
     public function shiftRules(): BelongsToMany
     {
         return $this->belongsToMany(

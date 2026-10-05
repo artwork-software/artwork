@@ -7,6 +7,9 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 trait BelongsToContract
 {
+    /**
+     * @return BelongsTo<Contract, $this>
+     */
     public function contract(): BelongsTo
     {
         return $this->belongsTo(Contract::class, 'contract_id', 'id', 'contract');

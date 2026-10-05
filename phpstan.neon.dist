@@ -2,7 +2,7 @@ includes:
     - vendor/larastan/larastan/extension.neon
     - phpstan-baseline.neon
 parameters:
-	level: 1
+	level: 2
 	# larastans "could have been retrieved as a query" ist ein Performance-Hinweis, kein Fehler — und
 	# z.B. skip() auf der Query erzeugt OFFSET ohne LIMIT (MariaDB-Syntaxfehler)
 	noUnnecessaryCollectionCall: false

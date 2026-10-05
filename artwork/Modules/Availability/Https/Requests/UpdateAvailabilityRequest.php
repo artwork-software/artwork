@@ -5,17 +5,17 @@ namespace Artwork\Modules\Availability\Https\Requests;
 use Illuminate\Foundation\Http\FormRequest;
 
 /**
- * @property mixed id
- * @property mixed start_time
- * @property mixed end_time
- * @property mixed date
- * @property mixed full_day
- * @property mixed comment
- * @property mixed is_series
- * @property mixed series_repeat
- * @property mixed series_repeat_until
- * @property mixed type
- * @property mixed type_before_update
+ * @property mixed $id
+ * @property mixed $start_time
+ * @property mixed $end_time
+ * @property mixed $date
+ * @property mixed $full_day
+ * @property mixed $comment
+ * @property mixed $is_series
+ * @property mixed $series_repeat
+ * @property mixed $series_repeat_until
+ * @property mixed $type
+ * @property mixed $type_before_update
  */
 class UpdateAvailabilityRequest extends FormRequest
 {

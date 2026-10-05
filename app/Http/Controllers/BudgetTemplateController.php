@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use Artwork\Modules\Budget\Enums\BudgetTypeEnum;
 use Artwork\Modules\Budget\Models\CellCalculation;
 use Artwork\Modules\Budget\Models\CellComment;
 use Artwork\Modules\Budget\Models\Column;
@@ -137,12 +138,17 @@ class BudgetTemplateController extends Controller
         });
 
         $oldTable->mainPositions->map(function (MainPosition $mainPosition) use ($newTable): void {
-            $replicated_mainPosition = $mainPosition->replicate()->fill(['table_id' => $newTable->id]);
+            // Verifizierungen hängen an der Ursprungsposition und werden nicht mitkopiert.
+            $replicated_mainPosition = $mainPosition->replicate()->fill([
+                'table_id' => $newTable->id,
+                'is_verified' => BudgetTypeEnum::BUDGET_VERIFIED_TYPE_NOT_VERIFIED,
+            ]);
             $replicated_mainPosition->save();
             $mainPosition->subPositions->map(function (SubPosition $subPosition) use ($replicated_mainPosition): void {
-                $replicated_subPosition = $subPosition->replicate()->fill(
-                    ['main_position_id' => $replicated_mainPosition->id]
-                );
+                $replicated_subPosition = $subPosition->replicate()->fill([
+                    'main_position_id' => $replicated_mainPosition->id,
+                    'is_verified' => BudgetTypeEnum::BUDGET_VERIFIED_TYPE_NOT_VERIFIED,
+                ]);
                 $replicated_subPosition->save();
                 $subPosition->subPositionRows->map(
                     function (SubPositionRow $subPositionRow) use ($replicated_subPosition): void {
@@ -158,6 +164,7 @@ class BudgetTemplateController extends Controller
                                 $replicated_columnCell = $columnCell->replicate()->fill(
                                     ['sub_position_row_id' => $replicated_subPositionRow->id]
                                 );
+                                $replicated_columnCell->verified_value = null;
                                 $replicated_columnCell->linked_money_source_id = null;
                                 $replicated_columnCell->linked_type = null;
                                 $replicated_columnCell->column_id = $this->columns[$columnCell->column_id];

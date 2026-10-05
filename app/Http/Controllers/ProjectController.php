@@ -885,6 +885,10 @@ class ProjectController extends Controller
         if ($request->type === 'main') {
             $mainPosition = MainPosition::find($request->position['id']);
             $verifiedRequest = $mainPosition->verified()->first();
+            if ($verifiedRequest === null) {
+                $this->resetOrphanedVerification($mainPosition);
+                return;
+            }
             $requestedUser = User::find($verifiedRequest->requested);
             $notificationTitle = __(
                 'notification.project.budget.delete_verify_request',
@@ -951,6 +955,10 @@ class ProjectController extends Controller
             $subPosition = SubPosition::find($request->position['id']);
             $mainPosition = $subPosition->mainPosition()->first();
             $verifiedRequest = $subPosition->verified()->first();
+            if ($verifiedRequest === null) {
+                $this->resetOrphanedVerification($subPosition);
+                return;
+            }
             $table = $mainPosition->table()->first();
             $requestedUser = User::find($verifiedRequest->requested);
             $notificationTitle = __(
@@ -1018,6 +1026,18 @@ class ProjectController extends Controller
         //return Redirect::back();
     }
 
+    /**
+     * Status „angefragt/verifiziert“ ohne zugehörige Anfrage (z. B. Altbestand aus Kopien):
+     * auf „nicht verifiziert“ zurücksetzen, damit die Position wieder bedienbar ist.
+     */
+    private function resetOrphanedVerification(MainPosition|SubPosition $position): void
+    {
+        $position->update(['is_verified' => BudgetTypeEnum::BUDGET_VERIFIED_TYPE_NOT_VERIFIED]);
+
+        $table = $position instanceof MainPosition ? $position->table : $position->mainPosition->table;
+        broadcast(new UpdateBudget($table->project_id));
+    }
+
     private function deleteOldNotification($positionId, $requestedId): void
     {
         DatabaseNotification::query()
@@ -1041,6 +1061,10 @@ class ProjectController extends Controller
         if ($request->type === 'main') {
             $mainPosition = MainPosition::find($request->position['id']);
             $verifiedRequest = $mainPosition->verified()->first();
+            if ($verifiedRequest === null) {
+                $this->resetOrphanedVerification($mainPosition);
+                return;
+            }
             $requestedUser = User::find($verifiedRequest->requested);
             $notificationTitle = __(
                 'notification.project.budget.verify_removed',
@@ -1106,6 +1130,10 @@ class ProjectController extends Controller
             $subPosition = SubPosition::find($request->position['id']);
             $mainPosition = $subPosition->mainPosition()->first();
             $verifiedRequest = $subPosition->verified()->first();
+            if ($verifiedRequest === null) {
+                $this->resetOrphanedVerification($subPosition);
+                return;
+            }
             $requestedUser = User::find($verifiedRequest->requested);
             $notificationTitle = __(
                 'notification.project.budget.verify_removed',
@@ -1300,15 +1328,19 @@ class ProjectController extends Controller
     public function verifiedSubPosition(Request $request): void
     {
         $subPosition = SubPosition::find($request->subPositionId);
+        abort_unless((bool) $subPosition, 404);
+
         $verifiedRequest = $subPosition->verified()->first();
         $this->setSubPositionCellVerifiedValue($subPosition);
         $subPosition->update(['is_verified' => 'BUDGET_VERIFIED_TYPE_CLOSED']);
 
-        DatabaseNotification::query()
-            ->whereJsonContains("data->budgetData->position_id", $subPosition->id)
-            ->whereJsonContains("data->budgetData->requested_by", $verifiedRequest->requested)
-            ->whereJsonContains("data->budgetData->changeType", BudgetTypeEnum::BUDGET_VERIFICATION_REQUEST)
-            ->delete();
+        if ($verifiedRequest) {
+            DatabaseNotification::query()
+                ->whereJsonContains("data->budgetData->position_id", $subPosition->id)
+                ->whereJsonContains("data->budgetData->requested_by", $verifiedRequest->requested)
+                ->whereJsonContains("data->budgetData->changeType", BudgetTypeEnum::BUDGET_VERIFICATION_REQUEST)
+                ->delete();
+        }
 
         $this->changeService->saveFromBuilder(
             $this->changeService
@@ -4848,6 +4880,9 @@ class ProjectController extends Controller
     public function duplicateSubPosition(SubPosition $subPosition, $mainPositionId = null): void
     {
         $newSubPosition = $subPosition->replicate();
+        // Verifizierungen hängen an der Ursprungsposition; ohne Reset wirkte die Kopie
+        // verifiziert, „Verifizierung zurücknehmen“ lief dann ins Leere (500).
+        $newSubPosition->is_verified = BudgetTypeEnum::BUDGET_VERIFIED_TYPE_NOT_VERIFIED;
         $newSubPosition->save();
         $newSubPosition->update(['name' => $subPosition->name . ' ' . __('(Copy)')]);
 
@@ -4881,6 +4916,7 @@ class ProjectController extends Controller
     public function duplicateMainPosition(MainPosition $mainPosition): void
     {
         $newMainPosition = $mainPosition->replicate();
+        $newMainPosition->is_verified = BudgetTypeEnum::BUDGET_VERIFIED_TYPE_NOT_VERIFIED;
         $newMainPosition->save();
         $newMainPosition->update(['name' => $mainPosition->name . ' ' . __('(Copy)')]);
 

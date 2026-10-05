@@ -77,7 +77,7 @@ abstract class EventExportService
         $desiredDateFormat = $this->carbonService->getDesiredDateFormatFromLocale($this->translator->getLocale());
         $nowFormatted = $this->carbonService->getNow()->format($desiredDateFormat);
 
-        return sprintf(
+        $filename = sprintf(
             "%s%s",
             $this->getFromCachedData('desiresTimespanExport') ?
                 $this->translator->get(
@@ -105,5 +105,8 @@ abstract class EventExportService
                 ),
             $filenameExtension
         );
+
+        // Content-Disposition verbietet "/" und "\\" im Dateinamen (z. B. Projekttitel "Boss/y")
+        return str_replace(['/', '\\'], '-', $filename);
     }
 }

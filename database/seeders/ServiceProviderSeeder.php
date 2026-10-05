@@ -24,9 +24,7 @@ class ServiceProviderSeeder extends Seeder
         for ($i = 0; $i < 10; $i++) {
             $companyName = $faker->company;
             $serviceProvider = ServiceProvider::create([
-                'profile_image' => 'https://ui-avatars.com/api/?name=' .
-                    $companyName[0] .
-                    '&color=7F9CF5&background=EBF4FF',
+                // kein profile_image: profile_photo_url-Accessor generiert lokalen SVG-Fallback
                 'provider_name' => $companyName,
                 'email' => $faker->companyEmail,
                 'phone_number' => $faker->phoneNumber,

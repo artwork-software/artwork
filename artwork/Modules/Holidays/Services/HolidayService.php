@@ -102,6 +102,14 @@ class HolidayService
      * @param bool $schoolHolidays
      * @return string[]
      */
+    /**
+     * Feiertagsnamen in der Instanzsprache (gespeichert wird einmal für alle Nutzer:innen).
+     */
+    private function holidayLanguage(): string
+    {
+        return strtoupper((string) config('app.instance_locale', 'de'));
+    }
+
     public function getHolidaysFromAPI(
         \Illuminate\Support\Collection $selectedSubdivisions,
         bool $publicHolidays,
@@ -115,6 +123,7 @@ class HolidayService
                     now()->startOfYear(),
                     now()->addYears(2)->endOfYear(),
                     $subdivisionModel,
+                    $this->holidayLanguage(),
                 );
                 $data['country'] = $subdivisionModel->country_code;
                 $responses[] = $data;
@@ -125,6 +134,7 @@ class HolidayService
                     now()->startOfYear(),
                     now()->addYears(2)->endOfYear(),
                     $subdivisionModel,
+                    $this->holidayLanguage(),
                 );
                 $data['country'] = $subdivisionModel->country_code;
                 $responses[] = $data;

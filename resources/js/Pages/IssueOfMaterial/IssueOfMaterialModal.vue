@@ -2,8 +2,8 @@
     <ArtworkBaseModal
         @close="handleClose"
         modal-size="max-w-7xl 2xl:max-w-[104rem]"
-        :title="issueOfMaterial?.id ?  $t('Edit issue of material') : $t('New issue of material')"
-        :description="issueOfMaterial?.id ? $t('Edit the details of the issue of material') : $t('Create a new issue of material')"
+        :title="checkIfEditMode ?  $t('Edit issue of material') : $t('New issue of material')"
+        :description="checkIfEditMode ? $t('Edit the details of the issue of material') : $t('Create a new issue of material')"
         classes-in-white-background="!p-0"
     >
         <!-- Übersichts-PDF direkt aus dem Bearbeiten-Modal erstellen (wie Drucker-Icon in der MA-Übersicht) -->

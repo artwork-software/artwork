@@ -39,7 +39,7 @@ class InvitationCreated extends Mailable
         return $this
             ->from($senderAddress, $pageTitle)
             ->replyTo($this->user->getAttribute('email'))
-            ->subject("Einladung")
+            ->subject(__('Invitation'))
             ->markdown(
                 'emails.invitations',
                 [

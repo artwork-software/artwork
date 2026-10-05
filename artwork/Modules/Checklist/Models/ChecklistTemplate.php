@@ -32,6 +32,9 @@ class ChecklistTemplate extends Model
         'user_id',
     ];
 
+    /**
+     * @return HasMany<TaskTemplate, $this>
+     */
     //@todo: fix phpcs error - refactor function name to taskTemplate
     //phpcs:ignore PSR1.Methods.CamelCapsMethodName.NotCamelCaps
     public function task_templates(): HasMany
@@ -41,6 +44,9 @@ class ChecklistTemplate extends Model
             ->orderBy('id');
     }
 
+    /**
+     * @return BelongsToMany<User, $this>
+     */
     public function users(): BelongsToMany
     {
         return $this->belongsToMany(User::class);

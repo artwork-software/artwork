@@ -140,6 +140,9 @@ import ArtworkBaseDeleteModal from '@/Artwork/Modals/ArtworkBaseDeleteModal.vue'
 import BiChart from '@/Artwork/Charts/BiChart.vue';
 import { useTranslation } from '@/Composeables/Translation.js';
 import { useBiSaveFeedback } from '@/Composeables/BiSaveFeedback.js';
+import { useInstanceFormat } from "@/Composeables/InstanceFormat.js";
+
+const instanceFormat = useInstanceFormat();
 
 const t = useTranslation();
 
@@ -175,12 +178,12 @@ const scopeItems = [
 const newScope = ref('actual');
 const newScopeItem = computed(() => scopeItems.find(i => i.id === newScope.value) ?? scopeItems[0]);
 
-const currencyFmt = new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' });
+const currencyFmt = new Intl.NumberFormat(instanceFormat.numberLocale, { style: 'currency', currency: instanceFormat.currency });
 
 const formatNumber = (value) => {
     const n = Number(value ?? 0);
     if (Number.isNaN(n)) return '0';
-    return new Intl.NumberFormat('de-DE', { maximumFractionDigits: 2 }).format(n);
+    return new Intl.NumberFormat(instanceFormat.numberLocale, { maximumFractionDigits: 2 }).format(n);
 };
 
 const snapshotLabel = (snapshot) => `${snapshot.name} (${formatDate(snapshot.snapshot_date)})`;

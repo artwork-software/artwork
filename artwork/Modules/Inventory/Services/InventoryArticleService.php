@@ -2,9 +2,12 @@
 
 namespace Artwork\Modules\Inventory\Services;
 
+use Carbon\Carbon;
+use Illuminate\Notifications\DatabaseNotification;
 use Artwork\Modules\Inventory\Http\Requests\StoreInventoryArticleRequest;
 use Artwork\Modules\Inventory\Http\Requests\UpdateInventoryArticleRequest;
 use Artwork\Modules\Inventory\Models\InventoryArticle;
+use Artwork\Modules\Inventory\Models\InventoryArticleStatus;
 use Artwork\Modules\Inventory\Models\InventoryDetailedQuantityArticle;
 use Artwork\Modules\Inventory\Models\InventoryTag;
 use Artwork\Modules\Inventory\Repositories\InventoryArticleRepository;
@@ -459,11 +462,11 @@ class InventoryArticleService
             // Vorherige Werte sichern mit Null-Handling
             $oldQuantity = $article->quantity ?? null;
 
-            // Sicheres Zugreifen auf statusValues — suche nach Name statt ID
+            // Standard-Status (default-Flag) statt Namensvergleich – Status sind umbenennbar
             $oldStatus1 = null;
             if (
                 $article->statusValues
-                 && ($readyStatus = $article->statusValues->firstWhere('name', 'Einsatzbereit'))
+                 && ($readyStatus = $article->statusValues->firstWhere('id', InventoryArticleStatus::defaultStatusId()))
             ) {
                 $oldStatus1 = $readyStatus->pivot->value ?? null;
             }
@@ -472,7 +475,7 @@ class InventoryArticleService
             $oldDetailedStatus1 = [];
             if ($article->detailedArticleQuantities) {
                 foreach ($article->detailedArticleQuantities as $detailed) {
-                    if ($detailed->status && $detailed->status->name === 'Einsatzbereit') {
+                    if ((int) $detailed->inventory_article_status_id === InventoryArticleStatus::defaultStatusId()) {
                         $oldDetailedStatus1[$detailed->id] = $detailed->quantity;
                     }
                 }
@@ -511,13 +514,24 @@ class InventoryArticleService
             $this->processRemovedImages($article, $request);
             $this->processArticleImages($article, $request);
 
-            // Reset and update article properties and detailed articles
-            $this->resetArticleRelations($article);
-            $this->processArticleProperties($article->fresh(), $request);
-            $this->processStatusValues($article, $request->get('statusValues', []));
+            // Nur ersetzen, was der Request mitschickt: ein fehlendes Feld leerte vorher Eigenschaften,
+            // Statusmengen, Tags bzw. löschte alle Einzelartikel. Das Bearbeiten-Modal schickt das ganze
+            // Formular (complete_form) – dort heißt ein fehlendes Feld „leer“, weil FormData leere
+            // Listen weglässt (letzter Tag / letzter Einzelartikel ließ sich sonst nicht entfernen).
+            $article = $article->fresh();
+            if ($request->has('properties') || $request->boolean('complete_form')) {
+                $this->articleRepository->detachAllProperties($article);
+            }
+            $this->processArticleProperties($article, $request);
+            if ($request->has('statusValues') || $article->is_detailed_quantity) {
+                $this->articleRepository->detachAllStatusValues($article);
+                $this->processStatusValues($article, $request->input('statusValues', []));
+            }
 
             // 🔹 NEU: Tags verarbeiten + Berechtigungen prüfen
-            $this->processArticleTags($article, $request->input('tag_ids', []));
+            if ($request->has('tag_ids') || $request->boolean('complete_form')) {
+                $this->processArticleTags($article, $request->input('tag_ids', []));
+            }
 
             // Artikel neu laden inkl. Status, Detailed-Status und Tags
             $article = $article->fresh(['detailedArticleQuantities.status', 'statusValues', 'tags']);
@@ -525,12 +539,12 @@ class InventoryArticleService
             // Nachherige Werte prüfen mit verbessertem Null-Handling
             $newQuantity = $article ? ($article->quantity ?? null) : null;
 
-            // Nachherige Statuswerte prüfen — suche nach Name statt ID
+            // Nachherige Statuswerte prüfen (Standard-Status)
             $newStatus1 = null;
             if (
                 $article
                  && $article->statusValues
-                 && ($readyStatus = $article->statusValues->firstWhere('name', 'Einsatzbereit'))
+                 && ($readyStatus = $article->statusValues->firstWhere('id', InventoryArticleStatus::defaultStatusId()))
             ) {
                 $newStatus1 = $readyStatus->pivot->value ?? null;
             }
@@ -538,7 +552,7 @@ class InventoryArticleService
             $detailedStatus1Changed = false;
             if ($article && $article->detailedArticleQuantities) {
                 foreach ($article->detailedArticleQuantities as $detailed) {
-                    if ($detailed->status && $detailed->status->name === 'Einsatzbereit') {
+                    if ((int) $detailed->inventory_article_status_id === InventoryArticleStatus::defaultStatusId()) {
                         $old = $oldDetailedStatus1[$detailed->id] ?? null;
                         $new = $detailed->quantity;
 
@@ -612,7 +626,7 @@ class InventoryArticleService
             }
         }
         $externalIssues = $article->externalIssues()
-            ->where('return_date', '>=', now()->toDateString())
+            ->reservedOnOrAfter(now()->toDateString())
             ->get();
         foreach ($externalIssues as $issue) {
             if ($issue->issuedBy) {
@@ -658,105 +672,124 @@ class InventoryArticleService
     }
 
     /**
-     * Prüft alle zukünftigen Materialausgaben auf Überbuchung und benachrichtigt Verantwortliche
+     * Benachrichtigt die Verantwortlichen künftiger Ausgaben, deren Zeitraum für diesen Artikel
+     * überbucht ist. Je Ausgabe zählt die gleichzeitige Nutzung im Zeitraum über interne UND
+     * externe Ausgaben gegen die einsatzbereite Menge (getAvailableStock). Vorher wurden alle
+     * künftigen Ausgaben ohne Zeitbezug addiert und mit der Gesamtmenge verglichen, intern und
+     * extern getrennt – Fehlalarme bei nicht überlappenden Ausgaben, echte Überbuchungen blieben
+     * unbemerkt. Pro Person und Ausgabe nur eine ungelesene Meldung.
      */
     public function checkAndNotifyOverbooking(InventoryArticle $article): void
     {
-        $notificationService = app(\Artwork\Modules\Notification\Services\NotificationService::class);
-        $now = now()->toDateString();
-        $internalIssues = $article->internalIssues()->where('end_date', '>=', $now)->get();
+        $today = now()->toDateString();
 
-        foreach ($internalIssues as $issue) {
-            $totalPlanned = $article->internalIssues()
-                ->where('end_date', '>=', $now)
-                ->sum('issuable_inventory_article.quantity');
-            if ($totalPlanned > $article->quantity) {
-                foreach ($issue->responsibleUsers as $user) {
-                    $notificationTitle = __('notification.inventory_article_overbooked_title', [
-                        'issueName' => $issue->name,
-                        'articleName' => $article->name,
-                    ], $user->language);
-                    $notificationDescription = [
-                        1 => [
-                            'type' => 'string',
-                            'title' => __('notification.inventory_article_overbooked_description', [
-                                'issueName' => $issue->name,
-                                'articleName' => $article->name,
-                            ], $user->language)
-                        ],
-                        2 => [
-                            'type' => 'link',
-                            'title' => __(
-                                'notification.material_issue',
-                                ['issueName' => $issue->name],
-                                $user->language
-                            ),
-                            'href' => route('issue-of-material.index', ['issue' => $issue->id])
-                        ]
-                    ];
-                    $broadcastMessage = [
-                        'id' => Str::uuid()->toString(),
-                        'type' => 'error',
-                        'message' => $notificationTitle
-                    ];
-                    $notificationService->setTitle($notificationTitle);
-                    $notificationService->setDescription($notificationDescription);
-                    $notificationService->setIcon('red');
-                    $notificationService->setPriority(3);
-                    $notificationService->setNotificationConstEnum(
-                        \Artwork\Modules\Notification\Enums\NotificationEnum::NOTIFICATION_INVENTORY_OVERBOOKED
-                    );
-                    $notificationService->setBroadcastMessage($broadcastMessage);
-                    $notificationService->setNotificationTo($user);
-                    $notificationService->setModelId($issue->id);
-                    $notificationService->createNotification();
-                }
+        foreach ($article->internalIssues()->where('end_date', '>=', $today)->get() as $issue) {
+            $start = Carbon::parse($issue->start_date)->toDateString() . ' ' . ($issue->start_time ?? '00:00:00');
+            $end = Carbon::parse($issue->end_date ?? $issue->start_date)->toDateString()
+                . ' ' . ($issue->end_time ?? '23:59:59');
+            if (!$this->isOverbookedWithin($article, $start, $end)) {
+                continue;
             }
-        }
-        $externalIssues = $article->externalIssues()->where('return_date', '>=', $now)->get();
 
-        foreach ($externalIssues as $issue) {
-            $totalPlanned = $article->externalIssues()
-                ->where('return_date', '>=', $now)
-                ->sum('issuable_inventory_article.quantity');
-            if ($totalPlanned > $article->quantity && $issue->issuedBy) {
-                $user = $issue->issuedBy;
-                $notificationTitle = __('notification.inventory_article_overbooked_title', [
-                    'issueName' => $issue->name,
-                    'articleName' => $article->name,
-                ], $user->language);
-                $notificationDescription = [
-                    1 => [
-                        'type' => 'string',
-                        'title' => __('notification.inventory_article_overbooked_description', [
-                            'issueName' => $issue->name,
-                            'articleName' => $article->name,
-                        ], $user->language)
-                    ],
-                    2 => [
-                        'type' => 'link',
-                        'title' => __('notification.material_issue', ['issueName' => $issue->name], $user->language),
-                        'href' => route('extern-issue-of-material.index', ['issue' => $issue->id])
-                    ]
-                ];
-                $broadcastMessage = [
-                    'id' => Str::uuid()->toString(),
-                    'type' => 'error',
-                    'message' => $notificationTitle
-                ];
-                $notificationService->setTitle($notificationTitle);
-                $notificationService->setDescription($notificationDescription);
-                $notificationService->setIcon('red');
-                $notificationService->setPriority(3);
-                $notificationService->setNotificationConstEnum(
-                    \Artwork\Modules\Notification\Enums\NotificationEnum::NOTIFICATION_INVENTORY_OVERBOOKED
+            foreach ($issue->responsibleUsers as $user) {
+                $this->sendOverbookingNotification(
+                    $article,
+                    $user,
+                    $issue->id,
+                    $issue->name,
+                    route('issue-of-material.index', ['issue' => $issue->id]),
+                    'intern'
                 );
-                $notificationService->setBroadcastMessage($broadcastMessage);
-                $notificationService->setNotificationTo($user);
-                $notificationService->setModelId($issue->id);
-                $notificationService->createNotification();
             }
         }
+
+        foreach ($article->externalIssues()->reservedOnOrAfter($today)->get() as $issue) {
+            $returnDate = $issue->effectiveReturnDate() ?? Carbon::parse($issue->issue_date);
+            if (
+                $issue->issuedBy === null
+                || !$this->isOverbookedWithin(
+                    $article,
+                    Carbon::parse($issue->issue_date)->toDateString(),
+                    $returnDate->toDateString()
+                )
+            ) {
+                continue;
+            }
+
+            $this->sendOverbookingNotification(
+                $article,
+                $issue->issuedBy,
+                $issue->id,
+                $issue->name,
+                route('extern-issue-of-material.index', ['issue' => $issue->id]),
+                'extern'
+            );
+        }
+    }
+
+    private function isOverbookedWithin(InventoryArticle $article, string $start, string $end): bool
+    {
+        // Frisch laden: getAvailableStock nutzt sonst ggf. vorgeladene, anders gefilterte Relationen
+        $stock = $article->fresh()?->getAvailableStock($start, $end);
+
+        return $stock !== null && $stock['reserved'] > $stock['total'];
+    }
+
+    private function sendOverbookingNotification(
+        InventoryArticle $article,
+        User $user,
+        int $issueId,
+        ?string $issueName,
+        string $href,
+        string $issueType
+    ): void {
+        $notificationKey = sprintf('inventory-overbooked-%d-%s-%d', $article->id, $issueType, $issueId);
+        $alreadyNotified = DatabaseNotification::query()
+            ->where('notifiable_type', $user->getMorphClass())
+            ->where('notifiable_id', $user->id)
+            ->whereNull('read_at')
+            ->whereJsonContains('data->notificationKey', $notificationKey)
+            ->exists();
+        if ($alreadyNotified) {
+            return;
+        }
+
+        $notificationTitle = __('notification.inventory_article_overbooked_title', [
+            'issueName' => $issueName,
+            'articleName' => $article->name,
+        ], $user->language);
+
+        $notificationService = app(\Artwork\Modules\Notification\Services\NotificationService::class);
+        $notificationService->setTitle($notificationTitle);
+        $notificationService->setDescription([
+            1 => [
+                'type' => 'string',
+                'title' => __('notification.inventory_article_overbooked_description', [
+                    'issueName' => $issueName,
+                    'articleName' => $article->name,
+                ], $user->language),
+            ],
+            2 => [
+                'type' => 'link',
+                'title' => __('notification.material_issue', ['issueName' => $issueName], $user->language),
+                'href' => $href,
+            ],
+        ]);
+        $notificationService->setIcon('red');
+        $notificationService->setPriority(3);
+        $notificationService->setNotificationConstEnum(
+            \Artwork\Modules\Notification\Enums\NotificationEnum::NOTIFICATION_INVENTORY_OVERBOOKED
+        );
+        $notificationService->setBroadcastMessage([
+            'id' => Str::uuid()->toString(),
+            'type' => 'error',
+            'message' => $notificationTitle,
+        ]);
+        $notificationService->setNotificationTo($user);
+        $notificationService->setModelId($issueId);
+        $notificationService->setNotificationKey($notificationKey);
+        $notificationService->createNotification();
+        $notificationService->clearNotificationData();
     }
 
     /**
@@ -793,7 +826,15 @@ class InventoryArticleService
         StoreInventoryArticleRequest|UpdateInventoryArticleRequest $request
     ): void {
         $this->articleRepository->attachProperties($article, $request->collect('properties'));
-        $this->syncDetailedArticles($article, $request->collect('detailed_article_quantities'));
+        // Ohne Feld im Request bleiben vorhandene Einzelartikel stehen (vorher: alle soft-gelöscht);
+        // Artikel ohne Einzelinventar dürfen keine haben.
+        if (
+            $request->has('detailed_article_quantities')
+            || $request->boolean('complete_form')
+            || !$article->is_detailed_quantity
+        ) {
+            $this->syncDetailedArticles($article, $request->collect('detailed_article_quantities'));
+        }
     }
 
     /**
@@ -905,17 +946,6 @@ class InventoryArticleService
     }
 
     /**
-     * Reset article relations before re-attaching.
-     * DetailArticles werden NICHT mehr hier gelöscht – sie werden in syncDetailedArticles()
-     * per ID gematcht (Match-and-Update), damit Typnummern und Auto-Increment-IDs stabil bleiben.
-     */
-    protected function resetArticleRelations(InventoryArticle $article): void
-    {
-        $this->articleRepository->detachAllProperties($article);
-        $this->articleRepository->detachAllStatusValues($article);
-    }
-
-    /**
      * Process and attach status values
      *
      * @param InventoryArticle $article
@@ -924,6 +954,12 @@ class InventoryArticleService
      */
     protected function processStatusValues(InventoryArticle $article, array $statusValues): void
     {
+        // Bei Einzelinventar tragen die Einzelartikel den Status; zusätzliche Mengen am Hauptartikel
+        // wurden sonst in Statuszählung und -filter doppelt gezählt.
+        if ($article->is_detailed_quantity) {
+            return;
+        }
+
         if (!empty($statusValues)) {
             $this->articleRepository->attachStatusValues($article, $statusValues);
         }
@@ -1016,7 +1052,7 @@ class InventoryArticleService
             return;
         }
 
-        /** @var \Artwork\Modules\User\Models\User|\App\Models\User|null $user */
+        /** @var \Artwork\Modules\User\Models\User|null $user */
         $user = $this->auth->user();
 
         if (! $user) {

@@ -58,14 +58,14 @@
         <div class="flex items-center justify-end mt-3 gap-x-3">
             <div class="flex items-center gap-x-1">
                 <component :is="IconBuildingSkyscraper" class="h-4 w-4"/>
-                <span class="text-xs">{{ $t('Costs for overnight stays') }}: <span class="underline decoration-double decoration-text-subtle underline-offset-2">{{ totalCostOfArtistResidencies }} €</span></span>
+                <span class="text-xs">{{ $t('Costs for overnight stays') }}: <span class="underline decoration-double decoration-text-subtle underline-offset-2">{{ totalCostOfArtistResidencies }} {{ $currencySymbol() }}</span></span>
             </div>
             <div class="flex items-center gap-x-1">
                 <component :is="IconMoneybag" class="h-4 w-4"/>
-                <span class="text-xs">{{ $t('Costs of daily allowances') }}: <span class="underline decoration-double decoration-text-subtle underline-offset-2">{{ totalAllowanceOfArtistResidencies }} €</span></span>
+                <span class="text-xs">{{ $t('Costs of daily allowances') }}: <span class="underline decoration-double decoration-text-subtle underline-offset-2">{{ totalAllowanceOfArtistResidencies }} {{ $currencySymbol() }}</span></span>
             </div>
             <div class="flex items-center gap-x-1 font-semibold">
-                <span class="text-xs">{{ $t('Total cost') }}: <span class="underline decoration-double decoration-text-subtle underline-offset-2">{{ totalCostAll }} €</span></span>
+                <span class="text-xs">{{ $t('Total cost') }}: <span class="underline decoration-double decoration-text-subtle underline-offset-2">{{ totalCostAll }} {{ $currencySymbol() }}</span></span>
             </div>
         </div>
     </div>

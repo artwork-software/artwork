@@ -8,20 +8,24 @@ use Artwork\Modules\User\Models\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Carbon;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
+use Illuminate\Database\Eloquent\Relations\MorphToMany;
 
 /**
- * @property string material_value
- * @property int issued_by_id
- * @property int received_by_id
- * @property \Illuminate\Support\Carbon|null issue_date
- * @property \Illuminate\Support\Carbon|null return_date
- * @property string return_remarks
- * @property string external_name
- * @property string external_address
- * @property string external_email
- * @property string external_phone
- * @property \Illuminate\Support\Carbon|null created_at
- * @property \Illuminate\Support\Carbon|null updated_at
+ * @property string $material_value
+ * @property int $issued_by_id
+ * @property int $received_by_id
+ * @property \Illuminate\Support\Carbon|null $issue_date
+ * @property \Illuminate\Support\Carbon|null $return_date
+ * @property string $return_remarks
+ * @property string $external_name
+ * @property string $external_address
+ * @property string $external_email
+ * @property string $external_phone
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
  */
 class ExternalIssue extends Model
 {
@@ -53,35 +57,58 @@ class ExternalIssue extends Model
         'return_date_formatted'
     ];
 
+    /**
+     * @return BelongsTo<User, $this>
+     */
     public function issuedBy(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
         return $this->belongsTo(User::class, 'issued_by_id', 'id', 'user');
     }
 
+    /**
+     * @return BelongsTo<User, $this>
+     */
     public function receivedBy(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
         return $this->belongsTo(User::class, 'received_by_id', 'id', 'user');
     }
 
+    /**
+     * @return BelongsTo<\Artwork\Modules\Project\Models\Project, $this>
+     */
     public function project(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
         return $this->belongsTo(\Artwork\Modules\Project\Models\Project::class, 'project_id');
     }
 
+    /**
+     * @return HasMany<ExternalIssueFile, $this>
+     */
     public function files(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
         return $this->hasMany(ExternalIssueFile::class, 'external_issue_id', 'id');
     }
 
+    /**
+     * @return MorphToMany<InventoryArticle, $this>
+     */
     public function articles(): \Illuminate\Database\Eloquent\Relations\MorphToMany
     {
         return $this->morphToMany(
             InventoryArticle::class,
             'issuable',
             'issuable_inventory_article'
-        )->withPivot('quantity')->withTimestamps();
+        )
+            // Artikel im Papierkorb bleiben Teil der Ausgabe (Entscheidung 05.10.2026); vorher
+            // verschwanden sie aus der Anzeige und das nächste Speichern löste die Verknüpfung.
+            ->withTrashed()
+            ->withPivot('quantity')
+            ->withTimestamps();
     }
 
+    /**
+     * @return MorphMany<SpecialItem, $this>
+     */
     public function specialItems(): \Illuminate\Database\Eloquent\Relations\MorphMany
     {
         return $this->morphMany(SpecialItem::class, 'issuable');
@@ -124,5 +151,56 @@ class ExternalIssue extends Model
             ->when(!$from && $to, function ($q) use ($to): void {
                 $q->whereDate('issue_date', '<=', $to);
             });
+    }
+
+    /**
+     * Ende der Reservierung für Verfügbarkeit und Planung. Nicht zurückgegebenes, überfälliges
+     * Material bleibt bis heute reserviert (Entscheidung 05.10.2026) – vorher galt es ab dem
+     * geplanten Rückgabedatum als frei, obwohl es noch draußen war.
+     */
+    public function effectiveReturnDate(): ?\Carbon\Carbon
+    {
+        $rawReturnDate = $this->getRawOriginal('return_date') ?? $this->getAttribute('return_date');
+        if ($rawReturnDate === null) {
+            return null;
+        }
+
+        $returnDate = \Carbon\Carbon::parse($rawReturnDate)->startOfDay();
+        $today = \Carbon\Carbon::today();
+        if (!$this->isReturned() && $returnDate->lt($today)) {
+            return $today;
+        }
+
+        return $returnDate;
+    }
+
+    /**
+     * Zurückgegeben über den Rückgabe-Status oder – Altbestand vor dem Status (08/2026) und das
+     * Feld „Erhalten von“ im Formular – über eine eingetragene Rücknahme (wie die Rückgabe-Erinnerung).
+     */
+    public function isReturned(): bool
+    {
+        return $this->return_status === self::RETURN_STATUS_RETURNED || $this->received_by_id !== null;
+    }
+
+    /**
+     * Ausgaben, deren Reservierung (effectiveReturnDate) am Datum noch läuft oder danach endet.
+     */
+    public function scopeReservedOnOrAfter(\Illuminate\Database\Eloquent\Builder $query, string $date): void
+    {
+        $query->where(function (\Illuminate\Database\Eloquent\Builder $reserved) use ($date): void {
+            $reserved->where('external_issues.return_date', '>=', $date)
+                ->orWhereNull('external_issues.return_date');
+
+            if (\Carbon\Carbon::parse($date)->startOfDay()->lte(\Carbon\Carbon::today())) {
+                $reserved->orWhere(function (\Illuminate\Database\Eloquent\Builder $overdue): void {
+                    $overdue->whereNull('external_issues.received_by_id')
+                        ->where(function (\Illuminate\Database\Eloquent\Builder $notReturned): void {
+                            $notReturned->whereNull('external_issues.return_status')
+                                ->orWhere('external_issues.return_status', '!=', self::RETURN_STATUS_RETURNED);
+                        });
+                });
+            }
+        });
     }
 }

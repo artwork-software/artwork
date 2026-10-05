@@ -205,7 +205,6 @@ import {IconX} from "@tabler/icons-vue";
 import {useForm} from "@inertiajs/vue3";
 import NewUserToolTip from "@/Layouts/Components/NewUserToolTip.vue";
 import Permissions from "@/Mixins/Permissions.vue";
-import IconLib from "@/Mixins/IconLib.vue";
 import UserSearch from "@/Components/SearchBars/UserSearch.vue";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 import BaseTextarea from "@/Artwork/Inputs/BaseTextarea.vue";
@@ -217,7 +216,7 @@ import IconSelector from "@/Components/Icon/IconSelector.vue";
 
 export default {
     name: 'EditMoneySourceComponent',
-    mixins: [Permissions, IconLib],
+    mixins: [Permissions],
     components: {
         IconSelector,
         ArtworkBaseModal,

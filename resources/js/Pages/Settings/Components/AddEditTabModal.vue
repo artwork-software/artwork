@@ -3,14 +3,12 @@
 import axios from "axios"
 import { useForm } from "@inertiajs/vue3"
 
-import IconLib from "@/Mixins/IconLib.vue"
 import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue"
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue"
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue"
 
 export default {
     name: "AddEditTabModal",
-    mixins: [IconLib],
     components: {
         ArtworkBaseModal,
         BaseInput,

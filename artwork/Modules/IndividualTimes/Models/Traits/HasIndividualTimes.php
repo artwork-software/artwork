@@ -11,6 +11,7 @@ trait HasIndividualTimes
 {
     /**
      * Polymorphic relationship to the IndividualTime model.
+     * @return MorphMany<IndividualTime, $this>
      */
     public function individualTimes(): MorphMany
     {

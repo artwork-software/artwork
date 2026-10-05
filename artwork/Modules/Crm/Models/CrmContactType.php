@@ -28,11 +28,17 @@ class CrmContactType extends Model
         'is_active' => 'boolean',
     ];
 
+    /**
+     * @return HasMany<CrmContact, $this>
+     */
     public function contacts(): HasMany
     {
         return $this->hasMany(CrmContact::class, 'crm_contact_type_id');
     }
 
+    /**
+     * @return BelongsToMany<CrmProperty, $this>
+     */
     public function properties(): BelongsToMany
     {
         return $this->belongsToMany(

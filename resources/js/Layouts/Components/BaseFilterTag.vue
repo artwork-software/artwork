@@ -17,12 +17,11 @@
 <script>
 import {IconX} from "@tabler/icons-vue";
 import Permissions from "@/Mixins/Permissions.vue";
-import IconLib from "@/Mixins/IconLib.vue";
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 
 export default {
     name: "BaseFilterTag",
-    mixins: [Permissions, IconLib],
+    mixins: [Permissions],
     props: {
         filter: Object,
         type: {

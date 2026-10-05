@@ -2,6 +2,7 @@
 
 namespace Artwork\Modules\Crm\Services;
 
+use Artwork\Modules\Crm\Exceptions\CrmSettingLockedException;
 use Artwork\Modules\Crm\Models\CrmPropertyGroup;
 use Artwork\Modules\Crm\Repositories\CrmPropertyGroupRepository;
 use Artwork\Modules\Department\Models\Department;
@@ -46,7 +47,11 @@ readonly class CrmPropertyGroupService
     public function destroy(CrmPropertyGroup $group): void
     {
         if ($group->is_system) {
-            throw new \RuntimeException('System property groups cannot be deleted.');
+            throw new CrmSettingLockedException(__('System property groups cannot be deleted.'));
+        }
+        // Eigenschaften hängen per FK-Cascade an der Gruppe – Systemeigenschaften würden mitgelöscht
+        if ($group->properties()->where('is_system', true)->exists()) {
+            throw new CrmSettingLockedException(__('Groups containing system properties cannot be deleted.'));
         }
 
         $this->repository->delete($group);

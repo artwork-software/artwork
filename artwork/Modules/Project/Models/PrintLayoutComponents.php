@@ -21,6 +21,9 @@ class PrintLayoutComponents extends Model
     ];
 
 
+    /**
+     * @return BelongsTo<ProjectPrintLayout, $this>
+     */
     public function projectPrintLayout(): BelongsTo
     {
         return $this->belongsTo(
@@ -31,6 +34,9 @@ class PrintLayoutComponents extends Model
         );
     }
 
+    /**
+     * @return BelongsTo<Component, $this>
+     */
     public function component(): BelongsTo
     {
         return $this->belongsTo(

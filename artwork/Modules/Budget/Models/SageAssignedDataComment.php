@@ -24,6 +24,9 @@ class SageAssignedDataComment extends Model
         'comment'
     ];
 
+    /**
+     * @return BelongsTo<SageAssignedData, $this>
+     */
     public function sageAssignedData(): BelongsTo
     {
         return $this->belongsTo(

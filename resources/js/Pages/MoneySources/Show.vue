@@ -358,6 +358,9 @@ import { is, can } from 'laravel-permission-to-vuejs'
 import BaseMenu from "@/Components/Menu/BaseMenu.vue";
 import BaseMenuItem from "@/Components/Menu/BaseMenuItem.vue";
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
+import { useInstanceFormat } from "@/Composeables/InstanceFormat.js";
+
+const instanceFormat = useInstanceFormat();
 
 /** Props */
 const props = defineProps<{
@@ -418,7 +421,7 @@ const canDelete = computed(() =>
 function toCurrency(val: number | string) {
     const num = typeof val === 'string' ? Number(val) : val
     if (Number.isNaN(num as number)) return '—'
-    return new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR', maximumFractionDigits: 2 }).format(num as number)
+    return new Intl.NumberFormat(instanceFormat.numberLocale, { style: 'currency', currency: instanceFormat.currency, maximumFractionDigits: 2 }).format(num as number)
 }
 function formatDate(isoDate: string) {
     // erwartet YYYY-MM-DD

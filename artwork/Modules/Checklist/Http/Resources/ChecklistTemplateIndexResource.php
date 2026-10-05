@@ -6,6 +6,9 @@ use Artwork\Modules\TaskTemplate\Models\TaskTemplate;
 use Artwork\Modules\User\Models\User;
 use Illuminate\Http\Resources\Json\JsonResource;
 
+/**
+ * @mixin \Artwork\Modules\Checklist\Models\ChecklistTemplate
+ */
 class ChecklistTemplateIndexResource extends JsonResource
 {
     public static $wrap = null;

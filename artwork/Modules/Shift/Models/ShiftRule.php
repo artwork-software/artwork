@@ -36,6 +36,9 @@ class ShiftRule extends Model
         'is_active' => 'boolean'
     ];
 
+    /**
+     * @return BelongsToMany<UserContract, $this>
+     */
     public function contracts(): BelongsToMany
     {
         return $this->belongsToMany(
@@ -46,6 +49,9 @@ class ShiftRule extends Model
         )->withTimestamps();
     }
 
+    /**
+     * @return BelongsToMany<User, $this>
+     */
     public function usersToNotify(): BelongsToMany
     {
         return $this->belongsToMany(
@@ -56,6 +62,9 @@ class ShiftRule extends Model
         )->withTimestamps();
     }
 
+    /**
+     * @return HasMany<ShiftRuleViolation, $this>
+     */
     public function shiftRuleViolations(): HasMany
     {
         return $this->hasMany(ShiftRuleViolation::class);

@@ -49,6 +49,9 @@ class Comment extends Model
     ];
 
 
+    /**
+     * @return BelongsTo<ProjectFile, $this>
+     */
     //@todo: fix phpcs error - refactor function name to projectFile
     //phpcs:ignore PSR1.Methods.CamelCapsMethodName.NotCamelCaps
     public function project_file(): BelongsTo
@@ -56,6 +59,9 @@ class Comment extends Model
         return $this->belongsTo(ProjectFile::class, 'project_file_id', 'id', 'project_file');
     }
 
+    /**
+     * @return BelongsTo<MoneySourceFile, $this>
+     */
     //@todo: fix phpcs error - refactor function name to moneySourceFile
     //phpcs:ignore PSR1.Methods.CamelCapsMethodName.NotCamelCaps
     public function money_source_file(): BelongsTo

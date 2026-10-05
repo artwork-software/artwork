@@ -74,6 +74,9 @@ class Holiday extends Model
         });
     }
 
+    /**
+     * @return BelongsToMany<Subdivision, $this>
+     */
     public function subdivisions(): BelongsToMany
     {
         return $this->belongsToMany(

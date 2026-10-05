@@ -8,6 +8,7 @@ use Artwork\Modules\Crm\Traits\HasCrmContact;
 use Artwork\Modules\Crm\Traits\HasCrmFields;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 /**
  * Artwork\Modules\Accommodation\Models\Accommodation
@@ -62,6 +63,9 @@ class Accommodation extends Model implements CrmEntity
             : route('generate-avatar-image', ['letters' => $this->name[0] ?? 'A']);
     }
 
+    /**
+     * @return BelongsToMany<AccommodationRoomType, $this>
+     */
     public function roomTypes(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
     {
         return $this->belongsToMany(

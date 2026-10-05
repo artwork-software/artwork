@@ -24,11 +24,17 @@ class WorkflowDefinition extends Model
         'max_instances' => 'integer'
     ];
 
+    /**
+     * @return HasMany<WorkflowDefinitionConfig, $this>
+     */
     public function workflowDefinitionConfigs(): HasMany
     {
         return $this->hasMany(WorkflowDefinitionConfig::class);
     }
 
+    /**
+     * @return HasOne<WorkflowDefinitionConfig, $this>
+     */
     public function currentConfig(): HasOne
     {
         return $this->hasOne(WorkflowDefinitionConfig::class)
@@ -36,6 +42,9 @@ class WorkflowDefinition extends Model
             ->latest('created_at');
     }
 
+    /**
+     * @return HasMany<WorkflowInstance, $this>
+     */
     public function workflowInstances(): HasMany
     {
         return $this->hasMany(WorkflowInstance::class);

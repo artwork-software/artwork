@@ -47,6 +47,8 @@ class ExternalIssueController extends Controller
 
         $issues = ExternalIssue::query()
             ->with([
+                // articles() schließt Papierkorb-Artikel ein (Historie); kopieren lassen sie sich nicht
+                'articles' => fn ($articles) => $articles->withoutTrashed(),
                 'articles.images',
                 'articles.category',
                 'articles.subCategory',

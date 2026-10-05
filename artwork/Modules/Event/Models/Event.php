@@ -167,16 +167,25 @@ class Event extends Model
         });
     }
 
+    /**
+     * @return HasMany<EventComment, $this>
+     */
     public function comments(): HasMany
     {
         return $this->hasMany(EventComment::class)->orderBy('id', 'DESC');
     }
 
+    /**
+     * @return HasMany<Timeline, $this>
+     */
     public function timelines(): HasMany
     {
         return $this->hasMany(Timeline::class);
     }
 
+    /**
+     * @return BelongsTo<EventStatus, $this>
+     */
     public function eventStatus(): BelongsTo
     {
         return $this->belongsTo(
@@ -187,11 +196,17 @@ class Event extends Model
         );
     }
 
+    /**
+     * @return HasMany<Shift, $this>
+     */
     public function shifts(): HasMany
     {
         return $this->hasMany(Shift::class, 'event_id', 'id');
     }
 
+    /**
+     * @return BelongsTo<EventType, $this>
+     */
     //@todo: fix phpcs error - refactor function name to eventType
     //phpcs:ignore PSR1.Methods.CamelCapsMethodName.NotCamelCaps
     public function event_type(): BelongsTo
@@ -204,6 +219,9 @@ class Event extends Model
         );
     }
 
+    /**
+     * @return BelongsTo<Room, $this>
+     */
     public function room(): BelongsTo
     {
         return $this->belongsTo(
@@ -214,6 +232,9 @@ class Event extends Model
         );
     }
 
+    /**
+     * @return BelongsTo<Project, $this>
+     */
     public function project(): BelongsTo
     {
         return $this->belongsTo(
@@ -224,6 +245,9 @@ class Event extends Model
         );
     }
 
+    /**
+     * @return BelongsTo<User, $this>
+     */
     public function creator(): BelongsTo
     {
         return $this->belongsTo(
@@ -234,16 +258,25 @@ class Event extends Model
         );
     }
 
+    /**
+     * @return HasOne<SeriesEvents, $this>
+     */
     public function series(): HasOne
     {
         return $this->hasOne(SeriesEvents::class, 'id', 'series_id');
     }
 
+    /**
+     * @return HasMany<SubEvent, $this>
+     */
     public function subEvents(): HasMany
     {
         return $this->hasMany(SubEvent::class)->orderBy('start_time', 'ASC');
     }
 
+    /**
+     * @return BelongsToMany<EventProperty, $this>
+     */
     public function eventProperties(): BelongsToMany
     {
         return $this->belongsToMany(EventProperty::class);
@@ -579,6 +612,9 @@ class Event extends Model
         return $builder->where('is_planning', false);
     }
 
+    /**
+     * @return HasMany<EventVerification, $this>
+     */
     public function verifications(): HasMany
     {
         return $this->hasMany(EventVerification::class);

@@ -49,6 +49,9 @@ class Timeline extends Model
     protected $appends = [
         'formatted_dates',
     ];
+    /**
+     * @return BelongsTo<Event, $this>
+     */
     public function event(): BelongsTo
     {
         return $this->belongsTo(

@@ -5,10 +5,11 @@ namespace Artwork\Modules\Shift\Models;
 use Artwork\Modules\User\Models\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class ShiftCommitWorkflowUser extends Model
 {
-    /** @use HasFactory<\Database\Factories\ShiftCommitWorkflowUserFactory> */
+    /** @use HasFactory<\Database\Factories\Artwork\Modules\Shift\Models\ShiftCommitWorkflowUserFactory> */
     use HasFactory;
 
     protected $fillable = [
@@ -20,6 +21,7 @@ class ShiftCommitWorkflowUser extends Model
 
     /**
      * Get the user associated with the shift commit workflow user.
+     * @return BelongsTo<User, $this>
      */
 
     public function user(): \Illuminate\Database\Eloquent\Relations\BelongsTo

@@ -2,6 +2,7 @@
 
 namespace Artwork\Modules\Crm\Services;
 
+use Artwork\Modules\Crm\Exceptions\CrmSettingLockedException;
 use Artwork\Modules\Crm\Models\CrmProperty;
 use Artwork\Modules\Crm\Repositories\CrmPropertyRepository;
 use Illuminate\Database\Eloquent\Collection;
@@ -37,13 +38,20 @@ readonly class CrmPropertyService
 
     public function update(CrmProperty $property, array $data): bool
     {
+        // Systemeigenschaften werden im Code über Name/Typ gefunden (E-Mail-Duplikate, Tooltip)
+        $renamesOrRetypes = (isset($data['name']) && $data['name'] !== $property->name)
+            || (isset($data['type']) && $data['type'] !== $property->type?->value);
+        if ($property->is_system && $renamesOrRetypes) {
+            throw new CrmSettingLockedException(__('System properties cannot be renamed or changed in type.'));
+        }
+
         return $this->repository->update($property, $data);
     }
 
     public function destroy(CrmProperty $property): void
     {
         if ($property->is_system) {
-            throw new \RuntimeException('System properties cannot be deleted.');
+            throw new CrmSettingLockedException(__('System properties cannot be deleted.'));
         }
 
         $this->repository->delete($property);

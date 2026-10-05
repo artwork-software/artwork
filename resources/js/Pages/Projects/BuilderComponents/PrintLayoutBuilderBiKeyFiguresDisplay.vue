@@ -22,6 +22,9 @@
 
 <script setup>
 import { computed } from 'vue';
+import { useInstanceFormat } from "@/Composeables/InstanceFormat.js";
+
+const instanceFormat = useInstanceFormat();
 
 const props = defineProps({
     project: { type: Object, required: true },
@@ -35,8 +38,8 @@ const hasData = computed(() => {
     return [f.visitors, f.revenue, f.occupancy].some(v => v !== null && v !== undefined);
 });
 
-const numberFmt = new Intl.NumberFormat('de-DE');
-const currencyFmt = new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' });
+const numberFmt = new Intl.NumberFormat(instanceFormat.numberLocale);
+const currencyFmt = new Intl.NumberFormat(instanceFormat.numberLocale, { style: 'currency', currency: instanceFormat.currency });
 const formatInt = (v) => numberFmt.format(v ?? 0);
 const formatCurrency = (v) => currencyFmt.format(v ?? 0);
 </script>

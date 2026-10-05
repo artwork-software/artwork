@@ -86,9 +86,7 @@ readonly class SubPositionRowService
         RowCommentService $rowCommentService,
         ColumnCellService $columnCellService,
         CellCommentService $cellCommentService,
-        CellCalculationService $cellCalculationService,
-        SageNotAssignedDataService $sageNotAssignedDataService,
-        SageAssignedDataService $sageAssignedDataService
+        CellCalculationService $cellCalculationService
     ): void {
         $subPositionRow->comments()->withTrashed()->get()
             ->each(function (RowComment $rowComment) use ($rowCommentService): void {
@@ -99,16 +97,12 @@ readonly class SubPositionRowService
             function (ColumnCell $columnCell) use (
                 $columnCellService,
                 $cellCommentService,
-                $cellCalculationService,
-                $sageNotAssignedDataService,
-                $sageAssignedDataService
+                $cellCalculationService
             ): void {
                 $columnCellService->restore(
                     $columnCell,
                     $cellCommentService,
-                    $cellCalculationService,
-                    $sageNotAssignedDataService,
-                    $sageAssignedDataService
+                    $cellCalculationService
                 );
             }
         );

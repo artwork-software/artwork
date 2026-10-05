@@ -355,8 +355,8 @@
                     <!-- Meta -->
                     <div class="mt-2 flex flex-wrap items-center gap-3 text-xs text-text-muted">
                         <div class="pl-1">
-                            {{ toCurrencyString(moneySource.amount + moneySource.sumOfPositions) }}€ /
-                            {{ toCurrencyString(moneySource.amount) }}€
+                            {{ toCurrencyString(moneySource.amount + moneySource.sumOfPositions) }} {{ $currencySymbol() }} /
+                            {{ toCurrencyString(moneySource.amount) }} {{ $currencySymbol() }}
                         </div>
 
                         <div v-if="moneySource.funding_start_date && moneySource.funding_end_date" class="pl-1">
@@ -475,6 +475,9 @@ import {can, is} from "laravel-permission-to-vuejs";
 import ToolbarHeader from "@/Artwork/Toolbar/ToolbarHeader.vue";
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
+import { useInstanceFormat } from "@/Composeables/InstanceFormat.js";
+
+const instanceFormat = useInstanceFormat();
 
 defineOptions({ name: 'MoneySourceIndex' })
 
@@ -600,7 +603,7 @@ function formatDateString (dateStr) {
 function toCurrencyString (val) {
     // Simplified Fallback; im Projekt habt ihr ggf. euren Formatter
     try {
-        return new Intl.NumberFormat('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(val ?? 0)
+        return new Intl.NumberFormat(instanceFormat.numberLocale, { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(val ?? 0)
     } catch { return String(val ?? 0) }
 }
 

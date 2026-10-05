@@ -44,11 +44,17 @@ class ExternalInvitation extends Model
         return ExternalInvitationFactory::new();
     }
 
+    /**
+     * @return BelongsTo<ExternalAccess, $this>
+     */
     public function externalAccess(): BelongsTo
     {
         return $this->belongsTo(ExternalAccess::class, 'external_access_id', 'id', 'externalAccess');
     }
 
+    /**
+     * @return BelongsTo<User, $this>
+     */
     public function invitedBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'invited_by_user_id', 'id', 'invitedBy');

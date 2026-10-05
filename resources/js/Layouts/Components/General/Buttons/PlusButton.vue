@@ -1,5 +1,4 @@
 <script>
-import IconLib from "@/Mixins/IconLib.vue";
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
 import {IconCirclePlus} from "@tabler/icons-vue";
 
@@ -7,7 +6,6 @@ export default {
     name: "PlusButton",
     methods: {IconCirclePlus},
     components: {ToolTipComponent},
-    mixins: [IconLib],
     props: {
         buttonText: {
             type: String,

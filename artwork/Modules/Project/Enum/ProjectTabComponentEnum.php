@@ -150,6 +150,55 @@ enum ProjectTabComponentEnum: string
         self::CRM_CONTACT_LIST,
     ];
 
+    /**
+     * Große Layout-Komponenten, die in Ordnern (DisclosureComponent) nicht funktionieren.
+     * Frontend-Gegenstück: resources/js/Pages/Projects/Tab/projectTabComponentRules.js
+     */
+    private const FOLDER_BLOCKED = [
+        self::CALENDAR,
+        self::SHIFT_TAB,
+        self::BUDGET,
+        self::BULK_EDIT,
+        self::CHECKLIST_ALL,
+        self::COMMENT_ALL_TAB,
+        self::PROJECT_ALL_DOCUMENTS,
+    ];
+
+    /**
+     * Komponenten, die beim Hinzufügen eine Tab-Auswahl (Scope) brauchen.
+     */
+    private const SCOPED = [
+        self::PROJECT_DOCUMENTS,
+        self::COMMENT_TAB,
+        self::CHECKLIST,
+    ];
+
+    public function canBePlacedInFolder(): bool
+    {
+        return $this !== self::DISCLOSURE_COMPONENT && !in_array($this, self::FOLDER_BLOCKED, true);
+    }
+
+    public function requiresScope(): bool
+    {
+        return in_array($this, self::SCOPED, true);
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    public static function folderBlockedValues(): array
+    {
+        return array_map(static fn (self $case): string => $case->value, self::FOLDER_BLOCKED);
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    public static function scopedValues(): array
+    {
+        return array_map(static fn (self $case): string => $case->value, self::SCOPED);
+    }
+
     public function isPrintable(): bool
     {
         return in_array($this, self::PRINTABLE, true);

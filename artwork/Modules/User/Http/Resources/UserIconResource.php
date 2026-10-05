@@ -4,6 +4,9 @@ namespace Artwork\Modules\User\Http\Resources;
 
 use Illuminate\Http\Resources\Json\JsonResource;
 
+/**
+ * @mixin \Artwork\Modules\User\Models\User
+ */
 class UserIconResource extends JsonResource
 {
     public static $wrap = null;

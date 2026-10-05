@@ -19,6 +19,7 @@ use Inertia\Response;
 use Inertia\ResponseFactory;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\ValidationException;
 
 class ProjectTabController extends Controller
 {
@@ -387,6 +388,8 @@ class ProjectTabController extends Controller
 
     public function addDisclosureComponent(Request $request): void
     {
+        $this->assertPlaceableInFolder($request);
+
         // Verschiebe alle bestehenden Elemente mit gleicher oder größerer Order nach oben
         DisclosureComponents::where('disclosure_id', $request->get('disclosure_id'))
             ->where('order', '>=', $request->get('order'))
@@ -404,6 +407,8 @@ class ProjectTabController extends Controller
 
     public function addDisclosureComponentWithScopes(Request $request): void
     {
+        $this->assertPlaceableInFolder($request);
+
         // Verschiebe alle bestehenden Elemente mit gleicher oder größerer Order nach oben
         DisclosureComponents::where('disclosure_id', $request->get('disclosure_id'))
             ->where('order', '>=', $request->get('order'))
@@ -418,6 +423,35 @@ class ProjectTabController extends Controller
         ]);
 
         $this->clearTabSettingsCache();
+    }
+
+    /**
+     * Ziel muss ein Ordner sein, und Ordner/große Layout-Komponenten dürfen nicht hinein – bisher
+     * nur im Frontend geprüft.
+     */
+    private function assertPlaceableInFolder(Request $request): void
+    {
+        $request->validate([
+            'component_id' => ['required', 'integer', 'exists:components,id'],
+            'disclosure_id' => ['required', 'integer', 'exists:components,id'],
+            'order' => ['required', 'integer', 'min:0'],
+        ]);
+
+        $types = Component::query()
+            ->whereKey([$request->integer('component_id'), $request->integer('disclosure_id')])
+            ->pluck('type', 'id');
+        $componentType = ProjectTabComponentEnum::tryFrom((string) $types[$request->integer('component_id')]);
+
+        if ($types[$request->integer('disclosure_id')] !== ProjectTabComponentEnum::DISCLOSURE_COMPONENT->value) {
+            throw ValidationException::withMessages([
+                'disclosure_id' => __('validation.exists', ['attribute' => 'disclosure_id']),
+            ]);
+        }
+        if ($componentType !== null && !$componentType->canBePlacedInFolder()) {
+            throw ValidationException::withMessages([
+                'component_id' => __('This component cannot be placed inside a folder'),
+            ]);
+        }
     }
 
     public function removeComponentFormDisclosure(Request $request): void

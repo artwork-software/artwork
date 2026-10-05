@@ -2,11 +2,9 @@
 
 namespace Artwork\Core\Console\Commands;
 
-use Artwork\Core\Carbon\Service\CarbonService;
 use Artwork\Core\Notifications\BaseNotification;
 use Artwork\Modules\Notification\Services\DatabaseNotificationService;
 use Artwork\Modules\GeneralSettings\Models\GeneralSettings;
-use Artwork\Modules\Notification\Enums\NotificationFrequencyEnum;
 use Artwork\Modules\Notification\Enums\NotificationGroupEnum;
 use Artwork\Modules\Notification\Mail\NotificationSummary;
 use Artwork\Modules\Notification\Models\NotificationSetting;
@@ -36,7 +34,6 @@ class SendNotificationsEmailSummariesCommand extends Command
         private readonly DatabaseNotificationService $databaseNotificationService,
         private readonly Repository $config,
         private readonly NotificationSettingService $notificationSettingService,
-        private readonly CarbonService $carbonService,
         // Contract statt MailManager: unter Mail::fake() liefert der Container MailFake (TypeError)
         private readonly MailFactory $mailManager,
         private readonly Translator $translator,
@@ -128,29 +125,13 @@ class SendNotificationsEmailSummariesCommand extends Command
                 )
             );
 
-            $notificationTypesSentOut = [];
+            $notificationIds = [];
             foreach ($notificationArray as $group) {
                 foreach ($group['notifications'] as $notification) {
-                    $notificationTypesSentOut[] = $notification['model']->getAttribute('data')['type'];
-                    $this->databaseNotificationService->updateSentInSummary(
-                        $notification['model'],
-                        true
-                    );
+                    $notificationIds[] = $notification['model']->getKey();
                 }
             }
-
-            $nowFormatted = Carbon::now()->format('Y-m-d');
-            $notificationEnumsLastSentDates = $user->getAttribute('notification_enums_last_sent_dates');
-            foreach (array_unique($notificationTypesSentOut) as $notificationTypeSentOut) {
-                $notificationEnumsLastSentDates[$notificationTypeSentOut] = $nowFormatted;
-            }
-
-            $this->userService->update(
-                $user,
-                [
-                    'notification_enums_last_sent_dates' => $notificationEnumsLastSentDates,
-                ]
-            );
+            $this->databaseNotificationService->markSentInSummary($notificationIds);
         }
     }
 
@@ -167,30 +148,10 @@ class SendNotificationsEmailSummariesCommand extends Command
                 ->groupBy('group_type')
                 ->values() as $notificationSettings
         ) {
-            $notificationEnumsLastSentDates = $user->getAttribute('notification_enums_last_sent_dates');
             /** @var NotificationSetting $notificationSetting */
             foreach ($notificationSettings as $notificationSetting) {
-                $notificationSettingFrequency = $notificationSetting->getAttribute('frequency');
-                //skip immediately frequency
-                if ($notificationSettingFrequency === NotificationFrequencyEnum::IMMEDIATELY) {
-                    continue;
-                }
                 $notificationSettingTypeValue = $notificationSetting->getAttribute('type')->value;
-                $lastDate = $notificationEnumsLastSentDates[$notificationSettingTypeValue] ?? null;
-
-                $sendSummary = is_null($notificationEnumsLastSentDates) || !$lastDate;
-
-                if (!$sendSummary) {
-                    $lastDate = match ($notificationSettingFrequency) {
-                        NotificationFrequencyEnum::DAILY => $this->carbonService->parseAndAddDay($lastDate),
-                        NotificationFrequencyEnum::WEEKLY_TWICE => $this->carbonService->parseAndAddThreeDays(
-                            $lastDate
-                        ),
-                        NotificationFrequencyEnum::WEEKLY_ONCE => $this->carbonService->parseAndAddWeek($lastDate),
-                    };
-
-                    $sendSummary = $this->carbonService->getTodayMidnight() >= $lastDate;
-                }
+                $sendSummary = $notificationSetting->getAttribute('frequency')->isDueOn(Carbon::today());
 
                 if ($sendSummary) {
                     $notifications = $this->userService->getNotReadOfNotificationTypeNotSentInSummaryForUser(
@@ -199,7 +160,8 @@ class SendNotificationsEmailSummariesCommand extends Command
                     );
 
                     if ($notifications->count() > 0) {
-                        $notificationsToSend[$notificationSetting->getAttribute('group_type')][
+                        // Gruppe aus dem Enum (die gespeicherte Spalte kann veraltet sein)
+                        $notificationsToSend[$notificationSetting->getAttribute('type')->groupType()][
                             $notificationSettingTypeValue
                         ] = $notifications;
                     }

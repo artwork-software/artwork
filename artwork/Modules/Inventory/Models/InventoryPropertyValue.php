@@ -5,6 +5,7 @@ namespace Artwork\Modules\Inventory\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class InventoryPropertyValue extends Model
 {
@@ -27,6 +28,7 @@ class InventoryPropertyValue extends Model
 
     /**
      * Verknüpfung zur Property (z. B. Farbe, Material).
+     * @return BelongsTo<InventoryArticleProperties, $this>
      */
     public function property(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {

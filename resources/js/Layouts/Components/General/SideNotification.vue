@@ -40,12 +40,10 @@
 </template>
 
 <script>
-import IconLib from "@/Mixins/IconLib.vue";
 
 export default {
     name: "SideNotification",
     emits: ['close'],
-    mixins: [IconLib],
     data() {
         return {
             show: true,

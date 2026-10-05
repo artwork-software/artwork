@@ -57,12 +57,14 @@ class HolidayController extends Controller
     {
         $selected = $request->collect('selectedSubdivisions')->pluck('id')->toArray();
         $type = Holiday::normalizeType($request->input('type'));
+        // Land aus der gewählten Region, sonst Instanz-Land (vorher immer 'DE', auch für Kantone)
+        $countryCode = Subdivision::query()->whereKey($selected)->value('country_code') ?? config('app.country');
         $this->holidayService->create(
             name: $request->input('name'),
             subdivision: $selected,
             date: Carbon::parse($request->input('date')),
             endDate: Carbon::parse($request->input('end_date') ?: $request->input('date')),
-            countryCode: 'DE',
+            countryCode: $countryCode,
             yearly: $request->boolean('yearly'),
             color: $request->input('color'),
             // Ohne explizite Angabe gilt der Typ-Default (nur gesetzliche Feiertage sind Sondertage)
@@ -148,7 +150,7 @@ class HolidayController extends Controller
                 collect($holiday['subdivisions'])->pluck('id')->toArray(),
                 Carbon::parse($holiday['startDate']),
                 Carbon::parse($holiday['endDate']),
-                $holiday['nationwide'] ? 'DE' : 'DE',
+                $holiday['country'] ?? config('app.country'),
                 false,
                 0,
                 $holiday['id'],

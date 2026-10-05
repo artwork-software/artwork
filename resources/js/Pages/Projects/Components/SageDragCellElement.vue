@@ -1,10 +1,8 @@
 <script>
-import IconLib from "@/Mixins/IconLib.vue";
 
 export default {
     name: "SageDragCellElement",
     props: ['cell'],
-    mixins: [IconLib],
     emits: ['isDragged'],
     methods: {
         onDragStart(event) {

@@ -40,7 +40,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class UserFilter extends CalendarFilter
 {
-    /** @use HasFactory<\Database\Factories\UserFilterFactory> */
+    /** @use HasFactory<\Database\Factories\Artwork\Modules\User\Models\UserFilterFactory> */
     use HasFactory;
 
     protected $fillable = [
@@ -75,6 +75,9 @@ class UserFilter extends CalendarFilter
         'project_state_ids' => 'array',
     ];
 
+    /**
+     * @return BelongsTo<User, $this>
+     */
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class, 'user_id', 'id', 'user_filters');

@@ -33,6 +33,9 @@ class ExternalAccessNotificationRecipient extends Model
         return $this->morphTo();
     }
 
+    /**
+     * @return BelongsTo<User, $this>
+     */
     public function createdBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by_user_id', 'id', 'createdBy');

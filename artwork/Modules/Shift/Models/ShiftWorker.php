@@ -45,21 +45,33 @@ class ShiftWorker extends MorphPivot
         });
     }
 
+    /**
+     * @return BelongsTo<Shift, $this>
+     */
     public function shift(): BelongsTo
     {
         return $this->belongsTo(Shift::class);
     }
 
+    /**
+     * @return BelongsTo<User, $this>
+     */
     public function assignedBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'assigned_by_user_id');
     }
 
+    /**
+     * @return BelongsTo<User, $this>
+     */
     public function confirmationBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'confirmation_by_user_id');
     }
 
+    /**
+     * @return BelongsTo<ShiftQualification, $this>
+     */
     public function shiftQualification(): BelongsTo
     {
         return $this->belongsTo(ShiftQualification::class);

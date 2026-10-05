@@ -1,5 +1,6 @@
 <script>
 import SelectTabsModal from "@/Pages/Settings/Components/SelectTabsModal.vue";
+import { requiresScope } from "@/Pages/Projects/Tab/projectTabComponentRules.js";
 import { EventListenerForDragging } from "@/Composeables/EventListenerForDragging.js";
 
 const dragBus = EventListenerForDragging();
@@ -72,7 +73,7 @@ export default {
 
             // Für normale Tabs: Spezielle Komponenten brauchen Tab-Auswahl
             if(!this.isSidebar){
-                if(data.type === 'ProjectDocumentsComponent' || data.type === 'CommentTab' || data.type === 'ChecklistComponent') {
+                if(requiresScope(data.type)) {
                     this.componentData = data;
                     this.showSelectTabsModal = true;
                     this.dropOver = false;

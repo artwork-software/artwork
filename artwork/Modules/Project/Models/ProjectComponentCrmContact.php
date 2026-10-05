@@ -48,26 +48,41 @@ class ProjectComponentCrmContact extends Model
         ];
     }
 
+    /**
+     * @return BelongsTo<Project, $this>
+     */
     public function project(): BelongsTo
     {
         return $this->belongsTo(Project::class, 'project_id', 'id', 'project');
     }
 
+    /**
+     * @return BelongsTo<Component, $this>
+     */
     public function component(): BelongsTo
     {
         return $this->belongsTo(Component::class, 'component_id', 'id', 'component');
     }
 
+    /**
+     * @return BelongsTo<CrmContact, $this>
+     */
     public function crmContact(): BelongsTo
     {
         return $this->belongsTo(CrmContact::class, 'crm_contact_id', 'id', 'crmContact');
     }
 
+    /**
+     * @return BelongsTo<User, $this>
+     */
     public function createdByUser(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by_user_id', 'id', 'createdByUser');
     }
 
+    /**
+     * @return BelongsTo<ExternalAccess, $this>
+     */
     public function createdByExternalAccess(): BelongsTo
     {
         return $this->belongsTo(
@@ -78,6 +93,9 @@ class ProjectComponentCrmContact extends Model
         );
     }
 
+    /**
+     * @return BelongsTo<User, $this>
+     */
     public function reviewedBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'reviewed_by_user_id', 'id', 'reviewedBy');

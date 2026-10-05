@@ -31,7 +31,7 @@
                 <div class="p-5 grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
                         <p class="text-text-subtle">{{ $t('Material value') }}</p>
-                        <p class="font-semibold text-text">{{ Number(issue.material_value).toFixed(2) }} €</p>
+                        <p class="font-semibold text-text">{{ $formatCurrency(issue.material_value) }}</p>
                     </div>
                     <div>
                         <p class="text-text-subtle">{{ $t('Period') }}</p>

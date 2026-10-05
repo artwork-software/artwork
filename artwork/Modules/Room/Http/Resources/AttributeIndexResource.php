@@ -4,6 +4,9 @@ namespace Artwork\Modules\Room\Http\Resources;
 
 use Illuminate\Http\Resources\Json\JsonResource;
 
+/**
+ * @mixin \Artwork\Modules\Room\Models\RoomAttribute
+ */
 class AttributeIndexResource extends JsonResource
 {
     /**

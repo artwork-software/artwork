@@ -25,6 +25,9 @@ class RoomFile extends Model
         'id'
     ];
 
+    /**
+     * @return BelongsTo<Room, $this>
+     */
     public function room(): BelongsTo
     {
         return $this->belongsTo(Room::class);

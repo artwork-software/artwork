@@ -914,7 +914,7 @@ class Sage100Service
         $movedColumnCells = $movedColumn->subPositionRow->cells()->get();
         $sageAssignedData = $movedColumn->sageAssignedData()->get();
         if ($sageAssignedData->isEmpty()) {
-            $movedColumnCells->each(function ($cell) use ($movedColumn): void {
+            $movedColumnCells->each(function ($cell): void {
                 $cell->delete();
             });
             $movedColumn->subPositionRow->delete();

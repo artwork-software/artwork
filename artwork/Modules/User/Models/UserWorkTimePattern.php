@@ -6,6 +6,7 @@ use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Laravel\Scout\Searchable;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
  * @property int $id
@@ -78,6 +79,9 @@ class UserWorkTimePattern extends Model
         ];
     }
 
+    /**
+     * @return HasMany<UserWorkTime, $this>
+     */
     public function userWorkTime(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
         return $this->hasMany(UserWorkTime::class, 'work_time_pattern_id', 'id');

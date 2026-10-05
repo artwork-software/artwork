@@ -68,26 +68,41 @@ class ExternalAccessScope extends Model
         return ExternalAccessScopeFactory::new();
     }
 
+    /**
+     * @return BelongsTo<ExternalAccess, $this>
+     */
     public function externalAccess(): BelongsTo
     {
         return $this->belongsTo(ExternalAccess::class, 'external_access_id', 'id', 'externalAccess');
     }
 
+    /**
+     * @return BelongsTo<Project, $this>
+     */
     public function project(): BelongsTo
     {
         return $this->belongsTo(Project::class, 'project_id', 'id', 'project');
     }
 
+    /**
+     * @return BelongsTo<ProjectTab, $this>
+     */
     public function projectTab(): BelongsTo
     {
         return $this->belongsTo(ProjectTab::class, 'project_tab_id', 'id', 'projectTab');
     }
 
+    /**
+     * @return BelongsTo<User, $this>
+     */
     public function grantedBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'granted_by_user_id', 'id', 'grantedBy');
     }
 
+    /**
+     * @return BelongsTo<User, $this>
+     */
     public function reviewedBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'reviewed_by_user_id', 'id', 'reviewedBy');

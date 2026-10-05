@@ -16,24 +16,27 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Artwork\Modules\Inventory\Services\TypeNumberGenerator;
 use Illuminate\Support\Collection;
 use Laravel\Scout\Searchable;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\MorphToMany;
 
 /**
- * @property string name
- * @property string description
- * @property int inventory_category_id
- * @property int inventory_sub_category_id
- * @property int quantity
- * @property bool is_detailed_quantity
- * @property string external_id
- * @property string inventory_number
+ * @property string $name
+ * @property string $description
+ * @property int $inventory_category_id
+ * @property int $inventory_sub_category_id
+ * @property int $quantity
+ * @property bool $is_detailed_quantity
+ * @property string $external_id
+ * @property string $inventory_number
  * @property \Illuminate\Database\Eloquent\Collection<int,
  *     \Artwork\Modules\Inventory\Models\InventoryArticleProperty> properties
  * @property \Illuminate\Database\Eloquent\Collection|\Artwork\Modules\Inventory\Models\InventoryArticleImage[] images
- * @property \Artwork\Modules\Inventory\Models\InventoryCategory category
+ * @property \Artwork\Modules\Inventory\Models\InventoryCategory $category
  * @property \Artwork\Modules\Inventory\Models\InventorySubCategory subCategory
- * @property int id
- * @property \Illuminate\Support\Carbon|null created_at
- * @property \Illuminate\Support\Carbon|null updated_at
+ * @property int $id
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
  * @extends \Illuminate\Database\Eloquent\Model
  * @uses \Illuminate\Database\Eloquent\Factories\HasFactory
  * @uses \Artwork\Modules\Inventory\Models\InventoryArticleFactory
@@ -83,26 +86,41 @@ class InventoryArticle extends Model
             }
         });
     }
+    /**
+     * @return BelongsTo<InventoryCategory, $this>
+     */
     public function category(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
         return $this->belongsTo(InventoryCategory::class, 'inventory_category_id', 'id');
     }
 
+    /**
+     * @return BelongsTo<InventorySubCategory, $this>
+     */
     public function subCategory(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
         return $this->belongsTo(InventorySubCategory::class, 'inventory_sub_category_id', 'id');
     }
 
+    /**
+     * @return HasMany<InventoryArticleImage, $this>
+     */
     public function images(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
         return $this->hasMany(InventoryArticleImage::class, 'inventory_article_id', 'id');
     }
 
+    /**
+     * @return HasMany<InventoryDetailedQuantityArticle, $this>
+     */
     public function detailedArticleQuantities(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
         return $this->hasMany(InventoryDetailedQuantityArticle::class, 'inventory_article_id', 'id');
     }
 
+    /**
+     * @return BelongsToMany<InventoryArticleStatus, $this>
+     */
     public function statusValues(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
     {
         return $this->belongsToMany(
@@ -113,6 +131,9 @@ class InventoryArticle extends Model
         )->withPivot('value')->orderBy('order');
     }
 
+    /**
+     * @return MorphToMany<InternalIssue, $this>
+     */
     public function internalIssues(): \Illuminate\Database\Eloquent\Relations\MorphToMany
     {
         return $this->morphedByMany(InternalIssue::class, 'issuable', 'issuable_inventory_article')
@@ -120,6 +141,9 @@ class InventoryArticle extends Model
             ->withTimestamps();
     }
 
+    /**
+     * @return MorphToMany<ExternalIssue, $this>
+     */
     public function externalIssues(): \Illuminate\Database\Eloquent\Relations\MorphToMany
     {
         return $this->morphedByMany(ExternalIssue::class, 'issuable', 'issuable_inventory_article')
@@ -355,6 +379,11 @@ class InventoryArticle extends Model
         ?int $excludeIssueId = null,
         ?string $excludeType = null
     ): array {
+        // SQL-Vorauswahl nur nach Datum: ein Vergleich der Datumsspalten mit "Y-m-d H:i" schloss
+        // Ausgaben desselben Tages aus. Die Uhrzeit-Genauigkeit kommt über das Zeitfenster unten.
+        $startDay = Carbon::parse($startDate)->toDateString();
+        $endDay = Carbon::parse($endDate)->toDateString();
+
         if ($this->relationLoaded('internalIssues')) {
             $internalIssues = $this->internalIssues;
             // Apply exclusion filter to pre-loaded relations if needed
@@ -365,9 +394,9 @@ class InventoryArticle extends Model
             }
         } else {
             $internalIssues = $this->internalIssues()
-                ->where('start_date', '<=', $endDate)
-                ->where(function ($q) use ($startDate): void {
-                    $q->where('end_date', '>=', $startDate)
+                ->where('start_date', '<=', $endDay)
+                ->where(function ($q) use ($startDay): void {
+                    $q->where('end_date', '>=', $startDay)
                         ->orWhereNull('end_date');
                 })
                 ->when($excludeType === 'intern' && $excludeIssueId, function ($q) use ($excludeIssueId): void {
@@ -386,54 +415,28 @@ class InventoryArticle extends Model
             }
         } else {
             $externalIssues = $this->externalIssues()
-                ->where('issue_date', '<=', $endDate)
-                ->where(function ($q) use ($startDate): void {
-                    $q->where('return_date', '>=', $startDate)
-                        ->orWhereNull('return_date');
-                })
+                ->where('issue_date', '<=', $endDay)
+                ->reservedOnOrAfter($startDay)
                 ->when($excludeType === 'extern' && $excludeIssueId, function ($q) use ($excludeIssueId): void {
                     $q->where('external_issues.id', '!=', $excludeIssueId);
                 })
                 ->get();
         }
 
+        // Fenster: reines Datum = ganzer Tag, mit Uhrzeit (Batch-Endpunkt, inkl. :59) bis einschließlich
+        $windowStart = Carbon::parse($startDate)->timestamp;
+        $windowEnd = strlen(trim((string) $endDate)) <= 10
+            ? Carbon::parse($endDate)->endOfDay()->timestamp + 1
+            : Carbon::parse($endDate)->timestamp + 1;
+
         $usedQuantity = self::calculatePeakConcurrentUsage(
             collect($internalIssues),
-            collect($externalIssues)
+            collect($externalIssues),
+            $windowStart,
+            $windowEnd
         );
 
-        // Get the quantity of items with "Einsatzbereit" status
-        $total = 0;
-
-        if ($this->is_detailed_quantity) {
-            // For detailed quantity articles, sum up the quantities of all
-        // detailed articles with "Einsatzbereit" status
-            if ($this->relationLoaded('detailedArticleQuantities')) {
-                $detailedQuantities = $this->detailedArticleQuantities;
-            } else {
-                // Load the detailedArticleQuantities relation if not already loaded
-                $this->load('detailedArticleQuantities.status');
-                $detailedQuantities = $this->detailedArticleQuantities;
-            }
-
-            foreach ($detailedQuantities as $detailedQuantity) {
-                if ($detailedQuantity->status && $detailedQuantity->status->name === 'Einsatzbereit') {
-                    $total += (float) $detailedQuantity->quantity;
-                }
-            }
-        } else {
-            // For regular articles, use the main article's status
-            $readyStatus = null;
-            if ($this->relationLoaded('statusValues')) {
-                $readyStatus = $this->statusValues->firstWhere('name', 'Einsatzbereit');
-            } else {
-                // Load the statusValues relation if not already loaded
-                $this->load('statusValues');
-                $readyStatus = $this->statusValues->firstWhere('name', 'Einsatzbereit');
-            }
-
-            $total = $readyStatus ? (float) $readyStatus->pivot->value : 0;
-        }
+        $total = $this->readyQuantity();
         $available = max($total - $usedQuantity, 0);
 
         return [
@@ -455,7 +458,9 @@ class InventoryArticle extends Model
      */
     public static function calculatePeakConcurrentUsage(
         Collection $internalIssues,
-        Collection $externalIssues
+        Collection $externalIssues,
+        ?int $windowStart = null,
+        ?int $windowEnd = null
     ): int {
         $events = [];
 
@@ -471,11 +476,12 @@ class InventoryArticle extends Model
             $endTime = $issue->end_time ?? '23:59:59';
 
             $start = Carbon::parse("{$startDateStr} {$startTime}")->timestamp;
-            // +1 second after end so that issues ending exactly when another starts don't overlap
-            $end = Carbon::parse("{$endDateStr} {$endTime}")->timestamp + 1;
+            // Ende exklusiv: endet eine Ausgabe genau, wenn die nächste beginnt, überlappen sie nicht
+            // (bei Gleichstand werden Abgänge vor Zugängen verarbeitet). Das frühere +1 Sekunde
+            // machte genau diese Fälle zu Überschneidungen.
+            $end = Carbon::parse("{$endDateStr} {$endTime}")->timestamp;
 
-            $events[] = [$start, $qty];   // issue starts: add quantity
-            $events[] = [$end, -$qty];    // issue ends: remove quantity
+            self::addClippedUsage($events, $start, $end, $qty, $windowStart, $windowEnd);
         }
 
         foreach ($externalIssues as $issue) {
@@ -485,13 +491,15 @@ class InventoryArticle extends Model
             }
 
             $issueDateStr = Carbon::parse($issue->issue_date)->format('Y-m-d');
-            $returnDateStr = Carbon::parse($issue->return_date ?? $issue->issue_date)->format('Y-m-d');
+            // Überfälliges, nicht zurückgegebenes Material bleibt reserviert
+            $effectiveReturnDate = $issue instanceof ExternalIssue ? $issue->effectiveReturnDate() : null;
+            $returnDateStr = ($effectiveReturnDate ?? Carbon::parse($issue->return_date ?? $issue->issue_date))
+                ->format('Y-m-d');
 
             $start = Carbon::parse("{$issueDateStr} 00:00:00")->timestamp;
-            $end = Carbon::parse("{$returnDateStr} 23:59:59")->timestamp + 1;
+            $end = Carbon::parse("{$returnDateStr} 23:59:59")->timestamp + 1; // ganzer Rückgabetag
 
-            $events[] = [$start, $qty];
-            $events[] = [$end, -$qty];
+            self::addClippedUsage($events, $start, $end, $qty, $windowStart, $windowEnd);
         }
 
         if (empty($events)) {
@@ -517,6 +525,37 @@ class InventoryArticle extends Model
         return $peak;
     }
 
+    /**
+     * Nutzung nur innerhalb des angefragten Zeitfensters zählen: Überschneidungen zweier Ausgaben
+     * VOR dem Fenster (nur eine reicht hinein) machten den Artikel sonst fälschlich überbucht.
+     *
+     * @param array<int, array{0: int, 1: int}> $events
+     */
+    private static function addClippedUsage(
+        array &$events,
+        int $start,
+        int $end,
+        int $quantity,
+        ?int $windowStart,
+        ?int $windowEnd
+    ): void {
+        if ($windowStart !== null) {
+            $start = max($start, $windowStart);
+        }
+        if ($windowEnd !== null) {
+            $end = min($end, $windowEnd);
+        }
+        if ($end <= $start) {
+            return;
+        }
+
+        $events[] = [$start, $quantity];  // issue starts: add quantity
+        $events[] = [$end, -$quantity];   // issue ends: remove quantity
+    }
+
+    /**
+     * @return BelongsToMany<InventoryTag, $this>
+     */
     public function tags(): BelongsToMany
     {
         return $this->belongsToMany(
@@ -525,5 +564,39 @@ class InventoryArticle extends Model
             'inventory_article_id',
             'inventory_tag_id'
         )->withTimestamps();
+    }
+
+    /**
+     * Einsatzbereite Menge: Menge im Standard-Status (default-Flag) – bei Einzelinventar die
+     * Summe der Einzelartikel in diesem Status. Artikel ohne jede gepflegte Statusmenge zählen
+     * mit ihrer Gesamtmenge (ältere Artikel aus der Zeit vor den Status). Einzige Quelle für
+     * Verfügbarkeit, Planung, Projekt-Tab und Überbuchungsprüfung.
+     */
+    public function readyQuantity(): float
+    {
+        $readyStatusId = InventoryArticleStatus::defaultStatusId();
+
+        if ($this->is_detailed_quantity) {
+            if (!$this->relationLoaded('detailedArticleQuantities')) {
+                $this->load('detailedArticleQuantities');
+            }
+
+            return (float) $this->detailedArticleQuantities
+                ->filter(fn ($detailed): bool => $readyStatusId !== null
+                    && (int) $detailed->inventory_article_status_id === $readyStatusId)
+                ->sum(fn ($detailed): float => (float) $detailed->quantity);
+        }
+
+        if (!$this->relationLoaded('statusValues')) {
+            $this->load('statusValues');
+        }
+
+        if ($this->statusValues->isEmpty()) {
+            return (float) $this->quantity;
+        }
+
+        $readyStatus = $readyStatusId === null ? null : $this->statusValues->firstWhere('id', $readyStatusId);
+
+        return $readyStatus !== null ? (float) $readyStatus->pivot->value : 0.0;
     }
 }

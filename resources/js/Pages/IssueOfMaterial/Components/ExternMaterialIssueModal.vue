@@ -205,7 +205,7 @@
                                             <div class="text-xs text-text-subtle line-clamp-2" v-if="article.description">{{ article.description }}</div>
                                             <div class="mt-2 flex flex-wrap items-center gap-2 text-[11px]">
                                                 <template v-for="(status, i) in article.status_values" :key="i">
-                                                    <div v-if="status.name === 'Ready for use' || status.name === 'Einsatzbereit'" class="inline-flex items-center gap-1 rounded-md border px-1.5 py-0.5" :style="{ borderColor: status.color, backgroundColor: status.color + '15' }" :title="status.name">
+                                                    <div v-if="status.default" class="inline-flex items-center gap-1 rounded-md border px-1.5 py-0.5" :style="{ borderColor: status.color, backgroundColor: status.color + '15' }" :title="status.name">
                                                         <span class="inline-block size-1.5 rounded-full" :style="{ backgroundColor: status.color }"></span>
                                                         <span class="tabular-nums">{{ status.name }}</span>
                                                         <span class="tabular-nums">{{ article.availableStock?.ready ?? status.pivot.value ?? 0 }}</span>

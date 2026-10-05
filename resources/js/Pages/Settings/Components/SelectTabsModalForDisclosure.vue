@@ -1,7 +1,6 @@
 <script>
 import {IconX} from "@tabler/icons-vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
-import IconLib from "@/Mixins/IconLib.vue";
 import {
     Dialog,
     DialogPanel,
@@ -22,7 +21,6 @@ import {
 } from '@headlessui/vue'
 export default {
     name: "SelectTabsModalForDisclosure",
-    mixins: [IconLib],
     components: {
         SwitchLabel,
         Switch,
@@ -89,7 +87,7 @@ export default {
                             <img src="/Svgs/Overlays/illu_appointment_edit.svg" class="-ml-6 -mt-8 mb-4"/>
                             <div class="absolute top-0 right-0 hidden pt-4 pr-4 sm:block">
                                 <button type="button" class="rounded-md bg-white text-text-subtle hover:text-text-subtle" @click="closeModal">
-                                    <span class="sr-only">Close</span>
+                                    <span class="sr-only">{{ $t('Close') }}</span>
                                     <IconX stroke-width="1.5" class="h-6 w-6" aria-hidden="true" />
                                 </button>
                             </div>
@@ -104,19 +102,19 @@ export default {
                                 <div class="mb-3">
                                     <SwitchGroup as="div" class="flex items-center gap-x-4">
                                         <SwitchLabel as="span" class="text-sm">
-                                            <span class="font-medium text-text">Nur aktuellen Tab einbeziehen</span>
+                                            <span class="font-medium text-text">{{ $t('Only include the current tab') }}</span>
                                         </SwitchLabel>
                                         <Switch v-model="enabled" :class="[enabled ? 'bg-accent-700' : 'bg-border-subtle', 'relative inline-flex h-3 w-6 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-accent-700 focus:ring-offset-2']">
                                             <span aria-hidden="true" :class="[enabled ? 'translate-x-3' : 'translate-x-0', 'pointer-events-none inline-block h-2 w-2 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']" />
                                         </Switch>
                                         <SwitchLabel as="span" class="text-sm">
-                                            <span class="font-medium text-text">Tabs auswählen</span>
+                                            <span class="font-medium text-text">{{ $t('Select tabs') }}</span>
                                         </SwitchLabel>
                                     </SwitchGroup>
                                 </div>
                                 <div v-if="enabled">
                                     <Listbox as="div" v-model="selected" multiple>
-                                        <ListboxLabel class="block text-sm font-medium leading-6 text-text">Ausgewählte Tabs</ListboxLabel>
+                                        <ListboxLabel class="block text-sm font-medium leading-6 text-text">{{ $t('Selected tabs') }}</ListboxLabel>
                                         <div class="relative mt-2">
                                             <ListboxButton class="relative w-full cursor-default bg-white h-10 py-1.5 pl-3 pr-10 text-left text-text shadow-sm ring-1 ring-inset ring-border focus:outline-none focus:ring-2 focus:ring-accent-700 sm:text-sm sm:leading-6">
                                                 <span class="block truncate"> {{ selected.map((tab) => tab.name).join(', ') }}</span>

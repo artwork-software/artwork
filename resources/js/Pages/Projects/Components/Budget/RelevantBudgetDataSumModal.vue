@@ -32,7 +32,7 @@
                 <div class="font-bold text-sm" :class="row.type === 'BUDGET_TYPE_COST' ? 'text-danger' : 'text-success'">
                    <span v-if="row.type === 'BUDGET_TYPE_COST'">-</span>
                    <span v-else>+</span>
-                    {{ toCurrencyString(row.value) }} €
+                    {{ toCurrencyString(row.value) }} {{ $currencySymbol() }}
                 </div>
             </div>
         </div>

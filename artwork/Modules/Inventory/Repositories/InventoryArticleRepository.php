@@ -2,6 +2,7 @@
 
 namespace Artwork\Modules\Inventory\Repositories;
 
+use Carbon\Carbon;
 use App\Jobs\GenerateInventoryArticleImageThumbnail;
 use Artwork\Modules\Inventory\Models\InventoryArticle;
 use Artwork\Modules\Inventory\Models\InventoryArticleProperties;
@@ -285,7 +286,8 @@ class InventoryArticleRepository
     {
         foreach ($statusValues as $statusValue) {
             $article->statusValues()->attach((int)$statusValue['id'], [
-                'value' => (string)$statusValue['value']
+                // Ganzzahl-Spalte: ein geleertes Feld kommt als null an
+                'value' => (int) ($statusValue['value'] ?? 0)
             ]);
         }
     }
@@ -420,12 +422,24 @@ class InventoryArticleRepository
 
     public function restore(InventoryArticle $article): void
     {
-        $images = $article->images()->withTrashed()->get();
+        // Nur zurückholen, was zusammen mit dem Artikel in den Papierkorb ging. Einzelartikel und
+        // Bilder, die vorher beim Bearbeiten entfernt wurden, bleiben entfernt – sonst passte die
+        // Summe der Einzelbestände nicht mehr zur Gesamtmenge.
+        // Rohwert: deleted_at ist am Model als übersetzter Anzeige-String gecastet
+        $rawDeletedAt = $article->getRawOriginal('deleted_at');
+        $deletedWithArticleSince = $rawDeletedAt ? Carbon::parse($rawDeletedAt)->subMinute() : null;
+        $deletedWithArticle = static fn ($query) => $query->where('deleted_at', '>=', $deletedWithArticleSince);
+
+        $images = $article->images()->onlyTrashed()
+            ->when($deletedWithArticleSince, $deletedWithArticle)
+            ->get();
         foreach ($images as $image) {
             $image->restore();
         }
 
-        $detailedArticles = $article->detailedArticleQuantities()->withTrashed()->get();
+        $detailedArticles = $article->detailedArticleQuantities()->onlyTrashed()
+            ->when($deletedWithArticleSince, $deletedWithArticle)
+            ->get();
 
         foreach ($detailedArticles as $detailedArticle) {
             $detailedArticle->restore();

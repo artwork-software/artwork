@@ -9,16 +9,16 @@ use Artwork\Modules\Holidays\Seeder\SwissCantoneSeeder;
 use Artwork\Modules\ServiceProvider\Models\ServiceProvider;
 use Artwork\Modules\Inventory\Models\InventoryArticleStatus;
 use Artwork\Modules\ArtistResidency\Enums\TypOfRoom;
-use Artwork\Modules\Notification\Enums\NotificationEnum;
-use Artwork\Modules\Notification\Enums\NotificationFrequencyEnum;
-use Artwork\Modules\Notification\Models\NotificationSetting;
+use Artwork\Modules\Notification\Services\NotificationSettingService;
 use Artwork\Modules\Project\Enum\ProjectTabComponentEnum;
 use Artwork\Modules\Project\Models\Component;
 use Artwork\Modules\Project\Services\ProjectManagementBuilderService;
 use Artwork\Modules\Sage100\Helpers\PermissionUpdater;
 use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\Shift\Seeders\ConsolidateShiftsSeeder;
+use Artwork\Modules\User\Enums\UserFilterTypes;
 use Artwork\Modules\User\Models\User;
+use Artwork\Modules\User\Services\UserService;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
@@ -34,6 +34,7 @@ class UpdateArtwork extends Command
         private readonly SwissCantoneSeeder $swissCantoneSeeder,
         private readonly ConsolidateShiftsSeeder $consolidateShiftsSeeder,
         private readonly PermissionUpdater $sagePermissionUpdater,
+        private readonly UserService $userService,
     ) {
         parent::__construct();
     }
@@ -60,6 +61,7 @@ class UpdateArtwork extends Command
         $this->addRoomTypes();
         $this->addSwissCantons();
         $this->createBasicProductBaskets();
+        $this->initializeMissingAccountDefaults();
         $this->remapShiftEventProjectRelations();
         $this->updateSpecialComponentsSidebarEnabled();
         $this->migrateShiftsWorkers();
@@ -181,62 +183,11 @@ class UpdateArtwork extends Command
     {
         $this->section('Notification Settings');
 
-        NotificationSetting::where('type', 'NOTIFICATION_ROOM_ANSWER')->update([
-            'title' => 'Room requests answered',
-            'description' => 'Find out if your room requests has been answered.',
-        ]);
-
-        $users = User::all();
-        foreach ($users as $user) {
-            $this->addUserNotificationSettings($user);
-        }
-    }
-
-    private function addUserNotificationSettings(User $user): void
-    {
-        $notificationTypes = [
-            NotificationEnum::NOTIFICATION_EVENT_VERIFICATION_REQUESTS,
-            NotificationEnum::NOTIFICATION_INVENTORY_ARTICLE_CHANGED,
-            NotificationEnum::NOTIFICATION_INVENTORY_OVERBOOKED,
-            NotificationEnum::NOTIFICATION_SHIFT_WORKTIME_REQUEST_APPROVED,
-            NotificationEnum::NOTIFICATION_SHIFT_WORKTIME_REQUEST_DECLINED,
-            NotificationEnum::NOTIFICATION_SHIFT_WORKTIME_GET_REQUEST,
-            NotificationEnum::NOTIFICATION_NEW_SHIFT_COMMIT_WORKFLOW_REQUEST,
-        ];
-
-        foreach ($notificationTypes as $enum) {
-            $user->notificationSettings()->updateOrCreate(
-                ['type' => $enum->value],
-                [
-                    'frequency' => NotificationFrequencyEnum::DAILY->value,
-                    'group_type' => $enum->groupType(),
-                    'title' => $enum->title(),
-                    'description' => $enum->description(),
-                    'enabled_email' => true,
-                    'enabled_push' => true,
-                ]
-            );
-        }
-
-        // External access notifications should reach the inviter immediately.
-        $externalNotificationTypes = [
-            NotificationEnum::NOTIFICATION_EXTERNAL_CRM_SUBMITTED,
-            NotificationEnum::NOTIFICATION_EXTERNAL_TAB_COMPONENT_UPDATED,
-        ];
-
-        foreach ($externalNotificationTypes as $enum) {
-            $user->notificationSettings()->updateOrCreate(
-                ['type' => $enum->value],
-                [
-                    'frequency' => NotificationFrequencyEnum::IMMEDIATELY->value,
-                    'group_type' => $enum->groupType(),
-                    'title' => $enum->title(),
-                    'description' => $enum->description(),
-                    'enabled_email' => true,
-                    'enabled_push' => true,
-                ]
-            );
-        }
+        // Gruppe/Texte aus dem Enum nachziehen (Sammelmail liest group_type), dann nur fehlende
+        // Einstellungen ergänzen (auch für neue Typen) – Nutzerwahl wird nie überschrieben
+        app(NotificationSettingService::class)->syncTypeMetadata();
+        $created = app(NotificationSettingService::class)->ensureDefaultsForAllUsers();
+        $this->info(sprintf('%d notification setting(s) added', $created));
     }
 
     private function addProjectGroupColumn(): void
@@ -394,19 +345,47 @@ class UpdateArtwork extends Command
             ],
         ];
 
-        foreach ($dataSet as $data) {
-            InventoryArticleStatus::updateOrCreate(
-                [
-                    'name' => $data['name'],
-                ],
-                [
-                    'default' => $data['default'] ?? false,
-                    'deletable' => $data['deletable'] ?? true,
-                    'color' => $data['color'] ?? null,
-                    'order' => $data['order'] ?? 1
-                ]
-            );
+        // Nur bei Erstinstallation anlegen. Vorher lief updateOrCreate per Name bei jedem Update:
+        // Reihenfolge/Farbe wurden zurückgesetzt und ein umbenannter Status (z. B. „Einsatzbereit“)
+        // wurde als zweiter Standard-Status neu angelegt.
+        if (InventoryArticleStatus::query()->exists()) {
+            $this->ensureSingleDefaultInventoryStatus();
+
+            return;
         }
+
+        foreach ($dataSet as $data) {
+            $status = new InventoryArticleStatus([
+                'name' => $data['name'],
+                'color' => $data['color'] ?? null,
+                'order' => $data['order'] ?? 1,
+            ]);
+            $status->default = $data['default'] ?? false;
+            $status->deletable = $data['deletable'] ?? true;
+            $status->save();
+        }
+    }
+
+    /**
+     * Genau ein Status trägt das default-Flag (er bestimmt die verfügbare Menge). Frühere Updates
+     * konnten einen zweiten anlegen; dann gewinnt der älteste. Fehlt er, wird „Einsatzbereit“
+     * (bzw. der erste Status) Standard.
+     */
+    private function ensureSingleDefaultInventoryStatus(): void
+    {
+        $defaults = InventoryArticleStatus::query()->where('default', true)->orderBy('id')->get();
+
+        if ($defaults->isEmpty()) {
+            $fallback = InventoryArticleStatus::query()->where('name', 'Einsatzbereit')->first()
+                ?? InventoryArticleStatus::query()->orderBy('order')->orderBy('id')->first();
+            $fallback?->forceFill(['default' => true])->save();
+
+            return;
+        }
+
+        $defaults->slice(1)->each(
+            static fn (InventoryArticleStatus $status) => $status->forceFill(['default' => false])->save()
+        );
     }
 
     /**
@@ -538,6 +517,29 @@ class UpdateArtwork extends Command
                 'name' => 'Standard',
             ]);
         }
+    }
+
+    /**
+     * Per SSO/LDAP angelegte Konten bekamen früher weder Kalendereinstellungen noch
+     * Zeitraumfilter oder Benachrichtigungseinstellungen (Projekt-Kalendertab → 500,
+     * keine Mails). Fehlendes wird hier nachgezogen; Vorhandenes bleibt unverändert.
+     */
+    private function initializeMissingAccountDefaults(): void
+    {
+        $this->section('Initializing missing account defaults');
+
+        $users = User::query()
+            ->whereDoesntHave('calendar_settings')
+            ->orWhereDoesntHave('userFilters', function ($query): void {
+                $query->where('filter_type', UserFilterTypes::CALENDAR_FILTER->value);
+            })
+            ->get();
+
+        foreach ($users as $user) {
+            $this->userService->initializeAccountDefaults($user);
+        }
+
+        $this->info(sprintf('%d account(s) completed', $users->count()));
     }
 
     private function remapShiftEventProjectRelations(): void

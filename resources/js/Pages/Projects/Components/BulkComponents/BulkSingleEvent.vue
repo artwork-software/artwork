@@ -798,6 +798,7 @@ const onStartDateFocusOut = async () => {
         if (payload.status && typeof payload.status === 'object' && payload.status.id) payload.status = { id: payload.status.id };
 
         // Send API request before reactive update
+        const previousEndDay = props.event.end_day;
         axios.patch(route('event.update.single.bulk', { event: props.event.id }), { data: payload })
             .then(({data}) => {
                 markRowEdited(props.event.id, data?.event?.updated_at);
@@ -806,7 +807,13 @@ const onStartDateFocusOut = async () => {
                 const snapshotKey = `event-snapshot-${props.event.id}`;
                 window.__bulkEventSnapshots[snapshotKey] = getComparableEvent({ ...props.event, day: newStart, end_day: newEndDay });
             })
-            .catch(err => console.error('bulk:patch-failed', props.event.id, err));
+            .catch(err => {
+                // Nicht gespeichert: Zeile wieder auf den gespeicherten Stand (Meldung kommt global)
+                console.error('bulk:patch-failed', props.event.id, err);
+                props.event.day = oldStart;
+                props.event.end_day = previousEndDay;
+                draftStartDate.value = oldStart;
+            });
     }
 
     // Now apply reactive changes (may trigger re-sort and component re-render)
@@ -839,7 +846,15 @@ const onAdmissionTimeFocusOut = (e) => {
     updateEventInDatabase();
 };
 
+// v-model setzt Raum/Typ, bevor @update:model-value läuft; die synchronen Watcher merken sich
+// den vorherigen Wert, damit ein fehlgeschlagenes Speichern die Zeile zurücksetzen kann.
+let roomBeforeChange = props.event.room;
+let typeBeforeChange = props.event.type;
+watch(() => props.event.room, (_newRoom, oldRoom) => { roomBeforeChange = oldRoom; }, {flush: 'sync'});
+watch(() => props.event.type, (_newType, oldType) => { typeBeforeChange = oldType; }, {flush: 'sync'});
+
 const onRoomChange = (newRoom) => {
+    const previousRoom = roomBeforeChange;
     // Send API request BEFORE reactive change to avoid component unmount during sort by room
     if (props.event.id) {
         const payload = JSON.parse(JSON.stringify(props.event));
@@ -854,12 +869,16 @@ const onRoomChange = (newRoom) => {
                 const snapshotKey = `event-snapshot-${props.event.id}`;
                 window.__bulkEventSnapshots[snapshotKey] = getComparableEvent({ ...props.event, room: newRoom });
             })
-            .catch(err => console.error('bulk:patch-failed', props.event.id, err));
+            .catch(err => {
+                console.error('bulk:patch-failed', props.event.id, err);
+                props.event.room = previousRoom;
+            });
     }
     // Reactive change already applied by v-model
 };
 
 const onTypeChange = (newType) => {
+    const previousType = typeBeforeChange;
     // Send API request BEFORE reactive change to avoid component unmount during sort by type
     if (props.event.id) {
         const payload = JSON.parse(JSON.stringify(props.event));
@@ -874,7 +893,10 @@ const onTypeChange = (newType) => {
                 const snapshotKey = `event-snapshot-${props.event.id}`;
                 window.__bulkEventSnapshots[snapshotKey] = getComparableEvent({ ...props.event, type: newType });
             })
-            .catch(err => console.error('bulk:patch-failed', props.event.id, err));
+            .catch(err => {
+                console.error('bulk:patch-failed', props.event.id, err);
+                props.event.type = previousType;
+            });
     }
     // Reactive change already applied by v-model
 };

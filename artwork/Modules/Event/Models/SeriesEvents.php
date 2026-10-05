@@ -62,6 +62,9 @@ class SeriesEvents extends Model
         ];
     }
 
+    /**
+     * @return HasMany<Event, $this>
+     */
     public function events(): HasMany
     {
         return $this->hasMany(Event::class, 'series_id', 'id');

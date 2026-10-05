@@ -313,6 +313,9 @@ import { is } from 'laravel-permission-to-vuejs'
 
 // Icons (Tabler)
 import { IconChevronDown, IconUpload, IconDownload, IconCircleX, IconEdit } from '@tabler/icons-vue'
+import { useInstanceFormat } from "@/Composeables/InstanceFormat.js";
+
+const instanceFormat = useInstanceFormat();
 
 /** Props */
 const props = defineProps<{
@@ -366,7 +369,7 @@ function isOverdue(date: string) {
     } catch { return false }
 }
 function formatCurrency(val: number) {
-    return new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR', maximumFractionDigits: 2 }).format(val || 0)
+    return new Intl.NumberFormat(instanceFormat.numberLocale, { style: 'currency', currency: instanceFormat.currency, maximumFractionDigits: 2 }).format(val || 0)
 }
 
 /** File Actions */

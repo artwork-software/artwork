@@ -193,11 +193,10 @@ import ContractEditModal from "@/Layouts/Components/ContractEditModal.vue";
 import ProjectCopyrightModal from "@/Layouts/Components/ProjectCopyrightModal.vue";
 import Permissions from "@/Mixins/Permissions.vue";
 import {Link} from '@inertiajs/vue3';
-import IconLib from "@/Mixins/IconLib.vue";
 import axios from 'axios';
 
 export default {
-    mixins: [Permissions, IconLib],
+    mixins: [Permissions],
     name: "ProjectSidenav",
     components: {
         ContractEditModal,

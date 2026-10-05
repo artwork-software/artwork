@@ -3,6 +3,7 @@ import { computed, ref } from "vue";
 import { router } from "@inertiajs/vue3";
 import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
 import ComponentIcons from "@/Components/Globale/ComponentIcons.vue";
+import { FOLDER_COMPONENT_TYPE, folderBlockReason, requiresScope } from "@/Pages/Projects/Tab/projectTabComponentRules.js";
 import SelectTabsModal from "@/Pages/Settings/Components/SelectTabsModal.vue";
 import SelectTabsModalForDisclosure from "@/Pages/Settings/Components/SelectTabsModalForDisclosure.vue";
 import { IconFolder, IconLayoutSidebarRight, IconCirclePlus } from "@tabler/icons-vue";
@@ -14,28 +15,10 @@ const props = defineProps({
 
 const emit = defineEmits(["close"]);
 
-// Komponenten, die nach dem Hinzufügen eine Tab-Auswahl (Scope) benötigen
-const scopeTypes = ["ProjectDocumentsComponent", "CommentTab", "ChecklistComponent"];
+const needsScope = computed(() => requiresScope(props.component.type));
+const isFolder = computed(() => props.component.type === FOLDER_COMPONENT_TYPE);
 
-// Große Layout-Komponenten funktionieren nicht in Ordnern (gleiche Regeln wie beim Drag & Drop)
-const blockedInDisclosure = [
-    "CalendarTab",
-    "ShiftTab",
-    "BudgetTab",
-    "BulkBody",
-    "ChecklistAllComponent",
-    "CommentAllTab",
-    "ProjectAllDocumentsComponent",
-];
-
-const needsScope = computed(() => scopeTypes.includes(props.component.type));
-const isFolder = computed(() => props.component.type === "DisclosureComponent");
-
-const folderDisabledReason = computed(() => {
-    if (isFolder.value) return "Folders cannot be nested inside folders";
-    if (blockedInDisclosure.includes(props.component.type)) return "This component cannot be placed inside a folder";
-    return null;
-});
+const folderDisabledReason = computed(() => folderBlockReason(props.component.type));
 
 const sidebarDisabledReason = computed(() => {
     if (isFolder.value) return "Folder components cannot be placed in the sidebar";

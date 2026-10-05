@@ -22,6 +22,9 @@ class RoomAttribute extends Model
         'name'
     ];
 
+    /**
+     * @return BelongsToMany<Room, $this>
+     */
     public function rooms(): BelongsToMany
     {
         return $this->belongsToMany(Room::class)->using(RoomRoomAttributeMapping::class);

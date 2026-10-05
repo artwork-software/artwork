@@ -221,6 +221,9 @@ import BiEventMetricsTable from '@/Pages/Projects/Components/BiComponents/BiEven
 import BiModeSwitchModal from '@/Pages/Projects/Components/BiComponents/BiModeSwitchModal.vue';
 import { useTranslation } from '@/Composeables/Translation.js';
 import { useBiSaveFeedback } from '@/Composeables/BiSaveFeedback.js';
+import { useInstanceFormat } from "@/Composeables/InstanceFormat.js";
+
+const instanceFormat = useInstanceFormat();
 
 const t = useTranslation();
 const biSave = useBiSaveFeedback();
@@ -467,8 +470,8 @@ const effectiveCapacities = computed(() => {
     return result;
 });
 
-const numberFmt = new Intl.NumberFormat('de-DE');
-const currencyFmt = new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' });
+const numberFmt = new Intl.NumberFormat(instanceFormat.numberLocale);
+const currencyFmt = new Intl.NumberFormat(instanceFormat.numberLocale, { style: 'currency', currency: instanceFormat.currency });
 
 const formatInt = (v) => numberFmt.format(v ?? 0);
 

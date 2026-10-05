@@ -75,11 +75,17 @@ class UserOvertime extends Model
             ->dontSubmitEmptyLogs();
     }
 
+    /**
+     * @return BelongsTo<User, $this>
+     */
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class, 'user_id', 'id', 'user');
     }
 
+    /**
+     * @return BelongsTo<User, $this>
+     */
     public function paidOutByUser(): BelongsTo
     {
         return $this->belongsTo(User::class, 'paid_out_by', 'id', 'paidOutByUser');

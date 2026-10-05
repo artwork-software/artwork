@@ -39,6 +39,7 @@
 
 import {computed, onMounted, onUnmounted, ref} from "vue";
 import {router} from "@inertiajs/vue3";
+import { canBePlacedInFolder, folderBlockReason, requiresScope } from "@/Pages/Projects/Tab/projectTabComponentRules.js";
 import { EventListenerForDragging } from "@/Composeables/EventListenerForDragging.js";
 import SelectTabsModalForDisclosure from "@/Pages/Settings/Components/SelectTabsModalForDisclosure.vue";
 
@@ -69,28 +70,10 @@ const componentData = ref(null);
 const { isDragging, draggedComponent, addEventListenerForDraggingStart, removeEventListenerForDraggingStart } = EventListenerForDragging();
 let listeners = null;
 
-// Große Layout-Komponenten blockieren – diese funktionieren nicht in Ordnern
-const blockedInDisclosure = [
-    'CalendarTab',
-    'ShiftTab',
-    'BudgetTab',
-    'BulkBody',
-    'ChecklistAllComponent',
-    'CommentAllTab',
-    'ProjectAllDocumentsComponent',
-];
-
 // Übersetzungskey des Ablage-Verbots für die aktuell gezogene Komponente (null = erlaubt)
 const invalidDropReason = computed(() => {
     const data = draggedComponent.value;
-    if (!data) return null;
-    if (data.type === 'DisclosureComponent') {
-        return 'Folders cannot be nested inside folders';
-    }
-    if (blockedInDisclosure.includes(data.type)) {
-        return 'This component cannot be placed inside a folder';
-    }
-    return null;
+    return data ? folderBlockReason(data.type) : null;
 });
 
 onMounted(() => {
@@ -122,18 +105,12 @@ const onDrop = (event) => {
         return false;
     }
 
-    if(data.type === 'DisclosureComponent') {
+    if(!canBePlacedInFolder(data.type)) {
         dropOver.value = false;
         return false;
     }
 
-    if(blockedInDisclosure.includes(data.type)) {
-        dropOver.value = false;
-        return false;
-    }
-
-    // Check if component requires scope selection (CommentTab, ChecklistComponent, or ProjectDocumentsComponent)
-    if(data.type === 'ProjectDocumentsComponent' || data.type === 'CommentTab' || data.type === 'ChecklistComponent') {
+    if(requiresScope(data.type)) {
         componentData.value = data;
         showSelectTabsModal.value = true;
         dropOver.value = false;

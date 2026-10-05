@@ -4,6 +4,9 @@ namespace Artwork\Modules\Category\Http\Resources;
 
 use Illuminate\Http\Resources\Json\JsonResource;
 
+/**
+ * @mixin \Artwork\Modules\Category\Models\Category
+ */
 class CategoryIndexResource extends JsonResource
 {
     /**

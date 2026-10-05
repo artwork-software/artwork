@@ -43,6 +43,9 @@ class ProjectTab extends Model
 
     protected $with = ['components', 'sidebarTabs'];
 
+    /**
+     * @return BelongsToMany<User, $this>
+     */
     public function visibleUsers(): BelongsToMany
     {
         return $this->belongsToMany(
@@ -53,6 +56,9 @@ class ProjectTab extends Model
         );
     }
 
+    /**
+     * @return BelongsToMany<Department, $this>
+     */
     public function visibleDepartments(): BelongsToMany
     {
         return $this->belongsToMany(
@@ -108,11 +114,17 @@ class ProjectTab extends Model
     }
 
 
+    /**
+     * @return HasMany<ComponentInTab, $this>
+     */
     public function components(): HasMany
     {
         return $this->hasMany(ComponentInTab::class, 'project_tab_id', 'id');
     }
 
+    /**
+     * @return HasMany<ProjectTabSidebarTab, $this>
+     */
     public function sidebarTabs(): HasMany
     {
         return $this->hasMany(ProjectTabSidebarTab::class, 'project_tab_id', 'id')->orderBy('order');

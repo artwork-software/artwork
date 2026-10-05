@@ -277,4 +277,29 @@ final class ShareCalendarDateTest extends FeatureTestCase
             'context' => 'calendar',
         ])->assertForbidden();
     }
+
+    #[Test]
+    public function date_updates_reject_missing_invalid_or_reversed_periods(): void
+    {
+        $user = User::factory()->create(['share_calendar_date' => false]);
+        $this->actingAs($user);
+
+        foreach (
+            [
+                'update.user.calendar.filter.dates',
+                'update.user.shift.calendar.filter.dates',
+                'update.user.shift-list-view.filter.dates',
+                'update.user.inventory.article-plan.filters.update',
+            ] as $routeName
+        ) {
+            $this->patch(route($routeName, $user), [])
+                ->assertSessionHasErrors(['start_date', 'end_date']);
+            $this->patch(route($routeName, $user), ['start_date' => 'kein-datum', 'end_date' => '2026-08-16'])
+                ->assertSessionHasErrors('start_date');
+            $this->patch(route($routeName, $user), ['start_date' => '2026-08-16', 'end_date' => '2026-08-03'])
+                ->assertSessionHasErrors('end_date');
+        }
+
+        $this->assertSame(0, $user->userFilters()->whereNotNull('start_date')->count());
+    }
 }

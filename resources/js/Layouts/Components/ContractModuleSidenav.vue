@@ -37,12 +37,11 @@ import ContractModuleDeleteModal from "@/Layouts/Components/ContractModuleDelete
 import ContractModuleUploadModal from "@/Layouts/Components/ContractModuleUploadModal.vue";
 import {usePage} from "@inertiajs/vue3";
 import Permissions from "@/Mixins/Permissions.vue";
-import IconLib from "@/Mixins/IconLib.vue";
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 
 export default {
     name: "ContractModuleSidenav",
-    mixins: [Permissions, IconLib],
+    mixins: [Permissions],
     props: {
         contractModules: Object
     },

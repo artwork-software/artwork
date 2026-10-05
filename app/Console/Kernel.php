@@ -61,7 +61,11 @@ class Kernel extends ConsoleKernel
         $schedule->command(NotifyCraftIfShiftDeadlineReached::class)->dailyAt('07:00');
         $schedule->command(NotifyShiftPlanRequestDeadlineReached::class)->dailyAt('07:15')->runInBackground();
         $schedule->command(DeleteExpiredNotificationsForAllCommand::class)->everyFiveMinutes()->runInBackground();
-        $schedule->command(SendNotificationsEmailSummariesCommand::class)->dailyAt('9:00');
+        // Zusammenfassungen: täglich um 9 Uhr, Wochentage je Häufigkeit (NotificationFrequencyEnum::isDueOn)
+        $schedule->command(SendNotificationsEmailSummariesCommand::class)->dailyAt('9:00')
+            // Sperre nur 2 h statt 24 h: ein abgebrochener Lauf darf den nächsten Tag nicht blockieren
+            ->withoutOverlapping(120)
+            ->onOneServer();
         // BI-Exportdateien bleiben für Re-Downloads liegen und werden nach 24 h entfernt
         $schedule->command(CleanupBiExportsCommand::class)->dailyAt('03:30')->runInBackground();
         $schedule->command(CleanupExportPdfsCommand::class)->dailyAt('03:40')->runInBackground();

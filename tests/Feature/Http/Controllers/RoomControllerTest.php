@@ -130,6 +130,57 @@ final class RoomControllerTest extends FeatureTestCase
     }
 
     #[Test]
+    public function room_create_and_update_validate_their_fields(): void
+    {
+        $this->actingAsAdmin();
+        $area = Area::factory()->create();
+
+        $this->post(route('rooms.store'), ['name' => '', 'area_id' => $area->id])
+            ->assertSessionHasErrors('name');
+        $this->post(route('rooms.store'), ['name' => 'Ohne Areal'])
+            ->assertSessionHasErrors('area_id');
+        // Temporärer Raum ohne Enddatum würde nie automatisch entfernt.
+        $this->post(route('rooms.store'), ['name' => 'Zelt', 'area_id' => $area->id, 'temporary' => true])
+            ->assertSessionHasErrors('end_date');
+        $this->post(route('rooms.store'), [
+            'name' => 'Zelt',
+            'area_id' => $area->id,
+            'temporary' => true,
+            'start_date' => '2026-10-10',
+            'end_date' => '2026-10-01',
+        ])->assertSessionHasErrors('end_date');
+        $this->assertDatabaseMissing('rooms', ['name' => 'Zelt']);
+
+        $this->post(route('rooms.store'), [
+            'name' => 'Zelt',
+            'area_id' => $area->id,
+            'temporary' => true,
+            'start_date' => '2026-10-01',
+            'end_date' => '2026-10-10',
+        ])->assertSessionHasNoErrors()->assertRedirect(route('areas.management'));
+        $this->assertDatabaseHas('rooms', ['name' => 'Zelt', 'area_id' => $area->id]);
+
+        $room = Room::factory()->create(['name' => 'Alt']);
+        $this->patch(route('rooms.update', $room), ['name' => ''])->assertSessionHasErrors('name');
+        $this->assertSame('Alt', $room->fresh()->name);
+    }
+
+    #[Test]
+    public function free_rooms_require_a_valid_period_of_at_most_one_year(): void
+    {
+        $this->actingAsAdmin();
+
+        $this->getJson(route('rooms.free'))->assertJsonValidationErrors(['start', 'end']);
+        $this->getJson(route('rooms.free', ['start' => 'kein-datum', 'end' => '2026-10-10']))
+            ->assertJsonValidationErrors('start');
+        $this->getJson(route('rooms.free', ['start' => '2026-01-01', 'end' => '2027-06-01']))
+            ->assertJsonValidationErrors('end');
+        $this->getJson(route('rooms.free', ['start' => '2026-10-01', 'end' => '2026-10-03']))
+            ->assertOk()
+            ->assertJsonStructure(['rooms']);
+    }
+
+    #[Test]
     public function admin_can_update_room(): void
     {
         $this->actingAsAdmin();

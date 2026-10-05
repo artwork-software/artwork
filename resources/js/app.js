@@ -1,15 +1,17 @@
 // resources/js/app.js
+import { createInstanceFormatter } from '@/Helper/instanceFormat.js'
 import './bootstrap'
 import '../css/app.css'
 import '../css/global.css'
 
 import { createApp, h } from 'vue'
-import { createInertiaApp, router } from '@inertiajs/vue3'
+import { createInertiaApp, router, usePage } from '@inertiajs/vue3'
 import { createI18n } from 'vue-i18n'
 import LaravelPermissionToVueJS from 'laravel-permission-to-vuejs'
 import PrimeVue from 'primevue/config'
 import Aura from '@primeuix/themes/aura'
 import Tooltip from 'primevue/tooltip'
+import {messageForFailedRequest, setAppToastTranslator, showAppToast, t} from './Helper/appToast'
 
 async function loadLocaleMessages(locale) {
     // Vite macht daraus separate Chunks pro Sprache
@@ -62,6 +64,12 @@ createInertiaApp({
         i18n.global.setLocaleMessage(initialLocale, messages.default || messages)
 
         app.use(i18n)
+        setAppToastTranslator((key) => i18n.global.t(key))
+        // Kurzmeldungen aus Komponenten: this.$toast.error(...) / .success(...)
+        app.config.globalProperties.$toast = {
+            success: (message) => showAppToast('success', message),
+            error: (message) => showAppToast('error', message),
+        }
         app.use(PrimeVue, {
             theme: {preset: Aura, options: {darkModeSelector: '.fake-dark-selector'}},
             ripple: true,
@@ -70,6 +78,11 @@ createInertiaApp({
         //app.use(VueMathjax)
         app.use(LaravelPermissionToVueJS)
 
+
+        // Regionale Formate der Instanz in Templates: {{ $currencySymbol() }}, {{ $formatCurrency(x) }}
+        const instanceFormatter = () => createInstanceFormatter(usePage()?.props?.instanceFormat)
+        app.config.globalProperties.$currencySymbol = () => instanceFormatter().currencySymbol
+        app.config.globalProperties.$formatCurrency = (value) => instanceFormatter().formatCurrency(value)
 
         app.config.globalProperties.$updateLocale = (newLocale) => {
             i18n.global.locale.value = newLocale
@@ -90,18 +103,25 @@ createInertiaApp({
 
         const status = event.detail.response?.status
         if (status === 401 || status === 419) {
-            alert('Deine Sitzung ist abgelaufen. Die Seite wird neu geladen, damit du dich wieder einloggen kannst.')
+            alert(t('Your session has expired. The page will reload so you can sign in again.'))
             window.location.reload()
         } else if (status === 409) {
             // Echter Konflikt (z.B. Raumanfrage wurde parallel bereits beantwortet).
             // Kein Session-Problem — Inertia-Versions-409er tragen X-Inertia-Location
             // und werden von Inertia selbst behandelt, bevor 'invalid' feuert.
-            alert('Die Aktion konnte nicht ausgeführt werden, weil die Daten inzwischen geändert wurden. Die Seite wird neu geladen.')
+            alert(t('The action could not be completed because the data has changed in the meantime. The page will reload.'))
             window.location.reload()
         } else if (status === 413) {
             // Server (nginx client_max_body_size / PHP post_max_size) hat den
             // Request abgelehnt, weil die Dateien zusammen zu groß sind.
-            alert('Die hochgeladenen Dateien sind zusammen zu groß für den Server. Bitte lade weniger oder kleinere Dateien auf einmal hoch.')
+            alert(t('The uploaded files are too large for the server in total. Please upload fewer or smaller files at once.'))
+        } else {
+            // 403/404/5xx: vorher stillschweigend verworfen – das Modal blieb offen,
+            // ohne Hinweis, dass nichts gespeichert wurde.
+            const message = messageForFailedRequest(status)
+            if (message) {
+                showAppToast('error', t(message))
+            }
         }
     })
 })

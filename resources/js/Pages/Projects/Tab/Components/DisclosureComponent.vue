@@ -66,40 +66,6 @@ import {usePage} from "@inertiajs/vue3";
 import {computed, inject, provide} from "vue";
 import {usePermission} from "@/Composeables/Permission.js";
 import {countFolderNonDefaultValues} from "@/Helper/ProjectComponentValueState.js";
-import TextField from "@/Pages/Projects/Tab/Components/TextField.vue";
-import Checkbox from "@/Pages/Projects/Tab/Components/Checkbox.vue";
-import Title from "@/Pages/Projects/Tab/Components/Title.vue";
-import TextArea from "@/Pages/Projects/Tab/Components/TextArea.vue";
-import DropDown from "@/Pages/Projects/Tab/Components/DropDown.vue";
-import LinkComponent from "@/Pages/Projects/Tab/Components/LinkComponent.vue";
-import LinkListComponent from "@/Pages/Projects/Tab/Components/LinkListComponent.vue";
-import CrmContactListComponent from "@/Pages/Projects/Tab/Components/CrmContactListComponent.vue";
-import ProjectStateComponent from "@/Pages/Projects/Components/ProjectStateComponent.vue";
-import CalendarTab from "@/Pages/Projects/Tab/Components/CalendarTab.vue";
-import ShiftTab from "@/Pages/Projects/Tab/Components/ShiftTab.vue";
-import BudgetTab from "@/Pages/Projects/Tab/Components/BudgetTab.vue";
-import ProjectBudgetDeadlineComponent from "@/Pages/Projects/Components/ProjectBudgetDeadlineComponent.vue";
-import SeparatorComponent from "@/Pages/Projects/Tab/Components/SeparatorComponent.vue";
-import ProjectGroupComponent from "@/Pages/Projects/Components/ProjectGroupComponent.vue";
-import ProjectTeamComponent from "@/Pages/Projects/Components/ProjectTeamComponent.vue";
-import ProjectAttributesComponent from "@/Pages/Projects/Components/ProjectAttributesComponent.vue";
-// Component can be removed - kept for backwards compatibility if still configured in customer projects
-// import RelevantDatesForShiftPlanningComponent
-//     from "@/Pages/Projects/Components/RelevantDatesForShiftPlanningComponent.vue";
-import ShiftContactPersonsComponent from "@/Pages/Projects/Components/ShiftContactPersonsComponent.vue";
-import GeneralShiftInformationComponent from "@/Pages/Projects/Components/GeneralShiftInformationComponent.vue";
-import CommentTab from "@/Pages/Projects/Tab/Components/CommentTab.vue";
-import ProjectTitleComponent from "@/Pages/Projects/Components/ProjectTitleComponent.vue";
-import ChecklistComponent from "@/Pages/Projects/Components/ChecklistComponent.vue";
-import ProjectDocumentsComponent from "@/Pages/Projects/Components/ProjectDocumentsComponent.vue";
-import ProjectAllDocumentsComponent from "@/Pages/Projects/Components/ProjectAllDocumentsComponent.vue";
-import ChecklistAllComponent from "@/Pages/Projects/Components/ChecklistAllComponent.vue";
-import CommentAllTab from "@/Pages/Projects/Tab/Components/CommentAllTab.vue";
-import BudgetInformations from "@/Pages/Projects/Tab/Components/BudgetInformations.vue";
-import BulkBody from "@/Pages/Projects/Components/BulkComponents/BulkBody.vue";
-import ArtistResidenciesComponent from "@/Pages/Projects/Tab/Components/ArtistResidenciesComponent.vue";
-import GroupProjectDisplayComponent from "@/Pages/Projects/Components/GroupProjectDisplayComponent.vue";
-import ProjectGroupDisplayComponent from "@/Pages/Projects/Components/ProjectGroupDisplayComponent.vue";
 import {IconChevronDown} from "@tabler/icons-vue";
 
 const props = defineProps({
@@ -138,40 +104,7 @@ const loadedProjectInformation = inject("loadedProjectInformation");
 
 const { canSeeComponent, canEditComponent } = usePermission(usePage().props);
 
-const componentMapping = {
-    TextField,
-    Checkbox,
-    Title,
-    TextArea,
-    DropDown,
-    Link: LinkComponent,
-    ProjectStateComponent,
-    CalendarTab,
-    ShiftTab,
-    BudgetTab,
-    ProjectBudgetDeadlineComponent,
-    SeparatorComponent,
-    ProjectGroupComponent,
-    ProjectTeamComponent,
-    ProjectAttributesComponent,
-    // RelevantDatesForShiftPlanningComponent, // Commented out - component can be removed
-    ShiftContactPersonsComponent,
-    GeneralShiftInformationComponent,
-    CommentTab,
-    ProjectTitleComponent,
-    ChecklistComponent,
-    ProjectDocumentsComponent,
-    ProjectAllDocumentsComponent,
-    ChecklistAllComponent,
-    CommentAllTab,
-    BudgetInformations,
-    BulkBody,
-    ArtistResidenciesComponent,
-    GroupProjectDisplayComponent,
-    ProjectGroupDisplayComponent,
-    LinkList: LinkListComponent,
-    CrmContactListComponent,
-};
+const componentMapping = inject('folderComponentMapping', {});
 
 const nonDefaultValueCount = computed(() =>
     countFolderNonDefaultValues(

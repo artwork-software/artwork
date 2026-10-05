@@ -49,21 +49,33 @@ class Checklist extends Model
         'private' => 'boolean',
     ];
 
+    /**
+     * @return HasMany<Task, $this>
+     */
     public function tasks(): HasMany
     {
         return $this->hasMany(Task::class);
     }
 
+    /**
+     * @return BelongsTo<User, $this>
+     */
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class, 'user_id', 'id', 'users');
     }
 
+    /**
+     * @return BelongsTo<Project, $this>
+     */
     public function project(): BelongsTo
     {
         return $this->belongsTo(Project::class, 'project_id', 'id', 'projects');
     }
 
+    /**
+     * @return BelongsToMany<User, $this>
+     */
     public function users(): BelongsToMany
     {
         return $this->belongsToMany(

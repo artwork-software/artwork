@@ -278,7 +278,7 @@ class EventVerificationController extends Controller
 
     public function rejectByEvents(Request $request): void
     {
-        $events = $request->collect('events', []);
+        $events = $request->collect('events');
         foreach ($events as $eventId) {
             /** @var Event $event */
             $event = $this->eventService->findEventById($eventId);
@@ -288,7 +288,7 @@ class EventVerificationController extends Controller
 
     public function approvedByEvents(Request $request): void
     {
-        $events = $request->collect('events', []);
+        $events = $request->collect('events');
         foreach ($events as $eventId) {
             /** @var Event $event */
             $event = $this->eventService->findEventById($eventId);
@@ -298,7 +298,7 @@ class EventVerificationController extends Controller
 
     public function requestVerification(Request $request): void
     {
-        $events = $request->collect('events', []);
+        $events = $request->collect('events');
         foreach ($events as $eventId) {
             /** @var Event $event */
             $event = $this->eventService->findEventById($eventId);

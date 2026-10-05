@@ -187,25 +187,6 @@ class ShiftService
         return $this->shiftRepository->delete($shift);
     }
 
-    public function deleteShifts(
-        Collection|array $shifts,
-        ShiftsQualificationsService $shiftsQualificationsService,
-        ShiftUserService $shiftUserService,
-        ShiftFreelancerService $shiftFreelancerService,
-        ShiftServiceProviderService $shiftServiceProviderService
-    ): void {
-        /** @var Shift $shift */
-        foreach ($shifts as $shift) {
-            $this->delete(
-                $shift,
-                $shiftsQualificationsService,
-                $shiftUserService,
-                $shiftFreelancerService,
-                $shiftServiceProviderService
-            );
-        }
-    }
-
     public function restoreShifts(
         Collection|array $shifts,
         ShiftsQualificationsService $shiftsQualificationsService

@@ -45,38 +45,23 @@ readonly class InventoryCategoryRepository
             }
         };
 
+        // Die Seitenleiste braucht je Kategorie/Unterkategorie nur die Anzahl der (gefilterten) Artikel,
+        // das Artikel-Modal die Eigenschaften. Früher wurde hier der komplette Artikelbaum samt
+        // Eigenschaften und Bildern geladen (~6 KB je Artikel auf jedem Inventar-Aufruf).
         return $this->getNewModelQuery()
             ->with([
-                'subcategories' => function ($query): void {
+                'subcategories' => function ($query) use ($restrict): void {
                     $query
-                        ->orderBy('name');
+                        ->orderBy('name')
+                        ->withCount(['articles' => $restrict]);
                 },
-                'subcategories.articles' => function ($query) use ($restrict): void {
-                    $restrict($query);
-                },
-                'subcategories.articles.category:id,name',
-                'subcategories.articles.subCategory:id,name',
-                'subcategories.articles.properties',
                 'subcategories.properties:id,name,type,select_values',
                 'properties' => function ($query): void {
                     $query
                         ->orderBy('name');
                 },
-                'articles' => function ($query) use ($restrict): void {
-                    $query
-                        ->with([
-                            'category:id,name',
-                            'subCategory:id,name',
-                            'properties',
-                            'images' => function ($q): void {
-                                $q->where('is_main_image', true)
-                                    ->select('id', 'inventory_article_id', 'image', 'thumbnail', 'is_main_image');
-                            }
-                        ])
-                        ->withCount('detailedArticleQuantities');
-                    $restrict($query);
-                }
             ])
+            ->withCount(['articles' => $restrict])
             ->orderBy('name')
             ->get();
     }

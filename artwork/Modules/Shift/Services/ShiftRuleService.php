@@ -195,17 +195,6 @@ class ShiftRuleService
         $this->shiftRuleViolationRepository->ignore($violation, $userId, $ignoreReason);
     }
 
-    public function updateViolationStatus(int $violationId, string $status, ?int $userId = null): void
-    {
-        $violation = $this->shiftRuleViolationRepository->findOrFail($violationId);
-
-        if ($status === 'resolved') {
-            $this->shiftRuleViolationRepository->resolve($violation, $userId);
-        } else {
-            $this->shiftRuleViolationRepository->ignore($violation, $userId);
-        }
-    }
-
     public function processViolation(ShiftRuleViolation $violation, array $attributes, int $userId): void
     {
         $this->shiftRuleViolationRepository->update($violation, $attributes);

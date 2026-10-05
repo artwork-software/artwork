@@ -97,4 +97,23 @@ final class ExternalUserGroupMappingControllerTest extends FeatureTestCase
             $this->payload(['role_ids' => [$adminRole->id]])
         )->assertCreated();
     }
+
+    #[Test]
+    public function only_admins_can_change_or_delete_a_mapping_that_grants_the_admin_role(): void
+    {
+        $adminRole = Role::findOrCreate(RoleEnum::ARTWORK_ADMIN->value, 'web');
+        $mapping = ExternalUserGroupMapping::query()->create($this->payload(['role_ids' => [$adminRole->id]]));
+        $this->actingAsUserWith(PermissionEnum::SETTINGS_UPDATE->value);
+
+        // vorher: Löschen entzog beim nächsten Sync allen Admins der Gruppe die Rolle
+        $this->deleteJson(route('tool.external-user-management.group-mappings.destroy', $mapping))->assertForbidden();
+        $this->putJson(
+            route('tool.external-user-management.group-mappings.update', $mapping),
+            $this->payload(['role_ids' => []])
+        )->assertForbidden();
+        $this->assertSame([$adminRole->id], array_map('intval', $mapping->fresh()->role_ids));
+
+        $this->actingAsAdmin();
+        $this->deleteJson(route('tool.external-user-management.group-mappings.destroy', $mapping))->assertOk();
+    }
 }

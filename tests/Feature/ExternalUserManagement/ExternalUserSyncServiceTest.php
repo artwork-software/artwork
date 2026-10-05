@@ -157,4 +157,20 @@ final class ExternalUserSyncServiceTest extends FeatureTestCase
         $this->syncWith([$this->entry('lia', 'lia@example.test', [self::GROUP_DN])]);
         $this->assertFalse($user->fresh()->hasPermissionTo($this->permission));
     }
+
+    #[Test]
+    public function rights_given_by_hand_survive_leaving_the_group_and_deleting_the_mapping(): void
+    {
+        // Lokales Konto hatte das Recht schon von Hand, bevor es mit dem Verzeichnis verknüpft wurde
+        $local = User::factory()->create(['email' => 'hand@example.test']);
+        $local->givePermissionTo($this->permission);
+        $this->syncWith([$this->entry('hand', 'hand@example.test', [self::GROUP_DN])]);
+
+        $this->syncWith([$this->entry('hand', 'hand@example.test', [])]);
+        $this->assertTrue($local->fresh()->hasPermissionTo($this->permission));
+
+        ExternalUserGroupMapping::query()->where('source_id', $this->source->id)->delete();
+        $this->syncWith([$this->entry('hand', 'hand@example.test', [self::GROUP_DN])]);
+        $this->assertTrue($local->fresh()->hasPermissionTo($this->permission));
+    }
 }

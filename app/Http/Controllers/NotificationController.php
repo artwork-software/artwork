@@ -17,7 +17,6 @@ use Artwork\Modules\GlobalNotification\Services\GlobalNotificationService;
 use Artwork\Modules\Notification\Jobs\ArchiveUserNotificationsJob;
 use Artwork\Modules\Notification\Enums\NotificationFrequencyEnum;
 use Artwork\Modules\Notification\Enums\NotificationGroupEnum;
-use Artwork\Modules\Notification\Http\Resources\NotificationProjectResource;
 use Artwork\Modules\Notification\Models\NotificationSetting;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Enum\ProjectTabComponentEnum;
@@ -64,7 +63,8 @@ class NotificationController extends Controller
         // verweigert MySQL 8 (ONLY_FULL_GROUP_BY) diese ORDER BY, MariaDB nicht.
         $rows = $user->notifications()
             ->reorder()
-            ->selectRaw("JSON_UNQUOTE(JSON_EXTRACT(data, '$.groupType')) as group_type")
+            // groupType ist eine generierte Spalte aus data (Index Empfänger/Gruppe/gelesen)
+            ->selectRaw('groupType as group_type')
             ->selectRaw('SUM(CASE WHEN read_at IS NULL THEN 1 ELSE 0 END) as unread')
             ->selectRaw('SUM(CASE WHEN read_at IS NOT NULL THEN 1 ELSE 0 END) as archived')
             ->groupBy('group_type')
@@ -191,12 +191,9 @@ class NotificationController extends Controller
             'globalNotification' => $globalNotificationService->getGlobalNotificationEnrichedByImageUrl(),
             'rooms' => RoomIndexWithoutEventsResource::collection(Room::all())->resolve(),
             'eventTypes' => EventTypeResource::collection(EventType::query()->with('verifiers')->get())->resolve(),
-            'projects' => NotificationProjectResource::collection(
-                Project::select([
-                    'id', 'name', 'shift_description',
-                    'number_of_participants', 'is_group', 'key_visual_path', 'cost_center_id'
-                ])->with(['groups', 'sectors', 'categories', 'genres', 'costCenter'])->get()
-            )->resolve(),
+            // Die Antwort-Modals zeigen nur den Projektnamen; vorher gingen alle Projekte mit
+            // Gruppen, Sektoren, Kategorien, Genres und Kostenstelle mit (MB bei großen Häusern).
+            'projects' => Project::query()->select(['id', 'name'])->get(),
             // "Termine immer direkt buchbar": Anfrage-/Verifizierungs-Benachrichtigungen gibt es nicht mehr
             'notificationSettings' => $user->notificationSettings()->get()
                 ->when(
@@ -255,7 +252,7 @@ class NotificationController extends Controller
         $query = Auth::user()
             ->notifications()
             ->select(['id', 'type', 'data', 'read_at', 'created_at'])
-            ->where('data->groupType', $validated['groupType'])
+            ->where('groupType', $validated['groupType'])
             ->orderBy('created_at', 'desc');
 
         $status === 'archived' ? $query->whereNotNull('read_at') : $query->whereNull('read_at');
@@ -300,7 +297,7 @@ class NotificationController extends Controller
 
         $unreadQuery = $user->notifications()->whereNull('read_at');
         if ($groupType !== null) {
-            $unreadQuery->where('data->groupType', $groupType);
+            $unreadQuery->where('groupType', $groupType);
         }
 
         if ($unreadQuery->count() > self::INLINE_ARCHIVE_THRESHOLD) {

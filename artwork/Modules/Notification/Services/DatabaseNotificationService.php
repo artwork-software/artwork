@@ -60,7 +60,7 @@ class DatabaseNotificationService
         $query = $user->notifications()->whereNull('read_at');
 
         if ($groupType !== null) {
-            $query->where('data->groupType', $groupType);
+            $query->where('groupType', $groupType);
         }
 
         $query->select(['id', 'data'])

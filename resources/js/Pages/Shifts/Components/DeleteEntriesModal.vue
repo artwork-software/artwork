@@ -1,8 +1,8 @@
 <template>
     <BaseModal @closed="$emit('close', {closing: false})">
         <ModalHeader
-            title="Löschen"
-            description="Alle Einträge (inklusive Schichten) für die ausgewählten Termine löschen?"
+            :title="$t('Delete')"
+            :description="$t('Delete all entries (including shifts) for the selected events?')"
         />
         <div class="flex items-center justify-center gap-4">
             <button

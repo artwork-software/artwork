@@ -110,8 +110,8 @@
             />
 
             <ConfirmDeleteModal
-                title="Event Status löschen"
-                description="Möchtest du den Event Status wirklich löschen?"
+                :title="$t('Delete event status')"
+                :description="$t('Do you really want to delete the event status?')"
                 v-if="showDeleteEventStatusModal"
                 @closed="showDeleteEventStatusModal = false"
                 @delete="deleteEventStatus"

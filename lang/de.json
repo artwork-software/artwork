@@ -8559,5 +8559,20 @@
     "The end must be after the start.": "Das Ende muss nach dem Beginn liegen.",
     "This category still contains articles (also in the trash). Move or permanently delete them first.": "Diese Kategorie enthält noch Artikel (auch im Papierkorb). Verschiebe sie oder lösche sie endgültig, bevor du die Kategorie löschst.",
     "Are you sure you want to delete this category? Its sub-categories will be deleted as well. Categories that still contain articles cannot be deleted.": "Möchtest du diese Kategorie wirklich löschen? Ihre Unterkategorien werden ebenfalls gelöscht. Kategorien, die noch Artikel enthalten, lassen sich nicht löschen.",
-    "This article is reserved in {0} upcoming material issue(s). It stays part of these issues, but no longer counts as available. Delete anyway?": "Dieser Artikel ist in {0} anstehenden Materialausgabe(n) reserviert. Er bleibt Teil dieser Ausgaben, zählt aber nicht mehr als verfügbar. Trotzdem löschen?"
+    "This article is reserved in {0} upcoming material issue(s). It stays part of these issues, but no longer counts as available. Delete anyway?": "Dieser Artikel ist in {0} anstehenden Materialausgabe(n) reserviert. Er bleibt Teil dieser Ausgaben, zählt aber nicht mehr als verfügbar. Trotzdem löschen?",
+    "Deselect all records": "Alle Datensätze abwählen",
+    "Select all records": "Alle Datensätze auswählen",
+    "Collective bookings": "Sammelbuchungen",
+    "Only include the current tab": "Nur aktuellen Tab einbeziehen",
+    "Choose an icon for the project group.": "Wähle ein Icon für die Projektgruppe aus.",
+    "Choose a color for the project group.": "Wähle eine Farbe für die Projektgruppe aus.",
+    "Delete event status": "Event Status löschen",
+    "Do you really want to delete the event status?": "Möchtest du den Event Status wirklich löschen?",
+    "Project overview": "Projektübersicht",
+    "Selecting an icon is required": "Icon auswählen notwendig",
+    "Update date": "Update Datum",
+    "ldaps://ad.domain.tld or ldap://ad.domain.tld": "ldaps://ad.domain.tld oder ldap://ad.domain.tld",
+    "Delete all entries (including shifts) for the selected events?": "Alle Einträge (inklusive Schichten) für die ausgewählten Termine löschen?",
+    "No times have been set yet. Click here to create times": "Es wurden noch keine Zeiten festgelegt. Klicke hier um Zeiten zu erstellen",
+    "Do you really want to delete this event? This action cannot be undone.": "Möchtest du diesen Termin wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden."
 }

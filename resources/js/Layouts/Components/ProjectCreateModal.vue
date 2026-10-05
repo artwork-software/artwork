@@ -273,7 +273,7 @@
                                 <IconSelector @update:modelValue="addIconToForm" :current-icon="createProjectForm.icon" />
                                 <BasePageTitle
                                     title="Icon"
-                                    description="Wähle ein Icon für die Projektgruppe aus."
+                                    :description="$t('Choose an icon for the project group.')"
                                 />
                                 <button
                                     v-if="createProjectForm.icon"
@@ -291,7 +291,7 @@
                                 </div>
                                 <BasePageTitle
                                     title="Farbe"
-                                    description="Wähle eine Farbe für die Projektgruppe aus."
+                                    :description="$t('Choose a color for the project group.')"
                                     />
 
                             </div>

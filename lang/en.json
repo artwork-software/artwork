@@ -8550,5 +8550,20 @@
     "The end must be after the start.": "The end must be after the start.",
     "This category still contains articles (also in the trash). Move or permanently delete them first.": "This category still contains articles (also in the trash). Move or permanently delete them first.",
     "Are you sure you want to delete this category? Its sub-categories will be deleted as well. Categories that still contain articles cannot be deleted.": "Are you sure you want to delete this category? Its sub-categories will be deleted as well. Categories that still contain articles cannot be deleted.",
-    "This article is reserved in {0} upcoming material issue(s). It stays part of these issues, but no longer counts as available. Delete anyway?": "This article is reserved in {0} upcoming material issue(s). It stays part of these issues, but no longer counts as available. Delete anyway?"
+    "This article is reserved in {0} upcoming material issue(s). It stays part of these issues, but no longer counts as available. Delete anyway?": "This article is reserved in {0} upcoming material issue(s). It stays part of these issues, but no longer counts as available. Delete anyway?",
+    "Deselect all records": "Deselect all records",
+    "Select all records": "Select all records",
+    "Collective bookings": "Collective bookings",
+    "Only include the current tab": "Only include the current tab",
+    "Choose an icon for the project group.": "Choose an icon for the project group.",
+    "Choose a color for the project group.": "Choose a color for the project group.",
+    "Delete event status": "Delete event status",
+    "Do you really want to delete the event status?": "Do you really want to delete the event status?",
+    "Project overview": "Project overview",
+    "Selecting an icon is required": "Selecting an icon is required",
+    "Update date": "Update date",
+    "ldaps://ad.domain.tld or ldap://ad.domain.tld": "ldaps://ad.domain.tld or ldap://ad.domain.tld",
+    "Delete all entries (including shifts) for the selected events?": "Delete all entries (including shifts) for the selected events?",
+    "No times have been set yet. Click here to create times": "No times have been set yet. Click here to create times",
+    "Do you really want to delete this event? This action cannot be undone.": "Do you really want to delete this event? This action cannot be undone."
 }

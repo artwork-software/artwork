@@ -112,7 +112,7 @@ export default {
                             <img src="/Svgs/Overlays/illu_warning.svg" class="-ml-6 -mt-8 mb-4"/>
                             <div class="absolute top-0 right-0 hidden pt-4 pr-4 sm:block">
                                 <button type="button" class="rounded-md bg-white text-text-subtle hover:text-text-subtle" @click="closeModal">
-                                    <span class="sr-only">Close</span>
+                                    <span class="sr-only">{{ $t('Close') }}</span>
                                     <IconX stroke-width="1.5" class="h-6 w-6" aria-hidden="true" />
                                 </button>
                             </div>
@@ -161,11 +161,11 @@ export default {
                                     </div>
                                     <div class="flex justify-between my-3">
                                         <div>
-                                            <p class="underline text-accent-600 cursor-pointer text-xs" @click="DeselectAllSageAssignedData" v-if="checkIfOneSelected">Alle Datensätze abwählen</p>
+                                            <p class="underline text-accent-600 cursor-pointer text-xs" @click="DeselectAllSageAssignedData" v-if="checkIfOneSelected">{{ $t('Deselect all records') }}</p>
                                         </div>
                                         <div>
-                                            <p class="underline text-accent-600 cursor-pointer text-xs" @click="SelectAllSageAssignedData" v-if="!checkIfAllSelected">Alle Datensätze auswählen</p>
-                                            <p class="underline text-accent-600 cursor-pointer text-xs" @click="DeselectAllSageAssignedData" v-else>Alle Datensätze abwählen</p>
+                                            <p class="underline text-accent-600 cursor-pointer text-xs" @click="SelectAllSageAssignedData" v-if="!checkIfAllSelected">{{ $t('Select all records') }}</p>
+                                            <p class="underline text-accent-600 cursor-pointer text-xs" @click="DeselectAllSageAssignedData" v-else>{{ $t('Deselect all records') }}</p>
                                         </div>
                                     </div>
                                 </div>
@@ -173,7 +173,7 @@ export default {
                             <div class="flex justify-between mt-5 items-center pr-4">
                                 <BaseUIButton
                                     @click="moveRow(true)"
-                                    label="Verschieben"
+                                    :label="$t('Move')"
                                     is-add-button
                                 />
 

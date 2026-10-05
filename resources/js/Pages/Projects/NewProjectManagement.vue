@@ -1,5 +1,5 @@
 <template>
-    <AppLayout title="Projektübersicht">
+    <AppLayout :title="$t('Project overview')">
         <div class="w-full px-4 sm:px-6 md:px-6 lg:px-8 pt-6 relative">
             <!-- Headbar (neu): dunkles Band (CI »Bühnenlicht«) -->
             <ToolbarHeader

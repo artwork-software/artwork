@@ -850,7 +850,7 @@
                                                   <button
                                                       type="button"
                                                       class="text-text-subtle hover:text-danger duration-200 ease-in-out"
-                                                      aria-label="Löschen"
+                                                      :aria-label="$t('Delete')"
                                                       @click.stop="removeOpenDetailedArticle(item)"
                                                   >
                                                     <component :is="IconTrash" class="h-4 w-4" aria-hidden="true"/>

@@ -4,7 +4,9 @@ import {
     messageForFailedRequest,
     onAppToast,
     shouldToastAxiosError,
+    setAppToastTranslator,
     showAppToast,
+    t,
 } from '../../resources/js/Helper/appToast.js'
 
 test('maps failed request statuses to a user message', () => {
@@ -39,4 +41,22 @@ test('identical toasts in quick succession are shown once', () => {
     showAppToast('error', 'nach dem Abmelden')
 
     assert.deepEqual(received, ['error:Speichern fehlgeschlagen', 'success:Gespeichert'])
+})
+
+test('statuses without a global message never reach the translator', () => {
+    // vue-i18n wirft bei t(null) – ein Wurf im axios-Interceptor verschluckt 422/409-Antworten
+    setAppToastTranslator((key) => {
+        if (typeof key !== 'string') {
+            throw new SyntaxError('Invalid arguments')
+        }
+        return key
+    })
+    try {
+        for (const status of [400, 409, 413, 422, 423]) {
+            assert.equal(t(messageForFailedRequest(status)), '')
+        }
+        assert.equal(t('You are not allowed to perform this action.'), 'You are not allowed to perform this action.')
+    } finally {
+        setAppToastTranslator((key) => key)
+    }
 })

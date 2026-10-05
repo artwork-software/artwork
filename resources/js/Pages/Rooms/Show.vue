@@ -81,7 +81,7 @@
                                 id="roomNameEdit"
                                 v-model="editRoomForm.name"
                                 label="Room name"/>
-                            <jet-input-error :message="editRoomForm.error" class="mt-2"/>
+                            <jet-input-error :message="editRoomForm.errors.name" class="mt-2"/>
                         </div>
                         <div>
                             <BaseTextarea
@@ -115,6 +115,7 @@
                                     label="End date"
                                 />
                             </div>
+                            <jet-input-error :message="editRoomForm.errors.start_date || editRoomForm.errors.end_date" class="mt-2"/>
                         </div>
 
                         <!-- "Termine immer direkt buchbar": Anfrage-Einstellungen des Raums sind ohne Wirkung -->
@@ -772,8 +773,12 @@ export default {
         editRoom() {
             this.editRoomForm.start_date = this.editRoomForm.start_date_dt_local;
             this.editRoomForm.end_date = this.editRoomForm.end_date_dt_local;
-            this.editRoomForm.patch(route('rooms.update', {room: this.editRoomForm.id}));
-            this.closeEditRoomModal();
+            // erst nach Erfolg schließen: bei Validierungsfehlern (z. B. temporär ohne Enddatum)
+            // gingen sonst alle Änderungen still verloren
+            this.editRoomForm.patch(route('rooms.update', {room: this.editRoomForm.id}), {
+                preserveScroll: true,
+                onSuccess: () => this.closeEditRoomModal(),
+            });
         },
         openRoomHistoryModal() {
             this.showRoomHistory = true;

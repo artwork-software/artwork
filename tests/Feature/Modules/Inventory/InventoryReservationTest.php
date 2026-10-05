@@ -89,6 +89,24 @@ final class InventoryReservationTest extends FeatureTestCase
     }
 
     #[Test]
+    public function issues_taken_back_before_the_return_status_existed_are_free(): void
+    {
+        $article = $this->article(4);
+        // Altbestand: Rücknahme nur über „Erhalten von“ eingetragen, kein Rückgabe-Status
+        $legacy = ExternalIssue::factory()->create([
+            'issue_date' => Carbon::today()->subDays(60)->toDateString(),
+            'return_date' => Carbon::today()->subDays(50)->toDateString(),
+            'return_status' => null,
+            'received_by_id' => User::factory()->create()->id,
+        ]);
+        $legacy->articles()->attach($article->id, ['quantity' => 3]);
+        $today = Carbon::today()->toDateString();
+
+        $this->assertSame(0, $article->fresh()->getAvailableStock($today, $today)['reserved']);
+        $this->assertTrue($legacy->fresh()->effectiveReturnDate()->isSameDay(Carbon::today()->subDays(50)));
+    }
+
+    #[Test]
     public function overbooking_is_reported_only_for_overlapping_issues(): void
     {
         $article = $this->article(5);

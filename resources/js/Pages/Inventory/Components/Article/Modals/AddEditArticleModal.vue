@@ -1607,7 +1607,9 @@ const submit = () => {
     if (!articleForm.is_detailed_quantity) storedDetailedArticleQuantities.value = []
 
     if (props.article) {
-        articleForm.transform(d => ({...d, _method: 'PATCH'}))
+        // complete_form: leere Listen (Tags, Einzelartikel, Eigenschaften) fehlen in FormData ganz –
+        // das Backend leert sie nur, wenn es weiß, dass das ganze Formular kommt
+        articleForm.transform(d => ({...d, _method: 'PATCH', complete_form: 1}))
         articleForm.post(route('inventory-management.articles.update', props.article.id), {
             preserveScroll: true, forceFormData: true, onSuccess: () => emits('close')
         })

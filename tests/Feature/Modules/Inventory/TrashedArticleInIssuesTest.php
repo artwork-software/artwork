@@ -65,4 +65,23 @@ final class TrashedArticleInIssuesTest extends FeatureTestCase
 
         $this->assertSame(1, $issue->fresh()->articles()->count());
     }
+
+    #[Test]
+    public function copying_an_issue_skips_trashed_articles(): void
+    {
+        $this->actingAsAdmin();
+        $kept = InventoryArticle::factory()->create();
+        $trashed = InventoryArticle::factory()->create();
+        $issue = $this->upcomingIssueWith($kept);
+        $issue->articles()->attach($trashed->id, ['quantity' => 1]);
+        $trashed->delete();
+
+        // sonst lehnt das Speichern der Kopie den Papierkorb-Artikel mit 422 ab
+        $copy = collect($this->getJson(route('issue-of-material.search-for-copy', ['q' => $issue->name]))
+            ->assertOk()
+            ->json())->firstWhere('id', $issue->id);
+
+        $this->assertSame([$kept->id], collect($copy['articles'])->pluck('id')->all());
+        $this->assertSame([$kept->id, $trashed->id], $issue->fresh()->articles->pluck('id')->sort()->values()->all());
+    }
 }

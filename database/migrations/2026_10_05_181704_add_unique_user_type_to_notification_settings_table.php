@@ -14,10 +14,13 @@ return new class extends Migration
 {
     public function up(): void
     {
+        // Behaltene IDs vorab gruppiert ermitteln – der frühere Self-Join ohne Index wuchs quadratisch
         DB::statement(
-            'DELETE newer FROM notification_settings newer
-             JOIN notification_settings older
-               ON older.user_id = newer.user_id AND older.type = newer.type AND older.id < newer.id'
+            'DELETE FROM notification_settings WHERE id NOT IN (
+                SELECT keep_id FROM (
+                    SELECT MIN(id) AS keep_id FROM notification_settings GROUP BY user_id, type
+                ) AS kept
+            )'
         );
         DB::table('notification_settings')
             ->whereNotExists(function ($query): void {

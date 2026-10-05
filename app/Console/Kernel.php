@@ -63,7 +63,8 @@ class Kernel extends ConsoleKernel
         $schedule->command(DeleteExpiredNotificationsForAllCommand::class)->everyFiveMinutes()->runInBackground();
         // Zusammenfassungen: täglich um 9 Uhr, Wochentage je Häufigkeit (NotificationFrequencyEnum::isDueOn)
         $schedule->command(SendNotificationsEmailSummariesCommand::class)->dailyAt('9:00')
-            ->withoutOverlapping()
+            // Sperre nur 2 h statt 24 h: ein abgebrochener Lauf darf den nächsten Tag nicht blockieren
+            ->withoutOverlapping(120)
             ->onOneServer();
         // BI-Exportdateien bleiben für Re-Downloads liegen und werden nach 24 h entfernt
         $schedule->command(CleanupBiExportsCommand::class)->dailyAt('03:30')->runInBackground();

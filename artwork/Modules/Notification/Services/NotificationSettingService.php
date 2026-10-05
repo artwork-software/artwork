@@ -51,11 +51,29 @@ class NotificationSettingService
             if (in_array($type->value, $existingTypes, true)) {
                 continue;
             }
+            $this->markBacklogAsSummarised($type, fn ($query) => $query->where('notifiable_id', $user->getKey()));
             $this->create($this->defaultAttributes($type) + ['user_id' => $user->getKey()]);
             $created++;
         }
 
         return $created;
+    }
+
+    /**
+     * Ungelesene Altmeldungen eines Typs, für den gerade erst eine Einstellung entsteht, gelten als
+     * zusammengefasst – sonst schickt die erste Sammelmail den ganzen Rückstand (teils Monate alt).
+     *
+     * @param callable(\Illuminate\Database\Query\Builder): mixed $restrictRecipients
+     */
+    private function markBacklogAsSummarised(NotificationEnum $type, callable $restrictRecipients): void
+    {
+        $query = DB::table('notifications')
+            ->where('notifiable_type', (new User())->getMorphClass())
+            ->whereNull('read_at')
+            ->where('sent_in_summary', false)
+            ->whereJsonContains('data->type', $type->value);
+        $restrictRecipients($query);
+        $query->update(['sent_in_summary' => true]);
     }
 
     /**
@@ -68,6 +86,14 @@ class NotificationSettingService
 
         foreach (NotificationEnum::configurableCases() as $type) {
             $attributes = $this->defaultAttributes($type);
+            $this->markBacklogAsSummarised($type, function ($query) use ($type): void {
+                $query->whereNotExists(function ($settings) use ($type): void {
+                    $settings->selectRaw('1')
+                        ->from('notification_settings')
+                        ->whereColumn('notification_settings.user_id', 'notifications.notifiable_id')
+                        ->where('notification_settings.type', $type->value);
+                });
+            });
             $created += DB::table('notification_settings')->insertUsing(
                 [
                     'user_id', 'group_type', 'type', 'title', 'description', 'frequency',

@@ -286,7 +286,8 @@ class InventoryArticleRepository
     {
         foreach ($statusValues as $statusValue) {
             $article->statusValues()->attach((int)$statusValue['id'], [
-                'value' => (string)$statusValue['value']
+                // Ganzzahl-Spalte: ein geleertes Feld kommt als null an
+                'value' => (int) ($statusValue['value'] ?? 0)
             ]);
         }
     }

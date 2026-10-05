@@ -15,6 +15,11 @@ export function setAppToastTranslator(translator) {
 }
 
 export function t(key) {
+    // vue-i18n wirft bei null/undefined („Invalid arguments“) – im axios-Interceptor käme der
+    // Aufrufer dann nie an error.response (422-Feldfehler, 409-Rückfragen)
+    if (key === null || key === undefined || key === '') {
+        return ''
+    }
     return translate(key)
 }
 

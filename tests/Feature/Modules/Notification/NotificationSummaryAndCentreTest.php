@@ -105,6 +105,30 @@ final class NotificationSummaryAndCentreTest extends FeatureTestCase
     }
 
     #[Test]
+    public function settings_added_later_do_not_mail_the_old_backlog(): void
+    {
+        $this->notify(NotificationEnum::NOTIFICATION_TEAM);
+        $this->notify(NotificationEnum::NOTIFICATION_PROJECT);
+        // Konten von vor Paket A hatten nur einen Teil der Typen – hier fehlt NOTIFICATION_TEAM
+        $this->recipient->notificationSettings()->where('type', NotificationEnum::NOTIFICATION_TEAM->value)->delete();
+
+        app(NotificationSettingService::class)->ensureDefaultsForAllUsers();
+        $this->travelTo(Carbon::parse('2026-10-05 09:00'));
+        $this->artisan('artwork:send-notifications-email-summaries')->assertSuccessful();
+
+        Mail::assertSent(NotificationSummary::class, 1);
+        $summarised = fn (NotificationEnum $type): bool => (bool) $this->recipient->notifications()
+            ->whereJsonContains('data->type', $type->value)
+            ->value('sent_in_summary');
+        $this->assertTrue($summarised(NotificationEnum::NOTIFICATION_TEAM));
+        $this->assertTrue($summarised(NotificationEnum::NOTIFICATION_PROJECT));
+        Mail::assertSent(
+            NotificationSummary::class,
+            fn (NotificationSummary $mail): bool => !str_contains(json_encode($mail->notifications), 'NOTIFICATION_TEAM')
+        );
+    }
+
+    #[Test]
     public function archiving_all_reports_what_happened(): void
     {
         $this->notify(NotificationEnum::NOTIFICATION_TEAM);

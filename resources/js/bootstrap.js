@@ -24,7 +24,10 @@ window.axios.interceptors.response.use(
         } else if (shouldToastAxiosError(error)) {
             // Viele Speicher-/Löschaktionen fangen Fehler nur per console.error ab;
             // ohne diese Meldung sähe die Aktion erfolgreich aus.
-            showAppToast('error', t(messageForFailedRequest(status)))
+            const message = messageForFailedRequest(status)
+            if (message) {
+                showAppToast('error', t(message))
+            }
         }
         return Promise.reject(error)
     }

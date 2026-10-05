@@ -515,9 +515,11 @@ class InventoryArticleService
             $this->processArticleImages($article, $request);
 
             // Nur ersetzen, was der Request mitschickt: ein fehlendes Feld leerte vorher Eigenschaften,
-            // Statusmengen, Tags bzw. löschte alle Einzelartikel.
+            // Statusmengen, Tags bzw. löschte alle Einzelartikel. Das Bearbeiten-Modal schickt das ganze
+            // Formular (complete_form) – dort heißt ein fehlendes Feld „leer“, weil FormData leere
+            // Listen weglässt (letzter Tag / letzter Einzelartikel ließ sich sonst nicht entfernen).
             $article = $article->fresh();
-            if ($request->has('properties')) {
+            if ($request->has('properties') || $request->boolean('complete_form')) {
                 $this->articleRepository->detachAllProperties($article);
             }
             $this->processArticleProperties($article, $request);
@@ -527,7 +529,7 @@ class InventoryArticleService
             }
 
             // 🔹 NEU: Tags verarbeiten + Berechtigungen prüfen
-            if ($request->has('tag_ids')) {
+            if ($request->has('tag_ids') || $request->boolean('complete_form')) {
                 $this->processArticleTags($article, $request->input('tag_ids', []));
             }
 
@@ -826,7 +828,11 @@ class InventoryArticleService
         $this->articleRepository->attachProperties($article, $request->collect('properties'));
         // Ohne Feld im Request bleiben vorhandene Einzelartikel stehen (vorher: alle soft-gelöscht);
         // Artikel ohne Einzelinventar dürfen keine haben.
-        if ($request->has('detailed_article_quantities') || !$article->is_detailed_quantity) {
+        if (
+            $request->has('detailed_article_quantities')
+            || $request->boolean('complete_form')
+            || !$article->is_detailed_quantity
+        ) {
             $this->syncDetailedArticles($article, $request->collect('detailed_article_quantities'));
         }
     }

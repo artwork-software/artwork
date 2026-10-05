@@ -167,11 +167,20 @@ class ExternalIssue extends Model
 
         $returnDate = \Carbon\Carbon::parse($rawReturnDate)->startOfDay();
         $today = \Carbon\Carbon::today();
-        if ($this->return_status !== self::RETURN_STATUS_RETURNED && $returnDate->lt($today)) {
+        if (!$this->isReturned() && $returnDate->lt($today)) {
             return $today;
         }
 
         return $returnDate;
+    }
+
+    /**
+     * Zurückgegeben über den Rückgabe-Status oder – Altbestand vor dem Status (08/2026) und das
+     * Feld „Erhalten von“ im Formular – über eine eingetragene Rücknahme (wie die Rückgabe-Erinnerung).
+     */
+    public function isReturned(): bool
+    {
+        return $this->return_status === self::RETURN_STATUS_RETURNED || $this->received_by_id !== null;
     }
 
     /**
@@ -185,8 +194,11 @@ class ExternalIssue extends Model
 
             if (\Carbon\Carbon::parse($date)->startOfDay()->lte(\Carbon\Carbon::today())) {
                 $reserved->orWhere(function (\Illuminate\Database\Eloquent\Builder $overdue): void {
-                    $overdue->whereNull('external_issues.return_status')
-                        ->orWhere('external_issues.return_status', '!=', self::RETURN_STATUS_RETURNED);
+                    $overdue->whereNull('external_issues.received_by_id')
+                        ->where(function (\Illuminate\Database\Eloquent\Builder $notReturned): void {
+                            $notReturned->whereNull('external_issues.return_status')
+                                ->orWhere('external_issues.return_status', '!=', self::RETURN_STATUS_RETURNED);
+                        });
                 });
             }
         });

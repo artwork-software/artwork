@@ -121,6 +121,32 @@ final class InventoryArticleConsistencyTest extends FeatureTestCase
     }
 
     #[Test]
+    public function the_edit_modal_can_remove_the_last_tag_and_the_last_detailed_article(): void
+    {
+        $article = InventoryArticle::factory()->create([
+            'inventory_category_id' => $this->category->id,
+            'inventory_sub_category_id' => null,
+            'is_detailed_quantity' => true,
+            'quantity' => 1,
+        ]);
+        $detail = InventoryDetailedQuantityArticle::factory()->create([
+            'inventory_article_id' => $article->id,
+            'inventory_article_status_id' => $this->ready->id,
+        ]);
+        $tag = InventoryTag::query()->create(['name' => 'Bühne', 'has_restricted_permissions' => false]);
+        $article->tags()->attach($tag->id);
+
+        // FormData lässt leere Listen weg – das Modal schickt nur die Kennung complete_form
+        $this->patch(
+            route('inventory-management.articles.update', $article),
+            $this->basePayload($article) + ['complete_form' => '1']
+        )->assertSessionHasNoErrors();
+
+        $this->assertFalse($article->tags()->whereKey($tag->id)->exists());
+        $this->assertSoftDeleted($detail);
+    }
+
+    #[Test]
     public function an_update_without_detailed_articles_keeps_them(): void
     {
         $article = InventoryArticle::factory()->create([

@@ -73,6 +73,7 @@ class UpdateInventoryArticleRequest extends FormRequest
 
 
             // 🔹 NEU: Tags am Artikel
+            'complete_form' => ['sometimes', 'boolean'],
             'tag_ids' => ['nullable', 'array'],
             'tag_ids.*' => ['integer', 'exists:inventory_tags,id'],
         ];

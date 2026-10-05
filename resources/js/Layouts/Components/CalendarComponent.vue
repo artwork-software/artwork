@@ -273,13 +273,12 @@ import NewUserToolTip from "@/Layouts/Components/NewUserToolTip.vue";
 import DatePickerComponent from "@/Layouts/Components/DatePickerComponent.vue";
 import CalendarFunctionBar from "@/Layouts/Components/CalendarFunctionBar.vue";
 import Permissions from "@/Mixins/Permissions.vue";
-import IconLib from "@/Mixins/IconLib.vue";
 import FunctionBarCalendar from "@/Components/FunctionBars/FunctionBarCalendar.vue";
 import {provide} from "vue";
 
 export default {
     name: 'CalendarComponent',
-    mixins: [Permissions, IconLib],
+    mixins: [Permissions],
     components: {
         FunctionBarCalendar,
         CalendarFunctionBar,

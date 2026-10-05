@@ -259,7 +259,6 @@ import ChooseUserSeriesShift from '@/Pages/Projects/Components/ChooseUserSeriesS
 import MultipleShiftQualificationSlotsAvailable from '@/Pages/Projects/Components/MultipleShiftQualificationSlotsAvailable.vue'
 import AssignmentConflictModal from '@/Layouts/Components/ShiftPlanComponents/AssignmentConflictModal.vue'
 // Mixins weiterverwenden (liefert z.B. $can / hasAdminRole o.ä.)
-import IconLib from '@/Mixins/IconLib.vue'
 import Permissions from '@/Mixins/Permissions.vue'
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
@@ -269,7 +268,7 @@ import {useShiftWorkerConfirmation} from '@/Composeables/useShiftWorkerConfirmat
 
 // In <script setup> können Optionen inkl. Mixins gesetzt werden
 defineOptions({
-    mixins: [IconLib, Permissions]
+    mixins: [Permissions]
 })
 
 /* ---------------- Props & Emits ---------------- */

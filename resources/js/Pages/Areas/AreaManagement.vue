@@ -954,7 +954,6 @@ import ConfirmationComponent from "@/Layouts/Components/ConfirmationComponent.vu
 import SuccessModal from "@/Layouts/Components/General/SuccessModal.vue";
 import AddButtonBig from "@/Layouts/Components/General/Buttons/AddButtonBig.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
-import IconLib from "@/Mixins/IconLib.vue";
 import BaseMenu from "@/Components/Menu/BaseMenu.vue";
 import BaseModal from "@/Components/Modals/BaseModal.vue";
 import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
@@ -974,7 +973,7 @@ import ColorPickerComponent from "@/Components/Globale/ColorPickerComponent.vue"
 import SettingsGuideBanner from "@/Artwork/Guide/SettingsGuideBanner.vue";
 
 export default defineComponent({
-    mixins: [Permissions, IconLib],
+    mixins: [Permissions],
     components: {
         SettingsGuideBanner,
         PropertyIcon,

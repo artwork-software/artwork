@@ -101,12 +101,10 @@
 <script>
 import {IconEdit, IconX} from "@tabler/icons-vue";
 import DeclineEventModal from "@/Layouts/Components/DeclineEventModal.vue";
-import IconLib from "@/Mixins/IconLib.vue";
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 
 export default {
     name: "NotificationButtons",
-    mixins: [IconLib],
     props: ['buttons'],
     emits: [
         'openDeclineModal',

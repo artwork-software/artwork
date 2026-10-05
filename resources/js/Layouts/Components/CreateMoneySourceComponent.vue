@@ -259,7 +259,6 @@ import {IconCirclePlus, IconInfoCircle, IconTrash, IconX} from "@tabler/icons-vu
 
 import {router, useForm} from "@inertiajs/vue3";
 import Permissions from "@/Mixins/Permissions.vue";
-import IconLib from "@/Mixins/IconLib.vue";
 import UserSearch from "@/Components/SearchBars/UserSearch.vue";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 import BaseTextarea from "@/Artwork/Inputs/BaseTextarea.vue";
@@ -272,7 +271,7 @@ import IconSelector from "@/Components/Icon/IconSelector.vue";
 
 export default {
     name: 'CreateMoneySourceComponent',
-    mixins: [Permissions, IconLib],
+    mixins: [Permissions],
     components: {
         IconSelector,
         ArtworkBaseModal,

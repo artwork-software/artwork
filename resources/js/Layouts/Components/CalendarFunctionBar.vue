@@ -183,7 +183,6 @@ import Permissions from "@/Mixins/Permissions.vue";
 import {router, useForm, usePage} from "@inertiajs/vue3";
 import BaseFilter from "@/Layouts/Components/BaseFilter.vue";
 import AddButtonSmall from "@/Layouts/Components/General/Buttons/AddButtonSmall.vue";
-import IconLib from "@/Mixins/IconLib.vue";
 import PlusButton from "@/Layouts/Components/General/Buttons/PlusButton.vue";
 import GeneralCalendarAboSettingModal from "@/Pages/Events/Components/GeneralCalendarAboSettingModal.vue";
 import CalendarAboInfoModal from "@/Pages/Shifts/Components/CalendarAboInfoModal.vue";
@@ -193,7 +192,7 @@ import {useExportTabEnums} from "@/Layouts/Components/Export/Enums/ExportTabEnum
 const exportTabEnums = useExportTabEnums();
 export default {
     name: "CalendarFunctionBar",
-    mixins: [Permissions, IconLib],
+    mixins: [Permissions],
     components: {
         ExportModal,
         CalendarAboInfoModal,

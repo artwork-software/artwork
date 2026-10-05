@@ -279,12 +279,11 @@ import {
 import BaseFilter from "@/Layouts/Components/BaseFilter.vue";
 import {router} from "@inertiajs/vue3";
 import Permissions from "@/Mixins/Permissions.vue";
-import IconLib from "@/Mixins/IconLib.vue";
 import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
 
 export default {
     name: "IndividualCalendarFilterComponent",
-    mixins: [Permissions, IconLib],
+    mixins: [Permissions],
     components: {
         TextInputComponent,
         SwitchLabel,

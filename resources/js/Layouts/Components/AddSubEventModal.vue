@@ -246,7 +246,6 @@ import dayjs from "dayjs";
 import Permissions from "@/Mixins/Permissions.vue";
 import Input from "@/Jetstream/Input.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
-import IconLib from "@/Mixins/IconLib.vue";
 import BaseModal from "@/Components/Modals/BaseModal.vue";
 import {useEvent} from "@/Composeables/Event.js";
 import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
@@ -259,7 +258,7 @@ import {inject, nextTick} from "vue";
 const {getDaysOfEvent, formatEventDateByDayJs} = useEvent();
 export default {
     name: "AddSubEventModal",
-    mixins: [Permissions, IconLib],
+    mixins: [Permissions],
     computed: {
         dayjs() {
             const utc = require('dayjs/plugin/utc');

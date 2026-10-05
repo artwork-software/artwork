@@ -71,7 +71,6 @@ import UserTooltip from "@/Layouts/Components/UserTooltip.vue";
 import Permissions from "@/Mixins/Permissions.vue";
 import {useForm} from "@inertiajs/vue3";
 import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
-import IconLib from "@/Mixins/IconLib.vue";
 import TextareaComponent from "@/Components/Inputs/TextareaComponent.vue";
 import Button from "@/Jetstream/Button.vue";
 import {useCommentListener} from "@/Composeables/Listener/useCommentListener.js";
@@ -85,7 +84,7 @@ export default {
         UserTooltip,
         IconEdit, IconCircleX, IconFileText, SvgCollection, IconX, JetInputError
     },
-    mixins: [Permissions, IconLib],
+    mixins: [Permissions],
     props: [
         'project',
         'isMemberOfADepartment',

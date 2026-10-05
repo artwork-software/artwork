@@ -26,12 +26,11 @@
 
 import axios from "axios";
 import Permissions from "@/Mixins/Permissions.vue";
-import IconLib from "@/Mixins/IconLib.vue";
 import { Dialog, DialogPanel, DialogTitle, TransitionChild, TransitionRoot } from '@headlessui/vue'
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 export default {
     name: "BaseSidenav",
-    mixins: [Permissions, IconLib],
+    mixins: [Permissions],
     components: {
         PropertyIcon,
         Dialog,

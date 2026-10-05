@@ -162,7 +162,6 @@ import {formatBookingDataDate, formatDateTime} from '@/Layouts/Components/Budget
 import PropertyIcon from '@/Artwork/Icon/PropertyIcon.vue';
 import {router, useForm} from '@inertiajs/vue3';
 import Permissions from '@/Mixins/Permissions.vue';
-import IconLib from '@/Mixins/IconLib.vue';
 import BaseModal from '@/Components/Modals/BaseModal.vue';
 import BookingModalContents from '@/Layouts/Components/Budget/BookingModalContents.vue';
 import UserPopoverTooltip from '@/Layouts/Components/UserPopoverTooltip.vue';
@@ -179,7 +178,7 @@ export default defineComponent({
         FormButton,
         ConfirmationComponent
     },
-    mixins: [Permissions, IconLib, CurrencyFloatToStringFormatter],
+    mixins: [Permissions, CurrencyFloatToStringFormatter],
     props: {
         show: {type: Boolean, default: false},
         cell: {type: Object, required: true},

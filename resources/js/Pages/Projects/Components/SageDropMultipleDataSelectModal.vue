@@ -2,14 +2,13 @@
 import {IconX} from "@tabler/icons-vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import {Dialog, DialogPanel, DialogTitle, TransitionChild, TransitionRoot} from "@headlessui/vue";
-import IconLib from "@/Mixins/IconLib.vue";
 import {router} from "@inertiajs/vue3";
 import CurrencyFloatToStringFormatter from "@/Mixins/CurrencyFloatToStringFormatter.vue";
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 
 export default {
     name: "SageDropMultipleDataSelectModal",
-    mixins: [IconLib, CurrencyFloatToStringFormatter],
+    mixins: [CurrencyFloatToStringFormatter],
     components: {
         BaseUIButton,
         FormButton,

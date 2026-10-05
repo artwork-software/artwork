@@ -263,7 +263,6 @@ import axios from 'axios'
 
 // Alte Mixins weiterhin nutzen (Vue 3 erlaubt defineOptions für Options-API features)
 import Permissions from '@/Mixins/Permissions.vue'
-import IconLib from '@/Mixins/IconLib.vue'
 
 import ArtworkBaseModal from '@/Artwork/Modals/ArtworkBaseModal.vue'
 import SettingsGuideBanner from '@/Artwork/Guide/SettingsGuideBanner.vue'
@@ -275,7 +274,7 @@ import {is} from "laravel-permission-to-vuejs";
 
 defineOptions({
     name: 'ProjectEditTeamModal',
-    mixins: [Permissions, IconLib],
+    mixins: [Permissions],
 })
 
 // Props

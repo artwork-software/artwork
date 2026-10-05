@@ -779,7 +779,6 @@ import ShiftQualificationModal from "@/Layouts/Components/ShiftQualificationModa
 import SuccessModal from "@/Layouts/Components/General/SuccessModal.vue";
 import ErrorComponent from "@/Layouts/Components/ErrorComponent.vue";
 import AddButtonSmall from "@/Layouts/Components/General/Buttons/AddButtonSmall.vue";
-import IconLib from "@/Mixins/IconLib.vue";
 import TabComponent from "@/Components/Tabs/TabComponent.vue";
 import BaseMenu from "@/Components/Menu/BaseMenu.vue";
 import TinyPageHeadline from "@/Components/Headlines/TinyPageHeadline.vue";
@@ -808,7 +807,6 @@ import {can, is} from 'laravel-permission-to-vuejs';
 
 export default defineComponent({
     name: "ShiftSettings",
-    mixins: [IconLib],
     components: {
         BaseInput,
         NotificationToast,

@@ -40,7 +40,6 @@
 <script>
 import {defineComponent} from "vue";
 import SidebarTagComponent from "@/Layouts/Components/SidebarTagComponent.vue";
-import IconLib from "@/Mixins/IconLib.vue";
 import Permissions from "@/Mixins/Permissions.vue";
 import ProjectAttributeEditModal from "@/Layouts/Components/ProjectAttributeEditModal.vue";
 import BasePageTitle from "@/Artwork/Titles/BasePageTitle.vue";
@@ -49,8 +48,7 @@ import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 
 export default defineComponent({
     mixins: [
-        Permissions,
-        IconLib
+        Permissions
     ],
     components: {
         PropertyIcon,

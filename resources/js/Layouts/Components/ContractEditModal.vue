@@ -440,7 +440,6 @@ import Button from "@/Jetstream/Button.vue";
 import Permissions from "@/Mixins/Permissions.vue";
 import InputComponent from "@/Layouts/Components/InputComponent.vue";
 import Input from "@/Jetstream/Input.vue";
-import IconLib from "@/Mixins/IconLib.vue";
 import BaseModal from "@/Components/Modals/BaseModal.vue";
 import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
 import NumberInputComponent from "@/Components/Inputs/NumberInputComponent.vue";
@@ -458,7 +457,7 @@ import TeamIconCollection from "@/Layouts/Components/TeamIconCollection.vue";
 
 export default {
     name: "ContractEditModal",
-    mixins: [Permissions, IconLib],
+    mixins: [Permissions],
     emits: ['closeModal'],
     props: {
         show: Boolean,

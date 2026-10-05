@@ -67,7 +67,6 @@ import {IconCheck, IconChevronDown, IconCirclePlus, IconCircleX, IconX} from "@t
 import JetDialogModal from "@/Jetstream/DialogModal.vue";
 import Permissions from "@/Mixins/Permissions.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
-import IconLib from "@/Mixins/IconLib.vue";
 import BaseModal from "@/Components/Modals/BaseModal.vue";
 import ModalHeader from "@/Components/Modals/ModalHeader.vue";
 import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
@@ -78,7 +77,7 @@ import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
 
 export default {
     name: 'LinkProjectsToMoneySourcesComponent',
-    mixins: [Permissions, IconLib],
+    mixins: [Permissions],
     components: {
         ArtworkBaseModal,
         LastedProjects,

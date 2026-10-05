@@ -1,4 +1,10 @@
 <script>
+import {usePermission} from "@/Composeables/Permission.js";
+
+/**
+ * Options-API-Zugang zu den Rechteprüfungen – dünne Hülle um Composeables/Permission.js (eine
+ * Implementierung). permissionsArray enthält für Admins bereits alle Rechte, $can() genügt also.
+ */
 export default {
     data() {
         return {
@@ -7,125 +13,23 @@ export default {
         };
     },
     methods: {
-        isCurrentUserInComponentUsers(users) {
-            return users.findIndex((user) => this.$page.props.auth.user.id === user.id) >= 0;
-        },
-        isCurrentUserInComponentDepartments(departments) {
-            let foundUserInDepartment = false;
-
-            departments.forEach((department) => {
-                department.users.forEach((user) => {
-                    if (user.id === this.$page.props.auth.user.id) {
-                        foundUserInDepartment = true;
-                    }
-                });
-            });
-
-            return foundUserInDepartment;
-        },
-        $canSeeComponent(component) {
-            // Spiegel von ProjectComponentVisibilityService::canSeeComponent() (Admin + "write projects")
-            if (
-                this.hasAdminRole() ||
-                this.$can('write projects') ||
-                component.permission_type === null ||
-                component.permission_type === 'allSeeAndEdit' ||
-                component.permission_type === 'allSeeSomeEdit'
-            ) {
-                return true;
-            }
-
-            if (component.permission_type === 'someSeeSomeEdit') {
-                return this.isCurrentUserInComponentUsers(component.users) ||
-                    this.isCurrentUserInComponentDepartments(component.departments);
-            }
-        },
-        $canEditComponent(component) {
-            // Spiegel von ProjectPolicy::writeComponent() (siehe Composeables/Permission.js):
-            // Schreibrecht im Projekt ist Grundvoraussetzung, Komponenten-Einstellung schränkt nur ein.
-            if (this.hasAdminRole() || this.$can('write projects')) {
-                return true;
-            }
-
-            if (!(this.$page.props.headerObject?.canWriteProject ?? false)) {
-                return false;
-            }
-
-            if (
-                component.permission_type === null ||
-                component.permission_type === 'allSeeAndEdit'
-            ) {
-                return true;
-            }
-
-            if (component.type === 'BudgetTab' || component.type === 'BudgetComponent') {
-                const project = this.$page.props.project || this.$page.props.headerObject?.project;
-                const usersArray = project?.usersArray || project?.users;
-
-                if (Array.isArray(usersArray)) {
-                    const currentUserId = this.$page.props.auth.user.id;
-                    const currentUserInTeam = usersArray.find(u => String(u.id) === String(currentUserId));
-                    if (currentUserInTeam?.pivot_access_budget) {
-                        return true;
-                    }
-                }
-            }
-
-            if (component.permission_type === 'allSeeSomeEdit') {
-                return this.isCurrentUserInComponentUsers(component.users) ||
-                    this.isCurrentUserInComponentDepartments(component.departments);
-            }
-
-            if (component.permission_type === 'someSeeSomeEdit') {
-                //find user in component users
-                let foundUserIndex = component.users.findIndex(
-                      (user) => this.$page.props.auth.user.id === user.id
-                    ),
-                    foundUserCanWrite = false;
-
-                if (foundUserIndex > -1) {
-                    foundUserCanWrite = component.users[foundUserIndex].pivot.can_write;
-                }
-
-                //find user in departments
-                let foundUserInDepartmentAndCanWrite = false;
-                component.departments.forEach((department) => {
-                    department.users.forEach((user) => {
-                        //only updated if it is not true already, because there is no opportunity to break the
-                        //forEach loop
-                        if (!foundUserInDepartmentAndCanWrite && user.id === this.$page.props.auth.user.id) {
-                            foundUserInDepartmentAndCanWrite = department.pivot.can_write;
-                        }
-                    });
-                });
-
-                return foundUserCanWrite || foundUserInDepartmentAndCanWrite;
-            }
+        $permission() {
+            return usePermission(this.$page.props);
         },
         $can(permissionName) {
-            return this.$page.props.permissionsArray.includes(permissionName);
+            return this.$permission().can(permissionName);
         },
         $role(roleName) {
-            return this.$page.props.rolesArray.includes(roleName);
+            return this.$permission().role(roleName);
         },
         $canAny(permissionNames) {
-            for (const permission of permissionNames) {
-                if (this.$can(permission)) {
-                    return true;
-                }
-            }
-            return false;
+            return this.$permission().canAny(permissionNames);
         },
         $roleAny(roleNames) {
-            for (const role of roleNames) {
-                if (this.$role(role)) {
-                    return true;
-                }
-            }
-            return false;
+            return this.$permission().roleAny(roleNames);
         },
-        hasAdminRole(){
-            return this.$role('artwork admin');
+        hasAdminRole() {
+            return this.$permission().hasAdminRole();
         }
     }
 };

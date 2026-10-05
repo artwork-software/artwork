@@ -157,6 +157,7 @@
 </template>
 
 <script setup>
+import { createInstanceFormatter } from "@/Helper/instanceFormat.js";
 import BaseMenuItem from "@/Components/Menu/BaseMenuItem.vue";
 import BaseMenu from "@/Components/Menu/BaseMenu.vue";
 import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
@@ -221,8 +222,8 @@ onMounted(() => {
 });
 
 const numberFmt = (v) => {
-    try { return new Intl.NumberFormat(usePage().props.locale, { style: 'currency', currency: usePage().props.currency || 'EUR' }).format(Number(v||0)); }
-    catch { return Number(v||0).toFixed(2); }
+    // vorher: props.locale/props.currency – beide Props gab es nicht
+    return createInstanceFormatter(usePage().props.instanceFormat).formatCurrency(v);
 }
 
 const deleteIssue = () => {

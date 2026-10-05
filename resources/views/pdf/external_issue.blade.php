@@ -1,3 +1,4 @@
+@inject('formatter', 'Artwork\Modules\GeneralSettings\Services\InstanceFormatter')
 <!DOCTYPE html>
 <html lang="de">
 <head>
@@ -54,7 +55,7 @@
 </div>
 
 <div class="mb-6">
-    <p><span class="font-bold">{{ __('Material value') }}:</span> {{ number_format($issue->material_value, 2, ',', '.') }} €</p>
+    <p><span class="font-bold">{{ __('Material value') }}:</span> {{ $formatter->currency($issue->material_value) }}</p>
 </div>
 
 <div class="mb-6">

@@ -8625,5 +8625,16 @@
     "Authorize access": "Zugriff autorisieren",
     ":app wants to access your account": ":app möchte auf dein Konto zugreifen",
     "The application :app is asking for permission to access your account (:email) on your behalf.": "Die Anwendung :app bittet um die Erlaubnis, in deinem Namen auf dein Konto (:email) zuzugreifen.",
-    "This application will be granted the following permissions:": "Diese Anwendung erhält folgende Berechtigungen:"
+    "This application will be granted the following permissions:": "Diese Anwendung erhält folgende Berechtigungen:",
+    "Regional formats": "Regionale Formate",
+    "These formats apply to numbers, amounts and dates throughout the instance – in the interface, in PDFs and in exports.": "Diese Formate gelten für Zahlen, Beträge und Datumsangaben in der gesamten Instanz – in der Oberfläche, in PDFs und in Exporten.",
+    "Changes are saved immediately.": "Änderungen werden sofort gespeichert.",
+    "Date format": "Datumsformat",
+    "Austria": "Österreich",
+    "Switzerland (German)": "Schweiz (deutsch)",
+    "Switzerland (French)": "Schweiz (französisch)",
+    "United Kingdom": "Vereinigtes Königreich",
+    "United States": "Vereinigte Staaten",
+    "Regional formats saved": "Regionale Formate gespeichert",
+    "Currency": "Währung"
 }

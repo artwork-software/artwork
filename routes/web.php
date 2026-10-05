@@ -117,6 +117,7 @@ use App\Http\Controllers\TaskTemplateController;
 use App\Http\Controllers\TimelinePresetController;
 use App\Http\Controllers\ToolSettingsBrandingController;
 use App\Http\Controllers\ToolSettingsCommunicationAndLegalController;
+use App\Http\Controllers\ToolSettingsFormatsController;
 use App\Http\Controllers\ToolSettingsExternalUserManagementController;
 use App\Http\Controllers\ToolSettingsInterfacesController;
 use Artwork\Modules\ExternalUserManagement\Http\Controllers\ExternalUserGroupMappingController;
@@ -464,6 +465,13 @@ Route::group(['middleware' => ['auth:sanctum']], function (): void {
             ->name('tool.communication-and-legal');
         Route::patch('/communication-and-legal', [ToolSettingsCommunicationAndLegalController::class, 'update'])
             ->name('tool.communication-and-legal.update');
+
+        Route::get('/formats', [ToolSettingsFormatsController::class, 'index'])
+            ->middleware('can:change tool settings')
+            ->name('tool.formats');
+        Route::patch('/formats', [ToolSettingsFormatsController::class, 'update'])
+            ->middleware('can:change tool settings')
+            ->name('tool.formats.update');
 
         Route::patch('/shift/workflow/update', [ShiftController::class, 'updateWorkflowSettings'])
             ->middleware('shift-settings-area:general,edit')

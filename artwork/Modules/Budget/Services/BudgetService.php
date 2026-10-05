@@ -81,7 +81,8 @@ class BudgetService
             // Auch Projektgruppen erhalten eine budgetrelevante Spalte (Vorschau-Spalte für Exporte).
             $columns[] = $this->columnService->createColumnInTable(
                 table: $table,
-                name: date('Y') . ' €',
+                name: date('Y') . ' ' . app(\Artwork\Modules\GeneralSettings\Services\InstanceFormatter::class)
+                    ->currencySymbol(),
                 subName: 'A',
                 type: 'empty',
                 position: 3,

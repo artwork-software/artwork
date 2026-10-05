@@ -158,7 +158,7 @@ enum NotificationEnum: string
      * Laravel-Notification, die NotificationService::createNotification für diesen Typ verschickt;
      * null = nur Push-Broadcast und Glocken-Indikator.
      *
-     * @return class-string<\Illuminate\Notifications\Notification>|null
+     * @return class-string<\Artwork\Core\Notifications\BaseNotification>|null
      */
     //phpcs:ignore Generic.Metrics.CyclomaticComplexity.TooHigh
     public function notificationClass(): ?string

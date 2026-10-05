@@ -60,15 +60,17 @@ class ArtistResidencyExcelExport implements FromView, ShouldAutoSize, WithStyles
      */
     public function columnFormats(): array
     {
+        $currency = app(\Artwork\Modules\GeneralSettings\Services\InstanceFormatter::class)->excelCurrencyFormat();
+
         return [
             'C' => NumberFormat::FORMAT_DATE_DATETIME,
             'D' => NumberFormat::FORMAT_DATE_DATETIME,
-            'F' => NumberFormat::FORMAT_CURRENCY_EUR,
-            'H' => NumberFormat::FORMAT_CURRENCY_EUR,
-            'J' => NumberFormat::FORMAT_CURRENCY_EUR,
-            'K' => NumberFormat::FORMAT_CURRENCY_EUR,
-            'L' => NumberFormat::FORMAT_CURRENCY_EUR,
-            'M' => NumberFormat::FORMAT_CURRENCY_EUR,
+            'F' => $currency,
+            'H' => $currency,
+            'J' => $currency,
+            'K' => $currency,
+            'L' => $currency,
+            'M' => $currency,
         ];
     }
 }

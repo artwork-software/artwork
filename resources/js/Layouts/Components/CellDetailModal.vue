@@ -403,6 +403,7 @@
 </template>
 
 <script>
+import { createInstanceFormatter } from "@/Helper/instanceFormat.js";
 import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
 import {
     IconLock,
@@ -907,10 +908,7 @@ export default {
         },
 
         formatCurrency(value) {
-            return new Intl.NumberFormat('de-DE', {
-                style: 'currency',
-                currency: 'EUR'
-            }).format(value);
+            return createInstanceFormatter(this.$page.props.instanceFormat).formatCurrency(value);
         },
 
         formatDate(date) {

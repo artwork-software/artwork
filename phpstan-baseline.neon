@@ -145,12 +145,6 @@ parameters:
 			path: app/Http/Controllers/NotificationController.php
 
 		-
-			message: '#^Access to an undefined property Artwork\\Modules\\Budget\\Models\\SubPositionRow\:\:\$name\.$#'
-			identifier: property.notFound
-			count: 2
-			path: app/Http/Controllers/ProjectController.php
-
-		-
 			message: '#^Access to an undefined property Artwork\\Modules\\DocumentRequest\\Models\\DocumentRequest\:\:\$description\.$#'
 			identifier: property.notFound
 			count: 1
@@ -515,12 +509,6 @@ parameters:
 			identifier: property.notFound
 			count: 1
 			path: artwork/Modules/Budget/Services/BudgetSumCalculator.php
-
-		-
-			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Relations\\HasMany\<Artwork\\Modules\\Budget\\Models\\SageAssignedData, Artwork\\Modules\\Budget\\Models\\ColumnCell\>\:\:withTrashed\(\)\.$#'
-			identifier: method.notFound
-			count: 1
-			path: artwork/Modules/Budget/Services/ColumnCellService.php
 
 		-
 			message: '#^Access to an undefined property Artwork\\Modules\\Budget\\Models\\CollectiveBookings\\CollectiveBooking\:\:\$id\.$#'

@@ -1809,9 +1809,7 @@ class ProjectController extends Controller
         BudgetSumDetailsService $budgetSumDetailsService,
         ColumnCellService $columnCellService,
         CellCommentService $cellCommentService,
-        CellCalculationService $cellCalculationService,
-        SageNotAssignedDataService $sageNotAssignedDataService,
-        SageAssignedDataService $sageAssignedDataService
+        CellCalculationService $cellCalculationService
     ): RedirectResponse {
         $table = $column->table()->withTrashed()->first();
         $tableHadRelevantColumn = $table->columns()->where('relevant_for_project_groups', true)->exists();
@@ -1825,9 +1823,7 @@ class ProjectController extends Controller
             $budgetSumDetailsService,
             $columnCellService,
             $cellCommentService,
-            $cellCalculationService,
-            $sageNotAssignedDataService,
-            $sageAssignedDataService
+            $cellCalculationService
         );
 
         // Eine wiederhergestellte Spalte darf der aktuellen budgetrelevanten
@@ -4581,9 +4577,7 @@ class ProjectController extends Controller
         SubPositionService $subPositionService,
         BudgetSumDetailsService $budgetSumDetailsService,
         CellCommentService $cellCommentService,
-        CellCalculationService $cellCalculationService,
-        SageNotAssignedDataService $sageNotAssignedDataService,
-        SageAssignedDataService $sageAssignedDataService
+        CellCalculationService $cellCalculationService
     ): RedirectResponse {
 
         $tableService->restore(
@@ -4602,9 +4596,7 @@ class ProjectController extends Controller
             $subPositionService,
             $budgetSumDetailsService,
             $cellCommentService,
-            $cellCalculationService,
-            $sageNotAssignedDataService,
-            $sageAssignedDataService
+            $cellCalculationService
         );
 
         return Redirect::back();

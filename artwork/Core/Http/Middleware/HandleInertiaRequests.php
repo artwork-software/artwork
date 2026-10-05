@@ -237,6 +237,9 @@ class HandleInertiaRequests extends Middleware
                 'banner' => $banner,
                 'projectNameOfCalendarProject' => $projectName,
                 'businessName' => $generalSettings->business_name,
+                // Regionale Formate der Instanz (Zahlen, Währung, Datum) – resources/js/Helper/instanceFormat.js
+                'instanceFormat' => app(\Artwork\Modules\GeneralSettings\Services\InstanceFormatter::class)
+                    ->toFrontend(),
                 'event_time_length_minutes' => $generalSettings->event_time_length_minutes,
                 'event_start_time' => $generalSettings->event_start_time,
                 'event_all_day_default' => $generalSettings->event_all_day_default,

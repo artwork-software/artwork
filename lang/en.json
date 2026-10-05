@@ -8662,5 +8662,14 @@
     "E-mail frequency": "E-mail frequency",
     "Notification settings saved": "Notification settings saved",
     "E-mail": "E-mail",
-    "Settings": "Settings"
+    "Settings": "Settings",
+    "{count} notifications archived": "{count} notifications archived",
+    "{count} still need an action from you": "{count} still need an action from you",
+    "Archiving runs in the background – this may take a moment.": "Archiving runs in the background – this may take a moment.",
+    "Settings for this type": "Settings for this type",
+    "Archive notification": "Archive notification",
+    "New notifications": "New notifications",
+    "You receive this e-mail because of your notification settings.": "You receive this e-mail because of your notification settings.",
+    "Change notification settings": "Change notification settings",
+    "Edit and accept": "Edit and accept"
 }

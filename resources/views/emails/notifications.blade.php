@@ -49,5 +49,11 @@
         <a href="{{ $presenter::appUrl() }}" class="notification-link notification-link-footer">
             {{ __('View all notifications in :app', ['app' => $page_title], $language) }}
         </a>
+        <p class="notification-description" style="margin-top: 1.5rem;">
+            {{ __('You receive this e-mail because of your notification settings.', [], $language) }}
+            <a href="{{ route('notifications.index', ['tab' => 'settings']) }}" class="notification-link notification-link-secondary">
+                {{ __('Change notification settings', [], $language) }}
+            </a>
+        </p>
     </div>
 @endcomponent

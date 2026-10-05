@@ -13,13 +13,16 @@
                         {{ displayUnreadCount }}
                     </div>
                 </div>
-                <div @click="setAllOnRead()"
-                     class="flex cursor-pointer items-center justify-end text-xs/[18px] text-accent-600 mr-8">
+                <button v-if="displayUnreadCount > 0"
+                        type="button"
+                        :disabled="archiving"
+                        @click="setAllOnRead()"
+                        class="flex cursor-pointer items-center justify-end text-xs/[18px] text-accent-600 mr-8 disabled:opacity-50">
                     <img src="/Svgs/IconSvgs/icon_archive_blue.svg"
-                         alt="Archive icon"
+                         alt=""
                          class="h-4 w-4 mr-2"
                          aria-hidden="true"/>{{$t('Archive all')}}
-                </div>
+                </button>
             </div>
             <div v-if="showSection"
                  @mouseover="notification.hovered = true"
@@ -147,6 +150,7 @@
 </template>
 
 <script>
+import { showAppToast } from "@/Helper/appToast.js";
 import {IconChevronDown, IconChevronRight, IconChevronUp} from "@tabler/icons-vue";
 import ConfirmationComponent from "@/Layouts/Components/ConfirmationComponent.vue";
 import NotificationEventInfoRow from "@/Layouts/Components/NotificationEventInfoRow.vue";
@@ -336,6 +340,17 @@ export default  {
             this.notificationToDelete = notification;
             this.deleteComponentVisible = true;
         },
+        reportArchiveResult(result) {
+            if (result?.queued) {
+                showAppToast('success', this.$t('Archiving runs in the background – this may take a moment.'));
+                return;
+            }
+            const parts = [this.$t('{count} notifications archived', { count: result?.archived ?? 0 })];
+            if ((result?.remaining ?? 0) > 0) {
+                parts.push(this.$t('{count} still need an action from you', { count: result.remaining }));
+            }
+            showAppToast('success', parts.join(' · '));
+        },
         async setAllOnRead() {
             if (this.archiving || this.displayUnreadCount === 0) {
                 return;
@@ -345,7 +360,8 @@ export default  {
             // offloaded to a queued job above the backend threshold) instead of shipping all ids.
             this.archiving = true;
             try {
-                await axios.patch(route('notifications.setReadAtAll'), { groupType: this.groupType });
+                const { data } = await axios.patch(route('notifications.setReadAtAll'), { groupType: this.groupType });
+                this.reportArchiveResult(data);
                 await this.fetchUnread(1);
                 if (this.showReadSection) {
                     await this.fetchArchived(1);

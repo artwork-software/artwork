@@ -26,6 +26,7 @@ use Artwork\Modules\User\Models\User;
 use Artwork\Modules\User\Services\UserService;
 use Artwork\Modules\Vacation\Services\VacationService;
 use Illuminate\Http\Request;
+use Artwork\Modules\Notification\Services\NotificationSettingService;
 use Artwork\Modules\Notification\Services\NotificationSettingsPresenter;
 use Illuminate\Validation\Rule;
 use Illuminate\Http\RedirectResponse;
@@ -265,12 +266,14 @@ class NotificationController extends Controller
      * single group. Small sets are archived inline (chunked bulk update); large sets are offloaded
      * to a queued job so the request returns immediately and the server is not blocked.
      */
-    public function setOnReadAll(Request $request, DatabaseNotificationService $databaseNotificationService): void
-    {
+    public function setOnReadAll(
+        Request $request,
+        DatabaseNotificationService $databaseNotificationService
+    ): JsonResponse {
         $user = User::find(Auth::id());
 
         if ($user === null) {
-            return;
+            return response()->json(['archived' => 0, 'remaining' => 0, 'queued' => false]);
         }
 
         $groupType = $request->filled('groupType') ? $request->string('groupType')->toString() : null;
@@ -282,10 +285,18 @@ class NotificationController extends Controller
 
         if ($unreadQuery->count() > self::INLINE_ARCHIVE_THRESHOLD) {
             ArchiveUserNotificationsJob::dispatch($user->id, $groupType);
-            return;
+
+            return response()->json(['archived' => 0, 'remaining' => 0, 'queued' => true]);
         }
 
-        $databaseNotificationService->archiveAllUnreadForUser($user, $groupType);
+        $archived = $databaseNotificationService->archiveAllUnreadForUser($user, $groupType);
+
+        // Rückmeldung fürs Center: was archiviert wurde und was noch eine Aktion braucht
+        return response()->json([
+            'archived' => $archived,
+            'remaining' => (clone $unreadQuery)->count(),
+            'queued' => false,
+        ]);
     }
 
     public function updateSetting(Request $request, NotificationSetting $setting): JsonResponse|RedirectResponse
@@ -300,7 +311,10 @@ class NotificationController extends Controller
             'enabled_push' => ['sometimes', 'boolean'],
             'frequency' => ['sometimes', Rule::enum(NotificationFrequencyEnum::class)],
         ]);
+        $settingService = app(NotificationSettingService::class);
+        $immediateBefore = $settingService->immediateMailTypes(Auth::user());
         $setting->update($validated);
+        $settingService->summariseTypesNoLongerImmediate(Auth::user(), $immediateBefore);
 
         return $request->expectsJson() && !$request->header('X-Inertia')
             ? response()->json(['setting' => $setting->fresh()])
@@ -326,6 +340,8 @@ class NotificationController extends Controller
         }
 
         $user = Auth::user();
+        $settingService = app(NotificationSettingService::class);
+        $immediateBefore = $settingService->immediateMailTypes($user);
         $user->notificationSettings()
             ->whereIn('type', app(NotificationSettingsPresenter::class)->visibleTypeValuesFor($user))
             ->when(
@@ -333,6 +349,7 @@ class NotificationController extends Controller
                 static fn ($query, string $groupType) => $query->where('group_type', $groupType)
             )
             ->update($values);
+        $settingService->summariseTypesNoLongerImmediate($user, $immediateBefore);
 
         return $this->settingsResponse($request, $user);
     }
@@ -343,6 +360,8 @@ class NotificationController extends Controller
     public function resetSettings(Request $request): JsonResponse|RedirectResponse
     {
         $user = Auth::user();
+        $settingService = app(NotificationSettingService::class);
+        $immediateBefore = $settingService->immediateMailTypes($user);
         foreach (NotificationEnum::configurableCases() as $type) {
             $user->notificationSettings()->where('type', $type->value)->update([
                 'enabled_email' => true,
@@ -350,6 +369,7 @@ class NotificationController extends Controller
                 'frequency' => $type->defaultFrequency()->value,
             ]);
         }
+        $settingService->summariseTypesNoLongerImmediate($user, $immediateBefore);
 
         return $this->settingsResponse($request, $user);
     }

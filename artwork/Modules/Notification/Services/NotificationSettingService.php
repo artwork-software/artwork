@@ -3,6 +3,7 @@
 namespace Artwork\Modules\Notification\Services;
 
 use Artwork\Modules\Notification\Enums\NotificationEnum;
+use Artwork\Modules\Notification\Enums\NotificationFrequencyEnum;
 use Artwork\Modules\Notification\Models\NotificationSetting;
 use Artwork\Modules\Notification\Repositories\NotificationSettingRepository;
 use Artwork\Modules\User\Models\User;
@@ -92,6 +93,44 @@ class NotificationSettingService
         }
 
         return $created;
+    }
+
+    /**
+     * Typen, die gerade als Sofort-Mail rausgehen.
+     *
+     * @return array<int, string>
+     */
+    public function immediateMailTypes(User $user): array
+    {
+        return $user->notificationSettings()
+            ->where('enabled_email', true)
+            ->where('frequency', NotificationFrequencyEnum::IMMEDIATELY->value)
+            ->pluck('type')
+            ->map(fn (mixed $type): string => $type instanceof NotificationEnum ? $type->value : (string) $type)
+            ->all();
+    }
+
+    /**
+     * Nach einer Änderung: Typen, die nicht mehr sofort gemailt werden, nicht noch einmal in die
+     * nächste Zusammenfassung packen – ihre ungelesenen Benachrichtigungen kamen schon per Mail.
+     *
+     * @param array<int, string> $immediateTypesBefore
+     */
+    public function summariseTypesNoLongerImmediate(User $user, array $immediateTypesBefore): void
+    {
+        $leftImmediate = array_values(array_diff($immediateTypesBefore, $this->immediateMailTypes($user)));
+        if ($leftImmediate === []) {
+            return;
+        }
+
+        $user->unreadNotifications()
+            ->where('sent_in_summary', false)
+            ->where(function ($query) use ($leftImmediate): void {
+                foreach ($leftImmediate as $type) {
+                    $query->orWhereJsonContains('data->type', $type);
+                }
+            })
+            ->update(['sent_in_summary' => true]);
     }
 
     /**

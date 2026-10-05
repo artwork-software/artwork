@@ -8671,5 +8671,14 @@
     "E-mail frequency": "E-Mail-Häufigkeit",
     "Notification settings saved": "Benachrichtigungseinstellungen gespeichert",
     "E-mail": "E-Mail",
-    "Settings": "Einstellungen"
+    "Settings": "Einstellungen",
+    "{count} notifications archived": "{count} Benachrichtigungen archiviert",
+    "{count} still need an action from you": "{count} warten noch auf eine Aktion von dir",
+    "Archiving runs in the background – this may take a moment.": "Die Archivierung läuft im Hintergrund – das kann einen Moment dauern.",
+    "Settings for this type": "Einstellungen für diese Art",
+    "Archive notification": "Benachrichtigung archivieren",
+    "New notifications": "Neue Benachrichtigungen",
+    "You receive this e-mail because of your notification settings.": "Du erhältst diese E-Mail aufgrund deiner Benachrichtigungseinstellungen.",
+    "Change notification settings": "Benachrichtigungseinstellungen ändern",
+    "Edit and accept": "Bearbeiten und annehmen"
 }

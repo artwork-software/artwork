@@ -78,15 +78,23 @@
                                      @confirm-material-return="showMaterialReturnConfirmModal = true"
                                      @decline-material-return="declineMaterialReturn"
                 />
+                <Link v-if="notification.data?.type && !isDashboard"
+                      :href="route('notifications.index', { tab: 'settings', type: notification.data.type })"
+                      class="mt-2 inline-block text-xs text-text-subtle hover:text-accent-600 underline-offset-2 hover:underline">
+                    {{ $t('Settings for this type') }}
+                </Link>
             </div>
         </div>
-        <img @click="setReadAt"
-             v-show="notification.hovered"
-             v-if="!isArchive && isArchivable(notification.data.buttons)"
-             src="/Svgs/IconSvgs/icon_archive_white.svg"
-             class="h-6 w-6 p-1 ml-1 flex cursor-pointer bg-accent-600 rounded-full"
-             aria-hidden="true"
-             alt=""/>
+        <!-- immer sichtbar (auch auf Touch-Geräten), bei Hover hervorgehoben -->
+        <button v-if="!isArchive && isArchivable(notification.data.buttons)"
+                type="button"
+                class="ml-1 shrink-0 rounded-full bg-accent-600 p-1 transition-opacity"
+                :class="notification.hovered ? 'opacity-100' : 'opacity-40 hover:opacity-100 focus-visible:opacity-100'"
+                :aria-label="$t('Archive notification')"
+                :title="$t('Archive notification')"
+                @click="setReadAt">
+            <img src="/Svgs/IconSvgs/icon_archive_white.svg" class="h-4 w-4" alt="" aria-hidden="true"/>
+        </button>
     </div>
     <ProjectHistoryWithoutBudgetComponent
         v-if="showProjectHistory"
@@ -168,7 +176,7 @@
 import {IconChevronRight} from "@tabler/icons-vue";
 import { isArchivable } from "@/Layouts/Components/NotificationComponents/archivableButtons.js";
 import NotificationButtons from "@/Layouts/Components/NotificationComponents/NotificationButtons.vue";
-import {router, usePage} from "@inertiajs/vue3";
+import {Link, router, usePage} from "@inertiajs/vue3";
 import DeclineEventModal from "@/Layouts/Components/DeclineEventModal.vue";
 import NewUserToolTip from "@/Layouts/Components/NewUserToolTip.vue";
 import ProjectHistoryWithoutBudgetComponent from "@/Layouts/Components/ProjectHistoryWithoutBudgetComponent.vue";
@@ -186,6 +194,7 @@ import { provide } from 'vue';
 export default {
     name: "NotificationBlock",
     components: {
+        Link,
         UserPopoverTooltip,
         MaterialIssueReturnConfirmModal,
         EventsWithoutRoomComponent,

@@ -114,6 +114,18 @@ class DatabaseNotificationService
     /**
      * @throws Throwable
      */
+    /**
+     * @param array<int, string> $notificationIds
+     */
+    public function markSentInSummary(array $notificationIds): void
+    {
+        if ($notificationIds === []) {
+            return;
+        }
+
+        DatabaseNotification::query()->whereKey($notificationIds)->update(['sent_in_summary' => true]);
+    }
+
     public function updateSentInSummary(DatabaseNotification $databaseNotification, bool $sent): DatabaseNotification
     {
         /**

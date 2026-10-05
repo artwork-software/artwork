@@ -437,7 +437,7 @@ class InventoryArticle extends Model
         Collection $externalIssues,
         ?int $windowStart = null,
         ?int $windowEnd = null
-): int {
+    ): int {
         $events = [];
 
         foreach ($internalIssues as $issue) {

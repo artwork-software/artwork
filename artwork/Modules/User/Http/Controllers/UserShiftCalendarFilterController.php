@@ -66,8 +66,7 @@ class UserShiftCalendarFilterController extends Controller
         UpdateFilterDatesRequest $request,
         User $user,
         UserService $userService
-    ): void
-    {
+    ): void {
         $this->authorize('updateOwnPreferences', $user);
 
         $startDate = Carbon::parse($request->get('start_date'))->format('Y-m-d');

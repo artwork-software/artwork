@@ -23,6 +23,8 @@ use Artwork\Modules\Crm\Enums\CrmSystemContactTypeEnum;
 use Artwork\Modules\Crm\Models\CrmContact;
 use Artwork\Modules\Room\Models\Room;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Redirect;
+use Illuminate\Http\RedirectResponse;
 use Inertia\Inertia;
 
 class InventoryCategoryController extends Controller
@@ -234,24 +236,30 @@ class InventoryCategoryController extends Controller
         ]);
     }
 
-    public function destroy(InventoryCategory $inventoryCategory): void
+    public function destroy(InventoryCategory $inventoryCategory): RedirectResponse
     {
-        $inventoryCategory->articles()->each(function (InventoryArticle $article): void {
-            $this->inventoryArticleService->delete($article);
-            $this->inventoryArticleService->forceDelete($article);
-        });
+        // Nur leere Kategorien löschen. Vorher wurden enthaltene Artikel am Papierkorb vorbei
+        // endgültig gelöscht (vergangene Ausgaben verloren ihre Artikel); Papierkorb-Artikel
+        // fielen dem FK-Cascade zum Opfer, ihre Bilder blieben verwaist liegen.
+        $articleCount = InventoryArticle::withTrashed()
+            ->where('inventory_category_id', $inventoryCategory->id)
+            ->count();
+        if ($articleCount > 0) {
+            return Redirect::back()->with(
+                'error',
+                __('This category still contains articles (also in the trash). Move or permanently delete them first.')
+            );
+        }
 
         $inventoryCategory->properties()->detach();
         $inventoryCategory->subcategories()->each(function (InventorySubCategory $subcategory): void {
-            $subcategory->articles()->each(function (InventoryArticle $article): void {
-                $this->inventoryArticleService->delete($article);
-                $this->inventoryArticleService->forceDelete($article);
-            });
             $subcategory->properties()->detach();
             $subcategory->delete();
         });
 
         $inventoryCategory->delete();
+
+        return Redirect::back();
     }
 
     public function getAllCategories()

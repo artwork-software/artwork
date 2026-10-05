@@ -8547,5 +8547,7 @@
     "The entry no longer exists. Please reload the page.": "The entry no longer exists. Please reload the page.",
     "The action could not be completed. Please try again.": "The action could not be completed. Please try again.",
     "The total quantity cannot be lower than the quantities in the other statuses.": "The total quantity cannot be lower than the quantities in the other statuses.",
-    "The end must be after the start.": "The end must be after the start."
+    "The end must be after the start.": "The end must be after the start.",
+    "This category still contains articles (also in the trash). Move or permanently delete them first.": "This category still contains articles (also in the trash). Move or permanently delete them first.",
+    "Are you sure you want to delete this category? Its sub-categories will be deleted as well. Categories that still contain articles cannot be deleted.": "Are you sure you want to delete this category? Its sub-categories will be deleted as well. Categories that still contain articles cannot be deleted."
 }

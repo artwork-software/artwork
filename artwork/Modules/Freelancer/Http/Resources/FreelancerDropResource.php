@@ -4,6 +4,9 @@ namespace Artwork\Modules\Freelancer\Http\Resources;
 
 use Illuminate\Http\Resources\Json\JsonResource;
 
+/**
+ * @mixin \Artwork\Modules\Freelancer\Models\Freelancer
+ */
 class FreelancerDropResource extends JsonResource
 {
     public static $wrap = null;

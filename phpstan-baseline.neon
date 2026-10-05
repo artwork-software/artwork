@@ -1,0 +1,97 @@
+parameters:
+	ignoreErrors:
+		-
+			message: '#^Variable \$breakMinutes on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.variable
+			count: 1
+			path: app/Http/Controllers/IndividualTimeController.php
+
+		-
+			message: '#^Variable \$data on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.variable
+			count: 1
+			path: artwork/Modules/BusinessIntelligence/Services/BiProjectMetricsService.php
+
+		-
+			message: '#^Access to an undefined property Artwork\\Modules\\Event\\Http\\Resources\\EventCalendarDayResource\:\:\$metaDate\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Event/Http/Resources/EventCalendarDayResource.php
+
+		-
+			message: '#^Access to an undefined property Artwork\\Modules\\Event\\Http\\Resources\\EventCalendarDayResource\:\:\$sameRoomEvents\.$#'
+			identifier: property.notFound
+			count: 2
+			path: artwork/Modules/Event/Http/Resources/EventCalendarDayResource.php
+
+		-
+			message: '#^Access to an undefined property Artwork\\Modules\\Freelancer\\Models\\Freelancer\:\:\$profile_photo_path\.$#'
+			identifier: property.notFound
+			count: 2
+			path: artwork/Modules/Freelancer/Models/Freelancer.php
+
+		-
+			message: '#^Access to an undefined property Artwork\\Modules\\Manufacturer\\Models\\Manufacturer\:\:\$profile_photo_path\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Manufacturer/Models/Manufacturer.php
+
+		-
+			message: '#^Access to an undefined property Artwork\\Modules\\Project\\Http\\Resources\\ProjectCalendarShowEventResource\:\:\$collision_count\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Project/Http/Resources/ProjectCalendarShowEventResource.php
+
+		-
+			message: '#^Call to an undefined method Artwork\\Modules\\Project\\Http\\Resources\\ProjectInEventResource\:\:state\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: artwork/Modules/Project/Http/Resources/ProjectInEventResource.php
+
+		-
+			message: '#^Access to an undefined property Artwork\\Modules\\Project\\Http\\Resources\\ProjectIndexShowResource\:\:\$money_sources\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Project/Http/Resources/ProjectIndexShowResource.php
+
+		-
+			message: '#^Access to an undefined property Artwork\\Modules\\Project\\Http\\Resources\\ProjectShowResource\:\:\$money_sources\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Project/Http/Resources/ProjectShowResource.php
+
+		-
+			message: '#^Access to an undefined property Artwork\\Modules\\ServiceProvider\\Models\\ServiceProvider\:\:\$profile_photo_path\.$#'
+			identifier: property.notFound
+			count: 2
+			path: artwork/Modules/ServiceProvider/Models/ServiceProvider.php
+
+		-
+			message: '#^Access to an undefined property Artwork\\Modules\\Task\\Http\\Resources\\ShowOwnTasksResource\:\:\$project\.$#'
+			identifier: property.notFound
+			count: 2
+			path: artwork/Modules/Task/Http/Resources/ShowOwnTasksResource.php
+
+		-
+			message: '#^Access to an undefined property Artwork\\Modules\\Task\\Http\\Resources\\ShowOwnTasksResource\:\:\$tab_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Task/Http/Resources/ShowOwnTasksResource.php
+
+		-
+			message: '#^Access to an undefined property Artwork\\Modules\\Task\\Http\\Resources\\ShowOwnTasksResource\:\:\$tasks\.$#'
+			identifier: property.notFound
+			count: 1
+			path: artwork/Modules/Task/Http/Resources/ShowOwnTasksResource.php
+
+		-
+			message: '#^Access to an undefined property Artwork\\Modules\\User\\Http\\Resources\\UserWithoutShiftsResource\:\:\$pivot\.$#'
+			identifier: property.notFound
+			count: 5
+			path: artwork/Modules/User/Http/Resources/UserWithoutShiftsResource.php
+
+		-
+			message: '#^Variable \$violationDate on left side of \?\? is never defined\.$#'
+			identifier: nullCoalesce.variable
+			count: 1
+			path: artwork/Modules/Workflow/Notifications/ShiftRuleViolationNotification.php

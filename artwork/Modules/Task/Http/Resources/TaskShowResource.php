@@ -6,6 +6,9 @@ use Artwork\Modules\User\Http\Resources\UserIconResource;
 use Carbon\Carbon;
 use Illuminate\Http\Resources\Json\JsonResource;
 
+/**
+ * @mixin \Artwork\Modules\Task\Models\Task
+ */
 class TaskShowResource extends JsonResource
 {
     public static $wrap = null;

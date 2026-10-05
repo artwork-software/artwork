@@ -6,6 +6,9 @@ use Artwork\Modules\Event\Models\Event;
 use Carbon\Carbon;
 use Illuminate\Http\Resources\Json\JsonResource;
 
+/**
+ * @mixin \Artwork\Modules\Event\Models\Event
+ */
 class EventCalendarDayResource extends JsonResource
 {
     public static $wrap = null;

@@ -5,6 +5,9 @@ namespace Artwork\Modules\Task\Http\Resources;
 use Carbon\Carbon;
 use Illuminate\Http\Resources\Json\JsonResource;
 
+/**
+ * @mixin \Artwork\Modules\Task\Models\Task
+ */
 class TaskIndexResource extends JsonResource
 {
     public static $wrap = null;

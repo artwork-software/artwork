@@ -137,7 +137,7 @@ readonly class EventService
             broadcast(new RemoveEvent($event, $event->room_id));
         }
 
-        $event->verifications()->each(function (EventVerification $eventVerification) use ($event): void {
+        $event->verifications()->each(function (EventVerification $eventVerification): void {
             $eventVerification->delete();
         });
 
@@ -1673,28 +1673,26 @@ readonly class EventService
                     )
             )
             ->setEventsWithoutRoom(
-                empty($room) ?
-                    CalendarEventResource::collection(
-                        $this->getEventsWithoutRoom(
-                            $project,
-                            [
-                                'room',
-                                'creator',
-                                'project',
-                                'project.managerUsers',
-                                'project.status',
-                                'shifts',
-                                'shifts.craft',
-                                'shifts.users',
-                                'shifts.freelancer',
-                                'shifts.serviceProvider',
-                                'shifts.shiftsQualifications',
-                                'subEvents.event',
-                                'subEvents.event.room',
-                            ]
-                        )
-                    )->resolve() :
-                    []
+                CalendarEventResource::collection(
+                    $this->getEventsWithoutRoom(
+                        $project,
+                        [
+                            'room',
+                            'creator',
+                            'project',
+                            'project.managerUsers',
+                            'project.status',
+                            'shifts',
+                            'shifts.craft',
+                            'shifts.users',
+                            'shifts.freelancer',
+                            'shifts.serviceProvider',
+                            'shifts.shiftsQualifications',
+                            'subEvents.event',
+                            'subEvents.event.room',
+                        ]
+                    )
+                )->resolve()
             )
             ->setEventsAtAGlance(
                 $desiredProjectHasNoEvents ?

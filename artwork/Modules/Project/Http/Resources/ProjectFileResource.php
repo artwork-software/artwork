@@ -4,6 +4,9 @@ namespace Artwork\Modules\Project\Http\Resources;
 
 use Illuminate\Http\Resources\Json\JsonResource;
 
+/**
+ * @mixin \Artwork\Modules\Project\Models\ProjectFile
+ */
 class ProjectFileResource extends JsonResource
 {
     /**

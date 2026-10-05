@@ -527,7 +527,7 @@ class UserService
 
         // Ensure dates are valid Carbon instances
         if (!$startDate instanceof Carbon) {
-            $startDate = $now ?? $this->carbonService->getNow();
+            $startDate = $now;
         }
         if (!$endDate instanceof Carbon) {
             $endDate = $this->carbonService->cloneAndAddWeek($startDate);

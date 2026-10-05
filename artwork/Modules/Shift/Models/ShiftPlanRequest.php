@@ -72,7 +72,7 @@ class ShiftPlanRequest extends Model
 
     public function shifts(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
-        return $this->hasMany(Shift::class, 'shift_plan_request_id', 'id', 'shifts');
+        return $this->hasMany(Shift::class, 'shift_plan_request_id', 'id');
     }
 
     /**

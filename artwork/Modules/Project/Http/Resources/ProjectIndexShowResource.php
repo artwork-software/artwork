@@ -10,6 +10,9 @@ use Artwork\Modules\User\Http\Resources\UserWithoutShiftsResource;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\Facades\Auth;
 
+/**
+ * @mixin \Artwork\Modules\Project\Models\Project
+ */
 class ProjectIndexShowResource extends JsonResource
 {
     public static $wrap = null;

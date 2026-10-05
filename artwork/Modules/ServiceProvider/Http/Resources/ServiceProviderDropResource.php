@@ -4,6 +4,9 @@ namespace Artwork\Modules\ServiceProvider\Http\Resources;
 
 use Illuminate\Http\Resources\Json\JsonResource;
 
+/**
+ * @mixin \Artwork\Modules\ServiceProvider\Models\ServiceProvider
+ */
 class ServiceProviderDropResource extends JsonResource
 {
     public static $wrap = null;

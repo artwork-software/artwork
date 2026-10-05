@@ -145,7 +145,6 @@ class ProjectPrintLayoutController extends Controller
         $loadedProjectInformation = [];
         $projectComponents = collect([$project])->map(function ($project) use (
             $projectPrintLayout,
-            $loadedProjectInformation,
             $user
         ) {
             /** @var Project $project */

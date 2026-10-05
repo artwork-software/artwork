@@ -191,7 +191,7 @@ class InventoryPlanningService
             $issues[] = [
                 'id'                 => $issue->id,
                 'type'               => 'extern',
-                'name'               => $issue->name ?? $receiverName ?? ('Leihschein #' . $issue->id),
+                'name'               => $issue->name ?: ($receiverName ?: 'Leihschein #' . $issue->id),
                 'start'              => Carbon::parse($issue->issue_date)->toDateString(),
                 'end'                => ($issue->effectiveReturnDate() ?? Carbon::parse($issue->issue_date))
                     ->toDateString(),

@@ -6,6 +6,9 @@ use Artwork\Modules\Event\Http\Resources\SubEventResource;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\Facades\Auth;
 
+/**
+ * @mixin \Artwork\Modules\Event\Models\Event
+ */
 class ProjectCalendarShowEventResource extends JsonResource
 {
     public static $wrap = null;

@@ -8,6 +8,9 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
+/**
+ * @mixin \Artwork\Modules\Task\Models\Task
+ */
 class ShowOwnTasksResource extends JsonResource
 {
     public static $wrap = null;

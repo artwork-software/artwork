@@ -6,6 +6,9 @@ use Artwork\Modules\EventType\Services\EventTypeService;
 use Artwork\Modules\Event\Http\Resources\SubEventResource;
 use Illuminate\Http\Resources\Json\JsonResource;
 
+/**
+ * @mixin \Artwork\Modules\Event\Models\Event
+ */
 class CalendarShowEventResource extends JsonResource
 {
     /**

@@ -4,6 +4,9 @@ namespace Artwork\Modules\Contract\Http\Resources;
 
 use Illuminate\Http\Resources\Json\JsonResource;
 
+/**
+ * @mixin \Artwork\Modules\Contract\Models\ContractModule
+ */
 class ContractModuleResource extends JsonResource
 {
     /**

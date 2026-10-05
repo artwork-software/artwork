@@ -4,6 +4,9 @@ namespace Artwork\Modules\DocumentRequest\Http\Resources;
 
 use Illuminate\Http\Resources\Json\JsonResource;
 
+/**
+ * @mixin \Artwork\Modules\DocumentRequest\Models\DocumentRequest
+ */
 class DocumentRequestResource extends JsonResource
 {
     /**

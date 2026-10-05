@@ -57,6 +57,7 @@ use Artwork\Modules\WorkTime\Repositories\UserOvertimeRepository;
 use Artwork\Modules\WorkTime\Services\OvertimeService;
 use Artwork\Modules\User\Http\Resources\UserWorkProfileResource;
 use Artwork\Modules\User\Models\User;
+use Artwork\Modules\User\Policies\UserPolicy;
 use Artwork\Modules\User\Models\UserContract;
 use Artwork\Modules\User\Models\UserContractAssign;
 use Artwork\Modules\User\Models\UserWorkTime;
@@ -356,6 +357,13 @@ class UserController extends Controller
         UserService $userService,
         MembersManagementRequest $request
     ): Response|ResponseFactory {
+        // Kontaktdaten aller Freelancer/Dienstleister – gleiche Hürde wie deren Profilseiten
+        $authUser = $request->user();
+        abort_unless(
+            $authUser instanceof User && UserPolicy::canViewExternalWorkerProfile($authUser),
+            \Illuminate\Http\Response::HTTP_FORBIDDEN
+        );
+
         $saveFilterAndSort = $request->boolean('saveFilterAndSort');
         $userUserManagementSetting = $userUserManagementSettingService
             ->getFromUser($userService->getAuthUser())

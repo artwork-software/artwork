@@ -511,7 +511,7 @@
     "GET user/two-factor-secret-key": "confirm",
     "GET user/{user}/own/operation/plan": "forbidden",
     "GET users": "allowed",
-    "GET users/addresses": "allowed",
+    "GET users/addresses": "forbidden",
     "GET users/invitations/accept": "unauth",
     "GET users/invitations/invite": "forbidden",
     "GET users/money_source_search": "validation",

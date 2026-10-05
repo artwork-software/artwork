@@ -4,9 +4,12 @@
 
 <script setup>
 import { computed } from 'vue'
-import { Link } from '@inertiajs/vue3'
+import { Link, usePage } from '@inertiajs/vue3'
 import BaseTabs from '@/Artwork/Tabs/BaseTabs.vue'
 import { is, can } from 'laravel-permission-to-vuejs'
+import { usePermission } from '@/Composeables/Permission.js'
+
+const { canViewExternalWorkerProfile } = usePermission(usePage().props)
 
 const tabs = computed(() => ([
     {
@@ -20,7 +23,8 @@ const tabs = computed(() => ([
         name: 'Freelancers & Service Providers',
         href: route('users.addresses'),
         current: route().current('users.addresses'),
-        permission: true,
+        // gleiche Regel wie die Profilseiten (UserPolicy::canViewExternalWorkerProfile)
+        permission: canViewExternalWorkerProfile(),
         icon: 'IconCompass',
     },
     {

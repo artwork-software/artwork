@@ -3,6 +3,7 @@
 namespace Tests\Feature\Modules\User\Characterization;
 
 use Artwork\Modules\Freelancer\Models\Freelancer;
+use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Artwork\Modules\ServiceProvider\Models\ServiceProvider;
 use Artwork\Modules\User\Models\User;
 use Artwork\Modules\User\Models\UserUserManagementSetting;
@@ -106,7 +107,7 @@ final class UserSearchAndPublicEndpointsTest extends FeatureTestCase
         Freelancer::factory()->create(['first_name' => 'Other', 'last_name' => 'Person']);
         $provider = ServiceProvider::factory()->create(['provider_name' => 'Zxq Licht GmbH']);
         ServiceProvider::factory()->create(['provider_name' => 'Ton AG']);
-        $this->actingAs(User::factory()->create());
+        $this->actingAsUserWith(PermissionEnum::CAN_VIEW_PRIVATE_USER_INFO->value);
 
         $this->get(route('users.addresses', ['query' => 'Zxq']))
             ->assertOk()
@@ -122,10 +123,9 @@ final class UserSearchAndPublicEndpointsTest extends FeatureTestCase
     #[Test]
     public function addresses_page_sorts_and_persists_the_sort_when_requested(): void
     {
-        $user = User::factory()->create();
         $bravo = Freelancer::factory()->create(['first_name' => 'Zxq', 'last_name' => 'Bravo']);
         $alpha = Freelancer::factory()->create(['first_name' => 'Zxq', 'last_name' => 'Alpha']);
-        $this->actingAs($user);
+        $user = $this->actingAsUserWith(PermissionEnum::CAN_VIEW_PRIVATE_USER_INFO->value);
 
         $this->get(route('users.addresses', [
             'query' => 'Zxq',
@@ -146,10 +146,9 @@ final class UserSearchAndPublicEndpointsTest extends FeatureTestCase
     #[Test]
     public function addresses_page_applies_the_persisted_sort_on_later_visits(): void
     {
-        $user = User::factory()->create();
         $alpha = Freelancer::factory()->create(['first_name' => 'Qyx', 'last_name' => 'Alpha']);
         $bravo = Freelancer::factory()->create(['first_name' => 'Qyx', 'last_name' => 'Bravo']);
-        $this->actingAs($user);
+        $user = $this->actingAsUserWith(PermissionEnum::CAN_VIEW_PRIVATE_USER_INFO->value);
         $this->get(route('users.addresses', ['sort' => 'ALPHABETICALLY_DESCENDING', 'saveFilterAndSort' => 1]))
             ->assertOk();
 
@@ -162,11 +161,28 @@ final class UserSearchAndPublicEndpointsTest extends FeatureTestCase
     #[Test]
     public function addresses_page_rejects_unknown_sort_values(): void
     {
-        $this->actingAs(User::factory()->create());
+        $this->actingAsUserWith(PermissionEnum::CAN_VIEW_PRIVATE_USER_INFO->value);
 
         $this->getJson(route('users.addresses', ['sort' => 'RANDOM']))
             ->assertUnprocessable()
             ->assertJsonValidationErrors('sort');
+    }
+
+    #[Test]
+    public function addresses_page_needs_the_same_rights_as_the_profile_pages(): void
+    {
+        // vorher: jede eingeloggte Person sah Kontaktdaten aller Freelancer/Dienstleister
+        $this->actingAs(User::factory()->create());
+        $this->get(route('users.addresses'))->assertForbidden();
+
+        foreach ([
+            PermissionEnum::CAN_VIEW_PRIVATE_USER_INFO,
+            PermissionEnum::EXTERNAL_MANAGER,
+            PermissionEnum::SHIFT_PLANNER,
+        ] as $permission) {
+            $this->actingAsUserWith($permission->value);
+            $this->get(route('users.addresses'))->assertOk();
+        }
     }
 
     #[Test]

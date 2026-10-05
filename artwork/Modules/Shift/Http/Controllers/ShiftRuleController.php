@@ -12,7 +12,6 @@ use Artwork\Modules\Shift\Http\Requests\StoreManualViolationRequest;
 use Artwork\Modules\Shift\Http\Requests\StoreShiftRuleRequest;
 use Artwork\Modules\Shift\Http\Requests\UpdateContractAssignmentsRequest;
 use Artwork\Modules\Shift\Http\Requests\UpdateShiftRuleRequest;
-use Artwork\Modules\Shift\Http\Requests\UpdateViolationStatusRequest;
 use Artwork\Modules\Shift\Http\Requests\ValidateShiftRulesRequest;
 use Artwork\Modules\Shift\Exports\ShiftRuleViolationsExcelExport;
 use Artwork\Modules\Shift\Models\CompensationDayOff;
@@ -576,30 +575,6 @@ class ShiftRuleController extends Controller
         );
 
         return $export->download(sprintf('verstoesse_%s_bis_%s.xlsx', $filters['date_from'], $filters['date_to']));
-    }
-
-    public function updateViolationStatus(UpdateViolationStatusRequest $request, int $violationId): RedirectResponse
-    {
-        try {
-            $this->shiftRuleService->updateViolationStatus(
-                $violationId,
-                $request->validated()['status'],
-                auth()->id()
-            );
-
-            return redirect()->back()->with('success', __('Status successfully updated'));
-        } catch (\Exception $e) {
-            // Rohe Exception-Texte gehören ins Log, nicht in die Oberfläche
-            Log::error('Shift rule violation status update failed', [
-                'violation_id' => $violationId,
-                'exception' => $e,
-            ]);
-
-            return redirect()->back()->with(
-                'error',
-                __('The violation could not be processed. Please reload the page and try again.')
-            );
-        }
     }
 
     public function assignContracts(AssignContractsToRuleRequest $request, ShiftRule $shiftRule): RedirectResponse

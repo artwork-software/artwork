@@ -39,7 +39,6 @@ use Artwork\Modules\Event\Http\Requests\EventBulkCreateRequest;
 use Artwork\Modules\Event\Http\Requests\EventStoreRequest;
 use Artwork\Modules\Event\Http\Requests\EventUpdateRequest;
 use Artwork\Modules\Event\Http\Resources\CalendarEventResource;
-use Artwork\Modules\Event\Http\Resources\EventShowResource;
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Event\Models\EventStatus;
 use Artwork\Modules\Event\Services\EventCollectionService;
@@ -126,7 +125,6 @@ use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 use Inertia\ResponseFactory;
-use Spatie\Activitylog\Models\Activity;
 use Symfony\Component\HttpFoundation\Response as SymfonyResponse;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 use Throwable;
@@ -1435,21 +1433,6 @@ class EventController extends Controller
             'first_project_calendar_tab_id' => $this->projectTabService
                 ->getFirstProjectTabWithTypeIdOrFirstProjectTabId(ProjectTabComponentEnum::CALENDAR),
             'event_properties' => $eventPropertyService->getAll()
-        ]);
-    }
-
-    public function viewRequestIndex(): Response
-    {
-        // Todo: filter room for visible for authenticated user
-        // should be like: Event::where($event->room->room_admins->contains(Auth::id()))->map(fn($event) => [
-        $events = Event::query()
-            ->where('occupancy_option', true)
-            ->get();
-
-        return inertia('Events/EventRequestsManagement', [
-            'event_requests' => EventShowResource::collection($events)->resolve(),
-            'first_project_calendar_tab_id' => $this->projectTabService
-                ->getFirstProjectTabWithTypeIdOrFirstProjectTabId(ProjectTabComponentEnum::CALENDAR)
         ]);
     }
 
@@ -3010,24 +2993,6 @@ class EventController extends Controller
         }
 
         $this->seriesEventsService->applyDefinitionChange($event, $series, $definitionInput, $propertyIds);
-    }
-
-    public function getCollisionCount(Request $request): int
-    {
-        // Ungültige Datums-Strings sollen 422 statt 500 liefern
-        $validated = $request->validate([
-            'start' => ['required', 'date'],
-            'end' => ['required', 'date'],
-        ]);
-
-        $start = Carbon::parse($validated['start'])->setTimezone(config('app.timezone'));
-        $end = Carbon::parse($validated['end'])->setTimezone(config('app.timezone'));
-
-        return Event::query()
-            ->startAndEndTimeOverlap($start, $end)
-            ->where('room_id', $request->query('roomId'))
-            ->where('id', '!=', $request->query('eventId'))
-            ->count();
     }
 
     public function getTrashed(Request $request): Response|ResponseFactory

@@ -21,15 +21,11 @@ final class ProjectShiftControllerTest extends FeatureTestCase
     #[Test]
     public function admin_shift_tab_passes_authorization(): void
     {
-        // ProjectTabShiftService has a known type-error in UserRepository::getWorkers
-        // (Carbon\Carbon vs Illuminate\Support\Carbon). Authorization is what we assert here.
+        // Früher TypeError in UserRepository::getWorkers (Carbon\Carbon vs Illuminate\Support\Carbon)
         $this->actingAsAdmin();
         $project = Project::factory()->create();
 
-        $response = $this->getJson(route('projects.tabs.shift', $project));
-
-        $this->assertNotEquals(302, $response->getStatusCode(), 'Admin should not be redirected.');
-        $this->assertNotEquals(401, $response->getStatusCode(), 'Admin should not be unauthorized.');
+        $this->getJson(route('projects.tabs.shift', $project))->assertOk();
     }
 
     #[Test]

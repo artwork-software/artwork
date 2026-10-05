@@ -105,6 +105,13 @@ watch(
     { immediate: true }
 )
 
+
+// Platzierungen in Ordnern (disclosure_components, erkennbar an disclosure_id) haben eigene Ids —
+// das Backend löst sie nur mit placement=disclosure auf und nutzt dann deren Tab-Auswahl.
+function placementQuery() {
+    return props.component?.disclosure_id ? { placement: 'disclosure' } : {}
+}
+
 async function fetchDocuments() {
     const projectId = props.project?.id
     const componentInTabId = props.component?.id ?? props.component?.component_in_tab_id
@@ -118,7 +125,7 @@ async function fetchDocuments() {
 
     try {
         const { data } = await axios.get(
-            route('projects.tabs.documents', { project: projectId, componentInTab: componentInTabId })
+            route('projects.tabs.documents', { project: projectId, componentInTab: componentInTabId, ...placementQuery() })
         )
         const fetchedDocuments = data?.documents ?? []
         documents.value.splice(0, documents.value.length, ...fetchedDocuments)

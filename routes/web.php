@@ -170,7 +170,9 @@ use Artwork\Modules\ModuleSettings\Http\Controller\ModuleSettingsController;
 use Artwork\Modules\Project\Http\Controllers\ProjectRoleMatrixExportController;
 use Artwork\Modules\Project\Http\Middleware\CanEditProject;
 use Artwork\Modules\Budget\Http\Middleware\EnsureUserCanAccessProjectBudget;
+use Artwork\Modules\Project\Enum\ProjectTabComponentEnum;
 use Artwork\Modules\Project\Http\Middleware\CanViewProject;
+use Artwork\Modules\Project\Http\Middleware\EnsureUserCanSeeProjectComponent;
 use Artwork\Modules\Room\Http\Middleware\CanViewRoom;
 use Artwork\Modules\Shift\Http\Controllers\ProjectShiftPersonalPlanExportController;
 use Artwork\Modules\Shift\Http\Controllers\ShiftCommitWorkflowUserController;
@@ -861,41 +863,58 @@ Route::group(['middleware' => ['auth:sanctum']], function (): void {
         'middleware' => CanViewProject::class,
     ], function (): void {
         Route::get('/team', [ProjectTeamController::class, 'show'])
-            ->name('projects.tabs.team');
+            ->name('projects.tabs.team')
+            ->middleware(EnsureUserCanSeeProjectComponent::for(ProjectTabComponentEnum::PROJECT_TEAM));
         Route::get('/components/{componentInTab}/documents', [ProjectDocumentsController::class, 'index'])
             ->name('projects.tabs.documents');
         Route::get('/all-documents', [ProjectDocumentsController::class, 'all'])
             ->name('projects.tabs.all-documents');
         Route::get('/status', [ProjectStatusController::class, 'show'])
-            ->name('projects.tabs.status');
+            ->name('projects.tabs.status')
+            ->middleware(EnsureUserCanSeeProjectComponent::for(ProjectTabComponentEnum::PROJECT_STATUS));
         Route::get('/artist-name', [ProjectArtistNameController::class, 'show'])
-            ->name('projects.tabs.artist-name');
+            ->name('projects.tabs.artist-name')
+            ->middleware(EnsureUserCanSeeProjectComponent::forOrProjectWriters(
+                ProjectTabComponentEnum::ARTIST_NAME_DISPLAY,
+                ProjectTabComponentEnum::PROJECT_BASIC_DATA_DISPLAY
+            ));
         Route::get('/shift-contacts', [ProjectShiftContactsController::class, 'show'])
-            ->name('projects.tabs.shift-contacts');
+            ->name('projects.tabs.shift-contacts')
+            ->middleware(EnsureUserCanSeeProjectComponent::for(ProjectTabComponentEnum::SHIFT_CONTACT_PERSONS));
         Route::get('/components/{componentInTab}/checklists', [ProjectChecklistController::class, 'index'])
             ->name('projects.tabs.checklists');
         Route::get('/all-checklists', [ProjectChecklistController::class, 'all'])
             ->name('projects.tabs.all-checklists');
         Route::get('/material-issues', [ProjectMaterialIssueController::class, 'show'])
-            ->name('projects.tabs.material-issues');
+            ->name('projects.tabs.material-issues')
+            ->middleware(EnsureUserCanSeeProjectComponent::for(
+                ProjectTabComponentEnum::PROJECT_MATERIAL_ISSUE_COMPONENT
+            ));
         Route::get('/artist-residencies', [ProjectArtistResidenciesController::class, 'show'])
-            ->name('projects.tabs.artist-residencies');
+            ->name('projects.tabs.artist-residencies')
+            ->middleware(EnsureUserCanSeeProjectComponent::for(ProjectTabComponentEnum::ARTIST_RESIDENCIES));
         Route::get('/components/{componentInTab}/comments', [ProjectCommentController::class, 'index'])
             ->name('projects.tabs.comments');
         Route::get('/all-comments', [ProjectCommentController::class, 'all'])
             ->name('projects.tabs.all-comments');
         Route::get('/budget-informations', [ProjectBudgetInformationController::class, 'show'])
-            ->name('projects.tabs.budget-informations');
+            ->name('projects.tabs.budget-informations')
+            ->middleware(EnsureUserCanSeeProjectComponent::for(ProjectTabComponentEnum::BUDGET_INFORMATIONS));
         Route::get('/bulk-edit', [ProjectBulkEditController::class, 'show'])
-            ->name('projects.tabs.bulk-edit');
+            ->name('projects.tabs.bulk-edit')
+            ->middleware(EnsureUserCanSeeProjectComponent::forOrProjectWriters(ProjectTabComponentEnum::BULK_EDIT));
         Route::get('/calendar', [ProjectCalendarController::class, 'show'])
-            ->name('projects.tabs.calendar');
+            ->name('projects.tabs.calendar')
+            ->middleware(EnsureUserCanSeeProjectComponent::for(ProjectTabComponentEnum::CALENDAR));
         Route::get('/budget', [ProjectBudgetController::class, 'show'])
-            ->name('projects.tabs.budget');
+            ->name('projects.tabs.budget')
+            ->middleware(EnsureUserCanSeeProjectComponent::for(ProjectTabComponentEnum::BUDGET));
         Route::get('/shift', [ProjectShiftController::class, 'show'])
-            ->name('projects.tabs.shift');
+            ->name('projects.tabs.shift')
+            ->middleware(EnsureUserCanSeeProjectComponent::for(ProjectTabComponentEnum::SHIFT_TAB));
         Route::get('/sage-invoices', [ProjectSageInvoiceOverviewController::class, 'show'])
-            ->name('projects.tabs.sage-invoices');
+            ->name('projects.tabs.sage-invoices')
+            ->middleware(EnsureUserCanSeeProjectComponent::for(ProjectTabComponentEnum::SAGE_INVOICE_OVERVIEW));
     });
 
     // Verknüpfung von CRM-Künstler*innen mit einem Projekt (Autorisierung via ProjectPolicy::update)

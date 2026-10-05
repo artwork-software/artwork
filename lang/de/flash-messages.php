@@ -69,7 +69,7 @@ return [
                 'update' => 'Konto konnte nicht aktualisiert werden, bitte erneut versuchen.',
                 'delete' => 'Konto konnte nicht gelöscht werden, bitte erneut versuchen.'
             ],
-            'cost_unit' => [
+            'cost-unit' => [
                 'create' => 'Kostenstelle konnte nicht gespeichert werden, bitte erneut versuchen.',
                 'update' => 'Kostenstelle konnte nicht aktualisiert werden, bitte erneut versuchen.',
                 'delete' => 'Kostenstelle konnte nicht gelöscht werden, bitte erneut versuchen.'

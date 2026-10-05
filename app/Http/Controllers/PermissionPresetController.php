@@ -54,11 +54,11 @@ class PermissionPresetController extends Controller
             return Redirect::back()
                 ->with(
                     'error',
-                    __('flash-messages.permission-preset.error.created')
+                    __('flash-messages.permission-preset.error.create')
                 );
         }
 
-        return Redirect::back()->with('success', __('flash-messages.permission-preset.success.created'));
+        return Redirect::back()->with('success', __('flash-messages.permission-preset.success.create'));
     }
 
     public function update(UpdatePermissionPresetRequest $request, PermissionPreset $permissionPreset): RedirectResponse
@@ -68,11 +68,11 @@ class PermissionPresetController extends Controller
         } catch (Throwable $t) {
             return Redirect::back()->with(
                 'error',
-                __('flash-messages.permission-preset.error.updated')
+                __('flash-messages.permission-preset.error.update')
             );
         }
 
-        return Redirect::back()->with('success', __('flash-messages.permission-preset.success.updated'));
+        return Redirect::back()->with('success', __('flash-messages.permission-preset.success.update'));
     }
 
     public function destroy(PermissionPreset $permissionPreset): RedirectResponse
@@ -82,10 +82,10 @@ class PermissionPresetController extends Controller
         } catch (Throwable $t) {
             return Redirect::back()->with(
                 'error',
-                __('flash-messages.permission-preset.error.deleted')
+                __('flash-messages.permission-preset.error.delete')
             );
         }
 
-        return Redirect::back()->with('success', __('flash-messages.permission-preset.success.deleted'));
+        return Redirect::back()->with('success', __('flash-messages.permission-preset.success.delete'));
     }
 }

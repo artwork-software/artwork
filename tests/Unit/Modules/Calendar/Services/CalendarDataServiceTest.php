@@ -23,13 +23,25 @@ final class CalendarDataServiceTest extends TestCase
     #[Test]
     public function get_project_date_range_returns_today_range_when_project_is_null(): void
     {
-        $today = Carbon::parse('2025-06-15');
+        $today = Carbon::parse('2025-06-15 14:30:00');
 
         [$start, $end] = $this->service->getProjectDateRange(null, $today);
 
-        // Note: the implementation mutates $today, so start == end at endOfDay.
-        $this->assertSame('2025-06-15', $start->toDateString());
-        $this->assertSame('2025-06-15', $end->toDateString());
+        // Ganzer Tag, nicht ein Zeitpunkt – und das übergebene Datum bleibt unverändert
+        $this->assertSame('2025-06-15 00:00:00', $start->toDateTimeString());
+        $this->assertSame('2025-06-15 23:59:59', $end->toDateTimeString());
+        $this->assertSame('2025-06-15 14:30:00', $today->toDateTimeString());
+    }
+
+    #[Test]
+    public function get_project_date_range_covers_today_for_a_project_without_events(): void
+    {
+        $project = \Artwork\Modules\Project\Models\Project::factory()->create();
+
+        [$start, $end] = $this->service->getProjectDateRange($project, Carbon::parse('2025-06-15 14:30:00'));
+
+        $this->assertSame('2025-06-15 00:00:00', $start->toDateTimeString());
+        $this->assertSame('2025-06-15 23:59:59', $end->toDateTimeString());
     }
 
     #[Test]

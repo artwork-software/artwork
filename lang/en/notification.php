@@ -117,6 +117,7 @@ return [
         'new_room_request' => 'New room request',
         'admin_message' => 'Message from room admin',
         'room_request_with_changed_room' => 'Room request with room change confirmed',
+        'room_change_confirmed' => 'Room change confirmed',
         'new_message' => 'New message regarding room request',
         'room_request_accept' => 'Room request confirmed',
         'room_request_declined' => 'Room request declined',

@@ -366,18 +366,22 @@ readonly class CalendarDataService
 
     public function getProjectDateRange($project, Carbon $today): array
     {
+        // Immer Kopien: startOfDay()/endOfDay() verändern die Instanz – ohne copy() zeigten Start und
+        // Ende auf dasselbe Objekt und der Zeitraum schrumpfte auf einen Zeitpunkt.
         if (!$project) {
-            return [$today->startOfDay(), $today->endOfDay()];
+            return [$today->copy()->startOfDay(), $today->copy()->endOfDay()];
         }
 
         $firstEvent  = $this->projectService->getFirstEventInProject($project);
         $latestEvent = $this->projectService->getLatestEndingEventInProject($project);
 
-        $endDate = $latestEvent ? $latestEvent->getAttribute('end_time')->copy()->endOfDay() : $today->endOfDay();
-
         return [
-            $firstEvent ? $firstEvent->getAttribute('start_time')->startOfDay() : $today->startOfDay(),
-            $endDate,
+            $firstEvent
+                ? $firstEvent->getAttribute('start_time')->copy()->startOfDay()
+                : $today->copy()->startOfDay(),
+            $latestEvent
+                ? $latestEvent->getAttribute('end_time')->copy()->endOfDay()
+                : $today->copy()->endOfDay(),
         ];
     }
 

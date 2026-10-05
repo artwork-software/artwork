@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Auth\ExtendedTokenValidator;
 use App\Policies\AccommodationPolicy;
 use App\Policies\ArtistPolicy;
 use App\Policies\ContactPolicy;
@@ -82,8 +83,11 @@ use Artwork\Modules\Webhook\Models\WebhookEndpoint;
 use Artwork\Modules\Webhook\Policies\WebhookEndpointPolicy;
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
 use Illuminate\Support\Facades\Gate;
+use Laravel\Passport\Bridge\AccessTokenRepository;
 use Laravel\Passport\Passport;
 use Laravel\Passport\Token;
+use League\OAuth2\Server\CryptKey;
+use League\OAuth2\Server\ResourceServer;
 
 class AuthServiceProvider extends ServiceProvider
 {
@@ -138,6 +142,33 @@ class AuthServiceProvider extends ServiceProvider
         Artist::class => ArtistPolicy::class,
         Contact::class => ContactPolicy::class,
     ];
+
+    public function register(): void
+    {
+        parent::register();
+
+        // Ersetzt Passports ResourceServer-Binding nur, um den ExtendedTokenValidator einzuhängen
+        // (bewusste Ausnahme für einzelne Tokens, siehe config passport.extended_tokens). Ohne
+        // gesetzte Konfiguration verhält sich der Validator exakt wie Passports Standard.
+        $this->app->singleton(ResourceServer::class, function ($container) {
+            // Spiegelt PassportServiceProvider::makeCryptKey('public') (protected, daher nachgebaut).
+            // Bei Passport-Upgrades gegen vendor/laravel/passport/src/PassportServiceProvider.php abgleichen.
+            $key = str_replace('\\n', "\n", config('passport.public_key') ?? '');
+
+            if (!$key) {
+                $key = 'file://' . Passport::keyPath('oauth-public.key');
+            }
+
+            return new ResourceServer(
+                $container->make(AccessTokenRepository::class),
+                new CryptKey($key, null, Passport::$validateKeyPermissions),
+                new ExtendedTokenValidator(
+                    $container->make(AccessTokenRepository::class),
+                    config('passport.extended_tokens', []),
+                ),
+            );
+        });
+    }
 
     public function boot(): void
     {

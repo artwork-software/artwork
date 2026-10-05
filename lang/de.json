@@ -8680,5 +8680,10 @@
     "New notifications": "Neue Benachrichtigungen",
     "You receive this e-mail because of your notification settings.": "Du erhältst diese E-Mail aufgrund deiner Benachrichtigungseinstellungen.",
     "Change notification settings": "Benachrichtigungseinstellungen ändern",
-    "Edit and accept": "Bearbeiten und annehmen"
+    "Edit and accept": "Bearbeiten und annehmen",
+    "On :date the funding \":name\" ends.": "Am :date wird die Förderung „:name“ eingestellt.",
+    "If the project(s) continue, please enter the follow-up funding.": "Sollte das Projekt/die Projekte weiter laufen, trage bitte die Folgefinanzierung ein.",
+    "Funding source: :name": "Finanzquelle: :name",
+    "Funding source running out": "Finanzquelle läuft aus",
+    "The source \":name\" has only :percent% of its budget left.": "Die Quelle „:name“ besitzt nur noch :percent % des Budgets."
 }

@@ -132,6 +132,7 @@ readonly class EventService
 
         broadcast(new OccupancyUpdated())->toOthers();
         $notificationService->deleteUpsertRoomRequestNotificationByEventId($event->id);
+        $notificationService->markOpenRoomRequestsHandled($event->id, 'deleted', $this->deletingUser());
 
         if ($event->room_id) {
             broadcast(new RemoveEvent($event, $event->room_id));
@@ -191,6 +192,7 @@ readonly class EventService
             $subEventService->deleteSubEvents($event->subEvents);
 
             $notificationService->deleteUpsertRoomRequestNotificationByEventId($event->id);
+            $notificationService->markOpenRoomRequestsHandled($event->id, 'deleted', $this->deletingUser());
 
             $this->eventRepository->delete($event);
             $eventsDeleted = true;
@@ -258,6 +260,7 @@ readonly class EventService
             $subEventService->forceDeleteSubEvents($subEvents);
 
             $notificationService->deleteUpsertRoomRequestNotificationByEventId($event->id);
+            $notificationService->markOpenRoomRequestsHandled($event->id, 'deleted', $this->deletingUser());
 
             $this->eventRepository->forceDelete($event);
         }
@@ -2404,5 +2407,12 @@ readonly class EventService
                 ->each(fn (Project $project) => $projectDayAssignmentService
                     ->rematerializeForProjectPeriodChange($project));
         });
+    }
+
+    private function deletingUser(): ?\Artwork\Modules\User\Models\User
+    {
+        $user = \Illuminate\Support\Facades\Auth::user();
+
+        return $user instanceof \Artwork\Modules\User\Models\User ? $user : null;
     }
 }

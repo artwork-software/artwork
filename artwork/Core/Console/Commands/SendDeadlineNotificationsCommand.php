@@ -176,6 +176,8 @@ class SendDeadlineNotificationsCommand extends Command
         $this->notificationService->setNotificationConstEnum(NotificationEnum::NOTIFICATION_TASK_REMINDER);
         $this->notificationService->setBroadcastMessage($broadcastMessage);
         $this->notificationService->setTaskId($task->getAttribute('id'));
+        // Erinnerung führt wie andere Aufgaben-Meldungen direkt zur Aufgabe
+        $this->notificationService->setButtons(['showInTasks']);
         $this->notificationService->setNotificationTo($user);
         $this->notificationService->createNotification();
     }

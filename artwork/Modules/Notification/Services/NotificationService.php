@@ -613,6 +613,48 @@ class NotificationService
         }
     }
 
+    /**
+     * Offene Raumanfrage-Benachrichtigungen als erledigt markieren, wenn die Anfrage nicht über
+     * Annehmen/Ablehnen endet (Termin gelöscht, Direktbuchung aktiviert). Sonst blieben Annehmen/
+     * Ablehnen stehen – Ablehnen hätte dann einer bestätigten Buchung den Raum entzogen.
+     */
+    public function markOpenRoomRequestsHandled(int $eventId, string $status, ?User $handledBy = null): void
+    {
+        $notifications = DB::table('notifications')
+            ->where('data->type', NotificationEnum::NOTIFICATION_ROOM_REQUEST->value)
+            ->where('data->eventId', $eventId)
+            ->whereNull('data->handledStatus')
+            ->get();
+
+        foreach ($notifications as $notification) {
+            $data = json_decode($notification->data, true);
+            $data['handledStatus'] = $status;
+            $data['handledBy'] = $handledBy
+                ? ['id' => $handledBy->id, 'name' => $handledBy->display_name]
+                : null;
+            $data['handledAt'] = now()->translatedFormat('d.m.Y H:i');
+            $data['buttons'] = [];
+            DB::table('notifications')
+                ->where('id', $notification->id)
+                ->update(['data' => json_encode($data)]);
+        }
+    }
+
+    /**
+     * Nach einem Raumwechsel der offenen Anfrage: Admins des alten Raums verlieren ihre Anfrage.
+     *
+     * @param array<int, int> $keepRecipientIds
+     */
+    public function deleteUnhandledRoomRequestNotificationsExcept(int $eventId, array $keepRecipientIds): void
+    {
+        DB::table('notifications')
+            ->where('data->type', NotificationEnum::NOTIFICATION_ROOM_REQUEST->value)
+            ->where('data->eventId', $eventId)
+            ->whereNull('data->handledStatus')
+            ->whereNotIn('notifiable_id', $keepRecipientIds)
+            ->delete();
+    }
+
     public function deleteUnhandledRoomRequestNotificationsByEventId(int $eventId): void
     {
         DB::table('notifications')

@@ -1635,10 +1635,11 @@ class EventController extends Controller
                 'title' =>  ($event->event_type?->name ?? '') . ', ' . $event->eventName,
                 'href' => null
             ],
+            // Termin ohne Projekt (bzw. Projekt erst danach angelegt): vorher 500 nach dem Speichern
             3 => [
                 'type' => 'link',
-                'title' => $project->name,
-                'href' => route(
+                'title' => $project?->name ?? '',
+                'href' => $project === null ? null : route(
                     'projects.tab',
                     [
                         $project->id,
@@ -1687,10 +1688,11 @@ class EventController extends Controller
                 'title' =>  ($event->event_type?->name ?? '') . ', ' . $event->eventName,
                 'href' => null
             ],
+            // Termin ohne Projekt (bzw. Projekt erst danach angelegt): vorher 500 nach dem Speichern
             3 => [
                 'type' => 'link',
-                'title' => $project->name,
-                'href' => route(
+                'title' => $project?->name ?? '',
+                'href' => $project === null ? null : route(
                     'projects.tab',
                     [
                         $project->id,
@@ -2421,6 +2423,9 @@ class EventController extends Controller
      */
     public function acceptEvent(Request $request, Event $event): RedirectResponse
     {
+        // Schon beantwortet (parallel durch andere Admins)? Dann 409 „bereits beantwortet“ –
+        // die Policy hätte vorher mit 403 „nicht erlaubt“ abgelehnt
+        abort_if(!$event->occupancy_option || $event->room_id === null, 409, 'This room request has already been answered.');
         $this->authorize('answerRoomRequest', $event);
 
         $updated = Event::query()
@@ -2560,7 +2565,7 @@ class EventController extends Controller
         $currentUser = $this->authManager->user();
         $this->notificationService->updateRoomRequestNotificationStatus($event->id, 'accepted', $currentUser);
 
-        broadcast(new EventUpdated($event->fresh(), $event->room_id));
+        $this->broadcastAfterSave(fn () => broadcast(new EventUpdated($event->fresh(), $event->room_id)));
 
         return Redirect::back();
     }
@@ -2572,6 +2577,7 @@ class EventController extends Controller
     //phpcs:ignore Generic.Metrics.CyclomaticComplexity.TooHigh
     public function declineEvent(Request $request, Event $event): RedirectResponse
     {
+        abort_if($event->room_id === null, 409, 'This room request has already been answered.');
         $this->authorize('declineEvent', $event);
 
         $projectManagers = [];
@@ -2611,7 +2617,7 @@ class EventController extends Controller
             $this->notificationService->setPriority(1);
             $this->notificationService
                 ->setNotificationConstEnum(NotificationEnum::NOTIFICATION_ROOM_ANSWER);
-            $this->notificationService->setRoomId($event->room_id);
+            $this->notificationService->setRoomId($roomId); // room_id ist nach der Absage null
             $this->notificationService->setEventId($event->id);
             $this->notificationService->setProjectId($event->project_id);
             $this->notificationService->setButtons(['answer']);
@@ -2739,7 +2745,7 @@ class EventController extends Controller
         $this->notificationService
             ->setNotificationConstEnum(NotificationEnum::NOTIFICATION_UPSERT_ROOM_REQUEST);
 
-        $this->notificationService->setRoomId($event->room_id);
+        $this->notificationService->setRoomId($roomId); // room_id ist nach der Absage null
         $this->notificationService->setEventId($event->id);
         $this->notificationService->setProjectId($event->project_id);
         $this->notificationService->setButtons(['change_request', 'event_delete']);
@@ -2851,12 +2857,25 @@ class EventController extends Controller
         $currentUser = $this->authManager->user();
         $this->notificationService->updateRoomRequestNotificationStatus($event->id, 'declined', $currentUser);
 
-        broadcast(new EventCreated(
+        $this->broadcastAfterSave(fn () => broadcast(new EventCreated(
             $event,
             $roomId
-        ));
+        )));
 
         return Redirect::back();
+    }
+
+    /**
+     * Live-Update nach bereits gespeicherter Antwort: ist der WebSocket-Server nicht erreichbar,
+     * fällt nur das Live-Update aus (gemeldet) – vorher 500 und die Benachrichtigung blieb stehen.
+     */
+    private function broadcastAfterSave(callable $broadcast): void
+    {
+        try {
+            $broadcast();
+        } catch (\Illuminate\Broadcasting\BroadcastException $exception) {
+            report($exception);
+        }
     }
 
     /**

@@ -41,7 +41,16 @@ class RoomRequestNotificationService
         }
 
         $admins = $room->users()->wherePivot('is_admin', true)->get();
+        $recipients = $admins->isNotEmpty()
+            ? $admins
+            : User::query()->whereKey($room->user_id)->get();
+        // Raum der offenen Anfrage gewechselt → Anfrage beim alten Raum zurückziehen
+        $this->notificationService->deleteUnhandledRoomRequestNotificationsExcept(
+            $event->id,
+            $recipients->modelKeys()
+        );
 
+        $this->notificationService->clearNotificationData();
         $this->notificationService->setIcon('blue');
         $this->notificationService->setPriority(1);
         $this->notificationService->setEventId($event->id);
@@ -49,18 +58,9 @@ class RoomRequestNotificationService
         $this->notificationService->setNotificationConstEnum(NotificationEnum::NOTIFICATION_ROOM_REQUEST);
         $this->notificationService->setButtons(['show_in_calendar', 'accept', 'decline']);
 
-        if ($admins->isNotEmpty()) {
-            foreach ($admins as $admin) {
-                $this->sendToRecipient($event, $room, $admin);
-            }
-            return;
+        foreach ($recipients as $recipient) {
+            $this->sendToRecipient($event, $room, $recipient);
         }
-
-        $fallbackUser = User::find($room->user_id);
-        if ($fallbackUser === null) {
-            return;
-        }
-        $this->sendToRecipient($event, $room, $fallbackUser);
     }
 
     private function sendToRecipient(Event $event, Room $room, User $recipient): void
@@ -80,7 +80,7 @@ class RoomRequestNotificationService
             ],
             2 => [
                 'type' => 'string',
-                'title' => $event->event_type->name . ', ' . $event->eventName,
+                'title' => ($event->event_type?->name ?? '') . ', ' . $event->eventName,
                 'href' => null
             ],
             3 => [

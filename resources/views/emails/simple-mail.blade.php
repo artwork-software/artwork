@@ -7,8 +7,8 @@
         $language = $language ?? config('app.locale');
         $description = $presenter::descriptionOf($notification);
         $textLines = $presenter::textLines($description);
-        $primaryLink = $presenter::primaryLink($description);
-        $hasDeepLink = $presenter::hasDeepLink($description);
+        $primaryLink = $presenter::mainLink($notification);
+        $hasDeepLink = $presenter::hasMainLink($notification);
         $notificationEvent = is_object($notification) ? ($notification->event ?? null) : null;
         $eventLine = $presenter::eventLine($notificationEvent, $language);
     @endphp
@@ -29,7 +29,7 @@
         </a>
         @if($hasDeepLink)
             <br>
-            <a href="{{ $presenter::appUrl() }}" class="notification-link notification-link-secondary">
+            <a href="{{ $presenter::notificationsUrl() }}" class="notification-link notification-link-secondary">
                 {{ __('View all notifications in :app', ['app' => $pageTitle], $language) }}
             </a>
         @endif

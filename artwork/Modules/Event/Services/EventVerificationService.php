@@ -256,9 +256,12 @@ class EventVerificationService
                     'uuid',
                     $verification->uuid
                 )->count();
+                // Alle Prüfenden der Anfrage zählen – auch die noch offenen. Ohne 'pending' galt bei
+                // drei Prüfenden schon die erste Zustimmung als „vollständig freigegeben“.
                 $totalCount = $event->verifications()->whereIn('status', [
                     'approved',
                     'rejected',
+                    'pending',
                 ])->where('uuid', $verification->uuid)->count();
                 $notificationTitle = __('notification.request-verification.user-approved', [
                     'name' => $verification->verifier?->full_name ?? '',

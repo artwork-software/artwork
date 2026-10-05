@@ -78,6 +78,15 @@ class DocumentRequest extends Model
         'id'
     ];
 
+    /**
+     * Bezeichnung für Benachrichtigungen (:title) – Anfragen haben keinen eigenen Titel.
+     */
+    public function displayTitle(): string
+    {
+        return $this->contract_partner
+            ?: ($this->project?->name ?: '#' . $this->id);
+    }
+
     protected $casts = [
         'ksk_liable' => 'boolean',
         'ksk_amount' => 'decimal:2',

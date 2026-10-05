@@ -146,9 +146,9 @@ final class NotificationSettingsBehaviourTest extends FeatureTestCase
         ])->assertOk();
         $this->assertFalse($setting->fresh()->enabled_email);
 
-        $this->patchJson(route('notifications.group'), ['groupType' => 'NOPE', 'enabled_push' => false])
+        $this->patchJson(route('notifications.settings.bulk'), ['groupType' => 'NOPE', 'enabled_push' => false])
             ->assertUnprocessable()->assertJsonValidationErrors('groupType');
-        $this->patchJson(route('notifications.group'), [
+        $this->patchJson(route('notifications.settings.bulk'), [
             'groupType' => NotificationGroupEnum::PROJECTS->value,
             'enabled_push' => false,
         ])->assertOk();

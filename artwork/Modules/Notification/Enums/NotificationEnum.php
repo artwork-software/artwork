@@ -235,6 +235,41 @@ enum NotificationEnum: string
     }
 
     /**
+     * Modul (ModuleSettings-Eigenschaft), ohne das dieser Typ nie anfällt; null = immer.
+     */
+    public function module(): ?string
+    {
+        return match ($this) {
+            self::NOTIFICATION_MONEY_SOURCE_EXPIRATION,
+            self::NOTIFICATION_MONEY_SOURCE_BUDGET_THRESHOLD_REACHED => 'sources_of_funding',
+            default => match (NotificationGroupEnum::from($this->groupType())) {
+                NotificationGroupEnum::EVENTS, NotificationGroupEnum::ROOMS => 'room_assignment',
+                NotificationGroupEnum::BUDGET, NotificationGroupEnum::PROJECTS => 'projects',
+                NotificationGroupEnum::DOCUMENTS => 'contracts',
+                NotificationGroupEnum::TASKS => 'tasks',
+                NotificationGroupEnum::SHIFTS => 'shift_plan',
+                NotificationGroupEnum::INVENTORY => 'inventory',
+                NotificationGroupEnum::EXTERNAL_ACCESS => null,
+            },
+        };
+    }
+
+    /**
+     * Geht nur an Personen, die fremde Dienstpläne sehen/planen (UserPolicy::canViewForeignRoster).
+     */
+    public function isForShiftPlanners(): bool
+    {
+        return in_array($this, [
+            self::NOTIFICATION_SHIFT_INFRINGEMENT,
+            self::NOTIFICATION_SHIFT_WORKER_CONFIRMATION,
+            self::NOTIFICATION_SHIFT_CONFLICT,
+            self::NOTIFICATION_SHIFT_OPEN_DEMAND,
+            self::NOTIFICATION_NEW_SHIFT_COMMIT_WORKFLOW_REQUEST,
+            self::NOTIFICATION_SHIFT_WORKTIME_GET_REQUEST,
+        ], true);
+    }
+
+    /**
      * @return array<int, self>
      */
     public static function configurableCases(): array
@@ -317,7 +352,7 @@ enum NotificationEnum: string
     public function description(): string
     {
         return match ($this) {
-            self::NOTIFICATION_ROOM_ANSWER => "Find out if your room requests has been answered.",
+            self::NOTIFICATION_ROOM_ANSWER => "Find out if your room requests have been answered.",
             self::NOTIFICATION_ROOM_REQUEST => "Find out if your room requests have been confirmed or declined.",
             self::NOTIFICATION_CONFLICT => "Be notified as soon as someone schedules an appointment that conflicts with one of your appointments.",
             self::NOTIFICATION_EVENT_CHANGED => "Find out if there have been any changes to your appointments or if an appointment has been cancelled.",
@@ -333,8 +368,8 @@ enum NotificationEnum: string
             self::NOTIFICATION_UPSERT_ROOM_REQUEST => "Find out if there are new or changed room requests.",
             self::NOTIFICATION_ROOM_CHANGED => "You will be notified as soon as there are changes to your rooms or your room responsibilities.",
             self::NOTIFICATION_NEW_TASK => "Find out if there are new tasks for you or your team.",
-            self::NOTIFICATION_TASK_REMINDER => "Be reminded when tasks become urgent or have already have already exceeded their deadline.",
-            self::NOTIFICATION_TASK_CHANGED => "Find out if there are any changes to your tasks",
+            self::NOTIFICATION_TASK_REMINDER => "Be reminded when tasks become urgent or have already exceeded their deadline.",
+            self::NOTIFICATION_TASK_CHANGED => "Find out if there are any changes to your tasks.",
             self::NOTIFICATION_PROJECT => "Find out if there are any changes in your projects or groups and what role you have in the project team.",
             self::NOTIFICATION_PUBLIC_RELEVANT => 'Be notified as soon as there are changes to your projects that may affect public relations.',
             self::NOTIFICATION_TEAM => "You will be notified as soon as your team membership changes.",

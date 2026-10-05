@@ -95,6 +95,20 @@ class NotificationSettingService
     }
 
     /**
+     * Gruppe, Titel und Beschreibung je Typ aus dem Enum in alle Zeilen übernehmen.
+     */
+    public function syncTypeMetadata(): void
+    {
+        foreach (NotificationEnum::cases() as $type) {
+            DB::table('notification_settings')->where('type', $type->value)->update([
+                'group_type' => $type->groupType(),
+                'title' => $type->title(),
+                'description' => $type->description(),
+            ]);
+        }
+    }
+
+    /**
      * @return array{group_type: string, type: string, title: string, description: string, frequency: string}
      */
     private function defaultAttributes(NotificationEnum $type): array

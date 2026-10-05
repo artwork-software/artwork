@@ -9,7 +9,6 @@ use Artwork\Modules\Notification\Services\DatabaseNotificationService;
 use Artwork\Modules\Event\Http\Resources\CalendarEventResource;
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Event\Models\EventStatus;
-use Artwork\Modules\Event\Services\EventSettingsService;
 use Artwork\Modules\Notification\Enums\NotificationEnum;
 use Artwork\Modules\EventType\Http\Resources\EventTypeResource;
 use Artwork\Modules\EventType\Models\EventType;
@@ -27,6 +26,7 @@ use Artwork\Modules\User\Models\User;
 use Artwork\Modules\User\Services\UserService;
 use Artwork\Modules\Vacation\Services\VacationService;
 use Illuminate\Http\Request;
+use Artwork\Modules\Notification\Services\NotificationSettingsPresenter;
 use Illuminate\Validation\Rule;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\JsonResponse;
@@ -197,37 +197,12 @@ class NotificationController extends Controller
             // Die Antwort-Modals zeigen nur den Projektnamen; vorher gingen alle Projekte mit
             // Gruppen, Sektoren, Kategorien, Genres und Kostenstelle mit (MB bei großen Häusern).
             'projects' => Project::query()->select(['id', 'name'])->get(),
-            // "Termine immer direkt buchbar": Anfrage-/Verifizierungs-Benachrichtigungen gibt es nicht mehr
-            'notificationSettings' => $user->notificationSettings()->get()
-                // Typen ohne Versender wären wirkungslose Schalter
-                ->filter(static fn (NotificationSetting $setting): bool => $setting->type->isConfigurable())
-                ->when(
-                    app(EventSettingsService::class)->alwaysDirectBooking(),
-                    static fn ($settings) => $settings->reject(
-                        static fn (NotificationSetting $setting): bool => in_array($setting->type, [
-                            NotificationEnum::NOTIFICATION_ROOM_REQUEST,
-                            NotificationEnum::NOTIFICATION_UPSERT_ROOM_REQUEST,
-                            NotificationEnum::NOTIFICATION_ROOM_ANSWER,
-                            NotificationEnum::NOTIFICATION_REMINDER_ROOM_REQUEST,
-                            NotificationEnum::NOTIFICATION_EVENT_VERIFICATION_REQUESTS,
-                        ], true)
-                    )
-                )
-                ->groupBy("group_type"),
+            // Einstellungen: nur relevante Typen, Texte aus dem Enum (NotificationSettingsPresenter)
+            'notificationSettingGroups' => app(NotificationSettingsPresenter::class)->groupsFor($user),
             'notificationFrequencies' => array_map(fn (NotificationFrequencyEnum $frequency) => [
                 'title' => $frequency->title(),
                 'value' => $frequency->value,
             ], NotificationFrequencyEnum::cases()),
-            'groupTypes' => collect(NotificationGroupEnum::cases())->reduce(
-                function ($groupTypes, $type) {
-                    $groupTypes[$type->value] = [
-                        'title' => $type->title(),
-                        'description' => $type->description(),
-                    ];
-                    return $groupTypes;
-                },
-                []
-            ),
             'first_project_shift_tab_id' => $projectTabService
                 ->getFirstProjectTabWithTypeIdOrFirstProjectTabId(ProjectTabComponentEnum::SHIFT_TAB),
             'first_project_budget_tab_id' => $projectTabService
@@ -332,21 +307,57 @@ class NotificationController extends Controller
             : back();
     }
 
-    public function toggleGroup(Request $request): JsonResponse|RedirectResponse
+    /**
+     * Sammeländerung für eine Gruppe oder alle sichtbaren Typen (E-Mail, Hinweis, Häufigkeit).
+     */
+    public function bulkUpdate(Request $request): JsonResponse|RedirectResponse
     {
         $validated = $request->validate([
-            'groupType' => ['required', Rule::enum(NotificationGroupEnum::class)],
+            'groupType' => ['nullable', Rule::enum(NotificationGroupEnum::class)],
             'enabled_email' => ['sometimes', 'boolean'],
             'enabled_push' => ['sometimes', 'boolean'],
+            'frequency' => ['sometimes', Rule::enum(NotificationFrequencyEnum::class)],
         ]);
-        $values = array_map('boolval', array_intersect_key($validated, array_flip(['enabled_email', 'enabled_push'])));
+        $values = array_intersect_key($validated, array_flip(['enabled_email', 'enabled_push', 'frequency']));
+        foreach (['enabled_email', 'enabled_push'] as $flag) {
+            if (array_key_exists($flag, $values)) {
+                $values[$flag] = (bool) $values[$flag];
+            }
+        }
 
-        Auth::user()->notificationSettings()
-            ->where('group_type', $validated['groupType'])
+        $user = Auth::user();
+        $user->notificationSettings()
+            ->whereIn('type', app(NotificationSettingsPresenter::class)->visibleTypeValuesFor($user))
+            ->when(
+                $validated['groupType'] ?? null,
+                static fn ($query, string $groupType) => $query->where('group_type', $groupType)
+            )
             ->update($values);
 
+        return $this->settingsResponse($request, $user);
+    }
+
+    /**
+     * Alle Einstellungen auf die Standardwerte (E-Mail und Hinweis an, Häufigkeit je Typ).
+     */
+    public function resetSettings(Request $request): JsonResponse|RedirectResponse
+    {
+        $user = Auth::user();
+        foreach (NotificationEnum::configurableCases() as $type) {
+            $user->notificationSettings()->where('type', $type->value)->update([
+                'enabled_email' => true,
+                'enabled_push' => true,
+                'frequency' => $type->defaultFrequency()->value,
+            ]);
+        }
+
+        return $this->settingsResponse($request, $user);
+    }
+
+    private function settingsResponse(Request $request, User $user): JsonResponse|RedirectResponse
+    {
         return $request->expectsJson() && !$request->header('X-Inertia')
-            ? response()->json(['updated' => true])
+            ? response()->json(['groups' => app(NotificationSettingsPresenter::class)->groupsFor($user)])
             : back();
     }
 

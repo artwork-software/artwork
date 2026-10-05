@@ -1506,7 +1506,9 @@ Route::group(['middleware' => ['auth:sanctum']], function (): void {
     Route::patch('/notifications', [NotificationController::class, 'setReadAt'])->name('notifications.setReadAt');
     Route::patch('/notifications/all', [NotificationController::class, 'setOnReadAll'])
         ->name('notifications.setReadAtAll');
-    Route::patch('/user/settings/group', [NotificationController::class, 'toggleGroup'])->name('notifications.group');
+    Route::patch('/user/settings/bulk', [NotificationController::class, 'bulkUpdate'])->name('notifications.settings.bulk');
+    Route::post('/user/settings/reset', [NotificationController::class, 'resetSettings'])
+        ->name('notifications.settings.reset');
     Route::patch('/user/settings/{setting}', [NotificationController::class, 'updateSetting'])
         ->name('notifications.settings');
     Route::delete('/notifications/{id}', [NotificationController::class, 'destroy'])->name('notifications.delete');

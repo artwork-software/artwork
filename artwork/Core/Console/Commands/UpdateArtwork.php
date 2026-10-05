@@ -10,7 +10,6 @@ use Artwork\Modules\ServiceProvider\Models\ServiceProvider;
 use Artwork\Modules\Inventory\Models\InventoryArticleStatus;
 use Artwork\Modules\ArtistResidency\Enums\TypOfRoom;
 use Artwork\Modules\Notification\Services\NotificationSettingService;
-use Artwork\Modules\Notification\Models\NotificationSetting;
 use Artwork\Modules\Project\Enum\ProjectTabComponentEnum;
 use Artwork\Modules\Project\Models\Component;
 use Artwork\Modules\Project\Services\ProjectManagementBuilderService;
@@ -184,12 +183,9 @@ class UpdateArtwork extends Command
     {
         $this->section('Notification Settings');
 
-        NotificationSetting::where('type', 'NOTIFICATION_ROOM_ANSWER')->update([
-            'title' => 'Room requests answered',
-            'description' => 'Find out if your room requests has been answered.',
-        ]);
-
-        // Nur fehlende Einstellungen ergänzen (auch für neue Typen) – nie überschreiben
+        // Gruppe/Texte aus dem Enum nachziehen (Sammelmail liest group_type), dann nur fehlende
+        // Einstellungen ergänzen (auch für neue Typen) – Nutzerwahl wird nie überschrieben
+        app(NotificationSettingService::class)->syncTypeMetadata();
         $created = app(NotificationSettingService::class)->ensureDefaultsForAllUsers();
         $this->info(sprintf('%d notification setting(s) added', $created));
     }

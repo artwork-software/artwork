@@ -2,8 +2,11 @@
 
 namespace Artwork\Modules\ExternalUserManagement\Http\Requests;
 
+use Artwork\Core\Validation\Rules\PublicUrlRule;
+use Artwork\Modules\ExternalUserManagement\Api\LdapApi;
 use Artwork\Modules\ExternalUserManagement\Models\ExternalUserSource;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\Validator;
 
 class UpdateExternalUserSourceRequest extends FormRequest
@@ -26,7 +29,7 @@ class UpdateExternalUserSourceRequest extends FormRequest
         $rules = [
             'name' => ['sometimes', 'required', 'string', 'max:255'],
             'active' => ['sometimes', 'boolean'],
-            'type' => ['sometimes', 'required', 'string', 'in:ldap,identity_provider'],
+            'type' => ['sometimes', 'required', 'string', 'max:255', 'in:ldap,identity_provider'],
             'config' => ['sometimes', 'required', 'array'],
         ];
 
@@ -76,7 +79,13 @@ class UpdateExternalUserSourceRequest extends FormRequest
         if ($preset === 'microsoft') {
             $rules['config.tenant_id'] = ['sometimes', 'required', 'string', 'max:255'];
         } elseif ($preset !== 'google') {
-            $rules['config.discovery_url'] = ['sometimes', 'required', 'url', 'max:500'];
+            $rules['config.discovery_url'] = [
+                'sometimes',
+                'required',
+                'url:http,https',
+                'max:500',
+                new PublicUrlRule(),
+            ];
         }
 
         return $rules;
@@ -90,9 +99,11 @@ class UpdateExternalUserSourceRequest extends FormRequest
             $active = $this->has('active') ? $this->boolean('active') : (bool) $source?->active;
             $config = $this->has('config') ? $this->input('config', []) : ($source?->config ?? []);
 
-            if ($this->resolvedType() === 'identity_provider'
+            if (
+                $this->resolvedType() === 'identity_provider'
                 && $active
-                && empty($config['allowed_domains'] ?? [])) {
+                && empty($config['allowed_domains'] ?? [])
+            ) {
                 $validator->errors()->add(
                     'config.allowed_domains',
                     __('An active identity provider requires at least one allowed email domain.')
@@ -115,7 +126,12 @@ class UpdateExternalUserSourceRequest extends FormRequest
             'config.use_ssl' => ['sometimes', 'boolean'],
             'config.use_tls' => ['sometimes', 'boolean'],
             'config.user_filter' => ['nullable', 'string', 'max:1000'],
-            'config.identifier_attribute' => ['nullable', 'string', 'max:100'],
+            'config.identifier_attribute' => [
+                'nullable',
+                'string',
+                'max:100',
+                Rule::in(LdapApi::ALLOWED_IDENTIFIER_ATTRIBUTES),
+            ],
             'config.default_role_id' => ['nullable', 'integer', 'exists:roles,id'],
         ];
     }

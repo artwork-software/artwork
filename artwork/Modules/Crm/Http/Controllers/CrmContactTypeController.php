@@ -14,7 +14,8 @@ class CrmContactTypeController extends Controller
 {
     public function __construct(
         private readonly CrmContactTypeService $service,
-    ) {}
+    ) {
+    }
 
     public function store(Request $request): RedirectResponse
     {

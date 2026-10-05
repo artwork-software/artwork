@@ -23,8 +23,8 @@ class UpdateEventPropertyRequest extends FormRequest
     {
         return [
             'id' => 'required|integer|exists:event_properties,id',
-            'icon' => 'required|string',
-            'name' => 'required|string'
+            'icon' => 'required|string|max:255',
+            'name' => 'required|string|max:255'
         ];
     }
 }

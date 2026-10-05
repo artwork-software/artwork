@@ -313,7 +313,10 @@ class BiDashboardService
                 // Erreichung bevorzugt Umsatz (Steuerungsgröße), sonst Besucher*innen
                 'attainment' => match (true) {
                     $planRevenue !== null && $planRevenue > 0 => round($revenue / $planRevenue * 100, 1),
-                    $planVisitors !== null && $planVisitors > 0 => round(($visitorsValue ?? 0) / $planVisitors * 100, 1),
+                    $planVisitors !== null && $planVisitors > 0 => round(
+                        ($visitorsValue ?? 0) / $planVisitors * 100,
+                        1
+                    ),
                     default => null,
                 },
             ];
@@ -529,7 +532,10 @@ class BiDashboardService
             ? $this->monthSequence($compareFrom, $compareTo, array_keys($previousBuckets))
             : [];
 
-        return array_map(function (string $month, int $index) use (
+        return array_map(function (
+            string $month,
+            int $index
+        ) use (
             $currentBuckets,
             $previousBuckets,
             $compareMonths

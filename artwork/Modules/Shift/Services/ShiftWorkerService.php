@@ -10,6 +10,7 @@ use Artwork\Modules\Notification\Services\NotificationService;
 use Artwork\Modules\ServiceProvider\Models\ServiceProvider;
 use Artwork\Modules\Shift\Contracts\Employable;
 use Artwork\Modules\Shift\Events\ShiftAssigned;
+use Artwork\Modules\Shift\Events\UpdateShiftInShiftPlan;
 use Artwork\Modules\Shift\Models\CommittedShiftChange;
 use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\Shift\Models\ShiftFreelancer;
@@ -25,6 +26,7 @@ use Artwork\Modules\Shift\Services\ShiftNotificationLinkService;
 use Artwork\Modules\User\Models\User;
 use Artwork\Modules\User\Services\WorkingHourCacheService;
 use Artwork\Modules\Vacation\Services\VacationConflictService;
+use Artwork\Modules\Project\Services\ProjectTeamNotificationService;
 use Carbon\Carbon;
 use Illuminate\Auth\AuthManager;
 use Illuminate\Support\Str;
@@ -38,7 +40,8 @@ class ShiftWorkerService
         private readonly ShiftsQualificationsService $shiftsQualificationsService,
         private readonly ShiftCountService $shiftCountService,
         private readonly WorkingHourCacheService $workingHourCacheService,
-        protected AuthManager $auth
+        protected AuthManager $auth,
+        private readonly ProjectTeamNotificationService $projectTeamNotificationService,
     ) {
     }
 
@@ -211,9 +214,78 @@ class ShiftWorkerService
                     'shift_id' => $shift->id,
                     'craft_id' => $shift->craft_id,
                     'shift_snapshot' => $shift->toActivitySnapshot(),
+                    // Person als ID (nicht nur als Name in den Platzhaltern), damit der Personenfilter
+                    // im Schichtverlauf auch nach Umbenennung / bei Namensgleichheit exakt trifft.
+                    'employable_type' => $pivot->employable_type,
+                    'employable_id' => $pivot->employable_id,
                 ]);
             })
             ->log($logMessage);
+    }
+
+    /**
+     * Individuelle Arbeitszeit einer Person in einer Schicht setzen — einziger Schreibweg für
+     * Dienstplan-Änderung und genehmigte Zeitanpassungs-Anfrage, damit beide dieselben Folgen haben:
+     * Datum über Mitternacht aus dem Starttag neu ableiten, Verlauf, Zu-/Absage zurücksetzen,
+     * Stunden-Cache leeren und die Dienstplan-Ansichten live aktualisieren.
+     *
+     * @param string $startTime H:i
+     * @param string $endTime H:i
+     */
+    public function applyIndividualTime(
+        ShiftWorker $pivot,
+        string $startTime,
+        string $endTime,
+        ?string $endDate = null
+    ): void {
+        $pivot->loadMissing('shift');
+
+        // end_date immer aus start_date neu ableiten: das alte Pivot-end_date kann
+        // von einer früheren Über-Mitternacht-Zeit stammen (+1 Tag) — bei Korrektur
+        // auf eine normale Tageszeit entstand sonst eine 32h-Zuweisung.
+        $startDate = Carbon::parse($pivot->start_date ?? $pivot->shift->start_date)->toDateString();
+        $startDateTime = Carbon::parse($startDate . ' ' . $startTime);
+        $endDateTime = Carbon::parse(($endDate ?? $startDate) . ' ' . $endTime);
+
+        if ($endDateTime <= $startDateTime) {
+            $endDateTime->addDay();
+        }
+
+        $beforeLabel = ($pivot->start_time || $pivot->end_time)
+            ? Carbon::parse($pivot->start_time)->format('H:i') . ' - ' . Carbon::parse($pivot->end_time)->format('H:i')
+            : null;
+
+        $pivot->update([
+            'start_time' => $startDateTime->format('H:i'),
+            'end_time' => $endDateTime->format('H:i'),
+            'start_date' => $startDateTime->format('Y-m-d'),
+            'end_date' => $endDateTime->format('Y-m-d'),
+        ]);
+
+        // Änderung im Workflow-/Festschreibungs-Verlauf protokollieren (B13)
+        $this->logIndividualPivotChange(
+            $pivot,
+            'individual_time',
+            $beforeLabel,
+            $startDateTime->format('H:i') . ' - ' . $endDateTime->format('H:i')
+        );
+
+        // Individuelle Zeit geändert → eine bereits abgegebene Zu-/Absage bezog
+        // sich auf die alte Zeit und wird auf "ausstehend" zurückgesetzt.
+        if ($pivot->wasChanged(['start_time', 'end_time', 'start_date', 'end_date'])) {
+            app(ShiftWorkerConfirmationService::class)->resetConfirmation($pivot);
+        }
+
+        $this->workingHourCacheService->forgetForEntity(
+            WorkingHourCacheService::entityType($pivot->employable),
+            $pivot->employable_id
+        );
+
+        $shift = $pivot->shift;
+        $roomId = $shift->event_id ? $shift->event?->room_id : $shift->room_id;
+        if ($roomId !== null) {
+            broadcast(new UpdateShiftInShiftPlan($shift, (int) $roomId));
+        }
     }
 
     /**
@@ -379,7 +451,14 @@ class ShiftWorkerService
         // zweiter Planer) konnten sonst dieselbe Person doppelt buchen bzw.
         // overbooked_value per Read-Modify-Write inkonsistent machen.
         [$shiftWorkerPivot, $isOverbooked, $wasAlreadyAssigned] = \Illuminate\Support\Facades\DB::transaction(
-            function () use ($shift, $worker, $shiftQualificationId, $craftAbbreviation, $employableType, $isOverbooked) {
+            function () use (
+                $shift,
+                $worker,
+                $shiftQualificationId,
+                $craftAbbreviation,
+                $employableType,
+                $isOverbooked
+            ) {
                 Shift::query()->whereKey($shift->id)->lockForUpdate()->first();
 
                 if ($this->isAlreadyAssigned($shift, $worker)) {
@@ -456,8 +535,14 @@ class ShiftWorkerService
 
         match (true) {
             $worker instanceof User => $this->shiftCountService->handleShiftUsersShiftCount($shift, $worker->id),
-            $worker instanceof Freelancer => $this->shiftCountService->handleShiftFreelancersShiftCount($shift, $worker->id),
-            $worker instanceof ServiceProvider => $this->shiftCountService->handleShiftServiceProvidersShiftCount($shift, $worker->id),
+            $worker instanceof Freelancer => $this->shiftCountService->handleShiftFreelancersShiftCount(
+                $shift,
+                $worker->id
+            ),
+            $worker instanceof ServiceProvider => $this->shiftCountService->handleShiftServiceProvidersShiftCount(
+                $shift,
+                $worker->id
+            ),
             default => throw new \InvalidArgumentException("Unbekannter Worker-Typ: {$employableType}"),
         };
 
@@ -542,6 +627,7 @@ class ShiftWorkerService
 
         if ($project && ! $project->users->contains($user->id)) {
             $project->users()->attach($user->id);
+            $this->projectTeamNotificationService->notifyAddedToTeam($project, [$user->id]);
         }
     }
 
@@ -704,8 +790,14 @@ class ShiftWorkerService
 
         match (true) {
             $worker instanceof User => $this->shiftCountService->handleShiftUsersShiftCount($shift, $worker->id),
-            $worker instanceof Freelancer => $this->shiftCountService->handleShiftFreelancersShiftCount($shift, $worker->id),
-            $worker instanceof ServiceProvider => $this->shiftCountService->handleShiftServiceProvidersShiftCount($shift, $worker->id),
+            $worker instanceof Freelancer => $this->shiftCountService->handleShiftFreelancersShiftCount(
+                $shift,
+                $worker->id
+            ),
+            $worker instanceof ServiceProvider => $this->shiftCountService->handleShiftServiceProvidersShiftCount(
+                $shift,
+                $worker->id
+            ),
             default => throw new \InvalidArgumentException("Unbekannter Worker-Typ: {$employableType}"),
         };
 
@@ -720,14 +812,7 @@ class ShiftWorkerService
         );
 
         if ($shift->is_committed && $this->supportsNotifications($worker)) {
-            $this->handleRemovedFromShift(
-                $shift,
-                $worker,
-                $notificationService,
-                $vacationConflictService,
-                $availabilityConflictService,
-                $changeService
-            );
+            $this->handleRemovedFromShift($shift, $worker, $notificationService, $changeService);
         } elseif (
             $shift->is_committed
             && $worker instanceof ServiceProvider
@@ -780,8 +865,6 @@ class ShiftWorkerService
         Shift $shift,
         Employable $worker,
         ?NotificationService $notificationService,
-        ?VacationConflictService $vacationConflictService,
-        ?AvailabilityConflictService $availabilityConflictService,
         ?ChangeService $changeService
     ): void {
         if ($shift->event?->exists && $changeService) {
@@ -904,7 +987,9 @@ class ShiftWorkerService
     ): void {
         $employableType = $this->getEmployableType($worker);
 
-        foreach ($this->shiftRepository->getShiftsByUuidBetweenDates($shift->shift_uuid, $start, $end) as $shiftBetweenDates) {
+        $shiftsBetweenDates = $this->shiftRepository->getShiftsByUuidBetweenDates($shift->shift_uuid, $start, $end);
+
+        foreach ($shiftsBetweenDates as $shiftBetweenDates) {
             if (
                 $this->isSameShift($shift, $shiftBetweenDates) ||
                 $this->isDayOfWeekFilteredOut($dayOfWeek, $shiftBetweenDates) ||
@@ -959,8 +1044,11 @@ class ShiftWorkerService
     }
 
     // User-spezifische Notification-Methoden
-    private function createAssignedToShiftNotification(Shift $shift, User $user, NotificationService $notificationService): void
-    {
+    private function createAssignedToShiftNotification(
+        Shift $shift,
+        User $user,
+        NotificationService $notificationService
+    ): void {
         if ($shift->event?->exists) {
             $notificationService->setProjectId($shift->event?->project?->id);
             $notificationService->setEventId($shift->event->id);
@@ -996,8 +1084,11 @@ class ShiftWorkerService
     }
 
 
-    private function checkShortBreakAndCreateNotificationsIfNecessary(Shift $shift, User $user, NotificationService $notificationService): void
-    {
+    private function checkShortBreakAndCreateNotificationsIfNecessary(
+        Shift $shift,
+        User $user,
+        NotificationService $notificationService
+    ): void {
         $shiftBreakCheck = $notificationService->checkIfShortBreakBetweenTwoShifts($user, $shift);
 
         if (! $shiftBreakCheck->shortBreak) {
@@ -1027,7 +1118,10 @@ class ShiftWorkerService
             1 => [
                 'type'  => 'string',
                 'title' => __('notification.keyWords.concerns', [], $user->language) . $user->getFullNameAttribute(),
-                'href'  => ShiftNotificationLinkService::ownOperationPlanForDate($user, $shiftBreakCheck->firstShift->event_start_day),
+                'href'  => ShiftNotificationLinkService::ownOperationPlanForDate(
+                    $user,
+                    $shiftBreakCheck->firstShift->event_start_day
+                ),
             ],
             2 => [
                 'type'  => 'string',
@@ -1035,15 +1129,21 @@ class ShiftWorkerService
                     'start' => Carbon::parse($shiftBreakCheck->firstShift->event_start_day)->format('d.m.Y'),
                     'end'   => Carbon::parse($shiftBreakCheck->lastShift->event_start_day)->format('d.m.Y'),
                 ], $user->language),
-                'href'  => ShiftNotificationLinkService::ownOperationPlanForDate($user, $shiftBreakCheck->firstShift->event_start_day),
+                'href'  => ShiftNotificationLinkService::ownOperationPlanForDate(
+                    $user,
+                    $shiftBreakCheck->firstShift->event_start_day
+                ),
             ],
         ]);
         $notificationService->setNotificationTo($user);
         $notificationService->createNotification();
     }
 
-    private function notifyShortBreakPlanner($shiftBreakCheck, User $user, NotificationService $notificationService): void
-    {
+    private function notifyShortBreakPlanner(
+        $shiftBreakCheck,
+        User $user,
+        NotificationService $notificationService
+    ): void {
         $planner = $this->auth->user();
 
         // Nur die planende Person benachrichtigen - und nicht doppelt, falls sie sich selbst eingeplant hat
@@ -1058,12 +1158,21 @@ class ShiftWorkerService
 
         $notificationTitle = __('notification.shift.worker_short_break', [], $planner->language);
 
+        // Eigene Toast-Nachricht setzen, sonst erbt die planende Person den Broadcast
+        // "Du wurdest mit zu kurzer Ruhezeit eingeplant" aus notifyShortBreakUser().
+        $notificationService->setBroadcastMessage([
+            'id'      => Str::uuid()->toString(),
+            'type'    => 'error',
+            'message' => $notificationTitle,
+        ]);
         $notificationService->setTitle($notificationTitle);
         $notificationService->setDescription([
             1 => [
                 'type'  => 'string',
                 'title' => __('notification.keyWords.concerns', [], $planner->language) . $user->getFullNameAttribute(),
-                'href'  => ShiftNotificationLinkService::shiftPlanForDate($shiftBreakCheck->firstShift->event_start_day),
+                'href'  => ShiftNotificationLinkService::shiftPlanForDate(
+                    $shiftBreakCheck->firstShift->event_start_day
+                ),
             ],
             2 => [
                 'type'  => 'string',
@@ -1071,15 +1180,20 @@ class ShiftWorkerService
                     'start' => Carbon::parse($shiftBreakCheck->firstShift->event_start_day)->format('d.m.Y'),
                     'end'   => Carbon::parse($shiftBreakCheck->lastShift->event_start_day)->format('d.m.Y'),
                 ], $planner->language),
-                'href'  => ShiftNotificationLinkService::shiftPlanForDate($shiftBreakCheck->firstShift->event_start_day),
+                'href'  => ShiftNotificationLinkService::shiftPlanForDate(
+                    $shiftBreakCheck->firstShift->event_start_day
+                ),
             ],
         ]);
         $notificationService->setNotificationTo($planner);
         $notificationService->createNotification();
     }
 
-    private function checkUserInMoreThanTenShiftsAndCreateNotificationsIfNecessary(Shift $shift, User $user, NotificationService $notificationService): void
-    {
+    private function checkUserInMoreThanTenShiftsAndCreateNotificationsIfNecessary(
+        Shift $shift,
+        User $user,
+        NotificationService $notificationService
+    ): void {
         $shiftCheck = $notificationService->checkIfUserInMoreThanTenShifts($user, $shift);
 
         if (! $shiftCheck->moreThanTenShifts) {
@@ -1093,8 +1207,11 @@ class ShiftWorkerService
         $notificationService->clearNotificationData();
     }
 
-    private function notifyMoreThanTenShiftsUser($shiftCheck, User $user, NotificationService $notificationService): void
-    {
+    private function notifyMoreThanTenShiftsUser(
+        $shiftCheck,
+        User $user,
+        NotificationService $notificationService
+    ): void {
         $notificationTitle = __('notification.shift.more_than_ten_days', [], $user->language);
 
         $notificationService->setTitle($notificationTitle);
@@ -1110,7 +1227,10 @@ class ShiftWorkerService
             1 => [
                 'type'  => 'string',
                 'title' => __('notification.keyWords.concerns', [], $user->language) . $user->getFullNameAttribute(),
-                'href'  => ShiftNotificationLinkService::ownOperationPlanForDate($user, $shiftCheck->firstShift->first()->event_start_day),
+                'href'  => ShiftNotificationLinkService::ownOperationPlanForDate(
+                    $user,
+                    $shiftCheck->firstShift->first()->event_start_day
+                ),
             ],
             2 => [
                 'type'  => 'string',
@@ -1118,7 +1238,10 @@ class ShiftWorkerService
                     'start' => Carbon::parse($shiftCheck->firstShift->first()->event_start_day)->format('d.m.Y'),
                     'end'   => Carbon::parse($shiftCheck->lastShift->first()->event_start_day)->format('d.m.Y'),
                 ], $user->language),
-                'href'  => ShiftNotificationLinkService::ownOperationPlanForDate($user, $shiftCheck->firstShift->first()->event_start_day),
+                'href'  => ShiftNotificationLinkService::ownOperationPlanForDate(
+                    $user,
+                    $shiftCheck->firstShift->first()->event_start_day
+                ),
             ],
         ]);
 
@@ -1126,8 +1249,11 @@ class ShiftWorkerService
         $notificationService->createNotification();
     }
 
-    private function notifyMoreThanTenShiftsPlanner($shiftCheck, User $user, NotificationService $notificationService): void
-    {
+    private function notifyMoreThanTenShiftsPlanner(
+        $shiftCheck,
+        User $user,
+        NotificationService $notificationService
+    ): void {
         $planner = $this->auth->user();
 
         // Nur die planende Person benachrichtigen - und nicht doppelt, falls sie sich selbst eingeplant hat
@@ -1153,7 +1279,9 @@ class ShiftWorkerService
             1 => [
                 'type'  => 'string',
                 'title' => __('notification.keyWords.concerns', [], $planner->language) . $user->getFullNameAttribute(),
-                'href'  => ShiftNotificationLinkService::shiftPlanForDate($shiftCheck->firstShift->first()->event_start_day),
+                'href'  => ShiftNotificationLinkService::shiftPlanForDate(
+                    $shiftCheck->firstShift->first()->event_start_day
+                ),
             ],
             2 => [
                 'type'  => 'string',
@@ -1161,7 +1289,9 @@ class ShiftWorkerService
                     'start' => Carbon::parse($shiftCheck->firstShift->first()->event_start_day)->format('d.m.Y'),
                     'end'   => Carbon::parse($shiftCheck->lastShift->first()->event_start_day)->format('d.m.Y'),
                 ], $planner->language),
-                'href'  => ShiftNotificationLinkService::shiftPlanForDate($shiftCheck->firstShift->first()->event_start_day),
+                'href'  => ShiftNotificationLinkService::shiftPlanForDate(
+                    $shiftCheck->firstShift->first()->event_start_day
+                ),
             ],
         ]);
         $notificationService->setNotificationTo($planner);

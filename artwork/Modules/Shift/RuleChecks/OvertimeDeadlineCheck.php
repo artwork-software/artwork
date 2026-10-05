@@ -8,6 +8,7 @@ use Artwork\Modules\User\Services\ContractSettingsResolver;
 use Artwork\Modules\WorkTime\Models\UserOvertime;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
+use Artwork\Modules\WorkTime\Support\WorkTimeAccounting;
 
 /**
  * Überstunden-Abbaufrist: $rule->individual_number_value = Tage vor Fristablauf, ab denen gewarnt wird.
@@ -97,6 +98,12 @@ class OvertimeDeadlineCheck extends AbstractRuleCheck
 
     private function overtimeRuleActiveFor(User $user): bool
     {
+        // Ohne Arbeitszeitberechnung werden keine Überstunden fortgeschrieben — die Regel hätte
+        // nur veraltete Einträge als Grundlage
+        if (!WorkTimeAccounting::isEnabled()) {
+            return false;
+        }
+
         $resolver = app(ContractSettingsResolver::class);
         if ($resolver->assignFor($user) === null) {
             return false;

@@ -20,6 +20,32 @@ class ExternalAccessSettingsResolver
     }
 
     /**
+     * Instanzweiter Feature-Schalter (Einstellungen → Externe Zugänge). Solange er aus ist, sind
+     * Einladen-Buttons, Einladungs-Endpunkte und der gesamte externe Bereich nicht erreichbar.
+     */
+    public function isEnabled(): bool
+    {
+        return (bool) ($this->settings->enabled ?? false);
+    }
+
+    /**
+     * Tage vor Ablauf, an denen Einladende erinnert werden. 0 schaltet die Erinnerung ab.
+     */
+    public function expiryReminderDays(): int
+    {
+        return max(0, (int) ($this->settings->expiry_reminder_days ?? 0));
+    }
+
+    /**
+     * Dürfen externe Zugänge in der Dokument-Komponente Dateien hochladen und eigene Uploads löschen?
+     * Liste und Download bleiben davon unberührt.
+     */
+    public function isFileUploadEnabled(): bool
+    {
+        return (bool) ($this->settings->file_upload_enabled ?? false);
+    }
+
+    /**
      * Company name for invitation wording: override -> GeneralSettings.business_name -> app.name.
      */
     public function companyName(): string

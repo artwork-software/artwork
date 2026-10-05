@@ -13,7 +13,9 @@ trait HandlesFileUpload
 {
     use RetrievesSettingsForFileType;
 
-
+    /**
+     * Denylist-Treffer (Client-Endung oder erkannter Inhalt) werden immer abgelehnt, auch wenn die Einstellung '*' erlaubt.
+     */
     public function handleFile(ArtworkFileTypes $type, UploadedFile $file): void
     {
         $settings = $this->retrieveSettingsForFileType($type);
@@ -49,6 +51,11 @@ trait HandlesFileUpload
                 ['size' => $settings['file_size']],
                 $user->language
             );
+        }
+
+        // Denylist vor der Allowlist: eigene, verständliche Meldung mit Feldbezug.
+        if (UploadDenyList::denies($file)) {
+            throw DeniedUploadFileException::forFile($file);
         }
 
         if (!$this->checkMimeType($settings['mime_types'], $file)) {

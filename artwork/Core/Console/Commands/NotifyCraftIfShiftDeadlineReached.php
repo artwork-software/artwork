@@ -21,7 +21,12 @@ class NotifyCraftIfShiftDeadlineReached extends Command
         $notificationService->setPriority(2);
         $notificationService->setNotificationConstEnum(NotificationEnum::NOTIFICATION_SHIFT_OPEN_DEMAND);
 
-        $crafts = Craft::with(['shifts.users', 'shifts.freelancer', 'shifts.serviceProvider', 'shifts.event.project'])->get();
+        $crafts = Craft::with([
+            'shifts.users',
+            'shifts.freelancer',
+            'shifts.serviceProvider',
+            'shifts.event.project',
+        ])->get();
 
         foreach ($crafts as $craft) {
             $this->processCraft($craft, $notificationService);

@@ -71,6 +71,11 @@
                         @click="req.type === 'permission' ? $emit('jump', req.value) : null"
                     >{{ req.type === 'permission' ? $t(titles[req.value] ?? req.value) : $t(req.label) }}</button>
                 </div>
+                <!-- Instanz-Einstellung setzt das Recht außer Kraft (bleibt gespeichert, wirkt nicht) -->
+                <div v-if="superseded" class="mt-1 flex flex-wrap items-center gap-1.5 rounded-md bg-warning-surface px-2 py-0.5 text-[11px] font-medium text-warning">
+                    <PropertyIcon name="IconSettingsOff" class="size-3.5" />
+                    <span>{{ definition.superseded_effect ? $t('Partly without effect') : $t('Without effect') }}: {{ $t(superseded.label) }}</span>
+                </div>
             </div>
         </div>
     </div>
@@ -91,6 +96,8 @@ defineProps({
     status: { type: String, default: 'inactive' },
     /** fehlende harte Voraussetzungen (Requirement-Objekte mit status) */
     missing: { type: Array, default: () => [] },
+    /** aktive Instanz-Einstellung, die das Recht außer Kraft setzt (Requirement-Objekt) oder null */
+    superseded: { type: Object, default: null },
     titles: { type: Object, default: () => ({}) },
     readonly: { type: Boolean, default: false },
     highlighted: { type: Boolean, default: false },

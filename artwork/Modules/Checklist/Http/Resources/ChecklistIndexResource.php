@@ -13,7 +13,6 @@ class ChecklistIndexResource extends JsonResource
     /**
      * @return array<string, mixed>
      */
-    // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.FoundInExtendedClass
     public function toArray($request): array
     {
         return [
@@ -30,8 +29,10 @@ class ChecklistIndexResource extends JsonResource
                 'name' => $this->project->name,
             ] : null,
             'checklist_tab_id' => $this->tab_id,
-            'tasks' => $this->tasks()->with('task_users')->orderBy('order')->get()
-            ->map(function (Task $task) {
+            // Spiegel von ChecklistPolicy::update – das Frontend sperrt damit das Abhaken
+            // (tasks.done) statt erst am 403 zu scheitern.
+            'can_update' => $request->user()?->can('update', $this->resource) ?? false,
+            'tasks' => $this->orderedTasks()->map(function (Task $task) {
                 return [
                     'id' => $task->id,
                     'name' => $task->name,
@@ -52,5 +53,23 @@ class ChecklistIndexResource extends JsonResource
                 ];
             }),
         ];
+    }
+
+    /**
+     * Aufgaben aus der bereits geladenen Relation (die Aufrufer laden `tasks.task_users`
+     * eager); vorher fragte die Resource je Checkliste die Aufgaben neu ab und je Aufgabe
+     * die erledigende Person nach. Ohne Vorladung: eine Query je Checkliste statt je Aufgabe.
+     *
+     * @return \Illuminate\Database\Eloquent\Collection<int, Task>
+     */
+    private function orderedTasks(): \Illuminate\Database\Eloquent\Collection
+    {
+        // loadMissing statt Einzel-Query, damit die Relation am Modell hängt und
+        // ChecklistPolicy::update (can_update) die Aufgaben nicht erneut lädt.
+        $this->resource->loadMissing(['tasks.task_users', 'tasks.user_who_done']);
+
+        $tasks = $this->tasks;
+
+        return $tasks->sortBy('order')->values();
     }
 }

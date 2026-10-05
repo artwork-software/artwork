@@ -123,7 +123,11 @@ class DemoMaterialIssueSeeder extends Seeder
 
             $firstEvent = $project->events()->min('start_time');
             $lastEvent = $project->events()->max('end_time');
-            if ($firstEvent === null || Carbon::parse($firstEvent)->lt($windowStart) || Carbon::parse($firstEvent)->gt($windowEnd)) {
+            if (
+                $firstEvent === null
+                 || Carbon::parse($firstEvent)->lt($windowStart)
+                 || Carbon::parse($firstEvent)->gt($windowEnd)
+            ) {
                 continue;
             }
 

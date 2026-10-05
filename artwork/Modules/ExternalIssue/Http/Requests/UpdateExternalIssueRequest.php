@@ -2,6 +2,7 @@
 
 namespace Artwork\Modules\ExternalIssue\Http\Requests;
 
+use Artwork\Core\FileHandling\Upload\SafeUploadFile;
 use Artwork\Modules\ExternalIssue\Models\ExternalIssue;
 use Illuminate\Foundation\Http\FormRequest;
 
@@ -14,7 +15,18 @@ class UpdateExternalIssueRequest extends FormRequest
     {
         $issue = $this->route('externalIssue');
 
-        return $issue instanceof ExternalIssue && ($this->user()?->can('update', $issue) ?? false);
+        if (!$issue instanceof ExternalIssue || !($this->user()?->can('update', $issue) ?? false)) {
+            return false;
+        }
+
+        // Projektwechsel nur, wenn im Zielprojekt angelegt werden dürfte.
+        $newProjectId = $this->integer('project_id') ?: null;
+
+        if ($newProjectId !== null && $newProjectId !== (int) $issue->project_id) {
+            return $this->user()->can('create', [ExternalIssue::class, $newProjectId]);
+        }
+
+        return true;
     }
 
     /**
@@ -37,7 +49,7 @@ class UpdateExternalIssueRequest extends FormRequest
             'external_address' => 'nullable|string|max:255',
             'external_email' => 'nullable|email|max:255',
             'external_phone' => 'nullable|string|max:50',
-            'files.*' => 'file|max:20480',
+            'files.*' => ['file', 'mimes:pdf,jpg,jpeg,png,webp,doc,docx,xls,xlsx,csv,txt,zip', 'max:20480', new SafeUploadFile()],
             'special_items' => 'nullable|array',
             'special_items.*.name' => 'required|string|max:255',
             'special_items.*.quantity' => 'required|integer|min:1',
@@ -45,7 +57,10 @@ class UpdateExternalIssueRequest extends FormRequest
             'special_items.*.inventory_category_id' => 'nullable|exists:inventory_categories,id',
             'special_items.*.inventory_sub_category_id' => 'nullable|exists:inventory_sub_categories,id',
             'articles' => 'nullable|array',
-            'articles.*.id' => ['required', \Illuminate\Validation\Rule::exists('inventory_articles', 'id')->whereNull('deleted_at')],
+            'articles.*.id' => [
+                'required',
+                \Illuminate\Validation\Rule::exists('inventory_articles', 'id')->whereNull('deleted_at'),
+            ],
             'articles.*.quantity' => 'required|integer|min:1',
             'special_items_done' => 'boolean',
         ];

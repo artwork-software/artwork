@@ -135,6 +135,7 @@ import BuilderLinkListComponent from "@/Pages/Projects/BuilderComponents/PrintLa
 import BuilderProjectPeriodComponent from "@/Pages/Projects/BuilderComponents/PrintLayoutBuilderProjectPeriodComponent.vue";
 import BuilderBiKeyFiguresDisplay from "@/Pages/Projects/BuilderComponents/PrintLayoutBuilderBiKeyFiguresDisplay.vue";
 import BuilderShiftComponent from "@/Pages/Projects/BuilderComponents/PrintLayoutBuilderShiftComponent.vue";
+import BuilderCrmContactListComponent from "@/Pages/Projects/BuilderComponents/PrintLayoutBuilderCrmContactListComponent.vue";
 
 const headerRef = ref(null);
 const footerRef = ref(null);
@@ -236,6 +237,7 @@ const componentMapping = {
     BuilderProjectPeriodComponent,
     BuilderBiKeyFiguresDisplay,
     BuilderShiftTab: BuilderShiftComponent,
+    BuilderCrmContactListComponent,
 };
 
 const hasHeaderContent = computed(() => {

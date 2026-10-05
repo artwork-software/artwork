@@ -11,7 +11,10 @@ class UpdateArtistRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return true;
+        $artist = $this->route('artist');
+
+        return $artist instanceof \Artwork\Modules\ArtistResidency\Models\Artist
+            && ($this->user()?->can('update', $artist) ?? false);
     }
 
     /**

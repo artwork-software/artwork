@@ -2,6 +2,7 @@
 
 namespace Artwork\Modules\ExternalAccess\Notifications;
 
+use Artwork\Modules\ExternalAccess\Services\ExternalAccessSettingsResolver;
 use Artwork\Modules\GeneralSettings\Models\GeneralSettings;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\User\Models\User;
@@ -19,6 +20,8 @@ class ExternalInvitationNotification extends Notification implements ShouldQueue
         public readonly string $plainToken,
         public readonly ?User $invitedBy = null,
         public readonly ?Project $invitedFromProject = null,
+        /** false = reine Tab-Einladung (Projektdaten ausfüllen), true = auch eigene Stammdaten pflegen */
+        public readonly bool $maintainsOwnData = true,
     ) {
     }
 
@@ -46,7 +49,7 @@ class ExternalInvitationNotification extends Notification implements ShouldQueue
             ? $settings->business_email
             : $fallbackSenderMail;
 
-        $lifetimeMinutes = (int) config('external_access.login_token.lifetime_minutes', 15);
+        $lifetimeMinutes = app(ExternalAccessSettingsResolver::class)->loginTokenLifetimeMinutes();
         $url = route('external.login.redeem', ['token' => $this->plainToken]);
 
         $invitedByName = $this->invitedBy !== null
@@ -62,6 +65,7 @@ class ExternalInvitationNotification extends Notification implements ShouldQueue
                 'invitedByName' => $invitedByName,
                 'projectName' => $this->invitedFromProject?->name,
                 'lifetimeMinutes' => $lifetimeMinutes,
+                'maintainsOwnData' => $this->maintainsOwnData || $this->invitedFromProject === null,
             ]);
     }
 }

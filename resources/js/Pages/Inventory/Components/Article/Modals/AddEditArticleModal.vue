@@ -840,7 +840,7 @@
                                                   <button
                                                       type="button"
                                                       class="text-text-subtle hover:text-text-muted duration-200 ease-in-out"
-                                                      aria-label="Kopieren"
+                                                      :aria-label="$t('Copy')"
                                                       @click.stop="copyDetailedArticle(item)"
                                                   >
                                                     <component :is="IconCopy" class="h-4 w-4" aria-hidden="true"/>

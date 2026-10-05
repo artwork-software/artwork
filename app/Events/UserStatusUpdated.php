@@ -2,7 +2,7 @@
 
 namespace App\Events;
 
-use Illuminate\Broadcasting\Channel;
+use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcastNow;
 use Illuminate\Queue\SerializesModels;
@@ -22,6 +22,6 @@ class UserStatusUpdated implements ShouldBroadcastNow
 
     public function broadcastOn()
     {
-        return new Channel('users.status');
+        return new PrivateChannel('users.status');
     }
 }

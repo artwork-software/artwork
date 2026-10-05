@@ -12,7 +12,7 @@ class SpecialItemController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(): void
     {
         //
     }
@@ -20,7 +20,7 @@ class SpecialItemController extends Controller
     /**
      * Show the form for creating a new resource.
      */
-    public function create()
+    public function create(): void
     {
         //
     }
@@ -28,7 +28,7 @@ class SpecialItemController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(StoreSpecialItemRequest $request)
+    public function store(StoreSpecialItemRequest $request): void
     {
         //
     }
@@ -36,7 +36,7 @@ class SpecialItemController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(SpecialItem $specialItem)
+    public function show(SpecialItem $specialItem): void
     {
         //
     }
@@ -44,7 +44,7 @@ class SpecialItemController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(SpecialItem $specialItem)
+    public function edit(SpecialItem $specialItem): void
     {
         //
     }
@@ -52,7 +52,7 @@ class SpecialItemController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(UpdateSpecialItemRequest $request, SpecialItem $specialItem)
+    public function update(UpdateSpecialItemRequest $request, SpecialItem $specialItem): void
     {
         //
     }
@@ -60,7 +60,7 @@ class SpecialItemController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(SpecialItem $specialItem)
+    public function destroy(SpecialItem $specialItem): void
     {
         //
     }

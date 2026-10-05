@@ -23,7 +23,7 @@ class StoreMoneySourceTaskRequest extends FormRequest
         return [
             'money_source' => ['required', 'integer', 'exists:money_sources,id'],
             'name' => ['required', 'string', 'max:255'],
-            'description' => ['nullable', 'string'],
+            'description' => ['nullable', 'string', 'max:65535'],
             'deadline' => ['nullable', 'date'],
             'users' => ['nullable', 'array'],
             'users.*' => ['integer', 'exists:users,id'],

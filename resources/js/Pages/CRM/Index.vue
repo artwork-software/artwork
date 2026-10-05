@@ -18,16 +18,22 @@
                         {{ $t('Export') }}
                     </button>
                     -->
-                    <!-- TODO: Externe-Einladen-Feature vorerst ausgeblendet (noch nicht ausgereift)
                     <button
-                        v-if="can('can invite externals')"
-                        class="ui-button flex items-center gap-1.5"
+                        v-if="canInviteExternal"
+                        class="inline-flex items-center gap-1.5 h-[30px] px-3 rounded-md bg-white/8 hover:bg-white/16 text-text-inverse text-[13px] font-medium"
                         @click="showInviteModal = true"
                     >
                         <component :is="IconUserPlus" stroke-width="1" class="size-5" />
                         {{ $t('Invite external') }}
                     </button>
-                    -->
+                    <Link
+                        v-if="canInviteExternal"
+                        :href="route('crm.external-access.index')"
+                        class="inline-flex items-center gap-1.5 h-[30px] px-3 rounded-md bg-white/8 hover:bg-white/16 text-text-inverse text-[13px] font-medium"
+                    >
+                        <component :is="IconUserShield" stroke-width="1" class="size-5" />
+                        {{ $t('External access') }}
+                    </Link>
                     <Link v-if="canImport" :href="route('crm.duplicates')" class="inline-flex items-center gap-1.5 h-[30px] px-3 rounded-md bg-white/8 hover:bg-white/16 text-text-inverse text-[13px] font-medium">
                         <component :is="IconUsers" stroke-width="1" class="size-5" />
                         {{ $t('Find duplicates') }}
@@ -163,7 +169,7 @@
                 <button type="button" class="text-sm text-text-subtle hover:text-text-muted" @click="selectedIds = new Set()">
                     {{ $t('Clear selection') }}
                 </button>
-                <button type="button" class="ml-auto flex items-center gap-1 text-sm font-medium text-danger hover:text-danger" @click="showBulkDeleteModal = true">
+                <button v-if="canDeleteContacts" type="button" class="ml-auto flex items-center gap-1 text-sm font-medium text-danger hover:text-danger" @click="showBulkDeleteModal = true">
                     <component :is="IconTrash" class="size-4" />
                     {{ $t('Delete selection') }}
                 </button>
@@ -210,7 +216,7 @@
                     <template #row-actions="{ row }">
                         <BaseMenu has-no-offset white-menu-background>
                             <BaseMenuItem :icon="IconEye" :title="$t('View')" white-menu-background @click="$inertia.visit(route('crm.contacts.show', row.id))" />
-                            <BaseMenuItem v-if="!isMirroredType" :icon="IconTrash" :title="$t('Delete')" white-menu-background @click="openDeleteModal(row)" />
+                            <BaseMenuItem v-if="!isMirroredType && canDeleteContacts" :icon="IconTrash" :title="$t('Delete')" white-menu-background @click="openDeleteModal(row)" />
                         </BaseMenu>
                     </template>
                 </BaseTable>
@@ -281,7 +287,6 @@
             @close="showExportModal = false"
         />
 
-        <!-- Invite External Modal — vorerst ausgeblendet (noch nicht ausgereift)
         <InviteExternalModal
             v-if="showInviteModal"
             source="crm_index"
@@ -289,7 +294,6 @@
             @close="showInviteModal = false"
             @success="showSuccess($t('Invitation sent.'))"
         />
-        -->
     </AppLayout>
 </template>
 
@@ -298,8 +302,7 @@ import { ref, watch, computed, onMounted } from 'vue'
 import { router, Link, usePage } from '@inertiajs/vue3'
 import { useTranslation } from '@/Composeables/Translation.js'
 import { usePermission } from '@/Composeables/Permission.js'
-// Externe-Einladen-Feature vorerst ausgeblendet (noch nicht ausgereift)
-// import InviteExternalModal from '@/Pages/CRM/Components/InviteExternalModal.vue'
+import InviteExternalModal from '@/Pages/CRM/Components/InviteExternalModal.vue'
 import AppLayout from '@/Layouts/AppLayout.vue'
 import ToolbarHeader from '@/Artwork/Toolbar/ToolbarHeader.vue'
 import BaseUIButton from '@/Artwork/Buttons/BaseUIButton.vue'
@@ -312,7 +315,7 @@ import CreateContactModal from '@/Pages/CRM/Components/CreateContactModal.vue'
 import CrmFilterModal from '@/Pages/CRM/Components/CrmFilterModal.vue'
 import CrmExportModal from '@/Pages/CRM/Components/CrmExportModal.vue'
 import ToolTipComponent from '@/Components/ToolTips/ToolTipComponent.vue'
-import { IconAddressBook, IconCirclePlus, IconEye, IconTrash, IconUpload, IconDownload, IconUserPlus, IconUsers } from '@tabler/icons-vue'
+import { IconAddressBook, IconCirclePlus, IconEye, IconTrash, IconUpload, IconDownload, IconUserPlus, IconUserShield, IconUsers } from '@tabler/icons-vue'
 import debounce from 'lodash.debounce'
 
 const props = defineProps({
@@ -325,7 +328,8 @@ const props = defineProps({
 })
 
 const $t = useTranslation()
-const { can } = usePermission(usePage().props)
+const { can, hasAdminRole } = usePermission(usePage().props)
+const canDeleteContacts = computed(() => hasAdminRole() || can('crm manager'))
 
 const mirroredSlugs = ['user', 'freelancer', 'service_provider']
 
@@ -344,6 +348,8 @@ const showDeleteModal = ref(false)
 const showFilterModal = ref(false)
 const showExportModal = ref(false)
 const showInviteModal = ref(false)
+// Nur mit Recht UND instanzweit freigeschaltetem Feature (Einstellungen → Externe Zugänge)
+const canInviteExternal = computed(() => usePage().props.externalAccessEnabled === true && can('can invite externals'))
 const showSkipped = ref(false)
 const contactToDelete = ref(null)
 const activeFilters = ref({})

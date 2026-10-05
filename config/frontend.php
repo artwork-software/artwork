@@ -26,5 +26,7 @@ return [
         'cluster' => env('REVERB_APP_CLUSTER'),
         'host' => env('REVERB_HOST'),
         'port' => env('VITE_REVERB_PORT'),
+        // 'https' erzwingt wss (forceTLS) im Browser, siehe resources/js/bootstrap.js.
+        'scheme' => env('REVERB_SCHEME'),
     ],
 ];

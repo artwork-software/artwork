@@ -3,6 +3,7 @@
 namespace Artwork\Modules\InternalIssue\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use Artwork\Core\FileHandling\Download\PrivateFileResponse;
 use Artwork\Core\FileHandling\Naming\DownloadFileName;
 use Artwork\Core\FileHandling\Naming\StoredFileName;
 use Artwork\Modules\InternalIssue\Http\Requests\StoreInternalIssueRequest;
@@ -16,10 +17,12 @@ use Artwork\Modules\Inventory\Services\InventoryUserFilterShareService;
 use Artwork\Modules\MaterialSet\Models\MaterialSet;
 use Barryvdh\Snappy\Facades\SnappyPdf;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Illuminate\Auth\AuthManager;
 use Symfony\Component\HttpFoundation\HeaderUtils;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class InternalIssueController extends Controller
 {
@@ -28,7 +31,8 @@ class InternalIssueController extends Controller
         protected InventoryUserFilterShareService $inventoryUserFilterShareService,
         protected AuthManager $authManger,
         protected InventoryUserFilterService $inventoryUserFilterService
-    ) {}
+    ) {
+    }
 
     public function index(): \Inertia\Response
     {
@@ -72,15 +76,15 @@ class InternalIssueController extends Controller
                 'project',
                 'responsibleUsers.departments',
             ])
-            ->when(!empty($articleIds), function ($q) use ($articleIds) {
-                $q->whereHas('articles', function ($sub) use ($articleIds) {
+            ->when(!empty($articleIds), function ($q) use ($articleIds): void {
+                $q->whereHas('articles', function ($sub) use ($articleIds): void {
                     $sub->whereIn('inventory_articles.id', $articleIds);
                 });
             })
             ->when($projectId > 0, fn ($q) => $q->where('project_id', $projectId))
             ->when($roomId > 0, fn ($q) => $q->where('room_id', $roomId))
-            ->when(!empty($responsibleUserIds), function ($q) use ($responsibleUserIds) {
-                $q->whereHas('responsibleUsers', function ($sub) use ($responsibleUserIds) {
+            ->when(!empty($responsibleUserIds), function ($q) use ($responsibleUserIds): void {
+                $q->whereHas('responsibleUsers', function ($sub) use ($responsibleUserIds): void {
                     $sub->whereIn('users.id', $responsibleUserIds);
                 });
             })
@@ -89,8 +93,8 @@ class InternalIssueController extends Controller
             ->overlapping($dateFrom, $dateTo)
 
             // Suche
-            ->when($q !== '', function ($qbuilder) use ($q) {
-                $qbuilder->where(function ($sub) use ($q) {
+            ->when($q !== '', function ($qbuilder) use ($q): void {
+                $qbuilder->where(function ($sub) use ($q): void {
                     $sub->where('name', 'like', "%{$q}%")
                         ->orWhere('notes', 'like', "%{$q}%");
                 });
@@ -110,19 +114,22 @@ class InternalIssueController extends Controller
         return Inertia::render('IssueOfMaterial/IssueOfMaterialManagement', [
             'issues' => $issues,
             'articlesInFilter' => $articlesInFilter,
-            'materialSets' => MaterialSet::with('items.article', 'items.article.category', 'items.article.subCategory')->get(),
+            'materialSets' => MaterialSet::with(
+                'items.article',
+                'items.article.category',
+                'items.article.subCategory'
+            )->get(),
             'detailedArticle' => Inertia::optional(fn () =>
             InventoryArticle::with([
                 'category',
                 'subCategory',
                 'properties',
-                'images' => function ($query) {
+                'images' => function ($query): void {
                     $query->orderBy('is_main_image', 'desc')->orderBy('id');
                 },
                 'statusValues',
                 'detailedArticleQuantities.status',
-            ])->find(request()->get('articleId'))
-            ),
+            ])->find(request()->get('articleId'))),
             'urlParameters' => request()->only([
                 'article_ids','date_from','date_to','project_id','room_id','responsible_user_ids','q'
             ]),
@@ -186,8 +193,10 @@ class InternalIssueController extends Controller
         return redirect()->back();
     }
 
-    public function update(UpdateInternalIssueRequest $request, InternalIssue $internalIssue): \Illuminate\Http\RedirectResponse
-    {
+    public function update(
+        UpdateInternalIssueRequest $request,
+        InternalIssue $internalIssue
+    ): \Illuminate\Http\RedirectResponse {
         $this->authorize('update', $internalIssue);
 
         //dd($request->all());
@@ -254,7 +263,7 @@ class InternalIssueController extends Controller
         if (!request()->boolean('preview')) {
             $storagePath = 'material-issue/' . StoredFileName::forGenerated('pdf', (string) $internalIssue->id);
 
-            Storage::disk('public')->put($storagePath, $pdfContent);
+            Storage::disk('local')->put($storagePath, $pdfContent);
 
             InternalIssueFile::create([
                 'internal_issue_id' => $internalIssue->id,
@@ -273,6 +282,24 @@ class InternalIssueController extends Controller
         ]);
     }
 
+    /**
+     * Nur mit MaterialIssuePolicy::view und nur für Dateien dieser Ausgabe (?inline=1 für Bilder/PDF).
+     */
+    public function fileDownload(
+        Request $request,
+        InternalIssue $internalIssue,
+        InternalIssueFile $internalIssueFile
+    ): StreamedResponse {
+        $this->authorize('view', $internalIssue);
+        abort_unless((int) $internalIssueFile->internal_issue_id === (int) $internalIssue->id, 404);
+
+        return PrivateFileResponse::make(
+            (string) $internalIssueFile->file_path,
+            $internalIssueFile->original_name,
+            $request->boolean('inline')
+        );
+    }
+
     public function setSpecialItemsDone(InternalIssue $internalIssue): \Illuminate\Http\RedirectResponse
     {
         $this->authorize('update', $internalIssue);
@@ -282,4 +309,3 @@ class InternalIssueController extends Controller
         return redirect()->back();
     }
 }
-

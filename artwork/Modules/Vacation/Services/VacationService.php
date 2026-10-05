@@ -33,8 +33,9 @@ readonly class VacationService
     }
 
     /**
-     * @param VacationType|string|null $vacationTypeEnum explizite Art (Planungsstatus wie FREE_WORK) –
-     *        null: Art aus dem Request (vacation_type: OFF_WORK|NOT_AVAILABLE), Default Urlaub (OFF_WORK)
+     * @param VacationType|string|null $vacationTypeEnum explizite Art (Planungsstatus wie OFF_WORK/FREE_WORK
+     *        aus dem Tagesstatus) – null: selbst erfasste Abwesenheit = NOT_AVAILABLE. Die Urlaubsart wird
+     *        NICHT im Verfügbarkeitskalender gewählt (kommt mit dem Urlaubsmodul).
      */
     public function create(
         Vacationer $vacationer,
@@ -46,7 +47,7 @@ readonly class VacationService
         NotificationService $notificationService,
         VacationType|string|null $vacationTypeEnum = null
     ): Vacation|Model {
-        $vacationTypeEnum = $this->resolveVacationType($vacationTypeEnum, $request);
+        $vacationTypeEnum = $this->resolveVacationType($vacationTypeEnum);
 
         /** @var Vacation $firstVacation */
         $firstVacation = $vacationer->vacations()->create([
@@ -100,7 +101,11 @@ readonly class VacationService
 
         // Frei-/Abwesenheits-Einträge lösen Projektzuordnungen bzw. -wünsche auf
         // (gesammelt über alle Tage der Serie, damit Notifications gebündelt sind).
-        if ($vacationer instanceof User || $vacationer instanceof Freelancer || $vacationer instanceof ServiceProvider) {
+        if (
+            $vacationer instanceof User
+             || $vacationer instanceof Freelancer
+             || $vacationer instanceof ServiceProvider
+        ) {
             app(\Artwork\Modules\Project\Services\ProjectDayAssignmentService::class)->handleVacationEntry(
                 $vacationer,
                 array_merge([Carbon::parse($request->date)->format('Y-m-d')], $seriesDates),
@@ -113,10 +118,10 @@ readonly class VacationService
 
     /**
      * Typsichere Art des Eintrags: explizit übergeben (Enum oder Magic String wie 'FREE_WORK'),
-     * sonst vacation_type aus dem Request (nur OFF_WORK|NOT_AVAILABLE, vom Request validiert),
-     * sonst Urlaub (OFF_WORK). Unbekannte Strings werfen ValueError (Vacation::from).
+     * sonst Nicht verfügbar (NOT_AVAILABLE) – die selbst erfasste Abwesenheit hat keine wählbare Art.
+     * Unbekannte Strings werfen ValueError (Vacation::from).
      */
-    private function resolveVacationType(VacationType|string|null $type, Request $request): VacationType
+    private function resolveVacationType(VacationType|string|null $type): VacationType
     {
         if ($type instanceof VacationType) {
             return $type;
@@ -125,12 +130,7 @@ readonly class VacationService
             return VacationType::from($type);
         }
 
-        $requested = $request->input('vacation_type');
-        if (is_string($requested) && in_array($requested, VacationType::selfServiceAbsenceValues(), true)) {
-            return VacationType::from($requested);
-        }
-
-        return VacationType::OFF_WORK;
+        return VacationType::NOT_AVAILABLE;
     }
 
     /**
@@ -231,7 +231,8 @@ readonly class VacationService
         // Parität zu create()/updateEntry(): auch der Legacy-Update-Pfad (z. B. Datums-
         // Verschiebung) löst Projektzuordnungen/-wünsche am neuen Tag auf
         $vacationer = $vacation->vacationer_type::find($vacation->vacationer_id);
-        if ($vacationer instanceof User
+        if (
+            $vacationer instanceof User
             || $vacationer instanceof Freelancer
             || $vacationer instanceof ServiceProvider
         ) {

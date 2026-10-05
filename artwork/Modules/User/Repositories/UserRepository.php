@@ -8,6 +8,7 @@ use Artwork\Core\Database\Models\Pivot;
 use Artwork\Core\Database\Repository\BaseRepository;
 use Artwork\Modules\Role\Enums\RoleEnum;
 use Artwork\Modules\User\Models\User;
+use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
@@ -174,11 +175,10 @@ class UserRepository extends BaseRepository
                 'name' => $user->getAttribute('full_name'),
                 'first_name' => $user->getAttribute('first_name'),
                 'last_name' => $user->getAttribute('last_name'),
-                'email' => $user->getAttribute('email'),
+                'email' => $user->visibleEmailFor(Auth::user()),
                 'project_manager_permission' => $user->getHasProjectManagerPermission(),
                 'profile_photo_url' => $user->getAttribute('profile_photo_url'),
                 'manager_type' => $user::class,
-                'chat_public_key' => $user->getAttribute('chat_public_key'),
                 'use_chat' => $user->getAttribute('use_chat'),
                 'position' => $user->getAttribute('position'),
             ]);

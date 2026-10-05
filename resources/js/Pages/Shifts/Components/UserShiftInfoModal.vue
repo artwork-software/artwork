@@ -351,6 +351,8 @@ import SimpleDayTable from '@/Pages/Shifts/Components/UserShiftInfoSimpleDayTabl
 import UserOvertimePanel from '@/Pages/Shifts/Components/UserOvertimePanel.vue'
 import { useTranslation } from '@/Composeables/Translation.js'
 import { formatViolationMeasure } from '@/Pages/ShiftWarnings/ruleTypes.js'
+import { usePage } from '@inertiajs/vue3'
+import { isWorkTimeAccountingEnabled } from '@/Helper/workTimeAccounting.js'
 
 const $t = useTranslation()
 
@@ -407,9 +409,11 @@ const tabs = computed(() => {
         { key: 'season', label: 'Season-related data' },
         { key: 'compensation', label: 'Substitute days off' },
         { key: 'vacation', label: 'Vacation' },
-        { key: 'worktimes', label: 'Actual hours' },
-        { key: 'overtime', label: 'Overtime' },
     ]
+    // Ist-Stunden und Überstunden nur mit eingeschalteter Arbeitszeitberechnung
+    if (isWorkTimeAccountingEnabled(usePage().props)) {
+        list.push({ key: 'worktimes', label: 'Actual hours' }, { key: 'overtime', label: 'Overtime' })
+    }
     if (violationsAvailable.value) {
         list.push({ key: 'violations', label: 'Rule violations' })
     }

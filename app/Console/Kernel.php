@@ -4,6 +4,7 @@ namespace App\Console;
 
 use Artwork\Core\Console\Commands\CalculateDailyWorkingHoursOfUsers;
 use Artwork\Core\Console\Commands\CleanupBiExportsCommand;
+use Artwork\Core\Console\Commands\CleanupExportPdfsCommand;
 use Artwork\Core\Console\Commands\CreateMoneySourceExpirationReminderNotificationsCommand;
 use Artwork\Core\Console\Commands\DeleteExpiredNotificationsForAllCommand;
 use Artwork\Core\Console\Commands\ImportHolidaysCommand;
@@ -17,10 +18,12 @@ use Artwork\Core\Console\Commands\SendDeadlineNotificationsCommand;
 use Artwork\Core\Console\Commands\SendExternalIssueReturnDueNotificationsCommand;
 use Artwork\Core\Console\Commands\TrackShiftKpisCommand;
 use Artwork\Core\Console\Commands\MarkPayableOvertimeCommand;
+use Artwork\Core\Console\Commands\PurgeTrashCommand;
 use Artwork\Modules\Crm\Console\Commands\CleanupCrmImportFilesCommand;
 use Artwork\Core\Console\Commands\SendNotificationsEmailSummariesCommand;
 use Artwork\Core\Console\Commands\SendScheduledNotificationsCommand;
 use Artwork\Modules\ExternalAccess\Console\Commands\CleanupExpiredLoginTokensCommand;
+use Artwork\Modules\ExternalAccess\Console\Commands\SendExternalAccessExpiryRemindersCommand;
 use Artwork\Modules\ExternalUserManagement\Console\Commands\SyncExternalUsersCommand;
 use Artwork\Modules\SageApiSettings\Services\SageApiSettingsService;
 use Illuminate\Console\Application as Artisan;
@@ -61,6 +64,10 @@ class Kernel extends ConsoleKernel
         $schedule->command(SendNotificationsEmailSummariesCommand::class)->dailyAt('9:00');
         // BI-Exportdateien bleiben für Re-Downloads liegen und werden nach 24 h entfernt
         $schedule->command(CleanupBiExportsCommand::class)->dailyAt('03:30')->runInBackground();
+        $schedule->command(CleanupExportPdfsCommand::class)->dailyAt('03:40')->runInBackground();
+        // Papierkorb: nach 30 Tagen endgültig löschen (so kündigt es die Papierkorb-Seite an) —
+        // über dieselben Wege wie "Endgültig löschen", nicht per Modell-Pruning
+        $schedule->command(PurgeTrashCommand::class)->dailyAt('03:15')->withoutOverlapping()->runInBackground();
         $schedule->command(CalculateDailyWorkingHoursOfUsers::class)->dailyAt('23:59')->runInBackground();
         // DP-18: spielzeitbezogene Kennzahlen nach der Arbeitszeitberechnung tracken (Tag ist dann abgeschlossen)
         $schedule->command(TrackShiftKpisCommand::class)->dailyAt('00:30')->runInBackground();
@@ -86,6 +93,9 @@ class Kernel extends ConsoleKernel
             ->runInBackground();
         $schedule->command(CleanupExpiredLoginTokensCommand::class)
             ->dailyAt('03:00')
+            ->runInBackground();
+        $schedule->command(SendExternalAccessExpiryRemindersCommand::class)
+            ->dailyAt('07:30')
             ->runInBackground();
 
         // ShiftRule validation - alle 5 Minuten für die nächsten 14 Tage
@@ -175,10 +185,10 @@ class Kernel extends ConsoleKernel
     {
         if (!$fromArtworkCore) {
             return $namespace . str_replace(
-                    ['/', '.php'],
-                    ['\\', ''],
-                    Str::after($file->getRealPath(), realpath(app_path()) . DIRECTORY_SEPARATOR)
-                );
+                ['/', '.php'],
+                ['\\', ''],
+                Str::after($file->getRealPath(), realpath(app_path()) . DIRECTORY_SEPARATOR)
+            );
         }
 
         return str_replace(

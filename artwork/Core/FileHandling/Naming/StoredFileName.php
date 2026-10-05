@@ -4,8 +4,12 @@ declare(strict_types=1);
 
 namespace Artwork\Core\FileHandling\Naming;
 
+use Artwork\Core\FileHandling\Upload\DeniedUploadFileException;
+use Artwork\Core\FileHandling\Upload\UploadDenyList;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Str;
+use InvalidArgumentException;
+use Symfony\Component\Mime\MimeTypes;
 
 /**
  * Builds the name a file is stored under on disk.
@@ -24,27 +28,29 @@ final class StoredFileName
     private const MAX_EXTENSION_LENGTH = 16;
 
     /**
-     * Extensions a web server may hand to an interpreter. Files on the "public"
-     * disk are reachable under /storage/**, so these are rewritten rather than
-     * kept. Defence in depth - most, but not all, upload paths also run a mime
-     * allow list via HandlesFileUpload.
+     * Mime types the sniffer reports when it cannot tell what a file is; the client extension is used instead.
      *
      * @var list<string>
      */
-    private const DENIED_EXTENSIONS = [
-        'php', 'php3', 'php4', 'php5', 'php7', 'php8', 'phps', 'phtml', 'pht',
-        'phar', 'shtml', 'cgi', 'pl', 'py', 'rb', 'sh', 'bash', 'htaccess',
-        'htpasswd', 'jsp', 'jspx', 'asp', 'aspx', 'exe', 'bat', 'cmd', 'com',
+    private const GENERIC_MIME_TYPES = [
+        'application/octet-stream',
+        'application/x-empty',
+        'inode/x-empty',
     ];
-
-    private const DENIED_REPLACEMENT = 'bin';
 
     private function __construct()
     {
     }
 
+    /**
+     * @throws DeniedUploadFileException when the file is on the UploadDenyList
+     */
     public static function forUpload(UploadedFile $file): string
     {
+        if (UploadDenyList::denies($file)) {
+            throw DeniedUploadFileException::forFile($file);
+        }
+
         return self::build(
             $file->getClientOriginalName(),
             self::resolveUploadExtension($file)
@@ -54,10 +60,18 @@ final class StoredFileName
     /**
      * Name for a file the application generates itself (PDF export, converted
      * image, thumbnail). $seed only adds entropy, it never reaches the result.
+     *
+     * @throws InvalidArgumentException when the application asks for a denied extension
      */
     public static function forGenerated(string $extension, string $seed = ''): string
     {
-        return self::build($seed, self::normaliseExtension($extension));
+        $extension = self::normaliseExtension($extension);
+
+        if (UploadDenyList::deniesExtension($extension)) {
+            throw new InvalidArgumentException(sprintf('Generated files must not use the extension "%s".', $extension));
+        }
+
+        return self::build($seed, $extension);
     }
 
     private static function build(string $seed, string $extension): string
@@ -67,29 +81,49 @@ final class StoredFileName
         return $extension === '' ? $hash : $hash . '.' . $extension;
     }
 
+    /**
+     * The extension follows the sniffed content ("x.jpg" containing PNG is stored as ".png"); the client
+     * extension only wins when the content is unrecognisable or it is registered for the detected mime type.
+     */
     private static function resolveUploadExtension(UploadedFile $file): string
     {
-        $extension = self::normaliseExtension($file->getClientOriginalExtension());
+        $clientExtension = self::normaliseExtension($file->getClientOriginalExtension());
+        $mimeType = self::detectMimeType($file);
 
-        if ($extension === '') {
-            // Symfony guesses from the detected mime type, never from the name.
-            $extension = self::normaliseExtension((string) $file->extension());
+        if ($mimeType === null || in_array($mimeType, self::GENERIC_MIME_TYPES, true)) {
+            return $clientExtension;
         }
 
-        return $extension;
+        $detectedExtensions = array_map(
+            static fn (string $extension): string => self::normaliseExtension($extension),
+            MimeTypes::getDefault()->getExtensions($mimeType)
+        );
+        $detectedExtensions = array_values(array_filter($detectedExtensions, static fn (string $e): bool => $e !== ''));
+
+        if ($detectedExtensions === []) {
+            return $clientExtension;
+        }
+
+        if ($clientExtension !== '' && in_array($clientExtension, $detectedExtensions, true)) {
+            return $clientExtension;
+        }
+
+        return $detectedExtensions[0];
+    }
+
+    private static function detectMimeType(UploadedFile $file): ?string
+    {
+        try {
+            $mimeType = $file->getMimeType();
+        } catch (\Throwable) {
+            return null;
+        }
+
+        return is_string($mimeType) && $mimeType !== '' ? strtolower($mimeType) : null;
     }
 
     private static function normaliseExtension(string $extension): string
     {
-        $extension = preg_replace('/[^a-z0-9]/', '', strtolower($extension)) ?? '';
-        $extension = substr($extension, 0, self::MAX_EXTENSION_LENGTH);
-
-        if ($extension === '') {
-            return '';
-        }
-
-        return in_array($extension, self::DENIED_EXTENSIONS, true)
-            ? self::DENIED_REPLACEMENT
-            : $extension;
+        return substr(UploadDenyList::normaliseExtension($extension), 0, self::MAX_EXTENSION_LENGTH);
     }
 }

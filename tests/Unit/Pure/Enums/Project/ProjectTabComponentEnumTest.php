@@ -47,7 +47,10 @@ final class ProjectTabComponentEnumTest extends UnitTestCase
     #[Test]
     public function all_values_are_unique(): void
     {
-        $values = array_map(static fn (ProjectTabComponentEnum $case): string => $case->value, ProjectTabComponentEnum::cases());
+        $values = array_map(
+            static fn (ProjectTabComponentEnum $case): string => $case->value,
+            ProjectTabComponentEnum::cases()
+        );
         $this->assertSame(count($values), count(array_unique($values)));
     }
 

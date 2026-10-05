@@ -12,7 +12,7 @@ class InventoryPropertyValueController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(): void
     {
         //
     }
@@ -20,7 +20,7 @@ class InventoryPropertyValueController extends Controller
     /**
      * Show the form for creating a new resource.
      */
-    public function create()
+    public function create(): void
     {
         //
     }
@@ -28,7 +28,7 @@ class InventoryPropertyValueController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(StoreInventoryPropertyValueRequest $request)
+    public function store(StoreInventoryPropertyValueRequest $request): void
     {
         //
     }
@@ -36,7 +36,7 @@ class InventoryPropertyValueController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(InventoryPropertyValue $inventoryPropertyValue)
+    public function show(InventoryPropertyValue $inventoryPropertyValue): void
     {
         //
     }
@@ -44,7 +44,7 @@ class InventoryPropertyValueController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(InventoryPropertyValue $inventoryPropertyValue)
+    public function edit(InventoryPropertyValue $inventoryPropertyValue): void
     {
         //
     }
@@ -52,15 +52,17 @@ class InventoryPropertyValueController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(UpdateInventoryPropertyValueRequest $request, InventoryPropertyValue $inventoryPropertyValue)
-    {
+    public function update(
+        UpdateInventoryPropertyValueRequest $request,
+        InventoryPropertyValue $inventoryPropertyValue
+    ): void {
         //
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(InventoryPropertyValue $inventoryPropertyValue)
+    public function destroy(InventoryPropertyValue $inventoryPropertyValue): void
     {
         //
     }

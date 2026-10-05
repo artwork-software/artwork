@@ -49,7 +49,9 @@ class DemoBiSeeder extends Seeder
 
         $demoProjects = Project::query()
             ->get(['id', 'name'])
-            ->filter(static fn (Project $project) => DemoProjectPools::archetypeForProjectName($project->name) !== null);
+            ->filter(
+                static fn (Project $project) => DemoProjectPools::archetypeForProjectName($project->name) !== null
+            );
         $archetypes = $demoProjects->pluck('name', 'id')
             ->map(static fn (string $name) => DemoProjectPools::archetypeForProjectName($name));
 
@@ -96,7 +98,9 @@ class DemoBiSeeder extends Seeder
             }
         }
         if ($projectDataCreated > 0) {
-            $this->command?->info(sprintf('BI: Projekt-Konfiguration (pro Termin) für %d Einträge angelegt.', $projectDataCreated));
+            $this->command?->info(
+                sprintf('BI: Projekt-Konfiguration (pro Termin) für %d Einträge angelegt.', $projectDataCreated)
+            );
         }
 
         $created = 0;

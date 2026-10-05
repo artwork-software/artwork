@@ -14,7 +14,8 @@ use Illuminate\Queue\SerializesModels;
 
 class NewChatMessage implements ShouldBroadcastNow
 {
-    use InteractsWithSockets, SerializesModels;
+    use InteractsWithSockets;
+    use SerializesModels;
 
     public $message;
     public $chatId;

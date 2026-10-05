@@ -59,6 +59,14 @@ return [
         'conflict' => 'Konflikt mit deiner Schicht',
         'conflict_text' =>
             ':username hat dich am :date :from - :to eingetragen, entgegen deines ursprünglichen Eintrags.',
+        // Die Schicht wurde von :username nur festgeschrieben — wer eingeteilt hat, ist für
+        // Zuweisungen aus der Zeit vor der Urheber-Erfassung nicht gespeichert.
+        'conflict_text_committed' =>
+            'Du bist am :date :from - :to eingeteilt, entgegen deines ursprünglichen Eintrags. ' .
+            'Wer die Einteilung vorgenommen hat, ist nicht gespeichert; festgeschrieben wurde die Schicht von :username.',
+        'conflict_text_unknown' =>
+            'Du bist am :date :from - :to eingeteilt, entgegen deines ursprünglichen Eintrags. ' .
+            'Wer die Einteilung vorgenommen hat, ist nicht gespeichert.',
         'deleted_where_locked' => ':craftAbbreviation · :projectName: Schicht trotz Festschreibung gelöscht',
         'shift_staffing' => ':craftAbbreviation · :projectName: Du wurdest einer Schicht zugewiesen',
         'conflict_shift' => 'Schichtkonflikt :date :from - :to',
@@ -111,6 +119,7 @@ return [
         'new_room_request' => 'Neue Raumanfrage',
         'admin_message' => 'Nachricht von Raumadmin',
         'room_request_with_changed_room' => 'Raumanfrage mit Raumänderung bestätigt',
+        'room_change_confirmed' => 'Raumänderung bestätigt',
         'new_message' => 'Neue Nachricht zu Raumanfrage',
         'room_request_accept' => 'Raumanfrage bestätigt',
         'room_request_declined' => 'Raumanfrage abgesagt',
@@ -144,6 +153,7 @@ return [
         'concerns_shift' => 'Betrifft Schicht: ',
         'your_shift' => 'Deine Schicht: ',
         'not_available' => ':username ist nicht verfügbar',
+        'time_room' => 'Zeitraum: ',
         'time_period' => 'Zeitraum: :from :to',
         'concerns_time_period' => 'Betrifft Zeitraum: :start - :end',
     ],

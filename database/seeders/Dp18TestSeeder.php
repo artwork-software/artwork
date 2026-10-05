@@ -62,12 +62,26 @@ class Dp18TestSeeder extends Seeder
 
         $this->command->info('--------------------------------------------------------');
         $this->command->info('DP-18 Testdaten angelegt.');
-        $this->command->info('Spielzeit: ' . $this->seasonStart->toDateString() . ' – ' . $this->seasonEnd->toDateString());
+        $this
+            ->command
+            ->info('Spielzeit: ' . $this->seasonStart->toDateString() . ' – ' . $this->seasonEnd->toDateString());
         $this->command->info('User A (volle Daten): dp18.test.a@artwork.test  [#' . $userA->id . ']');
-        $this->command->info('User B (negatives Konto / kein Overtime): dp18.test.b@artwork.test  [#' . $userB->id . ']');
+        $this
+            ->command
+            ->info('User B (negatives Konto / kein Overtime): dp18.test.b@artwork.test  [#' . $userB->id . ']');
         $this->command->info('Vertrag: "' . $contract->name . '" (alle Parameter aktiv, Überstunden-Frist 30 Tage)');
-        $this->command->warn('Danach ausführen: ddev exec php artisan artwork:track-shift-kpis && ddev exec php artisan artwork:mark-payable-overtime');
-        $this->command->info('Im Schichtplan das Info-Icon je User öffnen (Permission "can view shift user kpis" / "can pay out overtime").');
+        $this
+            ->command
+            ->warn(
+                'Danach ausführen: ddev exec php artisan artwork:track-shift-kpis '
+                . '&& ddev exec php artisan artwork:mark-payable-overtime'
+            );
+        $this
+            ->command
+            ->info(
+                'Im Schichtplan das Info-Icon je User öffnen '
+                . '(Permission "can view shift user kpis" / "can pay out overtime").'
+            );
         $this->command->info('--------------------------------------------------------');
     }
 
@@ -230,8 +244,14 @@ class Dp18TestSeeder extends Seeder
         ]);
     }
 
-    private function comp(User $user, float $value, ?Carbon $grantedDate, Carbon $deadline, bool $forHoliday, string $reason): void
-    {
+    private function comp(
+        User $user,
+        float $value,
+        ?Carbon $grantedDate,
+        Carbon $deadline,
+        bool $forHoliday,
+        string $reason
+    ): void {
         if ($grantedDate) {
             $this->reserved[$grantedDate->toDateString()] = true;
         }
@@ -314,7 +334,14 @@ class Dp18TestSeeder extends Seeder
 
         // --- Ersatzfreie Tage (CompensationDayOff) ---
         // gewährt, Sondertag (zählt NICHT als Überstundenabbau)
-        $this->comp($user, 1.0, $this->today->copy()->subWeeks(6), $this->today->copy()->addWeeks(6), true, 'DP18 gewährt (Sondertag)');
+        $this->comp(
+            $user,
+            1.0,
+            $this->today->copy()->subWeeks(6),
+            $this->today->copy()->addWeeks(6),
+            true,
+            'DP18 gewährt (Sondertag)'
+        );
         // offen (noch nicht gewährt) -> erscheint in "offene ersatzfreie Tage"
         $this->comp($user, 0.5, null, $this->today->copy()->addWeeks(3), false, 'DP18 offen');
 

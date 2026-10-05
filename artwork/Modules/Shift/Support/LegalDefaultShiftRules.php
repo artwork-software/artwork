@@ -33,7 +33,8 @@ final class LegalDefaultShiftRules
                 10.0,
                 'ArbZG § 3',
                 'Die werktägliche Arbeitszeit darf auf bis zu 10 Stunden verlängert werden.',
-                'Die geplante Arbeitszeit an einem Tag überschreitet das gesetzliche Tagesmaximum von 10 Stunden (ArbZG § 3).'
+                'Die geplante Arbeitszeit an einem Tag überschreitet das gesetzliche Tagesmaximum von 10 Stunden '
+                    . '(ArbZG § 3).'
             ),
             self::definition(
                 'weeklyMax',
@@ -42,7 +43,8 @@ final class LegalDefaultShiftRules
                 48.0,
                 'ArbZG § 3',
                 '8 Stunden werktäglich an sechs Werktagen ergeben höchstens 48 Stunden pro Woche.',
-                'Die geplante Arbeitszeit in einer Woche überschreitet das gesetzliche Wochenmaximum von 48 Stunden (ArbZG § 3).'
+                'Die geplante Arbeitszeit in einer Woche überschreitet das gesetzliche Wochenmaximum von 48 '
+                    . 'Stunden (ArbZG § 3).'
             ),
             self::definition(
                 'restTime',
@@ -50,7 +52,8 @@ final class LegalDefaultShiftRules
                 'restTimeBeforeWorkday',
                 11.0,
                 'ArbZG § 5 Abs. 1',
-                'Nach Ende der täglichen Arbeitszeit ist eine ununterbrochene Ruhezeit von mindestens 11 Stunden einzuhalten.',
+                'Nach Ende der täglichen Arbeitszeit ist eine ununterbrochene Ruhezeit von mindestens 11 Stunden '
+                    . 'einzuhalten.',
                 'Zwischen zwei Arbeitseinsätzen liegen weniger als 11 Stunden Ruhezeit (ArbZG § 5 Abs. 1).'
             ),
             self::definition(
@@ -69,7 +72,8 @@ final class LegalDefaultShiftRules
                 0.0,
                 'ArbZG § 11 Abs. 3',
                 'Für Arbeit an einem Sonntag ist innerhalb von zwei Wochen ein Ersatzruhetag zu gewähren.',
-                'Die Person arbeitet an einem Sonntag — Anspruch auf einen Ersatzruhetag innerhalb von zwei Wochen (ArbZG § 11 Abs. 3).',
+                'Die Person arbeitet an einem Sonntag — Anspruch auf einen Ersatzruhetag innerhalb von zwei '
+                    . 'Wochen (ArbZG § 11 Abs. 3).',
                 1.0,
                 14
             ),
@@ -80,7 +84,8 @@ final class LegalDefaultShiftRules
                 0.0,
                 'ArbZG § 11 Abs. 3',
                 'Für Arbeit an einem Feiertag ist innerhalb von acht Wochen ein Ersatzruhetag zu gewähren.',
-                'Die Person arbeitet an einem Sondertag — Anspruch auf einen Ersatzruhetag innerhalb von acht Wochen (ArbZG § 11 Abs. 3).',
+                'Die Person arbeitet an einem Sondertag — Anspruch auf einen Ersatzruhetag innerhalb von acht '
+                    . 'Wochen (ArbZG § 11 Abs. 3).',
                 1.0,
                 56
             ),
@@ -91,7 +96,8 @@ final class LegalDefaultShiftRules
                 15.0,
                 'ArbZG § 11 Abs. 1',
                 'Mindestens 15 Sonntage im Jahr müssen beschäftigungsfrei bleiben.',
-                'Die Person kann im Kalenderjahr die 15 gesetzlich freien Sonntage nicht mehr erreichen (ArbZG § 11 Abs. 1).'
+                'Die Person kann im Kalenderjahr die 15 gesetzlich freien Sonntage nicht mehr erreichen (ArbZG § '
+                    . '11 Abs. 1).'
             ),
             self::definition(
                 'averageWeeklyHours',
@@ -99,8 +105,10 @@ final class LegalDefaultShiftRules
                 'averageWeeklyHours',
                 48.0,
                 'ArbZG § 3, TVöD § 6 Abs. 2',
-                'Im Durchschnitt des Ausgleichszeitraums von 24 Wochen dürfen 48 Stunden pro Woche nicht überschritten werden.',
-                'Der Durchschnitt der geplanten Wochenstunden über 24 Wochen überschreitet 48 Stunden (ArbZG § 3, TVöD § 6 Abs. 2).',
+                'Im Durchschnitt des Ausgleichszeitraums von 24 Wochen dürfen 48 Stunden pro Woche nicht '
+                    . 'überschritten werden.',
+                'Der Durchschnitt der geplanten Wochenstunden über 24 Wochen überschreitet 48 Stunden (ArbZG § 3, '
+                    . 'TVöD § 6 Abs. 2).',
                 null,
                 null,
                 24

@@ -77,6 +77,7 @@ return [
     'breakfast_deduction_total' => 'Abzüglich Anzahl Frühstück im Hotel',
     'payout_per_diem' => 'Summe Auszahlung per DIEM',
     'per_diem_number' => 'Per Diem Nummer',
+    'per_diem_list' => 'Per-Diem-Liste',
     'production' => 'Produktion',
     'cost_bearer' => 'Kostenträger',
     'details' => 'Details',

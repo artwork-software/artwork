@@ -282,8 +282,34 @@
                             </li>
 
                             <li v-for="item in subNavigation" :key="item.name">
+                                <!-- Externer Link (Handbuch) im neuen Browser-Tab -->
+                                <a
+                                    v-if="item.external && item.has_permission"
+                                    :href="item.externalHref()"
+                                    target="_blank"
+                                    rel="noopener"
+                                    :title="$t(item.name)"
+                                    :aria-label="$t(item.name)"
+                                    :class="[
+                                      'w-full group flex items-center rounded-lg min-h-10 py-1.5 select-none transition-colors border-l-2 border-transparent text-white hover:bg-white/10 hover:text-white',
+                                      isFullSideBar ? 'justify-start gap-3 px-2' : 'justify-center px-0',
+                                    ]"
+                                >
+                                    <PropertyIcon
+                                        :name="item.icon"
+                                        :stroke-width="1"
+                                        class="size-6 min-w-6 min-h-6 text-white"
+                                    />
+                                    <span v-if="isFullSideBar" class="flex-1 min-w-0 leading-tight break-words text-left">{{ $t(item.name) }}</span>
+                                    <PropertyIcon
+                                        v-if="isFullSideBar"
+                                        name="IconExternalLink"
+                                        :stroke-width="1.5"
+                                        class="size-4 min-w-4 text-white/60"
+                                    />
+                                </a>
                                 <Link
-                                    v-if="!item.isMenu && item.has_permission"
+                                    v-else-if="!item.isMenu && item.has_permission"
                                     :href="item.href"
                                     :class="[
                                       'w-full group flex items-center rounded-lg min-h-10 py-1.5 select-none transition-colors border-l-2',
@@ -491,6 +517,7 @@ import BaseMenuItem from "@/Components/Menu/BaseMenuItem.vue";
 import { is, can } from 'laravel-permission-to-vuejs'
 import {Float} from "@headlessui-float/vue";
 import {useI18n} from "vue-i18n";
+import {manualUrl} from "@/Helper/manualLinks.js";
 import {
     IconBell,
     IconBrowserShare,
@@ -834,14 +861,13 @@ const navigation = ref([
                 current: route().current('crm.settings.*'),
                 has_permission: can('crm manager') || is('artwork admin')
             },
-            // Externe-Zugriff-Feature vorerst ausgeblendet (noch nicht ausgereift)
-            // {
-            //     name: 'External access settings',
-            //     href: route('settings.external-access.index'),
-            //     icon: 'IconAddressBook',
-            //     current: route().current('settings.external-access.*'),
-            //     has_permission: is('artwork admin')
-            // },
+            {
+                name: 'External access',
+                href: route('settings.external-access.index'),
+                icon: 'IconUserShield',
+                current: route().current('settings.external-access.*'),
+                has_permission: is('artwork admin')
+            },
             {
                 name: 'Inventory',
                 // Nutzer mit reinen Material-Set-Rechten dürfen die übrigen Inventar-Settings nicht sehen —
@@ -919,6 +945,16 @@ const navigation = ref([
 ])
 
 const subNavigation = ref([
+    {
+        name: 'User manual',
+        external: true,
+        externalHref: () => manualUrl('start', locale.value),
+        icon: 'IconBook',
+        current: false,
+        isMenu: false,
+        showToolTipForItem: false,
+        has_permission: true,
+    },
     {
         name: 'Notifications',
         href: route('notifications.index'),

@@ -35,7 +35,7 @@ class ExternalAccessNotificationRecipient extends Model
 
     public function createdBy(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'created_by_user_id');
+        return $this->belongsTo(User::class, 'created_by_user_id', 'id', 'createdBy');
     }
 
     public function listensFor(NotificationEnum $type): bool

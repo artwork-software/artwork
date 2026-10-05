@@ -218,106 +218,106 @@ class SchedulingService
                 $notificationService->setCreatedBy($schedulingCreator?->withoutRelations());
 
                 switch ($schedulings->type) {
-                case 'PROJECT_CHANGES':
-                    $project = Project::query()->find($schedulings->model_id);
-                    if (!$project instanceof Project) {
-                        $this->logger->error('Project with id: ' . $schedulings->model_id . ' not found.');
+                    case 'PROJECT_CHANGES':
+                        $project = Project::query()->find($schedulings->model_id);
+                        if (!$project instanceof Project) {
+                            $this->logger->error('Project with id: ' . $schedulings->model_id . ' not found.');
+                            break;
+                        }
+                        $notificationTitle = __(
+                            'notification.scheduling.changes_project',
+                            ['project' => $project?->name ?? 'Project name not found'],
+                            $user->language
+                        );
+                        $broadcastMessage = [
+                            'id' => Str::uuid()->toString(),
+                            'type' => 'success',
+                            'message' => $notificationTitle
+                        ];
+                        $notificationService->setTitle($notificationTitle);
+                        $notificationService->setIcon('green');
+                        $notificationService->setPriority(3);
+                        $notificationService->setNotificationConstEnum(NotificationEnum::NOTIFICATION_PROJECT);
+                        $notificationService->setBroadcastMessage($broadcastMessage);
+                        $notificationService->setShowHistory(true);
+                        $notificationService->setHistoryType('project');
+                        $notificationService->setModelId($project->id);
+                        $notificationService->setProjectId($project->id);
+                        $notificationService->setNotificationTo($user);
+                        $notificationService->createNotification();
                         break;
-                    }
-                    $notificationTitle = __(
-                        'notification.scheduling.changes_project',
-                        ['project' => $project?->name ?? 'Project name not found'],
-                        $user->language
-                    );
-                    $broadcastMessage = [
-                        'id' => Str::uuid()->toString(),
-                        'type' => 'success',
-                        'message' => $notificationTitle
-                    ];
-                    $notificationService->setTitle($notificationTitle);
-                    $notificationService->setIcon('green');
-                    $notificationService->setPriority(3);
-                    $notificationService->setNotificationConstEnum(NotificationEnum::NOTIFICATION_PROJECT);
-                    $notificationService->setBroadcastMessage($broadcastMessage);
-                    $notificationService->setShowHistory(true);
-                    $notificationService->setHistoryType('project');
-                    $notificationService->setModelId($project->id);
-                    $notificationService->setProjectId($project->id);
-                    $notificationService->setNotificationTo($user);
-                    $notificationService->createNotification();
-                    break;
-                case 'TASK_CHANGES':
-                    $task = Task::query()->find($schedulings->model_id);
-                    if (!$task instanceof Task) {
-                        $this->logger->error('Task with id: ' . $schedulings->model_id . ' not found.');
-                        break;
-                    }
-                    $notificationTitle = __(
-                        'notification.scheduling.changes_task',
-                        ['task' => $task?->name],
-                        $user->language
-                    );
-                    $broadcastMessage = [
-                        'id' => Str::uuid()->toString(),
-                        'type' => 'success',
-                        'message' => $notificationTitle
-                    ];
-                    $notificationService->setTitle($notificationTitle);
-                    $notificationService->setIcon('blue');
-                    $notificationService->setPriority(1);
-                    $notificationService
+                    case 'TASK_CHANGES':
+                        $task = Task::query()->find($schedulings->model_id);
+                        if (!$task instanceof Task) {
+                            $this->logger->error('Task with id: ' . $schedulings->model_id . ' not found.');
+                            break;
+                        }
+                        $notificationTitle = __(
+                            'notification.scheduling.changes_task',
+                            ['task' => $task?->name],
+                            $user->language
+                        );
+                        $broadcastMessage = [
+                            'id' => Str::uuid()->toString(),
+                            'type' => 'success',
+                            'message' => $notificationTitle
+                        ];
+                        $notificationService->setTitle($notificationTitle);
+                        $notificationService->setIcon('blue');
+                        $notificationService->setPriority(1);
+                        $notificationService
                         ->setNotificationConstEnum(NotificationEnum::NOTIFICATION_TASK_CHANGED);
-                    $notificationService->setBroadcastMessage($broadcastMessage);
-                    $notificationService->setTaskId($task->id);
-                    $notificationService->setButtons(['showInTasks']);
-                    $notificationService->setNotificationTo($user);
-                    $notificationService->createNotification();
-                    break;
-                case 'ROOM_CHANGES':
-                    $room = Room::query()->find($schedulings->model_id);
-                    if (!$room instanceof Room) {
-                        $this->logger->error('Room with id: ' . $schedulings->model_id . ' not found.');
+                        $notificationService->setBroadcastMessage($broadcastMessage);
+                        $notificationService->setTaskId($task->id);
+                        $notificationService->setButtons(['showInTasks']);
+                        $notificationService->setNotificationTo($user);
+                        $notificationService->createNotification();
                         break;
-                    }
-                    $notificationTitle = __(
-                        'notification.scheduling.changes_room',
-                        ['room' => $room?->name],
-                        $user->language
-                    );
-                    $broadcastMessage = [
-                        'id' => Str::uuid()->toString(),
-                        'type' => 'success',
-                        'message' => $notificationTitle
-                    ];
-                    $notificationService->setTitle($notificationTitle);
-                    $notificationService->setIcon('green');
-                    $notificationService->setPriority(3);
-                    $notificationService
+                    case 'ROOM_CHANGES':
+                        $room = Room::query()->find($schedulings->model_id);
+                        if (!$room instanceof Room) {
+                            $this->logger->error('Room with id: ' . $schedulings->model_id . ' not found.');
+                            break;
+                        }
+                        $notificationTitle = __(
+                            'notification.scheduling.changes_room',
+                            ['room' => $room?->name],
+                            $user->language
+                        );
+                        $broadcastMessage = [
+                            'id' => Str::uuid()->toString(),
+                            'type' => 'success',
+                            'message' => $notificationTitle
+                        ];
+                        $notificationService->setTitle($notificationTitle);
+                        $notificationService->setIcon('green');
+                        $notificationService->setPriority(3);
+                        $notificationService
                         ->setNotificationConstEnum(NotificationEnum::NOTIFICATION_ROOM_CHANGED);
-                    $notificationService->setBroadcastMessage($broadcastMessage);
-                    $notificationService->setRoomId($room->id);
-                    $notificationService->setNotificationTo($user);
-                    $notificationService->createNotification();
-                    break;
-                case 'EVENT_CHANGES':
-                    $event = Event::query()->find($schedulings->model_id);
-                    if (!$event instanceof Event) {
-                        $this->logger->error('Event with id: ' . $schedulings->model_id . ' not found.');
+                        $notificationService->setBroadcastMessage($broadcastMessage);
+                        $notificationService->setRoomId($room->id);
+                        $notificationService->setNotificationTo($user);
+                        $notificationService->createNotification();
                         break;
-                    }
-                    $notificationTitle = __(
-                        'notification.scheduling.changes_event',
-                        [],
-                        $user->language
-                    );
-                    $broadcastMessage = [
-                        'id' => Str::uuid()->toString(),
-                        'type' => 'success',
-                        'message' => $notificationTitle
-                    ];
-                    $room = $event->room()->first();
+                    case 'EVENT_CHANGES':
+                        $event = Event::query()->find($schedulings->model_id);
+                        if (!$event instanceof Event) {
+                            $this->logger->error('Event with id: ' . $schedulings->model_id . ' not found.');
+                            break;
+                        }
+                        $notificationTitle = __(
+                            'notification.scheduling.changes_event',
+                            [],
+                            $user->language
+                        );
+                        $broadcastMessage = [
+                            'id' => Str::uuid()->toString(),
+                            'type' => 'success',
+                            'message' => $notificationTitle
+                        ];
+                        $room = $event->room()->first();
 
-                    $notificationDescription = [
+                        $notificationDescription = [
                         1 => [
                             'type' => 'link',
                             'title' => $room ? $room->name : '',
@@ -349,96 +349,96 @@ class SchedulingService
                                 Carbon::parse($event->end_time)->translatedFormat('d.m.Y H:i'),
                             'href' => null
                         ]
-                    ];
-                    $notificationService->setTitle($notificationTitle);
-                    $notificationService->setIcon('green');
-                    $notificationService->setPriority(3);
-                    $notificationService
+                        ];
+                        $notificationService->setTitle($notificationTitle);
+                        $notificationService->setIcon('green');
+                        $notificationService->setPriority(3);
+                        $notificationService
                         ->setNotificationConstEnum(NotificationEnum::NOTIFICATION_EVENT_CHANGED);
-                    $notificationService->setBroadcastMessage($broadcastMessage);
-                    $notificationService->setShowHistory(true);
-                    $notificationService->setHistoryType('event');
-                    $notificationService->setModelId($event->id);
-                    $notificationService->setDescription($notificationDescription);
-                    $notificationService->setEventId($event->id);
-                    $notificationService->setNotificationTo($user);
-                    $notificationService->createNotification();
-                    break;
-                case 'PUBLIC_CHANGES':
-                    $project = Project::query()->find($schedulings->model_id);
-                    if (!$project instanceof Project) {
-                        $this->logger->error('Project with id: ' . $schedulings->model_id . ' not found.');
+                        $notificationService->setBroadcastMessage($broadcastMessage);
+                        $notificationService->setShowHistory(true);
+                        $notificationService->setHistoryType('event');
+                        $notificationService->setModelId($event->id);
+                        $notificationService->setDescription($notificationDescription);
+                        $notificationService->setEventId($event->id);
+                        $notificationService->setNotificationTo($user);
+                        $notificationService->createNotification();
                         break;
-                    }
-                    $notificationTitle = __(
-                        'notification.scheduling.public_changes_project',
-                        ['project' => $project?->name],
-                        $user->language
-                    );
-                    $broadcastMessage = [
-                        'id' => Str::uuid()->toString(),
-                        'type' => 'success',
-                        'message' => $notificationTitle
-                    ];
-                    $notificationService->setTitle($notificationTitle);
-                    $notificationService->setIcon('green');
-                    $notificationService->setPriority(3);
-                    $notificationService
-                        ->setNotificationConstEnum(NotificationEnum::NOTIFICATION_PUBLIC_RELEVANT);
-                    $notificationService->setBroadcastMessage($broadcastMessage);
-                    $notificationService->setProjectId($project->id);
-                    $notificationService->setShowHistory(true);
-                    $notificationService->setHistoryType('project');
-                    $notificationService->setModelId($project->id);
-                    $notificationService->setNotificationTo($user);
-                    $notificationService->createNotification();
-                    break;
-                case 'VACATION_CHANGES':
-                    $user = User::query()->find($schedulings->model_id);
-                    if (!$user instanceof User) {
-                        $this->logger->error('User with id: ' . $schedulings->model_id . ' not found.');
-                        break;
-                    }
-                    $notificationTitle = __(
-                        'notification.scheduling.changes_vacation',
-                        [],
-                        $user->language
-                    );
-                    $broadcastMessage = [
-                        'id' => Str::uuid()->toString(),
-                        'type' => 'success',
-                        'message' => $notificationTitle
-                    ];
-                    $notificationService->setTitle($notificationTitle);
-                    $notificationService->setIcon('green');
-                    $notificationService->setPriority(3);
-                    $notificationService
-                        ->setNotificationConstEnum(NotificationEnum::NOTIFICATION_SHIFT_AVAILABLE);
-                    $notificationService->setBroadcastMessage($broadcastMessage);
-                    $notificationService->setShowHistory(true);
-                    $notificationService->setHistoryType('vacations');
-                    $notificationService->setModelId($user->id);
-                    $notificationService->setNotificationTo($user);
-                    $notificationService->createNotification();
-                    $crafts = $user->crafts()->get();
-                    foreach ($crafts as $craft) {
-                        foreach ($craft->users()->get() as $craftUser) {
-                            if ($craftUser->id === $user->id) {
-                                continue;
-                            }
-                            $notificationService->setNotificationTo($craftUser);
-                            $notificationService->createNotification();
+                    case 'PUBLIC_CHANGES':
+                        $project = Project::query()->find($schedulings->model_id);
+                        if (!$project instanceof Project) {
+                            $this->logger->error('Project with id: ' . $schedulings->model_id . ' not found.');
+                            break;
                         }
-                    }
-                    break;
-            }
-            $schedulings->delete();
-            $this->logger->debug(
-                sprintf(
-                    'Successfully deleted scheduling model with id: %d after createNotification().',
-                    $schedulings->id
-                )
-            );
+                        $notificationTitle = __(
+                            'notification.scheduling.public_changes_project',
+                            ['project' => $project?->name],
+                            $user->language
+                        );
+                        $broadcastMessage = [
+                            'id' => Str::uuid()->toString(),
+                            'type' => 'success',
+                            'message' => $notificationTitle
+                        ];
+                        $notificationService->setTitle($notificationTitle);
+                        $notificationService->setIcon('green');
+                        $notificationService->setPriority(3);
+                        $notificationService
+                        ->setNotificationConstEnum(NotificationEnum::NOTIFICATION_PUBLIC_RELEVANT);
+                        $notificationService->setBroadcastMessage($broadcastMessage);
+                        $notificationService->setProjectId($project->id);
+                        $notificationService->setShowHistory(true);
+                        $notificationService->setHistoryType('project');
+                        $notificationService->setModelId($project->id);
+                        $notificationService->setNotificationTo($user);
+                        $notificationService->createNotification();
+                        break;
+                    case 'VACATION_CHANGES':
+                        $user = User::query()->find($schedulings->model_id);
+                        if (!$user instanceof User) {
+                            $this->logger->error('User with id: ' . $schedulings->model_id . ' not found.');
+                            break;
+                        }
+                        $notificationTitle = __(
+                            'notification.scheduling.changes_vacation',
+                            [],
+                            $user->language
+                        );
+                        $broadcastMessage = [
+                            'id' => Str::uuid()->toString(),
+                            'type' => 'success',
+                            'message' => $notificationTitle
+                        ];
+                        $notificationService->setTitle($notificationTitle);
+                        $notificationService->setIcon('green');
+                        $notificationService->setPriority(3);
+                        $notificationService
+                        ->setNotificationConstEnum(NotificationEnum::NOTIFICATION_SHIFT_AVAILABLE);
+                        $notificationService->setBroadcastMessage($broadcastMessage);
+                        $notificationService->setShowHistory(true);
+                        $notificationService->setHistoryType('vacations');
+                        $notificationService->setModelId($user->id);
+                        $notificationService->setNotificationTo($user);
+                        $notificationService->createNotification();
+                        $crafts = $user->crafts()->get();
+                        foreach ($crafts as $craft) {
+                            foreach ($craft->users()->get() as $craftUser) {
+                                if ($craftUser->id === $user->id) {
+                                    continue;
+                                }
+                                $notificationService->setNotificationTo($craftUser);
+                                $notificationService->createNotification();
+                            }
+                        }
+                        break;
+                }
+                $schedulings->delete();
+                $this->logger->debug(
+                    sprintf(
+                        'Successfully deleted scheduling model with id: %d after createNotification().',
+                        $schedulings->id
+                    )
+                );
             } catch (\Throwable $e) {
                 // Log the error and continue with next scheduling item to avoid failing the whole command
                 $this->logger->error('Failed to process scheduling item', [

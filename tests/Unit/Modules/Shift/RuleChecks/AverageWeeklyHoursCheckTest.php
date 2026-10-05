@@ -43,7 +43,12 @@ final class AverageWeeklyHoursCheckTest extends TestCase
     {
         $shift = null;
         for ($i = 0; $i < 5; $i++) {
-            $shift = $this->shiftFor($user, $monday->copy()->addDays($i), '08:00:00', sprintf('%02d:00:00', 8 + $hours));
+            $shift = $this->shiftFor(
+                $user,
+                $monday->copy()->addDays($i),
+                '08:00:00',
+                sprintf('%02d:00:00', 8 + $hours)
+            );
         }
 
         return $shift;
@@ -60,7 +65,12 @@ final class AverageWeeklyHoursCheckTest extends TestCase
         }
         $week4Monday = $monday->copy()->addWeeks(3);
 
-        $violations = $this->check->check($this->rule(40.0, 4), $user, $week4Monday->copy(), $week4Monday->copy()->addDays(6));
+        $violations = $this->check->check(
+            $this->rule(40.0, 4),
+            $user,
+            $week4Monday->copy(),
+            $week4Monday->copy()->addDays(6)
+        );
 
         $this->assertCount(1, $violations);
         $violation = $violations->first();
@@ -82,7 +92,12 @@ final class AverageWeeklyHoursCheckTest extends TestCase
         $this->workWeek($user, $monday->copy()->addWeeks(3));
         $week4Monday = $monday->copy()->addWeeks(3);
 
-        $violations = $this->check->check($this->rule(40.0, 4), $user, $week4Monday->copy(), $week4Monday->copy()->addDays(6));
+        $violations = $this->check->check(
+            $this->rule(40.0, 4),
+            $user,
+            $week4Monday->copy(),
+            $week4Monday->copy()->addDays(6)
+        );
 
         $this->assertCount(0, $violations);
     }
@@ -96,13 +111,23 @@ final class AverageWeeklyHoursCheckTest extends TestCase
         // Nur die geprüfte Woche hat Arbeit (50 h): Ø 12,5 h > 10 h, aber nur 1 von 4 Wochen mit Daten
         $this->workWeek($user, $week4Monday->copy());
 
-        $violations = $this->check->check($this->rule(10.0, 4), $user, $week4Monday->copy(), $week4Monday->copy()->addDays(6));
+        $violations = $this->check->check(
+            $this->rule(10.0, 4),
+            $user,
+            $week4Monday->copy(),
+            $week4Monday->copy()->addDays(6)
+        );
         $this->assertCount(0, $violations);
 
         // Zweite Woche mit Daten -> Hälfte erreicht, Ø 25 h > 10 h -> Verstoß
         $this->workWeek($user, $monday->copy()->addWeeks(2));
 
-        $violations = $this->check->check($this->rule(10.0, 4), $user, $week4Monday->copy(), $week4Monday->copy()->addDays(6));
+        $violations = $this->check->check(
+            $this->rule(10.0, 4),
+            $user,
+            $week4Monday->copy(),
+            $week4Monday->copy()->addDays(6)
+        );
         $this->assertCount(1, $violations);
         $this->assertSame(2, $violations->first()->violation_data['weeks_with_data']);
     }
@@ -120,7 +145,12 @@ final class AverageWeeklyHoursCheckTest extends TestCase
         }
         $week4Monday = $monday->copy()->addWeeks(3);
 
-        $violations = $this->check->check($this->rule(40.0, 4), $user, $week4Monday->copy(), $week4Monday->copy()->addDays(6));
+        $violations = $this->check->check(
+            $this->rule(40.0, 4),
+            $user,
+            $week4Monday->copy(),
+            $week4Monday->copy()->addDays(6)
+        );
 
         $this->assertCount(1, $violations);
         $violation = $violations->first();
@@ -134,7 +164,10 @@ final class AverageWeeklyHoursCheckTest extends TestCase
     {
         $rule = $this->rule(0.0, null);
 
-        $this->assertSame(AverageWeeklyHoursCheck::DEFAULT_PERIOD_WEEKS, AverageWeeklyHoursCheck::periodWeeksFor($rule));
+        $this->assertSame(
+            AverageWeeklyHoursCheck::DEFAULT_PERIOD_WEEKS,
+            AverageWeeklyHoursCheck::periodWeeksFor($rule)
+        );
         $this->assertSame(24, AverageWeeklyHoursCheck::DEFAULT_PERIOD_WEEKS);
         $this->assertEqualsWithDelta(48.0, AverageWeeklyHoursCheck::DEFAULT_MAX_AVERAGE_HOURS, 0.001);
 
@@ -146,7 +179,10 @@ final class AverageWeeklyHoursCheckTest extends TestCase
         }
         $week4Monday = $monday->copy()->addWeeks(3);
 
-        $this->assertCount(0, $this->check->check($rule, $user, $week4Monday->copy(), $week4Monday->copy()->addDays(6)));
+        $this->assertCount(
+            0,
+            $this->check->check($rule, $user, $week4Monday->copy(), $week4Monday->copy()->addDays(6))
+        );
     }
 
     #[Test]

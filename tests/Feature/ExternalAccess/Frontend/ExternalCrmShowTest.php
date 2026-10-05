@@ -11,7 +11,7 @@ use Artwork\Modules\ExternalAccess\Http\Controllers\ExternalCrmController;
 use Artwork\Modules\ExternalAccess\Models\ExternalAccess;
 use Illuminate\Http\Request;
 use PHPUnit\Framework\Attributes\Test;
-use Tests\TestCase;
+use Tests\Feature\ExternalAccess\ExternalAccessTestCase as TestCase;
 
 final class ExternalCrmShowTest extends TestCase
 {

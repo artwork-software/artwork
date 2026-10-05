@@ -12,7 +12,7 @@ class ExternalIssueFileController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(): void
     {
         //
     }
@@ -20,7 +20,7 @@ class ExternalIssueFileController extends Controller
     /**
      * Show the form for creating a new resource.
      */
-    public function create()
+    public function create(): void
     {
         //
     }
@@ -28,7 +28,7 @@ class ExternalIssueFileController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(StoreExternalIssueFileRequest $request)
+    public function store(StoreExternalIssueFileRequest $request): void
     {
         //
     }
@@ -36,7 +36,7 @@ class ExternalIssueFileController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(ExternalIssueFile $externalIssueFile)
+    public function show(ExternalIssueFile $externalIssueFile): void
     {
         //
     }
@@ -44,7 +44,7 @@ class ExternalIssueFileController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(ExternalIssueFile $externalIssueFile)
+    public function edit(ExternalIssueFile $externalIssueFile): void
     {
         //
     }
@@ -52,7 +52,7 @@ class ExternalIssueFileController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(UpdateExternalIssueFileRequest $request, ExternalIssueFile $externalIssueFile)
+    public function update(UpdateExternalIssueFileRequest $request, ExternalIssueFile $externalIssueFile): void
     {
         //
     }
@@ -60,7 +60,7 @@ class ExternalIssueFileController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(ExternalIssueFile $externalIssueFile)
+    public function destroy(ExternalIssueFile $externalIssueFile): void
     {
         //
     }

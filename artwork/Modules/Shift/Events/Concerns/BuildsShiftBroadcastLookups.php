@@ -40,7 +40,16 @@ trait BuildsShiftBroadcastLookups
     }
 
     /**
-     * @return array{projectsById: array<int, array<string, mixed>>, craftsById: array<int, array<string, mixed>>, shiftGroupsById: array<int, array{id: int, name: string}>}
+     * @return array{
+     *     projectsById: array<int,
+     *     array<string,
+     *     mixed>>,
+     *     craftsById: array<int,
+     *     array<string,
+     *     mixed>>,
+     *     shiftGroupsById: array<int,
+     *     array{id: int, name: string}>,
+     * }
      */
     protected function buildBroadcastLookups(Shift $shift): array
     {

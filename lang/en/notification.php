@@ -58,9 +58,16 @@ return [
         'new_shift_add' => ':craftAbbreviation · :craftName: You have been assigned to a shift',
         'conflict' => 'Conflict with your shift',
         'conflict_text' => ':username has scheduled you on :date :from - :to contrary to your original entry.',
+        'conflict_text_committed' =>
+            'You are scheduled on :date :from - :to contrary to your original entry. ' .
+            'Who made the assignment was not recorded; the shift was committed by :username.',
+        'conflict_text_unknown' =>
+            'You are scheduled on :date :from - :to contrary to your original entry. ' .
+            'Who made the assignment was not recorded.',
         'deleted_where_locked' => ':craftAbbreviation · :projectName: Shift deleted despite commitment',
         'shift_staffing' => ':craftAbbreviation · :projectName: You have been assigned to a shift',
         'conflict_shift' => 'Shift conflict :date :from - :to',
+        'conflict_shift_withName' => 'Shift conflict :date :craftName :craftAbbreviation',
         'your_short_break' => 'You have been scheduled with insufficient rest time',
         'worker_short_break' => 'Person scheduled with insufficient rest time',
         'more_than_ten_days' => 'You have been scheduled for more than 10 consecutive days',
@@ -110,6 +117,7 @@ return [
         'new_room_request' => 'New room request',
         'admin_message' => 'Message from room admin',
         'room_request_with_changed_room' => 'Room request with room change confirmed',
+        'room_change_confirmed' => 'Room change confirmed',
         'new_message' => 'New message regarding room request',
         'room_request_accept' => 'Room request confirmed',
         'room_request_declined' => 'Room request declined',
@@ -143,10 +151,13 @@ return [
         'your_shift' => 'Your shift:',
         'not_available' => ':username is not available',
         'time_room' => 'Time period:',
+        'time_period' => 'Period: :from :to',
+        'concerns_time_period' => 'Concerns period: :start - :end',
     ],
     'department' => [
-        'add' => 'Team :department has been deleted',
-        'remove' => 'You have been added to team :department'
+        'delete' => 'Team :department has been deleted',
+        'add' => 'You have been added to team :department',
+        'remove' => 'You have been removed from team :department',
     ],
     'room' => [
         'leader' => [

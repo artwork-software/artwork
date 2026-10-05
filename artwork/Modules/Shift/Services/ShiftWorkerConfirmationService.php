@@ -162,7 +162,8 @@ class ShiftWorkerConfirmationService
                     'type' => 'string',
                     'title' => __('notification.keyWords.your_shift', [], $recipient->language)
                         . $shift->time_span_label,
-                    'href' => ShiftNotificationLinkService::shiftPlanForDate($shift->start_date ?? $shift->event_start_day),
+                    'href' => ShiftNotificationLinkService::shiftPlanForDate($shift->start_date
+                         ?? $shift->event_start_day),
                 ],
             ];
 
@@ -174,7 +175,8 @@ class ShiftWorkerConfirmationService
                         ['comment' => $comment],
                         $recipient->language
                     ),
-                    'href' => ShiftNotificationLinkService::shiftPlanForDate($shift->start_date ?? $shift->event_start_day),
+                    'href' => ShiftNotificationLinkService::shiftPlanForDate($shift->start_date
+                         ?? $shift->event_start_day),
                 ];
             }
 
@@ -186,7 +188,8 @@ class ShiftWorkerConfirmationService
                         ['userName' => $actor->full_name ?? $actor->name ?? ''],
                         $recipient->language
                     ),
-                    'href' => ShiftNotificationLinkService::shiftPlanForDate($shift->start_date ?? $shift->event_start_day),
+                    'href' => ShiftNotificationLinkService::shiftPlanForDate($shift->start_date
+                         ?? $shift->event_start_day),
                 ];
             }
 

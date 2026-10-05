@@ -3,7 +3,10 @@
 namespace App\Http\Controllers;
 
 use Artwork\Core\FileHandling\Naming\StoredFileName;
+use Artwork\Core\FileHandling\Upload\ArtworkFileTypes;
+use Artwork\Core\FileHandling\Upload\HandlesFileUpload;
 use Artwork\Modules\Change\Services\ChangeService;
+use Artwork\Modules\GeneralSettings\Services\GeneralSettingsService;
 use Artwork\Modules\MoneySource\Models\MoneySource;
 use Artwork\Modules\MoneySource\Models\MoneySourceFile;
 use Artwork\Modules\Project\Models\Comment;
@@ -17,8 +20,12 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class MoneySourceFileController extends Controller
 {
-    public function __construct(private readonly ChangeService $changeService)
-    {
+    use HandlesFileUpload;
+
+    public function __construct(
+        private readonly ChangeService $changeService,
+        protected readonly GeneralSettingsService $generalSettingsService
+    ) {
     }
 
     /**
@@ -28,11 +35,16 @@ class MoneySourceFileController extends Controller
         Request $request,
         MoneySource $moneySource
     ): RedirectResponse {
+        $this->authorize('update', $moneySource);
+
+        $request->validate(['file' => ['required', 'file']]);
+
         if (!Storage::exists("money_source_files")) {
             Storage::makeDirectory("money_source_files");
         }
 
         $file = $request->file('file');
+        $this->handleFile(ArtworkFileTypes::PROJECT, $file);
         $original_name = $file->getClientOriginalName();
         $basename = StoredFileName::forUpload($file);
 
@@ -66,6 +78,8 @@ class MoneySourceFileController extends Controller
 
     public function download(MoneySourceFile $moneySourceFile): StreamedResponse
     {
+        $this->authorize('view', $moneySourceFile->money_source);
+
         return Storage::download('money_source_files/' . $moneySourceFile->basename, $moneySourceFile->name);
     }
 
@@ -73,9 +87,14 @@ class MoneySourceFileController extends Controller
         Request $request,
         MoneySourceFile $moneySourceFile
     ): RedirectResponse {
+        $this->authorize('update', $moneySourceFile->money_source);
+
+        $request->validate(['file' => ['nullable', 'file']]);
+
         if ($request->file('file')) {
-            Storage::delete('money_source_files/' . $moneySourceFile->basename);
             $file = $request->file('file');
+            $this->handleFile(ArtworkFileTypes::PROJECT, $file);
+            Storage::delete('money_source_files/' . $moneySourceFile->basename);
             $original_name = $file->getClientOriginalName();
             $basename = StoredFileName::forUpload($file);
 
@@ -103,6 +122,9 @@ class MoneySourceFileController extends Controller
         MoneySource $moneySource,
         MoneySourceFile $moneySourceFile
     ): RedirectResponse {
+        abort_unless($moneySourceFile->money_source_id === $moneySource->id, 404);
+        $this->authorize('update', $moneySourceFile->money_source);
+
         $this->changeService->saveFromBuilder(
             $this->changeService
                 ->createBuilder()

@@ -12,13 +12,12 @@ use Artwork\Modules\ExternalAccess\Notifications\ExternalReviewResultNotificatio
 use Artwork\Modules\ExternalAccess\Notifications\ExternalTabComponentUpdatedNotification;
 use Artwork\Modules\ExternalAccess\Services\ExternalNotificationSender;
 use Artwork\Modules\Freelancer\Models\Freelancer;
-use Artwork\Modules\Project\Models\Component;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Models\ProjectTab;
 use Artwork\Modules\User\Models\User;
 use Illuminate\Support\Facades\Notification;
 use PHPUnit\Framework\Attributes\Test;
-use Tests\TestCase;
+use Tests\Feature\ExternalAccess\ExternalAccessTestCase as TestCase;
 
 final class SenderTest extends TestCase
 {
@@ -110,7 +109,7 @@ final class SenderTest extends TestCase
     }
 
     #[Test]
-    public function tab_component_update_notifies_inviter_and_manager(): void
+    public function tab_submission_notifies_inviter_and_manager(): void
     {
         Notification::fake();
         $inviter = User::factory()->create();
@@ -119,9 +118,8 @@ final class SenderTest extends TestCase
         $project = Project::factory()->create();
         $project->users()->attach($manager->id, ['is_manager' => true]);
         $tab = ProjectTab::factory()->create();
-        $component = new Component(['name' => 'Notes']); // unsaved; sender only reads ->name
 
-        $this->sender()->notifyTabComponentUpdated($external, $project, $tab, $component);
+        $this->sender()->notifyTabSubmitted($external, $project, $tab, 3);
 
         Notification::assertSentTo($inviter, ExternalTabComponentUpdatedNotification::class);
         Notification::assertSentTo($manager, ExternalTabComponentUpdatedNotification::class);

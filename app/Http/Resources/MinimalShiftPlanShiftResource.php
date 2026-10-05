@@ -30,7 +30,9 @@ class MinimalShiftPlanShiftResource extends JsonResource
                     return [
                         'id' => $user->getAttribute('id'),
                         'pivot' => $user->getRelation('pivot')->only('shift_qualification_id'),
-                        'globalQualifications' => $user->getAttribute('globalQualifications')?->pluck('id')->toArray() ?? []
+                        'globalQualifications' => $user
+                            ->getAttribute('globalQualifications')?->pluck('id')
+                            ->toArray() ?? []
                     ];
                 }
             ),
@@ -39,7 +41,9 @@ class MinimalShiftPlanShiftResource extends JsonResource
                     return [
                         'id' => $freelancer->getAttribute('id'),
                         'pivot' => $freelancer->getRelation('pivot')->only('shift_qualification_id'),
-                        'globalQualifications' => $freelancer->getAttribute('globalQualifications')?->pluck('id')->toArray() ?? []
+                        'globalQualifications' => $freelancer
+                            ->getAttribute('globalQualifications')?->pluck('id')
+                            ->toArray() ?? []
                     ];
                 }
             ),
@@ -48,7 +52,9 @@ class MinimalShiftPlanShiftResource extends JsonResource
                     return [
                         'id' => $serviceProvider->getAttribute('id'),
                         'pivot' => $serviceProvider->getRelation('pivot')->only('shift_qualification_id'),
-                        'globalQualifications' => $serviceProvider->getAttribute('globalQualifications')?->pluck('id')->toArray() ?? []
+                        'globalQualifications' => $serviceProvider
+                            ->getAttribute('globalQualifications')?->pluck('id')
+                            ->toArray() ?? []
                     ];
                 }
             ),

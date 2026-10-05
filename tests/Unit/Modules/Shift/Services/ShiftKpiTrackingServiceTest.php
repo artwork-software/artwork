@@ -58,8 +58,13 @@ final class ShiftKpiTrackingServiceTest extends TestCase
         return $user;
     }
 
-    private function vacation(User $user, string $date, string $type, bool $fullDay = true, ?string $dayPart = null): void
-    {
+    private function vacation(
+        User $user,
+        string $date,
+        string $type,
+        bool $fullDay = true,
+        ?string $dayPart = null
+    ): void {
         Vacation::factory()->create([
             'vacationer_type' => User::class,
             'vacationer_id' => $user->id,
@@ -190,7 +195,10 @@ final class ShiftKpiTrackingServiceTest extends TestCase
         $yearStart = Carbon::parse('2026-01-01');
         $yearEnd = Carbon::parse('2026-12-31');
         $this->assertSame(1.5, $service->grantedVacationUnitsForUser($user, $yearStart, $yearEnd));
-        $this->assertSame(2.5, $service->grantedVacationUnitsForUser($user, $yearStart, $yearEnd, includePlanned: true));
+        $this->assertSame(
+            2.5,
+            $service->grantedVacationUnitsForUser($user, $yearStart, $yearEnd, includePlanned: true)
+        );
     }
 
     /**

@@ -48,9 +48,18 @@ class Accommodation extends Model implements CrmEntity
 
     public function getProfilePhotoUrlAttribute(): string
     {
-        return $this->profile_image
-            ? asset('storage/' . $this->profile_image)
-            : route('generate-avatar-image', ['letters' => $this->name[0]]);
+        // Altbestände können ui-avatars-/generate-avatar-image-URLs enthalten (CSP-Block bzw. 404)
+        $profileImage = $this->profile_image;
+        if (
+            $profileImage
+            && (str_contains($profileImage, 'ui-avatars.com') || str_contains($profileImage, 'generate-avatar-image'))
+        ) {
+            $profileImage = null;
+        }
+
+        return $profileImage
+            ? asset('storage/' . $profileImage)
+            : route('generate-avatar-image', ['letters' => $this->name[0] ?? 'A']);
     }
 
     public function roomTypes(): \Illuminate\Database\Eloquent\Relations\BelongsToMany

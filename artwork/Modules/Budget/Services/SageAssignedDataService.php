@@ -13,7 +13,6 @@ use Illuminate\Database\Eloquent\Collection;
 
 class SageAssignedDataService implements CollectiveBookingService
 {
-
     use HandlesCollectiveBookings;
 
     public function __construct(
@@ -116,7 +115,7 @@ class SageAssignedDataService implements CollectiveBookingService
             'parent_booking_id' => $newParent?->id,
         ]);
         if ($sageNotAssignedData->is_collective_booking) {
-            foreach($sageNotAssignedData->findChildren()->get() as $child) {
+            foreach ($sageNotAssignedData->findChildren()->get() as $child) {
                 $this->createFromSageNotAssignedData(null, $child, $sageAssignedData);
             }
             $this->sageNotAssignedDataService->deleteChildData($sageNotAssignedData);
@@ -203,5 +202,4 @@ class SageAssignedDataService implements CollectiveBookingService
     {
         $this->sageAssignedDataRepository->restore($sageAssignedData);
     }
-
 }

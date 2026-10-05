@@ -12,7 +12,7 @@ class InventorySubCategoryController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(): void
     {
         //
     }
@@ -20,7 +20,7 @@ class InventorySubCategoryController extends Controller
     /**
      * Show the form for creating a new resource.
      */
-    public function create()
+    public function create(): void
     {
         //
     }
@@ -28,7 +28,7 @@ class InventorySubCategoryController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(StoreInventorySubCategoryRequest $request)
+    public function store(StoreInventorySubCategoryRequest $request): void
     {
         //
     }
@@ -36,7 +36,7 @@ class InventorySubCategoryController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(InventorySubCategory $inventorySubCategory)
+    public function show(InventorySubCategory $inventorySubCategory): void
     {
         //
     }
@@ -44,7 +44,7 @@ class InventorySubCategoryController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(InventorySubCategory $inventorySubCategory)
+    public function edit(InventorySubCategory $inventorySubCategory): void
     {
         //
     }
@@ -52,7 +52,7 @@ class InventorySubCategoryController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(UpdateInventorySubCategoryRequest $request, InventorySubCategory $inventorySubCategory)
+    public function update(UpdateInventorySubCategoryRequest $request, InventorySubCategory $inventorySubCategory): void
     {
         //
     }
@@ -60,9 +60,9 @@ class InventorySubCategoryController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(InventorySubCategory $inventorySubCategory)
+    public function destroy(InventorySubCategory $inventorySubCategory): void
     {
-        $inventorySubCategory->articles()->each(function ($article) {
+        $inventorySubCategory->articles()->each(function ($article): void {
             $article->update([
                 'inventory_sub_category_id' => null,
             ]);

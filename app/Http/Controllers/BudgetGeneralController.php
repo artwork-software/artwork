@@ -18,6 +18,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Redirect;
 use Inertia\Inertia;
 use Inertia\Response;
+use Inertia\ResponseFactory;
 use Throwable;
 
 class BudgetGeneralController extends Controller

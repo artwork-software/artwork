@@ -6,7 +6,7 @@ use Artwork\Modules\ExternalAccess\Models\ExternalAccess;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 use PHPUnit\Framework\Attributes\Test;
-use Tests\TestCase;
+use Tests\Feature\ExternalAccess\ExternalAccessTestCase as TestCase;
 
 final class AdminBypassProtectionTest extends TestCase
 {

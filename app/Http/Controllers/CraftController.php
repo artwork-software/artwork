@@ -59,6 +59,8 @@ class CraftController extends Controller
             $craft->qualifications()->sync($qualificationIds);
         }
 
+        $this->craftService->syncManagers($craft, $craftStoreRequest->collect('managersToBeAssigned'));
+
         $craft->update([
             'position' => Craft::max('position') + 1
         ]);

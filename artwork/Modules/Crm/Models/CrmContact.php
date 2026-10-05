@@ -2,6 +2,7 @@
 
 namespace Artwork\Modules\Crm\Models;
 
+use Artwork\Modules\Inventory\Models\InventoryArticle;
 use Artwork\Modules\Accommodation\Models\AccommodationRoomType;
 use Artwork\Modules\ArtistResidency\Models\ArtistResidency;
 use Artwork\Modules\Contacts\Models\Traits\HasContacts;
@@ -28,6 +29,7 @@ class CrmContact extends Model
         'is_active',
         'entity_type',
         'entity_id',
+        'created_by_external_access_id',
     ];
 
     protected $casts = [
@@ -40,6 +42,11 @@ class CrmContact extends Model
 
     protected static function booted(): void
     {
+        // Hersteller-Lookup-Cache der Inventar-Artikel (je Prozess, unter Octane/Swoole
+        // request-übergreifend) nach Umbenennung/Löschung leeren
+        static::saved(static fn () => InventoryArticle::flushPropertyLookupCaches());
+        static::deleted(static fn () => InventoryArticle::flushPropertyLookupCaches());
+
         // Beim (Soft-)Löschen eines Kontakts offene externe Zugänge widerrufen –
         // die DB-Cascade auf external_accesses feuert bei Soft-Delete NICHT, sonst
         // könnte sich ein extern eingeladener, "gelöschter" Kontakt weiter einloggen.
@@ -75,6 +82,19 @@ class CrmContact extends Model
     public function externalAccess(): HasOne
     {
         return $this->hasOne(\Artwork\Modules\ExternalAccess\Models\ExternalAccess::class, 'crm_contact_id');
+    }
+
+    /**
+     * Externer Zugang, der diesen Kontakt über eine CRM-Kontaktliste im Projekt angelegt hat.
+     */
+    public function createdByExternalAccess(): BelongsTo
+    {
+        return $this->belongsTo(
+            \Artwork\Modules\ExternalAccess\Models\ExternalAccess::class,
+            'created_by_external_access_id',
+            'id',
+            'createdByExternalAccess'
+        );
     }
 
     public function externalAccesses(): HasMany
@@ -130,8 +150,18 @@ class CrmContact extends Model
 
     public function getProfilePhotoUrlAttribute(): string
     {
-        if ($this->profile_image) {
-            return asset('storage/' . $this->profile_image);
+        // Aus Freelancern/Dienstleistern gespiegelte Altbestände können ui-avatars-/
+        // generate-avatar-image-URLs enthalten (CSP-Block bzw. 404) → wie "kein Bild" behandeln
+        $profileImage = $this->profile_image;
+        if (
+            $profileImage
+            && (str_contains($profileImage, 'ui-avatars.com') || str_contains($profileImage, 'generate-avatar-image'))
+        ) {
+            $profileImage = null;
+        }
+
+        if ($profileImage) {
+            return asset('storage/' . $profileImage);
         }
 
         $letter = mb_substr($this->display_name ?? 'C', 0, 1);

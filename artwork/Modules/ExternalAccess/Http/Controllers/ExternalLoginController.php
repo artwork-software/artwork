@@ -32,6 +32,17 @@ class ExternalLoginController extends Controller
         return redirect()->route('external.login.link-sent');
     }
 
+    /**
+     * Das Token wird hier nicht angefasst, damit ein GET (Link-Vorschau, Virenscanner) es nicht
+     * entwertet; eingelöst wird per POST in redeem().
+     */
+    public function showRedeemConfirmation(string $token): Response
+    {
+        return Inertia::render('Auth/ConfirmLogin', [
+            'token' => $token,
+        ]);
+    }
+
     public function redeem(string $token): RedirectResponse
     {
         $external = $this->externalLoginService->redeemToken($token);

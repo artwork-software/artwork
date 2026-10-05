@@ -2,7 +2,10 @@
 
 namespace Artwork\Modules\ExternalUserManagement\Http\Requests;
 
+use Artwork\Core\Validation\Rules\PublicUrlRule;
+use Artwork\Modules\ExternalUserManagement\Api\LdapApi;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\Validator;
 
 class StoreExternalUserSourceRequest extends FormRequest
@@ -25,7 +28,7 @@ class StoreExternalUserSourceRequest extends FormRequest
         $rules = [
             'name' => ['required', 'string', 'max:255'],
             'active' => ['sometimes', 'boolean'],
-            'type' => ['required', 'string', 'in:ldap,identity_provider'],
+            'type' => ['required', 'string', 'max:255', 'in:ldap,identity_provider'],
             'config' => ['required', 'array'],
         ];
 
@@ -63,7 +66,7 @@ class StoreExternalUserSourceRequest extends FormRequest
         if ($preset === 'microsoft') {
             $rules['config.tenant_id'] = ['required', 'string', 'max:255'];
         } elseif ($preset !== 'google') {
-            $rules['config.discovery_url'] = ['required', 'url', 'max:500'];
+            $rules['config.discovery_url'] = ['required', 'url:http,https', 'max:500', new PublicUrlRule()];
         }
 
         return $rules;
@@ -98,7 +101,12 @@ class StoreExternalUserSourceRequest extends FormRequest
             'config.use_ssl' => ['sometimes', 'boolean'],
             'config.use_tls' => ['sometimes', 'boolean'],
             'config.user_filter' => ['nullable', 'string', 'max:1000'],
-            'config.identifier_attribute' => ['nullable', 'string', 'max:100'],
+            'config.identifier_attribute' => [
+                'nullable',
+                'string',
+                'max:100',
+                Rule::in(LdapApi::ALLOWED_IDENTIFIER_ATTRIBUTES),
+            ],
             'config.default_role_id' => ['nullable', 'integer', 'exists:roles,id'],
         ];
     }

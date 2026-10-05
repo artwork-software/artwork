@@ -8,7 +8,7 @@ use Artwork\Modules\Availability\Models\Availability;
 use Artwork\Modules\Calendar\Services\CalendarService;
 use Artwork\Modules\Vacation\Models\Vacation;
 use Artwork\Modules\Event\Services\EventService;
-use Artwork\Modules\Craft\Models\Craft;
+use Artwork\Modules\Craft\Services\CraftService;
 use Artwork\Modules\EventType\Http\Resources\EventTypeResource;
 use Artwork\Modules\EventType\Services\EventTypeService;
 use Artwork\Modules\Inventory\Services\ProductBasketService;
@@ -188,7 +188,6 @@ class UserService
         User $user,
         CalendarService $calendarService,
         EventService $eventService,
-        EventTypeService $eventTypeService,
         Carbon $selectedPeriodDate,
         Carbon $selectedDate,
         ?string $month,
@@ -218,7 +217,8 @@ class UserService
 
         return UserShiftPlanPageDto::newInstance()
             ->setUserToEdit(UserShowResource::make($user))
-            ->setCrafts(static fn() => Craft::all())
+            // Lookup-Felder der Einsatzplan-Karte + schlanke Planer:innen (Zeitanpassungs-Modal)
+            ->setCrafts(static fn() => app(CraftService::class)->getLookupCrafts())
             ->setCurrentTab('shiftplan')
             ->setCalendarData($calendarData)
             ->setDateToShow($dateToShow)
@@ -359,6 +359,32 @@ class UserService
                 'end_date' => $endDate,
             ]
         );
+    }
+
+    /**
+     * Springt im Kalender auf einen Zeitraum (z. B. "zum Termin im Kalender"): schreibt in den Filter
+     * der gerade aktiven Kalenderansicht (Woche oder Tag), legt ihn bei Bedarf an und überträgt den
+     * Zeitraum bei "Zeitraum in allen Ansichten teilen" auf alle Ansichten.
+     *
+     * @param array<string, mixed> $resetAttributes weitere Filterspalten, die zurückgesetzt werden
+     */
+    public function focusCalendarOnPeriod(User $user, Carbon $start, Carbon $end, array $resetAttributes = []): void
+    {
+        $filterType = $user->getAttribute('calendar_daily_view')
+            ? UserFilterTypes::CALENDAR_DAILY_FILTER
+            : UserFilterTypes::CALENDAR_FILTER;
+
+        $startDate = $start->format('Y-m-d');
+        $endDate = $end->format('Y-m-d');
+
+        $user->userFilters()->updateOrCreate(
+            ['filter_type' => $filterType->value],
+            array_merge($resetAttributes, ['start_date' => $startDate, 'end_date' => $endDate])
+        );
+
+        if ($user->getAttribute('share_calendar_date')) {
+            $this->syncSharedCalendarFilterDates($user, $startDate, $endDate);
+        }
     }
 
     /**
@@ -574,5 +600,4 @@ class UserService
             'calendarAboShift' => $shiftCalendarAbo,
         ]);
     }
-
 }

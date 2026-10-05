@@ -90,6 +90,7 @@ class CommittedShiftChangesExcelExport implements
      * @param CommittedShiftChange $change
      * @return array<int, mixed>
      */
+    // phpcs:ignore SlevomatCodingStandard.TypeHints.ParameterTypeHint.MissingNativeTypeHint -- Signatur der Elternklasse erlaubt keinen Typ
     public function map($change): array
     {
         $presented = CommittedShiftChangePresenter::present($change);

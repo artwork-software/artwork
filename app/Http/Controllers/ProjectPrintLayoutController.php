@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Artwork\Modules\ArtistResidency\Enums\TypOfRoom;
+use Artwork\Modules\BusinessIntelligence\Services\BiProjectMetricsService;
 use Artwork\Modules\Checklist\Http\Resources\ChecklistIndexResource;
 use Artwork\Modules\Checklist\Services\ChecklistService;
 use Artwork\Modules\Event\Http\Resources\MinimalCalendarEventResource;
@@ -19,8 +20,14 @@ use Artwork\Modules\Project\Models\PrintLayoutComponents;
 use Artwork\Modules\Project\Models\ProjectPrintLayout;
 use Artwork\Modules\Project\Services\ProjectPrintLayoutService;
 use Artwork\Modules\Project\Enum\ProjectTabComponentEnum;
+use Artwork\Modules\Project\Models\ProjectComponentCrmContact;
+use Artwork\Modules\Project\Services\ProjectComponentCrmContactService;
 use Artwork\Modules\Project\Models\Component;
+use Artwork\Modules\Project\Services\ProjectComponentVisibilityService;
+use Artwork\Modules\Project\Services\ProjectTabDocumentService;
 use Artwork\Modules\Project\Services\ProjectTabService;
+use Artwork\Modules\Permission\Enums\PermissionEnum;
+use Artwork\Modules\User\Models\User;
 use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\ServiceProvider\Enums\ServiceProviderTypes;
 use Artwork\Modules\ServiceProvider\Models\ServiceProvider;
@@ -39,9 +46,10 @@ class ProjectPrintLayoutController extends Controller
         private readonly ProjectPrintLayoutService $projectService,
         private readonly ProjectTabService $projectTabService,
         private readonly UserService $userService,
-        private readonly \Artwork\Modules\BusinessIntelligence\Services\BiProjectMetricsService $biProjectMetricsService
-    )
-    {
+        private readonly BiProjectMetricsService $biProjectMetricsService,
+        private readonly ProjectComponentVisibilityService $projectComponentVisibilityService,
+        private readonly ProjectTabDocumentService $projectTabDocumentService,
+    ) {
     }
     /**
      * Display a listing of the resource.
@@ -96,9 +104,8 @@ class ProjectPrintLayoutController extends Controller
     /**
      * Show the form for creating a new resource.
      */
-    public function create()
+    public function create(): void
     {
-
     }
 
     /**
@@ -106,9 +113,7 @@ class ProjectPrintLayoutController extends Controller
      */
     public function store(StoreProjectPrintLayoutRequest $request): void
     {
-        if ($request->validated()) {
-            $this->projectService->storeProjectPrintLayout($request->all());
-        }
+        $this->projectService->storeProjectPrintLayout($request->validated());
     }
 
     /**
@@ -116,6 +121,16 @@ class ProjectPrintLayoutController extends Controller
      */
     public function show(Project $project, ProjectPrintLayout $projectPrintLayout): \Inertia\Response
     {
+        /** @var \Artwork\Modules\User\Models\User $user */
+        $user = Auth::user();
+
+        // Deaktivierte Layouts stehen im Projekt nicht zur Auswahl; nur wer Drucklayouts
+        // verwaltet, darf sie (zum Testen) weiterhin aufrufen.
+        abort_unless(
+            $projectPrintLayout->is_active || $user->can(PermissionEnum::PROJECT_SETTINGS_UPDATE->value),
+            404
+        );
+
         $projectPrintLayout->load([
             'headerComponents',
             'bodyComponents',
@@ -125,8 +140,13 @@ class ProjectPrintLayoutController extends Controller
             'footerComponents.component',
             'components.component',
         ]);
+        $this->removeComponentsHiddenFromUser($projectPrintLayout, $user);
         $loadedProjectInformation = [];
-        $projectComponents = collect([$project])->map(function ($project) use ($projectPrintLayout, $loadedProjectInformation ) {
+        $projectComponents = collect([$project])->map(function ($project) use (
+            $projectPrintLayout,
+            $loadedProjectInformation,
+            $user
+        ) {
             /** @var Project $project */
             $projectData = new stdClass(); // needed for the ProjectShowHeaderComponent
             $projectData->id = $project->id;
@@ -261,13 +281,16 @@ class ProjectPrintLayoutController extends Controller
                         $projectData->project_period = $project->first_and_last_event_date;
                         break;
                     case ProjectTabComponentEnum::PROJECT_ALL_DOCUMENTS->value:
-                        $projectData->project_files_all = $project->project_files;
+                        // wie "Alle Dokumente" im Projekt: nur Dateien aus Tabs, die die Person sieht
+                        $projectData->project_files_all = $this->projectTabDocumentService
+                            ->loadVisibleDocuments($project, $user);
                         break;
                     case ProjectTabComponentEnum::COMMENT_ALL_TAB->value:
-                        $projectData->comments_all = $project->comments()
+                        $commentsQuery = $project->comments()
                             ->with('user')
-                            ->orderBy('created_at', 'DESC')
-                            ->get();
+                            ->orderBy('created_at', 'DESC');
+                        $this->projectComponentVisibilityService->constrainToVisibleTabs($commentsQuery, $user);
+                        $projectData->comments_all = $commentsQuery->get();
                         break;
 
                     case ProjectTabComponentEnum::CHECKLIST_ALL->value:
@@ -275,10 +298,15 @@ class ProjectPrintLayoutController extends Controller
                         Inertia::share([
                             'user' => array_merge(session('user', []), ['checklist_style' => 'kanban'])
                         ]);
-                        $projectData->opened_checklists = $project->checklists->pluck('id');
+                        $visibleTabIds = $this->projectComponentVisibilityService->visibleTabIds($user);
+                        $checklists = $project->checklists->filter(
+                            fn ($checklist) => $checklist->tab_id === null ||
+                                $visibleTabIds->contains($checklist->tab_id)
+                        );
+                        $projectData->opened_checklists = $checklists->pluck('id');
                         $userId = Auth::id();
                         $projectData->public_all_checklists = ChecklistIndexResource::collection(
-                            $project->checklists
+                            $checklists
                                 ->where('private', false)
                                 ->filter(function ($checklist) use ($userId) {
                                     $isInChecklistUsers = $checklist->users->contains('id', $userId);
@@ -290,7 +318,7 @@ class ProjectPrintLayoutController extends Controller
                                 })
                         )->resolve();
                         $projectData->private_all_checklists = ChecklistIndexResource::collection(
-                            $project->checklists
+                            $checklists
                                 ->where('private', true)
                                 ->filter(function ($checklist) use ($userId) {
                                     $isInChecklistUsers = $checklist->users->contains('id', $userId);
@@ -334,6 +362,13 @@ class ProjectPrintLayoutController extends Controller
                     case ProjectTabComponentEnum::PROJECT_CONTRACTS_DOCUMENTS->value:
                         $projectData->contracts_documents = $project->contracts;
                         break;
+                    case ProjectTabComponentEnum::CRM_CONTACT_LIST->value:
+                        // Kontakte der Liste mit den Feldern, die die druckende Person sehen darf
+                        $projectData->crm_contact_lists[$componentFullData->id] = $this->crmContactListPrintData(
+                            $project,
+                            $componentFullData,
+                        );
+                        break;
                 }
 
 
@@ -354,15 +389,64 @@ class ProjectPrintLayoutController extends Controller
         return Inertia::render('Projects/ProjectPrintLayoutWindow', [
             'project' => $projectComponents[0],
             'layout' => $projectPrintLayout,
-            'components' => Component::all(),
+            'components' => Component::query()
+                ->whereIn('id', $projectPrintLayout->components->pluck('component_id'))
+                ->get(),
             'loadedProjectInformation' => $loadedProjectInformation
         ]);
     }
 
     /**
+     * Druck folgt derselben Sichtregel wie die Projektansicht: Komponenten mit
+     * "Sehen dürfen nur die Folgenden" und Komponenten, die nur in für die Person unsichtbaren Tabs
+     * liegen, werden samt Werten weggelassen (die Zelle bleibt leer).
+     */
+    private function removeComponentsHiddenFromUser(ProjectPrintLayout $projectPrintLayout, User $user): void
+    {
+        $visibleComponentIds = $projectPrintLayout->components
+            ->pluck('component')
+            ->filter()
+            ->unique('id')
+            ->filter(fn (Component $component) => $this->projectComponentVisibilityService
+                ->canSeeInProject($user, $component))
+            ->pluck('id');
+
+        foreach (['components', 'headerComponents', 'bodyComponents', 'footerComponents'] as $relation) {
+            $projectPrintLayout->setRelation(
+                $relation,
+                $projectPrintLayout->{$relation}
+                    ->filter(fn (PrintLayoutComponents $placement) => $visibleComponentIds
+                        ->contains($placement->component_id))
+                    ->values()
+            );
+        }
+    }
+
+    /**
+     * @return array<int, array<string, mixed>>
+     */
+    private function crmContactListPrintData(Project $project, Component $component): array
+    {
+        /** @var \Artwork\Modules\User\Models\User $user */
+        $user = auth()->user();
+        $service = app(ProjectComponentCrmContactService::class);
+        $visiblePropertyIds = $service->visiblePropertyIdsFor($user);
+
+        return $service->entries($project, $component)
+            ->map(fn (ProjectComponentCrmContact $entry) => $service->serializeEntry(
+                $entry,
+                $visiblePropertyIds,
+                $user,
+                false,
+            ))
+            ->values()
+            ->all();
+    }
+
+    /**
      * Show the form for editing the specified resource.
      */
-    public function edit(string $id)
+    public function edit(string $id): void
     {
         //
     }
@@ -370,24 +454,25 @@ class ProjectPrintLayoutController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(UpdateProjectPrintLayoutRequest $request, ProjectPrintLayout $projectPrintLayout)
+    public function update(UpdateProjectPrintLayoutRequest $request, ProjectPrintLayout $projectPrintLayout): void
     {
-        if ($request->validated() && $projectPrintLayout->exists){
-            $projectPrintLayout->update($request->all());
+        if ($projectPrintLayout->exists) {
+            $projectPrintLayout->update($request->safe()->except(['id']));
         }
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(ProjectPrintLayout $projectPrintLayout)
+    public function destroy(ProjectPrintLayout $projectPrintLayout): void
     {
         // first remove all components
         $projectPrintLayout->components()->delete();
         $projectPrintLayout->delete();
     }
 
-    public function addComponent(ProjectPrintLayout $projectPrintLayout, Request $request){
+    public function addComponent(ProjectPrintLayout $projectPrintLayout, Request $request): void
+    {
         $projectPrintLayout->components()->create([
             'component_id' => $request->get('component_id'),
             'type' => $request->get('type'),
@@ -396,7 +481,8 @@ class ProjectPrintLayoutController extends Controller
         ]);
     }
 
-    public function destroyComponent(PrintLayoutComponents $printLayoutComponent){
+    public function destroyComponent(PrintLayoutComponents $printLayoutComponent): void
+    {
         $printLayoutComponent->delete();
     }
 
@@ -432,7 +518,8 @@ class ProjectPrintLayoutController extends Controller
         });
     }
 
-    public function updateHeaderNote(Request $request, ProjectPrintLayout $projectPrintLayout){
+    public function updateHeaderNote(Request $request, ProjectPrintLayout $projectPrintLayout): void
+    {
         $projectPrintLayout->update([
             'notes' => [
                 'header' => collect($request->input('header_note', [])),

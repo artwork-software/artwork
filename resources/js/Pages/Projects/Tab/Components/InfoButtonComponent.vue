@@ -1,5 +1,5 @@
 <template>
-    <Popover v-if="component?.note" v-slot="{ open }" class="relative print:hidden">
+    <Popover v-if="component?.note && !hintShownInline" v-slot="{ open }" class="relative print:hidden">
         <PopoverButton class="group inline-flex items-center ring-0 focus:outline-none focus-within:outline-none">
             <component :is="IconInfoCircle" class="size-4" />
         </PopoverButton>
@@ -24,6 +24,8 @@
 
 import {Popover, PopoverButton, PopoverPanel} from "@headlessui/vue";
 import {IconInfoCircle} from "@tabler/icons-vue";
+import {computed} from "vue";
+import {showsInlineHint} from "@/Helper/ComponentInlineHints.js";
 
 const props = defineProps({
     component: {
@@ -32,6 +34,9 @@ const props = defineProps({
         default: {},
     },
 })
+
+// Bei Eingabefeldern steht der Hinweis sichtbar unter dem Feld (TabContent/DisclosureComponent)
+const hintShownInline = computed(() => showsInlineHint(props.component?.component?.type))
 
 </script>
 

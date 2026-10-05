@@ -26,6 +26,10 @@ class ProjectShowResource extends JsonResource
     {
         $historyArray = app(ChangeService::class)->historyForFrontend($this->resource);
 
+        // Checklisten teilen sich die Projekt-Instanz, damit ChecklistPolicy::update (can_update)
+        // die Projekt-Relationen einmal statt je Checkliste lädt.
+        $this->checklists->each(fn ($checklist) => $checklist->setRelation('project', $this->resource));
+
         return [
             'id' => $this->id,
             'name' => $this->name,
@@ -97,8 +101,8 @@ class ProjectShowResource extends JsonResource
             ]),
             'shift_relevant_event_types' => $this->shiftRelevantEventTypes()->get(),
             'shift_contacts' => $this->shift_contact()->get(),
-            'freelancers' => Freelancer::all(),
-            'serviceProviders' => ServiceProvider::without(['contacts'])->get(),
+            'freelancers' => Freelancer::query()->withAssignedCraftIds()->get(),
+            'serviceProviders' => ServiceProvider::query()->without(['contacts'])->withAssignedCraftIds()->get(),
         ];
     }
 }

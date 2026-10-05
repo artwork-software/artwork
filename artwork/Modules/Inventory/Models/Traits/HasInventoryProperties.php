@@ -33,5 +33,4 @@ trait HasInventoryProperties
             ->orderBy('inventory_article_properties.order')
             ->orderBy('inventory_article_properties.id');
     }
-
 }

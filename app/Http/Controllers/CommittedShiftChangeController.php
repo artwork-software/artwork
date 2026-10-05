@@ -11,7 +11,7 @@ class CommittedShiftChangeController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(): void
     {
         //
     }
@@ -19,7 +19,7 @@ class CommittedShiftChangeController extends Controller
     /**
      * Show the form for creating a new resource.
      */
-    public function create()
+    public function create(): void
     {
         //
     }
@@ -27,7 +27,7 @@ class CommittedShiftChangeController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(StoreCommittedShiftChangeRequest $request)
+    public function store(StoreCommittedShiftChangeRequest $request): void
     {
         //
     }
@@ -35,7 +35,7 @@ class CommittedShiftChangeController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(CommittedShiftChange $committedShiftChange)
+    public function show(CommittedShiftChange $committedShiftChange): void
     {
         //
     }
@@ -43,7 +43,7 @@ class CommittedShiftChangeController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(CommittedShiftChange $committedShiftChange)
+    public function edit(CommittedShiftChange $committedShiftChange): void
     {
         //
     }
@@ -51,7 +51,7 @@ class CommittedShiftChangeController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(UpdateCommittedShiftChangeRequest $request, CommittedShiftChange $committedShiftChange)
+    public function update(UpdateCommittedShiftChangeRequest $request, CommittedShiftChange $committedShiftChange): void
     {
         //
     }
@@ -59,7 +59,7 @@ class CommittedShiftChangeController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(CommittedShiftChange $committedShiftChange)
+    public function destroy(CommittedShiftChange $committedShiftChange): void
     {
         //
     }

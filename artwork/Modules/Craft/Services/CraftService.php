@@ -10,7 +10,12 @@ use Artwork\Modules\Freelancer\Models\Freelancer;
 use Artwork\Modules\ServiceProvider\Models\ServiceProvider;
 use Artwork\Modules\User\Models\User;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Eloquent\Relations\Relation;
+use Illuminate\Support\Collection as SupportCollection;
 use Illuminate\Support\Facades\Log;
+use Artwork\Modules\Shift\Services\ShiftDeletionService;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 class CraftService
 {
@@ -22,6 +27,120 @@ class CraftService
     public function getAll(array $with = []): Collection
     {
         return $this->craftRepository->getAll($with);
+    }
+
+    /**
+     * Gewerke mit den zuweisbaren Personen für Projekt-Schichten-Tab und
+     * Schichtplan-Listenansicht (Auswahlliste/Drag&Drop in SingleShiftInDailyShiftView,
+     * ShiftsQualificationsDropElement, ShiftBookedElementComponent, DragElement).
+     *
+     * Personen tragen nur die dort gelesenen Felder: das volle User-Modell (88 Felder
+     * inkl. Settings) machte die crafts-Prop lokal 2,3 MB groß (14 Gewerke × 153 User
+     * × 6 KB), und Freelancer/Dienstleister schoben über `assigned_craft_ids` ($appends)
+     * je Person eine craftables-Query nach.
+     */
+    /**
+     * Planer:innen eines Gewerks (craft_users) in der Form, die das Frontend liest:
+     * SingleEntityInShift/SingleShiftInShiftOverviewUser prüfen `craft_shift_planer[].id`
+     * (Personen-Menü an der Schicht), RequestWorkTimeChangeModal zeigt Name, Position,
+     * Firma und Avatar (UserPopoverTooltip).
+     */
+    public const PLANER_VISIBLE = [
+        'id',
+        'first_name',
+        'last_name',
+        'full_name',
+        'position',
+        'business',
+        'profile_photo_url',
+        'type',
+    ];
+
+    /**
+     * Gewerke als Lookup (Karten/Modale im Einsatzplan): nur Stammfelder plus schlanke
+     * Planer:innen — Craft::all() lieferte die Planer:innen als volle User-Modelle.
+     */
+    public function getLookupCrafts(): Collection
+    {
+        $crafts = Craft::query()
+            ->orderBy('position')
+            ->get(['id', 'name', 'abbreviation', 'color', 'position', 'universally_applicable']);
+
+        foreach ($crafts as $craft) {
+            self::slimPlaners($craft);
+        }
+
+        return $crafts;
+    }
+
+    public static function slimPlaners(Craft $craft): void
+    {
+        if ($craft->relationLoaded('craftShiftPlaner')) {
+            $craft->craftShiftPlaner->each->setVisible(self::PLANER_VISIBLE);
+        }
+    }
+
+    public function getAllWithAssignableWorkers(bool $withManagers = false): Collection
+    {
+        $workerVisible = [
+            'id',
+            'first_name',
+            'last_name',
+            'provider_name',
+            'name',
+            'full_name',
+            'display_name',
+            'profile_photo_url',
+            'can_work_shifts',
+            'is_freelancer',
+            'type',
+            'assigned_craft_ids',
+            'shiftQualifications',
+            'pivot',
+        ];
+        $qualificationVisible = ['id', 'name', 'icon', 'available', 'pivot'];
+        // Frontend liest nur pivot.craft_id (Zuordnung Funktion → Gewerk)
+        $qualificationPivotVisible = ['craft_id', 'shift_qualification_id'];
+
+        $workerRelations = ['users', 'freelancers', 'serviceProviders'];
+        if ($withManagers) {
+            $workerRelations = [
+                ...$workerRelations,
+                'managingUsers',
+                'managingFreelancers',
+                'managingServiceProviders',
+            ];
+        }
+
+        $with = ['qualifications'];
+        foreach ($workerRelations as $relation) {
+            // withAssignedCraftIds (HasShifts): Gewerk-IDs vorladen statt Query je Person
+            $with[$relation] = static fn (Relation $query) => $query->withAssignedCraftIds();
+        }
+
+        // craftShiftPlaner (Craft::$with) bleibt geladen: die Listenansicht erkennt darüber,
+        // ob die angemeldete Person Planer:in des Gewerks ist (Personen-Menü an der Schicht)
+        $crafts = Craft::query()
+            ->with($with)
+            ->orderBy('position')
+            ->get();
+
+        foreach ($crafts as $craft) {
+            self::slimPlaners($craft);
+            foreach ($workerRelations as $relation) {
+                foreach ($craft->getRelation($relation) as $worker) {
+                    $worker->setVisible($workerVisible);
+                    if ($worker->relationLoaded('shiftQualifications')) {
+                        foreach ($worker->shiftQualifications as $qualification) {
+                            $qualification->setVisible($qualificationVisible);
+                            $qualification->pivot?->setVisible($qualificationPivotVisible);
+                        }
+                    }
+                }
+            }
+        }
+
+        return $crafts;
     }
 
     public function storeByRequest(CraftStoreRequest $craftStoreRequest): void
@@ -50,36 +169,12 @@ class CraftService
                 'universally_applicable',
             ]));
 
-        $managersToBeAssigned = $craftUpdateRequest->collect('managersToBeAssigned')->groupBy(
-            function ($managerToBeAssigned) {
-                return $managerToBeAssigned['manager_type'];
-            }
-        );
-
         if ($craftUpdateRequest->has('qualifications')) {
             $craft->qualifications()->detach();
             $craft->qualifications()->sync($craftUpdateRequest->collect('qualifications')->pluck('id')->toArray());
         }
 
-        if ($managersToBeAssigned->empty()) {
-            $craft->managingUsers()->sync([]);
-            $craft->managingFreelancers()->sync([]);
-            $craft->managingServiceProviders()->sync([]);
-        }
-
-        foreach ($managersToBeAssigned as $managerType => $managers) {
-            switch ($managerType) {
-                case User::class:
-                    $craft->managingUsers()->sync($managers->pluck('manager_id'));
-                    break;
-                case Freelancer::class:
-                    $craft->managingFreelancers()->sync($managers->pluck('manager_id'));
-                    break;
-                case ServiceProvider::class:
-                    $craft->managingServiceProviders()->sync($managers->pluck('manager_id'));
-                    break;
-            }
-        }
+        $this->syncManagers($craft, $craftUpdateRequest->collect('managersToBeAssigned'));
 
         // Craft-Planer-Status steckt im gecachten shift_workflow_flags-Prop —
         // bisherige und neue Planer invalidieren
@@ -96,11 +191,55 @@ class CraftService
         }
     }
 
+    /**
+     * Setzt die Gewerksleitung (Nutzer:innen, Freelancer, Dienstleister) auf genau die übergebene Liste;
+     * nicht enthaltene Typen werden geleert.
+     *
+     * @param SupportCollection<int, array{manager_id: int, manager_type: class-string}> $managersToBeAssigned
+     */
+    public function syncManagers(Craft $craft, SupportCollection $managersToBeAssigned): void
+    {
+        $managerIdsByType = $managersToBeAssigned
+            ->groupBy('manager_type')
+            ->map(fn (SupportCollection $managers): array => $managers->pluck('manager_id')->all());
+
+        $craft->managingUsers()->sync($managerIdsByType->get(User::class, []));
+        $craft->managingFreelancers()->sync($managerIdsByType->get(Freelancer::class, []));
+        $craft->managingServiceProviders()->sync($managerIdsByType->get(ServiceProvider::class, []));
+    }
+
+    /**
+     * Pivot-Tabellen mit Fremdschlüssel auf crafts OHNE Löschregel — sie blockierten das Löschen
+     * (500, nachdem die Planer:innen schon entfernt waren).
+     */
+    private const BLOCKING_CRAFT_PIVOT_TABLES = [
+        'craft_managers',
+        'craft_inventory_categories',
+        'users_assigned_crafts',
+        'freelancer_assigned_crafts',
+        'service_provider_assigned_crafts',
+    ];
+
     public function delete(Craft $craft): void
     {
         $previousPlanerIds = $craft->craftShiftPlaner()->pluck('users.id')->all();
-        $this->craftRepository->detachUsers($craft);
-        $this->craftRepository->delete($craft);
+
+        // Schichten des Gewerks sauber über den gemeinsamen Lösch-Weg entfernen (Benachrichtigung
+        // der Besetzung festgeschriebener Schichten, Konflikte, Projekt-Tageszuordnungen,
+        // Regel-Neuprüfung, Live-Update) — sonst löschte die DB-Kaskade sie still mit.
+        app(ShiftDeletionService::class)->deleteMany($craft->shifts()->get(), true, false);
+        broadcast(new \Artwork\Modules\Event\Events\OccupancyUpdated())->toOthers();
+
+        DB::transaction(function () use ($craft): void {
+            $this->craftRepository->detachUsers($craft);
+            foreach (self::BLOCKING_CRAFT_PIVOT_TABLES as $table) {
+                if (Schema::hasTable($table)) {
+                    DB::table($table)->where('craft_id', $craft->id)->delete();
+                }
+            }
+            $this->craftRepository->delete($craft);
+        });
+
         // Craft-Planer-Status steckt im gecachten shift_workflow_flags-Prop
         User::forgetCachedShareDataForIds($previousPlanerIds);
     }

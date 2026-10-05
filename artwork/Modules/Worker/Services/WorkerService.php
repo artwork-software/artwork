@@ -25,8 +25,17 @@ class WorkerService
     ) {
     }
 
-    public function searchWorkers(string $search): Collection
+    /**
+     * Personensuche über Nutzer*innen, Freelancer und Dienstleister (Scout). Liefert die gemappten
+     * Such-Arrays der drei Repositories — eine Support-Collection, KEINE Eloquent-Collection
+     * (der frühere Eloquent-Rückgabetyp warf zur Laufzeit einen TypeError → 500 in jeder Personensuche).
+     */
+    public function searchWorkers(string $search): SupportCollection
     {
+        if (trim($search) === '') {
+            return new SupportCollection();
+        }
+
         $users = $this->userService->searchUsers($search);
         $freelancers = $this->freelancerService->searchFreelancers($search);
         $serviceProviders = $this->serviceProviderService->searchServiceProviders($search);
@@ -34,8 +43,11 @@ class WorkerService
         return $users->merge($freelancers)->merge($serviceProviders);
     }
 
-    public function getWorkersForShiftPlan(string $workerType, Carbon|null $startDate = null, Carbon|null $endDate = null): Collection
-    {
+    public function getWorkersForShiftPlan(
+        string $workerType,
+        Carbon|null $startDate = null,
+        Carbon|null $endDate = null
+    ): Collection {
         $eagerLoads = WorkerEagerLoadConfig::getShiftPlanEagerLoads($startDate, $endDate);
         // Polymorphe Query basierend auf Worker-Typ
         $query = match ($workerType) {
@@ -88,10 +100,13 @@ class WorkerService
         if ($qualificationIds->isNotEmpty()) {
             $qualifications = ShiftQualification::whereIn('id', $qualificationIds)->get()->keyBy('id');
 
-            $workers->each(function ($worker) use ($qualifications) {
-                $worker->shifts->each(function ($shift) use ($qualifications) {
+            $workers->each(function ($worker) use ($qualifications): void {
+                $worker->shifts->each(function ($shift) use ($qualifications): void {
                     if ($shift->pivot && $shift->pivot->shift_qualification_id) {
-                        $shift->pivot->setRelation('shiftQualification', $qualifications->get($shift->pivot->shift_qualification_id));
+                        $shift->pivot->setRelation(
+                            'shiftQualification',
+                            $qualifications->get($shift->pivot->shift_qualification_id)
+                        );
                     }
                 });
             });

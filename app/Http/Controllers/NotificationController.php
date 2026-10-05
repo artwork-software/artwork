@@ -9,6 +9,8 @@ use Artwork\Modules\Notification\Services\DatabaseNotificationService;
 use Artwork\Modules\Event\Http\Resources\CalendarEventResource;
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Event\Models\EventStatus;
+use Artwork\Modules\Event\Services\EventSettingsService;
+use Artwork\Modules\Notification\Enums\NotificationEnum;
 use Artwork\Modules\EventType\Http\Resources\EventTypeResource;
 use Artwork\Modules\EventType\Models\EventType;
 use Artwork\Modules\GlobalNotification\Services\GlobalNotificationService;
@@ -58,7 +60,10 @@ class NotificationController extends Controller
             $counts[$case->value] = ['unread' => 0, 'archived' => 0];
         }
 
+        // reorder(): die notifications()-Relation sortiert per latest() nach created_at; mit GROUP BY
+        // verweigert MySQL 8 (ONLY_FULL_GROUP_BY) diese ORDER BY, MariaDB nicht.
         $rows = $user->notifications()
+            ->reorder()
             ->selectRaw("JSON_UNQUOTE(JSON_EXTRACT(data, '$.groupType')) as group_type")
             ->selectRaw('SUM(CASE WHEN read_at IS NULL THEN 1 ELSE 0 END) as unread')
             ->selectRaw('SUM(CASE WHEN read_at IS NOT NULL THEN 1 ELSE 0 END) as archived')
@@ -185,14 +190,28 @@ class NotificationController extends Controller
             'notificationCounts' => $this->getNotificationCountsByGroup($user),
             'globalNotification' => $globalNotificationService->getGlobalNotificationEnrichedByImageUrl(),
             'rooms' => RoomIndexWithoutEventsResource::collection(Room::all())->resolve(),
-            'eventTypes' => EventTypeResource::collection(EventType::all())->resolve(),
+            'eventTypes' => EventTypeResource::collection(EventType::query()->with('verifiers')->get())->resolve(),
             'projects' => NotificationProjectResource::collection(
                 Project::select([
                     'id', 'name', 'shift_description',
                     'number_of_participants', 'is_group', 'key_visual_path', 'cost_center_id'
                 ])->with(['groups', 'sectors', 'categories', 'genres', 'costCenter'])->get()
             )->resolve(),
-            'notificationSettings' => $user->notificationSettings()->get()->groupBy("group_type"),
+            // "Termine immer direkt buchbar": Anfrage-/Verifizierungs-Benachrichtigungen gibt es nicht mehr
+            'notificationSettings' => $user->notificationSettings()->get()
+                ->when(
+                    app(EventSettingsService::class)->alwaysDirectBooking(),
+                    static fn ($settings) => $settings->reject(
+                        static fn (NotificationSetting $setting): bool => in_array($setting->type, [
+                            NotificationEnum::NOTIFICATION_ROOM_REQUEST,
+                            NotificationEnum::NOTIFICATION_UPSERT_ROOM_REQUEST,
+                            NotificationEnum::NOTIFICATION_ROOM_ANSWER,
+                            NotificationEnum::NOTIFICATION_REMINDER_ROOM_REQUEST,
+                            NotificationEnum::NOTIFICATION_EVENT_VERIFICATION_REQUESTS,
+                        ], true)
+                    )
+                )
+                ->groupBy("group_type"),
             'notificationFrequencies' => array_map(fn (NotificationFrequencyEnum $frequency) => [
                 'title' => $frequency->title(),
                 'value' => $frequency->value,
@@ -249,8 +268,8 @@ class NotificationController extends Controller
         DatabaseNotificationService $databaseNotificationService,
         CarbonService $carbonService
     ): void {
-        /** @var DatabaseNotification $wantedNotification */
-        $wantedNotification = $databaseNotificationService->find($request->string('notificationId'));
+        /** @var DatabaseNotification|null $wantedNotification */
+        $wantedNotification = $request->user()?->notifications()->find($request->string('notificationId'));
 
         if (is_null($wantedNotification)) {
             return;

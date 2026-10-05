@@ -16,7 +16,7 @@ final class InviteExternalCommand
      */
     public function __construct(
         public readonly string $email,
-        public readonly int $crmContactTypeId,
+        public readonly ?int $crmContactTypeId,
         public readonly InviteSource $source,
         public readonly ?int $sourceReferenceProjectId,
         public readonly User $invitedBy,
@@ -24,7 +24,20 @@ final class InviteExternalCommand
         public readonly array $tabScopes = [],
         public readonly array $confidentialFieldValues = [],
         public readonly array $publicFieldValues = [],
+        /** Bestehenden CRM-Kontakt einladen: der Zugang wird an diesen Kontakt gebunden. */
+        public readonly ?int $crmContactId = null,
+        /** Optionaler Anzeigename der eingeladenen Person (v. a. für Einladungen aus dem Projekt-Tab). */
+        public readonly ?string $name = null,
     ) {
+    }
+
+    /**
+     * Einladung aus dem Projekt-Tab ohne bestehenden Kontakt: reiner Tab-Zugang ohne eigenen CRM-Kontakt
+     * und ohne Selbstpflege-Maske.
+     */
+    public function isTabOnlyInvitation(): bool
+    {
+        return $this->source === InviteSource::PROJECT_TAB && $this->crmContactId === null;
     }
 
     public function normalizedEmail(): string

@@ -50,5 +50,4 @@ class MaxConsecutiveWorkingDaysCheck extends AbstractRuleCheck
     {
         return 'maxConsecWorkingDays';
     }
-
 }

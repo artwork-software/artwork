@@ -47,6 +47,7 @@ import BaseSidenav from "@/Layouts/Components/BaseSidenav.vue";
 import ProjectSecondSidenav from "@/Layouts/Components/ProjectSecondSidenav.vue";
 import ProjectShiftSidenav from "@/Layouts/Components/ProjectShiftSidenav.vue";
 import {Link, router} from "@inertiajs/vue3";
+import {isWorkTimeAccountingEnabled} from "@/Helper/workTimeAccounting.js";
 import Permissions from "@/Mixins/Permissions.vue";
 import BaseTabs from "@/Artwork/Tabs/BaseTabs.vue";
 import UserProfileSearch from "@/Pages/Users/Components/UserProfileSearch.vue";
@@ -82,9 +83,9 @@ export default {
                 {name: 'Work profile', href: route('user.edit.workProfile', {user: this.user_to_edit.id}), current: route().current('user.edit.workProfile'), permission: this.$can('can manage workers') || this.hasAdminRole(), icon: 'IconBriefcase'},
                 // Ein Tab für Vertrag + Arbeitszeitmuster (Historie); alte Routen leiten hierher um
                 {name: 'Contract & working hours', href: route('user.edit.contract-and-work-time', {user: this.user_to_edit.id}), current: route().current('user.edit.contract-and-work-time'), permission: this.$can('can manage workers') || this.hasAdminRole(), icon: 'IconContract'},
-                {name: 'Work Times', href: route('user.edit.worktimes', {user: this.user_to_edit.id}), current: route().current('user.edit.worktimes'), permission: this.$can('can manage workers') || this.hasAdminRole(), icon: 'IconCalendarTime'},
+                {name: 'Work Times', href: route('user.edit.worktimes', {user: this.user_to_edit.id}), current: route().current('user.edit.worktimes'), permission: (this.$can('can manage workers') || this.hasAdminRole()) && isWorkTimeAccountingEnabled(this.$page.props), icon: 'IconCalendarTime'},
                 {name: 'Substitute days off', href: route('user.edit.compensationDays', {user: this.user_to_edit.id}), current: route().current('user.edit.compensationDays'), permission: this.$can('can plan shifts') || this.hasAdminRole(), icon: 'IconCalendarOff'},
-                {name: 'Overtime', href: route('user.edit.overtime', {user: this.user_to_edit.id}), current: route().current('user.edit.overtime'), permission: this.$can('can manage workers') || this.hasAdminRole(), icon: 'IconClock'},
+                {name: 'Overtime', href: route('user.edit.overtime', {user: this.user_to_edit.id}), current: route().current('user.edit.overtime'), permission: (this.$can('can manage workers') || this.hasAdminRole()) && isWorkTimeAccountingEnabled(this.$page.props), icon: 'IconClock'},
             ],
             title: this.user_to_edit.id === this.$page.props.auth.user.id ? 'My account' : 'User account' + ' - ' + this.user_to_edit.first_name + ' ' + this.user_to_edit.last_name
         }

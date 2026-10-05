@@ -59,7 +59,18 @@ class UserOvertime extends Model
     {
         return LogOptions::defaults()
             ->useLogName('user_overtime')
-            ->logOnly(['user_id', 'date', 'minutes', 'remaining_minutes', 'paid_out_minutes', 'deadline', 'status', 'paid_out_by', 'paid_out_at', 'payout_reason'])
+            ->logOnly([
+                'user_id',
+                'date',
+                'minutes',
+                'remaining_minutes',
+                'paid_out_minutes',
+                'deadline',
+                'status',
+                'paid_out_by',
+                'paid_out_at',
+                'payout_reason',
+            ])
             ->logOnlyDirty()
             ->dontSubmitEmptyLogs();
     }

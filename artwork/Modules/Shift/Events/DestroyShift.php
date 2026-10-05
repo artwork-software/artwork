@@ -64,6 +64,4 @@ class DestroyShift implements ShouldBroadcastNow
             'roomId' => $this->roomId,
         ];
     }
-
-
 }

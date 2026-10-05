@@ -217,6 +217,7 @@ class WorkerShiftPlanResource extends JsonResource
                 'confirmationStatus'    => $pivot?->confirmation_status,
                 'confirmationAt'        => $pivot?->confirmation_at,
                 'confirmationComment'   => $pivot?->confirmation_comment,
+                'confirmationByUserId'  => $pivot?->confirmation_by_user_id,
             ];
         });
     }

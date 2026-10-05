@@ -1,7 +1,7 @@
 <template>
     <div class="text-xs/[18px] text-text-subtle">
         <div v-if="component.data?.label" class="text-sm font-bold text-text mb-0.5">{{ component.data.label }}</div>
-        <p class="line-clamp-3" v-html="project['DropDown'][component.component_id]?.data?.selected"></p>
+        <p class="line-clamp-3 whitespace-pre-line">{{ project['DropDown'][component.component_id]?.data?.selected }}</p>
     </div>
 </template>
 <script setup>

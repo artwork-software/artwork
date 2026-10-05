@@ -568,7 +568,7 @@ class ContentSeeder extends Seeder
 
         /** @var Component $shortDescriptionComponent */
         $shortDescriptionComponent = Component::query()
-            ->where('name', 'Short Description')
+            ->whereIn('name', ['Short Description', __('Short Description')])
             ->where('type', 'TextArea')
             ->first();
 
@@ -605,7 +605,7 @@ class ContentSeeder extends Seeder
 
         /** @var Component $shortDescriptionComponent */
         $shortDescriptionComponent = Component::query()
-            ->where('name', 'Short Description')
+            ->whereIn('name', ['Short Description', __('Short Description')])
             ->where('type', 'TextArea')
             ->first();
 
@@ -631,7 +631,7 @@ class ContentSeeder extends Seeder
 
         /** @var Component $shortDescriptionComponent */
         $shortDescriptionComponent = Component::query()
-            ->where('name', 'Short Description')
+            ->whereIn('name', ['Short Description', __('Short Description')])
             ->where('type', 'TextArea')
             ->first();
 
@@ -657,7 +657,7 @@ class ContentSeeder extends Seeder
 
         /** @var Component $shortDescriptionComponent */
         $shortDescriptionComponent = Component::query()
-            ->where('name', 'Short Description')
+            ->whereIn('name', ['Short Description', __('Short Description')])
             ->where('type', 'TextArea')
             ->first();
 

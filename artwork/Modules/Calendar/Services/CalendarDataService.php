@@ -5,7 +5,6 @@ namespace Artwork\Modules\Calendar\Services;
 use App\Settings\GeneralCalendarSettings;
 use Artwork\Modules\Calendar\DTO\CalendarFrontendDataDTO;
 use Illuminate\Support\Facades\Auth;
-use Artwork\Modules\Calendar\DTO\CalendarHolidayDTO;
 use Artwork\Modules\Calendar\DTO\CalendarPeriodDTO;
 use Artwork\Modules\Calendar\Models\DayRemark;
 use Artwork\Modules\Permission\Enums\PermissionEnum;
@@ -14,7 +13,7 @@ use Artwork\Modules\Calendar\DTO\RoomDTO;
 use Artwork\Modules\Event\Http\Resources\CalendarEventResource;
 use Artwork\Modules\Event\Services\EventCollectionService;
 use Artwork\Modules\Filter\Services\FilterService;
-use Artwork\Modules\Holidays\Models\Holiday;
+use Artwork\Modules\Holidays\Services\HolidayService;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Services\ProjectService;
 use Artwork\Modules\Room\Models\Room;
@@ -44,6 +43,7 @@ readonly class CalendarDataService
         private FilterService $filterService,
         private UserService $userService,
         private ProjectService $projectService,
+        private HolidayService $holidayService,
     ) {
     }
 
@@ -120,28 +120,15 @@ readonly class CalendarDataService
         User $user,
         bool $extraRow = true,
         ?bool $isDailyView = null
-    ): array
-    {
+    ): array {
         if (!$startDate || !$endDate) {
             return [];
         }
 
         $calendarPeriod = CarbonPeriod::create($startDate, $endDate);
 
-        // Einmal alle Feiertage holen und über alle Tage ihrer Dauer expandieren
-        $holidays = $this->getHolidaysForRange($startDate, $endDate);
-        $holidaysByDate = collect();
-        foreach ($holidays as $holiday) {
-            $holidayStart = Carbon::parse($holiday->date);
-            $holidayEnd = $holiday->end_date ? Carbon::parse($holiday->end_date) : $holidayStart;
-            foreach (CarbonPeriod::create($holidayStart, $holidayEnd) as $day) {
-                $key = $day->toDateString();
-                if (!$holidaysByDate->has($key)) {
-                    $holidaysByDate[$key] = collect();
-                }
-                $holidaysByDate[$key]->push($holiday);
-            }
-        }
+        // Einmal alle Feiertage holen, je Tag ihrer Dauer
+        $holidaysByDate = $this->holidayService->getCalendarHolidaysByDate($startDate, $endDate);
 
         $isDailyView = $isDailyView ?? (bool) $user->getAttribute('daily_view');
         $hoursOfDay = $isDailyView
@@ -215,13 +202,17 @@ readonly class CalendarDataService
      */
     public function getFilteredRooms(
         ?UserFilter $filter,
+        // phpcs:ignore Generic.Files.LineLength.TooLong -- Union-Typ ohne Alias nicht umbrechbar
         null|UserCalendarSettings|UserDailyViewCalendarSettings|UserShiftPlanSettings|UserShiftPlanDailySettings $userCalendarSettings,
         CarbonInterface $startDate,
         CarbonInterface $endDate,
         bool $considerShiftsForOccupancy = false,
         ?Project $project = null,
         bool $showUnrelatedEvents = false,
-        bool $showUnrelatedShifts = false
+        bool $showUnrelatedShifts = false,
+        // Dienstplan-Wochenansicht mit ausgeblendeten Terminen: Räume, die nur durch Termine
+        // belegt sind, zählen bei „Räume ohne Belegung ausblenden" nicht mehr als belegt
+        bool $considerEventsForOccupancy = true
     ): SupportCollection {
         $overlap = static function ($q, string $startCol, string $endCol) use ($startDate, $endDate): void {
             // Overlap: start <= endDate AND end >= startDate (SQL-Server indexfreundlich)
@@ -243,8 +234,14 @@ readonly class CalendarDataService
                 ->whereColumn('events.room_id', 'rooms.id')
                 ->whereNull('events.deleted_at')
                 // "Projektfremde Termine anzeigen": auch Räume behalten, die nur durch fremde Termine belegt sind
-                ->when($project !== null && !$showUnrelatedEvents, fn ($q) => $q->where('events.project_id', $project->id))
-                ->when(!empty($filter?->event_type_ids), fn ($q) => $q->whereIn('events.event_type_id', $filter->event_type_ids))
+                ->when(
+                    $project !== null && !$showUnrelatedEvents,
+                    fn ($q) => $q->where('events.project_id', $project->id)
+                )
+                ->when(
+                    !empty($filter?->event_type_ids),
+                    fn ($q) => $q->whereIn('events.event_type_id', $filter->event_type_ids)
+                )
                 ->where(fn ($q) => $overlap($q, 'events.start_time', 'events.end_time'))
                 ->where(function ($q) use ($userCalendarSettings): void {
                     $q->where('events.is_planning', false);
@@ -252,7 +249,9 @@ readonly class CalendarDataService
                     if (
                         $userCalendarSettings?->show_planned_events &&
                         $user &&
-                        ($user->hasRole('artwork admin') || $user->can('can see planning calendar') || $user->can('can edit planning calendar'))
+                        ($user->hasRole('artwork admin') ||
+                             $user->can('can see planning calendar') ||
+                             $user->can('can edit planning calendar'))
                     ) {
                         $q->orWhere('events.is_planning', true);
                     }
@@ -261,7 +260,7 @@ readonly class CalendarDataService
             if (!empty($filter?->event_property_ids)) {
                 $ids = $filter->event_property_ids;
 
-                $eventQuery->whereExists(function ($sq) use ($ids) {
+                $eventQuery->whereExists(function ($sq) use ($ids): void {
                     $sq->selectRaw('1')
                         ->from('event_event_property as eep')
                         ->whereColumn('eep.event_id', 'events.id')
@@ -285,9 +284,14 @@ readonly class CalendarDataService
             $shiftQuery->selectRaw('1')
                 ->from('shifts')
                 ->whereNull('shifts.event_id')
+                // Schichten im Papierkorb belegen keinen Raum
+                ->whereNull('shifts.deleted_at')
                 ->whereColumn('shifts.room_id', 'rooms.id')
                 // "Projektfremde Schichten anzeigen": auch Räume behalten, die nur durch fremde Schichten belegt sind
-                ->when($project !== null && !$showUnrelatedShifts, fn ($q) => $q->where('shifts.project_id', $project->id))
+                ->when(
+                    $project !== null && !$showUnrelatedShifts,
+                    fn ($q) => $q->where('shifts.project_id', $project->id)
+                )
                 ->when(!empty($filter?->craft_ids), fn ($q) => $q->whereIn('shifts.craft_id', $filter->craft_ids))
                 ->where(fn ($q) => $overlap($q, 'shifts.start_date', 'shifts.end_date'));
         };
@@ -311,9 +315,16 @@ readonly class CalendarDataService
             })
             ->when(
                 $userCalendarSettings?->hide_unoccupied_rooms,
-                function ($query) use ($eventOccupancySubquery, $shiftOccupancySubquery, $considerShiftsForOccupancy): void {
+                function ($query) use (
+                    $eventOccupancySubquery,
+                    $shiftOccupancySubquery,
+                    $considerShiftsForOccupancy,
+                    $considerEventsForOccupancy
+                ): void {
                     if (!$considerShiftsForOccupancy) {
                         $query->whereExists($eventOccupancySubquery);
+                    } elseif (!$considerEventsForOccupancy) {
+                        $query->whereExists($shiftOccupancySubquery);
                     } else {
                         $query->where(function ($q) use ($eventOccupancySubquery, $shiftOccupancySubquery): void {
                             $q->whereExists($eventOccupancySubquery)
@@ -331,11 +342,17 @@ readonly class CalendarDataService
 
 
     public function getCalendarDateRange(
+        // phpcs:ignore Generic.Files.LineLength.TooLong -- Union-Typ ohne Alias nicht umbrechbar
         UserCalendarSettings|UserDailyViewCalendarSettings|UserShiftPlanSettings|UserShiftPlanDailySettings $userCalendarSettings,
         ?UserFilter $userCalendarFilter,
         ?Project $project = null
     ): array {
         $today = Carbon::now();
+
+        // Projekt gelöscht → resolveTimePeriodProject setzt den Projektmodus zurück, Filterzeitraum greift
+        if ($userCalendarSettings->getAttribute('use_project_time_period') && !$project) {
+            $project = $this->projectService->resolveTimePeriodProject($userCalendarSettings);
+        }
 
         if (!$userCalendarSettings->getAttribute('use_project_time_period')) {
             if ($userCalendarFilter === null) {
@@ -344,27 +361,27 @@ readonly class CalendarDataService
             return $this->userService->getUserCalendarFilterDatesOrDefault($userCalendarFilter);
         }
 
-        if (!$project) {
-            $project = $this->projectService->findById($userCalendarSettings->getAttribute('time_period_project_id'));
-        }
-
         return $this->getProjectDateRange($project, $today);
     }
 
     public function getProjectDateRange($project, Carbon $today): array
     {
+        // Immer Kopien: startOfDay()/endOfDay() verändern die Instanz – ohne copy() zeigten Start und
+        // Ende auf dasselbe Objekt und der Zeitraum schrumpfte auf einen Zeitpunkt.
         if (!$project) {
-            return [$today->startOfDay(), $today->endOfDay()];
+            return [$today->copy()->startOfDay(), $today->copy()->endOfDay()];
         }
 
         $firstEvent  = $this->projectService->getFirstEventInProject($project);
         $latestEvent = $this->projectService->getLatestEndingEventInProject($project);
 
-        $endDate = $latestEvent ? $latestEvent->getAttribute('end_time')->copy()->endOfDay() : $today->endOfDay();
-
         return [
-            $firstEvent ? $firstEvent->getAttribute('start_time')->startOfDay() : $today->startOfDay(),
-            $endDate,
+            $firstEvent
+                ? $firstEvent->getAttribute('start_time')->copy()->startOfDay()
+                : $today->copy()->startOfDay(),
+            $latestEvent
+                ? $latestEvent->getAttribute('end_time')->copy()->endOfDay()
+                : $today->copy()->endOfDay(),
         ];
     }
 
@@ -374,38 +391,6 @@ readonly class CalendarDataService
             return true;
         }
         return $start1 <= $end2 && $start2 <= $end1;
-    }
-
-    /**
-     * Feiertage einmal für Range
-     * @return SupportCollection<CalendarHolidayDTO>
-     */
-    private function getHolidaysForRange(Carbon $start, Carbon $end): SupportCollection
-    {
-        return Holiday::select(['id','name','date','end_date','color','yearly','treatAsSpecialDay'])
-            ->where(function (Builder $q) use ($start, $end): void {
-                $q->whereBetween('date', [$start->toDateString(), $end->toDateString()])
-                    ->orWhereBetween('end_date', [$start->toDateString(), $end->toDateString()])
-                    ->orWhere(function (Builder $nested) use ($start, $end): void {
-                        $nested->where('date', '<=', $start->toDateString())
-                            ->where('end_date', '>=', $end->toDateString());
-                    })
-                    ->orWhere(function (Builder $nested) use ($start, $end): void {
-                        // jährliche Gedenktage
-                        $nested->where('yearly', true)
-                            ->whereBetween(\DB::raw('DATE_FORMAT(date, "%m-%d")'), [$start->format('m-d'), $end->format('m-d')]);
-                    });
-            })
-            ->with(['subdivisions' => fn($q) => $q->select('name')])
-            ->get()
-            ->map(fn($holiday) => new CalendarHolidayDTO(
-                name: $holiday->name,
-                date: $holiday->date->toDateString(),
-                end_date: $holiday->end_date->toDateString(),
-                color: $holiday->color,
-                subdivisions: $holiday->subdivisions->pluck('name')->toArray(),
-                treatAsSpecialDay: (bool) $holiday->treatAsSpecialDay,
-            ));
     }
 
     /**

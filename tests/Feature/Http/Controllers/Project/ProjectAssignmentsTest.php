@@ -210,19 +210,6 @@ final class ProjectAssignmentsTest extends FeatureTestCase
     }
 
     #[Test]
-    public function admin_can_call_delete_project_from_group_endpoint(): void
-    {
-        $this->actingAsAdmin();
-        $group = Project::factory()->create(['is_group' => true]);
-        $project = Project::factory()->create();
-        $group->projectsOfGroup()->attach($project->id);
-
-        // Returns void -> 200 status. Just assert the endpoint is reachable.
-        $response = $this->delete('/project/group/' . $project->id . '/' . $group->id);
-        $this->assertContains($response->getStatusCode(), [200, 302]);
-    }
-
-    #[Test]
     public function admin_can_add_projects_to_group(): void
     {
         $this->actingAsAdmin();

@@ -4,7 +4,7 @@ namespace Tests\Feature\ExternalAccess\AdminSettings;
 
 use Artwork\Modules\ExternalAccess\Settings\ExternalAccessSettings;
 use PHPUnit\Framework\Attributes\Test;
-use Tests\TestCase;
+use Tests\Feature\ExternalAccess\ExternalAccessTestCase as TestCase;
 
 final class ExternalAccessSettingsTest extends TestCase
 {

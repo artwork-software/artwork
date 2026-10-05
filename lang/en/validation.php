@@ -331,6 +331,7 @@ return [
         'failed' => 'The upload failed. Please try again.',
         'max_size' => 'The maximum shared file size is currently :size MB, either have an admin increase it or try a smaller file',
         'invalid_file_type' => 'This file format is not released :format, please ask an admin to release it or use another format',
+        'denied_file_type' => 'Files of this type (:format) are never accepted for security reasons - even if all formats are released. Please use another format (e.g. PDF, PNG or JPG).',
     ],
     'timeline' => [
         'name_required' => 'The timeline name is required.',

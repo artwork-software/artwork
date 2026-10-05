@@ -2,67 +2,67 @@
 
 namespace App\Policies;
 
+use Artwork\Modules\Accommodation\Models\Accommodation;
 use Artwork\Modules\Contacts\Models\Contact;
+use Artwork\Modules\ServiceProvider\Models\ServiceProvider;
+use Artwork\Modules\ServiceProvider\Policies\ServiceProviderPolicy;
 use Artwork\Modules\User\Models\User;
+use Illuminate\Database\Eloquent\Model;
 
+/**
+ * Schreiben darf, wer die Eltern-Entität (User, Dienstleister, Unterkunft) pflegen darf.
+ */
 class ContactPolicy
 {
-    /**
-     * Determine whether the user can view any models.
-     */
     public function viewAny(User $user): bool
     {
-        // Allow viewing if the user is authenticated
         return $user->exists;
     }
 
-    /**
-     * Determine whether the user can view the model.
-     */
     public function view(User $user, Contact $contact): bool
     {
-        // Check if the user is authenticated and has access to the contact
         return $user->exists && $contact->exists;
     }
 
-    /**
-     * Determine whether the user can create models.
-     */
-    public function create(User $user): bool
+    public function create(User $user, ?Model $parent = null): bool
     {
-        // Allow creation if the user is authenticated
-        return $user->exists;
+        return $parent !== null && $this->canManageParent($user, $parent);
     }
 
-    /**
-     * Determine whether the user can update the model.
-     */
     public function update(User $user, Contact $contact): bool
     {
-        return $user->exists && $contact->exists;
+        return $contact->exists && $this->canManageParent($user, $contact->contactable);
     }
 
-    /**
-     * Determine whether the user can delete the model.
-     */
     public function delete(User $user, Contact $contact): bool
     {
-        return $user->exists && $contact->exists;
+        return $contact->exists && $this->canManageParent($user, $contact->contactable);
     }
 
-    /**
-     * Determine whether the user can restore the model.
-     */
     public function restore(User $user, Contact $contact): bool
     {
-        return $user->exists && $contact->exists;
+        return $this->delete($user, $contact);
     }
 
-    /**
-     * Determine whether the user can permanently delete the model.
-     */
     public function forceDelete(User $user, Contact $contact): bool
     {
-        return $user->exists && $contact->exists;
+        return $this->delete($user, $contact);
+    }
+
+    private function canManageParent(User $user, ?Model $parent): bool
+    {
+        if ($parent instanceof User) {
+            return $user->is($parent);
+        }
+
+        if ($parent instanceof ServiceProvider) {
+            return ServiceProviderPolicy::canManageExternals($user);
+        }
+
+        if ($parent instanceof Accommodation) {
+            return $user->can('update', $parent);
+        }
+
+        return false;
     }
 }

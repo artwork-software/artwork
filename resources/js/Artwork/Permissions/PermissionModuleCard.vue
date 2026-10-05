@@ -43,7 +43,11 @@
         </header>
 
         <div v-if="open" class="border-t border-border-subtle px-4 pb-4 pt-3 sm:px-5">
-            <p v-if="module.hint" class="mb-3 rounded-xl bg-accent-50/60 px-3 py-2 text-xs text-text-muted">
+            <!-- setting_hints: solange eine Instanz-Einstellung aktiv ist, ersetzt ihr Hinweis den Modul-Hinweis -->
+            <p v-if="activeSettingHint" class="mb-3 rounded-xl bg-warning-surface px-3 py-2 text-xs text-warning">
+                {{ $t(activeSettingHint) }}
+            </p>
+            <p v-else-if="module.hint" class="mb-3 rounded-xl bg-accent-50/60 px-3 py-2 text-xs text-text-muted">
                 {{ $t(module.hint) }}
             </p>
 
@@ -131,6 +135,8 @@ const props = defineProps({
     rowState: { type: Object, default: () => ({}) },
     titles: { type: Object, default: () => ({}) },
     readonly: { type: Boolean, default: false },
+    /** Instanz-Einstellungen (catalog.instance.settings) für setting_hints */
+    instanceSettings: { type: Object, default: () => ({}) },
     highlightedName: { type: String, default: null },
     initiallyOpen: { type: Boolean, default: true },
     /** Feinrechte ausgeklappt zeigen (z. B. bei Suche) */
@@ -161,6 +167,11 @@ const hasVisiblePreviousTier = (def) => {
 }
 
 const advancedGranted = computed(() => props.advanced.filter((d) => props.rowState[d.name]?.checked || props.rowState[d.name]?.implied).length)
+
+const activeSettingHint = computed(() => {
+    const entry = Object.entries(props.module.setting_hints ?? {}).find(([key]) => !!props.instanceSettings?.[key])
+    return entry ? entry[1] : null
+})
 
 const rowProps = (def) => ({
     definition: def,

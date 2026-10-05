@@ -2,6 +2,8 @@
 
 namespace Artwork\Modules\WorkTime\Http\Requests;
 
+use Artwork\Modules\Shift\Models\Shift;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Foundation\Http\FormRequest;
 
 class StoreWorkTimeChangeRequestRequest extends FormRequest
@@ -11,7 +13,15 @@ class StoreWorkTimeChangeRequestRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return true;
+        $user = $this->user();
+
+        return $user !== null
+            && $this->integer('user_id') === $user->id
+            && Shift::query()
+                ->whereKey($this->integer('shift_id'))
+                ->where('craft_id', $this->integer('craft_id'))
+                ->whereHas('users', fn (Builder $query): Builder => $query->where('users.id', $user->id))
+                ->exists();
     }
 
     /**
@@ -28,7 +38,6 @@ class StoreWorkTimeChangeRequestRequest extends FormRequest
             'craft_id' => 'required|exists:crafts,id',
             'request_comment' => 'required|string|max:255',
             'user_id' => 'required|exists:users,id',
-            'requested_by' => 'required|exists:users,id',
         ];
     }
 }

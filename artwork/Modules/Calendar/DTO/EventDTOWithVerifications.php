@@ -15,6 +15,7 @@ use Spatie\LaravelData\Optional;
 class EventDTOWithVerifications extends Data
 {
     use SerializesEventRelations;
+
     public function __construct(
         public int $id,
         public string $start,

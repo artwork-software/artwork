@@ -9,6 +9,7 @@ use Artwork\Modules\Budget\Models\Table;
 use Artwork\Modules\Budget\Repositories\TableRepository;
 use Artwork\Modules\Project\Models\Project;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Facades\DB;
 
 readonly class TableService
 {
@@ -53,26 +54,39 @@ readonly class TableService
         SageNotAssignedDataService $sageNotAssignedDataService,
         SageAssignedDataService $sageAssignedDataService
     ): void {
-        $table->mainPositions->each(
-            function (MainPosition $mainPosition) use (
-                $mainPositionService,
-                $sumCommentService,
-                $sumMoneySourceService,
-                $subPositionVerifiedService,
-                $subPositionSumDetailService,
-                $subPositionRowService,
-                $rowCommentService,
-                $columnCellService,
-                $mainPositionVerifiedService,
-                $mainPositionDetailsService,
-                $subPositionService,
-                $cellCommentService,
-                $cellCalculationService,
-                $sageNotAssignedDataService,
-                $sageAssignedDataService
-            ): void {
-                $mainPositionService->forceDelete(
-                    $mainPosition,
+        DB::beginTransaction();
+        try {
+            // Eine Vorlage im Papierkorb hat soft-gelöschte Positionen/Spalten — die Kaskade unten läuft
+            // nur über nicht gelöschte Kinder und ließ sie als Datenleichen zurück. Deshalb erst den
+            // ganzen Baum wiederherstellen und dann vollständig löschen (bei Fehler: alles zurück).
+            if ($table->trashed()) {
+                $this->restore(
+                    $table,
+                    $mainPositionService,
+                    $columnService,
+                    $sumCommentService,
+                    $sumMoneySourceService,
+                    $subPositionVerifiedService,
+                    $subPositionSumDetailService,
+                    $subPositionRowService,
+                    $rowCommentService,
+                    $columnCellService,
+                    $mainPositionVerifiedService,
+                    $mainPositionDetailsService,
+                    $subPositionService,
+                    $budgetSumDetailsService,
+                    $cellCommentService,
+                    $cellCalculationService,
+                    $sageNotAssignedDataService,
+                    $sageAssignedDataService
+                );
+                $table->refresh();
+                $table->unsetRelations();
+            }
+
+            $table->mainPositions->each(
+                function (MainPosition $mainPosition) use (
+                    $mainPositionService,
                     $sumCommentService,
                     $sumMoneySourceService,
                     $subPositionVerifiedService,
@@ -87,26 +101,30 @@ readonly class TableService
                     $cellCalculationService,
                     $sageNotAssignedDataService,
                     $sageAssignedDataService
-                );
-            }
-        );
+                ): void {
+                    $mainPositionService->forceDelete(
+                        $mainPosition,
+                        $sumCommentService,
+                        $sumMoneySourceService,
+                        $subPositionVerifiedService,
+                        $subPositionSumDetailService,
+                        $subPositionRowService,
+                        $rowCommentService,
+                        $columnCellService,
+                        $mainPositionVerifiedService,
+                        $mainPositionDetailsService,
+                        $subPositionService,
+                        $cellCommentService,
+                        $cellCalculationService,
+                        $sageNotAssignedDataService,
+                        $sageAssignedDataService
+                    );
+                }
+            );
 
-        $table->columns->each(
-            function (Column $column) use (
-                $columnService,
-                $sumCommentService,
-                $sumMoneySourceService,
-                $mainPositionDetailsService,
-                $subPositionSumDetailService,
-                $budgetSumDetailsService,
-                $columnCellService,
-                $cellCommentService,
-                $cellCalculationService,
-                $sageNotAssignedDataService,
-                $sageAssignedDataService
-            ): void {
-                $columnService->forceDelete(
-                    $column,
+            $table->columns->each(
+                function (Column $column) use (
+                    $columnService,
                     $sumCommentService,
                     $sumMoneySourceService,
                     $mainPositionDetailsService,
@@ -117,11 +135,29 @@ readonly class TableService
                     $cellCalculationService,
                     $sageNotAssignedDataService,
                     $sageAssignedDataService
-                );
-            }
-        );
+                ): void {
+                    $columnService->forceDelete(
+                        $column,
+                        $sumCommentService,
+                        $sumMoneySourceService,
+                        $mainPositionDetailsService,
+                        $subPositionSumDetailService,
+                        $budgetSumDetailsService,
+                        $columnCellService,
+                        $cellCommentService,
+                        $cellCalculationService,
+                        $sageNotAssignedDataService,
+                        $sageAssignedDataService
+                    );
+                }
+            );
 
-        $this->tableRepository->forceDelete($table);
+            $this->tableRepository->forceDelete($table);
+            DB::commit();
+        } catch (\Throwable $exception) {
+            DB::rollBack();
+            throw $exception;
+        }
     }
 
 

@@ -25,7 +25,7 @@ trait HasWorkflows
         $query = $this->workflowInstances()->whereNull('completed_at');
 
         if ($workflowType) {
-            $query->whereHas('workflowDefinitionConfig.workflowDefinition', function ($q) use ($workflowType) {
+            $query->whereHas('workflowDefinitionConfig.workflowDefinition', function ($q) use ($workflowType): void {
                 $q->where('type', $workflowType);
             });
         }
@@ -43,6 +43,7 @@ trait HasWorkflows
         ];
     }
 
+    // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter -- Default-Implementierung, Modelle überschreiben mit gleicher Signatur
     public function canHaveWorkflow(string $workflowType): bool
     {
         // Override in models to add specific logic

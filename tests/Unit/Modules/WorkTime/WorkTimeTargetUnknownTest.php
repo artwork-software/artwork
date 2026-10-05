@@ -40,8 +40,12 @@ final class WorkTimeTargetUnknownTest extends TestCase
     /**
      * @param array<string, string|null> $days
      */
-    private function workTime(User $user, array $days, string $validFrom = '2026-01-01', ?string $validUntil = null): void
-    {
+    private function workTime(
+        User $user,
+        array $days,
+        string $validFrom = '2026-01-01',
+        ?string $validUntil = null
+    ): void {
         UserWorkTime::query()->insert(array_merge([
             'user_id' => $user->id,
             'valid_from' => $validFrom,
@@ -155,7 +159,11 @@ final class WorkTimeTargetUnknownTest extends TestCase
         $user = $this->user();
         $this->workTime($user, ['monday' => '08:00'], '2026-07-21');
 
-        $targets = $this->service()->baseTargetsForRange($user, Carbon::parse(self::MONDAY), Carbon::parse('2026-07-27'));
+        $targets = $this->service()->baseTargetsForRange(
+            $user,
+            Carbon::parse(self::MONDAY),
+            Carbon::parse('2026-07-27')
+        );
 
         $this->assertNull($targets[self::MONDAY]);
         $this->assertSame(0, $targets[self::TUESDAY]); // Muster gültig, Dienstag ohne Zeit
@@ -182,12 +190,14 @@ final class WorkTimeTargetUnknownTest extends TestCase
         $this->assertNull($this->service()->currentWeeklyHours($user));
 
         $this->workTime($user, [
-            'monday' => '07:42', 'tuesday' => '07:42', 'wednesday' => '07:42', 'thursday' => '07:42', 'friday' => '07:42',
+            'monday' => '07:42', 'tuesday' => '07:42', 'wednesday' => '07:42',
+            'thursday' => '07:42', 'friday' => '07:42',
         ], '2026-01-01', '2026-06-30'); // abgelaufen
         $this->assertNull($this->service()->currentWeeklyHours($user));
 
         $this->workTime($user, [
-            'monday' => '07:42', 'tuesday' => '07:42', 'wednesday' => '07:42', 'thursday' => '07:42', 'friday' => '07:42',
+            'monday' => '07:42', 'tuesday' => '07:42', 'wednesday' => '07:42',
+            'thursday' => '07:42', 'friday' => '07:42',
         ], '2026-07-01');
         $this->assertSame(38.5, $this->service()->currentWeeklyHours($user));
     }

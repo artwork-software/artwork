@@ -13,8 +13,6 @@ class ShiftsDto extends BaseDto
 
     public ?array $serviceProvidersForShifts = null;
 
-    public ?array $eventsWithRelevant = null;
-
     public ?Collection $crafts = null;
 
     public ?Collection $currentUserCrafts = null;
@@ -67,13 +65,6 @@ class ShiftsDto extends BaseDto
         return $this;
     }
 
-    public function setEventsWithRelevant(?array $eventsWithRelevant): self
-    {
-        $this->eventsWithRelevant = $eventsWithRelevant;
-
-        return $this;
-    }
-
     public function setCrafts(?Collection $crafts): self
     {
         $this->crafts = $crafts;
@@ -117,14 +108,6 @@ class ShiftsDto extends BaseDto
     public function getServiceProvidersForShifts(): ?array
     {
         return $this->serviceProvidersForShifts;
-    }
-
-    /**
-     * @return array<string, mixed>|null
-     */
-    public function getEventsWithRelevant(): ?array
-    {
-        return $this->eventsWithRelevant;
     }
 
     public function getCrafts(): ?Collection

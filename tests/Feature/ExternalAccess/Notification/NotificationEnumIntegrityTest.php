@@ -5,7 +5,7 @@ namespace Tests\Feature\ExternalAccess\Notification;
 use Artwork\Modules\Notification\Enums\NotificationEnum;
 use Artwork\Modules\Notification\Enums\NotificationGroupEnum;
 use PHPUnit\Framework\Attributes\Test;
-use Tests\TestCase;
+use Tests\Feature\ExternalAccess\ExternalAccessTestCase as TestCase;
 
 final class NotificationEnumIntegrityTest extends TestCase
 {

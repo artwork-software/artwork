@@ -4,7 +4,7 @@
             <!-- Header -->
             <header class="flex items-start justify-between">
                 <div>
-                    <h1 class="text-xl font-semibold">{{ access.crm_contact.display_name }}</h1>
+                    <h1 class="text-xl font-semibold">{{ access.display_name ?? access.crm_contact?.display_name ?? access.email }}</h1>
                     <p class="text-sm text-text-subtle">{{ access.email }}</p>
                     <div class="mt-2 flex items-center gap-2">
                         <StatusBadge :status="resolveStatus()" />
@@ -15,6 +15,7 @@
                     </div>
                 </div>
                 <div class="flex gap-2" v-if="canManage">
+                    <BaseUIButton v-if="!access.revoked_at" variant="secondary" hide-icon @click="resendInvitation">{{ $t('Resend invitation') }}</BaseUIButton>
                     <BaseUIButton v-if="!access.revoked_at" variant="secondary" hide-icon @click="revokeOpen = true">{{ $t('Revoke access') }}</BaseUIButton>
                     <BaseUIButton v-else hide-icon @click="reactivate">{{ $t('Reactivate') }}</BaseUIButton>
                     <BaseUIButton v-if="canRelink" hide-icon @click="relinkOpen = true">{{ $t('Re-link to another contact') }}</BaseUIButton>
@@ -25,11 +26,14 @@
             <section class="rounded-2xl border border-border-subtle bg-white p-6">
                 <header class="flex items-center justify-between">
                     <h2 class="text-lg font-semibold">{{ $t('CRM access') }}</h2>
-                    <BaseUIButton v-if="canManage" hide-icon @click="extendCrmOpen = true">{{ $t('Extend') }}</BaseUIButton>
+                    <BaseUIButton v-if="canManage && access.crm_contact" hide-icon @click="extendCrmOpen = true">{{ $t('Extend') }}</BaseUIButton>
                 </header>
-                <p class="mt-4 text-sm">
+                <p v-if="access.crm_contact" class="mt-4 text-sm">
                     <strong>{{ $t('Valid until') }}:</strong>
                     {{ formatDate(access.crm_access_expires_at) ?? $t('No expiry') }}
+                </p>
+                <p v-else class="mt-4 text-sm text-text-subtle">
+                    {{ $t('Tab access only (no own CRM contact)') }}
                 </p>
             </section>
 
@@ -43,6 +47,7 @@
                             <th class="py-2">{{ $t('Tab') }}</th>
                             <th class="py-2">{{ $t('Access') }}</th>
                             <th class="py-2">{{ $t('Valid') }}</th>
+                            <th class="py-2">{{ $t('Last submitted') }}</th>
                             <th class="py-2"></th>
                         </tr>
                     </thead>
@@ -58,6 +63,9 @@
                             <td class="py-3 text-sm">
                                 {{ formatDate(scope.valid_from) }} – {{ formatDate(scope.valid_to) }}
                                 <span v-if="isExpired(scope)" class="text-xs text-text-subtle ml-1">({{ $t('expired') }})</span>
+                            </td>
+                            <td class="py-3 text-sm">
+                                {{ formatDateTime(scope.last_submitted_at) || $t('Not submitted yet') }}
                             </td>
                             <td class="py-3 text-right" v-if="canManage">
                                 <div class="flex justify-end gap-2">
@@ -211,6 +219,11 @@ function revoke() {
 
 function reactivate() {
     router.post(route('crm.external-access.reactivate', props.access.id), {}, opts)
+}
+
+function resendInvitation() {
+    if (!window.confirm($t('Resend invitation') + '?')) return
+    router.post(route('crm.external-access.resend-invitation', props.access.id), {}, opts)
 }
 
 function extendCrm() {

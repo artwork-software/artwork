@@ -11,19 +11,22 @@ class UserCommentedBudgetItemsSettingController extends Controller
 {
     public function store(Request $request, User $user): void
     {
+        $this->authorize('updateOwnPreferences', $user);
+
         $validated = $request->validate(['exclude' => 'required|boolean']);
         $user->commentedBudgetItemsSetting()->create([
             'exclude' => $validated['exclude']
         ]);
     }
 
-    /* $user parameter is required otherwise the route model binding isn't working properly, suppress phpcs error
-    phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.FoundInExtendedClassBeforeLastUsed */
     public function update(
         Request $request,
         User $user,
         UserCommentedBudgetItemsSetting $commentedBudgetItemsSetting
     ): void {
+        $this->authorize('updateOwnPreferences', $user);
+        abort_unless((int) $commentedBudgetItemsSetting->user_id === (int) $user->id, 403);
+
         $validated = $request->validate(['exclude' => 'required|boolean']);
         $commentedBudgetItemsSetting->update(['exclude' => $validated['exclude']]);
     }

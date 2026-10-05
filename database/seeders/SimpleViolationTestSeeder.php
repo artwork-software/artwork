@@ -17,7 +17,7 @@ class SimpleViolationTestSeeder extends Seeder
         // 1. Get first user and contract
         $user = User::first();
         $contract = UserContract::first();
-        
+
         if (!$user || !$contract) {
             $this->command->error('Missing user or contract data');
             return;

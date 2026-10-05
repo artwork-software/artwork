@@ -149,8 +149,11 @@ class InventoryArticleService
         return $query->pluck('inventory_articles.id')->all();
     }
 
-    protected function applyStableOrdering(Builder $query, ?InventoryCategory $category, ?InventorySubCategory $subCategory): void
-    {
+    protected function applyStableOrdering(
+        Builder $query,
+        ?InventoryCategory $category,
+        ?InventorySubCategory $subCategory
+    ): void {
         // Wenn eine Subkategorie fix ist: innerhalb einfach nach Name
         if ($subCategory) {
             $query->orderBy('inventory_articles.name', 'asc')
@@ -160,7 +163,12 @@ class InventoryArticleService
 
         // Wenn Kategorie fix ist: nach Subkategorie-Name, dann Artikelname
         if ($category) {
-            $query->leftJoin('inventory_sub_categories as isc', 'isc.id', '=', 'inventory_articles.inventory_sub_category_id')
+            $query->leftJoin(
+                'inventory_sub_categories as isc',
+                'isc.id',
+                '=',
+                'inventory_articles.inventory_sub_category_id'
+            )
                 ->select('inventory_articles.*')
                 ->orderBy('isc.name', 'asc')
                 ->orderBy('inventory_articles.name', 'asc')
@@ -453,7 +461,10 @@ class InventoryArticleService
 
             // Sicheres Zugreifen auf statusValues — suche nach Name statt ID
             $oldStatus1 = null;
-            if ($article->statusValues && ($readyStatus = $article->statusValues->firstWhere('name', 'Einsatzbereit'))) {
+            if (
+                $article->statusValues
+                 && ($readyStatus = $article->statusValues->firstWhere('name', 'Einsatzbereit'))
+            ) {
                 $oldStatus1 = $readyStatus->pivot->value ?? null;
             }
 
@@ -516,7 +527,11 @@ class InventoryArticleService
 
             // Nachherige Statuswerte prüfen — suche nach Name statt ID
             $newStatus1 = null;
-            if ($article && $article->statusValues && ($readyStatus = $article->statusValues->firstWhere('name', 'Einsatzbereit'))) {
+            if (
+                $article
+                 && $article->statusValues
+                 && ($readyStatus = $article->statusValues->firstWhere('name', 'Einsatzbereit'))
+            ) {
                 $newStatus1 = $readyStatus->pivot->value ?? null;
             }
 
@@ -558,11 +573,19 @@ class InventoryArticleService
             ->get();
         foreach ($internalIssues as $issue) {
             foreach ($issue->responsibleUsers as $user) {
-                $notificationTitle = __('notification.inventory_article_changed_title', ['articleName' => $article->name], $user->language);
+                $notificationTitle = __(
+                    'notification.inventory_article_changed_title',
+                    ['articleName' => $article->name],
+                    $user->language
+                );
                 $notificationDescription = [
                     1 => [
                         'type' => 'string',
-                        'title' => __('notification.inventory_article_changed_description', ['articleName' => $article->name], $user->language)
+                        'title' => __(
+                            'notification.inventory_article_changed_description',
+                            ['articleName' => $article->name],
+                            $user->language
+                        )
                     ],
                     2 => [
                         'type' => 'link',
@@ -579,7 +602,9 @@ class InventoryArticleService
                 $notificationService->setDescription($notificationDescription);
                 $notificationService->setIcon('warning');
                 $notificationService->setPriority(3);
-                $notificationService->setNotificationConstEnum(\Artwork\Modules\Notification\Enums\NotificationEnum::NOTIFICATION_INVENTORY_ARTICLE_CHANGED);
+                $notificationService->setNotificationConstEnum(
+                    \Artwork\Modules\Notification\Enums\NotificationEnum::NOTIFICATION_INVENTORY_ARTICLE_CHANGED
+                );
                 $notificationService->setBroadcastMessage($broadcastMessage);
                 $notificationService->setNotificationTo($user);
                 $notificationService->setModelId($issue->id);
@@ -592,11 +617,19 @@ class InventoryArticleService
         foreach ($externalIssues as $issue) {
             if ($issue->issuedBy) {
                 $user = $issue->issuedBy;
-                $notificationTitle = __('notification.inventory_article_changed_title', ['articleName' => $article->name], $user->language);
+                $notificationTitle = __(
+                    'notification.inventory_article_changed_title',
+                    ['articleName' => $article->name],
+                    $user->language
+                );
                 $notificationDescription = [
                     1 => [
                         'type' => 'string',
-                        'title' => __('notification.inventory_article_changed_description', ['articleName' => $article->name], $user->language)
+                        'title' => __(
+                            'notification.inventory_article_changed_description',
+                            ['articleName' => $article->name],
+                            $user->language
+                        )
                     ],
                     2 => [
                         'type' => 'link',
@@ -613,7 +646,9 @@ class InventoryArticleService
                 $notificationService->setDescription($notificationDescription);
                 $notificationService->setIcon('warning');
                 $notificationService->setPriority(3);
-                $notificationService->setNotificationConstEnum(\Artwork\Modules\Notification\Enums\NotificationEnum::NOTIFICATION_INVENTORY_ARTICLE_CHANGED);
+                $notificationService->setNotificationConstEnum(
+                    \Artwork\Modules\Notification\Enums\NotificationEnum::NOTIFICATION_INVENTORY_ARTICLE_CHANGED
+                );
                 $notificationService->setBroadcastMessage($broadcastMessage);
                 $notificationService->setNotificationTo($user);
                 $notificationService->setModelId($issue->id);
@@ -637,15 +672,25 @@ class InventoryArticleService
                 ->sum('issuable_inventory_article.quantity');
             if ($totalPlanned > $article->quantity) {
                 foreach ($issue->responsibleUsers as $user) {
-                    $notificationTitle = __('notification.inventory_article_overbooked_title', ['issueName' => $issue->name, 'articleName' => $article->name], $user->language);
+                    $notificationTitle = __('notification.inventory_article_overbooked_title', [
+                        'issueName' => $issue->name,
+                        'articleName' => $article->name,
+                    ], $user->language);
                     $notificationDescription = [
                         1 => [
                             'type' => 'string',
-                            'title' => __('notification.inventory_article_overbooked_description', ['issueName' => $issue->name, 'articleName' => $article->name], $user->language)
+                            'title' => __('notification.inventory_article_overbooked_description', [
+                                'issueName' => $issue->name,
+                                'articleName' => $article->name,
+                            ], $user->language)
                         ],
                         2 => [
                             'type' => 'link',
-                            'title' => __('notification.material_issue', ['issueName' => $issue->name], $user->language),
+                            'title' => __(
+                                'notification.material_issue',
+                                ['issueName' => $issue->name],
+                                $user->language
+                            ),
                             'href' => route('issue-of-material.index', ['issue' => $issue->id])
                         ]
                     ];
@@ -658,7 +703,9 @@ class InventoryArticleService
                     $notificationService->setDescription($notificationDescription);
                     $notificationService->setIcon('red');
                     $notificationService->setPriority(3);
-                    $notificationService->setNotificationConstEnum(\Artwork\Modules\Notification\Enums\NotificationEnum::NOTIFICATION_INVENTORY_OVERBOOKED);
+                    $notificationService->setNotificationConstEnum(
+                        \Artwork\Modules\Notification\Enums\NotificationEnum::NOTIFICATION_INVENTORY_OVERBOOKED
+                    );
                     $notificationService->setBroadcastMessage($broadcastMessage);
                     $notificationService->setNotificationTo($user);
                     $notificationService->setModelId($issue->id);
@@ -674,11 +721,17 @@ class InventoryArticleService
                 ->sum('issuable_inventory_article.quantity');
             if ($totalPlanned > $article->quantity && $issue->issuedBy) {
                 $user = $issue->issuedBy;
-                $notificationTitle = __('notification.inventory_article_overbooked_title', ['issueName' => $issue->name, 'articleName' => $article->name], $user->language);
+                $notificationTitle = __('notification.inventory_article_overbooked_title', [
+                    'issueName' => $issue->name,
+                    'articleName' => $article->name,
+                ], $user->language);
                 $notificationDescription = [
                     1 => [
                         'type' => 'string',
-                        'title' => __('notification.inventory_article_overbooked_description', ['issueName' => $issue->name, 'articleName' => $article->name], $user->language)
+                        'title' => __('notification.inventory_article_overbooked_description', [
+                            'issueName' => $issue->name,
+                            'articleName' => $article->name,
+                        ], $user->language)
                     ],
                     2 => [
                         'type' => 'link',
@@ -695,7 +748,9 @@ class InventoryArticleService
                 $notificationService->setDescription($notificationDescription);
                 $notificationService->setIcon('red');
                 $notificationService->setPriority(3);
-                $notificationService->setNotificationConstEnum(\Artwork\Modules\Notification\Enums\NotificationEnum::NOTIFICATION_INVENTORY_OVERBOOKED);
+                $notificationService->setNotificationConstEnum(
+                    \Artwork\Modules\Notification\Enums\NotificationEnum::NOTIFICATION_INVENTORY_OVERBOOKED
+                );
                 $notificationService->setBroadcastMessage($broadcastMessage);
                 $notificationService->setNotificationTo($user);
                 $notificationService->setModelId($issue->id);
@@ -711,8 +766,10 @@ class InventoryArticleService
      * @param StoreInventoryArticleRequest|UpdateInventoryArticleRequest $request
      * @return void
      */
-    protected function processArticleImages(InventoryArticle $article, StoreInventoryArticleRequest|UpdateInventoryArticleRequest $request): void
-    {
+    protected function processArticleImages(
+        InventoryArticle $article,
+        StoreInventoryArticleRequest|UpdateInventoryArticleRequest $request
+    ): void {
         $images = $request->file('newImages') ?? [];
         if (count($images) > 0) {
             // Only treat main_image_index as set when it was actually sent —
@@ -731,8 +788,10 @@ class InventoryArticleService
      * @param StoreInventoryArticleRequest|UpdateInventoryArticleRequest $request
      * @return void
      */
-    protected function processArticleProperties(InventoryArticle $article, StoreInventoryArticleRequest|UpdateInventoryArticleRequest $request): void
-    {
+    protected function processArticleProperties(
+        InventoryArticle $article,
+        StoreInventoryArticleRequest|UpdateInventoryArticleRequest $request
+    ): void {
         $this->articleRepository->attachProperties($article, $request->collect('properties'));
         $this->syncDetailedArticles($article, $request->collect('detailed_article_quantities'));
     }
@@ -740,7 +799,8 @@ class InventoryArticleService
     /**
      * Synchronisiert DetailArticles per ID:
      * - vorhandene IDs => Update + Property-Sync
-     * - fehlende IDs (im Request nicht mehr vorhanden) => Soft-Delete (Properties detachen, inventory_number bleibt belegt)
+     * - fehlende IDs (im Request nicht mehr vorhanden) => Soft-Delete (Properties detachen, inventory_number bleibt
+     * belegt)
      * - ohne ID => Neu anlegen mit nächster freier detail_number (max+1, inkl. trashed)
      */
     protected function syncDetailedArticles(InventoryArticle $article, SupportCollection $incoming): void
@@ -791,8 +851,14 @@ class InventoryArticleService
                     'quantity' => $detailData['quantity'],
                     'inventory_article_status_id' => $detailData['status']['id'] ?? null,
                     'detail_number' => $nextDetailNumber,
-                    'external_id' => TypeNumberGenerator::generateDetailExternalId($article->external_id, $nextDetailNumber),
-                    'inventory_number' => TypeNumberGenerator::generateDetailInventoryNumber($article->inventory_number, $nextDetailNumber),
+                    'external_id' => TypeNumberGenerator::generateDetailExternalId(
+                        $article->external_id,
+                        $nextDetailNumber
+                    ),
+                    'inventory_number' => TypeNumberGenerator::generateDetailInventoryNumber(
+                        $article->inventory_number,
+                        $nextDetailNumber
+                    ),
                 ]);
                 $nextDetailNumber++;
             }

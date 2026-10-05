@@ -39,6 +39,7 @@ readonly class ShiftServiceProviderService
     /**
      * Service Provider einer Schicht zuweisen (inkl. Serienlogik).
      */
+    // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter -- Signatur an vielen Aufrufstellen positional – Bereinigung ist ein eigenes Refactoring
     public function assignToShift(
         Shift $shift,
         int $serviceProviderId,
@@ -75,6 +76,7 @@ readonly class ShiftServiceProviderService
     /**
      * Service Provider aus Schicht entfernen (inkl. Serienlogik).
      */
+    // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter -- Signatur an vielen Aufrufstellen positional – Bereinigung ist ein eigenes Refactoring
     public function removeFromShift(
         ShiftServiceProvider|int $serviceProvidersPivot,
         bool $removeFromSingleShift,
@@ -118,7 +120,9 @@ readonly class ShiftServiceProviderService
             $shiftServiceProviderPivot->load('serviceProvider');
         }
 
-        $shiftWorkerPivot = $this->shiftWorkerService->convertShiftServiceProviderToShiftWorker($shiftServiceProviderPivot);
+        $shiftWorkerPivot = $this
+            ->shiftWorkerService
+            ->convertShiftServiceProviderToShiftWorker($shiftServiceProviderPivot);
         if (!$shiftWorkerPivot) {
             // Fallback: Wenn kein ShiftWorker gefunden, lösche direkt aus alter Tabelle
             $this->forceDelete($shiftServiceProviderPivot);
@@ -139,6 +143,7 @@ readonly class ShiftServiceProviderService
         );
     }
 
+    // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter -- Signatur an vielen Aufrufstellen positional – Bereinigung ist ein eigenes Refactoring
     private function removeServiceProviderFromAllShiftsWithSameUuid(
         Shift $shift,
         ServiceProvider $serviceProvider,
@@ -179,7 +184,9 @@ readonly class ShiftServiceProviderService
 
             $shift = $shiftWorkerPivot->shift;
             if (!$shift) {
-                throw new \RuntimeException("Shift for ShiftWorker pivot ID {$usersPivot} not found (shift_id: {$shiftWorkerPivot->shift_id})");
+                throw new \RuntimeException(
+                    "Shift for ShiftWorker pivot ID {$usersPivot} not found (shift_id: {$shiftWorkerPivot->shift_id})"
+                );
             }
 
             return $shift;
@@ -200,7 +207,10 @@ readonly class ShiftServiceProviderService
 
         $shift = $shiftServiceProviderPivot->shift;
         if (!$shift) {
-            throw new \RuntimeException("Shift for ShiftServiceProvider pivot ID {$usersPivot} not found (shift_id: {$shiftServiceProviderPivot->shift_id})");
+            throw new \RuntimeException(
+                "Shift for ShiftServiceProvider pivot ID {$usersPivot} not found "
+                . "(shift_id: {$shiftServiceProviderPivot->shift_id})"
+            );
         }
 
         return $shift;

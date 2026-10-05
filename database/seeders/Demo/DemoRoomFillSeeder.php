@@ -96,7 +96,12 @@ class DemoRoomFillSeeder extends Seeder
             if ($project->wasRecentlyCreated) {
                 $manager = $this->context->demoUser('Deniz', 'Aydın') ?? $this->context->adminUser();
                 $project->users()->syncWithoutDetaching([
-                    $manager->id => ['is_manager' => true, 'can_write' => true, 'access_budget' => false, 'delete_permission' => false],
+                    $manager->id => [
+                        'is_manager' => true,
+                        'can_write' => true,
+                        'access_budget' => false,
+                        'delete_permission' => false,
+                    ],
                 ]);
             }
             $projects->put($key, $project);

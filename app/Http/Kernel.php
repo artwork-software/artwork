@@ -11,6 +11,7 @@ use Artwork\Core\Http\Middleware\HandleInertiaRequests;
 use Artwork\Core\Http\Middleware\Localization;
 use Artwork\Core\Http\Middleware\PreventRequestsDuringMaintenance;
 use Artwork\Core\Http\Middleware\RedirectIfAuthenticated;
+use Artwork\Core\Http\Middleware\SecurityHeaders;
 use Artwork\Core\Http\Middleware\TrimStrings;
 use Artwork\Core\Http\Middleware\TrustProxies;
 use Artwork\Core\Http\Middleware\VerifyCsrfToken;
@@ -54,6 +55,7 @@ class Kernel extends HttpKernel
 
     protected $middlewareGroups = [
         'web' => [
+            SecurityHeaders::class,
             EncryptCookies::class,
             AddQueuedCookiesToResponse::class,
             StartSession::class,
@@ -89,6 +91,8 @@ class Kernel extends HttpKernel
         // HandleInertiaRequests (which leaks permissions/roles), SetDeveloperEnvironment, and
         // UpdateUserStatus — all of those are internal-user concerns.
         'external' => [
+            \Artwork\Modules\ExternalAccess\Http\Middleware\EnsureExternalAccessEnabled::class,
+            SecurityHeaders::class,
             EncryptCookies::class,
             AddQueuedCookiesToResponse::class,
             SwapExternalSessionConfig::class,
@@ -103,6 +107,8 @@ class Kernel extends HttpKernel
         ],
 
         'external.guest' => [
+            \Artwork\Modules\ExternalAccess\Http\Middleware\EnsureExternalAccessEnabled::class,
+            SecurityHeaders::class,
             EncryptCookies::class,
             AddQueuedCookiesToResponse::class,
             SwapExternalSessionConfig::class,
@@ -131,5 +137,6 @@ class Kernel extends HttpKernel
         'role_or_permission' => RoleOrPermissionMiddleware::class,
         'shift-settings-area' => \App\Http\Middleware\EnsureShiftSettingsAreaPermission::class,
         'external.scoped' => \Artwork\Modules\ExternalAccess\Http\Middleware\EnsureScopedAccess::class,
+        'external.crm' => \Artwork\Modules\ExternalAccess\Http\Middleware\EnsureCrmAccessActive::class,
     ];
 }

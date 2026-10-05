@@ -71,7 +71,10 @@ abstract class AbstractRuleCheck implements ShiftRuleCheckInterface
     {
         $totalMinutes = 0;
         foreach ($this->getIndividualTimeSegmentsOfDay($user, $date) as $segment) {
-            $totalMinutes += max(0, (int) $segment['start']->diffInMinutes($segment['end']) - $segment['break_minutes']);
+            $totalMinutes += max(
+                0,
+                (int) $segment['start']->diffInMinutes($segment['end']) - $segment['break_minutes']
+            );
         }
 
         return $totalMinutes;
@@ -83,7 +86,13 @@ abstract class AbstractRuleCheck implements ShiftRuleCheckInterface
      * break_minutes ist nur am ersten Tag des Eintrags gesetzt (sonst 0) — Grundlage für
      * getIndividualTimeMinutesForDay() und die tagesgenaue Nachtarbeit (NightWorkMaxHoursCheck).
      *
-     * @return list<array{start: Carbon, end: Carbon, individual_time: IndividualTime, break_minutes: int, first_day: bool}>
+     * @return list<array{
+     *     start: Carbon,
+     *     end: Carbon,
+     *     individual_time: IndividualTime,
+     *     break_minutes: int,
+     *     first_day: bool,
+     * }>
      */
     protected function getIndividualTimeSegmentsOfDay(User $user, Carbon $date): array
     {
@@ -309,6 +318,7 @@ abstract class AbstractRuleCheck implements ShiftRuleCheckInterface
 
         if ($this->context !== null && $this->context->covers($from, $to)) {
             return $this->context->grantedHalvesByDate()
+                // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter -- Collection-Callback (value, key) – Signatur vorgegeben
                 ->filter(fn ($halves, string $dateKey): bool => $dateKey >= $fromKey && $dateKey <= $toKey);
         }
 
@@ -437,8 +447,12 @@ abstract class AbstractRuleCheck implements ShiftRuleCheckInterface
      * @return list<array{start: Carbon, end: Carbon, start_key: string, end_key: string, source: string,
      *               shift: Shift|null, individual_time: IndividualTime|null, break_minutes: int, group_id: int|null}>
      */
-    protected function getWorkIntervals(User $user, Carbon $from, Carbon $to, bool $includeIndividualTimes = true): array
-    {
+    protected function getWorkIntervals(
+        User $user,
+        Carbon $from,
+        Carbon $to,
+        bool $includeIndividualTimes = true
+    ): array {
         $intervals = [];
         foreach ($this->getShiftsForRange($user, $from, $to) as $shift) {
             $interval = $this->shiftInterval($shift);

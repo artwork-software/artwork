@@ -26,7 +26,7 @@ use Artwork\Modules\User\Models\User;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Notification;
 use PHPUnit\Framework\Attributes\Test;
-use Tests\TestCase;
+use Tests\Feature\ExternalAccess\ExternalAccessTestCase as TestCase;
 
 final class ExternalAccessServiceInviteTest extends TestCase
 {

@@ -12,10 +12,14 @@ Route::middleware('external.guest')
         Route::post('login', [ExternalLoginController::class, 'requestLink'])
             ->middleware('throttle:external-request-link')
             ->name('login.request');
-        Route::get('login/{token}', [ExternalLoginController::class, 'redeem'])
-            ->middleware('throttle:external-redeem-token')
+        // GET zeigt nur die Bestätigungsseite (Link-Vorschauen dürfen das Einmal-Token nicht verbrennen); der POST löst es ein.
+        Route::get('login/{token}', [ExternalLoginController::class, 'showRedeemConfirmation'])
             ->where('token', '[A-Za-z0-9]{64}')
             ->name('login.redeem');
+        Route::post('login/{token}', [ExternalLoginController::class, 'redeem'])
+            ->middleware('throttle:external-redeem-token')
+            ->where('token', '[A-Za-z0-9]{64}')
+            ->name('login.redeem.store');
 
         Route::get('login-sent', fn () => Inertia::render('Auth/LinkSent'))
             ->name('login.link-sent');

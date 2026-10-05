@@ -10,6 +10,6 @@ use Illuminate\Support\Collection;
 interface ShiftRuleCheckInterface
 {
     public function check(ShiftRule $rule, User $user, Carbon $startDate, Carbon $endDate): Collection;
-    
+
     public function getTriggerType(): string;
 }

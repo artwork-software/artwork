@@ -71,4 +71,3 @@ class ExternalUserGroupMappingController extends Controller
         return Redirect::back()->with('success', __('flash-messages.external_user_group_mapping.success.delete'));
     }
 }
-

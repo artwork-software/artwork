@@ -2,9 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use Artwork\Modules\Project\Http\Requests\StoreProjectRoleRequest;
 use Artwork\Modules\Project\Models\ProjectRole;
 use Artwork\Modules\Project\Services\ProjectRoleService;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 
@@ -37,9 +37,9 @@ class ProjectRoleController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request): void
+    public function store(StoreProjectRoleRequest $request): void
     {
-        $this->projectRoleService->createByRequest($request->all());
+        $this->projectRoleService->createByRequest($request->validated());
     }
 
     /**
@@ -61,9 +61,9 @@ class ProjectRoleController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, ProjectRole $projectRole): void
+    public function update(StoreProjectRoleRequest $request, ProjectRole $projectRole): void
     {
-        $this->projectRoleService->updateByRequest($projectRole, $request->all());
+        $this->projectRoleService->updateByRequest($projectRole, $request->validated());
     }
 
     /**

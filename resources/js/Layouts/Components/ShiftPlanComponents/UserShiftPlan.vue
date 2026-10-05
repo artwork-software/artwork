@@ -87,7 +87,17 @@
                                 v-for="day in week.days"
                                 :key="day.date"
                                 class="flex flex-col min-h-[10rem]"
-                                :class="{ 'bg-surface-sunken/80': !isInRequestedRange(day.date) }"
+                                :class="[
+                                    { 'bg-surface-sunken/80': !isInRequestedRange(day.date) },
+                                    unavailableRingClass(day),
+                                ]"
+                                v-tooltip.bottom="unavailableAssignment(day) ? {
+                                    value: unavailableTooltip(day),
+                                    appendTo: 'body',
+                                    class: 'aw-tooltip',
+                                    position: 'bottom',
+                                    useTranslation: false
+                                } : null"
                             >
                                 <!-- Tages-Kopf -->
                                 <div
@@ -98,6 +108,18 @@
                                         {{ weekdayShort(day.date) }} {{ formatDayShort(day.date) }}
                                     </span>
                                     <div class="flex items-center gap-1">
+                                        <!-- Abwesenheitseintrag trotz Schicht: gleiche Warnung wie im Schichtplan -->
+                                        <svg
+                                            v-if="unavailableAssignment(day)"
+                                            class="h-3.5 w-3.5 shrink-0"
+                                            :class="unavailableIconClass(day)"
+                                            fill="currentColor"
+                                            viewBox="0 0 20 20"
+                                            aria-hidden="true"
+                                        >
+                                            <title>{{ unavailableTooltip(day) }}</title>
+                                            <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+                                        </svg>
                                         <div v-if="violationsForDay(day).length" class="flex items-center gap-0.5">
                                             <div
                                                 v-for="violation in violationsForDay(day)"
@@ -130,7 +152,7 @@
                                         </span>
                                         <!-- Projektwunsch für diesen Tag eintragen (nur eigener Einsatzplan) -->
                                         <button
-                                            v-if="isOwnPlan"
+                                            v-if="isOwnPlan && projectAssignmentsEnabled"
                                             type="button"
                                             class="p-0.5 rounded hover:bg-surface-sunken transition"
                                             :title="$t('Enter project wish')"
@@ -214,7 +236,7 @@
                                     <template v-if="itemsForDay(day).length">
                                         <div v-for="i in itemsForDay(day)" :key="i._key" class="space-y-1">
                                             <div class="text-[11px] text-text-muted">
-                                                {{ i.start }}–{{ i.end }}
+                                                {{ i._displayStart ?? i.start }}–{{ i._displayEnd ?? i.end }}
                                                 <span v-if="i._crossesMidnight" class="ml-1 inline-block rounded bg-surface-sunken px-1 py-0.5">
                                                     → +1&nbsp;Tag
                                                 </span>
@@ -344,6 +366,7 @@
         :initial-start-date="dateValue[0]"
         :initial-end-date="dateValue[1]"
         :prefill-search="prefillSearchName"
+        :initial-person="historyPerson"
         auto-load
         @close="showHistoryModal = false"
     />
@@ -413,8 +436,10 @@ const page = usePage()
 const daysWithData = computed(() => props.daysWithData ?? (page.props?.daysWithData || {}))
 
 // --- Projektzuordnungen + Wünsche (Map Y-m-d => Einträge, aus dem Page-Payload) ---
+// Globaler Schalter „Projektzuordnungen“ (Schichteinstellungen)
+const projectAssignmentsEnabled = computed(() => page.props?.project_assignments_enabled !== false)
 const projectAssignments = computed(() => page.props?.projectAssignments || {})
-const assignmentsForDay = (day) => projectAssignments.value?.[day.date] ?? []
+const assignmentsForDay = (day) => projectAssignmentsEnabled.value ? (projectAssignments.value?.[day.date] ?? []) : []
 
 // Wünsche darf nur die Person selbst eintragen (eigener Einsatzplan)
 const isOwnPlan = computed(() => props.type === 'user' && page.props?.auth?.user?.id === props.userToEditId)
@@ -481,6 +506,17 @@ const prefillSearchName = computed(() => {
         nameOf(page.props?.serviceProvider) ||
         nameOf(page.props?.freelancer) ||
         nameOf(page.props?.auth?.user)
+    )
+})
+
+// Personenfilter des Verlaufs auf die betrachtete Person setzen (ID + Typ statt nur Name)
+const historyPerson = computed(() => {
+    const pick = (obj, type) => (obj?.id ? { id: obj.id, type, name: prefillSearchName.value } : null)
+    return (
+        pick(page.props?.user_to_edit, 'user') ||
+        pick(page.props?.serviceProvider, 'service_provider') ||
+        pick(page.props?.freelancer, 'freelancer') ||
+        pick(page.props?.auth?.user, 'user')
     )
 })
 
@@ -585,6 +621,45 @@ function violationTooltip(violation) {
         .filter(Boolean)
         .join(': ')
 }
+
+/**
+ * "Eingeplant trotz Abwesenheitseintrag" — kommt aus derselben Backend-Quelle wie
+ * das Warndreieck im Schichtplan (ShiftWorkerAvailability). Der Eintrag stand im
+ * Einsatzplan bisher nur unten in der Abwesenheitsliste, am Tag selbst war nichts
+ * zu sehen.
+ */
+function unavailableAssignment(day) {
+    return day?.unavailableAssignment ?? null
+}
+
+// Rot, wenn die Person "nicht verfügbar" ist oder die Schicht bereits festgeschrieben
+// wurde — sonst amber. Gleiche Eskalation wie Schichtplan und Schichten-Tab.
+function isSevereUnavailability(day) {
+    const info = unavailableAssignment(day)
+    return !!info && (info.status === 'NOT_AVAILABLE' || info.committed)
+}
+
+function unavailableRingClass(day) {
+    if (!unavailableAssignment(day)) return ''
+    return isSevereUnavailability(day)
+        ? 'ring-2 ring-inset ring-danger-border bg-danger-surface/40'
+        : 'ring-2 ring-inset ring-warning-border bg-warning-surface/40'
+}
+
+function unavailableIconClass(day) {
+    return isSevereUnavailability(day) ? 'text-danger' : 'text-warning'
+}
+
+function unavailableTooltip(day) {
+    const info = unavailableAssignment(day)
+    if (!info) return ''
+
+    const status = info.status ? translate(info.status) : ''
+    const base = translate('Not available despite shift')
+
+    return status ? `${base} (${status})` : base
+}
+
 function hasIndividualTimes(day) {
     return Array.isArray(day?.individualTimes) && day.individualTimes.length > 0
 }
@@ -645,6 +720,14 @@ const weeks = computed(() => {
     return result
 })
 
+/** Arbeitszeit der angezeigten Person (worker_start/worker_end vom Server, sonst Schichtzeit) */
+function workerStart(shift) {
+    return String(shift?.worker_start || shift?.start || '').slice(0, 5)
+}
+function workerEnd(shift) {
+    return String(shift?.worker_end || shift?.end || '').slice(0, 5)
+}
+
 /** ---------- Items (Schichten + Individualzeiten) eines einzelnen Tages ---------- **/
 function itemsForDay(day) {
     const out = []
@@ -652,14 +735,19 @@ function itemsForDay(day) {
     for (const s of (Array.isArray(day?.shifts) ? day.shifts : [])) {
         if (!s?.start || !s?.end) continue
 
-        const startAt = toDateTime(day.date, s.start)
-        let endAt = toDateTime(day.date, s.end)
+        // Individuelle Arbeitszeit der Person hat Vorrang vor der Schichtzeit
+        const displayStart = workerStart(s)
+        const displayEnd = workerEnd(s)
+        const startAt = toDateTime(day.date, displayStart)
+        let endAt = toDateTime(day.date, displayEnd)
         if (endAt < startAt) endAt = addDays(endAt, 1)
 
         out.push({
             ...s,
             _type: 'shift',
             _day: day.date,
+            _displayStart: displayStart,
+            _displayEnd: displayEnd,
             _startAt: startAt,
             _endAt: endAt,
             _project: s.project,
@@ -710,8 +798,8 @@ const workItemsInRange = computed(() => {
         for (const s of shifts) {
             if (!s?.start || !s?.end) continue
 
-            const startAt = toDateTime(day.date, s.start)
-            let endAt = toDateTime(day.date, s.end)
+            const startAt = toDateTime(day.date, workerStart(s))
+            let endAt = toDateTime(day.date, workerEnd(s))
 
             // Übernacht-Schicht: Ende < Start ⇒ +1 Tag
             if (endAt < startAt) endAt = addDays(endAt, 1)

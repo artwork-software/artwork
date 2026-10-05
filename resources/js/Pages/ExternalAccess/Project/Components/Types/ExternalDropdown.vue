@@ -1,6 +1,6 @@
 <template>
-    <div class="rounded-2xl border border-border-subtle bg-white p-5">
-        <label :for="inputId" class="block text-sm font-medium text-text-muted mb-1">
+    <div>
+        <label :for="inputId" class="block text-sm font-semibold text-text mb-1">
             {{ label }}
         </label>
 
@@ -8,7 +8,7 @@
             :id="inputId"
             v-model="selected"
             :disabled="!editable"
-            class="block w-full rounded-lg border-border text-sm disabled:bg-surface-sunken disabled:text-text-subtle"
+            class="block w-full rounded-lg border border-border bg-white px-3 py-2 text-sm focus:border-accent-600 focus:outline-none focus:ring-1 focus:ring-accent-600 disabled:bg-surface-sunken disabled:text-text-subtle"
             @change="saveChange"
         >
             <option value="">{{ $t('Please select') }}</option>

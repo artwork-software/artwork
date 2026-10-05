@@ -38,6 +38,22 @@ class SageNotAssignedDataPolicy
         return $this->canHandle($user, $sageNotAssignedData);
     }
 
+    /**
+     * In ein Budget übernehmen darf nur, wer den Datensatz in diesem Projekt auch sieht (Spiegel von
+     * BudgetService::resolveSageNotAssigned): globale mit globalem Sage-Recht, projektbezogene nur ins
+     * eigene Projekt mit Projekt-Sage-Recht.
+     */
+    public function assignToProject(User $user, SageNotAssignedData $sageNotAssignedData, ?int $projectId): bool
+    {
+        if ($sageNotAssignedData->project_id === null) {
+            return $user->can(PermissionEnum::VIEW_GLOBAL_SAGE_DATA->value);
+        }
+
+        return $projectId !== null
+            && (int) $sageNotAssignedData->project_id === $projectId
+            && $user->can(PermissionEnum::VIEW_PROJECT_SAGE_DATA->value);
+    }
+
     private function canHandle(User $user, SageNotAssignedData $sageNotAssignedData): bool
     {
         return $sageNotAssignedData->project_id !== null

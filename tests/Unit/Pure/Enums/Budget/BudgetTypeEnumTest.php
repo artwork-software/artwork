@@ -23,7 +23,10 @@ final class BudgetTypeEnumTest extends UnitTestCase
     #[Test]
     public function it_has_verified_not_verified_case(): void
     {
-        $this->assertSame('BUDGET_VERIFIED_TYPE_NOT_VERIFIED', BudgetTypeEnum::BUDGET_VERIFIED_TYPE_NOT_VERIFIED->value);
+        $this->assertSame(
+            'BUDGET_VERIFIED_TYPE_NOT_VERIFIED',
+            BudgetTypeEnum::BUDGET_VERIFIED_TYPE_NOT_VERIFIED->value
+        );
     }
 
     #[Test]

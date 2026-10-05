@@ -176,7 +176,15 @@ class ShiftWeekStatusService
     /**
      * Wochenbeschreibungen (ISO-Jahr/-KW, Montag, Sonntag) für den Zeitraum.
      *
-     * @return array<int, array{key: string, week_number: int, year: int, monday: string, sunday: string, monday_formatted: string, sunday_formatted: string}>
+     * @return array<int, array{
+     *     key: string,
+     *     week_number: int,
+     *     year: int,
+     *     monday: string,
+     *     sunday: string,
+     *     monday_formatted: string,
+     *     sunday_formatted: string,
+     * }>
      */
     public function weeks(Carbon $from, Carbon $to): array
     {
@@ -338,7 +346,8 @@ class ShiftWeekStatusService
             [$craftId, $weekKey] = $location;
             $cell = &$cells[$craftId][$weekKey];
             $cell['required_slots'] += $value;
-            $cell['staffed_slots'] += $workersByShiftQualification[$shiftId][(int) $qualification->shift_qualification_id] ?? 0;
+            $cell['staffed_slots'] +=
+                $workersByShiftQualification[$shiftId][(int) $qualification->shift_qualification_id] ?? 0;
             unset($cell);
         }
     }

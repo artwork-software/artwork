@@ -67,7 +67,11 @@ class DemoArtistResidencySeeder extends Seeder
             }
             $firstEvent = $project->events()->min('start_time');
             $lastEvent = $project->events()->max('end_time');
-            if ($firstEvent === null || Carbon::parse($firstEvent)->gt($windowEnd) || Carbon::parse($lastEvent)->lt($windowStart)) {
+            if (
+                $firstEvent === null
+                 || Carbon::parse($firstEvent)->gt($windowEnd)
+                 || Carbon::parse($lastEvent)->lt($windowStart)
+            ) {
                 continue;
             }
 

@@ -14,15 +14,17 @@
         <!-- Scripts -->
         {{-- Oeffentliche Laufzeit-Config (config/frontend.php). Muss vor @vite stehen,
              damit die Werte bereitstehen, bevor die Module ausgefuehrt werden. --}}
-        <script type="text/javascript">
+        {{-- CSP-Nonce (Artwork\Core\Http\Middleware\SecurityHeaders): jedes Inline-Script
+             braucht ihn, sonst blockiert der Browser es bei aktiver Policy. --}}
+        <script type="text/javascript" nonce="{{ Vite::cspNonce() }}">
             window.__APP_CONFIG__ = @json(config('frontend'));
         </script>
 
-        @routes
+        @routes(nonce: Vite::cspNonce())
         @vite(['resources/js/app.js'])
         @inertiaHead
 
-        <script type="text/javascript">
+        <script type="text/javascript" nonce="{{ Vite::cspNonce() }}">
             window.Laravel = {
                 csrfToken: "{{ csrf_token() }}",
                 jsPermissions: {!! auth()->check()?auth()->user()->jsPermissions():0 !!}

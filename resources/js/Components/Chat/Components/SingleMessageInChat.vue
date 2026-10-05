@@ -4,7 +4,7 @@
         <div class="flex flex-col gap-1">
             <div class="text-[9px] text-text" v-if="chat.is_group">{{ message.sender.full_name }}</div>
             <div class="px-4 py-2 bg-white text-text rounded-e-md rounded-es-md">
-                <p class="text-xs" v-html="plainText"></p>
+                <p class="text-xs whitespace-pre-line">{{ plainText }}</p>
                 <span class="text-[9px]">{{ timeOnly }}</span>
             </div>
 
@@ -15,7 +15,7 @@
         <div class="flex flex-col gap-1">
             <!--<div class="text-xs font-semibold text-text text-right">{{ $t('You') }}</div>-->
             <div class="px-4 py-2 bg-[#015df2] text-white rounded-s-md rounded-ee-md">
-                <p class="text-xs" v-html="plainText"></p>
+                <p class="text-xs whitespace-pre-line">{{ plainText }}</p>
                 <div class="flex items-center justify-end gap-x-1">
                     <span class="text-[9px]">{{ timeOnly }}</span>
                     <div class="flex items-center gap-1 text-[10px]">

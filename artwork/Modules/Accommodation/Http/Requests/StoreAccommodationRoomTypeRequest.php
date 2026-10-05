@@ -11,7 +11,7 @@ class StoreAccommodationRoomTypeRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return true;
+        return $this->user()?->can('create', \Artwork\Modules\Accommodation\Models\Accommodation::class) ?? false;
     }
 
     /**

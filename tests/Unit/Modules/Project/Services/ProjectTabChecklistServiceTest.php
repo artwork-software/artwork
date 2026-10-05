@@ -15,7 +15,7 @@ final class ProjectTabChecklistServiceTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->service = new ProjectTabChecklistService();
+        $this->service = app(ProjectTabChecklistService::class);
     }
 
     #[Test]

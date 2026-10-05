@@ -25,6 +25,7 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpKernel\Exception\ConflictHttpException;
+use Artwork\Modules\WorkTime\Support\WorkTimeAccounting;
 
 /**
  * „Ersatz suchen" nach einer Absage: schlägt freie Personen mit passender
@@ -101,7 +102,11 @@ class ShiftReplacementService
         }
 
         $userIds = $candidates->filter(fn ($c) => $c instanceof User)->pluck('id')->map(fn ($id) => (int) $id)->all();
-        $freelancerIds = $candidates->filter(fn ($c) => $c instanceof Freelancer)->pluck('id')->map(fn ($id) => (int) $id)->all();
+        $freelancerIds = $candidates
+            ->filter(fn ($c) => $c instanceof Freelancer)
+            ->pluck('id')
+            ->map(fn ($id) => (int) $id)
+            ->all();
 
         $craftAbbreviations = $this->craftAbbreviationsFor($userIds, $freelancerIds, $craft, $universalCraftIds);
         $vacations = $this->vacationsFor($userIds, $freelancerIds, $startDate, $endDate);
@@ -122,7 +127,11 @@ class ShiftReplacementService
                 if (!$this->vacationOverlaps($vacation, $startDate, $endDate, $slotStart, $slotEnd)) {
                     continue;
                 }
-                $vacationType = $vacation->type instanceof VacationType ? $vacation->type->value : (string) $vacation->type;
+                $vacationType = $vacation
+                    ->type instanceof VacationType ? $vacation
+                    ->type
+                    ->value : (string) $vacation
+                    ->type;
                 if ($vacationType === VacationType::FREE_WORK->value) {
                     $hints[] = __('Free day according to planning');
                     continue;
@@ -165,7 +174,10 @@ class ShiftReplacementService
                 $hints[] = $this->individualTimeHint($individualTime, $slotStart, $slotEnd);
             }
 
-            $balanceMinutes = $candidate instanceof User ? (int) ($candidate->work_time_balance ?? 0) : null;
+            // Arbeitszeitberechnung aus: kein Stundenkonto anzeigen und nicht danach sortieren
+            $balanceMinutes = $candidate instanceof User && WorkTimeAccounting::isEnabled()
+                ? (int) ($candidate->work_time_balance ?? 0)
+                : null;
             $fullName = $candidate instanceof User
                 ? $candidate->getFullNameAttribute()
                 : $candidate->getNameAttribute();
@@ -387,8 +399,12 @@ class ShiftReplacementService
      * @param list<int> $universalCraftIds
      * @return array<string, string>
      */
-    private function craftAbbreviationsFor(array $userIds, array $freelancerIds, ?Craft $craft, array $universalCraftIds): array
-    {
+    private function craftAbbreviationsFor(
+        array $userIds,
+        array $freelancerIds,
+        ?Craft $craft,
+        array $universalCraftIds
+    ): array {
         if ($userIds === [] && $freelancerIds === []) {
             return [];
         }
@@ -396,9 +412,20 @@ class ShiftReplacementService
         $rows = DB::table('craftables')
             ->join('crafts', 'crafts.id', '=', 'craftables.craft_id')
             ->where(function ($q) use ($userIds, $freelancerIds): void {
-                $this->applyMorphFilter($q, 'craftables.craftable_type', 'craftables.craftable_id', $userIds, $freelancerIds);
+                $this->applyMorphFilter(
+                    $q,
+                    'craftables.craftable_type',
+                    'craftables.craftable_id',
+                    $userIds,
+                    $freelancerIds
+                );
             })
-            ->get(['craftables.craftable_type', 'craftables.craftable_id', 'crafts.id as craft_id', 'crafts.abbreviation']);
+            ->get([
+                'craftables.craftable_type',
+                'craftables.craftable_id',
+                'crafts.id as craft_id',
+                'crafts.abbreviation',
+            ]);
 
         $result = [];
         foreach ($rows as $row) {
@@ -432,7 +459,9 @@ class ShiftReplacementService
                 $this->applyMorphFilter($q, 'vacationer_type', 'vacationer_id', $userIds, $freelancerIds);
             })
             ->get()
-            ->groupBy(fn (Vacation $vacation) => $this->key($vacation->vacationer_type, (int) $vacation->vacationer_id));
+            ->groupBy(
+                fn (Vacation $vacation) => $this->key($vacation->vacationer_type, (int) $vacation->vacationer_id)
+            );
     }
 
     /**
@@ -470,8 +499,12 @@ class ShiftReplacementService
     /**
      * @return Collection<string, Collection<int, string>>
      */
-    private function dayServicesFor(array $userIds, array $freelancerIds, string $startDate, string $endDate): Collection
-    {
+    private function dayServicesFor(
+        array $userIds,
+        array $freelancerIds,
+        string $startDate,
+        string $endDate
+    ): Collection {
         if ($userIds === [] && $freelancerIds === []) {
             return collect();
         }
@@ -496,8 +529,12 @@ class ShiftReplacementService
     /**
      * @return Collection<string, Collection<int, IndividualTime>>
      */
-    private function individualTimesFor(array $userIds, array $freelancerIds, string $startDate, string $endDate): Collection
-    {
+    private function individualTimesFor(
+        array $userIds,
+        array $freelancerIds,
+        string $startDate,
+        string $endDate
+    ): Collection {
         if ($userIds === [] && $freelancerIds === []) {
             return collect();
         }
@@ -511,8 +548,13 @@ class ShiftReplacementService
             ->groupBy(fn (IndividualTime $time) => $this->key($time->timeable_type, (int) $time->timeable_id));
     }
 
-    private function applyMorphFilter($query, string $typeColumn, string $idColumn, array $userIds, array $freelancerIds): void
-    {
+    private function applyMorphFilter(
+        $query,
+        string $typeColumn,
+        string $idColumn,
+        array $userIds,
+        array $freelancerIds
+    ): void {
         if ($userIds !== []) {
             $query->orWhere(function ($q) use ($typeColumn, $idColumn, $userIds): void {
                 $q->where($typeColumn, User::class)->whereIn($idColumn, $userIds);
@@ -537,7 +579,10 @@ class ShiftReplacementService
      */
     private function resolveSlotWindow(Shift $shift, ShiftWorker $pivot): array
     {
-        $shiftStartDate = $shift->start_date ? Carbon::parse($shift->start_date)->toDateString() : now()->toDateString();
+        $shiftStartDate = $shift
+            ->start_date ? Carbon::parse($shift->start_date)
+            ->toDateString() : now()
+            ->toDateString();
         $shiftEndDate = $shift->end_date ? Carbon::parse($shift->end_date)->toDateString() : $shiftStartDate;
 
         $startDate = $pivot->start_date ? Carbon::parse($pivot->start_date)->toDateString() : $shiftStartDate;

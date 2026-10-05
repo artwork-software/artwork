@@ -80,7 +80,7 @@
                 <div class="p-5">
                     <ul class="space-y-2">
                         <li v-for="file in issue.files" :key="file.id" class="flex items-center justify-between gap-3 rounded-lg border border-border-subtle bg-surface-sunken px-3 py-2">
-                            <a :href="'/storage/' + file.file_path" target="_blank" download class="truncate text-sm font-medium text-accent-700 hover:underline">
+                            <a :href="route('issue-of-material.file.download', { internalIssue: issue.id, internalIssueFile: file.id })" target="_blank" download class="truncate text-sm font-medium text-accent-700 hover:underline">
                                 {{ file.original_name }}
                             </a>
                         </li>

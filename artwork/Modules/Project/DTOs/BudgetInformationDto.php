@@ -135,5 +135,4 @@ class BudgetInformationDto extends BaseDto
     {
         return $this->currencies;
     }
-
 }

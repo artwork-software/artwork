@@ -11,7 +11,6 @@ use Illuminate\Database\Eloquent\Prunable;
 
 class ChatMessageRead extends Model
 {
-
     use Prunable;
 
     protected $fillable = ['message_id', 'user_id', 'read_at'];

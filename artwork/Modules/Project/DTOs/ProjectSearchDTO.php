@@ -39,5 +39,4 @@ class ProjectSearchDTO extends Data
             implode(', ', $artistNames) ?: null
         );
     }
-
 }

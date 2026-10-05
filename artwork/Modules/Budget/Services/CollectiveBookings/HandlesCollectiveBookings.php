@@ -21,6 +21,6 @@ trait HandlesCollectiveBookings
 
     public function findParentByCollectiveBooking(CollectiveBooking $collectiveBooking): CollectiveBooking|null
     {
-        return $collectiveBooking->findParent()->get()->first();
+        return $collectiveBooking->findParent()->first();
     }
 }

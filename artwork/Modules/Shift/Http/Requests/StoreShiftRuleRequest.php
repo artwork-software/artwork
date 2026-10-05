@@ -18,8 +18,8 @@ class StoreShiftRuleRequest extends FormRequest
 
         return [
             'name' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'trigger_type' => 'required|string',
+            'description' => 'nullable|string|max:65535',
+            'trigger_type' => 'required|string|max:255',
             // Zahlenwert nur für Regeltypen, die ihn brauchen; für Sonntag/Sondertag/HFT an Sondertag ignoriert.
             'individual_number_value' => [
                 'nullable',
@@ -35,7 +35,7 @@ class StoreShiftRuleRequest extends FormRequest
                 'min:2',
                 'max:104',
             ],
-            'warning_color' => 'required|string',
+            'warning_color' => 'required|string|max:7',
             'default_compensation_days' => 'nullable|numeric|min:0.5',
             'default_compensation_deadline_days' => 'nullable|integer|min:1',
             'contract_ids' => 'nullable|array',

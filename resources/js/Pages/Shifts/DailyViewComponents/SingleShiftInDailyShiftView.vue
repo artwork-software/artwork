@@ -300,7 +300,7 @@
         :shift-qualifications="usePage().props.shiftQualifications"
         :shift-groups="usePage().props.shiftGroups"
         :global-qualifications="usePage().props.globalQualifications"
-        @closed="showAddShiftModal = false"
+        @closed="onEditShiftModalClosed"
         :shift-time-presets="usePage().props.shiftTimePresets"
         :shift-plan-modal="true"
         :edit="shift !== null"
@@ -411,6 +411,8 @@ const { resolveCraft, resolveShiftGroup } = useShiftPlanLookups();
 
 // Rooms provided by ShiftPlanDailyView for AddShiftModal
 const injectedRooms = inject("shiftPlanRooms", ref([]))
+// Speicher-Antwort direkt ins Raster übernehmen (ShiftPlanDailyView) — nicht nur auf den Broadcast warten
+const applySavedShift = inject("applySavedShift", null)
 
 const ConfirmationComponent = defineAsyncComponent({
     loader: () => import('@/Layouts/Components/ConfirmationComponent.vue'),
@@ -518,6 +520,13 @@ const { t } = useI18n();
 
 const showShiftDetails = ref(true);
 const showAddShiftModal = ref(false);
+
+function onEditShiftModalClosed(success = false, savedShift = null) {
+    showAddShiftModal.value = false
+    if (success && (savedShift?.shift || savedShift?.shifts)) {
+        applySavedShift?.(savedShift)
+    }
+}
 const showAddFunctionModal = ref(false);
 const showAddOverbookingModal = ref(false);
 const allowOverbooking = computed(() => !!usePage().props.allow_shift_overbooking);
@@ -936,7 +945,8 @@ const shiftProjectAssignees = ref(null); // Map `${type}_${id}` -> 'binding' | '
 let shiftProjectAssigneesPromise = null;
 
 const loadShiftProjectAssignees = () => {
-    if (shiftProjectAssigneesPromise || !props.shift?.id) return;
+    // Globaler Schalter (Schichteinstellungen) aus → keine Priorisierung/Badges
+    if (shiftProjectAssigneesPromise || !props.shift?.id || usePage().props.project_assignments_enabled === false) return;
     shiftProjectAssigneesPromise = axios
         .get(route('shifts.project-assignees', { shift: props.shift.id }))
         .then(({ data }) => {
@@ -1122,9 +1132,18 @@ const openConfirmDeleteModal = () => {
 const handleConfirmDelete = (confirmed) => {
     showConfirmDeleteModal.value = false;
     if (!confirmed) return;
-    router.delete(route('shifts.destroy', { shift: props.shift.id }), {
-        preserveScroll: true,
-    });
+    // axios statt router.delete: Fehler (z.B. fehlende Gewerksplanung) werden angezeigt statt
+    // verschluckt, und die Antwort nimmt die Schicht sofort aus dem Raster (nicht nur per WebSocket)
+    axios.delete(route('shifts.destroy', { shift: props.shift.id }))
+        .then(({ data }) => {
+            if (data?.shift) applySavedShift?.(data)
+        })
+        .catch((error) => {
+            toastTitle.value = error?.response?.data?.message || t('The shift could not be deleted.')
+            toastDescription.value = ''
+            toastType.value = 'danger'
+            toastVisible.value = true
+        })
 }
 
 // Funktion, um Kollisionen für alle Qualifikationen mit leeren Slots zu prüfen

@@ -129,8 +129,11 @@ class ShiftRuleService
     /**
      * Seite der gefilterten Verstöße (Liste "Offene Verstöße"), Einträge bereits fürs Frontend gemappt.
      */
-    public function paginateViolations(array $filters, int $perPage, string $sortDirection = 'desc'): \Illuminate\Contracts\Pagination\LengthAwarePaginator
-    {
+    public function paginateViolations(
+        array $filters,
+        int $perPage,
+        string $sortDirection = 'desc'
+    ): \Illuminate\Contracts\Pagination\LengthAwarePaginator {
         return $this->shiftRuleViolationRepository
             ->paginateFiltered($filters, $perPage, $sortDirection)
             ->withQueryString()
@@ -184,8 +187,11 @@ class ShiftRuleService
         $this->shiftRuleViolationRepository->resolve($violation, $userId);
     }
 
-    public function ignoreViolation(ShiftRuleViolation $violation, ?int $userId = null, ?string $ignoreReason = null): void
-    {
+    public function ignoreViolation(
+        ShiftRuleViolation $violation,
+        ?int $userId = null,
+        ?string $ignoreReason = null
+    ): void {
         $this->shiftRuleViolationRepository->ignore($violation, $userId, $ignoreReason);
     }
 

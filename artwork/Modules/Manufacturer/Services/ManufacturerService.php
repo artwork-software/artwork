@@ -7,7 +7,9 @@ use Artwork\Modules\Manufacturer\Repositories\ManufacturerRepository;
 
 class ManufacturerService
 {
-    public function __construct(protected ManufacturerRepository $repository) {}
+    public function __construct(protected ManufacturerRepository $repository)
+    {
+    }
 
     public function getAll($search = null, $perPage = 10)
     {

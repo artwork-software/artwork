@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use Artwork\Core\FileHandling\Upload\SafeUploadFile;
 use App\Settings\EventSettings;
 use Artwork\Core\FileHandling\Naming\StoredFileName;
 use Artwork\Core\Http\Requests\SearchRequest;
@@ -18,6 +19,7 @@ use Artwork\Modules\Budget\Models\ColumnCell;
 use Artwork\Modules\Budget\Models\MainPosition;
 use Artwork\Modules\Budget\Models\SubPosition;
 use Artwork\Modules\Budget\Models\SubPositionRow;
+use Artwork\Modules\Budget\Models\SageNotAssignedData;
 use Artwork\Modules\Budget\Models\Table;
 use Artwork\Modules\Budget\Services\BudgetCacheService;
 use Artwork\Modules\Budget\Services\BudgetService;
@@ -46,7 +48,6 @@ use Artwork\Modules\Calendar\DTO\ProjectDTO;
 use Artwork\Modules\Calendar\DTO\RoomDTO;
 use Artwork\Modules\Calendar\Services\CalendarService;
 use Artwork\Modules\Calendar\Services\CalendarDataService;
-use Artwork\Modules\Calendar\Services\ShiftCalendarService;
 use Artwork\Modules\Category\Models\Category;
 use Artwork\Modules\Category\Services\CategoryService;
 use Artwork\Modules\Change\Services\ChangeService;
@@ -64,6 +65,8 @@ use Artwork\Modules\Currency\Services\CurrencyService;
 use Artwork\Modules\InternalIssue\Models\InternalIssue;
 use Artwork\Modules\Inventory\Models\InventoryTag;
 use Artwork\Modules\Inventory\Models\InventoryTagGroup;
+use Artwork\Modules\Inventory\Services\InventoryUserFilterShareService;
+use Artwork\Modules\BusinessIntelligence\Services\BiProjectMetricsService;
 use Artwork\Modules\Notification\Services\DatabaseNotificationService;
 use Artwork\Modules\Department\Models\Department;
 use Artwork\Modules\Event\Http\Resources\MinimalCalendarEventResource;
@@ -74,6 +77,7 @@ use Artwork\Modules\Event\Services\EventCommentService;
 use Artwork\Modules\Event\Services\EventPropertyService;
 use Artwork\Modules\EventType\Models\EventType;
 use Artwork\Modules\EventType\Services\EventTypeService;
+use Artwork\Modules\ExternalAccess\Services\ExternalAccessSettingsResolver;
 use Artwork\Modules\Filter\Services\FilterService;
 use Artwork\Modules\Freelancer\Models\Freelancer;
 use Artwork\Modules\Freelancer\Services\FreelancerService;
@@ -102,7 +106,9 @@ use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Policies\ProjectPolicy;
 use Artwork\Modules\Project\Models\ProjectCreateSettings;
 use Artwork\Modules\Project\Models\ProjectRole;
+use Artwork\Modules\Project\Models\ProjectComponentValue;
 use Artwork\Modules\Project\Models\ProjectState;
+use Artwork\Modules\Project\Services\ProjectComponentVisibilityService;
 use Artwork\Modules\Project\Services\CommentService;
 use Artwork\Modules\Project\Services\ProjectFileService;
 use Artwork\Modules\Project\Services\ProjectService;
@@ -113,6 +119,7 @@ use Artwork\Modules\Project\Services\ProjectManagementBuilderService;
 use Artwork\Modules\Project\Services\ProjectPrintLayoutService;
 use Artwork\Modules\Project\Enum\ProjectTabComponentEnum;
 use Artwork\Modules\Project\Models\Component;
+use Artwork\Modules\Project\Models\ComponentInTab;
 use Artwork\Modules\Project\Models\ProjectTab;
 use Artwork\Modules\Project\Services\ProjectTabService;
 use Artwork\Modules\Project\Events\ProjectTeamUpdated;
@@ -207,8 +214,8 @@ class ProjectController extends Controller
         private readonly ProjectPrintLayoutService $projectPrintLayoutService,
         protected readonly SingleShiftPresetService $singleShiftPresetService,
         private readonly FilterService $filterService,
-        private readonly \Artwork\Modules\Inventory\Services\InventoryUserFilterShareService $inventoryUserFilterShareService,
-        private readonly \Artwork\Modules\BusinessIntelligence\Services\BiProjectMetricsService $biProjectMetricsService,
+        private readonly InventoryUserFilterShareService $inventoryUserFilterShareService,
+        private readonly BiProjectMetricsService $biProjectMetricsService,
     ) {
     }
 
@@ -217,17 +224,18 @@ class ProjectController extends Controller
      */
     public function projectUserSearch(Request $request): array
     {
-        $users = User::search($request->input('query'))->get();
-        $project = Project::find($request->input('projectId'));
+        $validated = $request->validate([
+            'query' => ['nullable', 'string', 'max:255'],
+            'projectId' => ['required', 'integer', 'exists:projects,id'],
+        ]);
 
-        $returnUser = [];
-        foreach ($users as $user) {
-            $projectUser = $project->users()->where('user_id', $user->id)->first();
-            if ($projectUser !== null) {
-                $returnUser[] = $projectUser;
-            }
-        }
-        return $returnUser;
+        $project = Project::findOrFail($validated['projectId']);
+        // Liefert Team-Pivots (Budgetzugriff, Rollen) – nur für Personen, die das Projekt sehen dürfen.
+        $this->authorize('view', $project);
+
+        $userIds = User::search((string) ($validated['query'] ?? ''))->keys();
+
+        return $project->users()->whereIn('users.id', $userIds)->get()->all();
     }
 
     public function saveProjectManagementFilter(ProjectIndexPaginateRequest $request): void
@@ -275,7 +283,9 @@ class ProjectController extends Controller
         $projects = $this->projectService->paginateProjects(
             $request->string('query'),
             $user->entities_per_page,
-            $userProjectManagementSetting['sort_by'] ? ProjectSortEnum::from($userProjectManagementSetting['sort_by']) : null,
+            $userProjectManagementSetting['sort_by']
+                 ? ProjectSortEnum::from($userProjectManagementSetting['sort_by'])
+                 : null,
             Collection::make($userProjectManagementSetting['project_state_ids']),
             Collection::make($userProjectManagementSetting['project_filters'])
         );
@@ -285,12 +295,12 @@ class ProjectController extends Controller
         $componentData = Component::whereIn('id', $components->pluck('component_id'))->get()
             ->keyBy('id');
 
-        // Bei aktiver Suche keine Pinned-Sektion: Pins ohne Suchtreffer verwirren (Abnahme
-        // PROJ-01); matchende gepinnte Projekte erscheinen dann als normale Treffer in der
-        // Liste (siehe ProjectService::getProjects).
-        $pinnedProjects = trim($request->string('query')->toString()) === ''
-            ? $this->projectService->pinnedProjects($this->authManager->id())
-            : new \Illuminate\Database\Eloquent\Collection();
+        // Bei aktiver Suche zeigt die Pinned-Sektion nur passende Pins (Abnahme PROJ-01: Pins
+        // ohne Treffer verwirren). Pins stehen nie in der Liste, s. ProjectService::getProjects.
+        $pinnedProjects = $this->projectService->pinnedProjects(
+            $this->authManager->id(),
+            $request->string('query')->toString()
+        );
 
         $pinnedProjectsComponents = $this->mapProjectsToComponents($pinnedProjects, $components, $componentData);
         $projectComponents = $this->mapProjectsToComponents($projects, $components, $componentData);
@@ -334,6 +344,13 @@ class ProjectController extends Controller
 
         $projectPeriods = $this->prepareProjectsForComponentMapping($projects, $components);
 
+        // Komponentenwerte einmal für alle Projekte laden (statt einer Query pro Projekt × Komponente)
+        $componentValues = ProjectComponentValue::query()
+            ->whereIn('project_id', $projects->pluck('id'))
+            ->whereIn('component_id', collect($componentData)->keys())
+            ->get()
+            ->keyBy(fn (ProjectComponentValue $value) => $value->component_id . ':' . $value->project_id);
+
         // Zutritt (Projektseite öffnen): globales Recht ODER Projektteam (User/Abteilung).
         // Ein Sammel-Query statt ProjectPolicy::view pro Zeile — die Übersicht bleibt für
         // alle sichtbar, nur der Einstieg wird im Frontend über dieses Flag gegated.
@@ -350,6 +367,7 @@ class ProjectController extends Controller
         $mapped = $projects->map(function ($project) use (
             $components,
             $componentData,
+            $componentValues,
             $firstTabId,
             $projectStates,
             $projectPeriods,
@@ -374,7 +392,9 @@ class ProjectController extends Controller
                         $projectData->title = $project->name;
                         $projectData->key_visual_path = $project->key_visual_path;
                         $projectData->is_group = $project->is_group;
-                        $projectData->projects_of_group_count = $project->is_group ? ($project->projects_of_group_count ?? 0) : null;
+                        $projectData
+                            ->projects_of_group_count = $project
+                            ->is_group ? ($project->projects_of_group_count ?? 0) : null;
                         $projectData->color = $project->color;
                         $projectData->icon = $project->icon;
                         break;
@@ -396,7 +416,9 @@ class ProjectController extends Controller
                     case ProjectTabComponentEnum::PROJECT_GROUP->value:
                         $projectData->group = $project->groups;
                         $projectData->is_group = $project->is_group;
-                        $projectData->projects_of_group_count = $project->is_group ? ($project->projects_of_group_count ?? 0) : null;
+                        $projectData
+                            ->projects_of_group_count = $project
+                            ->is_group ? ($project->projects_of_group_count ?? 0) : null;
                         break;
                     case ProjectTabComponentEnum::PROJECT_TEAM->value:
                         $projectData->team = $project->users;
@@ -434,9 +456,7 @@ class ProjectController extends Controller
 
                 if ($componentFullData && !$componentFullData->special) {
                     $projectData->{$component->type}[$componentFullData->id] =
-                        $componentFullData->projectValue()
-                            ->where('project_id', $project->id)
-                            ->first();
+                        $componentValues->get($componentFullData->id . ':' . $project->id);
                 }
             }
 
@@ -600,18 +620,18 @@ class ProjectController extends Controller
     }
 
     /**
-     * @return Project[]
+     * Projektsuche ohne Projektgruppen.
+     *
+     * @throws AuthorizationException
      */
-    public function searchProjectsWithoutGroup(Request $request): array
+    public function searchProjectsWithoutGroup(SearchRequest $request, ProjectService $projectService): Collection
     {
-        $filteredObjects = [];
-        $projects = Project::search($request->input('query'))->get();
-        foreach ($projects as $project) {
-            if ($project->is_group !== 1 || $project->is_group !== true) {
-                $filteredObjects[] = $project;
-            }
-        }
-        return $filteredObjects;
+        $this->authorize('viewAny', Project::class);
+
+        return $projectService->searchProjectsByNameOrArtists((string) $request->get('query'))
+            ->reject(static fn (Project $project): bool => (bool) $project->is_group)
+            ->values()
+            ->map(static fn (Project $project): ProjectSearchDTO => ProjectSearchDTO::fromModel($project));
     }
 
     /**
@@ -712,9 +732,21 @@ class ProjectController extends Controller
             }
         }
 
-        $this->projectService->syncCategories($project, $request->collect('assignedCategoryIds'), $request->input('mainCategoryId'));
-        $this->projectService->syncSectors($project, $request->collect('assignedSectorIds'), $request->input('mainSectorId'));
-        $this->projectService->syncGenres($project, $request->collect('assignedGenreIds'), $request->input('mainGenreId'));
+        $this->projectService->syncCategories(
+            $project,
+            $request->collect('assignedCategoryIds'),
+            $request->input('mainCategoryId')
+        );
+        $this->projectService->syncSectors(
+            $project,
+            $request->collect('assignedSectorIds'),
+            $request->input('mainSectorId')
+        );
+        $this->projectService->syncGenres(
+            $project,
+            $request->collect('assignedGenreIds'),
+            $request->input('mainGenreId')
+        );
 
         $project->departments()->sync($departments->pluck('id'));
 
@@ -746,7 +778,11 @@ class ProjectController extends Controller
             $project->users()->updateExistingPivot($request->user, ['access_budget' => true]);
             $user = User::find($request->user);
             if ($user !== null) {
-                $notificationTitle = __('notification.project.budget.add', ['project' => $project->name], $user->language);
+                $notificationTitle = __(
+                    'notification.project.budget.add',
+                    ['project' => $project->name],
+                    $user->language
+                );
                 $broadcastMessage = [
                     'id' => Str::uuid()->toString(),
                     'type' => 'success',
@@ -1801,8 +1837,11 @@ class ProjectController extends Controller
 
 
 
-    public function addColumn(Request $request, ColumnRelevanceService $columnRelevanceService): void
-    {
+    public function addColumn(
+        Request $request,
+        ColumnRelevanceService $columnRelevanceService,
+        ColumnCellService $columnCellService
+    ): void {
         $table = Table::find($request->table_id);
         if ($request->column_type === 'empty') {
             /** @var Column $column */
@@ -1866,64 +1905,20 @@ class ProjectController extends Controller
             // Die neueste Wertspalte gilt als aktueller Planungsstand und wird budgetrelevant.
             $columnRelevanceService->assignExclusive($column);
         }
-        if ($request->column_type === 'sum') {
-            $firstColumns = ColumnCell::where('column_id', $request->first_column_id)->get();
+        if (in_array($request->column_type, ['sum', 'difference'], true)) {
             $column = $table->columns()->create([
-                'name' => 'sum',
+                'name' => $request->column_type,
                 'subName' => '-',
-                'type' => 'sum',
+                'type' => $request->column_type,
                 'linked_first_column' => $request->first_column_id,
                 'linked_second_column' => $request->second_column_id,
                 'position' => $table->columns()->whereNot('position', 100)->max('position') + 1
             ]);
             $this->setColumnSubName($request->table_id);
-            foreach ($firstColumns as $firstColumn) {
-                $secondColumn = ColumnCell::where('column_id', $request->second_column_id)
-                    ->where('sub_position_row_id', $firstColumn->sub_position_row_id)
-                    ->first();
-                $firstDecimal = str_replace(',', '.', $firstColumn->value ?: '0');
-                $secondDecimal = str_replace(',', '.', $secondColumn->value ?: '0');
-                $sum = bcadd($firstDecimal, $secondDecimal, 2);
-                ColumnCell::create([
-                    'column_id' => $column->id,
-                    'sub_position_row_id' => $firstColumn->sub_position_row_id,
-                    'value' => $sum,
-                    'verified_value' => null,
-                    'linked_money_source_id' => null,
-                    'commented' => $secondColumn->commented
-                ]);
-            }
+            // Startwerte ueber den Service: der loest Sage-Spalten ueber die
+            // zugeordneten Buchungen auf (sage_value) statt ueber das leere `value`.
+            $columnCellService->createCellsForAutomaticColumn($column);
         }
-
-        if ($request->column_type === 'difference') {
-            $firstColumns = ColumnCell::where('column_id', $request->first_column_id)->get();
-            $column = $table->columns()->create([
-                'name' => 'difference',
-                'subName' => '-',
-                'type' => 'difference',
-                'linked_first_column' => $request->first_column_id,
-                'linked_second_column' => $request->second_column_id,
-                'position' => $table->columns()->whereNot('position', 100)->max('position') + 1
-            ]);
-            $this->setColumnSubName($request->table_id);
-            foreach ($firstColumns as $firstColumn) {
-                $secondColumn = ColumnCell::where('column_id', $request->second_column_id)
-                    ->where('sub_position_row_id', $firstColumn->sub_position_row_id)
-                    ->first();
-                $firstDecimal = str_replace(',', '.', $firstColumn->value ?: '0');
-                $secondDecimal = str_replace(',', '.', $secondColumn->value ?: '0');
-                $sum = bcsub($firstDecimal, $secondDecimal, 2);
-                ColumnCell::create([
-                    'column_id' => $column->id,
-                    'sub_position_row_id' => $firstColumn->sub_position_row_id,
-                    'value' => $sum,
-                    'verified_value' => null,
-                    'linked_money_source_id' => null,
-                    'commented' => $secondColumn->commented
-                ]);
-            }
-        }
-
 
         broadcast(new UpdateBudget($table->project_id));
     }
@@ -2069,6 +2064,27 @@ class ProjectController extends Controller
             ]);
         }
 
+        // Zeilen dürfen nur innerhalb derselben Budgettabelle verschoben werden.
+        $targetTableIds = SubPosition::query()
+            ->whereIn('id', collect($updates)->pluck('sub_position_id'))
+            ->with('mainPosition:id,table_id')
+            ->get()
+            ->map(fn (SubPosition $subPosition) => $subPosition->mainPosition?->table_id)
+            ->unique();
+        $rowTableIds = SubPositionRow::query()
+            ->whereIn('id', $allRowIds)
+            ->with('subPosition.mainPosition:id,table_id')
+            ->get()
+            ->map(fn (SubPositionRow $row) => $row->subPosition?->mainPosition?->table_id)
+            ->unique();
+        abort_unless(
+            $targetTableIds->count() === 1
+            && $rowTableIds->count() === 1
+            && $targetTableIds->first() !== null
+            && $targetTableIds->first() === $rowTableIds->first(),
+            403
+        );
+
         DB::transaction(function () use ($updates): void {
             foreach ($updates as $update) {
                 $subPositionId = (int)$update['sub_position_id'];
@@ -2174,6 +2190,20 @@ class ProjectController extends Controller
     public function dropSageData(
         Request $request,
     ): void {
+        $request->validate([
+            'table_id' => ['required', 'integer', 'exists:tables,id'],
+            'sub_position_id' => ['required', 'integer', 'exists:sub_positions,id'],
+            'sage_data_id' => ['required', 'integer'],
+        ]);
+
+        $sageNotAssignedData = SageNotAssignedData::find($request->integer('sage_data_id'));
+        if ($sageNotAssignedData instanceof SageNotAssignedData) {
+            $this->authorize('assignToProject', [
+                $sageNotAssignedData,
+                Table::find($request->integer('table_id'))?->project_id,
+            ]);
+        }
+
         $this->sage100Service->dropData($request);
     }
 
@@ -2281,7 +2311,7 @@ class ProjectController extends Controller
                 // Prüfe ob Kalkulation eine ID hat (existierend) oder neu ist
                 if (isset($calculation['id']) && !empty($calculation['id']) && is_numeric($calculation['id'])) {
                     // Existierende Kalkulation aktualisieren
-                    $cellCalculation = CellCalculation::find($calculation['id']);
+                    $cellCalculation = CellCalculation::where('cell_id', $cellId)->find($calculation['id']);
                     if ($cellCalculation) {
                         $cellCalculation->update([
                             'name' => $calculation['name'] ?? '',
@@ -2324,7 +2354,6 @@ class ProjectController extends Controller
             if ($cell) {
                 $cell->update(['value' => $cell->calculations()->sum('value')]);
             }
-
         }
 
         // Wenn AJAX-Request: JSON-Response — auch ohne cell_id, sonst folgt der Browser dem 302 mit PATCH (405)
@@ -2589,15 +2618,19 @@ class ProjectController extends Controller
             );
         }
 
+        // Komponenten mit "Sehen dürfen nur die Folgenden" samt Projektwerten gar nicht erst
+        // ausliefern — vorher filterte nur das Frontend (canSeeComponent).
+        app(ProjectComponentVisibilityService::class)->filterTabPayload($projectTab, $authUser);
+
         $this->inventoryUserFilterShareService->getFilterDataForUser($authUser);
 
         $firstEvent = $this->projectService->getFirstEventInProject($project);
         $lastEvent  = $this->projectService->getLatestEndingEventInProject($project);
 
+        // components inkl. component sind seit dem load() oben geladen (sortiert nach order) —
+        // eine frische Query hydratisierte alles ein zweites Mal (Komponenten, Disclosures)
         $projectTabComponents = $projectTab
-            ->components()
-            ->with(['component'])
-            ->get()
+            ->components
             ->concat(
                 $projectTab->sidebarTabs->flatMap->componentsInSidebar->unique('id')
             );
@@ -2658,7 +2691,9 @@ class ProjectController extends Controller
         $headerObject->projectGroups     = $project->groups;
 
         // Append first_and_last_event_date to groups so the frontend can show project periods
+        // (Zeiträume gebündelt vorberechnet statt Event-Queries je Gruppe beim Serialisieren)
         $project->loadMissing('groups');
+        Project::loadFirstAndLastEventDates($project->groups);
         $project->groups->each->append('first_and_last_event_date');
 
         $hasGroupComponent = in_array('ProjectGroupComponent', $componentTypes, true);
@@ -2668,7 +2703,9 @@ class ProjectController extends Controller
             $headerObject->groupProjects = collect();
         }
 
-        $headerObject->projectsOfGroup = $project->projectsOfGroup()->get()->each->append('first_and_last_event_date');
+        $projectsOfGroup = $project->projectsOfGroup()->get();
+        Project::loadFirstAndLastEventDates($projectsOfGroup);
+        $headerObject->projectsOfGroup = $projectsOfGroup->each->append('first_and_last_event_date');
 
         $hasAttributesComponent = in_array('ProjectAttributesComponent', $componentTypes, true);
         $needsProjectAttributesData = $hasAttributesComponent || (bool) ($projectCreateSettings->attributes ?? false);
@@ -2694,12 +2731,51 @@ class ProjectController extends Controller
         $headerObject->project->state = $project->status;
 
         $tabInformation = [];
+        // Tabs mit Dokument-Komponente (direkt oder in einer Disclosure): der Einladungsdialog für
+        // Externe warnt, wenn der Dateiupload für Externe deaktiviert ist.
+        $documentType = ProjectTabComponentEnum::PROJECT_DOCUMENTS->value;
+        $tabIdsWithDocuments = ComponentInTab::query()
+            ->where(function (Builder $query) use ($documentType): void {
+                $query->whereHas('component', fn (Builder $c) => $c->where('type', $documentType))
+                    ->orWhereHas(
+                        'disclosureComponents.component',
+                        fn (Builder $c) => $c->where('type', $documentType)
+                    );
+            })
+            ->distinct()
+            ->pluck('project_tab_id')
+            ->flip();
+        // Tabs mit mindestens einer extern lesbaren Komponente (direkt oder in einer Disclosure):
+        // der Einladungsdialog wählt nur solche Tabs vor und markiert die anderen.
+        $externallyReadableTypes = collect(ProjectTabComponentEnum::cases())
+            ->filter(fn (ProjectTabComponentEnum $type) => $type->isExternallyReadable())
+            ->map(fn (ProjectTabComponentEnum $type) => $type->value)
+            ->all();
+        $tabIdsWithExternalComponents = ComponentInTab::query()
+            ->where(function (Builder $query) use ($externallyReadableTypes): void {
+                $query->whereHas('component', fn (Builder $c) => $c->whereIn('type', $externallyReadableTypes))
+                    ->orWhereHas(
+                        'disclosureComponents.component',
+                        fn (Builder $c) => $c->whereIn('type', $externallyReadableTypes)
+                    );
+            })
+            ->distinct()
+            ->pluck('project_tab_id')
+            ->flip();
+        // without(): ProjectTab::$with (components, sidebarTabs) würde je Abfrage die komplette
+        // Komponentenstruktur mitladen — hier werden nur Id und Name gebraucht
         ProjectTab::query()
+            ->without(['components', 'sidebarTabs'])
             ->visibleForUser($authUser)
             ->orderBy('order')
             ->get(['id', 'name'])
-            ->each(function ($tab) use (&$tabInformation): void {
-                $tabInformation[] = ['id' => $tab->id, 'name' => $tab->name];
+            ->each(function ($tab) use (&$tabInformation, $tabIdsWithDocuments, $tabIdsWithExternalComponents): void {
+                $tabInformation[] = [
+                    'id' => $tab->id,
+                    'name' => $tab->name,
+                    'hasDocumentComponent' => $tabIdsWithDocuments->has($tab->id),
+                    'hasExternalComponents' => $tabIdsWithExternalComponents->has($tab->id),
+                ];
             });
         $headerObject->tabs = $tabInformation;
 
@@ -2730,12 +2806,7 @@ class ProjectController extends Controller
                 'created_at' => $latestActivity->created_at->diffInHours() < 24
                     ? $latestActivity->created_at->diffForHumans()
                     : $latestActivity->created_at->format('d.m.Y, H:i'),
-                // Aktivitäten ohne Verursacher (System/Konsole): morphTo-Query wäre kaputtes SQL
-                'changer'    => $latestActivity->causer_type !== null && $latestActivity->causer_id !== null
-                    ? $latestActivity->causer()
-                        ->without(['roles', 'departments', 'calendar_settings', 'calendarAbo', 'shiftCalendarAbo'])
-                        ->first()
-                    : null,
+                'changer'    => $this->resolveHistoryChanger($latestActivity),
             ]];
         }
         $headerObject->project_history = $latestChange;
@@ -2744,18 +2815,22 @@ class ProjectController extends Controller
         $user = $this->authManager->user();
 
 
+        // value('id') hydratisiert ein Modell und zieht damit ProjectTab::$with nach — without()
         $firstVisibleTabId = ProjectTab::query()
+            ->without(['components', 'sidebarTabs'])
             ->visibleForUser($authUser)
             ->orderBy('order')
             ->value('id');
 
         $firstVisibleCalendarTabId = ProjectTab::query()
+            ->without(['components', 'sidebarTabs'])
             ->visibleForUser($authUser)
             ->byComponentsComponentType(ProjectTabComponentEnum::CALENDAR->value)
             ->orderBy('order')
             ->value('id') ?? $firstVisibleTabId;
 
         $firstVisibleBudgetTabId = ProjectTab::query()
+            ->without(['components', 'sidebarTabs'])
             ->visibleForUser($authUser)
             ->byComponentsComponentType(ProjectTabComponentEnum::BUDGET->value)
             ->orderBy('order')
@@ -2766,7 +2841,7 @@ class ProjectController extends Controller
             'headerObject'                 => $headerObject,
             'loadedProjectInformation'     => $loadedProjectInformation,
             'first_project_tab_id'         => $firstVisibleTabId,
-            'first_project_calendar_tab_id'=> $firstVisibleCalendarTabId,
+            'first_project_calendar_tab_id' => $firstVisibleCalendarTabId,
             'first_project_budget_tab_id'  => $firstVisibleBudgetTabId,
             'createSettings'               => app(ProjectCreateSettings::class),
             'printLayouts'                 => $this->projectPrintLayoutService->getAll(),
@@ -2777,6 +2852,7 @@ class ProjectController extends Controller
                 : [],
             'event_properties'             => $eventPropertyService->getAll(),
             'projectId'                    => $project->id,
+            'externalFileUploadEnabled'    => app(ExternalAccessSettingsResolver::class)->isFileUploadEnabled(),
         ];
 
         $tabSpecificData = [];
@@ -2801,7 +2877,8 @@ class ProjectController extends Controller
 
             $userCalendarSettings = $user->getAttribute('calendar_settings');
 
-            $startDate = $firstEvent?->getAttribute('start_time')?->copy()?->startOfDay() ?? Carbon::now()->startOfDay();
+            $startDate = $firstEvent?->getAttribute('start_time')?->copy()?->startOfDay() ?? Carbon::now()
+                ->startOfDay();
             $endDate   = $lastEvent?->getAttribute('end_time')?->copy()?->endOfDay() ?? $startDate->copy()->endOfDay();
 
             /** @var CalendarDataService $calendarDataService */
@@ -2828,8 +2905,6 @@ class ProjectController extends Controller
                 $endDate ? $endDate->format('Y-m-d') : null,
             ];
 
-            $history = app(ShiftCalendarService::class)->getEventShiftsHistoryChanges();
-
             $tabSpecificData = array_merge($tabSpecificData, $this->getShiftTabInertiaData(
                 $project,
                 $craftService,
@@ -2839,8 +2914,7 @@ class ProjectController extends Controller
                 $shiftTimePresetService,
                 $user,
                 $userService,
-                $dateValue,
-                $history
+                $dateValue
             ));
 
             $tabSpecificData['rooms'] = $roomDTOs;
@@ -2879,7 +2953,7 @@ class ProjectController extends Controller
     public function history(Project $project): JsonResponse
     {
         $activities = $project->activities()->latest()->get();
-        $history = $activities->map(static function ($activity) {
+        $history = $activities->map(function ($activity) {
             $properties = $activity->properties;
 
             return [
@@ -2889,12 +2963,7 @@ class ProjectController extends Controller
                 'created_at' => $activity->created_at->diffInHours() < 24
                     ? $activity->created_at->diffForHumans()
                     : $activity->created_at->format('d.m.Y, H:i'),
-                // Aktivitäten ohne Verursacher (System/Konsole): morphTo-Query wäre kaputtes SQL
-                'changer'    => $activity->causer_type !== null && $activity->causer_id !== null
-                    ? $activity->causer()
-                        ->without(['roles', 'departments', 'calendar_settings', 'calendarAbo', 'shiftCalendarAbo'])
-                        ->first()
-                    : null,
+                'changer'    => $this->resolveHistoryChanger($activity),
             ];
         })->all();
 
@@ -2917,8 +2986,11 @@ class ProjectController extends Controller
         $headerObject->project->project_managers           = $project->managerUsers;
         $headerObject->project->shiftDescription           = $project->shift_description;
         // Step 4: Nur essentielle Felder für Freelancers und ServiceProviders laden
-        $headerObject->project->freelancers                = Freelancer::select('id', 'first_name', 'last_name')->get();
-        $headerObject->project->serviceProviders           = ServiceProvider::select('id', 'provider_name')->get();
+        // withAssignedCraftIds: sonst je Person eine craftables-Query über $appends assigned_craft_ids
+        $headerObject->project->freelancers                = Freelancer::select('id', 'first_name', 'last_name')
+            ->withAssignedCraftIds()->get();
+        $headerObject->project->serviceProviders           = ServiceProvider::select('id', 'provider_name')
+            ->withAssignedCraftIds()->get();
     }
 
     /**
@@ -2935,21 +3007,12 @@ class ProjectController extends Controller
         ShiftTimePresetService $shiftTimePresetService,
         User $user,
         UserService $userService,
-        array $dateValue,
-        array $history
+        array $dateValue
     ): array {
         return [
-            // Crafts mit allen notwendigen Relationen für ShiftPlanDailyView
-            // Benötigt: users, freelancers, serviceProviders mit shift_qualifications
-            'crafts' => Craft::with([
-                'users',
-                'freelancers',
-                'serviceProviders',
-                'managingUsers',
-                'managingFreelancers',
-                'managingServiceProviders',
-                'qualifications'
-            ])->without(['craftShiftPlaner'])->get(),
+            // Crafts mit users/freelancers/serviceProviders (+ shift_qualifications) für
+            // ShiftPlanDailyView — schlanke Personen-Serialisierung, siehe CraftService
+            'crafts' => $craftService->getAllWithAssignableWorkers(withManagers: true),
             // Step 2: Tags/TagGroups entfernt - werden nicht im ShiftTab verwendet
             // Step 3: History entfernt - wird per API geladen (/projects/{project}/history)
             'personalFilters' => $filterService->getPersonalFilter($user, UserFilterTypes::PROJECT_SHIFT_FILTER->value),
@@ -3051,7 +3114,15 @@ class ProjectController extends Controller
             });
 
         // Load document requests for this project (created by user or assigned to user)
-        $docRequestEagerLoad = ['requester', 'requested', 'project', 'contract', 'contractType', 'companyType', 'crmContact.contactType'];
+        $docRequestEagerLoad = [
+            'requester',
+            'requested',
+            'project',
+            'contract',
+            'contractType',
+            'companyType',
+            'crmContact.contactType',
+        ];
 
         $createdRequests = \Artwork\Modules\DocumentRequest\Models\DocumentRequest::where('requester_id', $userId)
             ->where('project_id', $project->id)
@@ -3065,10 +3136,49 @@ class ProjectController extends Controller
             ->get()
             ->map(fn($request) => $this->mapDocumentRequest($request));
 
+        // Fremde Anfragen (nicht zugewiesen / an andere zugewiesen) sehen nur Personen,
+        // die Anfragen erstellen oder bearbeiten dürfen, sowie Admins – wie in der Dokumentenanfragen-Übersicht.
+        $canSeeForeignRequests = $authUser !== null && (
+            $authUser->hasRole(RoleEnum::ARTWORK_ADMIN->value)
+            || $authUser->can(PermissionEnum::DOCUMENT_REQUEST_CREATE->value)
+            || $authUser->can(PermissionEnum::DOCUMENT_REQUEST_EDIT->value)
+        );
+
+        // Offene Anfragen mit Projektbezug, die noch niemandem zugewiesen sind.
+        $unassignedRequests = collect();
+        if ($canSeeForeignRequests) {
+            $unassignedRequests = \Artwork\Modules\DocumentRequest\Models\DocumentRequest::whereNull('requested_id')
+                ->where('project_id', $project->id)
+                ->where('status', '!=', \Artwork\Modules\DocumentRequest\Models\DocumentRequest::STATUS_COMPLETED)
+                ->with($docRequestEagerLoad)
+                ->orderBy('deadline_date')
+                ->orderBy('created_at')
+                ->get()
+                ->map(fn($request) => $this->mapDocumentRequest($request));
+        }
+
+        // Offene Anfragen mit Projektbezug, die anderen Personen zugewiesen sind (egal, wer sie erstellt hat).
+        // Sichtbarkeit wie der Tab "An andere zugewiesen" in der Dokumentenanfragen-Übersicht.
+        $assignedToOthersRequests = collect();
+        if ($canSeeForeignRequests) {
+            $assignedToOthersRequests = \Artwork\Modules\DocumentRequest\Models\DocumentRequest::query()
+                ->whereNotNull('requested_id')
+                ->where('requested_id', '!=', $userId)
+                ->where('project_id', $project->id)
+                ->where('status', '!=', \Artwork\Modules\DocumentRequest\Models\DocumentRequest::STATUS_COMPLETED)
+                ->with($docRequestEagerLoad)
+                ->orderBy('deadline_date')
+                ->orderBy('created_at')
+                ->get()
+                ->map(fn($request) => $this->mapDocumentRequest($request));
+        }
+
         return [
             'projectContracts' => $contracts,
             'projectCreatedRequests' => $createdRequests,
             'projectAssignedRequests' => $assignedRequests,
+            'projectUnassignedRequests' => $unassignedRequests,
+            'projectAssignedToOthersRequests' => $assignedToOthersRequests,
             'contractTypes' => $contractTypeService->getAll(),
             'companyTypes' => $companyTypeService->getAll(),
             'currencies' => $currencyService->getAll(),
@@ -3147,11 +3257,11 @@ class ProjectController extends Controller
                 'first_name'          => $user->first_name,
                 'last_name'           => $user->last_name,
                 'profile_photo_url'   => $user->profile_photo_url,
-                'email'               => $user->email,
+                'email'               => $user->visibleEmailFor(Auth::user()),
                 'departments'         => $user->departments,
                 'position'            => $user->position,
                 'business'            => $user->business,
-                'phone_number'        => $user->phone_number,
+                'phone_number'        => $user->visiblePhoneNumberFor(Auth::user()),
                 'project_management'  => $user->can(PermissionEnum::PROJECT_MANAGEMENT->value),
                 'pivot_access_budget' => (bool) ($user->pivot?->access_budget),
                 'pivot_is_manager'    => (bool) ($user->pivot?->is_manager),
@@ -3177,8 +3287,10 @@ class ProjectController extends Controller
     /**
      * Get crafts that the current user is allowed to assign in shift planning.
      */
-    private function getCurrentUserCraftsForShiftTab(User $user, CraftService $craftService): \Illuminate\Database\Eloquent\Collection
-    {
+    private function getCurrentUserCraftsForShiftTab(
+        User $user,
+        CraftService $craftService
+    ): \Illuminate\Database\Eloquent\Collection {
         // If user is admin, return all crafts with qualifications
         if ($user->hasRole('artwork admin')) {
             return $craftService->getAll(['qualifications']);
@@ -3196,6 +3308,8 @@ class ProjectController extends Controller
 
     public function addTimeLineRow(Event $event): void
     {
+        $this->authorizeTimelineEdit($event);
+
         $startTime = Carbon::parse($event->start_time);
         $endTime = Carbon::parse($event->end_time);
         $startDate = Carbon::parse($event->start_time);
@@ -3245,7 +3359,7 @@ class ProjectController extends Controller
                 'end_date' => $timeline['end_date'],
                 'start' => $timeline['start'],
                 'end' => $timeline['end'],
-                'description' => nl2br($timeline['description_without_html'])
+                'description' => $timeline['description_without_html']
             ]);
             if ($event = $findTimeLine->event()->first()) {
                 $event->touchQuietly();
@@ -3258,7 +3372,9 @@ class ProjectController extends Controller
     {
         return inertia('Projects/Edit', [
             'project' => new ProjectEditResource($project),
-            'users' => User::select(['id', 'first_name', 'last_name', 'email', 'profile_photo_path'])->get(),
+            // email_private mitladen: User::toArray() blendet private Adressen sonst nicht aus
+            'users' => User::select(['id', 'first_name', 'last_name', 'email', 'email_private', 'profile_photo_path'])
+                ->get(),
             'departments' => Department::select(['id', 'name'])->get()
         ]);
     }
@@ -3339,9 +3455,21 @@ class ProjectController extends Controller
             }
         }
 
-        $this->projectService->syncCategories($project, $request->collect('assignedCategoryIds'), $request->input('mainCategoryId'));
-        $this->projectService->syncSectors($project, $request->collect('assignedSectorIds'), $request->input('mainSectorId'));
-        $this->projectService->syncGenres($project, $request->collect('assignedGenreIds'), $request->input('mainGenreId'));
+        $this->projectService->syncCategories(
+            $project,
+            $request->collect('assignedCategoryIds'),
+            $request->input('mainCategoryId')
+        );
+        $this->projectService->syncSectors(
+            $project,
+            $request->collect('assignedSectorIds'),
+            $request->input('mainSectorId')
+        );
+        $this->projectService->syncGenres(
+            $project,
+            $request->collect('assignedGenreIds'),
+            $request->input('mainGenreId')
+        );
 
         $this->updateProjectState($request, $project);
 
@@ -3396,6 +3524,12 @@ class ProjectController extends Controller
                 }
 
                 $pivotData['roles'] = $validRoleIds->intersect($pivotData['roles'] ?? [])->values()->all();
+
+                // Projektleitung hat laut ProjectPolicy::update immer Schreibrecht — Pivot spiegelt das,
+                // damit Listen/Exports (writeUsers) nicht vom Frontend-Häkchen abhängen
+                if (!empty($pivotData['is_manager'])) {
+                    $pivotData['can_write'] = true;
+                }
 
                 return $pivotData;
             }
@@ -3508,7 +3642,7 @@ class ProjectController extends Controller
         $oldDescription = $project->description;
 
         $project->update([
-            'description' => nl2br($request->description)
+            'description' => $request->description
         ]);
 
         $project->save();
@@ -3560,14 +3694,13 @@ class ProjectController extends Controller
         $this->setPublicChangesNotification($projectId);
     }
 
-    public function deleteProjectFromGroup(Project $project, Project $projectGroup): void
-    {
-        $project->projectsOfGroup()->detach($projectGroup->id);
-    }
-
     public function addProjectsToGroup(Request $request, Project $projectGroup): void
     {
         $projectIdsToAdd = $request->collect('projectIdsToAdd')->pluck('id');
+        $this->authorize('update', $projectGroup);
+        Project::query()->whereIn('id', $projectIdsToAdd)->get()
+            ->each(fn (Project $project) => $this->authorize('view', $project));
+
         $projectGroup->projectsOfGroup()->sync($projectIdsToAdd);
 
         // Ensure the project group's is_group flag is set to true if there are projects to add
@@ -4042,7 +4175,7 @@ class ProjectController extends Controller
         }
 
         $newProject = Project::create([
-            'name' => '(Kopie) ' . $project->name,
+            'name' => __('(Copy)') . ' ' . $project->name,
             'description' => $project->description,
             'number_of_participants' => $project->number_of_participants,
             'cost_center' => $project->cost_center,
@@ -4220,9 +4353,6 @@ class ProjectController extends Controller
     public function restore(
         int $id,
         ShiftsQualificationsService $shiftsQualificationsService,
-        ShiftUserService $shiftUserService,
-        ShiftFreelancerService $shiftFreelancerService,
-        ShiftServiceProviderService $shiftServiceProviderService,
         CommentService $commentService,
         ChecklistService $checklistService,
         ProjectFileService $projectFileService,
@@ -4242,9 +4372,6 @@ class ProjectController extends Controller
             $this->projectService->restore(
                 $project,
                 $shiftsQualificationsService,
-                $shiftUserService,
-                $shiftFreelancerService,
-                $shiftServiceProviderService,
                 $commentService,
                 $checklistService,
                 $projectFileService,
@@ -4552,8 +4679,9 @@ class ProjectController extends Controller
 
         $oldKeyVisual = $project->key_visual_path;
         if ($request->file('keyVisual')) {
+            // public-Disk: nur echte Bilder, kein SVG/HTML.
             $request->validate([
-                'keyVisual' => ['max:' . 1_024 * 100]
+                'keyVisual' => ['image', 'max:10240', new SafeUploadFile()]
             ]);
 
             $file = $request->file('keyVisual');
@@ -4655,8 +4783,16 @@ class ProjectController extends Controller
         $project->shiftRelevantEventTypes()->sync(collect($request->shiftRelevantEventTypeIds));
     }
 
+    private function authorizeTimelineEdit(?Event $event): void
+    {
+        abort_unless((bool) $event, 404);
+
+        $this->authorize('editTimeline', $event);
+    }
+
     public function deleteTimeLineRow(Timeline $timeline, TimelineService $timelineService): void
     {
+        $this->authorizeTimelineEdit($timeline->event);
         $timelineService->forceDelete($timeline);
     }
 
@@ -4665,7 +4801,7 @@ class ProjectController extends Controller
         $newColumn = $column->replicate();
         $newColumn->relevant_for_project_groups = false;
         $newColumn->save();
-        $newColumn->update(['name' => $column->name . ' (Kopie)']);
+        $newColumn->update(['name' => $column->name . ' ' . __('(Copy)')]);
         $newColumn->cells()->forceDelete();
         // Verifizierungen und Finanzierungsquellen-Verknüpfungen dürfen nicht in die
         // Kopie wandern (sonst gilt die Kopie als verifiziert bzw. zählt doppelt auf
@@ -4707,7 +4843,7 @@ class ProjectController extends Controller
     {
         $newSubPosition = $subPosition->replicate();
         $newSubPosition->save();
-        $newSubPosition->update(['name' => $subPosition->name . ' (Kopie)']);
+        $newSubPosition->update(['name' => $subPosition->name . ' ' . __('(Copy)')]);
 
         if ($mainPositionId !== null) {
             $newSubPosition->update(['main_position_id' => $mainPositionId]);
@@ -4717,7 +4853,7 @@ class ProjectController extends Controller
         $rows = $subPosition->subPositionRows()->with('cells')->get();
         foreach ($rows as $subPositionRow) {
             $newSubPositionRow = $subPositionRow->replicate();
-            $newSubPositionRow->name = $subPositionRow->name . ' (Kopie)';
+            $newSubPositionRow->name = $subPositionRow->name . ' ' . __('(Copy)');
             $newSubPositionRow->sub_position_id = $newSubPosition->id;
             $newSubPositionRow->save();
             $newSubPositionRow->cells()->forceDelete();
@@ -4740,7 +4876,7 @@ class ProjectController extends Controller
     {
         $newMainPosition = $mainPosition->replicate();
         $newMainPosition->save();
-        $newMainPosition->update(['name' => $mainPosition->name . ' (Kopie)']);
+        $newMainPosition->update(['name' => $mainPosition->name . ' ' . __('(Copy)')]);
 
         // duplicate sub positions
         foreach ($mainPosition->subPositions()->get() as $subPosition) {
@@ -4862,6 +4998,8 @@ class ProjectController extends Controller
 
     public function updateCopyright(Request $request, Project $project): RedirectResponse
     {
+        $this->authorize('update', $project);
+
         $oldCostCenter = $project->cost_center_id;
         if (!empty($request->cost_center_name)) {
             $costCenter = CostCenter::firstOrCreate(['name' => $request->cost_center_name]);
@@ -4879,6 +5017,8 @@ class ProjectController extends Controller
 
     public function updateCostCenter(Request $request, Project $project): RedirectResponse
     {
+        $this->authorize('update', $project);
+
         $oldCostCenter = $project->cost_center_id;
         $costCenter = null;
 
@@ -5044,7 +5184,10 @@ class ProjectController extends Controller
         }
 
         // Earliest-starting room first.
-        usort($result, static fn ($a, $b) => strcmp($a['start_date'] . $a['start_time'], $b['start_date'] . $b['start_time']));
+        usort(
+            $result,
+            static fn ($a, $b) => strcmp($a['start_date'] . $a['start_time'], $b['start_date'] . $b['start_time'])
+        );
 
         return $result;
     }
@@ -5077,6 +5220,47 @@ class ProjectController extends Controller
 
     public function updateTimeline(Timeline $timeline, UpdateTimelineRequest $request): void
     {
+        $this->authorizeTimelineEdit($timeline->event);
         $this->timelineService->updateTimeline($timeline, collect($request->all()));
+    }
+
+    /**
+     * Verursacher eines Verlaufseintrags fürs Frontend (UserPopoverTooltip). Aktivitäten ohne
+     * Verursacher (System/Konsole) liefern null (morphTo-Query wäre kaputtes SQL). Externe Zugänge
+     * (Magic-Link-Personen) werden mit E-Mail bzw. CRM-Namen als Pseudo-User dargestellt.
+     *
+     * @return User|array<string, mixed>|null
+     */
+    private function resolveHistoryChanger(\Spatie\Activitylog\Models\Activity $activity): User|array|null
+    {
+        if ($activity->causer_type === null || $activity->causer_id === null) {
+            return null;
+        }
+
+        if ($activity->causer_type === (new \Artwork\Modules\ExternalAccess\Models\ExternalAccess())->getMorphClass()) {
+            /** @var \Artwork\Modules\ExternalAccess\Models\ExternalAccess|null $external */
+            $external = \Artwork\Modules\ExternalAccess\Models\ExternalAccess::query()
+                ->with('crmContact:id,display_name')
+                ->find($activity->causer_id);
+            if ($external === null) {
+                return null;
+            }
+            $name = $external->displayName();
+
+            return [
+                'id' => 'external-' . $external->id,
+                'type' => 'external',
+                'is_external' => true,
+                'first_name' => $name,
+                'last_name' => '',
+                'email' => $external->email,
+                'position' => __('External access'),
+                'profile_photo_url' => route('generate-avatar-image', ['letters' => mb_substr($name, 0, 1)]),
+            ];
+        }
+
+        return $activity->causer()
+            ->without(['roles', 'departments', 'calendar_settings', 'calendarAbo', 'shiftCalendarAbo'])
+            ->first();
     }
 }

@@ -12,11 +12,8 @@
                 <section v-for="section in schema.sections" :key="section.key">
                     <header class="mb-4">
                         <h2 class="text-lg font-semibold">{{ section.label }}</h2>
-                        <p v-if="section.mode === 'staged'" class="text-xs text-text-subtle mt-1">
+                        <p class="text-xs text-text-subtle mt-1">
                             {{ $t('Changes in this section will be reviewed before they take effect.') }}
-                        </p>
-                        <p v-else class="text-xs text-text-subtle mt-1">
-                            {{ $t('Changes in this section are saved immediately.') }}
                         </p>
                     </header>
 
@@ -63,7 +60,7 @@
                         :disabled="form.processing"
                         class="rounded-lg bg-surface-inverse px-4 py-2 text-sm font-medium text-white disabled:bg-border-strong disabled:cursor-not-allowed"
                     >
-                        {{ $t('Save changes') }}
+                        {{ $t('Submit changes for review') }}
                     </button>
                 </div>
             </form>

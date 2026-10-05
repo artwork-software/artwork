@@ -43,8 +43,12 @@ final class WorkTimeCalculationServiceTest extends TestCase
     /**
      * @param array<string, string|null> $days z. B. ['tuesday' => '08:00']
      */
-    private function workTime(User $user, array $days, string $validFrom = '2026-01-01', ?string $validUntil = null): void
-    {
+    private function workTime(
+        User $user,
+        array $days,
+        string $validFrom = '2026-01-01',
+        ?string $validUntil = null
+    ): void {
         UserWorkTime::query()->insert(array_merge([
             'user_id' => $user->id,
             'valid_from' => $validFrom,
@@ -55,8 +59,12 @@ final class WorkTimeCalculationServiceTest extends TestCase
         ], $days));
     }
 
-    private function contract(User $user, bool $specialDayRule = true, bool $threeMonth = false, ?bool $assignRule = null): void
-    {
+    private function contract(
+        User $user,
+        bool $specialDayRule = true,
+        bool $threeMonth = false,
+        ?bool $assignRule = null
+    ): void {
         $template = UserContract::create([
             'name' => 'Testvertrag',
             'free_full_days_per_week' => 2,
@@ -79,8 +87,12 @@ final class WorkTimeCalculationServiceTest extends TestCase
         ]);
     }
 
-    private function holiday(string $date, bool $special = true, ?string $endDate = null, string $name = 'Testfeiertag'): Holiday
-    {
+    private function holiday(
+        string $date,
+        bool $special = true,
+        ?string $endDate = null,
+        string $name = 'Testfeiertag'
+    ): Holiday {
         return Holiday::create([
             'name' => $name,
             'date' => $date,
@@ -114,7 +126,8 @@ final class WorkTimeCalculationServiceTest extends TestCase
         string $endTime,
         int $break = 0
     ): void {
-        $total = (int) Carbon::parse("{$startDate} {$startTime}")->diffInMinutes(Carbon::parse("{$endDate} {$endTime}"));
+        $total = (int) Carbon::parse("{$startDate} {$startTime}")
+            ->diffInMinutes(Carbon::parse("{$endDate} {$endTime}"));
         $user->individualTimes()->create([
             'title' => 'Einsatz',
             'start_date' => $startDate,
@@ -127,8 +140,12 @@ final class WorkTimeCalculationServiceTest extends TestCase
         ]);
     }
 
-    private function multiDayIndividualTimeWithoutTimes(User $user, string $startDate, string $endDate, int $minutes): void
-    {
+    private function multiDayIndividualTimeWithoutTimes(
+        User $user,
+        string $startDate,
+        string $endDate,
+        int $minutes
+    ): void {
         $user->individualTimes()->create([
             'title' => 'Einsatz',
             'start_date' => $startDate,
@@ -139,8 +156,14 @@ final class WorkTimeCalculationServiceTest extends TestCase
         ]);
     }
 
-    private function shift(User $user, string $startDate, string $startTime, string $endDate, string $endTime, int $break = 0): void
-    {
+    private function shift(
+        User $user,
+        string $startDate,
+        string $startTime,
+        string $endDate,
+        string $endTime,
+        int $break = 0
+    ): void {
         $shift = Shift::factory()->create([
             'start_date' => $startDate,
             'end_date' => $endDate,
@@ -446,7 +469,8 @@ final class WorkTimeCalculationServiceTest extends TestCase
     {
         $user = $this->user(40.0);
         $this->workTime($user, [
-            'monday' => '08:00', 'tuesday' => '08:00', 'wednesday' => '08:00', 'thursday' => '08:00', 'friday' => '08:00',
+            'monday' => '08:00', 'tuesday' => '08:00', 'wednesday' => '08:00',
+            'thursday' => '08:00', 'friday' => '08:00',
         ]);
 
         $range = $this->service()->breakdownForRange($user, Carbon::parse('2026-07-20'), Carbon::parse('2026-07-26'));
@@ -491,7 +515,11 @@ final class WorkTimeCalculationServiceTest extends TestCase
         $user = $this->user();
         $this->timedIndividualTime($user, self::TUESDAY, '22:00', '2026-07-22', '04:00', 30);
 
-        $perDay = $this->service()->individualMinutesPerDay($user, Carbon::parse(self::TUESDAY), Carbon::parse('2026-07-22'));
+        $perDay = $this->service()->individualMinutesPerDay(
+            $user,
+            Carbon::parse(self::TUESDAY),
+            Carbon::parse('2026-07-22')
+        );
 
         $this->assertSame(90, $perDay[self::TUESDAY]);
         $this->assertSame(240, $perDay['2026-07-22']);
@@ -511,11 +539,19 @@ final class WorkTimeCalculationServiceTest extends TestCase
         $this->timedIndividualTime($user, self::TUESDAY, '22:00', '2026-07-22', '04:00', 30);
 
         // Nur der zweite Tag angefragt: 240 Minuten, die Pause gehört zum (nicht angefragten) ersten Tag
-        $perDay = $this->service()->individualMinutesPerDay($user, Carbon::parse('2026-07-22'), Carbon::parse('2026-07-22'));
+        $perDay = $this->service()->individualMinutesPerDay(
+            $user,
+            Carbon::parse('2026-07-22'),
+            Carbon::parse('2026-07-22')
+        );
         $this->assertSame(['2026-07-22' => 240], $perDay);
 
         // Nur der erste Tag angefragt: 90 Minuten
-        $perDay = $this->service()->individualMinutesPerDay($user, Carbon::parse(self::TUESDAY), Carbon::parse(self::TUESDAY));
+        $perDay = $this->service()->individualMinutesPerDay(
+            $user,
+            Carbon::parse(self::TUESDAY),
+            Carbon::parse(self::TUESDAY)
+        );
         $this->assertSame([self::TUESDAY => 90], $perDay);
     }
 
@@ -529,7 +565,11 @@ final class WorkTimeCalculationServiceTest extends TestCase
         $user = $this->user();
         $this->multiDayIndividualTimeWithoutTimes($user, self::TUESDAY, '2026-07-23', 301);
 
-        $perDay = $this->service()->individualMinutesPerDay($user, Carbon::parse('2026-07-20'), Carbon::parse('2026-07-26'));
+        $perDay = $this->service()->individualMinutesPerDay(
+            $user,
+            Carbon::parse('2026-07-20'),
+            Carbon::parse('2026-07-26')
+        );
 
         $this->assertSame(101, $perDay[self::TUESDAY]);
         $this->assertSame(100, $perDay['2026-07-22']);
@@ -549,7 +589,11 @@ final class WorkTimeCalculationServiceTest extends TestCase
         $this->individualTime($user, self::TUESDAY, 120);
         $this->timedIndividualTime($user, '2026-07-22', '08:00', '2026-07-22', '12:30', 30);
 
-        $perDay = $this->service()->individualMinutesPerDay($user, Carbon::parse(self::TUESDAY), Carbon::parse('2026-07-22'));
+        $perDay = $this->service()->individualMinutesPerDay(
+            $user,
+            Carbon::parse(self::TUESDAY),
+            Carbon::parse('2026-07-22')
+        );
 
         $this->assertSame(120, $perDay[self::TUESDAY]);
         $this->assertSame(240, $perDay['2026-07-22']);

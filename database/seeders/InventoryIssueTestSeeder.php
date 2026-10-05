@@ -107,7 +107,11 @@ class InventoryIssueTestSeeder extends Seeder
                 $issue->articles()->attach($artId, ['quantity' => rand(1, 5)]);
             }
 
-            $this->command->info("  Internal: {$issue->name} ({$scenario['start_date']} → " . ($scenario['end_date'] ?? 'offen') . ")");
+            $this
+                ->command
+                ->info("  Internal: {$issue->name} ({$scenario['start_date']} → "
+                     . ($scenario['end_date'] ?? 'offen')
+                     . ")");
         }
 
         // ---------- External Issues ----------
@@ -173,7 +177,11 @@ class InventoryIssueTestSeeder extends Seeder
                 $issue->articles()->attach($artId, ['quantity' => rand(1, 3)]);
             }
 
-            $this->command->info("  External: {$issue->name} ({$scenario['issue_date']} → " . ($scenario['return_date'] ?? 'offen') . ")");
+            $this
+                ->command
+                ->info("  External: {$issue->name} ({$scenario['issue_date']} → "
+                     . ($scenario['return_date'] ?? 'offen')
+                     . ")");
         }
 
         $this->command->info('InventoryIssueTestSeeder fertig: 7 interne + 6 externe Issues erstellt.');

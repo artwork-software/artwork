@@ -23,14 +23,45 @@
 
                 <div class="mb-4 pb-4 border-b-2 border-dashed border-border">
                     <div v-if="usePage().props.personalFilters?.length > 0 && !saveFilterOption" class="flex flex-wrap items-center gap-2 mt-3">
-                        <div v-for="(filter, index) in usePage().props.personalFilters" class="group block cursor-pointer shrink-0 bg-accent-50  w-fit px-2 py-1.5 rounded-full border border-accent-200">
+                        <!-- Aktiver gespeicherter Filter (= aktuelle Filterwerte identisch) grün mit Haken
+                             und eigenem „Abwählen"-Knopf; das X löscht die Vorlage -->
+                        <div
+                            v-for="filter in usePage().props.personalFilters"
+                            :key="filter.id"
+                            class="group block cursor-pointer shrink-0 w-fit px-2 py-1.5 rounded-full border"
+                            :class="isActiveSavedFilter(filter)
+                                ? 'bg-success-surface border-success-border'
+                                : 'bg-accent-50 border-accent-200'"
+                        >
                             <div class="flex items-center">
-                                <div class="mx-2" @click="activateFilter(filter)">
-                                    <p class="text-accent-600 text-xs group-hover:text-accent-700">{{ filter.name}}</p>
+                                <div
+                                    class="mx-2 flex items-center gap-1"
+                                    :title="isActiveSavedFilter(filter) ? $t('Active filter') : undefined"
+                                    @click="activateFilter(filter)"
+                                >
+                                    <IconCheck v-if="isActiveSavedFilter(filter)" class="size-3.5 text-success" stroke-width="2.5" />
+                                    <p
+                                        class="text-xs"
+                                        :class="isActiveSavedFilter(filter) ? 'text-success font-semibold' : 'text-accent-600 group-hover:text-accent-700'"
+                                    >{{ filter.name }}</p>
                                 </div>
-                                <div class="flex items-center">
-                                    <button type="button" @click="removeFilter(filter)">
-                                        <IconX class="size-4 text-accent-600 hover:text-danger" />
+                                <div class="flex items-center gap-1">
+                                    <button
+                                        v-if="isActiveSavedFilter(filter)"
+                                        type="button"
+                                        :aria-label="$t('Deselect filter')"
+                                        v-tooltip.bottom="{ value: $t('Deselect filter'), class: 'aw-tooltip' }"
+                                        @click="deactivateSavedFilter"
+                                    >
+                                        <IconFilterOff class="size-4 text-success hover:text-danger" />
+                                    </button>
+                                    <button
+                                        type="button"
+                                        :aria-label="$t('Delete saved filter')"
+                                        v-tooltip.bottom="{ value: $t('Delete saved filter'), class: 'aw-tooltip' }"
+                                        @click="removeFilter(filter)"
+                                    >
+                                        <IconX class="size-4 hover:text-danger" :class="isActiveSavedFilter(filter) ? 'text-success' : 'text-accent-600'" />
                                     </button>
                                 </div>
                             </div>
@@ -223,7 +254,7 @@ import axios from "axios";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 import BaseCheckbox from "@/Artwork/Inputs/BaseCheckbox.vue";
 import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
-import {IconChevronDown, IconX} from "@tabler/icons-vue";
+import {IconCheck, IconChevronDown, IconFilterOff, IconX} from "@tabler/icons-vue";
 import BasePageTitle from "@/Artwork/Titles/BasePageTitle.vue";
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
@@ -521,6 +552,39 @@ const removeFilter = (filter) => {
             restoreFilterState()
         }
     })
+}
+
+// Aktiv = gespeicherte Vorlage, deren ID-Listen den aktuellen user_filters entsprechen (Reihenfolge egal,
+// null == []). Es wird nirgends gespeichert, WELCHE Vorlage aktiviert wurde — der Wertevergleich ist die
+// einzige Wahrheit und stimmt auch, wenn die Werte von Hand identisch gesetzt wurden.
+const SAVED_FILTER_ID_KEYS = [
+    'room_ids', 'area_ids', 'room_category_ids', 'room_attribute_ids',
+    'event_type_ids', 'event_property_ids', 'craft_ids', 'project_state_ids',
+];
+const normalizeIdList = (list) => Array.isArray(list)
+    ? [...list].map(Number).sort((a, b) => a - b).join(',')
+    : '';
+const activeSavedFilterId = computed(() => {
+    const current = props.user_filters ?? {};
+    const templates = usePage().props.personalFilters ?? [];
+    const match = templates.find((template) =>
+        SAVED_FILTER_ID_KEYS.some((key) => normalizeIdList(template[key]) !== '')
+        && SAVED_FILTER_ID_KEYS.every((key) => normalizeIdList(template[key]) === normalizeIdList(current[key]))
+    );
+    return match?.id ?? null;
+});
+const isActiveSavedFilter = (filter) => activeSavedFilterId.value !== null && filter.id === activeSavedFilterId.value;
+
+// „Abwählen" leert nur die ID-Filter der Vorlage — Besetzungs-/Verstoßfilter sind kein Teil davon
+const deactivateSavedFilter = () => {
+    Object.keys(filteredOptionsByCategories.value).forEach(category => {
+        Object.keys(filteredOptionsByCategories.value[category]).forEach(subCategory => {
+            filteredOptionsByCategories.value[category][subCategory].forEach(filter => {
+                filter.checked = false;
+            })
+        })
+    })
+    applyFilter();
 }
 
 const activateFilter = (filter) => {

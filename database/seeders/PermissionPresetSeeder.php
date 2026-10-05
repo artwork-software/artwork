@@ -169,7 +169,9 @@ class PermissionPresetSeeder extends Seeder
             sort($current);
             // Das tote Recht kann bereits entfernt worden sein und die Stufenleiter-Implikationen können
             // bereits angewendet sein — alle Varianten gelten als "unverändert".
-            $legacyWithoutDead = array_values(array_diff($legacyPermissions, ['can see, edit and delete project contracts and docs']));
+            $legacyWithoutDead = array_values(
+                array_diff($legacyPermissions, ['can see, edit and delete project contracts and docs'])
+            );
             $candidates = [
                 $legacyPermissions,
                 $legacyWithoutDead,

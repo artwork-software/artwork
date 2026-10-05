@@ -5,7 +5,7 @@ namespace Artwork\Modules\Shift\Events;
 use Artwork\Modules\Calendar\DTO\ShiftDTO;
 use Artwork\Modules\Calendar\Services\ShiftCalendarService;
 use Artwork\Modules\Shift\Models\Shift;
-use Illuminate\Broadcasting\Channel;
+use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcastNow;
 use Illuminate\Foundation\Events\Dispatchable;
@@ -20,6 +20,10 @@ class MultiShiftCreateInShiftPlan implements ShouldBroadcastNow
 
 
     public Collection $shifts;
+
+    /** Einmal berechnete Nutzlast (Flash für die anlegende Ansicht + Broadcast nutzen dieselbe). */
+    private ?array $payload = null;
+
     /**
      * Create a new event instance.
      */
@@ -37,16 +41,24 @@ class MultiShiftCreateInShiftPlan implements ShouldBroadcastNow
     /**
      * Get the channels the event should broadcast on.
      *
-     * @return array<int, \Illuminate\Broadcasting\Channel>
+     * @return array<int, PrivateChannel>
      */
     public function broadcastOn(): array
     {
         return [
-            new Channel('shift-plan.multi-shifts'),
+            new PrivateChannel('shift-plan.multi-shifts'),
         ];
     }
 
     public function broadcastWith(): array
+    {
+        return $this->payload ??= $this->buildPayload();
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function buildPayload(): array
     {
         $shifts = Shift::query()
             ->whereIn('id', $this->shifts->pluck('id')->all())

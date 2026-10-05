@@ -2,7 +2,12 @@
 
 namespace Tests\Feature\Http\Controllers;
 
+use Artwork\Modules\Project\Models\Component;
+use Artwork\Modules\Project\Models\ComponentInTab;
+use Artwork\Modules\Project\Models\Project;
+use Artwork\Modules\Project\Models\ProjectComponentValue;
 use Artwork\Modules\Project\Models\ProjectTab;
+use Illuminate\Support\Facades\DB;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\Feature\FeatureTestCase;
 
@@ -79,6 +84,64 @@ final class ProjectTabControllerTest extends FeatureTestCase
         $this->assertDatabaseMissing('project_tabs', ['id' => $tab->id]);
     }
 
+    /**
+     * Projektwerte hängen an (project_id, component_id), nicht am Tab. Früher wurde beim Tab-Löschen mit der
+     * Platzierungs-ID (component_in_tabs.id) gelöscht und so die Werte einer fremden Komponente mit gleicher ID
+     * entfernt; zusätzlich gingen geteilte Werte einer auch anderswo platzierten Komponente verloren.
+     */
+    #[Test]
+    public function destroying_tab_keeps_project_component_values(): void
+    {
+        $this->actingAsAdmin();
+        $project = Project::factory()->create();
+
+        // Gleiche ID für fremde Komponente und Platzierung erzwingen, damit die ID-Verwechslung sichtbar wird.
+        $collidingId = max(
+            (int) DB::table('components')->max('id'),
+            (int) DB::table('component_in_tabs')->max('id'),
+        ) + 1000;
+
+        $unrelatedComponent = $this->createTextComponent(['id' => $collidingId]);
+        $placedComponent = $this->createTextComponent();
+
+        $tabToDelete = ProjectTab::factory()->create();
+        $otherTab = ProjectTab::factory()->create();
+
+        ComponentInTab::query()->forceCreate([
+            'id' => $collidingId,
+            'project_tab_id' => $tabToDelete->id,
+            'component_id' => $placedComponent->id,
+            'order' => 1,
+        ]);
+        ComponentInTab::query()->create([
+            'project_tab_id' => $otherTab->id,
+            'component_id' => $placedComponent->id,
+            'order' => 1,
+        ]);
+
+        $unrelatedValue = ProjectComponentValue::query()->create([
+            'project_id' => $project->id,
+            'component_id' => $unrelatedComponent->id,
+            'data' => ['text' => 'fremder Wert'],
+        ]);
+        $sharedValue = ProjectComponentValue::query()->create([
+            'project_id' => $project->id,
+            'component_id' => $placedComponent->id,
+            'data' => ['text' => 'geteilter Wert'],
+        ]);
+
+        $this->delete(route('tab.destroy', $tabToDelete))->assertOk();
+
+        $this->assertDatabaseMissing('project_tabs', ['id' => $tabToDelete->id]);
+        $this->assertDatabaseMissing('component_in_tabs', ['project_tab_id' => $tabToDelete->id]);
+        $this->assertDatabaseHas('project_component_values', ['id' => $unrelatedValue->id]);
+        $this->assertDatabaseHas('project_component_values', ['id' => $sharedValue->id]);
+        $this->assertDatabaseHas('component_in_tabs', [
+            'project_tab_id' => $otherTab->id,
+            'component_id' => $placedComponent->id,
+        ]);
+    }
+
     #[Test]
     public function admin_can_set_tab_as_default(): void
     {
@@ -106,5 +169,19 @@ final class ProjectTabControllerTest extends FeatureTestCase
         ]);
 
         $response->assertOk();
+    }
+
+    /**
+     * @param array<string, mixed> $attributes
+     */
+    private function createTextComponent(array $attributes = []): Component
+    {
+        return Component::query()->forceCreate(array_merge([
+            'name' => 'Textfeld',
+            'type' => 'TextField',
+            'data' => [],
+            'special' => false,
+            'sidebar_enabled' => true,
+        ], $attributes));
     }
 }

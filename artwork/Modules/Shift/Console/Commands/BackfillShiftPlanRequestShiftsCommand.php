@@ -28,7 +28,8 @@ class BackfillShiftPlanRequestShiftsCommand extends Command
         {--no-broadcast : Keine Websocket-Events senden}
         {--once : Nur einmalig pro Umgebung ausführen (Marker in one_time_tasks). Für artwork:update.}';
 
-    protected $description = 'Hängt fehlende freie Schichten an bestehende Schichtplananfragen an (Reparatur des alten Auswahl-Bugs).';
+    protected $description = 'Hängt fehlende freie Schichten an bestehende Schichtplananfragen an (Reparatur des '
+        . 'alten Auswahl-Bugs).';
 
     /**
      * Marker-Key in der one_time_tasks-Tabelle für den --once-Lauf.

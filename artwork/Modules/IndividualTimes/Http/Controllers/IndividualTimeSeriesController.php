@@ -55,6 +55,8 @@ class IndividualTimeSeriesController extends Controller
         // subjects: [{type: "user"|"freelancer"|"service_provider", id: 123}, ...]
         $subjectsInput = collect($data['subjects']);
 
+        $this->authorize('createForSubjects', [IndividualTimeSeries::class, $subjectsInput->all()]);
+
         // Zeit-Subjekte aus DB laden
         $timeables = $this->resolveTimeables($subjectsInput);
 
@@ -75,9 +77,13 @@ class IndividualTimeSeriesController extends Controller
 
     /**
      * Display the specified resource.
+     *
+     * @throws \Illuminate\Auth\Access\AuthorizationException
      */
     public function show(IndividualTimeSeries $series, Request $request)
     {
+        $this->authorize('view', $series);
+
         $subjectType = $request->query('subject_type'); // 'user' | 'freelancer' | 'service_provider'
         $subjectId   = $request->query('subject_id');
 
@@ -153,9 +159,11 @@ class IndividualTimeSeriesController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(UpdateIndividualTimeSeriesRequest $request, IndividualTimeSeries $series)
+    public function update(UpdateIndividualTimeSeriesRequest $request, IndividualTimeSeries $series): void
     {
         $data = $this->validatePayload($request);
+
+        $this->authorize('update', [$series, $data['subjects']]);
 
         // Wer bearbeitet?
         $createdBy = $this->auth->id();
@@ -195,6 +203,8 @@ class IndividualTimeSeriesController extends Controller
      */
     public function destroy(IndividualTimeSeries $series): void
     {
+        $this->authorize('delete', $series);
+
         // Collect affected workers before deleting
         $affectedWorkers = $series->individualTimes()
             ->select('timeable_id', 'timeable_type')
@@ -255,6 +265,7 @@ class IndividualTimeSeriesController extends Controller
             'start_time'            => [
                 'nullable',
                 'date_format:H:i',
+                // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter -- Laravel-Validierungs-Closure (attribute, value, fail) – Signatur vorgegeben
                 function ($attribute, $value, $fail) use ($request): void {
                     if (!$request->boolean('full_day') && empty($value)) {
                         $fail(__('Start time is required if not full day.'));
@@ -264,6 +275,7 @@ class IndividualTimeSeriesController extends Controller
             'end_time'              => [
                 'nullable',
                 'date_format:H:i',
+                // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter -- Laravel-Validierungs-Closure (attribute, value, fail) – Signatur vorgegeben
                 function ($attribute, $value, $fail) use ($request): void {
                     if (!$request->boolean('full_day') && empty($value)) {
                         $fail(__('End time is required if not full day.'));
@@ -420,5 +432,4 @@ class IndividualTimeSeriesController extends Controller
             default => 0,
         };
     }
-
 }

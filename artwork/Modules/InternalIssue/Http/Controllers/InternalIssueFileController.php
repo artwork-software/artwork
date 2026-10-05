@@ -12,7 +12,7 @@ class InternalIssueFileController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(): void
     {
         //
     }
@@ -20,7 +20,7 @@ class InternalIssueFileController extends Controller
     /**
      * Show the form for creating a new resource.
      */
-    public function create()
+    public function create(): void
     {
         //
     }
@@ -28,7 +28,7 @@ class InternalIssueFileController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(StoreInternalIssueFileRequest $request)
+    public function store(StoreInternalIssueFileRequest $request): void
     {
         //
     }
@@ -36,7 +36,7 @@ class InternalIssueFileController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(InternalIssueFile $internalIssueFile)
+    public function show(InternalIssueFile $internalIssueFile): void
     {
         //
     }
@@ -44,7 +44,7 @@ class InternalIssueFileController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(InternalIssueFile $internalIssueFile)
+    public function edit(InternalIssueFile $internalIssueFile): void
     {
         //
     }
@@ -52,7 +52,7 @@ class InternalIssueFileController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(UpdateInternalIssueFileRequest $request, InternalIssueFile $internalIssueFile)
+    public function update(UpdateInternalIssueFileRequest $request, InternalIssueFile $internalIssueFile): void
     {
         //
     }
@@ -60,7 +60,7 @@ class InternalIssueFileController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(InternalIssueFile $internalIssueFile)
+    public function destroy(InternalIssueFile $internalIssueFile): void
     {
         //
     }

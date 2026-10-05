@@ -12,6 +12,7 @@ use Spatie\LaravelData\Data;
 class BroadcastEventDTO extends Data
 {
     use SerializesEventRelations;
+
     public function __construct(
         public int $id,
         public string $start,
@@ -92,5 +93,4 @@ class BroadcastEventDTO extends Data
             hasTimelines: $event->hasTimelines(),
         );
     }
-
 }

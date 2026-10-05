@@ -15,6 +15,7 @@ use Artwork\Modules\Calendar\DTO\CalendarPeriodDTO;
 use Artwork\Modules\Calendar\Services\CalendarDataService;
 use Artwork\Modules\Calendar\Services\CalendarService;
 use Artwork\Modules\Change\Services\ChangeService;
+use Artwork\Modules\Craft\Models\Craft;
 use Artwork\Modules\Craft\Services\CraftService;
 use Artwork\Modules\DayService\Services\DayServicesService;
 use Artwork\Modules\Event\DTOs\EventManagementDto;
@@ -39,6 +40,7 @@ use Artwork\Modules\Freelancer\Http\Resources\FreelancerShiftPlanResource;
 use Artwork\Modules\Freelancer\Models\Freelancer;
 use Artwork\Modules\Freelancer\Services\FreelancerService;
 use Artwork\Modules\Holidays\Models\Holiday;
+use Artwork\Modules\Holidays\Services\HolidayService;
 use Artwork\Modules\IndividualTimes\Models\IndividualTime;
 use Artwork\Modules\Notification\Enums\NotificationEnum;
 use Artwork\Modules\Notification\Services\NotificationService;
@@ -56,6 +58,8 @@ use Artwork\Modules\ServiceProvider\Http\Resources\ServiceProviderShiftPlanResou
 use Artwork\Modules\ServiceProvider\Models\ServiceProvider;
 use Artwork\Modules\ServiceProvider\Services\ServiceProviderService;
 use Artwork\Modules\Shift\Models\Shift;
+use Artwork\Modules\Shift\Services\ShiftDeletionService;
+use Artwork\Modules\Shift\Services\ShiftWorkerAvailability;
 use Artwork\Modules\Shift\Models\ShiftFilter;
 use Artwork\Modules\Shift\Models\ShiftQualification;
 use Artwork\Modules\Shift\Models\ShiftRuleViolation;
@@ -66,6 +70,7 @@ use Artwork\Modules\Shift\Services\ShiftsQualificationsService;
 use Artwork\Modules\Shift\Services\ShiftUserService;
 use Artwork\Modules\Shift\Services\ShiftQualificationService;
 use Artwork\Modules\Shift\Services\ShiftTimePresetService;
+use Artwork\Modules\Vacation\Enums\Vacation as VacationType;
 use Artwork\Modules\Event\Models\SubEvent;
 use Artwork\Modules\Event\Services\SubEventService;
 use Artwork\Modules\Timeline\Models\Timeline;
@@ -84,6 +89,7 @@ use Illuminate\Auth\AuthManager;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Collection as SupportCollection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -135,13 +141,9 @@ readonly class EventService
 
         $eventCommentService->deleteEventComments($event->comments);
         $timelineService->deleteTimelines($event->timelines);
-        $shiftService->deleteShifts(
-            $event->shifts,
-            $shiftsQualificationsService,
-            $shiftUserService,
-            $shiftFreelancerService,
-            $shiftServiceProviderService
-        );
+        // Gemeinsamer Lösch-Weg: Benachrichtigung der Besetzung festgeschriebener Schichten,
+        // Konflikte, Projekt-Tageszuordnungen, Regel-Neuprüfung, Live-Update
+        app(ShiftDeletionService::class)->deleteMany($event->shifts);
         $subEventService->deleteSubEvents($event->subEvents);
 
         broadcast(new OccupancyUpdated())->toOthers();
@@ -200,13 +202,8 @@ readonly class EventService
 
             $eventCommentService->deleteEventComments($event->comments);
             $timelineService->deleteTimelines($event->timelines);
-            $shiftService->deleteShifts(
-                $event->shifts,
-                $shiftsQualificationsService,
-                $shiftUserService,
-                $shiftFreelancerService,
-                $shiftServiceProviderService
-            );
+            // Massenpfad: kein Live-Update je Schicht, am Ende ein OccupancyUpdated (s. unten)
+            app(ShiftDeletionService::class)->deleteMany($event->shifts, $sendPerEventNotifications, false);
             $subEventService->deleteSubEvents($event->subEvents);
 
             $notificationService->deleteUpsertRoomRequestNotificationByEventId($event->id);
@@ -228,15 +225,13 @@ readonly class EventService
     public function restore(
         Event $event,
         ShiftsQualificationsService $shiftsQualificationsService,
-        ShiftUserService $shiftUserService,
-        ShiftFreelancerService $shiftFreelancerService,
-        ShiftServiceProviderService $shiftServiceProviderService,
         ChangeService $changeService,
         EventCommentService $eventCommentService,
         TimelineService $timelineService,
         ShiftService $shiftService,
         SubEventService $subEventService,
     ): void {
+        $eventDeletedAt = $event->deleted_at?->copy();
         $this->eventRepository->restore($event);
         if (!empty($event->project_id)) {
             $changeService->saveFromBuilder(
@@ -250,11 +245,8 @@ readonly class EventService
         $eventCommentService->restoreEventComments($event->comments()->onlyTrashed()->get());
         $timelineService->restoreTimelines($event->timelines()->onlyTrashed()->get());
         $shiftService->restoreShifts(
-            $event->shifts()->onlyTrashed()->get(),
-            $shiftsQualificationsService,
-            $shiftUserService,
-            $shiftFreelancerService,
-            $shiftServiceProviderService
+            $shiftService->trashedWithEvent($event, $eventDeletedAt),
+            $shiftsQualificationsService
         );
         $subEventService->restoreSubEvents($event->subEvents()->onlyTrashed()->get());
 
@@ -290,9 +282,6 @@ readonly class EventService
     public function restoreAll(
         Collection|array $events,
         ShiftsQualificationsService $shiftsQualificationsService,
-        ShiftUserService $shiftUserService,
-        ShiftFreelancerService $shiftFreelancerService,
-        ShiftServiceProviderService $shiftServiceProviderService,
         ChangeService $changeService,
         EventCommentService $eventCommentService,
         TimelineService $timelineService,
@@ -301,6 +290,7 @@ readonly class EventService
     ): void {
         /** @var Event $event */
         foreach ($events as $event) {
+            $eventDeletedAt = $event->deleted_at?->copy();
             $this->eventRepository->restore($event);
             if (!empty($event->project_id)) {
                 $changeService->saveFromBuilder(
@@ -315,11 +305,8 @@ readonly class EventService
             $eventCommentService->restoreEventComments($event->comments()->onlyTrashed()->get());
             $timelineService->restoreTimelines($event->timelines()->onlyTrashed()->get());
             $shiftService->restoreShifts(
-                $event->shifts()->onlyTrashed()->get(),
+                $shiftService->trashedWithEvent($event, $eventDeletedAt),
                 $shiftsQualificationsService,
-                $shiftUserService,
-                $shiftFreelancerService,
-                $shiftServiceProviderService
             );
             $subEventService->restoreSubEvents($event->subEvents()->onlyTrashed()->get());
 
@@ -528,16 +515,66 @@ readonly class EventService
         $qualificationNames = ShiftQualification::query()->pluck('name', 'id');
         $confirmationEligibility = app(ShiftConfirmationEligibilityService::class);
 
-        $buildWorkers = function (Shift $shift) use ($qualificationNames, $confirmationEligibility): array {
-            $tag = function ($workers, string $type) use ($qualificationNames, $confirmationEligibility) {
+        // Kompakte Serialisierung: Karte, Tooltip und PDF-Export lesen nur Name, Avatar,
+        // Typ und Pivot. Das volle Modell (User ~3 KB, Dienstleister mit
+        // assigned_craft_ids-Accessor = eine Query je Person) lag doppelt in
+        // `users` und `workers` und machte den Monatspayload ~18 KB je Schicht.
+        $workerVisible = [
+            'id',
+            'first_name',
+            'last_name',
+            'provider_name',
+            'name',
+            'profile_photo_url',
+            'type',
+            'confirmation_eligible',
+            'pivot',
+        ];
+
+        // Pivot ohne Zeitstempel/Workflow-Interna: Karte, Notiz, Zu-/Absage und PDF
+        // lesen nur Zeiten, Funktion, Notiz und die confirmation_*-Felder.
+        $pivotVisible = [
+            'id',
+            'shift_id',
+            'employable_type',
+            'employable_id',
+            'shift_qualification_id',
+            'shift_qualification_name',
+            'craft_abbreviation',
+            'is_overbooked',
+            'short_description',
+            'start_date',
+            'end_date',
+            'start_time',
+            'end_time',
+            'confirmation_status',
+            'confirmation_at',
+            'confirmation_by_user_id',
+            'confirmation_comment',
+            'confirmation_reset_at',
+        ];
+
+        $workerContext = [$qualificationNames, $confirmationEligibility, $workerVisible, $pivotVisible];
+        $buildWorkers = function (Shift $shift) use ($workerContext): array {
+            [$qualificationNames, $confirmationEligibility, $workerVisible, $pivotVisible] = $workerContext;
+            $tag = function ($workers, string $type) use ($workerContext) {
+                [$qualificationNames, $confirmationEligibility, $workerVisible, $pivotVisible] = $workerContext;
                 if ($workers === null) {
                     return collect();
                 }
 
-                return $workers->map(function ($worker) use ($type, $qualificationNames, $confirmationEligibility) {
+                return $workers->map(function ($worker) use (
+                    $type,
+                    $qualificationNames,
+                    $confirmationEligibility,
+                    $workerVisible,
+                    $pivotVisible
+                ) {
                     $worker->setAttribute('type', $type);
                     // Zu-/Absage-Buttons der Einsatzplan-Karte nur für Personen mit dem Recht
                     $worker->setAttribute('confirmation_eligible', $confirmationEligibility->isEligible($worker));
+                    $worker->setVisible($workerVisible);
+                    $worker->pivot?->setVisible($pivotVisible);
                     if ($worker->pivot !== null) {
                         $worker->pivot->setAttribute(
                             'shift_qualification_name',
@@ -555,6 +592,65 @@ readonly class EventService
                 ->all();
         };
 
+        // Schlanke Relations-Eager-Loads: Room zieht sonst admins+creator ($with),
+        // Craft die craftShiftPlaner ($with) — beides braucht der Einsatzplan nicht.
+        $slimRoom = static fn (Builder|Relation $query) => $query
+            ->without(['admins', 'creator'])
+            ->select(['rooms.id', 'rooms.name']);
+        // craftShiftPlaner (Craft::$with) bleibt geladen und wird unten auf die Felder des
+        // Zeitanpassungs-Modals reduziert („Zuständige Personen“ = Planer:innen des Gewerks)
+        $slimCraft = static fn (Builder|Relation $query) => $query
+            ->select(['crafts.id', 'crafts.name', 'crafts.abbreviation', 'crafts.color']);
+        $prepareCraft = static function (?Craft $craft): Craft|array {
+            if ($craft === null) {
+                return [];
+            }
+            CraftService::slimPlaners($craft);
+
+            return $craft;
+        };
+
+        // Projekt als Array mit genau den Feldern, die Karte (Name/Link),
+        // Gruppen-Pills (id/name/icon, users nur als IDs für den Mitglieds-Check)
+        // und PDF (name) lesen. `auth_user_in_team` wird unten per Bulk-Lookup gesetzt.
+        $slimProject = static function (?Project $project): ?array {
+            if ($project === null) {
+                return null;
+            }
+
+            $groups = $project->relationLoaded('groups') ? $project->groups : collect();
+
+            return [
+                'id' => $project->id,
+                'name' => $project->name,
+                'is_group' => (bool) $project->is_group,
+                'icon' => $project->icon,
+                'groups' => $groups->map(static fn (Project $group): array => [
+                    'id' => $group->id,
+                    'name' => $group->name,
+                    'icon' => $group->icon,
+                    'users' => $group->relationLoaded('users')
+                        ? $group->users->map(static fn ($user): array => ['id' => $user->id])->values()->all()
+                        : [],
+                ])->values()->all(),
+            ];
+        };
+
+        // Termin ohne $appends und ohne die (bereits separat serialisierten) Schichten:
+        // Karte liest event.room.name / event.project, PDF eventName|name.
+        $slimEvent = static fn (Event $event, ?array $project): array => [
+            'id' => $event->id,
+            'eventName' => $event->eventName,
+            'name' => $event->name,
+            'event_type_id' => $event->event_type_id,
+            'start_time' => $event->start_time,
+            'end_time' => $event->end_time,
+            'room' => $event->room !== null
+                ? ['id' => $event->room->id, 'name' => $event->room->name]
+                : null,
+            'project' => $project,
+        ];
+
         $period = CarbonPeriod::create($startDate, $endDate);
         foreach ($period as $date) {
             $formattedDate = $date->format('Y-m-d');
@@ -566,6 +662,7 @@ readonly class EventService
                 'holidays' => [],
                 'comments' => [],
                 'violations' => [],
+                'unavailableAssignment' => null,
                 'totalWorkTime' => '00:00',
                 'totalBreakTime' => '00:00',
             ];
@@ -621,6 +718,48 @@ readonly class EventService
                 ];
             }
         }
+
+        // Shifts use the morph pivot table `shift_workers` for workers (users/freelancers/service providers).
+        // When filtering via `whereHas()`, the callback targets the RELATED model query. Use `whereKey()`
+        // to generate a qualified primary key condition (avoids invalid `*_id` columns and `id` ambiguity).
+        $mapping = [
+            'user' => 'users',
+            'freelancer' => 'freelancer',
+            'service_provider' => 'serviceProvider',
+        ];
+
+        $relationToFind = $mapping[$modelType] ?? 'users';
+
+        // Zeiten der angezeigten Person: individuelle Arbeitszeit (shift_workers-Pivot) vor Schichtzeit.
+        // Die Stundensummen des Einsatzplans rechneten sonst mit der Schichtzeit, während Karte,
+        // Soll/Ist und Kalender-Abo die individuelle Zeit zeigen.
+        $ownTimes = static function (Shift $shift) use ($relationToFind, $modelId): array {
+            $pivot = $shift->{$relationToFind}?->firstWhere('id', $modelId)?->pivot;
+
+            return [
+                'start_date' => $pivot?->start_date ?? $shift->start_date,
+                'end_date' => $pivot?->end_date ?? $shift->end_date,
+                'start' => $pivot?->start_time ?? $shift->start,
+                'end' => $pivot?->end_time ?? $shift->end,
+                'break_minutes' => $shift->break_minutes,
+            ];
+        };
+
+        // Verfügbarkeitsstatus am Schichttag aus derselben Quelle wie das Warndreieck im
+        // Schichtplan: Wer trotz Abwesenheitseintrag eingeplant ist, soll das auch im
+        // Einsatzplan sehen — dort war der Eintrag bislang nur unten in der Liste sichtbar.
+        // Die Abwesenheiten werden einmal für den Zeitraum geladen und an die jeweilige
+        // Schicht-Zuweisung gehängt (ShiftWorkerAvailability filtert selbst nach Datum);
+        // ein lazy Nachladen je Schicht würde die Relation auf das erste Schichtfenster
+        // festnageln und alle weiteren Tage falsch bewerten.
+        $workerVacations = $this->loadWorkerVacations($worker, $startDate, $endDate);
+
+        $resolveUnavailableStatus = fn (Shift $shift): ?string => $this->resolveWorkerUnavailableStatus(
+            $shift,
+            $workerVacations,
+            $relationToFind,
+            $modelId
+        );
 
         // Feiertage einmal für den gesamten Zeitraum laden und pro Tag zuordnen.
         $holidays = Holiday::query()
@@ -706,21 +845,13 @@ readonly class EventService
             }
         }
 
-        // Shifts use the morph pivot table `shift_workers` for workers (users/freelancers/service providers).
-        // When filtering via `whereHas()`, the callback targets the RELATED model query. Use `whereKey()`
-        // to generate a qualified primary key condition (avoids invalid `*_id` columns and `id` ambiguity).
-        $mapping = [
-            'user' => 'users',
-            'freelancer' => 'freelancer',
-            'service_provider' => 'serviceProvider',
-        ];
-
-        $relationToFind = $mapping[$modelType] ?? 'users';
-
         $events = Event::query()
             ->with(
                 [
-                    'room',
+                    'room' => $slimRoom,
+                    // project + groups eager: vorher je Schicht eine Lazy-Query auf
+                    // projects und eine auf project_groups
+                    'project.groups',
                     'shifts' => function (HasMany $query) use ($relationToFind, $modelId): void {
                         $query->whereHas($relationToFind, function (Builder $builder) use ($modelId): void {
                             $builder->whereKey($modelId);
@@ -730,9 +861,9 @@ readonly class EventService
                         $query->orderBy('end_date');
                         $query->orderBy('end');
                     },
-                    'shifts.craft',
+                    'shifts.craft' => $slimCraft,
+                    'shifts.room' => $slimRoom,
                     'shifts.users',
-                    'shifts.users.dayServices',
                     'shifts.freelancer',
                     'shifts.serviceProvider',
                     'shifts.shiftsQualifications',
@@ -772,33 +903,40 @@ readonly class EventService
                     continue;
                 }
 
-                $plannedData = $calculatePlannedWorkingHours([$shift]);
+                $ownShiftTimes = $ownTimes($shift);
+                $plannedData = $calculatePlannedWorkingHours([$ownShiftTimes]);
+                $unavailableStatus = $resolveUnavailableStatus($shift);
+                $this->markUnavailableAssignment($daysWithData[$shiftDate], $unavailableStatus, $shift);
 
-                /** @var Project $project */
-                $project = $event->project;
+                $project = $slimProject($event->project);
+                $projectGroups = $project['groups'] ?? [];
 
                 $daysWithData[$shiftDate]['shifts'][] = [
                     'room' => $shift->room,
-                    'project' => $event->project,
-                    'projectIsGroup' => $project->is_group,
-                    'projectIsInGroup' => $project->groups->isNotEmpty(),
-                    'projectGroups' => $project->groups->isNotEmpty() ? $project->groups : null,
-                    'event' => $event,
+                    'project' => $project,
+                    'projectIsGroup' => (bool) ($project['is_group'] ?? false),
+                    'projectIsInGroup' => $projectGroups !== [],
+                    'projectGroups' => $projectGroups !== [] ? $projectGroups : null,
+                    'event' => $slimEvent($event, $project),
                     'id' => $shift->id,
                     'name' => $shift->name ?? '',
                     'start' => $shift->start,
                     'end' => $shift->end,
+                    // Arbeitszeit der angezeigten Person (individuelle Zeit, sonst Schichtzeit)
+                    'worker_start' => substr((string) $ownShiftTimes['start'], 0, 5),
+                    'worker_end' => substr((string) $ownShiftTimes['end'], 0, 5),
                     'break_minutes' => $shift->break_minutes,
                     'description' => $shift->description,
                     'is_committed' => (bool) $shift->is_committed,
                     'in_workflow' => (bool) $shift->in_workflow,
-                    'craft' => $shift->craft ?? [],
-                    'users' => $shift->users ?? [],
-                    'freelancer' => $shift->freelancer ?? [],
-                    'serviceProvider' => $shift->serviceProvider ?? [],
+                    'craft' => $prepareCraft($shift->craft),
+                    // Nur die vereinheitlichte workers-Liste (type-Tag + Pivot); die
+                    // getrennten users/freelancer/serviceProvider-Listen waren dieselben
+                    // Personen noch einmal und wurden von keinem Konsumenten gelesen.
                     'workers' => $buildWorkers($shift),
                     'shiftQualifications' => $shift->shiftsQualifications ?? [],
                     'plannedWorkingHours' => $plannedData['totalWorkTime'],
+                    'worker_unavailable_status' => $unavailableStatus,
                 ];
 
                 $daysWithData[$shiftDate]['totalWorkTime'] = $this->sumTimes(
@@ -814,14 +952,12 @@ readonly class EventService
 
         $shifts = Shift::query()
             ->with([
-                'room',
+                'room' => $slimRoom,
+                'craft' => $slimCraft,
+                'project.groups',
                 'users',
-                'users.dayServices',
-                'users.globalQualifications',
                 'freelancer',
-                'freelancer.globalQualifications',
                 'serviceProvider',
-                'serviceProvider.globalQualifications',
                 'shiftsQualifications'
             ])
             ->whereHas($relationToFind, function (Builder $builder) use ($modelId): void {
@@ -846,27 +982,40 @@ readonly class EventService
                 if (!isset($daysWithData[$shiftDate])) {
                     continue;
                 }
-                $plannedData = $calculatePlannedWorkingHours([$shift]);
+                $ownShiftTimes = $ownTimes($shift);
+                $plannedData = $calculatePlannedWorkingHours([$ownShiftTimes]);
+                $unavailableStatus = $resolveUnavailableStatus($shift);
+                $this->markUnavailableAssignment($daysWithData[$shiftDate], $unavailableStatus, $shift);
+
+                $project = $slimProject($shift->project);
+                $projectGroups = $project['groups'] ?? [];
 
                 $daysWithData[$shiftDate]['shifts'][] = [
                     'room' => $shift->room,
-                    'project' => $shift->project,
+                    'project' => $project,
+                    'projectIsGroup' => (bool) ($project['is_group'] ?? false),
+                    'projectIsInGroup' => $projectGroups !== [],
+                    'projectGroups' => $projectGroups !== [] ? $projectGroups : null,
                     'event' => null,
                     'id' => $shift->id,
                     'name' => $shift->name ?? '',
                     'start' => $shift->start,
                     'end' => $shift->end,
+                    // Arbeitszeit der angezeigten Person (individuelle Zeit, sonst Schichtzeit)
+                    'worker_start' => substr((string) $ownShiftTimes['start'], 0, 5),
+                    'worker_end' => substr((string) $ownShiftTimes['end'], 0, 5),
                     'break_minutes' => $shift->break_minutes,
                     'description' => $shift->description,
                     'is_committed' => (bool) $shift->is_committed,
                     'in_workflow' => (bool) $shift->in_workflow,
-                    'craft' => $shift->craft ?? [],
-                    'users' => $shift->users ?? [],
-                    'freelancer' => $shift->freelancer ?? [],
-                    'serviceProvider' => $shift->serviceProvider ?? [],
+                    'craft' => $prepareCraft($shift->craft),
+                    // Nur die vereinheitlichte workers-Liste (type-Tag + Pivot); die
+                    // getrennten users/freelancer/serviceProvider-Listen waren dieselben
+                    // Personen noch einmal und wurden von keinem Konsumenten gelesen.
                     'workers' => $buildWorkers($shift),
                     'shiftQualifications' => $shift->shiftsQualifications ?? [],
                     'plannedWorkingHours' => $plannedData['totalWorkTime'],
+                    'worker_unavailable_status' => $unavailableStatus,
                 ];
 
                 $daysWithData[$shiftDate]['totalWorkTime'] = $this->sumTimes(
@@ -885,31 +1034,135 @@ readonly class EventService
         // eingeloggte User Teammitglied ist. Ein Bulk-Lookup statt Exists pro Projekt.
         $authUserId = $this->authManager->id();
         if ($authUserId !== null) {
-            $shiftProjects = collect($daysWithData)
+            $shiftProjectIds = collect($daysWithData)
                 ->flatMap(static fn (array $day) => $day['shifts'])
-                ->pluck('project')
-                ->filter();
+                ->pluck('project.id')
+                ->filter()
+                ->unique();
 
             $teamProjectIds = DB::table('project_user')
                 ->where('user_id', $authUserId)
-                ->whereIn('project_id', $shiftProjects->pluck('id')->unique())
+                ->whereIn('project_id', $shiftProjectIds)
                 ->pluck('project_id')
                 ->flip();
 
-            foreach ($shiftProjects as $shiftProject) {
-                $shiftProject->setAttribute('auth_user_in_team', isset($teamProjectIds[$shiftProject->id]));
+            foreach ($daysWithData as &$day) {
+                foreach ($day['shifts'] as &$shiftRow) {
+                    if ($shiftRow['project'] === null) {
+                        continue;
+                    }
+
+                    $inTeam = isset($teamProjectIds[$shiftRow['project']['id']]);
+                    $shiftRow['project']['auth_user_in_team'] = $inTeam;
+                    if (isset($shiftRow['event']['project'])) {
+                        $shiftRow['event']['project']['auth_user_in_team'] = $inTeam;
+                    }
+                }
+                unset($shiftRow);
             }
+            unset($day);
         }
 
         foreach ($daysWithData as &$day) {
             usort($day['shifts'], fn($a, $b) => strtotime($a['start']) - strtotime($b['start']));
         }
+        unset($day);
 
         Inertia::share([
             'daysWithData' => $daysWithData,
         ]);
 
         return $daysWithData;
+    }
+
+    /**
+     * Abwesenheiten der betrachteten Person für den gesamten Zeitraum.
+     * Vacation::$with würde sonst Serie und Konflikte mitladen — beides wird hier
+     * nicht gebraucht und macht den Payload nur schwer.
+     *
+     * @return SupportCollection<int, \Artwork\Modules\Vacation\Models\Vacation>
+     */
+    private function loadWorkerVacations(
+        User|Freelancer|ServiceProvider|null $worker,
+        Carbon $startDate,
+        Carbon $endDate
+    ): SupportCollection {
+        if ($worker === null) {
+            return collect();
+        }
+
+        return $worker->vacations()
+            ->without(['series', 'conflicts'])
+            ->whereBetween('date', [$startDate->format('Y-m-d'), $endDate->format('Y-m-d')])
+            ->get();
+    }
+
+    /**
+     * Verfügbarkeitsstatus der betrachteten Person für eine einzelne Schicht.
+     *
+     * Die Instanz aus der Schicht-Relation trägt den Pivot (individuelle Zeiten),
+     * der das Einsatzfenster bestimmt — das frei geladene Modell hätte ihn nicht.
+     * Die Abwesenheiten kommen fertig geladen herein: ein lazy Nachladen je Schicht
+     * würde die Relation auf das erste Schichtfenster festnageln.
+     *
+     * @param SupportCollection<int, \Artwork\Modules\Vacation\Models\Vacation> $workerVacations
+     */
+    private function resolveWorkerUnavailableStatus(
+        Shift $shift,
+        SupportCollection $workerVacations,
+        string $relationToFind,
+        int $modelId
+    ): ?string {
+        if ($workerVacations->isEmpty()) {
+            return null;
+        }
+
+        $assigned = $shift->getRelationValue($relationToFind)?->firstWhere('id', $modelId);
+
+        if ($assigned === null) {
+            return null;
+        }
+
+        $assigned->setRelation('vacations', $workerVacations);
+
+        return ShiftWorkerAvailability::getWorkerUnavailableStatus($shift, $assigned);
+    }
+
+    /**
+     * Tagesmarkierung "eingeplant trotz Abwesenheitseintrag" setzen.
+     *
+     * Mehrere Schichten am selben Tag: die schwerere Einstufung gewinnt
+     * (NOT_AVAILABLE vor allem anderen), ebenso eine festgeschriebene Schicht —
+     * die Farbgebung im Frontend folgt derselben Eskalation wie im Schichtplan.
+     *
+     * @param array<string, mixed> $day
+     */
+    private function markUnavailableAssignment(array &$day, ?string $status, Shift $shift): void
+    {
+        if ($status === null) {
+            return;
+        }
+
+        $existing = $day['unavailableAssignment'] ?? null;
+        $isCommitted = (bool) $shift->is_committed;
+
+        if ($existing !== null) {
+            $keepStatus = $existing['status'] === VacationType::NOT_AVAILABLE->value
+                ? $existing['status']
+                : $status;
+
+            $day['unavailableAssignment'] = [
+                'status' => $keepStatus,
+                'committed' => $existing['committed'] || $isCommitted,
+            ];
+
+            return;
+        }
+
+        $day['unavailableAssignment'] = [
+            'status' => $status,
+            'committed' => $isCommitted,
+        ];
     }
 
     /**
@@ -1047,104 +1300,16 @@ readonly class EventService
 
 
     /**
-     * Feiertage des Zeitraums in EINER Query, pro Tag zugeordnet.
-     *
-     * Die Tages-Prüfung in holidayMatchesDay() spiegelt bewusst exakt die
-     * Bedingung aus getHolidaysForPeriod() — inklusive der ungewöhnlichen
-     * yearly-Regel (Monat aus `date`, Tag aus `end_date`).
+     * Feiertage des Zeitraums in EINER Query, pro Tag zugeordnet (jährliche Einträge inkl.
+     * Jahreswechsel, mehrtägige an jedem Tag) – gleiche Quelle wie Kalender und Listenansicht.
      *
      * @return array<string, SupportCollection<int, CalendarHolidayDTO>>
      */
     private function getHolidaysGroupedByDate($startDate, $endDate): array
     {
-        $rangeStart = Carbon::parse($startDate)->format('Y-m-d');
-        $rangeEnd = Carbon::parse($endDate)->format('Y-m-d');
-
-        $holidays = Holiday::query()
-            ->where(function (Builder $query) use ($rangeStart, $rangeEnd): void {
-                $query->where(function (Builder $builder) use ($rangeStart, $rangeEnd): void {
-                    // Direkter Vergleich statt whereDate(): beide Spalten sind vom
-                    // Typ DATE, DATE(spalte) wäre also identisch — würde aber den
-                    // Index auf (date, end_date) unbenutzbar machen.
-                    $builder->where('date', '<=', $rangeEnd)
-                        ->where('end_date', '>=', $rangeStart);
-                })->orWhere('yearly', true);
-            })
-            ->with('subdivisions')
-            ->get();
-
-        if ($holidays->isEmpty()) {
-            return [];
-        }
-
-        // DTO je Feiertag einmal bauen und über die Tage teilen — die DTOs sind
-        // reine Wertobjekte und werden nur serialisiert.
-        $dtoByHolidayId = [];
-        foreach ($holidays as $holiday) {
-            $dtoByHolidayId[$holiday->getKey()] = new CalendarHolidayDTO(
-                name: $holiday->name,
-                date: $holiday->date?->format('Y-m-d'),
-                end_date: $holiday->end_date?->format('Y-m-d'),
-                color: $holiday->color,
-                subdivisions: $holiday->subdivisions->pluck('name')->toArray(),
-                treatAsSpecialDay: (bool) $holiday->treatAsSpecialDay,
-            );
-        }
-
-        $grouped = [];
-        foreach (CarbonPeriod::create($startDate, $endDate) as $day) {
-            $matches = new SupportCollection();
-
-            foreach ($holidays as $holiday) {
-                if ($this->holidayMatchesDay($holiday, $day)) {
-                    $matches->push($dtoByHolidayId[$holiday->getKey()]);
-                }
-            }
-
-            if ($matches->isNotEmpty()) {
-                $grouped[$day->format('Y-m-d')] = $matches;
-            }
-        }
-
-        return $grouped;
-    }
-
-    private function holidayMatchesDay(Holiday $holiday, Carbon $day): bool
-    {
-        $dayKey = $day->format('Y-m-d');
-        $start = $holiday->date?->format('Y-m-d');
-        $end = $holiday->end_date?->format('Y-m-d');
-
-        if ($start !== null && $end !== null && $start <= $dayKey && $end >= $dayKey) {
-            return true;
-        }
-
-        return (bool) $holiday->yearly
-            && $holiday->date !== null
-            && $holiday->end_date !== null
-            && (int) $holiday->date->month === (int) $day->month
-            && (int) $holiday->end_date->day === (int) $day->day;
-    }
-
-    public function getHolidaysForPeriod($period): SupportCollection
-    {
-        return Holiday::where(function (Builder $query) use ($period): void {
-            $query->where(function (Builder $q) use ($period): void {
-                $q->whereDate('date', '<=', $period->format('Y-m-d'))
-                    ->whereDate('end_date', '>=', $period->format('Y-m-d'));
-            })->orWhere(function (Builder $q) use ($period): void {
-                $q->where('yearly', true)
-                    ->whereMonth('date', $period->month)
-                    ->whereDay('end_date', $period->day);
-            });
-        })->with('subdivisions')->get()->map(fn($holiday) => new CalendarHolidayDTO(
-            name: $holiday->name,
-            date: $holiday->date->format('Y-m-d'),
-            end_date: $holiday->end_date->format('Y-m-d'),
-            color: $holiday->color,
-            subdivisions: $holiday->subdivisions->pluck('name')->toArray(),
-                treatAsSpecialDay: (bool) $holiday->treatAsSpecialDay,
-        ));
+        return app(HolidayService::class)
+            ->getCalendarHolidaysByDate(Carbon::parse($startDate), Carbon::parse($endDate))
+            ->all();
     }
 
     public function fetchFilteredRooms(
@@ -1365,10 +1530,7 @@ readonly class EventService
             return [];
         }
 
-        return [
-            'id' => $series->getAttribute('id'),
-            'end_date' => $series->getAttribute('end_date')->format('Y-m-d'),
-        ];
+        return $series->toDefinitionArray();
     }
 
     public function mapRoomsToContent(Collection $rooms, $startDate, $endDate, bool $withShifts = true): array
@@ -1596,6 +1758,11 @@ readonly class EventService
         //do not rely on user calendar filter dates
         $today = Carbon::now();
 
+        // Setzt den Projektmodus zurück, falls das gewählte Projekt gelöscht wurde
+        $timePeriodProject = !$project && $userCalendarSettings->getAttribute('use_project_time_period')
+            ? $projectService->resolveTimePeriodProject($userCalendarSettings)
+            : null;
+
         if (
             !($useProjectTimePeriod = $userCalendarSettings->getAttribute('use_project_time_period')) &&
             !$project
@@ -1603,7 +1770,7 @@ readonly class EventService
             [$startDate, $endDate] = $userService->getUserCalendarFilterDatesOrDefault($userCalendarFilter);
         } else {
             if (!$project && $useProjectTimePeriod) {
-                $project = $projectService->findById($userCalendarSettings->getAttribute('time_period_project_id'));
+                $project = $timePeriodProject;
 
                 [$startDate, $endDate] = [
                     ($firstEventInProject = $projectService->getFirstEventInProject($project)) ?
@@ -1628,7 +1795,7 @@ readonly class EventService
         $desiredProjectHasNoEvents = $useProjectTimePeriod && !$startDate && !$endDate;
 
         $eventManagementDto = EventManagementDto::newInstance()
-            ->setEventTypes(EventTypeResource::collection($eventTypeService->getAll())->resolve())
+            ->setEventTypes(EventTypeResource::collection($eventTypeService->getAllWithVerifiers())->resolve())
             ->setDateValue(
                 $desiredProjectHasNoEvents ?
                     [] :
@@ -1743,6 +1910,11 @@ readonly class EventService
         //do not rely on user calendar filter dates
         $today = Carbon::now();
 
+        // Setzt den Projektmodus zurück, falls das gewählte Projekt gelöscht wurde
+        $timePeriodProject = !$project && $userCalendarSettings->getAttribute('use_project_time_period')
+            ? $projectService->resolveTimePeriodProject($userCalendarSettings)
+            : null;
+
         if (
             !($useProjectTimePeriod = $userCalendarSettings->getAttribute('use_project_time_period')) &&
             !$project
@@ -1750,7 +1922,7 @@ readonly class EventService
             [$startDate, $endDate] = $userService->getUserCalendarFilterDatesOrDefault($userCalendarFilter);
         } else {
             if (!$project && $useProjectTimePeriod) {
-                $project = $projectService->findById($userCalendarSettings->getAttribute('time_period_project_id'));
+                $project = $timePeriodProject;
 
                 [$startDate, $endDate] = [
                     ($firstEventInProject = $projectService->getFirstEventInProject($project)) ?

@@ -17,10 +17,23 @@ class SwapExternalSessionConfig
 
     public function handle(Request $request, Closure $next): Response
     {
+        $cookie = (string) config('external_access.session.cookie');
+
         // Cookie name and expire-on-close stay config-driven; the idle lifetime is admin-configurable.
-        Config::set('session.cookie', config('external_access.session.cookie'));
+        Config::set('session.cookie', $cookie);
         Config::set('session.lifetime', $this->settingsResolver->sessionIdleTimeoutMinutes());
         Config::set('session.expire_on_close', config('external_access.session.expire_on_close'));
+
+        // FALLE: Laravel instanziiert den Controller (Konstruktor-DI) VOR der Middleware-Pipeline, um
+        // Controller-Middleware einzusammeln. Zieht eine Abhängigkeit dabei den Session-Store, ist er
+        // schon mit dem internen Cookie-Namen gebaut und StartSession würde die WEB-Session laden.
+        // Deshalb den bereits aufgelösten Store auf den externen Cookie-Namen umbenennen.
+        if (app()->resolved('session.store')) {
+            $store = app('session.store');
+            if ($store->getName() !== $cookie) {
+                $store->setName($cookie);
+            }
+        }
 
         return $next($request);
     }

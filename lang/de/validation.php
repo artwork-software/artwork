@@ -115,12 +115,12 @@ return [
     'not_in' => 'Das ausgewählte :attribute ist ungültig.',
     'not_regex' => 'Das :attribute-Feldformat ist ungültig.',
     'numeric' => 'Das :attribute-Feld muss eine Zahl sein.',
-    'passwort' => [
-        'letters' => 'Das :attribute field muss mindestens einen Buchstaben enthalten.',
+    'password' => [
+        'letters' => 'Das :attribute-Feld muss mindestens einen Buchstaben enthalten.',
         'mixed' => 'Das :attribute-Feld muss mindestens einen Groß- und einen Kleinbuchstaben enthalten.',
-            'numbers' => 'Das :attribute-Feld muss mindestens eine Zahl enthalten.',
-            'symbols' => 'Das :attribute-Feld muss mindestens ein Symbol enthalten.',
-            'uncompromised' => 'Das angegebene :attribute ist in einem Datenleck aufgetaucht. Bitte wählen Sie ein anderes :Attribut.',
+        'numbers' => 'Das :attribute-Feld muss mindestens eine Ziffer enthalten.',
+        'symbols' => 'Das :attribute-Feld muss mindestens ein Sonderzeichen enthalten.',
+        'uncompromised' => 'Das angegebene :attribute ist in einem Datenleck aufgetaucht. Bitte ein anderes :attribute wählen.',
     ],
     'present' => 'Das :attribute-Feld muss vorhanden sein.',
     'present_if' => 'Das :attribute-Feld muss vorhanden sein, wenn :other :value ist.',
@@ -331,6 +331,7 @@ return [
         'failed' => 'Der Upload ist fehlgeschlagen. Bitte versuche es erneut.',
         'max_size' => 'Die maximal freigegebene Dateigröße ist aktuell :size MB, lasse es entweder von einem Admin hochsetzen oder versuche es mit einer kleineren Datei',
         'invalid_file_type' => 'Dieses Dateiformat :format ist nicht freigegeben, bitte einen Admin es freizugeben oder nutze ein anderes Format',
+        'denied_file_type' => 'Dateien dieses Typs (:format) werden aus Sicherheitsgründen grundsätzlich nicht angenommen - auch nicht, wenn alle Formate freigegeben sind. Bitte nutze ein anderes Format (z. B. PDF, PNG oder JPG).',
     ],
     'timeline' => [
         'name_required' => 'Der Name des Zeitplans ist erforderlich.',

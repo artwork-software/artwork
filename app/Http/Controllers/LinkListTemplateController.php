@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Artwork\Modules\Project\Models\LinkListTemplate;
 use Illuminate\Auth\AuthManager;
 use Illuminate\Http\JsonResponse;
@@ -49,6 +50,8 @@ class LinkListTemplateController extends Controller
      */
     public function update(Request $request, LinkListTemplate $linkListTemplate): JsonResponse
     {
+        $this->authorizeTemplateChange($linkListTemplate);
+
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'entries' => 'required|array',
@@ -68,8 +71,24 @@ class LinkListTemplateController extends Controller
      */
     public function destroy(LinkListTemplate $linkListTemplate): JsonResponse
     {
+        $this->authorizeTemplateChange($linkListTemplate);
+
         $linkListTemplate->delete();
 
         return response()->json(null, 204);
+    }
+
+    /**
+     * Vorlagen sind global: ändern/löschen nur Ersteller*in oder wer Projekt-Einstellungen verwalten darf.
+     */
+    private function authorizeTemplateChange(LinkListTemplate $linkListTemplate): void
+    {
+        $user = $this->authManager->user();
+        abort_unless(
+            $user !== null
+            && ((int) $linkListTemplate->created_by === (int) $user->getAuthIdentifier()
+                || $user->can(PermissionEnum::PROJECT_SETTINGS_UPDATE->value)),
+            403
+        );
     }
 }

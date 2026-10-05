@@ -17,6 +17,7 @@ use Artwork\Modules\Shift\Models\ShiftWorker;
 use Artwork\Modules\User\Models\User;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
+use App\Settings\ShiftSettings;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Notifications\DatabaseNotification;
 use Illuminate\Support\Collection as SupportCollection;
@@ -35,6 +36,17 @@ class ProjectDayAssignmentService
         private readonly NotificationService $notificationService,
         private readonly ChangeService $changeService,
     ) {
+    }
+
+    /**
+     * Globaler Schalter in den Schichteinstellungen. Ausgeschaltet laufen die
+     * Datenpflege-Hooks (Verdrängen/Auflösen/Re-Materialisieren) weiter, damit
+     * die Daten beim Wiedereinschalten stimmen — nur Benachrichtigungen über
+     * ein unsichtbares Feature werden unterdrückt und nichts Neues angelegt.
+     */
+    public static function isEnabled(): bool
+    {
+        return (bool) app(ShiftSettings::class)->project_assignments_enabled;
     }
 
     /**
@@ -340,7 +352,13 @@ class ProjectDayAssignmentService
                 ->map(static fn ($date) => Carbon::parse($date)->format('Y-m-d'));
 
             $shiftCoveredDates = $type === ProjectDayAssignmentType::BINDING
-                ? $this->getShiftCoveredDates($project->id, $employableType, $employableId, $dates->first(), $dates->last())
+                ? $this->getShiftCoveredDates(
+                    $project->id,
+                    $employableType,
+                    $employableId,
+                    $dates->first(),
+                    $dates->last()
+                )
                 : collect();
 
             $datesToCreate = $dates
@@ -812,7 +830,8 @@ class ProjectDayAssignmentService
                 ->event('project_assignment_dissolved')
                 ->tap(function ($activity) use ($project, $workerName, $datesLabel): void {
                     $activity->properties = $activity->properties->merge([
-                        'translation_key' => 'Project assignment of {0} for {1} ({2}) was dissolved by a free day entry',
+                    'translation_key' => 'Project assignment of {0} for {1} ({2}) was dissolved by a free day '
+                            . 'entry',
                         'translation_key_placeholder_values' => [$workerName, $project?->name ?? '', $datesLabel],
                         'context' => 'normal',
                     ]);
@@ -836,7 +855,11 @@ class ProjectDayAssignmentService
         array $dates,
         string $vacationType
     ): array {
-        if ($vacationType === \Artwork\Modules\Vacation\Enums\Vacation::AVAILABLE->value || $dates === []) {
+        if (
+            $vacationType === \Artwork\Modules\Vacation\Enums\Vacation::AVAILABLE->value
+            || $dates === []
+            || !self::isEnabled()
+        ) {
             return [];
         }
 
@@ -885,7 +908,7 @@ class ProjectDayAssignmentService
      */
     public function getAssignmentsDissolvedByVacationBulk(array $workers, string $vacationType): array
     {
-        if ($vacationType === \Artwork\Modules\Vacation\Enums\Vacation::AVAILABLE->value) {
+        if ($vacationType === \Artwork\Modules\Vacation\Enums\Vacation::AVAILABLE->value || !self::isEnabled()) {
             return [];
         }
 
@@ -1011,6 +1034,11 @@ class ProjectDayAssignmentService
         Carbon $startDate,
         Carbon $endDate
     ): SupportCollection {
+        // Anzeige-Payload (Dienstplan, Einsatzplan, PDF) — Feature aus = nichts anzeigen
+        if (!self::isEnabled()) {
+            return collect();
+        }
+
         $rows = ProjectDayAssignment::query()
             ->with('project:id,name')
             // Zuordnungen von Papierkorb-Projekten ausblenden (kommen beim Restore
@@ -1031,7 +1059,9 @@ class ProjectDayAssignmentService
                     ->groupBy(static fn (ProjectDayAssignment $row) => $row->date->format('Y-m-d'))
                     ->map(static function (Collection $dayRows) use ($groupBounds) {
                         return $dayRows
-                            ->map(static fn (ProjectDayAssignment $row) => self::serializeAssignment($row, $groupBounds))
+                            ->map(
+                                static fn (ProjectDayAssignment $row) => self::serializeAssignment($row, $groupBounds)
+                            )
                             ->values();
                     });
             });
@@ -1050,6 +1080,10 @@ class ProjectDayAssignmentService
         Carbon $endDate,
         ?ProjectDayAssignmentType $filterType = null
     ): array {
+        if (!self::isEnabled()) {
+            return [];
+        }
+
         $rows = ProjectDayAssignment::query()
             ->with('project:id,name')
             ->whereHas('project')
@@ -1099,7 +1133,10 @@ class ProjectDayAssignmentService
             'group_id' => $row->group_id,
             'is_full_period' => $row->is_full_period,
             'date' => $row->date->format('Y-m-d'),
-            'series_start' => $bounds ? Carbon::parse($bounds->series_start)->format('Y-m-d') : $row->date->format('Y-m-d'),
+            'series_start' => $bounds ? Carbon::parse($bounds->series_start)
+                ->format('Y-m-d') : $row
+                ->date
+                ->format('Y-m-d'),
             'series_end' => $bounds ? Carbon::parse($bounds->series_end)->format('Y-m-d') : $row->date->format('Y-m-d'),
         ];
     }
@@ -1205,6 +1242,10 @@ class ProjectDayAssignmentService
         string $datesLabel,
         string $reason
     ): void {
+        if (!self::isEnabled()) {
+            return;
+        }
+
         // Nach der Response: der Mail-Kanal versendet synchron per SMTP (BaseNotification
         // ist nicht queued) und darf den auslösenden Request nicht blockieren (502-Klasse)
         $this->deferAfterCommit(
@@ -1276,7 +1317,7 @@ class ProjectDayAssignmentService
         string $datesLabel,
         ?string $reasonKey = null
     ): void {
-        if ($employableType !== User::class || $employableId === Auth::id()) {
+        if ($employableType !== User::class || $employableId === Auth::id() || !self::isEnabled()) {
             return;
         }
 
@@ -1462,7 +1503,10 @@ class ProjectDayAssignmentService
             })
             ->get();
 
-        foreach ($outOfPeriodSingles->groupBy(static fn ($row) => $row->employable_type . '_' . $row->employable_id) as $rows) {
+        $outOfPeriodByWorker = $outOfPeriodSingles
+            ->groupBy(static fn ($row) => $row->employable_type . '_' . $row->employable_id);
+
+        foreach ($outOfPeriodByWorker as $rows) {
             $first = $rows->first();
             $workerName = $this->getWorkerName($first->employable_type, $first->employable_id);
             $datesLabel = $rows->map(static fn ($row) => $row->date->format('d.m.Y'))->unique()->implode(', ');

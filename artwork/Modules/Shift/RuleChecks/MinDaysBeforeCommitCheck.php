@@ -56,5 +56,4 @@ class MinDaysBeforeCommitCheck extends AbstractRuleCheck
     {
         return 'minDaysBeforeCommit';
     }
-
 }

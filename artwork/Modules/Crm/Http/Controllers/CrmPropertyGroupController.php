@@ -13,7 +13,8 @@ class CrmPropertyGroupController extends Controller
 {
     public function __construct(
         private readonly CrmPropertyGroupService $service,
-    ) {}
+    ) {
+    }
 
     public function store(Request $request): RedirectResponse
     {

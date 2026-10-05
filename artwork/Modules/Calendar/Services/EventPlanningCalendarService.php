@@ -13,13 +13,14 @@ use Artwork\Modules\User\Models\UserCalendarSettings;
 use Artwork\Modules\User\Models\UserDailyViewCalendarSettings;
 use Artwork\Modules\User\Models\UserFilter;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Auth;
 
 class EventPlanningCalendarService
 {
     use MapRoomsToContentForCalendar;
 
-    public function __construct(
-    ) {
+    public function __construct()
+    {
     }
 
     public function filterRoomsEvents(
@@ -101,7 +102,13 @@ class EventPlanningCalendarService
 
         $projects = Project::whereIn('id', $projectIds)
             ->select(['id', 'name', 'state', 'artists', 'is_group', 'color', 'icon'])
-            ->with(['status:id,name,color', 'managerUsers:id,first_name,last_name,position,email,profile_photo_path', 'managerUsers.departments:id', 'groups', 'categories'])
+            ->with([
+                'status:id,name,color',
+                'managerUsers:id,first_name,last_name,position,email,profile_photo_path',
+                'managerUsers.departments:id',
+                'groups',
+                'categories',
+            ])
             ->get()->keyBy('id');
 
         $eventTypes = EventType::whereIn('id', $eventTypeIds)
@@ -136,7 +143,7 @@ class EventPlanningCalendarService
             $room->events = $eventDTOs[$room->id] ?? collect();
         }
 
-        if ($userCalendarSettings?->work_shifts) {
+        if (CalendarShiftVisibility::isEnabled(Auth::user(), $userCalendarSettings)) {
             $this->attachStandaloneShiftsToRooms($rooms, $startDate, $endDate, $filter);
         } else {
             foreach ($rooms as $room) {

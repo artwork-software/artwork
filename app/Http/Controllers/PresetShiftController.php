@@ -17,6 +17,8 @@ class PresetShiftController extends Controller
 
     public function store(int $shiftPreset, Request $request): void
     {
+        $request->validate(['description' => ['nullable', 'string', 'max:10000']]);
+
         $presetShiftId = $this->presetShiftService->createFromRequestForShiftPreset($shiftPreset, $request);
 
         foreach ($request->get('presetShiftsQualifications') as $presetShiftsQualification) {
@@ -29,6 +31,8 @@ class PresetShiftController extends Controller
 
     public function update(Request $request, PresetShift $presetShift): void
     {
+        $request->validate(['description' => ['nullable', 'string', 'max:10000']]);
+
         $this->presetShiftService->updateFromRequest($presetShift, $request);
 
         foreach ($request->get('presetShiftsQualifications') as $presetShiftsQualification) {

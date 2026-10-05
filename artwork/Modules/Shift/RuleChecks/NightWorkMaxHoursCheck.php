@@ -47,7 +47,10 @@ class NightWorkMaxHoursCheck extends AbstractRuleCheck
             // Schichten, die an diesem Tag beginnen – über Mitternacht laufende zählen ganz zum Starttag.
             foreach ($this->getWorkIntervalsStartingOn($user, $date, false) as $interval) {
                 $dayNightMinutes += $window->minutesWithin($interval['start'], $interval['end']);
-                $dayNetMinutes += max(0, (int) $interval['start']->diffInMinutes($interval['end']) - $interval['break_minutes']);
+                $dayNetMinutes += max(
+                    0,
+                    (int) $interval['start']->diffInMinutes($interval['end']) - $interval['break_minutes']
+                );
                 $shift ??= $interval['shift'];
             }
 
@@ -57,7 +60,10 @@ class NightWorkMaxHoursCheck extends AbstractRuleCheck
                 if ($it->start_time && $it->end_time && !$it->full_day) {
                     $dayNightMinutes += $window->minutesWithin($segment['start'], $segment['end']);
                 }
-                $dayNetMinutes += max(0, (int) $segment['start']->diffInMinutes($segment['end']) - $segment['break_minutes']);
+                $dayNetMinutes += max(
+                    0,
+                    (int) $segment['start']->diffInMinutes($segment['end']) - $segment['break_minutes']
+                );
             }
 
             if ($dayNightMinutes < self::NIGHT_WORK_THRESHOLD_MINUTES) {

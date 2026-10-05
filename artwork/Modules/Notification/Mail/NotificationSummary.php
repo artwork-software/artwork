@@ -24,27 +24,31 @@ class NotificationSummary extends Mailable
 
     public string $fallbackPageTitle;
 
+    public string $language;
+
     public function __construct(
         array $notifications,
         string $user,
         string $page_title,
         string $systemEmail,
-        string $fallbackPageTitle
+        string $fallbackPageTitle,
+        ?string $language = null
     ) {
         $this->notifications = $notifications;
         $this->user = $user;
         $this->page_title = $page_title;
         $this->systemEmail = $systemEmail;
         $this->fallbackPageTitle = $fallbackPageTitle;
+        $this->language = $language ?: (string) config('app.locale');
     }
 
     public function envelope(): Envelope
     {
+        $pageTitle = $this->page_title !== '' ? $this->page_title : $this->fallbackPageTitle;
+
         return new Envelope(
             from: $this->systemEmail,
-            subject: 'Es gibt Neuigkeiten in ' . (
-                $this->page_title !== '' ? $this->page_title : $this->fallbackPageTitle
-            )
+            subject: __('There is news in :app', ['app' => $pageTitle], $this->language)
         );
     }
 
@@ -55,7 +59,8 @@ class NotificationSummary extends Mailable
             with: [
                 'notifications' => $this->notifications,
                 'user' => $this->user,
-                'page_title' => $this->page_title
+                'page_title' => $this->page_title,
+                'language' => $this->language,
             ]
         );
     }

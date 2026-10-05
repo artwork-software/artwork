@@ -22,6 +22,7 @@ use Artwork\Modules\Shift\Services\ShiftNotificationLinkService;
 use Artwork\Modules\Shift\Services\ShiftWorkerService;
 use Artwork\Modules\User\Models\User;
 use Artwork\Modules\Vacation\Services\VacationConflictService;
+use Artwork\Modules\Project\Services\ProjectTeamNotificationService;
 use Carbon\Carbon;
 use Illuminate\Auth\AuthManager;
 use Illuminate\Support\Str;
@@ -38,12 +39,14 @@ class ShiftUserService
         private readonly ShiftsQualificationsService $shiftsQualificationsService,
         private readonly ShiftWorkerService $shiftWorkerService,
         protected AuthManager $auth,
+        private readonly ProjectTeamNotificationService $projectTeamNotificationService,
     ) {
     }
 
     /**
      * User einer Schicht zuweisen (inkl. Serienlogik).
      */
+    // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter -- Signatur an vielen Aufrufstellen positional – Bereinigung ist ein eigenes Refactoring
     public function assignToShift(
         Shift $shift,
         int $userId,
@@ -147,6 +150,7 @@ class ShiftUserService
 
         if ($project && ! $project->users->contains($user->id)) {
             $project->users()->attach($user->id);
+            $this->projectTeamNotificationService->notifyAddedToTeam($project, [$user->id]);
         }
     }
 
@@ -227,7 +231,10 @@ class ShiftUserService
                     [],
                     $user->language
                 ) . $user->getFullNameAttribute(),
-                'href'  => ShiftNotificationLinkService::ownOperationPlanForDate($user, $shiftBreakCheck->firstShift->event_start_day),
+                'href'  => ShiftNotificationLinkService::ownOperationPlanForDate(
+                    $user,
+                    $shiftBreakCheck->firstShift->event_start_day
+                ),
             ],
             2 => [
                 'type'  => 'string',
@@ -239,7 +246,10 @@ class ShiftUserService
                     ],
                     $user->language
                 ),
-                'href'  => ShiftNotificationLinkService::ownOperationPlanForDate($user, $shiftBreakCheck->firstShift->event_start_day),
+                'href'  => ShiftNotificationLinkService::ownOperationPlanForDate(
+                    $user,
+                    $shiftBreakCheck->firstShift->event_start_day
+                ),
             ],
         ]);
         $notificationService->setNotificationTo($user);
@@ -265,6 +275,13 @@ class ShiftUserService
 
         $notificationTitle = __('notification.shift.worker_short_break', [], $planner->language);
 
+        // Eigene Toast-Nachricht setzen, sonst erbt die planende Person den Broadcast
+        // "Du wurdest mit zu kurzer Ruhezeit eingeplant" aus notifyShortBreakUser().
+        $notificationService->setBroadcastMessage([
+            'id'      => Str::uuid()->toString(),
+            'type'    => 'error',
+            'message' => $notificationTitle,
+        ]);
         $notificationService->setTitle($notificationTitle);
         $notificationService->setDescription([
             1 => [
@@ -274,7 +291,9 @@ class ShiftUserService
                     [],
                     $planner->language
                 ) . $user->getFullNameAttribute(),
-                'href'  => ShiftNotificationLinkService::shiftPlanForDate($shiftBreakCheck->firstShift->event_start_day),
+                'href'  => ShiftNotificationLinkService::shiftPlanForDate(
+                    $shiftBreakCheck->firstShift->event_start_day
+                ),
             ],
             2 => [
                 'type'  => 'string',
@@ -288,7 +307,9 @@ class ShiftUserService
                     ],
                     $planner->language
                 ),
-                'href'  => ShiftNotificationLinkService::shiftPlanForDate($shiftBreakCheck->firstShift->event_start_day),
+                'href'  => ShiftNotificationLinkService::shiftPlanForDate(
+                    $shiftBreakCheck->firstShift->event_start_day
+                ),
             ],
         ]);
         $notificationService->setNotificationTo($planner);
@@ -314,8 +335,11 @@ class ShiftUserService
         $notificationService->clearNotificationData();
     }
 
-    private function notifyMoreThanTenShiftsUser($shiftCheck, User $user, NotificationService $notificationService): void
-    {
+    private function notifyMoreThanTenShiftsUser(
+        $shiftCheck,
+        User $user,
+        NotificationService $notificationService
+    ): void {
         $notificationTitle = __('notification.shift.more_than_ten_days', [], $user->language);
 
         $notificationService->setTitle($notificationTitle);
@@ -335,7 +359,10 @@ class ShiftUserService
                     [],
                     $user->language
                 ) . $user->getFullNameAttribute(),
-                'href'  => ShiftNotificationLinkService::ownOperationPlanForDate($user, $shiftCheck->firstShift->first()->event_start_day),
+                'href'  => ShiftNotificationLinkService::ownOperationPlanForDate(
+                    $user,
+                    $shiftCheck->firstShift->first()->event_start_day
+                ),
             ],
             2 => [
                 'type'  => 'string',
@@ -349,7 +376,10 @@ class ShiftUserService
                     ],
                     $user->language
                 ),
-                'href'  => ShiftNotificationLinkService::ownOperationPlanForDate($user, $shiftCheck->firstShift->first()->event_start_day),
+                'href'  => ShiftNotificationLinkService::ownOperationPlanForDate(
+                    $user,
+                    $shiftCheck->firstShift->first()->event_start_day
+                ),
             ],
         ]);
 
@@ -391,7 +421,9 @@ class ShiftUserService
                     [],
                     $planner->language
                 ) . $user->getFullNameAttribute(),
-                'href'  => ShiftNotificationLinkService::shiftPlanForDate($shiftCheck->firstShift->first()->event_start_day),
+                'href'  => ShiftNotificationLinkService::shiftPlanForDate(
+                    $shiftCheck->firstShift->first()->event_start_day
+                ),
             ],
             2 => [
                 'type'  => 'string',
@@ -405,7 +437,9 @@ class ShiftUserService
                     ],
                     $planner->language
                 ),
-                'href'  => ShiftNotificationLinkService::shiftPlanForDate($shiftCheck->firstShift->first()->event_start_day),
+                'href'  => ShiftNotificationLinkService::shiftPlanForDate(
+                    $shiftCheck->firstShift->first()->event_start_day
+                ),
             ],
         ]);
         $notificationService->setNotificationTo($planner);
@@ -415,6 +449,7 @@ class ShiftUserService
     /**
      * Entfernt einen User aus einer Schicht (inkl. Serienlogik).
      */
+    // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter -- Signatur an vielen Aufrufstellen positional – Bereinigung ist ein eigenes Refactoring
     public function removeFromShift(
         ShiftUser|int $usersPivot,
         bool $removeFromSingleShift,
@@ -543,14 +578,15 @@ class ShiftUserService
 
         $shiftWorkerPivot = ShiftWorker::find($usersPivot);
         if ($shiftWorkerPivot && $shiftWorkerPivot->employable_type === User::class) {
-
             if (!$shiftWorkerPivot->relationLoaded('shift')) {
                 $shiftWorkerPivot->load('shift');
             }
 
             $shift = $shiftWorkerPivot->shift;
             if (!$shift) {
-                throw new \RuntimeException("Shift for ShiftWorker pivot ID {$usersPivot} not found (shift_id: {$shiftWorkerPivot->shift_id})");
+                throw new \RuntimeException(
+                    "Shift for ShiftWorker pivot ID {$usersPivot} not found (shift_id: {$shiftWorkerPivot->shift_id})"
+                );
             }
 
             return $shift;
@@ -572,7 +608,9 @@ class ShiftUserService
 
         $shift = $shiftUserPivot->shift;
         if (!$shift) {
-            throw new \RuntimeException("Shift for ShiftUser pivot ID {$usersPivot} not found (shift_id: {$shiftUserPivot->shift_id})");
+            throw new \RuntimeException(
+                "Shift for ShiftUser pivot ID {$usersPivot} not found (shift_id: {$shiftUserPivot->shift_id})"
+            );
         }
 
         return $shift;
@@ -765,5 +803,4 @@ class ShiftUserService
             $shiftUser->shift_id
         );
     }
-
 }

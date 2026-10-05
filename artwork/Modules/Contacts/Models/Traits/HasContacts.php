@@ -2,7 +2,6 @@
 
 namespace Artwork\Modules\Contacts\Models\Traits;
 
-
 use Artwork\Modules\Contacts\Models\Contact;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 

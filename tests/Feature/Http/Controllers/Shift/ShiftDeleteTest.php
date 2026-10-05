@@ -26,7 +26,7 @@ final class ShiftDeleteTest extends FeatureTestCase
         $response = $this->deleteJson(route('shifts.destroy', $shift));
 
         $response->assertSuccessful();
-        $this->assertDatabaseMissing('shifts', ['id' => $shift->id]);
+        $this->assertSoftDeleted('shifts', ['id' => $shift->id]);
     }
 
     #[Test]
@@ -58,8 +58,8 @@ final class ShiftDeleteTest extends FeatureTestCase
         ]);
 
         $response->assertSuccessful();
-        $this->assertDatabaseMissing('shifts', ['id' => $shiftA->id]);
-        $this->assertDatabaseMissing('shifts', ['id' => $shiftB->id]);
+        $this->assertSoftDeleted('shifts', ['id' => $shiftA->id]);
+        $this->assertSoftDeleted('shifts', ['id' => $shiftB->id]);
     }
 
     #[Test]

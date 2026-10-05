@@ -5,6 +5,7 @@ namespace Artwork\Core\Http\Middleware;
 use App\Settings\EventSettings;
 use App\Settings\GeneralCalendarSettings;
 use Artwork\Modules\AiAssistant\Services\AiAssistantAccess;
+use Artwork\Modules\ExternalAccess\Services\ExternalAccessSettingsResolver;
 use Artwork\Modules\Craft\Models\Craft;
 use Artwork\Modules\GeneralSettings\Models\GeneralSettings;
 use Artwork\Modules\ModuleSettings\Services\ModuleSettingsService;
@@ -45,6 +46,8 @@ class HandleInertiaRequests extends Middleware
         $generalSettings = app(GeneralSettings::class);
         $generalCalendarSettings = app(GeneralCalendarSettings::class);
         $eventSettings = app(EventSettings::class);
+        // "Termine immer direkt buchbar": keine Raumanfragen, keine Verifizierung (Menü/Seiten/Dialoge)
+        $alwaysDirectBooking = (bool) ($eventSettings->always_direct_booking ?? false);
 
         $user = Auth::user();
         // Settings-Relationen werden hier (vor den Controllern) gelesen und sowohl als Top-Level-Props
@@ -75,7 +78,7 @@ class HandleInertiaRequests extends Middleware
 
         $projectName = null;
         if ($calendarSettings?->use_project_time_period) {
-            $projectName = $this->projectService->findById($calendarSettings->time_period_project_id)?->name;
+            $projectName = $this->projectService->resolveTimePeriodProject($calendarSettings)?->name;
         }
 
         $storage = Storage::disk('public');
@@ -102,7 +105,8 @@ class HandleInertiaRequests extends Middleware
             )
             : [[], [], []];
 
-        // erstelle mir ein Array aus $generalCalendarSettings (Start und end ) für stunden z.b. Start: 22:00 end: 08:00 array = [22:00, 23:00, 00:00, 01:00, 02:00, 03:00, 04:00, 05:00, 06:00, 07:00, 08:00]
+        // Stundenraster aus $generalCalendarSettings (start/end), z.B. Start 22:00, Ende 08:00
+        // → [22:00, 23:00, 00:00, 01:00, 02:00, 03:00, 04:00, 05:00, 06:00, 07:00, 08:00]
         $start = explode(':', $generalCalendarSettings->start);
         $end = explode(':', $generalCalendarSettings->end);
 
@@ -120,13 +124,7 @@ class HandleInertiaRequests extends Middleware
             $currentHour = ($currentHour + 1) % 24;
             $failSave++;
         }
-        $sageApiEnabled = false;
-
-        if (config('services.sage.enabled')) {
-            $sageApiSettingsService = app(SageApiSettingsService::class);
-            $sageApiSettings = $sageApiSettingsService->getFirst();
-            $sageApiEnabled = !is_null($sageApiSettings) && $sageApiSettings->enabled;
-        }
+        $sageApiEnabled = app(SageApiSettingsService::class)->isEnabled();
 
         $shiftCommitWorkflowEnabled = (bool) $generalSettings->shift_commit_workflow_enabled;
 
@@ -195,7 +193,7 @@ class HandleInertiaRequests extends Middleware
             : [];
 
         // Drei exists()-Queries pro Request vermeiden — Ergebnis ändert sich selten, 5 Minuten cachen
-        $canSeeIncomingRequests = $user
+        $canSeeIncomingRequests = $user && !$alwaysDirectBooking
             ? Cache::remember(
                 "user:{$user->id}:can_see_incoming_requests",
                 now()->addMinutes(5),
@@ -207,7 +205,7 @@ class HandleInertiaRequests extends Middleware
             )
             : false;
 
-        $canSeeEventVerifications = (bool) $user;
+        $canSeeEventVerifications = $user && !$alwaysDirectBooking;
 
         $canViewBiDashboard = $user && (
             $user->hasRole(RoleEnum::ARTWORK_ADMIN->value)
@@ -262,7 +260,8 @@ class HandleInertiaRequests extends Middleware
                 'letterheadCity' => $generalSettings->letterhead_city,
                 'letterheadEmail' => $generalSettings->letterhead_email,
                 'budgetAccountManagementGlobal' => $generalSettings->budget_account_management_global,
-                'inventoryDetailedArticlesAlwaysQuantityOne' => $generalSettings->inventory_detailed_articles_always_quantity_one,
+                'inventoryDetailedArticlesAlwaysQuantityOne' =>
+                    $generalSettings->inventory_detailed_articles_always_quantity_one,
                 'inventoryShowInventoryNumberAsName' => $generalSettings->inventory_show_inventory_number_as_name,
                 'inventoryNumberPrefix' => $generalSettings->inventory_number_prefix,
                 'inventoryArticleImageMaxSizeMb' => $generalSettings->inventory_article_image_max_size_mb,
@@ -279,12 +278,17 @@ class HandleInertiaRequests extends Middleware
                     'plainTextToken' => fn() => $request->session()->get('plainTextToken'),
                     // Ebenso einmalig: das Signaturgeheimnis eines neu angelegten Webhook-Endpunkts.
                     'webhookSecret' => fn() => $request->session()->get('webhookSecret'),
+                    // Neu angelegte Schichten (MultiShiftCreateInShiftPlan-Payload) für die anlegende Ansicht
+                    'shiftPlanUpdate' => fn() => $request->session()->get('shiftPlanUpdate'),
                 ],
                 'event_status_module' => $eventSettings->enable_status,
                 'event_admission_module' => $eventSettings->enable_admission,
+                'event_direct_booking_only' => $alwaysDirectBooking,
                 'default_language' => config('app.fallback_locale'),
                 'selected_language' => app()->getLocale(),
                 'sageApiEnabled' => $sageApiEnabled,
+                // Externe Zugänge: gated Einladen-Buttons und CRM-Verwaltungslinks im Frontend
+                'externalAccessEnabled' => app(ExternalAccessSettingsResolver::class)->isEnabled(),
                 'calendar_settings' => $calendarSettings,
                 'daily_view_calendar_settings' => $dailyViewCalendarSettings,
                 'shift_plan_settings' => $shiftPlanSettings,
@@ -304,6 +308,10 @@ class HandleInertiaRequests extends Middleware
                     ->allow_shift_overbooking,
                 'shift_confirmation_enabled'   => (bool) app(\App\Settings\ShiftSettings::class)
                     ->shift_confirmation_enabled,
+                'project_assignments_enabled'  => (bool) app(\App\Settings\ShiftSettings::class)
+                    ->project_assignments_enabled,
+                'work_time_accounting_enabled' => (bool) app(\App\Settings\ShiftSettings::class)
+                    ->work_time_accounting_enabled,
                 'shift_settings_access'        => [
                     'granular_permissions_enabled' => (bool) app(\App\Settings\ShiftSettings::class)
                         ->granular_permissions_enabled,

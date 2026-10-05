@@ -25,6 +25,8 @@ import BaseModal from "@/Components/Modals/BaseModal.vue";
 import ModalHeader from "@/Components/Modals/ModalHeader.vue";
 import TextareaComponent from "@/Components/Inputs/TextareaComponent.vue";
 import {useForm} from "@inertiajs/vue3";
+import {inject} from "vue";
+import axios from "axios";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import BaseTextarea from "@/Artwork/Inputs/BaseTextarea.vue";
 import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
@@ -45,14 +47,22 @@ const eventNoteForm = useForm({
 })
 
 
-const addEditNote = () => {
-    eventNoteForm.patch(route('event.update.description', props.event.id), {
-        preserveScroll: true,
-        preserveState: false,
-        onSuccess: () => {
-            emit('close');
-        }
-    })
+// Wie der Inline-Beschreibungs-Editor in BulkSingleEvent: per axios patchen (der
+// Endpunkt liefert JSON, keine Inertia-Response), Zeile lokal aktualisieren und die
+// "zuletzt bearbeitet"-Markierung sofort aus der Response setzen.
+const markRowEdited = inject('bulkMarkRowEdited', () => {});
+
+const addEditNote = async () => {
+    try {
+        const {data} = await axios.patch(route('event.update.description', props.event.id), {
+            description: eventNoteForm.description,
+        });
+        props.event.description = eventNoteForm.description;
+        markRowEdited(props.event.id, data?.event?.updated_at);
+        emit('close');
+    } catch (e) {
+        console.error('bulk:description-patch-failed', props.event.id, e);
+    }
 }
 
 </script>

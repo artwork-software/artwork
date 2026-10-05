@@ -66,6 +66,8 @@ class ProjectDayAssignmentController extends Controller
 
     public function store(Request $request): JsonResponse
     {
+        abort_unless(ProjectDayAssignmentService::isEnabled(), 403);
+
         $validated = $request->validate([
             'project_id' => 'required|integer|exists:projects,id',
             'worker_type' => 'required|integer|in:0,1,2',
@@ -169,6 +171,11 @@ class ProjectDayAssignmentController extends Controller
      */
     public function vacationImpact(Request $request): JsonResponse
     {
+        // Feature aus → kein Confirm-Dialog über unsichtbare Zuordnungen
+        if (!ProjectDayAssignmentService::isEnabled()) {
+            return new JsonResponse(['affected' => []]);
+        }
+
         $validated = $request->validate([
             'workers' => 'required|array|min:1|max:200',
             'workers.*.type' => 'required|integer|in:0,1,2',
@@ -273,6 +280,8 @@ class ProjectDayAssignmentController extends Controller
 
     public function acceptWish(ProjectDayAssignment $projectDayAssignment): JsonResponse
     {
+        abort_unless(ProjectDayAssignmentService::isEnabled(), 403);
+
         // Admins passieren via Gate::before
         abort_unless((bool) auth()->user()?->can(PermissionEnum::SHIFT_PLANNER->value), 403);
 
@@ -289,6 +298,10 @@ class ProjectDayAssignmentController extends Controller
      */
     public function forProject(Project $project): JsonResponse
     {
+        if (!ProjectDayAssignmentService::isEnabled()) {
+            return new JsonResponse(['assignments' => []]);
+        }
+
         $user = auth()->user();
         // Ohne globales Schichtplan-Leserecht nur die EIGENEN Zuordnungen/Wünsche —
         // sonst könnte man einen Wunsch anlegen, ihn danach aber nie sehen.
@@ -369,7 +382,7 @@ class ProjectDayAssignmentController extends Controller
     {
         $projectId = $shift->project_id ?? $shift->event?->project_id;
 
-        if ($projectId === null || !$shift->start_date || !$shift->end_date) {
+        if (!ProjectDayAssignmentService::isEnabled() || $projectId === null || !$shift->start_date || !$shift->end_date) {
             return new JsonResponse(['assignees' => []]);
         }
 
@@ -410,7 +423,7 @@ class ProjectDayAssignmentController extends Controller
 
         $project = $event->project;
 
-        if ($project === null) {
+        if ($project === null || !ProjectDayAssignmentService::isEnabled()) {
             return new JsonResponse(['affected' => []]);
         }
 

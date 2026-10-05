@@ -9,7 +9,8 @@ class ShiftUserObserver
 {
     public function __construct(
         protected ShiftChangeRecorder $recorder
-    ) {}
+    ) {
+    }
 
     public function created(ShiftUser $pivot): void
     {

@@ -23,8 +23,8 @@ class UpdateEventStatusRequest extends FormRequest
     {
         return [
             'id' => 'required|exists:event_statuses,id',
-            'name' => 'required|string',
-            'color' => 'required|string',
+            'name' => 'required|string|max:255',
+            'color' => 'required|string|max:255',
             'default' => 'required|boolean',
         ];
     }

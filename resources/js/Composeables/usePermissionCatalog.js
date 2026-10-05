@@ -92,6 +92,16 @@ export function usePermissionCatalog(catalogRef, selectedRef) {
         return list.map((r) => (!r.hard && r.type !== 'project_team' && anySoftOk ? { ...r, status: 'ok' } : r))
     }
 
+    /**
+     * Instanz-Einstellung, die dieses Recht derzeit außer Kraft setzt (Katalog: supersededBy),
+     * oder null. Gegenstück zu den Voraussetzungen: das Recht bleibt gespeichert, wirkt aber nicht.
+     */
+    function supersededBy(def) {
+        const requirement = def?.superseded_by
+        if (!requirement) return null
+        return requirementStatus(requirement) === 'ok' ? requirement : null
+    }
+
     function hardMissing(def) {
         const reqs = requirementsFor(def)
         const hard = reqs.filter((r) => r.hard && r.type !== 'project_team' && r.status === 'missing')
@@ -177,6 +187,7 @@ export function usePermissionCatalog(catalogRef, selectedRef) {
         requirementsFor,
         hardMissing,
         statusOf,
+        supersededBy,
         activeSupersetsOf,
         impliedClosure,
         dependentsOf,

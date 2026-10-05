@@ -53,7 +53,13 @@ class TestArealShiftSeeder extends Seeder
         $month = $this->resolveMonth();
         $this->command?->info(
             'Seeding Testareal-Daten für ' . $month->isoFormat('MMMM YYYY') .
-            ' (' . $month->copy()->startOfMonth()->toDateString() . ' – ' . $month->copy()->endOfMonth()->toDateString() . ')'
+            ' (' . $month
+                ->copy()
+                ->startOfMonth()
+                ->toDateString() . ' – ' . $month
+                ->copy()
+                ->endOfMonth()
+                ->toDateString() . ')'
         );
 
         $ownerId = $this->resolveOwnerId();
@@ -104,7 +110,9 @@ class TestArealShiftSeeder extends Seeder
             try {
                 return Carbon::createFromFormat('Y-m', trim($raw))->startOfMonth();
             } catch (\Throwable) {
-                $this->command?->warn("SEED_MONTH='{$raw}' ungültig (erwartet Y-m, z.B. 2026-07). Nutze aktuellen Monat.");
+                $this->command?->warn(
+                    "SEED_MONTH='{$raw}' ungültig (erwartet Y-m, z.B. 2026-07). Nutze aktuellen Monat."
+                );
             }
         }
 
@@ -119,7 +127,7 @@ class TestArealShiftSeeder extends Seeder
     /**
      * @return \Illuminate\Support\Collection<int, Room>
      */
-    private function ensureRooms(Area $area, int $ownerId)
+    private function ensureRooms(Area $area, int $ownerId): \Illuminate\Support\Collection
     {
         $rooms = collect();
         foreach (self::ROOMS as $index => $config) {
@@ -148,7 +156,7 @@ class TestArealShiftSeeder extends Seeder
      * @param  \Illuminate\Support\Collection<int, Craft>  $crafts
      * @return \Illuminate\Support\Collection<int, User>
      */
-    private function unlockUsersForCrafts($crafts)
+    private function unlockUsersForCrafts(\Illuminate\Support\Collection $crafts): \Illuminate\Support\Collection
     {
         $users = User::query()->where('can_work_shifts', true)->get(['id']);
         if ($users->isEmpty()) {
@@ -246,9 +254,9 @@ class TestArealShiftSeeder extends Seeder
      */
     private function seedMonth(
         Carbon $month,
-        $rooms,
-        $crafts,
-        $userPool,
+        \Illuminate\Support\Collection $rooms,
+        \Illuminate\Support\Collection $crafts,
+        \Illuminate\Support\Collection $userPool,
         array $eventTypes,
         int $statusId,
         array $projectIds,
@@ -309,19 +317,93 @@ class TestArealShiftSeeder extends Seeder
 
     /**
      * @param  array<string, int>  $eventTypes
-     * @return array{type: string, eventTypeId: int, startHour: int, durationHours: int, allDay: bool, loud: bool, audience: int, shiftCrafts: int, demand: array<int, int>}
+     * @return array{
+     *     type: string,
+     *     eventTypeId: int,
+     *     startHour: int,
+     *     durationHours: int,
+     *     allDay: bool,
+     *     loud: bool,
+     *     audience: int,
+     *     shiftCrafts: int,
+     *     demand: array<int,
+     *     int>,
+     * }
      */
     private function pickEventPlan(array $eventTypes, bool $isWeekend): array
     {
         // Gewichtete Auswahl an Event-Profilen für einen abwechslungsreichen Kalender.
         $profiles = [
-            ['type' => 'Aufführung', 'startHour' => 19, 'duration' => 3, 'allDay' => false, 'loud' => true, 'audience' => true, 'shiftCrafts' => 2, 'weight' => $isWeekend ? 5 : 2],
-            ['type' => 'Probe', 'startHour' => 14, 'duration' => 4, 'allDay' => false, 'loud' => true, 'audience' => false, 'shiftCrafts' => 1, 'weight' => 4],
-            ['type' => 'Aufbau', 'startHour' => 8, 'duration' => 6, 'allDay' => false, 'loud' => false, 'audience' => false, 'shiftCrafts' => 2, 'weight' => 3],
-            ['type' => 'Workshop', 'startHour' => 10, 'duration' => 5, 'allDay' => false, 'loud' => false, 'audience' => false, 'shiftCrafts' => 1, 'weight' => 2],
-            ['type' => 'Meeting', 'startHour' => 11, 'duration' => 2, 'allDay' => false, 'loud' => false, 'audience' => false, 'shiftCrafts' => 0, 'weight' => 2],
-            ['type' => 'Führung', 'startHour' => 16, 'duration' => 1, 'allDay' => false, 'loud' => false, 'audience' => true, 'shiftCrafts' => 0, 'weight' => 1],
-            ['type' => 'Reinigung', 'startHour' => 7, 'duration' => 2, 'allDay' => false, 'loud' => false, 'audience' => false, 'shiftCrafts' => 0, 'weight' => 1],
+            [
+                'type' => 'Aufführung',
+                'startHour' => 19,
+                'duration' => 3,
+                'allDay' => false,
+                'loud' => true,
+                'audience' => true,
+                'shiftCrafts' => 2,
+                'weight' => $isWeekend ? 5 : 2,
+            ],
+            [
+                'type' => 'Probe',
+                'startHour' => 14,
+                'duration' => 4,
+                'allDay' => false,
+                'loud' => true,
+                'audience' => false,
+                'shiftCrafts' => 1,
+                'weight' => 4,
+            ],
+            [
+                'type' => 'Aufbau',
+                'startHour' => 8,
+                'duration' => 6,
+                'allDay' => false,
+                'loud' => false,
+                'audience' => false,
+                'shiftCrafts' => 2,
+                'weight' => 3,
+            ],
+            [
+                'type' => 'Workshop',
+                'startHour' => 10,
+                'duration' => 5,
+                'allDay' => false,
+                'loud' => false,
+                'audience' => false,
+                'shiftCrafts' => 1,
+                'weight' => 2,
+            ],
+            [
+                'type' => 'Meeting',
+                'startHour' => 11,
+                'duration' => 2,
+                'allDay' => false,
+                'loud' => false,
+                'audience' => false,
+                'shiftCrafts' => 0,
+                'weight' => 2,
+            ],
+            [
+                'type' => 'Führung',
+                'startHour' => 16,
+                'duration' => 1,
+                'allDay' => false,
+                'loud' => false,
+                'audience' => true,
+                'shiftCrafts' => 0,
+                'weight' => 1,
+            ],
+            [
+                'type' => 'Reinigung',
+                'startHour' => 7,
+                'duration' => 2,
+                'allDay' => false,
+                'loud' => false,
+                'audience' => false,
+                'shiftCrafts' => 0,
+                'weight' => 1,
+            ],
         ];
 
         $bag = [];
@@ -349,7 +431,15 @@ class TestArealShiftSeeder extends Seeder
 
     /**
      * @param  array<int, int>  $projectIds
-     * @param  array{type: string, eventTypeId: int, startHour: int, durationHours: int, allDay: bool, loud: bool, audience: int}  $plan
+     * @param  array{
+     *     type: string,
+     *     eventTypeId: int,
+     *     startHour: int,
+     *     durationHours: int,
+     *     allDay: bool,
+     *     loud: bool,
+     *     audience: int,
+     * }  $plan
      */
     private function createEvent(
         Carbon $day,
@@ -472,7 +562,15 @@ class TestArealShiftSeeder extends Seeder
                 }
                 $usedUserIds[] = $userId;
 
-                $this->assignWorker($shift, $userId, $qualificationId, $craft->abbreviation, $dayString, $shiftStart, $shiftEnd);
+                $this->assignWorker(
+                    $shift,
+                    $userId,
+                    $qualificationId,
+                    $craft->abbreviation,
+                    $dayString,
+                    $shiftStart,
+                    $shiftEnd
+                );
                 $assignments++;
             }
         }

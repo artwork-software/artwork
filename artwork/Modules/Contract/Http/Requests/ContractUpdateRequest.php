@@ -21,7 +21,8 @@ class ContractUpdateRequest extends FormRequest
      * @param  mixed  $default
      * @return mixed
      */
-    public function data($key = null, $default = null)
+    // phpcs:ignore SlevomatCodingStandard.TypeHints.ParameterTypeHint.MissingNativeTypeHint -- Signatur der Elternklasse erlaubt keinen Typ
+    public function data($key = null, $default = null): mixed
     {
         $contractData = $this->only([
             'contract_partner',

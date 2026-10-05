@@ -42,7 +42,12 @@
             <div class="text-danger text-xs mt-1" v-if="showUserErrorText">
                 {{ $t('The user must be specified.') }}
             </div>
-            <BaseInput type="password" v-model="sageForm.password" :label="$t('Password')" id="password"/>
+            <BaseInput type="password" v-model="sageForm.password" :label="$t('Password')" id="password"
+                       autocomplete="new-password"
+                       :placeholder="sageSettings?.has_password ? '••••••••' : ''"/>
+            <div class="text-xs text-text-subtle -mt-3" v-if="sageSettings?.has_password">
+                {{ $t('A password is stored. Leave blank to keep it, or enter a new one to replace it.') }}
+            </div>
             <div class="text-sm/5 text-danger" v-if="showPasswordErrorText">
                 {{ $t('The password must be entered.') }}
             </div>
@@ -71,6 +76,11 @@
                 <div class="flex items-center justify-end gap-x-3">
                     <label for="sageEnabled">{{ $t('Interface enabled') }}&nbsp;</label>
                     <input type="checkbox" id="sageEnabled" class="input-checklist" v-model="sageForm.enabled"/>
+                </div>
+                <div class="flex items-center justify-end">
+                    <BaseCheckbox id="sageVerifySsl" v-model="sageForm.verify_ssl"
+                                  :label="$t('Verify TLS certificate of the Sage server')"
+                                  :description="$t('Recommended. Only disable for Sage servers with a self-signed certificate on an internal network.')"/>
                 </div>
             </div>
 
@@ -241,6 +251,7 @@ import { useForm, router } from "@inertiajs/vue3";
 import {IconArrowCurveRight, IconDragDrop, IconInfoCircle, IconRefresh, IconTrash} from "@tabler/icons-vue";
 import draggable from "vuedraggable";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
+import BaseCheckbox from "@/Artwork/Inputs/BaseCheckbox.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import ConfirmationComponent from "@/Layouts/Components/ConfirmationComponent.vue";
 import SuccessModal from "@/Layouts/Components/General/SuccessModal.vue";
@@ -250,6 +261,7 @@ import SageBookingLogModal from "@/Pages/Interfaces/Sage/SageBookingLogModal.vue
 export default defineComponent({
     components: {
         BaseInput,
+        BaseCheckbox,
         FormButton,
         ConfirmationComponent,
         SuccessModal,
@@ -273,10 +285,12 @@ export default defineComponent({
                 host: this.sageSettings?.host ?? null,
                 endpoint: this.sageSettings?.endpoint ?? null,
                 user: this.sageSettings?.user ?? null,
-                password: this.sageSettings?.password ?? null,
+                // Das gespeicherte Passwort kommt nie vom Server (nur has_password); leer = behalten.
+                password: null,
                 bookingDate: this.sageSettings?.bookingDate ?? null,
                 fetchTime: this.sageSettings?.fetchTime ?? null,
-                enabled: this.sageSettings?.enabled ?? false
+                enabled: this.sageSettings?.enabled ?? false,
+                verify_ssl: this.sageSettings?.verify_ssl ?? true
             }),
             importProcessing: false,
             specificDayImportKtr: null,
@@ -297,7 +311,7 @@ export default defineComponent({
             return this.sageSettings?.host &&
                 this.sageSettings?.endpoint &&
                 this.sageSettings?.user &&
-                this.sageSettings?.password;
+                this.sageSettings?.has_password;
         },
         initializeSageImport() {
             if (!this.sageInterfaceIsConfigured() || this.importProcessing) return;
@@ -334,7 +348,7 @@ export default defineComponent({
             this.showHostErrorText = !this.sageForm.host;
             this.showEndpointErrorText = !this.sageForm.endpoint;
             this.showUserErrorText = !this.sageForm.user;
-            this.showPasswordErrorText = !this.sageForm.password;
+            this.showPasswordErrorText = !this.sageForm.password && !this.sageSettings?.has_password;
 
             if (this.showHostErrorText || this.showEndpointErrorText || this.showUserErrorText || this.showPasswordErrorText) {
                 return;

@@ -41,6 +41,6 @@ class BudgetSumDetails extends Model
 
     public function column(): BelongsTo
     {
-        return $this->belongsTo(Column::class);
+        return $this->belongsTo(Column::class, 'column_id', 'id', 'column');
     }
 }

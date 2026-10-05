@@ -55,4 +55,3 @@ class LdapService
         return $this->ldapApi->authenticateAndFetch($source, $username, $password);
     }
 }
-

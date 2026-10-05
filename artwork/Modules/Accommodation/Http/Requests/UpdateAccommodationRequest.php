@@ -7,9 +7,15 @@ use Illuminate\Validation\Rule;
 
 class UpdateAccommodationRequest extends FormRequest
 {
+    /**
+     * Autorisierung VOR der Validierung, sonst antwortet ein fehlendes Recht mit 422 statt 403.
+     */
     public function authorize(): bool
     {
-        return true;
+        $accommodation = $this->route('accommodation');
+
+        return $accommodation instanceof \Artwork\Modules\Accommodation\Models\Accommodation
+            && ($this->user()?->can('update', $accommodation) ?? false);
     }
 
     public function rules(): array
@@ -22,7 +28,7 @@ class UpdateAccommodationRequest extends FormRequest
             'street' => 'nullable|string|max:255',
             'zip_code' => 'nullable|string|max:20',
             'location' => 'nullable|string|max:255',
-            'note' => 'nullable|string',
+            'note' => 'nullable|string|max:65535',
             'room_types' => 'required|array|min:1',
             'room_types.*' => 'exists:accommodation_room_types,id',
             'room_type_costs' => 'nullable|array',

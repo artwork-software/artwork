@@ -26,6 +26,7 @@ class StoreInvitationRequest extends FormRequest
                 Rule::enum(RoleEnum::class),
                 // Die Admin-Rolle darf nur vergeben, wer selbst artwork-Admin ist – "Personalverwaltung"
                 // reicht zum Einladen, aber nicht zum Anlegen weiterer Admins.
+                // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter -- Laravel-Validierungs-Closure (attribute, value, fail) – Signatur vorgegeben
                 function (string $attribute, mixed $value, Closure $fail): void {
                     if (
                         $value === RoleEnum::ARTWORK_ADMIN->value

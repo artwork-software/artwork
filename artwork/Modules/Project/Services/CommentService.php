@@ -30,7 +30,8 @@ readonly class CommentService
         ?int $tabId = null
     ): Comment {
         $comment = new Comment();
-        $comment->text = nl2br($text);
+        // Rohtext; Umbrüche rendert das Frontend per white-space: pre-line.
+        $comment->text = $text;
         $comment->user()->associate($user);
         $comment->tab_id = $tabId;
         if ($project) {

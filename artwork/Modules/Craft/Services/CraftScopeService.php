@@ -2,8 +2,10 @@
 
 namespace Artwork\Modules\Craft\Services;
 
+use Artwork\Modules\Craft\Exceptions\CraftNotPlannableException;
 use Artwork\Modules\Craft\Models\Craft;
 use Artwork\Modules\Role\Enums\RoleEnum;
+use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\User\Models\User;
 use Illuminate\Database\Eloquent\Builder;
 
@@ -85,5 +87,42 @@ class CraftScopeService
         }
 
         return array_values(array_diff(array_map('intval', $requested), $allowed));
+    }
+
+    /**
+     * Wirft, wenn die Person eines der Gewerke nicht planen darf (Admin: nie). Einheitliche Prüfung
+     * für alle Schicht-Mutationen — die Oberfläche filterte bisher nur im Frontend.
+     *
+     * @param iterable<int|string|null> $craftIds
+     * @throws CraftNotPlannableException
+     */
+    public function assertCanPlan(?User $user, iterable $craftIds): void
+    {
+        if ($user === null) {
+            return;
+        }
+
+        $requested = collect($craftIds)->filter()->map(static fn ($id): int => (int) $id)->unique()->values()->all();
+        if ($requested === []) {
+            return;
+        }
+
+        $forbidden = $this->forbiddenCraftIds($user, $requested);
+        if ($forbidden === []) {
+            return;
+        }
+
+        throw new CraftNotPlannableException(
+            Craft::query()->whereKey($forbidden)->orderBy('name')->pluck('name')->all()
+        );
+    }
+
+    /**
+     * @param iterable<Shift> $shifts
+     * @throws CraftNotPlannableException
+     */
+    public function assertCanPlanShifts(?User $user, iterable $shifts): void
+    {
+        $this->assertCanPlan($user, collect($shifts)->pluck('craft_id'));
     }
 }

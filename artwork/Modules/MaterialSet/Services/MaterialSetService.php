@@ -9,7 +9,9 @@ use Artwork\Modules\MaterialSet\Repositories\MaterialSetRepository;
 
 class MaterialSetService
 {
-    public function __construct(protected MaterialSetRepository $repository) {}
+    public function __construct(protected MaterialSetRepository $repository)
+    {
+    }
 
     public function store(StoreMaterialSetRequest $request): MaterialSet
     {

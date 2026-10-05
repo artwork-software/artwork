@@ -2,6 +2,7 @@
 
 namespace App\Rules;
 
+use Artwork\Modules\Inventory\Services\InventoryArticleImageService;
 use Closure;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Http\UploadedFile;
@@ -10,6 +11,9 @@ use Throwable;
 class InventoryArticleImageDimensions implements ValidationRule
 {
     private const int MAX_DIMENSION = 8192;
+
+    // Gesamtpixel zusätzlich zur Kantenlänge (8192² wären 67 MP).
+    private const int MAX_PIXELS = InventoryArticleImageService::MAX_PIXELS;
 
     /**
      * Run the validation rule.
@@ -23,10 +27,16 @@ class InventoryArticleImageDimensions implements ValidationRule
         }
 
         try {
-            $dimensions = @getimagesize($value->getRealPath());
+            try {
+                $dimensions = getimagesize($value->getRealPath());
+            } catch (\Throwable) {
+                // ungültiges Bild: getimagesize warnt (Laravel wirft daraus eine Exception) → Imagick-Fallback
+                $dimensions = false;
+            }
 
             if ($dimensions === false && class_exists(\Imagick::class)) {
                 $image = new \Imagick();
+                InventoryArticleImageService::applyImagickResourceLimits($image);
                 $image->pingImage($value->getRealPath());
                 $dimensions = [$image->getImageWidth(), $image->getImageHeight()];
                 $image->clear();
@@ -44,6 +54,14 @@ class InventoryArticleImageDimensions implements ValidationRule
         if ($dimensions[0] > self::MAX_DIMENSION || $dimensions[1] > self::MAX_DIMENSION) {
             $fail(__('The :attribute dimensions must not exceed :max pixels.', [
                 'max' => number_format(self::MAX_DIMENSION, 0, ',', '.'),
+            ]));
+
+            return;
+        }
+
+        if (((int) $dimensions[0] * (int) $dimensions[1]) > self::MAX_PIXELS) {
+            $fail(__('The :attribute must not exceed :max megapixels.', [
+                'max' => (int) round(self::MAX_PIXELS / 1_000_000),
             ]));
         }
     }

@@ -57,8 +57,13 @@ final class ShiftRuleCheckContext
      * Kontext für den Prüfzeitraum [$startDate, $endDate] mit Rand: $daysBefore Tage zurück
      * (mind. 7 für Wochenfenster + Vortag), $daysAfter Tage voraus (mind. 7 für das Wochenende).
      */
-    public static function forRange(User $user, Carbon $startDate, Carbon $endDate, int $daysBefore = 7, int $daysAfter = 7): self
-    {
+    public static function forRange(
+        User $user,
+        Carbon $startDate,
+        Carbon $endDate,
+        int $daysBefore = 7,
+        int $daysAfter = 7
+    ): self {
         return new self(
             $user,
             $startDate->copy()->startOfDay()->subDays(max(7, $daysBefore)),

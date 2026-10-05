@@ -3,7 +3,6 @@
 namespace Artwork\Modules\User\Models\Traits;
 
 use Artwork\Core\FileHandling\Naming\StoredFileName;
-use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -62,15 +61,27 @@ trait HasProfilePhotoCustom
     }
 
     /**
+     * Alte Datenbestände enthalten persistierte Avatar-Fallback-URLs:
+     * ui-avatars.com (von der CSP img-src geblockt) sowie generate-avatar-image-URLs
+     * aus der Zeit, als die Route unter /api lag (heute 404). Solche Werte wie
+     * "kein Bild" behandeln, damit der lokale SVG-Fallback greift.
+     */
+    protected function isStaleAvatarFallbackUrl(?string $value): bool
+    {
+        return $value !== null
+            && (str_contains($value, 'ui-avatars.com') || str_contains($value, 'generate-avatar-image'));
+    }
+
+    /**
      * Update the user's profile photo.
      *
      * @param  \Illuminate\Http\UploadedFile  $photo
      * @param  string  $storagePath
      * @return void
      */
-    public function updateProfilePhoto(UploadedFile $photo, $storagePath = 'profile-photos')
+    public function updateProfilePhoto(UploadedFile $photo, string $storagePath = 'profile-photos'): void
     {
-        tap($this->profile_photo_path, function ($previous) use ($photo, $storagePath) {
+        tap($this->profile_photo_path, function ($previous) use ($photo, $storagePath): void {
             $this->forceFill([
                 'profile_photo_path' => $photo->storeAs(
                     $storagePath,
@@ -108,25 +119,11 @@ trait HasProfilePhotoCustom
     }
 
     /**
-     * Get the URL to the user's profile photo.
-     *
-     * @return \Illuminate\Database\Eloquent\Casts\Attribute
-     */
-    public function profilePhotoUrl(): Attribute
-    {
-        return Attribute::get(function (): string {
-            return $this->profile_photo_path
-                ? asset('storage/' . $this->profile_photo_path)
-                : $this->defaultProfilePhotoUrl();
-        });
-    }
-
-    /**
      * Get the default profile photo URL if no profile photo has been uploaded.
      *
      * @return string
      */
-    protected function defaultProfilePhotoUrl()
+    protected function defaultProfilePhotoUrl(): string
     {
         $name = $this->name ?? '';
         $name = trim(collect(explode(' ', $name))->map(function ($segment) {
@@ -147,7 +144,7 @@ trait HasProfilePhotoCustom
      *
      * @return string
      */
-    protected function profilePhotoDisk()
+    protected function profilePhotoDisk(): string
     {
         return isset($_ENV['VAPOR_ARTIFACT_NAME']) ? 's3' : config('jetstream.profile_photo_disk', 'public');
     }

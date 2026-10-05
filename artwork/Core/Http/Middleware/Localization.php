@@ -16,20 +16,14 @@ class Localization
     {
         $supported = ['de', 'en']; // ggf. erweitern
 
-        // 1) User
+        // Reihenfolge: 1) User, 2) Session, 3) Cookie, 4) Browser Accept-Language oder App-Default
         if (Auth::check() && filled(Auth::user()->language)) {
             $locale = Auth::user()->language;
-        }
-        // 2) Session
-        elseif (Session::has('locale')) {
+        } elseif (Session::has('locale')) {
             $locale = Session::get('locale');
-        }
-        // 3) Cookie
-        elseif ($cookie = $request->cookie('locale')) {
+        } elseif ($cookie = $request->cookie('locale')) {
             $locale = $cookie;
-        }
-        // 4) Browser Accept-Language oder App-Default
-        else {
+        } else {
             $locale = $request->getPreferredLanguage($supported) ?? config('app.locale');
         }
 

@@ -6,7 +6,7 @@ use Artwork\Modules\ExternalAccess\Models\ExternalAccess;
 use Artwork\Modules\User\Models\User;
 use Illuminate\Support\Facades\Auth;
 use PHPUnit\Framework\Attributes\Test;
-use Tests\TestCase;
+use Tests\Feature\ExternalAccess\ExternalAccessTestCase as TestCase;
 
 final class SessionIsolationTest extends TestCase
 {

@@ -55,8 +55,14 @@ final class ViolationMeasureFormatter
         }
 
         $type = $violation->shiftRule?->trigger_type;
-        $ofMax = fn (string $actual, string $max): string => $this->tr('{actual} of max. {max}', ['actual' => $actual, 'max' => $max]);
-        $ofMin = fn (string $actual, string $min): string => $this->tr('{actual} of min. {min}', ['actual' => $actual, 'min' => $min]);
+        $ofMax = fn (string $actual, string $max): string => $this->tr('{actual} of max. {max}', [
+            'actual' => $actual,
+            'max' => $max,
+        ]);
+        $ofMin = fn (string $actual, string $min): string => $this->tr('{actual} of min. {min}', [
+            'actual' => $actual,
+            'min' => $min,
+        ]);
 
         if (($data['type'] ?? null) === 'compensation_deadline_expired') {
             return $this->tr('Compensation deadline expired');
@@ -78,7 +84,10 @@ final class ViolationMeasureFormatter
 
         if (($data['type'] ?? null) === 'min_free_sundays_per_season_half' || array_key_exists('half', $data)) {
             $half = (int) ($data['half'] ?? 1) === 2 ? $this->tr('2nd half') : $this->tr('1st half');
-            $base = $half . ': ' . $ofMin((string) ($data['have'] ?? 0), ($data['target'] ?? '') . ' ' . $this->tr('free Sundays'));
+            $base = $half . ': ' . $ofMin(
+                (string) ($data['have'] ?? 0),
+                ($data['target'] ?? '') . ' ' . $this->tr('free Sundays')
+            );
 
             return !empty($data['completed'])
                 ? $base
@@ -86,7 +95,10 @@ final class ViolationMeasureFormatter
         }
 
         if (($data['type'] ?? null) === 'min_free_sundays_per_year') {
-            $base = ($data['year'] ?? '') . ': ' . $ofMin((string) ($data['have'] ?? 0), ($data['target'] ?? '') . ' ' . $this->tr('free Sundays'));
+            $base = ($data['year'] ?? '') . ': ' . $ofMin(
+                (string) ($data['have'] ?? 0),
+                ($data['target'] ?? '') . ' ' . $this->tr('free Sundays')
+            );
 
             return !empty($data['completed'])
                 ? $base
@@ -114,7 +126,10 @@ final class ViolationMeasureFormatter
         if (($data['type'] ?? null) === 'min_free_days_per_week' || array_key_exists('free_days', $data)) {
             $week = !empty($data['week']) ? $this->tr('CW') . ' ' . $data['week'] . ': ' : '';
 
-            return $week . $ofMin((string) ($data['free_days'] ?? 0), ($data['target'] ?? '') . ' ' . $this->tr('free days'));
+            return $week . $ofMin(
+                (string) ($data['free_days'] ?? 0),
+                ($data['target'] ?? '') . ' ' . $this->tr('free days')
+            );
         }
 
         if (isset($data['planned_hours'], $data['max_allowed'])) {
@@ -126,7 +141,10 @@ final class ViolationMeasureFormatter
         if (isset($data['consecutive_days'], $data['max_allowed'])) {
             $days = $this->tr('Days');
 
-            return $ofMax(self::number($data['consecutive_days']) . ' ' . $days, self::number($data['max_allowed']) . ' ' . $days);
+            return $ofMax(
+                self::number($data['consecutive_days']) . ' ' . $days,
+                self::number($data['max_allowed']) . ' ' . $days
+            );
         }
         if (isset($data['rest_hours'], $data['min_required'])) {
             return $ofMin(self::number($data['rest_hours']) . ' h', self::number($data['min_required']) . ' h');
@@ -134,7 +152,10 @@ final class ViolationMeasureFormatter
         if (isset($data['days_until_shift'], $data['min_required'])) {
             $days = $this->tr('Days');
 
-            return $ofMin(self::number($data['days_until_shift']) . ' ' . $days, self::number($data['min_required']) . ' ' . $days);
+            return $ofMin(
+                self::number($data['days_until_shift']) . ' ' . $days,
+                self::number($data['min_required']) . ' ' . $days
+            );
         }
 
         if ($type === 'halfDayOffConflict' || array_key_exists('threshold_hour', $data)) {

@@ -346,8 +346,9 @@
                                     :class="expandDays ? 'min-h-12 h-full overflow-visible' : 'h-full overflow-y-auto'"
                                     :data-sp-row="rowIndex"
                                 >
-                                    <!-- Events einmal pro Zelle auflösen statt mehrfach je Render -->
-                                    <template v-for="dayEvents in [getRoomDayEvents(room, day.fullDay)]" :key="`cell-events-${day.fullDay}`">
+                                    <!-- Events einmal pro Zelle auflösen statt mehrfach je Render;
+                                         Anzeigeeinstellung „Termine anzeigen" (show_events) blendet den ganzen Block aus -->
+                                    <template v-for="dayEvents in [showEvents ? getRoomDayEvents(room, day.fullDay) : []]" :key="`cell-events-${day.fullDay}`">
                                         <!-- Project Groups in Events -->
                                         <template v-if="displayProjectGroups && dayEvents.length">
                                             <template
@@ -402,7 +403,7 @@
                                                         <span class="flex items-center gap-1.5 min-w-0">
                                                             <!-- Personen-Multiedit: Person dem GESAMTEN Projekt (Zeitraum) zuweisen -->
                                                             <input
-                                                                v-if="multiEditMode && userForMultiEdit"
+                                                                v-if="projectAssignmentsEnabled && multiEditMode && userForMultiEdit"
                                                                 type="checkbox"
                                                                 class="input-checklist h-3.5 w-3.5 shrink-0"
                                                                 :checked="fullPeriodAssignedProjects.has(group.projectId)"
@@ -424,6 +425,7 @@
                                                             v-for="shift in group.shifts"
                                                             :key="shift.id || shift.dwId || shift.uuid"
                                                             data-sp-shiftrow
+                                                            :data-sp-has-notes="calendarSettings?.shift_notes && shift.description ? '' : undefined"
                                                             class="duration-200 ease-in-out first:rounded-t-lg last:rounded-b-lg"
                                                             :class="group.project ? 'hover:bg-info-surface' : 'hover:bg-surface-sunken'"
                                                         >
@@ -895,6 +897,7 @@
                                 <div v-else-if="row.kind === 'craft'" class="flex h-full w-full items-center justify-center" :class="day.isExtraRow ? 'pl-2' : ''">
                                     <!-- Besetzung EINMAL je Zelle nachschlagen; Ampelklasse/Tooltip rechnet die Pille nur bei Prop-Änderung -->
                                     <CraftStaffingPill
+                                        v-if="showCraftStaffing"
                                         :count="craftStaffingFor(row.craft.id, day)"
                                         :active="isCraftStaffingFilterActive(row.craft.id)"
                                         :week-number="day.isExtraRow ? day.weekNumber : null"
@@ -916,7 +919,15 @@
                                     >
                                         <!-- Einheitliches Stundenformat "H:MM h" (signiert) wie das AZK-Badge; Fallback auf das alte "2h 0m" -->
                                         <!-- target_unknown: kein Arbeitszeitmuster in der Woche -> "–" (Tooltip über kwCellTitle) -->
+                                        <!-- Arbeitszeitberechnung aus: geplante Stunden der Woche statt Differenz zum Soll -->
                                         <div
+                                            v-if="!workTimeAccountingEnabled"
+                                            class="font-lexend text-xs text-[var(--uo-text)]"
+                                        >
+                                            {{ row.worker?.weeklyWorkingHours?.[day.weekNumber]?.planned_formatted ?? row.worker?.weeklyWorkingHours?.[day.weekNumber]?.planned ?? '–' }}
+                                        </div>
+                                        <div
+                                            v-else
                                             class="font-lexend text-xs"
                                             :class="row.worker?.weeklyWorkingHours?.[day.weekNumber] && !row.worker.weeklyWorkingHours[day.weekNumber].target_unknown
                                                 ? (row.worker.weeklyWorkingHours[day.weekNumber].isMinus ? 'text-[var(--uo-danger-text)]' : 'text-[var(--uo-success-text)]')
@@ -945,18 +956,26 @@
                                             v-if="getDayServicesForCell(row.worker, day)"
                                             class="absolute right-2 top-1/2 flex -translate-y-1/2 transform"
                                         >
+                                            <!-- Vollflächig in der Tagesdienstfarbe, Icon weiß oder schwarz je nach
+                                                 Helligkeit der Farbe (dayServiceBallStyle); Ring in der Panelfarbe
+                                                 trennt überlappende Bälle voneinander -->
                                             <div
                                                 v-for="(svc, idx) in getDayServicesForCell(row.worker, day)"
                                                 :key="svc.id || idx"
-                                                class="flex h-6 w-6 items-center justify-center rounded-full bg-white p-0.5 ring-1 ring-[var(--uo-cell-ring)]"
+                                                class="flex h-6 w-6 items-center justify-center rounded-full p-0.5 ring-2 ring-[var(--uo-bg)]"
                                                 :class="idx > 0 ? '-ml-3' : ''"
+                                                :style="dayServiceBallStyle(svc.hex_color).ball"
                                             >
+                                                <!-- classes wirkt auf Button UND Icon: der Button ist sonst inline-block
+                                                     und das SVG steht auf der Schriftgrundlinie (Descender-Platz unten),
+                                                     wodurch das Icon im Ball nach oben rutscht -->
                                                 <ToolTipComponent
                                                     :tooltip-text="svc.name"
                                                     :icon="svc.icon"
                                                     icon-size="h-4 w-4"
-                                                    :icon-style="{ color: svc.hex_color }"
-                                                    :classes-button="'mt-0'"
+                                                    :icon-style="dayServiceBallStyle(svc.hex_color).icon"
+                                                    :classes-button="'mt-0 flex'"
+                                                    classes="flex items-center justify-center leading-none"
                                                 />
                                             </div>
                                         </div>
@@ -1066,6 +1085,7 @@
         :initial-project="pageProps?.currentProject ?? null"
         v-if="showAddShiftByPresetOrGroupModal"
         @close="showAddShiftByPresetOrGroupModal = false"
+        @added="closeAddShiftModalApply($event)"
         />
 
     <DayRemarkEditModal
@@ -1093,6 +1113,7 @@
         :initial-start-date="historyModalConfig.startDate ?? dateValue[0]"
         :initial-end-date="historyModalConfig.endDate ?? dateValue[1]"
         :prefill-search="historyModalConfig.search"
+        :initial-person="historyModalConfig.person"
         :initial-shift-id="historyModalConfig.shiftId"
         :auto-load="historyModalConfig.autoLoad"
         @close="showHistoryModal = false"
@@ -1104,6 +1125,7 @@ import 'vue-virtual-scroller/dist/vue-virtual-scroller.css'
 import Permissions from '@/Mixins/Permissions.vue'
 import axios from 'axios'
 import {Link, router, usePage} from '@inertiajs/vue3'
+import {isWorkTimeAccountingEnabled} from '@/Helper/workTimeAccounting.js'
 
 import ShiftPlanFunctionBar from '@/Layouts/Components/ShiftPlanComponents/ShiftPlanFunctionBar.vue'
 import ShiftPlanOpenViolationsFilterNotice from '@/Layouts/Components/ShiftPlanComponents/ShiftPlanOpenViolationsFilterNotice.vue'
@@ -1317,6 +1339,7 @@ const showHistoryModal = ref(false)
 // Person+Tag über das Tagesmodal, konkrete Schicht über das Verlauf-Icon an der Schicht.
 type HistoryModalConfig = {
     search?: string
+    person?: { id: number; type: 'user' | 'freelancer' | 'service_provider'; name: string } | null
     startDate?: string
     endDate?: string
     shiftId?: number
@@ -1330,6 +1353,7 @@ const dayToShow = ref<any | null>(null)
 
 /* DP-07/2.20: Projektmodus — der ganze Projektblock (Tag+Raum+Projekt) wird pink
    umrandet, fremde/projektlose Blöcke abgedimmt. */
+const workTimeAccountingEnabled = computed<boolean>(() => isWorkTimeAccountingEnabled(usePage().props))
 const shiftPlanSettings = computed<any>(() => usePage().props.shift_plan_settings ?? usePage().props.auth.user.calendar_settings)
 const projectModeActive = computed(() =>
     !!shiftPlanSettings.value?.use_project_time_period && !!shiftPlanSettings.value?.time_period_project_id
@@ -1637,12 +1661,21 @@ const calendarSettings = computed(() => {
     return usePage().props.shift_plan_settings ?? authUser.value.calendar_settings
 })
 const showUserOverview = ref(calendarSettings.value?.show_user_overview ?? true)
+// Anzeigeeinstellung „Besetzung je Gewerk anzeigen" (Wochenansicht, Default an) — blendet die
+// Besetzungs-Pille in Tages- UND KW-Zelle der Gewerkszeile aus; Filter bleibt im Popup erreichbar
+const showCraftStaffing = computed(() => usePage().props.shift_plan_settings?.show_craft_staffing ?? true)
+// Anzeigeeinstellung „Termine anzeigen" (Wochenansicht, Default an): aus = nur Schichten im Raster.
+// Das Backend liefert dann keine Termine; der Frontend-Guard fängt zusätzlich Websocket-Nachschübe ab.
+const showEvents = computed(() => usePage().props.shift_plan_settings?.show_events ?? true)
 // Hell/Dunkel des Personenbereichs: immer aus shift_plan_settings (Wochenansicht), nie aus den Daily-Settings
 const userOverviewLightMode = ref<boolean>(!!usePage().props.shift_plan_settings?.user_overview_light_mode)
 const expandDays = computed(() => calendarSettings.value?.expand_days)
 const displayProjectGroups = computed(() => calendarSettings.value?.display_project_groups)
 const compactMode = computed(() => authUser.value.compact_mode)
-const openedCrafts = computed(() => authUser.value.opened_crafts ?? [])
+// Optimistischer Zwischenstand beim Auf-/Zuklappen, bis die Server-Antwort
+// auth.user.opened_crafts nachzieht (closedCrafts ist davon abgeleitet und read-only)
+const openedCraftsOverride = ref<number[] | null>(null)
+const openedCrafts = computed<number[]>(() => openedCraftsOverride.value ?? authUser.value.opened_crafts ?? [])
 const sortWorkersByQualification = computed(() => authUser.value.sort_workers_by_qualification ?? true)
 const showQualificationDuplicates = computed(() => authUser.value.show_qualification_duplicates ?? true)
 const closedQualificationGroups = ref<string[]>([...(authUser.value.closed_qualification_groups ?? [])])
@@ -2017,7 +2050,8 @@ async function measureBaselineMetrics() {
     const pg = measureMax('[data-sp-pgbar]', outerHeightWithMargin)
     if (pg !== null) cellMetrics.pgBarWithMb = pg
 
-    const sr = measureMax('[data-sp-shiftrow]', el => el.getBoundingClientRect().height)
+    // Nur Zeilen OHNE Beschreibung messen — die Beschreibungshöhe kommt je Schicht aus summarizeCell()
+    const sr = measureMax('[data-sp-shiftrow]:not([data-sp-has-notes])', el => el.getBoundingClientRect().height)
     if (sr !== null) cellMetrics.shiftRow = sr
 
     const gh = measureMax('[data-sp-shiftgroupheader]', el => el.getBoundingClientRect().height)
@@ -2115,7 +2149,8 @@ function measureTextLines(text: string | undefined | null, availableWidth: numbe
 type CellSummary = {
     pgTotalHeight: number
     totalEventHeight: number
-    shiftGroups: Array<{ hasProject: boolean; shiftCount: number }>
+    // notesHeight: Summe der Beschreibungszeilen (shift_notes) aller Schichten der Gruppe in px
+    shiftGroups: Array<{ hasProject: boolean; shiftCount: number; notesHeight: number }>
 }
 
 const cellSummaryCache = new Map<string, CellSummary>()
@@ -2156,7 +2191,7 @@ function summarizeCell(room: any, dayKey: string): CellSummary {
     const cached = cellSummaryCache.get(cacheKey)
     if (cached) return cached
 
-    const events = getRoomDayEvents(room, dayKey)
+    const events = showEvents.value ? getRoomDayEvents(room, dayKey) : []
     const shifts = getRoomDayShifts(room, dayKey)
     const showProjectGroups = displayProjectGroups.value
     const expanded = expandDays.value
@@ -2259,9 +2294,20 @@ function summarizeCell(room: any, dayKey: string): CellSummary {
     }
 
     const shiftGroupsRaw = groupShiftsByProject(shifts, dayKey)
+    // Schichtbeschreibung (shift_notes): Vollkarte text-[11px]/4 (16px), Kompaktpille text-[10px]/3.5 (14px),
+    // jeweils + pb-0.5 (2px). Textbreite: Gruppen-px-1 (8) + Zeilen-px-1 (8).
+    const noteLineHeight = isCompactShiftZoom.value ? 14 : 16
+    const noteWidth = cellInnerWidth.value - 16
     const shiftGroups = shiftGroupsRaw.map(g => ({
         hasProject: !!g.project,
         shiftCount: g.shifts.length,
+        notesHeight: settings.shift_notes
+            ? g.shifts.reduce((sum: number, shift: any) => {
+                if (!shift?.description) return sum
+                const lines = expanded ? measureTextLines(shift.description, noteWidth, 400) : 1
+                return sum + lines * noteLineHeight + 2
+            }, 0)
+            : 0,
     }))
 
     const summary: CellSummary = { pgTotalHeight, totalEventHeight, shiftGroups }
@@ -2295,6 +2341,7 @@ function computeHeightFromSummary(summary: CellSummary, metrics: typeof cellMetr
                 h += (n - 1) * (metrics.shiftRowGap + metrics.shiftDivider)
             }
         }
+        h += group.notesHeight ?? 0
     })
 
     const minHeight = 112
@@ -2472,6 +2519,7 @@ watch(
     },
     { immediate: true },
 )
+
 
 type ShiftGroup = {
     project: any | null
@@ -2837,6 +2885,24 @@ async function initializeShiftPlan() {
 }
 
 
+// Echo-Handler dieser Instanz — beim Verlassen abmelden (Remount bei Filterwechsel hängte sonst
+// jedes Mal weitere Handler mit veralteten Daten an)
+let shiftCalendarListener: ReturnType<typeof useShiftCalendarListener> | null = null
+let isShiftPlanUnmounted = false
+
+/** Echo-Handler für die aktuell geladenen Räume (neu) anmelden — auch nach einem Nachladen */
+function startShiftCalendarListener() {
+    shiftCalendarListener?.dispose()
+    shiftCalendarListener = null
+    if (isShiftPlanUnmounted) return
+    shiftCalendarListener = useShiftCalendarListener(shiftPlanArrayRef, {
+        onWorkersNeedReload: debouncedLoadShiftPlanWorkers,
+        onWorkerNeedReload: reloadSingleWorker,
+        onLookupsReceived: mergeLookups,
+    })
+    shiftCalendarListener.init()
+}
+
 onMounted(async () => {
     // Crafts + Workers sofort parallel zum Meta/Batch-Load starten — die drei
     // Endpunkte sind unabhängig; vorher liefen alle vier Requests seriell
@@ -2954,12 +3020,7 @@ onMounted(async () => {
 
     attach()
 
-    const ShiftCalendarListener = useShiftCalendarListener(shiftPlanArrayRef, {
-        onWorkersNeedReload: debouncedLoadShiftPlanWorkers,
-        onWorkerNeedReload: reloadSingleWorker,
-        onLookupsReceived: mergeLookups,
-    })
-    ShiftCalendarListener.init()
+    startShiftCalendarListener()
 
     setupInertiaNavigationGuard()
 
@@ -2971,6 +3032,14 @@ onMounted(async () => {
 
 
 onBeforeUnmount(() => {
+    isShiftPlanUnmounted = true
+    shiftCalendarListener?.dispose()
+    shiftCalendarListener = null
+    if (userOverviewScrollSaveTimer) clearTimeout(userOverviewScrollSaveTimer)
+    if (userOverviewScrollRestoreTimer) clearTimeout(userOverviewScrollRestoreTimer)
+    saveUserOverviewScroll()
+    userOverviewEl.value?.removeEventListener('scroll', onUserOverviewScrollForSave)
+    window.removeEventListener('pagehide', onPageHideSaveScroll)
     detach()
     debouncedLoadShiftPlanWorkers.cancel()
     monthObserver.value?.disconnect()
@@ -3081,6 +3150,10 @@ function kwHoursTooltip(row: any, day: any): string {
     const week = row?.worker?.weeklyWorkingHours?.[day?.weekNumber]
     if (!week) return ''
     const planned = week.planned_formatted ?? week.planned
+    if (!workTimeAccountingEnabled.value) {
+        // Arbeitszeitberechnung aus: kein Soll, nur die geplanten Stunden
+        return `${$t('Planned')} ${planned}`
+    }
     if (week.target_unknown) {
         // Soll unbekannt: mindestens ein Tag der Woche ohne gültiges Arbeitszeitmuster
         return `${$t('Planned')} ${planned} · ${$t('Target')} – · ${$t('No work time pattern stored')}`
@@ -3105,6 +3178,37 @@ function kwWorkflowStatusTitle(row: any, day: any): string {
         default:
             return ''
     }
+}
+
+// Tagesdienst-Ball: Füllung = hinterlegte Farbe, Icon weiß auf dunklen und schwarz auf hellen
+// Farben (WCAG-Luminanz < 0,179 = Weiß hat den höheren Kontrast; gleiche Regel wie
+// useColorHelper().isDarkColor und Spielplan-PDF-Export). Sehr helle Farben
+// bekommen zusätzlich eine dünne dunkle Innenkante, damit der Ball auf weißen Zellen (heller
+// Personenbereich) nicht verschwindet. Ergebnis je Farbe gecacht — läuft pro Zelle und Render.
+const dayServiceBallStyleCache = new Map<string, { ball: Record<string, string>, icon: Record<string, string> }>()
+function dayServiceBallStyle(hexColor: string | null | undefined) {
+    const color = (hexColor && /^#?[0-9a-f]{6}$/i.test(hexColor)) ? hexColor.replace(/^#?/, '#') : '#71717a'
+    const cached = dayServiceBallStyleCache.get(color)
+    if (cached) return cached
+
+    const r = parseInt(color.slice(1, 3), 16)
+    const g = parseInt(color.slice(3, 5), 16)
+    const b = parseInt(color.slice(5, 7), 16)
+    const brightness = 0.299 * r + 0.587 * g + 0.114 * b
+    const luminance = [r, g, b]
+        .map((v) => { const c = v / 255; return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4) })
+        .reduce((sum, c, i) => sum + c * [0.2126, 0.7152, 0.0722][i], 0)
+    const dark = luminance < 0.179
+
+    const style = {
+        ball: {
+            backgroundColor: color,
+            ...(brightness >= 200 ? { boxShadow: 'inset 0 0 0 1px rgba(0, 0, 0, 0.35)' } : {}),
+        },
+        icon: { color: dark ? '#ffffff' : '#111111' },
+    }
+    dayServiceBallStyleCache.set(color, style)
+    return style
 }
 
 function getDayServicesForCell(worker: any, day: any) {
@@ -3242,28 +3346,39 @@ function openAddShiftForRoomAndDay(day: any, roomId: number) {
     showAddShiftModal.value = true
 }
 
-function closeAddShiftModal(success = false, shift = null) {
-    if (success && shift) {
-        for (const room of newShiftPlanData.value) {
-            if (room.shiftsById && room.shiftsById[shift.id]) {
-                room.shiftsById[shift.id] = shift;
-            }
-            if (room.eventsById) {
-                for (const eventId of Object.keys(room.eventsById)) {
-                    const event = room.eventsById[eventId];
-                    if (Array.isArray(event.shifts)) {
-                        const idx = event.shifts.findIndex((s) => s.id === shift.id);
-                        if (idx !== -1) event.shifts[idx] = shift;
-                    }
-                }
-            }
-        }
-    }
+/**
+ * @param success Speichern erfolgreich
+ * @param savedShift Antwort des Speicherns ({ shift, roomId, lookups } wie der Broadcast) — sofort
+ *                   anwenden, damit die Ansicht nicht allein vom Broadcast abhängt
+ */
+function closeAddShiftModal(success = false, savedShift: any = null) {
+    if (success) closeAddShiftModalApply(savedShift)
     showAddShiftModal.value = false
     roomForShiftAdd.value = null
     dayForShiftAdd.value = null
     shiftToEdit.value = null
     multiEditCalendarDays.value = []
+}
+
+/** Speicher-Antwort (Anlegen/Bearbeiten/Löschen) sofort ins Raster übernehmen */
+function closeAddShiftModalApply(savedShift: any) {
+    if (!savedShift?.shift && !savedShift?.shifts) return
+    shiftCalendarListener?.applyShiftUpdate(savedShift)
+    reloadIfShiftRoomNotLoaded(savedShift)
+}
+
+/**
+ * Neu angelegte/verschobene Schicht in einem Raum, der hier nicht geladen ist (z.B. „leere Räume
+ * ausblenden"): der Listener kann sie nirgends einfügen — Plan nachladen statt sie still zu verwerfen.
+ */
+async function reloadIfShiftRoomNotLoaded(savedShift: any) {
+    if (savedShift?.removed) return
+    const shifts = Array.isArray(savedShift?.shifts) ? savedShift.shifts : [savedShift?.shift]
+    const loadedRoomIds = new Set((shiftPlanArrayRef.value || []).map((room: any) => room.roomId ?? room.id))
+    const missesRoom = shifts.some((shift: any) => shift?.roomId != null && !loadedRoomIds.has(shift.roomId))
+    if (!missesRoom) return
+    await initializeShiftPlan()
+    startShiftCalendarListener()
 }
 
 function checkIfRoomAndDayIsInMultiEditCalendar(day: string, roomId: number) {
@@ -3519,6 +3634,92 @@ const gridRows = computed<GridRow[]>(() => {
 
     return rows
 })
+
+// Scrollposition des Personenbereichs pro Person merken. Reload, Datumsnavigation und
+// Filterwechsel remounten die Seite (preserveState:false) — Inertias preserveScroll greift
+// nur für window/scroll-region, nicht für den Grid-Viewport (Virtual2DGrid).
+const userOverviewScrollKey = computed(() => `shiftPlan.userOverview.scroll.${authUser.value?.id ?? 'anon'}`)
+const userOverviewRangeKey = computed(() => `${props.dateValue?.[0]}|${props.dateValue?.[1]}`)
+let userOverviewScrollSaveTimer: ReturnType<typeof setTimeout> | null = null
+let userOverviewScrollRestoreTimer: ReturnType<typeof setTimeout> | null = null
+let userOverviewScrollRestored = false
+
+function readUserOverviewScroll(): { top: number, left: number, range: string } | null {
+    try {
+        const saved = JSON.parse(localStorage.getItem(userOverviewScrollKey.value) ?? 'null')
+        return saved && typeof saved.top === 'number' ? saved : null
+    } catch {
+        return null
+    }
+}
+
+function saveUserOverviewScroll() {
+    const el = userOverviewEl.value
+    // Vor der Wiederherstellung nichts schreiben — sonst überschreibt der frische
+    // Mount (scrollTop 0) den gemerkten Stand
+    if (!el || !userOverviewScrollRestored) return
+    try {
+        localStorage.setItem(userOverviewScrollKey.value, JSON.stringify({
+            top: el.scrollTop,
+            left: el.scrollLeft,
+            range: userOverviewRangeKey.value,
+        }))
+    } catch {
+        // Storage gesperrt/voll — Position wird dann nicht gemerkt
+    }
+}
+
+function onUserOverviewScrollForSave() {
+    if (userOverviewScrollSaveTimer) clearTimeout(userOverviewScrollSaveTimer)
+    userOverviewScrollSaveTimer = setTimeout(saveUserOverviewScroll, 150)
+}
+
+// Zeilenhöhen (expand_days) und Spacer wachsen nach dem ersten Render noch — deshalb
+// wenige Versuche, bis die gewünschte Position erreichbar ist
+function restoreUserOverviewScroll(attempt = 0) {
+    const el = userOverviewEl.value
+    if (!el) return
+    const saved = readUserOverviewScroll()
+    if (saved) {
+        el.scrollTop = saved.top
+        // Horizontal nur im selben Zeitraum — sonst läge der Offset auf anderen Tagen
+        if (saved.range === userOverviewRangeKey.value) {
+            el.scrollLeft = saved.left
+        }
+        const reachable = el.scrollHeight - el.clientHeight >= saved.top
+        if (!reachable && attempt < 5) {
+            userOverviewScrollRestoreTimer = setTimeout(() => restoreUserOverviewScroll(attempt + 1), 200)
+            return
+        }
+    }
+    userOverviewScrollRestored = true
+}
+
+watch(
+    () => userOverviewEl.value,
+    (el, oldEl) => {
+        oldEl?.removeEventListener('scroll', onUserOverviewScrollForSave)
+        el?.addEventListener('scroll', onUserOverviewScrollForSave, { passive: true })
+    },
+    { immediate: true },
+)
+
+// Erst wiederherstellen, wenn Personen geladen sind und das Grid Zeilen hat —
+// vorher ist der Spacer zu klein und scrollTop würde auf 0 geklemmt
+watch(
+    () => !!userOverviewEl.value && workersLoadedOnce.value && gridRows.value.length > 0,
+    async (ready) => {
+        if (!ready || userOverviewScrollRestored) return
+        await nextTick()
+        restoreUserOverviewScroll()
+    },
+    { immediate: true },
+)
+
+function onPageHideSaveScroll() {
+    saveUserOverviewScroll()
+}
+window.addEventListener('pagehide', onPageHideSaveScroll)
 
 const gridCols = computed(() => days.value) // dein day-array (inkl. extraRow) bleibt “Columns”
 
@@ -4065,9 +4266,10 @@ function openHistoryModal(config: HistoryModalConfig = {}) {
 }
 
 // Shortcut aus dem Tagesmodal: Schichtverlauf mit Person + Tag vorausgewählt öffnen.
-function openHistoryForWorkerDay(payload: { search: string; date: string }) {
+function openHistoryForWorkerDay(payload: { search: string; person?: HistoryModalConfig['person']; date: string }) {
     openHistoryModal({
         search: payload.search,
+        person: payload.person ?? null,
         startDate: payload.date,
         endDate: payload.date,
         autoLoad: true,
@@ -4344,6 +4546,8 @@ function addUserToMultiEdit(item: any) {
  * Assignment-ID der Gruppe (Referenz für das Gruppen-Delete beim Abhaken).
  */
 const fullPeriodAssignedProjects = ref<Map<number, string>>(new Map())
+// Globaler Schalter „Projektzuordnungen“ (Schichteinstellungen)
+const projectAssignmentsEnabled = computed<boolean>(() => (page.props as any).project_assignments_enabled !== false)
 const savingFullPeriodProjectIds = ref<Set<number>>(new Set())
 let fullPeriodAssignmentRequestSequence = 0
 
@@ -4353,7 +4557,7 @@ async function refreshFullPeriodAssignedProjects() {
     const item = userForMultiEdit.value
 
     try {
-        if (item) {
+        if (item && projectAssignmentsEnabled.value) {
             const { data } = await axios.get(route('project-day-assignments.full-period.index'), {
                 params: { worker_type: item.type, worker_id: item.id },
             })
@@ -4537,16 +4741,26 @@ function resetMultiEditMode(closeMultiEdit = true) {
 }
 
 function changeCraftVisibility(id: number) {
-    if (closedCrafts.value.includes(id)) {
-        closedCrafts.value.splice(closedCrafts.value.indexOf(id), 1)
-    } else {
-        closedCrafts.value.push(id)
-    }
+    const current = openedCrafts.value
+    const opened = current.includes(id) ? current.filter((c) => c !== id) : [...current, id]
+
+    // Vollständige Liste über ALLE Gewerke schicken — craftsToDisplay ist durch den
+    // Gewerkefilter beschnitten und würde den Offen-Status ausgefilterter Gewerke verwerfen
+    const openedIds = craftsResolved.value
+        .map((c: any) => c.id)
+        .filter((craftId: number) => opened.includes(craftId))
+
+    openedCraftsOverride.value = openedIds
 
     router.patch(
         route('user.update.open.crafts', {user: authUser.value.id}),
-        {opened_crafts: craftsToDisplay.value.filter(c => !closedCrafts.value.includes(c.id)).map(c => c.id)},
-        {preserveState: true, preserveScroll: true},
+        {opened_crafts: openedIds},
+        {
+            preserveState: true,
+            preserveScroll: true,
+            // Danach gilt wieder der Serverstand (bei Erfolg identisch, bei Fehler der alte)
+            onFinish: () => { openedCraftsOverride.value = null },
+        },
     )
 }
 

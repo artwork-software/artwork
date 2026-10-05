@@ -169,7 +169,14 @@ final class CompensationDayOffRepositoryTest extends TestCase
 
         // Leerer Filter-Treffer: Nullen statt null
         $none = $this->repository->getDashboardStats(['user_id' => $user->id + $other->id + 1000]);
-        $this->assertSame(['open' => 0, 'granted' => 0, 'overdue' => 0, 'open_value' => 0.0, 'granted_value' => 0.0, 'overdue_value' => 0.0], $none);
+        $this->assertSame([
+            'open' => 0,
+            'granted' => 0,
+            'overdue' => 0,
+            'open_value' => 0.0,
+            'granted_value' => 0.0,
+            'overdue_value' => 0.0,
+        ], $none);
     }
 
     private function entry(User $user, Carbon $deadline, float $value, bool $granted = false): CompensationDayOff

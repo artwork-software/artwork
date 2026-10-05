@@ -43,7 +43,7 @@
                                     </div>
                                 </div>
                             </div>
-                            <p class="mt-2 mr-14 subpixel-antialiased text-sm/5 font-semibold text-text font-semibold" v-html="comment.text"></p>
+                            <p class="mt-2 mr-14 subpixel-antialiased text-sm/5 font-semibold text-text whitespace-pre-line">{{ comment.text }}</p>
                         </div>
                         <div class="invisible group-hover:visible">
                             <button v-if="$role('artwork admin') || $can('write projects') || projectWriteIds?.includes(this.$page.props.auth.user.id) || projectManagerIds?.includes(this.$page.props.auth.user.id) || isMemberOfADepartment || comment.user?.id === this.$page.props.auth.user.id" type="button"

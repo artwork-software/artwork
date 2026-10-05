@@ -147,13 +147,21 @@ final class DemoInventoryPools
                 ['name' => 'Robe Pointe', 'quantity' => 12, 'manufacturer' => 'Robe', 'detailed' => true,
                     'props' => ['Leistung (W)' => '470', 'Stromanschluss' => 'powerCON', 'Gewicht (kg)' => '15']],
                 ['name' => 'Robe Esprite', 'quantity' => 6, 'manufacturer' => 'Robe', 'detailed' => true,
-                    'props' => ['Leistung (W)' => '650', 'Stromanschluss' => 'powerCON TRUE1', 'Gewicht (kg)' => '28.4']],
+                    'props' => [
+                        'Leistung (W)' => '650',
+                        'Stromanschluss' => 'powerCON TRUE1',
+                        'Gewicht (kg)' => '28.4',
+                    ]],
                 ['name' => 'Martin MAC Aura XB', 'quantity' => 8, 'manufacturer' => 'Martin',
                     'props' => ['Leistung (W)' => '260', 'Stromanschluss' => 'powerCON', 'Gewicht (kg)' => '5.8']],
                 ['name' => 'GLP impression X4', 'quantity' => 10, 'manufacturer' => 'GLP',
                     'props' => ['Leistung (W)' => '450', 'Stromanschluss' => 'powerCON', 'Gewicht (kg)' => '8.9']],
                 ['name' => 'Ayrton Diablo S', 'quantity' => 4, 'manufacturer' => 'Ayrton',
-                    'props' => ['Leistung (W)' => '300', 'Stromanschluss' => 'powerCON TRUE1', 'Gewicht (kg)' => '21.8']],
+                    'props' => [
+                        'Leistung (W)' => '300',
+                        'Stromanschluss' => 'powerCON TRUE1',
+                        'Gewicht (kg)' => '21.8',
+                    ]],
             ],
             'Konventionell' => [
                 ['name' => 'Stufenlinse 2kW', 'quantity' => 24, 'manufacturer' => 'ARRI',
@@ -162,7 +170,12 @@ final class DemoInventoryPools
                     'props' => ['Leistung (W)' => '1000', 'Stromanschluss' => 'Schuko', 'Gewicht (kg)' => '5.2']],
                 ['name' => 'Profiler ETC Source Four 750W', 'quantity' => 18, 'manufacturer' => 'ETC',
                     'props' => ['Leistung (W)' => '750', 'Stromanschluss' => 'Schuko', 'Gewicht (kg)' => '6.9']],
-                ['name' => 'PAR 64 CP62', 'quantity' => 30, 'manufacturer' => 'Thomann', 'image' => 'scheinwerfer-par64.jpg',
+                [
+                    'name' => 'PAR 64 CP62',
+                    'quantity' => 30,
+                    'manufacturer' => 'Thomann',
+                    'image' => 'scheinwerfer-par64.jpg',
+
                     'props' => ['Leistung (W)' => '1000', 'Stromanschluss' => 'Schuko', 'Gewicht (kg)' => '3.4']],
                 ['name' => 'Blinder 2-lite', 'quantity' => 8, 'manufacturer' => 'Showtec',
                     'props' => ['Leistung (W)' => '1300', 'Stromanschluss' => 'Schuko', 'Gewicht (kg)' => '4.1']],
@@ -181,7 +194,11 @@ final class DemoInventoryPools
                 ['name' => 'grandMA3 light', 'quantity' => 2, 'manufacturer' => 'MA Lighting', 'detailed' => true,
                     'props' => ['Leistung (W)' => '450', 'Stromanschluss' => 'powerCON TRUE1', 'Gewicht (kg)' => '36']],
                 ['name' => 'grandMA3 command wing', 'quantity' => 1, 'manufacturer' => 'MA Lighting',
-                    'props' => ['Leistung (W)' => '150', 'Stromanschluss' => 'powerCON TRUE1', 'Gewicht (kg)' => '8.5']],
+                    'props' => [
+                        'Leistung (W)' => '150',
+                        'Stromanschluss' => 'powerCON TRUE1',
+                        'Gewicht (kg)' => '8.5',
+                    ]],
                 ['name' => 'Dimmer 12x 2,3kW', 'quantity' => 4, 'manufacturer' => 'ETC',
                     'props' => ['Stromanschluss' => 'CEE32', 'Gewicht (kg)' => '18']],
                 ['name' => 'Art-Net-Node 8-Port', 'quantity' => 6, 'manufacturer' => 'ELC',
@@ -192,7 +209,12 @@ final class DemoInventoryPools
             'Mikrofonie' => [
                 ['name' => 'Shure SM58', 'quantity' => 16, 'manufacturer' => 'Shure',
                     'props' => ['Gewicht (kg)' => '0.3']],
-                ['name' => 'Sennheiser EW 500 G4 Funkstrecke', 'quantity' => 12, 'manufacturer' => 'Sennheiser', 'detailed' => true,
+                [
+                    'name' => 'Sennheiser EW 500 G4 Funkstrecke',
+                    'quantity' => 12,
+                    'manufacturer' => 'Sennheiser',
+                    'detailed' => true,
+
                     'props' => ['Gewicht (kg)' => '0.9']],
                 ['name' => 'DPA 4066 Headset', 'quantity' => 10, 'manufacturer' => 'DPA',
                     'props' => ['Gewicht (kg)' => '0.1']],
@@ -208,9 +230,19 @@ final class DemoInventoryPools
                     'props' => ['Gewicht (kg)' => '42']],
                 ['name' => 'Monitor d&b M4', 'quantity' => 6, 'manufacturer' => 'd&b audiotechnik',
                     'props' => ['Gewicht (kg)' => '19']],
-                ['name' => 'd&b V8 Line-Array-Modul', 'quantity' => 12, 'manufacturer' => 'd&b audiotechnik', 'detailed' => true,
+                [
+                    'name' => 'd&b V8 Line-Array-Modul',
+                    'quantity' => 12,
+                    'manufacturer' => 'd&b audiotechnik',
+                    'detailed' => true,
+
                     'props' => ['Gewicht (kg)' => '34']],
-                ['name' => 'Endstufe d&b D80', 'quantity' => 4, 'manufacturer' => 'd&b audiotechnik', 'detailed' => true,
+                [
+                    'name' => 'Endstufe d&b D80',
+                    'quantity' => 4,
+                    'manufacturer' => 'd&b audiotechnik',
+                    'detailed' => true,
+
                     'props' => ['Gewicht (kg)' => '13']],
             ],
             'Pulte & Zuspiel' => [
@@ -226,7 +258,12 @@ final class DemoInventoryPools
         ],
         'Video' => [
             'Projektion' => [
-                ['name' => 'Beamer Panasonic PT-RZ12K', 'quantity' => 2, 'manufacturer' => 'Panasonic', 'detailed' => true,
+                [
+                    'name' => 'Beamer Panasonic PT-RZ12K',
+                    'quantity' => 2,
+                    'manufacturer' => 'Panasonic',
+                    'detailed' => true,
+
                     'props' => ['Leistung (W)' => '1200', 'Gewicht (kg)' => '43']],
                 ['name' => 'Beamer Epson EB-L1075U', 'quantity' => 3, 'manufacturer' => 'Epson',
                     'props' => ['Leistung (W)' => '536', 'Gewicht (kg)' => '13']],
@@ -266,7 +303,12 @@ final class DemoInventoryPools
                     'props' => ['Material' => 'Metall', 'Gewicht (kg)' => '93', 'Traglast (kg)' => '125']],
             ],
             'Böden & Podeste' => [
-                ['name' => 'Podest 2x1m höhenverstellbar', 'quantity' => 16, 'manufacturer' => 'Bütec', 'image' => 'buehnenpodest-schwarz.jpg',
+                [
+                    'name' => 'Podest 2x1m höhenverstellbar',
+                    'quantity' => 16,
+                    'manufacturer' => 'Bütec',
+                    'image' => 'buehnenpodest-schwarz.jpg',
+
                     'props' => ['Material' => 'Holz', 'Gewicht (kg)' => '42', 'Traglast (kg)' => '750']],
                 ['name' => 'Tanzboden schwarz (Rolle 20m)', 'quantity' => 10, 'manufacturer' => 'Harlequin',
                     'props' => ['Material' => 'Kunststoff', 'Gewicht (kg)' => '25']],
@@ -286,13 +328,28 @@ final class DemoInventoryPools
             'Requisiten' => [
                 ['name' => 'Stuhl Thonet (Bühnenfundus)', 'quantity' => 24, 'manufacturer' => null,
                     'props' => ['Material' => 'Holz', 'Farbe' => 'Nussbraun']],
-                ['name' => 'Lederkoffer historisch', 'quantity' => 8, 'manufacturer' => null, 'image' => 'lederkoffer-historisch.jpg',
+                [
+                    'name' => 'Lederkoffer historisch',
+                    'quantity' => 8,
+                    'manufacturer' => null,
+                    'image' => 'lederkoffer-historisch.jpg',
+
                     'props' => ['Material' => 'Leder', 'Farbe' => 'Cognac']],
                 ['name' => 'Samtsessel rot', 'quantity' => 4, 'manufacturer' => null, 'image' => 'samtsessel-rot.jpg',
                     'props' => ['Material' => 'Stoff', 'Farbe' => 'Weinrot']],
-                ['name' => 'Stehlampe Messing', 'quantity' => 6, 'manufacturer' => null, 'image' => 'stehlampe-messing.jpg',
+                [
+                    'name' => 'Stehlampe Messing',
+                    'quantity' => 6,
+                    'manufacturer' => null,
+                    'image' => 'stehlampe-messing.jpg',
+
                     'props' => ['Material' => 'Metall', 'Farbe' => 'Messing']],
-                ['name' => 'Wandspiegel Barock', 'quantity' => 3, 'manufacturer' => null, 'image' => 'wandspiegel-barock.jpg',
+                [
+                    'name' => 'Wandspiegel Barock',
+                    'quantity' => 3,
+                    'manufacturer' => null,
+                    'image' => 'wandspiegel-barock.jpg',
+
                     'props' => ['Material' => 'Glas', 'Farbe' => 'Gold']],
                 ['name' => 'Schreibtisch Gründerzeit', 'quantity' => 2, 'manufacturer' => null,
                     'props' => ['Material' => 'Holz', 'Farbe' => 'Eiche dunkel']],
@@ -304,7 +361,12 @@ final class DemoInventoryPools
                     'props' => ['Material' => 'Holz', 'Farbe' => 'Kirschbaum']],
             ],
             'Kostümfundus' => [
-                ['name' => 'Herrenfrack grün', 'quantity' => 5, 'manufacturer' => null, 'image' => 'herrenfrack-gruen.jpg',
+                [
+                    'name' => 'Herrenfrack grün',
+                    'quantity' => 5,
+                    'manufacturer' => null,
+                    'image' => 'herrenfrack-gruen.jpg',
+
                     'props' => ['Material' => 'Stoff', 'Farbe' => 'Flaschengrün', 'Größe' => 'L']],
                 ['name' => 'Abendkleid (div. Größen)', 'quantity' => 15, 'manufacturer' => null,
                     'props' => ['Material' => 'Stoff', 'Farbe' => 'Diverse', 'Größe' => 'Universal']],
@@ -328,7 +390,12 @@ final class DemoInventoryPools
                     'props' => ['Länge (m)' => '25', 'Farbe' => 'Weiß']],
             ],
             'Kabel & Strom' => [
-                ['name' => 'Schuko-Kabeltrommel 25m', 'quantity' => 18, 'manufacturer' => 'Brennenstuhl', 'image' => 'schuko-kabel-25m.jpg',
+                [
+                    'name' => 'Schuko-Kabeltrommel 25m',
+                    'quantity' => 18,
+                    'manufacturer' => 'Brennenstuhl',
+                    'image' => 'schuko-kabel-25m.jpg',
+
                     'props' => ['Länge (m)' => '25', 'Stromanschluss' => 'Schuko']],
                 ['name' => 'Schuko-Verlängerung 10m', 'quantity' => 30, 'manufacturer' => 'Brennenstuhl',
                     'props' => ['Länge (m)' => '10', 'Stromanschluss' => 'Schuko']],

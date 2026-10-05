@@ -14,7 +14,7 @@ class AddShiftTimePresetRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name' => 'string|required',
+            'name' => 'string|max:255|required',
             'break_time' => 'integer|required',
             'start_time' => 'required',
             'end_time' => 'required',

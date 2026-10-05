@@ -4,27 +4,32 @@
             :class="columnIndex === 0
                 ? 'whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-text sm:pl-0'
                 : 'whitespace-nowrap px-3 py-4 text-sm text-text-subtle'">
-            <div v-if="column.key === 'name' && artist_residency.do_not_save_artist" class="flex items-center gap-1">
-                <template v-if="isEditingName">
-                    <input
-                        ref="nameInputRef"
-                        v-model="editableName"
-                        type="text"
-                        class="rounded border-border text-sm px-2 py-1 focus:border-accent-700 focus:ring-accent-700 w-40"
-                        @blur="saveName"
-                        @keyup.enter="$event.target.blur()"
-                    />
-                </template>
-                <template v-else>
-                    <span>{{ columnValue(column.key) }}</span>
-                    <component
-                        :is="IconEdit"
-                        class="h-3.5 w-3.5 text-text-subtle hover:text-text-muted cursor-pointer shrink-0"
-                        @click="startEditingName"
-                    />
-                </template>
-            </div>
-            <span v-else>{{ columnValue(column.key) }}</span>
+            <BaseInput
+                v-if="editingKey === column.key"
+                :ref="setEditInputRef"
+                v-model="editableValue"
+                :id="`artist-residency-${artist_residency.id}-${column.key}`"
+                :label="columnLabel(column.key)"
+                :show-label="false"
+                is-small
+                class="w-44"
+                @focusout="saveEdit"
+                @keydown.enter.prevent="$event.target.blur()"
+                @keydown.esc.prevent="cancelEdit"
+            />
+            <button
+                v-else
+                type="button"
+                class="group inline-flex items-center gap-1 rounded px-1 -mx-1 text-left hover:bg-surface-sunken focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-700"
+                :title="$t('Rename')"
+                @click="startEditing(column.key)"
+            >
+                <span>{{ columnValue(column.key) || '–' }}</span>
+                <component
+                    :is="IconEdit"
+                    class="h-3.5 w-3.5 shrink-0 text-text-subtle opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100"
+                />
+            </button>
         </td>
         <td class="whitespace-nowrap px-3 py-4 text-sm text-text-subtle">{{ artist_residency?.position || artist_residency?.artist?.position || '' }}</td>
         <td class="whitespace-nowrap px-3 py-4 text-sm text-text-subtle">{{ artist_residency?.phone_number || artist_residency?.artist?.phone_number || '' }}</td>
@@ -66,6 +71,7 @@ import {nextTick, ref} from "vue";
 import axios from "axios";
 import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
 import BaseMenuItem from "@/Components/Menu/BaseMenuItem.vue";
+import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 import {IconCopy, IconEdit, IconTrash} from "@tabler/icons-vue";
 
 const props = defineProps({
@@ -98,32 +104,62 @@ const columnValue = (key) => {
 
 const showAddEditArtistResidenciesModal = ref(false);
 
-const isEditingName = ref(false);
-const editableName = ref('');
-const nameInputRef = ref(null);
+const columnLabel = (key) => ({
+    name: 'Artist name',
+    first_name: 'First name',
+    last_name: 'Last name',
+}[key] ?? key);
 
-const startEditingName = () => {
-    editableName.value = props.artist_residency.resolved_name ?? props.artist_residency.display_name ?? '';
-    isEditingName.value = true;
+/**
+ * Inline-Umbenennung direkt in der Tabelle (Ticket „Anpassungen HAU" Punkt 13):
+ * Klick auf den Namen öffnet ein Eingabefeld, Enter/Blur speichert, Escape verwirft.
+ * Gilt für jede konfigurierte Namensspalte und jeden Aufenthalt – der Wert landet
+ * ausschließlich in den lokalen Spalten des Aufenthalts, nie am CRM-Kontakt.
+ */
+const editingKey = ref(null);
+const editableValue = ref('');
+const editInputRef = ref(null);
+const setEditInputRef = (el) => {
+    if (el) {
+        editInputRef.value = el;
+    }
+};
+
+const startEditing = (key) => {
+    editingKey.value = key;
+    editableValue.value = columnValue(key);
     nextTick(() => {
-        nameInputRef.value?.focus();
+        editInputRef.value?.focus?.();
+        editInputRef.value?.select?.();
     });
 };
 
-const saveName = async () => {
-    isEditingName.value = false;
-    const trimmed = editableName.value.trim();
-    if (!trimmed || trimmed === (props.artist_residency.resolved_name ?? props.artist_residency.display_name ?? '')) {
+const cancelEdit = () => {
+    editingKey.value = null;
+};
+
+const saveEdit = async () => {
+    const key = editingKey.value;
+    if (!key) {
         return;
     }
+    editingKey.value = null;
+
+    const trimmed = editableValue.value.trim();
+    if (trimmed === columnValue(key) || (key === 'name' && !trimmed)) {
+        return;
+    }
+
     try {
         await axios.patch(
             route('artist-residencies.update-name', { artistResidency: props.artist_residency.id }),
-            { name: trimmed }
+            { field: key, value: trimmed }
         );
-        props.artist_residency.name = trimmed;
-        props.artist_residency.display_name = trimmed;
-        props.artist_residency.resolved_name = trimmed;
+        props.artist_residency[key] = trimmed;
+        props.artist_residency[`resolved_${key}`] = trimmed;
+        if (key === 'name') {
+            props.artist_residency.display_name = trimmed;
+        }
     } catch (e) {
         console.error(e);
     }

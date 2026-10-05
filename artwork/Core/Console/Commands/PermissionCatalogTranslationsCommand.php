@@ -12,7 +12,8 @@ use Illuminate\Console\Command;
  */
 class PermissionCatalogTranslationsCommand extends Command
 {
-    protected $signature = 'artwork:permissions:check-translations {--merge : Katalog-Übersetzungen in lang/*.json eintragen}';
+    protected $signature = 'artwork:permissions:check-translations {--merge : Katalog-Übersetzungen in '
+        . 'lang/*.json eintragen}';
     protected $description = 'Prüft (und ergänzt) die Übersetzungen des Rechte-Katalogs';
 
     public function handle(PermissionCatalog $catalog): int

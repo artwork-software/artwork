@@ -73,8 +73,16 @@ final class OvertimeServiceContractHistoryTest extends TestCase
         $user = User::factory()->create();
         $template = $this->template();
         // Zeitraum A: aktiv, Frist 30 Tage, bis 31.08. – Lücke im September – Zeitraum B ab 01.10., Frist 60 Tage
-        $this->assign($user, $template, ['valid_from' => null, 'valid_until' => '2026-08-31', 'overtime_compensation_period' => 30]);
-        $this->assign($user, $template, ['valid_from' => '2026-10-01', 'valid_until' => null, 'overtime_compensation_period' => 60]);
+        $this->assign($user, $template, [
+            'valid_from' => null,
+            'valid_until' => '2026-08-31',
+            'overtime_compensation_period' => 30,
+        ]);
+        $this->assign($user, $template, [
+            'valid_from' => '2026-10-01',
+            'valid_until' => null,
+            'overtime_compensation_period' => 60,
+        ]);
 
         $this->booking($user, '2026-08-10', 120);
         $this->booking($user, '2026-08-20', 60);
@@ -86,7 +94,10 @@ final class OvertimeServiceContractHistoryTest extends TestCase
         $this->service->recomputeForUser($user->fresh());
 
         $entries = UserOvertime::where('user_id', $user->id)->orderBy('date')->get();
-        $this->assertSame(['2026-08-10', '2026-08-20'], $entries->map(fn (UserOvertime $e) => $e->date->toDateString())->all());
+        $this->assertSame([
+            '2026-08-10',
+            '2026-08-20',
+        ], $entries->map(fn (UserOvertime $e) => $e->date->toDateString())->all());
         $this->assertSame('2026-09-09', $entries[0]->deadline->toDateString());
         $this->assertSame('2026-09-19', $entries[1]->deadline->toDateString());
         $this->assertSame(120, $entries[0]->minutes);
@@ -99,8 +110,16 @@ final class OvertimeServiceContractHistoryTest extends TestCase
     {
         $user = User::factory()->create();
         $template = $this->template();
-        $this->assign($user, $template, ['valid_from' => null, 'valid_until' => '2026-06-30', 'overtime_compensation_period' => 10]);
-        $this->assign($user, $template, ['valid_from' => '2026-07-01', 'valid_until' => null, 'overtime_compensation_period' => 90]);
+        $this->assign($user, $template, [
+            'valid_from' => null,
+            'valid_until' => '2026-06-30',
+            'overtime_compensation_period' => 10,
+        ]);
+        $this->assign($user, $template, [
+            'valid_from' => '2026-07-01',
+            'valid_until' => null,
+            'overtime_compensation_period' => 90,
+        ]);
 
         $this->booking($user, '2026-06-15', 30);
         $this->booking($user, '2026-07-15', 30);
@@ -121,8 +140,16 @@ final class OvertimeServiceContractHistoryTest extends TestCase
     {
         $user = User::factory()->create();
         $template = $this->template();
-        $this->assign($user, $template, ['valid_from' => null, 'valid_until' => '2026-05-31', 'overtime_rule_active' => false]);
-        $this->assign($user, $template, ['valid_from' => '2026-06-01', 'valid_until' => null, 'overtime_rule_active' => true]);
+        $this->assign($user, $template, [
+            'valid_from' => null,
+            'valid_until' => '2026-05-31',
+            'overtime_rule_active' => false,
+        ]);
+        $this->assign($user, $template, [
+            'valid_from' => '2026-06-01',
+            'valid_until' => null,
+            'overtime_rule_active' => true,
+        ]);
 
         $this->booking($user, '2026-05-20', 45);
         $this->booking($user, '2026-06-20', 45);
@@ -131,7 +158,10 @@ final class OvertimeServiceContractHistoryTest extends TestCase
 
         $this->assertSame(
             ['2026-06-20'],
-            UserOvertime::where('user_id', $user->id)->orderBy('date')->get()->map(fn (UserOvertime $e) => $e->date->toDateString())->all()
+            UserOvertime::where(
+                'user_id',
+                $user->id
+            )->orderBy('date')->get()->map(fn (UserOvertime $e) => $e->date->toDateString())->all()
         );
     }
 
@@ -141,7 +171,11 @@ final class OvertimeServiceContractHistoryTest extends TestCase
         $user = User::factory()->create();
         // Frist nur auf der Vorlage (Zuweisung: overtime_compensation_period null = nicht gesetzt)
         $template = $this->template(['overtime_compensation_period' => 45]);
-        $this->assign($user, $template, ['valid_from' => null, 'valid_until' => null, 'overtime_compensation_period' => null]);
+        $this->assign($user, $template, [
+            'valid_from' => null,
+            'valid_until' => null,
+            'overtime_compensation_period' => null,
+        ]);
 
         $this->booking($user, '2026-09-01', 30);
 
@@ -168,8 +202,16 @@ final class OvertimeServiceContractHistoryTest extends TestCase
         $user = User::factory()->create();
         $template = $this->template();
         // Bis 31.05. Regel inaktiv, ab 01.06. aktiv
-        $this->assign($user, $template, ['valid_from' => null, 'valid_until' => '2026-05-31', 'overtime_rule_active' => false]);
-        $this->assign($user, $template, ['valid_from' => '2026-06-01', 'valid_until' => null, 'overtime_rule_active' => true]);
+        $this->assign($user, $template, [
+            'valid_from' => null,
+            'valid_until' => '2026-05-31',
+            'overtime_rule_active' => false,
+        ]);
+        $this->assign($user, $template, [
+            'valid_from' => '2026-06-01',
+            'valid_until' => null,
+            'overtime_rule_active' => true,
+        ]);
 
         // Alte Einträge ohne (positive) Buchung: im inaktiven Zeitraum bleibt er, im aktiven ist er veraltet
         $keptEntry = UserOvertime::create([
@@ -195,7 +237,10 @@ final class OvertimeServiceContractHistoryTest extends TestCase
         $this->assertNotNull($keptEntry->fresh());
         $this->assertSame(
             ['2026-05-20', '2026-06-20'],
-            UserOvertime::where('user_id', $user->id)->orderBy('date')->get()->map(fn (UserOvertime $e) => $e->date->toDateString())->all()
+            UserOvertime::where(
+                'user_id',
+                $user->id
+            )->orderBy('date')->get()->map(fn (UserOvertime $e) => $e->date->toDateString())->all()
         );
     }
 }

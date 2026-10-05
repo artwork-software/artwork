@@ -10,6 +10,17 @@
         </div>
         <slot />
         <p v-if="footnote" class="mt-3 text-xs text-text-subtle">{{ $t(footnote) }}</p>
+        <a
+            v-if="manualHref"
+            :href="manualHref"
+            target="_blank"
+            rel="noopener"
+            class="mt-3 inline-flex items-center gap-1 text-xs font-medium text-accent-600 hover:text-accent-700"
+        >
+            <PropertyIcon name="IconBook" class="h-3.5 w-3.5" />
+            {{ $t('More in the manual') }}
+            <PropertyIcon name="IconExternalLink" class="h-3 w-3" />
+        </a>
     </div>
 
     <!-- static: non-collapsible box, for modals and short in-place notes -->
@@ -23,6 +34,17 @@
                 </div>
                 <slot />
                 <p v-if="footnote" class="mt-2 text-xs text-text-subtle">{{ $t(footnote) }}</p>
+                <a
+                    v-if="manualHref"
+                    :href="manualHref"
+                    target="_blank"
+                    rel="noopener"
+                    class="mt-3 inline-flex items-center gap-1 text-xs font-medium text-accent-600 hover:text-accent-700"
+                >
+                    <PropertyIcon name="IconBook" class="h-3.5 w-3.5" />
+                    {{ $t('More in the manual') }}
+                    <PropertyIcon name="IconExternalLink" class="h-3 w-3" />
+                </a>
             </div>
         </div>
     </div>
@@ -75,6 +97,17 @@
             </div>
             <slot />
             <p v-if="footnote" class="mt-3 text-xs text-text-subtle">{{ $t(footnote) }}</p>
+            <a
+                v-if="manualHref"
+                :href="manualHref"
+                target="_blank"
+                rel="noopener"
+                class="mt-3 inline-flex items-center gap-1 text-xs font-medium text-accent-600 hover:text-accent-700"
+            >
+                <PropertyIcon name="IconBook" class="h-3.5 w-3.5" />
+                {{ $t('More in the manual') }}
+                <PropertyIcon name="IconExternalLink" class="h-3 w-3" />
+            </a>
         </div>
     </div>
 </template>
@@ -83,6 +116,8 @@
 import {computed, ref} from 'vue'
 import {Link} from '@inertiajs/vue3'
 import PropertyIcon from '@/Artwork/Icon/PropertyIcon.vue'
+import {useI18n} from 'vue-i18n'
+import {manualUrl, settingsGuideManualPath} from '@/Helper/manualLinks.js'
 
 const props = defineProps({
     /**
@@ -131,6 +166,29 @@ const props = defineProps({
         type: String,
         default: null,
     },
+    /**
+     * Manual page for "More in the manual", e.g. 'shift-plan/settings#gewerke'.
+     * Defaults to the page derived from storageKey; false hides the link.
+     */
+    manualPath: {
+        type: [String, Boolean],
+        default: null,
+    },
+})
+
+const { locale } = useI18n()
+
+const manualHref = computed(() => {
+    if (props.manualPath === false) {
+        return null
+    }
+    // Inline guides sit inside a card below the tab banner, which already
+    // links the page; they only link when a specific page is passed.
+    if (props.variant === 'inline' && !props.manualPath) {
+        return null
+    }
+    const path = props.manualPath || settingsGuideManualPath(props.storageKey)
+    return path ? manualUrl(path, locale.value) : null
 })
 
 const collapsed = ref(

@@ -149,8 +149,14 @@ class InventoryCategoryController extends Controller
             'search_property_id' => $searchPropertyId,
         ]);
 
+        $categories = $this->categoryService->getAllWithRelations($filteredArticleIds);
+        // Raum-/Hersteller-Lookups der Artikel-$appends für die ganze Seite in je einer Query
+        InventoryArticle::preloadPropertyLookupsDeep(
+            [$categories, $articles, $inventoryCategory, $inventorySubCategory]
+        );
+
         return Inertia::render('Inventory/Index', [
-            'categories' => $this->categoryService->getAllWithRelations($filteredArticleIds),
+            'categories' => $categories,
             'hasActiveFilter' => $hasActiveFilter,
             'currentCategory' => $inventoryCategory,
             'currentSubCategory' => $inventorySubCategory,
@@ -160,7 +166,10 @@ class InventoryCategoryController extends Controller
             'properties' => $this->propertyRepository->all(),
             'rooms' => Room::select('id', 'name')->orderBy('name')->get(),
             'manufacturers' => CrmContact::query()
-                    ->whereHas('contactType', fn ($q) => $q->where('slug', CrmSystemContactTypeEnum::MANUFACTURER->value))
+                    ->whereHas(
+                        'contactType',
+                        fn ($q) => $q->where('slug', CrmSystemContactTypeEnum::MANUFACTURER->value)
+                    )
                     ->select('id', 'display_name as name')
                     ->orderBy('display_name')
                     ->get(),
@@ -227,7 +236,10 @@ class InventoryCategoryController extends Controller
             'properties' => $this->propertyRepository->all(),
             'rooms' => Room::all(),
             'manufacturers' => CrmContact::query()
-                    ->whereHas('contactType', fn ($q) => $q->where('slug', CrmSystemContactTypeEnum::MANUFACTURER->value))
+                    ->whereHas(
+                        'contactType',
+                        fn ($q) => $q->where('slug', CrmSystemContactTypeEnum::MANUFACTURER->value)
+                    )
                     ->select('id', 'display_name as name')
                     ->orderBy('display_name')
                     ->get(),
@@ -270,7 +282,7 @@ class InventoryCategoryController extends Controller
         $categories = InventoryCategory::with([
             'subcategories:id,inventory_category_id,name',
             'subcategories.properties:id,name,type,select_values',
-            'articles' => function ($query) use ($filteredArticleIds) {
+            'articles' => function ($query) use ($filteredArticleIds): void {
                 if (!empty($filteredArticleIds)) {
                     $query->whereIn('id', $filteredArticleIds);
                 }
@@ -283,6 +295,8 @@ class InventoryCategoryController extends Controller
         ->select('id', 'name')
         ->orderBy('name')
         ->get();
+
+        InventoryArticle::preloadPropertyLookupsDeep($categories);
 
         return response()->json([
             'categories' => $categories,
@@ -298,8 +312,6 @@ class InventoryCategoryController extends Controller
         auth()->user()->update([
             'inventory_grid_layout' => $validated['inventory_grid_layout']
         ]);
-
-
     }
 
     public function updateInventoryHideImages(\Illuminate\Http\Request $request): void

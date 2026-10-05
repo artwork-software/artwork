@@ -7,6 +7,7 @@ use Artwork\Modules\ExternalUserManagement\Models\ExternalUserSource;
 use Artwork\Modules\ExternalUserManagement\Support\LdapIdentifier;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
+use InvalidArgumentException;
 use LdapRecord\Connection;
 use LdapRecord\Container;
 use LdapRecord\Models\Entry as LdapUser;
@@ -14,6 +15,43 @@ use LdapRecord\Query\Collection as LdapCollection;
 
 class LdapApi implements ExternalUserManagementApi
 {
+    /**
+     * Attribute, die als Identifier in LDAP-Filter (auch whereRaw) dürfen; der Name kommt aus der
+     * Admin-Konfiguration und könnte sonst Filtersyntax enthalten.
+     */
+    public const ALLOWED_IDENTIFIER_ATTRIBUTES = [
+        'objectGUID',
+        'objectSid',
+        'entryUUID',
+        'uid',
+        'sAMAccountName',
+        'mail',
+        'userPrincipalName',
+    ];
+
+    /**
+     * @param array<string, mixed> $config
+     */
+    public static function identifierAttribute(array $config): string
+    {
+        $attribute = $config['identifier_attribute'] ?? 'objectGUID';
+        if (!is_string($attribute) || $attribute === '') {
+            return 'objectGUID';
+        }
+
+        foreach (self::ALLOWED_IDENTIFIER_ATTRIBUTES as $allowed) {
+            if (strcasecmp($allowed, $attribute) === 0) {
+                return $allowed;
+            }
+        }
+
+        throw new InvalidArgumentException(sprintf(
+            'LDAP identifier attribute "%s" is not allowed (allowed: %s).',
+            $attribute,
+            implode(', ', self::ALLOWED_IDENTIFIER_ATTRIBUTES)
+        ));
+    }
+
     /** @var array<string, array<int, string>> */
     private array $groupParentCache = [];
 
@@ -31,7 +69,7 @@ class LdapApi implements ExternalUserManagementApi
             'password' => $config['bind_password'] ?? '',
             'port' => $config['port'] ?? 389,
             'use_ssl' => $config['use_ssl'] ?? false,
-            'use_tls' => $config['use_tls'] ?? false,
+            'use_tls' => $config['use_tls'] ?? true,
             'timeout' => $config['timeout'] ?? 5,
             'options' => [
                 LDAP_OPT_PROTOCOL_VERSION => 3,
@@ -117,7 +155,7 @@ class LdapApi implements ExternalUserManagementApi
         $config = $source->config ?? [];
         $baseDn = $config['base_dn'] ?? '';
         $filter = $this->normalizeFilter($config['user_filter'] ?? null);
-        $identifierAttribute = $config['identifier_attribute'] ?? 'objectGUID';
+        $identifierAttribute = self::identifierAttribute($config);
 
         $query = LdapUser::on($connectionName)
             ->select([
@@ -184,7 +222,7 @@ class LdapApi implements ExternalUserManagementApi
         $config = $source->config ?? [];
         $baseDn = $config['base_dn'] ?? '';
         $filter = $this->normalizeFilter($config['user_filter'] ?? null);
-        $identifierAttribute = $config['identifier_attribute'] ?? 'objectGUID';
+        $identifierAttribute = self::identifierAttribute($config);
 
         $query = LdapUser::on($connectionName)
             ->select(['*', $identifierAttribute, 'mail', 'givenName', 'sn', 'displayName', 'cn'])
@@ -213,13 +251,12 @@ class LdapApi implements ExternalUserManagementApi
         ExternalUserSource $source,
         string $userIdentifier,
         bool $includeNested = true,
-    ): array
-    {
+    ): array {
         $this->groupParentCache = [];
         $connectionName = $this->registerConnection($source);
 
         $config = $source->config ?? [];
-        $identifierAttribute = $config['identifier_attribute'] ?? 'objectGUID';
+        $identifierAttribute = self::identifierAttribute($config);
 
         $query = LdapUser::on($connectionName);
 
@@ -324,7 +361,17 @@ class LdapApi implements ExternalUserManagementApi
      * = gefunden, aber Passwort falsch (der Nutzer gehört zum IdP → kein lokaler
      * Fallback).
      *
-     * @return array{identifier: string|null, email: string|null, first_name: string, last_name: string, groups: array<int, string>, email_verified: bool, meta_data: array<string, mixed>}|null
+     * @return array{
+     *     identifier: string|null,
+     *     email: string|null,
+     *     first_name: string,
+     *     last_name: string,
+     *     groups: array<int,
+     *     string>,
+     *     email_verified: bool,
+     *     meta_data: array<string,
+     *     mixed>,
+     * }|null
      * @throws LdapAuthenticationFailedException
      */
     public function authenticateAndFetch(ExternalUserSource $source, string $username, string $password): ?array
@@ -332,7 +379,7 @@ class LdapApi implements ExternalUserManagementApi
         $connectionName = $this->registerConnection($source);
 
         $config = $source->config ?? [];
-        $identifierAttribute = $config['identifier_attribute'] ?? 'objectGUID';
+        $identifierAttribute = self::identifierAttribute($config);
 
         $user = $this->buildLoginQuery($connectionName, $config, $username)->first();
 
@@ -383,7 +430,7 @@ class LdapApi implements ExternalUserManagementApi
         // Operationale Attribute (z. B. entryUUID bei OpenLDAP) werden von '*'
         // nicht mitgeliefert – das Identifier-Attribut muss wie beim Sync
         // explizit selektiert werden, sonst ist der Login-Treffer identifier-los.
-        $identifierAttribute = $config['identifier_attribute'] ?? 'objectGUID';
+        $identifierAttribute = self::identifierAttribute($config);
 
         $query = LdapUser::on($connectionName)
             ->select(['*', $identifierAttribute, 'mail', 'givenName', 'sn', 'displayName', 'cn'])
@@ -417,7 +464,7 @@ class LdapApi implements ExternalUserManagementApi
             'password' => $password,
             'port' => $config['port'] ?? 389,
             'use_ssl' => $config['use_ssl'] ?? false,
-            'use_tls' => $config['use_tls'] ?? false,
+            'use_tls' => $config['use_tls'] ?? true,
             'timeout' => $config['timeout'] ?? 5,
             'options' => [
                 LDAP_OPT_PROTOCOL_VERSION => 3,

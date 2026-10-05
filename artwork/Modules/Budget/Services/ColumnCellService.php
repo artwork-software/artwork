@@ -7,7 +7,9 @@ use Artwork\Modules\Budget\Models\CellComment;
 use Artwork\Modules\Budget\Models\Column;
 use Artwork\Modules\Budget\Models\ColumnCell;
 use Artwork\Modules\Budget\Models\SageAssignedData;
+use Artwork\Modules\Budget\Models\SubPositionRow;
 use Artwork\Modules\Budget\Repositories\ColumnCellRepository;
+use Illuminate\Database\Eloquent\Builder;
 
 readonly class ColumnCellService
 {
@@ -82,6 +84,60 @@ readonly class ColumnCellService
         $this->columnCellRepository->update($columnCell, ['value' => $value]);
     }
 
+    /**
+     * Legt die Zellen einer neuen Summen-/Differenzspalte fuer alle Zeilen der
+     * Tabelle an und berechnet dabei den Startwert aus den beiden verknuepften
+     * Spalten. Sage-Spalten liefern ihren Wert nicht ueber `value`, sondern
+     * ueber die zugeordneten Buchungen (sage_value) - deshalb laeuft die
+     * Aufloesung hier ueber dieselbe Logik wie die spaetere Neuberechnung.
+     */
+    public function createCellsForAutomaticColumn(Column $column): void
+    {
+        $table = $column->table;
+        $subPositionRows = SubPositionRow::query()
+            ->whereHas(
+                'subPosition.mainPosition',
+                fn (Builder $query) => $query->where('table_id', $table->id)
+            )
+            ->get();
+
+        if ($subPositionRows->isEmpty()) {
+            return;
+        }
+
+        $linkedColumns = Column::query()
+            ->whereIn('id', array_filter([$column->linked_first_column, $column->linked_second_column]))
+            ->get()
+            ->keyBy('id');
+
+        $linkedCells = ColumnCell::query()
+            ->whereIn('column_id', $linkedColumns->keys())
+            ->whereIn('sub_position_row_id', $subPositionRows->pluck('id'))
+            ->with('sageAssignedData')
+            ->get()
+            ->groupBy('sub_position_row_id');
+
+        foreach ($subPositionRows as $subPositionRow) {
+            $rowCells = $linkedCells->get($subPositionRow->id, collect())->keyBy('column_id');
+
+            $firstCell = $rowCells->get($column->linked_first_column);
+            $secondCell = $rowCells->get($column->linked_second_column);
+
+            ColumnCell::create([
+                'column_id' => $column->id,
+                'sub_position_row_id' => $subPositionRow->id,
+                'value' => $this->calculateAutomaticValue(
+                    $column,
+                    $this->resolveLinkedValue($linkedColumns->get($column->linked_first_column), $firstCell),
+                    $this->resolveLinkedValue($linkedColumns->get($column->linked_second_column), $secondCell)
+                ),
+                'verified_value' => null,
+                'linked_money_source_id' => null,
+                'commented' => (bool) ($secondCell?->commented ?? $firstCell?->commented ?? false),
+            ]);
+        }
+    }
+
     public function recalculateAutomaticColumns(int $subPositionRowId): void
     {
         // Zellen + Spalten der Zeile einmal laden statt pro automatischer
@@ -97,27 +153,17 @@ readonly class ColumnCellService
                 continue;
             }
 
-            $firstLinkedColumn = $columns->get($column->linked_first_column);
-            $secondLinkedColumn = $columns->get($column->linked_second_column);
-
-            $firstCell = $cells->get($column->linked_first_column);
-            $secondCell = $cells->get($column->linked_second_column);
-
-            $firstRowValue = $firstLinkedColumn?->type === 'sage'
-                ? $firstCell?->sage_value
-                : $firstCell?->value;
-            $secondRowValue = $secondLinkedColumn?->type === 'sage'
-                ? $secondCell?->sage_value
-                : $secondCell?->value;
-
-            $firstDecimal = str_replace(',', '.', $firstRowValue ?: '0');
-            $secondDecimal = str_replace(',', '.', $secondRowValue ?: '0');
-
-            if ($column->type === 'sum') {
-                $result = bcadd($firstDecimal, $secondDecimal, 2);
-            } else {
-                $result = bcsub($firstDecimal, $secondDecimal, 2);
-            }
+            $result = $this->calculateAutomaticValue(
+                $column,
+                $this->resolveLinkedValue(
+                    $columns->get($column->linked_first_column),
+                    $cells->get($column->linked_first_column)
+                ),
+                $this->resolveLinkedValue(
+                    $columns->get($column->linked_second_column),
+                    $cells->get($column->linked_second_column)
+                )
+            );
 
             // Nur bei tatsaechlicher Aenderung speichern - save() feuert sonst
             // trotzdem den saved-Observer und damit die Cache-Invalidierung.
@@ -125,6 +171,31 @@ readonly class ColumnCellService
                 $cell->update(['value' => $result]);
             }
         }
+    }
+
+    /**
+     * Wert einer verknuepften Zelle: Sage-Spalten tragen ihren Betrag in den
+     * zugeordneten Buchungen (sage_value), alle anderen Spalten in `value`.
+     */
+    private function resolveLinkedValue(?Column $linkedColumn, ?ColumnCell $linkedCell): ?string
+    {
+        if ($linkedCell === null) {
+            return null;
+        }
+
+        return $linkedColumn?->type === 'sage'
+            ? $linkedCell->sage_value
+            : $linkedCell->value;
+    }
+
+    private function calculateAutomaticValue(Column $column, ?string $firstRowValue, ?string $secondRowValue): string
+    {
+        $firstDecimal = str_replace(',', '.', $firstRowValue ?: '0');
+        $secondDecimal = str_replace(',', '.', $secondRowValue ?: '0');
+
+        return $column->type === 'sum'
+            ? bcadd($firstDecimal, $secondDecimal, 2)
+            : bcsub($firstDecimal, $secondDecimal, 2);
     }
 
     public function softDelete(

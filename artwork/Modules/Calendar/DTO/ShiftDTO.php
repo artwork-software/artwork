@@ -54,7 +54,9 @@ class ShiftDTO extends Data
             roomId: $shift->room_id,
             isCommitted: $shift->is_committed,
             inWorkflow: $shift->in_workflow,
-            projectId: $resolvedProject?->id,
+            // Fremdschlüssel als Rückfall: Ist das Projekt nicht auflösbar (z.B. im Papierkorb), darf die
+            // ID nicht verschwinden — das Bearbeiten-Modal würde sonst project_id = null speichern.
+            projectId: $resolvedProject?->id ?? $shift->project_id,
             globalQualifications: self::serializeGlobalQualifications($shift),
             shiftGroupId: $shift->shift_group_id,
             craft: self::serializeCraft($shift),
@@ -85,7 +87,13 @@ class ShiftDTO extends Data
         $workers = [];
         $confirmationEligibility = app(ShiftConfirmationEligibilityService::class);
 
-        foreach (['users' => 'user', 'freelancer' => 'freelancer', 'serviceProvider' => 'service_provider'] as $relation => $type) {
+        foreach (
+            [
+            'users' => 'user',
+            'freelancer' => 'freelancer',
+            'serviceProvider' => 'service_provider',
+            ] as $relation => $type
+        ) {
             $collection = $shift->{$relation};
             if ($collection === null || $collection->isEmpty()) {
                 continue;

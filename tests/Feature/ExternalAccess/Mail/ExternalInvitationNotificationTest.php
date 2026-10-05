@@ -8,7 +8,7 @@ use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\User\Models\User;
 use Illuminate\Support\Str;
 use PHPUnit\Framework\Attributes\Test;
-use Tests\TestCase;
+use Tests\Feature\ExternalAccess\ExternalAccessTestCase as TestCase;
 
 final class ExternalInvitationNotificationTest extends TestCase
 {
@@ -46,6 +46,21 @@ final class ExternalInvitationNotificationTest extends TestCase
         $rendered = (string) $mail->render();
 
         $this->assertStringNotContainsString('gain access to selected information', $rendered);
+    }
+
+    #[Test]
+    public function tab_only_invitation_asks_to_fill_in_project_information_instead_of_own_data(): void
+    {
+        $inviter = User::factory()->create();
+        $project = Project::factory()->create(['name' => 'Gastspiel Luna']);
+
+        $mail = (new ExternalInvitationNotification(Str::random(64), $inviter, $project, maintainsOwnData: false))
+            ->toMail(null);
+        $rendered = (string) $mail->render();
+
+        $this->assertStringContainsString('to fill in information for the project', $rendered);
+        $this->assertStringContainsString('Gastspiel Luna', $rendered);
+        $this->assertStringNotContainsString('enter your data', $rendered);
     }
 
     #[Test]

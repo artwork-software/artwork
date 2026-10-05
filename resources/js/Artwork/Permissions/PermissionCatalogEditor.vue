@@ -99,6 +99,7 @@
                 :row-state="rowState"
                 :titles="titles"
                 :readonly="readonly"
+                :instance-settings="catalog.instance?.settings ?? {}"
                 :highlighted-name="highlightedName"
                 :initially-open="initiallyOpen(entry)"
                 :force-advanced-open="query.length > 0 || onlyGranted"
@@ -118,6 +119,7 @@
             v-if="openDefinition"
             :definition="openDefinition"
             :requirements="requirementsFor(openDefinition)"
+            :superseded="supersededBy(openDefinition)"
             :supersets="activeSupersetsOf(openDefinition.name)"
             :titles="titles"
             :granted="effectiveSet.has(openDefinition.name)"
@@ -184,7 +186,7 @@ const emit = defineEmits(['update:modelValue', 'change'])
 
 const selected = computed(() => props.modelValue)
 const {
-    modules, definitions, effectiveSet, requirementsFor, hardMissing, statusOf,
+    modules, definitions, effectiveSet, requirementsFor, hardMissing, statusOf, supersededBy,
     activeSupersetsOf, withGranted, withRevoked, dependentsOf, visibleDefinitions, moduleSummary,
 } = usePermissionCatalog(computed(() => props.catalog), selected)
 
@@ -225,6 +227,8 @@ const rowState = computed(() => {
             supersets: activeSupersetsOf(def.name),
             status,
             missing: effectiveSet.value.has(def.name) ? hardMissing(def).filter((r) => r.type !== 'module') : [],
+            // Instanz-Einstellung, die das Recht derzeit außer Kraft setzt (z. B. "Termine immer direkt buchbar")
+            superseded: supersededBy(def),
         }
     }
     return state

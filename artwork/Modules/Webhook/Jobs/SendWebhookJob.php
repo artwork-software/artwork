@@ -78,6 +78,8 @@ class SendWebhookJob implements ShouldQueue
                 'Content-Type' => 'application/json',
             ])
                 ->timeout(10)
+                // Keine Redirects: die Ziel-URL ist gegen private Netze geprüft, ein 302 dorthin nicht.
+                ->withoutRedirecting()
                 ->withBody($body, 'application/json')
                 ->post($endpoint->url);
         } catch (Throwable $throwable) {

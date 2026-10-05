@@ -13,9 +13,7 @@ use Artwork\Modules\ExternalAccess\Exceptions\SubmissionAlreadyDecidedException;
 use Artwork\Modules\ExternalAccess\Models\ExternalAccess;
 use Artwork\Modules\ExternalAccess\Models\ExternalPendingFieldChange;
 use Artwork\Modules\ExternalAccess\Models\ExternalPendingSubmission;
-use Artwork\Modules\Freelancer\Models\Freelancer;
 use Artwork\Modules\Role\Enums\RoleEnum;
-use Artwork\Modules\ServiceProvider\Models\ServiceProvider;
 use Artwork\Modules\User\Models\User;
 use Illuminate\Database\DatabaseManager;
 use Illuminate\Database\Eloquent\Model;
@@ -159,7 +157,7 @@ class ExternalSubmissionApprovalService
             return;
         }
 
-        $allowedFields = $this->getAllowedFieldsFor($target);
+        $allowedFields = ExternalSelfEditFieldResolver::allowedFieldsFor($target::class);
         if (!in_array($change->field_key, $allowedFields, true)) {
             throw new \DomainException("Field {$change->field_key} not allowed on {$targetClass}");
         }
@@ -183,18 +181,6 @@ class ExternalSubmissionApprovalService
         $target->update([$change->field_key => $change->new_value]);
     }
 
-    /**
-     * @return list<string>
-     */
-    private function getAllowedFieldsFor(Model $target): array
-    {
-        return match ($target::class) {
-            Freelancer::class => ['first_name', 'last_name', 'email', 'phone_number', 'street', 'zip_code', 'location'],
-            ServiceProvider::class => ['provider_name', 'email', 'phone_number', 'street', 'zip_code', 'location'],
-            default => [],
-        };
-    }
-
     private function triggerSyncToCrmForApprovedTargets(ExternalPendingSubmission $submission): void
     {
         $targets = $submission->fieldChanges()
@@ -205,7 +191,7 @@ class ExternalSubmissionApprovalService
         foreach ($targets as $key => $changes) {
             [$type, $id] = explode(':', (string) $key, 2);
             if ($type === (new CrmContact())->getMorphClass() || $type === CrmContact::class) {
-                continue; // CRM property values are written directly
+                continue; // CRM property values / display name live on the contact itself
             }
             $target = $type::find($id);
             if ($target && method_exists($target, 'syncToCrm')) {

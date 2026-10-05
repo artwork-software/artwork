@@ -2,6 +2,7 @@
 
 namespace Artwork\Modules\User\Http\Controllers;
 
+use Artwork\Core\FileHandling\Upload\SafeUploadFile;
 use App\Http\Controllers\Controller;
 use Spatie\Activitylog\Models\Activity;
 use Artwork\Core\Http\Requests\SearchRequest;
@@ -17,6 +18,7 @@ use Artwork\Modules\ExternalUserManagement\Models\ExternalUserSource;
 use Artwork\Modules\EventType\Services\EventTypeService;
 use Artwork\Modules\Freelancer\Models\Freelancer;
 use Artwork\Modules\Invitation\Models\Invitation;
+use Artwork\Modules\Calendar\Services\CalendarShiftVisibility;
 use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Artwork\Modules\Permission\Models\Permission;
 use Artwork\Modules\Permission\Services\PermissionPresetService;
@@ -96,6 +98,7 @@ use Psr\Container\ContainerExceptionInterface;
 use Psr\Container\NotFoundExceptionInterface;
 use Spatie\Permission\Models\Role;
 use Throwable;
+use Artwork\Modules\WorkTime\Support\WorkTimeAccounting;
 
 class UserController extends Controller
 {
@@ -157,9 +160,16 @@ class UserController extends Controller
      */
     public function resetUserPassword(Request $request): mixed
     {
-        $this->authorize('update', User::class);
-
         $request->validate([Fortify::email() => 'required|email']);
+
+        // Reset-Mails nur für die eigene Adresse oder mit Personalverwaltung.
+        /** @var User $actor */
+        $actor = Auth::user();
+        abort_unless(
+            strcasecmp((string) $request->input(Fortify::email()), (string) $actor->email) === 0
+            || $actor->can(PermissionEnum::MA_MANAGER->value),
+            \Illuminate\Http\Response::HTTP_FORBIDDEN
+        );
 
         $status = Password::broker()->sendResetLink(
             $request->only(Fortify::email())
@@ -189,7 +199,7 @@ class UserController extends Controller
      *
      * @param \Illuminate\Database\Eloquent\Builder $query
      */
-    private function applyAuthProviderFilter($query, ?string $filter): void
+    private function applyAuthProviderFilter(\Illuminate\Database\Eloquent\Builder $query, ?string $filter): void
     {
         if ($filter === 'sso') {
             $query->where('auth_provider', '!=', 'local');
@@ -282,14 +292,21 @@ class UserController extends Controller
         // Nur Personen, die Schichten arbeiten, brauchen ein Muster (Soll gilt nur im Dienstplan).
         $shiftWorkerIds = array_values(array_map(
             static fn (array $listedUser): int => (int) $listedUser['id'],
-            array_filter($users, static fn (array $listedUser): bool => (bool) ($listedUser['can_work_shifts'] ?? false))
+            array_filter(
+                $users,
+                static fn (array $listedUser): bool => (bool) ($listedUser['can_work_shifts'] ?? false)
+            )
         ));
-        $userIdsWithPattern = $this->workTimeCalculationService->userIdsWithPatternOn($shiftWorkerIds);
+        $workTimeAccountingEnabled = WorkTimeAccounting::isEnabled();
+        $userIdsWithPattern = $workTimeAccountingEnabled
+            ? $this->workTimeCalculationService->userIdsWithPatternOn($shiftWorkerIds)
+            : [];
         $shiftWorkerLookup = array_flip($shiftWorkerIds);
         foreach ($users as &$listedUser) {
             $listedUserId = (int) ($listedUser['id'] ?? 0);
             $listedUser['can_work_shifts'] = isset($shiftWorkerLookup[$listedUserId]);
-            $listedUser['work_time_pattern_missing'] = isset($shiftWorkerLookup[$listedUserId])
+            $listedUser['work_time_pattern_missing'] = $workTimeAccountingEnabled
+                && isset($shiftWorkerLookup[$listedUserId])
                 && !isset($userIdsWithPattern[$listedUserId]);
         }
         unset($listedUser);
@@ -312,8 +329,9 @@ class UserController extends Controller
             'roles' => $userService->getAuthUser()->hasRole(RoleEnum::ARTWORK_ADMIN->value)
                 ? Role::query()->whereIn('name', array_column(RoleEnum::cases(), 'value'))->get()
                 : [],
-            'freelancers' => Freelancer::all(),
-            'serviceProviders' => ServiceProvider::query()->without('contacts')->get(),
+            // withAssignedCraftIds: sonst je Freelancer/Dienstleister eine craftables-Query beim Serialisieren
+            'freelancers' => Freelancer::query()->withAssignedCraftIds()->get(),
+            'serviceProviders' => ServiceProvider::query()->without('contacts')->withAssignedCraftIds()->get(),
             'permission_presets' => $permissionPresetService->getPermissionPresets()
                 ->map(static fn ($preset): array => [
                     'id' => $preset->id,
@@ -593,6 +611,8 @@ class UserController extends Controller
 
     public function showUserWorkTimes(User $user): Response|ResponseFactory
     {
+        abort_unless(WorkTimeAccounting::isEnabled(), 403);
+
         $startInput = request()->input('start');
         $endInput = request()->input('end');
 
@@ -759,6 +779,7 @@ class UserController extends Controller
 
     public function shiftUserInfoWorktimes(User $user): JsonResponse
     {
+        abort_unless(WorkTimeAccounting::isEnabled(), 403);
         $this->authorizeHourAccountAccess($user);
         $start = $this->parseDateOrDefault(request()->input('start'), Carbon::now()->startOfMonth())->startOfDay();
         $end = $this->parseDateOrDefault(request()->input('end'), $start->copy()->endOfMonth())->startOfDay();
@@ -819,7 +840,7 @@ class UserController extends Controller
      */
     private function operationPlanTargetSummary(User $user, ?array $dateValue): ?array
     {
-        if (!is_array($dateValue) || count($dateValue) < 2) {
+        if (!WorkTimeAccounting::isEnabled() || !is_array($dateValue) || count($dateValue) < 2) {
             return null;
         }
 
@@ -913,6 +934,7 @@ class UserController extends Controller
 
     public function shiftUserInfoOvertime(User $user): JsonResponse
     {
+        abort_unless(WorkTimeAccounting::isEnabled(), 403);
         $this->authorizeHourAccountAccess($user);
 
         return response()->json($this->buildOvertimePayload($user));
@@ -937,6 +959,8 @@ class UserController extends Controller
 
     public function editUserOvertime(User $user): Response|ResponseFactory
     {
+        abort_unless(WorkTimeAccounting::isEnabled(), 403);
+
         return inertia('Users/UserOvertime', [
             'userToEdit' => new UserShowResource($user),
             'currentTab' => 'overtime',
@@ -946,6 +970,8 @@ class UserController extends Controller
 
     public function payOutOvertime(Request $request, User $user, OvertimeService $service): JsonResponse
     {
+        abort_unless(WorkTimeAccounting::isEnabled(), 403);
+
         $validated = $request->validate([
             'minutes' => 'required|integer|min:1',
             'comment' => 'nullable|string|max:1000',
@@ -983,7 +1009,11 @@ class UserController extends Controller
         $compensationDayOffs = CompensationDayOff::where('user_id', $user->id)
             ->whereNotNull('granted_date')
             ->whereBetween('granted_date', [$start->toDateString(), $end->toDateString()])
-            ->with(['violation:id,shift_rule_id', 'violation.shiftRule:id,name', 'grantedByUser:id,first_name,last_name'])
+            ->with([
+                'violation:id,shift_rule_id',
+                'violation.shiftRule:id,name',
+                'grantedByUser:id,first_name,last_name',
+            ])
             ->get()
             ->groupBy(fn ($d) => $d->granted_date->toDateString());
 
@@ -1064,7 +1094,10 @@ class UserController extends Controller
                 'special_day_name' => $day['special_day_name'],
                 'special_day_counts' => (bool) $day['special_day_counts'],
                 'target_reduction' => (int) $day['target_reduction'],
-                'target_reduction_formatted' => $this->convertMinutesToHoursAndMinutes((int) $day['target_reduction'], true),
+                'target_reduction_formatted' => $this->convertMinutesToHoursAndMinutes(
+                    (int) $day['target_reduction'],
+                    true
+                ),
                 'reduction_reason' => $day['reduction_reason'],
                 'reference_period' => $day['reference_period'],
                 'reference_weekday_average' => $day['reference_weekday_average'],
@@ -1147,7 +1180,6 @@ class UserController extends Controller
             $user,
             $calendarService,
             $eventService,
-            $eventTypeService,
             $selectedPeriodDate,
             $selectedDate,
             $request->get('month'),
@@ -1165,6 +1197,8 @@ class UserController extends Controller
 
     public function editUserTerms(User $user): Response|ResponseFactory
     {
+        $this->authorize('updateTerms', User::class);
+
         return inertia('Users/UserTermsPage', [
             'user_to_edit' => new UserShowResource($user),
             'currentTab' => 'terms',
@@ -1240,9 +1274,12 @@ class UserController extends Controller
             abort(\Illuminate\Http\Response::HTTP_FORBIDDEN);
         }
 
-        if (isset($request['photo'])) {
-            $user->updateProfilePhoto($request['photo']);
-        }
+        // Inhalt geprüft, nicht Endung: sonst landet HTML/SVG unter /storage/profile-photos.
+        $request->validate([
+            'photo' => ['required', 'image', 'mimes:jpg,jpeg,png', 'max:3072', new SafeUploadFile()],
+        ]);
+
+        $user->updateProfilePhoto($request->file('photo'));
     }
 
     public function deleteUserPhoto(User $user): void
@@ -1317,29 +1354,55 @@ class UserController extends Controller
 
     public function updateUserDetails(Request $request, User $user): RedirectResponse
     {
-        if ($user->id !== Auth::user()->id && !Auth::user()->can(PermissionEnum::MA_MANAGER->value)) {
+        /** @var User $actor */
+        $actor = Auth::user();
+        $isSelf = $user->id === $actor->id;
+        $actorIsAdmin = $actor->hasRole(RoleEnum::ARTWORK_ADMIN->value);
+
+        if (!$isSelf && !$actor->can(PermissionEnum::MA_MANAGER->value)) {
             abort(\Illuminate\Http\Response::HTTP_FORBIDDEN);
         }
 
+        // Nicht-Admins dürfen keine Admin-Konten bearbeiten und fremde E-Mail-Adressen (= Login + Reset-Ziel) nicht ändern.
+        if (!$isSelf && !$actorIsAdmin) {
+            abort_if(
+                $user->hasRole(RoleEnum::ARTWORK_ADMIN->value),
+                \Illuminate\Http\Response::HTTP_FORBIDDEN
+            );
+            abort_if(
+                $request->filled('email')
+                && strcasecmp((string) $request->input('email'), (string) $user->email) !== 0,
+                \Illuminate\Http\Response::HTTP_FORBIDDEN
+            );
+        }
 
-        $user->update(
-            $request->only(
-                'first_name',
-                'last_name',
-                'phone_number',
-                'position',
-                'business',
-                'pronouns',
-                'description',
-                'email',
-                'language',
-                'email_private',
-                'phone_private',
-                'use_chat'
-            )
+        $attributes = $request->only(
+            'first_name',
+            'last_name',
+            'phone_number',
+            'position',
+            'business',
+            'pronouns',
+            'description',
+            'email',
+            'language',
+            'email_private',
+            'phone_private',
+            'use_chat'
         );
 
-        $user->calendar_settings->update([
+        // UserShowResource liefert private Kontaktdaten als null, wenn die bearbeitende Person sie nicht
+        // sehen darf; das Formular schickt diese null zurück. Ein null darf die gespeicherten Werte nie
+        // überschreiben (users.email ist NOT NULL, die Telefonnummer würde still gelöscht).
+        foreach (['email', 'phone_number'] as $privateField) {
+            if (array_key_exists($privateField, $attributes) && $attributes[$privateField] === null) {
+                unset($attributes[$privateField]);
+            }
+        }
+
+        $user->update($attributes);
+
+        $user->calendar_settings?->update([
             'high_contrast' => $request->get('high_contrast')
         ]);
 
@@ -1754,6 +1817,8 @@ class UserController extends Controller
 
     public function temporaryUserUpdate(User $user, Request $request): void
     {
+        $this->authorize('updateTerms', User::class);
+
         $user->update($request->only([
             'temporary',
             'employStart',
@@ -1831,7 +1896,17 @@ class UserController extends Controller
             'show_user_overview',
             // Nur vom Schichtplan-Personenbereich gesendet (Spalte nur auf user_shift_plan_settings)
             'user_overview_light_mode',
+            // Besetzungs-Pille je Gewerk (Wochenansicht, Spalte nur auf user_shift_plan_settings)
+            'show_craft_staffing',
+            // Termin-Kacheln in der Wochenansicht (Spalte nur auf user_shift_plan_settings)
+            'show_events',
         ]);
+
+        // work_shifts ohne Dienstplan-Sichtrecht wird auf false gezwungen statt abgelehnt, damit die
+        // übrigen Einstellungen gespeichert werden.
+        if (array_key_exists('work_shifts', $settingsFields) && !CalendarShiftVisibility::userMayViewShifts($user)) {
+            $settingsFields['work_shifts'] = false;
+        }
 
         if ($request->boolean('is_shift_plan')) {
             // updateOrCreate: die Tabellen haben unique(user_id), ein nacktes
@@ -1898,6 +1973,8 @@ class UserController extends Controller
 
     public function updateSidebar(User $user, Request $request): void
     {
+        $this->authorize('updateOwnPreferences', $user);
+
         $user->update($request->only([
             'is_sidebar_opened'
         ]));
@@ -1914,6 +1991,8 @@ class UserController extends Controller
 
     public function updateChecklistStyle(User $user, Request $request): void
     {
+        $this->authorize('updateOwnPreferences', $user);
+
         $user->update($request->only([
             'checklist_style'
         ]));
@@ -2067,7 +2146,6 @@ class UserController extends Controller
             $user,
             $calendarService,
             $eventService,
-            $eventTypeService,
             $selectedPeriodDate,
             $selectedDate,
             $request->get('month'),
@@ -2128,16 +2206,22 @@ class UserController extends Controller
 
     public function compactMode(User $user, Request $request): void
     {
+        $this->authorize('updateOwnPreferences', $user);
+
         $user->update($request->only('compact_mode'));
     }
 
     public function toggleShowProjectTeamNames(User $user, Request $request): void
     {
+        $this->authorize('updateOwnPreferences', $user);
+
         $user->update($request->only('show_project_team_names'));
     }
 
     public function updateShowCrafts(User $user, Request $request): void
     {
+        $this->authorize('updateOwnPreferences', $user);
+
         $user->userFilters()->updateOrCreate(
             ['filter_type' => 'shift_filter'],
             [
@@ -2159,11 +2243,15 @@ class UserController extends Controller
 
     public function updateShowShiftQualifications(User $user, Request $request): void
     {
+        $this->authorize('updateOwnPreferences', $user);
+
         $user->update($request->only('show_qualifications'));
     }
 
     public function calendarGoToStepper(User $user, Request $request): void
     {
+        $this->authorize('updateOwnPreferences', $user);
+
         $user->update($request->only('goto_mode'));
     }
 
@@ -2174,6 +2262,8 @@ class UserController extends Controller
         User $user,
         Request $request
     ): void {
+        $this->authorize('updateOwnPreferences', $user);
+
         $request->validate(
             [
                 'sortBy' => [
@@ -2196,6 +2286,8 @@ class UserController extends Controller
         User $user,
         Request $request
     ): void {
+        $this->authorize('updateOwnPreferences', $user);
+
         $request->validate(
             [
                 'sortBy' => [
@@ -2216,11 +2308,15 @@ class UserController extends Controller
 
     public function updateUserOverviewHeight(User $user, Request $request): void
     {
+        $this->authorize('updateOwnPreferences', $user);
+
         $user->update($request->only('drawer_height'));
     }
 
     public function updateChecklistFilter(User $user, Request $request): void
     {
+        $this->authorize('updateOwnPreferences', $user);
+
         $user->update($request->only([
             'checklist_has_projects',
             'checklist_no_projects',
@@ -2315,6 +2411,8 @@ class UserController extends Controller
 
     public function updateOpenedCrafts(User $user, Request $request): void
     {
+        $this->authorize('updateOwnPreferences', $user);
+
         $user->update($request->only('opened_crafts'));
     }
 

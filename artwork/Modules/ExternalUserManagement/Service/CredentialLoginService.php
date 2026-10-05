@@ -23,6 +23,12 @@ use Illuminate\Validation\ValidationException;
  */
 class CredentialLoginService
 {
+    /**
+     * Fester bcrypt-Hash (cost 12), gegen den bei unbekannter E-Mail geprüft wird, damit die
+     * Antwortzeit nicht verrät, ob ein Konto existiert (Timing-Enumeration).
+     */
+    private const DUMMY_PASSWORD_HASH = '$2y$12$OmzO7wJLOcrYilzWUl9R8OKTo3i85UszCZj7nyvc5Li8/lDr0HPPK';
+
     public function __construct(
         private readonly ExternalUserSourceRepository $sourceRepository,
         private readonly LdapService $ldapService,
@@ -70,7 +76,14 @@ class CredentialLoginService
         }
 
         // Nicht im IdP → ganz normaler lokaler Login (Standardverhalten).
-        if ($user !== null && Hash::check($password, $user->password)) {
+        if ($user === null || $user->password === null || $user->password === '') {
+            // Gleicher Rechenaufwand wie bei bekanntem Konto, Ergebnis wird verworfen.
+            Hash::check($password, self::DUMMY_PASSWORD_HASH);
+
+            return null;
+        }
+
+        if (Hash::check($password, $user->password)) {
             return $user;
         }
 

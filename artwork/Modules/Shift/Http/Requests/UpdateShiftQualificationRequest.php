@@ -12,8 +12,8 @@ class UpdateShiftQualificationRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'icon' => 'string',
-            'name' => 'string',
+            'icon' => 'string|max:255',
+            'name' => 'string|max:255',
             'available' => 'boolean'
         ];
     }

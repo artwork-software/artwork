@@ -230,11 +230,14 @@
         if (strlen($hex) !== 6 || !ctype_xdigit($hex)) {
             return '#111';
         }
-        $r = hexdec(substr($hex, 0, 2));
-        $g = hexdec(substr($hex, 2, 2));
-        $b = hexdec(substr($hex, 4, 2));
+        // WCAG-Luminanz: Weiß nur, wenn es den höheren Kontrast hat (L < 0,179) — gleiche Regel
+        // wie useColorHelper().isDarkColor und die Tagesdienst-Bälle im Dienstplan.
+        $channel = static fn (int $v): float => ($c = $v / 255) <= 0.03928 ? $c / 12.92 : (($c + 0.055) / 1.055) ** 2.4;
+        $luminance = 0.2126 * $channel(hexdec(substr($hex, 0, 2)))
+            + 0.7152 * $channel(hexdec(substr($hex, 2, 2)))
+            + 0.0722 * $channel(hexdec(substr($hex, 4, 2)));
 
-        return (0.299 * $r + 0.587 * $g + 0.114 * $b) > 150 ? '#111' : '#fff';
+        return $luminance < 0.179 ? '#fff' : '#111';
     };
 @endphp
 

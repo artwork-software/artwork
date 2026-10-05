@@ -6,6 +6,7 @@ use Artwork\Modules\Budget\Enums\BudgetTypeEnum;
 use Artwork\Modules\Budget\Models\BudgetManagementAccount;
 use Artwork\Modules\Budget\Models\BudgetManagementCostUnit;
 use Artwork\Modules\Budget\Models\Table;
+use Artwork\Modules\Budget\Services\BudgetService;
 use Artwork\Modules\GeneralSettings\Models\GeneralSettings;
 use Artwork\Modules\Project\Models\Project;
 use Illuminate\Contracts\View\View;
@@ -83,8 +84,8 @@ class BudgetExport implements FromView, ShouldAutoSize, WithStyles
     }
 
     /**
-     * Bei aktiver Kontenverwaltung: "Nummer – Name" für KTO-/KST-Zellen (Spiegel von
-     * BudgetService::enrichAccountManagementDisplayValues), keyed by Zellen-Id.
+     * Bei aktiver Kontenverwaltung: „Nummer – Name“ für KTO-/KST-Zellen (gleiches Format wie
+     * BudgetService::enrichAccountManagementDisplayValues in der Tabelle), keyed by Zellen-Id.
      *
      * @return array<int, string>
      */
@@ -100,6 +101,43 @@ class BudgetExport implements FromView, ShouldAutoSize, WithStyles
             return [];
         }
 
+        $cellsByColumn = $this->collectAccountCells($budgetTable, $ktoColumnId, $kstColumnId);
+
+        $accountTitles = empty($cellsByColumn['kto'])
+            ? collect()
+            : BudgetManagementAccount::query()
+                ->whereIn('account_number', array_values(array_unique($cellsByColumn['kto'])))
+                ->pluck('title', 'account_number');
+        $costUnitTitles = empty($cellsByColumn['kst'])
+            ? collect()
+            : BudgetManagementCostUnit::query()
+                ->whereIn('cost_unit_number', array_values(array_unique($cellsByColumn['kst'])))
+                ->pluck('title', 'cost_unit_number');
+
+        $displayValues = [];
+        foreach ($cellsByColumn['kto'] as $cellId => $number) {
+            $display = BudgetService::formatAccountDisplayValue($number, $accountTitles->get($number));
+            if ($display !== null) {
+                $displayValues[(int) $cellId] = $display;
+            }
+        }
+        foreach ($cellsByColumn['kst'] as $cellId => $number) {
+            $display = BudgetService::formatAccountDisplayValue($number, $costUnitTitles->get($number));
+            if ($display !== null) {
+                $displayValues[(int) $cellId] = $display;
+            }
+        }
+
+        return $displayValues;
+    }
+
+    /**
+     * Nicht-leere KTO-/KST-Zellwerte je Zellen-Id einsammeln.
+     *
+     * @return array{kto: array<int, string>, kst: array<int, string>}
+     */
+    private function collectAccountCells(Table $budgetTable, int $ktoColumnId, int $kstColumnId): array
+    {
         $cellsByColumn = ['kto' => [], 'kst' => []];
         foreach ($budgetTable->mainPositions as $mainPosition) {
             foreach ($mainPosition->subPositions as $subPosition) {
@@ -119,30 +157,7 @@ class BudgetExport implements FromView, ShouldAutoSize, WithStyles
             }
         }
 
-        $accountTitles = empty($cellsByColumn['kto'])
-            ? collect()
-            : BudgetManagementAccount::query()
-                ->whereIn('account_number', array_values(array_unique($cellsByColumn['kto'])))
-                ->pluck('title', 'account_number');
-        $costUnitTitles = empty($cellsByColumn['kst'])
-            ? collect()
-            : BudgetManagementCostUnit::query()
-                ->whereIn('cost_unit_number', array_values(array_unique($cellsByColumn['kst'])))
-                ->pluck('title', 'cost_unit_number');
-
-        $displayValues = [];
-        foreach ($cellsByColumn['kto'] as $cellId => $number) {
-            if ($accountTitles->has($number)) {
-                $displayValues[(int) $cellId] = $number . ' – ' . $accountTitles->get($number);
-            }
-        }
-        foreach ($cellsByColumn['kst'] as $cellId => $number) {
-            if ($costUnitTitles->has($number)) {
-                $displayValues[(int) $cellId] = $number . ' – ' . $costUnitTitles->get($number);
-            }
-        }
-
-        return $displayValues;
+        return $cellsByColumn;
     }
 
     private function getMainPositionsByBudgetType(

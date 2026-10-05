@@ -9,17 +9,17 @@ class WorkerEagerLoadConfig
     public static function getShiftPlanEagerLoads(Carbon|null $startDate, Carbon|null $endDate): array
     {
         return [
-            'dayServices' => function ($query) use ($startDate, $endDate){
+            'dayServices' => function ($query) use ($startDate, $endDate): void {
                 $query->whereBetween('day_serviceables.date', [$startDate, $endDate]);
             },
             'assignedCrafts',
             'managingCrafts',
-            'vacations' => function ($query) use ($startDate, $endDate) {
+            'vacations' => function ($query) use ($startDate, $endDate): void {
                 if ($startDate && $endDate) {
                     $query->whereBetween('vacations.date', [$startDate->toDateString(), $endDate->toDateString()]);
                 }
             },
-            'shifts' => function ($query) use ($startDate, $endDate) {
+            'shifts' => function ($query) use ($startDate, $endDate): void {
                 $query->select([
                     'shifts.id',
                     'shifts.start_date',
@@ -53,7 +53,7 @@ class WorkerEagerLoadConfig
                     'event.room:id,name',
                     'event.event_type:id,abbreviation',
                     'room:id,name',
-                    'shiftsQualifications' => function ($q) {
+                    'shiftsQualifications' => function ($q): void {
                         $q->select(['id', 'shift_id', 'shift_qualification_id', 'value', 'deleted_at']);
                     },
                 ]);
@@ -62,7 +62,7 @@ class WorkerEagerLoadConfig
                           ->where('shifts.end_date', '>=', $startDate);
                 }
             },
-            'shiftQualifications' => function ($query) {
+            'shiftQualifications' => function ($query): void {
                 $query->select([
                     'shift_qualifications.id',
                     'shift_qualifications.name',

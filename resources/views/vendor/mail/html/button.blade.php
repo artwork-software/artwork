@@ -4,7 +4,7 @@
             style="display:inline-block;
                     background:#27233C;
                     color:#ffffff;
-                    font-family:Inter, arial, sans-serif;
+                    font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
                     font-size:1rem;
                     font-weight:300;
                     margin:1em 0 5em 0;

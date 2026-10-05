@@ -30,7 +30,7 @@ class InventoryUserFilterController extends Controller
     /**
      * Speichert die Filter-Einstellungen des Users
      */
-    public function store(InventoryUserFilterRequest $request)
+    public function store(InventoryUserFilterRequest $request): void
     {
         $user = Auth::user();
         $data = $request->only(['category_ids', 'sub_category_ids', 'property_filters', 'tag_ids']);

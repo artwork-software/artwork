@@ -213,7 +213,8 @@ class ShiftPlanRequestService
     /**
      * Create a ShiftPlanRequest and attach the provided shifts into the historical pivot table.
      *
-     * @param array $data  // attributes for ShiftPlanRequest (craft_id, week_number, year, status, requested_by_user_id...)
+     * @param array $data  // attributes for ShiftPlanRequest
+     *                     (craft_id, week_number, year, status, requested_by_user_id...)
      * @param array<int> $shiftIds
      * @param bool $withSnapshot // if true, store a small snapshot per shift
      * @return ShiftPlanRequest

@@ -16,7 +16,7 @@ final class ProjectTabCommentServiceTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->service = new ProjectTabCommentService();
+        $this->service = app(ProjectTabCommentService::class);
     }
 
     #[Test]

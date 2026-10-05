@@ -51,39 +51,115 @@ final class DemoProjectPools
     /** name, genre, artists — pro Archetyp; Auswahl deterministisch je Monat/Slot. */
     public const PROJECT_POOLS = [
         'eigenproduktion' => [
-            ['name' => 'Winterreise – ein Tanzabend', 'genre' => 'Tanz', 'artists' => 'Compagnie Testhaus, Choreografie: Mara Ilić'],
-            ['name' => 'Kaspar Häuser Meer', 'genre' => 'Schauspiel', 'artists' => 'Ensemble Testhaus, Regie: Jule Brandes'],
-            ['name' => 'Die Verwandlung', 'genre' => 'Schauspiel', 'artists' => 'Ensemble Testhaus, Regie: Omar Khaled'],
+            [
+                'name' => 'Winterreise – ein Tanzabend',
+                'genre' => 'Tanz',
+                'artists' => 'Compagnie Testhaus, Choreografie: Mara Ilić',
+            ],
+            [
+                'name' => 'Kaspar Häuser Meer',
+                'genre' => 'Schauspiel',
+                'artists' => 'Ensemble Testhaus, Regie: Jule Brandes',
+            ],
+            [
+                'name' => 'Die Verwandlung',
+                'genre' => 'Schauspiel',
+                'artists' => 'Ensemble Testhaus, Regie: Omar Khaled',
+            ],
             ['name' => 'Atlas der abgelegenen Inseln', 'genre' => 'Performance', 'artists' => 'Kollektiv Fernweh'],
-            ['name' => 'Momo und die Zeitdiebe', 'genre' => 'Schauspiel', 'artists' => 'Junges Testhaus, Regie: Sina Albers'],
-            ['name' => 'Woyzeck Fragmente', 'genre' => 'Musiktheater', 'artists' => 'Ensemble Testhaus & Bandkollektiv Marotte'],
+            [
+                'name' => 'Momo und die Zeitdiebe',
+                'genre' => 'Schauspiel',
+                'artists' => 'Junges Testhaus, Regie: Sina Albers',
+            ],
+            [
+                'name' => 'Woyzeck Fragmente',
+                'genre' => 'Musiktheater',
+                'artists' => 'Ensemble Testhaus & Bandkollektiv Marotte',
+            ],
             ['name' => 'Peer Gynt', 'genre' => 'Schauspiel', 'artists' => 'Ensemble Testhaus, Regie: Henrik Dall'],
             ['name' => 'Antigone Reloaded', 'genre' => 'Performance', 'artists' => 'Kollektiv Beton & Gäste'],
         ],
         'gastspiel' => [
-            ['name' => 'Gastspiel: Compagnie Marelle – »Traces«', 'genre' => 'Tanz', 'artists' => 'Compagnie Marelle (Lyon)'],
-            ['name' => 'Gastspiel: Ensemble Nordwind – »Brandung«', 'genre' => 'Schauspiel', 'artists' => 'Ensemble Nordwind (Kiel)'],
-            ['name' => 'Gastspiel: Teatro Luna – »La Casa«', 'genre' => 'Performance', 'artists' => 'Teatro Luna (Sevilla)'],
-            ['name' => 'Gastspiel: Duo Fragile – Zirkusabend', 'genre' => 'Performance', 'artists' => 'Duo Fragile (Montréal)'],
-            ['name' => 'Gastspiel: Tanzkollektiv PULS – »Echo«', 'genre' => 'Tanz', 'artists' => 'Tanzkollektiv PULS (Wien)'],
-            ['name' => 'Gastspiel: Figurentheater Wolkenschieber', 'genre' => 'Schauspiel', 'artists' => 'Figurentheater Wolkenschieber (Erfurt)'],
-            ['name' => 'Gastspiel: Studio Nachtblau – »Fluten«', 'genre' => 'Performance', 'artists' => 'Studio Nachtblau (Zürich)'],
-            ['name' => 'Gastspiel: Compagnia Vento – »Aria«', 'genre' => 'Tanz', 'artists' => 'Compagnia Vento (Turin)'],
+            [
+                'name' => 'Gastspiel: Compagnie Marelle – »Traces«',
+                'genre' => 'Tanz',
+                'artists' => 'Compagnie Marelle (Lyon)',
+            ],
+            [
+                'name' => 'Gastspiel: Ensemble Nordwind – »Brandung«',
+                'genre' => 'Schauspiel',
+                'artists' => 'Ensemble Nordwind (Kiel)',
+            ],
+            [
+                'name' => 'Gastspiel: Teatro Luna – »La Casa«',
+                'genre' => 'Performance',
+                'artists' => 'Teatro Luna (Sevilla)',
+            ],
+            [
+                'name' => 'Gastspiel: Duo Fragile – Zirkusabend',
+                'genre' => 'Performance',
+                'artists' => 'Duo Fragile (Montréal)',
+            ],
+            [
+                'name' => 'Gastspiel: Tanzkollektiv PULS – »Echo«',
+                'genre' => 'Tanz',
+                'artists' => 'Tanzkollektiv PULS (Wien)',
+            ],
+            [
+                'name' => 'Gastspiel: Figurentheater Wolkenschieber',
+                'genre' => 'Schauspiel',
+                'artists' => 'Figurentheater Wolkenschieber (Erfurt)',
+            ],
+            [
+                'name' => 'Gastspiel: Studio Nachtblau – »Fluten«',
+                'genre' => 'Performance',
+                'artists' => 'Studio Nachtblau (Zürich)',
+            ],
+            [
+                'name' => 'Gastspiel: Compagnia Vento – »Aria«',
+                'genre' => 'Tanz',
+                'artists' => 'Compagnia Vento (Turin)',
+            ],
         ],
         'konzert' => [
-            ['name' => 'Nachtschicht: Elektro trifft Orchester', 'genre' => 'Konzert', 'artists' => 'DJ Marlow & Kammerorchester Elbe'],
+            [
+                'name' => 'Nachtschicht: Elektro trifft Orchester',
+                'genre' => 'Konzert',
+                'artists' => 'DJ Marlow & Kammerorchester Elbe',
+            ],
             ['name' => 'Jazz im Foyer: Trio Anders', 'genre' => 'Konzert', 'artists' => 'Trio Anders'],
-            ['name' => 'Liederabend: Von fernen Ufern', 'genre' => 'Konzert', 'artists' => 'Selma Kron (Mezzosopran), Pavel Orlov (Klavier)'],
+            [
+                'name' => 'Liederabend: Von fernen Ufern',
+                'genre' => 'Konzert',
+                'artists' => 'Selma Kron (Mezzosopran), Pavel Orlov (Klavier)',
+            ],
             ['name' => 'Klangkosmos: Minimal Music', 'genre' => 'Konzert', 'artists' => 'Ensemble Repeat'],
             ['name' => 'Singer-Songwriter-Slam', 'genre' => 'Konzert', 'artists' => 'Diverse, Moderation: Nele Fuchs'],
-            ['name' => 'Lesung & Musik: Nachtgestalten', 'genre' => 'Lesung', 'artists' => 'Jasper Thiel (Text), Ada Lund (Cello)'],
+            [
+                'name' => 'Lesung & Musik: Nachtgestalten',
+                'genre' => 'Lesung',
+                'artists' => 'Jasper Thiel (Text), Ada Lund (Cello)',
+            ],
         ],
         'vermietung' => [
-            ['name' => 'Firmenevent Hanseatic Insurance', 'genre' => 'Konzert', 'artists' => 'Extern: Hanseatic Insurance AG'],
-            ['name' => 'Jahrestagung Logistikverband Nord', 'genre' => 'Lesung', 'artists' => 'Extern: Logistikverband Nord e.V.'],
+            [
+                'name' => 'Firmenevent Hanseatic Insurance',
+                'genre' => 'Konzert',
+                'artists' => 'Extern: Hanseatic Insurance AG',
+            ],
+            [
+                'name' => 'Jahrestagung Logistikverband Nord',
+                'genre' => 'Lesung',
+                'artists' => 'Extern: Logistikverband Nord e.V.',
+            ],
             ['name' => 'Absolvent*innenfeier HAW', 'genre' => 'Konzert', 'artists' => 'Extern: HAW Hamburg'],
             ['name' => 'Charity-Gala Kinderhospiz', 'genre' => 'Konzert', 'artists' => 'Extern: Stiftung Kinderhospiz'],
-            ['name' => 'Produktpräsentation Nordlicht Mobility', 'genre' => 'Performance', 'artists' => 'Extern: Nordlicht Mobility GmbH'],
+            [
+                'name' => 'Produktpräsentation Nordlicht Mobility',
+                'genre' => 'Performance',
+                'artists' => 'Extern: Nordlicht Mobility GmbH',
+            ],
         ],
     ];
 
@@ -94,9 +170,24 @@ final class DemoProjectPools
         'color' => '#7c3aed',
         'artists' => 'Diverse internationale Compagnien',
         'sub_projects' => [
-            ['name' => 'Festival: Eröffnung & Empfang %s', 'genre' => 'Performance', 'artists' => 'Alle Festival-Compagnien', 'stage_role' => 'foyer'],
-            ['name' => 'Festival: Tanz-Triple %s', 'genre' => 'Tanz', 'artists' => 'Cie. Marelle / PULS / Compagnia Vento', 'stage_role' => 'main_stage'],
-            ['name' => 'Festival: Lange Nacht der Performance %s', 'genre' => 'Performance', 'artists' => 'Kollektiv Beton, Studio Nachtblau u.a.', 'stage_role' => 'second_stage'],
+            [
+                'name' => 'Festival: Eröffnung & Empfang %s',
+                'genre' => 'Performance',
+                'artists' => 'Alle Festival-Compagnien',
+                'stage_role' => 'foyer',
+            ],
+            [
+                'name' => 'Festival: Tanz-Triple %s',
+                'genre' => 'Tanz',
+                'artists' => 'Cie. Marelle / PULS / Compagnia Vento',
+                'stage_role' => 'main_stage',
+            ],
+            [
+                'name' => 'Festival: Lange Nacht der Performance %s',
+                'genre' => 'Performance',
+                'artists' => 'Kollektiv Beton, Studio Nachtblau u.a.',
+                'stage_role' => 'second_stage',
+            ],
         ],
     ];
 
@@ -275,10 +366,18 @@ final class DemoProjectPools
     ];
 
     public const TECH_REQUIREMENTS = [
-        'eigenproduktion' => "Drehbühne wird genutzt, Einrichtung ab Aufbautag 1.\nZusätzlich 12 Moving Lights aus dem Lager, Haze durchgehend.\nAchtung: offene Flamme in Szene 3 – Brandwache erforderlich.",
-        'gastspiel' => "Rider siehe Dokumente. Compagnie bringt eigenes Licht-Pult mit (MA3).\nTon: 2x d&b Monitor zusätzlich, FOH ab Soundcheck besetzt.\nTanzboden schwarz, Verlegung am Aufbautag.",
-        'konzert' => "Backline: Flügel (gestimmt), Drum-Riser 3x2m.\nFOH + Monitor aus dem Haus, 4 Wege In-Ear für Band.\nFoyer-Bestuhlung: Clubtische, 120 Plätze.",
-        'vermietung' => "Standard-Konferenz-Setup: Rednerpult, 2x Handfunk, Beamer 12k.\nEinlass ab 60 Minuten vor Beginn, Garderobe besetzt.\nAufbau durch Kunde ab 14 Uhr, Hausbetreuung durch VT.",
+        'eigenproduktion' => "Drehbühne wird genutzt, Einrichtung ab Aufbautag 1.\n"
+            . "Zusätzlich 12 Moving Lights aus dem Lager, Haze durchgehend.\n"
+            . "Achtung: offene Flamme in Szene 3 – Brandwache erforderlich.",
+        'gastspiel' => "Rider siehe Dokumente. Compagnie bringt eigenes Licht-Pult mit (MA3).\n"
+            . "Ton: 2x d&b Monitor zusätzlich, FOH ab Soundcheck besetzt.\n"
+            . "Tanzboden schwarz, Verlegung am Aufbautag.",
+        'konzert' => "Backline: Flügel (gestimmt), Drum-Riser 3x2m.\n"
+            . "FOH + Monitor aus dem Haus, 4 Wege In-Ear für Band.\n"
+            . "Foyer-Bestuhlung: Clubtische, 120 Plätze.",
+        'vermietung' => "Standard-Konferenz-Setup: Rednerpult, 2x Handfunk, Beamer 12k.\n"
+            . "Einlass ab 60 Minuten vor Beginn, Garderobe besetzt.\n"
+            . "Aufbau durch Kunde ab 14 Uhr, Hausbetreuung durch VT.",
     ];
 
     public const DAY_REMARKS = [

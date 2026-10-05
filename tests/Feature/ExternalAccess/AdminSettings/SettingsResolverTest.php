@@ -7,7 +7,7 @@ use Artwork\Modules\ExternalAccess\Settings\ExternalAccessSettings;
 use Artwork\Modules\GeneralSettings\Models\GeneralSettings;
 use Carbon\Carbon;
 use PHPUnit\Framework\Attributes\Test;
-use Tests\TestCase;
+use Tests\Feature\ExternalAccess\ExternalAccessTestCase as TestCase;
 
 final class SettingsResolverTest extends TestCase
 {

@@ -49,7 +49,7 @@ class WorkflowInstanceRepository extends BaseRepository
         Model $subject
     ): \Illuminate\Database\Eloquent\Collection {
         return $this->getBuilder()
-            ->whereHas('workflowDefinitionConfig', function ($query) use ($definitionId) {
+            ->whereHas('workflowDefinitionConfig', function ($query) use ($definitionId): void {
                 $query->where('workflow_definition_id', $definitionId);
             })
             ->where('subject_type', get_class($subject))

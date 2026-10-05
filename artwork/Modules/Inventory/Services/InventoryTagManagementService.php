@@ -46,11 +46,6 @@ class InventoryTagManagementService
         return DB::transaction(function () use ($group, $data) {
             $payload = Arr::only($data, ['name', 'position']);
 
-            // Falls Position nicht gesetzt ist: nicht anfassen
-            if (! array_key_exists('position', $payload)) {
-                unset($payload['position']);
-            }
-
             $group->fill($payload);
             $group->save();
 
@@ -114,9 +109,6 @@ class InventoryTagManagementService
                 'inventory_tag_group_id',
                 'position',
             ]);
-            if (! array_key_exists('position', $payload)) {
-                unset($payload['position']);
-            }
 
             $tag->fill($payload);
             $tag->save();

@@ -63,6 +63,17 @@ class Holiday extends Model
         'casted_date',
     ];
 
+    protected static function booted(): void
+    {
+        // Eintägige Einträge ohne Enddatum (end_date ist im Formular optional) enden am Starttag;
+        // Kalender, Schichtplan-Listen und casted_date setzen ein Enddatum voraus.
+        static::saving(static function (self $holiday): void {
+            if ($holiday->end_date === null && $holiday->date !== null) {
+                $holiday->end_date = $holiday->date;
+            }
+        });
+    }
+
     public function subdivisions(): BelongsToMany
     {
         return $this->belongsToMany(

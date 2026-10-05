@@ -78,10 +78,10 @@ readonly class UserCalendarAboService
             $start = Carbon::parse($calendarAbo->start_date)->startOfDay();
             $end = Carbon::parse($calendarAbo->end_date)->endOfDay();
 
-            $q->where(function ($qq) use ($start, $end) {
+            $q->where(function ($qq) use ($start, $end): void {
                 $qq->whereBetween('start_time', [$start, $end])
                     ->orWhereBetween('end_time', [$start, $end])
-                    ->orWhere(function ($qqq) use ($start, $end) {
+                    ->orWhere(function ($qqq) use ($start, $end): void {
                         $qqq->where('start_time', '<=', $start)
                             ->where('end_time', '>=', $end);
                     });

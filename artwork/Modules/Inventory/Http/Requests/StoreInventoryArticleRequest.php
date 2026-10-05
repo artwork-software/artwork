@@ -2,6 +2,7 @@
 
 namespace Artwork\Modules\Inventory\Http\Requests;
 
+use Artwork\Core\FileHandling\Upload\SafeUploadFile;
 use App\Rules\InventoryArticleImageDimensions;
 use Artwork\Modules\GeneralSettings\Models\GeneralSettings;
 use Illuminate\Foundation\Http\FormRequest;
@@ -36,6 +37,7 @@ class StoreInventoryArticleRequest extends FormRequest
             // get converted to JPEG on upload (InventoryArticleImageService).
             'newImages.*' => [
                 'bail',
+                new SafeUploadFile(),
                 'mimes:jpg,jpeg,png,gif,webp,bmp,heic,heif',
                 'max:' . $maxImageSizeKb,
                 new InventoryArticleImageDimensions(),

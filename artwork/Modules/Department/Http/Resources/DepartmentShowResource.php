@@ -27,8 +27,8 @@ class DepartmentShowResource extends JsonResource
                 'id' => $user->id,
                 'first_name' => $user->first_name,
                 'last_name' => $user->last_name,
-                'email' => $user->email,
-                'phone_number' => $user->phone_number,
+                'email' => $user->visibleEmailFor($request->user()),
+                'phone_number' => $user->visiblePhoneNumberFor($request->user()),
                 'position' => $user->position,
                 'profile_photo_url' => $user->profile_photo_url
             ]),

@@ -2,7 +2,6 @@
 
 namespace Artwork\Modules\Calendar\Services;
 
-use Spatie\Activitylog\Models\Activity;
 use Artwork\Modules\Calendar\DTO\CalendarFrontendDataDTO;
 use Artwork\Modules\Calendar\DTO\CalendarRoomDTO;
 use Artwork\Modules\Calendar\DTO\EventDTO;
@@ -22,6 +21,7 @@ use Artwork\Modules\User\Models\UserFilter;
 use Artwork\Modules\User\Models\UserShiftCalendarFilter;
 use Carbon\CarbonInterface;
 use Carbon\CarbonPeriod;
+use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Support\Collection;
 
 class ShiftCalendarService
@@ -67,7 +67,13 @@ class ShiftCalendarService
             // Optional: ->select(['id','event_id','start','end', ...]) wenn du Spalten kennst
         }
 
-        $events = Event::query()
+        // Anzeigeeinstellung „Termine anzeigen" (nur user_shift_plan_settings, Wochenansicht):
+        // ist sie aus, wird die Termin-Query komplett übersprungen — die Wochenansicht soll
+        // dann keine ungenutzten Termindaten mitschleppen. Andere Settings-Tabellen und
+        // null (PDF-Export) kennen die Spalte nicht → Termine wie bisher laden.
+        $showEvents = $displaySettings === null || (bool) ($displaySettings->show_events ?? true);
+
+        $events = !$showEvents ? new EloquentCollection() : Event::query()
             ->select([
                 'id',
                 'start_time',
@@ -432,31 +438,5 @@ class ShiftCalendarService
             $startDate->addDay();
         }
         return $days;
-    }
-
-    /**
-     * @return array<int, mixed>
-     */
-    public function getEventShiftsHistoryChanges(): array
-    {
-        $historyArray = [];
-
-        Activity::query()
-            ->where('subject_type', Shift::class)
-            ->orderByDesc('created_at')
-            ->get()
-            ->each(function (Activity $activity) use (&$historyArray): void {
-                $properties = $activity->properties;
-                $historyArray[] = [
-                    'changes' => $properties instanceof \Illuminate\Support\Collection
-                        ? $properties->all()
-                        : ($properties ?? null),
-                    'created_at' => $activity->created_at->diffInHours() < 24
-                        ? $activity->created_at->diffForHumans()
-                        : $activity->created_at->format('d.m.Y, H:i'),
-                ];
-            });
-
-        return $historyArray;
     }
 }

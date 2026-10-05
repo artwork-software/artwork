@@ -330,6 +330,13 @@ watch(
     { immediate: true }
 );
 
+
+// Platzierungen in Ordnern (disclosure_components, erkennbar an disclosure_id) haben eigene Ids —
+// das Backend löst sie nur mit placement=disclosure auf und nutzt dann deren Tab-Auswahl.
+function placementQuery() {
+    return props.component?.disclosure_id ? { placement: 'disclosure' } : {};
+}
+
 async function fetchChecklists() {
     const projectId = props.project?.id;
     const componentInTabId = props.component?.id ?? props.component?.component_in_tab_id;
@@ -344,7 +351,7 @@ async function fetchChecklists() {
 
     try {
         const { data } = await axios.get(
-            route('projects.tabs.checklists', { project: projectId, componentInTab: componentInTabId })
+            route('projects.tabs.checklists', { project: projectId, componentInTab: componentInTabId, ...placementQuery() })
         );
         localOpenedChecklists.value = data?.opened_checklists ?? [];
         localChecklistTemplates.value = data?.checklist_templates ?? [];

@@ -118,14 +118,42 @@ final class ShiftBlock1aRouteAuthorizationTest extends FeatureTestCase
         $this->postJson(route('shift.check-collisions'), [])->assertStatus(400);
     }
 
+    /**
+     * Die Timeline ist Inhalt des Termins, nicht der Schichtplanung (EventPolicy::editTimeline).
+     * Ohne Schreibzugang zum Termin bleibt sie gesperrt.
+     */
     #[Test]
-    public function timeline_routes_require_planning_permission(): void
+    public function timeline_routes_reject_users_without_write_access_to_the_event(): void
     {
         $this->actingAsUserWith(PermissionEnum::VIEW_SHIFT_PLAN->value);
         $event = Event::factory()->create();
 
         $this->postJson(route('edit.timeline.event', $event), ['dataset' => []])->assertForbidden();
         $this->postJson(route('create.timeline.event', $event), ['dataset' => []])->assertForbidden();
+        $this->postJson(
+            route('timeline-preset.store.form.event', $event),
+            ['name' => 'Vorlage']
+        )->assertForbidden();
+    }
+
+    /**
+     * Regression: Bis zum Routen-Gate "can plan shifts" konnten Projektschreibende die Timeline
+     * ihres eigenen Termins nicht mehr anlegen oder bearbeiten (403 ohne sichtbare Meldung).
+     */
+    #[Test]
+    public function project_write_access_is_enough_for_timeline_routes(): void
+    {
+        $user = $this->actingAsUserWith([]);
+        $project = Project::factory()->create();
+        $project->users()->attach($user->id, ['can_write' => true]);
+        $event = Event::factory()->create(['project_id' => $project->id]);
+
+        $this->postJson(route('edit.timeline.event', $event), ['dataset' => []])->assertOk();
+        $this->postJson(route('create.timeline.event', $event), ['dataset' => []])->assertOk();
+        $this->postJson(
+            route('timeline-preset.store.form.event', $event),
+            ['name' => 'Vorlage']
+        )->assertOk();
     }
 
     #[Test]

@@ -120,9 +120,11 @@ class BudgetSumCalculator
         // Cast the exact bcadd strings back to float so the JSON payload shape
         // for the frontend stays unchanged (numbers, not strings).
         $costSums = collect($costSums)->filter(
+            // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter -- Collection-Callback (value, key) – Signatur vorgegeben
             fn ($val, $key) => !in_array($key, $skipColumnIds)
         )->map(fn ($val) => (float) $val);
         $earningSums = collect($earningSums)->filter(
+            // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter -- Collection-Callback (value, key) – Signatur vorgegeben
             fn ($val, $key) => !in_array($key, $skipColumnIds)
         )->map(fn ($val) => (float) $val);
 
@@ -170,7 +172,11 @@ class BudgetSumCalculator
                     foreach ($subPosition->subPositionRows as $row) {
                         if ($row->relationLoaded('cells')) {
                             foreach ($row->cells as $cell) {
-                                if ($cell->verified_value !== null && $cell->verified_value !== '' && $cell->verified_value !== $cell->value) {
+                                if (
+                                    $cell->verified_value !== null
+                                     && $cell->verified_value !== ''
+                                     && $cell->verified_value !== $cell->value
+                                ) {
                                     $hasVerifiedChanges = true;
                                     break 2;
                                 }
@@ -266,6 +272,7 @@ class BudgetSumCalculator
     private function buildBudgetSumDetailsMap($allBudgetSumDetails, string $type): \Illuminate\Support\Collection
     {
         return collect($allBudgetSumDetails)
+            // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter -- Collection-Callback (value, key) – Signatur vorgegeben
             ->filter(fn ($details, $key) => str_starts_with($key, $type . ':'))
             ->mapWithKeys(function ($details, $key) {
                 $columnId = (int) explode(':', $key)[1];

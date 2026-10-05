@@ -69,7 +69,9 @@ class UpdateArtwork extends Command
         $this->cleanupFalseConflicts();
         $this->migrateChangesHistoryToActivityLog();
         $this->backfillShiftPlanRequestShifts();
+        $this->backfillShiftWorkerAssignedBy();
         $this->generateInventoryArticleThumbnails();
+        $this->movePublicFilesToPrivateDisk();
         $this->warnAboutSynchronousQueue();
 
         $this->info('--- Artwork Update Finished ---');
@@ -97,6 +99,20 @@ class UpdateArtwork extends Command
         );
     }
 
+    private function movePublicFilesToPrivateDisk(): void
+    {
+        $this->section('Move public files to private disk');
+
+        // Ein unerwarteter Fehler darf das Update nicht abbrechen; bis zum nächsten Lauf greift der public-Fallback.
+        try {
+            $this->call('artwork:security:move-public-files');
+        } catch (\Throwable $exception) {
+            $this->warn(
+                'Moving public files failed and will be retried on the next update: ' . $exception->getMessage()
+            );
+        }
+    }
+
     private function generateInventoryArticleThumbnails(): void
     {
         $this->section('Inventory Article Image Thumbnails');
@@ -110,6 +126,14 @@ class UpdateArtwork extends Command
         // Einmaliger Reparatur-Lauf für Anfragen, die unter dem alten Auswahl-Bug erstellt wurden.
         // --once stellt sicher, dass der Lauf nur einmal pro Umgebung erfolgt (nicht bei jedem Deploy).
         $this->call('shift-plan-requests:backfill', ['--once' => true]);
+    }
+
+    private function backfillShiftWorkerAssignedBy(): void
+    {
+        $this->section('Shift Worker Assigned-By Backfill');
+        // Trägt Zuweisende aus dem Schichtverlauf nach, damit Konflikthinweise nicht
+        // ersatzweise den Festschreibenden als einteilende Person nennen.
+        $this->call('artwork:shift-workers:backfill-assigned-by', ['--once' => true]);
     }
 
     private function migrateChangesHistoryToActivityLog(): void
@@ -388,8 +412,13 @@ class UpdateArtwork extends Command
     /**
      * Migriert einen Filter mit optionalen Extra-Werten.
      */
-    private function migrateUserFilter(User $user, string $relation, string $filterType, array $fields, array $extra = []): void
-    {
+    private function migrateUserFilter(
+        User $user,
+        string $relation,
+        string $filterType,
+        array $fields,
+        array $extra = []
+    ): void {
         $filter = $user->$relation;
 
         if (!$filter) {
@@ -494,7 +523,6 @@ class UpdateArtwork extends Command
     {
         $this->section('Consolidating shifts workers');
         $this->consolidateShiftsSeeder->seed();
-
     }
 
     private function createBasicProductBaskets(): void
@@ -612,14 +640,14 @@ class UpdateArtwork extends Command
         ];
 
         foreach ($entityClasses as $class) {
-            $table = (new $class)->getTable();
+            $table = (new $class())->getTable();
 
-            $morphClass = (new $class)->getMorphClass();
+            $morphClass = (new $class())->getMorphClass();
 
             // Bulk-update: backfill crm_contact_id where non-deleted CRM contact exists via entity_type/entity_id
             $updated = DB::table($table)
                 ->whereNull('crm_contact_id')
-                ->whereExists(function ($query) use ($table, $morphClass) {
+                ->whereExists(function ($query) use ($table, $morphClass): void {
                     $query->select(DB::raw(1))
                         ->from('crm_contacts')
                         ->where('crm_contacts.entity_type', $morphClass)
@@ -641,7 +669,7 @@ class UpdateArtwork extends Command
 
             // Create CRM contacts for entities that have none at all
             $missing = $class::whereNull('crm_contact_id')
-                ->whereNotExists(function ($query) use ($table, $morphClass) {
+                ->whereNotExists(function ($query) use ($table, $morphClass): void {
                     $query->select(DB::raw(1))
                         ->from('crm_contacts')
                         ->where('crm_contacts.entity_type', $morphClass)

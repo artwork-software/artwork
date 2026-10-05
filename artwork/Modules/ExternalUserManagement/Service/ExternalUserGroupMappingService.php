@@ -38,4 +38,3 @@ class ExternalUserGroupMappingService
         return $this->repository->delete($mapping);
     }
 }
-

@@ -50,5 +50,4 @@ class WeeklyMaxHoursCheck extends AbstractRuleCheck
     {
         return 'weeklyMaxHours';
     }
-
 }

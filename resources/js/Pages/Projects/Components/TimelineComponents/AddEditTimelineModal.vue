@@ -66,8 +66,12 @@
             </div>
 
 
+            <div v-if="saveError" class="mt-5 rounded-md bg-danger-surface ring-1 ring-danger-border px-3 py-2" role="alert" aria-live="assertive">
+                <p class="text-xs text-danger">{{ saveError }}</p>
+            </div>
+
             <div class="mt-5 flex items-center justify-center">
-                <FormButton :text="$t('Create')" type="submit"/>
+                <FormButton :text="$t('Create')" type="submit" :disabled="isSaving"/>
             </div>
         </form>
     </ArtworkBaseModal>
@@ -87,6 +91,7 @@ import {IconInfoCircle} from "@tabler/icons-vue";
 import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 import axios from "axios";
+import { useI18n } from "vue-i18n";
 
 const props = defineProps({
     timelineToEdit: {
@@ -104,6 +109,8 @@ const props = defineProps({
 })
 
 const emit = defineEmits(['close'])
+
+const { t } = useI18n();
 
 const showExamples = ref(false);
 const exampleText = ref([]);
@@ -267,7 +274,15 @@ const addExample = (example) => {
 
 const presetName = ref(props.preset?.name || '');
 
+const isSaving = ref(false);
+const saveError = ref('');
+
 const updateOrCreate = async () => {
+    // Ohne sichtbare Meldung wirkte ein 403 wie ein toter Button: das Modal blieb
+    // offen und der Fehler landete nur in der Konsole.
+    saveError.value = '';
+    isSaving.value = true;
+
     try {
         const payload = { dataset: dataset.value };
 
@@ -285,7 +300,11 @@ const updateOrCreate = async () => {
 
         emit('close');
     } catch (error) {
-        console.error('Error saving timeline:', error);
+        saveError.value = error?.response?.status === 403
+            ? t('You are not allowed to edit the timeline of this date.')
+            : (error?.response?.data?.message || t('The timeline could not be saved. Please try again.'));
+    } finally {
+        isSaving.value = false;
     }
 }
 

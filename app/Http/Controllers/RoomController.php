@@ -330,7 +330,7 @@ class RoomController extends Controller
     {
         $this->authorize('forceDelete', Room::class);
 
-        Room::onlyTrashed()->each(function ($room) {
+        Room::onlyTrashed()->each(function ($room): void {
             $room->forceDelete();
         });
         return Redirect::route('rooms.trashed');
@@ -379,7 +379,7 @@ class RoomController extends Controller
         $search = $request->get('search');
         $rooms = Room::query()
             ->where('name', 'like', "%{$search}%")
-            ->orWhereHas('area', function ($query) use ($search) {
+            ->orWhereHas('area', function ($query) use ($search): void {
                 $query->where('name', 'like', "%{$search}%");
             })
             ->with(['area', 'admins:id', 'requestableBy:id'])

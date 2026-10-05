@@ -13,7 +13,9 @@ use Artwork\Modules\ExternalAccess\Models\ExternalAccessScope;
 use Artwork\Modules\ExternalAccess\Models\ExternalPendingSubmission;
 use Artwork\Modules\ExternalAccess\Repositories\ExternalAccessRepository;
 use Artwork\Modules\ExternalAccess\Repositories\ExternalAccessScopeRepository;
+use Artwork\Modules\ExternalAccess\Exceptions\ExternalAccessException;
 use Artwork\Modules\ExternalAccess\Services\ExternalAccessManagementService;
+use Artwork\Modules\ExternalAccess\Services\ExternalAccessService;
 use Artwork\Modules\User\Models\User;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
@@ -29,6 +31,7 @@ class ExternalAccessManagementController extends Controller
         private readonly ExternalAccessRepository $repository,
         private readonly ExternalAccessScopeRepository $scopeRepository,
         private readonly ExternalAccessManagementService $service,
+        private readonly ExternalAccessService $externalAccessService,
     ) {
     }
 
@@ -63,15 +66,18 @@ class ExternalAccessManagementController extends Controller
                 'submitted_at' => $s->submitted_at->toIso8601String(),
                 'field_count' => $s->field_changes_count,
             ])->all(),
-            'audit_log' => $this->loadAuditLog($access),
-            'can_manage' => $request->user()->can('manage', $access),
-            'can_relink' => $request->user()->can('relink', $access),
+            // Prop-Namen müssen den Vue-Props (camelCase) entsprechen — Inertia konvertiert nicht.
+            'auditLog' => $this->loadAuditLog($access),
+            'canManage' => $request->user()->can('manage', $access),
+            'canRelink' => $request->user()->can('relink', $access),
         ]);
     }
 
     public function extendCrmAccess(ExtendCrmAccessRequest $request, ExternalAccess $access): RedirectResponse
     {
         $this->authorize('manage', $access);
+        // Reine Tab-Zugänge haben keinen eigenen Kontakt und damit keine CRM-Selbstpflege
+        abort_if($access->crm_contact_id === null, 422, __('This access has no own CRM contact.'));
 
         $this->service->extendCrmAccess($access, Carbon::parse($request->validated('expires_at')), $request->user());
 
@@ -129,6 +135,19 @@ class ExternalAccessManagementController extends Controller
         return redirect()->back()->with('status', __('Scope ended.'));
     }
 
+    public function resendInvitation(Request $request, ExternalAccess $access): RedirectResponse
+    {
+        $this->authorize('manage', $access);
+
+        try {
+            $this->externalAccessService->resendInvitation($access, $request->user());
+        } catch (ExternalAccessException $e) {
+            return redirect()->back()->with('error', __($e->getMessage()));
+        }
+
+        return redirect()->back()->with('status', __('Invitation sent.'));
+    }
+
     public function relink(RelinkAccessRequest $request, ExternalAccess $access): RedirectResponse
     {
         $this->authorize('relink', $access);
@@ -154,12 +173,15 @@ class ExternalAccessManagementController extends Controller
         return [
             'id' => $access->id,
             'email' => $access->email,
+            'name' => $access->name,
+            'display_name' => $access->displayName(),
             'crm_contact_id' => $access->crm_contact_id,
-            'crm_contact' => [
-                'id' => $access->crmContact?->id,
-                'display_name' => $access->crmContact?->display_name,
-                'entity_type' => $access->crmContact?->entity_type,
-            ],
+            // null bei reinem Tab-Zugang (ohne eigenen Kontakt)
+            'crm_contact' => $access->crmContact ? [
+                'id' => $access->crmContact->id,
+                'display_name' => $access->crmContact->display_name,
+                'entity_type' => $access->crmContact->entity_type,
+            ] : null,
             'crm_access_expires_at' => $access->crm_access_expires_at?->toIso8601String(),
             'revoked_at' => $access->revoked_at?->toIso8601String(),
             'last_login_at' => $access->last_login_at?->toIso8601String(),
@@ -184,6 +206,7 @@ class ExternalAccessManagementController extends Controller
             'access_type' => $scope->access_type->value,
             'valid_from' => $scope->valid_from->toIso8601String(),
             'valid_to' => $scope->valid_to->toIso8601String(),
+            'last_submitted_at' => $scope->last_submitted_at?->toIso8601String(),
         ];
     }
 
@@ -241,7 +264,7 @@ class ExternalAccessManagementController extends Controller
             return [
                 'type' => 'external',
                 'id' => $causer->id,
-                'label' => $causer->crmContact?->display_name ?? $causer->email,
+                'label' => $causer->displayName(),
                 'is_external' => true,
             ];
         }

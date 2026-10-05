@@ -3,49 +3,21 @@
 namespace App\Http\Controllers;
 
 use Artwork\Modules\ServiceProvider\Models\ServiceProvider;
-use Artwork\Modules\ServiceProvider\Models\ServiceProviderContacts;
-use Illuminate\Http\Request;
 
+/**
+ * Legt einen leeren Kontakt (Contacts-Modul) am Dienstleister an; Bearbeiten/Löschen laufen über ArtworkSingleContact.
+ */
 class ServiceProviderContactsController extends Controller
 {
-    public function index(): void
-    {
-    }
-
-    public function create(): void
-    {
-    }
-
     public function store(ServiceProvider $serviceProvider): void
     {
+        $this->authorize('updateWorkProfile', ServiceProvider::class);
+
         $serviceProvider->contacts()->create([
             'first_name' => '',
             'last_name' => '',
             'email' => '',
             'phone_number' => ''
         ]);
-    }
-
-    public function show(): void
-    {
-    }
-
-    public function edit(): void
-    {
-    }
-
-    public function update(Request $request, ServiceProviderContacts $serviceProviderContacts): void
-    {
-        $serviceProviderContacts->update($request->only([
-            'first_name',
-            'last_name',
-            'email',
-            'phone_number'
-        ]));
-    }
-
-    public function destroy(ServiceProviderContacts $serviceProviderContacts): void
-    {
-        $serviceProviderContacts->delete();
     }
 }

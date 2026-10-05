@@ -26,7 +26,8 @@ class MigrateToCrmCommand extends Command
 {
     protected $signature = 'artwork:migrate-to-crm';
 
-    protected $description = 'Migrate existing Artists, Accommodations, Manufacturers, Users, Freelancers and ServiceProviders to the CRM module';
+    protected $description = 'Migrate existing Artists, Accommodations, Manufacturers, Users, Freelancers and '
+        . 'ServiceProviders to the CRM module';
 
     private array $contactTypes = [];
     private array $properties = [];
@@ -69,12 +70,42 @@ class MigrateToCrmCommand extends Command
         $this->info('Creating system contact types...');
 
         $types = [
-            ['name' => 'Künstler*in', 'slug' => CrmSystemContactTypeEnum::ARTIST->value, 'icon' => 'IconPalette', 'sort_order' => 1],
-            ['name' => 'Unterkunft', 'slug' => CrmSystemContactTypeEnum::ACCOMMODATION->value, 'icon' => 'IconHome', 'sort_order' => 2],
-            ['name' => 'Hersteller*in', 'slug' => CrmSystemContactTypeEnum::MANUFACTURER->value, 'icon' => 'IconBuildingFactory2', 'sort_order' => 3],
-            ['name' => 'Freelancer', 'slug' => CrmSystemContactTypeEnum::FREELANCER->value, 'icon' => 'IconUserBolt', 'sort_order' => 4],
-            ['name' => 'Dienstleister*in', 'slug' => CrmSystemContactTypeEnum::SERVICE_PROVIDER->value, 'icon' => 'IconBriefcase', 'sort_order' => 5],
-            ['name' => 'Nutzer*in', 'slug' => CrmSystemContactTypeEnum::USER->value, 'icon' => 'IconUser', 'sort_order' => 6],
+            [
+                'name' => 'Künstler*in',
+                'slug' => CrmSystemContactTypeEnum::ARTIST->value,
+                'icon' => 'IconPalette',
+                'sort_order' => 1,
+            ],
+            [
+                'name' => 'Unterkunft',
+                'slug' => CrmSystemContactTypeEnum::ACCOMMODATION->value,
+                'icon' => 'IconHome',
+                'sort_order' => 2,
+            ],
+            [
+                'name' => 'Hersteller*in',
+                'slug' => CrmSystemContactTypeEnum::MANUFACTURER->value,
+                'icon' => 'IconBuildingFactory2',
+                'sort_order' => 3,
+            ],
+            [
+                'name' => 'Freelancer',
+                'slug' => CrmSystemContactTypeEnum::FREELANCER->value,
+                'icon' => 'IconUserBolt',
+                'sort_order' => 4,
+            ],
+            [
+                'name' => 'Dienstleister*in',
+                'slug' => CrmSystemContactTypeEnum::SERVICE_PROVIDER->value,
+                'icon' => 'IconBriefcase',
+                'sort_order' => 5,
+            ],
+            [
+                'name' => 'Nutzer*in',
+                'slug' => CrmSystemContactTypeEnum::USER->value,
+                'icon' => 'IconUser',
+                'sort_order' => 6,
+            ],
         ];
 
         foreach ($types as $type) {
@@ -158,7 +189,14 @@ class MigrateToCrmCommand extends Command
         );
 
         $this->createProperty($conditionsGroup, 'Stundensatz', CrmPropertyTypeEnum::NUMBER, false, false, 1);
-        $this->createProperty($conditionsGroup, 'Vergütungsbeschreibung', CrmPropertyTypeEnum::TEXTAREA, false, false, 2);
+        $this->createProperty(
+            $conditionsGroup,
+            'Vergütungsbeschreibung',
+            CrmPropertyTypeEnum::TEXTAREA,
+            false,
+            false,
+            2
+        );
 
         // Group: Hersteller-Details
         $manufacturerGroup = CrmPropertyGroup::firstOrCreate(
@@ -266,8 +304,11 @@ class MigrateToCrmCommand extends Command
      * Migriert ein CrmEntity-Model: erstellt CrmContact, setzt entity-Morph,
      * crm_contact_id und schreibt Property-Werte via getCrmFields().
      */
-    private function migrateEntity(Model&CrmEntity $entity, CrmContactType $type, ?string $profileImage = null): CrmContact
-    {
+    private function migrateEntity(
+        Model&CrmEntity $entity,
+        CrmContactType $type,
+        ?string $profileImage = null
+    ): CrmContact {
         $contact = CrmContact::firstOrCreate(
             [
                 'crm_contact_type_id' => $type->id,
@@ -306,7 +347,7 @@ class MigrateToCrmCommand extends Command
         $this->info('Migrating artists...');
         $type = $this->contactTypes[CrmSystemContactTypeEnum::ARTIST->value];
 
-        Artist::all()->each(function (Artist $artist) use ($type) {
+        Artist::all()->each(function (Artist $artist) use ($type): void {
             $contact = $this->migrateEntity($artist, $type);
 
             // Update ArtistResidencies
@@ -320,7 +361,7 @@ class MigrateToCrmCommand extends Command
         $this->info('Migrating accommodations...');
         $type = $this->contactTypes[CrmSystemContactTypeEnum::ACCOMMODATION->value];
 
-        Accommodation::all()->each(function (Accommodation $accommodation) use ($type) {
+        Accommodation::all()->each(function (Accommodation $accommodation) use ($type): void {
             $contact = $this->migrateEntity($accommodation, $type, $accommodation->profile_image);
 
             // Migrate room type pivot
@@ -347,12 +388,17 @@ class MigrateToCrmCommand extends Command
         $this->info('Migrating manufacturers...');
         $type = $this->contactTypes[CrmSystemContactTypeEnum::MANUFACTURER->value];
 
-        Manufacturer::all()->each(function (Manufacturer $manufacturer) use ($type) {
+        Manufacturer::all()->each(function (Manufacturer $manufacturer) use ($type): void {
             $contact = $this->migrateEntity($manufacturer, $type);
 
             // Migrate inventory manufacturer property values
             DB::table('inventory_property_values')
-                ->join('inventory_article_properties', 'inventory_article_properties.id', '=', 'inventory_property_values.inventory_article_property_id')
+                ->join(
+                    'inventory_article_properties',
+                    'inventory_article_properties.id',
+                    '=',
+                    'inventory_property_values.inventory_article_property_id'
+                )
                 ->where('inventory_article_properties.type', 'manufacturer')
                 ->where('inventory_property_values.value', (string) $manufacturer->id)
                 ->update(['inventory_property_values.value' => (string) $contact->id]);
@@ -364,7 +410,7 @@ class MigrateToCrmCommand extends Command
         $this->info('Migrating users...');
         $type = $this->contactTypes[CrmSystemContactTypeEnum::USER->value];
 
-        User::all()->each(function (User $user) use ($type) {
+        User::all()->each(function (User $user) use ($type): void {
             $this->migrateEntity($user, $type, $user->profile_photo_path);
         });
     }
@@ -374,7 +420,7 @@ class MigrateToCrmCommand extends Command
         $this->info('Migrating freelancers...');
         $type = $this->contactTypes[CrmSystemContactTypeEnum::FREELANCER->value];
 
-        Freelancer::all()->each(function (Freelancer $freelancer) use ($type) {
+        Freelancer::all()->each(function (Freelancer $freelancer) use ($type): void {
             $this->migrateEntity($freelancer, $type, $freelancer->profile_image);
         });
     }
@@ -384,7 +430,7 @@ class MigrateToCrmCommand extends Command
         $this->info('Migrating service providers...');
         $type = $this->contactTypes[CrmSystemContactTypeEnum::SERVICE_PROVIDER->value];
 
-        ServiceProvider::all()->each(function (ServiceProvider $provider) use ($type) {
+        ServiceProvider::all()->each(function (ServiceProvider $provider) use ($type): void {
             $this->migrateEntity($provider, $type, $provider->profile_image);
         });
     }

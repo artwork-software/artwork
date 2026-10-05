@@ -127,7 +127,8 @@ final class ShiftKpiFreeDaysTest extends TestCase
     {
         $halves = $this->service()->seasonHalves($this->seasonStart, $this->seasonEnd);
 
-        // Mittelpunkt (getSeasonMidpoint, Spielzeitende = Tagesende) 30.01.2026: Hälfte 1 = 01.08.–29.01. (182 Tage), Hälfte 2 = 30.01.–31.07. (183 Tage)
+        // Mittelpunkt (getSeasonMidpoint, Spielzeitende = Tagesende) 30.01.2026: Hälfte 1 = 01.08.–29.01. (182 Tage),
+        // Hälfte 2 = 30.01.–31.07. (183 Tage)
         $this->assertSame('2025-08-01', $halves['half1']['start']);
         $this->assertSame('2026-01-29', $halves['half1']['end']);
         $this->assertSame(182, $halves['half1']['days']);

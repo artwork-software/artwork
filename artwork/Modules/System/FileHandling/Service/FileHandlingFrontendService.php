@@ -10,7 +10,7 @@ use Artwork\Modules\System\FileHandling\RetrievesSettingsForFileType;
 class FileHandlingFrontendService
 {
     use RetrievesSettingsForFileType;
-    
+
     public function __construct(private readonly GeneralSettingsService $generalSettingsService)
     {
     }

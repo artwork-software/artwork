@@ -20,11 +20,16 @@ class MaterialSetController extends Controller
         protected InventoryUserFilterService $filterService,
         protected InventoryUserFilterShareService $filterShareService,
         protected AuthManager $auth
-    ) {}
+    ) {
+    }
 
     public function index(): \Inertia\Response
     {
-        $materialSets = MaterialSet::with('items.article', 'items.article.category', 'items.article.subCategory')->get();
+        $materialSets = MaterialSet::with(
+            'items.article',
+            'items.article.category',
+            'items.article.subCategory'
+        )->get();
 
         /** @var User $user */
         $user = $this->auth->user();
@@ -49,5 +54,4 @@ class MaterialSetController extends Controller
     {
         $this->service->delete($set);
     }
-
 }

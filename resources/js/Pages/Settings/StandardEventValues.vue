@@ -90,6 +90,66 @@
                     ]"
                 />
             </div>
+
+            <!-- "Termine immer direkt buchbar": Instanz-Schalter, schaltet Raumanfragen und Verifizierung ab -->
+            <div class="mt-10 border-t border-border-subtle pt-8">
+                <h3 class="text-sm font-semibold text-text-subtle">{{ $t('Events always bookable directly') }}</h3>
+                <p class="text-xs text-text-subtle mt-1">{{ $t('If active, there are no room requests and no event verification. Everyone who may create events books directly in the calendar and in the planning calendar.') }}</p>
+                <div class="flex items-center gap-x-2 mt-3">
+                    <Switch v-model="always_direct_booking" :class="[always_direct_booking ? 'bg-accent-600' : 'bg-border-subtle', 'relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-accent-600 focus:ring-offset-2']">
+                        <span :class="[always_direct_booking ? 'translate-x-5' : 'translate-x-0', 'pointer-events-none relative inline-block size-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']">
+                          <span :class="[always_direct_booking ? 'opacity-0 duration-100 ease-out' : 'opacity-100 duration-200 ease-in', 'absolute inset-0 flex size-full items-center justify-center transition-opacity']" aria-hidden="true">
+                            <svg class="size-3 text-text-subtle" fill="none" viewBox="0 0 12 12">
+                              <path d="M4 8l2-2m0 0l2-2M6 6L4 4m2 2l2 2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                            </svg>
+                          </span>
+                          <span :class="[always_direct_booking ? 'opacity-100 duration-200 ease-in' : 'opacity-0 duration-100 ease-out', 'absolute inset-0 flex size-full items-center justify-center transition-opacity']" aria-hidden="true">
+                            <svg class="size-3 text-accent-600" fill="currentColor" viewBox="0 0 12 12">
+                              <path d="M3.707 5.293a1 1 0 00-1.414 1.414l1.414-1.414zM5 8l-.707.707a1 1 0 001.414 0L5 8zm4.707-3.293a1 1 0 00-1.414-1.414l1.414 1.414zm-7.414 2l2 2 1.414-1.414-2-2-1.414 1.414zm3.414 2l4-4-1.414-1.414-4 4 1.414 1.414z" />
+                            </svg>
+                          </span>
+                        </span>
+                    </Switch>
+                    <span class="text-sm text-text-subtle">{{ $t('Events always bookable directly') }}</span>
+                </div>
+
+                <SettingsGuideBanner
+                    class="mt-4"
+                    variant="static"
+                    title="What the setting changes"
+                    :paragraphs="[
+                        'The menu item \'Event Verifications\' disappears for everyone. The event dialog never switches to request mode; planned events are confirmed as fixed events without a verification step.',
+                        'The room settings \'Can be booked by anyone\' and \'Authorized to request\' as well as the permissions \'Request room occupancy\', \'Plan events directly\' (direct booking part) and \'Plan directly in the planning calendar\' have no effect while the setting is active. The permissions page marks them accordingly. Room admins can still edit other people\'s events in their rooms.',
+                        'When you switch the setting on, all open room requests are accepted and all open verification requests are approved – you are asked to confirm this first.',
+                    ]"
+                />
+            </div>
+
+            <!-- Warnung vor dem Einschalten: Altbestand wird übernommen -->
+            <ArtworkBaseModal
+                v-if="showDirectBookingConfirm"
+                :title="$t('Events always bookable directly')"
+                modal-size="sm:max-w-xl"
+                @close="cancelDirectBooking"
+            >
+                <div class="space-y-4 text-sm text-text">
+                    <p>{{ $t('From now on there are no room requests and no event verification. Everyone who may create events books directly.') }}</p>
+                    <div class="rounded-lg border border-warning-border bg-warning-surface px-3 py-2 text-warning">
+                        <p class="font-semibold">{{ $t('Existing requests will be accepted when you switch on the setting:') }}</p>
+                        <ul class="mt-1 list-disc pl-5">
+                            <li>{{ $t('{0} open room requests become firmly booked events.', [openRoomRequestsCount]) }}</li>
+                            <li>{{ $t('{0} planned events with an open verification request become fixed events.', [pendingVerificationsCount]) }}</li>
+                        </ul>
+                        <p class="mt-1">{{ $t('This is written to the event history but sends no notifications. It cannot be undone by switching the setting off again.') }}</p>
+                    </div>
+                </div>
+                <template #footer>
+                    <div class="mt-6 flex items-center justify-end gap-3">
+                        <BaseUIButton variant="ghost" hide-icon :label="$t('Cancel')" @click="cancelDirectBooking" />
+                        <BaseUIButton variant="primary" hide-icon :label="$t('Switch on and accept requests')" @click="confirmDirectBooking" />
+                    </div>
+                </template>
+            </ArtworkBaseModal>
         </EventSettingHeader>
     </AppLayout>
 </template>
@@ -101,6 +161,8 @@ import BasePageTitle from "@/Artwork/Titles/BasePageTitle.vue";
 import AppLayout from "@/Layouts/AppLayout.vue";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 import SettingsGuideBanner from "@/Artwork/Guide/SettingsGuideBanner.vue";
+import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
+import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 import {Switch} from "@headlessui/vue";
 import {ref, watch} from "vue";
 import {router, usePage} from "@inertiajs/vue3";
@@ -110,6 +172,10 @@ const event_time_length_minutes = ref(usePage().props.event_time_length_minutes 
 const event_start_time = ref(usePage().props.event_start_time || '09:00')
 const event_all_day_default = ref(usePage().props.event_all_day_default || false)
 const enable_admission = ref(usePage().props.event_admission_module || false)
+const always_direct_booking = ref(usePage().props.event_direct_booking_only || false)
+const openRoomRequestsCount = usePage().props.openRoomRequestsCount ?? 0
+const pendingVerificationsCount = usePage().props.pendingVerificationsCount ?? 0
+const showDirectBookingConfirm = ref(false)
 
 const update = () => {
     if (!event_start_time.value) {
@@ -128,6 +194,37 @@ const update = () => {
 
 // Switch hat kein @change-Event wie native Inputs — Auto-Save via Watcher
 watch(enable_admission, () => update())
+
+// "Termine immer direkt buchbar" wird getrennt gespeichert: Einschalten erst nach Bestätigung
+// (offene Raumanfragen/Verifizierungen werden dabei übernommen), Ausschalten sofort.
+let directBookingSaving = false
+const saveDirectBooking = (value) => {
+    directBookingSaving = true
+    router.patch(route('event.standard.values.update'), { always_direct_booking: value }, {
+        preserveState: false,
+        preserveScroll: true,
+        onFinish: () => { directBookingSaving = false },
+    })
+}
+watch(always_direct_booking, (value, previous) => {
+    if (directBookingSaving) return
+    if (value && !previous) {
+        showDirectBookingConfirm.value = true
+        return
+    }
+    if (!value) saveDirectBooking(false)
+})
+const confirmDirectBooking = () => {
+    showDirectBookingConfirm.value = false
+    saveDirectBooking(true)
+}
+const cancelDirectBooking = () => {
+    showDirectBookingConfirm.value = false
+    directBookingSaving = true
+    always_direct_booking.value = false
+    // Watcher-Durchlauf für das Zurücksetzen überspringen
+    setTimeout(() => { directBookingSaving = false }, 0)
+}
 </script>
 <style scoped>
 

@@ -2,6 +2,7 @@
 
 namespace Artwork\Modules\Webhook\Http\Requests;
 
+use Artwork\Core\Validation\Rules\PublicUrlRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -21,7 +22,7 @@ class StoreWebhookEndpointRequest extends FormRequest
         return [
             'name' => 'required|string|max:255',
             // Nur https: Der Payload verlässt die Instanz und ist signiert, aber nicht verschlüsselt.
-            'url' => ['required', 'url:https', 'max:255'],
+            'url' => ['required', 'url:https', 'max:255', new PublicUrlRule(['https'])],
             'subscribed_events' => 'required|array|min:1',
             'subscribed_events.*' => ['string', Rule::in(array_keys(config('webhooks.events', [])))],
             'is_active' => 'boolean',

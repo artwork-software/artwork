@@ -11,6 +11,9 @@
                 </Link>
             </div>
 
+            <p v-if="flashStatus" class="mt-4 rounded-xl border border-success-border bg-success-surface px-4 py-3 text-sm text-success">
+                {{ flashStatus }}
+            </p>
             <p
                 v-if="submissionStatus && submissionStatus.has_pending"
                 class="mt-4 rounded-xl border border-warning-border bg-warning-surface px-4 py-3 text-sm text-warning"
@@ -42,15 +45,19 @@
             </section>
 
             <section v-if="!groups.length" class="mt-10 text-sm text-text-subtle">
-                {{ $t('You have no shared project tabs at the moment.') }}
+                {{ $t('No data fields are available for your contact yet.') }}
             </section>
         </div>
     </ExternalAppLayout>
 </template>
 
 <script setup>
-import { Link } from '@inertiajs/vue3'
+import { computed } from 'vue'
+import { Link, usePage } from '@inertiajs/vue3'
 import ExternalAppLayout from '@/Pages/ExternalAccess/Layouts/ExternalAppLayout.vue'
+
+const page = usePage()
+const flashStatus = computed(() => page.props.flash?.status ?? null)
 
 defineProps({
     groups: { type: Array, required: true },

@@ -38,6 +38,9 @@ readonly class ShiftListViewSerializer
                 'id' => $shift->shiftGroup->id,
                 'name' => $shift->shiftGroup->name,
             ] : null,
+            // Rohe ID zusätzlich: bei einem Projekt im Papierkorb ist 'project' null — das Bearbeiten-Modal
+            // würde sonst project_id = null speichern
+            'project_id' => $shift->project_id,
             'project' => $shift->project ? [
                 'id' => $shift->project->id,
                 'name' => $shift->project->name,

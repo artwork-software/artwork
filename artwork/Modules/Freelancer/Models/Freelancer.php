@@ -91,6 +91,16 @@ class Freelancer extends Model implements Vacationer, Available, DayServiceable,
         'can_work_shifts'
     ];
 
+    /**
+     * Gage und interne Notiz nie roh serialisieren (Personenlisten, Schicht-Tab, Broadcasts); die Profilseite
+     * gibt sie explizit über die ShowResource aus.
+     */
+    protected $hidden = [
+        'salary_per_hour',
+        'salary_description',
+        'note',
+    ];
+
     protected $appends = [
         'name',
         'display_name',
@@ -106,14 +116,16 @@ class Freelancer extends Model implements Vacationer, Available, DayServiceable,
 
     public function getProfilePhotoUrlAttribute(): string
     {
-        $isUrl = filter_var($this->profile_image, FILTER_VALIDATE_URL);
+        $profileImage = $this->isStaleAvatarFallbackUrl($this->profile_image) ? null : $this->profile_image;
+
+        $isUrl = filter_var($profileImage, FILTER_VALIDATE_URL);
         if ($isUrl) {
-            return $this->profile_image;
+            return $profileImage;
         }
 
-        if ($this->profile_image) {
+        if ($profileImage) {
             // profile_image kann via Storage::url() bereits mit '/storage/' beginnen
-            $path = ltrim($this->profile_image, '/');
+            $path = ltrim($profileImage, '/');
             return str_starts_with($path, 'storage/') ? asset($path) : asset('storage/' . $path);
         }
 

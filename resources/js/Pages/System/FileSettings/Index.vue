@@ -58,17 +58,38 @@
           </div>
         </Listbox>
         <div class="flex">
-          <div class="mt-2">
-            <SliderInput
-                v-model="area.fileSize"
-                :min="1"
-                :max="1024"
-                :step="1"
-                :property="{area: area, fileSize: area.fileSize}"
-                :show-value="true"
-                :label="$t('Max file size in MB')"
-                :method="handleSlideValueUpdate"
-            />
+          <div class="mt-2 w-full max-w-xl">
+            <label :for="'file-size-range-' + area.name" class="mb-2 block text-sm text-text-muted">{{ $t('Max file size in MB') }}</label>
+            <div class="flex items-center gap-x-4">
+              <!-- Regler aktualisiert beim Ziehen nur den Entwurf; gespeichert wird erst beim Loslassen -->
+              <input
+                  :id="'file-size-range-' + area.name"
+                  type="range"
+                  :min="MIN_FILE_SIZE_MB"
+                  :max="MAX_FILE_SIZE_MB"
+                  step="1"
+                  :value="fileSizeDrafts[area.name]"
+                  @input="fileSizeDrafts[area.name] = Number($event.target.value)"
+                  @change="commitFileSize(area)"
+                  class="w-full cursor-pointer accent-accent-600"
+              />
+              <BaseInput
+                  :id="'file-size-input-' + area.name"
+                  type="number"
+                  v-model="fileSizeDrafts[area.name]"
+                  :min="MIN_FILE_SIZE_MB"
+                  :max="MAX_FILE_SIZE_MB"
+                  :step="1"
+                  label="MB"
+                  :show-label="false"
+                  class="!w-28 shrink-0"
+                  @focusout="commitFileSize(area)"
+                  @keydown.enter="$event.target.blur()"
+              />
+            </div>
+            <p class="mt-1 text-xs text-text-muted">
+              {{ $t('Allowed: {0} to {1} MB per file.', [MIN_FILE_SIZE_MB, MAX_FILE_SIZE_MB]) }}
+            </p>
             <!-- Eingestellter Wert liegt über der Serverobergrenze → greift erst nach IT-Anpassung -->
             <p v-if="serverUploadLimitMb && area.fileSize > serverUploadLimitMb" class="mt-1 flex items-center gap-x-1 text-xs text-warning">
               <IconAlertTriangle stroke-width="1.5" class="size-4 shrink-0"/>
@@ -94,14 +115,13 @@
 
 <script setup>
 import ToolSettingsHeader from "@/Pages/ToolSettings/ToolSettingsHeader.vue";
-import {computed, ref} from "vue";
+import {computed, reactive, ref} from "vue";
 import {router, usePage} from "@inertiajs/vue3";
 import {useTranslation} from "@/Composeables/Translation.js";
 import TagComponent from "@/Layouts/Components/TagComponent.vue";
 import {IconAlertTriangle, IconCheck, IconChevronDown, IconInfoCircle} from "@tabler/icons-vue";
 import {Listbox, ListboxButton, ListboxOption, ListboxOptions} from "@headlessui/vue";
-import SliderInput from "@/Components/Form/SliderInput.vue";
-import debounce from "lodash.debounce";
+import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 import SettingsGuideBanner from "@/Artwork/Guide/SettingsGuideBanner.vue";
 
 const $t = useTranslation(),
@@ -140,15 +160,37 @@ const removeFileTypeFromArea = (data) => {
   updateArea(targetArea);
 }
 
-const handleSlideValueUpdate = (property, value) => {
-  const targetArea = areas.value.find(area => area.name === property.area.name);
-  targetArea.fileSize = parseInt(value);
-  updateArea(targetArea);
+// Muss zu UpdateFileSettingsRequest passen
+const MIN_FILE_SIZE_MB = 1;
+const MAX_FILE_SIZE_MB = 1024;
+
+// Entwurfswerte pro Bereich: Regler und Zahlenfeld teilen sich den Wert, gespeichert wird
+// erst beim Loslassen des Reglers bzw. beim Verlassen des Feldes (vorher: Request pro Zieh-Event)
+const fileSizeDrafts = reactive(Object.fromEntries(areas.value.map((area) => [area.name, area.fileSize])));
+
+const commitFileSize = (area) => {
+  const parsed = Math.round(Number(fileSizeDrafts[area.name]));
+  const fileSize = Number.isFinite(parsed) && parsed > 0
+      ? Math.min(Math.max(parsed, MIN_FILE_SIZE_MB), MAX_FILE_SIZE_MB)
+      : area.fileSize;
+
+  fileSizeDrafts[area.name] = fileSize;
+  if (fileSize === area.fileSize) {
+    return;
+  }
+
+  area.fileSize = fileSize;
+  updateArea(area);
 }
 
-const updateArea = debounce((area) => {
+const updateArea = (area) => {
   router.put(route('tool.file-settings.store', {}), {
     data: area
+  }, {
+    preserveScroll: true,
+    preserveState: true,
+    // Abgelehnte Änderung (Validierung): lokal geänderten Stand verwerfen und Server-Stand neu laden
+    onError: () => router.reload({ preserveScroll: true }),
   })
-}, 500);
+}
 </script>

@@ -30,7 +30,15 @@ class EventVerification extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['uuid', 'event_id', 'verifier_id', 'verifier_type', 'status', 'rejection_reason', 'request_user_id'];
+    protected $fillable = [
+        'uuid',
+        'event_id',
+        'verifier_id',
+        'verifier_type',
+        'status',
+        'rejection_reason',
+        'request_user_id',
+    ];
 
     protected $casts = [
         'created_at' => TranslatedDateTimeCast::class,

@@ -14,5 +14,4 @@ class MinimalEventDTO extends Data
         public int $roomId,
     ) {
     }
-
 }

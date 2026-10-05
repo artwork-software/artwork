@@ -1,15 +1,22 @@
 <template>
-    <component
-        :is="resolvedComponent"
-        :component="component"
-        :project-id="projectId"
-        :tab-id="tabId"
-        :scope="scope"
-    />
+    <div>
+        <component
+            :is="resolvedComponent"
+            :component="component"
+            :project-id="projectId"
+            :tab-id="tabId"
+            :scope="scope"
+        />
+        <!-- Hinweis aus den Tab-Einstellungen sichtbar unter dem Feld (wie die Hinweis-Spalte im Formular) -->
+        <p v-if="component.note && showsInlineHint(component.type)" class="mt-1.5 whitespace-pre-line text-xs text-text-subtle">
+            {{ component.note }}
+        </p>
+    </div>
 </template>
 
 <script setup>
 import { computed } from 'vue'
+import { showsInlineHint } from '@/Helper/ComponentInlineHints.js'
 import ExternalTextField from './Types/ExternalTextField.vue'
 import ExternalTextArea from './Types/ExternalTextArea.vue'
 import ExternalCheckbox from './Types/ExternalCheckbox.vue'
@@ -22,6 +29,8 @@ import ExternalDisclosure from './Types/ExternalDisclosure.vue'
 import ExternalProjectTitle from './Types/ExternalProjectTitle.vue'
 import ExternalProjectBasicData from './Types/ExternalProjectBasicData.vue'
 import ExternalArtistNameDisplay from './Types/ExternalArtistNameDisplay.vue'
+import ExternalDocuments from './Types/ExternalDocuments.vue'
+import ExternalCrmContactList from './Types/ExternalCrmContactList.vue'
 import ExternalUnknownType from './Types/ExternalUnknownType.vue'
 
 const props = defineProps({
@@ -45,6 +54,8 @@ const typeToComponent = {
     ProjectTitleComponent: ExternalProjectTitle,
     ProjectBasicDataDisplayComponent: ExternalProjectBasicData,
     ArtistNameDisplayComponent: ExternalArtistNameDisplay,
+    ProjectDocumentsComponent: ExternalDocuments,
+    CrmContactListComponent: ExternalCrmContactList,
 }
 
 const resolvedComponent = computed(() => typeToComponent[props.component.type] ?? ExternalUnknownType)

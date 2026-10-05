@@ -23,6 +23,7 @@ interface ProjectFile {
     storage_available?: boolean
     created_at?: string
     mime_type?: string | null
+    external_access?: { id: number, email: string, crm_contact?: { id: number, display_name: string } | null } | null
     url?: string | null
 }
 
@@ -104,6 +105,13 @@ watch(
     { immediate: true }
 )
 
+
+// Platzierungen in Ordnern (disclosure_components, erkennbar an disclosure_id) haben eigene Ids —
+// das Backend löst sie nur mit placement=disclosure auf und nutzt dann deren Tab-Auswahl.
+function placementQuery() {
+    return props.component?.disclosure_id ? { placement: 'disclosure' } : {}
+}
+
 async function fetchDocuments() {
     const projectId = props.project?.id
     const componentInTabId = props.component?.id ?? props.component?.component_in_tab_id
@@ -117,7 +125,7 @@ async function fetchDocuments() {
 
     try {
         const { data } = await axios.get(
-            route('projects.tabs.documents', { project: projectId, componentInTab: componentInTabId })
+            route('projects.tabs.documents', { project: projectId, componentInTab: componentInTabId, ...placementQuery() })
         )
         const fetchedDocuments = data?.documents ?? []
         documents.value.splice(0, documents.value.length, ...fetchedDocuments)
@@ -374,6 +382,13 @@ function closePreview() {
                                 <span v-if="file.created_at" class="inline-flex items-center gap-1">
                                   • <span>{{ $t('Uploaded') }}:</span>
                                   <time :datetime="file.created_at">{{ formatDate(file.created_at) }}</time>
+                                </span>
+                                <span
+                                    v-if="file.external_access"
+                                    class="inline-flex items-center rounded-full bg-warning-surface px-2 py-0.5 text-[11px] font-medium text-warning"
+                                    :title="file.external_access.email"
+                                >
+                                    {{ $t('Uploaded externally by {name}', { name: file.external_access.name ?? file.external_access.crm_contact?.display_name ?? file.external_access.email }) }}
                                 </span>
                             </div>
                         </div>

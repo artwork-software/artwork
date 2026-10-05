@@ -28,6 +28,10 @@
                     </div>
                     <p class="text-sm/5 font-bold text-text-subtle subpixel-antialiased mt-2">
                         {{ event.start }} - {{ event.end }}
+                        <span v-if="event.series_id" class="ml-2 inline-flex items-center gap-1 rounded-full border border-border-subtle px-2 py-0.5 text-[11px] font-medium text-text-subtle">
+                            <IconRepeat class="size-3" />
+                            {{ $t('Part of a series') }}
+                        </span>
                     </p>
                     <div class="text-sm leading-6 font-lexend text-text-subtle mt-2 flex items-center">
                         <div>
@@ -49,6 +53,19 @@
                                     aria-hidden="true"/>
                                 {{ $t('Restore') }}
                             </Link>
+                        </MenuItem>
+                        <MenuItem v-if="event.series_id" v-slot="{ active }">
+                            <button type="button"
+                                    @click="restoreSeries(event.series_id)"
+                                    :title="$t('All events of this series are restored from the trash.')"
+                                    :class="[active ? 'bg-text-inverse/10 text-accent-700' :
+                                          'text-text-subtle',
+                                          'group flex items-center px-4 py-2 w-full text-sm subpixel-antialiased']">
+                                <IconRepeat
+                                    class="mr-3 h-5 w-5 text-primaryText group-hover:text-accent-700"
+                                    aria-hidden="true"/>
+                                {{ $t('Restore series') }}
+                            </button>
                         </MenuItem>
                         <MenuItem v-slot="{ active }">
                             <Link as="button" method="delete"
@@ -85,7 +102,8 @@
 </template>
 
 <script>
-import {IconChevronDown, IconChevronUp, IconDotsVertical, IconRefresh, IconSearch, IconTrash, IconX} from "@tabler/icons-vue";
+import {IconChevronDown, IconChevronUp, IconDotsVertical, IconRefresh, IconRepeat, IconSearch, IconTrash, IconX} from "@tabler/icons-vue";
+import axios from "axios";
 import AppLayout from "@/Layouts/AppLayout.vue";
 import TrashLayout from "@/Layouts/TrashLayout.vue";
 import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
@@ -116,6 +134,7 @@ export default {
         MenuItems,
         MenuItem,
         IconRefresh,
+        IconRepeat,
         IconTrash,
         Link
     },
@@ -132,6 +151,12 @@ export default {
             } else {
                 this.showTemporaryEvents.push(eventId);
             }
+        },
+        restoreSeries(seriesId) {
+            // JSON-Endpunkt; danach Liste neu laden
+            axios.patch(route('events.series.restore', { series: seriesId }))
+                .then(() => this.$inertia.reload({ only: ['trashed_events'] }))
+                .catch((e) => console.error('series-restore:failed', e));
         },
         forceDeleteAll() {
             this.$inertia.delete(route('events.force.all'), {

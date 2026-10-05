@@ -37,7 +37,9 @@ class DemoShiftSeeder extends Seeder
 
         $demoProjects = Project::query()
             ->get(['id', 'name'])
-            ->filter(static fn (Project $project) => DemoProjectPools::archetypeForProjectName($project->name) !== null);
+            ->filter(
+                static fn (Project $project) => DemoProjectPools::archetypeForProjectName($project->name) !== null
+            );
 
         $events = Event::query()
             ->whereIn('project_id', $demoProjects->pluck('id'))

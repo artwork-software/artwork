@@ -47,13 +47,13 @@
                                 <template v-if="property.type === 'checkbox'">
                                     <component :is="getPropertyValue(property.id) === '1' ? IconCheck : IconX" class="h-5 w-5" :class="getPropertyValue(property.id) === '1' ? 'text-success' : 'text-text-subtle'" />
                                 </template>
-                                <template v-else-if="property.type === 'link' && getPropertyValue(property.id)">
-                                    <a :href="getPropertyValue(property.id)" target="_blank" class="text-accent-600 hover:text-accent-600">
+                                <template v-else-if="property.type === 'link' && isSafeHttpUrl(getPropertyValue(property.id))">
+                                    <a :href="getPropertyValue(property.id)" target="_blank" rel="noopener" class="text-accent-600 hover:text-accent-600">
                                         {{ getPropertyValue(property.id) }}
                                     </a>
                                 </template>
                                 <template v-else-if="property.type === 'upload' && getPropertyValue(property.id)">
-                                    <a :href="'/storage/' + getPropertyValue(property.id)" target="_blank" download class="inline-flex items-center gap-1.5 text-accent-700 hover:underline">
+                                    <a :href="route('crm.contacts.property-file.download', { crmContact: contact.id, property: property.id })" target="_blank" download class="inline-flex items-center gap-1.5 text-accent-700 hover:underline">
                                         <component :is="IconFile" class="h-4 w-4" />
                                         {{ getPropertyValue(property.id).split('/').pop() }}
                                     </a>
@@ -74,6 +74,7 @@
 </template>
 
 <script setup>
+import { isSafeHttpUrl } from '@/Helper/SafeUrl.js'
 import { ref } from 'vue'
 import PropertyIcon from '@/Artwork/Icon/PropertyIcon.vue'
 import ToolTipComponent from '@/Components/ToolTips/ToolTipComponent.vue'

@@ -423,7 +423,7 @@
                     <li
                         v-else
                         v-for="user in user_search_results"
-                        :key="`search-${user.email}`"
+                        :key="`search-${user.type ?? 'user'}-${user.id}`"
                         class="py-4"
                     >
                         <div class="flex items-center justify-between gap-4">

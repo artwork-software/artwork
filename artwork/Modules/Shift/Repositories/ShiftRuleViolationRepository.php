@@ -37,7 +37,8 @@ class ShiftRuleViolationRepository extends BaseRepository
     public static function listRelations(): array
     {
         return [
-            'shiftRule:id,name,description,trigger_type,warning_color,default_compensation_days,default_compensation_deadline_days',
+            'shiftRule:id,name,description,trigger_type,warning_color,'
+                . 'default_compensation_days,default_compensation_deadline_days',
             'user:id,first_name,last_name',
             // Craft lädt per $with immer craftShiftPlaner, Room immer admins + creator — für die Liste
             // unnötig (Muster ShiftWeekStatusController::visibleCrafts), deshalb abgeschaltet.
@@ -98,8 +99,14 @@ class ShiftRuleViolationRepository extends BaseRepository
                 fn (Builder $q) => $q->where('shift_rule_id', (int) $filters['shift_rule_id'])
             )
             ->when(!empty($filters['severity']), fn (Builder $q) => $q->where('severity', $filters['severity']))
-            ->when(!empty($filters['date_from']), fn (Builder $q) => $q->whereDate('violation_date', '>=', $filters['date_from']))
-            ->when(!empty($filters['date_to']), fn (Builder $q) => $q->whereDate('violation_date', '<=', $filters['date_to']));
+            ->when(
+                !empty($filters['date_from']),
+                fn (Builder $q) => $q->whereDate('violation_date', '>=', $filters['date_from'])
+            )
+            ->when(
+                !empty($filters['date_to']),
+                fn (Builder $q) => $q->whereDate('violation_date', '<=', $filters['date_to'])
+            );
     }
 
     /**
@@ -183,7 +190,10 @@ class ShiftRuleViolationRepository extends BaseRepository
 
     public function getActiveForDateRange(string $startDate, string $endDate, ?array $userIds = null): Collection
     {
-        $query = ShiftRuleViolation::with(['shiftRule:id,name,description,warning_color,default_compensation_days,default_compensation_deadline_days'])
+        $query = ShiftRuleViolation::with([
+            'shiftRule:id,name,description,warning_color,'
+                . 'default_compensation_days,default_compensation_deadline_days',
+        ])
             ->whereBetween('violation_date', [$startDate, $endDate])
             ->where('status', 'active');
 

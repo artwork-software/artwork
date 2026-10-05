@@ -108,7 +108,7 @@ const importTimelinePreset = () => {
 
 onMounted(async () => {
     try {
-        const response = await axios.get(route('timeline-presets.all'))
+        const response = await axios.get(route('timeline-presets.all', { event: props.event.id }))
         allPresets.value = response.data
     } catch (error) {
         console.error('Error loading timeline presets:', error)

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use Artwork\Modules\Budget\Http\Middleware\EnsureUserCanAccessProjectBudget;
 use Artwork\Modules\Budget\Services\ColumnCellService;
 use Artwork\Modules\Budget\Http\Requests\StoreBudgetManagementCostUnitRequest;
 use Artwork\Modules\Budget\Http\Requests\UpdateBudgetManagementCostUnitRequest;
@@ -31,7 +32,7 @@ class BudgetManagementCostUnitController extends Controller
         $perPage = (int) $request->input('entitiesPerPage', 25);
 
         $trashedCostUnits = BudgetManagementCostUnit::onlyTrashed()
-            ->when($search !== '', function ($query) use ($search) {
+            ->when($search !== '', function ($query) use ($search): void {
                 $query->where('cost_unit_number', 'like', '%' . $search . '%')
                     ->orWhere('title', 'like', '%' . $search . '%');
             })
@@ -52,7 +53,6 @@ class BudgetManagementCostUnitController extends Controller
         try {
             $this->budgetManagementCostUnitService->createFromRequest($storeBudgetManagementCostUnitRequest);
         } catch (\Throwable $t) {
-
             return Redirect::back()->with(
                 'error',
                 __('flash-messages.budget-account-management.error.cost-unit.create')
@@ -72,7 +72,6 @@ class BudgetManagementCostUnitController extends Controller
         try {
             $this->budgetManagementCostUnitService->updateFromRequest($budgetManagementCostUnit, $request);
         } catch (\Throwable $t) {
-
             return Redirect::back()->with(
                 'error',
                 __('flash-messages.budget-account-management.error.cost-unit.update')
@@ -90,7 +89,6 @@ class BudgetManagementCostUnitController extends Controller
         try {
             $this->budgetManagementCostUnitService->delete($budgetManagementCostUnit);
         } catch (Throwable $t) {
-
             return Redirect::back()->with(
                 'error',
                 __('flash-messages.budget-account-management.error.cost-unit.delete')
@@ -128,7 +126,10 @@ class BudgetManagementCostUnitController extends Controller
         ProjectService $projectService,
         ColumnCellService $columnCellService
     ): RedirectResponse {
-        BudgetManagementCostUnit::onlyTrashed()->each(function ($costUnit) use ($projectService, $columnCellService) {
+        BudgetManagementCostUnit::onlyTrashed()->each(function ($costUnit) use (
+            $projectService,
+            $columnCellService
+        ): void {
             $this->budgetManagementCostUnitService->forceDelete($costUnit, $projectService, $columnCellService);
         });
         return Redirect::route('budget-settings.account-management.trash-cost-units');
@@ -136,6 +137,9 @@ class BudgetManagementCostUnitController extends Controller
 
     public function search(Request $request): Collection
     {
+        abort_unless(EnsureUserCanAccessProjectBudget::hasAnyBudgetAccess($request->user()), 403);
+        $request->validate(['search' => ['required', 'string', 'max:255']]);
+
         return $this->budgetManagementCostUnitService->searchByRequest($request);
     }
 }

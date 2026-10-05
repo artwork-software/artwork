@@ -71,6 +71,7 @@ class TaskController extends Controller
     ): JsonResponse|RedirectResponse {
         /** @var Checklist $checklist */
         $checklist = $this->checklistService->getById($request->integer('checklist_id'));
+        $this->authorize('update', $checklist);
 
         $this->taskService->createTaskByRequest(
             $checklist,
@@ -121,6 +122,8 @@ class TaskController extends Controller
 
     public function edit(Task $task): Response|ResponseFactory
     {
+        $this->authorize('view', $task->checklist);
+
         return inertia('Tasks/Edit', [
             'task' => new TaskIndexResource($task),
         ]);
@@ -128,6 +131,8 @@ class TaskController extends Controller
 
     public function update(UpdateTaskRequest $request, Task $task): RedirectResponse
     {
+        $this->authorize('update', $task->checklist);
+
         $this->taskService->updateByRequest(
             $task,
             $request->collect()
@@ -174,6 +179,11 @@ class TaskController extends Controller
 
     public function updateOrder(UpdateTaskOrderInChecklistRequest $request): RedirectResponse
     {
+        $tasks = Task::with('checklist')->whereIn('id', $request->collect('checklistTasks')->pluck('id'))->get();
+        foreach ($tasks as $task) {
+            $this->authorize('update', $task->checklist);
+        }
+
         $this->taskService->reorderTasks(
             $request->collect('checklistTasks')
         );
@@ -183,6 +193,8 @@ class TaskController extends Controller
 
     public function destroy(Task $task): RedirectResponse
     {
+        $this->authorize('update', $task->checklist);
+
         /** @var Checklist $checklist */
         $checklist = $task->checklist()->first();
 
@@ -208,6 +220,8 @@ class TaskController extends Controller
 
     public function updateDoneStatus(Task $task): RedirectResponse
     {
+        $this->authorize('update', $task->checklist);
+
         $this->taskService->doneOrUndoneTask(
             $task,
             $this->authManager->id()
@@ -223,6 +237,9 @@ class TaskController extends Controller
 
     public function changeTaskChecklist(Checklist $checklist, Task $task): void
     {
+        $this->authorize('update', $task->checklist);
+        $this->authorize('update', $checklist);
+
         $oldChecklist = $task->checklist()->first();
         $task->update([
             'checklist_id' => $checklist->id

@@ -1,5 +1,5 @@
 <template>
-    <div class="rounded-2xl border border-border-subtle bg-white">
+    <div class="rounded-xl border border-border-subtle">
         <button
             type="button"
             class="flex w-full items-center justify-between px-5 py-4 text-left"

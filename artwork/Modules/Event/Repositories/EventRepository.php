@@ -202,7 +202,7 @@ class EventRepository extends BaseRepository
     public function getEventsWithoutRoom(int|Project|null $project = null, ?array $with = null): Collection
     {
         /** @var Builder $builder */
-        $builder = Event::query()->hasNoRoom();
+        $builder = Event::query()->hasNoRoom()->visiblePlanningFor(Auth::user());
 
         if ($project) {
             $builder->byProjectId(($project instanceof Project) ? $project->getAttribute('id') : $project);
@@ -371,6 +371,11 @@ class EventRepository extends BaseRepository
                         }
                     });
                 }
+            )
+            // Ohne Anzeigeeinstellungen (Client lässt sie weg) trotzdem keine Planungstermine ohne Planungsrecht
+            ->when(
+                $displaySettings === null,
+                fn (Builder $query) => $query->visiblePlanningFor(Auth::user())
             )
                 ->where('deleted_at', null)
             ->orderBy('start_time');

@@ -11,11 +11,13 @@ use Artwork\Modules\Contacts\Services\ContactService;
 class ContactController extends Controller
 {
 
-    public function __construct(protected ContactService $contactService) {}
+    public function __construct(protected ContactService $contactService)
+    {
+    }
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(): void
     {
         //
     }
@@ -23,7 +25,7 @@ class ContactController extends Controller
     /**
      * Show the form for creating a new resource.
      */
-    public function create()
+    public function create(): void
     {
         //
     }
@@ -31,9 +33,11 @@ class ContactController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(StoreContactRequest $request, $model, $modelId)
+    public function store(StoreContactRequest $request, $model, $modelId): void
     {
         $modelObject = $this->contactService->resolveModelInstance($model, $modelId);
+
+        $this->authorize('create', [Contact::class, $modelObject]);
 
         $this->contactService->createForModel($modelObject, $request->validated());
     }
@@ -41,7 +45,7 @@ class ContactController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(Contact $contact)
+    public function show(Contact $contact): void
     {
         //
     }
@@ -49,7 +53,7 @@ class ContactController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(Contact $contact)
+    public function edit(Contact $contact): void
     {
         //
     }
@@ -57,16 +61,20 @@ class ContactController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(UpdateContactRequest $request, Contact $contact)
+    public function update(UpdateContactRequest $request, Contact $contact): void
     {
+        $this->authorize('update', $contact);
+
         $this->contactService->updateForModel($contact, $request->validated());
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Contact $contact)
+    public function destroy(Contact $contact): void
     {
+        $this->authorize('delete', $contact);
+
         $this->contactService->deleteFromModel($contact);
     }
 }

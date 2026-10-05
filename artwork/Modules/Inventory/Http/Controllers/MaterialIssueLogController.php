@@ -55,29 +55,29 @@ class MaterialIssueLogController
 
         $paginator = Activity::query()
             ->where('log_name', 'material_issue')
-            ->where(function ($q) use ($internalIds, $externalIds, $projectId, $startDate, $endDate) {
-                $q->when(!empty($internalIds), function ($qq) use ($internalIds) {
-                    $qq->orWhere(function ($qqq) use ($internalIds) {
+            ->where(function ($q) use ($internalIds, $externalIds, $projectId, $startDate, $endDate): void {
+                $q->when(!empty($internalIds), function ($qq) use ($internalIds): void {
+                    $qq->orWhere(function ($qqq) use ($internalIds): void {
                         $qqq->where('subject_type', InternalIssue::class)
                             ->whereIn('subject_id', $internalIds);
                     });
                 })
-                ->when(!empty($externalIds), function ($qq) use ($externalIds) {
-                    $qq->orWhere(function ($qqq) use ($externalIds) {
+                ->when(!empty($externalIds), function ($qq) use ($externalIds): void {
+                    $qq->orWhere(function ($qqq) use ($externalIds): void {
                         $qqq->where('subject_type', ExternalIssue::class)
                             ->whereIn('subject_id', $externalIds);
                     });
                 })
                 // Issues are hard-deleted — their history (incl. the delete
                 // entry) can only be matched via the activity date itself.
-                ->orWhere(function ($qq) use ($projectId, $startDate, $endDate) {
+                ->orWhere(function ($qq) use ($projectId, $startDate, $endDate): void {
                     $qq->where('subject_type', InternalIssue::class)
                         ->whereNotIn('subject_id', InternalIssue::query()->select('id'))
                         ->whereBetween('created_at', [$startDate, $endDate])
                         ->when($projectId > 0, fn($x) => $x->where('properties->project_id', $projectId));
                 })
-                ->when($projectId <= 0, function ($qq) use ($startDate, $endDate) {
-                    $qq->orWhere(function ($qqq) use ($startDate, $endDate) {
+                ->when($projectId <= 0, function ($qq) use ($startDate, $endDate): void {
+                    $qq->orWhere(function ($qqq) use ($startDate, $endDate): void {
                         $qqq->where('subject_type', ExternalIssue::class)
                             ->whereNotIn('subject_id', ExternalIssue::query()->select('id'))
                             ->whereBetween('created_at', [$startDate, $endDate]);

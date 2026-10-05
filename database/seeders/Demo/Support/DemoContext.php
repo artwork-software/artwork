@@ -107,6 +107,7 @@ final class DemoContext
                 ->values();
             $roleIndex = array_search($role, $legacyRoles, true);
             $rooms = $rooms->merge(
+                // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter -- Collection-Callback (value, key) – Signatur vorgegeben
                 $legacy->filter(static fn (Room $room, int $index) => $index % count($legacyRoles) === $roleIndex)
             )->values();
         }

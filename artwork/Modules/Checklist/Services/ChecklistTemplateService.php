@@ -20,7 +20,7 @@ readonly class ChecklistTemplateService
     public function duplicate(ChecklistTemplate $checklistTemplate, int $userId): ChecklistTemplate
     {
         $newChecklistTemplate = $this->createChecklistTemplate([
-            'name' => $checklistTemplate->getAttribute('name') . ' (Kopie)',
+            'name' => $checklistTemplate->getAttribute('name') . ' ' . __('(Copy)'),
             'user_id' => $userId,
         ]);
         $this->checklistTemplateRepository->save($newChecklistTemplate);

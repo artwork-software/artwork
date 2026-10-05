@@ -52,7 +52,7 @@ readonly class RoomService
     public function duplicateByRoomModelWithoutArea(Room $room): Room
     {
         $new_room = $room->replicate();
-        $new_room->name = '(Kopie) ' . $room->name;
+        $new_room->name = __('(Copy)') . ' ' . $room->name;
         $this->roomRepository->save($new_room);
 
         return $new_room;

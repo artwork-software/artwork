@@ -47,8 +47,7 @@
                     <p
                         class="line-clamp-1 break-words"
                         :class="isUnread ? 'text-text-muted font-semibold' : 'text-text-subtle font-normal'"
-                        v-html="lastMessageText"
-                    />
+                    >{{ lastMessageText }}</p>
                 </div>
 
                 <div v-else class="text-text-subtle">

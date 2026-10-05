@@ -30,7 +30,17 @@ class BiComponentSettingsController extends Controller
     public function index(): Response
     {
         $biFields = Component::isBiField()
-            ->select(['id', 'name', 'type', 'data', 'special', 'sidebar_enabled', 'permission_type', 'is_bi_field', 'bi_order'])
+            ->select([
+                'id',
+                'name',
+                'type',
+                'data',
+                'special',
+                'sidebar_enabled',
+                'permission_type',
+                'is_bi_field',
+                'bi_order',
+            ])
             ->orderBy('bi_order')
             ->get();
 
@@ -87,7 +97,9 @@ class BiComponentSettingsController extends Controller
                 'key' => 'module',
                 'title' => 'Enable the BI module',
                 'done' => $moduleEnabled,
-                'detail' => $moduleEnabled ? 'Module is enabled.' : 'The module is disabled — menu and dashboard are hidden.',
+                'detail' => $moduleEnabled
+                     ? 'Module is enabled.'
+                     : 'The module is disabled — menu and dashboard are hidden.',
                 'href' => route('tool.module-settings.index'),
                 'actionLabel' => 'Open module settings',
             ],
@@ -121,7 +133,11 @@ class BiComponentSettingsController extends Controller
                 'done' => $roomsTotal > 0 && $roomsWithCapacity === $roomsTotal,
                 'detail' => $roomsTotal === 0
                     ? 'No rooms yet.'
-                    : $roomsWithCapacity . ' / ' . $roomsTotal . ' ' . __('rooms have a capacity — needed for the occupancy rate.'),
+                    : $roomsWithCapacity
+                         . ' / '
+                         . $roomsTotal
+                         . ' '
+                         . __('rooms have a capacity — needed for the occupancy rate.'),
                 'href' => route('areas.management'),
                 'actionLabel' => 'Open rooms',
                 // Teilweise erledigt ist hier normal (nicht jeder Raum hat Publikum)
@@ -151,7 +167,13 @@ class BiComponentSettingsController extends Controller
                 'key' => 'permissions',
                 'title' => 'Grant BI permissions',
                 'done' => $dashboardUsers > 0,
-                'detail' => $dashboardUsers . ' ' . __('people can view the dashboard,') . ' ' . $exportUsers . ' ' . __('can export.'),
+                'detail' => $dashboardUsers
+                     . ' '
+                     . __('people can view the dashboard,')
+                     . ' '
+                     . $exportUsers
+                     . ' '
+                     . __('can export.'),
                 'href' => route('users'),
                 'actionLabel' => 'Open users',
             ],

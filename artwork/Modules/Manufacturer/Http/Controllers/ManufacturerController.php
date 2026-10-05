@@ -12,7 +12,9 @@ use Inertia\Inertia;
 
 class ManufacturerController extends Controller
 {
-    public function __construct(protected ManufacturerService $service) {}
+    public function __construct(protected ManufacturerService $service)
+    {
+    }
 
     public function index(Request $request)
     {
@@ -26,17 +28,17 @@ class ManufacturerController extends Controller
         ]);
     }
 
-    public function store(StoreManufacturerRequest $request)
+    public function store(StoreManufacturerRequest $request): void
     {
         $this->service->store($request->validated());
     }
 
-    public function update(UpdateManufacturerRequest $request, Manufacturer $manufacturer)
+    public function update(UpdateManufacturerRequest $request, Manufacturer $manufacturer): void
     {
         $this->service->update($manufacturer, $request->validated());
     }
 
-    public function destroy(Manufacturer $manufacturer)
+    public function destroy(Manufacturer $manufacturer): void
     {
         $this->service->delete($manufacturer);
     }

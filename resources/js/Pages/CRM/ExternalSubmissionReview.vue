@@ -35,7 +35,7 @@
                                         {{ $t('Reject') }}
                                     </button>
                                 </div>
-                                <span v-else class="text-xs uppercase text-text-subtle">{{ change.approval_status }}</span>
+                                <span v-else class="text-xs uppercase text-text-subtle">{{ $t(change.approval_status) }}</span>
                             </td>
                         </tr>
                     </tbody>

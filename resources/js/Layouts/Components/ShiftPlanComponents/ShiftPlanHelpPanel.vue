@@ -239,6 +239,19 @@
                             </ol>
                         </template>
                     </div>
+                    <!-- Verweis ins Handbuch: ausführliche Erklärung aller Ansichten und Anzeigeeinstellungen -->
+                    <div class="border-t border-border-subtle px-4 py-3">
+                        <a
+                            :href="manualHref"
+                            target="_blank"
+                            rel="noopener"
+                            class="inline-flex items-center gap-1.5 text-xs font-medium text-accent-600 hover:text-accent-700"
+                        >
+                            <PropertyIcon name="IconBook" class="h-4 w-4" />
+                            {{ $t('Views and display settings in the manual') }}
+                            <PropertyIcon name="IconExternalLink" class="h-3.5 w-3.5" />
+                        </a>
+                    </div>
                 </aside>
             </Transition>
         </div>
@@ -251,6 +264,8 @@ import {Link, usePage} from '@inertiajs/vue3'
 import {can, is} from 'laravel-permission-to-vuejs'
 import PropertyIcon from '@/Artwork/Icon/PropertyIcon.vue'
 import {IconInfoCircle, IconX} from '@tabler/icons-vue'
+import {useI18n} from 'vue-i18n'
+import {manualUrl} from '@/Helper/manualLinks.js'
 
 defineProps({
     /** Kein eigener Icon-Button — das Panel wird von außen über die exponierte open()-Methode geöffnet */
@@ -258,6 +273,9 @@ defineProps({
 })
 
 const STORAGE_KEY = 'shift-plan-help.tab'
+
+const { locale } = useI18n()
+const manualHref = computed(() => manualUrl('shift-plan/views-and-display-settings', locale.value))
 
 const visible = ref(false)
 const closing = ref(false)

@@ -51,15 +51,44 @@ final class ArtistResidencyControllerTest extends FeatureTestCase
     }
 
     #[Test]
-    public function update_name_returns_403_when_artist_is_saved(): void
+    public function update_name_renames_linked_artist_residency_inline(): void
     {
         $this->actingAsAdmin();
-        $ar = ArtistResidency::factory()->create(['do_not_save_artist' => false]);
+        $ar = ArtistResidency::factory()->create(['do_not_save_artist' => false, 'name' => 'Old Name']);
 
-        $response = $this->patch(route('artist-residencies.update-name', $ar), [
-            'name' => 'New Name',
+        $response = $this->patchJson(route('artist-residencies.update-name', $ar), [
+            'field' => 'name',
+            'value' => '  New Name  ',
         ]);
 
-        $response->assertForbidden();
+        $response->assertOk();
+        $this->assertDatabaseHas('artist_residencies', ['id' => $ar->id, 'name' => 'New Name']);
+    }
+
+    #[Test]
+    public function update_name_can_clear_first_name_but_not_name(): void
+    {
+        $this->actingAsAdmin();
+        $ar = ArtistResidency::factory()->create(['name' => 'Keep Me', 'first_name' => 'Ada']);
+
+        $this->patchJson(route('artist-residencies.update-name', $ar), ['field' => 'first_name', 'value' => ''])
+            ->assertOk();
+        $this->assertDatabaseHas('artist_residencies', ['id' => $ar->id, 'first_name' => null]);
+
+        $this->patchJson(route('artist-residencies.update-name', $ar), ['field' => 'name', 'value' => '   '])
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors(['value']);
+        $this->assertDatabaseHas('artist_residencies', ['id' => $ar->id, 'name' => 'Keep Me']);
+    }
+
+    #[Test]
+    public function update_name_rejects_unknown_field(): void
+    {
+        $this->actingAsAdmin();
+        $ar = ArtistResidency::factory()->create();
+
+        $this->patchJson(route('artist-residencies.update-name', $ar), ['field' => 'phone_number', 'value' => 'x'])
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors(['field']);
     }
 }

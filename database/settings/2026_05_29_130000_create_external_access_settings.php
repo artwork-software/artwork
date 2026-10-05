@@ -17,7 +17,8 @@ return new class extends SettingsMigration {
 
     public function down(): void
     {
-        foreach ([
+        foreach (
+            [
             'company_name_override',
             'default_crm_access_months',
             'default_tab_access_days',
@@ -26,7 +27,8 @@ return new class extends SettingsMigration {
             'session_absolute_lifetime_minutes',
             'rate_limit_request_link_per_email_per_hour',
             'rate_limit_request_link_per_ip_per_hour',
-        ] as $key) {
+            ] as $key
+        ) {
             $this->migrator->delete("external_access.{$key}");
         }
     }

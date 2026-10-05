@@ -31,9 +31,11 @@ class ProjectFileController extends Controller
     use HandlesFileUpload;
 
     /**
+     * Typen, die per ?inline=1 im Browser gerendert werden dürfen; alles andere geht als Attachment raus.
+     *
      * @var list<string>
      */
-    private const INLINE_PROJECT_FILE_MIME_TYPES = [
+    public const INLINE_PROJECT_FILE_MIME_TYPES = [
         'application/pdf',
         'image/avif',
         'image/bmp',
@@ -56,7 +58,8 @@ class ProjectFileController extends Controller
      */
     public function store(FileUpload $request, Project $project, ProjectController $projectController): void
     {
-        $this->authorize('create', [ProjectFile::class, $project]);
+        $tabId = $request->filled('tabId') ? $request->integer('tabId') : null;
+        $this->authorize('create', [ProjectFile::class, $project, $tabId]);
 
         if (!Storage::exists("project_files")) {
             Storage::makeDirectory("project_files");
@@ -70,7 +73,7 @@ class ProjectFileController extends Controller
         Storage::putFileAs('project_files', $file, $basename);
 
         $projectFile = $project->project_files()->create([
-            'tab_id' => $request->input('tabId'),
+            'tab_id' => $tabId,
             'name' => $original_name,
             'basename' => $basename,
 
@@ -186,8 +189,9 @@ class ProjectFileController extends Controller
         }
 
         if ($request->file('file')) {
-            Storage::delete('project_files/' . $projectFile->basename);
             $file = $request->file('file');
+            $this->handleFile(ArtworkFileTypes::PROJECT, $file);
+            Storage::delete('project_files/' . $projectFile->basename);
             $original_name = $file->getClientOriginalName();
             $basename = StoredFileName::forUpload($file);
 

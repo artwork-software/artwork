@@ -98,8 +98,22 @@ final class OvertimeDeadlineCheckTest extends TestCase
     {
         [$user] = $this->userWithOvertimeRule();
         $today = Carbon::today();
-        $this->overtimeEntryFor($user, $today->copy()->subDays(80), 210, $today->copy()->addDays(5), UserOvertime::STATUS_COMPENSATED, 0);
-        $this->overtimeEntryFor($user, $today->copy()->subDays(70), 60, $today->copy()->subDays(1), UserOvertime::STATUS_PAID_OUT, 0);
+        $this->overtimeEntryFor(
+            $user,
+            $today->copy()->subDays(80),
+            210,
+            $today->copy()->addDays(5),
+            UserOvertime::STATUS_COMPENSATED,
+            0
+        );
+        $this->overtimeEntryFor(
+            $user,
+            $today->copy()->subDays(70),
+            60,
+            $today->copy()->subDays(1),
+            UserOvertime::STATUS_PAID_OUT,
+            0
+        );
 
         $violations = $this->check->check($this->rule(14), $user, $today->copy(), $today->copy()->addDays(14));
 
@@ -131,7 +145,10 @@ final class OvertimeDeadlineCheckTest extends TestCase
         $violations = $this->check->check($rule, $user, $today->copy(), $today->copy()->addDays(14));
 
         $this->assertCount(1, $violations);
-        $this->assertSame(1, \Artwork\Modules\Shift\Models\ShiftRuleViolation::where('shift_rule_id', $rule->id)->count());
+        $this->assertSame(
+            1,
+            \Artwork\Modules\Shift\Models\ShiftRuleViolation::where('shift_rule_id', $rule->id)->count()
+        );
         $this->assertSame(90, $violations->first()->violation_data['remaining_minutes']);
     }
 }

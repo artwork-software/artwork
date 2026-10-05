@@ -24,17 +24,17 @@ class CrmPropertyGroupRepository
             return $query->get();
         }
 
-        return $query->where(function ($q) use ($userId, $departmentIds) {
+        return $query->where(function ($q) use ($userId, $departmentIds): void {
             $q->where('is_confidential', false)
-                ->orWhereHas('permissions', function ($sub) use ($userId, $departmentIds) {
+                ->orWhereHas('permissions', function ($sub) use ($userId, $departmentIds): void {
                     $sub->where('can_view', true)
-                        ->where(function ($morph) use ($userId, $departmentIds) {
-                            $morph->where(function ($u) use ($userId) {
+                        ->where(function ($morph) use ($userId, $departmentIds): void {
+                            $morph->where(function ($u) use ($userId): void {
                                 $u->where('permissionable_type', (new User())->getMorphClass())
                                     ->where('permissionable_id', $userId);
                             });
                             if (!empty($departmentIds)) {
-                                $morph->orWhere(function ($d) use ($departmentIds) {
+                                $morph->orWhere(function ($d) use ($departmentIds): void {
                                     $d->where('permissionable_type', (new Department())->getMorphClass())
                                         ->whereIn('permissionable_id', $departmentIds);
                                 });

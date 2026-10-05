@@ -96,6 +96,7 @@
                                         :user="user"
                                         :shift="shift"
                                         @shiftDeleted="handleShiftDeleted"
+                                        @confirmation-changed="emit('desiresReload')"
                                     />
                                 </div>
                             </template>
@@ -109,8 +110,8 @@
                         </div>
                     </section>
 
-                    <!-- Projekte (Zuordnungen + Wünsche an diesem Tag) -->
-                    <section class="space-y-3">
+                    <!-- Projekte (Zuordnungen + Wünsche an diesem Tag); globaler Schalter in den Schichteinstellungen -->
+                    <section v-if="projectAssignmentsEnabled" class="space-y-3">
                         <div class="flex items-center justify-between">
                             <div>
                                 <h3 class="text-xs font-semibold tracking-wide text-text-subtle uppercase">
@@ -1022,6 +1023,7 @@ const emit = defineEmits(['closed', 'delete', 'desiresReload', 'openHistory']);
 
 const { t } = useI18n();
 const page = usePage();
+const projectAssignmentsEnabled = computed(() => page.props.project_assignments_enabled !== false);
 const { can, hasAdminRole } = usePermission(page.props);
 
 // Verfügbarkeits-Typen
@@ -1646,7 +1648,12 @@ function openHistory() {
     const name = el.type === 'service_provider'
         ? el.provider_name
         : (el.full_name ?? `${el.first_name ?? ''} ${el.last_name ?? ''}`.trim());
-    emit('openHistory', { search: name ?? '', date: props.day.withoutFormat });
+    const type = el.type === 'service_provider' || el.type === 'freelancer' ? el.type : 'user';
+    emit('openHistory', {
+        search: name ?? '',
+        person: el.id ? { id: el.id, type, name: name ?? '' } : null,
+        date: props.day.withoutFormat,
+    });
 }
 
 function removeUserFromShift(shiftId, usersPivotId) {

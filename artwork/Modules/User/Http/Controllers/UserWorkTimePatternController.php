@@ -9,6 +9,7 @@ use Artwork\Modules\User\Models\UserWorkTimePattern;
 use Artwork\Modules\User\Services\UserWorkTimePatternService;
 use Artwork\Modules\User\Services\WorkingHourCacheService;
 use Inertia\Inertia;
+use Artwork\Modules\WorkTime\Support\WorkTimeAccounting;
 
 class UserWorkTimePatternController extends Controller
 {
@@ -23,6 +24,8 @@ class UserWorkTimePatternController extends Controller
      */
     public function index(): \Inertia\Response
     {
+        abort_unless(WorkTimeAccounting::isEnabled(), 403);
+
         return Inertia::render('Settings/WorkTimePattern/Index', [
             'workTimePatterns' => UserWorkTimePattern::all(),
         ]);

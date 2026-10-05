@@ -13,6 +13,7 @@ use Artwork\Modules\Freelancer\Models\Freelancer;
 use Artwork\Modules\Notification\Services\NotificationService;
 use Artwork\Modules\Scheduling\Services\SchedulingService;
 use Artwork\Modules\User\Models\User;
+use Artwork\Modules\Vacation\Events\WorkerAvailabilityChanged;
 use Artwork\Modules\Vacation\Https\Requests\CreateVacationRequest;
 use Artwork\Modules\Vacation\Services\VacationConflictService;
 use Artwork\Modules\Vacation\Services\VacationSeriesService;
@@ -66,6 +67,7 @@ class AvailabilityController extends Controller
                     }
                     $this->availabilityService->delete($availability);
                 }
+                $this->broadcastWorkerAvailability($availability);
                 return redirect()->back();
             } else {
                 $this->availabilityService->update(
@@ -76,6 +78,7 @@ class AvailabilityController extends Controller
                 );
             }
         }
+        $this->broadcastWorkerAvailability($availability);
         return redirect()->back();
     }
 
@@ -132,6 +135,8 @@ class AvailabilityController extends Controller
             }
         });
 
+        $this->broadcastWorkerAvailability($availability);
+
         return redirect()->back();
     }
 
@@ -139,6 +144,7 @@ class AvailabilityController extends Controller
     {
         $this->authorize('delete', $availability);
         $this->availabilityService->delete($availability);
+        $this->broadcastWorkerAvailability($availability);
         return redirect()->back();
     }
 
@@ -149,6 +155,20 @@ class AvailabilityController extends Controller
             $this->authorize('delete', $firstAvailability);
         }
         $this->availabilitySeriesService->deleteSeries($availabilitySeries);
+        if ($firstAvailability !== null) {
+            $this->broadcastWorkerAvailability($firstAvailability);
+        }
         return redirect()->back();
+    }
+
+    /**
+     * Personenzeile im Dienstplan anderer Clients nachladen lassen — siehe useShiftCalendarListener.
+     */
+    private function broadcastWorkerAvailability(Availability $availability): void
+    {
+        broadcast(WorkerAvailabilityChanged::forMorph(
+            $availability->available_type,
+            (int) $availability->available_id
+        ));
     }
 }

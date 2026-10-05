@@ -1,5 +1,5 @@
 <template>
-    <div class="rounded-2xl border border-border-subtle bg-white p-5">
+    <div>
         <p class="text-sm font-medium text-text-muted mb-2">{{ component.name }}</p>
 
         <dl v-if="entries.length" class="divide-y divide-border-subtle">

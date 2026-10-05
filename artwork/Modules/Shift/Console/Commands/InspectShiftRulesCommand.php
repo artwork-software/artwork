@@ -40,8 +40,15 @@ class InspectShiftRulesCommand extends Command
         /** @var Collection<ShiftRule> $rules */
         $rules = $contract->shiftRules()->where('is_active', true)->get();
         $this->line("Active rules for contract #{$contract->id}:");
-        $this->table(['ID', 'Name', 'Trigger', 'Value', 'Color'],
-            $rules->map(fn($r) => [$r->id, $r->name, $r->trigger_type, $r->individual_number_value, $r->warning_color])->toArray()
+        $this->table(
+            ['ID', 'Name', 'Trigger', 'Value', 'Color'],
+            $rules->map(fn($r) => [
+                $r->id,
+                $r->name,
+                $r->trigger_type,
+                $r->individual_number_value,
+                $r->warning_color,
+            ])->toArray()
         );
 
         // Shifts in range
@@ -105,7 +112,12 @@ class InspectShiftRulesCommand extends Command
 
         // Weekly totals (ISO week)
         $weeklyTotals = $daily->groupBy(function ($row) {
-            return Carbon::parse($row['date'])->isoWeekYear() . '-W' . str_pad((string)Carbon::parse($row['date'])->isoWeek(), 2, '0', STR_PAD_LEFT);
+            return Carbon::parse($row['date'])->isoWeekYear() . '-W' . str_pad(
+                (string)Carbon::parse($row['date'])->isoWeek(),
+                2,
+                '0',
+                STR_PAD_LEFT
+            );
         })->map(fn($g) => round(collect($g)->sum('hours'), 2));
 
         $this->line('Weekly totals (ISO week):');
@@ -138,7 +150,8 @@ class InspectShiftRulesCommand extends Command
             $this->table(['Date', 'Prev day last end', 'Current day first start', 'Rest (h)'], $restRows);
         }
 
-        $this->info('Inspection completed. Compare above numbers with your rule thresholds to understand why violations did or did not trigger.');
+        $this->info('Inspection completed. Compare above numbers with your rule thresholds to understand why '
+            . 'violations did or did not trigger.');
         return self::SUCCESS;
     }
 

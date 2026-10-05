@@ -6,6 +6,7 @@ use App\Actions\Fortify\CreateNewUser;
 use App\Actions\Fortify\ResetUserPassword;
 use App\Actions\Fortify\UpdateUserPassword;
 use App\Actions\Fortify\UpdateUserProfileInformation;
+use App\Http\Responses\NeutralPasswordResetLinkRequestResponse;
 use Artwork\Modules\ExternalUserManagement\Repository\ExternalUserSourceRepository;
 use Artwork\Modules\ExternalUserManagement\Service\CredentialLoginService;
 use Artwork\Modules\GeneralSettings\Models\GeneralSettings;
@@ -18,8 +19,10 @@ use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Laravel\Fortify\Fortify;
+use Laravel\Fortify\Contracts\FailedPasswordResetLinkRequestResponse;
 use Laravel\Fortify\Contracts\LoginResponse;
 
 class FortifyServiceProvider extends ServiceProvider
@@ -71,6 +74,24 @@ class FortifyServiceProvider extends ServiceProvider
             return Limit::perMinute(5)->by($request->session()->get('login.id'));
         });
 
+        RateLimiter::for('password-reset', function (Request $request) {
+            $email = $request->input(Fortify::email());
+            $email = is_string($email) ? Str::lower(trim($email)) : '';
+
+            return Limit::perMinute(5)->by($email . '|' . $request->ip());
+        });
+
+        // Fortify registriert password.email ohne Throttle; die Route existiert erst nach dem Booten.
+        $this->app->booted(function (): void {
+            Route::getRoutes()->getByName('password.email')?->middleware('throttle:password-reset');
+        });
+
+        // Unbekannte E-Mail antwortet wie der Erfolgsfall (keine Nutzer-Enumeration).
+        $this->app->singleton(
+            FailedPasswordResetLinkRequestResponse::class,
+            NeutralPasswordResetLinkRequestResponse::class
+        );
+
         ResetPassword::toMailUsing(
             function (User $notifiable, string $token) {
                 /** @var GeneralSettings $settings */
@@ -96,7 +117,7 @@ class FortifyServiceProvider extends ServiceProvider
                                 '%s/reset-password/%s?email=%s',
                                 $config->get('app.url'),
                                 $token,
-                                $notifiable->email
+                                urlencode($notifiable->email)
                             )
                         ]
                     );

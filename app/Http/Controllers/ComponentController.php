@@ -3,8 +3,11 @@
 namespace App\Http\Controllers;
 
 use Artwork\Modules\Project\Enum\ProjectTabComponentEnum;
+use Artwork\Modules\Project\Http\Requests\StoreComponentRequest;
+use Artwork\Modules\Project\Http\Requests\UpdateComponentRequest;
 use Artwork\Modules\Project\Models\Component;
 use Artwork\Modules\Project\Services\ComponentUsageService;
+use Artwork\Modules\SageApiSettings\Services\SageApiSettingsService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -38,6 +41,15 @@ class ComponentController extends Controller
                 ->get();
         });
 
+        // Sage-Rechnungsübersicht nur zeigen, wenn die Sage-Schnittstelle aktiv ist
+        if (!app(SageApiSettingsService::class)->isEnabled()) {
+            $componentsSpecial = $componentsSpecial
+                ->reject(
+                    fn (Component $component) => $component->type === ProjectTabComponentEnum::SAGE_INVOICE_OVERVIEW->value
+                )
+                ->values();
+        }
+
         return Inertia::render('Settings/ComponentManagement/Index', [
             'components' => $components,
             'componentsSpecial' => $componentsSpecial,
@@ -61,7 +73,7 @@ class ComponentController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request): void
+    public function store(StoreComponentRequest $request): void
     {
         /** @var Component $component */
         $component = Component::create([
@@ -93,7 +105,7 @@ class ComponentController extends Controller
         Cache::forget('print_layout_all_components');
     }
 
-    public function update(Request $request, Component $component): void
+    public function update(UpdateComponentRequest $request, Component $component): void
     {
         $component->users()->detach();
         foreach ($request->get('users', []) as $user) {
@@ -124,6 +136,8 @@ class ComponentController extends Controller
         $component->users()->detach();
         $component->departments()->detach();
         $component->componentInDisclosures()->delete();
+        // Ordner-Inhalte (disclosure_id hat kein ON DELETE CASCADE); die enthaltenen Komponenten bleiben bestehen
+        $component->disclosureContents()->delete();
 
         // first check if the component has projectValues attached
         if ($component->projectValue) {

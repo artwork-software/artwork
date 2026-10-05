@@ -21,7 +21,7 @@ class InventorySubCategoryDTO
      */
     public static function fromModel(InventorySubCategory $subCategory): static
     {
-        $dto = new static();
+        $dto = new self();
         $dto->id = $subCategory->id;
         $dto->name = $subCategory->name;
         $dto->description = $subCategory->description;
@@ -38,7 +38,7 @@ class InventorySubCategoryDTO
      * @param \Illuminate\Database\Eloquent\Collection $subCategories
      * @return array
      */
-    public static function fromCollection($subCategories): array
+    public static function fromCollection(\Illuminate\Database\Eloquent\Collection $subCategories): array
     {
         $dtos = [];
 
@@ -67,7 +67,7 @@ class InventorySubCategoryDTO
      */
     public static function fromArray(array $data): static
     {
-        $dto = new static();
+        $dto = new self();
 
         foreach ($data as $key => $value) {
             if (property_exists($dto, $key)) {

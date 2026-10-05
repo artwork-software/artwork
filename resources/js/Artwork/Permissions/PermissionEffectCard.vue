@@ -29,6 +29,13 @@
                         <PermissionRequirementChips :requirements="requirements" :titles="titles" @jump="$emit('jump', $event)" />
                     </dd>
                 </template>
+                <template v-if="superseded">
+                    <dt class="text-[11px] font-semibold uppercase tracking-wide text-warning pt-0.5">{{ $t('Currently') }}</dt>
+                    <dd class="text-sm text-warning">
+                        <p>{{ $t('Without effect') }}: {{ $t(superseded.label) }}</p>
+                        <p v-if="definition.superseded_effect" class="mt-1 text-text-muted">{{ $t('Still applies') }}: {{ $t(definition.superseded_effect) }}</p>
+                    </dd>
+                </template>
                 <template v-if="definition.implies?.length">
                     <dt class="text-[11px] font-semibold uppercase tracking-wide text-text-subtle pt-0.5">{{ $t('Includes') }}</dt>
                     <dd class="text-sm text-text-muted">{{ definition.implies.map((n) => $t(titles[n] ?? n)).join(' · ') }}</dd>
@@ -75,6 +82,8 @@ import PermissionRequirementChips from '@/Artwork/Permissions/PermissionRequirem
 defineProps({
     definition: { type: Object, required: true },
     requirements: { type: Array, default: () => [] },
+    /** aktive Instanz-Einstellung, die das Recht außer Kraft setzt (Requirement-Objekt) oder null */
+    superseded: { type: Object, default: null },
     /** gesetzte Supersets, die dieses Recht enthalten */
     supersets: { type: Array, default: () => [] },
     titles: { type: Object, default: () => ({}) },

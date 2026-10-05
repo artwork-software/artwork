@@ -78,5 +78,4 @@ final class IndividualTimeServiceTest extends TestCase
             'title' => 'Reise',
         ]);
     }
-
 }

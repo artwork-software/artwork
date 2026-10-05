@@ -22,8 +22,16 @@ class InventoryArticleTestSeeder extends Seeder
 
         $articleTemplates = [
             // Licht / Beleuchtung
-            ['name' => 'LED PAR 64 RGBW', 'description' => 'LED-Scheinwerfer PAR64, 4-Kanal RGBW, 120W', 'quantity' => 24],
-            ['name' => 'Moving Head Spot 250W', 'description' => 'Moving Head mit Spot-Optik, DMX-steuerbar', 'quantity' => 8],
+            [
+                'name' => 'LED PAR 64 RGBW',
+                'description' => 'LED-Scheinwerfer PAR64, 4-Kanal RGBW, 120W',
+                'quantity' => 24,
+            ],
+            [
+                'name' => 'Moving Head Spot 250W',
+                'description' => 'Moving Head mit Spot-Optik, DMX-steuerbar',
+                'quantity' => 8,
+            ],
             ['name' => 'Followspot 1200W', 'description' => 'Verfolger-Scheinwerfer mit Irisblende', 'quantity' => 2],
             ['name' => 'LED Fluter 500W', 'description' => 'Asymmetrischer LED-Fluter für Flächen', 'quantity' => 12],
             ['name' => 'Stufenlinse 1kW', 'description' => 'Stufenlinsen-Scheinwerfer, Tungsten', 'quantity' => 16],
@@ -35,16 +43,32 @@ class InventoryArticleTestSeeder extends Seeder
             ['name' => 'Aktivbox 12" 1000W', 'description' => 'Aktive Fullrange-Box, Bi-Amped', 'quantity' => 8],
             ['name' => 'Subwoofer 18" 1200W', 'description' => 'Aktiver Subwoofer, Cardioid-Modus', 'quantity' => 4],
             ['name' => 'Funkmikrofon Handheld', 'description' => 'UHF-Funkmikrofon mit Handsender', 'quantity' => 12],
-            ['name' => 'Kondensatormikrofon Großmembran', 'description' => 'Studiomikrofon mit Spinne und Windschutz', 'quantity' => 4],
-            ['name' => 'Mischpult 32-Kanal Digital', 'description' => 'Digitalmischpult, 32 Inputs, Dante', 'quantity' => 2],
+            [
+                'name' => 'Kondensatormikrofon Großmembran',
+                'description' => 'Studiomikrofon mit Spinne und Windschutz',
+                'quantity' => 4,
+            ],
+            [
+                'name' => 'Mischpult 32-Kanal Digital',
+                'description' => 'Digitalmischpult, 32 Inputs, Dante',
+                'quantity' => 2,
+            ],
             ['name' => 'Stagebox 32/16', 'description' => 'Digitale Stagebox, 32 In / 16 Out', 'quantity' => 3],
             ['name' => 'In-Ear Monitoring Set', 'description' => 'Stereo In-Ear Set mit Bodypack', 'quantity' => 8],
             ['name' => 'DI-Box aktiv', 'description' => 'Aktive DI-Box, 2-Kanal', 'quantity' => 10],
 
             // Video / Projektion
             ['name' => 'Beamer 10.000 ANSI', 'description' => 'Laserprojektor, WUXGA, Lens-Shift', 'quantity' => 3],
-            ['name' => 'LED-Wand Panel 50x50cm', 'description' => 'Indoor LED-Panel, P2.5, 160x160 Pixel', 'quantity' => 40],
-            ['name' => 'Video-Mischer 4K', 'description' => '4-Kanal Video-Mischer mit Streaming-Ausgang', 'quantity' => 1],
+            [
+                'name' => 'LED-Wand Panel 50x50cm',
+                'description' => 'Indoor LED-Panel, P2.5, 160x160 Pixel',
+                'quantity' => 40,
+            ],
+            [
+                'name' => 'Video-Mischer 4K',
+                'description' => '4-Kanal Video-Mischer mit Streaming-Ausgang',
+                'quantity' => 1,
+            ],
             ['name' => 'HDMI-Kabel 10m', 'description' => 'HDMI 2.0 Kabel, vergoldet, 10 Meter', 'quantity' => 15],
             ['name' => 'SDI-Kabel 20m', 'description' => '3G-SDI Kabel, BNC, 20 Meter', 'quantity' => 10],
 
@@ -66,7 +90,11 @@ class InventoryArticleTestSeeder extends Seeder
             // Kabel / Strom
             ['name' => 'CEE 16A Kabel 25m', 'description' => 'CEE-Verlängerung, 3-phasig, 16A', 'quantity' => 10],
             ['name' => 'CEE 32A Kabel 25m', 'description' => 'CEE-Verlängerung, 3-phasig, 32A', 'quantity' => 6],
-            ['name' => 'Schuko-Verteiler 6-fach', 'description' => 'Steckdosenleiste mit Überspannungsschutz', 'quantity' => 20],
+            [
+                'name' => 'Schuko-Verteiler 6-fach',
+                'description' => 'Steckdosenleiste mit Überspannungsschutz',
+                'quantity' => 20,
+            ],
             ['name' => 'XLR-Kabel 10m', 'description' => '3-pol XLR-Kabel, Neutrik', 'quantity' => 40],
             ['name' => 'XLR-Kabel 20m', 'description' => '3-pol XLR-Kabel, Neutrik', 'quantity' => 20],
             ['name' => 'Multicore 16/4 30m', 'description' => 'Multicore-Kabel, 16 Sends / 4 Returns', 'quantity' => 3],

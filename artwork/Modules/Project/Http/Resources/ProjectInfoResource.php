@@ -25,11 +25,16 @@ class ProjectInfoResource extends JsonResource
     {
         $historyArray = app(ChangeService::class)->historyForFrontend($this->resource);
 
+        // Checklisten teilen sich die Projekt-Instanz, damit ChecklistPolicy::update (can_update)
+        // die Projekt-Relationen einmal statt je Checkliste lädt.
+        $this->checklists->each(fn ($checklist) => $checklist->setRelation('project', $this->resource));
+
         return [
             'id' => $this->id,
             'name' => $this->name,
             'description' => $this->description,
-            'description_without_html' => strip_tags($this->description),
+            // Rohtext: strip_tags würde Eingaben wie "a<b" verstümmeln.
+            'description_without_html' => $this->description,
             'isMemberOfADepartment' => $this->departments
                 ->contains(fn ($department) => $department->users->contains(Auth::user())),
             'key_visual_path' => $this->key_visual_path,

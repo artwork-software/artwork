@@ -151,6 +151,17 @@ export const SETTINGS = [
 
     // ----------------------------------------------------------- Sichtbarkeit & Filter
     {
+        // Termin-Kacheln (inkl. Projektgruppen-Balken) im Raster der Wochenansicht; aus = nur Schichten.
+        // Backend lädt dann keine Termine mehr und zählt bei „Räume ohne Belegung ausblenden" nur Schichten.
+        key: 'show_events',
+        section: 'visibility',
+        views: [VIEW.SHIFT_WEEK],
+        label: 'Show events',
+        description: 'Shows the events of the period as cards in the room grid. Switch off to see only the shifts.',
+        default: (ctx) => ctx.settings?.show_events ?? true,
+        indicator: false,
+    },
+    {
         key: 'hide_unoccupied_rooms',
         section: 'visibility',
         views: [...CALENDAR_VIEWS, ...SHIFT_PLAN_VIEWS],
@@ -181,6 +192,17 @@ export const SETTINGS = [
         description: 'Only displays shifts where at least one position still has capacity for additional staff.',
     },
     {
+        // Besetzungs-Pille „besetzt/Bedarf" in der Gewerkszeile des Personenbereichs (Tag + KW-Summe);
+        // der Klick-Filter „nur nicht voll besetzte" bleibt über das Filter-Popup erreichbar
+        key: 'show_craft_staffing',
+        section: 'visibility',
+        views: [VIEW.SHIFT_WEEK],
+        label: 'Show staffing per craft',
+        description: 'Shows staffed and required shift slots per day and calendar week as a traffic light in the craft row of the person area.',
+        default: (ctx) => ctx.settings?.show_craft_staffing ?? true,
+        indicator: false,
+    },
+    {
         key: 'show_project_assignments',
         section: 'visibility',
         views: SHIFT_DAY_VIEWS,
@@ -188,6 +210,8 @@ export const SETTINGS = [
         description: 'Shows the assigned persons overview and the avatars in the day bars of the project shift tab.',
         default: (ctx) => ctx.settings?.show_project_assignments ?? true,
         indicator: false,
+        // Globaler Schalter in den Schichteinstellungen
+        when: (ctx) => ctx.page.project_assignments_enabled !== false,
     },
     {
         key: 'show_unrelated_events',
@@ -219,12 +243,14 @@ export const SETTINGS = [
         description: 'Shows the associated project group of an event in the calendar, helpful for assignment and overview with several groups.',
     },
     {
-        // Nur Kalender: im Dienstplan sind Schichten immer sichtbar
+        // Nur Kalender: im Dienstplan sind Schichten immer sichtbar.
+        // Nur mit Dienstplan-Sichtrecht (Spiegel von CalendarShiftVisibility im Backend).
         key: 'work_shifts',
         section: 'visibility',
         views: CALENDAR_VIEWS,
         label: 'Show shifts',
         description: 'Shows standalone shifts as separate cards in the matching room-day cells of the calendar, mixed with the events and sorted by start time.',
+        when: (ctx) => ctx.can('can view shift plan') || ctx.can('can plan shifts') || ctx.is('artwork admin'),
     },
     {
         // Dienstplan-Tagesansicht: Timelines sind immer Teil der Karte

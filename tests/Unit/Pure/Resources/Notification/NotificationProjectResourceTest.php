@@ -49,9 +49,11 @@ final class NotificationProjectResourceTest extends TestCase
             'key_visual_path' => null, 'costCenter' => null,
         ]))->toArray(new Request());
 
-        foreach (['id', 'name', 'description', 'shiftDescription', 'number_of_participants',
+        foreach (
+            ['id', 'name', 'description', 'shiftDescription', 'number_of_participants',
                  'is_group', 'group', 'sectors', 'categories', 'genres', 'key_visual_path',
-                 'cost_center'] as $key) {
+                 'cost_center'] as $key
+        ) {
             $this->assertArrayHasKey($key, $array);
         }
     }

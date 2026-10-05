@@ -46,10 +46,13 @@
                 </p>
 
                 <!-- Konflikt-Details -->
-                <div v-if="entry.hasConflicts" class="mt-2 text-xs text-text-muted space-y-0.5">
-                    <p v-for="conflict in entry.conflicts" :key="conflictKey(conflict)">
-                        {{ $t('{username} has scheduled you on {date} {start} - {end}, contrary to your original entry.', { username: conflict.user_name, date: conflict.date_casted, start: conflict.start_time, end: conflict.end_time }) }}
-                    </p>
+                <div v-if="entry.hasConflicts" class="mt-2 text-xs text-text-muted space-y-1">
+                    <div v-for="conflict in entry.conflicts" :key="conflictKey(conflict)">
+                        <p>{{ conflictText(conflict) }}</p>
+                        <p v-if="conflict.scheduled_at_casted" class="text-text-subtle">
+                            {{ $t('Assignment made on {date}.', { date: conflict.scheduled_at_casted }) }}
+                        </p>
+                    </div>
                 </div>
             </div>
 
@@ -170,6 +173,38 @@ const deleteDescription = computed(() => {
 })
 
 const conflictKey = (c) => `${c?.date_casted}-${c?.start_time}-${c?.end_time}-${c?.user_name}`
+
+/**
+ * Der Hinweis darf nur dann jemanden als einteilende Person nennen, wenn die
+ * Zuweisung selbst diese Person gespeichert hat (scheduler_source = 'assigned').
+ * Bei Altzuweisungen kennt das Backend nur den Festschreibenden — der hat die
+ * Einteilung aber nicht vorgenommen und taucht deshalb auch nicht im
+ * Schichtverlauf als Zuweisender auf.
+ */
+const conflictText = (conflict) => {
+    const params = {
+        username: conflict?.user_name,
+        date: conflict?.date_casted,
+        start: conflict?.start_time,
+        end: conflict?.end_time,
+    }
+
+    if (conflict?.scheduler_source === 'assigned') {
+        return proxy.$t('{username} has scheduled you on {date} {start} - {end}, contrary to your original entry.', params)
+    }
+
+    if (conflict?.user_name) {
+        return proxy.$t(
+            'You are scheduled on {date} {start} - {end}, contrary to your original entry. Who made the assignment was not recorded; the shift was committed by {username}.',
+            params,
+        )
+    }
+
+    return proxy.$t(
+        'You are scheduled on {date} {start} - {end}, contrary to your original entry. Who made the assignment was not recorded.',
+        params,
+    )
+}
 
 const deleteEntry = () => {
     const isSeries = props.entry.kind !== 'single' && props.entry.seriesId

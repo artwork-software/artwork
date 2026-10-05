@@ -150,6 +150,9 @@
                     <p class="text-xs text-warning">
                         {{ $t('Recommended: the bind sends the password in clear text – use SSL (LDAPS) or StartTLS.') }}
                     </p>
+                    <p v-if="!form.config.use_ssl && !form.config.use_tls" class="text-xs font-semibold text-danger">
+                        {{ $t('Without SSL (LDAPS) or StartTLS, passwords are sent to the directory in clear text.') }}
+                    </p>
                 </div>
 
                 <!-- User Filter -->
@@ -446,7 +449,7 @@ function defaultConfig() {
         bind_dn: '',
         bind_password: '',
         use_ssl: false,
-        use_tls: false,
+        use_tls: true,
         user_filter: '(objectClass=user)',
         identifier_attribute: 'objectGUID',
         // OIDC

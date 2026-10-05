@@ -18,7 +18,6 @@ class ExternalComponentValueService
     public function __construct(
         private readonly ExternalScopeResolver $scopeResolver,
         private readonly DatabaseManager $db,
-        private readonly ExternalNotificationSender $notificationSender,
     ) {
     }
 
@@ -77,15 +76,14 @@ class ExternalComponentValueService
             return $value;
         });
 
-        // Notify inviter + project managers AFTER commit (mail/queue failure must not roll back).
-        $this->notificationSender->notifyTabComponentUpdated($external, $project, $tab, $component);
-
+        // Keine Benachrichtigung pro Feld: Einladende werden erst beim expliziten
+        // "Daten absenden" (ExternalTabSubmissionService) gesammelt informiert.
         return $value;
     }
 
     /**
-     * Replicates the legacy normalization from the internal
-     * ProjectComponentValueController: when a 'text' key is present, apply nl2br.
+     * Mirrors ProjectComponentValueController: when a 'text' key is present only that key is kept,
+     * as raw text (the frontend renders line breaks with white-space: pre-line).
      *
      * @param array<string, mixed> $data
      * @return array<string, mixed>
@@ -93,7 +91,7 @@ class ExternalComponentValueService
     private function normalizeData(array $data): array
     {
         if (array_key_exists('text', $data)) {
-            return ['text' => nl2br((string) $data['text'])];
+            return ['text' => (string) $data['text']];
         }
 
         return $data;

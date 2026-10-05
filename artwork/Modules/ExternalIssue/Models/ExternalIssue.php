@@ -104,24 +104,24 @@ class ExternalIssue extends Model
     {
         return $query
             // beide Grenzen gesetzt
-            ->when($from && $to, function ($q) use ($from, $to) {
-                $q->where(function ($qq) use ($from, $to) {
+            ->when($from && $to, function ($q) use ($from, $to): void {
+                $q->where(function ($qq) use ($from, $to): void {
                     $qq->whereDate('issue_date', '<=', $to)
-                        ->where(function ($qqq) use ($from) {
+                        ->where(function ($qqq) use ($from): void {
                             $qqq->whereNull('return_date')
                                 ->orWhereDate('return_date', '>=', $from);
                         });
                 });
             })
             // nur FROM: alles, was am/vor unendlicher Zukunft läuft & nicht vor FROM endet
-            ->when($from && !$to, function ($q) use ($from) {
-                $q->where(function ($qq) use ($from) {
+            ->when($from && !$to, function ($q) use ($from): void {
+                $q->where(function ($qq) use ($from): void {
                     $qq->whereNull('return_date')
                         ->orWhereDate('return_date', '>=', $from);
                 });
             })
             // nur TO: alles, was bis TO begonnen hat
-            ->when(!$from && $to, function ($q) use ($to) {
+            ->when(!$from && $to, function ($q) use ($to): void {
                 $q->whereDate('issue_date', '<=', $to);
             });
     }

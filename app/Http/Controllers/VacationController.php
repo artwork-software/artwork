@@ -19,6 +19,7 @@ use Artwork\Modules\Vacation\Models\Vacation;
 use Artwork\Modules\Vacation\Models\VacationSeries;
 use Artwork\Modules\Vacation\Services\VacationConflictService;
 use Artwork\Modules\Vacation\Services\VacationSeriesService;
+use Artwork\Modules\Vacation\Events\WorkerAvailabilityChanged;
 use Artwork\Modules\Vacation\Services\VacationService;
 use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
@@ -58,8 +59,8 @@ class VacationController extends Controller
         );
 
         if ($createVacationRequest->type === 'vacation') {
-            // Art der Abwesenheit kommt aus dem Request (vacation_type: OFF_WORK = Urlaub, Default |
-            // NOT_AVAILABLE = nicht verfügbar, soll-neutral) – Auflösung im VacationService::create
+            // Selbst erfasste Abwesenheit ist immer „Nicht verfügbar" (NOT_AVAILABLE); die Urlaubsart
+            // wird nicht im Verfügbarkeitskalender gewählt, sondern kommt mit dem Urlaubsmodul
             $this->vacationService->create(
                 $user,
                 $createVacationRequest,
@@ -80,6 +81,8 @@ class VacationController extends Controller
                 $this->schedulingService
             );
         }
+
+        $this->broadcastWorkerAvailability($user);
     }
 
     public function storeFreelancerVacation(
@@ -121,6 +124,8 @@ class VacationController extends Controller
                 $this->schedulingService
             );
         }
+
+        $this->broadcastWorkerAvailability($freelancer);
     }
 
     /**
@@ -169,6 +174,7 @@ class VacationController extends Controller
             if ($vacations->count() > 0) {
                 $this->vacationService->deleteVacationInterval($user, $day);
                 $this->broadcastShiftPlanUpdates($this->shiftsOnDay($user, $day));
+                $this->broadcastWorkerAvailability($user);
             }
             return;
         }
@@ -235,6 +241,7 @@ class VacationController extends Controller
         }
 
         $this->broadcastShiftPlanUpdates($shiftsOnDay);
+        $this->broadcastWorkerAvailability($user);
     }
 
     public function checkVacationFreelancer(
@@ -259,6 +266,7 @@ class VacationController extends Controller
             if ($vacations->count() > 0) {
                 $this->vacationService->deleteVacationInterval($freelancer, $day);
                 $this->broadcastShiftPlanUpdates($this->shiftsOnDay($freelancer, $day));
+                $this->broadcastWorkerAvailability($freelancer);
             }
             return;
         }
@@ -313,6 +321,7 @@ class VacationController extends Controller
         }
 
         $this->broadcastShiftPlanUpdates($shiftsOnDay);
+        $this->broadcastWorkerAvailability($freelancer);
     }
 
     public function checkVacationServiceProvider(
@@ -337,6 +346,7 @@ class VacationController extends Controller
             if ($vacations->count() > 0) {
                 $this->vacationService->deleteVacationInterval($serviceProvider, $day);
                 $this->broadcastShiftPlanUpdates($this->shiftsOnDay($serviceProvider, $day));
+                $this->broadcastWorkerAvailability($serviceProvider);
             }
             return;
         }
@@ -391,6 +401,7 @@ class VacationController extends Controller
         }
 
         $this->broadcastShiftPlanUpdates($shiftsOnDay);
+        $this->broadcastWorkerAvailability($serviceProvider);
     }
 
     /**
@@ -420,6 +431,15 @@ class VacationController extends Controller
             $shift->unsetRelations();
             broadcast(new UpdateShiftInShiftPlan($shift, (int) $roomId));
         }
+    }
+
+    /**
+     * Personenzeile im Dienstplan anderer Clients nachladen lassen (Abwesenheits-Beschriftung,
+     * Konflikt-Markierung) — siehe useShiftCalendarListener.
+     */
+    private function broadcastWorkerAvailability(User|Freelancer|ServiceProvider $worker): void
+    {
+        broadcast(WorkerAvailabilityChanged::forMorph($worker::class, (int) $worker->id));
     }
 
     public function update(
@@ -468,6 +488,7 @@ class VacationController extends Controller
                 );
             }
         }
+        broadcast(WorkerAvailabilityChanged::forMorph($vacation->vacationer_type, (int) $vacation->vacationer_id));
         return redirect()->back();
     }
 
@@ -509,7 +530,9 @@ class VacationController extends Controller
                     $this->vacationSeriesService,
                     $this->changeService,
                     $this->schedulingService,
-                    $this->notificationService
+                    $this->notificationService,
+                    // Art des bisherigen Eintrags behalten (z. B. planerisch gesetzter Arbeitsfreier Tag)
+                    $vacation->type
                 );
             } else {
                 $this->availabilityService->create(
@@ -524,6 +547,8 @@ class VacationController extends Controller
             }
         });
 
+        $this->broadcastWorkerAvailability($vacationer);
+
         return redirect()->back();
     }
 
@@ -531,6 +556,7 @@ class VacationController extends Controller
     {
         $this->authorize('delete', $vacation);
         $this->vacationService->delete($vacation);
+        broadcast(WorkerAvailabilityChanged::forMorph($vacation->vacationer_type, (int) $vacation->vacationer_id));
         return redirect()->back();
     }
 
@@ -541,6 +567,12 @@ class VacationController extends Controller
             $this->authorize('delete', $firstVacation);
         }
         $this->vacationSeriesService->deleteSeries($vacationSeries);
+        if ($firstVacation !== null) {
+            broadcast(WorkerAvailabilityChanged::forMorph(
+                $firstVacation->vacationer_type,
+                (int) $firstVacation->vacationer_id
+            ));
+        }
         return redirect()->back();
     }
 }

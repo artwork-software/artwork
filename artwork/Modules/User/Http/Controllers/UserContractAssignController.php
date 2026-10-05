@@ -130,7 +130,10 @@ class UserContractAssignController extends Controller
             }
 
             // Neuprüfung läuft über UserContractAssign::booted() → ShiftRuleRevalidationService (ab valid_from)
-            return back()->with('success', self::successMessage(__('User contract assigned successfully.'), $retroactive));
+            return back()->with(
+                'success',
+                self::successMessage(__('User contract assigned successfully.'), $retroactive)
+            );
         } catch (ValidationException | ModelNotFoundException $e) {
             throw $e;
         } catch (\Throwable $e) {
@@ -319,7 +322,8 @@ class UserContractAssignController extends Controller
 
         throw ValidationException::withMessages([
             'valid_from' => __(
-                'The period overlaps with the existing contract period {0} ({1} – {2}). Adjust the dates or edit that period.',
+                'The period overlaps with the existing contract period {0} ({1} – {2}). Adjust the dates or edit '
+                    . 'that period.',
                 [
                     $conflict->userContract?->name ?? __('individual'),
                     $conflict->valid_from?->format('d.m.Y') ?? __('open'),

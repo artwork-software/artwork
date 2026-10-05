@@ -83,8 +83,9 @@ final class VacationControllerTest extends FeatureTestCase
     }
 
     /**
-     * Selbst erfasste Abwesenheit: Art über vacation_type (Urlaub = OFF_WORK, Nicht verfügbar =
-     * NOT_AVAILABLE), Default Urlaub; andere Werte (z. B. Planungsstatus FREE_WORK) sind ungültig.
+     * Selbst erfasste Abwesenheit ist immer „Nicht verfügbar" (NOT_AVAILABLE) – eine wählbare
+     * Urlaubsart gibt es im Verfügbarkeitskalender nicht (kommt mit dem Urlaubsmodul); ein trotzdem
+     * mitgeschicktes vacation_type wird ignoriert.
      */
     private function ownAbsencePayload(array $overrides = []): array
     {
@@ -98,7 +99,23 @@ final class VacationControllerTest extends FeatureTestCase
     }
 
     #[Test]
-    public function user_can_store_own_absence_as_vacation(): void
+    public function own_absence_is_stored_as_not_available(): void
+    {
+        $user = User::factory()->create();
+        $this->actingAs($user);
+
+        $this->postJson(route('user.vacation.add', $user), $this->ownAbsencePayload())->assertSuccessful();
+
+        $this->assertDatabaseHas('vacations', [
+            'vacationer_id' => $user->id,
+            'vacationer_type' => User::class,
+            'date' => '2026-07-16',
+            'type' => 'NOT_AVAILABLE',
+        ]);
+    }
+
+    #[Test]
+    public function a_sent_vacation_type_is_ignored_for_own_absences(): void
     {
         $user = User::factory()->create();
         $this->actingAs($user);
@@ -109,57 +126,12 @@ final class VacationControllerTest extends FeatureTestCase
         $this->assertDatabaseHas('vacations', [
             'vacationer_id' => $user->id,
             'vacationer_type' => User::class,
-            'date' => '2026-07-16',
-            'type' => 'OFF_WORK',
-        ]);
-    }
-
-    #[Test]
-    public function user_can_store_own_absence_as_not_available(): void
-    {
-        $user = User::factory()->create();
-        $this->actingAs($user);
-
-        $this->postJson(
-            route('user.vacation.add', $user),
-            $this->ownAbsencePayload(['vacation_type' => 'NOT_AVAILABLE'])
-        )->assertSuccessful();
-
-        $this->assertDatabaseHas('vacations', [
-            'vacationer_id' => $user->id,
-            'vacationer_type' => User::class,
             'type' => 'NOT_AVAILABLE',
         ]);
-    }
-
-    #[Test]
-    public function own_absence_defaults_to_vacation_when_no_type_is_given(): void
-    {
-        $user = User::factory()->create();
-        $this->actingAs($user);
-
-        $this->postJson(route('user.vacation.add', $user), $this->ownAbsencePayload())->assertSuccessful();
-
-        $this->assertDatabaseHas('vacations', [
-            'vacationer_id' => $user->id,
-            'vacationer_type' => User::class,
-            'type' => 'OFF_WORK',
-        ]);
-    }
-
-    #[Test]
-    public function own_absence_with_an_invalid_type_is_rejected(): void
-    {
-        $user = User::factory()->create();
-        $this->actingAs($user);
-
-        $this->postJson(route('user.vacation.add', $user), $this->ownAbsencePayload(['vacation_type' => 'FREE_WORK']))
-            ->assertStatus(422)
-            ->assertJsonValidationErrors(['vacation_type']);
-
         $this->assertDatabaseMissing('vacations', [
             'vacationer_id' => $user->id,
             'vacationer_type' => User::class,
+            'type' => 'OFF_WORK',
         ]);
     }
 

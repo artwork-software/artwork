@@ -47,7 +47,7 @@
                         </span>
                     </button>
                     <button
-                        v-if="can('can create document requests') || can('can edit document requests') || hasAdminRole()"
+                        v-if="canSeeForeignRequests"
                         @click="activeTab = 'unassigned'"
                         :class="[
                             activeTab === 'unassigned'
@@ -59,6 +59,21 @@
                         {{ $t('Unassigned') }}
                         <span class="ml-2 rounded-full bg-special-orange-surface px-2.5 py-0.5 text-xs font-medium text-special-orange">
                             {{ openUnassignedRequests.length }}
+                        </span>
+                    </button>
+                    <button
+                        v-if="canSeeForeignRequests"
+                        @click="activeTab = 'assignedToOthers'"
+                        :class="[
+                            activeTab === 'assignedToOthers'
+                                ? 'border-accent-600 text-accent-600'
+                                : 'border-transparent text-text-subtle hover:border-border hover:text-text-muted',
+                            'whitespace-nowrap border-b-2 py-4 px-1 text-sm font-medium'
+                        ]"
+                    >
+                        {{ $t('Assigned to others') }}
+                        <span class="ml-2 rounded-full bg-surface-sunken px-2.5 py-0.5 text-xs font-medium text-text-muted">
+                            {{ openAssignedToOthersRequests.length }}
                         </span>
                     </button>
                     <button
@@ -223,6 +238,64 @@
                 </BaseTable>
             </div>
 
+            <!-- Assigned To Others Requests Table -->
+            <div v-if="activeTab === 'assignedToOthers'">
+                <BaseTable
+                    :rows="openAssignedToOthersRequests"
+                    :columns="colsAssignedToOthers"
+                    row-key="id"
+                    v-model:page="page"
+                    :empty-title="$t('No document requests')"
+                    :empty-message="$t('No open document requests assigned to others.')"
+                >
+                    <template #cell-requester="{ row }">
+                        <div v-if="row.requester" class="flex items-center">
+                            <img :src="row.requester.profile_photo_url" alt="" class="size-8 rounded-full object-cover" />
+                            <div class="ml-3">
+                                <div class="text-sm font-medium text-text">
+                                    {{ row.requester.first_name }} {{ row.requester.last_name }}
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+
+                    <template #cell-requested="{ row }">
+                        <div v-if="row.requested" class="flex items-center">
+                            <img :src="row.requested.profile_photo_url" alt="" class="size-8 rounded-full object-cover" />
+                            <div class="ml-3">
+                                <div class="text-sm font-medium text-text">
+                                    {{ row.requested.first_name }} {{ row.requested.last_name }}
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+
+                    <template #cell-project="{ row }">
+                        <span v-if="row.project" class="text-sm text-text">{{ row.project.name }}</span>
+                        <span v-else class="text-sm text-text-subtle">-</span>
+                    </template>
+
+                    <template #cell-status="{ row }">
+                        <span :class="getStatusClass(row.status)" class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium">
+                            {{ $t(getStatusLabel(row.status)) }}
+                        </span>
+                    </template>
+
+                    <template #cell-deadline="{ row }">
+                        <span v-if="row.deadline_date" class="text-sm text-text">{{ formatDate(row.deadline_date) }}</span>
+                        <span v-else class="text-sm text-text-subtle">-</span>
+                    </template>
+
+                    <template #row-actions="{ row }">
+                        <BaseMenu has-no-offset white-menu-background>
+                            <BaseMenuItem :icon="IconEye" :title="$t('View details')" white-menu-background @click="openDetailModal(row)" />
+                            <BaseMenuItem v-if="can('can edit document requests') || hasAdminRole()" :icon="IconEdit" :title="$t('Edit')" white-menu-background @click="openEditModal(row)" />
+                            <BaseMenuItem v-if="can('can edit document requests') || hasAdminRole()" :icon="IconTrash" :title="$t('Delete')" white-menu-background @click="openDeleteModal(row)" />
+                        </BaseMenu>
+                    </template>
+                </BaseTable>
+            </div>
+
             <!-- Completed Requests Table -->
             <div v-if="activeTab === 'completed'">
                 <BaseTable
@@ -372,6 +445,10 @@ const props = defineProps({
         type: Array,
         default: () => []
     },
+    assignedToOthersRequests: {
+        type: Array,
+        default: () => []
+    },
     contract_types: {
         type: Array,
         default: () => []
@@ -407,6 +484,8 @@ onMounted(() => {
         activeTab.value = 'created'
     } else if (tabParam === 'unassigned') {
         activeTab.value = 'unassigned'
+    } else if (tabParam === 'assignedToOthers') {
+        activeTab.value = 'assignedToOthers'
     }
 })
 const showCreateModal = ref(false)
@@ -429,6 +508,16 @@ const openCreatedRequests = computed(() =>
 // Filter for open/in_progress unassigned requests (not completed)
 const openUnassignedRequests = computed(() =>
     props.unassignedRequests.filter(r => r.status !== 'completed')
+)
+
+// Sichtbarkeit der fremden Anfragen (nicht zugewiesen / an andere zugewiesen)
+const canSeeForeignRequests = computed(() =>
+    can('can create document requests') || can('can edit document requests') || hasAdminRole()
+)
+
+// Offene Anfragen, die anderen Personen zugewiesen sind (Backend liefert bereits nur offene)
+const openAssignedToOthersRequests = computed(() =>
+    props.assignedToOthersRequests.filter(r => r.status !== 'completed')
 )
 
 // Completed requests from both created and assigned
@@ -466,6 +555,14 @@ const colsCompleted = ref([
 
 const colsUnassigned = ref([
     { key: 'requester', label: 'Requested by', sortable: false },
+    { key: 'project', label: 'Project', sortable: false },
+    { key: 'status', label: 'Status', sortable: false },
+    { key: 'deadline', label: 'Deadline', sortable: false },
+])
+
+const colsAssignedToOthers = ref([
+    { key: 'requester', label: 'Requested by', sortable: false },
+    { key: 'requested', label: 'Assigned to', sortable: false },
     { key: 'project', label: 'Project', sortable: false },
     { key: 'status', label: 'Status', sortable: false },
     { key: 'deadline', label: 'Deadline', sortable: false },

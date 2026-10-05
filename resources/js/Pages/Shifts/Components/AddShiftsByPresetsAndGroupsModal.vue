@@ -371,7 +371,7 @@
 
 <script setup>
 import { computed, ref, watch } from "vue";
-import { router } from "@inertiajs/vue3";
+import { router, usePage } from "@inertiajs/vue3";
 import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 import ProjectSearch from "@/Components/SearchBars/ProjectSearch.vue";
@@ -447,16 +447,27 @@ watch(
     }
 );
 
+// Nur Vorlagen planbarer Gewerke anbieten (Server prüft zusätzlich); null = keine Einschränkung (Admin)
+const plannableCraftIds = computed(() => {
+    const ids = usePage().props?.plannableCraftIds;
+    return Array.isArray(ids) ? new Set(ids.map((id) => Number(id))) : null;
+});
+const isPresetPlannable = (preset) => {
+    const craftId = preset?.craft_id ?? preset?.craft?.id ?? null;
+    return plannableCraftIds.value === null || craftId === null || plannableCraftIds.value.has(Number(craftId));
+};
+
 const groups = computed(() => {
     const v = props.presetGroups;
-    if (Array.isArray(v)) return v;
-    return v ? Object.values(v) : [];
+    const list = Array.isArray(v) ? v : (v ? Object.values(v) : []);
+    // Eine Gruppe nur, wenn ALLE Vorlagen planbar sind — sonst würde sie nur teilweise angelegt
+    return list.filter((g) => (g?.presets ?? []).every(isPresetPlannable));
 });
 
 const presets = computed(() => {
     const v = props.singleShiftPresets;
-    if (Array.isArray(v)) return v;
-    return v ? Object.values(v) : [];
+    const list = Array.isArray(v) ? v : (v ? Object.values(v) : []);
+    return list.filter(isPresetPlannable);
 });
 
 const selectedGroupIds = ref(new Set());
@@ -654,8 +665,9 @@ function apply() {
             onFinish: () => {
                 processing.value = false;
             },
-            onSuccess: () => {
-                emit("added");
+            // flash.shiftPlanUpdate = neu angelegte Schichten → Ansicht zeigt sie sofort (nicht nur per WebSocket)
+            onSuccess: (page) => {
+                emit("added", page?.props?.flash?.shiftPlanUpdate ?? null);
                 emit("close");
             },
         }

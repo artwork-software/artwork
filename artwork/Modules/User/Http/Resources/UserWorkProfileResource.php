@@ -45,8 +45,7 @@ class UserWorkProfileResource extends JsonResource
             'accessibleCrafts' => $this->can('can plan shifts') ?
                 $this->crafts->filter(fn(Craft $craft) =>
                     $craft->getAttribute('assignable_by_all') === true ||
-                    $craft->craftShiftPlaner->contains($this->resource->id)
-                )
+                    $craft->craftShiftPlaner->contains($this->resource->id))
                     ->merge($this->getAttribute('assignedCrafts'))
                     ->merge($this->getAttribute('managingCrafts'))
                     ->unique('id')
@@ -60,7 +59,7 @@ class UserWorkProfileResource extends JsonResource
             'shiftQualifications' => $this->getAttribute('shiftQualifications'),
             'defaultProjectRoleIds' => $this->getAttribute('defaultProjectRoles')->pluck('id')->toArray(),
             'is_freelancer' => $this->getAttribute('is_freelancer'),
-            'email' => $this->getAttribute('email'),
+            'email' => $this->visibleEmailFor($request->user()),
         ];
     }
 }

@@ -66,6 +66,77 @@
                         </div>
                     </div>
 
+                    <!-- Untertext (Überschrift) -->
+                    <div v-if="'subtitle' in textData" class="flex items-start gap-x-2">
+                        <BaseTextarea
+                            id="subtitle"
+                            class="grow"
+                            v-model="textData.subtitle"
+                            label="Text below the heading"
+                            :rows="2"
+                        />
+                        <div class="mt-7">
+                            <ToolTipComponent
+                                direction="left"
+                                :tooltip-text="$t(fieldTooltips.subtitle)"
+                                icon="IconInfoCircle"
+                                icon-size="h-4 w-4"
+                            />
+                        </div>
+                    </div>
+
+                    <!-- Balkenfarbe (Überschrift als farbiger Abschnittsbalken) -->
+                    <fieldset v-if="'bar_color' in textData">
+                        <div class="flex items-center gap-x-1.5">
+                            <legend class="text-xs text-text-subtle">{{ $t('Section bar') }}</legend>
+                            <ToolTipComponent
+                                direction="right"
+                                :tooltip-text="$t(fieldTooltips.bar_color)"
+                                icon="IconInfoCircle"
+                                icon-size="h-4 w-4"
+                            />
+                        </div>
+                        <div class="mt-2 flex flex-wrap items-center gap-2">
+                            <button
+                                type="button"
+                                class="rounded-lg border px-3 py-1.5 text-xs"
+                                :class="!textData.bar_color ? 'border-accent-600 text-accent-700 font-semibold' : 'border-border-subtle text-text-muted'"
+                                :aria-pressed="String(!textData.bar_color)"
+                                @click="textData.bar_color = ''"
+                            >
+                                {{ $t('No bar') }}
+                            </button>
+                            <button
+                                v-for="swatch in barColorSwatches"
+                                :key="swatch"
+                                type="button"
+                                class="size-7 rounded-md ring-offset-2"
+                                :class="textData.bar_color?.toLowerCase() === swatch.toLowerCase() ? 'ring-2 ring-accent-600' : 'ring-1 ring-border-subtle'"
+                                :style="{ backgroundColor: swatch }"
+                                :title="swatch"
+                                :aria-label="$t('Bar color {0}', [swatch])"
+                                :aria-pressed="String(textData.bar_color?.toLowerCase() === swatch.toLowerCase())"
+                                @click="textData.bar_color = swatch"
+                            />
+                            <label class="flex items-center gap-2 text-xs text-text-muted">
+                                <input
+                                    type="color"
+                                    class="h-7 w-10 cursor-pointer rounded border border-border-subtle bg-white p-0.5"
+                                    :value="textData.bar_color || '#EB7A3D'"
+                                    @input="textData.bar_color = $event.target.value.toUpperCase()"
+                                />
+                                {{ $t('Custom color') }}
+                            </label>
+                        </div>
+                        <div
+                            v-if="textData.bar_color"
+                            class="mt-3 rounded-md px-4 py-2.5 text-sm font-semibold"
+                            :style="{ backgroundColor: textData.bar_color, color: getTextColorBasedOnBackground(textData.bar_color) }"
+                        >
+                            {{ textData.title || $t('Preview') }}
+                        </div>
+                    </fieldset>
+
                     <!-- Label -->
                     <div v-if="'label' in textData" class="flex items-end gap-x-2">
                         <BaseInput class="grow" :label="$t('label')" v-model="textData.label" id="label" />
@@ -150,6 +221,80 @@
                             min="1"
                             max="200"
                             v-model.number="textData.max_items"
+                            class="mt-2 w-full rounded-lg border border-border-subtle px-3 py-2 text-sm"
+                        />
+                    </div>
+
+                    <!-- Hinweistext (CRM-Kontaktliste) -->
+                    <div v-if="'description' in textData" class="flex items-start gap-x-2">
+                        <BaseTextarea
+                            id="description"
+                            class="grow"
+                            v-model="textData.description"
+                            label="Hint text"
+                            :rows="3"
+                        />
+                        <div class="mt-7">
+                            <ToolTipComponent
+                                direction="left"
+                                :tooltip-text="$t(fieldTooltips.description)"
+                                icon="IconInfoCircle"
+                                icon-size="h-4 w-4"
+                            />
+                        </div>
+                    </div>
+
+                    <!-- Erlaubte Kontakttypen (CRM-Kontaktliste) -->
+                    <fieldset v-if="Array.isArray(textData.contact_type_ids)">
+                        <div class="flex items-center gap-x-1.5">
+                            <legend class="text-xs text-text-subtle">{{ $t('Allowed contact types') }}</legend>
+                            <ToolTipComponent
+                                direction="right"
+                                :tooltip-text="$t(fieldTooltips.contact_type_ids)"
+                                icon="IconInfoCircle"
+                                icon-size="h-4 w-4"
+                            />
+                        </div>
+                        <div class="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2">
+                            <label
+                                v-for="contactType in crmContactTypeOptions"
+                                :key="contactType.id"
+                                class="flex items-center gap-2 rounded-lg border border-border-subtle px-3 py-2 text-sm text-text-muted"
+                            >
+                                <input
+                                    type="checkbox"
+                                    class="input-checklist"
+                                    :checked="textData.contact_type_ids.includes(contactType.id)"
+                                    @change="toggleContactType(contactType.id, $event.target.checked)"
+                                />
+                                {{ $t(contactType.name) }}
+                            </label>
+                        </div>
+                        <p v-if="!textData.contact_type_ids.length" class="mt-1.5 text-xs text-warning">
+                            {{ $t('Select at least one contact type, otherwise no contacts can be added.') }}
+                        </p>
+                    </fieldset>
+
+                    <!-- Höchstzahl Kontakte (CRM-Kontaktliste) -->
+                    <div v-if="'max_contacts' in textData">
+                        <div class="flex items-center gap-x-1.5">
+                            <label for="max_contacts" class="text-xs text-text-subtle">
+                                {{ $t('Maximum number of contacts (optional)') }}
+                            </label>
+                            <ToolTipComponent
+                                direction="right"
+                                :tooltip-text="$t(fieldTooltips.max_contacts)"
+                                icon="IconInfoCircle"
+                                icon-size="h-4 w-4"
+                            />
+                        </div>
+                        <input
+                            id="max_contacts"
+                            type="number"
+                            min="1"
+                            max="500"
+                            :value="textData.max_contacts ?? ''"
+                            @input="textData.max_contacts = $event.target.value === '' ? null : Number($event.target.value)"
                             class="mt-2 w-full rounded-lg border border-border-subtle px-3 py-2 text-sm"
                         />
                     </div>
@@ -551,6 +696,8 @@ import TeamIconCollection from '@/Layouts/Components/TeamIconCollection.vue'
 import ToolTipComponent from '@/Components/ToolTips/ToolTipComponent.vue'
 import FormButton from '@/Layouts/Components/General/Buttons/FormButton.vue'
 import BaseInput from '@/Artwork/Inputs/BaseInput.vue'
+import BaseTextarea from '@/Artwork/Inputs/BaseTextarea.vue'
+import { useColorHelper } from '@/Composeables/UseColorHelper.js'
 import ArtworkBaseModal from '@/Artwork/Modals/ArtworkBaseModal.vue'
 import SettingsGuideBanner from '@/Artwork/Guide/SettingsGuideBanner.vue'
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
@@ -616,7 +763,7 @@ onMounted(async () => {
 
             // Initialize form with loaded data
             componentName.value = data.name ?? ''
-            textDataResetTo(data.data ?? {})
+            textDataResetTo({ ...(FIELD_DEFAULTS_BY_TYPE[data.type] ?? {}), ...(data.data ?? {}) })
             modulePermissions.permission_type = data.permission_type ?? 'allSeeAndEdit'
             modulePermissions.users = deepClone(data.users ?? [])
             modulePermissions.departments = deepClone(data.departments ?? [])
@@ -626,7 +773,7 @@ onMounted(async () => {
     } else if (props.componentToEdit) {
         // Legacy: use passed component object
         componentName.value = props.componentToEdit.name ?? ''
-        textDataResetTo(props.componentToEdit.data ?? {})
+        textDataResetTo({ ...(FIELD_DEFAULTS_BY_TYPE[props.componentToEdit.type] ?? {}), ...(props.componentToEdit.data ?? {}) })
         modulePermissions.permission_type = props.componentToEdit.permission_type ?? 'allSeeAndEdit'
         modulePermissions.users = deepClone(props.componentToEdit.users ?? [])
         modulePermissions.departments = deepClone(props.componentToEdit.departments ?? [])
@@ -650,6 +797,11 @@ const fieldTooltips = computed(() => {
         title: type === 'LinkList'
             ? 'This title is currently not displayed in the project.'
             : 'This text is displayed as a heading in the project.',
+        description: 'Shown below the heading, also to invited external persons – e.g. what should be entered here.',
+        subtitle: 'Optional explanatory text shown directly below the heading, e.g. an introduction to the section.',
+        bar_color: 'With a color the heading is shown as a colored bar across the full width, with some space above it. This divides a tab into clearly separated sections.',
+        contact_type_ids: 'Only contacts of these types can be added or linked in this list. Each type has its own button and its own form based on the CRM properties of the type.',
+        max_contacts: 'Leave empty for no limit.',
         label: labelText,
         text: 'If specified, this text is pre-filled in the component when it is created (optional).',
         placeholder: 'The placeholder is displayed as long as the field is empty, as a hint what to enter (optional).',
@@ -739,6 +891,35 @@ async function searchUsersAndTeams() {
         userAndTeamsSearchResult.users = []
         userAndTeamsSearchResult.departments = []
     }
+}
+
+/* Überschrift: Balkenfarben (Vorschläge; zuerst Artwork-Orange wie in den Systemvorlagen) */
+const { getTextColorBasedOnBackground } = useColorHelper()
+const barColorSwatches = ['#EB7A3D', '#27233C', '#FFB6E1', '#BFE3F5', '#C8EBC9', '#FFE3A3', '#E5E7EB']
+
+/* Felder, die ältere Komponenten eines Typs noch nicht in data haben (Bearbeiten zeigt sie trotzdem an) */
+const FIELD_DEFAULTS_BY_TYPE = {
+    Title: { subtitle: '', bar_color: '' },
+}
+
+/* CRM-Kontaktliste: erlaubte Kontakttypen */
+const crmContactTypeOptions = ref([])
+watch(
+    () => Array.isArray(textData.contact_type_ids),
+    async (needsOptions) => {
+        if (!needsOptions || crmContactTypeOptions.value.length) return
+        try {
+            const { data } = await axios.get(route('components.crm-contact-list.contact-types'))
+            crmContactTypeOptions.value = data ?? []
+        } catch (e) {
+            crmContactTypeOptions.value = []
+        }
+    },
+    { immediate: true },
+)
+function toggleContactType(id, checked) {
+    const current = textData.contact_type_ids ?? []
+    textData.contact_type_ids = checked ? [...new Set([...current, id])] : current.filter((typeId) => typeId !== id)
 }
 
 /* Optionen */

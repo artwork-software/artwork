@@ -72,6 +72,8 @@ import Title from "@/Pages/Projects/Tab/Components/Title.vue";
 import TextArea from "@/Pages/Projects/Tab/Components/TextArea.vue";
 import DropDown from "@/Pages/Projects/Tab/Components/DropDown.vue";
 import LinkComponent from "@/Pages/Projects/Tab/Components/LinkComponent.vue";
+import LinkListComponent from "@/Pages/Projects/Tab/Components/LinkListComponent.vue";
+import CrmContactListComponent from "@/Pages/Projects/Tab/Components/CrmContactListComponent.vue";
 import ProjectStateComponent from "@/Pages/Projects/Components/ProjectStateComponent.vue";
 import CalendarTab from "@/Pages/Projects/Tab/Components/CalendarTab.vue";
 import ShiftTab from "@/Pages/Projects/Tab/Components/ShiftTab.vue";
@@ -166,7 +168,9 @@ const componentMapping = {
     BulkBody,
     ArtistResidenciesComponent,
     GroupProjectDisplayComponent,
-    ProjectGroupDisplayComponent
+    ProjectGroupDisplayComponent,
+    LinkList: LinkListComponent,
+    CrmContactListComponent,
 };
 
 const nonDefaultValueCount = computed(() =>

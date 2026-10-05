@@ -2,6 +2,7 @@
 
 namespace Artwork\Modules\Project\Services;
 
+use Artwork\Modules\Budget\Services\TableService;
 use Artwork\Core\Carbon\Service\CarbonService;
 use Artwork\Modules\Budget\Services\ColumnRelevanceService;
 use Artwork\Modules\Change\Services\ChangeService;
@@ -27,6 +28,10 @@ use Artwork\Modules\Event\Services\SubEventService;
 use Artwork\Modules\Task\Services\TaskService;
 use Artwork\Modules\Timeline\Services\TimelineService;
 use Artwork\Modules\User\Models\User;
+use Artwork\Modules\User\Models\UserCalendarSettings;
+use Artwork\Modules\User\Models\UserDailyViewCalendarSettings;
+use Artwork\Modules\User\Models\UserShiftPlanDailySettings;
+use Artwork\Modules\User\Models\UserShiftPlanSettings;
 use Artwork\Modules\User\Services\UserService;
 use Artwork\Modules\User\Services\UserProjectManagementSettingService;
 use Illuminate\Database\Eloquent\Builder;
@@ -44,6 +49,7 @@ class ProjectService
         private readonly EventService $eventService,
         private readonly UserService $userService,
         private readonly CarbonService $carbonService,
+        private readonly ProjectTeamNotificationService $projectTeamNotificationService,
     ) {
     }
 
@@ -108,22 +114,7 @@ class ProjectService
                 /** @todo für Jason:
                  * search muss raus wenn das mit Meilisearch klappt
                  */
-                ->when(
-                    strlen($search) > 0,
-                    function (Builder $builder) use ($search): void {
-                        $builder->where(function (Builder $query) use ($search): void {
-                            $like = '%' . $search . '%';
-
-                            $query
-                                ->where('name', 'like', $like)
-                                ->orWhere('artists', 'like', $like)
-                                ->orWhereHas(
-                                    'crmContacts',
-                                    fn(Builder $crmQuery) => $crmQuery->where('display_name', 'like', $like)
-                                );
-                        });
-                    }
-                )
+                ->tap(fn(Builder $builder) => $this->projectRepository->applyOverviewSearch($builder, $search))
                 ->when(
                     $useSort,
                     function (Builder $builder) use ($sortEnum): void {
@@ -278,17 +269,13 @@ class ProjectService
                         }
                     }
                 )
-                // Gepinnte Projekte laufen normal oben in der eigenen Pinned-Sektion und werden
-                // deshalb aus der Liste ausgeschlossen. Bei aktiver SUCHE zeigt die Übersicht
-                // keine Pinned-Sektion (Abnahme PROJ-01: Pins ohne Treffer verwirren) — dann
-                // müssen matchende gepinnte Projekte als normale Treffer erscheinen.
-                // trim() wie in ProjectController::index — sonst zeigt eine reine
-                // Leerzeichen-Suche gepinnte Projekte doppelt (Sektion UND Liste)
-                ->when(trim($search) === '', function (Builder $builder): void {
-                    $builder->where(function (Builder $builder): void {
-                        $builder->whereJsonDoesntContain('pinned_by_users', Auth::id())
-                            ->orWhereNull('pinned_by_users');
-                    });
+                // Gepinnte Projekte stehen immer in der eigenen Pinned-Sektion (bei aktiver Suche
+                // auf die Treffer gefiltert) und werden deshalb aus der Liste ausgeschlossen. So
+                // greifen Übersichtsfilter und Paginierung nicht auf Pins — ein gepinntes Projekt,
+                // das zur Suche passt, ist immer zu sehen.
+                ->where(function (Builder $builder): void {
+                    $builder->whereJsonDoesntContain('pinned_by_users', Auth::id())
+                        ->orWhereNull('pinned_by_users');
                 })
                 ->without(['shiftRelevantEventTypes']);
         };
@@ -323,8 +310,10 @@ class ProjectService
             $search,
             $sortEnum,
             $projectStateIds,
-            //phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.FoundBeforeLastUsed
-            $projectFilters->filter(fn($filter, $enabled) => $enabled)->keys()
+            // Collection::filter liefert (Wert, Schlüssel): nur aktivierte Filter (true) durchlassen.
+            // Vorher wurde auf den Schlüssel geprüft, dadurch griff auch ein gespeichertes
+            // `showOnlyWithBiData => false` (Standardwerte beim ersten Aufruf) als aktiver Filter.
+            $projectFilters->filter(fn ($enabled) => (bool) $enabled)->keys()
         );
         return $projectQuery->paginate($perPage);
     }
@@ -359,6 +348,32 @@ class ProjectService
     public function findById(int $id): Project
     {
         return $this->projectRepository->findOrFail($id);
+    }
+
+    /**
+     * Projekt des Projektmodus (Zeitraum) einer Kalender-/Dienstplan-Einstellung.
+     * Verweist die Einstellung auf ein gelöschtes Projekt (Papierkorb oder endgültig), wird der Projektmodus
+     * zurückgesetzt statt einen 404 zu werfen — sonst sperrt ein gelöschtes Projekt
+     * den User dauerhaft aus Kalender/Planungskalender aus.
+     */
+    public function resolveTimePeriodProject(
+        // phpcs:ignore Generic.Files.LineLength.TooLong -- Union-Typ ohne Alias nicht umbrechbar
+        UserCalendarSettings|UserDailyViewCalendarSettings|UserShiftPlanSettings|UserShiftPlanDailySettings $settings
+    ): ?Project {
+        $projectId = (int) $settings->getAttribute('time_period_project_id');
+
+        /** @var Project|null $project */
+        $project = $projectId > 0 ? $this->projectRepository->find($projectId) : null;
+        // Repository-Query umgeht Global Scopes → Papierkorb-Projekte explizit ausschließen
+        if ($project?->trashed()) {
+            $project = null;
+        }
+
+        if ($project === null && ($projectId > 0 || $settings->getAttribute('use_project_time_period'))) {
+            $settings->forceFill(['use_project_time_period' => false, 'time_period_project_id' => 0])->save();
+        }
+
+        return $project;
     }
 
     public function save(Project $project): Project
@@ -489,9 +504,10 @@ class ProjectService
         // force delete the checklists and their tasks
         $checklistService->forceDeleteAll($checkLists, $taskService);
 
-        // force delete the events and their shifts
+        // force delete the events and their shifts — inkl. der Termine, die beim Löschen des Projekts
+        // in den Papierkorb gelegt wurden (sonst blieben sie mit project_id = NULL verwaist zurück)
         $eventService->forceDeleteAll(
-            $project->events,
+            $project->events()->withTrashed()->get(),
             $eventCommentService,
             $timelineService,
             $shiftService,
@@ -499,53 +515,18 @@ class ProjectService
             $notificationService
         );
 
-        // force delete the project files
-        $projectFileService->forceDeleteAll($project->project_files);
+        // force delete the project files (auch Dateien im Papierkorb)
+        $projectFileService->forceDeleteAll($project->project_files()->withTrashed()->get());
 
         // force delete the comments
         $comments = Comment::onlyTrashed()->where('project_id', $project->id)->get();
         $commentService->forceDeleteAll($comments);
 
-        // Soft delete the budget with all its relations
-        $table = $project->table;
+        // Budgettabelle endgültig löschen — auch eine bereits weich gelöschte (die frühere Kaskade lief nur
+        // über nicht gelöschte Kinder und ließ Positionen/Zellen als Datenleichen zurück)
+        $table = $project->table()->withTrashed()->first();
         if ($table) {
-            // Soft delete the budget
-            $mainPositions = $table->mainPositions()->get();
-            foreach ($mainPositions as $mainPosition) {
-                $subPositions = $mainPosition->subPositions()->get();
-                foreach ($subPositions as $subPosition) {
-                    $subPositionRows = $subPosition->subPositionRows()->get();
-                    foreach ($subPositionRows as $subPositionRow) {
-                        $cells = $subPositionRow->cells()->get();
-                        $comments = $subPositionRow->comments()->get();
-                        foreach ($comments as $comment) {
-                            $comment->forceDelete();
-                        }
-                        foreach ($cells as $cell) {
-                            $cell->comments()->forceDelete();
-                            $cell->calculations()->forceDelete();
-                            $cell->forceDelete();
-                        }
-                        $subPositionRow->forceDelete();
-                    }
-                    $subPosition->verified()->forceDelete();
-                    $subPosition->subPositionSumDetails()->forceDelete();
-                    $subPosition->forceDelete();
-                }
-                $mainPosition->verified()->forceDelete();
-                $mainPosition->mainPositionSumDetails()->forceDelete();
-                $mainPosition->forceDelete();
-            }
-            $columns = $table->columns()->get();
-            foreach ($columns as $column) {
-                $budgetSumDetails = $column->budgetSumDetails()->get();
-                foreach ($budgetSumDetails as $budgetSumDetail) {
-                    $budgetSumDetail->comments()->forceDelete();
-                    $budgetSumDetail->forceDelete();
-                }
-                $column->forceDelete();
-            }
-            $table->forceDelete();
+            app()->call([app(TableService::class), 'forceDelete'], ['table' => $table]);
         }
 
         // force delete the project
@@ -555,9 +536,6 @@ class ProjectService
     public function restore(
         Project $project,
         ShiftsQualificationsService $shiftsQualificationsService,
-        ShiftUserService $shiftUserService,
-        ShiftFreelancerService $shiftFreelancerService,
-        ShiftServiceProviderService $shiftServiceProviderService,
         CommentService $commentService,
         ChecklistService $checklistService,
         ProjectFileService $projectFileService,
@@ -576,9 +554,6 @@ class ProjectService
         $eventService->restoreAll(
             $project->events()->with(['shifts'])->onlyTrashed()->get(),
             $shiftsQualificationsService,
-            $shiftUserService,
-            $shiftFreelancerService,
-            $shiftServiceProviderService,
             $changeService,
             $eventCommentService,
             $timelineService,
@@ -732,110 +707,6 @@ class ProjectService
     }
 
     /**
-     * @return array<string, mixed>
-     * @throws ModelNotFoundException
-     */
-    public function getEventsWithRelevantShifts(int|Project $project): array
-    {
-        if (!$project instanceof Project) {
-            $project = $this->projectRepository->findOrFail($project);
-        }
-
-        $eventsWithRelevant = [];
-        // Alle Relationen einmalig eager laden statt pro Event/Schicht/Person nachzuladen
-        // (vorher: timelines-Requery, $shift->load() und room()->first() je Event → hunderte Queries)
-        $events = $project
-            ->events()
-            ->whereIn('event_type_id', $project->shiftRelevantEventTypes->pluck('id'))
-            ->with([
-                'event_type',
-                'room' => fn ($query) => $query->without(['creator', 'admins']),
-                'timelines' => fn ($query) => $query
-                    ->orderBy('start_date')
-                    ->orderBy('start')
-                    ->orderBy('end_date')
-                    ->orderBy('end'),
-                'shifts.craft',
-                'shifts.committedBy',
-                'shifts.shiftsQualifications',
-                // Personen inkl. globaler Qualifikationen, damit sie im Payload enthalten sind
-                'shifts.users.globalQualifications',
-                'shifts.users.vacations',
-                'shifts.freelancer.globalQualifications',
-                'shifts.serviceProvider.globalQualifications',
-                // Bewusst KEIN eager load von assignedCrafts: Freelancer und
-                // Dienstleister hängen zwar assigned_craft_ids an (dessen Accessor
-                // sonst je Person eine craftables-Query nachschiebt), die Relation
-                // zieht über ihr eigenes with('qualifications') aber ~3 MB in den
-                // Payload. Die paar Zusatzqueries sind hier das kleinere Übel.
-            ])
-            ->orderBy('start_time', 'asc')
-            ->get();
-
-        // Urlaubs-Tage nur einmal pro User berechnen, auch wenn er in mehreren Schichten steckt
-        $vacationDaysByUserId = [];
-
-        foreach ($events as $event) {
-            $timeline = $event->timelines->toArray();
-
-            foreach ($timeline as &$singleTimeLine) {
-                $singleTimeLine['description_without_html'] = strip_tags($singleTimeLine['description']);
-            }
-
-            foreach ($event->shifts as $shift) {
-                foreach ($shift->users as $user) {
-                    $user->formatted_vacation_days = $vacationDaysByUserId[$user->id]
-                        ??= $user->getFormattedVacationDays();
-                }
-            }
-
-            $eventsWithRelevant[] = [
-                'event' => $event,
-                'timeline' => $timeline,
-                'shifts' => $event->shifts,
-                'event_type' => $event->event_type,
-                'room' => $event->room,
-            ];
-        }
-        return $this->sortEventsWithRelevant($eventsWithRelevant);
-    }
-
-    /**
-     * @param array $eventsWithRelevant
-     * @return array<string, mixed>
-     */
-    private function sortEventsWithRelevant(array $eventsWithRelevant): array
-    {
-        $userSortType = $this->userService->getAuthUser()->sort_type_shift_tab;
-
-        if ($userSortType === null) {
-            return $eventsWithRelevant;
-        }
-
-        usort($eventsWithRelevant, function ($a, $b) use ($userSortType) {
-            $roomNameA = $a['room']['name'] ?? '';
-            $roomNameB = $b['room']['name'] ?? '';
-            if ($userSortType === 'ROOM_NAME_DESC') {
-                $roomComparison = strcmp($roomNameB, $roomNameA);
-            } else {
-                $roomComparison = strcmp($roomNameA, $roomNameB);
-            }
-            if ($roomComparison !== 0) {
-                return $roomComparison;
-            }
-            $dateA = $a['event']['event_date_without_time']['start_clear'] ?? '';
-            $dateB = $b['event']['event_date_without_time']['start_clear'] ?? '';
-
-            $timestampA = strtotime($dateA);
-            $timestampB = strtotime($dateB);
-
-            return $timestampA <=> $timestampB;
-        });
-
-        return $eventsWithRelevant;
-    }
-
-    /**
      * @throws ModelNotFoundException
      */
     public function getFirstEventInProject(int|Project $project): Event|null
@@ -923,9 +794,9 @@ class ProjectService
             ->all();
     }
 
-    public function pinnedProjects(int $userId): Collection
+    public function pinnedProjects(int $userId, string $search = ''): Collection
     {
-        return $this->projectRepository->pinnedProjects($userId);
+        return $this->projectRepository->pinnedProjects($userId, $search);
     }
 
     public function attachManagementUsersWithoutSelf(Project $project, IlluminateCollection $userIds, int $authId): void
@@ -939,6 +810,8 @@ class ProjectService
             ]]);
 
         $project->users()->attach($usersToAttach);
+
+        $this->projectTeamNotificationService->notifyAddedToTeam($project, $usersToAttach->keys(), true);
     }
 
     public function attachManagementUsers(Project $project, array $userIds): void
@@ -1027,9 +900,16 @@ class ProjectService
 
         $existingUserIds = $project->users()->pluck('users.id');
 
+        // neu ernannte Projektleitungen (auch bisherige Teammitglieder) erfahren davon
+        $this->projectTeamNotificationService->notifyAddedToTeam(
+            $project,
+            $newManagerIds->diff($currentManagerIds),
+            true
+        );
+
         foreach ($newManagerIds as $userId) {
             if ($existingUserIds->contains($userId)) {
-                $project->users()->updateExistingPivot($userId, ['is_manager' => true]);
+                $project->users()->updateExistingPivot($userId, ['is_manager' => true, 'can_write' => true]);
             } else {
                 $project->users()->attach($userId, [
                     'access_budget' => false,

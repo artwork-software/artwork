@@ -3,6 +3,11 @@
 namespace Tests\Feature\Modules\Budget;
 
 use Artwork\Modules\Budget\Models\Column;
+use Artwork\Modules\Budget\Models\ColumnCell;
+use Artwork\Modules\Budget\Models\MainPosition;
+use Artwork\Modules\Budget\Models\SageAssignedData;
+use Artwork\Modules\Budget\Models\SubPosition;
+use Artwork\Modules\Budget\Models\SubPositionRow;
 use Artwork\Modules\Budget\Models\Table;
 use Artwork\Modules\Budget\Services\BudgetService;
 use Artwork\Modules\Budget\Services\ColumnRelevanceService;
@@ -72,6 +77,53 @@ final class ColumnRelevanceTest extends FeatureTestCase
     }
 
     #[Test]
+    public function adding_a_difference_column_against_the_sage_column_subtracts_the_bookings(): void
+    {
+        $this->actingAsAdmin();
+        $table = $this->createTableWithColumns();
+        $planColumnId = $this->relevantColumnIds($table)[0];
+        $sageColumn = Column::factory()->create(['table_id' => $table->id, 'type' => 'sage', 'position' => 4]);
+
+        $mainPosition = MainPosition::factory()->create(['table_id' => $table->id]);
+        $subPosition = SubPosition::factory()->create(['main_position_id' => $mainPosition->id]);
+        $row = SubPositionRow::factory()->create(['sub_position_id' => $subPosition->id]);
+        ColumnCell::factory()->create(['column_id' => $planColumnId, 'sub_position_row_id' => $row->id, 'value' => '1000']);
+        $sageCell = ColumnCell::factory()->create(['column_id' => $sageColumn->id, 'sub_position_row_id' => $row->id, 'value' => '0']);
+        SageAssignedData::create([
+            'column_cell_id' => $sageCell->id,
+            'sage_id' => 4711,
+            'tan' => 1,
+            'periode' => 7,
+            'kto_haben' => '4400',
+            'kto_soll' => '6300',
+            'sa_kto' => '1',
+            'kst_traeger' => 'KT-1',
+            'kst_stelle' => 'KS-1',
+            'kreditor' => 'Testkreditor',
+            'buchungstext' => 'Testbuchung',
+            'buchungsbetrag' => '400',
+            'belegnummer' => 'B-1',
+            'belegdatum' => now()->toDateString(),
+            'buchungsdatum' => now()->toDateString(),
+        ]);
+
+        $this->post(route('project.budget.column.add'), [
+            'table_id' => $table->id,
+            'column_type' => 'difference',
+            'first_column_id' => $planColumnId,
+            'second_column_id' => $sageColumn->id,
+        ]);
+
+        $differenceColumn = $table->columns()->where('type', 'difference')->first();
+        $this->assertNotNull($differenceColumn);
+        $this->assertDatabaseHas('column_sub_position_row', [
+            'column_id' => $differenceColumn->id,
+            'sub_position_row_id' => $row->id,
+            'value' => '600.00',
+        ]);
+    }
+
+    #[Test]
     public function duplicating_a_column_moves_the_budget_relevant_flag_to_the_copy(): void
     {
         $this->actingAsAdmin();
@@ -80,7 +132,7 @@ final class ColumnRelevanceTest extends FeatureTestCase
 
         $this->post(route('project.budget.column.duplicate', ['column' => $relevantColumn->id]));
 
-        $copy = $table->columns()->where('name', 'like', '%(Kopie)')->first();
+        $copy = $table->columns()->where('name', 'like', '%' . __('(Copy)'))->first();
         $this->assertNotNull($copy);
         $this->assertSame([$copy->id], $this->relevantColumnIds($table));
     }
@@ -101,7 +153,7 @@ final class ColumnRelevanceTest extends FeatureTestCase
 
         $this->post(route('project.budget.column.duplicate', ['column' => $sumColumn->id]));
 
-        $copy = $table->columns()->where('name', 'like', '%(Kopie)')->first();
+        $copy = $table->columns()->where('name', 'like', '%' . __('(Copy)'))->first();
         $this->assertFalse($copy->relevant_for_project_groups);
     }
 

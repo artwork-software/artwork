@@ -26,6 +26,7 @@ class WorkTimeOverviewExportRequest extends FormRequest
                 'after_or_equal:start_month',
                 // Zeitraum begrenzen: alle ShiftWorker-Zeilen des Zeitraums werden in den
                 // Speicher geladen — ohne Cap ist der Export per URL auf OOM/Timeout treibbar
+                // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter -- Laravel-Validierungs-Closure (attribute, value, fail) – Signatur vorgegeben
                 function (string $attribute, mixed $value, \Closure $fail): void {
                     $start = Carbon::createFromFormat('Y-m-d', $this->input('start_month') . '-01');
                     $end = Carbon::createFromFormat('Y-m-d', $value . '-01');

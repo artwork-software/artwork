@@ -27,7 +27,7 @@
                 <BaseInput
                     id="email"
                     v-model="form.email"
-                    :label="$t('Email') + '*'"
+                    :label="$t('Email')"
                     type="email"
                     autocomplete="email"
                     required

@@ -1,6 +1,6 @@
 <template>
-    <div class="grid grid-cols-12 w-full">
-        <div class="col-span-7">
+    <div class="grid grid-cols-1 lg:grid-cols-12 w-full">
+        <div class="lg:col-span-7">
             <h3 class="font-lexend font-semibold text-[clamp(18px,2.5vw,20px)]/[25px] text-text mb-6">{{ $t('Availability')}}</h3>
             <div class="mb-10" v-if="type !== 'freelancer'">
                 <TemporarilyHired :user="user" v-if="$can('can manage workers') || hasAdminRole()" />
@@ -9,14 +9,15 @@
                 </div>
             </div>
         </div>
-        <div class="col-span-1">
+        <div class="hidden lg:block lg:col-span-1">
 
         </div>
-        <div class="col-span-4 mt-12">
+        <div class="hidden lg:block lg:col-span-4 mt-12">
         </div>
     </div>
-    <div class="grid grid-cols-12 w-full mb-20 items-start">
-        <div ref="calendarCol" class="col-span-7">
+    <!-- Unter lg stehen Kalender und Abwesenheitsliste untereinander, ab lg nebeneinander. -->
+    <div class="grid grid-cols-1 gap-y-8 lg:gap-y-0 lg:grid-cols-12 w-full mb-20 items-start">
+        <div ref="calendarCol" class="min-w-0 lg:col-span-7">
             <UserAvailabilityCalendar
                 :showVacationsAndAvailabilitiesDate="showVacationsAndAvailabilitiesDate"
                 :calendar-data="calendarData"
@@ -26,10 +27,10 @@
                 @select-range="openCreateModal"
             />
         </div>
-        <div class="col-span-1">
+        <div class="hidden lg:block lg:col-span-1">
 
         </div>
-        <div class="col-span-4 mt-12 flex min-h-0 flex-col" :style="{ maxHeight: calendarHeight + 'px' }">
+        <div class="min-w-0 lg:col-span-4 lg:mt-12 flex min-h-0 flex-col" :style="isSideBySide ? { maxHeight: calendarHeight + 'px' } : null">
             <UserVacations
                 :availabilities="availabilities"
                 :type="type"
@@ -91,7 +92,13 @@ export default defineComponent({
         const calendarHeight = ref(500)
         let observer = null
 
+        // Die Höhen-Kopplung der Liste an den Kalender gilt nur im Nebeneinander-Layout (Tailwind lg = 1024px).
+        const sideBySideQuery = typeof window !== 'undefined' ? window.matchMedia('(min-width: 1024px)') : null
+        const isSideBySide = ref(sideBySideQuery ? sideBySideQuery.matches : true)
+        const onLayoutChange = (event) => { isSideBySide.value = event.matches }
+
         onMounted(() => {
+            sideBySideQuery?.addEventListener('change', onLayoutChange)
             if (calendarCol.value) {
                 calendarHeight.value = calendarCol.value.offsetHeight
                 observer = new ResizeObserver((entries) => {
@@ -105,6 +112,7 @@ export default defineComponent({
 
         onBeforeUnmount(() => {
             observer?.disconnect()
+            sideBySideQuery?.removeEventListener('change', onLayoutChange)
         })
 
         const page = usePage()
@@ -126,7 +134,7 @@ export default defineComponent({
             showCreateModal.value = true
         }
 
-        return { calendarCol, calendarHeight, canManage, showCreateModal, createRange, openCreateModal }
+        return { calendarCol, calendarHeight, isSideBySide, canManage, showCreateModal, createRange, openCreateModal }
     },
 })
 </script>

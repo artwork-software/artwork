@@ -35,8 +35,10 @@ class FilterService
     ) {
     }
 
-    public function getPersonalFilter(?User $user = null, string $filterType = UserFilterTypes::CALENDAR_FILTER->value): Collection
-    {
+    public function getPersonalFilter(
+        ?User $user = null,
+        string $filterType = UserFilterTypes::CALENDAR_FILTER->value
+    ): Collection {
         $foundedUser = $user;
         //dirty compatibility hacks
         if ($foundedUser === null) {

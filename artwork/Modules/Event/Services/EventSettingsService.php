@@ -30,4 +30,13 @@ class EventSettingsService
             return $default;
         }
     }
+
+    /**
+     * Instanz-Schalter "Termine immer direkt buchbar": Raumbelegungsanfragen und Terminverifizierung
+     * sind abgeschaltet, jede Person mit Anlage-Recht bucht im Kalender und Planungskalender direkt.
+     */
+    public function alwaysDirectBooking(): bool
+    {
+        return (bool) $this->get('always_direct_booking', false);
+    }
 }

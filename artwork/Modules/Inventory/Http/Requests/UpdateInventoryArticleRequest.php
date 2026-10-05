@@ -2,6 +2,7 @@
 
 namespace Artwork\Modules\Inventory\Http\Requests;
 
+use Artwork\Core\FileHandling\Upload\SafeUploadFile;
 use App\Rules\InventoryArticleImageDimensions;
 use Artwork\Modules\GeneralSettings\Models\GeneralSettings;
 use Illuminate\Foundation\Http\FormRequest;
@@ -28,7 +29,7 @@ class UpdateInventoryArticleRequest extends FormRequest
             'is_detailed_quantity' => ['required', 'boolean'],
 
             'images' => ['nullable', 'array'],
-            'images.*' => ['nullable', 'image', 'max:' . $maxImageSizeKb, new InventoryArticleImageDimensions()],
+            'images.*' => ['nullable', 'image', 'max:' . $maxImageSizeKb, new SafeUploadFile(), new InventoryArticleImageDimensions()],
             'newImages' => ['nullable', 'array'],
             // Laravel's 'image' rule plus HEIC/HEIF (iPhone photos) — those
             // get converted to JPEG on upload (InventoryArticleImageService).
@@ -57,7 +58,11 @@ class UpdateInventoryArticleRequest extends FormRequest
             'detailed_article_quantities.*.quantity' => ['required', 'integer', 'min:0'],
             'detailed_article_quantities.*.description' => ['nullable', 'string'],
             'detailed_article_quantities.*.properties' => ['nullable', 'array'],
-            'detailed_article_quantities.*.properties.*.id' => ['required', 'integer', 'exists:inventory_article_properties,id'],
+            'detailed_article_quantities.*.properties.*.id' => [
+                'required',
+                'integer',
+                'exists:inventory_article_properties,id',
+            ],
             'detailed_article_quantities.*.properties.*.value' => ['nullable', 'max:255'],
 
             'statusValues' => ['nullable', 'array'],

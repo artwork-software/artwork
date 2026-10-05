@@ -10,7 +10,8 @@ readonly class CrmPropertyValueService
 {
     public function __construct(
         private CrmPropertyValueRepository $repository,
-    ) {}
+    ) {
+    }
 
     public function getForContact(int $contactId): Collection
     {

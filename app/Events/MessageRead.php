@@ -44,4 +44,3 @@ class MessageRead implements ShouldBroadcastNow
         ];
     }
 }
-

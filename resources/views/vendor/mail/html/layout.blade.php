@@ -45,6 +45,97 @@
             margin: 13px 0;
         }
 
+        /* Benachrichtigungs-Mails (emails.simple-mail, emails.notifications) */
+        .notification,
+        .email-content {
+            padding: 10px;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        .notification {
+            margin-top: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .email-content {
+            margin-bottom: 2rem;
+        }
+
+        .email-greeting {
+            margin-top: 3rem;
+            margin-bottom: 2rem;
+            font-size: 16px;
+            font-weight: 500;
+        }
+
+        .notification-group {
+            margin-bottom: 1rem;
+        }
+
+        .email-content h1 {
+            color: #27233C;
+            font-size: 20px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+        }
+
+        .email-content h1 span {
+            font-size: 12px;
+            background-color: #EBEBE8;
+            border-radius: 5px;
+            min-width: 20px;
+            min-height: 20px;
+            color: #A7A6B1;
+            text-align: center;
+            margin-left: 1rem;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 5px;
+        }
+
+        .notification h2,
+        .email-content h2 {
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 0.2rem;
+            color: #27233C;
+        }
+
+        .notification-content {
+            margin-bottom: 1rem;
+        }
+
+        .notification-text,
+        .notification-text p,
+        .notification-description {
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .notification-description {
+            margin: 0.2rem 0;
+        }
+
+        .notification-link {
+            display: inline-block;
+            margin-top: 1rem;
+            margin-bottom: 0.5rem;
+            font-size: 12px;
+            text-decoration: none;
+            color: #3017AD;
+        }
+
+        .notification-link-secondary {
+            margin-top: 0.25rem;
+        }
+
+        .notification-link-footer {
+            margin-bottom: 2rem;
+            padding-bottom: 2rem;
+        }
+
     </style>
     <!--[if mso]>
     <noscript>
@@ -61,12 +152,7 @@
     .mj-outlook-group-fix { width:100% !important; }
     </style>
     <![endif]-->
-    <!--[if !mso]><!-->
-    <link href="https://fonts.googleapis.com/css?family=Inter" rel="stylesheet" type="text/css">
-    <style type="text/css">
-        @import url(https://fonts.googleapis.com/css?family=Inter);
-    </style>
-    <!--<![endif]-->
+    {{-- Keine externen Font-Abrufe: System-Font-Stack. --}}
     <style type="text/css">
         @media only screen and (min-width:480px) {
             .mj-column-per-50 {
@@ -185,10 +271,10 @@
             <tbody>
                 <tr>
                     <td align="left" style="font-size:0px;padding:25px 50px;word-break:break-word;">
-                        <a href="{{$settings->impressum_link}}" style="font-family:Inter;font-size:14px;line-height:1;text-align:left;color:#A7A6B1;">
+                        <a href="{{$settings->impressum_link}}" style="font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;font-size:14px;line-height:1;text-align:left;color:#A7A6B1;">
                             Impressum
                         </a>
-                        <a href="{{ $settings->privacy_link}}" style="font-family:Inter;font-size:14px;line-height:1;text-align:left;color:#A7A6B1; margin-left: 3em">
+                        <a href="{{ $settings->privacy_link}}" style="font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;font-size:14px;line-height:1;text-align:left;color:#A7A6B1; margin-left: 3em">
                             Datenschutz
                         </a>
                     </td>

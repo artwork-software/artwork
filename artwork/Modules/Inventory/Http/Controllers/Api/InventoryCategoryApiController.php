@@ -12,7 +12,8 @@ class InventoryCategoryApiController extends Controller
 {
     public function __construct(
         protected InventoryCategoryService $categoryService
-    ) {}
+    ) {
+    }
 
     public function index(Request $request): JsonResponse
     {

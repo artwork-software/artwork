@@ -197,7 +197,7 @@
                             <SvgCollection svgName="arrowTopLeft"/>
 
                             <div class="w-full ml-3">
-                                {{ $t('The password must be at least 10 characters long, contain at least 1 digit, upper and lower case letters and special characters.')}}
+                                {{ $t('The password must be at least 10 characters long and contain upper and lower case letters as well as at least one digit.')}}
                             </div>
                         </div>
 
@@ -292,7 +292,6 @@ import JetInput from '@/Jetstream/Input.vue'
 import JetInputError from '@/Jetstream/InputError.vue'
 import JetLabel from '@/Jetstream/Label.vue'
 import AppLayout from "@/Layouts/AppLayout.vue";
-import DeleteUserForm from "@/Pages/Profile/Partials/DeleteUserForm.vue";
 import JetSectionBorder from "@/Jetstream/SectionBorder.vue";
 import LogoutOtherBrowserSessionsForm from "@/Pages/Profile/Partials/LogoutOtherBrowserSessionsForm.vue";
 import TwoFactorAuthenticationForm from "@/Pages/Profile/Partials/TwoFactorAuthenticationForm.vue";
@@ -322,7 +321,6 @@ export default defineComponent({
         JetInputError,
         JetLabel,
         AppLayout,
-        DeleteUserForm,
         JetSectionBorder,
         LogoutOtherBrowserSessionsForm,
         TwoFactorAuthenticationForm,

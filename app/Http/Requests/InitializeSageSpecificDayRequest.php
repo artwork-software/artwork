@@ -24,7 +24,13 @@ class InitializeSageSpecificDayRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'ktr' => ['nullable', 'string', 'max:100', 'regex:/\A[A-Za-z0-9._\-\/ ]+\z/u', 'required_without:specificDayFrom'],
+            'ktr' => [
+                'nullable',
+                'string',
+                'max:100',
+                'regex:/\A[A-Za-z0-9._\-\/ ]+\z/u',
+                'required_without:specificDayFrom',
+            ],
             'specificDayFrom' => ['nullable', 'date_format:Y-m-d', 'required_without:ktr'],
             'specificDayTo' => ['nullable', 'date_format:Y-m-d', 'after_or_equal:specificDayFrom'],
         ];

@@ -26,6 +26,7 @@
             :verifierForEventTypIds="verifierForEventTypIds"
             :is-planning="isPlanning"
             :is-in-daily-view="isInDailyView"
+            :adapt-to-tile-width="adaptToTileWidth"
             :is-height-full="isHeightFull"
             :cell-day="cellDay"
             @editEvent="e => emit('editEvent', e)"
@@ -93,6 +94,7 @@ defineProps({
     hasAdminRole: { type: Boolean, default: false },
     width: { type: [String, Number], default: '248px' },
     isInDailyView: { type: Boolean, default: false },
+    adaptToTileWidth: { type: Boolean, default: false },
     verifierForEventTypIds: { type: Array, default: () => [] },
     isPlanning: { type: Boolean, default: false },
     isHeightFull: {

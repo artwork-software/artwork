@@ -100,7 +100,8 @@ class OidcAuthController extends Controller
             ]);
         }
 
-        Auth::guard(config('fortify.guard'))->login($user, true);
+        // Kein Remember-Me für SSO-Logins: erneuter Zugriff läuft über den IdP.
+        Auth::guard(config('fortify.guard'))->login($user, false);
 
         // Session-Fixation verhindern: Fortifys eigener Login-Pfad regeneriert die
         // Session-ID ebenfalls – der manuelle OIDC-Login muss das selbst tun.

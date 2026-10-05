@@ -84,8 +84,7 @@
                                                 <span class="text-xs text-text-subtle">•</span>
                                                 <time class="text-xs text-text-subtle">{{ comment.created_at }}</time>
                                             </div>
-                                            <p class="mt-1 text-sm font-normal leading-6 text-text-subtle subpixel-antialiased"
-                                               v-html="comment.text"></p>
+                                            <p class="mt-1 text-sm font-normal leading-6 text-text-subtle subpixel-antialiased whitespace-pre-line">{{ comment.text }}</p>
                                         </div>
                                     </div>
 
@@ -203,6 +202,13 @@ watch(
     { immediate: true }
 );
 
+
+// Platzierungen in Ordnern (disclosure_components, erkennbar an disclosure_id) haben eigene Ids —
+// das Backend löst sie nur mit placement=disclosure auf und nutzt dann deren Tab-Auswahl.
+function placementQuery() {
+    return props.component?.disclosure_id ? { placement: 'disclosure' } : {};
+}
+
 async function fetchComments() {
     const projectId = props.project?.id;
     const componentInTabId = props.component?.id ?? props.component?.component_in_tab_id;
@@ -216,7 +222,7 @@ async function fetchComments() {
 
     try {
         const { data } = await axios.get(
-            route('projects.tabs.comments', { project: projectId, componentInTab: componentInTabId })
+            route('projects.tabs.comments', { project: projectId, componentInTab: componentInTabId, ...placementQuery() })
         );
         const fetchedComments = data?.comments ?? [];
         newCommentList.value.splice(0, newCommentList.value.length, ...fetchedComments);

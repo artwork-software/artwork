@@ -24,4 +24,3 @@ class ProjectCalendarController extends Controller
         );
     }
 }
-

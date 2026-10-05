@@ -7,7 +7,7 @@ use Artwork\Modules\ExternalAccess\Models\ExternalAccessNotificationRecipient;
 use Artwork\Modules\Notification\Enums\NotificationEnum;
 use Artwork\Modules\User\Models\User;
 use PHPUnit\Framework\Attributes\Test;
-use Tests\TestCase;
+use Tests\Feature\ExternalAccess\ExternalAccessTestCase as TestCase;
 
 final class NotificationRecipientModelTest extends TestCase
 {

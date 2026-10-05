@@ -10,7 +10,8 @@ readonly class CrmPropertyService
 {
     public function __construct(
         private CrmPropertyRepository $repository,
-    ) {}
+    ) {
+    }
 
     public function getByGroup(int $groupId): Collection
     {

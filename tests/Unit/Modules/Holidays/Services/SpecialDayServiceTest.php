@@ -31,8 +31,18 @@ final class SpecialDayServiceTest extends TestCase
     #[Test]
     public function only_holidays_with_the_flag_are_special_days(): void
     {
-        $this->holiday(['name' => 'Feiertag', 'date' => '2026-07-21', 'end_date' => '2026-07-21', 'treatAsSpecialDay' => true]);
-        $this->holiday(['name' => 'Ferien', 'date' => '2026-07-22', 'end_date' => '2026-07-22', 'treatAsSpecialDay' => false]);
+        $this->holiday([
+            'name' => 'Feiertag',
+            'date' => '2026-07-21',
+            'end_date' => '2026-07-21',
+            'treatAsSpecialDay' => true,
+        ]);
+        $this->holiday([
+            'name' => 'Ferien',
+            'date' => '2026-07-22',
+            'end_date' => '2026-07-22',
+            'treatAsSpecialDay' => false,
+        ]);
 
         $service = $this->service();
 
@@ -64,8 +74,18 @@ final class SpecialDayServiceTest extends TestCase
     #[Test]
     public function yearly_entries_repeat_and_may_span_the_turn_of_the_year(): void
     {
-        $this->holiday(['name' => 'Jahreswechsel', 'date' => '2020-12-31', 'end_date' => '2021-01-01', 'yearly' => true]);
-        $this->holiday(['name' => 'Neujahr-Sonder', 'date' => '2019-05-01', 'end_date' => '2019-05-01', 'yearly' => true]);
+        $this->holiday([
+            'name' => 'Jahreswechsel',
+            'date' => '2020-12-31',
+            'end_date' => '2021-01-01',
+            'yearly' => true,
+        ]);
+        $this->holiday([
+            'name' => 'Neujahr-Sonder',
+            'date' => '2019-05-01',
+            'end_date' => '2019-05-01',
+            'yearly' => true,
+        ]);
 
         $service = $this->service();
 

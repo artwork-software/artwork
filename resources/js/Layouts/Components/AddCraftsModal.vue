@@ -123,7 +123,7 @@
                                 <img class="size-9 rounded-full object-cover" :src="user.profile_photo_url" alt="" />
                                 <span class="text-sm">{{ user.first_name }} {{ user.last_name }}</span>
                             </div>
-                            <button type="button" @click="togglePlanner(user, 'shift_planer')" class="p-1" aria-label="{{$t('Remove')}}">
+                            <button type="button" @click="togglePlanner(user, 'shift_planer')" class="p-1" :aria-label="$t('Remove')">
                                 <PropertyIcon name="IconCircleX" stroke-width="1.5" class="h-5 w-5 text-text hover:text-danger"/>
                             </button>
                         </li>
@@ -155,7 +155,7 @@
                         <img class="size-9 rounded-full object-cover" :src="user.profile_photo_url" alt="" />
                         <span class="text-sm">{{ user.first_name }} {{ user.last_name }}</span>
                     </div>
-                    <button type="button" @click="deleteDepartmentManager(user)" class="p-1" aria-label="$t('Delete department management')">
+                    <button type="button" @click="deleteDepartmentManager(user)" class="p-1" :aria-label="$t('Delete department management')">
                         <PropertyIcon name="IconCircleX" stroke-width="1.5" class="h-5 w-5 text-text hover:text-danger"/>
                     </button>
                 </li>

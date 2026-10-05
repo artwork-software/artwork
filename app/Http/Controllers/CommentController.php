@@ -57,6 +57,7 @@ class CommentController extends Controller
 
     public function update(Request $request, Comment $comment): RedirectResponse
     {
+        $request->validate(['text' => 'required|string|max:5000']);
         $comment->text = $request->input('text');
         $this->commentService->save($comment);
         return Redirect::back();

@@ -335,7 +335,10 @@ class SeasonSchedulePdfBuilder
 
             if (count($words) >= 2) {
                 $abbreviation = mb_strtoupper(
-                    implode('', array_map(static fn (string $word): string => mb_substr($word, 0, 1), array_slice($words, 0, 3)))
+                    implode('', array_map(
+                        static fn (string $word): string => mb_substr($word, 0, 1),
+                        array_slice($words, 0, 3)
+                    ))
                 );
             } else {
                 $abbreviation = mb_strtoupper(mb_substr($words[0] ?? '', 0, 2));

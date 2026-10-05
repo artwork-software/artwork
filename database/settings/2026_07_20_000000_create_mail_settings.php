@@ -16,7 +16,8 @@ return new class extends SettingsMigration {
 
     public function down(): void
     {
-        foreach ([
+        foreach (
+            [
             'host',
             'port',
             'encryption',
@@ -24,7 +25,8 @@ return new class extends SettingsMigration {
             'password',
             'from_address',
             'from_name',
-        ] as $key) {
+            ] as $key
+        ) {
             $this->migrator->delete("mail.{$key}");
         }
     }

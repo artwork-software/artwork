@@ -8,6 +8,7 @@ use Artwork\Modules\Accommodation\Models\Accommodation;
 use Artwork\Modules\Accommodation\Models\AccommodationRoomType;
 use Artwork\Modules\ArtistResidency\Models\Artist;
 use Artwork\Modules\Crm\Models\CrmContact;
+use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\ServiceProvider\Models\ServiceProvider;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -145,6 +146,11 @@ class ArtistResidency extends Model
         );
     }
 
+    public function project(): BelongsTo
+    {
+        return $this->belongsTo(Project::class, 'project_id', 'id', 'project');
+    }
+
     public function accommodation(): BelongsTo
     {
         return $this->belongsTo(
@@ -185,8 +191,12 @@ class ArtistResidency extends Model
             // arrival_date/departure_date sind nullable; Date::parse(null) liefert sonst "heute".
             'arrival_date' => $this->arrival_date ? Date::parse($this->arrival_date)->translatedFormat('d.m.Y') : null,
             'arrival_time' => $this->arrival_time ? Date::parse($this->arrival_time)->translatedFormat('H:i') : null,
-            'departure_date' => $this->departure_date ? Date::parse($this->departure_date)->translatedFormat('d.m.Y') : null,
-            'departure_time' => $this->departure_time ? Date::parse($this->departure_time)->translatedFormat('H:i') : null,
+            'departure_date' => $this
+                ->departure_date ? Date::parse($this->departure_date)
+                ->translatedFormat('d.m.Y') : null,
+            'departure_time' => $this
+                ->departure_time ? Date::parse($this->departure_time)
+                ->translatedFormat('H:i') : null,
         ];
     }
 }

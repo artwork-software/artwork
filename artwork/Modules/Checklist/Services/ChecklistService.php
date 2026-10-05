@@ -15,14 +15,17 @@ use Artwork\Modules\Project\Services\ProjectTabService;
 use Artwork\Modules\Task\Models\Task;
 use Artwork\Modules\Task\Services\TaskService;
 use Artwork\Modules\User\Models\User;
+use Artwork\Modules\Project\Services\ProjectTeamNotificationService;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Auth;
 use stdClass;
 
 readonly class ChecklistService
 {
-    public function __construct(private ChecklistRepository $checklistRepository)
-    {
+    public function __construct(
+        private ChecklistRepository $checklistRepository,
+        private ProjectTeamNotificationService $projectTeamNotificationService,
+    ) {
     }
 
     public function updateByRequest(
@@ -30,12 +33,20 @@ readonly class ChecklistService
         ChecklistUpdateRequest $request,
         TaskService $taskService
     ): Checklist|Model {
-        $checklist->fill($request->all());
+        $checklist->fill($request->fillableFields());
 
         if ($request->get('tasks')) {
             $taskService->deleteByChecklist($checklist);
             $checklist->tasks()->delete();
-            $checklist->tasks()->createMany($request->tasks);
+            $checklist->tasks()->createMany(
+                array_map(
+                    static fn (array $task): array => array_intersect_key(
+                        $task,
+                        array_flip(['name', 'description', 'done', 'order', 'deadline'])
+                    ),
+                    (array) $request->input('tasks', [])
+                )
+            );
         }
 
         return $this->checklistRepository->save($checklist);
@@ -69,7 +80,7 @@ readonly class ChecklistService
      */
     public function buildOwnTasksChecklistPayload(int $userId, int $sort): array
     {
-        $checklists = Checklist::with(['users', 'tasks.task_users', 'project'])
+        $checklists = Checklist::with(['users', 'tasks.task_users', 'tasks.user_who_done', 'project'])
             ->where(function ($query) use ($userId): void {
                 $query->where(function ($q) use ($userId): void {
                     // Public checklists where user is assigned, has tasks, or is a project member
@@ -105,9 +116,11 @@ readonly class ChecklistService
                 return true;
             }
             // Keep if any task is assigned to the user
-            if ($checklist->tasks->contains(function ($task) use ($userId) {
-                return $task->task_users->contains('id', $userId);
-            })) {
+            if (
+                $checklist->tasks->contains(function ($task) use ($userId) {
+                    return $task->task_users->contains('id', $userId);
+                })
+            ) {
                 return true;
             }
         });
@@ -159,11 +172,14 @@ readonly class ChecklistService
         $checklist->users()->sync($ids);
         if ($checklist->hasProject()) {
             $project = $checklist->project;
+            $addedUserIds = [];
             foreach ($ids as $id) {
                 if (!$project->users->contains($id)) {
                     $project->users()->attach($id);
+                    $addedUserIds[] = $id;
                 }
             }
+            $this->projectTeamNotificationService->notifyAddedToTeam($project, $addedUserIds);
         }
     }
 

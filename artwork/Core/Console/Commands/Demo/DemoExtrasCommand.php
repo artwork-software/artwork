@@ -22,6 +22,10 @@ class DemoExtrasCommand extends BaseDemoCommand
 
     public function handle(): int
     {
+        if ($this->abortInProduction()) {
+            return self::FAILURE;
+        }
+
         $this->actAsSeedUser();
 
         $from = $this->option('from');

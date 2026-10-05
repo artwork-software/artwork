@@ -8,7 +8,8 @@ use Illuminate\Queue\SerializesModels;
 
 class WorkflowTriggered
 {
-    use Dispatchable, SerializesModels;
+    use Dispatchable;
+    use SerializesModels;
 
     public function __construct(
         public readonly Model $subject,

@@ -39,11 +39,21 @@ window.Pusher = pusher;
 // Verbindungsdaten kommen zur Laufzeit vom Server (config/frontend.php ->
 // window.__APP_CONFIG__), nicht mehr per import.meta.env aus dem Build. Nur so
 // bleibt das Bundle umgebungsneutral und muss nicht pro Kunde neu gebaut werden.
+// TLS fuer den WebSocket: aus REVERB_SCHEME (config/frontend.php), sonst aus dem Schema der
+// Seite. Ohne forceTLS probiert pusher-js zuerst ws:// und faellt erst nach einem
+// Fehlversuch auf wss:// zurueck — hinter dem Reverse-Proxy ist das eine Klartextverbindung.
+const reverbScheme = cfg('reverb.scheme')
+const reverbForceTls = reverbScheme
+    ? String(reverbScheme).toLowerCase() === 'https'
+    : window.location.protocol === 'https:'
+const reverbPort = cfg('reverb.port', 8080)
+
 window.Echo = new Echo({
     broadcaster: 'pusher',
     key: cfg('reverb.key', 'app-key'),
     cluster: cfg('reverb.cluster', 'eu'),
-    forceTLS: false,
+    forceTLS: reverbForceTls,
     wsHost: cfg('reverb.host', 'localhost'),
-    wssPort: cfg('reverb.port', 8080),
+    wsPort: reverbPort,
+    wssPort: reverbPort,
 });

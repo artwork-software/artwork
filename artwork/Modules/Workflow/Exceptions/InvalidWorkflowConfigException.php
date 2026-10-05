@@ -6,5 +6,5 @@ use Exception;
 
 class InvalidWorkflowConfigException extends Exception
 {
-    
+
 }

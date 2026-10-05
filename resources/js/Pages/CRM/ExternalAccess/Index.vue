@@ -35,12 +35,15 @@
                     <tbody>
                         <tr v-for="access in accesses.data" :key="access.id" class="border-b border-border-subtle">
                             <td class="px-4 py-3">
-                                <div class="font-medium">{{ access.crm_contact?.display_name }}</div>
+                                <div class="font-medium">{{ access.crm_contact?.display_name ?? access.name ?? access.email }}</div>
                                 <div class="text-xs text-text-subtle">{{ access.email }}</div>
                             </td>
                             <td class="px-4 py-3 text-sm">
-                                <div>{{ access.crm_contact?.display_name }}</div>
-                                <div class="text-xs text-text-subtle">{{ entityTypeLabel(access.crm_contact) }}</div>
+                                <template v-if="access.crm_contact">
+                                    <div>{{ access.crm_contact.display_name }}</div>
+                                    <div class="text-xs text-text-subtle">{{ entityTypeLabel(access.crm_contact) }}</div>
+                                </template>
+                                <div v-else class="text-xs text-text-subtle">{{ $t('Tab access only (no own CRM contact)') }}</div>
                             </td>
                             <td class="px-4 py-3"><StatusBadge :status="resolveStatus(access)" /></td>
                             <td class="px-4 py-3 text-sm">{{ formatDate(access.crm_access_expires_at) ?? '—' }}</td>

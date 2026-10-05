@@ -21,4 +21,3 @@ class ProjectArtistNameController extends Controller
         );
     }
 }
-

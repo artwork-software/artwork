@@ -11,7 +11,8 @@ class RemoveDatabaseNotificationsCommand extends Command
 {
     protected $signature = 'artwork:remove-archived-database-notifications';
 
-    protected $description = 'This command forceDeletes archived notifications older than 30 days and unread notifications older than 1 year';
+    protected $description = 'This command forceDeletes archived notifications older than 30 days and unread '
+        . 'notifications older than 1 year';
 
     public function __construct(
         private readonly DatabaseNotificationService $databaseNotificationService,

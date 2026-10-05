@@ -15,7 +15,8 @@ class CrmPropertyController extends Controller
 {
     public function __construct(
         private readonly CrmPropertyService $service,
-    ) {}
+    ) {
+    }
 
     public function reorder(Request $request): RedirectResponse
     {

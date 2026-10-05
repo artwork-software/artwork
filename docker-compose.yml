@@ -47,11 +47,14 @@ services:
             - ./.env:/var/www/html/.env:ro
     db:
         image: 'mariadb:10.11'
+        # DB-Port nur an die Loopback-Adresse des Hosts binden (DB_BIND_HOST, Default 127.0.0.1).
+        # Die App-Container erreichen die DB über das Compose-Netzwerk, ein Host-Port ist nur für
+        # lokale Werkzeuge nötig. Für Remote-Zugriff DB_BIND_HOST bewusst setzen (z. B. VPN-IP).
         ports:
-            - '${FORWARD_DB_PORT:-3306}:3306'
+            - '${DB_BIND_HOST:-127.0.0.1}:${FORWARD_DB_PORT:-3306}:3306'
         environment:
+            # Root-Login nur lokal im DB-Container (kein Remote-Root über '%'); die App nutzt DB_USERNAME.
             MYSQL_ROOT_PASSWORD: '${DB_PASSWORD}'
-            MYSQL_ROOT_HOST: '%'
             MYSQL_DATABASE: '${DB_DATABASE}'
             MYSQL_USER: '${DB_USERNAME}'
             MYSQL_PASSWORD: '${DB_PASSWORD}'
@@ -62,8 +65,9 @@ services:
         environment:
             MEILI_MASTER_KEY: ${MEILISEARCH_KEY}
             MEILI_ENV: development
+        # Meilisearch-Port ebenfalls nur an DB_BIND_HOST (Default 127.0.0.1) binden.
         ports:
-            - '${FORWARD_MEILISEARCH_PORT:-7700}:7700'
+            - '${DB_BIND_HOST:-127.0.0.1}:${FORWARD_MEILISEARCH_PORT:-7700}:7700'
         volumes:
             - 'artwork-meilisearch:/data'
     redis:

@@ -166,7 +166,6 @@ class ProjectTabService implements ServiceWithArrayCache
                     currentUser: $userService->getAuthUser()
                 )
             )
-            ->setEventsWithRelevant($projectService->getEventsWithRelevantShifts($project))
             // Bewusst OHNE nested assignedCrafts: das würde zwar die
             // craftables-Nachfragen des assigned_craft_ids-Accessors sparen,
             // serialisiert aber die Relation (inkl. ihres eigenen

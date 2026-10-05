@@ -19,7 +19,17 @@ class OidcService
     }
 
     /**
-     * @return array{identifier: string, email: string|null, first_name: string, last_name: string, groups: array<int, string>, email_verified: bool, meta_data: array<string, mixed>}
+     * @return array{
+     *     identifier: string,
+     *     email: string|null,
+     *     first_name: string,
+     *     last_name: string,
+     *     groups: array<int,
+     *     string>,
+     *     email_verified: bool,
+     *     meta_data: array<string,
+     *     mixed>,
+     * }
      */
     public function userFromCallback(ExternalUserSource $source): array
     {

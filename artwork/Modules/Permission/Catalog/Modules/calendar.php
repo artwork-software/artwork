@@ -9,6 +9,8 @@ use Artwork\Modules\Permission\Enums\PermissionEnum;
 $module = Requirement::module('room_assignment', 'Module "Calendar" enabled');
 $planningModule = Requirement::module('planning_calendar', 'Module "Planning calendar" enabled');
 $dayRemarksSetting = Requirement::setting('day_remarks_enabled', 'Calendar setting "Day remarks" enabled');
+// "Termine immer direkt buchbar" (Einstellungen → Termine → Standardwerte): keine Raumanfragen, keine Verifizierung
+$directBooking = Requirement::setting('event_direct_booking_only', 'Event setting "Events always bookable directly" enabled');
 
 return new PermissionModuleDefinition(
     key: 'calendar',
@@ -18,6 +20,11 @@ return new PermissionModuleDefinition(
     moduleSetting: 'room_assignment',
     hint: 'Without permissions a person can only book in rooms that are bookable for everyone '
         . 'or in which they are listed as requester or room admin.',
+    settingHints: [
+        'event_direct_booking_only' => 'The setting "Events always bookable directly" is active: there are no room '
+            . 'requests and no event verification. Everyone who may create events books directly. Room-specific '
+            . 'request settings and the permissions marked below have no effect until the setting is switched off.',
+    ],
     tiers: [
         new PermissionDefinition(
             name: PermissionEnum::EVENT_REQUEST,
@@ -35,6 +42,8 @@ return new PermissionModuleDefinition(
             personas: [Persona::BASIS],
             note: 'Requests are not bound to a project. Own events stay editable because the person created them, '
                 . 'not because of this permission.',
+            supersededBy: $directBooking,
+            supersededEffect: 'Creates events directly in all rooms (no request) – including bulk creation and series.',
         ),
         new PermissionDefinition(
             name: PermissionEnum::CREATE_EVENTS_WITHOUT_REQUEST,
@@ -59,6 +68,9 @@ return new PermissionModuleDefinition(
             personas: [Persona::DISPOSITION, Persona::PRODUCTION_LEAD],
             note: 'Room admins have the same rights within their own rooms without this permission. '
                 . 'Direct booking of planned events requires "Plan directly in the planning calendar" separately.',
+            supersededBy: $directBooking,
+            supersededEffect: 'Direct booking and answering requests no longer depend on this permission. It still allows '
+                . 'editing, declining and deleting other people\'s events, events without a room and "Save timeline as preset".',
         ),
     ],
     extras: [
@@ -77,6 +89,8 @@ return new PermissionModuleDefinition(
             requires: [$planningModule],
             personas: [Persona::PRODUCTION_LEAD],
             note: 'When the module "Planning calendar" is disabled, the planning calendar is closed for artwork admins as well.',
+            supersededBy: $directBooking,
+            supersededEffect: 'Planned events are created directly instead of as a request; there is no verification step.',
         ),
         new PermissionDefinition(
             name: PermissionEnum::CAN_EDIT_PLANNING_CALENDAR,
@@ -105,6 +119,7 @@ return new PermissionModuleDefinition(
             requires: [$planningModule, Requirement::permission(PermissionEnum::CAN_SEE_PLANNING_CALENDAR)],
             personas: [Persona::DISPOSITION],
             note: 'Independent of "Plan events directly": calendar and planning calendar are permitted separately.',
+            supersededBy: $directBooking,
         ),
         new PermissionDefinition(
             name: PermissionEnum::DAY_REMARKS_VIEW,

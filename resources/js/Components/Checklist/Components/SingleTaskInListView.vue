@@ -15,8 +15,10 @@
                         name="task"
                         type="checkbox"
                         v-model="localTaskDone"
+                        :disabled="!canToggleDone"
                         @change="updateTaskStatus"
                         class="h-5 w-5 cursor-pointer rounded-full border-2 border-border text-success ring-0 focus:ring-0 focus:outline-none"
+                        :class="canToggleDone ? '' : 'cursor-not-allowed opacity-50'"
                         :aria-labelledby="titleId"
                     />
                 </div>
@@ -159,6 +161,9 @@ const canManage = computed(() => {
     const isManager = props.projectManagerIds?.includes(authId.value as number)
     return (canEdit && (isWriter || isManager || !!props.isAdmin)) || !!props.isInOwnTaskManagement
 })
+
+// Abhaken folgt ChecklistPolicy::update (Backend-Flag can_update); ohne Flag (z. B. eigene Aufgabenverwaltung) wie bisher canManage
+const canToggleDone = computed(() => props.checklist?.can_update ?? canManage.value)
 
 const titleId = `task-title-${props.task.id}`
 const checkboxId = `task-checkbox-${props.task.id}`

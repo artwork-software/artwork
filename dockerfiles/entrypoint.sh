@@ -5,17 +5,22 @@ set -euo pipefail
 HASH_DIR="/var/www/html/storage/.dep-hashes"
 mkdir -p "$HASH_DIR"
 
-# Composer
+# Composer – ohne Dev-Pakete: Entwicklungswerkzeuge (z. B. laravel/dusk) registrieren eigene Routen
+# und Login-Hintertüren, sobald APP_ENV nicht "production" ist. Nur COMPOSER_INSTALL_DEV=1 installiert sie.
+COMPOSER_FLAGS="--no-interaction"
+if [ "${COMPOSER_INSTALL_DEV:-0}" != "1" ]; then
+  COMPOSER_FLAGS="$COMPOSER_FLAGS --no-dev --optimize-autoloader"
+fi
 if [ ! -d "vendor" ] || [ -z "$(ls -A vendor 2>/dev/null)" ] || \
    ([ -f composer.lock ] && ! md5sum -c "$HASH_DIR/composer.lock.md5" &>/dev/null); then
   echo "Installing Composer dependencies..."
   if [ -f composer.phar ]; then
-    php composer.phar install --no-interaction
+    php composer.phar install $COMPOSER_FLAGS
   elif command -v composer &>/dev/null; then
-    composer install --no-interaction
+    composer install $COMPOSER_FLAGS
   else
     curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
-    composer install --no-interaction
+    composer install $COMPOSER_FLAGS
   fi
   md5sum composer.lock > "$HASH_DIR/composer.lock.md5" 2>/dev/null || true
 fi

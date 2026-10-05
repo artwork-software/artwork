@@ -45,7 +45,12 @@ final class MinFreeDaysPerWeekCheckTest extends TestCase
             $this->shiftFor($user, $monday->copy()->addDays($i));
         }
 
-        $violations = $this->check->check($this->rule(2.0), $user, $monday->copy()->addDays(2), $monday->copy()->addDays(3));
+        $violations = $this->check->check(
+            $this->rule(2.0),
+            $user,
+            $monday->copy()->addDays(2),
+            $monday->copy()->addDays(3)
+        );
 
         $this->assertCount(1, $violations);
         $violation = $violations->first();
@@ -158,10 +163,18 @@ final class MinFreeDaysPerWeekCheckTest extends TestCase
             $this->shiftFor($user, $monday->copy()->addDays($i));
         }
 
-        $violations = $this->check->check($this->rule(2.0), $user, $monday->copy()->addDays(3), $monday->copy()->addDays(8));
+        $violations = $this->check->check(
+            $this->rule(2.0),
+            $user,
+            $monday->copy()->addDays(3),
+            $monday->copy()->addDays(8)
+        );
 
         $this->assertCount(2, $violations);
-        [$from, $to] = $this->check->getCoveredRange($this->rule(), $monday->copy()->addDays(3), $monday->copy()->addDays(8));
+        [
+            $from,
+            $to,
+        ] = $this->check->getCoveredRange($this->rule(), $monday->copy()->addDays(3), $monday->copy()->addDays(8));
         $this->assertSame($monday->toDateString(), $from->toDateString());
         $this->assertSame($monday->copy()->addDays(13)->toDateString(), $to->toDateString());
     }

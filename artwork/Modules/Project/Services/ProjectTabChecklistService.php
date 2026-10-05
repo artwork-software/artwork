@@ -12,9 +12,17 @@ use Illuminate\Support\Facades\Auth;
 
 class ProjectTabChecklistService
 {
-    public function buildChecklistPayload(Project $project, ?ComponentInTab $componentInTab = null): array
-    {
-        $userId = Auth::id();
+    public function __construct(
+        private readonly ProjectComponentVisibilityService $projectComponentVisibilityService,
+    ) {
+    }
+
+    public function buildChecklistPayload(
+        Project $project,
+        ?ComponentInTab $componentInTab = null,
+        ?User $user = null
+    ): array {
+        $userId = $user?->id ?? Auth::id();
         $scope = $componentInTab?->scope ?? [];
 
         $openedChecklists = User::where('id', $userId)
@@ -25,8 +33,8 @@ class ProjectTabChecklistService
             ChecklistTemplate::all()
         )->resolve();
 
-        $publicChecklists = $this->getFilteredChecklists($project, $scope, false, $userId);
-        $privateChecklists = $this->getFilteredChecklists($project, $scope, true, $userId);
+        $publicChecklists = $this->getFilteredChecklists($project, $scope, false, $userId, $user);
+        $privateChecklists = $this->getFilteredChecklists($project, $scope, true, $userId, $user);
 
         return [
             'opened_checklists' => $openedChecklists,
@@ -36,16 +44,16 @@ class ProjectTabChecklistService
         ];
     }
 
-    public function buildAllChecklistsPayload(Project $project): array
+    public function buildAllChecklistsPayload(Project $project, ?User $user = null): array
     {
-        $userId = Auth::id();
+        $userId = $user?->id ?? Auth::id();
 
         $openedChecklists = User::where('id', $userId)
             ->first()
             ?->opened_checklists ?? [];
 
-        $publicAllChecklists = $this->getFilteredChecklists($project, [], false, $userId);
-        $privateAllChecklists = $this->getFilteredChecklists($project, [], true, $userId);
+        $publicAllChecklists = $this->getFilteredChecklists($project, [], false, $userId, $user);
+        $privateAllChecklists = $this->getFilteredChecklists($project, [], true, $userId, $user);
 
         return [
             'opened_checklists' => $openedChecklists,
@@ -54,19 +62,37 @@ class ProjectTabChecklistService
         ];
     }
 
-    private function getFilteredChecklists(Project $project, array $scope, bool $private, int $userId): array
-    {
+    private function getFilteredChecklists(
+        Project $project,
+        array $scope,
+        bool $private,
+        int $userId,
+        ?User $user = null
+    ): array {
         $query = $project->checklists()
-            ->with(['users', 'tasks.task_users'])
+            ->with(['users', 'tasks.task_users', 'tasks.user_who_done'])
             ->where('private', $private);
 
+        // Alle Listen teilen sich die Projekt-Instanz: ChecklistPolicy::update (can_update) liest
+        // project->users/writeUsers/managerUsers/departments dann einmal statt je Checkliste.
+        $shareProject = static fn (\Illuminate\Support\Collection $checklists) => $checklists
+            ->each(static fn ($checklist) => $checklist->setRelation('project', $project));
+
         if (!empty($scope)) {
-            $query->whereIn('tab_id', $scope);
+            // Tab-Auswahl der Komponente, ohne Tabs, die die Person nicht sehen darf
+            $query->whereIn(
+                'tab_id',
+                $user !== null
+                    ? $this->projectComponentVisibilityService->restrictScopeToVisibleTabs($user, $scope)
+                    : $scope
+            );
+        } elseif ($user !== null) {
+            $this->projectComponentVisibilityService->constrainToVisibleTabs($query, $user);
         }
 
         // Public checklists are visible to everyone who can view the component
         if (!$private) {
-            return ChecklistIndexResource::collection($query->get())->resolve();
+            return ChecklistIndexResource::collection($shareProject($query->get()))->resolve();
         }
 
         // Private checklists require user to be assigned, creator, or in project team
@@ -74,7 +100,7 @@ class ProjectTabChecklistService
             $project->load('users');
         }
 
-        $checklists = $query->get()->filter(function ($checklist) use ($userId, $project) {
+        $checklists = $shareProject($query->get())->filter(function ($checklist) use ($userId, $project) {
             $isInChecklistUsers = $checklist->users->contains('id', $userId);
             $isInTaskUsers = $checklist->tasks->contains(function ($task) use ($userId) {
                 return $task->task_users->contains('id', $userId);
@@ -88,4 +114,3 @@ class ProjectTabChecklistService
         return ChecklistIndexResource::collection($checklists)->resolve();
     }
 }
-

@@ -3,6 +3,7 @@
 namespace Tests\Unit\Pure\Core\FileHandling\Naming;
 
 use Artwork\Core\FileHandling\Naming\StoredFileName;
+use Artwork\Core\FileHandling\Upload\DeniedUploadFileException;
 use Illuminate\Http\UploadedFile;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
@@ -52,11 +53,13 @@ final class StoredFileNameTest extends TestCase
 
     #[Test]
     #[DataProvider('executableNames')]
-    public function it_rewrites_an_executable_extension(string $originalName): void
+    public function it_rejects_an_executable_extension(string $originalName): void
     {
         $file = UploadedFile::fake()->create($originalName, 1);
 
-        $this->assertStringEndsWith('.bin', StoredFileName::forUpload($file));
+        $this->expectException(DeniedUploadFileException::class);
+
+        StoredFileName::forUpload($file);
     }
 
     /**
@@ -67,8 +70,13 @@ final class StoredFileNameTest extends TestCase
         return [
             'php' => ['shell.php'],
             'phtml' => ['shell.phtml'],
+            'phar' => ['archive.phar'],
+            'htaccess' => ['.htaccess'],
+            'upper case' => ['shell.PHP'],
             'double extension' => ['report.pdf.exe'],
             'shell script' => ['deploy.sh'],
+            'html' => ['seite.html'],
+            'svg' => ['logo.svg'],
         ];
     }
 
@@ -121,6 +129,14 @@ final class StoredFileNameTest extends TestCase
 
         $this->assertStringEndsWith('.pdf', $name);
         $this->assertMatchesRegularExpression(StoredFileName::PATTERN, $name);
+    }
+
+    #[Test]
+    public function it_refuses_to_generate_a_denied_extension(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+
+        StoredFileName::forGenerated('php');
     }
 
     #[Test]

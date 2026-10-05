@@ -109,7 +109,7 @@
                 <span class="inline-block w-2 h-2 rounded-full bg-warning"></span>
                 <span>{{ $t('Conflict with your shift!') }}</span>
             </div>
-            <div class="flex items-center gap-1.5">
+            <div v-if="projectAssignmentsEnabled" class="flex items-center gap-1.5">
                 <span class="inline-block w-4 h-[4px] rounded-full border border-success-border border-dashed bg-success-surface"></span>
                 <span>{{ $t('Project wish') }}</span>
             </div>
@@ -124,9 +124,12 @@
 import {IconChevronLeft, IconChevronRight} from "@tabler/icons-vue";
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 import { computed, ref, onBeforeUnmount } from 'vue'
-import { router } from '@inertiajs/vue3'
+import { router, usePage } from '@inertiajs/vue3'
 import dayjs from 'dayjs'
 import { assignmentStripStyle, assignmentLabel } from '@/Composeables/UseProjectDayAssignments.js'
+
+// Globaler Schalter „Projektzuordnungen“ (Schichteinstellungen)
+const projectAssignmentsEnabled = computed(() => usePage().props.project_assignments_enabled !== false)
 
 const props = defineProps({
     calendarData: { type: Array, required: true },

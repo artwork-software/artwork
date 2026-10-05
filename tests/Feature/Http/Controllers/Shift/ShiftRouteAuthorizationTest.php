@@ -7,6 +7,9 @@ use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\Shift\Models\ShiftCommitWorkflowUser;
 use Artwork\Modules\Shift\Models\ShiftPlanRequest;
+use Artwork\Modules\Shift\Models\ShiftQualification;
+use Artwork\Modules\Shift\Models\ShiftWorker;
+use Artwork\Modules\User\Models\User;
 use Illuminate\Support\Facades\Route;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\Feature\FeatureTestCase;
@@ -45,7 +48,44 @@ final class ShiftRouteAuthorizationTest extends FeatureTestCase
         $this->postJson(route('multi-edit.calendar.cell.delete'), [])->assertForbidden();
         $this->postJson(route('shifts.createFromPresets'), [])->assertForbidden();
         $this->postJson(route('shifts.updateIndividualShiftTime'), [])->assertForbidden();
-        $this->postJson(route('shifts.updateShortDescription'), [])->assertForbidden();
+    }
+
+    #[Test]
+    public function user_without_planning_permission_can_only_edit_the_own_shift_note(): void
+    {
+        // Die Route liegt nicht mehr hinter "can plan shifts": die eigene Notiz ist erlaubt,
+        // fremde Notizen bleiben Planer:innen vorbehalten (Prüfung im Controller).
+        $user = $this->actingAsUserWith(PermissionEnum::VIEW_SHIFT_PLAN->value);
+        $other = User::factory()->create();
+        $shift = Shift::factory()->create();
+        $qualificationId = ShiftQualification::factory()->create()->id;
+        foreach ([$user, $other] as $worker) {
+            ShiftWorker::create([
+                'shift_id' => $shift->id,
+                'employable_type' => User::class,
+                'employable_id' => $worker->id,
+                'shift_qualification_id' => $qualificationId,
+                'craft_abbreviation' => 'X',
+            ]);
+        }
+        $pivotIdFor = static fn (User $worker): int => (int) \DB::table('shift_workers')
+            ->where('shift_id', $shift->id)
+            ->where('employable_id', $worker->id)
+            ->value('id');
+
+        $this->postJson(route('shifts.updateShortDescription'), [
+            'shiftPivotId' => $pivotIdFor($other),
+            'entity' => ['type' => 'user'],
+            'short_description' => 'fremd',
+        ])->assertForbidden();
+
+        $this->postJson(route('shifts.updateShortDescription'), [
+            'shiftPivotId' => $pivotIdFor($user),
+            'entity' => ['type' => 'user'],
+            'short_description' => 'meine Notiz',
+        ])->assertSuccessful();
+
+        $this->assertDatabaseHas('shift_workers', ['id' => $pivotIdFor($user), 'short_description' => 'meine Notiz']);
     }
 
     #[Test]
@@ -86,8 +126,8 @@ final class ShiftRouteAuthorizationTest extends FeatureTestCase
         $response = $this->delete(route('shifts.destroy', $shift));
 
         $this->assertNotSame(403, $response->getStatusCode());
-        // destroy() force-deleted die Schicht (kein Soft-Delete auf diesem Pfad)
-        $this->assertDatabaseMissing('shifts', ['id' => $shift->id]);
+        // destroy() legt die Schicht in den Papierkorb (gemeinsamer Lösch-Weg)
+        $this->assertSoftDeleted('shifts', ['id' => $shift->id]);
     }
 
     #[Test]

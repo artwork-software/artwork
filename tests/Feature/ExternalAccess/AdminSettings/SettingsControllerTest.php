@@ -2,11 +2,12 @@
 
 namespace Tests\Feature\ExternalAccess\AdminSettings;
 
+use Artwork\Modules\ExternalAccess\Models\ExternalAccessNotificationRecipient;
 use Artwork\Modules\ExternalAccess\Settings\ExternalAccessSettings;
 use Artwork\Modules\User\Models\User;
 use PHPUnit\Framework\Attributes\Test;
 use Spatie\Activitylog\Models\Activity;
-use Tests\TestCase;
+use Tests\Feature\ExternalAccess\ExternalAccessTestCase as TestCase;
 
 final class SettingsControllerTest extends TestCase
 {
@@ -16,6 +17,8 @@ final class SettingsControllerTest extends TestCase
     private function validPayload(array $overrides = []): array
     {
         return array_merge([
+            'enabled' => true,
+            'expiry_reminder_days' => 3,
             'company_name_override' => 'Acme',
             'default_crm_access_months' => 12,
             'default_tab_access_days' => 90,
@@ -41,6 +44,23 @@ final class SettingsControllerTest extends TestCase
         $this->actingAsAdmin();
 
         $this->get(route('settings.external-access.index'))->assertOk();
+    }
+
+    #[Test]
+    public function settings_page_renders_with_an_existing_notification_recipient(): void
+    {
+        $admin = $this->actingAsAdmin();
+        $recipient = ExternalAccessNotificationRecipient::create([
+            'recipient_type' => User::class,
+            'recipient_id' => User::factory()->create()->id,
+            'notification_types' => [],
+            'created_by_user_id' => $admin->id,
+        ]);
+
+        // Regression: belongsTo() ohne vollständige Signatur warf hier InvalidArgumentException
+        $this->get(route('settings.external-access.index'))
+            ->assertOk()
+            ->assertInertia(fn ($page) => $page->where('notificationRecipients.0.id', $recipient->id)->where('notificationRecipients.0.created_by.id', $admin->id));
     }
 
     #[Test]

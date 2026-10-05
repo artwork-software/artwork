@@ -24,6 +24,7 @@ use Artwork\Modules\Craft\Models\Craft;
 use Artwork\Modules\Shift\Services\DailyShiftPlanPdfBuilder;
 use Artwork\Modules\User\Enums\UserFilterTypes;
 use Artwork\Modules\User\Models\User;
+use Illuminate\Support\Facades\Auth;
 use Artwork\Modules\User\Models\UserFilter;
 use Artwork\Modules\User\Policies\UserPolicy;
 use Artwork\Modules\User\Services\UserService;
@@ -39,6 +40,7 @@ use Illuminate\Support\Str;
 use Inertia\ResponseFactory as InertiaResponseFactory;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\Response;
+use Artwork\Modules\WorkTime\Support\WorkTimeAccounting;
 
 class ExportPDFController extends Controller
 {
@@ -97,19 +99,19 @@ class ExportPDFController extends Controller
 
 
         $filteredEventTypes = EventType::whereIn('id', $userCalendarFilter->event_type_ids ?? [])
-            ->get()->pluck('name')->toArray();
+            ->pluck('name')->toArray();
 
         $filteredRooms = Room::whereIn('id', $userCalendarFilter->room_ids ?? [])
-            ->get()->pluck('name')->toArray();
+            ->pluck('name')->toArray();
 
         $filteredEventProperties = EventProperty::whereIn('id', $userCalendarFilter->event_property_ids ?? [])
-            ->get()->pluck('name')->toArray();
+            ->pluck('name')->toArray();
 
         $filteredRoomAttributes = RoomAttribute::whereIn('id', $userCalendarFilter->room_attribute_ids ?? [])
-            ->get()->pluck('name')->toArray();
+            ->pluck('name')->toArray();
 
         $filteredAreas = Area::whereIn('id', $userCalendarFilter->area_ids ?? [])
-            ->get()->pluck('name')->toArray();
+            ->pluck('name')->toArray();
 
         $startDate = \Carbon\Carbon::parse($startDate)->startOfDay();
         $endDate   = \Carbon\Carbon::parse($endDate)->endOfDay();
@@ -302,10 +304,17 @@ class ExportPDFController extends Controller
                         $tz = config('app.timezone');
                         foreach ($events as $event) {
                             $start    = \Illuminate\Support\Carbon::parse($event->start)->timezone($tz);
-                            $startMin = max(360, min(1440, ((int) $start->format('H')) * 60 + ((int) $start->format('i'))));
+                            $startMin = max(
+                                360,
+                                min(1440, ((int) $start->format('H')) * 60 + ((int) $start->format('i')))
+                            );
                             $allDay   = (bool) ($event->allDay ?? false);
 
-                            $slot = $allDay ? 'morning' : ($startMin < 720 ? 'morning' : ($startMin < 1080 ? 'noon' : 'evening'));
+                            $slot = $allDay
+                                 ? 'morning'
+                                 : ($startMin < 720
+                                 ? 'morning'
+                                 : ($startMin < 1080 ? 'noon' : 'evening'));
 
                             // Gleiche Namens-/Zeilenlogik wie __buildSegmentForDay im Blade,
                             // damit die vorberechneten Slot-Höhen zum Rendering passen
@@ -318,8 +327,12 @@ class ExportPDFController extends Controller
 
                             $titleText    = ($abbr !== '' ? $abbr . ': ' : '') . $name;
                             $titleLines   = max(1, (int) ceil(mb_strlen($titleText) / $effectiveCharsPerLine));
-                            $projectLines = $projectName !== '' ? max(1, (int) ceil(mb_strlen($projectName) / $effectiveCharsPerLine)) : 0;
-                            $contentHeight = max(40,
+                            $projectLines = $projectName !== '' ? max(
+                                1,
+                                (int) ceil(mb_strlen($projectName) / $effectiveCharsPerLine)
+                            ) : 0;
+                            $contentHeight = max(
+                                40,
                                 $titleLines * $titleLineH
                                 + $projectLines * $projectLineH
                                 + $timeLineH
@@ -595,7 +608,10 @@ class ExportPDFController extends Controller
         $activeFilter = [
             'rooms' => Room::whereIn('id', $userCalendarFilter->room_ids ?? [])->pluck('name')->toArray(),
             'areas' => Area::whereIn('id', $userCalendarFilter->area_ids ?? [])->pluck('name')->toArray(),
-            'event_types' => EventType::whereIn('id', $userCalendarFilter->event_type_ids ?? [])->pluck('name')->toArray(),
+            'event_types' => EventType::whereIn(
+                'id',
+                $userCalendarFilter->event_type_ids ?? []
+            )->pluck('name')->toArray(),
             'crafts' => Craft::whereIn('id', $userCalendarFilter->craft_ids ?? [])->pluck('name')->toArray(),
         ];
 
@@ -1021,7 +1037,7 @@ class ExportPDFController extends Controller
         $dayNames = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'];
         // Soll je Monat aus dem Arbeitszeitmuster (WorkTimeCalculationService, inkl. Sondertage);
         // kein Muster an mindestens einem Monatstag -> Soll unbekannt (keine Soll-/Differenzzeile)
-        $targetBreakdown = $type === 'user' && $worker instanceof User
+        $targetBreakdown = $type === 'user' && $worker instanceof User && WorkTimeAccounting::isEnabled()
             ? app(\Artwork\Modules\WorkTime\Services\WorkTimeCalculationService::class)
                 ->breakdownForRange($worker, $gridStart->copy(), $gridEnd->copy())
             : null;
@@ -1213,8 +1229,9 @@ class ExportPDFController extends Controller
             'color' => $color,
             'craft' => $craft,
             'function' => $function,
-            'start' => !empty($shift['start']) ? substr((string) $shift['start'], 0, 5) : null,
-            'end' => !empty($shift['end']) ? substr((string) $shift['end'], 0, 5) : null,
+            // Individuelle Arbeitszeit der Person (worker_start/-end) vor der Schichtzeit
+            'start' => $this->shiftTimeForExport($shift['worker_start'] ?? null, $shift['start'] ?? null),
+            'end' => $this->shiftTimeForExport($shift['worker_end'] ?? null, $shift['end'] ?? null),
             'room' => $room,
             'project' => $project,
             'event' => $eventName,
@@ -1223,6 +1240,13 @@ class ExportPDFController extends Controller
             'colleagues' => $colleagues,
             'committed' => (bool) ($shift['is_committed'] ?? false),
         ];
+    }
+
+    private function shiftTimeForExport(mixed $workerTime, mixed $shiftTime): ?string
+    {
+        $time = !empty($workerTime) ? $workerTime : $shiftTime;
+
+        return !empty($time) ? substr((string) $time, 0, 5) : null;
     }
 
     private function workerName(mixed $worker): string
@@ -1344,7 +1368,7 @@ class ExportPDFController extends Controller
             $userPayload = [
                 'id'        => $projUser->id,
                 'full_name' => $projUser->full_name ?? '',
-                'email'     => $projUser->email,
+                'email'     => $projUser->visibleEmailFor(Auth::user()),
             ];
 
             foreach ($roleIds as $roleId) {

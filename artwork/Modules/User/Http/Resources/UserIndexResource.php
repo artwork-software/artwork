@@ -24,11 +24,11 @@ class UserIndexResource extends JsonResource
             'first_name' => $this->first_name,
             'last_name' => $this->last_name,
             'profile_photo_url' => $this->profile_photo_url,
-            'email' => $this->email,
+            'email' => $this->visibleEmailFor($request->user()),
             'departments' => $this->departments,
             'position' => $this->position,
             'business' => $this->business,
-            'phone_number' => $this->phone_number,
+            'phone_number' => $this->visiblePhoneNumberFor($request->user()),
             'project_management' => $this->can(PermissionEnum::PROJECT_MANAGEMENT->value),
             'shifts' => $this->getAttribute('shifts')->map(
                 function (Shift $shift): array {

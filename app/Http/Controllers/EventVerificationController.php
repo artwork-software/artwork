@@ -12,6 +12,7 @@ use Artwork\Modules\Event\Models\EventProperty;
 use Artwork\Modules\Event\Models\EventStatus;
 use Artwork\Modules\Event\Models\EventVerification;
 use Artwork\Modules\Event\Services\EventService;
+use Artwork\Modules\Event\Services\EventSettingsService;
 use Artwork\Modules\Event\Services\EventVerificationService;
 use Artwork\Modules\EventType\Models\EventType;
 use Artwork\Modules\Permission\Enums\PermissionEnum;
@@ -24,15 +25,18 @@ use Carbon\Carbon;
 use Illuminate\Auth\AuthManager;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use Artwork\Modules\User\Services\UserService;
 
 class EventVerificationController extends Controller
 {
 
     public function __construct(
         private readonly EventVerificationService $eventVerificationService,
+        private readonly EventSettingsService $eventSettingsService,
         private readonly AuthManager $authManager,
         private readonly EventService $eventService,
         private readonly ProjectTabService $projectTabService,
+        private readonly UserService $userService,
     ) {
     }
 
@@ -42,6 +46,11 @@ class EventVerificationController extends Controller
     //phpcs:ignore Generic.Metrics.CyclomaticComplexity.TooHigh
     public function index()
     {
+        // "Termine immer direkt buchbar": keine Anfragen, keine Verifizierung – Seite existiert nicht mehr
+        if ($this->eventSettingsService->alwaysDirectBooking()) {
+            return redirect()->route('events');
+        }
+
         /** @var User $user */
         $user = $this->authManager->user();
         $isAdmin = $user->hasRole('artwork admin');
@@ -126,13 +135,26 @@ class EventVerificationController extends Controller
      */
     public function sent()
     {
+        if ($this->eventSettingsService->alwaysDirectBooking()) {
+            return redirect()->route('events');
+        }
+
         $myRequestPaginate = request()?->integer('myRequestsPerPage', 5);
         /** @var User $user */
         $user = $this->authManager->user();
 
         $myRoomRequests = Event::where('user_id', $user->id)
             ->where('occupancy_option', true)
-            ->with(['room', 'event_type', 'project', 'creator', 'eventStatus', 'eventProperties', 'subEvents', 'series'])
+            ->with([
+                'room',
+                'event_type',
+                'project',
+                'creator',
+                'eventStatus',
+                'eventProperties',
+                'subEvents',
+                'series',
+            ])
             ->orderBy('start_time', 'desc')
             ->get();
 
@@ -180,7 +202,7 @@ class EventVerificationController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Event $event)
+    public function store(Event $event): void
     {
         /** @var User $user */
         $user = $this->authManager->user();
@@ -360,9 +382,7 @@ class EventVerificationController extends Controller
         $startOfWeek = Carbon::parse($event->start_time)->startOfWeek(Carbon::MONDAY);
         $endOfWeek = Carbon::parse($event->end_time)->endOfWeek(Carbon::SUNDAY);
 
-        $user->userFilters()->calendarFilter()->first()->update([
-            'start_date' => $startOfWeek->format('Y-m-d'),
-            'end_date' => $endOfWeek->format('Y-m-d'),
+        $this->userService->focusCalendarOnPeriod($user, $startOfWeek, $endOfWeek, [
             'event_type_ids' => null,
             'room_ids' => null,
             'area_ids' => null,

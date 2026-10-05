@@ -14,7 +14,8 @@ class MigrateChangesToActivityLogCommand extends Command
     protected $signature = 'changes:migrate-to-activity-log
         {--chunk=1000 : Chunk size for iteration over the legacy changes table}';
 
-    protected $description = 'Copy rows from the archived `changes_legacy` table (Antonrom) into Spatie `activity_log`. Idempotent via `legacy_change_id`. Invoked from `artwork:update`.';
+    protected $description = 'Copy rows from the archived `changes_legacy` table (Antonrom) into Spatie '
+        . '`activity_log`. Idempotent via `legacy_change_id`. Invoked from `artwork:update`.';
 
     public function handle(): int
     {

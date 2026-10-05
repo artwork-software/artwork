@@ -19,14 +19,14 @@ class DocumentRequestResource extends JsonResource
                 'first_name' => $this->requester->first_name,
                 'last_name' => $this->requester->last_name,
                 'profile_photo_url' => $this->requester->profile_photo_url,
-                'email' => $this->requester->email,
+                'email' => $this->requester->visibleEmailFor($request->user()),
             ] : null,
             'requested' => $this->requested ? [
                 'id' => $this->requested->id,
                 'first_name' => $this->requested->first_name,
                 'last_name' => $this->requested->last_name,
                 'profile_photo_url' => $this->requested->profile_photo_url,
-                'email' => $this->requested->email,
+                'email' => $this->requested->visibleEmailFor($request->user()),
             ] : null,
             'project' => $this->project ? [
                 'id' => $this->project->id,

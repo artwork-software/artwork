@@ -10,7 +10,8 @@ readonly class CrmContactTypeService
 {
     public function __construct(
         private CrmContactTypeRepository $repository,
-    ) {}
+    ) {
+    }
 
     public function getAll(): Collection
     {

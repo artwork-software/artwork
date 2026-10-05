@@ -13,13 +13,13 @@ class UploadBrandingGraphicRequest extends FormRequest
      */
     public function rules(): array
     {
-        /*
-         *     $smallLogo = $request->file('smallLogo');
-        $bigLogo = $request->file('bigLogo');
-        $banner = $request->file('banner');
+        // public-Disk: nur Rasterbilder, kein SVG/HTML.
+        $imageRule = ['nullable', 'file', 'image', 'mimes:jpg,jpeg,png,webp', 'max:10240'];
 
-         */
         return [
+            'smallLogo' => $imageRule,
+            'bigLogo' => $imageRule,
+            'banner' => $imageRule,
         ];
     }
 }

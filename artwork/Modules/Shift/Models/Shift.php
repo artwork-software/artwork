@@ -23,6 +23,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphToMany;
+use Illuminate\Database\Eloquent\Prunable;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Collection;
 use Spatie\Activitylog\Contracts\Activity;
@@ -69,6 +70,18 @@ class Shift extends Model
     use HasFactory;
     use SoftDeletes;
     use LogsActivity;
+    use Prunable;
+
+    /**
+     * Papierkorb: eigenständige Schichten nach einem Monat endgültig entfernen (wie Termine/Projekte).
+     * Termin-Schichten gehen mit ihrem Termin.
+     */
+    public function prunable(): Builder
+    {
+        return static::onlyTrashed()
+            ->whereNull('event_id')
+            ->where('deleted_at', '<=', now()->subMonth());
+    }
 
     protected static function booted(): void
     {
@@ -123,7 +136,7 @@ class Shift extends Model
     // Kein globales $with mehr: craft/users/freelancer/serviceProvider/committedBy wurden
     // vorher bei JEDER Shift-Query mitgeladen — auch bei internen Operationen (Rule-Checks,
     // Observer, Bulk-Aktionen), die sie nie brauchen. Serialisierende Pfade laden sie
-    // explizit eager (Kalender, ShiftPlan, Projekt-Tab, PushesShiftModification::broadcastWith()).
+    // explizit eager (Kalender, ShiftPlan, Projekt-Tab, Broadcast-Payloads).
 
     protected $appends = [
         'break_formatted',
@@ -309,7 +322,24 @@ class Shift extends Model
             ->using(ShiftWorker::class)
             ->where('shift_workers.employable_type', User::class)
             ->whereNull('shift_workers.deleted_at')
-            ->withPivot(['id', 'shift_qualification_id', 'is_overbooked', 'shift_count', 'craft_abbreviation', 'short_description', 'start_date', 'end_date', 'start_time', 'end_time', 'workflow_rejection_reason', 'confirmation_status', 'confirmation_at', 'confirmation_by_user_id', 'confirmation_comment', 'confirmation_reset_at'])
+            ->withPivot([
+                'id',
+                'shift_qualification_id',
+                'is_overbooked',
+                'shift_count',
+                'craft_abbreviation',
+                'short_description',
+                'start_date',
+                'end_date',
+                'start_time',
+                'end_time',
+                'workflow_rejection_reason',
+                'confirmation_status',
+                'confirmation_at',
+                'confirmation_by_user_id',
+                'confirmation_comment',
+                'confirmation_reset_at',
+            ])
             ->without('calendar_settings');
     }
 
@@ -320,7 +350,24 @@ class Shift extends Model
             ->using(ShiftWorker::class)
             ->where('shift_workers.employable_type', Freelancer::class)
             ->whereNull('shift_workers.deleted_at')
-            ->withPivot(['id', 'shift_qualification_id', 'is_overbooked', 'shift_count', 'craft_abbreviation', 'short_description', 'start_date', 'end_date', 'start_time', 'end_time', 'workflow_rejection_reason', 'confirmation_status', 'confirmation_at', 'confirmation_by_user_id', 'confirmation_comment', 'confirmation_reset_at']);
+            ->withPivot([
+                'id',
+                'shift_qualification_id',
+                'is_overbooked',
+                'shift_count',
+                'craft_abbreviation',
+                'short_description',
+                'start_date',
+                'end_date',
+                'start_time',
+                'end_time',
+                'workflow_rejection_reason',
+                'confirmation_status',
+                'confirmation_at',
+                'confirmation_by_user_id',
+                'confirmation_comment',
+                'confirmation_reset_at',
+            ]);
     }
 
     public function serviceProvider(): MorphToMany
@@ -330,7 +377,24 @@ class Shift extends Model
             ->using(ShiftWorker::class)
             ->where('shift_workers.employable_type', ServiceProvider::class)
             ->whereNull('shift_workers.deleted_at')
-            ->withPivot(['id', 'shift_qualification_id', 'is_overbooked', 'shift_count', 'craft_abbreviation', 'short_description', 'start_date', 'end_date', 'start_time', 'end_time', 'workflow_rejection_reason', 'confirmation_status', 'confirmation_at', 'confirmation_by_user_id', 'confirmation_comment', 'confirmation_reset_at']);
+            ->withPivot([
+                'id',
+                'shift_qualification_id',
+                'is_overbooked',
+                'shift_count',
+                'craft_abbreviation',
+                'short_description',
+                'start_date',
+                'end_date',
+                'start_time',
+                'end_time',
+                'workflow_rejection_reason',
+                'confirmation_status',
+                'confirmation_at',
+                'confirmation_by_user_id',
+                'confirmation_comment',
+                'confirmation_reset_at',
+            ]);
     }
 
     /**

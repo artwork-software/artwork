@@ -16,7 +16,7 @@ use Artwork\Modules\Project\Models\ProjectTab;
 use Artwork\Modules\User\Models\User;
 use Illuminate\Support\Facades\Notification;
 use PHPUnit\Framework\Attributes\Test;
-use Tests\TestCase;
+use Tests\Feature\ExternalAccess\ExternalAccessTestCase as TestCase;
 
 final class ExternalInvitationControllerTest extends TestCase
 {

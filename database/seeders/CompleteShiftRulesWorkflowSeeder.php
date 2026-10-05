@@ -13,7 +13,7 @@ class CompleteShiftRulesWorkflowSeeder extends Seeder
     {
         // Load the workflow definition from JSON file
         $workflowPath = base_path('artwork/Modules/Workflow/Examples/complete_shift_rules_workflow.json');
-        
+
         if (!File::exists($workflowPath)) {
             $this->command->error('Workflow definition file not found: ' . $workflowPath);
             return;

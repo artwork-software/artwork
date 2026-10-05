@@ -62,7 +62,10 @@ final class MaxConsecutiveWorkingDaysCheckTest extends TestCase
         $violations = $this->check->check($this->rule(3), $user, $wednesday->copy(), $wednesday->copy()->addDay());
 
         $this->assertCount(1, $violations);
-        $this->assertSame($wednesday->copy()->addDay()->toDateString(), $violations->first()->violation_date->toDateString());
+        $this->assertSame(
+            $wednesday->copy()->addDay()->toDateString(),
+            $violations->first()->violation_date->toDateString()
+        );
     }
 
     #[Test]

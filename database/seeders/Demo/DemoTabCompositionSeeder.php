@@ -41,7 +41,11 @@ class DemoTabCompositionSeeder extends Seeder
         [
             'name' => 'Technische Anforderungen',
             'type' => ProjectTabComponentEnum::TEXT_AREA,
-            'data' => ['label' => 'Technische Anforderungen', 'text' => '', 'placeholder' => 'Rider, Sonderbedarfe, Sicherheitsauflagen …'],
+            'data' => [
+                'label' => 'Technische Anforderungen',
+                'text' => '',
+                'placeholder' => 'Rider, Sonderbedarfe, Sicherheitsauflagen …',
+            ],
         ],
         [
             'name' => 'Ansprechperson extern',
@@ -67,7 +71,7 @@ class DemoTabCompositionSeeder extends Seeder
             $this->call(DefaultComponentSeeder::class);
         }
 
-        $targetTab = ProjectTab::query()->where('name', 'Project Information')->first()
+        $targetTab = ProjectTab::query()->whereIn('name', ['Project Information', __('Project Information')])->first()
             ?? ProjectTab::query()->orderBy('order')->first();
         if ($targetTab === null) {
             $this->command?->error('Tab-Struktur konnte nicht ermittelt werden – Custom-Komponenten übersprungen.');

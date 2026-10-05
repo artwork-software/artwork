@@ -88,7 +88,8 @@
                                             <ShiftInCalendarCell
                                                 :shift="item.data"
                                                 :day="rowDayKey"
-                                                @shift-edited="emit('shift-edited', day)"
+                                                adapt-to-tile-width
+                                                @shift-edited="(_shift, targetDate) => emit('shift-edited', day, targetDate)"
                                             />
                                         </div>
                                         <div
@@ -114,6 +115,7 @@
                                                 :is-planning="isPlanning"
                                                 :is-height-full="settings.expand_days && !!item.data.allDay"
                                                 :cell-day="day.withoutFormat"
+                                                adapt-to-tile-width
                                                 @edit-event="e => emit('edit-event', e)"
                                                 @edit-sub-event="(...args) => emit('open-add-sub-event-modal', ...args)"
                                                 @open-add-sub-event-modal="(...args) => emit('open-add-sub-event-modal', ...args)"

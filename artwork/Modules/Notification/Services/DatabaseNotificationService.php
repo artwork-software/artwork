@@ -33,8 +33,7 @@ class DatabaseNotificationService
     public function __construct(
         private readonly DatabaseNotificationRepository $databaseNotificationRepository,
         private readonly CarbonService $carbonService
-    )
-    {
+    ) {
     }
 
     /**

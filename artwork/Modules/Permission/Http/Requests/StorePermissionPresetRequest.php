@@ -12,7 +12,7 @@ class StorePermissionPresetRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name' => 'string|unique:permission_presets',
+            'name' => 'string|max:255|unique:permission_presets',
             'permissions' => 'array'
         ];
     }

@@ -73,7 +73,12 @@
                     />
                 </div>
 
-                <div class="col-span-full border-t border-border-subtle border-dashed">
+                <!-- "Termine immer direkt buchbar": Verifizierung ist instanzweit abgeschaltet, Konfiguration bleibt gespeichert -->
+                <div v-if="directBookingOnly" class="col-span-full border-t border-border-subtle border-dashed pt-4">
+                    <h4 class="text-sm/6 font-semibold font-lexend text-text">{{ $t('Verification mode') }}</h4>
+                    <BaseAlertComponent class="mt-2" type="info" :use-translation="true" message="Event verification is switched off by the setting 'Events always bookable directly' (Settings → Events → Standard values). The stored verification mode has no effect until the setting is switched off." />
+                </div>
+                <div v-else class="col-span-full border-t border-border-subtle border-dashed">
                     <div class="mt-4">
                         <h4 class="text-sm/6 font-semibold font-lexend text-text">{{ $t('Verification mode') }}</h4>
                         <p class="mt-1 text-sm/6 font-lexend text-text-muted">
@@ -160,7 +165,7 @@ import ModalHeader from "@/Components/Modals/ModalHeader.vue";
 import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
 import ColorPickerComponent from "@/Components/Globale/ColorPickerComponent.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
-import {useForm} from "@inertiajs/vue3";
+import {useForm, usePage} from "@inertiajs/vue3";
 import UserSearch from "@/Components/SearchBars/UserSearch.vue";
 import BaseAlertComponent from "@/Components/Alerts/BaseAlertComponent.vue";
 import {computed} from "vue";
@@ -177,6 +182,9 @@ const props = defineProps({
 })
 
 const emits = defineEmits(['close'])
+
+// Instanz-Setting "Termine immer direkt buchbar": keine Verifizierung
+const directBookingOnly = computed(() => !!usePage().props.event_direct_booking_only);
 
 const verificationModes = [
     { id: 'none', title: 'No verification needed' },

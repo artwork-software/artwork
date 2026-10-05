@@ -54,7 +54,6 @@ use Artwork\Modules\Workflow\Contracts\WorkflowSubject;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
 use Illuminate\Auth\Authenticatable;
-use Illuminate\Auth\MustVerifyEmail;
 use Illuminate\Auth\Passwords\CanResetPassword;
 use Illuminate\Contracts\Auth\Access\Authorizable as AuthorizableContract;
 use Illuminate\Contracts\Auth\Authenticatable as AuthenticatableContract;
@@ -69,6 +68,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\MorphToMany;
 use Illuminate\Foundation\Auth\Access\Authorizable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 use Laravel\Fortify\TwoFactorAuthenticatable;
 use Laravel\Passport\HasApiTokens;
@@ -174,7 +174,6 @@ use Spatie\Permission\Traits\HasRoles;
  * @property array $bulk_column_size
  * @property boolean $show_description_in_bulk
  * @property boolean $shift_period_on_start_date_change
- * @property string $chat_public_key
  * @property boolean $use_chat
  * @property string $work_name
  * @property string $work_description
@@ -197,7 +196,6 @@ class User extends Model implements
     use Authenticatable;
     use Authorizable;
     use CanResetPassword;
-    use MustVerifyEmail;
     use HasApiTokens;
     use HasFactory;
     use HasRoles;
@@ -282,7 +280,6 @@ class User extends Model implements
         'show_description_in_bulk',
         'shift_period_on_start_date_change',
         'show_project_team_names',
-        'chat_public_key',
         'use_chat',
         'work_time_balance',
         'chat_popup_position',
@@ -341,11 +338,18 @@ class User extends Model implements
         'ad_managed' => 'boolean',
     ];
 
+    /**
+     * Gehaltsfelder sind versteckt; legitime Ausgabe nur über UserShowResource (greift direkt auf das
+     * Attribut zu) hinter der Vertrags-Sichtprüfung.
+     */
     protected $hidden = [
         'password',
         'remember_token',
         'two_factor_recovery_codes',
         'two_factor_secret',
+        'salary_per_hour',
+        'salary_description',
+        'weekly_working_hours',
     ];
 
     protected $appends = [
@@ -361,6 +365,60 @@ class User extends Model implements
     public function inventoryUserFilter()
     {
         return $this->hasOne(\Artwork\Modules\Inventory\Models\InventoryUserFilter::class, 'user_id');
+    }
+
+    /**
+     * Als privat markierte Kontaktdaten sieht nur die Person selbst oder wer "can view private user info"
+     * hat (Admins via Gate::before). Ohne Betrachter*in (Jobs, Konsole) gibt es keine Freigabe.
+     */
+    public function privateContactDataVisibleTo(?self $viewer): bool
+    {
+        if ($viewer === null) {
+            return false;
+        }
+
+        return $viewer->is($this) || $viewer->can(PermissionEnum::CAN_VIEW_PRIVATE_USER_INFO->value);
+    }
+
+    public function visibleEmailFor(?self $viewer): ?string
+    {
+        return !$this->getAttribute('email_private') || $this->privateContactDataVisibleTo($viewer)
+            ? $this->getAttribute('email')
+            : null;
+    }
+
+    public function visiblePhoneNumberFor(?self $viewer): ?string
+    {
+        return !$this->getAttribute('phone_private') || $this->privateContactDataVisibleTo($viewer)
+            ? $this->getAttribute('phone_number')
+            : null;
+    }
+
+    /**
+     * Rohe Serialisierung (Inertia-Props, JSON, Broadcasts) blendet private Kontaktdaten für die
+     * angemeldete Person aus. Ohne Web-Login (Jobs, Konsole) bleibt die Ausgabe unverändert.
+     * FALLE: Das greift nur, wenn email_private/phone_private mitgeladen sind – bei select()-Listen mit
+     * email/phone_number die Flags mit selektieren.
+     *
+     * @return array<string, mixed>
+     */
+    public function toArray(): array
+    {
+        $attributes = parent::toArray();
+        $viewer = Auth::guard('web')->user();
+
+        if (!$viewer instanceof self) {
+            return $attributes;
+        }
+
+        if (array_key_exists('email', $attributes)) {
+            $attributes['email'] = $this->visibleEmailFor($viewer);
+        }
+        if (array_key_exists('phone_number', $attributes)) {
+            $attributes['phone_number'] = $this->visiblePhoneNumberFor($viewer);
+        }
+
+        return $attributes;
     }
 
     public function getTypeAttribute(): string
@@ -440,6 +498,7 @@ class User extends Model implements
         return $this->hasOne(UserDailyViewCalendarSettings::class);
     }
 
+    // phpcs:ignore PSR1.Methods.CamelCapsMethodName.NotCamelCaps -- wird als Attribut shift_list_view_settings gelesen
     public function shift_list_view_settings(): HasOne
     {
         return $this->hasOne(UserShiftListViewSettings::class);
@@ -605,11 +664,6 @@ class User extends Model implements
         return $this->hasOne(UserCommentedBudgetItemsSetting::class);
     }
 
-    public function budgetAccountDisplaySetting(): HasOne
-    {
-        return $this->hasOne(UserBudgetAccountDisplaySetting::class);
-    }
-
     public function crafts(): BelongsToMany
     {
         return $this->belongsToMany(Craft::class, 'craft_users');
@@ -702,7 +756,6 @@ class User extends Model implements
             'business' => $this->business,
             'phone_number' => $this->phone_number,
             'email' => $this->email,
-            'chat_public_key' => $this->chat_public_key,
             'use_chat' => $this->use_chat,
         ];
     }

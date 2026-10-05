@@ -114,7 +114,15 @@ class ShiftWeekStatusController extends Controller
     private function visibleCrafts(User $user): Collection
     {
         $query = Craft::query()
-            ->select(['id', 'name', 'abbreviation', 'color', 'position', 'assignable_by_all', 'commit_request_deadline_days'])
+            ->select([
+                'id',
+                'name',
+                'abbreviation',
+                'color',
+                'position',
+                'assignable_by_all',
+                'commit_request_deadline_days',
+            ])
             ->without(['craftShiftPlaner'])
             ->orderBy('position')
             ->orderBy('name');

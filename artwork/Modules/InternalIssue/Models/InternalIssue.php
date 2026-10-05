@@ -84,24 +84,24 @@ class InternalIssue extends Model
     {
         return $query
             // beide Grenzen vorhanden
-            ->when($from && $to, function ($q) use ($from, $to) {
-                $q->where(function ($qq) use ($from, $to) {
+            ->when($from && $to, function ($q) use ($from, $to): void {
+                $q->where(function ($qq) use ($from, $to): void {
                     $qq->whereDate('start_date', '<=', $to)
-                        ->where(function ($qqq) use ($from) {
+                        ->where(function ($qqq) use ($from): void {
                             $qqq->whereNull('end_date')
                                 ->orWhereDate('end_date', '>=', $from);
                         });
                 });
             })
             // nur FROM: alles, das ab FROM noch läuft/endet
-            ->when($from && !$to, function ($q) use ($from) {
-                $q->where(function ($qq) use ($from) {
+            ->when($from && !$to, function ($q) use ($from): void {
+                $q->where(function ($qq) use ($from): void {
                     $qq->whereNull('end_date')
                         ->orWhereDate('end_date', '>=', $from);
                 });
             })
             // nur TO: alles, das bis TO begonnen hat
-            ->when(!$from && $to, function ($q) use ($to) {
+            ->when(!$from && $to, function ($q) use ($to): void {
                 $q->whereDate('start_date', '<=', $to);
             });
     }

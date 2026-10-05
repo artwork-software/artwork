@@ -43,5 +43,4 @@ class BroadcastToReloadEventVerificationRequests implements ShouldBroadcastNow
     {
         return new PrivateChannel('event-verification-index.' . $this->user->id);
     }
-
 }

@@ -21,4 +21,3 @@ class ProjectMaterialIssueController extends Controller
         );
     }
 }
-

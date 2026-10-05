@@ -11,15 +11,4 @@ enum Vacation: string
     /** Freier Tag laut Planung (ganz oder halb, siehe vacations.day_part) */
     case FREE_WORK = 'FREE_WORK';
     case AVAILABLE = 'AVAILABLE';
-
-    /**
-     * Abwesenheitsarten, die eine Person selbst im Verfügbarkeitskalender erfassen darf.
-     * FREE_WORK ist Planungssache (Verfügbarkeitsstatus im Schichtplan).
-     *
-     * @return list<string>
-     */
-    public static function selfServiceAbsenceValues(): array
-    {
-        return [self::OFF_WORK->value, self::NOT_AVAILABLE->value];
-    }
 }

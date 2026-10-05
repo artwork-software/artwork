@@ -15,7 +15,8 @@ class CrmSettingsController extends Controller
         private readonly CrmContactTypeService $contactTypeService,
         private readonly CrmPropertyGroupService $propertyGroupService,
         private readonly CrmPropertyService $propertyService,
-    ) {}
+    ) {
+    }
 
     public function index(): Response
     {

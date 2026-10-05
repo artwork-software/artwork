@@ -1,6 +1,6 @@
 <template>
-    <div class="rounded-2xl border border-border-subtle bg-white p-5">
-        <label :for="inputId" class="inline-flex items-center gap-3 text-sm font-medium text-text-muted">
+    <div>
+        <label :for="inputId" class="inline-flex items-center gap-3 text-sm font-semibold text-text">
             <input
                 :id="inputId"
                 v-model="checked"

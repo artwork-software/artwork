@@ -88,7 +88,8 @@ class ShiftWeekCopyService
      *     created: int,
      *     skipped: int,
      *     shift_ids: array<int, int>,
-     *     skipped_shifts: array<int, array{date: string, room: string|null, start: string|null, end: string|null, craft: string|null, reason: string}>
+     *     skipped_shifts: array<int, array{date: string, room: string|null, start: string|null, end: string|null,
+     * craft: string|null, reason: string}>
      * }
      */
     public function copyToWeek(

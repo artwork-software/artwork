@@ -9,6 +9,8 @@ use Artwork\Modules\Notification\Services\NotificationService;
 use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Artwork\Modules\Project\Enum\ProjectTabComponentEnum;
 use Artwork\Modules\Role\Enums\RoleEnum;
+use Artwork\Modules\Shift\Models\ShiftWorker;
+use Artwork\Modules\Shift\Services\ShiftWorkerService;
 use Artwork\Modules\User\Models\User;
 use Artwork\Modules\WorkTime\Http\Requests\StoreWorkTimeChangeRequestRequest;
 use Artwork\Modules\WorkTime\Http\Requests\UpdateWorkTimeChangeRequestRequest;
@@ -20,6 +22,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Random\RandomException;
+use Artwork\Modules\WorkTime\Support\WorkTimeAccounting;
 
 class WorkTimeChangeRequestController extends Controller
 {
@@ -27,7 +30,8 @@ class WorkTimeChangeRequestController extends Controller
     public function __construct(
         protected WorkTimeChangeRequestService $workTimeChangeRequestService,
         protected WorkTimeBookingRepository $workTimeBookingRepository,
-        protected NotificationService $notificationService
+        protected NotificationService $notificationService,
+        protected ShiftWorkerService $shiftWorkerService
     ) {
     }
 
@@ -55,8 +59,10 @@ class WorkTimeChangeRequestController extends Controller
         ];
     }
 
-    private function applyListFilters(\Illuminate\Database\Eloquent\Builder $query, array $filters): \Illuminate\Database\Eloquent\Builder
-    {
+    private function applyListFilters(
+        \Illuminate\Database\Eloquent\Builder $query,
+        array $filters
+    ): \Illuminate\Database\Eloquent\Builder {
         return $query
             ->when($filters['status'] !== 'all', fn ($q) => $q->where('status', $filters['status']))
             ->when($filters['date_from'], fn ($q) => $q->whereDate('created_at', '>=', $filters['date_from']))
@@ -91,8 +97,10 @@ class WorkTimeChangeRequestController extends Controller
         $user = auth()->user();
 
         // Check if user is admin or has shift planner permission
-        if (!$user->hasRole(RoleEnum::ARTWORK_ADMIN->value) &&
-            !$user->hasPermissionTo(PermissionEnum::SHIFT_PLANNER->value)) {
+        if (
+            !$user->hasRole(RoleEnum::ARTWORK_ADMIN->value) &&
+            !$user->hasPermissionTo(PermissionEnum::SHIFT_PLANNER->value)
+        ) {
             abort(403, 'Unauthorized');
         }
 
@@ -101,7 +109,7 @@ class WorkTimeChangeRequestController extends Controller
 
         $workTimeChangeRequests = $this->applyListFilters(
             WorkTimeChangeRequest::with(['user', 'shift', 'craft.craftShiftPlaner'])
-                ->where(function ($query) use ($userId) {
+                ->where(function ($query) use ($userId): void {
                     // Include requests where user is assigned as craft shift planner
                     $query->whereHas('craft.craftShiftPlaner', function ($subQuery) use ($userId): void {
                         $subQuery->where('user_id', $userId);
@@ -135,13 +143,16 @@ class WorkTimeChangeRequestController extends Controller
     public function store(StoreWorkTimeChangeRequestRequest $request): void
     {
         $validated = $request->validated();
+        $shift = \Artwork\Modules\Shift\Models\Shift::findOrFail($validated['shift_id']);
+        $validated['requested_by'] = $request->user()->id;
+        $validated['user_id'] = $request->user()->id;
+        $validated['craft_id'] = $shift->craft_id;
 
         // Detect overnight shift: if end_time <= start_time, set end_date to next day
         $startTime = Carbon::createFromFormat('H:i', $validated['request_start_time']);
         $endTime = Carbon::createFromFormat('H:i', $validated['request_end_time']);
 
         if ($endTime->lte($startTime)) {
-            $shift = \Artwork\Modules\Shift\Models\Shift::findOrFail($validated['shift_id']);
             $pivot = $shift->users()
                 ->where('shift_workers.employable_id', $validated['user_id'])
                 ->first()
@@ -157,7 +168,7 @@ class WorkTimeChangeRequestController extends Controller
         $workTimeRequest = $this->workTimeChangeRequestService->createChangeRequest($validated);
 
         // send notification to craft planner
-        $craftId = $request->input('craft_id');
+        $craftId = $validated['craft_id'];
         $craft = Craft::findOrFail($craftId);
 
         // Determine who should receive notifications
@@ -288,18 +299,28 @@ class WorkTimeChangeRequestController extends Controller
         $newDuration = $newStart->diffInMinutes($newEnd);
         $balanceDelta = $newDuration - $oldDuration;
 
-        $pivotUpdate = [
-            'start_time' => $newStart->format('H:i:s'),
-            'end_time' => $newEnd->format('H:i:s'),
-        ];
+        // Gleicher Schreibweg wie die individuelle Zeit im Dienstplan: Datum über Mitternacht neu
+        // ableiten (sonst blieb ein altes +1-Tag-end_date stehen), Verlauf, Zu-/Absage-Reset,
+        // Stunden-Cache und Live-Update. Die Person sieht die genehmigte Zeit so im Einsatzplan.
+        $applyIndividualTime = function () use ($oldPivot, $newStart, $newEnd, $workTimeChangeRequest): void {
+            $shiftWorker = ShiftWorker::withoutTrashed()->find($oldPivot->id);
+            if ($shiftWorker === null) {
+                abort(404, 'Ursprüngliche Schicht nicht gefunden.');
+            }
+            $this->shiftWorkerService->applyIndividualTime(
+                $shiftWorker,
+                $newStart->format('H:i'),
+                $newEnd->format('H:i'),
+                $workTimeChangeRequest->request_end_date
+                    ? Carbon::parse($workTimeChangeRequest->request_end_date)->toDateString()
+                    : null
+            );
+        };
 
-        // Only update end_date when the request crosses midnight
-        if ($workTimeChangeRequest->request_end_date) {
-            $pivotUpdate['end_date'] = $workTimeChangeRequest->request_end_date;
-        }
-
-        if ($shiftDate->gte($now)) {
-            $shift->users()->updateExistingPivot($user->id, $pivotUpdate);
+        if ($shiftDate->gte($now) || !WorkTimeAccounting::isEnabled()) {
+            // Zukünftige Schicht oder Arbeitszeitberechnung aus: nur die Zeit an der Schicht ändern,
+            // keine Korrekturbuchung aufs Stundenkonto
+            $applyIndividualTime();
         } else {
             // For past shifts, create an adjustment booking to reflect the time change
             $repository->storeOrUpdateBooking($user, now(), now()->dayOfWeek, [
@@ -320,7 +341,7 @@ class WorkTimeChangeRequestController extends Controller
                 $repository->updateUserBalance($user, $balanceDelta);
             }
 
-            $shift->users()->updateExistingPivot($user->id, $pivotUpdate);
+            $applyIndividualTime();
         }
 
         $workTimeChangeRequest->update([
@@ -331,8 +352,10 @@ class WorkTimeChangeRequestController extends Controller
         return redirect()->back();
     }
 
-    public function decline(WorkTimeChangeRequest $workTimeChangeRequest, Request $request): \Illuminate\Http\RedirectResponse
-    {
+    public function decline(
+        WorkTimeChangeRequest $workTimeChangeRequest,
+        Request $request
+    ): \Illuminate\Http\RedirectResponse {
         $this->authorizeDecision($workTimeChangeRequest);
 
         $workTimeChangeRequest->update([

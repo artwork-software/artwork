@@ -122,7 +122,8 @@ final class ShiftRuleServiceBatchingTest extends TestCase
         $this->assertLessThanOrEqual(
             $withoutRule + 1,
             $fourteenDays,
-            "24-Wochen-Regel kostet zusätzliche Abfragen (Kontextfenster zu klein?): ohne = {$withoutRule}, mit = {$fourteenDays}"
+            "24-Wochen-Regel kostet zusätzliche Abfragen (Kontextfenster zu klein?): "
+            . "ohne = {$withoutRule}, mit = {$fourteenDays}"
         );
         $this->assertLessThanOrEqual(
             $threeDays + 2,
@@ -139,7 +140,14 @@ final class ShiftRuleServiceBatchingTest extends TestCase
         [$user, $contract] = $this->userWithContract();
         $rule = $this->ruleForContract($contract, 'restTimeBeforeWorkday', 11.0);
         $tuesday = $this->futureWeekday(Carbon::TUESDAY);
-        $this->shiftWithPivotTimesFor($user, $tuesday->copy()->subDay(), '14:00:00', '20:00:00', '14:00:00', '23:30:00');
+        $this->shiftWithPivotTimesFor(
+            $user,
+            $tuesday->copy()->subDay(),
+            '14:00:00',
+            '20:00:00',
+            '14:00:00',
+            '23:30:00'
+        );
         $this->shiftFor($user, $tuesday, '06:00:00', '14:00:00');
 
         // Mit Kontext (Service) …

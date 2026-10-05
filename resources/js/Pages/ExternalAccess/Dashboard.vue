@@ -13,10 +13,15 @@
                 <h2 class="text-lg font-semibold">{{ $t('Shared with you') }}</h2>
                 <ul class="mt-4 space-y-2">
                     <li v-for="scope in page.props.accessible_scopes" :key="scope.id" class="text-sm text-text-muted">
-                        <strong>{{ scope.project.name }}</strong>{{ ' — ' }}{{ scope.tab.name }}
-                        <span class="text-xs text-text-subtle ml-2">
-                            ({{ scope.access_type === 'write' ? $t('can edit') : $t('read only') }})
-                        </span>
+                        <Link
+                            :href="route('external.project.tab.show', { project: scope.project.id, tab: scope.tab.id })"
+                            class="inline-flex items-center gap-2 hover:text-text hover:underline"
+                        >
+                            <span><strong>{{ scope.project.name }}</strong>{{ ' — ' }}{{ scope.tab.name }}</span>
+                            <span class="text-xs text-text-subtle">
+                                ({{ scope.access_type === 'write' ? $t('can edit') : $t('read only') }})
+                            </span>
+                        </Link>
                     </li>
                 </ul>
             </section>
@@ -29,7 +34,7 @@
 </template>
 
 <script setup>
-import { usePage } from '@inertiajs/vue3'
+import { Link, usePage } from '@inertiajs/vue3'
 import ExternalAppLayout from '@/Pages/ExternalAccess/Layouts/ExternalAppLayout.vue'
 
 const page = usePage()

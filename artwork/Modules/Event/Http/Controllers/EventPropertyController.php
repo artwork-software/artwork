@@ -34,7 +34,7 @@ class EventPropertyController extends Controller
 
     public function store(CreateEventPropertyRequest $request): RedirectResponse
     {
-        if($request->validated()){
+        if ($request->validated()) {
             $this->eventPropertyService->createFromRequest($request);
             return $this->redirector->back();
         }
@@ -46,7 +46,7 @@ class EventPropertyController extends Controller
         EventProperty $eventProperty,
         UpdateEventPropertyRequest $request
     ): RedirectResponse {
-        if($request->validated()){
+        if ($request->validated()) {
             $this->eventPropertyService->updateFromRequest($eventProperty, $request);
             return $this->redirector->back();
         }

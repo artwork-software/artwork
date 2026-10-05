@@ -26,7 +26,11 @@ class CategoryController extends Controller
     public function index(): Response|ResponseFactory
     {
         return inertia('Settings/ProjectSettings', [
-            'categories' => Category::with('projects:id,name')->select(['id', 'name', 'color'])->get()->map(fn($category) => [
+            'categories' => Category::with('projects:id,name')->select([
+                'id',
+                'name',
+                'color',
+            ])->get()->map(fn($category) => [
                 'id' => $category->id,
                 'name' => $category->name,
                 'color' => $category->color,

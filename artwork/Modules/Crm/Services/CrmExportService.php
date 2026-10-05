@@ -12,7 +12,8 @@ readonly class CrmExportService
 {
     public function __construct(
         private \Artwork\Modules\Crm\Repositories\CrmContactRepository $contactRepository,
-    ) {}
+    ) {
+    }
 
     public function export(array $filters): BinaryFileResponse
     {

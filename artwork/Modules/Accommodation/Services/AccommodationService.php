@@ -9,7 +9,8 @@ class AccommodationService
 {
     public function __construct(
         protected AccommodationRepository $repository
-    ) {}
+    ) {
+    }
 
     public function store(array $data)
     {
@@ -21,7 +22,8 @@ class AccommodationService
         return $this->repository->update($accommodation, $data);
     }
 
-    public function destroy(Accommodation $accommodation){
+    public function destroy(Accommodation $accommodation): void
+    {
         $this->repository->destroy($accommodation);
     }
 }

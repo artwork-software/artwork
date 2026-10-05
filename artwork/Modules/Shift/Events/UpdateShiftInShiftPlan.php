@@ -21,10 +21,17 @@ class UpdateShiftInShiftPlan implements ShouldBroadcastNow
     public $shift;
     public $roomId;
 
-    public function __construct(Shift $shift, int $roomId)
+    /**
+     * Raum vor einem Raumwechsel: Ansichten, die den neuen Raum nicht geladen haben
+     * (Raumfilter), erfahren nur über den alten Kanal, dass die Schicht dort weg ist.
+     */
+    public ?int $previousRoomId;
+
+    public function __construct(Shift $shift, int $roomId, ?int $previousRoomId = null)
     {
         $this->shift = $shift;
         $this->roomId = $roomId;
+        $this->previousRoomId = $previousRoomId !== null && $previousRoomId !== $roomId ? $previousRoomId : null;
     }
 
     public function broadcastAs()
@@ -32,9 +39,18 @@ class UpdateShiftInShiftPlan implements ShouldBroadcastNow
         return 'shift-created';
     }
 
-    public function broadcastOn(): PrivateChannel
+    /**
+     * @return array<int, PrivateChannel>
+     */
+    public function broadcastOn(): array
     {
-        return new PrivateChannel('shift-plan.room.' . $this->roomId);
+        $channels = [new PrivateChannel('shift-plan.room.' . $this->roomId)];
+
+        if ($this->previousRoomId !== null) {
+            $channels[] = new PrivateChannel('shift-plan.room.' . $this->previousRoomId);
+        }
+
+        return $channels;
     }
 
     public function broadcastWith(): array
@@ -44,6 +60,7 @@ class UpdateShiftInShiftPlan implements ShouldBroadcastNow
         return [
             'shift' => ShiftDTO::fromModel($this->shift, $this->shift->project),
             'roomId' => $this->roomId,
+            'previousRoomId' => $this->previousRoomId,
             'lookups' => $this->buildBroadcastLookups($this->shift),
         ];
     }

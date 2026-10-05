@@ -2,7 +2,6 @@
 
 namespace Artwork\Modules\Accommodation\Http\Controllers;
 
-
 use App\Http\Controllers\Controller;
 use Artwork\Modules\Accommodation\Http\Requests\StoreAccommodationRequest;
 use Artwork\Modules\Accommodation\Http\Requests\UpdateAccommodationRequest;
@@ -16,13 +15,16 @@ class AccommodationController extends Controller
 
     public function __construct(
         protected AccommodationService $accommodationService
-    ) {}
+    ) {
+    }
 
     /**
      * Display a listing of the resource.
      */
     public function index()
     {
+        $this->authorize('viewAny', Accommodation::class);
+
         return Inertia::render('Accommodation/index', [
             'accommodations' => Accommodation::with(['roomTypes'])->get(),
             'roomTypes' => AccommodationRoomType::all(),
@@ -32,7 +34,7 @@ class AccommodationController extends Controller
     /**
      * Show the form for creating a new resource.
      */
-    public function create()
+    public function create(): void
     {
         //
     }
@@ -42,6 +44,8 @@ class AccommodationController extends Controller
      */
     public function store(StoreAccommodationRequest $request)
     {
+        $this->authorize('create', Accommodation::class);
+
         $accommodation = $this->accommodationService->store($request->validated());
 
         // Handle room types with costs
@@ -65,8 +69,10 @@ class AccommodationController extends Controller
      */
     public function show(Accommodation $accommodation)
     {
+        $this->authorize('view', $accommodation);
+
         return Inertia::render('Accommodation/Show', [
-            'accommodation' => $accommodation->load(['contacts', 'roomTypes' => function($query) {
+            'accommodation' => $accommodation->load(['contacts', 'roomTypes' => function ($query): void {
                 $query->withPivot('cost_per_night');
             }]),
             'roomTypes' => AccommodationRoomType::all(),
@@ -76,7 +82,7 @@ class AccommodationController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(Accommodation $accommodation)
+    public function edit(Accommodation $accommodation): void
     {
         //
     }
@@ -86,6 +92,8 @@ class AccommodationController extends Controller
      */
     public function update(UpdateAccommodationRequest $request, Accommodation $accommodation)
     {
+        $this->authorize('update', $accommodation);
+
         $accommodation = $this->accommodationService->update($accommodation, $request->validated());
 
         // Handle room types with costs
@@ -110,6 +118,8 @@ class AccommodationController extends Controller
      */
     public function destroy(Accommodation $accommodation)
     {
+        $this->authorize('delete', $accommodation);
+
         $this->accommodationService->destroy($accommodation);
 
         return redirect()->route('accommodation.index');

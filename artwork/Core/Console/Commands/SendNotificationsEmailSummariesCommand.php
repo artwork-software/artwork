@@ -3,6 +3,7 @@
 namespace Artwork\Core\Console\Commands;
 
 use Artwork\Core\Carbon\Service\CarbonService;
+use Artwork\Core\Notifications\BaseNotification;
 use Artwork\Modules\Notification\Services\DatabaseNotificationService;
 use Artwork\Modules\GeneralSettings\Models\GeneralSettings;
 use Artwork\Modules\Notification\Enums\NotificationFrequencyEnum;
@@ -16,7 +17,7 @@ use Carbon\Carbon;
 use Illuminate\Config\Repository;
 use Illuminate\Console\Command;
 use Illuminate\Database\Eloquent\Collection;
-use Illuminate\Mail\MailManager;
+use Illuminate\Contracts\Mail\Factory as MailFactory;
 use Illuminate\Notifications\DatabaseNotification;
 use Illuminate\Translation\Translator;
 use Psr\Log\LoggerInterface;
@@ -36,7 +37,8 @@ class SendNotificationsEmailSummariesCommand extends Command
         private readonly Repository $config,
         private readonly NotificationSettingService $notificationSettingService,
         private readonly CarbonService $carbonService,
-        private readonly MailManager $mailManager,
+        // Contract statt MailManager: unter Mail::fake() liefert der Container MailFake (TypeError)
+        private readonly MailFactory $mailManager,
         private readonly Translator $translator,
     ) {
         parent::__construct();
@@ -76,6 +78,7 @@ class SendNotificationsEmailSummariesCommand extends Command
     protected function sendNotificationsSummary(User $user): void
     {
         $notificationArray = [];
+        $language = BaseNotification::languageOf($user);
         foreach ($this->collectNotificationsToSendForUser($user) as $groupType => $notificationsByType) {
             /** @var Collection $notificationCollection */
             foreach ($notificationsByType as $notificationCollection) {
@@ -86,7 +89,7 @@ class SendNotificationsEmailSummariesCommand extends Command
                                 'notification-group-enum.title.' .
                                 NotificationGroupEnum::from($groupType)->title(),
                                 [],
-                                'de'
+                                $language
                             ),
                             'count' => 0,
                             'notifications' => [],
@@ -112,13 +115,16 @@ class SendNotificationsEmailSummariesCommand extends Command
         }
 
         if (!empty($notificationArray)) {
-            $this->mailManager->to($user)->send(
+            // Absender wie bei den Sofort-Mails: Geschäfts-E-Mail aus den Einstellungen, sonst System-Mail
+            $businessEmail = (string) $this->generalSettings->__get('business_email');
+            $this->mailManager->mailer()->to($user)->send(
                 new NotificationSummary(
                     $notificationArray,
                     $user->getAttribute('first_name'),
                     $this->generalSettings->__get('page_title'),
-                    $this->config->get('mail.system_mail'),
-                    $this->config->get('mail.fallback_page_title')
+                    $businessEmail !== '' ? $businessEmail : $this->config->get('mail.system_mail'),
+                    $this->config->get('mail.fallback_page_title'),
+                    $language
                 )
             );
 

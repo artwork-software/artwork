@@ -15,6 +15,8 @@ export const ARCHIVABLE_BUTTONS = [
     'change_request',
     'event_delete',
     'show_in_calendar',
+    'calculation_check',
+    'delete_request',
     'material_issue_return_confirm',
     'material_issue_return_decline',
 ]

@@ -17,6 +17,23 @@ use Throwable;
 final class NotificationMailPresenter
 {
     /**
+     * Buttons, deren Aktion es nur im Benachrichtigungscenter gibt (Annehmen/Ablehnen, Antworten,
+     * Prüfen …). Der erste Beschreibungslink führte dort z. B. auf die Raumseite – ohne Aktion.
+     */
+    private const IN_APP_ACTIONS = [
+        'accept',
+        'decline',
+        'answer',
+        'answerDialog',
+        'change_request',
+        'event_delete',
+        'calculation_check',
+        'delete_request',
+        'material_issue_return_confirm',
+        'material_issue_return_decline',
+    ];
+
+    /**
      * Beschreibungszeilen der Notification als flache Liste.
      *
      * @return array<int, array{type: string, title: string, href: string|null}>
@@ -66,7 +83,7 @@ final class NotificationMailPresenter
     }
 
     /**
-     * Erster absoluter Link aus der Beschreibung; Fallback ist die App-URL.
+     * Erster absoluter Link aus der Beschreibung; Fallback ist das Benachrichtigungscenter.
      */
     public static function primaryLink(mixed $description): string
     {
@@ -76,7 +93,39 @@ final class NotificationMailPresenter
             }
         }
 
-        return self::appUrl();
+        return self::notificationsUrl();
+    }
+
+    /**
+     * Ziel des Haupt-Buttons einer Mail: das Benachrichtigungscenter, wenn dort eine Aktion
+     * wartet, sonst der erste Beschreibungslink (bzw. das Center als Fallback).
+     */
+    public static function mainLink(mixed $payload): string
+    {
+        return self::requiresAppAction($payload)
+            ? self::notificationsUrl()
+            : self::primaryLink(self::descriptionOf($payload));
+    }
+
+    public static function hasMainLink(mixed $payload): bool
+    {
+        return self::requiresAppAction($payload) || self::hasDeepLink(self::descriptionOf($payload));
+    }
+
+    public static function requiresAppAction(mixed $payload): bool
+    {
+        $buttons = match (true) {
+            is_object($payload) => $payload->buttons ?? [],
+            is_array($payload) => $payload['buttons'] ?? [],
+            default => [],
+        };
+
+        return array_intersect((array) $buttons, self::IN_APP_ACTIONS) !== [];
+    }
+
+    public static function notificationsUrl(): string
+    {
+        return route('notifications.index');
     }
 
     /**

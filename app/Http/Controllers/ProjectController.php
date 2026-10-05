@@ -806,7 +806,7 @@ class ProjectController extends Controller
 
                 $this->notificationService->setTitle($notificationTitle);
                 $this->notificationService->setIcon('green');
-                $this->notificationService->setNotificationConstEnum(NotificationEnum::NOTIFICATION_PROJECT);
+                $this->notificationService->setNotificationConstEnum(NotificationEnum::NOTIFICATION_BUDGET_MONEY_SOURCE_AUTH_CHANGED);
                 $this->notificationService->setBroadcastMessage($broadcastMessage);
                 $this->notificationService->setNotificationTo($user);
                 $this->notificationService->createNotification();
@@ -907,7 +907,7 @@ class ProjectController extends Controller
             $table = $mainPosition->table()->first();
             $project = $table->project()->first();
             // Delete Function Updated to new Notification System
-            $this->deleteOldNotification($mainPosition->id, $verifiedRequest->requested);
+            $this->deleteVerificationRequestNotifications('main', $mainPosition->id);
             $budgetData->position_id = $mainPosition->id;
             $broadcastMessage = [
                 'id' => Str::uuid()->toString(),
@@ -977,7 +977,7 @@ class ProjectController extends Controller
             );
             $project = $table->project()->first();
             // Delete Function Updated to new Notification System
-            $this->deleteOldNotification($subPosition->id, $verifiedRequest->requested);
+            $this->deleteVerificationRequestNotifications('sub', $subPosition->id);
             $budgetData->position_id = $mainPosition->id;
             $broadcastMessage = [
                 'id' => Str::uuid()->toString(),
@@ -1047,13 +1047,26 @@ class ProjectController extends Controller
         broadcast(new UpdateBudget($table->project_id));
     }
 
-    private function deleteOldNotification($positionId, $requestedId): void
+    /**
+     * Offene Prüfanfrage-Benachrichtigung einer Position entfernen (erledigt, zurückgezogen, neu
+     * angefragt). Vorher wurde nach budgetData.requested_by = prüfende Person gefiltert – dort steht
+     * aber die anfragende Person, die Meldung blieb also für immer im Posteingang.
+     */
+    private function deleteVerificationRequestNotifications(string $positionType, int $positionId): void
     {
         DatabaseNotification::query()
-            ->whereJsonContains("data->budgetData->position_id", $positionId)
-            ->whereJsonContains("data->budgetData->requested_by", $requestedId)
+            ->where('data->positionVerifyRequestType', $positionType)
+            // als Zeichenkette: Zeilen mit null bringen MariaDB (strict) sonst beim DELETE zum Abbruch
+            ->where('data->positionVerifyRequestId', (string) $positionId)
             ->whereJsonContains("data->budgetData->changeType", BudgetTypeEnum::BUDGET_VERIFICATION_REQUEST)
             ->delete();
+    }
+
+    private function verificationCounterpartId(object $verifiedRequest): ?int
+    {
+        return Auth::id() === (int) $verifiedRequest->requested
+            ? $verifiedRequest->requested_by
+            : $verifiedRequest->requested;
     }
 
     /**
@@ -1074,12 +1087,16 @@ class ProjectController extends Controller
                 $this->resetOrphanedVerification($mainPosition);
                 return;
             }
-            $requestedUser = User::find($verifiedRequest->requested);
+            // Die jeweils andere Seite erfährt es (vorher immer die prüfende Person – zog sie die
+            // Anfrage aus ihrer Benachrichtigung zurück, wurde sie selbst benachrichtigt, die
+            // anfragende Person nie)
+            $requestedUser = User::find($this->verificationCounterpartId($verifiedRequest));
             $notificationTitle = __(
                 'notification.project.budget.verify_removed',
                 [],
                 $requestedUser?->language ?? 'de'
             );
+            $this->deleteVerificationRequestNotifications('main', $mainPosition->id);
             $this->removeMainPositionCellVerifiedValue($mainPosition);
             $project = $mainPosition->table()->first()->project()->first();
             $budgetData->position_id = $mainPosition->id;
@@ -1143,12 +1160,13 @@ class ProjectController extends Controller
                 $this->resetOrphanedVerification($subPosition);
                 return;
             }
-            $requestedUser = User::find($verifiedRequest->requested);
+            $requestedUser = User::find($this->verificationCounterpartId($verifiedRequest));
             $notificationTitle = __(
                 'notification.project.budget.verify_removed',
                 [],
                 $requestedUser?->language ?? 'de'
             );
+            $this->deleteVerificationRequestNotifications('sub', $subPosition->id);
             $this->removeSubPositionCellVerifiedValue($subPosition);
             $project = $mainPosition->table()->first()->project()->first();
             $budgetData->position_id = $mainPosition->id;
@@ -1224,10 +1242,9 @@ class ProjectController extends Controller
                 // Notification
                 $notificationTitle = __(
                     'notification.project.budget.add',
-                    [],
+                    ['project' => $project?->name ?? ''],
                     $user->language
                 );
-                $project = $mainPosition->table()->first()->project()->first();
                 $broadcastMessage = [
                     'id' => Str::uuid()->toString(),
                     'type' => 'success',
@@ -1257,7 +1274,7 @@ class ProjectController extends Controller
                 $this->notificationService->setIcon('red');
                 $this->notificationService->setPriority(2);
                 $this->notificationService
-                    ->setNotificationConstEnum(NotificationEnum::NOTIFICATION_BUDGET_STATE_CHANGED);
+                    ->setNotificationConstEnum(NotificationEnum::NOTIFICATION_BUDGET_MONEY_SOURCE_AUTH_CHANGED);
                 $this->notificationService->setBroadcastMessage($broadcastMessage);
                 $this->notificationService->setNotificationTo($user);
                 $this->notificationService->setDescription($notificationDescription);
@@ -1344,11 +1361,7 @@ class ProjectController extends Controller
         $subPosition->update(['is_verified' => 'BUDGET_VERIFIED_TYPE_CLOSED']);
 
         if ($verifiedRequest) {
-            DatabaseNotification::query()
-                ->whereJsonContains("data->budgetData->position_id", $subPosition->id)
-                ->whereJsonContains("data->budgetData->requested_by", $verifiedRequest->requested)
-                ->whereJsonContains("data->budgetData->changeType", BudgetTypeEnum::BUDGET_VERIFICATION_REQUEST)
-                ->delete();
+            $this->deleteVerificationRequestNotifications('sub', $subPosition->id);
         }
 
         $this->changeService->saveFromBuilder(
@@ -1598,11 +1611,7 @@ class ProjectController extends Controller
         $verifiedRequest = $mainPosition->verified()->first();
 
         if ($verifiedRequest) {
-            DatabaseNotification::query()
-                ->whereJsonContains("data->budgetData->position_id", $mainPosition->id)
-                ->whereJsonContains("data->budgetData->requested_by", $verifiedRequest->requested)
-                ->whereJsonContains("data->budgetData->changeType", BudgetTypeEnum::BUDGET_VERIFICATION_REQUEST)
-                ->delete();
+            $this->deleteVerificationRequestNotifications('main', $mainPosition->id);
         }
 
         $this->changeService->saveFromBuilder(
@@ -4058,7 +4067,7 @@ class ProjectController extends Controller
                 $this->notificationService->setTitle($notificationTitle);
                 $this->notificationService->setIcon('green');
                 $this->notificationService->setPriority(3);
-                $this->notificationService->setNotificationConstEnum(NotificationEnum::NOTIFICATION_PROJECT);
+                $this->notificationService->setNotificationConstEnum(NotificationEnum::NOTIFICATION_BUDGET_MONEY_SOURCE_AUTH_CHANGED);
                 $this->notificationService->setBroadcastMessage($broadcastMessage);
                 $this->notificationService->setProjectId($project->id);
                 $this->notificationService->setNotificationTo($budgetAfter);
@@ -4110,7 +4119,7 @@ class ProjectController extends Controller
                 $this->notificationService->setTitle($notificationTitle);
                 $this->notificationService->setIcon('red');
                 $this->notificationService->setPriority(2);
-                $this->notificationService->setNotificationConstEnum(NotificationEnum::NOTIFICATION_PROJECT);
+                $this->notificationService->setNotificationConstEnum(NotificationEnum::NOTIFICATION_BUDGET_MONEY_SOURCE_AUTH_CHANGED);
                 $this->notificationService->setBroadcastMessage($broadcastMessage);
                 $this->notificationService->setProjectId($project->id);
                 $this->notificationService->setNotificationTo($user);

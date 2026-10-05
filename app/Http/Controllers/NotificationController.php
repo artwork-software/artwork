@@ -4,10 +4,7 @@ namespace App\Http\Controllers;
 
 use Artwork\Core\Carbon\Service\CarbonService;
 use Artwork\Core\Casts\TimeAgoCast;
-use Artwork\Modules\Change\Services\ChangeService;
 use Artwork\Modules\Notification\Services\DatabaseNotificationService;
-use Artwork\Modules\Event\Http\Resources\CalendarEventResource;
-use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Event\Models\EventStatus;
 use Artwork\Modules\Notification\Enums\NotificationEnum;
 use Artwork\Modules\EventType\Http\Resources\EventTypeResource;
@@ -24,9 +21,10 @@ use Artwork\Modules\Room\Http\Resources\RoomIndexWithoutEventsResource;
 use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\User\Models\User;
 use Artwork\Modules\User\Services\UserService;
-use Artwork\Modules\Vacation\Services\VacationService;
 use Illuminate\Http\Request;
 use Artwork\Modules\Notification\Services\NotificationSettingService;
+use Artwork\Modules\Notification\Services\NotificationDialogDataService;
+use Artwork\Modules\Event\Services\EventPropertyService;
 use Artwork\Modules\Notification\Services\NotificationSettingsPresenter;
 use Illuminate\Validation\Rule;
 use Illuminate\Http\RedirectResponse;
@@ -43,12 +41,6 @@ class NotificationController extends Controller
      * queued job instead of running inline in the request.
      */
     private const INLINE_ARCHIVE_THRESHOLD = 500;
-
-    public function __construct(
-        private readonly VacationService $vacationService,
-        private readonly ChangeService $changeService,
-    ) {
-    }
 
     /**
      * Returns the unread/archived notification counts per group for the given user as a single
@@ -113,83 +105,28 @@ class NotificationController extends Controller
     public function index(
         ProjectTabService $projectTabService,
         GlobalNotificationService $globalNotificationService,
-        UserService $userService
+        UserService $userService,
+        NotificationDialogDataService $notificationDialogDataService,
+        EventPropertyService $eventPropertyService
     ): Response|ResponseFactory {
         $userService->updateCurrentUserShowNotificationIndicator(
             $userService->getAuthUser(),
             false
         );
 
-        $historyObjects = [];
-        $event = null;
-        // reload functions
-        if (request('showHistory')) {
-            if (request('historyType') === 'project') {
-                $project = Project::find(request('modelId'));
-                if ($project !== null) {
-                    $historyObjects = array_merge(
-                        $historyObjects,
-                        $this->changeService->historyForFrontend($project)
-                    );
-                }
-            }
-
-            if (request('historyType') === 'event') {
-                $event = Event::find(request('modelId'));
-                if ($event !== null) {
-                    $historyObjects = array_merge(
-                        $historyObjects,
-                        $this->changeService->historyForFrontend($event)
-                    );
-                }
-            }
-
-            if (request('historyType') === 'vacations') {
-                $vacations = $this->vacationService->findVacationsByUserId(request('modelId'));
-
-                foreach ($vacations as $vacation) {
-                    $historyObjects = array_merge(
-                        $historyObjects,
-                        $this->changeService->historyForFrontend($vacation)
-                    );
-                }
-            }
-        }
-
-        if (request('openDeclineEvent')) {
-            $event = Event::find(request('eventId'));
-        }
-
-        if (request('openEditEvent')) {
-            $event = Event::with([
-                'room',
-                'creator',
-                'project',
-                'project.managerUsers',
-                'project.status',
-                'event_type',
-                'eventStatus',
-                'eventProperties',
-                'shifts',
-                'shifts.craft',
-                'shifts.users',
-                'shifts.freelancer',
-                'shifts.serviceProvider',
-                'shifts.shiftsQualifications',
-                'subEvents.event',
-                'subEvents.event.room',
-                'series',
-            ])->find(request('eventId'));
-        }
-
         /** @var User $user */
         $user = Auth::user();
+        // Dialoge der Benachrichtigungen (Absagen, Bearbeiten/Annehmen, Antworten, Verlauf) –
+        // gemeinsam mit dem Dashboard, IDs aus der URL werden dort autorisiert
+        $dialogData = $notificationDialogDataService->forRequest(request(), $user);
 
         return inertia('Notifications/Show', [
-            'historyObjects' => $historyObjects,
-            'event' => $event !== null ? new CalendarEventResource($event) : null,
+            'historyObjects' => $dialogData['historyObjects'],
+            'event' => $dialogData['event'],
             'project' => null,
-            'wantedSplit' => $event?->room_id,
+            'wantedSplit' => $dialogData['wantedSplit'],
+            // ohne Eigenschaften schickte der Bearbeiten-Dialog event_properties: [] → sync([]) löschte sie
+            'event_properties' => $eventPropertyService->getAll(),
             'roomCollisions' => [],
             'notificationCounts' => $this->getNotificationCountsByGroup($user),
             'globalNotification' => $globalNotificationService->getGlobalNotificationEnrichedByImageUrl(),

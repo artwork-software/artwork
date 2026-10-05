@@ -416,7 +416,7 @@
 </template>
 
 <script setup lang="ts">
-import {computed, onMounted, onBeforeUnmount, defineOptions, defineAsyncComponent, ref} from 'vue'
+import {computed, onMounted, onBeforeUnmount, defineOptions, defineAsyncComponent, ref, watch} from 'vue'
 import axios from 'axios'
 import { Link, router, useForm, usePage } from '@inertiajs/vue3'
 import AppLayout from '@/Layouts/AppLayout.vue'
@@ -498,6 +498,16 @@ const fetchNotificationPage = async (targetPage: number) => {
         notificationsLoading.value = false
     }
 }
+
+// Nach Archivieren/Löschen/Annehmen kommen neue Props (preserveState) – die Liste ist eine Kopie und
+// blieb vorher stehen, bis die Seite neu aufgebaut wurde
+watch(() => props.notificationOfToday, (fresh) => {
+    if (notificationPage.value === 1) {
+        notifications.value = [...(fresh ?? [])]
+        return
+    }
+    fetchNotificationPage(Math.min(notificationPage.value, notificationPageCount.value))
+})
 
 const NotificationBlock = defineAsyncComponent(() => import('@/Layouts/Components/NotificationComponents/NotificationBlock.vue'));
 const SingleUserEventShift = defineAsyncComponent(() => import('@/Layouts/Components/ShiftPlanComponents/SingleUserEventShift.vue'));

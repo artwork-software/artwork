@@ -15,31 +15,27 @@
                             </div>
                         </div>
                     </div>
-                    <div class="flex items-center gap-2 text-xs/[18px] text-text-subtle" v-if="notification.data?.description[0]">
-                        {{ notification.data?.description[0].text }}
-                        {{ $t('from')}}
-                        <UserPopoverTooltip :id="notification.id" :user="notification.data.created_by"
-                                        height="5" width="5"/>
-                    </div>
-                    <div class="flex items-center gap-2 text-xs/[18px] text-text-subtle" v-else-if="notification.data.created_by">
+                    <!-- Zeitpunkt immer, „von“ nur mit bekannter Person (Scheduler/Externe: ohne). Kontaktdaten
+                         lädt der Tooltip rechtegeprüft nach – im Payload stehen nur Name und Foto. -->
+                    <div class="flex items-center gap-2 text-xs/[18px] text-text-subtle" v-if="notification.data?.created_at || notification.data?.created_by">
                         {{ notification.data.created_at }}
-                        {{ $t('from')}}
-                        <UserPopoverTooltip :id="notification.id" :user="notification.data?.created_by" height="5"
-                                        width="5"/>
+                        <template v-if="notification.data?.created_by">
+                            {{ $t('from')}}
+                            <UserPopoverTooltip :id="notification.id" :user="notification.data.created_by"
+                                                lazy-load height="5" width="5"/>
+                        </template>
                     </div>
                 </div>
                 <div class="text-xs/[18px] text-text-subtle mt-2 flex gap-1 items-center" v-if="notification.data?.description">
                     <div v-for="(description, index) in notification.data?.description" class="divide-x">
-                        <p v-if="description.type !== 'comment'">
-                            <a :href="description.href" v-if="description.type === 'link'"
+                        <p v-if="description?.type !== 'comment' && description?.title">
+                            <!-- auch Textzeilen mit Ziel sind klickbar (Schicht-, Konflikt-, Regelmeldungen) -->
+                            <a :href="description.href" v-if="description.href"
                                class="text-accent-600">{{ description.title }}</a>
                             <span v-else>{{ description.title }}</span>
                         </p>
                     </div>
                 </div>
-                <p v-if="notification.data?.description[5]" class="mt-2 text-xs/[18px] text-text-subtle">
-                    {{ notification.data?.description[5]?.title }}
-                </p>
                 <span v-if="notification.data.isModified" class="text-special-orange bg-special-orange-surface px-2 py-1 rounded text-xs font-medium">
                     {{ $t('modified') }}
                 </span>
@@ -68,6 +64,7 @@
                                      @acceptRoomRequest="acceptRoomRequest"
                                      @openDialogModal="loadEventDataForDialog"
                                      @deleteEvent="showDeleteConfirmModal = true"
+                                     @see-shift="openShift"
                                      @openProjectCalculation="openProjectBudget(notification.data?.projectId)"
                                      @open-event-without-room-modal="loadEventDataForEventWithoutRoom"
                                      @deleteNotification="setReadAt"
@@ -153,6 +150,7 @@
         :eventTypes="eventTypes"
         :rooms="rooms"
         :eventsWithoutRoom="[event]"
+        :event-statuses="eventStatuses"
         :isAdmin="this.hasAdminRole()"
         :removeNotificationOnAction="true"
         :first_project_calendar_tab_id="this.first_project_calendar_tab_id"
@@ -246,21 +244,24 @@ export default {
             showRoomRequestDialogComponent: false,
             showUserVacationHistory: false,
             showEventHistory: false,
-            showMaterialReturnConfirmModal: false
+            showMaterialReturnConfirmModal: false,
+            answering: false,
         }
     },
     computed: {},
     methods: {
         isArchivable,
         declineMaterialReturn() {
-            if (!this.notification.data?.modelId) {
+            if (!this.notification.data?.modelId || this.answering) {
                 return;
             }
+            this.answering = true;
             router.post(
                 route('extern-issue-of-material.return-decline', this.notification.data.modelId),
                 {},
                 {
                     preserveScroll: true,
+                    onFinish: () => { this.answering = false; },
                 }
             );
         },
@@ -290,77 +291,79 @@ export default {
                 }
             );
         },
-        openHistory() {
+        /**
+         * Dialog-Daten nachladen (nur diese Props) und den Dialog erst öffnen, wenn sie da sind.
+         * Fehlt der Termin (gelöscht, kein Zugriff), Hinweis statt leerem Dialog.
+         */
+        loadDialogData(data, open) {
             router.reload({
-                data: {
-                    showHistory: true,
-                    historyType: this.notification.data?.historyType,
-                    modelId: this.notification.data?.modelId,
+                data,
+                only: ['event', 'historyObjects', 'wantedSplit'],
+                preserveScroll: true,
+                onSuccess: () => {
+                    if (data.eventId && !this.event?.id) {
+                        this.$toast.error(this.$t('The entry no longer exists. Please reload the page.'));
+                        return;
+                    }
+                    open();
                 },
-                onFinish: () => {
-                    if (this.notification.data?.historyType === 'project') {
-                        this.showProjectHistory = true;
-                    }
-                    if (this.notification.data?.historyType === 'vacations') {
-                        this.showUserVacationHistory = true;
-                    }
-                    if (this.notification.data?.historyType === 'event') {
-                        this.showEventHistory = true;
-                    }
+            });
+        },
+        openHistory() {
+            const historyType = this.notification.data?.historyType;
+            this.loadDialogData(
+                {showHistory: true, historyType, modelId: this.notification.data?.modelId},
+                () => {
+                    this.showProjectHistory = historyType === 'project';
+                    this.showUserVacationHistory = historyType === 'vacations';
+                    this.showEventHistory = historyType === 'event';
                 }
-            })
+            );
         },
         loadEventDataForDecline() {
-            router.reload({
-                data: {
-                    openDeclineEvent: true,
-                    eventId: this.notification.data?.eventId
-                },
-                onFinish: () => {
-                    this.showDeclineEventModal = true
-                }
-            })
+            this.loadDialogData(
+                {openDeclineEvent: true, eventId: this.notification.data?.eventId},
+                () => { this.showDeclineEventModal = true; }
+            );
         },
         closeDeclineEventModal() {
             this.showDeclineEventModal = false;
         },
         loadEventDataForEditAndAccept() {
-            router.reload({
-                data: {
-                    openEditEvent: true,
-                    eventId: this.notification.data?.eventId
-                },
-                onFinish: () => {
-                    this.createEventComponentIsVisible = true;
-                }
-            });
+            this.loadDialogData(
+                {openEditEvent: true, eventId: this.notification.data?.eventId},
+                () => { this.createEventComponentIsVisible = true; }
+            );
         },
         loadEventDataForDialog() {
-            router.reload({
-                data: {
-                    openEditEvent: true,
-                    eventId: this.notification.data?.eventId
-                },
-                onFinish: () => {
-                    this.showRoomRequestDialogComponent = true;
-                }
-            });
+            this.loadDialogData(
+                {openEditEvent: true, eventId: this.notification.data?.eventId},
+                () => { this.showRoomRequestDialogComponent = true; }
+            );
         },
         loadEventDataForEventWithoutRoom(){
-            router.reload({
-                data: {
-                    openEditEvent: true,
-                    eventId: this.notification.data?.eventId
-                },
-                onFinish: () => {
-                    this.showEventWithoutRoomComponent = true
-                }
-            })
+            this.loadDialogData(
+                {openEditEvent: true, eventId: this.notification.data?.eventId},
+                () => { this.showEventWithoutRoomComponent = true; }
+            );
+        },
+        /** „Schicht ansehen“: erstes Ziel aus der Beschreibung, sonst Schichten-Tab des Projekts */
+        openShift() {
+            const target = Object.values(this.notification.data?.description ?? {}).find((row) => row?.href);
+            if (target) {
+                window.location.href = target.href;
+                return;
+            }
+            if (this.notification.data?.projectId) {
+                this.openProjectShift(this.notification.data.projectId, this.notification.data?.eventId, this.notification.data?.shiftId);
+            }
         },
         onEventComponentClose(bool) {
             this.createEventComponentIsVisible = false;
 
-            if (bool && this.checkNotificationKey(this.notification.data?.notificationKey)) {
+            // nur bei echtem Speichern (true) – „Abbrechen“ lieferte früher das Klick-Event (truthy)
+            // und löschte die Benachrichtigung
+            if (bool === true && this.checkNotificationKey(this.notification.data?.notificationKey)) {
                 router.post(route('event.notification.delete', this.notification.data?.notificationKey), {
                     notificationKey: this.notification.data?.notificationKey
                 }, {
@@ -372,7 +375,9 @@ export default {
         onDialogComponentClose(bool) {
             this.showRoomRequestDialogComponent = false;
 
-            if (bool && this.checkNotificationKey(this.notification.data?.notificationKey)) {
+            // nur bei echtem Speichern (true) – „Abbrechen“ lieferte früher das Klick-Event (truthy)
+            // und löschte die Benachrichtigung
+            if (bool === true && this.checkNotificationKey(this.notification.data?.notificationKey)) {
                 router.post(route('event.notification.delete', this.notification.data?.notificationKey), {
                     notificationKey: this.notification.data?.notificationKey
                 }, {
@@ -384,7 +389,9 @@ export default {
         onEventWithoutRoomComponentClose(bool) {
             this.showEventWithoutRoomComponent = false;
 
-            if (bool && this.checkNotificationKey(this.notification.data?.notificationKey)) {
+            // nur bei echtem Speichern (true) – „Abbrechen“ lieferte früher das Klick-Event (truthy)
+            // und löschte die Benachrichtigung
+            if (bool === true && this.checkNotificationKey(this.notification.data?.notificationKey)) {
                 router.post(route('event.notification.delete', this.notification.data?.notificationKey), {
                     notificationKey: this.notification.data?.notificationKey
                 }, {
@@ -464,7 +471,8 @@ export default {
             }
         },
         acceptRoomRequest() {
-            if (this.notification.data?.eventId) {
+            if (this.notification.data?.eventId && !this.answering) {
+                this.answering = true;
                 router.put(
                     route('events.accept', { event: this.notification.data.eventId }),
                     { accepted: true },
@@ -476,7 +484,8 @@ export default {
                                     notificationKey: this.notification.data.notificationKey
                                 }, { preserveScroll: true, preserveState: true });
                             }
-                        }
+                        },
+                        onFinish: () => { this.answering = false; },
                     }
                 );
             }

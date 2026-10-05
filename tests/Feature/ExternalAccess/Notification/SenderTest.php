@@ -64,7 +64,8 @@ final class SenderTest extends TestCase
     public function crm_submission_uses_first_time_phrase_when_initial(): void
     {
         Notification::fake();
-        $inviter = User::factory()->create();
+        // Titel kommen in der Sprache der Empfänger*in
+        $inviter = User::factory()->create(['language' => 'en']);
         $external = $this->externalWithContact($inviter);
 
         $this->sender()->notifyCrmSubmissionCreated($this->submission($external), true);
@@ -77,10 +78,31 @@ final class SenderTest extends TestCase
     }
 
     #[Test]
+    public function each_recipient_gets_the_title_in_their_language(): void
+    {
+        Notification::fake();
+        $inviter = User::factory()->create(['language' => 'de']);
+        $external = $this->externalWithContact($inviter);
+        app()->setLocale('en');
+
+        $this->sender()->notifyCrmSubmissionCreated($this->submission($external), true);
+
+        // vorher in der Sprache der Anfrage (externe Person) für alle gleich
+        Notification::assertSentTo(
+            $inviter,
+            ExternalCrmSubmissionNotification::class,
+            fn ($notification) => $notification->toArray()->title
+                === __(':name has filled in their data for the first time.', ['name' => $external->displayName()], 'de'),
+        );
+        $this->assertSame('en', app()->getLocale());
+    }
+
+    #[Test]
     public function crm_submission_uses_update_phrase_when_not_initial(): void
     {
         Notification::fake();
-        $inviter = User::factory()->create();
+        // Titel kommen in der Sprache der Empfänger*in
+        $inviter = User::factory()->create(['language' => 'en']);
         $external = $this->externalWithContact($inviter);
 
         $this->sender()->notifyCrmSubmissionCreated($this->submission($external), false);

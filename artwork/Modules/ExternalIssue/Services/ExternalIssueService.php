@@ -337,7 +337,7 @@ class ExternalIssueService
             ->where('notifiable_type', User::class)
             ->where('notifiable_id', $issue->issued_by_id)
             ->where('data->type', NotificationEnum::NOTIFICATION_EXTERNAL_ISSUE_RETURN_DUE->value)
-            ->where('data->modelId', $issue->id)
+            ->where('data->modelId', (string) $issue->id)
             ->get();
 
         foreach ($notifications as $notification) {

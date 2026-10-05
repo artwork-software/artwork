@@ -96,6 +96,9 @@ class SchedulingService
         // Process aggregated TASK_ADDED notifications
         foreach ($taskAddedByUser as $userId => $userSchedulings) {
             try {
+                // eine Service-Instanz für den ganzen Lauf: ohne Reset erbten Folgemeldungen Beschreibung,
+                // Buttons, Termin-/Aufgaben-IDs und Verlauf der vorherigen (auch anderer Empfänger*innen)
+                $notificationService->clearNotificationData();
                 $user = User::query()->find($userId);
                 if (!$user instanceof User) {
                     $this->logger->error('User with id: ' . $userId . ' not found.');
@@ -202,6 +205,9 @@ class SchedulingService
 
         foreach ($otherSchedulings as $schedulings) {
             try {
+                // eine Service-Instanz für den ganzen Lauf: ohne Reset erbten Folgemeldungen Beschreibung,
+                // Buttons, Termin-/Aufgaben-IDs und Verlauf der vorherigen (auch anderer Empfänger*innen)
+                $notificationService->clearNotificationData();
                 $user = User::query()->find($schedulings->user_id);
                 if (!$user instanceof User) {
                     $this->logger->error('User with id: ' . $schedulings->user_id . ' not found.');
@@ -399,36 +405,35 @@ class SchedulingService
                             $this->logger->error('User with id: ' . $schedulings->model_id . ' not found.');
                             break;
                         }
-                        $notificationTitle = __(
-                            'notification.scheduling.changes_vacation',
-                            [],
-                            $user->language
-                        );
-                        $broadcastMessage = [
-                            'id' => Str::uuid()->toString(),
-                            'type' => 'success',
-                            'message' => $notificationTitle
-                        ];
-                        $notificationService->setTitle($notificationTitle);
                         $notificationService->setIcon('green');
                         $notificationService->setPriority(3);
                         $notificationService
                         ->setNotificationConstEnum(NotificationEnum::NOTIFICATION_SHIFT_AVAILABLE);
-                        $notificationService->setBroadcastMessage($broadcastMessage);
                         $notificationService->setShowHistory(true);
                         $notificationService->setHistoryType('vacations');
                         $notificationService->setModelId($user->id);
-                        $notificationService->setNotificationTo($user);
-                        $notificationService->createNotification();
-                        $crafts = $user->crafts()->get();
-                        foreach ($crafts as $craft) {
-                            foreach ($craft->users()->get() as $craftUser) {
-                                if ($craftUser->id === $user->id) {
-                                    continue;
-                                }
-                                $notificationService->setNotificationTo($craftUser);
-                                $notificationService->createNotification();
-                            }
+                        // Die Person selbst und die Planer*innen der Gewerke, in denen sie arbeitet
+                        // (vorher: crafts() = Gewerke, die SIE plant, und deren Arbeitskräfte – also
+                        // Kolleg*innen statt Planer*innen, ohne Duplikat-Schutz)
+                        $recipients = collect([$user]);
+                        foreach ($user->assignedCrafts()->with('craftShiftPlaner')->get() as $craft) {
+                            $recipients = $recipients->merge($craft->craftShiftPlaner);
+                        }
+                        /** @var User $recipient */
+                        foreach ($recipients->unique('id') as $recipient) {
+                            $notificationTitle = __(
+                                'notification.scheduling.changes_vacation',
+                                [],
+                                $recipient->language
+                            );
+                            $notificationService->setTitle($notificationTitle);
+                            $notificationService->setBroadcastMessage([
+                                'id' => Str::uuid()->toString(),
+                                'type' => 'success',
+                                'message' => $notificationTitle
+                            ]);
+                            $notificationService->setNotificationTo($recipient);
+                            $notificationService->createNotification();
                         }
                         break;
                 }

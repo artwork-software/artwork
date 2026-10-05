@@ -296,7 +296,7 @@ enum NotificationEnum: string
     {
         return match ($this) {
             self::NOTIFICATION_ROOM_ANSWER => "Room requests answered",
-            self::NOTIFICATION_ROOM_REQUEST => "Room requests confirmed or declined",
+            self::NOTIFICATION_ROOM_REQUEST => "New/modified room request",
             self::NOTIFICATION_CONFLICT => "Event conflicts",
             self::NOTIFICATION_EVENT_CHANGED => "Event changes",
             self::NOTIFICATION_LOUD_ADJOINING_EVENT => "Side events",
@@ -308,7 +308,7 @@ enum NotificationEnum: string
             self::NOTIFICATION_MONEY_SOURCE_BUDGET_THRESHOLD_REACHED => 'Funding source has reached the set threshold',
             self::NOTIFICATION_CONTRACTS_DOCUMENT_CHANGED => 'Changes to documents and contracts',
 
-            self::NOTIFICATION_UPSERT_ROOM_REQUEST => "New/modified room request",
+            self::NOTIFICATION_UPSERT_ROOM_REQUEST => "Room requests confirmed or declined",
             self::NOTIFICATION_ROOM_CHANGED => "Changes to room",
             self::NOTIFICATION_NEW_TASK => "New tasks",
             self::NOTIFICATION_TASK_REMINDER => "Reminders for Tasks",
@@ -353,7 +353,7 @@ enum NotificationEnum: string
     {
         return match ($this) {
             self::NOTIFICATION_ROOM_ANSWER => "Find out if your room requests have been answered.",
-            self::NOTIFICATION_ROOM_REQUEST => "Find out if your room requests have been confirmed or declined.",
+            self::NOTIFICATION_ROOM_REQUEST => "Find out if there are new or changed room requests.",
             self::NOTIFICATION_CONFLICT => "Be notified as soon as someone schedules an appointment that conflicts with one of your appointments.",
             self::NOTIFICATION_EVENT_CHANGED => "Find out if there have been any changes to your appointments or if an appointment has been cancelled.",
             self::NOTIFICATION_LOUD_ADJOINING_EVENT => "Find out whether loud events or events with an audience have been set in an adjacent room at the same time as one of your events.",
@@ -365,7 +365,7 @@ enum NotificationEnum: string
             self::NOTIFICATION_MONEY_SOURCE_BUDGET_THRESHOLD_REACHED =>
                 'You will be notified as soon as the funding source reaches the defined threshold.',
             self::NOTIFICATION_CONTRACTS_DOCUMENT_CHANGED => 'Find out whether you have received approval for documents or contracts and whether there have been any changes to these documents.',
-            self::NOTIFICATION_UPSERT_ROOM_REQUEST => "Find out if there are new or changed room requests.",
+            self::NOTIFICATION_UPSERT_ROOM_REQUEST => "Find out if your room requests have been confirmed or declined.",
             self::NOTIFICATION_ROOM_CHANGED => "You will be notified as soon as there are changes to your rooms or your room responsibilities.",
             self::NOTIFICATION_NEW_TASK => "Find out if there are new tasks for you or your team.",
             self::NOTIFICATION_TASK_REMINDER => "Be reminded when tasks become urgent or have already exceeded their deadline.",

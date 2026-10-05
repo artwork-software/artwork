@@ -36,8 +36,8 @@
                             @foreach($presenter::textLines($entryDescription) as $line)
                                 <p class="notification-description">{{ $line }}</p>
                             @endforeach
-                            @if($presenter::hasDeepLink($entryDescription))
-                                <a href="{{ $presenter::primaryLink($entryDescription) }}" class="notification-link">
+                            @if($presenter::hasMainLink($entry))
+                                <a href="{{ $presenter::mainLink($entry) }}" class="notification-link">
                                     {{ __('Open directly in :app', ['app' => $page_title], $language) }}
                                 </a>
                             @endif
@@ -46,7 +46,7 @@
                 @endforeach
             </div>
         @endforeach
-        <a href="{{ $presenter::appUrl() }}" class="notification-link notification-link-footer">
+        <a href="{{ $presenter::notificationsUrl() }}" class="notification-link notification-link-footer">
             {{ __('View all notifications in :app', ['app' => $page_title], $language) }}
         </a>
         <p class="notification-description" style="margin-top: 1.5rem;">

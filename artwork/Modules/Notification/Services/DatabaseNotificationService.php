@@ -29,6 +29,9 @@ class DatabaseNotificationService
         'change_request',
         'event_delete',
         'show_in_calendar',
+        // Budget-Prüfanfrage: verschwindet beim Erledigen/Zurückziehen, lässt sich aber auch so ablegen
+        'calculation_check',
+        'delete_request',
         'material_issue_return_confirm',
         'material_issue_return_decline',
     ];

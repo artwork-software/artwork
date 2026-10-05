@@ -34,7 +34,8 @@ class CalendarEventResource extends JsonResource
             'projectArtists' => $projectArtists,
             'roomId'      => $this->getAttribute('room_id'),
             'roomName'    => $this->getAttribute('room')?->getAttribute('name'),
-            'created_by'  => [
+            // events.user_id wird beim Löschen der Person NULL → vorher 500 bei Absagen/Bearbeiten/Verlauf
+            'created_by'  => $creator === null ? null : [
                 'id'               => $creator->getAttribute('id'),
                 'profile_photo_url' => $creator->getAttribute('profile_photo_url'),
                 'first_name'       => $creator->getAttribute('first_name'),

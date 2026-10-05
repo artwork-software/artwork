@@ -68,41 +68,41 @@ class CreateMoneySourceExpirationReminderNotificationsCommand extends Command
         MoneySource $moneySource,
         Collection $responsibleMoneySourceUsers
     ): void {
-        $notificationTitle = sprintf(
-            'Am %s wird die Förderung "%s" eingestellt.',
-            Carbon::parse($moneySource->funding_end_date)->format('d.m.Y'),
-            $moneySource->name
-        );
-        $broadcastMessage = [
-            'id' => Str::uuid()->toString(),
-            'type' => 'error',
-            'message' => $notificationTitle
-        ];
-        $notificationDescription = [
-            1 => [
-                'type' => 'string',
-                'title' => 'Sollte das Projekt/die Projekte weiter laufen, trage bitte die ' .
-                    'Folgefinanzierung ein.',
-                'href' => null
-            ],
-            2 => [
-                'type' => 'link',
-                'title' => 'Finanzquelle: ' . $moneySource->name,
-                'href' => route('money_sources.show', $moneySource->id)
-            ]
-        ];
-
-        $this->notificationService->setTitle($notificationTitle);
-        $this->notificationService->setDescription($notificationDescription);
         $this->notificationService->setIcon('red');
         $this->notificationService->setPriority(3);
         $this->notificationService->setNotificationConstEnum(
             NotificationEnum::NOTIFICATION_MONEY_SOURCE_EXPIRATION
         );
-        $this->notificationService->setBroadcastMessage($broadcastMessage);
         $this->notificationService->setModelId($moneySource->id);
+        $endDate = Carbon::parse($moneySource->funding_end_date)->format('d.m.Y');
 
+        // Texte je Empfänger*in übersetzt (vorher fest deutsch)
+        /** @var \Artwork\Modules\User\Models\User $responsibleMoneySourceUser */
         foreach ($responsibleMoneySourceUsers as $responsibleMoneySourceUser) {
+            $language = $responsibleMoneySourceUser->language;
+            $notificationTitle = __(
+                'On :date the funding ":name" ends.',
+                ['date' => $endDate, 'name' => $moneySource->name],
+                $language
+            );
+            $this->notificationService->setTitle($notificationTitle);
+            $this->notificationService->setDescription([
+                1 => [
+                    'type' => 'string',
+                    'title' => __('If the project(s) continue, please enter the follow-up funding.', [], $language),
+                    'href' => null
+                ],
+                2 => [
+                    'type' => 'link',
+                    'title' => __('Funding source: :name', ['name' => $moneySource->name], $language),
+                    'href' => route('money_sources.show', $moneySource->id)
+                ]
+            ]);
+            $this->notificationService->setBroadcastMessage([
+                'id' => Str::uuid()->toString(),
+                'type' => 'error',
+                'message' => $notificationTitle
+            ]);
             $this->notificationService->setNotificationTo($responsibleMoneySourceUser);
             $this->notificationService->createNotification();
         }

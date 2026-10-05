@@ -2,6 +2,8 @@
 
 namespace Tests\Feature\Http\Controllers;
 
+use Artwork\Modules\Event\Models\Event;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\Feature\FeatureTestCase;
 
@@ -62,5 +64,33 @@ final class NotificationControllerTest extends FeatureTestCase
         $response = $this->delete(route('notifications.delete', 'not-existing'));
 
         $response->assertOk();
+    }
+
+    /**
+     * @return array<string, array{string}>
+     */
+    public static function eventDialogs(): array
+    {
+        return [
+            'Belegung absagen' => ['openDeclineEvent'],
+            'Bearbeiten/Annehmen' => ['openEditEvent'],
+        ];
+    }
+
+    #[Test]
+    #[DataProvider('eventDialogs')]
+    public function event_dialogs_get_the_event_unwrapped(string $dialogFlag): void
+    {
+        $this->actingAsAdmin();
+        $event = Event::factory()->create();
+
+        // vorher {data: {...}}: der Absage-Dialog las event.id → route('events.decline') ohne Termin
+        $this->get(route('notifications.index', [$dialogFlag => true, 'eventId' => $event->id]))
+            ->assertOk()
+            ->assertInertia(fn ($page) => $page
+                ->where('event.id', $event->id)
+                ->where('event.roomId', $event->room_id)
+                ->missing('event.data')
+                ->etc());
     }
 }

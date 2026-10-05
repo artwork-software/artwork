@@ -7,6 +7,35 @@ use Carbon\Carbon;
 class EventUpdateRequest extends EventStoreOrUpdateRequest
 {
     /**
+     * Event-Attribut => Request-Feld.
+     */
+    private const FIELDS = [
+        'admission_time' => 'admissionTime',
+        'room_id' => 'roomId',
+        'declined_room_id' => 'declinedRoomId',
+        'name' => 'title',
+        'eventName' => 'eventName',
+        'project_id_mandatory' => 'projectIdMandatory',
+        'event_name_mandatory' => 'eventNameMandatory',
+        'creating_project' => 'creatingProject',
+        'description' => 'description',
+        'audience' => 'audience',
+        'is_loud' => 'isLoud',
+        'project_id' => 'projectId',
+        'event_type_id' => 'eventTypeId',
+        'event_status_id' => 'eventStatusId',
+        'is_series' => 'is_series',
+        'frequency' => 'seriesFrequency',
+        'seriesEnd' => 'seriesEndDate',
+        'allSeriesEvents' => 'allSeriesEvents',
+        'adminComment' => 'adminComment',
+        'option_string' => 'optionString',
+        'accept' => 'accept',
+        'optionAccept' => 'optionAccept',
+        'allDay' => 'allDay',
+    ];
+
+    /**
      * Retrieve data from the request.
      *
      * @param  string|null  $key
@@ -19,32 +48,22 @@ class EventUpdateRequest extends EventStoreOrUpdateRequest
         $eventData = [
             'start_time' => Carbon::create($this->get('start'))->setTimezone(config('app.timezone')),
             'end_time' => Carbon::create($this->get('end'))->setTimezone(config('app.timezone')),
-            'admission_time' => $this->get('admissionTime'),
-            'room_id' => $this->get('roomId'),
-            'declined_room_id' => $this->get('declinedRoomId'),
-            'name' => $this->get('title'),
-            'eventName' => $this->get('eventName'),
-            'project_id_mandatory' => $this->get('projectIdMandatory'),
-            'event_name_mandatory' => $this->get('eventNameMandatory'),
-            'creating_project' => $this->get('creatingProject'),
-            'description' => $this->get('description'),
-            'audience' => $this->get('audience'),
-            'is_loud' => $this->get('isLoud'),
-            'project_id' => $this->get('projectId'),
-            'event_type_id' => $this->get('eventTypeId'),
-            'event_status_id' => $this->get('eventStatusId'),
-            'occupancy_option' => $this->booleanValue('isOption'),
-            'is_series' => $this->get('is_series'),
-            'frequency' => $this->get('seriesFrequency'),
-            'seriesEnd' => $this->get('seriesEndDate'),
-            'allSeriesEvents' => $this->get('allSeriesEvents'),
-            'adminComment' => $this->get('adminComment'),
-            'option_string' => $this->get('optionString'),
-            'accept' => $this->get('accept'),
-            'optionAccept' => $this->get('optionAccept'),
-            'allDay' => $this->get('allDay'),
-            'event_properties' => $this->input('event_properties'),
         ];
+
+        // Nur übernehmen, was der Aufrufer mitschickt: Antwort-Dialog und „Termine ohne Raum“ senden
+        // z. B. keinen Status, keinen Einlass und keine Eigenschaften – vorher wurden diese beim
+        // Speichern auf null gesetzt bzw. geleert.
+        foreach (self::FIELDS as $attribute => $input) {
+            if ($this->has($input)) {
+                $eventData[$attribute] = $this->get($input);
+            }
+        }
+        if ($this->has('isOption')) {
+            $eventData['occupancy_option'] = $this->booleanValue('isOption');
+        }
+        if ($this->has('event_properties')) {
+            $eventData['event_properties'] = $this->input('event_properties');
+        }
 
         if ($key === null) {
             return $eventData;

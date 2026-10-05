@@ -40,7 +40,7 @@
                                     class="inline-flex size-7 cursor-pointer items-center justify-center rounded-md text-text-muted transition-colors duration-150 motion-reduce:transition-none hover:bg-danger-surface hover:text-danger"
                                     :aria-label="$t('Close Window')"
                                     v-tooltip.bottom="{ value: $t('Close Window'), class: 'aw-tooltip' }"
-                                    @click="closeModal"
+                                    @click="closeModal(false)"
                                 >
                                     <PropertyIcon name="IconX" class="size-4" stroke-width="1.5" aria-hidden="true"/>
                                 </button>

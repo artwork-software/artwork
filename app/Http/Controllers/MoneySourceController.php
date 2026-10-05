@@ -134,7 +134,7 @@ class MoneySourceController extends Controller
             $notificationTitle = __(
                 'notification.moneySource.add_permission',
                 [
-                    'moneySourceName' => $request->name
+                    'moneySource' => $request->name
                 ],
                 $user->language
             );

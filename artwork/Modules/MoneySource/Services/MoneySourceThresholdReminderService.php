@@ -93,39 +93,40 @@ readonly class MoneySourceThresholdReminderService
         int $percentageLeft,
         NotificationService $notificationService
     ): void {
-        $notificationTitle = 'Finanzquelle läuft aus';
-        $broadcastMessage = [
-            'id' => Str::uuid()->toString(),
-            'type' => 'error',
-            'message' => $notificationTitle
-        ];
-        $notificationDescription = [
-            1 => [
-                'type' => 'string',
-                'title' => sprintf(
-                    'Die Quelle "%s" besitzt nur noch %d%% des Budgets.',
-                    $moneySource->name,
-                    max($percentageLeft, 0)
-                )
-            ],
-            2 => [
-                'type' => 'link',
-                'title' => 'Finanzquelle: ' . $moneySource->name,
-                'href' => route('money_sources.show', $moneySource->id)
-            ]
-        ];
-
-        $notificationService->setTitle($notificationTitle);
-        $notificationService->setDescription($notificationDescription);
         $notificationService->setIcon('red');
         $notificationService->setPriority(3);
         $notificationService->setNotificationConstEnum(
             NotificationEnum::NOTIFICATION_MONEY_SOURCE_BUDGET_THRESHOLD_REACHED
         );
-        $notificationService->setBroadcastMessage($broadcastMessage);
         $notificationService->setModelId($moneySource->id);
 
+        // Texte je Empfänger*in übersetzt (vorher fest deutsch)
+        /** @var \Artwork\Modules\User\Models\User $responsibleMoneySourceUser */
         foreach ($responsibleMoneySourceUsers as $responsibleMoneySourceUser) {
+            $language = $responsibleMoneySourceUser->language;
+            $notificationTitle = __('Funding source running out', [], $language);
+            $notificationService->setTitle($notificationTitle);
+            $notificationService->setDescription([
+                1 => [
+                    'type' => 'string',
+                    'title' => __(
+                        'The source ":name" has only :percent% of its budget left.',
+                        ['name' => $moneySource->name, 'percent' => max($percentageLeft, 0)],
+                        $language
+                    ),
+                    'href' => null
+                ],
+                2 => [
+                    'type' => 'link',
+                    'title' => __('Funding source: :name', ['name' => $moneySource->name], $language),
+                    'href' => route('money_sources.show', $moneySource->id)
+                ]
+            ]);
+            $notificationService->setBroadcastMessage([
+                'id' => Str::uuid()->toString(),
+                'type' => 'error',
+                'message' => $notificationTitle
+            ]);
             $notificationService->setNotificationTo($responsibleMoneySourceUser);
             $notificationService->createNotification();
         }

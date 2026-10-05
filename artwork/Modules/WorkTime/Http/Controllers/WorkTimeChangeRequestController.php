@@ -194,23 +194,25 @@ class WorkTimeChangeRequestController extends Controller
                 'type' => 'success',
                 'message' => $notificationTitle
             ];
+            // 1-basiert und 'string' wie alle anderen Beschreibungen ('text' kennt das Center nicht);
+            // requestId war immer null (Request hat kein 'id') → Link ohne Anfrage
             $notificationDescription = [
-                0 => [
-                    'type' => 'text',
+                1 => [
+                    'type' => 'string',
                     'title' => __('notification.shift.worktime-request.old-new-time', [
                         'user' => $workTimeRequest->user->full_name,
                         'start_time' => $workTimeRequest->request_start_time,
                         'end_time' => $workTimeRequest->request_end_time,
                     ], $planner->language),
                     'href' => route('work-time-request.received', [
-                        'requestId' => $request->input('id'),
+                        'requestId' => $workTimeRequest->id,
                     ])
                 ],
-                1 => [
+                2 => [
                     'type' => 'link',
                     'title' => __('notification.shift.worktime-request.link-to-request', [], $planner->language),
                     'href' => route('work-time-request.received', [
-                        'requestId' => $request->input('id'),
+                        'requestId' => $workTimeRequest->id,
                     ])
                 ],
             ];

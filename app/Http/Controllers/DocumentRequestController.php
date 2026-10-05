@@ -328,14 +328,14 @@ class DocumentRequestController extends Controller
 
         $broadcastMessage = [
             'id' => Str::uuid()->toString(),
-            'type' => 'info',
+            'type' => 'success',
             'message' => $notificationTitle
         ];
 
         $notificationDescription = [
             1 => [
                 'type' => 'link',
-                'title' => __('View document requests'),
+                'title' => __('View document requests', [], $requestedUser->language),
                 'href' => route('document-requests.index'),
             ]
         ];
@@ -369,7 +369,8 @@ class DocumentRequestController extends Controller
         $notificationTitle = __(
             'notification.document_request.completed',
             [
-                'user' => $requestedUser->first_name . ' ' . $requestedUser->last_name
+                'user' => $requestedUser->first_name . ' ' . $requestedUser->last_name,
+                'title' => $documentRequest->displayTitle(),
             ],
             $requesterUser->language
         );
@@ -383,7 +384,7 @@ class DocumentRequestController extends Controller
         $notificationDescription = [
             1 => [
                 'type' => 'link',
-                'title' => __('View document requests'),
+                'title' => __('View document requests', [], $requesterUser->language),
                 'href' => route('document-requests.index'),
             ]
         ];

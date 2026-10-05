@@ -3,6 +3,8 @@
 namespace Tests\Feature\Http\Controllers\Event;
 
 use Artwork\Modules\Event\Models\Event;
+use Artwork\Modules\Event\Models\EventProperty;
+use Artwork\Modules\Event\Models\EventStatus;
 use Artwork\Modules\Event\Models\SeriesEvents;
 use Artwork\Modules\EventType\Models\EventType;
 use Artwork\Modules\Project\Models\Project;
@@ -348,5 +350,42 @@ final class EventUpdateTest extends FeatureTestCase
 
         $this->assertSame('2026-10-07 10:00:00', $events[0]->fresh()->start_time->format('Y-m-d H:i:s'));
         $this->assertSame('2026-10-14 12:00:00', $events[1]->fresh()->end_time->format('Y-m-d H:i:s'));
+    }
+
+    #[Test]
+    public function fields_a_dialog_does_not_send_stay_unchanged(): void
+    {
+        $this->actingAsAdmin();
+        $room = Room::factory()->create();
+        $eventType = EventType::factory()->create();
+        $status = EventStatus::factory()->create();
+        $property = EventProperty::factory()->create();
+        $event = Event::factory()->create([
+            'room_id' => $room->id,
+            'event_status_id' => $status->id,
+            'admission_time' => '18:30:00',
+        ]);
+        $event->eventProperties()->attach($property->id);
+
+        // Antwort-Dialog / „Termine ohne Raum“ (Benachrichtigungen): ohne Status, Einlass, Eigenschaften
+        $this->putJson(route('events.update', $event), [
+            'start' => '2026-11-10 10:00',
+            'end' => '2026-11-10 12:00',
+            'projectIdMandatory' => false,
+            'creatingProject' => false,
+            'eventNameMandatory' => false,
+            'eventTypeId' => $eventType->id,
+            'roomId' => $room->id,
+            'title' => 'Antwort',
+            'eventName' => 'Probe',
+            'isOption' => false,
+            'noNotifications' => true,
+        ])->assertSuccessful();
+
+        $event->refresh();
+        $this->assertSame('Probe', $event->eventName);
+        $this->assertSame($status->id, $event->event_status_id);
+        $this->assertSame('18:30', substr((string) $event->admission_time, 0, 5));
+        $this->assertSame([$property->id], $event->eventProperties()->pluck('event_properties.id')->all());
     }
 }

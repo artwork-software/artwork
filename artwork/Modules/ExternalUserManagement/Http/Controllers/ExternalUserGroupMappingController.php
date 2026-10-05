@@ -13,6 +13,8 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Redirect;
+use Artwork\Modules\Role\Enums\RoleEnum;
+use Spatie\Permission\Models\Role;
 
 class ExternalUserGroupMappingController extends Controller
 {
@@ -48,6 +50,7 @@ class ExternalUserGroupMappingController extends Controller
         ExternalUserGroupMapping $externalUserGroupMapping
     ): RedirectResponse|JsonResponse {
         $this->authorize('view', GeneralSettings::class);
+        $this->ensureMayManage($externalUserGroupMapping);
 
         $mapping = $this->externalUserGroupMappingService->update($externalUserGroupMapping, $request->validated());
 
@@ -61,6 +64,7 @@ class ExternalUserGroupMappingController extends Controller
     public function destroy(ExternalUserGroupMapping $externalUserGroupMapping): RedirectResponse|JsonResponse
     {
         $this->authorize('view', GeneralSettings::class);
+        $this->ensureMayManage($externalUserGroupMapping);
 
         $this->externalUserGroupMappingService->delete($externalUserGroupMapping);
 
@@ -69,5 +73,23 @@ class ExternalUserGroupMappingController extends Controller
         }
 
         return Redirect::back()->with('success', __('flash-messages.external_user_group_mapping.success.delete'));
+    }
+
+    /**
+     * Mappings, die die Admin-Rolle vergeben, ändern/löschen nur Admins: Löschen entzieht beim
+     * nächsten Sync allen Personen der Gruppe die per Sync vergebene Admin-Rolle – mit „Tool-
+     * Einstellungen ändern“ allein hätte man so Admins absetzen können.
+     */
+    private function ensureMayManage(ExternalUserGroupMapping $mapping): void
+    {
+        $adminRoleId = Role::query()->where('name', RoleEnum::ARTWORK_ADMIN->value)->value('id');
+        $grantsAdmin = $adminRoleId !== null
+            && in_array((int) $adminRoleId, array_map('intval', $mapping->role_ids ?? []), true);
+
+        abort_if(
+            $grantsAdmin && !request()->user()?->hasRole(RoleEnum::ARTWORK_ADMIN->value),
+            403,
+            __('Only artwork admins can assign the admin role.')
+        );
     }
 }

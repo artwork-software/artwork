@@ -61,30 +61,26 @@ class ProjectComponentValueController extends Controller
         // Schreibrecht im Projekt + Komponenten-Einstellung (Spiegel von canEditComponent() im Frontend).
         abort_unless($user->can('writeComponent', [$project, $component]), 403);
 
-        $value = ProjectComponentValue::where('project_id', $project->id)
-            ->where('component_id', $component->id)->first();
+        // Fehlendes data oder ein Array als text führten vorher zu TypeError/ErrorException (500).
+        $request->validate([
+            'data' => ['present', 'nullable', 'array'],
+            // Zahlen aus Zahlenfeldern bleiben erlaubt (werden zu Text), nur Listen/Objekte nicht.
+            'data.text' => ['sometimes', 'nullable', function (string $attribute, mixed $value, \Closure $fail): void {
+                if (is_array($value)) {
+                    $fail(__('validation.string', ['attribute' => $attribute]));
+                }
+            }],
+        ]);
 
-        $valueInput = null;
-        if (array_key_exists('text', $request->input('data'))) {
-            // Rohtext; Umbrüche rendert das Frontend per white-space: pre-line.
-            $valueInput = (string) $request->input('data')['text'];
-            // return it ad array to be able to store it in the database
-            $valueInput = ['text' => $valueInput];
-        } else {
-            $valueInput = $request->input('data');
-        }
+        $data = $request->input('data') ?? [];
+        // Rohtext; Umbrüche rendert das Frontend per white-space: pre-line.
+        $valueInput = array_key_exists('text', $data) ? ['text' => (string) $data['text']] : $data;
 
-        if ($value === null) {
-            $value = ProjectComponentValue::create([
-                'project_id' => $project->id,
-                'component_id' => $component->id,
-                'data' => $valueInput,
-            ]);
-        } else {
-            $value->update([
-                'data' => $valueInput,
-            ]);
-        }
+        // Unique-Index (project_id, component_id): parallele Autosaves erzeugen keine Duplikate mehr.
+        $value = ProjectComponentValue::query()->updateOrCreate(
+            ['project_id' => $project->id, 'component_id' => $component->id],
+            ['data' => $valueInput]
+        );
 
         broadcast(new UpdateProjectComponentData($value, $project->id));
     }

@@ -221,4 +221,27 @@ final class ProjectComponentValueControllerTest extends FeatureTestCase
 
         $this->assertValueRejected($project, $this->patchComponentValue($project, $component));
     }
+
+    #[Test]
+    public function update_rejects_malformed_payloads_and_keeps_a_single_value(): void
+    {
+        $this->actingAsAdmin();
+        $project = Project::factory()->create();
+        $component = $this->makeComponent();
+        $route = route('project.tab.component.update', ['project' => $project->id, 'component' => $component->id]);
+
+        // Vorher TypeError bzw. ErrorException (500).
+        $this->patch($route, [])->assertSessionHasErrors('data');
+        $this->patch($route, ['data' => ['text' => ['a', 'b']]])->assertSessionHasErrors('data.text');
+
+        $this->patch($route, ['data' => ['text' => 'Erster Stand']])->assertSessionHasNoErrors();
+        $this->patch($route, ['data' => ['text' => 42]])->assertSessionHasNoErrors();
+
+        $values = \Artwork\Modules\Project\Models\ProjectComponentValue::query()
+            ->where('project_id', $project->id)
+            ->where('component_id', $component->id)
+            ->get();
+        $this->assertCount(1, $values);
+        $this->assertSame(['text' => '42'], $values->first()->data);
+    }
 }

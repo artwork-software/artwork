@@ -1056,7 +1056,8 @@ class ProjectController extends Controller
     {
         DatabaseNotification::query()
             ->where('data->positionVerifyRequestType', $positionType)
-            ->where('data->positionVerifyRequestId', $positionId)
+            // als Zeichenkette: Zeilen mit null bringen MariaDB (strict) sonst beim DELETE zum Abbruch
+            ->where('data->positionVerifyRequestId', (string) $positionId)
             ->whereJsonContains("data->budgetData->changeType", BudgetTypeEnum::BUDGET_VERIFICATION_REQUEST)
             ->delete();
     }

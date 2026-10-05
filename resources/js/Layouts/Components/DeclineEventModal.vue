@@ -10,7 +10,7 @@
                 <div class="flex min-w-0 items-center gap-x-2">
                     <span
                         class="size-4 shrink-0 rounded-full"
-                        :style="{ backgroundColor: eventTypes?.[requestToDecline?.eventTypeId]?.hex_code }"
+                        :style="{ backgroundColor: eventTypeColor }"
                     />
                     <span class="truncate font-lexend text-sm font-bold text-text">
                         {{ requestToDecline?.eventTypeName }}<template v-if="requestToDecline?.eventName"> – {{ requestToDecline?.eventName }}</template>
@@ -70,6 +70,7 @@
                 variant="danger"
                 icon="IconX"
                 :processing="processing"
+                :disabled="!requestToDecline?.id"
                 @click="declineRequest"
             />
         </template>
@@ -104,21 +105,33 @@ const periodText = computed(() => {
         dayjs(props.requestToDecline.end).format('DD.MM.YYYY HH:mm')
 })
 
+// eventTypes ist eine Liste – vorher per Index = Typ-ID gelesen (falsche Farbe)
+const eventTypeColor = computed(() => {
+    const types = Array.isArray(props.eventTypes) ? props.eventTypes : Object.values(props.eventTypes ?? {})
+    return types.find((type) => type?.id === props.requestToDecline?.eventTypeId)?.hex_code
+})
+
 const close = () => emit('closed', true)
 
 const declineRequest = () => {
+    if (!props.requestToDecline?.id || processing.value) {
+        return
+    }
     processing.value = true
-    router.put(route('events.decline', props.requestToDecline?.id), {
+    router.put(route('events.decline', props.requestToDecline.id), {
         comment: comment.value,
     }, {
         preserveScroll: true,
+        // Seite bleibt bestehen, damit „declined“ ankommt und die Benachrichtigung entfernt wird
+        preserveState: true,
         onSuccess: () => {
+            emit('declined')
+            close()
             router.reload({only: ['eventsWithoutRoom']})
         },
         onFinish: () => {
+            // Bei Fehlern (403/409/500) bleibt der Dialog offen und die Benachrichtigung stehen
             processing.value = false
-            close()
-            emit('declined')
         },
     })
 }

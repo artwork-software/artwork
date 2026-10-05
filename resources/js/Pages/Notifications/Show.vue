@@ -234,6 +234,7 @@ import InputComponent from "@/Layouts/Components/InputComponent.vue";
 import NotificationUserIcon from "@/Layouts/Components/NotificationUserIcon.vue";
 import NotificationSettingsPanel from "@/Layouts/Components/NotificationComponents/NotificationSettingsPanel.vue";
 import NotificationSectionComponent from "@/Layouts/Components/NotificationSectionComponent.vue";
+import {resetNotificationArrived} from "@/Helper/notificationIndicator.js";
 import AnswerEventRequestComponent from "@/Layouts/Components/AnswerEventRequestComponent.vue";
 import Permissions from "@/Mixins/Permissions.vue";
 import GlobalNotificationModal from "@/Pages/Notifications/Components/GlobalNotificationModal.vue";
@@ -303,6 +304,10 @@ export default defineComponent({
         'first_project_calendar_tab_id',
         'eventStatuses'
     ],
+    mounted() {
+        // Center besucht: live gesetzter Glocken-Punkt gilt als gesehen
+        resetNotificationArrived();
+    },
     data() {
         return {
             // Reiter per URL verlinkbar (?tab=settings), z. B. aus Benachrichtigungen und E-Mails

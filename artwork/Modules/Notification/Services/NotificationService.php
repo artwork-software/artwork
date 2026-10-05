@@ -434,7 +434,7 @@ class NotificationService
 
         // Live-Toast bewusst auch für die handelnde Person (Rückmeldung, z. B. Planer-Warnungen);
         // die Glocke nur, wenn wirklich ein Eintrag im Benachrichtigungscenter entstanden ist
-        $this->broadcastLiveHint($this->getNotificationTo(), $type, $this->getBroadcastMessage() ?? []);
+        $this->broadcastLiveHint($this->getNotificationTo(), $type, $this->getBroadcastMessage() ?? [], $isDelivered);
         if ($isDelivered) {
             $this->userService->updateCurrentUserShowNotificationIndicator($this->getNotificationTo(), true);
         }
@@ -448,15 +448,19 @@ class NotificationService
      */
     public function pushToUser(User $user, NotificationEnum $type, array $broadcastMessage): void
     {
-        $this->broadcastLiveHint($user, $type, $broadcastMessage);
+        $this->broadcastLiveHint($user, $type, $broadcastMessage, true);
         $this->userService->updateCurrentUserShowNotificationIndicator($user, true);
     }
 
     /**
      * @param array<string, mixed> $broadcastMessage
      */
-    private function broadcastLiveHint(User $user, NotificationEnum $type, array $broadcastMessage): void
-    {
+    private function broadcastLiveHint(
+        User $user,
+        NotificationEnum $type,
+        array $broadcastMessage,
+        bool $delivered
+    ): void {
         if ($broadcastMessage === []) {
             return;
         }
@@ -469,7 +473,8 @@ class NotificationService
         // Wie bei den Sofort-Mails: ist der WebSocket-Server nicht erreichbar, fällt nur der
         // Live-Hinweis aus – nicht die bereits gespeicherte Aktion (vorher 500 nach dem Speichern)
         try {
-            broadcast(new NewNotificationBroadcast($user, $broadcastMessage));
+            // delivered: nur dann setzt das Frontend den Glocken-Punkt (Rückmeldung an Handelnde ohne Eintrag)
+            broadcast(new NewNotificationBroadcast($user, $broadcastMessage + ['delivered' => $delivered]));
         } catch (BroadcastException $exception) {
             report($exception);
         }
@@ -566,7 +571,7 @@ class NotificationService
     ): bool {
         $existingNotification = DB::table('notifications')
             ->where('data->type', NotificationEnum::NOTIFICATION_ROOM_REQUEST->value)
-            ->where('data->eventId', $eventId)
+            ->where('data->eventId', (string) $eventId)
             ->where('notifiable_id', $recipientUserId)
             ->whereNull('data->handledStatus')
             ->first();
@@ -596,7 +601,7 @@ class NotificationService
     {
         $notifications = DB::table('notifications')
             ->where('data->type', NotificationEnum::NOTIFICATION_ROOM_REQUEST->value)
-            ->where('data->eventId', $eventId)
+            ->where('data->eventId', (string) $eventId)
             ->get();
 
         foreach ($notifications as $notification) {
@@ -622,7 +627,7 @@ class NotificationService
     {
         $notifications = DB::table('notifications')
             ->where('data->type', NotificationEnum::NOTIFICATION_ROOM_REQUEST->value)
-            ->where('data->eventId', $eventId)
+            ->where('data->eventId', (string) $eventId)
             ->whereNull('data->handledStatus')
             ->get();
 
@@ -649,7 +654,7 @@ class NotificationService
     {
         DB::table('notifications')
             ->where('data->type', NotificationEnum::NOTIFICATION_ROOM_REQUEST->value)
-            ->where('data->eventId', $eventId)
+            ->where('data->eventId', (string) $eventId)
             ->whereNull('data->handledStatus')
             ->whereNotIn('notifiable_id', $keepRecipientIds)
             ->delete();
@@ -659,7 +664,7 @@ class NotificationService
     {
         DB::table('notifications')
             ->where('data->type', NotificationEnum::NOTIFICATION_ROOM_REQUEST->value)
-            ->where('data->eventId', $eventId)
+            ->where('data->eventId', (string) $eventId)
             ->whereNull('data->handledStatus')
             ->delete();
     }
@@ -669,7 +674,7 @@ class NotificationService
         DB::table('notifications')
             ->where('type', RoomRequestNotification::class)
             ->where('data->type', NotificationEnum::NOTIFICATION_UPSERT_ROOM_REQUEST->value)
-            ->where('data->eventId', $eventId)
+            ->where('data->eventId', (string) $eventId)
             ->delete();
     }
 

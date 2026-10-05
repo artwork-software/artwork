@@ -2114,7 +2114,11 @@ class EventController extends Controller
             $event->is_series_exception = true;
         }
 
-        $event->eventProperties()->sync(($newEventPropertyIds = $request->input('event_properties', [])));
+        // Nur synchronisieren, wenn der Dialog Eigenschaften mitschickt (sonst wurden sie gelöscht)
+        $newEventPropertyIds = $request->has('event_properties')
+            ? $request->input('event_properties', [])
+            : $oldEventPropertyIds;
+        $event->eventProperties()->sync($newEventPropertyIds);
         $this->eventService->save($event);
 
         if ($shouldAcceptRoomRequest) {

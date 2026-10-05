@@ -75,6 +75,12 @@
                 {{ $t('Open Project')}}
             </button>
         </div>
+        <!-- Konflikt-/Schichtmeldungen (Abwesenheit, Verfügbarkeit, Regelverstoß): vorher ohne Button -->
+        <div v-if="buttons?.includes('see_shift')">
+            <button @click="$emit('seeShift', true)" type="button" class="rounded-full bg-transparent px-3.5 py-1.5 text-sm font-semibold text-accent-600 hover:text-white ring-2 ring-accent-600 hover:bg-accent-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-600">
+                {{ $t('View shift')}}
+            </button>
+        </div>
         <div v-if="buttons?.includes('material_issue_return_confirm')">
             <button @click="$emit('confirmMaterialReturn', true)" type="button" :title="$t('Confirm return')" class="rounded-full bg-success p-2 text-white shadow-sm hover:bg-success focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-success">
                 <PropertyIcon name="IconCheck" stroke-width="1.5" class="h-5 w-5" aria-hidden="true" />
@@ -90,7 +96,6 @@
 
 <script>
 import {IconEdit, IconX} from "@tabler/icons-vue";
-import DeclineEventModal from "@/Layouts/Components/DeclineEventModal.vue";
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 
 export default {
@@ -111,11 +116,11 @@ export default {
         'showProject',
         'showInCalendar',
         'confirmMaterialReturn',
-        'declineMaterialReturn'
+        'declineMaterialReturn',
+        'seeShift',
     ],
     components: {
         PropertyIcon,
-        DeclineEventModal,
         IconEdit,
         IconX
     }

@@ -206,4 +206,31 @@ final class NotificationRobustnessTest extends FeatureTestCase
             ->assertOk()
             ->assertInertia(fn ($page) => $page->where('event.created_by', null)->etc());
     }
+
+    #[Test]
+    public function room_request_cleanup_survives_notifications_without_event(): void
+    {
+        $admin = $this->recipient();
+        $event = Event::factory()->create();
+        foreach ([null, $event->id] as $eventId) {
+            $admin->notifications()->create([
+                'id' => (string) \Illuminate\Support\Str::uuid(),
+                'type' => \Artwork\Modules\Room\Notifications\RoomRequestNotification::class,
+                'data' => ['type' => NotificationEnum::NOTIFICATION_ROOM_REQUEST->value, 'eventId' => $eventId,
+                    'groupType' => 'ROOMS', 'buttons' => ['accept', 'decline']],
+            ]);
+        }
+        $service = app(NotificationService::class);
+
+        // Zeilen ohne Termin dürfen das Aufräumen nicht stören (JSON-IDs werden als Zeichenkette verglichen;
+        // ein numerischer Vergleich kann in MariaDB strict an „null“ scheitern)
+        $service->markOpenRoomRequestsHandled($event->id, 'deleted');
+        $service->deleteUnhandledRoomRequestNotificationsExcept($event->id, []);
+        $service->deleteUnhandledRoomRequestNotificationsByEventId($event->id);
+
+        $handled = $admin->notifications()->get()->first(fn ($n) => ($n->data['eventId'] ?? null) === $event->id);
+        $this->assertSame('deleted', $handled->data['handledStatus']);
+        $this->assertSame([], $handled->data['buttons']);
+        $this->assertSame(2, $admin->notifications()->count());
+    }
 }

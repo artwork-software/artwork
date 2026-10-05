@@ -640,7 +640,7 @@
                         </div>
 
                         <div class="flex items-center gap-2">
-                            <BaseUIButton type="button" hide-icon @click="closeModal">
+                            <BaseUIButton type="button" hide-icon @click="closeModal(false)">
                                 {{ $t('Cancel') }}
                             </BaseUIButton>
 
@@ -736,7 +736,7 @@
                 </div>
 
                 <div class="mt-3 flex w-full justify-end">
-                    <BaseUIButton type="button" hide-icon @click="closeModal">{{ $t('Close') }}</BaseUIButton>
+                    <BaseUIButton type="button" hide-icon @click="closeModal(false)">{{ $t('Close') }}</BaseUIButton>
                 </div>
             </div>
         </div>
@@ -1384,13 +1384,16 @@ function setEndFromDuration() {
 // --- Computeds
 // Manche Aufrufer liefern rooms als Objekt-Map statt als Array – hier vereinheitlichen
 const roomsList = computed(() => Array.isArray(props.rooms) ? props.rooms : Object.values(props.rooms || {}))
+// admins kommt je nach Seite als ID-Liste (Kalender) oder als Personen-Liste (Benachrichtigungen) –
+// vorher nur IDs geprüft, Raumadmins sahen aus der Benachrichtigung nur die Leseansicht
+const adminIdsOf = (room) => (room?.admins ?? []).map((admin) => admin?.id ?? admin)
 const isRoomAdmin = computed(() => {
-    return roomsList.value.find(r => r.id === props.event?.roomId)?.admins?.includes(page.props.auth.user.id) || false
+    return adminIdsOf(roomsList.value.find(r => r.id === props.event?.roomId)).includes(page.props.auth.user.id)
 })
 const isCreator = computed(() => (props.event ? props.event.created_by?.id === page.props.auth.user.id : false))
 const hasAdminRole = () => props.isAdmin || page.props.auth.user?.roles?.some?.(r => r.name?.toLowerCase?.().includes('admin'))
 
-const roomAdminIds = computed(() => selectedRoom.value?.admins ?? [])
+const roomAdminIds = computed(() => adminIdsOf(selectedRoom.value))
 const declinedRoomName = computed(() => {
     if (!declinedRoomId.value) return null
     return roomsList.value.find(r => r.id === Number(declinedRoomId.value))?.name ?? null

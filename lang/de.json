@@ -8685,5 +8685,6 @@
     "If the project(s) continue, please enter the follow-up funding.": "Sollte das Projekt/die Projekte weiter laufen, trage bitte die Folgefinanzierung ein.",
     "Funding source: :name": "Finanzquelle: :name",
     "Funding source running out": "Finanzquelle läuft aus",
-    "The source \":name\" has only :percent% of its budget left.": "Die Quelle „:name“ besitzt nur noch :percent % des Budgets."
+    "The source \":name\" has only :percent% of its budget left.": "Die Quelle „:name“ besitzt nur noch :percent % des Budgets.",
+    "View shift": "Schicht ansehen"
 }

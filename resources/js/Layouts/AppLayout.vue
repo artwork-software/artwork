@@ -84,7 +84,7 @@ const flashDedupe = {key: null, at: 0}
 </script>
 
 <script setup>
-import { markNotificationArrived } from "@/Helper/notificationIndicator.js";
+import { createsNotificationEntry, markNotificationArrived } from "@/Helper/notificationIndicator.js";
 import {onAppToast} from '@/Helper/appToast'
 import {Head, router, usePage} from "@inertiajs/vue3"
 import {defineAsyncComponent, onBeforeMount, onMounted, onUnmounted, ref, watchEffect} from "vue";
@@ -211,20 +211,27 @@ onBeforeMount(() => {
     reloadRolesAndPermissions()
 })
 
+const notificationChannel = () => `notifications.${usePage().props.auth.user.id}`
+
 onMounted(() => {
     // Vollständiger Seitenaufruf nach Redirect (kein Inertia-'success'-Event): Flash einmalig zeigen
     showFlashFromPage(usePage())
     document.documentElement.lang = usePage().props.auth.user.language
     locale.value = usePage().props.auth.user.language
-    window.Echo.private(`notifications.${usePage().props.auth.user.id}`)
+    window.Echo.private(notificationChannel())
         .listen('.incoming-notification', (notification) => {
             const message = { id: notification.message.id ?? `${Date.now()}`, ...notification.message }
             pushNotifications.value.push(message);
-            markNotificationArrived();
+            if (createsNotificationEntry(message)) {
+                markNotificationArrived();
+            }
             schedulePushNotificationClose(message.id);
         });
+})
 
-
+// Layout wird je Seite neu gemountet – ohne Abmelden kam bei jeder Navigation ein Listener dazu
+onUnmounted(() => {
+    window.Echo?.private(notificationChannel()).stopListening('.incoming-notification')
 })
 
 </script>

@@ -8676,5 +8676,6 @@
     "If the project(s) continue, please enter the follow-up funding.": "If the project(s) continue, please enter the follow-up funding.",
     "Funding source: :name": "Funding source: :name",
     "Funding source running out": "Funding source running out",
-    "The source \":name\" has only :percent% of its budget left.": "The source \":name\" has only :percent% of its budget left."
+    "The source \":name\" has only :percent% of its budget left.": "The source \":name\" has only :percent% of its budget left.",
+    "View shift": "View shift"
 }

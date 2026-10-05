@@ -8538,5 +8538,12 @@
     "Jump by month": "Jump by month",
     "Work time accounting": "Work time accounting",
     "If deactivated, the shift plan is only used to create and staff shifts: no target hours from work time patterns, no work time balance, no overtime and no nightly booking. Planned hours stay visible. Stored patterns, contracts and balances are kept; days while the calculation is off are not booked afterwards.": "If deactivated, the shift plan is only used to create and staff shifts: no target hours from work time patterns, no work time balance, no overtime and no nightly booking. Planned hours stay visible. Stored patterns, contracts and balances are kept; days while the calculation is off are not booked afterwards.",
-    "Work time accounting is deactivated in the shift settings. Working hours are stored but not used for target hours, work time balance or overtime. Contracts still decide which shift rules apply.": "Work time accounting is deactivated in the shift settings. Working hours are stored but not used for target hours, work time balance or overtime. Contracts still decide which shift rules apply."
+    "Work time accounting is deactivated in the shift settings. Working hours are stored but not used for target hours, work time balance or overtime. Contracts still decide which shift rules apply.": "Work time accounting is deactivated in the shift settings. Working hours are stored but not used for target hours, work time balance or overtime. Contracts still decide which shift rules apply.",
+    "Your session has expired. The page will reload so you can sign in again.": "Your session has expired. The page will reload so you can sign in again.",
+    "The action could not be completed because the data has changed in the meantime. The page will reload.": "The action could not be completed because the data has changed in the meantime. The page will reload.",
+    "The uploaded files are too large for the server in total. Please upload fewer or smaller files at once.": "The uploaded files are too large for the server in total. Please upload fewer or smaller files at once.",
+    "The connection to the server failed. Please check your network and try again.": "The connection to the server failed. Please check your network and try again.",
+    "You are not allowed to perform this action.": "You are not allowed to perform this action.",
+    "The entry no longer exists. Please reload the page.": "The entry no longer exists. Please reload the page.",
+    "The action could not be completed. Please try again.": "The action could not be completed. Please try again."
 }

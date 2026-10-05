@@ -47,7 +47,7 @@
                                 hide-icon
                                 :class="commentForm.text === '' ? 'cursor-not-allowed !bg-surface-sunken !text-text-subtle !border-border-subtle' : 'cursor-pointer'"
                                 @click="addCommentToProject"
-                                :disabled="commentForm.text === ''"
+                                :disabled="commentForm.text === '' || commentForm.processing"
                             >
                                 <IconCircleCheckFilled class="size-4" />
                                 <span class="text-sm">{{ $t('Add comment to project') }}</span>
@@ -248,6 +248,7 @@ onMounted(() => {
 });
 
 function addCommentToProject() {
+    if (commentForm.processing) return;
     commentForm.post(route("comments.store"), {
         preserveState: true,
         preserveScroll: true,

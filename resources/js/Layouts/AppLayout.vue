@@ -81,6 +81,7 @@ const flashDedupe = {key: null, at: 0}
 </script>
 
 <script setup>
+import {onAppToast} from '@/Helper/appToast'
 import {Head, router, usePage} from "@inertiajs/vue3"
 import {defineAsyncComponent, onBeforeMount, onMounted, onUnmounted, ref, watchEffect} from "vue";
 import {reloadRolesAndPermissions} from "laravel-permission-to-vuejs";
@@ -157,8 +158,13 @@ const showFlashFromPage = (pageData) => {
 
 // Nach jeder erfolgreichen Inertia-Navigation (inkl. redirect()->back() nach Formularen)
 const removeFlashListener = router.on('success', (event) => showFlashFromPage(event.detail.page))
+// Meldungen außerhalb von Redirects (fehlgeschlagene Requests, $toast) über denselben Toast
+const removeAppToastListener = onAppToast((type, message) => pushFlashToast(type, message))
 
-onUnmounted(() => removeFlashListener())
+onUnmounted(() => {
+    removeFlashListener()
+    removeAppToastListener()
+})
 
 const closePushNotification = (id) => {
     const pushNotification = document.getElementById(id);

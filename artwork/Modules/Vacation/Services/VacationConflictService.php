@@ -55,7 +55,7 @@ readonly class VacationConflictService
         string $date,
         string $from,
         string $to,
-        string $language
+        ?string $language
     ): string {
         $key = match (true) {
             $scheduler['source'] === ShiftSchedulerResolver::SOURCE_ASSIGNED => 'notification.shift.conflict_text',

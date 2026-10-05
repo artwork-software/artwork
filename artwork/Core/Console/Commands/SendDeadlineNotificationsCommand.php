@@ -77,15 +77,12 @@ class SendDeadlineNotificationsCommand extends Command
                             $alreadySentUserIds[] = $checklistsUser->getAttribute('id');
                         }
                         foreach ($task->getRelation('task_users') as $taskUser) {
-                            if (
-                                (
-                                    $checklistUser &&
-                                    $checklistUser->getAttribute('id') === $taskUser->getAttribute('id')
-                                ) ||
-                                in_array($taskUser->getAttribute('id'), $alreadySentUserIds)
-                            ) {
+                            // Zugewiesene bekommen die Erinnerung immer – auch wenn ihnen die Checkliste
+                            // gehört (vorher übersprungen: eigene Aufgaben in Team-Checklisten ohne Hinweis)
+                            if (in_array($taskUser->getAttribute('id'), $alreadySentUserIds)) {
                                 continue;
                             }
+                            $alreadySentUserIds[] = $taskUser->getAttribute('id');
                             $this->sendDeadlineNotification(
                                 __(
                                     'notification.scheduling.deadline_over',
@@ -135,15 +132,12 @@ class SendDeadlineNotificationsCommand extends Command
                             $alreadySentUserIds[] = $checklistsUser->getAttribute('id');
                         }
                         foreach ($task->getRelation('task_users') as $taskUser) {
-                            if (
-                                (
-                                    $checklistUser &&
-                                    $checklistUser->getAttribute('id') === $taskUser->getAttribute('id')
-                                ) ||
-                                in_array($taskUser->getAttribute('id'), $alreadySentUserIds)
-                            ) {
+                            // Zugewiesene bekommen die Erinnerung immer – auch wenn ihnen die Checkliste
+                            // gehört (vorher übersprungen: eigene Aufgaben in Team-Checklisten ohne Hinweis)
+                            if (in_array($taskUser->getAttribute('id'), $alreadySentUserIds)) {
                                 continue;
                             }
+                            $alreadySentUserIds[] = $taskUser->getAttribute('id');
                             $this->sendDeadlineNotification(
                                 __(
                                     'notification.scheduling.deadline_tomorrow',

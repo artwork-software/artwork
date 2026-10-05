@@ -36,6 +36,11 @@
                         </p>
                     </div>
                 </div>
+                <!-- Kommentare (z. B. Begründung einer Absage) eigene Zeile – früher fest description[5] -->
+                <p v-for="(comment, index) in commentRows" :key="'comment-' + index"
+                   class="mt-2 text-xs/[18px] text-text-subtle italic">
+                    „{{ comment.title }}“
+                </p>
                 <span v-if="notification.data.isModified" class="text-special-orange bg-special-orange-surface px-2 py-1 rounded text-xs font-medium">
                     {{ $t('modified') }}
                 </span>
@@ -248,7 +253,14 @@ export default {
             answering: false,
         }
     },
-    computed: {},
+    computed: {
+        commentRows() {
+            const description = this.notification.data?.description;
+            return description
+                ? Object.values(description).filter((row) => row?.type === 'comment' && row?.title)
+                : [];
+        },
+    },
     methods: {
         isArchivable,
         declineMaterialReturn() {

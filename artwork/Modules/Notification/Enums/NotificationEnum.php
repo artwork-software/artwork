@@ -103,7 +103,9 @@ enum NotificationEnum: string
     public function groupType(): string
     {
         return match ($this) {
-            self::NOTIFICATION_ROOM_REQUEST,
+            // UPSERT = Antwort auf die EIGENE Anfrage (bestätigt/abgelehnt) → Termine;
+            // ROOM_REQUEST = neue Anfrage an Raumadmins → Räume (vorher vertauscht)
+            self::NOTIFICATION_UPSERT_ROOM_REQUEST,
             self::NOTIFICATION_CONFLICT,
             self::NOTIFICATION_EVENT_CHANGED,
             self::NOTIFICATION_EVENT_VERIFICATION_REQUESTS,
@@ -119,7 +121,7 @@ enum NotificationEnum: string
             self::NOTIFICATION_DOCUMENT_REQUEST_CREATED,
             self::NOTIFICATION_DOCUMENT_REQUEST_COMPLETED => "DOCUMENTS",
 
-            self::NOTIFICATION_UPSERT_ROOM_REQUEST,
+            self::NOTIFICATION_ROOM_REQUEST,
             self::NOTIFICATION_ROOM_ANSWER,
             self::NOTIFICATION_REMINDER_ROOM_REQUEST,
             self::NOTIFICATION_ROOM_CHANGED => "ROOMS",

@@ -121,7 +121,7 @@
 </template>
 
 <script setup>
-import { computed, onMounted, ref } from "vue";
+import { computed, nextTick, onMounted, ref } from "vue";
 import axios from "axios";
 import { useI18n } from "vue-i18n";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
@@ -206,6 +206,12 @@ onMounted(() => {
         return;
     }
     highlightedType.value = type;
-    document.getElementById('notification-type-' + type)?.scrollIntoView({ block: 'center' });
+    // Direkt beim Mounten stimmt das Layout noch nicht (Gruppen/Seite rendern nach, Inertia setzt den
+    // Scroll zurück) – der Sprung landete oben. Nach dem Rendern und noch einmal nach kurzer Pause.
+    // instant: die Seite scrollt global „smooth“ – die Animation lief in Hintergrund-Tabs nicht los
+    const scrollToType = () => document.getElementById('notification-type-' + type)
+        ?.scrollIntoView({ block: 'center', behavior: 'instant' });
+    nextTick(() => requestAnimationFrame(scrollToType));
+    setTimeout(scrollToType, 400);
 });
 </script>

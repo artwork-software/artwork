@@ -156,7 +156,7 @@ import ConfirmationComponent from "@/Layouts/Components/ConfirmationComponent.vu
 import NotificationEventInfoRow from "@/Layouts/Components/NotificationEventInfoRow.vue";
 import NotificationUserIcon from "@/Layouts/Components/NotificationUserIcon.vue";
 import TeamIconCollection from "@/Layouts/Components/TeamIconCollection.vue";
-import {Link, useForm} from "@inertiajs/vue3";
+import {Link, router, useForm} from "@inertiajs/vue3";
 import AnswerEventRequestComponent from "@/Layouts/Components/AnswerEventRequestComponent.vue";
 import AnswerEventRequestWithRoomChangeComponent
     from "@/Layouts/Components/AnswerEventRequestWithRoomChangeComponent.vue";
@@ -239,6 +239,24 @@ export default  {
         if (this.showSection && (this.unreadCount || 0) > 0) {
             this.fetchUnread(1);
         }
+        // Aktionen aus einer Benachrichtigung (Rückgabe melden, Annehmen, Absagen …) ändern Einträge,
+        // ohne dass sich die Anzahl ändert – die per axios geladenen Listen blieben dann veraltet.
+        // Nach jeder abgeschlossenen schreibenden Inertia-Aktion die geladenen Listen neu holen.
+        this.removeFinishListener = router.on('finish', (event) => {
+            const visit = event.detail.visit;
+            if (visit.method === 'get' || !visit.completed || visit.cancelled || !this.showSection) {
+                return;
+            }
+            if (this.unread.page > 0) {
+                this.fetchUnread(1);
+            }
+            if (this.archived?.page > 0) {
+                this.fetchArchived(1);
+            }
+        });
+    },
+    beforeUnmount() {
+        this.removeFinishListener?.();
     },
     watch: {
         // After a single archive/delete inside a NotificationBlock the whole page is reloaded via

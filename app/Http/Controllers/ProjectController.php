@@ -48,7 +48,6 @@ use Artwork\Modules\Calendar\DTO\ProjectDTO;
 use Artwork\Modules\Calendar\DTO\RoomDTO;
 use Artwork\Modules\Calendar\Services\CalendarService;
 use Artwork\Modules\Calendar\Services\CalendarDataService;
-use Artwork\Modules\Calendar\Services\ShiftCalendarService;
 use Artwork\Modules\Category\Models\Category;
 use Artwork\Modules\Category\Services\CategoryService;
 use Artwork\Modules\Change\Services\ChangeService;
@@ -109,6 +108,7 @@ use Artwork\Modules\Project\Models\ProjectCreateSettings;
 use Artwork\Modules\Project\Models\ProjectRole;
 use Artwork\Modules\Project\Models\ProjectComponentValue;
 use Artwork\Modules\Project\Models\ProjectState;
+use Artwork\Modules\Project\Services\ProjectComponentVisibilityService;
 use Artwork\Modules\Project\Services\CommentService;
 use Artwork\Modules\Project\Services\ProjectFileService;
 use Artwork\Modules\Project\Services\ProjectService;
@@ -2624,6 +2624,10 @@ class ProjectController extends Controller
             );
         }
 
+        // Komponenten mit "Sehen dürfen nur die Folgenden" samt Projektwerten gar nicht erst
+        // ausliefern — vorher filterte nur das Frontend (canSeeComponent).
+        app(ProjectComponentVisibilityService::class)->filterTabPayload($projectTab, $authUser);
+
         $this->inventoryUserFilterShareService->getFilterDataForUser($authUser);
 
         $firstEvent = $this->projectService->getFirstEventInProject($project);
@@ -2907,8 +2911,6 @@ class ProjectController extends Controller
                 $endDate ? $endDate->format('Y-m-d') : null,
             ];
 
-            $history = app(ShiftCalendarService::class)->getEventShiftsHistoryChanges();
-
             $tabSpecificData = array_merge($tabSpecificData, $this->getShiftTabInertiaData(
                 $project,
                 $craftService,
@@ -2918,8 +2920,7 @@ class ProjectController extends Controller
                 $shiftTimePresetService,
                 $user,
                 $userService,
-                $dateValue,
-                $history
+                $dateValue
             ));
 
             $tabSpecificData['rooms'] = $roomDTOs;
@@ -3012,8 +3013,7 @@ class ProjectController extends Controller
         ShiftTimePresetService $shiftTimePresetService,
         User $user,
         UserService $userService,
-        array $dateValue,
-        array $history
+        array $dateValue
     ): array {
         return [
             // Crafts mit users/freelancers/serviceProviders (+ shift_qualifications) für
@@ -4181,7 +4181,7 @@ class ProjectController extends Controller
         }
 
         $newProject = Project::create([
-            'name' => '(Kopie) ' . $project->name,
+            'name' => __('(Copy)') . ' ' . $project->name,
             'description' => $project->description,
             'number_of_participants' => $project->number_of_participants,
             'cost_center' => $project->cost_center,
@@ -4807,7 +4807,7 @@ class ProjectController extends Controller
         $newColumn = $column->replicate();
         $newColumn->relevant_for_project_groups = false;
         $newColumn->save();
-        $newColumn->update(['name' => $column->name . ' (Kopie)']);
+        $newColumn->update(['name' => $column->name . ' ' . __('(Copy)')]);
         $newColumn->cells()->forceDelete();
         // Verifizierungen und Finanzierungsquellen-Verknüpfungen dürfen nicht in die
         // Kopie wandern (sonst gilt die Kopie als verifiziert bzw. zählt doppelt auf
@@ -4849,7 +4849,7 @@ class ProjectController extends Controller
     {
         $newSubPosition = $subPosition->replicate();
         $newSubPosition->save();
-        $newSubPosition->update(['name' => $subPosition->name . ' (Kopie)']);
+        $newSubPosition->update(['name' => $subPosition->name . ' ' . __('(Copy)')]);
 
         if ($mainPositionId !== null) {
             $newSubPosition->update(['main_position_id' => $mainPositionId]);
@@ -4859,7 +4859,7 @@ class ProjectController extends Controller
         $rows = $subPosition->subPositionRows()->with('cells')->get();
         foreach ($rows as $subPositionRow) {
             $newSubPositionRow = $subPositionRow->replicate();
-            $newSubPositionRow->name = $subPositionRow->name . ' (Kopie)';
+            $newSubPositionRow->name = $subPositionRow->name . ' ' . __('(Copy)');
             $newSubPositionRow->sub_position_id = $newSubPosition->id;
             $newSubPositionRow->save();
             $newSubPositionRow->cells()->forceDelete();
@@ -4882,7 +4882,7 @@ class ProjectController extends Controller
     {
         $newMainPosition = $mainPosition->replicate();
         $newMainPosition->save();
-        $newMainPosition->update(['name' => $mainPosition->name . ' (Kopie)']);
+        $newMainPosition->update(['name' => $mainPosition->name . ' ' . __('(Copy)')]);
 
         // duplicate sub positions
         foreach ($mainPosition->subPositions()->get() as $subPosition) {

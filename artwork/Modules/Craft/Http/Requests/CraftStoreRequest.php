@@ -2,7 +2,11 @@
 
 namespace Artwork\Modules\Craft\Http\Requests;
 
+use Artwork\Modules\Freelancer\Models\Freelancer;
+use Artwork\Modules\ServiceProvider\Models\ServiceProvider;
+use Artwork\Modules\User\Models\User;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class CraftStoreRequest extends FormRequest
 {
@@ -24,6 +28,14 @@ class CraftStoreRequest extends FormRequest
             'color' => 'nullable|string|max:7',
             'notify_days' => 'nullable|integer|min:0',
             'commit_request_deadline_days' => 'nullable|integer|min:0|max:365',
+            'managersToBeAssigned' => 'sometimes|array',
+            'managersToBeAssigned.*' => 'array',
+            'managersToBeAssigned.*.manager_id' => 'required|integer',
+            'managersToBeAssigned.*.manager_type' => Rule::in(
+                User::class,
+                Freelancer::class,
+                ServiceProvider::class
+            ),
         ];
     }
 }

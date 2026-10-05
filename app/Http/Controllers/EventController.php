@@ -195,9 +195,7 @@ class EventController extends Controller
 
 
 
-        $user->userFilters()->calendarFilter()->first()->update([
-            'start_date' => $startOfWeek->format('Y-m-d'),
-            'end_date' => $endOfWeek->format('Y-m-d'),
+        $this->userService->focusCalendarOnPeriod($user, $startOfWeek, $endOfWeek, [
             'event_type_ids' => null,
             'room_ids' => null,
             'area_ids' => null,
@@ -222,10 +220,7 @@ class EventController extends Controller
         $startDate = Carbon::parse($day);
         $endDate = $startDate->copy()->addDays(7);
 
-        $user->userFilters()->calendarFilter()->first()->update([
-            'start_date' => $startDate->format('Y-m-d'),
-            'end_date' => $endDate->format('Y-m-d'),
-        ]);
+        $this->userService->focusCalendarOnPeriod($user, $startDate, $endDate);
 
         return redirect()->route('events');
     }
@@ -2057,6 +2052,8 @@ class EventController extends Controller
         if ($request->roomChange) {
             $room = Room::find($event->room_id);
             $project = Project::find($event->project_id);
+            // Nicht aus dem Benachrichtigungs-Block übernehmen: mit noNotifications ist die Variable dort nie gesetzt
+            $projectManagers = $project?->managerUsers()->get() ?? collect();
 
             $this->notificationService->setIcon('green');
             $this->notificationService->setPriority(3);
@@ -4192,7 +4189,7 @@ class EventController extends Controller
     public function updateSingleBulkEvent(
         Request $request,
         Event $event
-    ): void {
+    ): JsonResponse {
         $this->authorize('update', $event);
 
         $data =  $request->collect('data');
@@ -4207,6 +4204,13 @@ class EventController extends Controller
             broadcast(new \Artwork\Modules\Event\Events\BulkEventChanged($freshEvent, 'updated'));
             broadcast(new EventUpdated($freshEvent, $freshEvent->room_id));
         })->afterResponse();
+
+        // Aktualisiertes Event zurückgeben: der auslösende Client setzt die
+        // "zuletzt bearbeitet"-Markierung sofort aus der Response (Server-updated_at),
+        // statt auf den eigenen Broadcast-Roundtrip zu warten.
+        return new JsonResponse([
+            'event' => \Artwork\Modules\Event\Events\BulkEventChanged::eventPayload($freshEvent),
+        ]);
     }
 
     public function createSingleBulkEvent(
@@ -4261,7 +4265,7 @@ class EventController extends Controller
         return new JsonResponse(['description' => $event->description]);
     }
 
-    public function updateDescription(Request $request, Event $event): void
+    public function updateDescription(Request $request, Event $event): JsonResponse
     {
         $this->authorize('update', $event);
 
@@ -4269,8 +4273,15 @@ class EventController extends Controller
 
         $freshEvent = $event->fresh();
         dispatch(static function () use ($freshEvent): void {
+            // Auch die Bulk-Terminliste anderer Sessions aktualisieren (inkl.
+            // "zuletzt bearbeitet"-Markierung) — vorher fehlte dieser Broadcast.
+            broadcast(new BulkEventChanged($freshEvent, 'updated'));
             broadcast(new EventCreated($freshEvent, $freshEvent->room_id));
         })->afterResponse();
+
+        return new JsonResponse([
+            'event' => BulkEventChanged::eventPayload($freshEvent),
+        ]);
     }
 
 

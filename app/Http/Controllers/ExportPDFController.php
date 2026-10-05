@@ -40,6 +40,7 @@ use Illuminate\Support\Str;
 use Inertia\ResponseFactory as InertiaResponseFactory;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\Response;
+use Artwork\Modules\WorkTime\Support\WorkTimeAccounting;
 
 class ExportPDFController extends Controller
 {
@@ -1036,7 +1037,7 @@ class ExportPDFController extends Controller
         $dayNames = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'];
         // Soll je Monat aus dem Arbeitszeitmuster (WorkTimeCalculationService, inkl. Sondertage);
         // kein Muster an mindestens einem Monatstag -> Soll unbekannt (keine Soll-/Differenzzeile)
-        $targetBreakdown = $type === 'user' && $worker instanceof User
+        $targetBreakdown = $type === 'user' && $worker instanceof User && WorkTimeAccounting::isEnabled()
             ? app(\Artwork\Modules\WorkTime\Services\WorkTimeCalculationService::class)
                 ->breakdownForRange($worker, $gridStart->copy(), $gridEnd->copy())
             : null;

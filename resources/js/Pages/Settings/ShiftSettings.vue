@@ -65,7 +65,7 @@
                 <div class="flex items-start justify-between gap-5">
                     <BasePageTitle
                         :title="$t('Shift confirmation by employees')"
-                        :description="$t('Scheduled people can accept or decline their committed shifts in their own operational plan. Planners can record responses on behalf of freelancers and service providers.')"
+                        :description="$t('Scheduled users with the permission “Accept or decline shifts” can accept or decline their committed shifts in their own operational plan. Planners can record the response on behalf of these users. Freelancers and service providers do not take part.')"
                     />
                     <SwitchIconTooltip
                         v-model="shiftSettings.shift_confirmation_enabled"
@@ -226,7 +226,7 @@
                     <div class="w-1/2">
                         <BasePageTitle
                             :title="$t('Crafts')"
-                            :description="$t('Define crafts to which you can later assign employees and shifts. Additionally, you can specify which users are allowed to assign what type of employee shifts.')"
+                            :description="$t('Define crafts to which you can later assign employees and shifts. For each craft, you can also set the craft management and which users may plan its shifts.')"
                         />
                     </div>
                     <div class="flex items-center justify-end">
@@ -689,6 +689,35 @@
                     </Switch>
                     <SwitchLabel as="span" class="text-sm">
                         <span :class="[shiftSettings.project_assignments_enabled ? 'font-bold' : 'font-medium', 'text-text']">
+                            {{ $t('Activated') }}
+                        </span>
+                    </SwitchLabel>
+                </SwitchGroup>
+            </div>
+
+            <div class="flex flex-col gap-2 rounded-lg bg-surface border border-border-subtle w-full shadow-raised p-5 mb-10">
+                <BasePageTitle
+                    :title="$t('Work time accounting')"
+                    :description="$t('If deactivated, the shift plan is only used to create and staff shifts: no target hours from work time patterns, no work time balance, no overtime and no nightly booking. Planned hours stay visible. Stored patterns, contracts and balances are kept; days while the calculation is off are not booked afterwards.')"
+                />
+                <SwitchGroup as="div" class="flex flex-row items-center gap-x-2 cursor-pointer mt-4">
+                    <SwitchLabel as="span" class="text-sm">
+                        <span :class="[!shiftSettings.work_time_accounting_enabled ? 'font-bold' : 'font-medium', 'text-text']">
+                            {{ $t('Deactivated') }}
+                        </span>
+                    </SwitchLabel>
+                    <Switch v-model="shiftSettings.work_time_accounting_enabled"
+                            @update:model-value="updateWorkTimeAccountingEnabled"
+                            :class="[
+                                shiftSettings.work_time_accounting_enabled ?
+                                    'bg-accent-600' :
+                                    'bg-border-subtle',
+                                'relative inline-flex h-3 w-6 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-accent-600 focus:ring-offset-2'
+                            ]">
+                        <span aria-hidden="true" :class="[shiftSettings.work_time_accounting_enabled ? 'translate-x-3' : 'translate-x-0', 'pointer-events-none inline-block h-2 w-2 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']" />
+                    </Switch>
+                    <SwitchLabel as="span" class="text-sm">
+                        <span :class="[shiftSettings.work_time_accounting_enabled ? 'font-bold' : 'font-medium', 'text-text']">
                             {{ $t('Activated') }}
                         </span>
                     </SwitchLabel>
@@ -1159,6 +1188,11 @@ export default defineComponent({
         updateProjectAssignmentsEnabled(projectAssignmentsEnabled) {
             router.patch(route('shift.settings.update.project-assignments-enabled'), {
                 project_assignments_enabled: projectAssignmentsEnabled
+            }, { preserveScroll: true })
+        },
+        updateWorkTimeAccountingEnabled(workTimeAccountingEnabled) {
+            router.patch(route('shift.settings.update.work-time-accounting-enabled'), {
+                work_time_accounting_enabled: workTimeAccountingEnabled
             }, { preserveScroll: true })
         },
         updateGranularPermissions(granularPermissionsEnabled) {

@@ -39,19 +39,19 @@
                                         <MenuItem v-slot="{ active }">
                                             <div @click="changeUserSelectedGoTo('day')"
                                                  :class="[active ? 'bg-text-inverse/10 text-accent-700' : 'text-white', 'block px-4 py-2 text-sm']">
-                                                <ToolTipComponent direction="right" :tooltip-text="$t('Jump around') + ' ' + $t('Day')" icon="IconCalendar" icon-size="h-5 w-5 text-white"/>
+                                                <ToolTipComponent direction="right" :tooltip-text="$t('Jump by day')" icon="IconCalendar" icon-size="h-5 w-5 text-white"/>
                                             </div>
                                         </MenuItem>
                                         <MenuItem v-slot="{ active }">
                                             <div @click="changeUserSelectedGoTo('week')"
                                                  :class="[active ? 'bg-text-inverse/10 text-accent-700' : 'text-white', 'block px-4 py-2 text-sm']">
-                                                <ToolTipComponent direction="right" :tooltip-text="$t('Jump around') + ' ' + $t('Calendar week')" icon="IconCalendarWeek" icon-size="h-5 w-5 text-white"/>
+                                                <ToolTipComponent direction="right" :tooltip-text="$t('Jump by calendar week')" icon="IconCalendarWeek" icon-size="h-5 w-5 text-white"/>
                                             </div>
                                         </MenuItem>
                                         <MenuItem v-slot="{ active }">
                                             <div @click="changeUserSelectedGoTo('month')"
                                                  :class="[active ? 'bg-text-inverse/10 text-accent-700' : 'text-white', 'block px-4 py-2 text-sm']">
-                                                <ToolTipComponent direction="right" :tooltip-text="$t('Jump around') + ' ' + $t('Month')" icon="IconCalendarMonth" icon-size="h-5 w-5 text-white"/>
+                                                <ToolTipComponent direction="right" :tooltip-text="$t('Jump by month')" icon="IconCalendarMonth" icon-size="h-5 w-5 text-white"/>
                                             </div>
                                         </MenuItem>
                                     </div>

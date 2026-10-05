@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Services\ProjectTabBudgetInformationService;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 class ProjectBudgetInformationController extends Controller
 {
@@ -14,10 +15,10 @@ class ProjectBudgetInformationController extends Controller
     ) {
     }
 
-    public function show(Project $project): JsonResponse
+    public function show(Request $request, Project $project): JsonResponse
     {
         return response()->json(
-            $this->projectTabBudgetInformationService->buildBudgetInformationPayload($project)
+            $this->projectTabBudgetInformationService->buildBudgetInformationPayload($project, $request->user())
         );
     }
 }

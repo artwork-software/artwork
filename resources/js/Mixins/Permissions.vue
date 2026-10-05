@@ -24,8 +24,10 @@ export default {
             return foundUserInDepartment;
         },
         $canSeeComponent(component) {
+            // Spiegel von ProjectComponentVisibilityService::canSeeComponent() (Admin + "write projects")
             if (
                 this.hasAdminRole() ||
+                this.$can('write projects') ||
                 component.permission_type === null ||
                 component.permission_type === 'allSeeAndEdit' ||
                 component.permission_type === 'allSeeSomeEdit'

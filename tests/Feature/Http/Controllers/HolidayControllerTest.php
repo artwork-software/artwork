@@ -5,6 +5,7 @@ namespace Tests\Feature\Http\Controllers;
 use Artwork\Modules\Holidays\Models\Holiday;
 use Artwork\Modules\Holidays\Models\Subdivision;
 use Artwork\Modules\Permission\Enums\PermissionEnum;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\Feature\FeatureTestCase;
@@ -99,6 +100,52 @@ final class HolidayControllerTest extends FeatureTestCase
 
         $response->assertOk();
         $this->assertSame('Updated', $holiday->fresh()->name);
+    }
+
+    #[Test]
+    public function update_without_end_date_ends_the_holiday_on_its_start_day(): void
+    {
+        $this->actingAsAdmin();
+        $holiday = Holiday::query()->forceCreate([
+            'name' => 'X',
+            'date' => '2026-01-01',
+            'end_date' => '2026-01-03',
+            'yearly' => false,
+            'color' => '#abcdef',
+        ]);
+
+        $this->patch(route('holidays.update', $holiday), [
+            'name' => 'X',
+            'date' => '2026-02-01',
+            'end_date' => null,
+            'yearly' => false,
+            'color' => '#abcdef',
+            'selectedSubdivisions' => [],
+        ])->assertOk();
+
+        $this->assertSame('2026-02-01', $holiday->fresh()->end_date->toDateString());
+        // Kalender bleibt erreichbar (vorher 500 durch end_date = null)
+        $this->get(route('events'))->assertOk();
+    }
+
+    #[Test]
+    public function migration_backfills_missing_end_dates_with_the_start_date(): void
+    {
+        $id = (int) DB::table('holidays')->insertGetId([
+            'name' => 'Altbestand',
+            'date' => '2026-03-05',
+            'end_date' => null,
+            'from_api' => false,
+            'yearly' => false,
+            'treatAsSpecialDay' => false,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $migration = require database_path('migrations/2026_10_01_100000_backfill_missing_holiday_end_dates.php');
+        $migration->up();
+
+        $this->assertSame('2026-03-05', DB::table('holidays')->where('id', $id)->value('end_date'));
     }
 
     #[Test]

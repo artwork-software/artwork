@@ -5,7 +5,6 @@ namespace Artwork\Modules\Calendar\Services;
 use App\Settings\GeneralCalendarSettings;
 use Artwork\Modules\Calendar\DTO\CalendarFrontendDataDTO;
 use Illuminate\Support\Facades\Auth;
-use Artwork\Modules\Calendar\DTO\CalendarHolidayDTO;
 use Artwork\Modules\Calendar\DTO\CalendarPeriodDTO;
 use Artwork\Modules\Calendar\Models\DayRemark;
 use Artwork\Modules\Permission\Enums\PermissionEnum;
@@ -14,7 +13,7 @@ use Artwork\Modules\Calendar\DTO\RoomDTO;
 use Artwork\Modules\Event\Http\Resources\CalendarEventResource;
 use Artwork\Modules\Event\Services\EventCollectionService;
 use Artwork\Modules\Filter\Services\FilterService;
-use Artwork\Modules\Holidays\Models\Holiday;
+use Artwork\Modules\Holidays\Services\HolidayService;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Services\ProjectService;
 use Artwork\Modules\Room\Models\Room;
@@ -44,6 +43,7 @@ readonly class CalendarDataService
         private FilterService $filterService,
         private UserService $userService,
         private ProjectService $projectService,
+        private HolidayService $holidayService,
     ) {
     }
 
@@ -127,20 +127,8 @@ readonly class CalendarDataService
 
         $calendarPeriod = CarbonPeriod::create($startDate, $endDate);
 
-        // Einmal alle Feiertage holen und über alle Tage ihrer Dauer expandieren
-        $holidays = $this->getHolidaysForRange($startDate, $endDate);
-        $holidaysByDate = collect();
-        foreach ($holidays as $holiday) {
-            $holidayStart = Carbon::parse($holiday->date);
-            $holidayEnd = $holiday->end_date ? Carbon::parse($holiday->end_date) : $holidayStart;
-            foreach (CarbonPeriod::create($holidayStart, $holidayEnd) as $day) {
-                $key = $day->toDateString();
-                if (!$holidaysByDate->has($key)) {
-                    $holidaysByDate[$key] = collect();
-                }
-                $holidaysByDate[$key]->push($holiday);
-            }
-        }
+        // Einmal alle Feiertage holen, je Tag ihrer Dauer
+        $holidaysByDate = $this->holidayService->getCalendarHolidaysByDate($startDate, $endDate);
 
         $isDailyView = $isDailyView ?? (bool) $user->getAttribute('daily_view');
         $hoursOfDay = $isDailyView
@@ -378,18 +366,22 @@ readonly class CalendarDataService
 
     public function getProjectDateRange($project, Carbon $today): array
     {
+        // Immer Kopien: startOfDay()/endOfDay() verändern die Instanz – ohne copy() zeigten Start und
+        // Ende auf dasselbe Objekt und der Zeitraum schrumpfte auf einen Zeitpunkt.
         if (!$project) {
-            return [$today->startOfDay(), $today->endOfDay()];
+            return [$today->copy()->startOfDay(), $today->copy()->endOfDay()];
         }
 
         $firstEvent  = $this->projectService->getFirstEventInProject($project);
         $latestEvent = $this->projectService->getLatestEndingEventInProject($project);
 
-        $endDate = $latestEvent ? $latestEvent->getAttribute('end_time')->copy()->endOfDay() : $today->endOfDay();
-
         return [
-            $firstEvent ? $firstEvent->getAttribute('start_time')->startOfDay() : $today->startOfDay(),
-            $endDate,
+            $firstEvent
+                ? $firstEvent->getAttribute('start_time')->copy()->startOfDay()
+                : $today->copy()->startOfDay(),
+            $latestEvent
+                ? $latestEvent->getAttribute('end_time')->copy()->endOfDay()
+                : $today->copy()->endOfDay(),
         ];
     }
 
@@ -399,41 +391,6 @@ readonly class CalendarDataService
             return true;
         }
         return $start1 <= $end2 && $start2 <= $end1;
-    }
-
-    /**
-     * Feiertage einmal für Range
-     * @return SupportCollection<CalendarHolidayDTO>
-     */
-    private function getHolidaysForRange(Carbon $start, Carbon $end): SupportCollection
-    {
-        return Holiday::select(['id','name','date','end_date','color','yearly','treatAsSpecialDay'])
-            ->where(function (Builder $q) use ($start, $end): void {
-                $q->whereBetween('date', [$start->toDateString(), $end->toDateString()])
-                    ->orWhereBetween('end_date', [$start->toDateString(), $end->toDateString()])
-                    ->orWhere(function (Builder $nested) use ($start, $end): void {
-                        $nested->where('date', '<=', $start->toDateString())
-                            ->where('end_date', '>=', $end->toDateString());
-                    })
-                    ->orWhere(function (Builder $nested) use ($start, $end): void {
-                        // jährliche Gedenktage
-                        $nested->where('yearly', true)
-                            ->whereBetween(\DB::raw('DATE_FORMAT(date, "%m-%d")'), [
-                                $start->format('m-d'),
-                                $end->format('m-d'),
-                            ]);
-                    });
-            })
-            ->with(['subdivisions' => fn($q) => $q->select('name')])
-            ->get()
-            ->map(fn($holiday) => new CalendarHolidayDTO(
-                name: $holiday->name,
-                date: $holiday->date->toDateString(),
-                end_date: $holiday->end_date->toDateString(),
-                color: $holiday->color,
-                subdivisions: $holiday->subdivisions->pluck('name')->toArray(),
-                treatAsSpecialDay: (bool) $holiday->treatAsSpecialDay,
-            ));
     }
 
     /**

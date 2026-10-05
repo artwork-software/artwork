@@ -104,14 +104,16 @@ class ServiceProvider extends Model implements Vacationer, DayServiceable, Emplo
 
     public function getProfilePhotoUrlAttribute(): string
     {
-        $isUrl = filter_var($this->profile_image, FILTER_VALIDATE_URL);
+        $profileImage = $this->isStaleAvatarFallbackUrl($this->profile_image) ? null : $this->profile_image;
+
+        $isUrl = filter_var($profileImage, FILTER_VALIDATE_URL);
         if ($isUrl) {
-            return $this->profile_image;
+            return $profileImage;
         }
 
-        if ($this->profile_image) {
+        if ($profileImage) {
             // profile_image kann via Storage::url() bereits mit '/storage/' beginnen
-            $path = ltrim($this->profile_image, '/');
+            $path = ltrim($profileImage, '/');
             return str_starts_with($path, 'storage/') ? asset($path) : asset('storage/' . $path);
         }
 

@@ -136,6 +136,8 @@ class ComponentController extends Controller
         $component->users()->detach();
         $component->departments()->detach();
         $component->componentInDisclosures()->delete();
+        // Ordner-Inhalte (disclosure_id hat kein ON DELETE CASCADE); die enthaltenen Komponenten bleiben bestehen
+        $component->disclosureContents()->delete();
 
         // first check if the component has projectValues attached
         if ($component->projectValue) {

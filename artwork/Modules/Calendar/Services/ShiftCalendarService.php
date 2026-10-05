@@ -2,7 +2,6 @@
 
 namespace Artwork\Modules\Calendar\Services;
 
-use Spatie\Activitylog\Models\Activity;
 use Artwork\Modules\Calendar\DTO\CalendarFrontendDataDTO;
 use Artwork\Modules\Calendar\DTO\CalendarRoomDTO;
 use Artwork\Modules\Calendar\DTO\EventDTO;
@@ -439,31 +438,5 @@ class ShiftCalendarService
             $startDate->addDay();
         }
         return $days;
-    }
-
-    /**
-     * @return array<int, mixed>
-     */
-    public function getEventShiftsHistoryChanges(): array
-    {
-        $historyArray = [];
-
-        Activity::query()
-            ->where('subject_type', Shift::class)
-            ->orderByDesc('created_at')
-            ->get()
-            ->each(function (Activity $activity) use (&$historyArray): void {
-                $properties = $activity->properties;
-                $historyArray[] = [
-                    'changes' => $properties instanceof \Illuminate\Support\Collection
-                        ? $properties->all()
-                        : ($properties ?? null),
-                    'created_at' => $activity->created_at->diffInHours() < 24
-                        ? $activity->created_at->diffForHumans()
-                        : $activity->created_at->format('d.m.Y, H:i'),
-                ];
-            });
-
-        return $historyArray;
     }
 }

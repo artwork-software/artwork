@@ -150,8 +150,18 @@ class CrmContact extends Model
 
     public function getProfilePhotoUrlAttribute(): string
     {
-        if ($this->profile_image) {
-            return asset('storage/' . $this->profile_image);
+        // Aus Freelancern/Dienstleistern gespiegelte Altbestände können ui-avatars-/
+        // generate-avatar-image-URLs enthalten (CSP-Block bzw. 404) → wie "kein Bild" behandeln
+        $profileImage = $this->profile_image;
+        if (
+            $profileImage
+            && (str_contains($profileImage, 'ui-avatars.com') || str_contains($profileImage, 'generate-avatar-image'))
+        ) {
+            $profileImage = null;
+        }
+
+        if ($profileImage) {
+            return asset('storage/' . $profileImage);
         }
 
         $letter = mb_substr($this->display_name ?? 'C', 0, 1);

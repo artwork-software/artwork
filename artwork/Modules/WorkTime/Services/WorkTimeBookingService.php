@@ -9,6 +9,7 @@ use Artwork\Modules\User\Services\WorkingHourCacheService;
 use Artwork\Modules\WorkTime\Repositories\WorkTimeBookingRepository;
 use Artwork\Modules\WorkTime\Support\NightWindow;
 use Carbon\Carbon;
+use Artwork\Modules\WorkTime\Support\WorkTimeAccounting;
 
 /**
  * Nächtliche Buchung des Arbeitszeitkontos (ein Datensatz je User und Tag).
@@ -29,6 +30,11 @@ class WorkTimeBookingService
 
     public function calculateDailyWorkingHours(): void
     {
+        // Arbeitszeitberechnung ausgeschaltet: keine Buchung, kein Saldo, keine Überstunden
+        if (!WorkTimeAccounting::isEnabled()) {
+            return;
+        }
+
         $this->refreshWorkTimeActivations();
 
         $users = $this->repository->getWorkShiftUsers();

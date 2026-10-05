@@ -919,7 +919,15 @@
                                     >
                                         <!-- Einheitliches Stundenformat "H:MM h" (signiert) wie das AZK-Badge; Fallback auf das alte "2h 0m" -->
                                         <!-- target_unknown: kein Arbeitszeitmuster in der Woche -> "–" (Tooltip über kwCellTitle) -->
+                                        <!-- Arbeitszeitberechnung aus: geplante Stunden der Woche statt Differenz zum Soll -->
                                         <div
+                                            v-if="!workTimeAccountingEnabled"
+                                            class="font-lexend text-xs text-[var(--uo-text)]"
+                                        >
+                                            {{ row.worker?.weeklyWorkingHours?.[day.weekNumber]?.planned_formatted ?? row.worker?.weeklyWorkingHours?.[day.weekNumber]?.planned ?? '–' }}
+                                        </div>
+                                        <div
+                                            v-else
                                             class="font-lexend text-xs"
                                             :class="row.worker?.weeklyWorkingHours?.[day.weekNumber] && !row.worker.weeklyWorkingHours[day.weekNumber].target_unknown
                                                 ? (row.worker.weeklyWorkingHours[day.weekNumber].isMinus ? 'text-[var(--uo-danger-text)]' : 'text-[var(--uo-success-text)]')
@@ -1117,6 +1125,7 @@ import 'vue-virtual-scroller/dist/vue-virtual-scroller.css'
 import Permissions from '@/Mixins/Permissions.vue'
 import axios from 'axios'
 import {Link, router, usePage} from '@inertiajs/vue3'
+import {isWorkTimeAccountingEnabled} from '@/Helper/workTimeAccounting.js'
 
 import ShiftPlanFunctionBar from '@/Layouts/Components/ShiftPlanComponents/ShiftPlanFunctionBar.vue'
 import ShiftPlanOpenViolationsFilterNotice from '@/Layouts/Components/ShiftPlanComponents/ShiftPlanOpenViolationsFilterNotice.vue'
@@ -1344,6 +1353,7 @@ const dayToShow = ref<any | null>(null)
 
 /* DP-07/2.20: Projektmodus — der ganze Projektblock (Tag+Raum+Projekt) wird pink
    umrandet, fremde/projektlose Blöcke abgedimmt. */
+const workTimeAccountingEnabled = computed<boolean>(() => isWorkTimeAccountingEnabled(usePage().props))
 const shiftPlanSettings = computed<any>(() => usePage().props.shift_plan_settings ?? usePage().props.auth.user.calendar_settings)
 const projectModeActive = computed(() =>
     !!shiftPlanSettings.value?.use_project_time_period && !!shiftPlanSettings.value?.time_period_project_id
@@ -3140,6 +3150,10 @@ function kwHoursTooltip(row: any, day: any): string {
     const week = row?.worker?.weeklyWorkingHours?.[day?.weekNumber]
     if (!week) return ''
     const planned = week.planned_formatted ?? week.planned
+    if (!workTimeAccountingEnabled.value) {
+        // Arbeitszeitberechnung aus: kein Soll, nur die geplanten Stunden
+        return `${$t('Planned')} ${planned}`
+    }
     if (week.target_unknown) {
         // Soll unbekannt: mindestens ein Tag der Woche ohne gültiges Arbeitszeitmuster
         return `${$t('Planned')} ${planned} · ${$t('Target')} – · ${$t('No work time pattern stored')}`

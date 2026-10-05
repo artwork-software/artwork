@@ -50,8 +50,11 @@ export function usePermission(pageProps) {
             return false;
         }
 
+        // Spiegel von ProjectComponentVisibilityService::canSeeComponent(): Admins und globales
+        // "write projects" sind von "Sehen dürfen nur die Folgenden" ausgenommen.
         if (
             hasAdminRole() ||
+            can('write projects') ||
             component.permission_type === null ||
             component.permission_type === 'allSeeAndEdit' ||
             component.permission_type === 'allSeeSomeEdit'

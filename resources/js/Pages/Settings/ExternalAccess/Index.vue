@@ -1,14 +1,36 @@
 <template>
     <AppLayout :title="$t('External access settings')">
+        <!-- Rückmeldung nach Autosave: kleines grünes Banner oben, blendet sich selbst aus -->
+        <Transition
+            enter-active-class="transition duration-200 ease-out"
+            enter-from-class="opacity-0 -translate-y-2"
+            leave-active-class="transition duration-300 ease-in"
+            leave-to-class="opacity-0 -translate-y-2"
+        >
+            <div
+                v-if="savedBannerVisible"
+                role="status"
+                aria-live="polite"
+                class="pointer-events-none fixed inset-x-0 top-20 z-[120] flex justify-center px-4"
+            >
+                <div class="flex items-center gap-2 rounded-full bg-success px-4 py-1.5 text-sm font-medium text-white shadow-overlay">
+                    <PropertyIcon name="IconCircleCheck" class="size-4" :stroke-width="2" aria-hidden="true" />
+                    {{ $t('Saved') }}
+                </div>
+            </div>
+        </Transition>
+
         <div class="mx-auto max-w-3xl mt-6 px-6 pb-20 space-y-8">
             <header>
                 <h1 class="text-xl font-semibold">{{ $t('External access settings') }}</h1>
                 <p class="mt-2 text-sm text-text-subtle">
                     {{ $t('Configure defaults and notification recipients for external access invitations.') }}
+                    {{ $t('Changes are saved automatically.') }}
                 </p>
             </header>
 
-            <form @submit.prevent="save" class="space-y-8">
+            <!-- Autosave: Checkboxen sofort, Eingabefelder beim Verlassen des Feldes -->
+            <div class="space-y-8">
                 <!-- Feature switch -->
                 <section class="rounded-2xl border border-border-subtle bg-white p-6">
                     <h2 class="text-lg font-semibold">{{ $t('Activate external access') }}</h2>
@@ -19,6 +41,7 @@
                         <BaseCheckbox
                             id="external_access_enabled"
                             v-model="form.enabled"
+                            @change="save"
                             :label="$t('External access enabled')"
                         />
                     </div>
@@ -34,6 +57,8 @@
                             v-model="form.company_name_override"
                             :label="$t('Company name (override)')"
                             :placeholder="settings.effective_company_name_without_override"
+                            :error="errors.company_name_override"
+                            @focusout="saveIfChanged"
                         />
                         <p v-if="!form.company_name_override" class="text-xs text-text-subtle mt-1">
                             {{ $t('Will use:') }} <strong>{{ settings.effective_company_name_without_override }}</strong>
@@ -51,6 +76,8 @@
                                 v-model="form.default_crm_access_months"
                                 type="number"
                                 :label="$t('CRM access default (months)')"
+                                :error="errors.default_crm_access_months"
+                                @focusout="saveIfChanged"
                             />
                         </div>
                         <div>
@@ -59,6 +86,8 @@
                                 v-model="form.default_tab_access_days"
                                 type="number"
                                 :label="$t('Tab access default (days)')"
+                                :error="errors.default_tab_access_days"
+                                @focusout="saveIfChanged"
                             />
                         </div>
                         <div>
@@ -68,6 +97,7 @@
                                 type="number"
                                 :label="$t('Expiry reminder (days before, 0 = off)')"
                                 :error="errors.expiry_reminder_days"
+                                @focusout="saveIfChanged"
                             />
                             <p class="text-xs text-text-subtle mt-1">{{ $t('Inviters are notified this many days before a tab or CRM access expires.') }}</p>
                         </div>
@@ -84,6 +114,7 @@
                         <BaseCheckbox
                             id="external_file_upload_enabled"
                             v-model="form.file_upload_enabled"
+                            @change="save"
                             :label="$t('Allow file upload for external accesses')"
                             :description="$t('If enabled, externally invited persons may upload files in the document component of a shared project tab and remove their own uploads. The file types and size limit of the \'project\' area apply.')"
                         />
@@ -107,6 +138,7 @@
                                 type="number"
                                 :label="$t('Magic link lifetime (minutes)')"
                                 :error="errors.login_token_lifetime_minutes"
+                                @focusout="saveIfChanged"
                             />
                         </div>
                         <div>
@@ -116,6 +148,7 @@
                                 type="number"
                                 :label="$t('Session idle timeout (minutes)')"
                                 :error="errors.session_idle_timeout_minutes"
+                                @focusout="saveIfChanged"
                             />
                         </div>
                         <div>
@@ -124,6 +157,8 @@
                                 v-model="form.session_absolute_lifetime_minutes"
                                 type="number"
                                 :label="$t('Session absolute lifetime (minutes)')"
+                                :error="errors.session_absolute_lifetime_minutes"
+                                @focusout="saveIfChanged"
                             />
                         </div>
                         <div>
@@ -132,6 +167,8 @@
                                 v-model="form.rate_limit_request_link_per_email_per_hour"
                                 type="number"
                                 :label="$t('Link requests per email per hour')"
+                                :error="errors.rate_limit_request_link_per_email_per_hour"
+                                @focusout="saveIfChanged"
                             />
                         </div>
                         <div>
@@ -140,15 +177,13 @@
                                 v-model="form.rate_limit_request_link_per_ip_per_hour"
                                 type="number"
                                 :label="$t('Link requests per IP per hour')"
+                                :error="errors.rate_limit_request_link_per_ip_per_hour"
+                                @focusout="saveIfChanged"
                             />
                         </div>
                     </div>
                 </section>
-
-                <div class="flex justify-end">
-                    <BaseUIButton type="submit" variant="primary" hide-icon :disabled="form.processing">{{ $t('Save settings') }}</BaseUIButton>
-                </div>
-            </form>
+            </div>
 
             <!-- Recipients -->
             <section class="rounded-2xl border border-border-subtle bg-white p-6">
@@ -223,7 +258,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onBeforeUnmount } from 'vue'
 import { router, useForm, usePage } from '@inertiajs/vue3'
 import AppLayout from '@/Layouts/AppLayout.vue'
 import ArtworkBaseModal from '@/Artwork/Modals/ArtworkBaseModal.vue'
@@ -231,6 +266,7 @@ import BaseInput from '@/Artwork/Inputs/BaseInput.vue'
 import BaseCheckbox from '@/Artwork/Inputs/BaseCheckbox.vue'
 import BaseUIButton from '@/Artwork/Buttons/BaseUIButton.vue'
 import ArtworkBaseListbox from '@/Artwork/Listbox/ArtworkBaseListbox.vue'
+import PropertyIcon from '@/Artwork/Icon/PropertyIcon.vue'
 import { useTranslation } from '@/Composeables/Translation.js'
 
 const $t = useTranslation()
@@ -265,8 +301,36 @@ const form = useForm({
     file_upload_enabled: props.settings.file_upload_enabled === true,
 })
 
+const savedBannerVisible = ref(false)
+let savedBannerTimeout = null
+
+function showSavedBanner() {
+    clearTimeout(savedBannerTimeout)
+    savedBannerVisible.value = true
+    savedBannerTimeout = setTimeout(() => { savedBannerVisible.value = false }, 2500)
+}
+
+onBeforeUnmount(() => clearTimeout(savedBannerTimeout))
+
+/** Zuletzt gespeicherter Stand – Fokusverlust ohne Änderung löst keinen Request aus. */
+let lastSavedSnapshot = JSON.stringify(form.data())
+
 function save() {
-    form.patch(route('settings.external-access.update'), { preserveScroll: true })
+    form.patch(route('settings.external-access.update'), {
+        preserveScroll: true,
+        preserveState: true,
+        onSuccess: () => {
+            lastSavedSnapshot = JSON.stringify(form.data())
+            showSavedBanner()
+        },
+    })
+}
+
+function saveIfChanged() {
+    if (JSON.stringify(form.data()) === lastSavedSnapshot) {
+        return
+    }
+    save()
 }
 
 const addOpen = ref(false)
@@ -284,7 +348,7 @@ function addRecipient() {
         recipient_type: addForm.value.option.type,
         recipient_id: addForm.value.option.id,
         notification_types: addForm.value.types,
-    }, { preserveScroll: true, onSuccess: () => { addOpen.value = false } })
+    }, { preserveScroll: true, onSuccess: () => { addOpen.value = false; showSavedBanner() } })
 }
 
 function openEdit(recipient) {
@@ -295,12 +359,12 @@ function openEdit(recipient) {
 function updateRecipient() {
     router.patch(route('settings.external-access.recipients.update', editForm.value.id), {
         notification_types: editForm.value.types,
-    }, { preserveScroll: true, onSuccess: () => { editOpen.value = false } })
+    }, { preserveScroll: true, onSuccess: () => { editOpen.value = false; showSavedBanner() } })
 }
 
 function remove(recipient) {
     if (!window.confirm($t('Remove') + '?')) return
-    router.delete(route('settings.external-access.recipients.remove', recipient.id), { preserveScroll: true })
+    router.delete(route('settings.external-access.recipients.remove', recipient.id), { preserveScroll: true, onSuccess: showSavedBanner })
 }
 
 function formatTypes(types) {

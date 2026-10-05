@@ -10,9 +10,23 @@ use Illuminate\Database\Eloquent\Collection;
 
 class ProjectTabDocumentService
 {
-    public function buildDocumentPayload(Project $project, ?ComponentInTab $componentInTab = null): array
-    {
-        $documents = $this->loadDocuments($project, $componentInTab?->scope);
+    public function __construct(
+        private readonly ProjectComponentVisibilityService $projectComponentVisibilityService,
+    ) {
+    }
+
+    public function buildDocumentPayload(
+        Project $project,
+        ?ComponentInTab $componentInTab = null,
+        ?User $user = null
+    ): array {
+        $scope = $componentInTab?->scope ?? [];
+        if ($user !== null) {
+            // Tabs, die die Person nicht sehen darf, fallen aus der Tab-Auswahl der Komponente heraus
+            $scope = $this->projectComponentVisibilityService->restrictScopeToVisibleTabs($user, $scope);
+        }
+
+        $documents = $this->loadDocuments($project, $scope);
 
         return [
             'documents' => $documents,
@@ -34,7 +48,22 @@ class ProjectTabDocumentService
         ];
     }
 
-    private function loadDocuments(Project $project, ?array $scope): Collection
+    /**
+     * Alle Dateien des Projekts ohne Tab oder aus Tabs, die die Person sehen darf.
+     */
+    public function loadVisibleDocuments(Project $project, ?User $user): Collection
+    {
+        if (!$user) {
+            return $project->project_files;
+        }
+
+        $query = $project->project_files();
+        $this->projectComponentVisibilityService->constrainToVisibleTabs($query, $user);
+
+        return $query->get();
+    }
+
+    private function loadDocuments(Project $project, array $scope): Collection
     {
         if (empty($scope)) {
             return new Collection();
@@ -47,22 +76,6 @@ class ProjectTabDocumentService
             ->get();
     }
 
-    private function loadVisibleDocuments(Project $project, ?User $user): Collection
-    {
-        if (!$user) {
-            return $project->project_files;
-        }
-
-        $visibleTabIds = ProjectTab::query()->visibleForUser($user)->pluck('id');
-
-        return $project->project_files()
-            ->where(function ($query) use ($visibleTabIds): void {
-                $query->whereIn('tab_id', $visibleTabIds)
-                    ->orWhereNull('tab_id');
-            })
-            ->get();
-    }
-
     /**
      * @return string[]
      */
@@ -72,7 +85,7 @@ class ProjectTabDocumentService
             return [];
         }
 
-        $visibleTabIds = ProjectTab::query()->visibleForUser($user)->pluck('id');
+        $visibleTabIds = $this->projectComponentVisibilityService->visibleTabIds($user);
 
         $hiddenTabIdsWithDocuments = $project->project_files()
             ->whereNotNull('tab_id')

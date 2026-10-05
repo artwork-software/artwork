@@ -718,6 +718,7 @@ import DateRangeControl from "@/Artwork/DateRange/DateRangeControl.vue";
 import { ref, provide, onMounted, onUnmounted, onBeforeUnmount, watch, computed, nextTick, shallowRef, triggerRef, defineAsyncComponent } from "vue";
 import AddShiftModal from "@/Pages/Projects/Components/AddShiftModal.vue";
 import { router, usePage } from "@inertiajs/vue3";
+import {isWorkTimeAccountingEnabled} from "@/Helper/workTimeAccounting.js";
 import EventComponent from "@/Layouts/Components/EventComponent.vue";
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
@@ -1188,7 +1189,11 @@ const projectShiftExportTabs = computed(() => {
             exportTabEnums.EXCEL_SHIFT_PERSONNEL_PLAN_EXPORT,
         ]
     }
-    const tabs = [exportTabEnums.PDF_SHIFT_PLAN_EXPORT, exportTabEnums.EXCEL_WORK_TIME_OVERVIEW_EXPORT]
+    const tabs = [exportTabEnums.PDF_SHIFT_PLAN_EXPORT]
+    // Soll/Ist-Übersicht nur mit eingeschalteter Arbeitszeitberechnung
+    if (isWorkTimeAccountingEnabled(page.props)) {
+        tabs.push(exportTabEnums.EXCEL_WORK_TIME_OVERVIEW_EXPORT)
+    }
     // Gewerke-Verteilung enthält namentliche Stunden — Backend-Route verlangt dieselbe Permission
     if (can('can view shift worker hours') || is('artwork admin')) {
         tabs.push(exportTabEnums.EXCEL_CRAFT_DISTRIBUTION_EXPORT)

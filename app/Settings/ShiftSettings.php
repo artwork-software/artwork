@@ -13,6 +13,7 @@ use Spatie\LaravelSettings\Settings;
  * @property bool $shift_confirmation_enabled
  * @property bool $shift_confirmation_in_history
  * @property bool $project_assignments_enabled
+ * @property bool $work_time_accounting_enabled
  */
 class ShiftSettings extends Settings
 {
@@ -42,6 +43,12 @@ class ShiftSettings extends Settings
     // sämtliche Buttons/Anzeigen ausgeblendet, keine neuen Zuordnungen;
     // bestehende Daten bleiben erhalten und sind beim Wiedereinschalten zurück.
     public bool $project_assignments_enabled;
+
+    // Globaler Schalter für die Arbeitszeitberechnung (Soll aus Arbeitszeitmustern,
+    // Stundenkonto, Überstunden, nächtliche Buchung). Aus = der Dienstplan dient nur
+    // zum Anlegen und Besetzen von Schichten; geplante Stunden bleiben sichtbar,
+    // gespeicherte Konten, Muster und Verträge bleiben erhalten.
+    public bool $work_time_accounting_enabled;
 
     public static function group(): string
     {

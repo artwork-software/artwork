@@ -677,7 +677,7 @@ class MoneySourceController extends Controller
 
         $user = Auth::user();
         $newMoneySource = $user->money_sources()->create([
-            'name' => '(Kopie) ' . $moneySource->name,
+            'name' => __('(Copy)') . ' ' . $moneySource->name,
             'amount' => $moneySource->amount,
             'start_date' => $moneySource->start_date,
             'end_date' => $moneySource->end_date,

@@ -40,6 +40,7 @@ use Artwork\Modules\Freelancer\Http\Resources\FreelancerShiftPlanResource;
 use Artwork\Modules\Freelancer\Models\Freelancer;
 use Artwork\Modules\Freelancer\Services\FreelancerService;
 use Artwork\Modules\Holidays\Models\Holiday;
+use Artwork\Modules\Holidays\Services\HolidayService;
 use Artwork\Modules\IndividualTimes\Models\IndividualTime;
 use Artwork\Modules\Notification\Enums\NotificationEnum;
 use Artwork\Modules\Notification\Services\NotificationService;
@@ -1299,104 +1300,16 @@ readonly class EventService
 
 
     /**
-     * Feiertage des Zeitraums in EINER Query, pro Tag zugeordnet.
-     *
-     * Die Tages-Prüfung in holidayMatchesDay() spiegelt bewusst exakt die
-     * Bedingung aus getHolidaysForPeriod() — inklusive der ungewöhnlichen
-     * yearly-Regel (Monat aus `date`, Tag aus `end_date`).
+     * Feiertage des Zeitraums in EINER Query, pro Tag zugeordnet (jährliche Einträge inkl.
+     * Jahreswechsel, mehrtägige an jedem Tag) – gleiche Quelle wie Kalender und Listenansicht.
      *
      * @return array<string, SupportCollection<int, CalendarHolidayDTO>>
      */
     private function getHolidaysGroupedByDate($startDate, $endDate): array
     {
-        $rangeStart = Carbon::parse($startDate)->format('Y-m-d');
-        $rangeEnd = Carbon::parse($endDate)->format('Y-m-d');
-
-        $holidays = Holiday::query()
-            ->where(function (Builder $query) use ($rangeStart, $rangeEnd): void {
-                $query->where(function (Builder $builder) use ($rangeStart, $rangeEnd): void {
-                    // Direkter Vergleich statt whereDate(): beide Spalten sind vom
-                    // Typ DATE, DATE(spalte) wäre also identisch — würde aber den
-                    // Index auf (date, end_date) unbenutzbar machen.
-                    $builder->where('date', '<=', $rangeEnd)
-                        ->where('end_date', '>=', $rangeStart);
-                })->orWhere('yearly', true);
-            })
-            ->with('subdivisions')
-            ->get();
-
-        if ($holidays->isEmpty()) {
-            return [];
-        }
-
-        // DTO je Feiertag einmal bauen und über die Tage teilen — die DTOs sind
-        // reine Wertobjekte und werden nur serialisiert.
-        $dtoByHolidayId = [];
-        foreach ($holidays as $holiday) {
-            $dtoByHolidayId[$holiday->getKey()] = new CalendarHolidayDTO(
-                name: $holiday->name,
-                date: $holiday->date?->format('Y-m-d'),
-                end_date: $holiday->end_date?->format('Y-m-d'),
-                color: $holiday->color,
-                subdivisions: $holiday->subdivisions->pluck('name')->toArray(),
-                treatAsSpecialDay: (bool) $holiday->treatAsSpecialDay,
-            );
-        }
-
-        $grouped = [];
-        foreach (CarbonPeriod::create($startDate, $endDate) as $day) {
-            $matches = new SupportCollection();
-
-            foreach ($holidays as $holiday) {
-                if ($this->holidayMatchesDay($holiday, $day)) {
-                    $matches->push($dtoByHolidayId[$holiday->getKey()]);
-                }
-            }
-
-            if ($matches->isNotEmpty()) {
-                $grouped[$day->format('Y-m-d')] = $matches;
-            }
-        }
-
-        return $grouped;
-    }
-
-    private function holidayMatchesDay(Holiday $holiday, Carbon $day): bool
-    {
-        $dayKey = $day->format('Y-m-d');
-        $start = $holiday->date?->format('Y-m-d');
-        $end = $holiday->end_date?->format('Y-m-d');
-
-        if ($start !== null && $end !== null && $start <= $dayKey && $end >= $dayKey) {
-            return true;
-        }
-
-        return (bool) $holiday->yearly
-            && $holiday->date !== null
-            && $holiday->end_date !== null
-            && (int) $holiday->date->month === (int) $day->month
-            && (int) $holiday->end_date->day === (int) $day->day;
-    }
-
-    public function getHolidaysForPeriod($period): SupportCollection
-    {
-        return Holiday::where(function (Builder $query) use ($period): void {
-            $query->where(function (Builder $q) use ($period): void {
-                $q->whereDate('date', '<=', $period->format('Y-m-d'))
-                    ->whereDate('end_date', '>=', $period->format('Y-m-d'));
-            })->orWhere(function (Builder $q) use ($period): void {
-                $q->where('yearly', true)
-                    ->whereMonth('date', $period->month)
-                    ->whereDay('end_date', $period->day);
-            });
-        })->with('subdivisions')->get()->map(fn($holiday) => new CalendarHolidayDTO(
-            name: $holiday->name,
-            date: $holiday->date->format('Y-m-d'),
-            end_date: $holiday->end_date->format('Y-m-d'),
-            color: $holiday->color,
-            subdivisions: $holiday->subdivisions->pluck('name')->toArray(),
-            treatAsSpecialDay: (bool) $holiday->treatAsSpecialDay,
-        ));
+        return app(HolidayService::class)
+            ->getCalendarHolidaysByDate(Carbon::parse($startDate), Carbon::parse($endDate))
+            ->all();
     }
 
     public function fetchFilteredRooms(

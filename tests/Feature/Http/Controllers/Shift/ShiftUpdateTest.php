@@ -107,6 +107,44 @@ final class ShiftUpdateTest extends FeatureTestCase
     }
 
     #[Test]
+    public function updating_a_shift_accepts_a_description_longer_than_255_characters(): void
+    {
+        // Regression (Sentry): Technik-Rider als Schichtnotiz sprengten varchar(255) -> SQLSTATE 1406.
+        $this->actingAsAdmin();
+
+        $shift = Shift::factory()->create([
+            'is_committed' => false,
+            'start_date' => '2026-06-08',
+            'end_date' => '2026-06-08',
+            'start' => '10:00:00',
+            'end' => '14:00:00',
+        ]);
+        $description = "Stage Requirements\n" . str_repeat('Ground-level stage, Backdrop, Schüler*Innen.', 40);
+
+        $this->patchJson(route('event.shift.update', $shift), [
+            'craft_id' => $shift->craft_id,
+            'description' => $description,
+            'updateOrCreateInShiftPlan' => true,
+        ])->assertOk();
+
+        $this->assertSame($description, $shift->fresh()->description);
+    }
+
+    #[Test]
+    public function updating_a_shift_rejects_an_overlong_description_with_a_validation_error(): void
+    {
+        $this->actingAsAdmin();
+
+        $shift = Shift::factory()->create(['is_committed' => false]);
+
+        $this->patchJson(route('event.shift.update', $shift), [
+            'craft_id' => $shift->craft_id,
+            'description' => str_repeat('a', 10001),
+            'updateOrCreateInShiftPlan' => true,
+        ])->assertUnprocessable()->assertJsonValidationErrors('description');
+    }
+
+    #[Test]
     public function updating_a_shift_without_qualifications_field_preserves_slots_and_assignments(): void
     {
         // Regression: Beim zeitlichen Verschieben einer Schicht wird das Feld `shiftsQualifications`

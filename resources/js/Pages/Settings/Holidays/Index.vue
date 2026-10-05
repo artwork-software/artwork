@@ -45,7 +45,7 @@
                             class="inline-flex items-center gap-2 cursor-pointer select-none"
                         >
                             <img :src="c.image" :alt="c.name" class="size-12 rounded-full" />
-                            <span class="text-sm text-text dark:text-white">{{ c.name }}</span>
+                            <span class="text-sm text-text dark:text-white">{{ $t(c.name) }}</span>
                         </label>
                     </div>
                 </div>
@@ -492,7 +492,7 @@
                                         {{ $t('Federal states') }}
                                     </th>
                                     <th scope="col" class="px-3 py-3.5 text-sm font-semibold text-text">
-                                        {{ $t('About interface') }}
+                                        {{ $t('Via interface') }}
                                     </th>
                                     <th scope="col" class="px-3 py-3.5 text-sm font-semibold text-text">
                                         {{ $t('Repeat annually')}}
@@ -733,8 +733,8 @@ watch(typeFilterOption, (option, previous) => {
 
 // Länderwahl & Suche
 const countries = [
-    { id: "de", name: "Deutschland", image: "/storage/country-flags/germany.png", country_code: "DE"  },
-    { id: "ch", name: "Schweiz",     image: "/storage/country-flags/switzerland.png", country_code: "CH" },
+    { id: "de", name: "Germany", image: "/storage/country-flags/germany.png", country_code: "DE"  },
+    { id: "ch", name: "Switzerland", image: "/storage/country-flags/switzerland.png", country_code: "CH" },
 ];
 const selectedCountryId = ref("de");
 const searchQuery = ref("");

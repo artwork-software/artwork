@@ -98,6 +98,7 @@ use Psr\Container\ContainerExceptionInterface;
 use Psr\Container\NotFoundExceptionInterface;
 use Spatie\Permission\Models\Role;
 use Throwable;
+use Artwork\Modules\WorkTime\Support\WorkTimeAccounting;
 
 class UserController extends Controller
 {
@@ -296,12 +297,16 @@ class UserController extends Controller
                 static fn (array $listedUser): bool => (bool) ($listedUser['can_work_shifts'] ?? false)
             )
         ));
-        $userIdsWithPattern = $this->workTimeCalculationService->userIdsWithPatternOn($shiftWorkerIds);
+        $workTimeAccountingEnabled = WorkTimeAccounting::isEnabled();
+        $userIdsWithPattern = $workTimeAccountingEnabled
+            ? $this->workTimeCalculationService->userIdsWithPatternOn($shiftWorkerIds)
+            : [];
         $shiftWorkerLookup = array_flip($shiftWorkerIds);
         foreach ($users as &$listedUser) {
             $listedUserId = (int) ($listedUser['id'] ?? 0);
             $listedUser['can_work_shifts'] = isset($shiftWorkerLookup[$listedUserId]);
-            $listedUser['work_time_pattern_missing'] = isset($shiftWorkerLookup[$listedUserId])
+            $listedUser['work_time_pattern_missing'] = $workTimeAccountingEnabled
+                && isset($shiftWorkerLookup[$listedUserId])
                 && !isset($userIdsWithPattern[$listedUserId]);
         }
         unset($listedUser);
@@ -606,6 +611,8 @@ class UserController extends Controller
 
     public function showUserWorkTimes(User $user): Response|ResponseFactory
     {
+        abort_unless(WorkTimeAccounting::isEnabled(), 403);
+
         $startInput = request()->input('start');
         $endInput = request()->input('end');
 
@@ -772,6 +779,7 @@ class UserController extends Controller
 
     public function shiftUserInfoWorktimes(User $user): JsonResponse
     {
+        abort_unless(WorkTimeAccounting::isEnabled(), 403);
         $this->authorizeHourAccountAccess($user);
         $start = $this->parseDateOrDefault(request()->input('start'), Carbon::now()->startOfMonth())->startOfDay();
         $end = $this->parseDateOrDefault(request()->input('end'), $start->copy()->endOfMonth())->startOfDay();
@@ -832,7 +840,7 @@ class UserController extends Controller
      */
     private function operationPlanTargetSummary(User $user, ?array $dateValue): ?array
     {
-        if (!is_array($dateValue) || count($dateValue) < 2) {
+        if (!WorkTimeAccounting::isEnabled() || !is_array($dateValue) || count($dateValue) < 2) {
             return null;
         }
 
@@ -926,6 +934,7 @@ class UserController extends Controller
 
     public function shiftUserInfoOvertime(User $user): JsonResponse
     {
+        abort_unless(WorkTimeAccounting::isEnabled(), 403);
         $this->authorizeHourAccountAccess($user);
 
         return response()->json($this->buildOvertimePayload($user));
@@ -950,6 +959,8 @@ class UserController extends Controller
 
     public function editUserOvertime(User $user): Response|ResponseFactory
     {
+        abort_unless(WorkTimeAccounting::isEnabled(), 403);
+
         return inertia('Users/UserOvertime', [
             'userToEdit' => new UserShowResource($user),
             'currentTab' => 'overtime',
@@ -959,6 +970,8 @@ class UserController extends Controller
 
     public function payOutOvertime(Request $request, User $user, OvertimeService $service): JsonResponse
     {
+        abort_unless(WorkTimeAccounting::isEnabled(), 403);
+
         $validated = $request->validate([
             'minutes' => 'required|integer|min:1',
             'comment' => 'nullable|string|max:1000',

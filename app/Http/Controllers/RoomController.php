@@ -18,6 +18,7 @@ use Carbon\Carbon;
 use Carbon\CarbonPeriod;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
 use Illuminate\Routing\Redirector;
 use Illuminate\Support\Facades\Redirect;
 use Inertia\Inertia;
@@ -42,6 +43,15 @@ class RoomController extends Controller
      */
     public function getAllDayFree(Request $request): array
     {
+        // Je Tag läuft eine Abfrage: Zeitraum begrenzen, unparsbare Daten nicht als 500 enden lassen.
+        $request->validate([
+            'start' => ['required', 'date'],
+            'end' => ['required', 'date', 'after_or_equal:start'],
+        ]);
+        if (Carbon::parse($request->input('start'))->addYear()->lt(Carbon::parse($request->input('end')))) {
+            throw ValidationException::withMessages(['end' => __('The period may cover at most one year.')]);
+        }
+
         $period = CarbonPeriod::create(
             Carbon::parse($request->get('start'))->addHours(2),
             Carbon::parse($request->get('end'))
@@ -97,20 +107,22 @@ class RoomController extends Controller
     {
         $this->authorize('create', Room::class);
 
-        // varchar(7)-Spalte: ungültige Werte würden im Strict-Mode einen SQL-Fehler (500) werfen
-        $request->validate(['color' => ['nullable', 'regex:/^#[0-9a-fA-F]{6}$/']]);
+        $request->validate(array_merge($this->roomFieldRules($request, true), [
+            'area_id' => ['required', 'integer', 'exists:areas,id'],
+            'user_id' => ['nullable', 'integer', 'exists:users,id'],
+        ]));
 
         $room = Room::create([
             'name' => $request->name,
             'color' => $request->color,
             'description' => $request->description,
-            'temporary' => $request->temporary,
+            'temporary' => $request->boolean('temporary'),
             'start_date' => $request->start_date,
             'end_date' => $request->end_date,
             'area_id' => $request->area_id,
-            'user_id' => $request->user_id,
-            'everyone_can_book' => $request->everyone_can_book,
-            'relevant_for_disposition' => $request->relevant_for_disposition,
+            'user_id' => $request->user_id ?? $request->user()->id,
+            'everyone_can_book' => $request->boolean('everyone_can_book'),
+            'relevant_for_disposition' => $request->boolean('relevant_for_disposition', true),
             'capacity' => $request->capacity,
             'order' => Room::max('order') + 1,
         ]);
@@ -192,8 +204,7 @@ class RoomController extends Controller
     ): RedirectResponse {
         $this->authorize('update', $room);
 
-        // varchar(7)-Spalte: ungültige Werte würden im Strict-Mode einen SQL-Fehler (500) werfen
-        $request->validate(['color' => ['nullable', 'regex:/^#[0-9a-fA-F]{6}$/']]);
+        $request->validate($this->roomFieldRules($request, false));
 
         $roomReplicate = $room->replicate();
         $roomReplicate->admins = $room->users()->wherePivot('is_admin', true)->get();
@@ -398,5 +409,34 @@ class RoomController extends Controller
         ]);
 
         return response()->json($normalized);
+    }
+
+    /**
+     * Gemeinsame Regeln für Raum anlegen/bearbeiten. Ohne Prüfung führten leerer Name oder
+     * ungültige Daten zu SQL-Fehlern (500), und ein temporärer Raum ohne Enddatum wurde nie
+     * automatisch entfernt. Beim Bearbeiten nur vorhandene Felder prüfen (Teilupdates).
+     *
+     * @return array<string, array<int, string>>
+     */
+    private function roomFieldRules(Request $request, bool $creating): array
+    {
+        $presence = $creating ? 'required' : 'sometimes';
+        $endDateRules = ['nullable', 'date', 'required_if_accepted:temporary'];
+        if ($request->filled('start_date')) {
+            $endDateRules[] = 'after_or_equal:start_date';
+        }
+
+        return [
+            'name' => [$presence, 'string', 'max:255'],
+            // varchar(7)-Spalte: ungültige Werte würden im Strict-Mode einen SQL-Fehler (500) werfen
+            'color' => ['nullable', 'regex:/^#[0-9a-fA-F]{6}$/'],
+            'description' => ['nullable', 'string'],
+            'temporary' => ['sometimes', 'boolean'],
+            'start_date' => ['nullable', 'date'],
+            'end_date' => $endDateRules,
+            'everyone_can_book' => ['sometimes', 'boolean'],
+            'relevant_for_disposition' => ['sometimes', 'boolean'],
+            'capacity' => ['nullable', 'integer', 'min:0'],
+        ];
     }
 }

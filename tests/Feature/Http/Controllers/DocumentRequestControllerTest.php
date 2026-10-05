@@ -137,4 +137,39 @@ final class DocumentRequestControllerTest extends FeatureTestCase
         $response->assertRedirect();
         $this->assertSoftDeleted('document_requests', ['id' => $documentRequest->id]);
     }
+
+    #[Test]
+    public function unassigned_requests_are_only_sent_to_users_who_may_see_foreign_requests(): void
+    {
+        DocumentRequest::factory()->create(['requested_id' => null, 'status' => DocumentRequest::STATUS_OPEN]);
+
+        // Vorher in den Props für alle, das Frontend blendete nur den Tab aus
+        $this->actingAs(User::factory()->create());
+        $this->get(route('document-requests.index'))
+            ->assertInertia(fn (AssertableInertia $page) => $page->has('unassignedRequests', 0));
+
+        $this->actingAsUserWith(PermissionEnum::DOCUMENT_REQUEST_EDIT->value);
+        $this->get(route('document-requests.index'))
+            ->assertInertia(fn (AssertableInertia $page) => $page->where(
+                'unassignedRequests',
+                fn ($requests) => count($requests) >= 1
+            ));
+    }
+
+    #[Test]
+    public function crm_contact_data_is_only_returned_to_involved_or_authorised_users(): void
+    {
+        $requester = User::factory()->create();
+        $request = DocumentRequest::factory()->create(['requester_id' => $requester->id, 'requested_id' => null]);
+
+        // Vorher ohne jede Prüfung abrufbar
+        $this->actingAs(User::factory()->create());
+        $this->getJson(route('document-requests.crm-contact', $request))->assertForbidden();
+
+        $this->actingAs($requester);
+        $this->getJson(route('document-requests.crm-contact', $request))->assertOk();
+
+        $this->actingAsUserWith(PermissionEnum::DOCUMENT_REQUEST_EDIT->value);
+        $this->getJson(route('document-requests.crm-contact', $request))->assertOk();
+    }
 }

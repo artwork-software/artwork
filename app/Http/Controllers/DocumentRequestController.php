@@ -64,10 +64,11 @@ class DocumentRequestController extends Controller
             ->with($eagerLoad)
             ->get();
 
-        // Get requests that are not assigned to any user
-        $unassignedRequests = DocumentRequest::whereNull('requested_id')
-            ->with($eagerLoad)
-            ->get();
+        // Nicht zugewiesene Anfragen nur mit Erstellen-/Bearbeiten-Recht bzw. Admin – vorher gingen sie
+        // an alle in die Seiten-Props, obwohl das Frontend den Tab nur Berechtigten zeigt.
+        $unassignedRequests = $this->canSeeForeignRequests()
+            ? DocumentRequest::whereNull('requested_id')->with($eagerLoad)->get()
+            : collect();
 
         // Offene Anfragen, die anderen Personen zugewiesen sind (unabhängig davon, wer sie erstellt hat).
         // Sichtbarkeit wie beim Tab "Nicht zugewiesen": nur mit Erstellen-/Bearbeiten-Recht bzw. Admin.
@@ -267,6 +268,15 @@ class DocumentRequestController extends Controller
      */
     public function getCrmContactData(DocumentRequest $documentRequest): JsonResponse
     {
+        // Kontaktdaten (inkl. Eigenschaften) nur für Beteiligte oder Berechtigte – vorher ohne Prüfung
+        $userId = Auth::id();
+        abort_unless(
+            (int) $documentRequest->requester_id === $userId
+            || (int) $documentRequest->requested_id === $userId
+            || $this->canSeeForeignRequests(),
+            403
+        );
+
         if (!$documentRequest->crm_contact_id) {
             return response()->json(null);
         }

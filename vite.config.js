@@ -65,6 +65,14 @@ function tablerIconsSync() {
 
 export default defineConfig({
     envPrefix: 'ARTWORK_NEVER_EXPOSE_',
+    // Die Sprachdateien (~8.500 Keys) werden nur als Ganzes (default) gebraucht. Als String +
+    // JSON.parse parst der Browser sie deutlich schneller als ein JS-Objektliteral mit
+    // einem Named Export je Key – das bremste jeden Kaltstart vor dem Mount. stringify greift
+    // in Vite 7 nur ohne namedExports (JSON wird nirgends per Named Import genutzt).
+    json: {
+        namedExports: false,
+        stringify: true,
+    },
     build: {
         // for modern browsers / node versions — ESNext includes top-level await
         target: 'esnext',

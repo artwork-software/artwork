@@ -2,9 +2,14 @@
 
 namespace Artwork\Modules\Notification\Enums;
 
+use Artwork\Modules\Budget\Notifications\BudgetVerified;
 use Artwork\Modules\Department\Notifications\TeamNotification;
 use Artwork\Modules\Event\Notifications\ConflictNotification;
 use Artwork\Modules\Event\Notifications\EventNotification;
+use Artwork\Modules\ExternalAccess\Notifications\ExternalAccessExpiringNotification;
+use Artwork\Modules\ExternalAccess\Notifications\ExternalCrmSubmissionNotification;
+use Artwork\Modules\ExternalAccess\Notifications\ExternalTabComponentUpdatedNotification;
+use Artwork\Modules\Inventory\Notifications\InventoryArticleNotification;
 use Artwork\Modules\MoneySource\Notifications\MoneySourceNotification;
 use Artwork\Modules\Project\Notifications\ProjectNotification;
 use Artwork\Modules\Room\Notifications\RoomNotification;
@@ -149,50 +154,71 @@ enum NotificationEnum: string
         };
     }
 
+    /**
+     * Laravel-Notification, die NotificationService::createNotification für diesen Typ verschickt;
+     * null = nur Push-Broadcast und Glocken-Indikator.
+     *
+     * @return class-string<\Illuminate\Notifications\Notification>|null
+     */
     //phpcs:ignore Generic.Metrics.CyclomaticComplexity.TooHigh
-    public function notificationClass(): string
+    public function notificationClass(): ?string
     {
         return match ($this) {
-            self::NOTIFICATION_EVENT_CHANGED => EventNotification::class,
             self::NOTIFICATION_UPSERT_ROOM_REQUEST,
-            self::NOTIFICATION_ROOM_REQUEST => RoomRequestNotification::class,
-            self::NOTIFICATION_CONFLICT,
-            self::NOTIFICATION_LOUD_ADJOINING_EVENT => ConflictNotification::class,
-            self::NOTIFICATION_ROOM_ANSWER,
-            self::NOTIFICATION_ROOM_CHANGED => RoomNotification::class,
-            self::NOTIFICATION_TASK_REMINDER => DeadlineNotification::class,
+            self::NOTIFICATION_ROOM_REQUEST,
+            self::NOTIFICATION_ROOM_ANSWER => RoomRequestNotification::class,
+            self::NOTIFICATION_EVENT_CHANGED,
+            self::NOTIFICATION_EVENT_VERIFICATION_REQUESTS => EventNotification::class,
             self::NOTIFICATION_NEW_TASK,
             self::NOTIFICATION_TASK_CHANGED => TaskNotification::class,
-            self::NOTIFICATION_PUBLIC_RELEVANT,
-            self::NOTIFICATION_PROJECT => ProjectNotification::class,
+            self::NOTIFICATION_PROJECT,
+            self::NOTIFICATION_PUBLIC_RELEVANT => ProjectNotification::class,
             self::NOTIFICATION_TEAM => TeamNotification::class,
+            self::NOTIFICATION_ROOM_CHANGED => RoomNotification::class,
+            self::NOTIFICATION_CONFLICT,
+            self::NOTIFICATION_LOUD_ADJOINING_EVENT => ConflictNotification::class,
+            self::NOTIFICATION_TASK_REMINDER => DeadlineNotification::class,
             self::NOTIFICATION_BUDGET_MONEY_SOURCE_AUTH_CHANGED,
-            self::NOTIFICATION_BUDGET_STATE_CHANGED,
             self::NOTIFICATION_BUDGET_MONEY_SOURCE_CHANGED,
             self::NOTIFICATION_MONEY_SOURCE_EXPIRATION,
-            self::NOTIFICATION_MONEY_SOURCE_BUDGET_THRESHOLD_REACHED,
-            self::NOTIFICATION_CONTRACTS_DOCUMENT_CHANGED => MoneySourceNotification::class,
-            self::NOTIFICATION_SHIFT_CHANGED,
-            self::NOTIFICATION_SHIFT_OWN_INFRINGEMENT,
-            self::NOTIFICATION_SHIFT_INFRINGEMENT,
+            self::NOTIFICATION_MONEY_SOURCE_BUDGET_THRESHOLD_REACHED => MoneySourceNotification::class,
+            self::NOTIFICATION_BUDGET_STATE_CHANGED,
+            self::NOTIFICATION_CONTRACTS_DOCUMENT_CHANGED,
+            self::NOTIFICATION_DOCUMENT_REQUEST_CREATED,
+            self::NOTIFICATION_DOCUMENT_REQUEST_COMPLETED => BudgetVerified::class,
             self::NOTIFICATION_SHIFT_LOCKED,
             self::NOTIFICATION_SHIFT_AVAILABLE,
+            self::NOTIFICATION_SHIFT_CHANGED,
+            self::NOTIFICATION_SHIFT_CONFLICT,
+            self::NOTIFICATION_SHIFT_INFRINGEMENT,
+            self::NOTIFICATION_SHIFT_OWN_INFRINGEMENT,
             self::NOTIFICATION_SHIFT_OPEN_DEMAND,
-            self::NOTIFICATION_REMINDER_ROOM_REQUEST,
             self::NOTIFICATION_SHIFT_WORKTIME_REQUEST_APPROVED,
             self::NOTIFICATION_SHIFT_WORKTIME_REQUEST_DECLINED,
             self::NOTIFICATION_SHIFT_WORKTIME_GET_REQUEST,
             self::NOTIFICATION_NEW_SHIFT_COMMIT_WORKFLOW_REQUEST,
-            self::NOTIFICATION_SHIFT_WORKER_CONFIRMATION,
-            self::NOTIFICATION_SHIFT_CONFLICT => ShiftNotification::class,
-            self::NOTIFICATION_EXTERNAL_ISSUE_RETURN_DUE =>
-                \Artwork\Modules\Inventory\Notifications\InventoryArticleNotification::class,
-            self::NOTIFICATION_EXTERNAL_CRM_SUBMITTED =>
-                \Artwork\Modules\ExternalAccess\Notifications\ExternalCrmSubmissionNotification::class,
-            self::NOTIFICATION_EXTERNAL_TAB_COMPONENT_UPDATED =>
-                \Artwork\Modules\ExternalAccess\Notifications\ExternalTabComponentUpdatedNotification::class,
-            self::NOTIFICATION_EXTERNAL_ACCESS_EXPIRING =>
-                \Artwork\Modules\ExternalAccess\Notifications\ExternalAccessExpiringNotification::class,
+            self::NOTIFICATION_SHIFT_WORKER_CONFIRMATION => ShiftNotification::class,
+            self::NOTIFICATION_INVENTORY_OVERBOOKED,
+            self::NOTIFICATION_INVENTORY_ARTICLE_CHANGED,
+            self::NOTIFICATION_EXTERNAL_ISSUE_RETURN_DUE => InventoryArticleNotification::class,
+            self::NOTIFICATION_EXTERNAL_CRM_SUBMITTED => ExternalCrmSubmissionNotification::class,
+            self::NOTIFICATION_EXTERNAL_TAB_COMPONENT_UPDATED => ExternalTabComponentUpdatedNotification::class,
+            self::NOTIFICATION_EXTERNAL_ACCESS_EXPIRING => ExternalAccessExpiringNotification::class,
+            self::NOTIFICATION_REMINDER_ROOM_REQUEST => null,
+        };
+    }
+
+    /**
+     * Systemmeldungen ohne auslösende Person (Scheduler) gehen auch an den eingeloggten User;
+     * alle anderen nie an den, der sie selbst ausgelöst hat.
+     */
+    public function notifiesActingUser(): bool
+    {
+        return match ($this) {
+            self::NOTIFICATION_MONEY_SOURCE_EXPIRATION,
+            self::NOTIFICATION_MONEY_SOURCE_BUDGET_THRESHOLD_REACHED,
+            self::NOTIFICATION_EXTERNAL_ISSUE_RETURN_DUE => true,
+            default => false,
         };
     }
 

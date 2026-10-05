@@ -18,7 +18,6 @@ import {IconCheck, IconX} from "@tabler/icons-vue";
 import JetDialogModal from "@/Jetstream/DialogModal.vue";
 import Permissions from "@/Mixins/Permissions.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
-import IconLib from "@/Mixins/IconLib.vue";
 import BaseModal from "@/Components/Modals/BaseModal.vue";
 import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
@@ -26,7 +25,7 @@ import BaseAlertComponent from "@/Components/Alerts/BaseAlertComponent.vue";
 
 export default {
     name: 'ConfirmationComponent',
-    mixins: [Permissions, IconLib],
+    mixins: [Permissions],
     components: {
         BaseAlertComponent,
         BaseUIButton,

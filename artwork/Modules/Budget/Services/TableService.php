@@ -76,9 +76,7 @@ readonly class TableService
                     $subPositionService,
                     $budgetSumDetailsService,
                     $cellCommentService,
-                    $cellCalculationService,
-                    $sageNotAssignedDataService,
-                    $sageAssignedDataService
+                    $cellCalculationService
                 );
                 $table->refresh();
                 $table->unsetRelations();
@@ -268,9 +266,7 @@ readonly class TableService
         SubPositionService $subPositionService,
         BudgetSumDetailsService $budgetSumDetailsService,
         CellCommentService $cellCommentService,
-        CellCalculationService $cellCalculationService,
-        SageNotAssignedDataService $sageNotAssignedDataService,
-        SageAssignedDataService $sageAssignedDataService
+        CellCalculationService $cellCalculationService
     ): void {
         $table->mainPositions()->withTrashed()->get()->each(
             function (MainPosition $mainPosition) use (
@@ -286,9 +282,7 @@ readonly class TableService
                 $mainPositionDetailsService,
                 $subPositionService,
                 $cellCommentService,
-                $cellCalculationService,
-                $sageNotAssignedDataService,
-                $sageAssignedDataService
+                $cellCalculationService
             ): void {
                 $mainPositionService->restore(
                     $mainPosition,
@@ -303,9 +297,7 @@ readonly class TableService
                     $mainPositionDetailsService,
                     $subPositionService,
                     $cellCommentService,
-                    $cellCalculationService,
-                    $sageNotAssignedDataService,
-                    $sageAssignedDataService
+                    $cellCalculationService
                 );
             }
         );
@@ -320,9 +312,7 @@ readonly class TableService
                 $budgetSumDetailsService,
                 $columnCellService,
                 $cellCommentService,
-                $cellCalculationService,
-                $sageNotAssignedDataService,
-                $sageAssignedDataService
+                $cellCalculationService
             ): void {
                 $columnService->restore(
                     $column,
@@ -333,9 +323,7 @@ readonly class TableService
                     $budgetSumDetailsService,
                     $columnCellService,
                     $cellCommentService,
-                    $cellCalculationService,
-                    $sageNotAssignedDataService,
-                    $sageAssignedDataService
+                    $cellCalculationService
                 );
             }
         );

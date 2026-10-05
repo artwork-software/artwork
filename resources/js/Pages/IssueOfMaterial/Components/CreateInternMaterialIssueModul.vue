@@ -215,7 +215,7 @@
                                             <div class="text-xs text-text-subtle line-clamp-2" v-if="article.description">{{ article.description }}</div>
                                             <div class="mt-2 flex flex-wrap items-center gap-2 text-[11px]">
                                                 <template v-for="(status, i) in article.status_values" :key="i">
-                                                    <div v-if="status.name === 'Ready for use' || status.name === 'Einsatzbereit'" class="inline-flex items-center gap-1 rounded-md border px-1.5 py-0.5" :style="{ borderColor: status.color, backgroundColor: status.color + '15' }" :title="status.name">
+                                                    <div v-if="status.default" class="inline-flex items-center gap-1 rounded-md border px-1.5 py-0.5" :style="{ borderColor: status.color, backgroundColor: status.color + '15' }" :title="status.name">
                                                         <span class="inline-block size-1.5 rounded-full" :style="{ backgroundColor: status.color }"></span>
                                                         <span class="tabular-nums">{{ status.name }}</span>
                                                         <span class="tabular-nums">{{ readyForUseCount(article) }}</span>
@@ -1789,31 +1789,26 @@ const filePreviewUrl = (file) => {
     }
 };
 
-// Helper: Compute "Ready for use / Einsatzbereit" count for Found Articles list
-// - For detailed-quantity articles: sum quantities of detailed items with status name in ['Einsatzbereit', 'Ready for use']
-// - Otherwise: use the article's status_values pivot value for that status
-const READY_STATUS_NAMES = ['Einsatzbereit', 'Ready for use'];
+// Einsatzbereite Menge in der Trefferliste – wie InventoryArticle::readyQuantity() im Backend:
+// Status mit default-Flag (nicht der Name, Status sind umbenennbar); Artikel ganz ohne
+// gepflegte Statusmengen zählen mit ihrer Gesamtmenge.
 function readyForUseCount(article: any): number {
     if (!article) return 0;
-    const isReadyName = (name?: string) => !!name && READY_STATUS_NAMES.includes(name);
-    try {
-        if (article.is_detailed_quantity && Array.isArray(article.detailed_article_quantities) && article.detailed_article_quantities.length) {
-            return article.detailed_article_quantities.reduce((sum: number, dq: any) => {
-                const name = dq?.status?.name as string | undefined;
-                const qty = Number(dq?.quantity ?? 0);
-                return sum + (isReadyName(name) && !Number.isNaN(qty) ? qty : 0);
-            }, 0);
-        }
-        const readyStatus = (article.status_values || []).find((s: any) => isReadyName(s?.name));
-        const val = Number(readyStatus?.pivot?.value ?? 0);
-        return Number.isNaN(val) ? 0 : val;
-    } catch (e) {
-        return 0;
+    const toNumber = (value: any) => {
+        const number = Number(value ?? 0);
+        return Number.isNaN(number) ? 0 : number;
+    };
+    if (article.is_detailed_quantity && Array.isArray(article.detailed_article_quantities) && article.detailed_article_quantities.length) {
+        return article.detailed_article_quantities.reduce(
+            (sum: number, dq: any) => sum + (dq?.status?.default ? toNumber(dq?.quantity) : 0),
+            0
+        );
     }
+    const statusValues = article.status_values || [];
+    if (!statusValues.length) return toNumber(article.quantity);
+    const readyStatus = statusValues.find((status: any) => status?.default);
+    return toNumber(readyStatus?.pivot?.value);
 }
-
-
-
 
 const openArticleDetailModal = async (article) => {
     try {
@@ -1907,7 +1902,8 @@ function addBasketArticlesToIssue(basket) {
 
     for (const ba of basket.basket_articles) {
         const art = ba?.article;
-        if (!art?.id) continue;
+        // Artikel im Papierkorb (article = null) bzw. Menge 0 nicht übernehmen
+        if (!art?.id || Number(ba?.quantity ?? 0) < 1) continue;
 
         const idx = internMaterialIssue.articles.findIndex(a => a.id === art.id);
 

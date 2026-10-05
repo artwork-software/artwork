@@ -217,11 +217,17 @@ class Component extends Model
         return false;
     }
 
+    /**
+     * @return HasMany<PrintLayoutComponents, $this>
+     */
     public function componentInPrintLayouts(): HasMany
     {
         return $this->hasMany(PrintLayoutComponents::class, 'component_id', 'id');
     }
 
+    /**
+     * @return HasMany<DisclosureComponents, $this>
+     */
     public function componentInDisclosures(): HasMany
     {
         return $this->hasMany(DisclosureComponents::class, 'component_id', 'id');
@@ -229,6 +235,7 @@ class Component extends Model
 
     /**
      * Inhalte dieses Ordners (nur bei type = DisclosureComponent befüllt).
+     * @return HasMany<DisclosureComponents, $this>
      */
     public function disclosureContents(): HasMany
     {

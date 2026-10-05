@@ -6,6 +6,9 @@ use Artwork\Modules\Room\Models\Room;
 use Carbon\Carbon;
 use Illuminate\Http\Resources\Json\JsonResource;
 
+/**
+ * @mixin \Artwork\Modules\Event\Models\Event
+ */
 class EventShowResource extends JsonResource
 {
     public static $wrap = null;

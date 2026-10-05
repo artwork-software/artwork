@@ -26,6 +26,9 @@ class BiEventTypeTag extends Model
         'kpi_role',
     ];
 
+    /**
+     * @return BelongsToMany<EventType, $this>
+     */
     public function eventTypes(): BelongsToMany
     {
         return $this->belongsToMany(

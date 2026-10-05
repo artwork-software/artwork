@@ -475,6 +475,9 @@ import {can, is} from "laravel-permission-to-vuejs";
 import ToolbarHeader from "@/Artwork/Toolbar/ToolbarHeader.vue";
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
+import { useInstanceFormat } from "@/Composeables/InstanceFormat.js";
+
+const instanceFormat = useInstanceFormat();
 
 defineOptions({ name: 'MoneySourceIndex' })
 
@@ -600,7 +603,7 @@ function formatDateString (dateStr) {
 function toCurrencyString (val) {
     // Simplified Fallback; im Projekt habt ihr ggf. euren Formatter
     try {
-        return new Intl.NumberFormat('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(val ?? 0)
+        return new Intl.NumberFormat(instanceFormat.numberLocale, { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(val ?? 0)
     } catch { return String(val ?? 0) }
 }
 

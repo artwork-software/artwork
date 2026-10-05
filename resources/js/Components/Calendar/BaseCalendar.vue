@@ -1428,9 +1428,18 @@ const eventComponentClosed = (closedOnPurpose) => {
     wantedDate.value = null;
 };
 const deleteEvent = () => {
-    if (deleteType.value === "main") axios.delete(route("events.delete", eventToDelete.value));
-    else axios.delete(route("subEvent.delete", eventToDelete.value));
+    const event = eventToDelete.value;
+    const isMainEvent = deleteType.value === "main";
+    const request = isMainEvent
+        ? axios.delete(route("events.delete", event))
+        : axios.delete(route("subEvent.delete", event));
     deleteComponentVisible.value = false;
+    // Ohne Websocket kam die Löschung sonst nie im Kalender an; Fehler meldet der globale Interceptor.
+    request
+        .then(() => {
+            if (isMainEvent && event?.id) shiftCalendarListener?.removeEvent(event.id);
+        })
+        .catch(() => {});
 };
 const closeDeleteSelectedEventsModal = (closedOnPurpose) => {
     openDeleteSelectedEventsModal.value = false;

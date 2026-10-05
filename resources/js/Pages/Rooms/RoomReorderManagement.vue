@@ -37,13 +37,11 @@ import draggable from "vuedraggable";
 import {IconCopy, IconDotsVertical, IconEdit, IconTrash} from "@tabler/icons-vue";
 import {Link} from "@inertiajs/vue3";
 import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
-import IconLib from "@/Mixins/IconLib.vue";
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 import SettingsGuideBanner from "@/Artwork/Guide/SettingsGuideBanner.vue";
 
 export default {
     name: "RoomReorderManagement",
-    mixins: [IconLib],
     components: {
         SettingsGuideBanner,
         PropertyIcon,

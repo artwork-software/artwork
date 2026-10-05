@@ -43,16 +43,25 @@ class SubPosition extends Model
 
     protected $appends = [];
 
+    /**
+     * @return HasMany<SubPositionRow, $this>
+     */
     public function subPositionRows(): HasMany
     {
         return $this->hasMany(SubPositionRow::class);
     }
 
+    /**
+     * @return HasOne<SubPositionVerified, $this>
+     */
     public function verified(): HasOne
     {
         return $this->hasOne(SubPositionVerified::class);
     }
 
+    /**
+     * @return HasMany<SubPositionSumDetail, $this>
+     */
     public function subPositionSumDetails(): HasMany
     {
         return $this->hasMany(SubPositionSumDetail::class);

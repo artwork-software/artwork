@@ -51,7 +51,6 @@
 
 import {defineComponent} from "vue";
 import {Listbox, ListboxButton, ListboxOption, ListboxOptions} from "@headlessui/vue";
-import IconLib from "@/Mixins/IconLib.vue";
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 
 export default defineComponent({
@@ -62,9 +61,6 @@ export default defineComponent({
         ListboxOptions,
         ListboxButton
     },
-    mixins: [
-        IconLib
-    ],
     props: [
         'id',
         'label',

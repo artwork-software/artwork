@@ -66,7 +66,6 @@ import JetDialogModal from '@/Jetstream/DialogModal.vue'
 import JetInputError from '@/Jetstream/InputError.vue'
 import Permissions from "@/Mixins/Permissions.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
-import IconLib from "@/Mixins/IconLib.vue";
 import BaseModal from "@/Components/Modals/BaseModal.vue";
 import TextareaComponent from "@/Components/Inputs/TextareaComponent.vue";
 import MultiAlertComponent from "@/Components/Alerts/MultiAlertComponent.vue";
@@ -77,7 +76,7 @@ import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 
 export default {
     name: "ContractModuleUploadModal",
-    mixins: [Permissions, IconLib],
+    mixins: [Permissions],
     props: {
         show: Boolean,
         closeModal: Function

@@ -15,13 +15,11 @@
 </template>
 
 <script>
-import IconLib from "@/Mixins/IconLib.vue";
 
 export default {
     name: "ShiftQualificationIconCollection",
     props: [
         'iconName', 'classes'
     ],
-    mixins: [IconLib],
 }
 </script>

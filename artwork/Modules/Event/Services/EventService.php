@@ -2,25 +2,17 @@
 
 namespace Artwork\Modules\Event\Services;
 
-use Spatie\Activitylog\Models\Activity;
-use App\Http\Controllers\ShiftFilterController;
 use App\Http\Resources\MinimalShiftPlanShiftResource;
 use App\Settings\EventSettings;
-use App\Settings\ShiftSettings;
 use Artwork\Core\Database\Models\Model;
 use Artwork\Core\Services\CollectionService;
 use Artwork\Modules\Area\Services\AreaService;
 use Artwork\Modules\Calendar\DTO\CalendarHolidayDTO;
-use Artwork\Modules\Calendar\DTO\CalendarPeriodDTO;
-use Artwork\Modules\Calendar\Services\CalendarDataService;
 use Artwork\Modules\Calendar\Services\CalendarService;
 use Artwork\Modules\Change\Services\ChangeService;
 use Artwork\Modules\Craft\Models\Craft;
 use Artwork\Modules\Craft\Services\CraftService;
-use Artwork\Modules\DayService\Services\DayServicesService;
 use Artwork\Modules\Event\DTOs\EventManagementDto;
-use Artwork\Modules\Event\DTOs\ShiftPlanDto;
-use Artwork\Modules\Event\Enum\ShiftPlanWorkerSortEnum;
 use Artwork\Modules\Event\Events\EventUpdated;
 use Artwork\Modules\Event\Events\OccupancyUpdated;
 use Artwork\Modules\Event\Events\RemoveEvent;
@@ -36,9 +28,7 @@ use Artwork\Modules\Event\Services\EventPropertyService;
 use Artwork\Modules\EventType\Http\Resources\EventTypeResource;
 use Artwork\Modules\EventType\Services\EventTypeService;
 use Artwork\Modules\Filter\Services\FilterService;
-use Artwork\Modules\Freelancer\Http\Resources\FreelancerShiftPlanResource;
 use Artwork\Modules\Freelancer\Models\Freelancer;
-use Artwork\Modules\Freelancer\Services\FreelancerService;
 use Artwork\Modules\Holidays\Models\Holiday;
 use Artwork\Modules\Holidays\Services\HolidayService;
 use Artwork\Modules\IndividualTimes\Models\IndividualTime;
@@ -54,13 +44,10 @@ use Artwork\Modules\Project\Services\ProjectTabService;
 use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\Room\Services\RoomService;
 use Artwork\Modules\Event\Models\SeriesEvents;
-use Artwork\Modules\ServiceProvider\Http\Resources\ServiceProviderShiftPlanResource;
 use Artwork\Modules\ServiceProvider\Models\ServiceProvider;
-use Artwork\Modules\ServiceProvider\Services\ServiceProviderService;
 use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\Shift\Services\ShiftDeletionService;
 use Artwork\Modules\Shift\Services\ShiftWorkerAvailability;
-use Artwork\Modules\Shift\Models\ShiftFilter;
 use Artwork\Modules\Shift\Models\ShiftQualification;
 use Artwork\Modules\Shift\Models\ShiftRuleViolation;
 use Artwork\Modules\Shift\Services\ShiftFreelancerService;
@@ -68,20 +55,17 @@ use Artwork\Modules\Shift\Services\ShiftService;
 use Artwork\Modules\Shift\Services\ShiftServiceProviderService;
 use Artwork\Modules\Shift\Services\ShiftsQualificationsService;
 use Artwork\Modules\Shift\Services\ShiftUserService;
-use Artwork\Modules\Shift\Services\ShiftQualificationService;
 use Artwork\Modules\Shift\Services\ShiftTimePresetService;
 use Artwork\Modules\Vacation\Enums\Vacation as VacationType;
 use Artwork\Modules\Event\Models\SubEvent;
 use Artwork\Modules\Event\Services\SubEventService;
 use Artwork\Modules\Timeline\Models\Timeline;
 use Artwork\Modules\Timeline\Services\TimelineService;
-use Artwork\Modules\User\Http\Resources\UserShiftPlanResource;
+use Artwork\Modules\User\Enums\UserFilterTypes;
 use Artwork\Modules\User\Models\User;
 use Artwork\Modules\User\Services\UserService;
 use Artwork\Modules\User\Services\WorkingHourService;
-use Artwork\Modules\User\Models\UserCalendarFilter;
 use Artwork\Modules\User\Models\UserCalendarSettings;
-use Artwork\Modules\User\Models\UserShiftCalendarFilter;
 use Artwork\Modules\User\Models\UserFilter;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
@@ -153,7 +137,7 @@ readonly class EventService
             broadcast(new RemoveEvent($event, $event->room_id));
         }
 
-        $event->verifications()->each(function (EventVerification $eventVerification) use ($event): void {
+        $event->verifications()->each(function (EventVerification $eventVerification): void {
             $eventVerification->delete();
         });
 
@@ -1191,51 +1175,6 @@ readonly class EventService
         return false;
     }
 
-    // Diese Methode hat aktuell keinen Aufrufer; $roomService ist ungenutzt.
-    //phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.FoundBeforeLastUsed
-    public function getShiftPlanDto(
-        UserService $userService,
-        FreelancerService $freelancerService,
-        ServiceProviderService $serviceProviderService,
-        RoomService $roomService,
-        CraftService $craftService,
-        FilterService $filterService,
-        ShiftFilterController $shiftFilterController,
-        ShiftQualificationService $shiftQualificationService,
-        DayServicesService $dayServicesService,
-        User $user,
-        ProjectTabService $projectTabService
-    ): ShiftPlanDto {
-        [$startDate, $endDate] = $userService->getUserShiftCalendarFilterDatesOrDefault($user);
-
-        $periodArray = $this->generatePeriodArray($startDate, $endDate, $user);
-        $userFilter = $user->userFilters()->shiftCalendar()->first();
-        $userCalendarSettings = $user->calendar_settings;
-        $rooms = $this->fetchFilteredRooms($userFilter, $startDate, $endDate);
-
-        $this->filterRoomsEventsAndShifts($rooms, $userFilter, $startDate, $endDate, $userCalendarSettings, true);
-
-        $mappedRooms = $this->mapRoomsToContent($rooms, $startDate, $endDate);
-
-
-        return $this->buildShiftPlanDto(
-            $periodArray,
-            $userService,
-            $craftService,
-            $filterService,
-            $shiftFilterController,
-            $freelancerService,
-            $serviceProviderService,
-            $shiftQualificationService,
-            $dayServicesService,
-            $projectTabService,
-            $startDate,
-            $endDate,
-            $user,
-            $mappedRooms
-        );
-    }
-
     public function generatePeriodArray(
         $startDate,
         $endDate,
@@ -1630,110 +1569,22 @@ readonly class EventService
         return $content;
     }
 
-    public function buildShiftPlanDto(
-        array $periodArray,
-        UserService $userService,
-        CraftService $craftService,
-        FilterService $filterService,
-        ShiftFilterController $shiftFilterController,
-        FreelancerService $freelancerService,
-        ServiceProviderService $serviceProviderService,
-        ShiftQualificationService $shiftQualificationService,
-        DayServicesService $dayServicesService,
-        ProjectTabService $projectTabService,
-        $startDate,
-        $endDate,
-        User $user,
-        array $mappedRooms
-    ): ShiftPlanDto {
-        return ShiftPlanDto::newInstance()
-            ->setHistory($this->getEventShiftsHistoryChanges())
-            ->setCrafts(
-                $craftService->getAll([
-                    'managingUsers',
-                    'managingFreelancers',
-                    'managingServiceProviders'
-                ])
-            )
-            ->setDays($periodArray)
-            ->setFilterOptions($filterService->getCalendarFilterDefinitions())
-            ->setUserFilters($userService->getAuthUser()->userFilters()->shiftFilter()->first())
-            ->setDateValue([$startDate->format('Y-m-d'), $endDate->format('Y-m-d')])
-            ->setPersonalFilters($shiftFilterController->index())
-            ->setUsersForShifts(
-                $this->workingHourService->getUsersWithPlannedWorkingHours(
-                    $startDate,
-                    $endDate,
-                    UserShiftPlanResource::class,
-                    true,
-                    $user
-                )
-            )
-            ->setFreelancersForShifts(
-                $freelancerService->getFreelancersWithPlannedWorkingHours(
-                    $startDate,
-                    $endDate,
-                    FreelancerShiftPlanResource::class,
-                    true,
-                    $user
-                )
-            )
-            ->setServiceProvidersForShifts(
-                $serviceProviderService->getServiceProvidersWithPlannedWorkingHours(
-                    $startDate,
-                    $endDate,
-                    ServiceProviderShiftPlanResource::class,
-                    $user
-                )
-            )
-            ->setCurrentUserCrafts(
-                $userService->getAuthUserCrafts()->merge($craftService->getAssignableByAllCrafts())
-            )
-            ->setShiftTimePresets($this->shiftTimePresetService->getAll())
-            ->setShiftQualifications($shiftQualificationService->getAllOrderedByPosition())
-            ->setDayServices($dayServicesService->getAll())
-            ->setFirstProjectShiftTabId(
-                $projectTabService->getFirstProjectTabWithTypeIdOrFirstProjectTabId(
-                    ProjectTabComponentEnum::SHIFT_TAB
-                )
-            )
-            ->setShiftPlanWorkerSortEnumNames(
-                array_map(
-                    function (ShiftPlanWorkerSortEnum $enum): string {
-                        return $enum->name;
-                    },
-                    ShiftPlanWorkerSortEnum::cases()
-                )
-            )
-            ->setUseFirstNameForSort((new ShiftSettings())->use_first_name_for_sort)
-            ->setUserShiftPlanShiftQualificationFilters($user->getAttribute('show_qualifications'))
-            ->setMappedRooms($mappedRooms);
-    }
-
     /**
-     * @return array<int, mixed>
+     * Kalenderfilter und -einstellungen der Person; fehlen sie (z. B. Konto noch nie im
+     * Hauptkalender), werden sie wie im EventController angelegt statt mit 500 abzubrechen.
+     *
+     * @return array{0: UserFilter, 1: UserCalendarSettings}
      */
-    public function getEventShiftsHistoryChanges(): array
+    private function resolveCalendarFilterAndSettings(User $user): array
     {
-        $historyArray = [];
+        $userCalendarFilter = $user->userFilters()->firstOrCreate(
+            ['filter_type' => UserFilterTypes::CALENDAR_FILTER->value],
+            ['start_date' => null, 'end_date' => null]
+        );
+        $userCalendarSettings = $user->getAttribute('calendar_settings')
+            ?? $user->calendar_settings()->create();
 
-        Activity::query()
-            ->where('subject_type', Shift::class)
-            ->orderByDesc('created_at')
-            ->get()
-            ->each(function (Activity $activity) use (&$historyArray): void {
-                $properties = $activity->properties;
-                $historyArray[] = [
-                    'changes' => $properties instanceof \Illuminate\Support\Collection
-                        ? $properties->all()
-                        : ($properties ?? null),
-                    'created_at' => $activity->created_at->diffInHours() < 24
-                        ? $activity->created_at->diffForHumans()
-                        : $activity->created_at->format('d.m.Y, H:i'),
-                ];
-            });
-
-        return $historyArray;
+        return [$userCalendarFilter, $userCalendarSettings];
     }
 
     //phpcs:ignore Generic.Metrics.CyclomaticComplexity.TooHigh
@@ -1751,8 +1602,7 @@ readonly class EventService
         ?Project $project = null,
     ): EventManagementDto {
         $user = $userService->getAuthUser();
-        $userCalendarFilter = $user->userFilters()->calendarFilter()->first();
-        $userCalendarSettings = $user->getAttribute('calendar_settings');
+        [$userCalendarFilter, $userCalendarSettings] = $this->resolveCalendarFilterAndSettings($user);
 
         //today is used if project calendar is opened and no events are given as project calendar
         //do not rely on user calendar filter dates
@@ -1823,28 +1673,26 @@ readonly class EventService
                     )
             )
             ->setEventsWithoutRoom(
-                empty($room) ?
-                    CalendarEventResource::collection(
-                        $this->getEventsWithoutRoom(
-                            $project,
-                            [
-                                'room',
-                                'creator',
-                                'project',
-                                'project.managerUsers',
-                                'project.status',
-                                'shifts',
-                                'shifts.craft',
-                                'shifts.users',
-                                'shifts.freelancer',
-                                'shifts.serviceProvider',
-                                'shifts.shiftsQualifications',
-                                'subEvents.event',
-                                'subEvents.event.room',
-                            ]
-                        )
-                    )->resolve() :
-                    []
+                CalendarEventResource::collection(
+                    $this->getEventsWithoutRoom(
+                        $project,
+                        [
+                            'room',
+                            'creator',
+                            'project',
+                            'project.managerUsers',
+                            'project.status',
+                            'shifts',
+                            'shifts.craft',
+                            'shifts.users',
+                            'shifts.freelancer',
+                            'shifts.serviceProvider',
+                            'shifts.shiftsQualifications',
+                            'subEvents.event',
+                            'subEvents.event.room',
+                        ]
+                    )
+                )->resolve()
             )
             ->setEventsAtAGlance(
                 $desiredProjectHasNoEvents ?
@@ -1903,8 +1751,7 @@ readonly class EventService
         ?Project $project = null,
     ): EventManagementDto {
         $user = $userService->getAuthUser();
-        $userCalendarFilter = $user->userFilters()->calendarFilter()->first();
-        $userCalendarSettings = $user->getAttribute('calendar_settings');
+        [$userCalendarFilter, $userCalendarSettings] = $this->resolveCalendarFilterAndSettings($user);
 
         //today is used if project calendar is opened and no events are given as project calendar
         //do not rely on user calendar filter dates
@@ -1973,8 +1820,7 @@ readonly class EventService
                 ];
             }
         }
-        $userFilter = $user->userFilters()->calendarFilter()->first();
-        $rooms = $this->fetchFilteredRooms($userFilter, $startDate, $endDate, $userCalendarSettings);
+        $rooms = $this->fetchFilteredRooms($userCalendarFilter, $startDate, $endDate, $userCalendarSettings);
 
         // Bewusst KEIN Aufbau der Kalenderzellen mehr: BaseCalendar lädt die
         // Termine nach dem Mount ohnehin monatsweise über events.all nach und

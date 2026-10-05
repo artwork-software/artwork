@@ -208,7 +208,7 @@ class MoneySourceController extends Controller
         $moneySource->load([
             'moneySourceFiles'
         ]);
-        $amount = $moneySource->amount;
+        $amount = (float) $moneySource->amount;
         $subMoneySources = MoneySource::where('group_id', $moneySource->id)->get();
         // Gleiche Zellen-Auswahl wie getPositionSumOfOneMoneySource, sonst
         // weichen Detail-Liste/amount_available von Übersichts-Summe und
@@ -266,9 +266,9 @@ class MoneySourceController extends Controller
                     'created_at' => date('d.m.Y', strtotime($column->created_at))
                 ];
                 if ($column->linked_type === 'EARNING') {
-                    $amount = (int)$amount + (int)$column->value;
+                    $amount += $this->parseCellAmount($column->value);
                 } else {
-                    $amount = (int)$amount - (int)$column->value;
+                    $amount -= $this->parseCellAmount($column->value);
                 }
             }
         } else {
@@ -292,9 +292,9 @@ class MoneySourceController extends Controller
                         'created_at' => date('d.m.Y', strtotime($detail->created_at))
                     ];
                     if ($detail->sumMoneySource->linked_type === 'EARNING') {
-                        $amount = (int)$amount + (int)$costSum;
+                        $amount += $this->parseCellAmount($costSum);
                     } else {
-                        $amount = (int)$amount - (int)$costSum;
+                        $amount -= $this->parseCellAmount($costSum);
                     }
                 }
 
@@ -317,9 +317,9 @@ class MoneySourceController extends Controller
                         'created_at' => date('d.m.Y', strtotime($detail->created_at))
                     ];
                     if ($detail->sumMoneySource->linked_type === 'EARNING') {
-                        $amount = (int)$amount + (int)$earningSum;
+                        $amount += $this->parseCellAmount($earningSum);
                     } else {
-                        $amount = (int)$amount - (int)$earningSum;
+                        $amount -= $this->parseCellAmount($earningSum);
                     }
                 }
             }
@@ -342,9 +342,9 @@ class MoneySourceController extends Controller
                         'created_at' => date('d.m.Y', strtotime($detail->created_at))
                     ];
                     if ($detail->sumMoneySource->linked_type === 'EARNING') {
-                        $amount = (int)$amount + (int)$columnSum['sum'];
+                        $amount += $this->parseCellAmount($columnSum['sum']);
                     } else {
-                        $amount = (int)$amount - (int)$columnSum['sum'];
+                        $amount -= $this->parseCellAmount($columnSum['sum']);
                     }
                 }
             }
@@ -367,9 +367,9 @@ class MoneySourceController extends Controller
                         'created_at' => date('d.m.Y', strtotime($detail->created_at))
                     ];
                     if ($detail->sumMoneySource->linked_type === 'EARNING') {
-                        $amount = (int)$amount + (int)$columnSum['sum'];
+                        $amount += $this->parseCellAmount($columnSum['sum']);
                     } else {
-                        $amount = (int)$amount - (int)$columnSum['sum'];
+                        $amount -= $this->parseCellAmount($columnSum['sum']);
                     }
                 }
             }
@@ -408,9 +408,9 @@ class MoneySourceController extends Controller
                 ];
 
                 if ($column->linked_type === 'EARNING') {
-                    $amount = (int)$amount + (int)$column->value;
+                    $amount += $this->parseCellAmount($column->value);
                 } else {
-                    $amount = (int)$amount - (int)$column->value;
+                    $amount -= $this->parseCellAmount($column->value);
                 }
             }
         }
@@ -804,5 +804,15 @@ class MoneySourceController extends Controller
         $this->authorize('update', $moneySource);
 
         $moneySource->categories()->sync($request->categoryIds);
+    }
+
+    /**
+     * Zellwerte sind mit Dezimalkomma gespeichert („1234,56“); wie in
+     * MoneySourceCalculationService parsen, damit die Detailseite dieselben
+     * Restbeträge zeigt wie Übersicht und Schwellwert-Warnung.
+     */
+    private function parseCellAmount(mixed $value): float
+    {
+        return (float) str_replace(',', '.', (string) $value);
     }
 }

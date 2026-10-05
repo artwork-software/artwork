@@ -76,7 +76,6 @@ use App\Http\Controllers\ProjectRoleController;
 use App\Http\Controllers\ProjectStatesController;
 use App\Http\Controllers\ProjectTab\ProjectArtistNameController;
 use App\Http\Controllers\ProjectTab\ProjectArtistResidenciesController;
-use App\Http\Controllers\ProjectTab\ProjectBudgetController;
 use App\Http\Controllers\ProjectTab\ProjectBudgetInformationController;
 use App\Http\Controllers\ProjectTab\ProjectBulkEditController;
 use App\Http\Controllers\ProjectTab\ProjectCalendarController;
@@ -85,7 +84,6 @@ use App\Http\Controllers\ProjectTab\ProjectCommentController;
 use App\Http\Controllers\ProjectTab\ProjectDocumentsController;
 use App\Http\Controllers\ProjectTab\ProjectMaterialIssueController;
 use App\Http\Controllers\ProjectTab\ProjectShiftContactsController;
-use App\Http\Controllers\ProjectTab\ProjectShiftController;
 use App\Http\Controllers\ProjectTab\ProjectSageInvoiceOverviewController;
 use App\Http\Controllers\ProjectTab\ProjectStatusController;
 use App\Http\Controllers\ProjectTab\ProjectTeamController;
@@ -119,6 +117,7 @@ use App\Http\Controllers\TaskTemplateController;
 use App\Http\Controllers\TimelinePresetController;
 use App\Http\Controllers\ToolSettingsBrandingController;
 use App\Http\Controllers\ToolSettingsCommunicationAndLegalController;
+use App\Http\Controllers\ToolSettingsFormatsController;
 use App\Http\Controllers\ToolSettingsExternalUserManagementController;
 use App\Http\Controllers\ToolSettingsInterfacesController;
 use Artwork\Modules\ExternalUserManagement\Http\Controllers\ExternalUserGroupMappingController;
@@ -466,6 +465,13 @@ Route::group(['middleware' => ['auth:sanctum']], function (): void {
             ->name('tool.communication-and-legal');
         Route::patch('/communication-and-legal', [ToolSettingsCommunicationAndLegalController::class, 'update'])
             ->name('tool.communication-and-legal.update');
+
+        Route::get('/formats', [ToolSettingsFormatsController::class, 'index'])
+            ->middleware('can:change tool settings')
+            ->name('tool.formats');
+        Route::patch('/formats', [ToolSettingsFormatsController::class, 'update'])
+            ->middleware('can:change tool settings')
+            ->name('tool.formats.update');
 
         Route::patch('/shift/workflow/update', [ShiftController::class, 'updateWorkflowSettings'])
             ->middleware('shift-settings-area:general,edit')
@@ -906,12 +912,6 @@ Route::group(['middleware' => ['auth:sanctum']], function (): void {
         Route::get('/calendar', [ProjectCalendarController::class, 'show'])
             ->name('projects.tabs.calendar')
             ->middleware(EnsureUserCanSeeProjectComponent::for(ProjectTabComponentEnum::CALENDAR));
-        Route::get('/budget', [ProjectBudgetController::class, 'show'])
-            ->name('projects.tabs.budget')
-            ->middleware(EnsureUserCanSeeProjectComponent::for(ProjectTabComponentEnum::BUDGET));
-        Route::get('/shift', [ProjectShiftController::class, 'show'])
-            ->name('projects.tabs.shift')
-            ->middleware(EnsureUserCanSeeProjectComponent::for(ProjectTabComponentEnum::SHIFT_TAB));
         Route::get('/sage-invoices', [ProjectSageInvoiceOverviewController::class, 'show'])
             ->name('projects.tabs.sage-invoices')
             ->middleware(EnsureUserCanSeeProjectComponent::for(ProjectTabComponentEnum::SAGE_INVOICE_OVERVIEW));
@@ -1506,7 +1506,9 @@ Route::group(['middleware' => ['auth:sanctum']], function (): void {
     Route::patch('/notifications', [NotificationController::class, 'setReadAt'])->name('notifications.setReadAt');
     Route::patch('/notifications/all', [NotificationController::class, 'setOnReadAll'])
         ->name('notifications.setReadAtAll');
-    Route::patch('/user/settings/group', [NotificationController::class, 'toggleGroup'])->name('notifications.group');
+    Route::patch('/user/settings/bulk', [NotificationController::class, 'bulkUpdate'])->name('notifications.settings.bulk');
+    Route::post('/user/settings/reset', [NotificationController::class, 'resetSettings'])
+        ->name('notifications.settings.reset');
     Route::patch('/user/settings/{setting}', [NotificationController::class, 'updateSetting'])
         ->name('notifications.settings');
     Route::delete('/notifications/{id}', [NotificationController::class, 'destroy'])->name('notifications.delete');
@@ -3158,6 +3160,11 @@ Route::group(['middleware' => ['auth:sanctum']], function (): void {
         Route::delete('/articles/{inventoryArticle}/destroy', [InventoryArticleController::class, 'destroy'])
             ->middleware('can:' . PermissionEnum::INVENTORY_DELETE->value)
             ->name('articles.destroy');
+
+        // Warnhinweis vor dem Löschen: künftige Ausgaben, in denen der Artikel reserviert ist
+        Route::get('/articles/{inventoryArticle}/future-issues', [InventoryArticleController::class, 'futureIssues'])
+            ->middleware('can:' . PermissionEnum::INVENTORY_DELETE->value)
+            ->name('articles.future-issues');
 
         // get inventory.articles.trash
         Route::get('/articles/trash', [InventoryArticleController::class, 'indexTrash'])

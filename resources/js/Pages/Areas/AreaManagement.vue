@@ -635,7 +635,7 @@
                         label="Room name*"
                         required
                     />
-                    <jet-input-error :message="newRoomForm.error" class="mt-2"/>
+                    <jet-input-error :message="newRoomForm.errors.name" class="mt-2"/>
                 </div>
                 <div class="">
                     <BaseTextarea
@@ -693,12 +693,14 @@
                             type="date"
                             v-model="newRoomForm.start_date"
                             id="startDate"
-                            label="Start date"/>
+                            label="Start date"
+                            :error="newRoomForm.errors.start_date"/>
                         <BaseInput
                             type="date"
                             v-model="newRoomForm.end_date"
                             id="endDate"
                             label="End date"
+                            :error="newRoomForm.errors.end_date"
                         />
                     </div>
                 </div>
@@ -759,7 +761,7 @@
                         v-model="editRoomForm.name"
                         label="Room name*"
                     />
-                    <jet-input-error :message="editRoomForm.error" class="mt-2"/>
+                    <jet-input-error :message="editRoomForm.errors.name" class="mt-2"/>
                 </div>
                 <div class="">
                     <BaseTextarea
@@ -833,12 +835,14 @@
                             type="date"
                             v-model="editRoomForm.start_date_dt_local"
                             id="startDate"
-                            label="Start date"/>
+                            label="Start date"
+                            :error="editRoomForm.errors.start_date"/>
                         <BaseInput
                             type="date"
                             v-model="editRoomForm.end_date_dt_local"
                             id="endDate"
                             label="End date"
+                            :error="editRoomForm.errors.end_date"
                         />
                     </div>
                 </div>
@@ -950,7 +954,6 @@ import ConfirmationComponent from "@/Layouts/Components/ConfirmationComponent.vu
 import SuccessModal from "@/Layouts/Components/General/SuccessModal.vue";
 import AddButtonBig from "@/Layouts/Components/General/Buttons/AddButtonBig.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
-import IconLib from "@/Mixins/IconLib.vue";
 import BaseMenu from "@/Components/Menu/BaseMenu.vue";
 import BaseModal from "@/Components/Modals/BaseModal.vue";
 import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
@@ -970,7 +973,7 @@ import ColorPickerComponent from "@/Components/Globale/ColorPickerComponent.vue"
 import SettingsGuideBanner from "@/Artwork/Guide/SettingsGuideBanner.vue";
 
 export default defineComponent({
-    mixins: [Permissions, IconLib],
+    mixins: [Permissions],
     components: {
         SettingsGuideBanner,
         PropertyIcon,

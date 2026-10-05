@@ -10,6 +10,7 @@ use Artwork\Modules\WorkTime\Repositories\WorkTimeBookingRepository;
 use Artwork\Modules\WorkTime\Support\NightWindow;
 use Carbon\Carbon;
 use Artwork\Modules\WorkTime\Support\WorkTimeAccounting;
+use Throwable;
 
 /**
  * Nächtliche Buchung des Arbeitszeitkontos (ein Datensatz je User und Tag).
@@ -42,54 +43,65 @@ class WorkTimeBookingService
         $weekdayIndex = $today->dayOfWeek;
 
         foreach ($users as $user) {
-            $workTimeEntry = $this->getActiveUserWorkTime($user);
-
-            if (!$workTimeEntry) {
-                continue;
+            // Ein fehlerhafter Datensatz (z. B. kaputtes Muster) darf die Buchung der
+            // übrigen Personen nicht verhindern: melden und mit der nächsten weitermachen.
+            try {
+                $this->bookDailyWorkTimeForUser($user, $today, $weekdayIndex);
+            } catch (Throwable $exception) {
+                report($exception);
             }
-
-            // Bestehende Buchung des Tages (Re-Run) darf nicht als Ist zurückfließen -> use_bookings=false
-            $context = $this->workTimeCalculationService->buildContext($user, $today, $today, [
-                'use_bookings' => false,
-            ]);
-            $breakdown = $this->workTimeCalculationService->dayBreakdown($user, $today, $context);
-
-            // Ohne gültiges Muster ist das Soll unbekannt: keine Buchung (kein Fallback auf 0 Soll,
-            // sonst würde jede Arbeit als Überstunde verbucht)
-            if ($breakdown['target'] === null || !empty($breakdown['target_unknown'])) {
-                continue;
-            }
-
-            $wantedMinutes = (int) $breakdown['target'];
-            $workedMinutes = (int) $breakdown['actual'];
-            $nightMinutes = $breakdown['is_sick'] && $breakdown['sick_factor'] >= 1.0
-                ? 0 // Krankheit zählt keine Nachtzeit
-                : $this->calculateNightMinutes($today, $user);
-
-            $workTimeBalanceChange = $this->calculateWorkTimeBalanceChange($workedMinutes, $wantedMinutes);
-
-            $previousBooking = $this->repository->getPreviousBooking($user, $today, $weekdayIndex);
-            $delta = $previousBooking
-                ? $workTimeBalanceChange - $previousBooking->work_time_balance_change
-                : $workTimeBalanceChange;
-
-            // Buchung UND Saldo-Anpassung atomar in einer Transaktion (vorher war das
-            // Balance-Update separat danach -> bei Worker-Crash dazwischen blieb der Saldo
-            // dauerhaft falsch, da der Re-Run wegen vorhandener Buchung delta=0 errechnet).
-            $this->repository->storeBookingAndUpdateBalanceInTransaction($user, $today, $weekdayIndex, [
-                'name' => "daily_work_time_booking_{$today->toDateString()}",
-                'wanted_working_hours' => $wantedMinutes,
-                'worked_hours' => $workedMinutes,
-                'nightly_working_hours' => $nightMinutes,
-                'is_special_day' => (bool) $breakdown['is_special_day'],
-                'work_time_balance_change' => $workTimeBalanceChange,
-            ], $delta);
-
-            $this->workingHourCacheService->forgetForEntity('user', $user->id);
-
-            // Rebuild overtime entries + deadlines (flips expired open entries to "payable").
-            app(OvertimeService::class)->recomputeForUser($user);
         }
+    }
+
+    private function bookDailyWorkTimeForUser(User $user, Carbon $today, int $weekdayIndex): void
+    {
+        $workTimeEntry = $this->getActiveUserWorkTime($user);
+
+        if (!$workTimeEntry) {
+            return;
+        }
+
+        // Bestehende Buchung des Tages (Re-Run) darf nicht als Ist zurückfließen -> use_bookings=false
+        $context = $this->workTimeCalculationService->buildContext($user, $today, $today, [
+            'use_bookings' => false,
+        ]);
+        $breakdown = $this->workTimeCalculationService->dayBreakdown($user, $today, $context);
+
+        // Ohne gültiges Muster ist das Soll unbekannt: keine Buchung (kein Fallback auf 0 Soll,
+        // sonst würde jede Arbeit als Überstunde verbucht)
+        if ($breakdown['target'] === null || !empty($breakdown['target_unknown'])) {
+            return;
+        }
+
+        $wantedMinutes = (int) $breakdown['target'];
+        $workedMinutes = (int) $breakdown['actual'];
+        $nightMinutes = $breakdown['is_sick'] && $breakdown['sick_factor'] >= 1.0
+            ? 0 // Krankheit zählt keine Nachtzeit
+            : $this->calculateNightMinutes($today, $user);
+
+        $workTimeBalanceChange = $this->calculateWorkTimeBalanceChange($workedMinutes, $wantedMinutes);
+
+        $previousBooking = $this->repository->getPreviousBooking($user, $today, $weekdayIndex);
+        $delta = $previousBooking
+            ? $workTimeBalanceChange - $previousBooking->work_time_balance_change
+            : $workTimeBalanceChange;
+
+        // Buchung UND Saldo-Anpassung atomar in einer Transaktion (vorher war das
+        // Balance-Update separat danach -> bei Worker-Crash dazwischen blieb der Saldo
+        // dauerhaft falsch, da der Re-Run wegen vorhandener Buchung delta=0 errechnet).
+        $this->repository->storeBookingAndUpdateBalanceInTransaction($user, $today, $weekdayIndex, [
+            'name' => "daily_work_time_booking_{$today->toDateString()}",
+            'wanted_working_hours' => $wantedMinutes,
+            'worked_hours' => $workedMinutes,
+            'nightly_working_hours' => $nightMinutes,
+            'is_special_day' => (bool) $breakdown['is_special_day'],
+            'work_time_balance_change' => $workTimeBalanceChange,
+        ], $delta);
+
+        $this->workingHourCacheService->forgetForEntity('user', $user->id);
+
+        // Rebuild overtime entries + deadlines (flips expired open entries to "payable").
+        app(OvertimeService::class)->recomputeForUser($user);
     }
 
     /**

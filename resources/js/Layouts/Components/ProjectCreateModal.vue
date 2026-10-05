@@ -253,12 +253,14 @@
                                 use-translation
                                 icon="IconCalendarMonth"
                                 v-if="!project && (can('create events without request') || can('request room occupancy') || can('can see planning calendar') || can('can edit planning calendar'))"
+                                :processing="createProjectForm.processing"
                                 @click="addProject(true)"
                             />
                             <BaseUIButton
                                 :label="project ? t('Save') : t('Create')"
                                 is-add-button
                                 use-translation
+                                :processing="createProjectForm.processing"
                                 @click="addProject(false)"
                             />
                         </div>
@@ -271,7 +273,7 @@
                                 <IconSelector @update:modelValue="addIconToForm" :current-icon="createProjectForm.icon" />
                                 <BasePageTitle
                                     title="Icon"
-                                    description="Wähle ein Icon für die Projektgruppe aus."
+                                    :description="$t('Choose an icon for the project group.')"
                                 />
                                 <button
                                     v-if="createProjectForm.icon"
@@ -289,7 +291,7 @@
                                 </div>
                                 <BasePageTitle
                                     title="Farbe"
-                                    description="Wähle eine Farbe für die Projektgruppe aus."
+                                    :description="$t('Choose a color for the project group.')"
                                     />
 
                             </div>
@@ -337,8 +339,8 @@
 
                         <div class="w-full flex items-center justify-end gap-x-4 mt-5">
 
-                            <BaseUIButton label="Set up events" is-add-button use-translation icon="IconCalendarMonth" v-if="!project" @click="addProject(true)"/>
-                            <BaseUIButton :label="project ? t('Save') : t('Create')" is-add-button use-translation @click="addProject(false)"/>
+                            <BaseUIButton label="Set up events" is-add-button use-translation icon="IconCalendarMonth" v-if="!project" :processing="createProjectForm.processing" @click="addProject(true)"/>
+                            <BaseUIButton :label="project ? t('Save') : t('Create')" is-add-button use-translation :processing="createProjectForm.processing" @click="addProject(false)"/>
                         </div>
 
                     </div>
@@ -548,6 +550,10 @@ const addColorToProject = (color) => {
 };
 
 const addProject = (bool) => {
+    // Doppelklick auf „Anlegen" erzeugte sonst zwei Projekte
+    if (createProjectForm.processing) {
+        return;
+    }
     if (createProjectForm.name === '') {
         showInvalidProjectNameHelpText.value = true;
         return;
@@ -558,9 +564,8 @@ const addProject = (bool) => {
         return;
     }
 
-    projectGroupProjects.value.forEach((projectToAdd) => {
-        createProjectForm.projects.push(projectToAdd.id);
-    });
+    // Zuweisen statt anhängen: nach einem fehlgeschlagenen Versuch standen die Projekte sonst doppelt drin
+    createProjectForm.projects = projectGroupProjects.value.map((projectToAdd) => projectToAdd.id);
 
     createProjectForm.assignedUsers = assignedUsers.value?.map(user => user.id);
     createProjectForm.state = selectedState.value ? selectedState.value.id : null;

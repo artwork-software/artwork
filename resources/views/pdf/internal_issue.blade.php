@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <title>Interne Materialausgabe</title>
+    <title>{{ __('Internal material issue') }}</title>
     <style>
         body { font-family: DejaVu Sans, sans-serif; font-size: 13px; color: #1f2937; }
         .font-bold { font-weight: bold; }
@@ -29,22 +29,22 @@
 <body class="p-4">
 
 <div style="font-size: 11px; color: #6b7280;">
-    Erstellt am {{ $createdAt }} von {{ $createdBy }}
+    {{ __('Created on :date by :name', ['date' => $createdAt, 'name' => $createdBy]) }}
 </div>
 
 <div class="text-center mb-6">
     <h2 class="font-bold text-xl">{{ $issue->name ?: 'Interne Materialausgabe' }}</h2>
-    <div style="font-size: 12px; color: #6b7280;">Interne Materialausgabe Nr. {{ $issue->id }}</div>
+    <div style="font-size: 12px; color: #6b7280;">{{ __('Internal Material Issue No.') }} {{ $issue->id }}</div>
 </div>
 
 <div class="mb-4">
     @if($issue->project)
-        <p><span class="font-bold">Projekt:</span> {{ $issue->project->name }}</p>
+        <p><span class="font-bold">{{ __('Project') }}:</span> {{ $issue->project->name }}</p>
     @endif
 </div>
 
 <div class="mb-4">
-    <p><span class="font-bold">Zeitraum:</span>
+    <p><span class="font-bold">{{ __('Time period') }}:</span>
         {{ $issue->start_date ? $issue->start_date->format('d.m.Y') : '' }}{{ $issue->start_time ? ' ' . \Carbon\Carbon::parse($issue->start_time)->format('H:i') : '' }}
         –
         {{ $issue->end_date ? $issue->end_date->format('d.m.Y') : '' }}{{ $issue->end_time ? ' ' . \Carbon\Carbon::parse($issue->end_time)->format('H:i') : '' }}
@@ -53,13 +53,13 @@
 
 <div class="mb-4">
     @if($issue->room)
-        <p><span class="font-bold">Raum:</span> {{ $issue->room->name }}</p>
+        <p><span class="font-bold">{{ __('Room') }}:</span> {{ $issue->room->name }}</p>
     @endif
 </div>
 
 @if($issue->responsibleUsers->count())
     <div class="mb-4">
-        <p class="font-bold">Verantwortliche:</p>
+        <p class="font-bold">{{ __('Persons responsible') }}:</p>
         <ul>
             @foreach($issue->responsibleUsers as $user)
                 <li>{{ $user->full_name }}</li>
@@ -70,20 +70,20 @@
 
 @if($issue->notes)
     <div class="mb-4">
-        <p class="font-bold">Beschreibung:</p>
+        <p class="font-bold">{{ __('Description') }}:</p>
         <p class="text-sm">{!! nl2br(e($issue->notes)) !!}</p>
     </div>
 @endif
 
 <div class="mb-6">
-    <p class="font-bold mb-2">Artikel:</p>
+    <p class="font-bold mb-2">{{ __('Articles') }}:</p>
     <table class="w-full border border-collapse text-sm">
         <thead class="bg-gray-100">
         <tr>
-            <th class="p-2 border-b text-left">Artikelname</th>
-            <th class="p-2 border-b text-left">Kategorie</th>
-            <th class="p-2 border-b text-left">Unterkategorie</th>
-            <th class="p-2 border-b text-left">Menge</th>
+            <th class="p-2 border-b text-left">{{ __('Article Name') }}</th>
+            <th class="p-2 border-b text-left">{{ __('Category') }}</th>
+            <th class="p-2 border-b text-left">{{ __('Sub-Category') }}</th>
+            <th class="p-2 border-b text-left">{{ __('Quantity') }}</th>
         </tr>
         </thead>
         <tbody>
@@ -101,15 +101,15 @@
 
 @if($issue->specialItems->count())
     <div class="mb-6">
-        <p class="font-bold mb-2">Sonderartikel – {{ $issue->special_items_done ? 'abgeschlossen' : 'nicht abgeschlossen' }}</p>
+        <p class="font-bold mb-2">{{ __('Special article') }} – {{ $issue->special_items_done ? 'abgeschlossen' : 'nicht abgeschlossen' }}</p>
         <table class="w-full border border-collapse text-sm">
             <thead class="bg-gray-100">
             <tr>
                 <th class="p-2 border-b text-left">Name</th>
-                <th class="p-2 border-b text-left">Kategorie</th>
-                <th class="p-2 border-b text-left">Unterkategorie</th>
-                <th class="p-2 border-b text-left">Menge</th>
-                <th class="p-2 border-b text-left">Beschreibung</th>
+                <th class="p-2 border-b text-left">{{ __('Category') }}</th>
+                <th class="p-2 border-b text-left">{{ __('Sub-Category') }}</th>
+                <th class="p-2 border-b text-left">{{ __('Quantity') }}</th>
+                <th class="p-2 border-b text-left">{{ __('Description') }}</th>
             </tr>
             </thead>
             <tbody>
@@ -132,15 +132,15 @@
         <tr>
             <td class="w-1-3">
                 <div class="line"></div>
-                <div class="label">Ort / Datum</div>
+                <div class="label">{{ __('Place / date') }}</div>
             </td>
             <td class="w-1-3">
                 <div class="line"></div>
-                <div class="label">Unterschrift Ausgabe</div>
+                <div class="label">{{ __('Signature issue') }}</div>
             </td>
             <td class="w-1-3">
                 <div class="line"></div>
-                <div class="label">Unterschrift Empfang</div>
+                <div class="label">{{ __('Signature receipt') }}</div>
             </td>
         </tr>
     </table>

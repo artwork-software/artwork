@@ -10,6 +10,9 @@ use Artwork\Modules\User\Http\Resources\UserIndexResource;
 use Artwork\Modules\User\Models\User;
 use Illuminate\Http\Resources\Json\JsonResource;
 
+/**
+ * @mixin \Artwork\Modules\Contract\Models\Contract
+ */
 class ContractResource extends JsonResource
 {
 

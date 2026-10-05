@@ -50,6 +50,9 @@ class ColumnCell extends Model
 
     protected $appends = [];
 
+    /**
+     * @return BelongsTo<SubPositionRow, $this>
+     */
     public function subPositionRow(): BelongsTo
     {
         return $this->belongsTo(
@@ -60,16 +63,25 @@ class ColumnCell extends Model
         );
     }
 
+    /**
+     * @return HasMany<CellComment, $this>
+     */
     public function comments(): HasMany
     {
         return $this->hasMany(CellComment::class, 'column_cell_id', 'id');
     }
 
+    /**
+     * @return HasMany<CellCalculation, $this>
+     */
     public function calculations(): HasMany
     {
         return $this->hasMany(CellCalculation::class, 'cell_id', 'id');
     }
 
+    /**
+     * @return BelongsTo<\Artwork\Modules\MoneySource\Models\MoneySource, $this>
+     */
     public function linkedMoneySource(): BelongsTo
     {
         return $this->belongsTo(
@@ -80,6 +92,9 @@ class ColumnCell extends Model
         );
     }
 
+    /**
+     * @return HasMany<SageAssignedData, $this>
+     */
     public function sageAssignedData(): HasMany
     {
         return $this->hasMany(

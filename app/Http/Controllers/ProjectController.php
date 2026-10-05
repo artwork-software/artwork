@@ -169,6 +169,7 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Storage;
@@ -311,21 +312,29 @@ class ProjectController extends Controller
             'components' => $components,
             'pinnedProjects' => $pinnedProjectsComponents,
             'pinnedProjectsAll' => $pinnedProjects,
-            'first_project_tab_id' => $this->projectTabService->getDefaultOrFirstProjectTab()->getAttribute('id'),
-            'states' => $this->projectStateService->getAll(),
-            'projectGroups' => $this->projectService->getProjectGroups(),
-            'categories' => $this->categoryService->getAll(),
-            'genres' => $this->genreService->getAll(),
-            'sectors' => $this->sectorService->getAll(),
-            'createSettings' => app(ProjectCreateSettings::class),
-            'myLastProject' => $this->projectService->getMyLastProject($this->authManager->id()),
-            'eventTypes' => $this->eventTypeService->getAll(),
-            'rooms' => $this->roomService->getAllWithoutTrashed(),
+            // Stammdaten als Closures: Filter, Suche und Blättern laden per partial reload nur die
+            // Projektlisten nach; eager berechnet liefen diese Abfragen bei jedem Klick mit.
+            'first_project_tab_id' => fn () => $this->projectTabService->getDefaultOrFirstProjectTab()
+                ->getAttribute('id'),
+            'states' => fn () => $this->projectStateService->getAll(),
+            'projectGroups' => fn () => $this->projectService->getProjectGroups(),
+            'categories' => fn () => $this->categoryService->getAll(),
+            'genres' => fn () => $this->genreService->getAll(),
+            'sectors' => fn () => $this->sectorService->getAll(),
+            'createSettings' => fn () => app(ProjectCreateSettings::class),
+            'myLastProject' => fn () => $this->projectService->getMyLastProject($this->authManager->id()),
+            'eventTypes' => fn () => $this->eventTypeService->getAll(),
+            // Nur für das Termine-Modal (Raumauswahl): id/name/position reichen; vorher volle Räume
+            // samt globalem $with (admins, creator).
+            'rooms' => fn () => Room::query()
+                ->without(['admins', 'creator'])
+                ->select(['id', 'name', 'position'])
+                ->get(),
             'projectSortEnumNames' => array_column(ProjectSortEnum::cases(), 'name'),
             'userProjectManagementSetting' => $userProjectManagementSetting,
-            'eventStatuses' => EventStatus::orderBy('order')->get(),
-            'lastProject' => $lastProject = $this->userService->getAuthUser()->lastProject,
-            'lastProjectCanEnter' => $lastProject !== null && $user->can('view', $lastProject),
+            'eventStatuses' => fn () => EventStatus::orderBy('order')->get(),
+            'lastProject' => fn () => $user->lastProject,
+            'lastProjectCanEnter' => fn () => $user->lastProject !== null && $user->can('view', $user->lastProject),
             'entitiesPerPage' => $user->entities_per_page
         ]);
     }
@@ -885,6 +894,10 @@ class ProjectController extends Controller
         if ($request->type === 'main') {
             $mainPosition = MainPosition::find($request->position['id']);
             $verifiedRequest = $mainPosition->verified()->first();
+            if ($verifiedRequest === null) {
+                $this->resetOrphanedVerification($mainPosition);
+                return;
+            }
             $requestedUser = User::find($verifiedRequest->requested);
             $notificationTitle = __(
                 'notification.project.budget.delete_verify_request',
@@ -951,6 +964,10 @@ class ProjectController extends Controller
             $subPosition = SubPosition::find($request->position['id']);
             $mainPosition = $subPosition->mainPosition()->first();
             $verifiedRequest = $subPosition->verified()->first();
+            if ($verifiedRequest === null) {
+                $this->resetOrphanedVerification($subPosition);
+                return;
+            }
             $table = $mainPosition->table()->first();
             $requestedUser = User::find($verifiedRequest->requested);
             $notificationTitle = __(
@@ -1018,6 +1035,18 @@ class ProjectController extends Controller
         //return Redirect::back();
     }
 
+    /**
+     * Status „angefragt/verifiziert“ ohne zugehörige Anfrage (z. B. Altbestand aus Kopien):
+     * auf „nicht verifiziert“ zurücksetzen, damit die Position wieder bedienbar ist.
+     */
+    private function resetOrphanedVerification(MainPosition|SubPosition $position): void
+    {
+        $position->update(['is_verified' => BudgetTypeEnum::BUDGET_VERIFIED_TYPE_NOT_VERIFIED]);
+
+        $table = $position instanceof MainPosition ? $position->table : $position->mainPosition->table;
+        broadcast(new UpdateBudget($table->project_id));
+    }
+
     private function deleteOldNotification($positionId, $requestedId): void
     {
         DatabaseNotification::query()
@@ -1041,6 +1070,10 @@ class ProjectController extends Controller
         if ($request->type === 'main') {
             $mainPosition = MainPosition::find($request->position['id']);
             $verifiedRequest = $mainPosition->verified()->first();
+            if ($verifiedRequest === null) {
+                $this->resetOrphanedVerification($mainPosition);
+                return;
+            }
             $requestedUser = User::find($verifiedRequest->requested);
             $notificationTitle = __(
                 'notification.project.budget.verify_removed',
@@ -1106,6 +1139,10 @@ class ProjectController extends Controller
             $subPosition = SubPosition::find($request->position['id']);
             $mainPosition = $subPosition->mainPosition()->first();
             $verifiedRequest = $subPosition->verified()->first();
+            if ($verifiedRequest === null) {
+                $this->resetOrphanedVerification($subPosition);
+                return;
+            }
             $requestedUser = User::find($verifiedRequest->requested);
             $notificationTitle = __(
                 'notification.project.budget.verify_removed',
@@ -1300,15 +1337,19 @@ class ProjectController extends Controller
     public function verifiedSubPosition(Request $request): void
     {
         $subPosition = SubPosition::find($request->subPositionId);
+        abort_unless((bool) $subPosition, 404);
+
         $verifiedRequest = $subPosition->verified()->first();
         $this->setSubPositionCellVerifiedValue($subPosition);
         $subPosition->update(['is_verified' => 'BUDGET_VERIFIED_TYPE_CLOSED']);
 
-        DatabaseNotification::query()
-            ->whereJsonContains("data->budgetData->position_id", $subPosition->id)
-            ->whereJsonContains("data->budgetData->requested_by", $verifiedRequest->requested)
-            ->whereJsonContains("data->budgetData->changeType", BudgetTypeEnum::BUDGET_VERIFICATION_REQUEST)
-            ->delete();
+        if ($verifiedRequest) {
+            DatabaseNotification::query()
+                ->whereJsonContains("data->budgetData->position_id", $subPosition->id)
+                ->whereJsonContains("data->budgetData->requested_by", $verifiedRequest->requested)
+                ->whereJsonContains("data->budgetData->changeType", BudgetTypeEnum::BUDGET_VERIFICATION_REQUEST)
+                ->delete();
+        }
 
         $this->changeService->saveFromBuilder(
             $this->changeService
@@ -1768,9 +1809,7 @@ class ProjectController extends Controller
         BudgetSumDetailsService $budgetSumDetailsService,
         ColumnCellService $columnCellService,
         CellCommentService $cellCommentService,
-        CellCalculationService $cellCalculationService,
-        SageNotAssignedDataService $sageNotAssignedDataService,
-        SageAssignedDataService $sageAssignedDataService
+        CellCalculationService $cellCalculationService
     ): RedirectResponse {
         $table = $column->table()->withTrashed()->first();
         $tableHadRelevantColumn = $table->columns()->where('relevant_for_project_groups', true)->exists();
@@ -1784,9 +1823,7 @@ class ProjectController extends Controller
             $budgetSumDetailsService,
             $columnCellService,
             $cellCommentService,
-            $cellCalculationService,
-            $sageNotAssignedDataService,
-            $sageAssignedDataService
+            $cellCalculationService
         );
 
         // Eine wiederhergestellte Spalte darf der aktuellen budgetrelevanten
@@ -3499,19 +3536,10 @@ class ProjectController extends Controller
 
     public function updateTeam(Request $request, Project $project): JsonResponse|RedirectResponse
     {
-        if (!Auth::user()->hasRole(RoleEnum::ARTWORK_ADMIN->value)) {
-            // authorization ("Projektleitung sein" gibt keine Rechte auf fremde Projekte)
-            if (
-                !Auth::user()->canAny([
-                    PermissionEnum::ADD_EDIT_OWN_PROJECT->value,
-                    PermissionEnum::WRITE_PROJECTS->value
-                ]) &&
-                $project->access_budget->pluck('id')->doesntContain(Auth::id()) &&
-                $project->managerUsers->pluck('id')->doesntContain(Auth::id()) &&
-                $project->writeUsers->pluck('id')->doesntContain(Auth::id())
-            ) {
-                return response()->json(['error' => 'Not authorized to assign users to a project.'], 403);
-            }
+        // Team setzen = Schreibrecht im Projekt. Vorher genügte "eigene Projekte anlegen" für jedes
+        // fremde Projekt – samt Selbstvergabe von Budgetzugriff und Schreibrecht.
+        if (Gate::denies('update', $project)) {
+            return response()->json(['error' => 'Not authorized to assign users to a project.'], 403);
         }
 
         $projectManagerBefore = $project->managerUsers()->get();
@@ -4162,18 +4190,14 @@ class ProjectController extends Controller
         Project $project,
         Request $request
     ): JsonResponse|RedirectResponse {
-        // authorization ("Projektleitung sein" gibt keine Rechte auf fremde Projekte)
-        if ($project->users->isNotEmpty() || !Auth::user()->hasRole(RoleEnum::ARTWORK_ADMIN->value)) {
-            if (
-                !Auth::user()->canAny([
-                    PermissionEnum::ADD_EDIT_OWN_PROJECT->value,
-                    PermissionEnum::WRITE_PROJECTS->value
-                ]) &&
-                $project->access_budget->pluck('id')->doesntContain(Auth::id()) &&
-                $project->managerUsers->pluck('id')->doesntContain(Auth::id())
-            ) {
-                return response()->json(['error' => 'Not authorized to assign users to a project.'], 403);
-            }
+        // Duplizieren = Quelle sehen dürfen + Projekte anlegen dürfen oder im Projekt Leitung/Budgetzugriff
+        // haben (vorher reichte "eigene Projekte anlegen" für jedes fremde Projekt, auch ohne Sichtrecht)
+        $mayDuplicate = Gate::allows('create', Project::class)
+            || Auth::user()->can(PermissionEnum::WRITE_PROJECTS->value)
+            || $project->access_budget->contains(Auth::id())
+            || $project->managerUsers->contains(Auth::id());
+        if (Gate::denies('view', $project) || !$mayDuplicate) {
+            return response()->json(['error' => 'Not authorized to duplicate this project.'], 403);
         }
 
         if ($project->departments->isNotEmpty()) {
@@ -4553,9 +4577,7 @@ class ProjectController extends Controller
         SubPositionService $subPositionService,
         BudgetSumDetailsService $budgetSumDetailsService,
         CellCommentService $cellCommentService,
-        CellCalculationService $cellCalculationService,
-        SageNotAssignedDataService $sageNotAssignedDataService,
-        SageAssignedDataService $sageAssignedDataService
+        CellCalculationService $cellCalculationService
     ): RedirectResponse {
 
         $tableService->restore(
@@ -4574,9 +4596,7 @@ class ProjectController extends Controller
             $subPositionService,
             $budgetSumDetailsService,
             $cellCommentService,
-            $cellCalculationService,
-            $sageNotAssignedDataService,
-            $sageAssignedDataService
+            $cellCalculationService
         );
 
         return Redirect::back();
@@ -4736,6 +4756,11 @@ class ProjectController extends Controller
 
     public function downloadKeyVisual(Project $project): StreamedResponse
     {
+        abort_if(
+            blank($project->key_visual_path) || !Storage::exists('public/keyVisual/' . $project->key_visual_path),
+            404
+        );
+
         return Storage::download('public/keyVisual/' . $project->key_visual_path, $project->key_visual_path);
     }
 
@@ -4848,6 +4873,9 @@ class ProjectController extends Controller
     public function duplicateSubPosition(SubPosition $subPosition, $mainPositionId = null): void
     {
         $newSubPosition = $subPosition->replicate();
+        // Verifizierungen hängen an der Ursprungsposition; ohne Reset wirkte die Kopie
+        // verifiziert, „Verifizierung zurücknehmen“ lief dann ins Leere (500).
+        $newSubPosition->is_verified = BudgetTypeEnum::BUDGET_VERIFIED_TYPE_NOT_VERIFIED;
         $newSubPosition->save();
         $newSubPosition->update(['name' => $subPosition->name . ' ' . __('(Copy)')]);
 
@@ -4859,7 +4887,6 @@ class ProjectController extends Controller
         $rows = $subPosition->subPositionRows()->with('cells')->get();
         foreach ($rows as $subPositionRow) {
             $newSubPositionRow = $subPositionRow->replicate();
-            $newSubPositionRow->name = $subPositionRow->name . ' ' . __('(Copy)');
             $newSubPositionRow->sub_position_id = $newSubPosition->id;
             $newSubPositionRow->save();
             $newSubPositionRow->cells()->forceDelete();
@@ -4881,6 +4908,7 @@ class ProjectController extends Controller
     public function duplicateMainPosition(MainPosition $mainPosition): void
     {
         $newMainPosition = $mainPosition->replicate();
+        $newMainPosition->is_verified = BudgetTypeEnum::BUDGET_VERIFIED_TYPE_NOT_VERIFIED;
         $newMainPosition->save();
         $newMainPosition->update(['name' => $mainPosition->name . ' ' . __('(Copy)')]);
 

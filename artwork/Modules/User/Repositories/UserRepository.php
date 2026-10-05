@@ -66,11 +66,16 @@ class UserRepository extends BaseRepository
         return $user;
     }
 
-    public function getWorkers(\Illuminate\Support\Carbon $startDate, \Illuminate\Support\Carbon $endDate): Collection
+    public function getWorkers(\Carbon\CarbonInterface $startDate, \Carbon\CarbonInterface $endDate): Collection
     {
         // Im Konstruktor kann das zu circluar dependency führen, deswegen über den Container
         $workerService = app(\Artwork\Modules\Worker\Services\WorkerService::class);
-        return $workerService->getWorkersForShiftPlan(User::class, $startDate, $endDate);
+        // Aufrufer übergeben teils Carbon\Carbon (z. B. Projekt-Schichttab) – vorher TypeError
+        return $workerService->getWorkersForShiftPlan(
+            User::class,
+            \Illuminate\Support\Carbon::instance($startDate),
+            \Illuminate\Support\Carbon::instance($endDate)
+        );
     }
 
     /**
@@ -78,11 +83,16 @@ class UserRepository extends BaseRepository
      */
     public function getWorkersByIds(
         array $userIds,
-        \Illuminate\Support\Carbon $startDate,
-        \Illuminate\Support\Carbon $endDate
+        \Carbon\CarbonInterface $startDate,
+        \Carbon\CarbonInterface $endDate
     ): Collection {
         $workerService = app(\Artwork\Modules\Worker\Services\WorkerService::class);
-        return $workerService->getWorkersForShiftPlanByIds(User::class, $userIds, $startDate, $endDate);
+        return $workerService->getWorkersForShiftPlanByIds(
+            User::class,
+            $userIds,
+            \Illuminate\Support\Carbon::instance($startDate),
+            \Illuminate\Support\Carbon::instance($endDate)
+        );
     }
 
     public function getAvailabilitiesBetweenDatesGroupedByFormattedDate(

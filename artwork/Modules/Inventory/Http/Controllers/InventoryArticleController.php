@@ -8,6 +8,7 @@ use Artwork\Modules\InternalIssue\Models\InternalIssue;
 use Artwork\Modules\Inventory\Http\Requests\StoreInventoryArticleRequest;
 use Artwork\Modules\Inventory\Http\Requests\UpdateInventoryArticleRequest;
 use Artwork\Modules\Inventory\Models\InventoryArticle;
+use Artwork\Modules\Inventory\Models\InventoryArticleStatus;
 use Artwork\Modules\Inventory\Models\InventoryDetailedQuantityArticle;
 use Artwork\Modules\Inventory\Models\InventoryPropertyValue;
 use Artwork\Modules\Inventory\Services\InventoryArticleService;
@@ -24,6 +25,7 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Inertia\Inertia;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class InventoryArticleController extends Controller
@@ -137,17 +139,41 @@ class InventoryArticleController extends Controller
         $this->inventoryArticleService->delete($inventoryArticle);
     }
 
+    /**
+     * Anzahl künftiger (noch nicht beendeter) interner und externer Ausgaben mit diesem Artikel –
+     * der Löschdialog warnt damit, dass die Reservierungen am Papierkorb-Artikel hängen bleiben.
+     */
+    public function futureIssues(InventoryArticle $inventoryArticle): JsonResponse
+    {
+        $this->authorizeTagAccess($inventoryArticle);
+
+        $today = now()->toDateString();
+        $internal = $inventoryArticle->internalIssues()->where('end_date', '>=', $today)->count();
+        $external = $inventoryArticle->externalIssues()->reservedOnOrAfter($today)->count();
+
+        return response()->json(['count' => $internal + $external]);
+    }
+
     public function forceDelete(int $inventoryArticle): void
     {
         /** @var InventoryArticle $article */
-        $article = InventoryArticle::withTrashed()->findOrFail($inventoryArticle);
+        $article = InventoryArticle::onlyTrashed()->findOrFail($inventoryArticle);
+        $this->authorizeTagAccess($article);
         $this->inventoryArticleService->forceDelete($article);
     }
 
     public function forceDeleteAll(): void
     {
-        InventoryArticle::onlyTrashed()->each(function ($article): void {
-            $this->inventoryArticleService->forceDelete($article);
+        /** @var \Artwork\Modules\User\Models\User $user */
+        $user = $this->authManager->user();
+        $isAdmin = $user->hasRole(\Artwork\Modules\Role\Enums\RoleEnum::ARTWORK_ADMIN->value);
+        $tagPermissions = app(\Artwork\Modules\Inventory\Services\InventoryTagPermissionService::class);
+
+        // Artikel mit gesperrten Tags bleiben im Papierkorb, statt endgültig gelöscht zu werden
+        InventoryArticle::onlyTrashed()->each(function ($article) use ($isAdmin, $tagPermissions, $user): void {
+            if ($isAdmin || $tagPermissions->userCanEditArticle($user, $article)) {
+                $this->inventoryArticleService->forceDelete($article);
+            }
         });
     }
 
@@ -155,6 +181,7 @@ class InventoryArticleController extends Controller
     {
         /** @var InventoryArticle $article */
         $article = InventoryArticle::onlyTrashed()->findOrFail($inventoryArticle);
+        $this->authorizeTagAccess($article);
         $this->inventoryArticleService->restore($article);
     }
 
@@ -208,7 +235,6 @@ class InventoryArticleController extends Controller
 
         // External issues have dates only (no separate time columns). Use full-day bounds for overlap checks.
         $tsExternalStart = DB::raw("TIMESTAMP(issue_date, '00:00:00')");
-        $tsExternalEnd   = DB::raw("TIMESTAMP(COALESCE(return_date, issue_date), '23:59:59')");
 
         $articles = InventoryArticle::whereIn('id', $articleIds)
             ->with([
@@ -223,12 +249,10 @@ class InventoryArticleController extends Controller
                         });
                 },
                 // Externe Ausgaben (Verleih): gleiche Logik
-                'externalIssues' => function ($q) use ($tsExternalStart, $tsExternalEnd, $startAt, $endAt): void {
+                // inkl. überfälliger, nicht zurückgegebener Ausgaben (bleiben reserviert)
+                'externalIssues' => function ($q) use ($tsExternalStart, $startAt, $endAt): void {
                     $q->where($tsExternalStart, '<=', $endAt)
-                        ->where(function ($qq) use ($tsExternalEnd, $startAt): void {
-                            $qq->where($tsExternalEnd, '>=', $startAt)
-                                ->orWhereNull('return_date');
-                        });
+                        ->reservedOnOrAfter($startAt->toDateString());
                 },
             ])
             ->get()
@@ -317,7 +341,7 @@ class InventoryArticleController extends Controller
         $fieldRules = [
             'name' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
-            'quantity' => ['required', 'numeric', 'min:0'],
+            'quantity' => ['required', 'integer', 'min:0'],
             'inventory_category_id' => ['required', 'integer', 'exists:inventory_categories,id'],
             'inventory_sub_category_id' => ['nullable', 'integer', 'exists:inventory_sub_categories,id'],
         ];
@@ -367,9 +391,42 @@ class InventoryArticleController extends Controller
             }
         }
 
+        if ($field === 'quantity' && !$this->syncReadyStatusWithQuantity($inventoryArticle, (int) $value)) {
+            return response()->json(
+                ['error' => __('The total quantity cannot be lower than the quantities in the other statuses.')],
+                422
+            );
+        }
+
         $inventoryArticle->update($data);
 
         return response()->json(['success' => true]);
+    }
+
+    /**
+     * Gesamtmenge = Summe der Statusmengen. Ändert sich die Gesamtmenge inline, wird die Differenz
+     * im Standard-Status ausgeglichen (vorher liefen Gesamt- und Statussumme auseinander). Artikel
+     * ohne gepflegte Statusmengen bleiben unberührt.
+     */
+    private function syncReadyStatusWithQuantity(InventoryArticle $article, int $newQuantity): bool
+    {
+        $statusValues = $article->statusValues()->get();
+        $readyStatusId = InventoryArticleStatus::defaultStatusId();
+        if ($statusValues->isEmpty() || $readyStatusId === null) {
+            return true;
+        }
+
+        $otherStatusesTotal = (int) $statusValues
+            ->reject(fn (InventoryArticleStatus $status): bool => $status->id === $readyStatusId)
+            ->sum(fn (InventoryArticleStatus $status): int => (int) $status->pivot->value);
+        $newReadyValue = $newQuantity - $otherStatusesTotal;
+        if ($newReadyValue < 0) {
+            return false;
+        }
+
+        $article->statusValues()->syncWithoutDetaching([$readyStatusId => ['value' => $newReadyValue]]);
+
+        return true;
     }
 
     public function updateDetailedArticleField(
@@ -379,7 +436,7 @@ class InventoryArticleController extends Controller
         $fieldRules = [
             'name' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
-            'quantity' => ['required', 'numeric', 'min:0'],
+            'quantity' => ['required', 'integer', 'min:0'],
             // No DB foreign key on this column — the exists rule is the only guard
             // against silently storing a dead status id (breaks availability sums).
             'inventory_article_status_id' => ['nullable', 'integer', 'exists:inventory_article_statuses,id'],

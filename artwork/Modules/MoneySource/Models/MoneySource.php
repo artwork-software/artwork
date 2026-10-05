@@ -73,6 +73,9 @@ class MoneySource extends Model
         'pinned_by_users' => 'array',
     ];
 
+    /**
+     * @return BelongsToMany<User, $this>
+     */
     public function users(): BelongsToMany
     {
         return $this->belongsToMany(User::class, 'money_source_users')->withPivot(
@@ -81,32 +84,50 @@ class MoneySource extends Model
         )->using(MoneySourceUserPivot::class);
     }
 
+    /**
+     * @return BelongsToMany<User, $this>
+     */
     public function pinnedByUsers(): BelongsToMany
     {
         return $this->belongsToMany(User::class, 'money_source_user_pinned');
     }
 
+    /**
+     * @return BelongsToMany<User, $this>
+     */
     public function competent(): BelongsToMany
     {
         return $this->belongsToMany(User::class, 'money_source_users')
             ->wherePivot('competent', true)->using(MoneySourceUserPivot::class);
     }
 
+    /**
+     * @return HasMany<MoneySourceTask, $this>
+     */
     public function moneySourceTasks(): HasMany
     {
         return $this->hasMany(MoneySourceTask::class, 'money_source_id');
     }
 
+    /**
+     * @return BelongsToMany<Project, $this>
+     */
     public function projects(): BelongsToMany
     {
         return $this->belongsToMany(Project::class, 'money_source_project');
     }
 
+    /**
+     * @return HasMany<MoneySourceFile, $this>
+     */
     public function moneySourceFiles(): HasMany
     {
         return $this->hasMany(MoneySourceFile::class);
     }
 
+    /**
+     * @return HasMany<SumMoneySource, $this>
+     */
     public function sumMoneySources(): HasMany
     {
         return $this->hasMany(SumMoneySource::class);
@@ -119,6 +140,9 @@ class MoneySource extends Model
             ->using(MoneySourceCategoryMapping::class);
     }
 
+    /**
+     * @return HasMany<MoneySourceReminder, $this>
+     */
     public function reminder(): HasMany
     {
         return $this->hasMany(MoneySourceReminder::class);

@@ -5,19 +5,19 @@
     >
         <div class="bg-white rounded-lg p-6 w-11/12 max-w-4xl max-h-[90vh] overflow-y-auto">
             <div class="flex justify-between items-center mb-4">
-                <h3 class="text-xl font-semibold">Sammelbuchungen</h3>
+                <h3 class="text-xl font-semibold">{{ $t('Collective bookings') }}</h3>
                 <IconX class="w-6 h-6 cursor-pointer" @click="$emit('close')" />
             </div>
             <div class="overflow-x-auto">
                 <table class="min-w-full table-auto border-collapse">
                     <thead>
                     <tr class="bg-surface-sunken">
-                        <th class="px-4 py-2 text-left">KTO</th>
-                        <th class="px-4 py-2 text-left">KST</th>
-                        <th class="px-4 py-2 text-left">Buchungstext</th>
-                        <th class="px-4 py-2 text-right">Betrag</th>
-                        <th class="px-4 py-2 text-right">Datum</th>
-                        <th class="px-4 py-2 text-left">Kostenträger</th>
+                        <th class="px-4 py-2 text-left">{{ $t('KTO') }}</th>
+                        <th class="px-4 py-2 text-left">{{ $t('KST') }}</th>
+                        <th class="px-4 py-2 text-left">{{ $t('Booking text') }}</th>
+                        <th class="px-4 py-2 text-right">{{ $t('Amount') }}</th>
+                        <th class="px-4 py-2 text-right">{{ $t('Date') }}</th>
+                        <th class="px-4 py-2 text-left">{{ $t('Cost bearer') }}</th>
                     </tr>
                     </thead>
                     <tbody>

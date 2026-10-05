@@ -33,5 +33,11 @@
                 {{ __('View all notifications in :app', ['app' => $pageTitle], $language) }}
             </a>
         @endif
+        <p class="notification-description" style="margin-top: 1.5rem;">
+            {{ __('You receive this e-mail because of your notification settings.', [], $language) }}
+            <a href="{{ route('notifications.index', array_filter(['tab' => 'settings', 'type' => is_object($notification->type ?? null) ? $notification->type->value : ($notification->type ?? null)])) }}" class="notification-link notification-link-secondary">
+                {{ __('Change notification settings', [], $language) }}
+            </a>
+        </p>
     </div>
 @endcomponent

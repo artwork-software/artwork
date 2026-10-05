@@ -119,6 +119,9 @@ class Room extends Model
         return $this->color ?? $this->area?->color ?? '#000000';
     }
 
+    /**
+     * @return BelongsTo<Area, $this>
+     */
     public function area(): BelongsTo
     {
         return $this->belongsTo(
@@ -129,34 +132,52 @@ class Room extends Model
         );
     }
 
+    /**
+     * @return HasMany<Shift, $this>
+     */
     public function shifts(): HasMany
     {
         return $this->hasMany(Shift::class, 'room_id', 'id');
     }
 
+    /**
+     * @return BelongsTo<User, $this>
+     */
     public function creator(): BelongsTo
     {
         return $this->belongsTo(User::class, 'user_id', 'id', 'users');
     }
 
+    /**
+     * @return BelongsToMany<User, $this>
+     */
     public function users(): BelongsToMany
     {
         return $this->belongsToMany(User::class, 'room_user', 'room_id')
             ->withPivot('is_admin', 'can_request');
     }
 
+    /**
+     * @return BelongsToMany<User, $this>
+     */
     public function admins(): BelongsToMany
     {
         return $this->belongsToMany(User::class, 'room_user', 'room_id')
             ->wherePivot('is_admin', true);
     }
 
+    /**
+     * @return BelongsToMany<User, $this>
+     */
     public function requestableBy(): BelongsToMany
     {
         return $this->belongsToMany(User::class, 'room_user', 'room_id')
             ->wherePivot('can_request', true);
     }
 
+    /**
+     * @return HasMany<RoomFile, $this>
+     */
     //@todo: fix phpcs error - refactor function name to roomFiles
     //phpcs:ignore PSR1.Methods.CamelCapsMethodName.NotCamelCaps
     public function room_files(): HasMany
@@ -164,11 +185,17 @@ class Room extends Model
         return $this->hasMany(RoomFile::class);
     }
 
+    /**
+     * @return HasMany<Event, $this>
+     */
     public function events(): HasMany
     {
         return $this->hasMany(Event::class);
     }
 
+    /**
+     * @return BelongsToMany<Room, $this>
+     */
     //@todo: fix phpcs error - refactor function name to adjoiningRooms
     //phpcs:ignore PSR1.Methods.CamelCapsMethodName.NotCamelCaps
     public function adjoining_rooms(): BelongsToMany
@@ -176,6 +203,9 @@ class Room extends Model
         return $this->belongsToMany(Room::class, 'adjoining_room_main_room', 'main_room_id', 'adjoining_room_id');
     }
 
+    /**
+     * @return BelongsToMany<Room, $this>
+     */
     //@todo: fix phpcs error - refactor function name to mainRooms
     //phpcs:ignore PSR1.Methods.CamelCapsMethodName.NotCamelCaps
     public function main_rooms(): BelongsToMany
@@ -183,11 +213,17 @@ class Room extends Model
         return $this->belongsToMany(Room::class, 'adjoining_room_main_room', 'adjoining_room_id', 'main_room_id');
     }
 
+    /**
+     * @return BelongsToMany<RoomCategory, $this>
+     */
     public function categories(): BelongsToMany
     {
         return $this->belongsToMany(RoomCategory::class)->using(RoomRoomCategoryMapping::class);
     }
 
+    /**
+     * @return BelongsToMany<RoomAttribute, $this>
+     */
     public function attributes(): BelongsToMany
     {
         return $this->belongsToMany(RoomAttribute::class)->using(RoomRoomAttributeMapping::class);

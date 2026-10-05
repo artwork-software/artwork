@@ -60,7 +60,6 @@ import {useForm} from "@inertiajs/vue3";
 import BaseModal from "@/Components/Modals/BaseModal.vue";
 import Input from "@/Jetstream/Input.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
-import IconLib from "@/Mixins/IconLib.vue";
 import ModalHeader from "@/Components/Modals/ModalHeader.vue";
 import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
@@ -80,7 +79,6 @@ export default {
         ProjectSettingsHeader,
         BaseInput,
         TextInputComponent, ModalHeader, FormButton, Input, BaseModal, PlusButton},
-    mixins: [IconLib],
     props: {
         projectRoles: {
             type: Array,

@@ -43,6 +43,9 @@ class WebhookEndpoint extends Model
         'secret',
     ];
 
+    /**
+     * @return HasMany<WebhookDelivery, $this>
+     */
     public function deliveries(): HasMany
     {
         return $this->hasMany(WebhookDelivery::class);

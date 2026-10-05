@@ -158,7 +158,6 @@ import axios from 'axios';
 import TeamIconCollection from "@/Layouts/Components/TeamIconCollection.vue";
 import UserTooltip from "@/Layouts/Components/UserTooltip.vue";
 import TeamTooltip from "@/Layouts/Components/TeamTooltip.vue";
-import IconLib from "@/Mixins/IconLib.vue";
 import Permissions from "@/Mixins/Permissions.vue";
 import ProjectEditTeamModal from "@/Pages/Projects/Components/ProjectEditTeamModal.vue";
 import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
@@ -170,8 +169,7 @@ import {IconEdit, IconMail} from "@tabler/icons-vue";
 
 export default defineComponent({
     mixins: [
-        Permissions,
-        IconLib
+        Permissions
     ],
     components: {
         BasePageTitle,

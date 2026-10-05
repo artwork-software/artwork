@@ -24,12 +24,18 @@ class CrmPropertyGroup extends Model
         'is_system' => 'boolean',
     ];
 
+    /**
+     * @return HasMany<CrmProperty, $this>
+     */
     public function properties(): HasMany
     {
         return $this->hasMany(CrmProperty::class, 'crm_property_group_id')
             ->orderBy('sort_order');
     }
 
+    /**
+     * @return HasMany<CrmPropertyGroupPermission, $this>
+     */
     public function permissions(): HasMany
     {
         return $this->hasMany(CrmPropertyGroupPermission::class, 'crm_property_group_id');

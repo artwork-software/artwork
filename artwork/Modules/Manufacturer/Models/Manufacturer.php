@@ -10,13 +10,13 @@ use Illuminate\Database\Eloquent\Model;
 use Laravel\Scout\Searchable;
 
 /**
- * @property string name
- * @property string address
- * @property string website
- * @property string customer_number
- * @property string contact_person
- * @property string phone
- * @property string email
+ * @property string $name
+ * @property string $address
+ * @property string $website
+ * @property string $customer_number
+ * @property string $contact_person
+ * @property string $phone
+ * @property string $email
  */
 class Manufacturer extends Model implements CrmEntity
 {

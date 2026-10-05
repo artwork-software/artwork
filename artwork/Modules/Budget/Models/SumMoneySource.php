@@ -29,6 +29,9 @@ class SumMoneySource extends Model
         'linked_type'
     ];
 
+    /**
+     * @return BelongsTo<MoneySource, $this>
+     */
     public function moneySource(): BelongsTo
     {
         return $this->belongsTo(MoneySource::class, 'money_source_id', 'id', 'moneySource');

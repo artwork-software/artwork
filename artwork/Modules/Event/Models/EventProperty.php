@@ -16,6 +16,9 @@ class EventProperty extends Model
         'name'
     ];
 
+    /**
+     * @return BelongsToMany<Event, $this>
+     */
     public function events(): BelongsToMany
     {
         return $this->belongsToMany(Event::class);

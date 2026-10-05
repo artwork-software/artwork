@@ -21,11 +21,17 @@ class PresetShiftShiftsQualifications extends Model
         'value'
     ];
 
+    /**
+     * @return HasOne<PresetShift, $this>
+     */
     public function presetShift(): HasOne
     {
         return $this->hasOne(PresetShift::class);
     }
 
+    /**
+     * @return HasOne<ShiftQualification, $this>
+     */
     public function shiftQualification(): HasOne
     {
         return $this->hasOne(ShiftQualification::class);

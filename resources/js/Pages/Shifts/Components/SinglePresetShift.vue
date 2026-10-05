@@ -76,7 +76,6 @@ import {Menu, MenuItems, MenuItem, MenuButton} from "@headlessui/vue";
 import AddEditShiftPresetModal from "@/Pages/Shifts/Components/AddEditShiftPresetModal.vue";
 import {router} from "@inertiajs/vue3";
 import ShiftQualificationIconCollection from "@/Layouts/Components/ShiftQualificationIconCollection.vue";
-import IconLib from "@/Mixins/IconLib.vue";
 import BaseMenu from "@/Components/Menu/BaseMenu.vue";
 import ShiftNoteComponent from "@/Layouts/Components/ShiftNoteComponent.vue";
 import {IconCopy, IconDotsVertical, IconEdit, IconTrash, IconX} from "@tabler/icons-vue";
@@ -84,7 +83,6 @@ import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 
 export default defineComponent({
     name: "SinglePresetShift",
-    mixins: [IconLib],
     data(){
         return {
             showEditShiftModal: false

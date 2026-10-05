@@ -142,12 +142,11 @@ import {
 import BaseFilter from "@/Layouts/Components/BaseFilter.vue";
 import {router} from "@inertiajs/vue3";
 import Permissions from "@/Mixins/Permissions.vue";
-import IconLib from "@/Mixins/IconLib.vue";
 import CraftFilter from "@/Components/Filter/CraftFilter.vue";
 
 export default {
     name: "ShiftPlanFilter",
-    mixins: [Permissions, IconLib],
+    mixins: [Permissions],
     components: {
         CraftFilter,
         SwitchLabel,

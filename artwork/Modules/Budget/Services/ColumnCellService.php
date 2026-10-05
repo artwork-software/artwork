@@ -255,8 +255,6 @@ readonly class ColumnCellService
         ColumnCell $columnCell,
         CellCommentService $cellCommentService,
         CellCalculationService $cellCalculationService,
-        SageNotAssignedDataService $sageNotAssignedDataService,
-        SageAssignedDataService $sageAssignedDataService,
     ): void {
         $columnCell->comments()->withTrashed()->get()->each(
             fn (CellComment $cellComment) => $cellCommentService->restore($cellComment)
@@ -266,48 +264,9 @@ readonly class ColumnCellService
             fn (CellCalculation $cellCalculation) => $cellCalculationService->restore($cellCalculation)
         );
 
-        // Table sauber (inkl. softdeleted) holen, statt über Property-Kette
-        $table = $columnCell->subPositionRow()
-            ->withTrashed()
-            ->with([
-                'subPosition' => fn ($q) => $q->withTrashed()->with([
-                    'mainPosition' => fn ($q) => $q->withTrashed()->with([
-                        'table' => fn ($q) => $q->withTrashed(),
-                    ]),
-                ]),
-            ])
-            ->first()
-            ?->subPosition
-            ?->mainPosition
-            ?->table;
-
-        // SageAssignedData kann ebenfalls softdeleted sein -> withTrashed()
-        if ($table && !$table->is_template) {
-            foreach ($columnCell->sageAssignedData()->withTrashed()->get() as $sageAssignedData) {
-                $excluded = [$sageAssignedData->getAttribute('id')];
-
-                $assignedSageDataBySageIdExcluded = $sageAssignedDataService->findAllBySageIdExcluded(
-                    $sageAssignedData->getAttribute('sage_id'),
-                    $excluded
-                );
-
-                if ($assignedSageDataBySageIdExcluded->count() > 0) {
-                    $sageNotAssignedDataService->createFromSageAssignedData($sageAssignedData);
-                    $sageAssignedDataService->restore($sageAssignedData);
-
-                    foreach ($assignedSageDataBySageIdExcluded as $assignedSageData) {
-                        $sageAssignedDataService->restore($assignedSageData);
-                    }
-                    continue;
-                }
-
-                $sageNotAssignedDataService->createFromSageAssignedData(
-                    $sageAssignedData,
-                    $table->project_id
-                );
-                $sageAssignedDataService->restore($sageAssignedData);
-            }
-        }
+        // Sage-Zuordnungen nicht anfassen: softDelete() hat sie endgültig nach "nicht zugeordnet"
+        // verschoben (SageAssignedData hat kein SoftDeletes) – dort werden sie neu zugeordnet.
+        // Vorher: withTrashed() auf SageAssignedData → BadMethodCallException beim Wiederherstellen.
 
         $this->columnCellRepository->restore($columnCell);
     }

@@ -5,6 +5,9 @@ namespace Artwork\Modules\MoneySource\Http\Resources;
 use Artwork\Modules\Project\Http\Resources\CommentResource;
 use Illuminate\Http\Resources\Json\JsonResource;
 
+/**
+ * @mixin \Artwork\Modules\MoneySource\Models\MoneySourceFile
+ */
 class MoneySourceFileResource extends JsonResource
 {
     /**

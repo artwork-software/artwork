@@ -603,5 +603,8 @@ export function useShiftCalendarListener(newShiftPlanData, { onWorkersNeedReload
         updateShiftInRoomAndEvents(data, data.roomId ?? data.shift.roomId, { reloadWorkers: true });
     }
 
-    return { init, dispose, applyShiftUpdate };
+    // Lokal entfernen, ohne auf den Broadcast zu warten (idempotent, der Broadcast findet nichts mehr)
+    const removeEvent = (eventId) => onEventRemoved({event: {id: eventId}});
+
+    return { init, dispose, applyShiftUpdate, removeEvent };
 }

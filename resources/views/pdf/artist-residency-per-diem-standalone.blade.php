@@ -1,3 +1,4 @@
+@inject('formatter', 'Artwork\Modules\GeneralSettings\Services\InstanceFormatter')
 <html lang="en">
 <head>
     <title>Per Diem Export</title>
@@ -152,11 +153,11 @@
                 <td>{{ $artistResidency->formatted_dates['arrival_date'] }} {{ $artistResidency->formatted_dates['arrival_time'] }}</td>
                 <td>{{ $artistResidency->formatted_dates['departure_date'] }} {{ $artistResidency->formatted_dates['departure_time'] }}</td>
                 <td style="text-align: center">{{ $days }}</td>
-                <td>{{ number_format($artistResidency->daily_allowance, 2, ',', '.') }} €</td>
-                <td>{{ number_format($dailyAllowanceTotal, 2, ',', '.') }} €</td>
+                <td>{{ $formatter->currency($artistResidency->daily_allowance) }}</td>
+                <td>{{ $formatter->currency($dailyAllowanceTotal) }}</td>
                 <td style="text-align: center">{{ $breakfastCount }}</td>
-                <td>{{ number_format($breakfastDeductionTotal, 2, ',', '.') }} €</td>
-                <td>{{ number_format($payoutPerDiem, 2, ',', '.') }} €</td>
+                <td>{{ $formatter->currency($breakfastDeductionTotal) }}</td>
+                <td>{{ $formatter->currency($payoutPerDiem) }}</td>
             </tr>
         @endforeach
 
@@ -179,10 +180,10 @@
             <td colspan="4" style="text-align: right; font-weight: bold">{{ __('export.total_days', [], $language) }}:</td>
             <td style="text-align: center; font-weight: bold">{{ $artistResidencies->sum('days') }}</td>
             <td></td>
-            <td style="font-weight: bold">{{ number_format($grandTotalDailyAllowance, 2, ',', '.') }} €</td>
+            <td style="font-weight: bold">{{ $formatter->currency($grandTotalDailyAllowance) }}</td>
             <td></td>
-            <td style="font-weight: bold">{{ number_format($grandTotalBreakfastDeduction, 2, ',', '.') }} €</td>
-            <td style="font-weight: bold">{{ number_format($grandTotalPayoutPerDiem, 2, ',', '.') }} €</td>
+            <td style="font-weight: bold">{{ $formatter->currency($grandTotalBreakfastDeduction) }}</td>
+            <td style="font-weight: bold">{{ $formatter->currency($grandTotalPayoutPerDiem) }}</td>
         </tr>
     </tbody>
 </table>

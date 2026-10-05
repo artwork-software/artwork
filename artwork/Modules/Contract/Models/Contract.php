@@ -96,6 +96,9 @@ class Contract extends Model
         'has_power_of_attorney' => 'boolean',
     ];
 
+    /**
+     * @return BelongsTo<Project, $this>
+     */
     public function project(): BelongsTo
     {
         return $this->belongsTo(
@@ -106,6 +109,9 @@ class Contract extends Model
         );
     }
 
+    /**
+     * @return BelongsTo<CompanyType, $this>
+     */
     //@todo: fix phpcs error - refactor function name to companyType
     //phpcs:ignore PSR1.Methods.CamelCapsMethodName.NotCamelCaps
     public function company_type(): BelongsTo
@@ -118,6 +124,9 @@ class Contract extends Model
         );
     }
 
+    /**
+     * @return BelongsTo<ContractType, $this>
+     */
     //@todo: fix phpcs error - refactor function name to contractType
     //phpcs:ignore PSR1.Methods.CamelCapsMethodName.NotCamelCaps
     public function contract_type(): BelongsTo
@@ -130,6 +139,9 @@ class Contract extends Model
         );
     }
 
+    /**
+     * @return BelongsTo<Currency, $this>
+     */
     public function currency(): BelongsTo
     {
         return $this->belongsTo(
@@ -140,27 +152,42 @@ class Contract extends Model
         );
     }
 
+    /**
+     * @return BelongsToMany<User, $this>
+     */
     public function accessingUsers(): BelongsToMany
     {
         return $this->belongsToMany(User::class);
     }
 
+    /**
+     * @return BelongsToMany<Department, $this>
+     */
     public function accessingDepartments(): BelongsToMany
     {
         return $this->belongsToMany(Department::class);
     }
 
+    /**
+     * @return BelongsTo<User, $this>
+     */
     public function creator(): BelongsTo
     {
         return $this->belongsTo(User::class, 'creator_id', 'id', 'users')
             ->without(['calender_settings', 'shifts', 'vacations', 'vacation_series', 'vacationer']);
     }
 
+    /**
+     * @return HasMany<Task, $this>
+     */
     public function tasks(): HasMany
     {
         return $this->hasMany(Task::class);
     }
 
+    /**
+     * @return HasMany<Comment, $this>
+     */
     public function comments(): HasMany
     {
         return $this->hasMany(Comment::class, 'contract_id', 'id');

@@ -27,6 +27,9 @@ class ProjectState extends Model
         'is_planning'
     ];
 
+    /**
+     * @return HasMany<Project, $this>
+     */
     public function projects(): HasMany
     {
         return $this->hasMany(

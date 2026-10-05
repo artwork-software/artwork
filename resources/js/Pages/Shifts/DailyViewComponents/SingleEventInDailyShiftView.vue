@@ -187,8 +187,8 @@
     <!-- Bestätigungsmodal: Termin löschen -->
     <ConfirmationComponent
         v-if="showConfirmDeleteModal"
-        titel="Termin löschen"
-        description="Möchtest du diesen Termin wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden."
+        :titel="$t('Delete event')"
+        :description="$t('Do you really want to delete this event? This action cannot be undone.')"
         @closed="handleConfirmDelete"
     />
 </template>

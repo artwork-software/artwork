@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\Cache;
 
 class SingleShiftPreset extends Model
 {
-    /** @use HasFactory<\Database\Factories\SingleShiftPresetFactory> */
+    /** @use HasFactory<\Database\Factories\Artwork\Modules\Shift\Models\SingleShiftPresetFactory> */
     use HasFactory;
 
     public const SHIFT_PLAN_CACHE_KEY = 'shift_plan:single_presets';
@@ -37,6 +37,9 @@ class SingleShiftPreset extends Model
         static::deleted($flush);
     }
 
+    /**
+     * @return BelongsTo<Craft, $this>
+     */
     public function craft(): BelongsTo
     {
         return $this->belongsTo(
@@ -47,6 +50,9 @@ class SingleShiftPreset extends Model
         )->without(['users']);
     }
 
+    /**
+     * @return BelongsToMany<ShiftQualification, $this>
+     */
     // map shift qualifications relation
     public function shiftsQualifications(): BelongsToMany
     {

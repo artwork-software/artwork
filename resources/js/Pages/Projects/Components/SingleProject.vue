@@ -167,7 +167,6 @@
 
 <script>
 import Permissions from "@/Mixins/Permissions.vue";
-import IconLib from "@/Mixins/IconLib.vue";
 import BaseMenu from "@/Components/Menu/BaseMenu.vue";
 import {Link, router} from "@inertiajs/vue3";
 import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
@@ -189,7 +188,7 @@ export default {
         MenuButton,
         MenuItem,
         MenuItems,},
-    mixins: [IconLib, Permissions],
+    mixins: [Permissions],
     setup() {
         const {backgroundColorWithOpacityOld: backgroundColorWithOpacity, TextColorWithDarken} = useColorHelper();
         return {backgroundColorWithOpacity, TextColorWithDarken};

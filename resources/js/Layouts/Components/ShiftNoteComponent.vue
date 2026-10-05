@@ -30,7 +30,6 @@
 </template>
 
 <script>
-import IconLib from "@/Mixins/IconLib.vue";
 import {router, useForm, usePage} from "@inertiajs/vue3";
 import Permissions from "@/Mixins/Permissions.vue";
 import BaseTextarea from "@/Artwork/Inputs/BaseTextarea.vue";
@@ -61,7 +60,7 @@ export default {
             default: false
         }
     },
-    mixins: [IconLib, Permissions],
+    mixins: [Permissions],
     computed: {
         isPivotMode() {
             return this.mode === 'pivot'

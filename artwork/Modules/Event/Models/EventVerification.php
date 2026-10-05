@@ -49,11 +49,17 @@ class EventVerification extends Model
         return $this->morphTo();
     }
 
+    /**
+     * @return BelongsTo<Event, $this>
+     */
     public function event(): BelongsTo
     {
         return $this->belongsTo(Event::class, 'event_id', 'id', 'events');
     }
 
+    /**
+     * @return BelongsTo<User, $this>
+     */
     public function requester(): BelongsTo
     {
         return $this->belongsTo(User::class, 'request_user_id', 'id', 'requester');

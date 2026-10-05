@@ -43,16 +43,25 @@ class ExternalPendingSubmission extends Model
         ];
     }
 
+    /**
+     * @return BelongsTo<ExternalAccess, $this>
+     */
     public function externalAccess(): BelongsTo
     {
         return $this->belongsTo(ExternalAccess::class, 'external_access_id', 'id', 'externalAccess');
     }
 
+    /**
+     * @return BelongsTo<User, $this>
+     */
     public function reviewer(): BelongsTo
     {
         return $this->belongsTo(User::class, 'reviewed_by_user_id', 'id', 'reviewer');
     }
 
+    /**
+     * @return HasMany<ExternalPendingFieldChange, $this>
+     */
     public function fieldChanges(): HasMany
     {
         return $this->hasMany(ExternalPendingFieldChange::class, 'submission_id');

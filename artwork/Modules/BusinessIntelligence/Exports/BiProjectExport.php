@@ -2,6 +2,7 @@
 
 namespace Artwork\Modules\BusinessIntelligence\Exports;
 
+use Artwork\Modules\GeneralSettings\Services\InstanceFormatter;
 use Maatwebsite\Excel\Concerns\Exportable;
 use Maatwebsite\Excel\Concerns\FromArray;
 use Maatwebsite\Excel\Concerns\ShouldAutoSize;
@@ -136,10 +137,13 @@ class BiProjectExport implements
     {
         $formats = [];
         $formatMap = array_merge(self::COLUMN_FORMATS, $this->extraColumnFormats);
+        $currencyFormat = app(InstanceFormatter::class)->excelCurrencyFormat();
 
         foreach (array_values($this->columns) as $index => $column) {
             if (isset($formatMap[$column])) {
-                $formats[Coordinate::stringFromColumnIndex($index + 1)] = $formatMap[$column];
+                // FORMAT_CURRENCY ist der Platzhalter; das Symbol kommt aus den Instanz-Formaten
+                $formats[Coordinate::stringFromColumnIndex($index + 1)] =
+                    $formatMap[$column] === self::FORMAT_CURRENCY ? $currencyFormat : $formatMap[$column];
             }
         }
 

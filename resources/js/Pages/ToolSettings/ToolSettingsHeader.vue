@@ -58,6 +58,12 @@ export default defineComponent({
                     permission: this.$can('change tool settings') || this.hasAdminRole()
                 },
                 {
+                    name: this.$t('Regional formats'),
+                    href: route('tool.formats'),
+                    current: route().current('tool.formats'),
+                    permission: this.$can('change tool settings')
+                },
+                {
                     name: this.$t('Interfaces'),
                     href: route('tool.interfaces'),
                     current: route().current('tool.interfaces'),

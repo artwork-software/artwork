@@ -19,11 +19,17 @@ class RoomRoomAttributeMapping extends Pivot
 
     protected $table = 'room_room_attribute';
 
+    /**
+     * @return BelongsTo<Room, $this>
+     */
     public function room(): BelongsTo
     {
         return $this->belongsTo(Room::class);
     }
 
+    /**
+     * @return BelongsTo<RoomAttribute, $this>
+     */
     public function roomAttribute(): BelongsTo
     {
         return $this->belongsTo(RoomAttribute::class);

@@ -12,7 +12,6 @@ use Artwork\Modules\Shift\Http\Requests\StoreManualViolationRequest;
 use Artwork\Modules\Shift\Http\Requests\StoreShiftRuleRequest;
 use Artwork\Modules\Shift\Http\Requests\UpdateContractAssignmentsRequest;
 use Artwork\Modules\Shift\Http\Requests\UpdateShiftRuleRequest;
-use Artwork\Modules\Shift\Http\Requests\UpdateViolationStatusRequest;
 use Artwork\Modules\Shift\Http\Requests\ValidateShiftRulesRequest;
 use Artwork\Modules\Shift\Exports\ShiftRuleViolationsExcelExport;
 use Artwork\Modules\Shift\Models\CompensationDayOff;
@@ -578,30 +577,6 @@ class ShiftRuleController extends Controller
         return $export->download(sprintf('verstoesse_%s_bis_%s.xlsx', $filters['date_from'], $filters['date_to']));
     }
 
-    public function updateViolationStatus(UpdateViolationStatusRequest $request, int $violationId): RedirectResponse
-    {
-        try {
-            $this->shiftRuleService->updateViolationStatus(
-                $violationId,
-                $request->validated()['status'],
-                auth()->id()
-            );
-
-            return redirect()->back()->with('success', __('Status successfully updated'));
-        } catch (\Exception $e) {
-            // Rohe Exception-Texte gehören ins Log, nicht in die Oberfläche
-            Log::error('Shift rule violation status update failed', [
-                'violation_id' => $violationId,
-                'exception' => $e,
-            ]);
-
-            return redirect()->back()->with(
-                'error',
-                __('The violation could not be processed. Please reload the page and try again.')
-            );
-        }
-    }
-
     public function assignContracts(AssignContractsToRuleRequest $request, ShiftRule $shiftRule): RedirectResponse
     {
         $this->shiftRuleService->syncContractsForRule($shiftRule, $request->validated()['contract_ids']);
@@ -759,17 +734,23 @@ class ShiftRuleController extends Controller
         // records and notifications fire like a manual removal from the shift plan.
         if (!empty($validated['remove_shifts']) && $shiftsOnDate > 0) {
             $shiftWorkerService = app(\Artwork\Modules\Shift\Services\ShiftWorkerService::class);
-            $this->userShiftWorkersOnDateQuery($compensationDayOff->user_id, $grantedDate)
+            $pivots = $this->userShiftWorkersOnDateQuery($compensationDayOff->user_id, $grantedDate)
                 ->with('shift')
-                ->get()
-                ->each(fn (\Artwork\Modules\Shift\Models\ShiftWorker $pivot) => $shiftWorkerService->removeFromShift(
+                ->get();
+            // Nur aus Schichten planbarer Gewerke entfernen – sonst wird gar nichts geändert
+            app(\Artwork\Modules\Craft\Services\CraftScopeService::class)
+                ->assertCanPlanShifts($request->user(), $pivots->pluck('shift')->filter());
+            /** @var \Artwork\Modules\Shift\Models\ShiftWorker $pivot */
+            foreach ($pivots as $pivot) {
+                $shiftWorkerService->removeFromShift(
                     $pivot,
                     true,
                     app(\Artwork\Modules\Notification\Services\NotificationService::class),
                     app(\Artwork\Modules\Vacation\Services\VacationConflictService::class),
                     app(\Artwork\Modules\Availability\Services\AvailabilityConflictService::class),
                     app(\Artwork\Modules\Change\Services\ChangeService::class)
-                ));
+                );
+            }
         }
 
         $period = $validated['half_day_period'] ?? null;

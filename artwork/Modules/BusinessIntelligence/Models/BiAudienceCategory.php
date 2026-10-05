@@ -35,6 +35,9 @@ class BiAudienceCategory extends Model
         ];
     }
 
+    /**
+     * @return HasMany<BiAudienceCategoryValue, $this>
+     */
     public function values(): HasMany
     {
         return $this->hasMany(BiAudienceCategoryValue::class, 'bi_audience_category_id');

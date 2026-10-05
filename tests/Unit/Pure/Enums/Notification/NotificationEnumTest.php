@@ -184,26 +184,13 @@ final class NotificationEnumTest extends UnitTestCase
     }
 
     #[Test]
-    public function notification_class_returns_existing_class_for_covered_cases(): void
+    public function notification_class_is_an_existing_class_or_null_for_every_case(): void
     {
-        // NOTE: Bug detected: NOTIFICATION_EVENT_VERIFICATION_REQUESTS, NOTIFICATION_DOCUMENT_REQUEST_CREATED,
-        // and NOTIFICATION_DOCUMENT_REQUEST_COMPLETED are NOT handled in NotificationEnum::notificationClass()
-        // match expression - they trigger UnhandledMatchError at runtime.
-        $uncovered = [
-            NotificationEnum::NOTIFICATION_EVENT_VERIFICATION_REQUESTS,
-            NotificationEnum::NOTIFICATION_DOCUMENT_REQUEST_CREATED,
-            NotificationEnum::NOTIFICATION_DOCUMENT_REQUEST_COMPLETED,
-            NotificationEnum::NOTIFICATION_INVENTORY_ARTICLE_CHANGED,
-            NotificationEnum::NOTIFICATION_INVENTORY_OVERBOOKED,
-        ];
-
         foreach (NotificationEnum::cases() as $case) {
-            if (in_array($case, $uncovered, true)) {
-                continue;
-            }
+            $class = $case->notificationClass();
             $this->assertTrue(
-                class_exists($case->notificationClass()),
-                sprintf('Notification class %s does not exist for %s', $case->notificationClass(), $case->name)
+                $class === null || class_exists($class),
+                sprintf('Notification class %s does not exist for %s', $class, $case->name)
             );
         }
     }

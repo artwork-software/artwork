@@ -175,6 +175,7 @@
 </template>
 
 <script>
+import { createInstanceFormatter } from "@/Helper/instanceFormat.js";
 import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 import CrmContactProfileCard from "./CrmContactProfileCard.vue";
@@ -221,7 +222,7 @@ export default {
         },
         formatCurrency(value) {
             if (!value) return '-';
-            return new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' }).format(value);
+            return createInstanceFormatter(this.$page.props.instanceFormat).formatCurrency(value);
         },
         formatDate(value) {
             if (!value) return '-';

@@ -69,16 +69,25 @@ class CrmContact extends Model
         return $entity instanceof CrmEntity ? $entity : null;
     }
 
+    /**
+     * @return BelongsTo<CrmContactType, $this>
+     */
     public function contactType(): BelongsTo
     {
         return $this->belongsTo(CrmContactType::class, 'crm_contact_type_id');
     }
 
+    /**
+     * @return HasMany<CrmPropertyValue, $this>
+     */
     public function propertyValues(): HasMany
     {
         return $this->hasMany(CrmPropertyValue::class, 'crm_contact_id');
     }
 
+    /**
+     * @return HasOne<\Artwork\Modules\ExternalAccess\Models\ExternalAccess, $this>
+     */
     public function externalAccess(): HasOne
     {
         return $this->hasOne(\Artwork\Modules\ExternalAccess\Models\ExternalAccess::class, 'crm_contact_id');
@@ -86,6 +95,7 @@ class CrmContact extends Model
 
     /**
      * Externer Zugang, der diesen Kontakt über eine CRM-Kontaktliste im Projekt angelegt hat.
+     * @return BelongsTo<\Artwork\Modules\ExternalAccess\Models\ExternalAccess, $this>
      */
     public function createdByExternalAccess(): BelongsTo
     {
@@ -97,11 +107,17 @@ class CrmContact extends Model
         );
     }
 
+    /**
+     * @return HasMany<\Artwork\Modules\ExternalAccess\Models\ExternalAccess, $this>
+     */
     public function externalAccesses(): HasMany
     {
         return $this->hasMany(\Artwork\Modules\ExternalAccess\Models\ExternalAccess::class, 'crm_contact_id');
     }
 
+    /**
+     * @return BelongsToMany<AccommodationRoomType, $this>
+     */
     public function roomTypes(): BelongsToMany
     {
         return $this->belongsToMany(
@@ -112,11 +128,17 @@ class CrmContact extends Model
         )->withPivot('cost_per_night');
     }
 
+    /**
+     * @return HasMany<ArtistResidency, $this>
+     */
     public function artistResidencies(): HasMany
     {
         return $this->hasMany(ArtistResidency::class, 'artist_crm_contact_id');
     }
 
+    /**
+     * @return BelongsToMany<\Artwork\Modules\Project\Models\Project, $this>
+     */
     public function projects(): BelongsToMany
     {
         return $this->belongsToMany(
@@ -125,6 +147,9 @@ class CrmContact extends Model
         )->withTimestamps();
     }
 
+    /**
+     * @return BelongsToMany<\Artwork\Modules\Project\Models\Project, $this>
+     */
     public function teamProjects(): BelongsToMany
     {
         return $this->belongsToMany(
@@ -135,6 +160,9 @@ class CrmContact extends Model
             ->withTimestamps();
     }
 
+    /**
+     * @return HasMany<ArtistResidency, $this>
+     */
     public function accommodationResidencies(): HasMany
     {
         return $this->hasMany(ArtistResidency::class, 'accommodation_crm_contact_id');

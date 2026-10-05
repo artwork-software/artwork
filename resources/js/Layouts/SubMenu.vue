@@ -286,6 +286,8 @@
                                 <Link
                                     v-else-if="!item.isMenu && item.has_permission"
                                     :href="item.href"
+                                    :title="isFullSideBar ? undefined : $t(item.name)"
+                                    :aria-label="isFullSideBar ? undefined : $t(item.name)"
                                     :class="[
                                       'w-full group flex items-center rounded-lg min-h-10 py-1.5 select-none transition-colors border-l-2',
                                       isFullSideBar ? 'justify-start gap-3 px-2' : 'justify-center px-0',
@@ -294,11 +296,19 @@
                                         : 'border-transparent text-white hover:bg-white/10 hover:text-white'
                                     ]"
                                 >
-                                    <PropertyIcon
-                                        :name="item.icon"
-                                        :stroke-width="1"
-                                        class="size-6 min-w-6 min-h-6 text-white"
-                                    />
+                                    <span class="relative inline-flex">
+                                        <PropertyIcon
+                                            :name="item.icon"
+                                            :stroke-width="1"
+                                            class="size-6 min-w-6 min-h-6 text-white"
+                                        />
+                                        <span
+                                            v-if="item.showsUnseenNotifications && unseenNotifications"
+                                            class="absolute -top-0.5 -right-0.5 size-2.5 rounded-full bg-danger ring-2 ring-surface-inverse"
+                                        >
+                                            <span class="sr-only">{{ $t('New notifications') }}</span>
+                                        </span>
+                                    </span>
                                     <span v-if="isFullSideBar" class="flex-1 min-w-0 leading-tight break-words text-left">{{ $t(item.name) }}</span>
                                 </Link>
 
@@ -474,6 +484,7 @@
 </template>
 
 <script setup>
+import { hasUnseenNotifications } from "@/Helper/notificationIndicator.js";
 
 import {computed, ref} from "vue";
 import {usePage, Link, router} from "@inertiajs/vue3";
@@ -528,6 +539,10 @@ const computedBudgetRoute = computed(() => {
 
     return desiredBudgetRoute
 })
+
+const unseenNotifications = computed(() =>
+    hasUnseenNotifications(usePage().props.auth.user, route().current('notifications.*'))
+)
 
 const moduleIsVisible = (module) => {
     return is('artwork admin') || usePage().props.module_settings[module];
@@ -934,6 +949,7 @@ const subNavigation = ref([
         href: route('notifications.index'),
         icon: 'IconBell',
         current: route().current('notifications.*'),
+        showsUnseenNotifications: true,
         isMenu: false,
         showToolTipForItem: false,
         has_permission: true,

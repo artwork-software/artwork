@@ -4,11 +4,14 @@
         <title>{{ title }} - {{ usePage().props.page_title }}</title>
     </Head>
     <div class="artwork relative">
-        <div v-if="pushNotifications.length > 0" class="absolute top-16 right-5">
-            <div v-for="pushNotification in pushNotifications" :key="pushNotification.id" :id="pushNotification.id"
-                 class="my-2 z-50 flex relative w-full max-w-xs rounded-lg border border-border-subtle bg-surface shadow-overlay"
-                 role="alert">
-                <div class="flex p-4">
+        <!-- Live-Hinweise: fest oben rechts, 8 s sichtbar (pausiert bei Hover), Klick öffnet das Center -->
+        <div v-if="pushNotifications.length > 0" class="fixed top-16 right-5 z-[60] w-full max-w-xs space-y-2">
+            <div v-for="pushNotification in pushNotifications" :key="pushNotification.id"
+                 class="flex relative w-full rounded-lg border border-border-subtle bg-surface shadow-overlay"
+                 role="status"
+                 @mouseenter="pausePushNotification(pushNotification.id)"
+                 @mouseleave="schedulePushNotificationClose(pushNotification.id)">
+                <button type="button" class="flex p-4 text-left grow" @click="openNotificationCenter(pushNotification.id)">
                     <div class="inline-flex flex-shrink-0 justify-center items-center rounded-lg">
                         <img alt="Notification" v-if="pushNotification.type === 'success'"
                              class="h-9 w-9" src="/Svgs/IconSvgs/icon_push_notification_green.svg"/>
@@ -16,10 +19,10 @@
                              src="/Svgs/IconSvgs/icon_push_notification_red.svg"/>
                     </div>
                     <div class="ml-4 text-sm font-semibold text-text">{{ pushNotification.message }}</div>
-                </div>
-                <button type="button" class="-mt-4 mr-2">
-                    <PropertyIcon name="IconX" class="-mt-4 h-5 w-5 text-text-subtle hover:text-danger relative"
-                           @click="closePushNotification(pushNotification.id)"/>
+                </button>
+                <button type="button" class="self-start p-2" :aria-label="$t('Close')"
+                        @click="closePushNotification(pushNotification.id)">
+                    <PropertyIcon name="IconX" class="h-5 w-5 text-text-subtle hover:text-danger"/>
                 </button>
             </div>
         </div>
@@ -81,6 +84,8 @@ const flashDedupe = {key: null, at: 0}
 </script>
 
 <script setup>
+import { markNotificationArrived } from "@/Helper/notificationIndicator.js";
+import {onAppToast} from '@/Helper/appToast'
 import {Head, router, usePage} from "@inertiajs/vue3"
 import {defineAsyncComponent, onBeforeMount, onMounted, onUnmounted, ref, watchEffect} from "vue";
 import {reloadRolesAndPermissions} from "laravel-permission-to-vuejs";
@@ -157,12 +162,35 @@ const showFlashFromPage = (pageData) => {
 
 // Nach jeder erfolgreichen Inertia-Navigation (inkl. redirect()->back() nach Formularen)
 const removeFlashListener = router.on('success', (event) => showFlashFromPage(event.detail.page))
+// Meldungen außerhalb von Redirects (fehlgeschlagene Requests, $toast) über denselben Toast
+const removeAppToastListener = onAppToast((type, message) => pushFlashToast(type, message))
 
-onUnmounted(() => removeFlashListener())
+onUnmounted(() => {
+    removeFlashListener()
+    removeAppToastListener()
+})
+
+const pushNotificationTimers = new Map()
+const PUSH_NOTIFICATION_DURATION_MS = 8000
 
 const closePushNotification = (id) => {
-    const pushNotification = document.getElementById(id);
-    pushNotification?.remove();
+    clearTimeout(pushNotificationTimers.get(id))
+    pushNotificationTimers.delete(id)
+    pushNotifications.value = pushNotifications.value.filter((notification) => notification.id !== id)
+}
+
+const pausePushNotification = (id) => {
+    clearTimeout(pushNotificationTimers.get(id))
+}
+
+const schedulePushNotificationClose = (id) => {
+    pausePushNotification(id)
+    pushNotificationTimers.set(id, setTimeout(() => closePushNotification(id), PUSH_NOTIFICATION_DURATION_MS))
+}
+
+const openNotificationCenter = (id) => {
+    closePushNotification(id)
+    router.visit(route('notifications.index'))
 }
 
 onBeforeMount(() => {
@@ -190,10 +218,10 @@ onMounted(() => {
     locale.value = usePage().props.auth.user.language
     window.Echo.private(`notifications.${usePage().props.auth.user.id}`)
         .listen('.incoming-notification', (notification) => {
-            pushNotifications.value.push(notification.message);
-            setTimeout(() => {
-                closePushNotification(notification.message.id)
-            }, 3000)
+            const message = { id: notification.message.id ?? `${Date.now()}`, ...notification.message }
+            pushNotifications.value.push(message);
+            markNotificationArrived();
+            schedulePushNotificationClose(message.id);
         });
 
 

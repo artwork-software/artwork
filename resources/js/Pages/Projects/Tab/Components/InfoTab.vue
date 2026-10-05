@@ -52,7 +52,6 @@ import SvgCollection from "@/Layouts/Components/SvgCollection.vue";
 import Permissions from "@/Mixins/Permissions.vue";
 import {nextTick} from "vue";
 import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
-import IconLib from "@/Mixins/IconLib.vue";
 import ProjectDocumentsComponent from "@/Pages/Projects/Components/ProjectDocumentsComponent.vue";
 import TextareaComponent from "@/Components/Inputs/TextareaComponent.vue";
 
@@ -73,7 +72,7 @@ export default{
         'projectWriteIds',
         'projectManagerIds',
     ],
-    mixins: [Permissions, IconLib],
+    mixins: [Permissions],
     data() {
         return{
             descriptionClicked: false,

@@ -54,7 +54,7 @@
                         :label="$t('LDAP/AD Host')"
                         v-model="form.config.host"
                         :error="form.errors['config.host']"
-                        placeholder="ldaps://ad.domain.tld oder ldap://ad.domain.tld"
+                        :placeholder="$t('ldaps://ad.domain.tld or ldap://ad.domain.tld')"
                         required
                     />
                     <p class="mt-1 text-xs text-text-subtle">

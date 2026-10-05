@@ -23,6 +23,9 @@ class UserCommentedBudgetItemsSetting extends Model
         'exclude'
     ];
 
+    /**
+     * @return HasOne<User, $this>
+     */
     public function user(): HasOne
     {
         return $this->hasOne(User::class);

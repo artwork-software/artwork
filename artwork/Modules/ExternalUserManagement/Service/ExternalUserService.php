@@ -42,6 +42,12 @@ class ExternalUserService
         );
     }
 
+    /**
+     * Gleicht Rechte und Rollen aus den Gruppen-Mappings der Quelle ab. Entzogen wird alles,
+     * was ein Mapping vergeben könnte, aber gerade nicht zutrifft – UND alles, was der Sync
+     * dieser Person früher vergeben hat und heute kein Mapping mehr liefert. Ohne Letzteres
+     * blieben Rechte aus gelöschten oder geänderten Mappings für immer bestehen.
+     */
     public function syncUserGroups(
         ExternalUserSource $source,
         User $user,
@@ -49,52 +55,67 @@ class ExternalUserService
         ExternalUserGroupMappingService $groupMappingService
     ): void {
         $groupMappings = $groupMappingService->getAllBySourceId($source->id);
+        $externalUser = $this->externalUserRepository->findBySourceIdAndUserId($source->id, $user->id);
+        $previousMetaData = $externalUser?->meta_data ?? [];
+        $previouslyGrantedPermissionIds = collect($previousMetaData['synced_permission_ids'] ?? [])
+            ->map(fn ($id): int => (int) $id);
+        $previouslyGrantedRoleIds = collect($previousMetaData['synced_role_ids'] ?? [])
+            ->map(fn ($id): int => (int) $id);
 
         $activeMappings = $groupMappings->filter(
             fn ($mapping): bool => in_array($mapping->ad_group_dn, $userGroups, true)
         );
         $mappedPermissionIds = $groupMappings->flatMap(
             fn ($mapping): array => $mapping->permission_ids ?? []
-        )->unique()->values();
+        )->map(fn ($id): int => (int) $id)->unique()->values();
         $activePermissionIds = $activeMappings->flatMap(
             fn ($mapping): array => $mapping->permission_ids ?? []
-        )->unique()->values();
+        )->map(fn ($id): int => (int) $id)->unique()->values();
         $mappedRoleIds = $groupMappings->flatMap(
             fn ($mapping): array => $mapping->role_ids ?? []
-        )->unique()->values();
+        )->map(fn ($id): int => (int) $id)->unique()->values();
         $activeRoleIds = $activeMappings->flatMap(
             fn ($mapping): array => $mapping->role_ids ?? []
-        )->unique()->values();
+        )->map(fn ($id): int => (int) $id)->unique()->values();
 
-        $permissions = Permission::whereIn('id', $mappedPermissionIds)->pluck('name', 'id');
+        $revokePermissionIds = $mappedPermissionIds->merge($previouslyGrantedPermissionIds)
+            ->unique()
+            ->diff($activePermissionIds);
+        $revokeRoleIds = $mappedRoleIds->merge($previouslyGrantedRoleIds)
+            ->unique()
+            ->diff($activeRoleIds);
+
+        $permissions = Permission::whereIn('id', $activePermissionIds->merge($revokePermissionIds))
+            ->pluck('name', 'id');
         foreach ($activePermissionIds as $permissionId) {
             if ($permissions->has($permissionId)) {
                 $user->givePermissionTo($permissions->get($permissionId));
             }
         }
-        foreach ($mappedPermissionIds->diff($activePermissionIds) as $permissionId) {
+        foreach ($revokePermissionIds as $permissionId) {
             if ($permissions->has($permissionId)) {
                 $user->revokePermissionTo($permissions->get($permissionId));
             }
         }
 
-        $roles = Role::whereIn('id', $mappedRoleIds)->pluck('name', 'id');
+        $roles = Role::whereIn('id', $activeRoleIds->merge($revokeRoleIds))->pluck('name', 'id');
         foreach ($activeRoleIds as $roleId) {
             if ($roles->has($roleId)) {
                 $user->assignRole($roles->get($roleId));
             }
         }
-        foreach ($mappedRoleIds->diff($activeRoleIds) as $roleId) {
+        foreach ($revokeRoleIds as $roleId) {
             if ($roles->has($roleId)) {
                 $user->removeRole($roles->get($roleId));
             }
         }
 
-        $externalUser = $this->externalUserRepository->findBySourceIdAndUserId($source->id, $user->id);
-
         if ($externalUser) {
-            $metaData = $externalUser->meta_data ?? [];
+            $metaData = $previousMetaData;
             $metaData['security_groups'] = $userGroups;
+            // Merken, was der Sync vergeben hat – Grundlage für das Entziehen beim nächsten Lauf
+            $metaData['synced_permission_ids'] = $activePermissionIds->all();
+            $metaData['synced_role_ids'] = $activeRoleIds->all();
             $this->externalUserRepository->update($externalUser, ['meta_data' => $metaData]);
         }
     }

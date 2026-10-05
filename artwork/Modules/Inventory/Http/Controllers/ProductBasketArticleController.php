@@ -61,7 +61,7 @@ class ProductBasketArticleController extends Controller
         // 2) Absolutmenge hat Vorrang (einfachster Pfad)
         if (array_key_exists('target', $data)) {
             $target = max(0, (int)$data['target']);
-            $basketArticle->update(['quantity' => $target]);
+            $this->storeQuantityOrRemove($basketArticle, $target);
 
             return response()->json([
                 'basket_article_id' => $basketArticle->id,
@@ -97,7 +97,7 @@ class ProductBasketArticleController extends Controller
                 ->first();
 
             $newQty = max(0, ($fresh->quantity ?? 0) + $delta);
-            $fresh->update(['quantity' => $newQty]);
+            $this->storeQuantityOrRemove($fresh, $newQty);
 
             // zurückreichen, damit wir unten den aktuellen Zustand senden
             $basketArticle = $fresh;
@@ -117,7 +117,23 @@ class ProductBasketArticleController extends Controller
             'quantity' => ['required', 'integer', 'min:0'],
         ]);
 
-        $basketArticle->update(['quantity' => $data['quantity']]);
+        $this->storeQuantityOrRemove($basketArticle, (int) $data['quantity']);
+    }
+
+    /**
+     * Menge 0 entfernt die Position: vorher blieb sie im Korb und das Speichern der Ausgabe
+     * scheiterte danach an der Mindestmenge 1.
+     */
+    private function storeQuantityOrRemove(ProductBasketArticle $basketArticle, int $quantity): void
+    {
+        if ($quantity <= 0) {
+            $basketArticle->delete();
+            $basketArticle->quantity = 0;
+
+            return;
+        }
+
+        $basketArticle->update(['quantity' => $quantity]);
     }
 
     /**

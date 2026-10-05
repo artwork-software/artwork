@@ -1,22 +1,22 @@
 <template>
-    <div class="w-full flex items-center justify-start gap-3 mt-3">
+    <div class="w-full flex flex-wrap items-center justify-start gap-3 mt-3">
         <div v-if="buttons?.includes('show_in_calendar')">
             <button @click="$emit('showInCalendar', true)" type="button" class="rounded-full bg-accent-600 px-3.5 py-2 text-sm font-semibold text-white shadow-sm hover:bg-accent-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-600">
                 {{ $t('Show in calendar') }}
             </button>
         </div>
         <div v-if="buttons?.includes('accept')">
-            <button @click="$emit('acceptRoomRequest', true)" type="button" class="rounded-full bg-success p-2 text-white shadow-sm hover:bg-success focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-success">
+            <button @click="$emit('acceptRoomRequest', true)" type="button" :aria-label="$t('Accept')" :title="$t('Accept')" class="rounded-full bg-success p-2 text-white shadow-sm hover:bg-success focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-success">
                 <PropertyIcon name="IconCheck" stroke-width="1.5" class="h-5 w-5" aria-hidden="true" />
             </button>
         </div>
         <div v-if="buttons?.includes('accept')">
-            <button @click="$emit('openEventEditAccept', true)" type="button" class="rounded-full bg-accent-600 p-2 text-white shadow-sm hover:bg-accent-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-600">
+            <button @click="$emit('openEventEditAccept', true)" type="button" :aria-label="$t('Edit and accept')" :title="$t('Edit and accept')" class="rounded-full bg-accent-600 p-2 text-white shadow-sm hover:bg-accent-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-600">
                 <PropertyIcon name="IconEdit" stroke-width="1.5" class="h-5 w-5" aria-hidden="true" />
             </button>
         </div>
         <div v-if="buttons?.includes('decline')">
-            <button @click="$emit('openDeclineModal', true)" type="button" class="rounded-full bg-danger p-2 text-white shadow-sm hover:bg-danger focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-danger">
+            <button @click="$emit('openDeclineModal', true)" type="button" :aria-label="$t('Decline')" :title="$t('Decline')" class="rounded-full bg-danger p-2 text-white shadow-sm hover:bg-danger focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-danger">
                 <PropertyIcon name="IconX" stroke-width="1.5" class="h-5 w-5" aria-hidden="true" />
             </button>
         </div>
@@ -25,19 +25,9 @@
                 {{  $t('Change shift') }}
             </button>
         </div>
-        <div v-if="buttons?.includes('change_shift')">
-            <button @click="$emit('openProject')" type="button" class="rounded-full bg-accent-600 px-3.5 py-2 text-sm font-semibold text-white shadow-sm hover:bg-accent-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-600">
-                {{ $t('View')}}
-            </button>
-        </div>
         <div v-if="buttons?.includes('change_shift_conflict')">
             <button @click="$emit('openProject')" type="button" class="rounded-full bg-accent-600 px-3.5 py-2 text-sm font-semibold text-white shadow-sm hover:bg-accent-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-600">
                 {{ $t('Re-staff shift')}}
-            </button>
-        </div>
-        <div v-if="buttons?.includes('change_room')">
-            <button type="button" class="rounded-full bg-accent-600 px-3.5 py-2 text-sm font-semibold text-white shadow-sm hover:bg-accent-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-600">
-                {{ $t('Change room')}}
             </button>
         </div>
         <div v-if="buttons?.includes('change_request')">
@@ -101,12 +91,10 @@
 <script>
 import {IconEdit, IconX} from "@tabler/icons-vue";
 import DeclineEventModal from "@/Layouts/Components/DeclineEventModal.vue";
-import IconLib from "@/Mixins/IconLib.vue";
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 
 export default {
     name: "NotificationButtons",
-    mixins: [IconLib],
     props: ['buttons'],
     emits: [
         'openDeclineModal',

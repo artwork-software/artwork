@@ -26,7 +26,6 @@ use Artwork\Modules\Permission\Services\PermissionCatalogPresenter;
 use Artwork\Modules\Permission\Services\PermissionChangeLogService;
 use Artwork\Modules\Permission\Services\PermissionImplicationService;
 use Artwork\Modules\Project\Models\Project;
-use Artwork\Modules\Project\Models\ProjectFile;
 use Artwork\Modules\Project\Models\ProjectRole;
 use Artwork\Modules\Role\Enums\RoleEnum;
 use Artwork\Modules\Room\Models\Room;
@@ -34,17 +33,14 @@ use Artwork\Modules\Room\Services\RoomService;
 use Artwork\Modules\ServiceProvider\Models\ServiceProvider;
 use Artwork\Modules\Shift\Enums\ShiftTabSort;
 use Artwork\Modules\Shift\Models\CompensationDayOff;
-use Artwork\Modules\Shift\Http\Requests\UpdateUserShiftQualificationRequest;
 use Artwork\Modules\Shift\Models\GlobalQualification;
 use Artwork\Modules\Shift\Models\ShiftQualification;
 use Artwork\Modules\Shift\Models\ShiftRuleViolation;
 use Artwork\Modules\Shift\Repositories\ShiftQualificationRepository;
 use Artwork\Modules\Shift\Services\GlobalQualificationService;
-use Artwork\Modules\Shift\Services\ShiftQualificationService;
 use Artwork\Modules\Shift\Models\UserShiftKpiSnapshot;
 use Artwork\Modules\Shift\Services\ShiftKpiTrackingService;
 use Artwork\Modules\Shift\Services\ShiftRuleService;
-use Artwork\Modules\Shift\Services\UserShiftQualificationService;
 use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\Shift\Models\ShiftUser;
 use Artwork\Modules\User\Enums\MemberSortEnum;
@@ -61,6 +57,7 @@ use Artwork\Modules\WorkTime\Repositories\UserOvertimeRepository;
 use Artwork\Modules\WorkTime\Services\OvertimeService;
 use Artwork\Modules\User\Http\Resources\UserWorkProfileResource;
 use Artwork\Modules\User\Models\User;
+use Artwork\Modules\User\Policies\UserPolicy;
 use Artwork\Modules\User\Models\UserContract;
 use Artwork\Modules\User\Models\UserContractAssign;
 use Artwork\Modules\User\Models\UserWorkTime;
@@ -69,7 +66,6 @@ use Artwork\Modules\User\Services\ContractSettingsResolver;
 use Artwork\Modules\User\Services\UserService;
 use Artwork\Modules\User\Services\UserUserManagementSettingService;
 use Artwork\Modules\WorkTime\Services\WorkTimeCalculationService;
-use Artwork\Modules\WorkTime\Models\WorkTimeBooking;
 use Carbon\Carbon;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Auth\AuthManager;
@@ -361,13 +357,21 @@ class UserController extends Controller
         UserService $userService,
         MembersManagementRequest $request
     ): Response|ResponseFactory {
+        // Kontaktdaten aller Freelancer/Dienstleister – gleiche Hürde wie deren Profilseiten
+        $authUser = $request->user();
+        abort_unless(
+            $authUser instanceof User && UserPolicy::canViewExternalWorkerProfile($authUser),
+            \Illuminate\Http\Response::HTTP_FORBIDDEN
+        );
+
         $saveFilterAndSort = $request->boolean('saveFilterAndSort');
         $userUserManagementSetting = $userUserManagementSettingService
             ->getFromUser($userService->getAuthUser())
             ->getAttribute('settings');
+        // gespeicherte Sortierung teilt sich den Wert mit der Nutzerliste; das switch unten prüft
+        // MemberSortEnum – mit UserSortEnum griff es nie
         $sortEnum = $saveFilterAndSort ? $request->enum('sort', MemberSortEnum::class) :
-            ($userUserManagementSetting['sort_by'] ?
-                UserSortEnum::from($userUserManagementSetting['sort_by']) : null);
+            MemberSortEnum::tryFrom((string) ($userUserManagementSetting['sort_by'] ?? ''));
 
         $freelancers = Freelancer::query()->when(
             strlen($search = $request->string('query')) > 0,
@@ -1466,11 +1470,23 @@ class UserController extends Controller
             }
         }
 
-        $permissionsBefore = $user->permissions()->pluck('name')->all();
-        $rolesBefore = $user->getRoleNames()->all();
+        // Der Rechte-Tab speichert bei jedem Klick sofort; schnelle Klickfolgen erzeugen parallele Requests.
+        // syncPermissions/syncRoles sind detach + attach ohne Transaktion – ohne Sperre auf den User
+        // schreiben zwei Requests dieselben Pivot-Zeilen (Duplicate entry auf model_has_permissions).
+        [$permissionsBefore, $rolesBefore] = DB::transaction(
+            function () use ($user, $permissionsToGrant, $rolesToGrant): array {
+                User::query()->whereKey($user->getKey())->lockForUpdate()->first();
+                $user->unsetRelation('permissions')->unsetRelation('roles');
 
-        $user->syncPermissions($permissionsToGrant);
-        $user->syncRoles($rolesToGrant);
+                $permissionsBefore = $user->permissions()->pluck('name')->all();
+                $rolesBefore = $user->roles()->pluck('name')->all();
+
+                $user->syncPermissions($permissionsToGrant);
+                $user->syncRoles($rolesToGrant);
+
+                return [$permissionsBefore, $rolesBefore];
+            }
+        );
         // Gecachte Inertia-Share-Daten sofort invalidieren statt auf den 5-Min.-TTL zu warten
         $user->forgetCachedShareData();
 

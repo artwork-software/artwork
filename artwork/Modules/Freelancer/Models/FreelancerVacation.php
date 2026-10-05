@@ -25,6 +25,9 @@ class FreelancerVacation extends Model
         'until'
     ];
 
+    /**
+     * @return BelongsTo<Freelancer, $this>
+     */
     public function freelancer(): BelongsTo
     {
         return $this->belongsTo(

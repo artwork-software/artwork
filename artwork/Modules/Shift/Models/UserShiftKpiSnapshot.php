@@ -66,6 +66,9 @@ class UserShiftKpiSnapshot extends Model
         'recalculated_at' => 'datetime',
     ];
 
+    /**
+     * @return BelongsTo<User, $this>
+     */
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);

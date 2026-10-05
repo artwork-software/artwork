@@ -13,7 +13,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property int $id
  * @property int $user_id
  * @property string $group_type
- * @property string $type
+ * @property NotificationEnum $type
  * @property string $title
  * @property string $description
  * @property NotificationFrequencyEnum $frequency
@@ -36,6 +36,9 @@ class NotificationSetting extends Model
         'enabled_push' => 'boolean'
     ];
 
+    /**
+     * @return BelongsTo<User, $this>
+     */
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class, 'user_id', 'id', 'user');

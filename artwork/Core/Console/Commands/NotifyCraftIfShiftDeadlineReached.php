@@ -5,6 +5,8 @@ namespace Artwork\Core\Console\Commands;
 use Artwork\Modules\Craft\Models\Craft;
 use Artwork\Modules\Notification\Enums\NotificationEnum;
 use Artwork\Modules\Notification\Services\NotificationService;
+use Artwork\Modules\Project\Enum\ProjectTabComponentEnum;
+use Artwork\Modules\Project\Services\ProjectTabService;
 use Carbon\Carbon;
 use Illuminate\Console\Command;
 use Illuminate\Support\Str;
@@ -15,8 +17,16 @@ class NotifyCraftIfShiftDeadlineReached extends Command
 
     protected $description = 'Notify craft if shift deadline reached.';
 
-    public function handle(NotificationService $notificationService): void
+    /** Link „Zum Projekt“ (Schichten-Reiter) der gerade bearbeiteten Schicht */
+    private ?array $projectLink = null;
+
+    private ?int $shiftTabId = null;
+
+    public function handle(NotificationService $notificationService, ProjectTabService $projectTabService): void
     {
+        $this->shiftTabId = $projectTabService->getFirstProjectTabWithTypeIdOrFirstProjectTabId(
+            ProjectTabComponentEnum::SHIFT_TAB
+        );
         $notificationService->setIcon('red');
         $notificationService->setPriority(2);
         $notificationService->setNotificationConstEnum(NotificationEnum::NOTIFICATION_SHIFT_OPEN_DEMAND);
@@ -65,6 +75,12 @@ class NotifyCraftIfShiftDeadlineReached extends Command
 
             $notificationService->setButtons(['show_project']);
             $notificationService->setProjectId($project->id);
+            // ohne Link führte „Zum Projekt“ auf einen festen Reiter, den es nicht überall gibt
+            $this->projectLink = [
+                'type' => 'link',
+                'title' => $project->name,
+                'href' => route('projects.tab', [$project->id, $this->shiftTabId]),
+            ];
 
             $contactedUsers = $this->notifyProjectManagers(
                 $project->managerUsers,
@@ -180,6 +196,7 @@ class NotifyCraftIfShiftDeadlineReached extends Command
                 ),
                 'href' => null
             ],
+            2 => $this->projectLink,
         ]);
         $notificationService->setNotificationTo($user);
         $notificationService->createNotification();

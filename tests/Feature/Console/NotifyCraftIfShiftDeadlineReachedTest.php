@@ -53,6 +53,8 @@ final class NotifyCraftIfShiftDeadlineReachedTest extends FeatureTestCase
             $this->assertSame(NotificationEnum::NOTIFICATION_SHIFT_OPEN_DEMAND->value, $data['type']);
             $this->assertSame($project->id, $data['projectId']);
             $this->assertStringContainsString('Sommerfest', $data['title']);
+            // „Zum Projekt“ braucht einen Link (vorher nur Text → fester Reiter 1)
+            $this->assertStringContainsString('/projects/' . $project->id . '/tab/', $data['description'][2]['href']);
         }
         $this->assertSame(0, $worker->notifications()->count());
     }

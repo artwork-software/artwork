@@ -311,21 +311,29 @@ class ProjectController extends Controller
             'components' => $components,
             'pinnedProjects' => $pinnedProjectsComponents,
             'pinnedProjectsAll' => $pinnedProjects,
-            'first_project_tab_id' => $this->projectTabService->getDefaultOrFirstProjectTab()->getAttribute('id'),
-            'states' => $this->projectStateService->getAll(),
-            'projectGroups' => $this->projectService->getProjectGroups(),
-            'categories' => $this->categoryService->getAll(),
-            'genres' => $this->genreService->getAll(),
-            'sectors' => $this->sectorService->getAll(),
-            'createSettings' => app(ProjectCreateSettings::class),
-            'myLastProject' => $this->projectService->getMyLastProject($this->authManager->id()),
-            'eventTypes' => $this->eventTypeService->getAll(),
-            'rooms' => $this->roomService->getAllWithoutTrashed(),
+            // Stammdaten als Closures: Filter, Suche und Blättern laden per partial reload nur die
+            // Projektlisten nach; eager berechnet liefen diese Abfragen bei jedem Klick mit.
+            'first_project_tab_id' => fn () => $this->projectTabService->getDefaultOrFirstProjectTab()
+                ->getAttribute('id'),
+            'states' => fn () => $this->projectStateService->getAll(),
+            'projectGroups' => fn () => $this->projectService->getProjectGroups(),
+            'categories' => fn () => $this->categoryService->getAll(),
+            'genres' => fn () => $this->genreService->getAll(),
+            'sectors' => fn () => $this->sectorService->getAll(),
+            'createSettings' => fn () => app(ProjectCreateSettings::class),
+            'myLastProject' => fn () => $this->projectService->getMyLastProject($this->authManager->id()),
+            'eventTypes' => fn () => $this->eventTypeService->getAll(),
+            // Nur für das Termine-Modal (Raumauswahl): id/name/position reichen; vorher volle Räume
+            // samt globalem $with (admins, creator).
+            'rooms' => fn () => Room::query()
+                ->without(['admins', 'creator'])
+                ->select(['id', 'name', 'position'])
+                ->get(),
             'projectSortEnumNames' => array_column(ProjectSortEnum::cases(), 'name'),
             'userProjectManagementSetting' => $userProjectManagementSetting,
-            'eventStatuses' => EventStatus::orderBy('order')->get(),
-            'lastProject' => $lastProject = $this->userService->getAuthUser()->lastProject,
-            'lastProjectCanEnter' => $lastProject !== null && $user->can('view', $lastProject),
+            'eventStatuses' => fn () => EventStatus::orderBy('order')->get(),
+            'lastProject' => fn () => $user->lastProject,
+            'lastProjectCanEnter' => fn () => $user->lastProject !== null && $user->can('view', $user->lastProject),
             'entitiesPerPage' => $user->entities_per_page
         ]);
     }

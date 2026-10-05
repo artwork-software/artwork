@@ -379,6 +379,7 @@
 <script setup>
 import AppLayout from "@/Layouts/AppLayout.vue";
 import { router, usePage } from "@inertiajs/vue3";
+import axios from "axios";
 import BaseFilter from "@/Layouts/Components/BaseFilter.vue";
 import {
     IconCheck,
@@ -587,32 +588,37 @@ const closeProjectHistoryModal = () => {
 };
 const openExportModal = () => (showExportModal.value = true);
 
-// Filter/Sort -> laden mit Skeleton
-const applyFiltersAndSort = (resetPage = true) => {
+// Filter/Sort -> laden mit Skeleton.
+// Gespeichert wird per axios und danach EINMAL gezielt nachgeladen. Vorher lief router.post:
+// leere Antwort -> Redirect -> kompletter Index, anschließend noch einmal reloadProjects
+// (doppelte Serverarbeit und doppelter Payload pro Klick).
+const saveFilterAndReload = async (payload, resetPage) => {
     isLoading.value = true;
-    router.post(
-        route("projects.filter"),
-        {
-            project_state_ids: props.states.filter((s) => s.clicked).map((s) => s.id),
-            project_filters: {
-                showOnlyMyProjects: getTruthyOrUndefined(showOnlyMyProjects.value),
-                showProjectGroups: getTruthyOrUndefined(showProjectGroups.value),
-                showProjects: getTruthyOrUndefined(showProjects.value),
-                showExpiredProjects: getTruthyOrUndefined(showExpiredProjects.value),
-                showFutureProjects: getTruthyOrUndefined(showFutureProjects.value),
-                hideProjectsWithoutEvents: getTruthyOrUndefined(hideProjectsWithoutEvents.value),
-                showOnlyProjectsWithoutGroup: getTruthyOrUndefined(showOnlyProjectsWithoutGroup.value),
-                showOnlyWithBiData: getTruthyOrUndefined(showOnlyWithBiData.value),
-            },
-            sort: sortBy.value,
+    try {
+        await axios.post(route("projects.filter"), payload);
+    } catch (error) {
+        // Meldung kommt über den globalen Interceptor
+        isLoading.value = false;
+        return;
+    }
+    reloadProjects(resetPage);
+};
+
+const applyFiltersAndSort = (resetPage = true) => {
+    saveFilterAndReload({
+        project_state_ids: props.states.filter((s) => s.clicked).map((s) => s.id),
+        project_filters: {
+            showOnlyMyProjects: getTruthyOrUndefined(showOnlyMyProjects.value),
+            showProjectGroups: getTruthyOrUndefined(showProjectGroups.value),
+            showProjects: getTruthyOrUndefined(showProjects.value),
+            showExpiredProjects: getTruthyOrUndefined(showExpiredProjects.value),
+            showFutureProjects: getTruthyOrUndefined(showFutureProjects.value),
+            hideProjectsWithoutEvents: getTruthyOrUndefined(hideProjectsWithoutEvents.value),
+            showOnlyProjectsWithoutGroup: getTruthyOrUndefined(showOnlyProjectsWithoutGroup.value),
+            showOnlyWithBiData: getTruthyOrUndefined(showOnlyWithBiData.value),
         },
-        {
-            preserveState: false,
-            onStart: () => (isLoading.value = true),
-            onFinish: () => (isLoading.value = false),
-            onSuccess: () => reloadProjects(resetPage),
-        }
-    );
+        sort: sortBy.value,
+    }, resetPage);
 };
 
 const resetFilter = () => {
@@ -627,18 +633,7 @@ const resetFilter = () => {
 
     props.states.forEach((s) => (s.clicked = false));
 
-    isLoading.value = true;
-    router.post(route("projects.filter"), {
-        page: 1,
-        entitiesPerPage: perPage.value,
-        query: route().params.query,
-        project_states: undefined,
-        project_filters: undefined,
-        sort: sortBy.value,
-    }, {
-        onStart: () => (isLoading.value = true),
-        onFinish: () => (isLoading.value = false),
-    });
+    saveFilterAndReload({sort: sortBy.value}, true);
 };
 
 const resetSort = () => {

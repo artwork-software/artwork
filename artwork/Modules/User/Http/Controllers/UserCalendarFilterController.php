@@ -105,10 +105,16 @@ class UserCalendarFilterController extends Controller
     public function singleValueUpdate(User $user, Request $request): RedirectResponse
     {
         $this->authorize('updateOwnPreferences', $user);
-
-        $user->calendar_filter()->update([
-            $request->key => $request->value
+        // vorher: beliebiger Spaltenname per Query-Builder (500 bei unbekannten Keys, user_id umhängbar)
+        $request->validate([
+            'key' => ['required', 'string', \Illuminate\Validation\Rule::in([
+                'is_loud', 'is_not_loud', 'adjoining_not_loud', 'has_audience', 'has_no_audience',
+                'adjoining_no_audience', 'show_free_rooms', 'show_adjoining_rooms', 'all_day_free',
+                'event_types', 'rooms', 'areas', 'room_attributes', 'room_categories', 'event_properties',
+            ])],
         ]);
+
+        $user->calendar_filter()->first()?->update([$request->string('key')->value() => $request->input('value')]);
 
         return redirect()->back();
     }

@@ -360,9 +360,10 @@ class UserController extends Controller
         $userUserManagementSetting = $userUserManagementSettingService
             ->getFromUser($userService->getAuthUser())
             ->getAttribute('settings');
+        // gespeicherte Sortierung teilt sich den Wert mit der Nutzerliste; das switch unten prüft
+        // MemberSortEnum – mit UserSortEnum griff es nie
         $sortEnum = $saveFilterAndSort ? $request->enum('sort', MemberSortEnum::class) :
-            ($userUserManagementSetting['sort_by'] ?
-                UserSortEnum::from($userUserManagementSetting['sort_by']) : null);
+            MemberSortEnum::tryFrom((string) ($userUserManagementSetting['sort_by'] ?? ''));
 
         $freelancers = Freelancer::query()->when(
             strlen($search = $request->string('query')) > 0,

@@ -145,9 +145,10 @@ class UserShiftCalendarFilterController extends Controller
     public function singleValueUpdate(Request $request, User $user): void
     {
         $this->authorize('updateOwnPreferences', $user);
+        $request->validate(['key' => ['required', 'string', \Illuminate\Validation\Rule::in(['event_types', 'rooms'])]]);
 
-        $user->shift_calendar_filter()->update([
-            $request->key => $request->value
+        $user->shift_calendar_filter()->first()?->update([
+            $request->string('key')->value() => $request->input('value'),
         ]);
     }
 

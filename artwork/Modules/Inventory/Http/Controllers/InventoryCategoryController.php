@@ -75,17 +75,12 @@ class InventoryCategoryController extends Controller
             }
         };
 
+        // currentCategory/currentSubCategory dienen nur Seitenleiste (Anzahl je Unterkategorie) und
+        // Breadcrumb; die Artikel selbst kommen paginiert über $articles.
         $inventoryCategory?->load([
-            'subcategories' => function ($query): void {
-                $query->orderBy('name');
+            'subcategories' => function ($query) use ($restrictArticles): void {
+                $query->orderBy('name')->withCount(['articles' => $restrictArticles]);
             },
-            'subcategories.articles' => function ($query) use ($restrictArticles): void {
-                $query->orderBy('name');
-                $restrictArticles($query);
-            },
-            'subcategories.articles.category:id,name',
-            'subcategories.articles.subCategory:id,name',
-            'subcategories.articles.properties',
             'subcategories.properties' => function ($query): void {
                 $query->orderBy('name');
             },
@@ -98,13 +93,6 @@ class InventoryCategoryController extends Controller
             'properties' => function ($query): void {
                 $query->orderBy('name');
             },
-            'articles' => function ($query) use ($restrictArticles): void {
-                $query->orderBy('name');
-                $restrictArticles($query);
-            },
-            'articles.category:id,name',
-            'articles.subCategory:id,name',
-            'articles.properties',
         ]);
 
         $filterableProperties = collect();

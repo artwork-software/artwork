@@ -76,6 +76,7 @@ use Artwork\Modules\Event\Services\SubEventService;
 use Artwork\Modules\Timeline\Models\Timeline;
 use Artwork\Modules\Timeline\Services\TimelineService;
 use Artwork\Modules\User\Http\Resources\UserShiftPlanResource;
+use Artwork\Modules\User\Enums\UserFilterTypes;
 use Artwork\Modules\User\Models\User;
 use Artwork\Modules\User\Services\UserService;
 use Artwork\Modules\User\Services\WorkingHourService;
@@ -1736,6 +1737,24 @@ readonly class EventService
         return $historyArray;
     }
 
+    /**
+     * Kalenderfilter und -einstellungen der Person; fehlen sie (z. B. Konto noch nie im
+     * Hauptkalender), werden sie wie im EventController angelegt statt mit 500 abzubrechen.
+     *
+     * @return array{0: UserFilter, 1: UserCalendarSettings}
+     */
+    private function resolveCalendarFilterAndSettings(User $user): array
+    {
+        $userCalendarFilter = $user->userFilters()->firstOrCreate(
+            ['filter_type' => UserFilterTypes::CALENDAR_FILTER->value],
+            ['start_date' => null, 'end_date' => null]
+        );
+        $userCalendarSettings = $user->getAttribute('calendar_settings')
+            ?? $user->calendar_settings()->create();
+
+        return [$userCalendarFilter, $userCalendarSettings];
+    }
+
     //phpcs:ignore Generic.Metrics.CyclomaticComplexity.TooHigh
     public function createEventManagementDtoForAtAGlance(
         CalendarService $calendarService,
@@ -1751,8 +1770,7 @@ readonly class EventService
         ?Project $project = null,
     ): EventManagementDto {
         $user = $userService->getAuthUser();
-        $userCalendarFilter = $user->userFilters()->calendarFilter()->first();
-        $userCalendarSettings = $user->getAttribute('calendar_settings');
+        [$userCalendarFilter, $userCalendarSettings] = $this->resolveCalendarFilterAndSettings($user);
 
         //today is used if project calendar is opened and no events are given as project calendar
         //do not rely on user calendar filter dates
@@ -1903,8 +1921,7 @@ readonly class EventService
         ?Project $project = null,
     ): EventManagementDto {
         $user = $userService->getAuthUser();
-        $userCalendarFilter = $user->userFilters()->calendarFilter()->first();
-        $userCalendarSettings = $user->getAttribute('calendar_settings');
+        [$userCalendarFilter, $userCalendarSettings] = $this->resolveCalendarFilterAndSettings($user);
 
         //today is used if project calendar is opened and no events are given as project calendar
         //do not rely on user calendar filter dates
@@ -1973,8 +1990,7 @@ readonly class EventService
                 ];
             }
         }
-        $userFilter = $user->userFilters()->calendarFilter()->first();
-        $rooms = $this->fetchFilteredRooms($userFilter, $startDate, $endDate, $userCalendarSettings);
+        $rooms = $this->fetchFilteredRooms($userCalendarFilter, $startDate, $endDate, $userCalendarSettings);
 
         // Bewusst KEIN Aufbau der Kalenderzellen mehr: BaseCalendar lädt die
         // Termine nach dem Mount ohnehin monatsweise über events.all nach und

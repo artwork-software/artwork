@@ -36,6 +36,23 @@ final class ProjectCalendarControllerTest extends FeatureTestCase
     }
 
     #[Test]
+    public function calendar_tab_works_for_a_user_who_never_opened_the_main_calendar(): void
+    {
+        // Per SSO/LDAP angelegte Konten hatten weder Kalendereinstellungen noch Kalenderfilter;
+        // der Projekt-Kalendertab dereferenzierte beide ungeprüft (500).
+        $user = $this->actingAsAdmin();
+        $user->calendar_settings()->delete();
+        $user->userFilters()->delete();
+        $user->unsetRelation('calendar_settings');
+        $project = Project::factory()->create();
+
+        $this->getJson(route('projects.tabs.calendar', $project))->assertOk();
+
+        $this->assertTrue($user->calendar_settings()->exists());
+        $this->assertTrue($user->userFilters()->calendarFilter()->exists());
+    }
+
+    #[Test]
     public function user_without_project_access_is_redirected_back(): void
     {
         $this->actingAs(User::factory()->create());

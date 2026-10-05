@@ -18,7 +18,9 @@ use Artwork\Modules\Project\Services\ProjectManagementBuilderService;
 use Artwork\Modules\Sage100\Helpers\PermissionUpdater;
 use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\Shift\Seeders\ConsolidateShiftsSeeder;
+use Artwork\Modules\User\Enums\UserFilterTypes;
 use Artwork\Modules\User\Models\User;
+use Artwork\Modules\User\Services\UserService;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
@@ -34,6 +36,7 @@ class UpdateArtwork extends Command
         private readonly SwissCantoneSeeder $swissCantoneSeeder,
         private readonly ConsolidateShiftsSeeder $consolidateShiftsSeeder,
         private readonly PermissionUpdater $sagePermissionUpdater,
+        private readonly UserService $userService,
     ) {
         parent::__construct();
     }
@@ -60,6 +63,7 @@ class UpdateArtwork extends Command
         $this->addRoomTypes();
         $this->addSwissCantons();
         $this->createBasicProductBaskets();
+        $this->initializeMissingAccountDefaults();
         $this->remapShiftEventProjectRelations();
         $this->updateSpecialComponentsSidebarEnabled();
         $this->migrateShiftsWorkers();
@@ -538,6 +542,29 @@ class UpdateArtwork extends Command
                 'name' => 'Standard',
             ]);
         }
+    }
+
+    /**
+     * Per SSO/LDAP angelegte Konten bekamen früher weder Kalendereinstellungen noch
+     * Zeitraumfilter oder Benachrichtigungseinstellungen (Projekt-Kalendertab → 500,
+     * keine Mails). Fehlendes wird hier nachgezogen; Vorhandenes bleibt unverändert.
+     */
+    private function initializeMissingAccountDefaults(): void
+    {
+        $this->section('Initializing missing account defaults');
+
+        $users = User::query()
+            ->whereDoesntHave('calendar_settings')
+            ->orWhereDoesntHave('userFilters', function ($query): void {
+                $query->where('filter_type', UserFilterTypes::CALENDAR_FILTER->value);
+            })
+            ->get();
+
+        foreach ($users as $user) {
+            $this->userService->initializeAccountDefaults($user);
+        }
+
+        $this->info(sprintf('%d account(s) completed', $users->count()));
     }
 
     private function remapShiftEventProjectRelations(): void

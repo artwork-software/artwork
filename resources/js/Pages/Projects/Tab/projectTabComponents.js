@@ -1,6 +1,7 @@
 /**
  * Vue-Komponente je Projekt-Tab-Komponententyp – gemeinsam für Tab-Ansicht und Ordner
- * (DisclosureComponent). Regeln und Icons: projectTabComponentRules.js.
+ * (DisclosureComponent erhält folderComponentMapping per provide/inject aus TabContent, nie per
+ * Import: sonst Zyklus). Regeln und Icons: projectTabComponentRules.js.
  */
 import TextField from '@/Pages/Projects/Tab/Components/TextField.vue'
 import Checkbox from '@/Pages/Projects/Tab/Components/Checkbox.vue'

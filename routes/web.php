@@ -76,6 +76,7 @@ use App\Http\Controllers\ProjectRoleController;
 use App\Http\Controllers\ProjectStatesController;
 use App\Http\Controllers\ProjectTab\ProjectArtistNameController;
 use App\Http\Controllers\ProjectTab\ProjectArtistResidenciesController;
+use App\Http\Controllers\ProjectTab\ProjectBudgetController;
 use App\Http\Controllers\ProjectTab\ProjectBudgetInformationController;
 use App\Http\Controllers\ProjectTab\ProjectBulkEditController;
 use App\Http\Controllers\ProjectTab\ProjectCalendarController;
@@ -912,6 +913,10 @@ Route::group(['middleware' => ['auth:sanctum']], function (): void {
         Route::get('/calendar', [ProjectCalendarController::class, 'show'])
             ->name('projects.tabs.calendar')
             ->middleware(EnsureUserCanSeeProjectComponent::for(ProjectTabComponentEnum::CALENDAR));
+        // BudgetTab.vue lädt seine Daten hierüber (route("projects.tabs.budget", …))
+        Route::get('/budget', [ProjectBudgetController::class, 'show'])
+            ->name('projects.tabs.budget')
+            ->middleware(EnsureUserCanSeeProjectComponent::for(ProjectTabComponentEnum::BUDGET));
         Route::get('/sage-invoices', [ProjectSageInvoiceOverviewController::class, 'show'])
             ->name('projects.tabs.sage-invoices')
             ->middleware(EnsureUserCanSeeProjectComponent::for(ProjectTabComponentEnum::SAGE_INVOICE_OVERVIEW));

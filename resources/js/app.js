@@ -1,10 +1,11 @@
 // resources/js/app.js
+import { createInstanceFormatter } from '@/Helper/instanceFormat.js'
 import './bootstrap'
 import '../css/app.css'
 import '../css/global.css'
 
 import { createApp, h } from 'vue'
-import { createInertiaApp, router } from '@inertiajs/vue3'
+import { createInertiaApp, router, usePage } from '@inertiajs/vue3'
 import { createI18n } from 'vue-i18n'
 import LaravelPermissionToVueJS from 'laravel-permission-to-vuejs'
 import PrimeVue from 'primevue/config'
@@ -77,6 +78,11 @@ createInertiaApp({
         //app.use(VueMathjax)
         app.use(LaravelPermissionToVueJS)
 
+
+        // Regionale Formate der Instanz in Templates: {{ $currencySymbol() }}, {{ $formatCurrency(x) }}
+        const instanceFormatter = () => createInstanceFormatter(usePage()?.props?.instanceFormat)
+        app.config.globalProperties.$currencySymbol = () => instanceFormatter().currencySymbol
+        app.config.globalProperties.$formatCurrency = (value) => instanceFormatter().formatCurrency(value)
 
         app.config.globalProperties.$updateLocale = (newLocale) => {
             i18n.global.locale.value = newLocale

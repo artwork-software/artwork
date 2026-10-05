@@ -20,9 +20,9 @@
                    </template>
                </div>
                <div class="flex col-span-full items-center">
-                   <BaseInput type="number" v-model="userForm.salary_per_hour" label="€" @focusout="updateUserTerms" id="salary_per_hour"/>
+                   <BaseInput type="number" v-model="userForm.salary_per_hour" :label="$currencySymbol()" without-translation @focusout="updateUserTerms" id="salary_per_hour"/>
                    <div class="ml-4 h-10 flex items-center">
-                       €/h
+                       {{ $currencySymbol() }}/h
                    </div>
                </div>
                <div class="mb-3">

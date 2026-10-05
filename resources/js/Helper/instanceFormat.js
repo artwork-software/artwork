@@ -52,5 +52,10 @@ export function createInstanceFormatter(format = {}) {
         return dateFormat.replace(/[dmY]/g, (token) => parts[token])
     }
 
-    return { numberLocale, currency, dateFormat, formatNumber, formatCurrency, formatDate }
+    /** Währungssymbol im Format der Instanz (€, CHF, £, $) */
+    const currencySymbol = new Intl.NumberFormat(numberLocale, { style: 'currency', currency })
+        .formatToParts(0)
+        .find((part) => part.type === 'currency')?.value ?? currency
+
+    return { numberLocale, currency, dateFormat, currencySymbol, formatNumber, formatCurrency, formatDate }
 }

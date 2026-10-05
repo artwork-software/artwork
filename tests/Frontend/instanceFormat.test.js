@@ -30,3 +30,9 @@ test('date formats and German number input are honoured', () => {
     assert.equal(us.formatCurrency(null), '$0.00')
     assert.equal(iso.formatDate(null), '')
 })
+
+test('the currency symbol follows the instance currency', () => {
+    assert.equal(createInstanceFormatter().currencySymbol, '€')
+    assert.equal(createInstanceFormatter({ numberLocale: 'de-CH', currency: 'CHF' }).currencySymbol, 'CHF')
+    assert.equal(createInstanceFormatter({ numberLocale: 'en-GB', currency: 'GBP' }).currencySymbol, '£')
+})

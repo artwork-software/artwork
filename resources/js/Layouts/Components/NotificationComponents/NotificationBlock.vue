@@ -80,7 +80,8 @@
                 />
                 <Link v-if="notification.data?.type && !isDashboard"
                       :href="route('notifications.index', { tab: 'settings', type: notification.data.type })"
-                      class="mt-2 inline-block text-xs text-text-subtle hover:text-accent-600 underline-offset-2 hover:underline">
+                      class="mt-2 inline-block text-xs text-text-subtle hover:text-accent-600 underline-offset-2 hover:underline focus-visible:opacity-100"
+                      :class="notification.hovered ? '' : 'md:opacity-0'">
                     {{ $t('Settings for this type') }}
                 </Link>
             </div>

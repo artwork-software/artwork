@@ -355,8 +355,8 @@
                     <!-- Meta -->
                     <div class="mt-2 flex flex-wrap items-center gap-3 text-xs text-text-muted">
                         <div class="pl-1">
-                            {{ toCurrencyString(moneySource.amount + moneySource.sumOfPositions) }}€ /
-                            {{ toCurrencyString(moneySource.amount) }}€
+                            {{ toCurrencyString(moneySource.amount + moneySource.sumOfPositions) }} {{ $currencySymbol() }} /
+                            {{ toCurrencyString(moneySource.amount) }} {{ $currencySymbol() }}
                         </div>
 
                         <div v-if="moneySource.funding_start_date && moneySource.funding_end_date" class="pl-1">

@@ -310,7 +310,7 @@
                                     <div class="rounded-xl border border-border-subtle bg-surface-sunken p-3">
                                         <h4 class="text-sm/5 font-bold text-text-subtle">{{ $t('Costs for overnight stays') }}</h4>
                                         <div class="mt-2 text-sm/5 font-semibold text-text tabular-nums">
-                                            <span class="underline decoration-double underline-offset-2">{{ calculateTotalCost }} €</span>
+                                            <span class="underline decoration-double underline-offset-2">{{ calculateTotalCost }} {{ $currencySymbol() }}</span>
                                         </div>
                                     </div>
 
@@ -367,7 +367,7 @@
                                             <CountUp
                                                 :value="Number(artistResidency.cost_per_night)"
                                                 :decimals="2"
-                                                suffix=" €"
+                                                :suffix="' ' + $currencySymbol()"
                                                 locale="de-DE"
                                                 class="tabular-nums text-sm font-semibold text-text"
                                             />
@@ -379,7 +379,7 @@
                                             <CountUp
                                                 :value="Number(calculateTotalCost)"
                                                 :decimals="2"
-                                                suffix=" €"
+                                                :suffix="' ' + $currencySymbol()"
                                                 locale="de-DE"
                                                 class="tabular-nums text-sm font-semibold text-text"
                                             />
@@ -408,7 +408,7 @@
                                             <CountUp
                                                 :value="Number(artistResidency.daily_allowance)"
                                                 :decimals="2"
-                                                suffix=" €"
+                                                :suffix="' ' + $currencySymbol()"
                                                 locale="de-DE"
                                                 class="tabular-nums text-sm font-semibold text-text"
                                             />
@@ -420,7 +420,7 @@
                                             <CountUp
                                                 :value="Number(calculateTotalDailyAllowance)"
                                                 :decimals="2"
-                                                suffix=" €"
+                                                :suffix="' ' + $currencySymbol()"
                                                 locale="de-DE"
                                                 class="tabular-nums text-sm font-semibold text-text"
                                             />
@@ -432,7 +432,7 @@
                                             <CountUp
                                                 :value="Number(calculateBreakfastDeduction)"
                                                 :decimals="2"
-                                                suffix=" €"
+                                                :suffix="' ' + $currencySymbol()"
                                                 locale="de-DE"
                                                 class="tabular-nums text-sm font-semibold text-danger"
                                             />
@@ -444,7 +444,7 @@
                                             <CountUp
                                                 :value="Number(calculatePayoutPerDiem)"
                                                 :decimals="2"
-                                                suffix=" €"
+                                                :suffix="' ' + $currencySymbol()"
                                                 locale="de-DE"
                                                 class="tabular-nums text-sm font-semibold text-text"
                                             />
@@ -460,7 +460,7 @@
                                     <CountUp
                                         :value="Number(calculateTotalCost) + Number(calculatePayoutPerDiem)"
                                         :decimals="2"
-                                        suffix=" €"
+                                        :suffix="' ' + $currencySymbol()"
                                         locale="de-DE"
                                         class="tabular-nums text-sm font-bold text-text"
                                     />

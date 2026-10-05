@@ -146,7 +146,7 @@ import {usePage} from "@inertiajs/vue3";
 import ProjectHeaderComponent from "@/Pages/Projects/Tab/Components/ProjectHeaderComponent.vue";
 import BaseSidenav from "@/Layouts/Components/BaseSidenav.vue";
 import {usePermission} from "@/Composeables/Permission.js";
-import { projectTabComponents } from "@/Pages/Projects/Tab/projectTabComponents.js";
+import { folderComponentMapping, projectTabComponents } from "@/Pages/Projects/Tab/projectTabComponents.js";
 import InviteExternalModal from "@/Pages/CRM/Components/InviteExternalModal.vue";
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 import { IconInfoCircle, IconUserPlus } from "@tabler/icons-vue";
@@ -156,6 +156,9 @@ import { useTranslation } from "@/Composeables/Translation.js";
 
 const pageProps = usePage().props;
 provide('pageProps', pageProps);
+// Ordner (DisclosureComponent) bekommen ihre Zuordnung per inject – ein direkter Import der Registry
+// wäre ein Zyklus (Registry → DisclosureComponent → Registry) und bricht im Produktions-Bundle
+provide('folderComponentMapping', folderComponentMapping());
 
 const $t = useTranslation();
 

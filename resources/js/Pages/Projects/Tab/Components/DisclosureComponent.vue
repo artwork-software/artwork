@@ -65,7 +65,6 @@ import InfoButtonComponent from "@/Pages/Projects/Tab/Components/InfoButtonCompo
 import {usePage} from "@inertiajs/vue3";
 import {computed, inject, provide} from "vue";
 import {usePermission} from "@/Composeables/Permission.js";
-import { folderComponentMapping } from "@/Pages/Projects/Tab/projectTabComponents.js";
 import {countFolderNonDefaultValues} from "@/Helper/ProjectComponentValueState.js";
 import {IconChevronDown} from "@tabler/icons-vue";
 
@@ -105,7 +104,7 @@ const loadedProjectInformation = inject("loadedProjectInformation");
 
 const { canSeeComponent, canEditComponent } = usePermission(usePage().props);
 
-const componentMapping = folderComponentMapping();
+const componentMapping = inject('folderComponentMapping', {});
 
 const nonDefaultValueCount = computed(() =>
     countFolderNonDefaultValues(

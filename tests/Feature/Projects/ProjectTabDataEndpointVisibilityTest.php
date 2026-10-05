@@ -62,6 +62,7 @@ final class ProjectTabDataEndpointVisibilityTest extends FeatureTestCase
             ],
             'bulk edit' => ['projects.tabs.bulk-edit', ProjectTabComponentEnum::BULK_EDIT],
             'calendar' => ['projects.tabs.calendar', ProjectTabComponentEnum::CALENDAR],
+            'budget' => ['projects.tabs.budget', ProjectTabComponentEnum::BUDGET],
             'sage invoices' => ['projects.tabs.sage-invoices', ProjectTabComponentEnum::SAGE_INVOICE_OVERVIEW],
         ];
     }

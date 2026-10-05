@@ -8627,5 +8627,13 @@
     "United Kingdom": "United Kingdom",
     "United States": "United States",
     "Regional formats saved": "Regional formats saved",
-    "Currency": "Currency"
+    "Currency": "Currency",
+    "Get notified when there are changes to your projects budget, funding source or copyrights. You will also receive a warning as soon as your funding source has slipped into the red.": "Get notified when there are changes to your projects budget, funding source or copyrights. You will also receive a warning as soon as your funding source has slipped into the red.",
+    "New document request": "New document request",
+    "Find out if someone has created a document request for you.": "Find out if someone has created a document request for you.",
+    "Document request completed": "Document request completed",
+    "Find out if a document request you created has been completed.": "Find out if a document request you created has been completed.",
+    "External person filled in or updated their data": "External person filled in or updated their data",
+    "Get notified when an external person fills in or updates their CRM data.": "Get notified when an external person fills in or updates their CRM data.",
+    "Get notified when someone sends you a document request or when a requested document has been uploaded.": "Get notified when someone sends you a document request or when a requested document has been uploaded."
 }

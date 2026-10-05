@@ -71,7 +71,7 @@ final class OidcCallbackTest extends FeatureTestCase
         $this->assertTrue($user->calendar_settings()->exists());
         $this->assertTrue($user->userFilters()->calendarFilter()->exists());
         $this->assertSame(
-            count(NotificationEnum::cases()),
+            count(NotificationEnum::configurableCases()),
             $user->notificationSettings()->count()
         );
         $this->assertTrue($user->productBasket()->exists());

@@ -82,7 +82,7 @@
         </div>
         <img @click="setReadAt"
              v-show="notification.hovered"
-             v-if="!isArchive && notification.data.buttons.filter(button => !['showInTasks', 'show_project', 'delete_shift_notification', 'see_shift', 'change_shift', 'accept', 'decline', 'answerDialog', 'answer', 'change_request', 'event_delete', 'show_in_calendar', 'material_issue_return_confirm', 'material_issue_return_decline'].includes(button)).length === 0"
+             v-if="!isArchive && isArchivable(notification.data.buttons)"
              src="/Svgs/IconSvgs/icon_archive_white.svg"
              class="h-6 w-6 p-1 ml-1 flex cursor-pointer bg-accent-600 rounded-full"
              aria-hidden="true"
@@ -166,6 +166,7 @@
 
 <script>
 import {IconChevronRight} from "@tabler/icons-vue";
+import { isArchivable } from "@/Layouts/Components/NotificationComponents/archivableButtons.js";
 import NotificationButtons from "@/Layouts/Components/NotificationComponents/NotificationButtons.vue";
 import {router, usePage} from "@inertiajs/vue3";
 import DeclineEventModal from "@/Layouts/Components/DeclineEventModal.vue";
@@ -240,6 +241,7 @@ export default {
     },
     computed: {},
     methods: {
+        isArchivable,
         declineMaterialReturn() {
             if (!this.notification.data?.modelId) {
                 return;

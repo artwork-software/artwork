@@ -27,6 +27,9 @@ use Artwork\Modules\User\Models\User;
 use Artwork\Modules\User\Services\UserService;
 use Artwork\Modules\Vacation\Services\VacationService;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Notifications\DatabaseNotification;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Response;
@@ -196,6 +199,8 @@ class NotificationController extends Controller
             'projects' => Project::query()->select(['id', 'name'])->get(),
             // "Termine immer direkt buchbar": Anfrage-/Verifizierungs-Benachrichtigungen gibt es nicht mehr
             'notificationSettings' => $user->notificationSettings()->get()
+                // Typen ohne Versender wären wirkungslose Schalter
+                ->filter(static fn (NotificationSetting $setting): bool => $setting->type->isConfigurable())
                 ->when(
                     app(EventSettingsService::class)->alwaysDirectBooking(),
                     static fn ($settings) => $settings->reject(
@@ -308,20 +313,41 @@ class NotificationController extends Controller
         $databaseNotificationService->archiveAllUnreadForUser($user, $groupType);
     }
 
-    public function updateSetting(Request $request, NotificationSetting $setting): void
+    public function updateSetting(Request $request, NotificationSetting $setting): JsonResponse|RedirectResponse
     {
         if (Auth::id() !== $setting->user_id) {
             abort(403);
         }
 
-        $setting->update($request->only("enabled_email", "frequency", "enabled_push"));
+        // vorher ungeprüft: ungültige Häufigkeit → 500, "false" als Text → an
+        $validated = $request->validate([
+            'enabled_email' => ['sometimes', 'boolean'],
+            'enabled_push' => ['sometimes', 'boolean'],
+            'frequency' => ['sometimes', Rule::enum(NotificationFrequencyEnum::class)],
+        ]);
+        $setting->update($validated);
+
+        return $request->expectsJson() && !$request->header('X-Inertia')
+            ? response()->json(['setting' => $setting->fresh()])
+            : back();
     }
 
-    public function toggleGroup(Request $request): void
+    public function toggleGroup(Request $request): JsonResponse|RedirectResponse
     {
+        $validated = $request->validate([
+            'groupType' => ['required', Rule::enum(NotificationGroupEnum::class)],
+            'enabled_email' => ['sometimes', 'boolean'],
+            'enabled_push' => ['sometimes', 'boolean'],
+        ]);
+        $values = array_map('boolval', array_intersect_key($validated, array_flip(['enabled_email', 'enabled_push'])));
+
         Auth::user()->notificationSettings()
-            ->where('group_type', $request->groupType)
-            ->update($request->only('enabled_email', 'enabled_push'));
+            ->where('group_type', $validated['groupType'])
+            ->update($values);
+
+        return $request->expectsJson() && !$request->header('X-Inertia')
+            ? response()->json(['updated' => true])
+            : back();
     }
 
     public function destroy(string $id): string

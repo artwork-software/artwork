@@ -28,7 +28,7 @@ class NotificationService
 
     public array|null $description = [];
 
-    public string $icon = 'green';
+    public string $icon = 'gray';
 
     public array $buttons = [];
 
@@ -308,6 +308,19 @@ class NotificationService
         $this->createdBy = $createdBy;
     }
 
+    /**
+     * Farbe des Benachrichtigungs-Icons; nur Varianten mit SVG (public/Svgs/IconSvgs).
+     */
+    private function displayIcon(): string
+    {
+        return match ($this->getIcon()) {
+            'red', 'warning' => 'red',
+            'green' => 'green',
+            'blue', 'workflow' => 'blue',
+            default => 'gray',
+        };
+    }
+
     public function clearNotificationData(): void
     {
         $this->setTitle('');
@@ -355,7 +368,8 @@ class NotificationService
         }
 
         $body = new stdClass();
-        $body->icon = 'gray';
+        // vorher fest 'gray' – die gesetzte Statusfarbe kam nie an
+        $body->icon = $this->displayIcon();
         $body->priority = $this->getPriority();
         $body->groupType = $this->getNotificationConstEnum()->groupType();
         $body->type = $this->getNotificationConstEnum();
@@ -381,34 +395,48 @@ class NotificationService
 
         $type = $this->getNotificationConstEnum();
         $notificationClass = $type->notificationClass();
-        if (
-            $notificationClass !== null &&
-            ($type->notifiesActingUser() || $this->getNotificationTo()->id !== $this->actingUserId())
-        ) {
+        $isDelivered = $notificationClass !== null &&
+            ($type->notifiesActingUser() || $this->getNotificationTo()->id !== $this->actingUserId());
+
+        if ($isDelivered) {
             $this->sendNotification(
                 $this->getNotificationTo(),
                 new $notificationClass($body, $this->getBroadcastMessage() ?? [])
             );
         }
 
-        $this->sendBroadcastMessage($this->getNotificationTo());
-
-        $this->userService->updateCurrentUserShowNotificationIndicator(
-            $this->getNotificationTo(),
-            true
-        );
+        // Live-Toast bewusst auch für die handelnde Person (Rückmeldung, z. B. Planer-Warnungen);
+        // die Glocke nur, wenn wirklich ein Eintrag im Benachrichtigungscenter entstanden ist
+        $this->broadcastLiveHint($this->getNotificationTo(), $type, $this->getBroadcastMessage() ?? []);
+        if ($isDelivered) {
+            $this->userService->updateCurrentUserShowNotificationIndicator($this->getNotificationTo(), true);
+        }
     }
 
-    private function sendBroadcastMessage(User $user): void
+    /**
+     * Zugestellte Benachrichtigung, die nicht über createNotification läuft (z. B.
+     * Schichtregel-Verstöße): Live-Toast gemäß Einstellung „Push“ plus Glocke.
+     *
+     * @param array<string, mixed> $broadcastMessage
+     */
+    public function pushToUser(User $user, NotificationEnum $type, array $broadcastMessage): void
     {
-        $notificationSetting = $user->notificationSettings()
-            ->where('type', $this->getNotificationConstEnum())
-            ->first();
+        $this->broadcastLiveHint($user, $type, $broadcastMessage);
+        $this->userService->updateCurrentUserShowNotificationIndicator($user, true);
+    }
 
-        if ($notificationSetting?->getAttribute('enabled_push')) {
-            if ($this->getBroadcastMessage()) {
-                broadcast(new NewNotificationBroadcast($user, $this->getBroadcastMessage()));
-            }
+    /**
+     * @param array<string, mixed> $broadcastMessage
+     */
+    private function broadcastLiveHint(User $user, NotificationEnum $type, array $broadcastMessage): void
+    {
+        if ($broadcastMessage === []) {
+            return;
+        }
+
+        $pushEnabled = (bool) $user->notificationSettings()->where('type', $type->value)->value('enabled_push');
+        if ($pushEnabled) {
+            broadcast(new NewNotificationBroadcast($user, $broadcastMessage));
         }
     }
 
@@ -569,7 +597,7 @@ class NotificationService
     }
 
     /**
-     * Sofort-Mails laufen synchron (viaQueues mail=sync). Ist der Mailserver nicht
+     * Sofort-Mails laufen synchron im Request. Ist der Mailserver nicht
      * erreichbar, soll nur die Mail ausfallen und gemeldet werden – nicht die Aktion,
      * die die Benachrichtigung ausgelöst hat (Termin speichern, Raumanfrage …).
      */

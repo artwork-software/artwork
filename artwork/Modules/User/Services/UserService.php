@@ -108,23 +108,7 @@ class UserService
      */
     public function initializeAccountDefaults(User $user): void
     {
-        $existingTypes = $user->notificationSettings()->pluck('type')
-            ->map(fn (mixed $type): string => $type instanceof \BackedEnum ? (string) $type->value : (string) $type)
-            ->all();
-        foreach ($this->notificationSettingService->getNotificationEnumCases() as $notificationType) {
-            if (in_array($notificationType->value, $existingTypes, true)) {
-                continue;
-            }
-            $this->notificationSettingService->create(
-                [
-                    'user_id' => $user->getAttribute('id'),
-                    'group_type' => $notificationType->groupType(),
-                    'type' => $notificationType->value,
-                    'title' => $notificationType->title(),
-                    'description' => $notificationType->description()
-                ]
-            );
-        }
+        $this->notificationSettingService->ensureDefaultsForUser($user);
 
         if (!$user->calendar_settings()->exists()) {
             $user->calendar_settings()->create();

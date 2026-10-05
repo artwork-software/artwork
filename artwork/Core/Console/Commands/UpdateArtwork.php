@@ -9,8 +9,7 @@ use Artwork\Modules\Holidays\Seeder\SwissCantoneSeeder;
 use Artwork\Modules\ServiceProvider\Models\ServiceProvider;
 use Artwork\Modules\Inventory\Models\InventoryArticleStatus;
 use Artwork\Modules\ArtistResidency\Enums\TypOfRoom;
-use Artwork\Modules\Notification\Enums\NotificationEnum;
-use Artwork\Modules\Notification\Enums\NotificationFrequencyEnum;
+use Artwork\Modules\Notification\Services\NotificationSettingService;
 use Artwork\Modules\Notification\Models\NotificationSetting;
 use Artwork\Modules\Project\Enum\ProjectTabComponentEnum;
 use Artwork\Modules\Project\Models\Component;
@@ -190,57 +189,9 @@ class UpdateArtwork extends Command
             'description' => 'Find out if your room requests has been answered.',
         ]);
 
-        $users = User::all();
-        foreach ($users as $user) {
-            $this->addUserNotificationSettings($user);
-        }
-    }
-
-    private function addUserNotificationSettings(User $user): void
-    {
-        $notificationTypes = [
-            NotificationEnum::NOTIFICATION_EVENT_VERIFICATION_REQUESTS,
-            NotificationEnum::NOTIFICATION_INVENTORY_ARTICLE_CHANGED,
-            NotificationEnum::NOTIFICATION_INVENTORY_OVERBOOKED,
-            NotificationEnum::NOTIFICATION_SHIFT_WORKTIME_REQUEST_APPROVED,
-            NotificationEnum::NOTIFICATION_SHIFT_WORKTIME_REQUEST_DECLINED,
-            NotificationEnum::NOTIFICATION_SHIFT_WORKTIME_GET_REQUEST,
-            NotificationEnum::NOTIFICATION_NEW_SHIFT_COMMIT_WORKFLOW_REQUEST,
-        ];
-
-        foreach ($notificationTypes as $enum) {
-            $user->notificationSettings()->updateOrCreate(
-                ['type' => $enum->value],
-                [
-                    'frequency' => NotificationFrequencyEnum::DAILY->value,
-                    'group_type' => $enum->groupType(),
-                    'title' => $enum->title(),
-                    'description' => $enum->description(),
-                    'enabled_email' => true,
-                    'enabled_push' => true,
-                ]
-            );
-        }
-
-        // External access notifications should reach the inviter immediately.
-        $externalNotificationTypes = [
-            NotificationEnum::NOTIFICATION_EXTERNAL_CRM_SUBMITTED,
-            NotificationEnum::NOTIFICATION_EXTERNAL_TAB_COMPONENT_UPDATED,
-        ];
-
-        foreach ($externalNotificationTypes as $enum) {
-            $user->notificationSettings()->updateOrCreate(
-                ['type' => $enum->value],
-                [
-                    'frequency' => NotificationFrequencyEnum::IMMEDIATELY->value,
-                    'group_type' => $enum->groupType(),
-                    'title' => $enum->title(),
-                    'description' => $enum->description(),
-                    'enabled_email' => true,
-                    'enabled_push' => true,
-                ]
-            );
-        }
+        // Nur fehlende Einstellungen ergänzen (auch für neue Typen) – nie überschreiben
+        $created = app(NotificationSettingService::class)->ensureDefaultsForAllUsers();
+        $this->info(sprintf('%d notification setting(s) added', $created));
     }
 
     private function addProjectGroupColumn(): void

@@ -14,7 +14,7 @@ class DatabaseNotificationService
      * Buttons that mark a notification as "passive" / archivable. A notification may only be
      * archived (bulk or single) when ALL of its buttons are within this set – otherwise it still
      * requires an explicit user action (accept/decline/answer ...) and must stay unread.
-     * Kept in sync with the frontend filter in NotificationSectionComponent / NotificationBlock.
+     * Frontend-Spiegel: NotificationComponents/archivableButtons.js (Paritätstest).
      */
     public const ARCHIVABLE_BUTTONS = [
         'showInTasks',
@@ -28,6 +28,9 @@ class DatabaseNotificationService
         'answer',
         'change_request',
         'event_delete',
+        'show_in_calendar',
+        'material_issue_return_confirm',
+        'material_issue_return_decline',
     ];
 
     public function __construct(

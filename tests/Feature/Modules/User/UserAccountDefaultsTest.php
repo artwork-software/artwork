@@ -29,7 +29,7 @@ final class UserAccountDefaultsTest extends FeatureTestCase
         ) {
             $this->assertSame(1, $user->userFilters()->where('filter_type', $filterType->value)->count());
         }
-        $this->assertSame(count(NotificationEnum::cases()), $user->notificationSettings()->count());
+        $this->assertSame(count(NotificationEnum::configurableCases()), $user->notificationSettings()->count());
         $this->assertSame(1, $user->productBasket()->count());
         $this->assertNotNull(app(UserUserManagementSettingService::class)->getFromUser($user));
     }
@@ -51,7 +51,7 @@ final class UserAccountDefaultsTest extends FeatureTestCase
         $this->assertSame(1, $user->calendar_settings()->count());
         $this->assertTrue((bool) $user->calendar_settings()->value('use_project_time_period'));
         $this->assertSame(['custom' => true], $managementSettingService->getFromUser($user)->settings);
-        $this->assertSame(count(NotificationEnum::cases()), $user->notificationSettings()->count());
+        $this->assertSame(count(NotificationEnum::configurableCases()), $user->notificationSettings()->count());
         $this->assertSame(1, $user->notificationSettings()->where('enabled_email', false)->count());
         $this->assertSame(
             1,

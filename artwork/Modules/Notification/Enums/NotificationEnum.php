@@ -209,6 +209,40 @@ enum NotificationEnum: string
     }
 
     /**
+     * Typen, für die nirgends etwas verschickt wird – ihre Einstellungen wären wirkungslose
+     * Schalter. Die Enum-Fälle bleiben, weil Werte in Datenbank/Altbenachrichtigungen stehen.
+     */
+    public function isConfigurable(): bool
+    {
+        return !in_array($this, [
+            self::NOTIFICATION_BUDGET_MONEY_SOURCE_CHANGED,
+            self::NOTIFICATION_SHIFT_WORKTIME_REQUEST_APPROVED,
+            self::NOTIFICATION_SHIFT_WORKTIME_REQUEST_DECLINED,
+            self::NOTIFICATION_REMINDER_ROOM_REQUEST,
+        ], true);
+    }
+
+    /**
+     * Häufigkeit der E-Mail für neue Einstellungen; Rückmeldungen Externer gehen sofort raus.
+     */
+    public function defaultFrequency(): NotificationFrequencyEnum
+    {
+        return match ($this) {
+            self::NOTIFICATION_EXTERNAL_CRM_SUBMITTED,
+            self::NOTIFICATION_EXTERNAL_TAB_COMPONENT_UPDATED => NotificationFrequencyEnum::IMMEDIATELY,
+            default => NotificationFrequencyEnum::DAILY,
+        };
+    }
+
+    /**
+     * @return array<int, self>
+     */
+    public static function configurableCases(): array
+    {
+        return array_values(array_filter(self::cases(), static fn (self $case): bool => $case->isConfigurable()));
+    }
+
+    /**
      * Systemmeldungen ohne auslösende Person (Scheduler) gehen auch an den eingeloggten User;
      * alle anderen nie an den, der sie selbst ausgelöst hat.
      */

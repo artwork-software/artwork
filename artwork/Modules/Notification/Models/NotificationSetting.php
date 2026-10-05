@@ -13,7 +13,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property int $id
  * @property int $user_id
  * @property string $group_type
- * @property string $type
+ * @property NotificationEnum $type
  * @property string $title
  * @property string $description
  * @property NotificationFrequencyEnum $frequency

@@ -18,7 +18,7 @@ class NotificationSettingFactory extends Factory
     public function definition(): array
     {
         return [
-            'user_id' => fake()->numberBetween(1, 1000),
+            'user_id' => \Artwork\Modules\User\Models\User::factory(),
             'group_type' => \Artwork\Modules\Notification\Enums\NotificationEnum::cases()[0]->groupType(),
             'type' => \Artwork\Modules\Notification\Enums\NotificationEnum::cases()[0]->value,
             'title' => fake()->words(2, true),

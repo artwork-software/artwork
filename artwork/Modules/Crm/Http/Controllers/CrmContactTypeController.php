@@ -34,7 +34,7 @@ class CrmContactTypeController extends Controller
         $properties = $validated['properties'] ?? null;
         unset($validated['properties']);
 
-        $validated['slug'] = Str::slug($validated['name']);
+        $validated['slug'] = $this->uniqueSlug($validated['name']);
 
         $type = $this->service->store($validated);
 
@@ -45,6 +45,20 @@ class CrmContactTypeController extends Controller
         broadcast(new CrmSettingsChanged());
 
         return redirect()->back();
+    }
+
+    /**
+     * Slug ist eindeutig (auch gegenüber gelöschten Typen) – vorher 500 bei gleichem Namen.
+     */
+    private function uniqueSlug(string $name): string
+    {
+        $base = Str::slug($name) ?: 'type';
+        $slug = $base;
+        for ($suffix = 2; CrmContactType::withTrashed()->where('slug', $slug)->exists(); $suffix++) {
+            $slug = $base . '-' . $suffix;
+        }
+
+        return $slug;
     }
 
     public function update(Request $request, CrmContactType $crmContactType): RedirectResponse

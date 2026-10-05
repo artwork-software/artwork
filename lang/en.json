@@ -8565,5 +8565,11 @@
     "ldaps://ad.domain.tld or ldap://ad.domain.tld": "ldaps://ad.domain.tld or ldap://ad.domain.tld",
     "Delete all entries (including shifts) for the selected events?": "Delete all entries (including shifts) for the selected events?",
     "No times have been set yet. Click here to create times": "No times have been set yet. Click here to create times",
-    "Do you really want to delete this event? This action cannot be undone.": "Do you really want to delete this event? This action cannot be undone."
+    "Do you really want to delete this event? This action cannot be undone.": "Do you really want to delete this event? This action cannot be undone.",
+    "System contact types cannot be deleted.": "System contact types cannot be deleted.",
+    "Contact types with assigned contacts cannot be deleted.": "Contact types with assigned contacts cannot be deleted.",
+    "System properties cannot be deleted.": "System properties cannot be deleted.",
+    "System property groups cannot be deleted.": "System property groups cannot be deleted.",
+    "Groups containing system properties cannot be deleted.": "Groups containing system properties cannot be deleted.",
+    "System properties cannot be renamed or changed in type.": "System properties cannot be renamed or changed in type."
 }

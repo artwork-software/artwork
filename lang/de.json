@@ -8574,5 +8574,11 @@
     "ldaps://ad.domain.tld or ldap://ad.domain.tld": "ldaps://ad.domain.tld oder ldap://ad.domain.tld",
     "Delete all entries (including shifts) for the selected events?": "Alle Einträge (inklusive Schichten) für die ausgewählten Termine löschen?",
     "No times have been set yet. Click here to create times": "Es wurden noch keine Zeiten festgelegt. Klicke hier um Zeiten zu erstellen",
-    "Do you really want to delete this event? This action cannot be undone.": "Möchtest du diesen Termin wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden."
+    "Do you really want to delete this event? This action cannot be undone.": "Möchtest du diesen Termin wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden.",
+    "System contact types cannot be deleted.": "System-Kontakttypen können nicht gelöscht werden.",
+    "Contact types with assigned contacts cannot be deleted.": "Kontakttypen mit zugeordneten Kontakten können nicht gelöscht werden.",
+    "System properties cannot be deleted.": "Systemeigenschaften können nicht gelöscht werden.",
+    "System property groups cannot be deleted.": "System-Eigenschaftsgruppen können nicht gelöscht werden.",
+    "Groups containing system properties cannot be deleted.": "Gruppen mit Systemeigenschaften können nicht gelöscht werden.",
+    "System properties cannot be renamed or changed in type.": "Systemeigenschaften können weder umbenannt noch im Typ geändert werden."
 }

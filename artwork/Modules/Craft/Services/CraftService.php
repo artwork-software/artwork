@@ -11,6 +11,7 @@ use Artwork\Modules\ServiceProvider\Models\ServiceProvider;
 use Artwork\Modules\User\Models\User;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Relations\Relation;
+use Illuminate\Support\Collection as SupportCollection;
 use Illuminate\Support\Facades\Log;
 use Artwork\Modules\Shift\Services\ShiftDeletionService;
 use Illuminate\Support\Facades\DB;
@@ -168,36 +169,12 @@ class CraftService
                 'universally_applicable',
             ]));
 
-        $managersToBeAssigned = $craftUpdateRequest->collect('managersToBeAssigned')->groupBy(
-            function ($managerToBeAssigned) {
-                return $managerToBeAssigned['manager_type'];
-            }
-        );
-
         if ($craftUpdateRequest->has('qualifications')) {
             $craft->qualifications()->detach();
             $craft->qualifications()->sync($craftUpdateRequest->collect('qualifications')->pluck('id')->toArray());
         }
 
-        if ($managersToBeAssigned->empty()) {
-            $craft->managingUsers()->sync([]);
-            $craft->managingFreelancers()->sync([]);
-            $craft->managingServiceProviders()->sync([]);
-        }
-
-        foreach ($managersToBeAssigned as $managerType => $managers) {
-            switch ($managerType) {
-                case User::class:
-                    $craft->managingUsers()->sync($managers->pluck('manager_id'));
-                    break;
-                case Freelancer::class:
-                    $craft->managingFreelancers()->sync($managers->pluck('manager_id'));
-                    break;
-                case ServiceProvider::class:
-                    $craft->managingServiceProviders()->sync($managers->pluck('manager_id'));
-                    break;
-            }
-        }
+        $this->syncManagers($craft, $craftUpdateRequest->collect('managersToBeAssigned'));
 
         // Craft-Planer-Status steckt im gecachten shift_workflow_flags-Prop —
         // bisherige und neue Planer invalidieren
@@ -212,6 +189,23 @@ class CraftService
             $this->craftRepository->detachUsers($craft);
             User::forgetCachedShareDataForIds($previousPlanerIds);
         }
+    }
+
+    /**
+     * Setzt die Gewerksleitung (Nutzer:innen, Freelancer, Dienstleister) auf genau die übergebene Liste;
+     * nicht enthaltene Typen werden geleert.
+     *
+     * @param SupportCollection<int, array{manager_id: int, manager_type: class-string}> $managersToBeAssigned
+     */
+    public function syncManagers(Craft $craft, SupportCollection $managersToBeAssigned): void
+    {
+        $managerIdsByType = $managersToBeAssigned
+            ->groupBy('manager_type')
+            ->map(fn (SupportCollection $managers): array => $managers->pluck('manager_id')->all());
+
+        $craft->managingUsers()->sync($managerIdsByType->get(User::class, []));
+        $craft->managingFreelancers()->sync($managerIdsByType->get(Freelancer::class, []));
+        $craft->managingServiceProviders()->sync($managerIdsByType->get(ServiceProvider::class, []));
     }
 
     /**

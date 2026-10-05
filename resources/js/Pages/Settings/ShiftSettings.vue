@@ -65,7 +65,7 @@
                 <div class="flex items-start justify-between gap-5">
                     <BasePageTitle
                         :title="$t('Shift confirmation by employees')"
-                        :description="$t('Scheduled people can accept or decline their committed shifts in their own operational plan. Planners can record responses on behalf of freelancers and service providers.')"
+                        :description="$t('Scheduled users with the permission “Accept or decline shifts” can accept or decline their committed shifts in their own operational plan. Planners can record the response on behalf of these users. Freelancers and service providers do not take part.')"
                     />
                     <SwitchIconTooltip
                         v-model="shiftSettings.shift_confirmation_enabled"
@@ -226,7 +226,7 @@
                     <div class="w-1/2">
                         <BasePageTitle
                             :title="$t('Crafts')"
-                            :description="$t('Define crafts to which you can later assign employees and shifts. Additionally, you can specify which users are allowed to assign what type of employee shifts.')"
+                            :description="$t('Define crafts to which you can later assign employees and shifts. For each craft, you can also set the craft management and which users may plan its shifts.')"
                         />
                     </div>
                     <div class="flex items-center justify-end">

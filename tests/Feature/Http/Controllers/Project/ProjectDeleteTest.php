@@ -70,10 +70,7 @@ final class ProjectDeleteTest extends FeatureTestCase
             ->assertRedirect(route('login'));
     }
 
-    // NOTE: A "happy path" admin_can_restore_trashed_project test is intentionally omitted —
-    // ProjectService::restore throws "Call to a member function restore() on null" when the
-    // soft-deleted project lacks related models (e.g. table, contracts). See
-    // artwork/Modules/Project/Services/ProjectService.php restore() chain.
+    // Erfolgsfall des Wiederherstellens: tests/Feature/Projects/Characterization/ProjectLifecycleTest.php
 
     #[Test]
     public function restore_returns_404_for_unknown_id(): void

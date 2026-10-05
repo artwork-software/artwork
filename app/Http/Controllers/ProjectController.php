@@ -169,6 +169,7 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Storage;
@@ -3539,19 +3540,10 @@ class ProjectController extends Controller
 
     public function updateTeam(Request $request, Project $project): JsonResponse|RedirectResponse
     {
-        if (!Auth::user()->hasRole(RoleEnum::ARTWORK_ADMIN->value)) {
-            // authorization ("Projektleitung sein" gibt keine Rechte auf fremde Projekte)
-            if (
-                !Auth::user()->canAny([
-                    PermissionEnum::ADD_EDIT_OWN_PROJECT->value,
-                    PermissionEnum::WRITE_PROJECTS->value
-                ]) &&
-                $project->access_budget->pluck('id')->doesntContain(Auth::id()) &&
-                $project->managerUsers->pluck('id')->doesntContain(Auth::id()) &&
-                $project->writeUsers->pluck('id')->doesntContain(Auth::id())
-            ) {
-                return response()->json(['error' => 'Not authorized to assign users to a project.'], 403);
-            }
+        // Team setzen = Schreibrecht im Projekt. Vorher genügte "eigene Projekte anlegen" für jedes
+        // fremde Projekt – samt Selbstvergabe von Budgetzugriff und Schreibrecht.
+        if (Gate::denies('update', $project)) {
+            return response()->json(['error' => 'Not authorized to assign users to a project.'], 403);
         }
 
         $projectManagerBefore = $project->managerUsers()->get();
@@ -4202,18 +4194,14 @@ class ProjectController extends Controller
         Project $project,
         Request $request
     ): JsonResponse|RedirectResponse {
-        // authorization ("Projektleitung sein" gibt keine Rechte auf fremde Projekte)
-        if ($project->users->isNotEmpty() || !Auth::user()->hasRole(RoleEnum::ARTWORK_ADMIN->value)) {
-            if (
-                !Auth::user()->canAny([
-                    PermissionEnum::ADD_EDIT_OWN_PROJECT->value,
-                    PermissionEnum::WRITE_PROJECTS->value
-                ]) &&
-                $project->access_budget->pluck('id')->doesntContain(Auth::id()) &&
-                $project->managerUsers->pluck('id')->doesntContain(Auth::id())
-            ) {
-                return response()->json(['error' => 'Not authorized to assign users to a project.'], 403);
-            }
+        // Duplizieren = Quelle sehen dürfen + Projekte anlegen dürfen oder im Projekt Leitung/Budgetzugriff
+        // haben (vorher reichte "eigene Projekte anlegen" für jedes fremde Projekt, auch ohne Sichtrecht)
+        $mayDuplicate = Gate::allows('create', Project::class)
+            || Auth::user()->can(PermissionEnum::WRITE_PROJECTS->value)
+            || $project->access_budget->contains(Auth::id())
+            || $project->managerUsers->contains(Auth::id());
+        if (Gate::denies('view', $project) || !$mayDuplicate) {
+            return response()->json(['error' => 'Not authorized to duplicate this project.'], 403);
         }
 
         if ($project->departments->isNotEmpty()) {
@@ -4776,6 +4764,11 @@ class ProjectController extends Controller
 
     public function downloadKeyVisual(Project $project): StreamedResponse
     {
+        abort_if(
+            blank($project->key_visual_path) || !Storage::exists('public/keyVisual/' . $project->key_visual_path),
+            404
+        );
+
         return Storage::download('public/keyVisual/' . $project->key_visual_path, $project->key_visual_path);
     }
 
@@ -4902,7 +4895,6 @@ class ProjectController extends Controller
         $rows = $subPosition->subPositionRows()->with('cells')->get();
         foreach ($rows as $subPositionRow) {
             $newSubPositionRow = $subPositionRow->replicate();
-            $newSubPositionRow->name = $subPositionRow->name . ' ' . __('(Copy)');
             $newSubPositionRow->sub_position_id = $newSubPosition->id;
             $newSubPositionRow->save();
             $newSubPositionRow->cells()->forceDelete();

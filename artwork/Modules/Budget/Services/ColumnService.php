@@ -303,9 +303,7 @@ readonly class ColumnService
                 $columnCellService->restore(
                     $columnCell,
                     $cellCommentService,
-                    $cellCalculationService,
-                    $sageNotAssignedDataService,
-                    $sageAssignedDataService
+                    $cellCalculationService
                 );
             }
         );

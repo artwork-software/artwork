@@ -106,9 +106,7 @@ readonly class SubPositionRowService
                 $columnCellService->restore(
                     $columnCell,
                     $cellCommentService,
-                    $cellCalculationService,
-                    $sageNotAssignedDataService,
-                    $sageAssignedDataService
+                    $cellCalculationService
                 );
             }
         );

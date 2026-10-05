@@ -4,7 +4,6 @@ import laravel from 'laravel-vite-plugin';
 import vue from '@vitejs/plugin-vue';
 import tailwindcss from "@tailwindcss/vite";
 import viteCompression from 'vite-plugin-compression'
-import Components from 'unplugin-vue-components/vite'
 
 const port = 5173;
 // DDEV_PRIMARY_URL includes the router port when it is non-standard (e.g. :8443).
@@ -110,9 +109,6 @@ export default defineConfig({
                     includeAbsolute: false,
                 },
             },
-        }),
-        Components({
-            dts: 'resources/types/components.d.ts',
         }),
         tailwindcss(),
         viteCompression({ algorithm: 'brotliCompress', ext: '.br', deleteOriginFile: false }),

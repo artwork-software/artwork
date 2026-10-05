@@ -351,7 +351,8 @@
                 <textarea
                     ref="descriptionTextarea"
                     v-model="draftDescription"
-                    @focusout="saveDescription"
+                    @focus="onDescriptionFocus"
+                    @focusout="onDescriptionFocusOut"
                     @keydown.enter.ctrl="saveDescription"
                     maxlength="250"
                     rows="2"
@@ -427,6 +428,8 @@ import {getBulkColumnSize as getColumnSize} from "@/Pages/Projects/Components/Bu
 import BaseMenu from "@/Components/Menu/BaseMenu.vue";
 import BaseMenuItem from "@/Components/Menu/BaseMenuItem.vue";
 import {Float} from "@headlessui-float/vue";
+import {hasUserInteractedSince} from "@/Helper/userInteraction.js";
+import {focusedDescriptionKey, openDescriptionEdits} from "@/Pages/Projects/Components/BulkComponents/bulkDescriptionEdits.js";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 import BaseCombobox from "@/Artwork/Inputs/BaseCombobox.vue";
 import axios from "axios";
@@ -558,30 +561,78 @@ const endChipTooltipBinding = computed(() => ({
     appendTo: 'body',
     class: 'aw-tooltip'
 }));
-const editingDescription = ref(false);
-const draftDescription = ref(props.event.description || '');
+// Beschreibung inline bearbeiten. Der Zustand (offen, Entwurf, Fokus) hängt am TERMIN, nicht an dieser
+// Komponente: die virtuelle Liste recycelt Komponenten – nach dem Speichern einer anderen Zeile zeigte
+// die Instanz, in der man gerade tippte, plötzlich einen anderen Termin; Feld und Fokus waren weg.
+const eventKey = computed(() => props.event.id ?? props.event.localUid);
+const descriptionEdit = computed(() => openDescriptionEdits.get(eventKey.value) ?? null);
+const editingDescription = computed(() => descriptionEdit.value !== null);
+const draftDescription = computed({
+    get: () => descriptionEdit.value?.draft ?? '',
+    set: (value) => {
+        if (descriptionEdit.value) {
+            descriptionEdit.value.draft = value;
+        }
+    },
+});
 const descriptionTextarea = ref(null);
+
+// Zeigt diese Komponente (wieder) den Termin, dessen Feld den Fokus hatte: Fokus zurückholen
+watch(descriptionTextarea, (textarea) => {
+    if (textarea && focusedDescriptionKey.value === eventKey.value && document.activeElement !== textarea) {
+        textarea.focus({preventScroll: true});
+    }
+});
 
 const startEditDescription = () => {
     if (!canEditRow.value) return;
-    draftDescription.value = props.event.description || '';
-    editingDescription.value = true;
+    openDescriptionEdits.set(eventKey.value, {draft: props.event.description || ''});
+    focusedDescriptionKey.value = eventKey.value;
     nextTick(() => {
         descriptionTextarea.value?.focus();
     });
 };
 
-const saveDescription = async () => {
-    if (draftDescription.value !== (props.event.description || '')) {
-        if (props.event.id) {
-            const {data} = await axios.patch(route('event.update.description', props.event.id), {
-                description: draftDescription.value
-            });
-            markRowEdited(props.event.id, data?.event?.updated_at);
-        }
-        props.event.description = draftDescription.value;
+/**
+ * Fokusverlust nur dann als „fertig“ werten, wenn die Person ihn ausgelöst hat (Klick/Taste außerhalb
+ * des Felds nach dem Fokussieren). Bei einem Fensterwechsel oder Neu-Rendern der Liste bleibt das Feld
+ * offen und holt sich den Fokus zurück.
+ */
+let descriptionFocusedAt = 0;
+const onDescriptionFocus = () => {
+    descriptionFocusedAt = performance.now();
+    focusedDescriptionKey.value = eventKey.value;
+};
+const onDescriptionFocusOut = () => {
+    if (!document.hasFocus()) {
+        return;
     }
-    editingDescription.value = false;
+    if (!hasUserInteractedSince(descriptionFocusedAt, descriptionTextarea.value)) {
+        nextTick(() => descriptionTextarea.value?.focus({preventScroll: true}));
+        return;
+    }
+    saveDescription();
+};
+
+const saveDescription = async () => {
+    // Termin und Entwurf jetzt festhalten: nach dem await kann diese Komponente schon einen
+    // anderen Termin zeigen
+    const event = props.event;
+    const key = eventKey.value;
+    const draft = openDescriptionEdits.get(key)?.draft ?? event.description ?? '';
+    openDescriptionEdits.delete(key);
+    if (focusedDescriptionKey.value === key) {
+        focusedDescriptionKey.value = null;
+    }
+    if (draft !== (event.description || '')) {
+        if (event.id) {
+            const {data} = await axios.patch(route('event.update.description', event.id), {
+                description: draft
+            });
+            markRowEdited(event.id, data?.event?.updated_at);
+        }
+        event.description = draft;
+    }
 };
 
 const openSaveTimelinePresetModal = async () => {

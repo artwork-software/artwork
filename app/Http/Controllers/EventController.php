@@ -3254,166 +3254,178 @@ class EventController extends Controller
     public function updateSeriesEvents(Event $event, Request $request): void
     {
         $this->authorize('update', $event);
+        $request->validate([
+            'newRoomId' => ['nullable', 'integer', 'exists:rooms,id'],
+            'calculationType' => ['nullable', 'integer', 'in:1,2'],
+            'value' => ['nullable', 'integer', 'between:-10000,10000'],
+            'type' => ['nullable', 'integer', 'between:1,5'],
+        ]);
         if (!$event->is_series || !$event->series_id) {
             return;
         }
 
         $seriesEvents = Event::where('series_id', $event->series_id)->get();
 
+        // Alles oder nichts: ein Fehler mitten in der Serie darf sie nicht halb verschoben zurücklassen.
+        DB::transaction(function () use ($seriesEvents, $request): void {
+            foreach ($seriesEvents as $seriesEvent) {
+                if ($request->get('newRoomId') !== null) {
+                    $seriesEvent->setAttribute('room_id', $request->integer('newRoomId'));
+                }
+
+                if ($request->integer('value') !== 0) {
+                    $endDate = Carbon::parse($seriesEvent->getAttribute('end_time'));
+                    $startDate = Carbon::parse($seriesEvent->getAttribute('start_time'));
+                    $shifts = $seriesEvent->shifts;
+                    $calculationType = $request->integer('calculationType');
+                    $value = $request->integer('value');
+                    $type = $request->integer('type');
+
+                    // Invalidate cache for all workers on all shifts before date changes
+                    foreach ($shifts as $shift) {
+                        $this->workingHourCacheService->forgetForShift($shift);
+                    }
+
+                    if ($calculationType === 1) {
+                        if ($type === 1) {
+                            $seriesEvent->setAttribute('start_time', $startDate->addHours($value));
+                            $seriesEvent->setAttribute('end_time', $endDate->addHours($value));
+                        }
+                        if ($type === 2) {
+                            $seriesEvent->setAttribute('start_time', $startDate->addDays($value));
+                            $seriesEvent->setAttribute('end_time', $endDate->addDays($value));
+                            foreach ($shifts as $shift) {
+                                $shift->setAttribute(
+                                    'start_date',
+                                    Carbon::parse($shift->getAttribute('start_date'))->addDays($value)
+                                );
+                                $shift->setAttribute(
+                                    'end_date',
+                                    Carbon::parse($shift->getAttribute('end_date'))->addDays($value)
+                                );
+                                $shift->save();
+                            }
+                        }
+                        if ($type === 3) {
+                            $seriesEvent->setAttribute('start_time', $startDate->addWeeks($value));
+                            $seriesEvent->setAttribute('end_time', $endDate->addWeeks($value));
+                            foreach ($shifts as $shift) {
+                                $shift->setAttribute(
+                                    'start_date',
+                                    Carbon::parse($shift->getAttribute('start_date'))->addWeeks($value)
+                                );
+                                $shift->setAttribute(
+                                    'end_date',
+                                    Carbon::parse($shift->getAttribute('end_date'))->addWeeks($value)
+                                );
+                                $shift->save();
+                            }
+                        }
+                        if ($type === 4) {
+                            $seriesEvent->setAttribute('start_time', $startDate->addMonths($value));
+                            $seriesEvent->setAttribute('end_time', $endDate->addMonths($value));
+                            foreach ($shifts as $shift) {
+                                $shift->setAttribute(
+                                    'start_date',
+                                    Carbon::parse($shift->getAttribute('start_date'))->addMonths($value)
+                                );
+                                $shift->setAttribute(
+                                    'end_date',
+                                    Carbon::parse($shift->getAttribute('end_date'))->addMonths($value)
+                                );
+                                $shift->save();
+                            }
+                        }
+                        if ($type === 5) {
+                            $seriesEvent->setAttribute('start_time', $startDate->addYears($value));
+                            $seriesEvent->setAttribute('end_time', $endDate->addYears($value));
+                            foreach ($shifts as $shift) {
+                                $shift->setAttribute(
+                                    'start_date',
+                                    Carbon::parse($shift->getAttribute('start_date'))->addYears($value)
+                                );
+                                $shift->setAttribute(
+                                    'end_date',
+                                    Carbon::parse($shift->getAttribute('end_date'))->addYears($value)
+                                );
+                                $shift->save();
+                            }
+                        }
+                    }
+
+                    if ($calculationType === 2) {
+                        if ($type === 1) {
+                            $seriesEvent->setAttribute('start_time', $startDate->subHours($value));
+                            $seriesEvent->setAttribute('end_time', $endDate->subHours($value));
+                        }
+                        if ($type === 2) {
+                            $seriesEvent->setAttribute('start_time', $startDate->subDays($value));
+                            $seriesEvent->setAttribute('end_time', $endDate->subDays($value));
+                            foreach ($shifts as $shift) {
+                                $shift->setAttribute(
+                                    'start_date',
+                                    Carbon::parse($shift->getAttribute('start_date'))->subDays($value)
+                                );
+                                $shift->setAttribute(
+                                    'end_date',
+                                    Carbon::parse($shift->getAttribute('end_date'))->subDays($value)
+                                );
+                                $shift->save();
+                            }
+                        }
+                        if ($type === 3) {
+                            $seriesEvent->setAttribute('start_time', $startDate->subWeeks($value));
+                            $seriesEvent->setAttribute('end_time', $endDate->subWeeks($value));
+                            foreach ($shifts as $shift) {
+                                $shift->setAttribute(
+                                    'start_date',
+                                    Carbon::parse($shift->getAttribute('start_date'))->subWeeks($value)
+                                );
+                                $shift->setAttribute(
+                                    'end_date',
+                                    Carbon::parse($shift->getAttribute('end_date'))->subWeeks($value)
+                                );
+                                $shift->save();
+                            }
+                        }
+                        if ($type === 4) {
+                            $seriesEvent->setAttribute('start_time', $startDate->subMonths($value));
+                            $seriesEvent->setAttribute('end_time', $endDate->subMonths($value));
+                            foreach ($shifts as $shift) {
+                                $shift->setAttribute(
+                                    'start_date',
+                                    Carbon::parse($shift->getAttribute('start_date'))->subMonths($value)
+                                );
+                                $shift->setAttribute(
+                                    'end_date',
+                                    Carbon::parse($shift->getAttribute('end_date'))->subMonths($value)
+                                );
+                                $shift->save();
+                            }
+                        }
+                        if ($type === 5) {
+                            $seriesEvent->setAttribute('start_time', $startDate->subYears($value));
+                            $seriesEvent->setAttribute('end_time', $endDate->subYears($value));
+                            foreach ($shifts as $shift) {
+                                $shift->setAttribute(
+                                    'start_date',
+                                    Carbon::parse($shift->getAttribute('start_date'))->subYears($value)
+                                );
+                                $shift->setAttribute(
+                                    'end_date',
+                                    Carbon::parse($shift->getAttribute('end_date'))->subYears($value)
+                                );
+                                $shift->save();
+                            }
+                        }
+                    }
+                }
+
+                $seriesEvent->save();
+            }
+        });
+
         foreach ($seriesEvents as $seriesEvent) {
-            if ($request->get('newRoomId') !== null) {
-                $seriesEvent->setAttribute('room_id', $request->integer('newRoomId'));
-            }
-
-            if ($request->integer('value') !== 0) {
-                $endDate = Carbon::parse($seriesEvent->getAttribute('end_time'));
-                $startDate = Carbon::parse($seriesEvent->getAttribute('start_time'));
-                $shifts = $seriesEvent->shifts;
-                $calculationType = $request->integer('calculationType');
-                $value = $request->integer('value');
-                $type = $request->integer('type');
-
-                // Invalidate cache for all workers on all shifts before date changes
-                foreach ($shifts as $shift) {
-                    $this->workingHourCacheService->forgetForShift($shift);
-                }
-
-                if ($calculationType === 1) {
-                    if ($type === 1) {
-                        $seriesEvent->setAttribute('start_time', $startDate->addHours($value));
-                        $seriesEvent->setAttribute('end_time', $endDate->addHours($value));
-                    }
-                    if ($type === 2) {
-                        $seriesEvent->setAttribute('start_time', $startDate->addDays($value));
-                        $seriesEvent->setAttribute('end_time', $endDate->addDays($value));
-                        foreach ($shifts as $shift) {
-                            $shift->setAttribute(
-                                'start_date',
-                                Carbon::parse($shift->getAttribute('start_date'))->addDays($value)
-                            );
-                            $shift->setAttribute(
-                                'end_date',
-                                Carbon::parse($shift->getAttribute('end_date'))->addDays($value)
-                            );
-                            $shift->save();
-                        }
-                    }
-                    if ($type === 3) {
-                        $seriesEvent->setAttribute('start_time', $startDate->addWeeks($value));
-                        $seriesEvent->setAttribute('end_time', $endDate->addWeeks($value));
-                        foreach ($shifts as $shift) {
-                            $shift->setAttribute(
-                                'start_date',
-                                Carbon::parse($shift->getAttribute('start_date'))->addWeeks($value)
-                            );
-                            $shift->setAttribute(
-                                'end_date',
-                                Carbon::parse($shift->getAttribute('end_date'))->addWeeks($value)
-                            );
-                            $shift->save();
-                        }
-                    }
-                    if ($type === 4) {
-                        $seriesEvent->setAttribute('start_time', $startDate->addMonths($value));
-                        $seriesEvent->setAttribute('end_time', $endDate->addMonths($value));
-                        foreach ($shifts as $shift) {
-                            $shift->setAttribute(
-                                'start_date',
-                                Carbon::parse($shift->getAttribute('start_date'))->addMonths($value)
-                            );
-                            $shift->setAttribute(
-                                'end_date',
-                                Carbon::parse($shift->getAttribute('end_date'))->addMonths($value)
-                            );
-                            $shift->save();
-                        }
-                    }
-                    if ($type === 5) {
-                        $seriesEvent->setAttribute('start_time', $startDate->addYears($value));
-                        $seriesEvent->setAttribute('end_time', $endDate->addYears($value));
-                        foreach ($shifts as $shift) {
-                            $shift->setAttribute(
-                                'start_date',
-                                Carbon::parse($shift->getAttribute('start_date'))->addYears($value)
-                            );
-                            $shift->setAttribute(
-                                'end_date',
-                                Carbon::parse($shift->getAttribute('end_date'))->addYears($value)
-                            );
-                            $shift->save();
-                        }
-                    }
-                }
-
-                if ($calculationType === 2) {
-                    if ($type === 1) {
-                        $seriesEvent->setAttribute('start_time', $startDate->subHours($value));
-                        $seriesEvent->setAttribute('end_time', $endDate->subHours($value));
-                    }
-                    if ($type === 2) {
-                        $seriesEvent->setAttribute('start_time', $startDate->subDays($value));
-                        $seriesEvent->setAttribute('end_time', $endDate->subDays($value));
-                        foreach ($shifts as $shift) {
-                            $shift->setAttribute(
-                                'start_date',
-                                Carbon::parse($shift->getAttribute('start_date'))->subDays($value)
-                            );
-                            $shift->setAttribute(
-                                'end_date',
-                                Carbon::parse($shift->getAttribute('end_date'))->subDays($value)
-                            );
-                            $shift->save();
-                        }
-                    }
-                    if ($type === 3) {
-                        $seriesEvent->setAttribute('start_time', $startDate->subWeeks($value));
-                        $seriesEvent->setAttribute('end_time', $endDate->subWeeks($value));
-                        foreach ($shifts as $shift) {
-                            $shift->setAttribute(
-                                'start_date',
-                                Carbon::parse($shift->getAttribute('start_date'))->subWeeks($value)
-                            );
-                            $shift->setAttribute(
-                                'end_date',
-                                Carbon::parse($shift->getAttribute('end_date'))->subWeeks($value)
-                            );
-                            $shift->save();
-                        }
-                    }
-                    if ($type === 4) {
-                        $seriesEvent->setAttribute('start_time', $startDate->subMonths($value));
-                        $seriesEvent->setAttribute('end_time', $endDate->subMonths($value));
-                        foreach ($shifts as $shift) {
-                            $shift->setAttribute(
-                                'start_date',
-                                Carbon::parse($shift->getAttribute('start_date'))->subMonths($value)
-                            );
-                            $shift->setAttribute(
-                                'end_date',
-                                Carbon::parse($shift->getAttribute('end_date'))->subMonths($value)
-                            );
-                            $shift->save();
-                        }
-                    }
-                    if ($type === 5) {
-                        $seriesEvent->setAttribute('start_time', $startDate->subYears($value));
-                        $seriesEvent->setAttribute('end_time', $endDate->subYears($value));
-                        foreach ($shifts as $shift) {
-                            $shift->setAttribute(
-                                'start_date',
-                                Carbon::parse($shift->getAttribute('start_date'))->subYears($value)
-                            );
-                            $shift->setAttribute(
-                                'end_date',
-                                Carbon::parse($shift->getAttribute('end_date'))->subYears($value)
-                            );
-                            $shift->save();
-                        }
-                    }
-                }
-            }
-
-            $seriesEvent->save();
             broadcast(new EventCreated($seriesEvent->fresh(), $seriesEvent->fresh()->room_id));
         }
     }

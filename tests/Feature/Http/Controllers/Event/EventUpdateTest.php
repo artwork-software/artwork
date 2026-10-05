@@ -3,6 +3,7 @@
 namespace Tests\Feature\Http\Controllers\Event;
 
 use Artwork\Modules\Event\Models\Event;
+use Artwork\Modules\Event\Models\SeriesEvents;
 use Artwork\Modules\EventType\Models\EventType;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Permission\Enums\PermissionEnum;
@@ -315,4 +316,37 @@ final class EventUpdateTest extends FeatureTestCase
         $response->assertSuccessful();
     }
 
+    #[Test]
+    public function series_update_moves_all_series_events_and_rejects_unknown_rooms(): void
+    {
+        $this->actingAsAdmin();
+        $series = SeriesEvents::query()->create(['frequency_id' => 1, 'end_date' => '2026-12-31 00:00:00']);
+        $room = Room::factory()->create();
+        $events = collect(['2026-10-06', '2026-10-13'])->map(fn (string $day) => Event::factory()->create([
+            'is_series' => true,
+            'series_id' => $series->id,
+            'room_id' => $room->id,
+            'start_time' => $day . ' 10:00:00',
+            'end_time' => $day . ' 12:00:00',
+        ]));
+
+        // Unbekannter Raum: vorher FK-Fehler mitten in der Schleife (Serie halb geändert).
+        $this->patchJson(route('events.series.update', $events->first()), [
+            'newRoomId' => 999999999,
+            'calculationType' => 1,
+            'value' => 1,
+            'type' => 2,
+        ])->assertUnprocessable()->assertJsonValidationErrors('newRoomId');
+        $this->assertSame('2026-10-06 10:00:00', $events->first()->fresh()->start_time->format('Y-m-d H:i:s'));
+
+        $this->patchJson(route('events.series.update', $events->first()), [
+            'newRoomId' => null,
+            'calculationType' => 1,
+            'value' => 1,
+            'type' => 2,
+        ])->assertSuccessful();
+
+        $this->assertSame('2026-10-07 10:00:00', $events[0]->fresh()->start_time->format('Y-m-d H:i:s'));
+        $this->assertSame('2026-10-14 12:00:00', $events[1]->fresh()->end_time->format('Y-m-d H:i:s'));
+    }
 }

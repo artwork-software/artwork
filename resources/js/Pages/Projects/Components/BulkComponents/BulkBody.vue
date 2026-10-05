@@ -585,20 +585,67 @@ const events = ref([]);
 let localRowUid = 0;
 const nextLocalRowUid = () => `local-${++localRowUid}`;
 
+// --- "Zuletzt bearbeitet"-Markierung (blau)
+// Ein Speichervorgang = ein Satz blauer Zeilen. Gefüttert wird die Markierung aus
+// ZWEI Quellen mit demselben Server-updated_at: der eigenen Save-Response (sofort,
+// kein Warten auf den eigenen Broadcast-Roundtrip) und den Broadcasts anderer
+// Sessions. Ein deutlich neuerer Zeitstempel ersetzt den Satz, Zeitstempel innerhalb
+// des Toleranzfensters gehören zum selben Vorgang (Multi-Edit-Broadcasts driften um
+// Sekunden auseinander) und ergänzen ihn, ältere Nachzügler werden ignoriert —
+// vorher wurde der Satz bei jedem Broadcast geleert und per striktem
+// updated_at-Stringvergleich neu aufgebaut (initial geladene Zeilen haben gar kein
+// updated_at → Marker sprangen verspätet und unvollständig um).
+const EDIT_BATCH_TOLERANCE_MS = 3000;
+let lastEditStampMs = 0;
+const markRowEdited = (eventId, updatedAt) => {
+    if (!eventId) return;
+    const ts = Date.parse(updatedAt ?? '') || Date.now();
+    if (ts > lastEditStampMs + EDIT_BATCH_TOLERANCE_MS) {
+        // Neuer Speichervorgang → Markierung komplett ersetzen
+        lastEditEventIds.value = [eventId];
+        lastEditStampMs = ts;
+        return;
+    }
+    if (ts >= lastEditStampMs - EDIT_BATCH_TOLERANCE_MS) {
+        // Gleicher Speichervorgang (z.B. Multi-Edit) → Zeile ergänzen
+        if (!lastEditEventIds.value.includes(eventId)) {
+            lastEditEventIds.value.push(eventId);
+        }
+        lastEditStampMs = Math.max(lastEditStampMs, ts);
+    }
+    // Älter als das Fenster → veralteter Nachzügler, Markierung unverändert lassen
+};
+provide('bulkMarkRowEdited', markRowEdited);
+
+// Gleiches Batch-Prinzip für die pinke "Neu"-Markierung: ein Erstellvorgang
+// (Einzel-Create oder Kopien-Serie) = ein Satz pinker Zeilen. Die eigenen
+// Response-Pfade räumen alte isNew-Flags bereits selbst und melden hier nur den
+// Server-created_at ihres Batches an — Broadcasts fremder Creates räumen dann
+// alte pinke Zeilen, statt sie endlos zu akkumulieren, und Broadcasts des
+// EIGENEN Batches (gleiches Zeitfenster) lassen die frisch gesetzten stehen.
+let lastCreateStampMs = 0;
+const bumpCreateStamp = (createdAt) => {
+    const ts = Date.parse(createdAt ?? '') || Date.now();
+    lastCreateStampMs = Math.max(lastCreateStampMs, ts);
+};
+const onBroadcastRowCreated = (event) => {
+    const ts = Date.parse(event?.created_at ?? '') || Date.now();
+    if (ts > lastCreateStampMs + EDIT_BATCH_TOLERANCE_MS) {
+        // Neuer Erstellvorgang → alte "Neu"-Markierungen räumen
+        events.value.forEach(e => {
+            if (e.isNew && e.id !== event.id) e.isNew = false;
+        });
+    }
+    lastCreateStampMs = Math.max(lastCreateStampMs, ts);
+};
+
 // --- BulkEventsBroadcastUpdater Integration
 useBulkEventsBroadcastUpdater(events, computed(() => props.project?.id), {
     onEvent: (event, action) => {
-        // add event id if not existing in lastEditEventIds
         if (action === 'updated') {
-            lastEditEventIds.value = [];
-
-            // add all event ids in lastEditEventIds where are the same update_at timestamp as the updated event
-            const sameUpdatedEvents = events.value.filter(e => e.updated_at === event.updated_at);
-            sameUpdatedEvents.forEach(e => {
-                if (!lastEditEventIds.value.includes(e.id)) {
-                    lastEditEventIds.value.push(e.id);
-                }
-            });
+            markRowEdited(event.id, event.updated_at);
+        } else if (action === 'created') {
+            onBroadcastRowCreated(event);
         }
     }
 });
@@ -716,6 +763,7 @@ const persistNewEventRow = (base) => {
         .then(({data}) => {
             const idx = events.value.findIndex(e => e.localUid === base.localUid);
             if (data?.event?.id) {
+                bumpCreateStamp(data.event.created_at);
                 const row = {...mapPayloadToBulkRow(data.event), isNew: true};
                 if (idx !== -1) {
                     events.value[idx] = row;
@@ -1200,6 +1248,7 @@ const createCopyByEventWithData = (event) => {
                     const idx = events.value.findIndex(e => e.localUid === clone.localUid);
                     const payload = stored[i];
                     if (payload?.id) {
+                        bumpCreateStamp(payload.created_at);
                         const row = {...mapPayloadToBulkRow(payload), isNew: true};
                         if (idx !== -1) events.value[idx] = row;
                         else upsertEventRowFromResponse(payload, {markNew: false});

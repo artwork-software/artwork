@@ -516,6 +516,9 @@ const shouldShiftPeriod = () => shiftPeriodOnStartDateChange
 
 // --- Enddatum-Chip (Ausnahme-Anzeige bei ausgeblendeter Enddatum-Spalte) ---
 const injectedShowEndDate = inject('bulkShowEndDate', null);
+// "Zuletzt bearbeitet"-Markierung sofort aus der eigenen Save-Response setzen —
+// ohne diesen Aufruf hinge die blaue Tönung am eigenen Broadcast-Roundtrip.
+const markRowEdited = inject('bulkMarkRowEdited', () => {});
 const isMultiDay = computed(() => !!props.event.end_day && props.event.end_day !== props.event.day);
 
 // Kurzer Amber-Puls, wenn eine Startdatum-Änderung das (unsichtbare) Ende betroffen hat
@@ -571,9 +574,10 @@ const startEditDescription = () => {
 const saveDescription = async () => {
     if (draftDescription.value !== (props.event.description || '')) {
         if (props.event.id) {
-            await axios.patch(route('event.update.description', props.event.id), {
+            const {data} = await axios.patch(route('event.update.description', props.event.id), {
                 description: draftDescription.value
             });
+            markRowEdited(props.event.id, data?.event?.updated_at);
         }
         props.event.description = draftDescription.value;
     }
@@ -721,7 +725,8 @@ const updateEventInDatabase = async () => {
         if (payload.type && typeof payload.type === 'object' && payload.type.id) payload.type = { id: payload.type.id };
         if (payload.status && typeof payload.status === 'object' && payload.status.id) payload.status = { id: payload.status.id };
 
-        await axios.patch(route('event.update.single.bulk', { event: props.event.id }), { data: payload });
+        const {data} = await axios.patch(route('event.update.single.bulk', { event: props.event.id }), { data: payload });
+        markRowEdited(props.event.id, data?.event?.updated_at);
 
         // Snapshot nach erfolgreichem Patch aktualisieren
         window.__bulkEventSnapshots[snapshotKey] = getComparableEvent(props.event);
@@ -794,7 +799,8 @@ const onStartDateFocusOut = async () => {
 
         // Send API request before reactive update
         axios.patch(route('event.update.single.bulk', { event: props.event.id }), { data: payload })
-            .then(() => {
+            .then(({data}) => {
+                markRowEdited(props.event.id, data?.event?.updated_at);
                 // Update snapshot after successful patch
                 if (!window.__bulkEventSnapshots) window.__bulkEventSnapshots = {};
                 const snapshotKey = `event-snapshot-${props.event.id}`;
@@ -842,7 +848,8 @@ const onRoomChange = (newRoom) => {
         if (payload.status && typeof payload.status === 'object' && payload.status.id) payload.status = { id: payload.status.id };
 
         axios.patch(route('event.update.single.bulk', { event: props.event.id }), { data: payload })
-            .then(() => {
+            .then(({data}) => {
+                markRowEdited(props.event.id, data?.event?.updated_at);
                 if (!window.__bulkEventSnapshots) window.__bulkEventSnapshots = {};
                 const snapshotKey = `event-snapshot-${props.event.id}`;
                 window.__bulkEventSnapshots[snapshotKey] = getComparableEvent({ ...props.event, room: newRoom });
@@ -861,7 +868,8 @@ const onTypeChange = (newType) => {
         if (payload.status && typeof payload.status === 'object' && payload.status.id) payload.status = { id: payload.status.id };
 
         axios.patch(route('event.update.single.bulk', { event: props.event.id }), { data: payload })
-            .then(() => {
+            .then(({data}) => {
+                markRowEdited(props.event.id, data?.event?.updated_at);
                 if (!window.__bulkEventSnapshots) window.__bulkEventSnapshots = {};
                 const snapshotKey = `event-snapshot-${props.event.id}`;
                 window.__bulkEventSnapshots[snapshotKey] = getComparableEvent({ ...props.event, type: newType });

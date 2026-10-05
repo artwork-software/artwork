@@ -4,6 +4,7 @@ namespace Artwork\Modules\User\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use Artwork\Modules\User\Enums\UserFilterTypes;
+use Artwork\Modules\User\Http\Requests\UpdateFilterDatesRequest;
 use Artwork\Modules\User\Models\User;
 use Artwork\Modules\User\Services\UserService;
 use Carbon\Carbon;
@@ -63,7 +64,7 @@ class UserCalendarFilterController extends Controller
         ]);
     }
 
-    public function updateDates(Request $request, User $user, UserService $userService): void
+    public function updateDates(UpdateFilterDatesRequest $request, User $user, UserService $userService): void
     {
         $this->authorize('updateOwnPreferences', $user);
 

@@ -4,6 +4,7 @@ namespace Artwork\Modules\User\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use Artwork\Modules\User\Enums\UserFilterTypes;
+use Artwork\Modules\User\Http\Requests\UpdateFilterDatesRequest;
 use Artwork\Modules\User\Models\User;
 use Artwork\Modules\User\Services\UserService;
 use Carbon\Carbon;
@@ -22,7 +23,7 @@ class UserShiftCalendarFilterController extends Controller
         ]));
     }
 
-    public function updateDates(Request $request, User $user, UserService $userService): void
+    public function updateDates(UpdateFilterDatesRequest $request, User $user, UserService $userService): void
     {
         $this->authorize('updateOwnPreferences', $user);
 
@@ -61,7 +62,11 @@ class UserShiftCalendarFilterController extends Controller
         ]);
     }
 
-    public function updateInventoryArticlePlanFilters(Request $request, User $user, UserService $userService): void
+    public function updateInventoryArticlePlanFilters(
+        UpdateFilterDatesRequest $request,
+        User $user,
+        UserService $userService
+    ): void
     {
         $this->authorize('updateOwnPreferences', $user);
 
@@ -115,7 +120,7 @@ class UserShiftCalendarFilterController extends Controller
         ]);
     }
 
-    public function updateListViewDates(Request $request, User $user, UserService $userService): void
+    public function updateListViewDates(UpdateFilterDatesRequest $request, User $user, UserService $userService): void
     {
         $this->authorize('updateOwnPreferences', $user);
 

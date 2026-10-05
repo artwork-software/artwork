@@ -12,6 +12,7 @@ use Artwork\Modules\Event\Models\EventStatus;
 use Artwork\Modules\EventType\Models\EventType;
 use Artwork\Modules\InternalIssue\Models\InternalIssue;
 use Artwork\Modules\Project\Models\Project;
+use Artwork\Modules\Project\Models\ProjectComponentValue;
 use Artwork\Modules\Project\Models\ProjectCreateSettings;
 use Artwork\Modules\Project\Models\ProjectState;
 use Artwork\Modules\Project\Http\Requests\StoreProjectPrintLayoutRequest;
@@ -157,9 +158,19 @@ class ProjectPrintLayoutController extends Controller
             $projectData->projectGroups = $project->groups;
             $projectData->groupProjects = Project::where('is_group', 1)->get();
             $projectData->projectsOfGroup = $project->projectsOfGroup()->get();
+            // Projektwerte aller Komponenten des Layouts in einer Abfrage statt je Komponente
+            $componentValues = ProjectComponentValue::query()
+                ->where('project_id', $project->id)
+                ->whereIn('component_id', $projectPrintLayout->components->pluck('component_id'))
+                ->get()
+                ->keyBy('component_id');
             foreach ($projectPrintLayout->components as $component) {
-                /** @var Component $componentFullData */
-                $componentFullData = Component::find($component->component_id);
+                /** @var Component|null $componentFullData */
+                $componentFullData = $component->component;
+                if ($componentFullData === null) {
+                    // Komponente inzwischen gelöscht: Platzierung überspringen statt Null-Zugriff
+                    continue;
+                }
                 switch ($componentFullData->type) {
                     case ProjectTabComponentEnum::PROJECT_TITLE->value:
                         $projectData->title = $project->name;
@@ -373,13 +384,9 @@ class ProjectPrintLayoutController extends Controller
 
 
 
-                if ($componentFullData) {
-                    if (!$componentFullData?->special) {
-                        $projectData->{$component->component->type}[$componentFullData->id] =
-                            $componentFullData->projectValue()
-                                ->where('project_id', $project->id)
-                                ->first() ?? $componentFullData->data;
-                    }
+                if (!$componentFullData->special) {
+                    $projectData->{$componentFullData->type}[$componentFullData->id] =
+                        $componentValues->get($componentFullData->id) ?? $componentFullData->data;
                 }
             }
 

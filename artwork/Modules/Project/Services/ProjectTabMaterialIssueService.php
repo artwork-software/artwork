@@ -50,11 +50,9 @@ class ProjectTabMaterialIssueService
                         $query->whereRaw('1 = 0');
                         return;
                     }
+                    // inkl. überfälliger, nicht zurückgegebener Ausgaben (bleiben reserviert)
                     $query->where('external_issues.issue_date', '<=', $maxEnd)
-                        ->where(function ($subQuery) use ($minStart): void {
-                            $subQuery->where('external_issues.return_date', '>=', $minStart)
-                                ->orWhereNull('external_issues.return_date');
-                        });
+                        ->reservedOnOrAfter($minStart);
                 },
                 'specialItems',
                 'files',
@@ -85,8 +83,8 @@ class ProjectTabMaterialIssueService
                 $article->setRelation('externalIssues', $article->externalIssues->filter(
                     fn ($otherIssue) => ($otherIssue->issue_date === null
                             || $otherIssue->issue_date->toDateString() <= $endDate)
-                        && ($otherIssue->return_date === null
-                            || $otherIssue->return_date->toDateString() >= $startDate)
+                        && ($otherIssue->effectiveReturnDate() === null
+                            || $otherIssue->effectiveReturnDate()->toDateString() >= $startDate)
                 )->values());
 
                 $periodUsage = $article->getAvailableStock($startDate, $endDate);

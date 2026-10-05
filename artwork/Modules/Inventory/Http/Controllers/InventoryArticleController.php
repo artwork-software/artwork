@@ -149,7 +149,7 @@ class InventoryArticleController extends Controller
 
         $today = now()->toDateString();
         $internal = $inventoryArticle->internalIssues()->where('end_date', '>=', $today)->count();
-        $external = $inventoryArticle->externalIssues()->where('return_date', '>=', $today)->count();
+        $external = $inventoryArticle->externalIssues()->reservedOnOrAfter($today)->count();
 
         return response()->json(['count' => $internal + $external]);
     }
@@ -225,7 +225,6 @@ class InventoryArticleController extends Controller
 
         // External issues have dates only (no separate time columns). Use full-day bounds for overlap checks.
         $tsExternalStart = DB::raw("TIMESTAMP(issue_date, '00:00:00')");
-        $tsExternalEnd   = DB::raw("TIMESTAMP(COALESCE(return_date, issue_date), '23:59:59')");
 
         $articles = InventoryArticle::whereIn('id', $articleIds)
             ->with([
@@ -240,12 +239,10 @@ class InventoryArticleController extends Controller
                         });
                 },
                 // Externe Ausgaben (Verleih): gleiche Logik
-                'externalIssues' => function ($q) use ($tsExternalStart, $tsExternalEnd, $startAt, $endAt): void {
+                // inkl. überfälliger, nicht zurückgegebener Ausgaben (bleiben reserviert)
+                'externalIssues' => function ($q) use ($tsExternalStart, $startAt, $endAt): void {
                     $q->where($tsExternalStart, '<=', $endAt)
-                        ->where(function ($qq) use ($tsExternalEnd, $startAt): void {
-                            $qq->where($tsExternalEnd, '>=', $startAt)
-                                ->orWhereNull('return_date');
-                        });
+                        ->reservedOnOrAfter($startAt->toDateString());
                 },
             ])
             ->get()

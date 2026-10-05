@@ -2,6 +2,8 @@
 
 namespace Artwork\Modules\Inventory\Services;
 
+use Carbon\Carbon;
+use Illuminate\Notifications\DatabaseNotification;
 use Artwork\Modules\Inventory\Http\Requests\StoreInventoryArticleRequest;
 use Artwork\Modules\Inventory\Http\Requests\UpdateInventoryArticleRequest;
 use Artwork\Modules\Inventory\Models\InventoryArticle;
@@ -622,7 +624,7 @@ class InventoryArticleService
             }
         }
         $externalIssues = $article->externalIssues()
-            ->where('return_date', '>=', now()->toDateString())
+            ->reservedOnOrAfter(now()->toDateString())
             ->get();
         foreach ($externalIssues as $issue) {
             if ($issue->issuedBy) {
@@ -668,105 +670,124 @@ class InventoryArticleService
     }
 
     /**
-     * Prüft alle zukünftigen Materialausgaben auf Überbuchung und benachrichtigt Verantwortliche
+     * Benachrichtigt die Verantwortlichen künftiger Ausgaben, deren Zeitraum für diesen Artikel
+     * überbucht ist. Je Ausgabe zählt die gleichzeitige Nutzung im Zeitraum über interne UND
+     * externe Ausgaben gegen die einsatzbereite Menge (getAvailableStock). Vorher wurden alle
+     * künftigen Ausgaben ohne Zeitbezug addiert und mit der Gesamtmenge verglichen, intern und
+     * extern getrennt – Fehlalarme bei nicht überlappenden Ausgaben, echte Überbuchungen blieben
+     * unbemerkt. Pro Person und Ausgabe nur eine ungelesene Meldung.
      */
     public function checkAndNotifyOverbooking(InventoryArticle $article): void
     {
-        $notificationService = app(\Artwork\Modules\Notification\Services\NotificationService::class);
-        $now = now()->toDateString();
-        $internalIssues = $article->internalIssues()->where('end_date', '>=', $now)->get();
+        $today = now()->toDateString();
 
-        foreach ($internalIssues as $issue) {
-            $totalPlanned = $article->internalIssues()
-                ->where('end_date', '>=', $now)
-                ->sum('issuable_inventory_article.quantity');
-            if ($totalPlanned > $article->quantity) {
-                foreach ($issue->responsibleUsers as $user) {
-                    $notificationTitle = __('notification.inventory_article_overbooked_title', [
-                        'issueName' => $issue->name,
-                        'articleName' => $article->name,
-                    ], $user->language);
-                    $notificationDescription = [
-                        1 => [
-                            'type' => 'string',
-                            'title' => __('notification.inventory_article_overbooked_description', [
-                                'issueName' => $issue->name,
-                                'articleName' => $article->name,
-                            ], $user->language)
-                        ],
-                        2 => [
-                            'type' => 'link',
-                            'title' => __(
-                                'notification.material_issue',
-                                ['issueName' => $issue->name],
-                                $user->language
-                            ),
-                            'href' => route('issue-of-material.index', ['issue' => $issue->id])
-                        ]
-                    ];
-                    $broadcastMessage = [
-                        'id' => Str::uuid()->toString(),
-                        'type' => 'error',
-                        'message' => $notificationTitle
-                    ];
-                    $notificationService->setTitle($notificationTitle);
-                    $notificationService->setDescription($notificationDescription);
-                    $notificationService->setIcon('red');
-                    $notificationService->setPriority(3);
-                    $notificationService->setNotificationConstEnum(
-                        \Artwork\Modules\Notification\Enums\NotificationEnum::NOTIFICATION_INVENTORY_OVERBOOKED
-                    );
-                    $notificationService->setBroadcastMessage($broadcastMessage);
-                    $notificationService->setNotificationTo($user);
-                    $notificationService->setModelId($issue->id);
-                    $notificationService->createNotification();
-                }
+        foreach ($article->internalIssues()->where('end_date', '>=', $today)->get() as $issue) {
+            $start = Carbon::parse($issue->start_date)->toDateString() . ' ' . ($issue->start_time ?? '00:00:00');
+            $end = Carbon::parse($issue->end_date ?? $issue->start_date)->toDateString()
+                . ' ' . ($issue->end_time ?? '23:59:59');
+            if (!$this->isOverbookedWithin($article, $start, $end)) {
+                continue;
             }
-        }
-        $externalIssues = $article->externalIssues()->where('return_date', '>=', $now)->get();
 
-        foreach ($externalIssues as $issue) {
-            $totalPlanned = $article->externalIssues()
-                ->where('return_date', '>=', $now)
-                ->sum('issuable_inventory_article.quantity');
-            if ($totalPlanned > $article->quantity && $issue->issuedBy) {
-                $user = $issue->issuedBy;
-                $notificationTitle = __('notification.inventory_article_overbooked_title', [
-                    'issueName' => $issue->name,
-                    'articleName' => $article->name,
-                ], $user->language);
-                $notificationDescription = [
-                    1 => [
-                        'type' => 'string',
-                        'title' => __('notification.inventory_article_overbooked_description', [
-                            'issueName' => $issue->name,
-                            'articleName' => $article->name,
-                        ], $user->language)
-                    ],
-                    2 => [
-                        'type' => 'link',
-                        'title' => __('notification.material_issue', ['issueName' => $issue->name], $user->language),
-                        'href' => route('extern-issue-of-material.index', ['issue' => $issue->id])
-                    ]
-                ];
-                $broadcastMessage = [
-                    'id' => Str::uuid()->toString(),
-                    'type' => 'error',
-                    'message' => $notificationTitle
-                ];
-                $notificationService->setTitle($notificationTitle);
-                $notificationService->setDescription($notificationDescription);
-                $notificationService->setIcon('red');
-                $notificationService->setPriority(3);
-                $notificationService->setNotificationConstEnum(
-                    \Artwork\Modules\Notification\Enums\NotificationEnum::NOTIFICATION_INVENTORY_OVERBOOKED
+            foreach ($issue->responsibleUsers as $user) {
+                $this->sendOverbookingNotification(
+                    $article,
+                    $user,
+                    $issue->id,
+                    $issue->name,
+                    route('issue-of-material.index', ['issue' => $issue->id]),
+                    'intern'
                 );
-                $notificationService->setBroadcastMessage($broadcastMessage);
-                $notificationService->setNotificationTo($user);
-                $notificationService->setModelId($issue->id);
-                $notificationService->createNotification();
             }
         }
+
+        foreach ($article->externalIssues()->reservedOnOrAfter($today)->get() as $issue) {
+            $returnDate = $issue->effectiveReturnDate() ?? Carbon::parse($issue->issue_date);
+            if (
+                $issue->issuedBy === null
+                || !$this->isOverbookedWithin(
+                    $article,
+                    Carbon::parse($issue->issue_date)->toDateString(),
+                    $returnDate->toDateString()
+                )
+            ) {
+                continue;
+            }
+
+            $this->sendOverbookingNotification(
+                $article,
+                $issue->issuedBy,
+                $issue->id,
+                $issue->name,
+                route('extern-issue-of-material.index', ['issue' => $issue->id]),
+                'extern'
+            );
+        }
+    }
+
+    private function isOverbookedWithin(InventoryArticle $article, string $start, string $end): bool
+    {
+        // Frisch laden: getAvailableStock nutzt sonst ggf. vorgeladene, anders gefilterte Relationen
+        $stock = $article->fresh()?->getAvailableStock($start, $end);
+
+        return $stock !== null && $stock['reserved'] > $stock['total'];
+    }
+
+    private function sendOverbookingNotification(
+        InventoryArticle $article,
+        User $user,
+        int $issueId,
+        ?string $issueName,
+        string $href,
+        string $issueType
+    ): void {
+        $notificationKey = sprintf('inventory-overbooked-%d-%s-%d', $article->id, $issueType, $issueId);
+        $alreadyNotified = DatabaseNotification::query()
+            ->where('notifiable_type', $user->getMorphClass())
+            ->where('notifiable_id', $user->id)
+            ->whereNull('read_at')
+            ->whereJsonContains('data->notificationKey', $notificationKey)
+            ->exists();
+        if ($alreadyNotified) {
+            return;
+        }
+
+        $notificationTitle = __('notification.inventory_article_overbooked_title', [
+            'issueName' => $issueName,
+            'articleName' => $article->name,
+        ], $user->language);
+
+        $notificationService = app(\Artwork\Modules\Notification\Services\NotificationService::class);
+        $notificationService->setTitle($notificationTitle);
+        $notificationService->setDescription([
+            1 => [
+                'type' => 'string',
+                'title' => __('notification.inventory_article_overbooked_description', [
+                    'issueName' => $issueName,
+                    'articleName' => $article->name,
+                ], $user->language),
+            ],
+            2 => [
+                'type' => 'link',
+                'title' => __('notification.material_issue', ['issueName' => $issueName], $user->language),
+                'href' => $href,
+            ],
+        ]);
+        $notificationService->setIcon('red');
+        $notificationService->setPriority(3);
+        $notificationService->setNotificationConstEnum(
+            \Artwork\Modules\Notification\Enums\NotificationEnum::NOTIFICATION_INVENTORY_OVERBOOKED
+        );
+        $notificationService->setBroadcastMessage([
+            'id' => Str::uuid()->toString(),
+            'type' => 'error',
+            'message' => $notificationTitle,
+        ]);
+        $notificationService->setNotificationTo($user);
+        $notificationService->setModelId($issueId);
+        $notificationService->setNotificationKey($notificationKey);
+        $notificationService->createNotification();
+        $notificationService->clearNotificationData();
     }
 
     /**

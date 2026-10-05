@@ -130,4 +130,43 @@ class ExternalIssue extends Model
                 $q->whereDate('issue_date', '<=', $to);
             });
     }
+
+    /**
+     * Ende der Reservierung für Verfügbarkeit und Planung. Nicht zurückgegebenes, überfälliges
+     * Material bleibt bis heute reserviert (Entscheidung 05.10.2026) – vorher galt es ab dem
+     * geplanten Rückgabedatum als frei, obwohl es noch draußen war.
+     */
+    public function effectiveReturnDate(): ?\Carbon\Carbon
+    {
+        $rawReturnDate = $this->getRawOriginal('return_date') ?? $this->getAttribute('return_date');
+        if ($rawReturnDate === null) {
+            return null;
+        }
+
+        $returnDate = \Carbon\Carbon::parse($rawReturnDate)->startOfDay();
+        $today = \Carbon\Carbon::today();
+        if ($this->return_status !== self::RETURN_STATUS_RETURNED && $returnDate->lt($today)) {
+            return $today;
+        }
+
+        return $returnDate;
+    }
+
+    /**
+     * Ausgaben, deren Reservierung (effectiveReturnDate) am Datum noch läuft oder danach endet.
+     */
+    public function scopeReservedOnOrAfter(\Illuminate\Database\Eloquent\Builder $query, string $date): void
+    {
+        $query->where(function (\Illuminate\Database\Eloquent\Builder $reserved) use ($date): void {
+            $reserved->where('external_issues.return_date', '>=', $date)
+                ->orWhereNull('external_issues.return_date');
+
+            if (\Carbon\Carbon::parse($date)->startOfDay()->lte(\Carbon\Carbon::today())) {
+                $reserved->orWhere(function (\Illuminate\Database\Eloquent\Builder $overdue): void {
+                    $overdue->whereNull('external_issues.return_status')
+                        ->orWhere('external_issues.return_status', '!=', self::RETURN_STATUS_RETURNED);
+                });
+            }
+        });
+    }
 }

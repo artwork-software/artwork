@@ -355,6 +355,11 @@ class InventoryArticle extends Model
         ?int $excludeIssueId = null,
         ?string $excludeType = null
     ): array {
+        // SQL-Vorauswahl nur nach Datum: ein Vergleich der Datumsspalten mit "Y-m-d H:i" schloss
+        // Ausgaben desselben Tages aus. Die Uhrzeit-Genauigkeit kommt über das Zeitfenster unten.
+        $startDay = Carbon::parse($startDate)->toDateString();
+        $endDay = Carbon::parse($endDate)->toDateString();
+
         if ($this->relationLoaded('internalIssues')) {
             $internalIssues = $this->internalIssues;
             // Apply exclusion filter to pre-loaded relations if needed
@@ -365,9 +370,9 @@ class InventoryArticle extends Model
             }
         } else {
             $internalIssues = $this->internalIssues()
-                ->where('start_date', '<=', $endDate)
-                ->where(function ($q) use ($startDate): void {
-                    $q->where('end_date', '>=', $startDate)
+                ->where('start_date', '<=', $endDay)
+                ->where(function ($q) use ($startDay): void {
+                    $q->where('end_date', '>=', $startDay)
                         ->orWhereNull('end_date');
                 })
                 ->when($excludeType === 'intern' && $excludeIssueId, function ($q) use ($excludeIssueId): void {
@@ -386,20 +391,25 @@ class InventoryArticle extends Model
             }
         } else {
             $externalIssues = $this->externalIssues()
-                ->where('issue_date', '<=', $endDate)
-                ->where(function ($q) use ($startDate): void {
-                    $q->where('return_date', '>=', $startDate)
-                        ->orWhereNull('return_date');
-                })
+                ->where('issue_date', '<=', $endDay)
+                ->reservedOnOrAfter($startDay)
                 ->when($excludeType === 'extern' && $excludeIssueId, function ($q) use ($excludeIssueId): void {
                     $q->where('external_issues.id', '!=', $excludeIssueId);
                 })
                 ->get();
         }
 
+        // Fenster: reines Datum = ganzer Tag, mit Uhrzeit (Batch-Endpunkt, inkl. :59) bis einschließlich
+        $windowStart = Carbon::parse($startDate)->timestamp;
+        $windowEnd = strlen(trim((string) $endDate)) <= 10
+            ? Carbon::parse($endDate)->endOfDay()->timestamp + 1
+            : Carbon::parse($endDate)->timestamp + 1;
+
         $usedQuantity = self::calculatePeakConcurrentUsage(
             collect($internalIssues),
-            collect($externalIssues)
+            collect($externalIssues),
+            $windowStart,
+            $windowEnd
         );
 
         $total = $this->readyQuantity();
@@ -424,8 +434,10 @@ class InventoryArticle extends Model
      */
     public static function calculatePeakConcurrentUsage(
         Collection $internalIssues,
-        Collection $externalIssues
-    ): int {
+        Collection $externalIssues,
+        ?int $windowStart = null,
+        ?int $windowEnd = null
+): int {
         $events = [];
 
         foreach ($internalIssues as $issue) {
@@ -440,11 +452,12 @@ class InventoryArticle extends Model
             $endTime = $issue->end_time ?? '23:59:59';
 
             $start = Carbon::parse("{$startDateStr} {$startTime}")->timestamp;
-            // +1 second after end so that issues ending exactly when another starts don't overlap
-            $end = Carbon::parse("{$endDateStr} {$endTime}")->timestamp + 1;
+            // Ende exklusiv: endet eine Ausgabe genau, wenn die nächste beginnt, überlappen sie nicht
+            // (bei Gleichstand werden Abgänge vor Zugängen verarbeitet). Das frühere +1 Sekunde
+            // machte genau diese Fälle zu Überschneidungen.
+            $end = Carbon::parse("{$endDateStr} {$endTime}")->timestamp;
 
-            $events[] = [$start, $qty];   // issue starts: add quantity
-            $events[] = [$end, -$qty];    // issue ends: remove quantity
+            self::addClippedUsage($events, $start, $end, $qty, $windowStart, $windowEnd);
         }
 
         foreach ($externalIssues as $issue) {
@@ -454,13 +467,15 @@ class InventoryArticle extends Model
             }
 
             $issueDateStr = Carbon::parse($issue->issue_date)->format('Y-m-d');
-            $returnDateStr = Carbon::parse($issue->return_date ?? $issue->issue_date)->format('Y-m-d');
+            // Überfälliges, nicht zurückgegebenes Material bleibt reserviert
+            $effectiveReturnDate = $issue instanceof ExternalIssue ? $issue->effectiveReturnDate() : null;
+            $returnDateStr = ($effectiveReturnDate ?? Carbon::parse($issue->return_date ?? $issue->issue_date))
+                ->format('Y-m-d');
 
             $start = Carbon::parse("{$issueDateStr} 00:00:00")->timestamp;
-            $end = Carbon::parse("{$returnDateStr} 23:59:59")->timestamp + 1;
+            $end = Carbon::parse("{$returnDateStr} 23:59:59")->timestamp + 1; // ganzer Rückgabetag
 
-            $events[] = [$start, $qty];
-            $events[] = [$end, -$qty];
+            self::addClippedUsage($events, $start, $end, $qty, $windowStart, $windowEnd);
         }
 
         if (empty($events)) {
@@ -484,6 +499,34 @@ class InventoryArticle extends Model
         }
 
         return $peak;
+    }
+
+    /**
+     * Nutzung nur innerhalb des angefragten Zeitfensters zählen: Überschneidungen zweier Ausgaben
+     * VOR dem Fenster (nur eine reicht hinein) machten den Artikel sonst fälschlich überbucht.
+     *
+     * @param array<int, array{0: int, 1: int}> $events
+     */
+    private static function addClippedUsage(
+        array &$events,
+        int $start,
+        int $end,
+        int $quantity,
+        ?int $windowStart,
+        ?int $windowEnd
+    ): void {
+        if ($windowStart !== null) {
+            $start = max($start, $windowStart);
+        }
+        if ($windowEnd !== null) {
+            $end = min($end, $windowEnd);
+        }
+        if ($end <= $start) {
+            return;
+        }
+
+        $events[] = [$start, $quantity];  // issue starts: add quantity
+        $events[] = [$end, -$quantity];   // issue ends: remove quantity
     }
 
     public function tags(): BelongsToMany

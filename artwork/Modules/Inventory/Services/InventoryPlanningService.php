@@ -124,7 +124,7 @@ class InventoryPlanningService
         ])
             // B11: date-typed columns — plain comparison enables index usage.
             ->where('issue_date', '<=', $rangeEnd)
-            ->where('return_date', '>=', $rangeStart)
+            ->reservedOnOrAfter($rangeStart)
             ->get();
     }
 
@@ -193,7 +193,8 @@ class InventoryPlanningService
                 'type'               => 'extern',
                 'name'               => $issue->name ?? $receiverName ?? ('Leihschein #' . $issue->id),
                 'start'              => Carbon::parse($issue->issue_date)->toDateString(),
-                'end'                => Carbon::parse($issue->return_date ?? $issue->issue_date)->toDateString(),
+                'end'                => ($issue->effectiveReturnDate() ?? Carbon::parse($issue->issue_date))
+                    ->toDateString(),
                 'project_id'         => null,
                 'project_name'       => null,
                 'receiver_name'      => $receiverName !== '' ? $receiverName : null,
@@ -400,7 +401,7 @@ class InventoryPlanningService
         foreach ($externalIssues as $issue) {
             $addIssue(
                 Carbon::parse($issue->issue_date)->toDateString(),
-                Carbon::parse($issue->return_date ?? $issue->issue_date)->toDateString(),
+                ($issue->effectiveReturnDate() ?? Carbon::parse($issue->issue_date))->toDateString(),
                 0,
                 1440,
                 $issue->articles
@@ -500,7 +501,7 @@ class InventoryPlanningService
             $query->where('inventory_article_id', $articleId);
         }, 'issuedBy', 'receivedBy', 'files', 'specialItems'])
             ->where('issue_date', '<=', $date)
-            ->where('return_date', '>=', $date)
+            ->reservedOnOrAfter($date)
             ->get();
 
         // Calculate status counts
@@ -553,9 +554,7 @@ class InventoryPlanningService
                     'issue_date' => $issue
                         ->issue_date ? CarbonCarbon::parse($issue->issue_date)
                         ->format('Y-m-d') : null,
-                    'return_date' => $issue
-                        ->return_date ? CarbonCarbon::parse($issue->return_date)
-                        ->format('Y-m-d') : null,
+                    'return_date' => $issue->effectiveReturnDate()?->format('Y-m-d'),
                     'pivot' => (object) ['quantity' => $a->pivot->quantity],
                 ]);
             }
@@ -663,7 +662,7 @@ class InventoryPlanningService
         foreach ($externalIssues as $issue) {
             $collect(
                 $issue->issue_date ? CarbonCarbon::parse($issue->issue_date)->toDateString() : null,
-                $issue->return_date ? CarbonCarbon::parse($issue->return_date)->toDateString() : null,
+                $issue->effectiveReturnDate()?->toDateString(),
                 0,
                 1440,
                 (int) ($issue->pivot->quantity ?? 0)
@@ -770,10 +769,7 @@ class InventoryPlanningService
             $query->where('inventory_article_id', $articleId);
         }])
             ->where('issue_date', '<=', $endDate)
-            ->where(function ($q) use ($startDate): void {
-                $q->where('return_date', '>=', $startDate)
-                    ->orWhereNull('return_date');
-            })
+            ->reservedOnOrAfter($startDate)
             ->get();
 
         // Statuszählungen für den Zeitraum
@@ -833,9 +829,7 @@ class InventoryPlanningService
                     'issue_date' => $issue
                         ->issue_date ? CarbonCarbon::parse($issue->issue_date)
                         ->format('Y-m-d') : null,
-                    'return_date' => $issue
-                        ->return_date ? CarbonCarbon::parse($issue->return_date)
-                        ->format('Y-m-d') : null,
+                    'return_date' => $issue->effectiveReturnDate()?->format('Y-m-d'),
                     'pivot' => (object) ['quantity' => $a->pivot->quantity],
                 ]);
             }

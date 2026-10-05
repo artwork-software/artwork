@@ -8,6 +8,7 @@ use Artwork\Modules\InternalIssue\Models\InternalIssue;
 use Artwork\Modules\Inventory\Http\Requests\StoreInventoryArticleRequest;
 use Artwork\Modules\Inventory\Http\Requests\UpdateInventoryArticleRequest;
 use Artwork\Modules\Inventory\Models\InventoryArticle;
+use Artwork\Modules\Inventory\Models\InventoryArticleStatus;
 use Artwork\Modules\Inventory\Models\InventoryDetailedQuantityArticle;
 use Artwork\Modules\Inventory\Models\InventoryPropertyValue;
 use Artwork\Modules\Inventory\Services\InventoryArticleService;
@@ -317,7 +318,7 @@ class InventoryArticleController extends Controller
         $fieldRules = [
             'name' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
-            'quantity' => ['required', 'numeric', 'min:0'],
+            'quantity' => ['required', 'integer', 'min:0'],
             'inventory_category_id' => ['required', 'integer', 'exists:inventory_categories,id'],
             'inventory_sub_category_id' => ['nullable', 'integer', 'exists:inventory_sub_categories,id'],
         ];
@@ -367,9 +368,42 @@ class InventoryArticleController extends Controller
             }
         }
 
+        if ($field === 'quantity' && !$this->syncReadyStatusWithQuantity($inventoryArticle, (int) $value)) {
+            return response()->json(
+                ['error' => __('The total quantity cannot be lower than the quantities in the other statuses.')],
+                422
+            );
+        }
+
         $inventoryArticle->update($data);
 
         return response()->json(['success' => true]);
+    }
+
+    /**
+     * Gesamtmenge = Summe der Statusmengen. Ändert sich die Gesamtmenge inline, wird die Differenz
+     * im Standard-Status ausgeglichen (vorher liefen Gesamt- und Statussumme auseinander). Artikel
+     * ohne gepflegte Statusmengen bleiben unberührt.
+     */
+    private function syncReadyStatusWithQuantity(InventoryArticle $article, int $newQuantity): bool
+    {
+        $statusValues = $article->statusValues()->get();
+        $readyStatusId = InventoryArticleStatus::defaultStatusId();
+        if ($statusValues->isEmpty() || $readyStatusId === null) {
+            return true;
+        }
+
+        $otherStatusesTotal = (int) $statusValues
+            ->reject(fn (InventoryArticleStatus $status): bool => $status->id === $readyStatusId)
+            ->sum(fn (InventoryArticleStatus $status): int => (int) $status->pivot->value);
+        $newReadyValue = $newQuantity - $otherStatusesTotal;
+        if ($newReadyValue < 0) {
+            return false;
+        }
+
+        $article->statusValues()->syncWithoutDetaching([$readyStatusId => ['value' => $newReadyValue]]);
+
+        return true;
     }
 
     public function updateDetailedArticleField(
@@ -379,7 +413,7 @@ class InventoryArticleController extends Controller
         $fieldRules = [
             'name' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
-            'quantity' => ['required', 'numeric', 'min:0'],
+            'quantity' => ['required', 'integer', 'min:0'],
             // No DB foreign key on this column — the exists rule is the only guard
             // against silently storing a dead status id (breaks availability sums).
             'inventory_article_status_id' => ['nullable', 'integer', 'exists:inventory_article_statuses,id'],

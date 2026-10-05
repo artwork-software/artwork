@@ -35,6 +35,7 @@ class UpdateInventoryArticleRequest extends FormRequest
             // get converted to JPEG on upload (InventoryArticleImageService).
             'newImages.*' => [
                 'bail',
+                new SafeUploadFile(),
                 'mimes:jpg,jpeg,png,gif,webp,bmp,heic,heif',
                 'max:' . $maxImageSizeKb,
                 new InventoryArticleImageDimensions(),
@@ -67,6 +68,8 @@ class UpdateInventoryArticleRequest extends FormRequest
 
             'statusValues' => ['nullable', 'array'],
             'statusValues.*.id' => ['required', 'integer', 'exists:inventory_article_statuses,id'],
+            // Spalte ist varchar und wird per SQL-SUM aufsummiert: nur ganze, nicht negative Mengen
+            'statusValues.*.value' => ['nullable', 'integer', 'min:0'],
 
 
             // 🔹 NEU: Tags am Artikel

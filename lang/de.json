@@ -8554,5 +8554,6 @@
     "The connection to the server failed. Please check your network and try again.": "Die Verbindung zum Server ist fehlgeschlagen. Bitte prüfe deine Netzwerkverbindung und versuche es erneut.",
     "You are not allowed to perform this action.": "Für diese Aktion fehlt dir die Berechtigung.",
     "The entry no longer exists. Please reload the page.": "Der Eintrag existiert nicht mehr. Bitte lade die Seite neu.",
-    "The action could not be completed. Please try again.": "Die Aktion konnte nicht ausgeführt werden. Bitte versuche es erneut."
+    "The action could not be completed. Please try again.": "Die Aktion konnte nicht ausgeführt werden. Bitte versuche es erneut.",
+    "The total quantity cannot be lower than the quantities in the other statuses.": "Die Gesamtmenge darf nicht kleiner sein als die Mengen in den übrigen Status."
 }

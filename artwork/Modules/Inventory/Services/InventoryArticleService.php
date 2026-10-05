@@ -512,13 +512,22 @@ class InventoryArticleService
             $this->processRemovedImages($article, $request);
             $this->processArticleImages($article, $request);
 
-            // Reset and update article properties and detailed articles
-            $this->resetArticleRelations($article);
-            $this->processArticleProperties($article->fresh(), $request);
-            $this->processStatusValues($article, $request->get('statusValues', []));
+            // Nur ersetzen, was der Request mitschickt: ein fehlendes Feld leerte vorher Eigenschaften,
+            // Statusmengen, Tags bzw. löschte alle Einzelartikel.
+            $article = $article->fresh();
+            if ($request->has('properties')) {
+                $this->articleRepository->detachAllProperties($article);
+            }
+            $this->processArticleProperties($article, $request);
+            if ($request->has('statusValues') || $article->is_detailed_quantity) {
+                $this->articleRepository->detachAllStatusValues($article);
+                $this->processStatusValues($article, $request->input('statusValues', []));
+            }
 
             // 🔹 NEU: Tags verarbeiten + Berechtigungen prüfen
-            $this->processArticleTags($article, $request->input('tag_ids', []));
+            if ($request->has('tag_ids')) {
+                $this->processArticleTags($article, $request->input('tag_ids', []));
+            }
 
             // Artikel neu laden inkl. Status, Detailed-Status und Tags
             $article = $article->fresh(['detailedArticleQuantities.status', 'statusValues', 'tags']);
@@ -794,7 +803,11 @@ class InventoryArticleService
         StoreInventoryArticleRequest|UpdateInventoryArticleRequest $request
     ): void {
         $this->articleRepository->attachProperties($article, $request->collect('properties'));
-        $this->syncDetailedArticles($article, $request->collect('detailed_article_quantities'));
+        // Ohne Feld im Request bleiben vorhandene Einzelartikel stehen (vorher: alle soft-gelöscht);
+        // Artikel ohne Einzelinventar dürfen keine haben.
+        if ($request->has('detailed_article_quantities') || !$article->is_detailed_quantity) {
+            $this->syncDetailedArticles($article, $request->collect('detailed_article_quantities'));
+        }
     }
 
     /**
@@ -906,17 +919,6 @@ class InventoryArticleService
     }
 
     /**
-     * Reset article relations before re-attaching.
-     * DetailArticles werden NICHT mehr hier gelöscht – sie werden in syncDetailedArticles()
-     * per ID gematcht (Match-and-Update), damit Typnummern und Auto-Increment-IDs stabil bleiben.
-     */
-    protected function resetArticleRelations(InventoryArticle $article): void
-    {
-        $this->articleRepository->detachAllProperties($article);
-        $this->articleRepository->detachAllStatusValues($article);
-    }
-
-    /**
      * Process and attach status values
      *
      * @param InventoryArticle $article
@@ -925,6 +927,12 @@ class InventoryArticleService
      */
     protected function processStatusValues(InventoryArticle $article, array $statusValues): void
     {
+        // Bei Einzelinventar tragen die Einzelartikel den Status; zusätzliche Mengen am Hauptartikel
+        // wurden sonst in Statuszählung und -filter doppelt gezählt.
+        if ($article->is_detailed_quantity) {
+            return;
+        }
+
         if (!empty($statusValues)) {
             $this->articleRepository->attachStatusValues($article, $statusValues);
         }

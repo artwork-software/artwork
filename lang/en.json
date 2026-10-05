@@ -8545,5 +8545,6 @@
     "The connection to the server failed. Please check your network and try again.": "The connection to the server failed. Please check your network and try again.",
     "You are not allowed to perform this action.": "You are not allowed to perform this action.",
     "The entry no longer exists. Please reload the page.": "The entry no longer exists. Please reload the page.",
-    "The action could not be completed. Please try again.": "The action could not be completed. Please try again."
+    "The action could not be completed. Please try again.": "The action could not be completed. Please try again.",
+    "The total quantity cannot be lower than the quantities in the other statuses.": "The total quantity cannot be lower than the quantities in the other statuses."
 }

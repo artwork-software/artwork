@@ -29,7 +29,7 @@ use Illuminate\Database\Eloquent\Prunable;
 
 class ShiftPlanRequest extends Model
 {
-    /** @use HasFactory<\Database\Factories\ShiftPlanRequestFactory> */
+    /** @use HasFactory<\Database\Factories\Artwork\Modules\Shift\Models\ShiftPlanRequestFactory> */
     use HasFactory;
     use Prunable;
 

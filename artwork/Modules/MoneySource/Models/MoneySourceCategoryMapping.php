@@ -12,6 +12,9 @@ class MoneySourceCategoryMapping extends Pivot
 {
     use HasFactory;
 
+    // Die Tabelle hat keine Zeitstempel-Spalten (direktes create() scheiterte sonst)
+    public $timestamps = false;
+
     protected $fillable = [
         'money_source_id',
         'money_source_category_id'

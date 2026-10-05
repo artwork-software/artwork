@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class ProductBasketArticle extends Model
 {
-    /** @use HasFactory<\Database\Factories\ProductBasketArticleFactory> */
+    /** @use HasFactory<\Database\Factories\Artwork\Modules\Inventory\Models\ProductBasketArticleFactory> */
     use HasFactory;
 
     protected $fillable = [

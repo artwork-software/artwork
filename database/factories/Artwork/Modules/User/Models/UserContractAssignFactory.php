@@ -1,6 +1,6 @@
 <?php
 
-namespace Database\Factories;
+namespace Database\Factories\Artwork\Modules\User\Models;
 
 use Artwork\Modules\User\Models\UserContractAssign;
 use Artwork\Modules\User\Models\User;
@@ -23,7 +23,7 @@ class UserContractAssignFactory extends Factory
     {
         return [
             'user_id' => \Artwork\Modules\User\Models\User::factory(),
-            'user_contract_id' => \Database\Factories\UserContractFactory::new(),
+            'user_contract_id' => UserContract::factory(),
             'free_full_days_per_week' => $this->faker->numberBetween(1, 2),
             'free_half_days_per_week' => $this->faker->numberBetween(0, 2),
             'special_day_rule_active' => $this->faker->boolean(),

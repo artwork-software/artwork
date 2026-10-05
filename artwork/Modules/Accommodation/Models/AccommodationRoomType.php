@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class AccommodationRoomType extends Model
 {
-    /** @use HasFactory<\Database\Factories\AccommodationRoomTypeFactory> */
+    /** @use HasFactory<\Database\Factories\Artwork\Modules\Accommodation\Models\AccommodationRoomTypeFactory> */
     use HasFactory;
 
     protected $fillable = [

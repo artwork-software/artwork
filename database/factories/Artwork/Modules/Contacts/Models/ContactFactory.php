@@ -1,6 +1,6 @@
 <?php
 
-namespace Database\Factories;
+namespace Database\Factories\Artwork\Modules\Contacts\Models;
 
 use Artwork\Modules\Contacts\Models\Contact;
 use Artwork\Modules\User\Models\User;

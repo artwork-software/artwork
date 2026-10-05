@@ -34,7 +34,7 @@ use Illuminate\Database\Eloquent\Model;
  */
 class WorkTimeChangeRequest extends Model
 {
-    /** @use HasFactory<\Database\Factories\WorkTimeChangeRequestFactory> */
+    /** @use HasFactory<\Database\Factories\Artwork\Modules\WorkTime\Models\WorkTimeChangeRequestFactory> */
     use HasFactory;
 
     protected $fillable = [

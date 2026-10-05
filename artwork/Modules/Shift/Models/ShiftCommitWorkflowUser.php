@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class ShiftCommitWorkflowUser extends Model
 {
-    /** @use HasFactory<\Database\Factories\ShiftCommitWorkflowUserFactory> */
+    /** @use HasFactory<\Database\Factories\Artwork\Modules\Shift\Models\ShiftCommitWorkflowUserFactory> */
     use HasFactory;
 
     protected $fillable = [

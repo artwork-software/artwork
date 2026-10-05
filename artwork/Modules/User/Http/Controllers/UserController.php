@@ -1461,11 +1461,23 @@ class UserController extends Controller
             }
         }
 
-        $permissionsBefore = $user->permissions()->pluck('name')->all();
-        $rolesBefore = $user->getRoleNames()->all();
+        // Der Rechte-Tab speichert bei jedem Klick sofort; schnelle Klickfolgen erzeugen parallele Requests.
+        // syncPermissions/syncRoles sind detach + attach ohne Transaktion – ohne Sperre auf den User
+        // schreiben zwei Requests dieselben Pivot-Zeilen (Duplicate entry auf model_has_permissions).
+        [$permissionsBefore, $rolesBefore] = DB::transaction(
+            function () use ($user, $permissionsToGrant, $rolesToGrant): array {
+                User::query()->whereKey($user->getKey())->lockForUpdate()->first();
+                $user->unsetRelation('permissions')->unsetRelation('roles');
 
-        $user->syncPermissions($permissionsToGrant);
-        $user->syncRoles($rolesToGrant);
+                $permissionsBefore = $user->permissions()->pluck('name')->all();
+                $rolesBefore = $user->roles()->pluck('name')->all();
+
+                $user->syncPermissions($permissionsToGrant);
+                $user->syncRoles($rolesToGrant);
+
+                return [$permissionsBefore, $rolesBefore];
+            }
+        );
         // Gecachte Inertia-Share-Daten sofort invalidieren statt auf den 5-Min.-TTL zu warten
         $user->forgetCachedShareData();
 

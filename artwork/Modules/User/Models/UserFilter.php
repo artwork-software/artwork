@@ -40,7 +40,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class UserFilter extends CalendarFilter
 {
-    /** @use HasFactory<\Database\Factories\UserFilterFactory> */
+    /** @use HasFactory<\Database\Factories\Artwork\Modules\User\Models\UserFilterFactory> */
     use HasFactory;
 
     protected $fillable = [

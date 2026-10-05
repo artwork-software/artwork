@@ -25,7 +25,7 @@ use Illuminate\Database\Eloquent\Model;
  */
 class WorkTimeBooking extends Model
 {
-    /** @use HasFactory<\Database\Factories\WorkTimeBookingFactory> */
+    /** @use HasFactory<\Database\Factories\Artwork\Modules\WorkTime\Models\WorkTimeBookingFactory> */
     use HasFactory;
 
     /**

@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Artist extends Model implements CrmEntity
 {
-    /** @use HasFactory<\Database\Factories\ArtistFactory> */
+    /** @use HasFactory<\Database\Factories\Artwork\Modules\ArtistResidency\Models\ArtistFactory> */
     use HasFactory;
     use HasCrmContact;
     use HasCrmFields;

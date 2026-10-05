@@ -18,7 +18,7 @@ use Illuminate\Database\Eloquent\Model;
  */
 class GlobalQualification extends Model
 {
-    /** @use HasFactory<\Database\Factories\GlobalQualificationFactory> */
+    /** @use HasFactory<\Database\Factories\Artwork\Modules\Shift\Models\GlobalQualificationFactory> */
     use HasFactory;
 
     protected $fillable = [

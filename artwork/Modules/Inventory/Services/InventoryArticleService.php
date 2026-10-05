@@ -5,6 +5,7 @@ namespace Artwork\Modules\Inventory\Services;
 use Artwork\Modules\Inventory\Http\Requests\StoreInventoryArticleRequest;
 use Artwork\Modules\Inventory\Http\Requests\UpdateInventoryArticleRequest;
 use Artwork\Modules\Inventory\Models\InventoryArticle;
+use Artwork\Modules\Inventory\Models\InventoryArticleStatus;
 use Artwork\Modules\Inventory\Models\InventoryDetailedQuantityArticle;
 use Artwork\Modules\Inventory\Models\InventoryTag;
 use Artwork\Modules\Inventory\Repositories\InventoryArticleRepository;
@@ -459,11 +460,11 @@ class InventoryArticleService
             // Vorherige Werte sichern mit Null-Handling
             $oldQuantity = $article->quantity ?? null;
 
-            // Sicheres Zugreifen auf statusValues — suche nach Name statt ID
+            // Standard-Status (default-Flag) statt Namensvergleich – Status sind umbenennbar
             $oldStatus1 = null;
             if (
                 $article->statusValues
-                 && ($readyStatus = $article->statusValues->firstWhere('name', 'Einsatzbereit'))
+                 && ($readyStatus = $article->statusValues->firstWhere('id', InventoryArticleStatus::defaultStatusId()))
             ) {
                 $oldStatus1 = $readyStatus->pivot->value ?? null;
             }
@@ -472,7 +473,7 @@ class InventoryArticleService
             $oldDetailedStatus1 = [];
             if ($article->detailedArticleQuantities) {
                 foreach ($article->detailedArticleQuantities as $detailed) {
-                    if ($detailed->status && $detailed->status->name === 'Einsatzbereit') {
+                    if ((int) $detailed->inventory_article_status_id === InventoryArticleStatus::defaultStatusId()) {
                         $oldDetailedStatus1[$detailed->id] = $detailed->quantity;
                     }
                 }
@@ -525,12 +526,12 @@ class InventoryArticleService
             // Nachherige Werte prüfen mit verbessertem Null-Handling
             $newQuantity = $article ? ($article->quantity ?? null) : null;
 
-            // Nachherige Statuswerte prüfen — suche nach Name statt ID
+            // Nachherige Statuswerte prüfen (Standard-Status)
             $newStatus1 = null;
             if (
                 $article
                  && $article->statusValues
-                 && ($readyStatus = $article->statusValues->firstWhere('name', 'Einsatzbereit'))
+                 && ($readyStatus = $article->statusValues->firstWhere('id', InventoryArticleStatus::defaultStatusId()))
             ) {
                 $newStatus1 = $readyStatus->pivot->value ?? null;
             }
@@ -538,7 +539,7 @@ class InventoryArticleService
             $detailedStatus1Changed = false;
             if ($article && $article->detailedArticleQuantities) {
                 foreach ($article->detailedArticleQuantities as $detailed) {
-                    if ($detailed->status && $detailed->status->name === 'Einsatzbereit') {
+                    if ((int) $detailed->inventory_article_status_id === InventoryArticleStatus::defaultStatusId()) {
                         $old = $oldDetailedStatus1[$detailed->id] ?? null;
                         $new = $detailed->quantity;
 

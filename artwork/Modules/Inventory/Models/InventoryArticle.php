@@ -402,38 +402,7 @@ class InventoryArticle extends Model
             collect($externalIssues)
         );
 
-        // Get the quantity of items with "Einsatzbereit" status
-        $total = 0;
-
-        if ($this->is_detailed_quantity) {
-            // For detailed quantity articles, sum up the quantities of all
-        // detailed articles with "Einsatzbereit" status
-            if ($this->relationLoaded('detailedArticleQuantities')) {
-                $detailedQuantities = $this->detailedArticleQuantities;
-            } else {
-                // Load the detailedArticleQuantities relation if not already loaded
-                $this->load('detailedArticleQuantities.status');
-                $detailedQuantities = $this->detailedArticleQuantities;
-            }
-
-            foreach ($detailedQuantities as $detailedQuantity) {
-                if ($detailedQuantity->status && $detailedQuantity->status->name === 'Einsatzbereit') {
-                    $total += (float) $detailedQuantity->quantity;
-                }
-            }
-        } else {
-            // For regular articles, use the main article's status
-            $readyStatus = null;
-            if ($this->relationLoaded('statusValues')) {
-                $readyStatus = $this->statusValues->firstWhere('name', 'Einsatzbereit');
-            } else {
-                // Load the statusValues relation if not already loaded
-                $this->load('statusValues');
-                $readyStatus = $this->statusValues->firstWhere('name', 'Einsatzbereit');
-            }
-
-            $total = $readyStatus ? (float) $readyStatus->pivot->value : 0;
-        }
+        $total = $this->readyQuantity();
         $available = max($total - $usedQuantity, 0);
 
         return [
@@ -525,5 +494,39 @@ class InventoryArticle extends Model
             'inventory_article_id',
             'inventory_tag_id'
         )->withTimestamps();
+    }
+
+    /**
+     * Einsatzbereite Menge: Menge im Standard-Status (default-Flag) – bei Einzelinventar die
+     * Summe der Einzelartikel in diesem Status. Artikel ohne jede gepflegte Statusmenge zählen
+     * mit ihrer Gesamtmenge (ältere Artikel aus der Zeit vor den Status). Einzige Quelle für
+     * Verfügbarkeit, Planung, Projekt-Tab und Überbuchungsprüfung.
+     */
+    public function readyQuantity(): float
+    {
+        $readyStatusId = InventoryArticleStatus::defaultStatusId();
+
+        if ($this->is_detailed_quantity) {
+            if (!$this->relationLoaded('detailedArticleQuantities')) {
+                $this->load('detailedArticleQuantities');
+            }
+
+            return (float) $this->detailedArticleQuantities
+                ->filter(fn ($detailed): bool => $readyStatusId !== null
+                    && (int) $detailed->inventory_article_status_id === $readyStatusId)
+                ->sum(fn ($detailed): float => (float) $detailed->quantity);
+        }
+
+        if (!$this->relationLoaded('statusValues')) {
+            $this->load('statusValues');
+        }
+
+        if ($this->statusValues->isEmpty()) {
+            return (float) $this->quantity;
+        }
+
+        $readyStatus = $readyStatusId === null ? null : $this->statusValues->firstWhere('id', $readyStatusId);
+
+        return $readyStatus !== null ? (float) $readyStatus->pivot->value : 0.0;
     }
 }

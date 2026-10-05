@@ -398,19 +398,47 @@ class UpdateArtwork extends Command
             ],
         ];
 
-        foreach ($dataSet as $data) {
-            InventoryArticleStatus::updateOrCreate(
-                [
-                    'name' => $data['name'],
-                ],
-                [
-                    'default' => $data['default'] ?? false,
-                    'deletable' => $data['deletable'] ?? true,
-                    'color' => $data['color'] ?? null,
-                    'order' => $data['order'] ?? 1
-                ]
-            );
+        // Nur bei Erstinstallation anlegen. Vorher lief updateOrCreate per Name bei jedem Update:
+        // Reihenfolge/Farbe wurden zurückgesetzt und ein umbenannter Status (z. B. „Einsatzbereit“)
+        // wurde als zweiter Standard-Status neu angelegt.
+        if (InventoryArticleStatus::query()->exists()) {
+            $this->ensureSingleDefaultInventoryStatus();
+
+            return;
         }
+
+        foreach ($dataSet as $data) {
+            $status = new InventoryArticleStatus([
+                'name' => $data['name'],
+                'color' => $data['color'] ?? null,
+                'order' => $data['order'] ?? 1,
+            ]);
+            $status->default = $data['default'] ?? false;
+            $status->deletable = $data['deletable'] ?? true;
+            $status->save();
+        }
+    }
+
+    /**
+     * Genau ein Status trägt das default-Flag (er bestimmt die verfügbare Menge). Frühere Updates
+     * konnten einen zweiten anlegen; dann gewinnt der älteste. Fehlt er, wird „Einsatzbereit“
+     * (bzw. der erste Status) Standard.
+     */
+    private function ensureSingleDefaultInventoryStatus(): void
+    {
+        $defaults = InventoryArticleStatus::query()->where('default', true)->orderBy('id')->get();
+
+        if ($defaults->isEmpty()) {
+            $fallback = InventoryArticleStatus::query()->where('name', 'Einsatzbereit')->first()
+                ?? InventoryArticleStatus::query()->orderBy('order')->orderBy('id')->first();
+            $fallback?->forceFill(['default' => true])->save();
+
+            return;
+        }
+
+        $defaults->slice(1)->each(
+            static fn (InventoryArticleStatus $status) => $status->forceFill(['default' => false])->save()
+        );
     }
 
     /**

@@ -91,17 +91,8 @@ class ProjectTabMaterialIssueService
 
                 $periodUsage = $article->getAvailableStock($startDate, $endDate);
 
-                // getAvailableStock zählt nur "Einsatzbereit"-Statusmengen. Artikel ohne
-                // gepflegte Statusmengen hätten total=0 und würden im Tab fälschlich als
-                // 100% überbucht (rot) erscheinen — dann auf die Gesamtmenge zurückfallen.
-                $hasMaintainedReadyStatus = $article->is_detailed_quantity
-                    ? $article->detailedArticleQuantities->isNotEmpty()
-                    : $article->statusValues->firstWhere('name', 'Einsatzbereit') !== null;
-                if (!$hasMaintainedReadyStatus && $periodUsage['total'] <= 0 && (float) $article->quantity > 0) {
-                    $periodUsage['total'] = (float) $article->quantity;
-                    $periodUsage['quantity'] = (float) $article->quantity;
-                    $periodUsage['available'] = max($periodUsage['total'] - $periodUsage['reserved'], 0);
-                }
+                // Fallback auf die Gesamtmenge für Artikel ohne gepflegte Statusmengen steckt
+                // jetzt zentral in InventoryArticle::readyQuantity() (gleich in Modal und Planung).
 
                 $article->setAttribute('period_usage', $periodUsage);
 

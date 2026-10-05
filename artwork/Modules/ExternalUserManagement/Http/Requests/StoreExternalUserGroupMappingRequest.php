@@ -7,6 +7,8 @@ use Illuminate\Validation\Rule;
 
 class StoreExternalUserGroupMappingRequest extends FormRequest
 {
+    use RestrictsAdminRoleMapping;
+
     /**
      * Determine if the user is authorized to make this request.
      */
@@ -29,7 +31,7 @@ class StoreExternalUserGroupMappingRequest extends FormRequest
             'permission_ids' => ['nullable', 'array'],
             'permission_ids.*' => ['integer', 'exists:permissions,id'],
             'role_ids' => ['nullable', 'array'],
-            'role_ids.*' => ['integer', 'exists:roles,id'],
+            'role_ids.*' => ['integer', 'exists:roles,id', $this->adminRoleRule()],
             'include_nested_groups' => ['sometimes', 'boolean'],
         ];
     }

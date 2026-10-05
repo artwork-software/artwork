@@ -157,14 +157,23 @@ class InventoryArticleController extends Controller
     public function forceDelete(int $inventoryArticle): void
     {
         /** @var InventoryArticle $article */
-        $article = InventoryArticle::withTrashed()->findOrFail($inventoryArticle);
+        $article = InventoryArticle::onlyTrashed()->findOrFail($inventoryArticle);
+        $this->authorizeTagAccess($article);
         $this->inventoryArticleService->forceDelete($article);
     }
 
     public function forceDeleteAll(): void
     {
-        InventoryArticle::onlyTrashed()->each(function ($article): void {
-            $this->inventoryArticleService->forceDelete($article);
+        /** @var \Artwork\Modules\User\Models\User $user */
+        $user = $this->authManager->user();
+        $isAdmin = $user->hasRole(\Artwork\Modules\Role\Enums\RoleEnum::ARTWORK_ADMIN->value);
+        $tagPermissions = app(\Artwork\Modules\Inventory\Services\InventoryTagPermissionService::class);
+
+        // Artikel mit gesperrten Tags bleiben im Papierkorb, statt endgültig gelöscht zu werden
+        InventoryArticle::onlyTrashed()->each(function ($article) use ($isAdmin, $tagPermissions, $user): void {
+            if ($isAdmin || $tagPermissions->userCanEditArticle($user, $article)) {
+                $this->inventoryArticleService->forceDelete($article);
+            }
         });
     }
 
@@ -172,6 +181,7 @@ class InventoryArticleController extends Controller
     {
         /** @var InventoryArticle $article */
         $article = InventoryArticle::onlyTrashed()->findOrFail($inventoryArticle);
+        $this->authorizeTagAccess($article);
         $this->inventoryArticleService->restore($article);
     }
 

@@ -267,19 +267,20 @@ class InventoryCategoryController extends Controller
         $user = Auth::user();
 
         // Get filtered article IDs based on user's saved filters (including tags)
+        // null = kein User, nicht filtern; [] = Filter passt auf nichts → keine Artikel
         $filteredArticleIds = $user
             ? $this->filterService
                 ->getFilteredArticlesNew($user)
                 ->pluck('id')
                 ->toArray()
-            : [];
+            : null;
 
         // Load categories with filtered articles
         $categories = InventoryCategory::with([
             'subcategories:id,inventory_category_id,name',
             'subcategories.properties:id,name,type,select_values',
             'articles' => function ($query) use ($filteredArticleIds): void {
-                if (!empty($filteredArticleIds)) {
+                if ($filteredArticleIds !== null) {
                     $query->whereIn('id', $filteredArticleIds);
                 }
                 $query->select('id', 'name', 'inventory_category_id', 'inventory_sub_category_id');

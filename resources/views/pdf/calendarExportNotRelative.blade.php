@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <title>Kalender</title>
+    <title>{{ __('Calendar') }}</title>
     @php
         $scaleFactor = match(strtolower($paperSize ?? 'a4')) {
             'a3' => 1.4,
@@ -268,7 +268,7 @@
             $isMultiDay = $startCarbon->toDateString() !== $endCarbon->toDateString();
 
             if ($allDay) {
-                $timeString = 'Ganztägig';
+                $timeString = __('All day');
             } else {
                 $timeString = $startCarbon->format('H:i') . '–' . $endCarbon->format('H:i');
             }
@@ -370,13 +370,13 @@
                         <div class="title">{{ $title ?? 'Raumbelegung' }}</div>
                         <div class="subtitle">
                             @if($firstDay && $lastDay)
-                                Zeitraum: {{ $firstDay }} – {{ $lastDay }}
+                                {{ __('Time period') }}: {{ $firstDay }} – {{ $lastDay }}
                             @endif
                         </div>
                     </td>
                     <td class="header-right">
-                        <div class="chunk-info">Erstellt von {{ $created_by }}</div>
-                        <div class="chunk-info">Erstellt am {{ \Illuminate\Support\Carbon::now()->format('d.m.Y H:i') }}</div>
+                        <div class="chunk-info">{{ __('Created by') }} {{ $created_by }}</div>
+                        <div class="chunk-info">{{ __('Created on') }} {{ \Illuminate\Support\Carbon::now()->format('d.m.Y H:i') }}</div>
                     </td>
                 </tr>
             </table>
@@ -387,11 +387,11 @@
                     <tr>
                                     {{-- Linke Kopfspalte: Raum --}}
                     <th class="th-room-head" style="text-align:center; vertical-align:middle; font-size:{{ $s(9) }}; font-weight:700;">
-                        Raum
+                        {{ __('Room') }}
                     </th>
                     {{-- Slot/Zeitraum Kopf --}}
                     <th class="th-room-head time-col-bg" style="padding: 1px; font-size: {{ $s(9) }}; font-weight: 700; line-height: 1.2; background-color:#f4f4f5; text-align:center; vertical-align:middle; white-space:nowrap;">
-                        Zeit
+                        {{ __('Time') }}
                     </th>
 
                     {{-- Dann pro Tag EINE Spalte --}}
@@ -429,7 +429,7 @@
                     <tr>
                         <th colspan="2"
                             style="font-size:{{ $s(7) }}; font-weight:700; padding:2px 3px; text-align:right; vertical-align:top; background-color:#fef9ec; border-bottom:1px solid rgba(64,64,64,0.35);">
-                            Tagesbemerkungen
+                            {{ __('Day remarks') }}
                         </th>
                         @foreach($daysPage as $dayInfo)
                             <td style="font-size:{{ $s(7) }}; line-height:1.25; padding:2px 3px; text-align:left; vertical-align:top; background-color:#fef9ec; border-bottom:1px solid rgba(64,64,64,0.35); word-wrap:break-word;">
@@ -463,7 +463,7 @@
 
                         {{-- Slot-Label Morgens --}}
                         <td class="td-slot-label time-col-bg" style="background-color:#f4f4f5; min-height: {{ $hMorning }}px;">
-                            Morgens
+                            {{ __('In the morning') }}
                         </td>
 
                         {{-- Für jeden Tag die Events Morgens --}}
@@ -510,7 +510,7 @@
                         </td>
 
                         <td class="td-slot-label time-col-bg" style="background-color:#f4f4f5; min-height: {{ $hNoon }}px;">
-                            Mittags
+                            {{ __('At noon') }}
                         </td>
 
                         @foreach($daysPage as $dayInfo)
@@ -552,7 +552,7 @@
                         </td>
 
                         <td class="td-slot-label time-col-bg" style="border-bottom:1px solid #404040; background-color:#f4f4f5; min-height: {{ $hEvening }}px;">
-                            Abends
+                            {{ __('In the evening') }}
                         </td>
 
                         @foreach($daysPage as $dayInfo)

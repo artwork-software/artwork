@@ -58,6 +58,7 @@ use Illuminate\Auth\Passwords\CanResetPassword;
 use Illuminate\Contracts\Auth\Access\Authorizable as AuthorizableContract;
 use Illuminate\Contracts\Auth\Authenticatable as AuthenticatableContract;
 use Illuminate\Contracts\Auth\CanResetPassword as CanResetPasswordContract;
+use Illuminate\Contracts\Translation\HasLocalePreference;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -187,6 +188,7 @@ class User extends Model implements
     AuthenticatableContract,
     AuthorizableContract,
     CanResetPasswordContract,
+    HasLocalePreference,
     Vacationer,
     Available,
     DayServiceable,
@@ -449,6 +451,17 @@ class User extends Model implements
      * wird still unterdrückt (kein User-Enumeration-Leak), Break-Glass setzt den
      * Account zuvor auf 'local' zurück und aktiviert den Reset damit wieder.
      */
+    /**
+     * Mails und Benachrichtigungen in der Sprache der Empfänger:in rendern, nicht in der des
+     * Auslösers (Laravel nutzt das beim Versand automatisch).
+     */
+    public function preferredLocale(): ?string
+    {
+        $language = $this->getAttribute('language');
+
+        return in_array($language, config('app.supported_locales', ['de', 'en']), true) ? $language : null;
+    }
+
     public function sendPasswordResetNotification($token): void
     {
         if ($this->isIdpBound()) {

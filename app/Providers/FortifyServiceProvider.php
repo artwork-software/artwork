@@ -107,7 +107,7 @@ class FortifyServiceProvider extends ServiceProvider
                         $settings->business_email !== '' ? $settings->business_email : $fallbackSenderMail,
                         $pageTitle
                     )
-                    ->subject('Passwort zurücksetzen')
+                    ->subject(__('Reset password'))
                     ->markdown(
                         'emails.password_reset',
                         [

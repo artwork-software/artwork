@@ -36,7 +36,7 @@ class ExternalUserImported extends Mailable implements ShouldQueue
 
         return $this
             ->from($senderAddress, $pageTitle)
-            ->subject('Willkommen bei ' . $pageTitle)
+            ->subject(__('Welcome to :app', ['app' => $pageTitle]))
             ->markdown(
                 'emails.external_user_imported',
                 [

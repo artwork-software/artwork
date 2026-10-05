@@ -14,7 +14,7 @@ class Localization
 {
     public function handle(Request $request, Closure $next)
     {
-        $supported = ['de', 'en']; // ggf. erweitern
+        $supported = config('app.supported_locales', ['de', 'en']);
 
         // Reihenfolge: 1) User, 2) Session, 3) Cookie, 4) Browser Accept-Language oder App-Default
         if (Auth::check() && filled(Auth::user()->language)) {

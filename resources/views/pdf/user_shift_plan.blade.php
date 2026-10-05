@@ -148,12 +148,12 @@
                             <img class="logo" src="{{ $bigLogoBase64 }}" alt="">
                         @endif
                         <div class="summary">
-                            <span class="ist">Ist {{ $page['monthName'] }}: {{ $page['totalWork'] }} h</span>
+                            <span class="ist">{{ __('Actual') }} {{ $page['monthName'] }}: {{ $page['totalWork'] }} h</span>
                             @if ($showSoll && $page['sollWork'])
                                 <span class="sep">|</span>
-                                <span>Soll {{ $page['monthName'] }}: {{ $page['sollWork'] }} h</span>
+                                <span>{{ __('Target') }} {{ $page['monthName'] }}: {{ $page['sollWork'] }} h</span>
                                 <span class="sep">|</span>
-                                <span class="{{ $page['diffPositive'] ? 'diff-pos' : 'diff-neg' }}">Differenz: {{ $page['diffWork'] }} h</span>
+                                <span class="{{ $page['diffPositive'] ? 'diff-pos' : 'diff-neg' }}">{{ __('Difference') }}: {{ $page['diffWork'] }} h</span>
                             @endif
                         </div>
                     </td>
@@ -207,7 +207,7 @@
                                             @endif
                                             @if (count($shift['colleagues']))
                                                 <div class="line colleagues">
-                                                    mit: {{ implode(', ', $shift['colleagues']) }}
+                                                    {{ __('with') }}: {{ implode(', ', $shift['colleagues']) }}
                                                 </div>
                                             @endif
                                         </div>
@@ -218,7 +218,7 @@
                                     <div class="it">
                                         <div class="stime">
                                             @if ($it['full_day'] || (!$it['start'] && !$it['end']))
-                                                Ganztägig
+                                                {{ __('All day') }}
                                             @else
                                                 {{ $it['start'] }}–{{ $it['end'] }}
                                             @endif
@@ -243,16 +243,16 @@
         </table>
 
         <div class="legend">
-            <span><span class="swatch" style="background:#dbeafe;"></span>Wochenende</span>
-            <span><span class="swatch" style="background:#fef2f2;"></span>Feiertag</span>
-            <span><span class="swatch" style="background:#f4f4f5;"></span>anderer Monat</span>
-            <span><span class="swatch" style="background:#a1a1aa;"></span>Individuelle Zeit</span>
-            <span><span class="swatch" style="background:#f0f9ff;"></span>Projektzuordnung</span>
-            <span>&#10003; = bestätigt</span>
+            <span><span class="swatch" style="background:#dbeafe;"></span>{{ __('Weekend') }}</span>
+            <span><span class="swatch" style="background:#fef2f2;"></span>{{ __('Public holiday') }}</span>
+            <span><span class="swatch" style="background:#f4f4f5;"></span>{{ __('other month') }}</span>
+            <span><span class="swatch" style="background:#a1a1aa;"></span>{{ __('Individual time') }}</span>
+            <span><span class="swatch" style="background:#f0f9ff;"></span>{{ __('Project allocation') }}</span>
+            <span>&#10003; = {{ __('confirmed') }}</span>
         </div>
 
         <div class="doc-footer">
-            Erstellt von {{ $created_by }} am {{ $created_date }}
+            {{ __('Created by :name on :date', ['name' => $created_by, 'date' => $created_date]) }}
         </div>
     </div>
 @endforeach

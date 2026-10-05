@@ -139,6 +139,9 @@ return [
 
     'fallback_locale' => 'en',
 
+    // Sprachen mit vollständigen Übersetzungen (lang/*.json) – Oberfläche und Empfängersprache
+    'supported_locales' => ['de', 'en'],
+
     /*
     |--------------------------------------------------------------------------
     | Faker Locale

@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <title>Leihschein</title>
+    <title>{{ __('Borrowing slip') }}</title>
     <style>
         body { font-family: DejaVu Sans, sans-serif; font-size: 13px; color: #1f2937; }
         .font-bold { font-weight: bold; }
@@ -29,16 +29,16 @@
 <body class="p-4">
 
 <div style="font-size: 11px; color: #6b7280;">
-    Erstellt am {{ $createdAt }} von {{ $createdBy }}
+    {{ __('Created on :date by :name', ['date' => $createdAt, 'name' => $createdBy]) }}
 </div>
 
 <div class="text-center mb-6">
-    <h2 class="font-bold text-xl">Leihschein Nr. {{ $issue->id }}</h2>
-    <p class="text-sm">Ausgabe: {{ $issue->issue_date->format('d.m.Y') }} | Rückgabe: {{ $issue->return_date->format('d.m.Y') }}</p>
+    <h2 class="font-bold text-xl">{{ __('Borrowing slip no.') }} {{ $issue->id }}</h2>
+    <p class="text-sm">{{ __('Issued on') }}: {{ $issue->issue_date->format('d.m.Y') }} | {{ __('Return') }}: {{ $issue->return_date->format('d.m.Y') }}</p>
 </div>
 
 <div class="mb-4">
-    <p class="font-bold">Externe Person/Firma:</p>
+    <p class="font-bold">{{ __('External person/company') }}:</p>
     <p>{{ $issue->external_name }}<br>
         {{ $issue->external_address }}<br>
         {{ $issue->external_email }} | {{ $issue->external_phone }}</p>
@@ -46,26 +46,26 @@
 
 <div class="mb-4">
     @if($issue->issuedBy)
-        <p><span class="font-bold">Ausgabe durch:</span> {{ $issue->issuedBy->full_name }}</p>
+        <p><span class="font-bold">{{ __('Handed out by') }}:</span> {{ $issue->issuedBy->full_name }}</p>
     @endif
     @if($issue->receivedBy)
-        <p><span class="font-bold">Zurückgenommen durch:</span> {{ $issue->receivedBy->full_name }}</p>
+        <p><span class="font-bold">{{ __('Taken back by') }}:</span> {{ $issue->receivedBy->full_name }}</p>
     @endif
 </div>
 
 <div class="mb-6">
-    <p><span class="font-bold">Materialwert:</span> {{ number_format($issue->material_value, 2, ',', '.') }} €</p>
+    <p><span class="font-bold">{{ __('Material value') }}:</span> {{ number_format($issue->material_value, 2, ',', '.') }} €</p>
 </div>
 
 <div class="mb-6">
-    <p class="font-bold mb-2">Artikel:</p>
+    <p class="font-bold mb-2">{{ __('Articles') }}:</p>
     <table class="w-full border border-collapse text-sm">
         <thead class="bg-gray-100">
         <tr>
-            <th class="p-2 border-b text-left">Artikelname</th>
-            <th class="p-2 border-b text-left">Kategorie</th>
-            <th class="p-2 border-b text-left">Unterkategorie</th>
-            <th class="p-2 border-b text-left">Menge</th>
+            <th class="p-2 border-b text-left">{{ __('Article Name') }}</th>
+            <th class="p-2 border-b text-left">{{ __('Category') }}</th>
+            <th class="p-2 border-b text-left">{{ __('Sub-Category') }}</th>
+            <th class="p-2 border-b text-left">{{ __('Quantity') }}</th>
         </tr>
         </thead>
         <tbody>
@@ -83,15 +83,15 @@
 
 @if($issue->specialItems->count())
     <div class="mb-6">
-        <p class="font-bold mb-2">Sonderartikel:</p>
+        <p class="font-bold mb-2">{{ __('Special article') }}:</p>
         <table class="w-full border border-collapse text-sm">
             <thead class="bg-gray-100">
             <tr>
                 <th class="p-2 border-b text-left">Name</th>
-                <th class="p-2 border-b text-left">Kategorie</th>
-                <th class="p-2 border-b text-left">Unterkategorie</th>
-                <th class="p-2 border-b text-left">Menge</th>
-                <th class="p-2 border-b text-left">Beschreibung</th>
+                <th class="p-2 border-b text-left">{{ __('Category') }}</th>
+                <th class="p-2 border-b text-left">{{ __('Sub-Category') }}</th>
+                <th class="p-2 border-b text-left">{{ __('Quantity') }}</th>
+                <th class="p-2 border-b text-left">{{ __('Description') }}</th>
             </tr>
             </thead>
             <tbody>
@@ -110,7 +110,7 @@
 @endif
 
 <div class="mb-6">
-    <p class="font-bold mb-2">Mängel nach Rückgabe:</p>
+    <p class="font-bold mb-2">{{ __('Defects after return') }}:</p>
     <p class="text-sm">{!! nl2br(e($issue->return_remarks)) !!}</p>
 </div>
 
@@ -119,15 +119,15 @@
         <tr>
             <td class="w-1-3">
                 <div class="line"></div>
-                <div class="label">Ort / Datum</div>
+                <div class="label">{{ __('Place / date') }}</div>
             </td>
             <td class="w-1-3">
                 <div class="line"></div>
-                <div class="label">Unterschrift EmpfängerIn</div>
+                <div class="label">{{ __('Signature recipient') }}</div>
             </td>
             <td class="w-1-3">
                 <div class="line"></div>
-                <div class="label">Unterschrift zurücknehmend</div>
+                <div class="label">{{ __('Signature of the person taking it back') }}</div>
             </td>
         </tr>
     </table>

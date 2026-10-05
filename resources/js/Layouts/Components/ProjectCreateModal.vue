@@ -600,9 +600,6 @@ const addProject = (bool) => {
 };
 
 function handleOpenProject(p) {
-    // hier deine gewünschte Funktionalität
-    // z.B. Inertia besuchen:
-    // router.visit(route('projects.show', p.id))
     addProjectToProjectGroup(p)
 }
 

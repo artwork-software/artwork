@@ -41,7 +41,6 @@
 </template>
 
 <script>
-import InfoTab from "@/Pages/Projects/Tab/Components/InfoTab.vue";
 import AppLayout from "@/Layouts/AppLayout.vue";
 import BaseSidenav from "@/Layouts/Components/BaseSidenav.vue";
 import ProjectSecondSidenav from "@/Layouts/Components/ProjectSecondSidenav.vue";
@@ -62,8 +61,7 @@ export default {
         ProjectShiftSidenav,
         ProjectSecondSidenav,
         BaseSidenav,
-        AppLayout,
-        InfoTab
+        AppLayout
     },
     props: [
         'user_to_edit',

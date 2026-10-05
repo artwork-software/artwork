@@ -993,48 +993,19 @@ const mapBulkEventToModalEvent = (e) => {
     };
 };
 
-const onOpenEventComponent = async (payload) => {
-    // Resolve the event id first
+// Das Termin-Modal wird aus den Bulk-Daten befüllt (einen JSON-Endpunkt für Einzeltermine gibt es nicht).
+const onOpenEventComponent = (payload) => {
     const id = (payload && typeof payload === 'object') ? payload.id : payload;
-    const fallbackModel = () => {
-        if (payload && typeof payload === 'object') {
-            return (payload.start || payload.end) ? payload : mapBulkEventToModalEvent(payload);
-        }
+    let model = null;
+    if (payload && typeof payload === 'object') {
+        model = (payload.start || payload.end) ? payload : mapBulkEventToModalEvent(payload);
+    } else {
         const found = events.value.find(e => e.id == id) ?? null; // loose equality to handle string/number
-        return found ? ((found.start || found.end) ? found : mapBulkEventToModalEvent(found)) : null;
-    };
-
-    try {
-        isLoading.value = true;
-        if (!id) throw new Error('Missing event id');
-        const {data} = await axios.get(route('events.show.json', {event: id}));
-        // Laravel JSON Resource may wrap payload under data
-        const payloadData = data?.data ?? data;
-        if (props.project) payloadData.project = props.project;
-        // Fix: ensure multi-day end date is respected when opening modal from bulk list
-        try {
-            const fb = fallbackModel();
-            if (fb?.start && fb?.end) {
-                const sd = String(fb.start).slice(0, 10);
-                const ed = String(fb.end).slice(0, 10);
-                if (sd && ed && sd !== ed) {
-                    payloadData.start = fb.start;
-                    payloadData.end = fb.end;
-                    payloadData.allDay = fb.allDay;
-                }
-            }
-        } catch { /* ignore */
-        }
-        eventToEdit.value = payloadData;
-        eventComponentIsVisible.value = true;
-    } catch (e) {
-        const model = fallbackModel();
-        if (model && props.project) model.project = props.project;
-        eventToEdit.value = model;
-        eventComponentIsVisible.value = !!model;
-    } finally {
-        isLoading.value = false;
+        model = found ? ((found.start || found.end) ? found : mapBulkEventToModalEvent(found)) : null;
     }
+    if (model && props.project) model.project = props.project;
+    eventToEdit.value = model;
+    eventComponentIsVisible.value = !!model;
 };
 
 const onEventComponentClosed = () => {

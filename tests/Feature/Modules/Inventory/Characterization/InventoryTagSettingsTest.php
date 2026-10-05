@@ -179,6 +179,32 @@ final class InventoryTagSettingsTest extends FeatureTestCase
     }
 
     #[Test]
+    public function a_tag_group_can_be_renamed(): void
+    {
+        $this->actingAsSettingsUser();
+        $group = InventoryTagGroup::factory()->create(['name' => 'Ton', 'position' => 3]);
+
+        $this->put(route('settings.inventory-tag-groups.update', $group), ['id' => $group->id, 'name' => 'Audio'])
+            ->assertRedirect()
+            ->assertSessionHas('success');
+
+        $group->refresh();
+        $this->assertSame('Audio', $group->name);
+        $this->assertSame(3, $group->position);
+    }
+
+    #[Test]
+    public function renaming_a_tag_group_needs_a_name(): void
+    {
+        $this->actingAsSettingsUser();
+        $group = InventoryTagGroup::factory()->create(['name' => 'Ton']);
+
+        $this->put(route('settings.inventory-tag-groups.update', $group), ['id' => $group->id, 'name' => ''])
+            ->assertSessionHasErrors('name');
+        $this->assertSame('Ton', $group->refresh()->name);
+    }
+
+    #[Test]
     public function users_without_the_settings_permission_are_forbidden(): void
     {
         $this->actingAs(User::factory()->create());
@@ -197,6 +223,8 @@ final class InventoryTagSettingsTest extends FeatureTestCase
         $this->post(route('settings.inventory-tag-groups.reorder'), ['ordered_ids' => [$group->id]])
             ->assertForbidden();
         $this->post(route('settings.inventory-tags.reorder'), ['ordered_ids' => [$tag->id]])->assertForbidden();
+        $this->put(route('settings.inventory-tag-groups.update', $group), ['id' => $group->id, 'name' => 'X'])
+            ->assertForbidden();
         $this->delete(route('settings.inventory-tag-groups.destroy', $group))->assertForbidden();
         $this->delete(route('settings.inventory-tags.destroy', $tag))->assertForbidden();
 

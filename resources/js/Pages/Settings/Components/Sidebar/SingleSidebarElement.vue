@@ -125,20 +125,6 @@ function handleSaved() {
     showAddEditModal.value = false;
     emit('saved');
 }
-
-function removeDisclosureComponent(id) {
-    if (confirm('Möchten Sie diese Komponente aus dem Ordner entfernen?')) {
-        router.delete(route("sidebar.disclosure.component.remove", { disclosureComponent: id }), {
-            preserveScroll: true,
-            onSuccess: () => {
-                router.reload({ only: ['tabs'] });
-            },
-            onError: (errors) => {
-                console.error('❌ Fehler beim Entfernen der Komponente aus Ordner:', errors);
-            }
-        });
-    }
-}
 </script>
 
 <template>

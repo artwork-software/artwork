@@ -1189,6 +1189,7 @@
     "PUT projects/{project}/bi/time-efforts/{biTimeEffort}": "forbidden",
     "PUT projects/{project}/bi/visitor-mode": "forbidden",
     "PUT rooms/order": "forbidden",
+    "PUT settings/inventory-tags/tag-groups/{inventoryTagGroup}/update": "forbidden",
     "PUT shift-qualifications/{shift_qualification}": "forbidden",
     "PUT shift-rule-violations/{violation}/process": "forbidden",
     "PUT shift-rules/contracts/{contract}/assignments": "forbidden",

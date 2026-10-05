@@ -298,7 +298,7 @@ function onPageChange({ page: newPage, pageSize }: { page: number; pageSize: num
     // bestehende Query-Parameter übernehmen (Filter etc.)
     const currentQuery = Object.fromEntries(new URLSearchParams(window.location.search) as any)
     router.get(
-        route('departments.index'),
+        route('departments'),
         { ...currentQuery, page: newPage, per_page: pageSize },
         { preserveState: true, preserveScroll: true, replace: true, only: ['departments'] }
     )

@@ -2617,6 +2617,10 @@ Route::group(['middleware' => ['auth:sanctum']], function (): void {
                 Route::post('/tag-groups/store', [InventoryTagGroupController::class, 'store'])
                 ->name('settings.inventory-tag-groups.store');
 
+            // settings.inventory-tag-groups.update (AddEditTagGroupModal)
+                Route::put('/tag-groups/{inventoryTagGroup}/update', [InventoryTagGroupController::class, 'update'])
+                ->name('settings.inventory-tag-groups.update');
+
             // settings.inventory-tags.store
                 Route::post('/store', [InventoryTagController::class, 'store'])
                 ->name('settings.inventory-tags.store');

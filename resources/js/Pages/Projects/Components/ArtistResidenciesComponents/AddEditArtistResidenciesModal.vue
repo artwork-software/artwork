@@ -522,6 +522,7 @@
 <script setup>
 
 import {useForm, usePage} from "@inertiajs/vue3";
+import { toYmd } from "@/Helper/IsoWeek.js";
 import {computed, ref, watch} from "vue";
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
 import AlertComponent from "@/Components/Alerts/AlertComponent.vue";
@@ -1026,8 +1027,8 @@ const handleShortcut = (value) => {
 // watch dateValuePicker and update it to start and end date of artistResidency
 watch(dateValuePicker, (newValue) => {
     if (newValue.length === 2) {
-        artistResidency.arrival_date = newValue[0] ? newValue[0].toISOString().slice(0, 10) : '';
-        artistResidency.departure_date = newValue[1] ? newValue[1].toISOString().slice(0, 10) : '';
+        artistResidency.arrival_date = newValue[0] ? toYmd(newValue[0]) : '';
+        artistResidency.departure_date = newValue[1] ? toYmd(newValue[1]) : '';
     }
 }, { immediate: true });
 

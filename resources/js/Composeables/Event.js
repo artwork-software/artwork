@@ -1,15 +1,20 @@
 import dayjs from "dayjs";
 import axios from "axios";
 import {ref} from "vue";
+import {parseYmd, toDmy} from "@/Helper/IsoWeek.js";
 
 export function useEvent() {
     const getDaysOfEvent = (startDate, endDate) => {
-            let days = [];
-            let start = new Date(startDate);
-            let end = new Date(endDate);
-            for (let d = start; d <= end; d.setDate(d.getDate() + 1)) {
-                let dayParts = new Date(d).toISOString().slice(0, 10).split('-');
-                days.push(dayParts[2] + '.' + dayParts[1] + '.' + dayParts[0]);
+            // Tage lokal rechnen: new Date('YYYY-MM-DD') wäre UTC-Mitternacht, setDate + toISOString
+            // lieferte an der Sommerzeit-Umstellung den Vortag doppelt bzw. ließ den letzten Tag weg
+            const toLocalDay = (value) => {
+                const parsed = parseYmd(value) ?? new Date(value);
+                return new Date(parsed.getFullYear(), parsed.getMonth(), parsed.getDate());
+            };
+            const days = [];
+            const end = toLocalDay(endDate);
+            for (let d = toLocalDay(startDate); d <= end; d.setDate(d.getDate() + 1)) {
+                days.push(toDmy(d));
             }
             return days;
         },

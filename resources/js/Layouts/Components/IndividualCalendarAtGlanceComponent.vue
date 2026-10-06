@@ -77,13 +77,15 @@
     <div v-show="multiEdit"
          class="-ml-7 -mb-2 absolute z-50 w-full bg-white/70 bottom-0 h-20 shadow border-t border-border-subtle flex items-center justify-center gap-4">
         <FormButton :text="$t('Move events')"
+                    :disabled="checkedEventIds.length === 0"
                     @click="openMultiEditModal"/>
         <FormButton @click="openDeleteSelectedEventsModal = true"
+                    :disabled="checkedEventIds.length === 0"
                     class="!border-2 !border-accent-600 bg-transparent !text-accent-600 hover:!text-white hover:!bg-accent-700 !hover:border-transparent resize-none"
                     :text="$t('Delete events')"/>
     </div>
 
-    <MultiEditModal :checked-events="editEvents" v-if="showMultiEditModal" :rooms="rooms"
+    <MultiEditModal :checked-events="checkedEventIds" v-if="showMultiEditModal" :rooms="rooms"
                     @closed="closeMultiEditModal"/>
 
     <ConfirmDeleteModal
@@ -95,7 +97,8 @@
 </template>
 
 <script setup>
-import {onMounted, ref} from "vue";
+import {computed, nextTick, onBeforeUnmount, onMounted, ref, watch} from "vue";
+import axios from "axios";
 import EventComponent from "@/Layouts/Components/EventComponent.vue";
 import EventsWithoutRoomComponent from "@/Layouts/Components/EventsWithoutRoomComponent.vue";
 import SingleCalendarEvent from "@/Layouts/Components/SingleCalendarEvent.vue";
@@ -134,7 +137,6 @@ const {hasAdminRole} = usePermission(usePage().props),
     roomCollisions = ref([]),
     zoomFactor = ref(1),
     multiEdit = ref(false),
-    editEvents = ref([]),
     showMultiEditModal = ref(false),
     openDeleteSelectedEventsModal = ref(false),
     currentEventsInView = ref(new Set()),
@@ -149,8 +151,40 @@ const {hasAdminRole} = usePermission(usePage().props),
         }
         return days;
     },
+    // Haken an allen Terminen verwerfen, auch an gerade nicht gerenderten
+    clearEventSelection = () => {
+        (eventsAtAGlanceRef.value ?? []).forEach((roomData) => {
+            Object.values(getDaysFromRoomData(roomData)).forEach((dayData) => {
+                (dayData?.events ?? []).forEach((event) => {
+                    event.clicked = false;
+                });
+            });
+        });
+    },
     changeMultiEdit = (multiEditEnabled) => {
         multiEdit.value = multiEditEnabled;
+        if (!multiEditEnabled) {
+            clearEventSelection();
+        }
+    },
+    // Termine nach Mehrfachbearbeitung neu laden (CalendarTab holt die Daten, sonst Seite neu laden)
+    reloadCalendarTabData = inject('reloadCalendarTabData', null),
+    reloadEvents = () => {
+        if (typeof reloadCalendarTabData === 'function') {
+            reloadCalendarTabData();
+            return;
+        }
+        router.reload();
+    },
+    removeEventsLocally = (eventIds) => {
+        const removed = new Set(eventIds);
+        (eventsAtAGlanceRef.value ?? []).forEach((roomData) => {
+            Object.values(getDaysFromRoomData(roomData)).forEach((dayData) => {
+                if (Array.isArray(dayData?.events)) {
+                    dayData.events = dayData.events.filter((event) => !removed.has(event.id));
+                }
+            });
+        });
     },
     openEditEventModal = (event = null) => {
         wantedRoom.value = event?.roomId;
@@ -182,40 +216,86 @@ const {hasAdminRole} = usePermission(usePage().props),
         selectedEvent.value = event;
         createEventComponentIsVisible.value = true;
     },
+    // reloadEvents statt router.reload(): im Projekt-Kalendertab hält CalendarTab die Daten lokal,
+    // ein Inertia-Reload erneuert sie nicht – die Ansicht blieb nach dem Bearbeiten veraltet
     onEventComponentClose = (bool) => {
         createEventComponentIsVisible.value = false;
 
         if (bool) {
-            router.reload();
+            reloadEvents();
         }
     },
     onEventsWithoutRoomComponentClose = () => {
         showEventsWithoutRoomComponent.value = false;
-        router.reload();
+        reloadEvents();
     },
     openMultiEditModal = () => {
+        if (checkedEventIds.value.length === 0) {
+            return;
+        }
         showMultiEditModal.value = true;
     },
     deleteSelectedEvents = () => {
-        router.post(route('multi-edit.delete'), {
-            events: this.editEvents
-        }, {
-            onSuccess: () => {
-                this.openDeleteSelectedEventsModal = false
-            }
-        });
+        // Nie eine leere Auswahl senden
+        if (checkedEventIds.value.length === 0) {
+            openDeleteSelectedEventsModal.value = false;
+            return;
+        }
+        // JSON-Endpunkt (liefert bool, keine Inertia-Antwort) → axios wie in BaseCalendar
+        const eventIds = [...checkedEventIds.value];
+        axios.post(route('multi-edit.delete'), { events: eventIds })
+            .then(() => removeEventsLocally(eventIds))
+            .catch(() => {}) // Meldung zeigt der globale axios-Interceptor
+            .finally(() => {
+                openDeleteSelectedEventsModal.value = false;
+                clearEventSelection();
+            });
     },
-    closeMultiEditModal = () => {
+    closeMultiEditModal = (moved) => {
         showMultiEditModal.value = false;
+        if (moved) {
+            // Termine stehen jetzt woanders: Auswahl aufheben (sonst verschiebt ein zweiter Klick doppelt)
+            clearEventSelection();
+            reloadEvents();
+        }
     };
+
+// eventsAtAGlanceRef ist eine Arbeitskopie (Haken, lokales Entfernen) – neue Daten übernehmen
+watch(() => props.eventsAtAGlance, (eventsAtAGlance) => {
+    eventsAtAGlanceRef.value = JSON.parse(JSON.stringify(eventsAtAGlance ?? []));
+    nextTick(observeEventContainers);
+});
+
+/**
+ * Im Multi-Edit-Modus setzt SingleCalendarEvent per Checkbox event.clicked; ausgewählt ist,
+ * was dort angehakt ist (wie getCheckedEvents in IndividualCalendarComponent).
+ */
+const checkedEventIds = computed(() => {
+    const ids = new Set();
+    (eventsAtAGlanceRef.value ?? []).forEach((roomData) => {
+        Object.values(getDaysFromRoomData(roomData)).forEach((dayData) => {
+            (dayData?.events ?? []).forEach((event) => {
+                if (event?.clicked) {
+                    ids.add(event.id);
+                }
+            });
+        });
+    });
+    return [...ids];
+});
 
 const isSearchingForProject = ref(false);
 const toggleSearchingForProject = (isShowingResults) => {
     isSearchingForProject.value = isShowingResults;
 };
 
-onMounted(() => {
-    const observer = new IntersectionObserver(
+// Termine werden erst gerendert, wenn ihr Container beobachtet wurde – nach neuen Daten
+// (Nachladen nach Verschieben) auch die neuen Container beobachten
+let eventContainerObserver = null;
+
+function observeEventContainers() {
+    if (!eventContainerObserver) {
+        eventContainerObserver = new IntersectionObserver(
             (observables) => {
                 observables.forEach((atAGlanceEventContainerObserver) => {
                     let eventId = atAGlanceEventContainerObserver.target.getAttribute('data-event-id');
@@ -231,11 +311,19 @@ onMounted(() => {
                 root: document.getElementsByClassName('.events-at-a-glance-container')[0],
                 rootMargin: '10000px'
             }
-        ),
-        eventContainers = document.querySelectorAll('.at-a-glance-event-container');
+        );
+    }
 
-    eventContainers.forEach((container) => {
-        observer.observe(container);
+    document.querySelectorAll('.at-a-glance-event-container').forEach((container) => {
+        eventContainerObserver.observe(container);
     });
+}
+
+onMounted(() => {
+    observeEventContainers();
+});
+
+onBeforeUnmount(() => {
+    eventContainerObserver?.disconnect();
 });
 </script>

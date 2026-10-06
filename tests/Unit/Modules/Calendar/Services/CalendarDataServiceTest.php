@@ -70,6 +70,15 @@ final class CalendarDataServiceTest extends TestCase
     }
 
     #[Test]
+    public function yearly_leap_day_is_skipped_in_non_leap_years(): void
+    {
+        $this->createHoliday('Schalttag', '2024-02-29', '2024-02-29', true);
+
+        $this->assertSame([], $this->holidayNamesByDate('2027-02-27', '2027-03-02')['2027-03-01']);
+        $this->assertSame(['Schalttag'], $this->holidayNamesByDate('2028-02-27', '2028-03-02')['2028-02-29']);
+    }
+
+    #[Test]
     public function fixed_holiday_only_appears_in_its_own_year(): void
     {
         $this->createHoliday('Einmalig', '2026-03-10', '2026-03-11', false);

@@ -132,6 +132,7 @@
 
 <script setup>
 import { ref, computed } from 'vue';
+import { toYmd } from '@/Helper/IsoWeek.js';
 import { usePage } from '@inertiajs/vue3';
 import BaseInput from '@/Artwork/Inputs/BaseInput.vue';
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
@@ -165,7 +166,7 @@ const categoryNameById = computed(() => new Map(
 
 const newName = ref('');
 // Stichtag ist fast immer "heute" → vorbelegen
-const newDate = ref(new Date().toISOString().slice(0, 10));
+const newDate = ref(toYmd(new Date()));
 const expandedId = ref(null);
 const snapshotToDelete = ref(null);
 const compareId = ref(null);
@@ -312,12 +313,8 @@ const trendOptions = {
 
 const formatDate = (value) => {
     if (!value) return '-';
-    const date = new Date(value);
-    if (isNaN(date.getTime())) return value;
-    const day = String(date.getDate()).padStart(2, '0');
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const year = date.getFullYear();
-    return `${day}.${month}.${year}`;
+    // Datumsformat der Instanz (Einstellungen → Tool → Regionale Formate)
+    return instanceFormat.formatDate(value) || value;
 };
 
 const toggleDetail = (id) => {

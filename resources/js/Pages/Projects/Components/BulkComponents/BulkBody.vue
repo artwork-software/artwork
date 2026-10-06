@@ -436,6 +436,7 @@
 
 <script setup>
 import BulkSingleEvent from "@/Pages/Projects/Components/BulkComponents/BulkSingleEvent.vue";
+import { parseYmd, toYmd } from "@/Helper/IsoWeek.js";
 import BaseButton from "@/Layouts/Components/General/Buttons/BaseButton.vue";
 import {
     IconArrowsMoveHorizontal,
@@ -786,7 +787,8 @@ const persistNewEventRow = (base) => {
         });
 };
 
-const toISO = (d) => d.toISOString().split('T')[0];
+// lokales Datum: Zeilen entstehen aus new Date() bzw. werden lokal (setDate/setMonth) verschoben
+const toISO = (d) => toYmd(d);
 const formatFullDate = (iso) => new Date(iso).toLocaleDateString('de-DE', {
     weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
 });
@@ -1026,7 +1028,7 @@ const addEmptyEvent = () => {
     let newDate = new Date();
     if (events.value.length > 0) {
         const last = events.value[events.value.length - 1];
-        newDate = new Date(last.day);
+        newDate = parseYmd(last.day) ?? new Date(last.day);
         newDate.setDate(newDate.getDate() + 1);
     }
 
@@ -1081,7 +1083,7 @@ const addEmptyEventForGroup = (groupRow) => {
         const lastEventInGroup = groupEvents[groupEvents.length - 1];
         baseEvent = lastEventInGroup;
 
-        const parsed = lastEventInGroup?.day ? new Date(lastEventInGroup.day) : null;
+        const parsed = lastEventInGroup?.day ? (parseYmd(lastEventInGroup.day) ?? new Date(lastEventInGroup.day)) : null;
         if (parsed && !Number.isNaN(parsed.getTime())) {
             newDate = parsed;
             // When sorting by day, create event on the same day, otherwise add +1 day
@@ -1149,7 +1151,7 @@ const createCopyByEventWithData = (event) => {
     if (!props.isInModal && isCreatingEvent.value) return;
     lastUsedCopyCount.value = event.copyCount;
 
-    let cursor = new Date(event.day);
+    let cursor = parseYmd(event.day) ?? new Date(event.day);
     const createdEvents = [];
     const spanDays = (() => {
         try {
@@ -1165,7 +1167,7 @@ const createCopyByEventWithData = (event) => {
         if (event.copyType.type === 'daily') cursor.setDate(cursor.getDate() + 1);
         else if (event.copyType.type === 'weekly') cursor.setDate(cursor.getDate() + 7);
         else if (event.copyType.type === 'monthly') cursor.setMonth(cursor.getMonth() + 1);
-        else if (event.copyType.type === 'same_day') cursor = new Date(event.day);
+        else if (event.copyType.type === 'same_day') cursor = parseYmd(event.day) ?? new Date(event.day);
 
         const endCursor = new Date(cursor);
         endCursor.setDate(endCursor.getDate() + spanDays);

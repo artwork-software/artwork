@@ -357,7 +357,7 @@
                              class="flex items-center gap-1.5 rounded-md border border-border-subtle bg-surface-sunken px-2.5 py-4 text-sm/5 font-semibold text-text"
                         >
                             <span class="truncate">{{ selectedRoom.name }}</span>
-                            <button class="ml-0.5 text-text-subtle transition hover:text-danger" @click="selectedRoom = null" type="button">
+                            <button class="ml-0.5 text-text-subtle transition hover:text-danger" @click="removeSelectedRoom" type="button">
                                 <IconCircleX class="size-4" />
                             </button>
                         </div>
@@ -1303,6 +1303,13 @@ const showProjectInfo = ref(Boolean(props.project) || (props.calendarProjectPeri
 const allDayEvent = ref(!!usePage().props.event_all_day_default)
 const selectedProject = ref(null)
 const selectedRoom = ref(null)
+// Nur ein bewusst entfernter Raum wird als null gesendet – ist der Raum des Termins nicht in der
+// Raumliste (z. B. im Papierkorb), bleibt das Feld leer, darf den Raum beim Speichern aber nicht löschen
+const roomRemovedByUser = ref(false)
+function removeSelectedRoom() {
+    selectedRoom.value = null
+    roomRemovedByUser.value = true
+}
 const error = ref(null)
 const creatingProject = ref(false)
 const description = ref(null)
@@ -1626,6 +1633,7 @@ function closeModal(closedOnPurpose = false) {
     descriptionLoadFailed.value = false
     descriptionRequest = null
     selectedProject.value = selectedRoom.value = null
+    roomRemovedByUser.value = false
     selectedEventType.value = props.eventTypes?.[0] ?? null
     selectedEventStatus.value = props.eventStatuses?.find(s => s.default) ?? props.eventStatuses?.[0] ?? null
     allDayEvent.value = !!page.props.event_all_day_default
@@ -1860,6 +1868,7 @@ function chooseProject(project) {
 }
 function onRoomSelected(room) {
     selectedRoom.value = room
+    roomRemovedByUser.value = false
     checkChanges()
 }
 function errorMsg(field) {
@@ -1876,7 +1885,8 @@ function payload() {
         start: formatDate(startDate.value, allDayEvent.value ? '00:00' : startTime.value),
         end: formatDate(endDate.value, allDayEvent.value ? '23:59' : endTime.value),
         admissionTime: admissionTime.value || null,
-        roomId: selectedRoom.value?.id,
+        // undefined lässt den Raum im Backend unverändert, null entfernt ihn (nur nach Klick auf X)
+        roomId: selectedRoom.value?.id ?? (roomRemovedByUser.value ? null : undefined),
         description: description.value,
         isOption: isOption.value,
         eventNameMandatory: !!selectedEventType.value?.individual_name,

@@ -241,7 +241,7 @@
 </template>
 
 <script>
-import {IconAlertTriangle, IconCalendar, IconCheck, IconChevronDown, IconChevronLeft, IconChevronRight, IconChevronUp, IconCirclePlus, IconCircleX, IconDotsVertical, IconEdit, IconFileText, IconFilter, IconTrash, IconX} from "@tabler/icons-vue";
+import {IconAlertTriangle, IconCalendar, IconCheck, IconChevronDown, IconChevronLeft, IconChevronRight, IconChevronUp, IconCirclePlus, IconCircleX, IconDotsVertical, IconEdit, IconFileText, IconFilter, IconTrash, IconUsersGroup, IconX} from "@tabler/icons-vue";
 import VueCal from 'vue-cal'
 import 'vue-cal/dist/vuecal.css'
 import JetDialogModal from "@/Jetstream/DialogModal.vue";
@@ -280,6 +280,7 @@ export default {
     name: 'CalendarComponent',
     mixins: [Permissions],
     components: {
+        IconUsersGroup,
         FunctionBarCalendar,
         CalendarFunctionBar,
         DatePickerComponent,

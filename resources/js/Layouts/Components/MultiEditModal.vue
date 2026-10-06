@@ -190,6 +190,7 @@
 <script setup>
 import { computed, ref } from "vue";
 import axios from "axios";
+import { extractSaveErrorMessage } from "@/Composeables/BiSaveFeedback.js";
 import { useI18n } from "vue-i18n";
 import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
 import ArtworkBaseListbox from "@/Artwork/Listbox/ArtworkBaseListbox.vue";
@@ -302,10 +303,11 @@ const save = () => {
         value: timeMode.value === "offset" ? offsetNumber.value : 0,
         type: selectedUnit.value?.id ?? 2,
         date: timeMode.value === "date" ? fixedDate.value : null,
-    }).then(() => {
+    }, {skipErrorToast: true}).then(() => {
         emit("closed", true);
     }).catch((error) => {
-        requestError.value = error.response?.data?.message ?? $t("An error has occurred");
+        // Fehler steht im Modal – kein zusätzlicher globaler Toast (skipErrorToast)
+        requestError.value = extractSaveErrorMessage(error) ?? $t("An error has occurred");
     }).finally(() => {
         submitting.value = false;
     });

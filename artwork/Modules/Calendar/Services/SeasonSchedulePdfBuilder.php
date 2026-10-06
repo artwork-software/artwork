@@ -273,10 +273,14 @@ class SeasonSchedulePdfBuilder
             $holidayEnd = Carbon::parse($holiday->end_date ?? $holiday->date)->startOfDay();
 
             if ($holiday->yearly) {
-                // Jährliche Einträge in jedes betroffene Jahr des Zeitraums projizieren
+                // Jährliche Einträge in jedes betroffene Jahr des Zeitraums projizieren – ab dem Vorjahr, damit
+                // jahresübergreifende Blöcke (z. B. 30.12.–02.01.) auch Anfang Januar erscheinen (wie HolidayService)
                 $lengthInDays = $holidayStart->diffInDays($holidayEnd);
-                for ($year = $globalStart->year; $year <= $globalEnd->year; $year++) {
-                    $projectedStart = $holidayStart->copy()->setYear($year);
+                for ($year = $globalStart->year - 1; $year <= $globalEnd->year; $year++) {
+                    $projectedStart = Holiday::yearlyStartIn($holidayStart, $year);
+                    if ($projectedStart === null) {
+                        continue;
+                    }
                     $this->fillHolidayRange(
                         $map,
                         $projectedStart,

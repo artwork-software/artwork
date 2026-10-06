@@ -389,6 +389,7 @@
 
 <script setup lang="ts">
 import {computed, defineAsyncComponent, inject, nextTick, onBeforeUnmount, onMounted, provide, ref, shallowRef, triggerRef, watch} from "vue";
+import { toYmd } from "@/Helper/IsoWeek.js";
 import {router, usePage} from "@inertiajs/vue3";
 import axios from "axios";
 import {IconAlertTriangle} from "@tabler/icons-vue";
@@ -1087,7 +1088,7 @@ function waitUntil(pred: () => boolean, { interval = 30, timeout = 5000 } = {}):
 }
 
 function pickInitialMonthKey(): string | null {
-    const todayIsoMonth = new Date().toISOString().slice(0, 7);
+    const todayIsoMonth = toYmd(new Date()).slice(0, 7);
     if (monthIndexByKey.value.has(todayIsoMonth)) return todayIsoMonth;
     return monthList.value[0]?.key ?? null;
 }

@@ -7,16 +7,24 @@ use Artwork\Modules\Event\Models\EventProperty;
 use Artwork\Modules\Event\Models\EventStatus;
 use Artwork\Modules\Event\Models\SeriesEvents;
 use Artwork\Modules\EventType\Models\EventType;
+use Artwork\Modules\Notification\Enums\NotificationEnum;
+use Artwork\Modules\Notification\Services\NotificationSettingService;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Artwork\Modules\Room\Models\Room;
+use Artwork\Modules\Room\Notifications\RoomNotification;
 use Artwork\Modules\User\Models\User;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Notification;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\Feature\FeatureTestCase;
 
 final class EventUpdateTest extends FeatureTestCase
 {
+    private Event $roomChangeEvent;
+
+    private EventType $roomChangeEventType;
+
     #[Test]
     public function guest_cannot_update_event(): void
     {
@@ -72,23 +80,63 @@ final class EventUpdateTest extends FeatureTestCase
     }
 
     #[Test]
-    public function room_change_without_notifications_does_not_fail(): void
+    public function room_change_without_notifications_does_not_fail_and_notifies_nobody(): void
     {
         $this->actingAsAdmin();
-        $project = Project::factory()->create();
-        $room = Room::factory()->create();
-        $eventType = EventType::factory()->create();
-        $event = Event::factory()->create(['project_id' => $project->id, 'room_id' => $room->id]);
+        $manager = $this->projectWithManagerForRoomChange();
+        $event = $this->roomChangeEvent;
 
         // Vorher: $projectManagers wurde nur im Benachrichtigungs-Block gesetzt → 500 (Undefined variable)
-        $this->putJson(route('events.update', $event), [
+        $this->putJson(route('events.update', $event), $this->roomChangePayload(true))->assertSuccessful();
+
+        Notification::assertNothingSentTo($manager);
+    }
+
+    #[Test]
+    public function room_change_with_notifications_notifies_the_project_managers(): void
+    {
+        $this->actingAsAdmin();
+        $manager = $this->projectWithManagerForRoomChange();
+
+        $this->putJson(route('events.update', $this->roomChangeEvent), $this->roomChangePayload(false))
+            ->assertSuccessful();
+
+        Notification::assertSentTo(
+            $manager,
+            RoomNotification::class,
+            fn (RoomNotification $notification): bool =>
+                $notification->toArray()->type === NotificationEnum::NOTIFICATION_ROOM_CHANGED
+        );
+    }
+
+    private function projectWithManagerForRoomChange(): User
+    {
+        $project = Project::factory()->create();
+        $manager = User::factory()->create();
+        $project->users()->attach($manager->id, ['is_manager' => true]);
+        app(NotificationSettingService::class)->ensureDefaultsForUser($manager);
+        $this->roomChangeEventType = EventType::factory()->create();
+        $this->roomChangeEvent = Event::factory()->create([
+            'project_id' => $project->id,
+            'room_id' => Room::factory()->create()->id,
+        ]);
+
+        return $manager;
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function roomChangePayload(bool $noNotifications): array
+    {
+        return [
             'start' => '2026-11-10 10:00',
             'end' => '2026-11-10 12:00',
             'projectIdMandatory' => false,
             'creatingProject' => false,
             'eventNameMandatory' => false,
-            'eventTypeId' => $eventType->id,
-            'roomId' => $room->id,
+            'eventTypeId' => $this->roomChangeEventType->id,
+            'roomId' => $this->roomChangeEvent->room_id,
             'title' => 'Raumwechsel',
             'eventName' => 'Probe',
             'isOption' => false,
@@ -97,9 +145,9 @@ final class EventUpdateTest extends FeatureTestCase
             'allDay' => false,
             'is_series' => false,
             'isPlanning' => false,
-            'noNotifications' => true,
+            'noNotifications' => $noNotifications,
             'roomChange' => true,
-        ])->assertSuccessful();
+        ];
     }
 
     #[Test]
@@ -418,5 +466,31 @@ final class EventUpdateTest extends FeatureTestCase
         ])->assertSuccessful();
 
         $this->assertNull($event->fresh()->project_id);
+    }
+
+    #[Test]
+    public function an_explicit_null_room_id_removes_the_room(): void
+    {
+        $this->actingAsAdmin();
+        $eventType = EventType::factory()->create();
+        $event = Event::factory()->create(['room_id' => Room::factory()->create()->id]);
+
+        // Raum-Chip „entfernen“ im Termin-Dialog: roomId kommt als null an
+        $this->putJson(route('events.update', $event), [
+            'start' => '2026-11-10 10:00',
+            'end' => '2026-11-10 12:00',
+            'projectIdMandatory' => false,
+            'creatingProject' => false,
+            'eventNameMandatory' => false,
+            'eventTypeId' => $eventType->id,
+            'roomId' => null,
+            'title' => 'Ohne Raum',
+            'isOption' => false,
+            'projectId' => null,
+            'projectName' => '',
+            'noNotifications' => true,
+        ])->assertSuccessful();
+
+        $this->assertNull($event->fresh()->room_id);
     }
 }

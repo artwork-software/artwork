@@ -34,6 +34,7 @@
                 :project="project"
                 :available-tabs="headerObject.tabs ?? []"
                 :preselected-tab-id="currentTab.id"
+                :can-grant-write="headerObject.canWriteProject === true"
                 :external-file-upload-enabled="pageProps.externalFileUploadEnabled === true"
                 @close="onInviteModalClosed"
             />

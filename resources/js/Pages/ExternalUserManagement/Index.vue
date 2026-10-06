@@ -13,11 +13,22 @@
             <div class="flex justify-between items-center mb-6">
                 <h2 class="text-lg font-semibold text-text">{{ $t('External User Sources') }}</h2>
                 <BaseUIButton
+                    v-if="canManageSources"
                     :label="$t('Add Source')"
                     is-add-button
                     @click="showCreateSourceModal = true"
                 />
             </div>
+
+            <SettingsGuideBanner
+                v-if="!canManageSources"
+                class="mb-6"
+                variant="static"
+                title="Only artwork admins can manage directory sources"
+                :paragraphs="[
+                    'Directory sources decide who can sign in to which account. Adding, changing, activating or deleting a source is therefore reserved for artwork admins. You can still test connections and start a synchronization.',
+                ]"
+            />
 
             <!-- Sources List -->
             <div v-if="sources.length > 0" class="space-y-4">
@@ -59,6 +70,7 @@
                                 <span v-else>{{ $t('Test Connection') }}</span>
                             </button>
                             <button
+                                v-if="canManageSources"
                                 @click="editSource(source)"
                                 class="px-3 py-1.5 text-sm bg-surface-sunken text-text-muted rounded hover:bg-surface-sunken flex items-center gap-1.5"
                                 :title="$t('Edit')"
@@ -67,6 +79,7 @@
                                 <span>{{ $t('Edit') }}</span>
                             </button>
                             <button
+                                v-if="canManageSources"
                                 @click="showDeleteModal = source.id"
                                 class="px-3 py-1.5 text-sm bg-danger-surface text-danger rounded hover:bg-danger-surface flex items-center gap-1.5"
                                 :title="$t('Delete')"
@@ -135,7 +148,7 @@
 
         <!-- Create/Edit Source Modal -->
         <SourceModal
-            v-if="showCreateSourceModal || editingSource"
+            v-if="canManageSources && (showCreateSourceModal || editingSource)"
             :show="showCreateSourceModal || !!editingSource"
             :source="editingSource"
             :roles="roles"
@@ -145,7 +158,7 @@
 
         <!-- Delete Confirmation Modal -->
         <ConfirmDeleteModal
-            v-if="showDeleteModal"
+            v-if="canManageSources && showDeleteModal"
             :title="$t('Delete Source')"
             :description="$t('Are you sure you want to delete this source? This action cannot be undone.')"
             @closed="showDeleteModal = null"
@@ -186,6 +199,10 @@ export default defineComponent({
         roles: {
             type: Array,
             default: () => []
+        },
+        canManageSources: {
+            type: Boolean,
+            default: false
         }
     },
     data() {

@@ -16,11 +16,13 @@ use Artwork\Modules\ExternalAccess\Repositories\ExternalAccessScopeRepository;
 use Artwork\Modules\ExternalAccess\Exceptions\ExternalAccessException;
 use Artwork\Modules\ExternalAccess\Services\ExternalAccessManagementService;
 use Artwork\Modules\ExternalAccess\Services\ExternalAccessService;
+use Artwork\Modules\ExternalAccess\Services\ExternalScopeGrantGuard;
 use Artwork\Modules\User\Models\User;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 use Spatie\Activitylog\Models\Activity;
@@ -32,6 +34,7 @@ class ExternalAccessManagementController extends Controller
         private readonly ExternalAccessScopeRepository $scopeRepository,
         private readonly ExternalAccessManagementService $service,
         private readonly ExternalAccessService $externalAccessService,
+        private readonly ExternalScopeGrantGuard $grantGuard,
     ) {
     }
 
@@ -109,6 +112,7 @@ class ExternalAccessManagementController extends Controller
     ): RedirectResponse {
         $this->authorize('manage', $access);
         $this->ensureScopeBelongsToAccess($access, $scope);
+        $this->ensureMayGrantScope($request, $scope);
 
         if ($request->filled('valid_to')) {
             $this->service->extendScope($scope, Carbon::parse($request->validated('valid_to')), $request->user());
@@ -123,6 +127,38 @@ class ExternalAccessManagementController extends Controller
         }
 
         return redirect()->back()->with('status', __('Scope updated.'));
+    }
+
+    /**
+     * Gleiche Regel wie bei der Einladung (ExternalScopeGrantGuard): Freigaben nur für Tabs, die die
+     * Person selbst sieht; Schreibzugriff setzen oder verlängern nur mit Schreibrecht im Projekt.
+     * Vorher ließ sich hier eine Lese- nachträglich in eine Schreibfreigabe umwandeln.
+     */
+    private function ensureMayGrantScope(UpdateScopeRequest $request, ExternalAccessScope $scope): void
+    {
+        /** @var User $user */
+        $user = $request->user();
+
+        $resultingAccessType = $request->filled('access_type')
+            ? ExternalAccessType::from($request->validated('access_type'))
+            : $scope->access_type;
+
+        // Nur zurückstufen (Schreiben → Lesen) schränkt ein und bleibt immer erlaubt, wie endScope.
+        if (!$request->filled('valid_to') && $resultingAccessType === ExternalAccessType::READ) {
+            return;
+        }
+
+        if (!$this->grantGuard->maySeeTab($user, (int) $scope->project_tab_id)) {
+            throw ValidationException::withMessages([
+                'access_type' => __('You do not have permission to access this project tab.'),
+            ]);
+        }
+
+        if (!$this->grantGuard->mayGrantAccessType($user, $scope->project, $resultingAccessType)) {
+            throw ValidationException::withMessages([
+                'access_type' => __('You do not have write access to this tab.'),
+            ]);
+        }
     }
 
     public function endScope(Request $request, ExternalAccess $access, ExternalAccessScope $scope): RedirectResponse

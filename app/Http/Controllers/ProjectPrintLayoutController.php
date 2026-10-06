@@ -6,6 +6,7 @@ use Artwork\Modules\ArtistResidency\Enums\TypOfRoom;
 use Artwork\Modules\BusinessIntelligence\Services\BiProjectMetricsService;
 use Artwork\Modules\Checklist\Http\Resources\ChecklistIndexResource;
 use Artwork\Modules\Checklist\Services\ChecklistService;
+use Artwork\Modules\Contract\Models\Contract;
 use Artwork\Modules\Event\Http\Resources\MinimalCalendarEventResource;
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Event\Models\EventStatus;
@@ -308,10 +309,10 @@ class ProjectPrintLayoutController extends Controller
                         Inertia::share([
                             'user' => array_merge(session('user', []), ['checklist_style' => 'kanban'])
                         ]);
-                        $visibleTabIds = $this->projectComponentVisibilityService->visibleTabIds($user);
+                        // canSeeTab wie constrainToVisibleTabs: Admins sehen auch Checklisten gelöschter Tabs
                         $checklists = $project->checklists->filter(
                             fn ($checklist) => $checklist->tab_id === null ||
-                                $visibleTabIds->contains($checklist->tab_id)
+                                $this->projectComponentVisibilityService->canSeeTab($user, $checklist->tab_id)
                         );
                         $projectData->opened_checklists = $checklists->pluck('id');
                         $userId = Auth::id();
@@ -370,7 +371,10 @@ class ProjectPrintLayoutController extends Controller
                         ];
                         break;
                     case ProjectTabComponentEnum::PROJECT_CONTRACTS_DOCUMENTS->value:
-                        $projectData->contracts_documents = $project->contracts;
+                        // wie im Projekt-Tab: nur Verträge, die die Person laut ContractPolicy öffnen darf
+                        $projectData->contracts_documents = $project->contracts
+                            ->filter(fn (Contract $contract): bool => $user->can('view', $contract))
+                            ->values();
                         break;
                     case ProjectTabComponentEnum::CRM_CONTACT_LIST->value:
                         // Kontakte der Liste mit den Feldern, die die druckende Person sehen darf

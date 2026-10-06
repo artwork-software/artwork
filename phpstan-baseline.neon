@@ -1948,12 +1948,6 @@ parameters:
 			path: artwork/Modules/Project/Models/Component.php
 
 		-
-			message: '#^Access to an undefined property Artwork\\Modules\\Event\\Models\\Event\:\:\$created_by\.$#'
-			identifier: property.notFound
-			count: 2
-			path: artwork/Modules/Project/Policies/ProjectPolicy.php
-
-		-
 			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Relations\\Pivot\:\:\$is_manager\.$#'
 			identifier: property.notFound
 			count: 1
@@ -3032,18 +3026,6 @@ parameters:
 			identifier: property.notFound
 			count: 1
 			path: artwork/Modules/Worker/Services/WorkerShiftPlanService.php
-
-		-
-			message: '#^Cannot call method setDescription\(\) on null\.$#'
-			identifier: method.nonObject
-			count: 1
-			path: artwork/Modules/Workflow/Actions/NotificationAction.php
-
-		-
-			message: '#^Result of method Artwork\\Modules\\Notification\\Services\\NotificationService\:\:setTitle\(\) \(void\) is used\.$#'
-			identifier: method.void
-			count: 1
-			path: artwork/Modules/Workflow/Actions/NotificationAction.php
 
 		-
 			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'

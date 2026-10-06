@@ -17,14 +17,30 @@ class ContractResource extends JsonResource
 {
 
     /**
-     * @return \Illuminate\Support\Collection
+     * Echte Freigaben (Pivot contract_user). Nur diese Liste belegt das Bearbeiten-Modal vor und wird beim
+     * Speichern zurückgeschickt.
+     *
+     * @return \Illuminate\Support\Collection<int, User>
      */
     public function getAccessibleUsers(): \Illuminate\Support\Collection
     {
-        $usersWithAccess = collect($this->accessingUsers->all());
-        $project = Project::where('id', $this->project_id)->with(['users'])->first();
+        return collect($this->accessingUsers->all());
+    }
 
-        foreach ($project->users as $user) {
+    /**
+     * Nur zur Anzeige: Freigaben plus Projektleitungen, die laut ContractPolicy ohnehin Zugriff haben.
+     * Würde diese Liste gespeichert, stünden die Projektleitungen danach dauerhaft in der Freigabe.
+     *
+     * @return \Illuminate\Support\Collection<int, User>
+     */
+    public function getDisplayedAccessUsers(): \Illuminate\Support\Collection
+    {
+        $usersWithAccess = $this->getAccessibleUsers();
+        $project = $this->project_id !== null
+            ? Project::where('id', $this->project_id)->with(['users'])->first()
+            : null;
+
+        foreach ($project?->users ?? [] as $user) {
             if ($user->pivot->is_manager && !$usersWithAccess->contains('id', $user->id)) {
                 $usersWithAccess->push($user);
             }
@@ -59,29 +75,22 @@ class ContractResource extends JsonResource
             'foreign_tax_country' => $this->foreign_tax_country,
             'foreign_tax_reason' => $this->foreign_tax_reason,
             'reverse_charge_amount' => $this->reverse_charge_amount,
-            'deadline_date' => $this->deadline_date,
+            // Kalenderdatum (Y-m-d) – ein Carbon-Objekt würde als UTC-Zeitpunkt des Vortags serialisiert
+            'deadline_date' => $this->deadline_date?->format('Y-m-d'),
             'has_power_of_attorney' => $this->has_power_of_attorney,
             'currency' => $this->currency,
             'is_freed' => $this->is_freed,
             'description' => $this->description,
             'contract_state' => $this->contract_state,
             'contract_state_comment' => $this->contract_state_comment,
-            'accessibleUsers' => $this->getAccessibleUsers()->map(fn ($user) => [
-                'resource' => class_basename($user),
-                'id' => $user->id,
-                'first_name' => $user->first_name,
-                'last_name' => $user->last_name,
-                'profile_photo_url' => $user->profile_photo_url,
-                'email' => $user->visibleEmailFor($request->user()),
-                'departments' => $user->departments,
-                'position' => $user->position,
-                'business' => $user->business,
-                'phone_number' => $user->visiblePhoneNumberFor($request->user()),
-                'project_management' => $user->can(PermissionEnum::PROJECT_MANAGEMENT->value),
-                'display_name' => $user->getDisplayNameAttribute(),
-                'type' => $user->getTypeAttribute(),
-                'assigned_craft_ids' => $user->getAssignedCraftIdsAttribute(),
-            ]),
+            // Gespeicherte Freigaben – Grundlage für das Bearbeiten-Modal
+            'accessibleUsers' => $this->getAccessibleUsers()->map(
+                fn (User $user): array => $this->userArray($user, $request)
+            ),
+            // Anzeige in der Vertragsübersicht (inkl. Projektleitungen), wird nie gespeichert
+            'displayedAccessUsers' => $this->getDisplayedAccessUsers()->map(
+                fn (User $user): array => $this->userArray($user, $request)
+            ),
             //'accessibleUsers' => UserIndexResource::collection($this->getAccessibleUsers())->resolve(),
             'accessibleDepartments' => $this->accessingDepartments->map(fn ($department) => [
                 'id' => $department->id,
@@ -90,6 +99,29 @@ class ContractResource extends JsonResource
             ]),
             'tasks' => Task::where('contract_id', $this->id)->get(),
             'comments' => CommentResource::collection($this->comments)->resolve()
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function userArray(User $user, mixed $request): array
+    {
+        return [
+            'resource' => class_basename($user),
+            'id' => $user->id,
+            'first_name' => $user->first_name,
+            'last_name' => $user->last_name,
+            'profile_photo_url' => $user->profile_photo_url,
+            'email' => $user->visibleEmailFor($request->user()),
+            'departments' => $user->departments,
+            'position' => $user->position,
+            'business' => $user->business,
+            'phone_number' => $user->visiblePhoneNumberFor($request->user()),
+            'project_management' => $user->can(PermissionEnum::PROJECT_MANAGEMENT->value),
+            'display_name' => $user->getDisplayNameAttribute(),
+            'type' => $user->getTypeAttribute(),
+            'assigned_craft_ids' => $user->getAssignedCraftIdsAttribute(),
         ];
     }
 }

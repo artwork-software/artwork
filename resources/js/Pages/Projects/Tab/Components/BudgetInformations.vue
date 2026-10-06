@@ -21,14 +21,15 @@
                         @click="openFileUploadModal"/>
             <ProjectFileUploadModal :show="showFileUploadModal"
                                     :close-modal="closeFileUploadModal"
+                                    @saved="reloadBudgetInformation"
                                     :project-id="project.id"
                                     :budget-access="effectiveBudgetInformation?.access_budget ?? project.access_budget"/>
         </div>
             <div v-if="showProjectFiles">
             <div v-if="effectiveBudgetInformation?.project_files?.length > 0">
                 <div v-for="projectFile in effectiveBudgetInformation.project_files">
+                    <!-- Sichtbarkeit filtert das Backend (Freigabeliste, ProjectFilePolicy) -->
                     <div
-                        v-if="projectFile.accessibleUsers?.filter(user => user.id === $page.props.auth.user.id).length > 0 || this.hasAdminRole()"
                         class="flex items-center w-full mb-2 cursor-pointer text-text-subtle hover:text-white"
                     >
                         <IconDownload class="w-4 h-4 mr-2" @click="downloadProjectFile(projectFile)"/>
@@ -40,12 +41,14 @@
                 <ProjectFileEditModal
                     :show="showFileEditModal"
                     :close-modal="closeFileEditModal"
+                    @saved="reloadBudgetInformation"
                     :file="projectFileToEdit"
                 />
 
                 <FileDeleteModal
                     :show="showFileDeleteModal"
                     :close-modal="closeFileDeleteModal"
+                    @saved="reloadBudgetInformation"
                     :file="projectFileToDelete"
                     type="project"
                 />
@@ -75,8 +78,9 @@
             <div v-if="showContracts">
                 <div v-if="this.effectiveBudgetInformation?.contracts?.length > 0">
                     <div v-for="contract in this.effectiveBudgetInformation.contracts">
+                        <!-- Sichtbarkeit filtert das Backend (ContractPolicy: Freigabe, Abteilung, Projektleitung,
+                             Ersteller:in) – ein Frontend-Filter auf die Personenliste versteckte diese Fälle -->
                         <div
-                            v-if="contract.accessibleUsers?.filter(user => user.id === $page.props.auth.user.id).length > 0 || hasAdminRole()"
                             class="flex items-center w-full mb-2 cursor-pointer text-text-subtle hover:text-white">
                             <IconDownload class="w-4 h-4 mr-2" @click="downloadContract(contract)"/>
                             <div @click="openContractEditModal(contract)">{{ contract.name }}</div>
@@ -86,8 +90,8 @@
                                                  :contract="contract"/>
                             <ContractEditModal v-if="showContractEditModal"
                                                :show="showContractEditModal === contract?.id"
-                                               :close-modal="closeContractEditModal"
-                                               :contract="contract"
+                                               @closeModal="closeContractEditModal"
+                                               :contract="normalizeContractForEdit(contract, project)"
                                                :contract-types="this.effectiveBudgetInformation?.contract_types ?? project.contract_types"
                                                :company-types="this.effectiveBudgetInformation?.company_types ?? project.company_types"
                                                :currencies="this.effectiveBudgetInformation?.currencies ?? project.currencies"/>
@@ -194,6 +198,8 @@ import ProjectCopyrightModal from "@/Layouts/Components/ProjectCopyrightModal.vu
 import Permissions from "@/Mixins/Permissions.vue";
 import {Link} from '@inertiajs/vue3';
 import axios from 'axios';
+import {normalizeContractForEdit} from "@/Helper/contractEditForm.js";
+import {createLatestRequestTracker} from "@/Helper/latestRequest.js";
 
 export default {
     mixins: [Permissions],
@@ -260,12 +266,26 @@ export default {
             );
         }
     },
+    created() {
+        // je Instanz, nicht reaktiv: nur die zuletzt gestartete Ladeanfrage zählt
+        this.budgetInformationRequests = createLatestRequestTracker();
+    },
     mounted() {
         this.fetchBudgetInformation();
     },
     methods: {
-        async fetchBudgetInformation() {
-            if (this.localBudgetInformation) {
+        // rohes Vertragsmodell → Form des Bearbeiten-Modals (contract_partner, project_id, accessing_users …)
+        normalizeContractForEdit,
+        /**
+         * Nach Bearbeiten/Hochladen/Löschen neu laden: sonst belegt ein erneutes Öffnen die Modals mit dem alten
+         * Stand vor und Speichern schriebe die eben geänderten Werte (z. B. Freigaben) zurück. Die Modals melden
+         * zusätzlich "saved", sobald ihre Anfrage abgeschlossen ist – das Schließen kommt vorher.
+         */
+        reloadBudgetInformation() {
+            this.fetchBudgetInformation(true)
+        },
+        async fetchBudgetInformation(force = false) {
+            if (this.localBudgetInformation && !force) {
                 return;
             }
 
@@ -274,6 +294,8 @@ export default {
                 return;
             }
 
+            // Nur die Antwort der zuletzt gestarteten Anfrage übernehmen (mehrere Neuladungen kurz hintereinander)
+            const requestId = this.budgetInformationRequests.begin();
             this.isLoadingBudgetInfo = true;
             this.loadBudgetInfoError = '';
 
@@ -281,12 +303,20 @@ export default {
                 const { data } = await axios.get(
                     route('projects.tabs.budget-informations', { project: projectId })
                 );
+                if (!this.budgetInformationRequests.isLatest(requestId)) {
+                    return;
+                }
                 this.localBudgetInformation = data?.BudgetInformation || null;
             } catch (error) {
+                if (!this.budgetInformationRequests.isLatest(requestId)) {
+                    return;
+                }
                 console.error(error);
                 this.loadBudgetInfoError = 'Unable to load budget information.';
             } finally {
-                this.isLoadingBudgetInfo = false;
+                if (this.budgetInformationRequests.isLatest(requestId)) {
+                    this.isLoadingBudgetInfo = false;
+                }
             }
         },
         hasBudgetAccess() {
@@ -339,15 +369,18 @@ export default {
         closeFileEditModal() {
             this.projectFileToEdit = null
             this.showFileEditModal = false
+            this.reloadBudgetInformation()
         },
         closeContractEditModal() {
             this.showContractEditModal = null
+            this.reloadBudgetInformation()
         },
         openFileUploadModal() {
             this.showFileUploadModal = true
         },
         closeFileUploadModal() {
             this.showFileUploadModal = false
+            this.reloadBudgetInformation()
         },
         openFileDeleteModal(projectFile) {
             this.projectFileToDelete = projectFile
@@ -356,18 +389,21 @@ export default {
         closeFileDeleteModal() {
             this.projectFileToDelete = null
             this.showFileDeleteModal = false
+            this.reloadBudgetInformation()
         },
         openContractUploadModal() {
             this.showContractUploadModal = true
         },
         closeContractUploadModal() {
             this.showContractUploadModal = false
+            this.reloadBudgetInformation()
         },
         openContractDeleteModal(contract) {
             this.showContractDeleteModal = contract.id
         },
         closeContractDeleteModal() {
             this.showContractDeleteModal = null;
+            this.reloadBudgetInformation()
         },
     }
 }

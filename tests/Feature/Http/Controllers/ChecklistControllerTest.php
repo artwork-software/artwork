@@ -75,41 +75,46 @@ final class ChecklistControllerTest extends FeatureTestCase
         $this->assertDatabaseHas('tasks', ['name' => 'Task A']);
     }
 
+    /**
+     * Die Seiten Checklists/Show und Checklists/Edit gibt es nicht mehr; die GET-Routen lieferten die
+     * Liste trotzdem als Inertia-JSON aus und sind deshalb entfernt.
+     */
     #[Test]
     public function guest_cannot_view_checklist(): void
     {
-        $checklist = Checklist::factory()->create();
+        $checklist = Checklist::factory()->create(['name' => 'Guest probe']);
 
-        $this->get('/checklists/' . $checklist->id)
-            ->assertRedirect(route('login'));
+        $this->get('/checklists/' . $checklist->id)->assertMethodNotAllowed();
     }
 
     #[Test]
-    public function admin_can_view_checklist(): void
+    public function checklist_show_route_no_longer_exists(): void
     {
         $this->actingAsAdmin();
         $checklist = Checklist::factory()->create();
 
-        $this->get('/checklists/' . $checklist->id)->assertOk();
+        $this->get('/checklists/' . $checklist->id)->assertMethodNotAllowed();
     }
 
     #[Test]
-    public function admin_with_checklist_settings_can_view_checklist(): void
+    public function checklist_show_route_does_not_leak_data_via_inertia(): void
     {
-        // ChecklistPolicy::view starts with can(CHECKLIST_SETTINGS_ADMIN) — admin satisfies it.
         $this->actingAsAdmin();
-        $checklist = Checklist::factory()->create();
+        $checklist = Checklist::factory()->create(['name' => 'Inertia probe']);
 
-        $this->get('/checklists/' . $checklist->id)->assertOk();
+        // kein Inertia-Payload mehr (die Debug-Fehlerseite listet in Tests die SQL-Werte, daher Status statt Inhalt)
+        $response = $this->get('/checklists/' . $checklist->id, ['X-Inertia' => 'true']);
+        $response->assertMethodNotAllowed();
+        $this->assertNull($response->headers->get('X-Inertia'));
     }
 
     #[Test]
-    public function admin_can_view_checklist_edit_page(): void
+    public function checklist_edit_route_no_longer_exists(): void
     {
         $this->actingAsAdmin();
         $checklist = Checklist::factory()->create();
 
-        $this->get('/checklists/' . $checklist->id . '/edit')->assertOk();
+        $this->get('/checklists/' . $checklist->id . '/edit')->assertNotFound();
     }
 
     #[Test]

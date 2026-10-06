@@ -18,6 +18,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
  * @property string $name
  * @property string $basename
  * @property int $project_id
+ * @property int|null $tab_id
+ * @property bool $is_budget_document Budget-Dokument mit Freigabeliste (nur Freigegebene und Admins)
  * @property string $deleted_at
  * @property string $created_at
  * @property string $updated_at
@@ -35,6 +37,11 @@ class ProjectFile extends Model
         'basename',
         'project_id',
         'external_access_id',
+        'is_budget_document',
+    ];
+
+    protected $casts = [
+        'is_budget_document' => 'boolean',
     ];
 
     protected $guarded = [

@@ -6,6 +6,7 @@ use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Models\ProjectFile;
 use Artwork\Modules\Project\Services\ProjectComponentVisibilityService;
+use Artwork\Modules\Project\Services\ProjectTabDocumentService;
 use Artwork\Modules\User\Models\User;
 use Illuminate\Auth\Access\HandlesAuthorization;
 
@@ -15,6 +16,7 @@ class ProjectFilePolicy
 
     public function __construct(
         private readonly ProjectComponentVisibilityService $projectComponentVisibilityService,
+        private readonly ProjectTabDocumentService $projectTabDocumentService,
     ) {
     }
 
@@ -35,24 +37,15 @@ class ProjectFilePolicy
             return false;
         }
 
-        // Check if user is a team member
-        $isTeamMember = false;
-        foreach ($project->departments as $department) {
-            if ($department->users->contains($user->id)) {
-                $isTeamMember = true;
-                break;
-            }
+        // Budget-Dokumente nur für Freigegebene mit Sicht auf die Budget-Informationen und Admins – sonst
+        // wäre die Freigabe-Auswahl über "Alle Dokumente" und den Download wirkungslos.
+        if (!$this->projectTabDocumentService->canSeeBudgetDocument($user, $projectFile)) {
+            return false;
         }
 
-        // Check if user is attached to the project
-        $isAttachedToProject = $project->users()->where('user_id', $user->id)->exists();
-
-        return $isAttachedToProject ||
-            $user->projects->contains($project->id) ||
-            $project->users->contains($user->id) ||
-            $isTeamMember ||
-            $hasFileAccess ||
-            $user->can(PermissionEnum::PROJECT_VIEW->value);
+        // Basis ist die Projektsicht (ProjectPolicy::view: "view/write projects", Team, Abteilungen) –
+        // dieselbe Regel wie für die Dokumentlisten (CanViewProject); ausdrückliche Freigabe genügt auch.
+        return $hasFileAccess || ($project !== null && $user->can('view', $project));
     }
 
     public function create(User $user, Project $project, ?int $tabId = null): bool

@@ -104,12 +104,10 @@ class ProjectPolicy
             }
         }
 
-        foreach ($project->events as $event) {
-            if ($event->created_by?->id === $user->id) {
-                return true;
-            }
-        }
-
+        // Kein Zweig "Ersteller:in eines Termins im Projekt": die Projektzuordnung im Termin-Dialog
+        // ist bewusst ohne Projektrecht möglich – sonst bekäme jede Person mit Terminrecht so
+        // Schreibzugriff auf beliebige Projekte. (Der frühere Zweig las events.created_by, das es
+        // nicht gibt, und war damit nie aktiv.)
         return false;
     }
 
@@ -139,12 +137,7 @@ class ProjectPolicy
             return true;
         }
 
-        foreach ($project->events as $event) {
-            if ($event->created_by?->id === $user->id) {
-                return true;
-            }
-        }
-
+        // Bewusst kein Termin-Ersteller-Zweig (siehe update()).
         return false;
     }
 }

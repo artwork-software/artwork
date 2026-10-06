@@ -53,6 +53,10 @@ class ProjectComponentVisibilityService
 
     public function canSeeTab(User $user, int $tabId): bool
     {
+        if ($user->hasRole(RoleEnum::ARTWORK_ADMIN->value)) {
+            return true;
+        }
+
         return $this->visibleTabIds($user)->contains($tabId);
     }
 
@@ -75,10 +79,15 @@ class ProjectComponentVisibilityService
     }
 
     /**
-     * Inhalte ohne Tab (tab_id = null) oder aus sichtbaren Tabs.
+     * Inhalte ohne Tab (tab_id = null) oder aus sichtbaren Tabs. Admins sehen alles — auch Inhalte
+     * gelöschter eingeschränkter Tabs, deren tab_id auf keinen Tab mehr zeigt.
      */
     public function constrainToVisibleTabs(Builder|Relation $query, User $user): void
     {
+        if ($user->hasRole(RoleEnum::ARTWORK_ADMIN->value)) {
+            return;
+        }
+
         $visibleTabIds = $this->visibleTabIds($user);
 
         $query->where(function ($query) use ($visibleTabIds): void {

@@ -54,6 +54,7 @@ use Artwork\Modules\Change\Services\ChangeService;
 use Artwork\Modules\Checklist\Services\ChecklistService;
 use Artwork\Modules\CompanyType\Models\CompanyType;
 use Artwork\Modules\CompanyType\Services\CompanyTypeService;
+use Artwork\Modules\Contract\Models\Contract;
 use Artwork\Modules\Contract\Models\ContractType;
 use Artwork\Modules\Contract\Services\ContractTypeService;
 use Artwork\Modules\CostCenter\Models\CostCenter;
@@ -3120,10 +3121,20 @@ class ProjectController extends Controller
     ): array {
         $userId = $authUser?->id;
 
-        // Load contracts for this project with necessary relations
+        // Nur Verträge, die die Person laut ContractPolicy öffnen darf (Ersteller:in, Freigabe an Person
+        // oder Abteilung, Projektleitung; Admins via Gate::before) – wie BudgetInformations.
         $contracts = $project->contracts()
-            ->with(['accessingUsers', 'accessingDepartments', 'contract_type', 'company_type', 'currency'])
+            ->with([
+                'accessingUsers',
+                'accessingDepartments',
+                'contract_type',
+                'company_type',
+                'currency',
+                'project.managerUsers',
+            ])
             ->get()
+            ->filter(fn (Contract $contract): bool => $authUser !== null && $authUser->can('view', $contract))
+            ->values()
             ->map(function ($contract) use ($project) {
                 return [
                     'id' => $contract->id,
@@ -3153,12 +3164,20 @@ class ProjectController extends Controller
                     'ksk_reason' => $contract->ksk_reason,
                     'resident_abroad' => $contract->resident_abroad,
                     'has_foreign_tax' => $contract->foreign_tax,
+                    // ContractEditModal belegt alle Felder vor und sendet sie vollständig zurück – fehlende
+                    // Schlüssel würden beim Speichern die gespeicherten Werte leeren
+                    'foreign_tax' => $contract->foreign_tax,
                     'foreign_tax_amount' => $contract->foreign_tax_amount,
+                    'foreign_tax_city' => $contract->foreign_tax_city,
+                    'foreign_tax_country' => $contract->foreign_tax_country,
                     'foreign_tax_reason' => $contract->foreign_tax_reason,
+                    'contract_state' => $contract->contract_state,
+                    'contract_state_comment' => $contract->contract_state_comment,
                     'reverse_charge_amount' => $contract->reverse_charge_amount,
                     'has_power_of_attorney' => $contract->has_power_of_attorney,
                     'is_freed' => $contract->is_freed,
-                    'deadline_date' => $contract->deadline_date,
+                    // Kalenderdatum (Y-m-d) – ein Carbon-Objekt würde als UTC-Zeitpunkt des Vortags serialisiert
+                    'deadline_date' => $contract->deadline_date?->format('Y-m-d'),
                     'amount' => $contract->amount,
                     'description' => $contract->description,
                     'currency_id' => $contract->currency_id,

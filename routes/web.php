@@ -875,7 +875,8 @@ Route::group(['middleware' => ['auth:sanctum']], function (): void {
         Route::get('/components/{componentInTab}/documents', [ProjectDocumentsController::class, 'index'])
             ->name('projects.tabs.documents');
         Route::get('/all-documents', [ProjectDocumentsController::class, 'all'])
-            ->name('projects.tabs.all-documents');
+            ->name('projects.tabs.all-documents')
+            ->middleware(EnsureUserCanSeeProjectComponent::for(ProjectTabComponentEnum::PROJECT_ALL_DOCUMENTS));
         Route::get('/status', [ProjectStatusController::class, 'show'])
             ->name('projects.tabs.status')
             ->middleware(EnsureUserCanSeeProjectComponent::for(ProjectTabComponentEnum::PROJECT_STATUS));
@@ -891,7 +892,8 @@ Route::group(['middleware' => ['auth:sanctum']], function (): void {
         Route::get('/components/{componentInTab}/checklists', [ProjectChecklistController::class, 'index'])
             ->name('projects.tabs.checklists');
         Route::get('/all-checklists', [ProjectChecklistController::class, 'all'])
-            ->name('projects.tabs.all-checklists');
+            ->name('projects.tabs.all-checklists')
+            ->middleware(EnsureUserCanSeeProjectComponent::for(ProjectTabComponentEnum::CHECKLIST_ALL));
         Route::get('/material-issues', [ProjectMaterialIssueController::class, 'show'])
             ->name('projects.tabs.material-issues')
             ->middleware(EnsureUserCanSeeProjectComponent::for(
@@ -903,7 +905,8 @@ Route::group(['middleware' => ['auth:sanctum']], function (): void {
         Route::get('/components/{componentInTab}/comments', [ProjectCommentController::class, 'index'])
             ->name('projects.tabs.comments');
         Route::get('/all-comments', [ProjectCommentController::class, 'all'])
-            ->name('projects.tabs.all-comments');
+            ->name('projects.tabs.all-comments')
+            ->middleware(EnsureUserCanSeeProjectComponent::for(ProjectTabComponentEnum::COMMENT_ALL_TAB));
         Route::get('/budget-informations', [ProjectBudgetInformationController::class, 'show'])
             ->name('projects.tabs.budget-informations')
             ->middleware(EnsureUserCanSeeProjectComponent::for(ProjectTabComponentEnum::BUDGET_INFORMATIONS));
@@ -988,10 +991,8 @@ Route::group(['middleware' => ['auth:sanctum']], function (): void {
     //Checklists
     Route::get('/checklists/create', [ChecklistController::class, 'create'])->name('checklists.create');
     Route::post('/checklists', [ChecklistController::class, 'store'])->name('checklists.store');
-    Route::get('/checklists/{checklist}', [ChecklistController::class, 'show']);
     Route::post('/checklists/{checklist}/duplicate', [ChecklistController::class, 'duplicate'])
         ->name('checklists.duplicate');
-    Route::get('/checklists/{checklist}/edit', [ChecklistController::class, 'edit']);
     Route::patch('/checklists/{checklist}', [ChecklistController::class, 'update'])->name('checklists.update');
     Route::delete('/checklists/{checklist}', [ChecklistController::class, 'destroy'])->name('checklist.destroy');
 
@@ -2879,6 +2880,10 @@ Route::group(['middleware' => ['auth:sanctum']], function (): void {
         Route::patch('component/{project}/{component}/update', [ProjectComponentValueController::class,
             'update'])
             ->name('project.tab.component.update');
+        // project.tab.component.value — Wert nachladen nach Broadcast (data.updated trägt nur Kennungen)
+        Route::get('component/{project}/{component}/value', [ProjectComponentValueController::class,
+            'value'])
+            ->name('project.tab.component.value');
         Route::group(['prefix' => 'component', 'middleware' => 'can:change project settings'], function (): void {
             // index
             Route::get('index', [ComponentController::class, 'index'])

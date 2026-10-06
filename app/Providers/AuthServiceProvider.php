@@ -48,6 +48,8 @@ use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Event\Policies\EventPolicy;
 use Artwork\Modules\ExternalAccess\Models\ExternalAccess;
 use Artwork\Modules\ExternalAccess\Policies\ExternalAccessPolicy;
+use Artwork\Modules\ExternalUserManagement\Models\ExternalUserSource;
+use Artwork\Modules\ExternalUserManagement\Policies\ExternalUserSourcePolicy;
 use Artwork\Modules\Freelancer\Models\Freelancer;
 use Artwork\Modules\Freelancer\Policies\FreelancerPolicy;
 use Artwork\Modules\GeneralSettings\Models\GeneralSettings;
@@ -127,6 +129,7 @@ class AuthServiceProvider extends ServiceProvider
         Event::class => EventPolicy::class,
         ModuleSettings::class => ModuleSettingsPolicy::class,
         ExternalAccess::class => ExternalAccessPolicy::class,
+        ExternalUserSource::class => ExternalUserSourcePolicy::class,
         \Artwork\Modules\Chat\Models\Chat::class => \Artwork\Modules\Chat\Policies\ChatPolicy::class,
         \Artwork\Modules\Vacation\Models\Vacation::class =>
             \Artwork\Modules\Vacation\Policies\VacationPolicy::class,

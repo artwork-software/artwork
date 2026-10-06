@@ -2,10 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use Artwork\Modules\Checklist\Models\Checklist;
 use Artwork\Modules\Project\Enum\ProjectTabComponentEnum;
+use Artwork\Modules\Project\Models\Comment;
 use Artwork\Modules\Project\Models\Component;
 use Artwork\Modules\Project\Models\ComponentInTab;
 use Artwork\Modules\Project\Models\DisclosureComponents;
+use Artwork\Modules\Project\Models\ProjectFile;
 use Artwork\Modules\Project\Models\ProjectTab;
 use Artwork\Modules\Project\TabTemplates\ProjectTabTemplateCatalog;
 use Artwork\Modules\Project\TabTemplates\ProjectTabTemplateService;
@@ -18,6 +21,7 @@ use Illuminate\Http\Request;
 use Inertia\Response;
 use Inertia\ResponseFactory;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 
@@ -230,20 +234,32 @@ class ProjectTabController extends Controller
 
     public function destroy(ProjectTab $projectTab): void
     {
-        // check if tab in ComponentsInTab in scopes and delete them
-        $componentsInTabWithTabAsScope = ComponentInTab::whereJsonContains('scope', $projectTab->id)->get();
-        // now remove the tab from the scope
-        foreach ($componentsInTabWithTabAsScope as $componentInTab) {
-            $componentInTab->scope = array_diff($componentInTab->scope, [$projectTab->id]);
-            $componentInTab->save();
-        }
+        // Platzierungen, Tab-Bezug der Inhalte und Tab gemeinsam – ein Abbruch hinterlässt keinen Teilzustand
+        DB::transaction(function () use ($projectTab): void {
+            // check if tab in ComponentsInTab in scopes and delete them
+            $componentsInTabWithTabAsScope = ComponentInTab::whereJsonContains('scope', $projectTab->id)->get();
+            // now remove the tab from the scope
+            foreach ($componentsInTabWithTabAsScope as $componentInTab) {
+                $componentInTab->scope = array_diff($componentInTab->scope, [$projectTab->id]);
+                $componentInTab->save();
+            }
 
-        // Nur die Platzierungen entfernen: Projektwerte hängen an (project_id, component_id) und gehören der
-        // Komponente, die in anderen Tabs/Ordnern/der Sidebar weiter platziert sein kann. Werte werden
-        // ausschließlich beim Löschen der Komponente selbst (Komponenteneinstellungen) entfernt.
-        $projectTab->components()->delete();
+            // Nur die Platzierungen entfernen: Projektwerte hängen an (project_id, component_id) und gehören der
+            // Komponente, die in anderen Tabs/Ordnern/der Sidebar weiter platziert sein kann. Werte werden
+            // ausschließlich beim Löschen der Komponente selbst (Komponenteneinstellungen) entfernt.
+            $projectTab->components()->delete();
 
-        $projectTab->delete();
+            // Inhalte eines für alle sichtbaren Tabs bleiben für alle sichtbar („ohne Tab“). Inhalte eines
+            // eingeschränkten Tabs behalten die alte tab_id und sind danach nur noch für Admins sichtbar,
+            // damit sie nicht über „Alle Kommentare/Checklisten/Dokumente“ für alle frei werden.
+            if ($projectTab->visible_for_all) {
+                foreach ([Comment::class, Checklist::class, ProjectFile::class] as $model) {
+                    $model::withTrashed()->where('tab_id', $projectTab->id)->update(['tab_id' => null]);
+                }
+            }
+
+            $projectTab->delete();
+        });
 
         $this->clearTabSettingsCache();
     }

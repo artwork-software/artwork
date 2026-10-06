@@ -11,6 +11,7 @@ use Artwork\Modules\Project\Models\Component;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Models\ProjectComponentValue;
 use Artwork\Modules\Project\Models\ProjectTab;
+use Artwork\Modules\Shift\Support\SafeBroadcast;
 use Illuminate\Database\DatabaseManager;
 
 class ExternalComponentValueService
@@ -41,7 +42,8 @@ class ExternalComponentValueService
             throw new ComponentNotInTabException($component, $tab);
         }
 
-        $value = $this->db->transaction(function () use ($external, $project, $component, $data) {
+        $valueChanged = false;
+        $value = $this->db->transaction(function () use ($external, $project, $component, $data, &$valueChanged) {
             $previousValue = ProjectComponentValue::query()
                 ->where('project_id', $project->id)
                 ->where('component_id', $component->id)
@@ -71,10 +73,15 @@ class ExternalComponentValueService
                 newData: $newData,
             );
 
-            $this->broadcastUpdate($value, $project);
+            $valueChanged = $previousValue === null || $value->wasChanged('data');
 
             return $value;
         });
+
+        // Nach dem Commit und nur bei echter Änderung: interne Clients laden den Wert daraufhin nach
+        if ($valueChanged) {
+            $this->broadcastUpdate($value, $project);
+        }
 
         // Keine Benachrichtigung pro Feld: Einladende werden erst beim expliziten
         // "Daten absenden" (ExternalTabSubmissionService) gesammelt informiert.
@@ -125,6 +132,7 @@ class ExternalComponentValueService
         // Re-use the existing event so internal users viewing the same tab receive
         // the update in parallel. Channel auth (routes/channels.php) uses the web
         // guard, so external users cannot subscribe to these channels themselves.
-        broadcast(new UpdateProjectComponentData($value, $project->id));
+        // Abgesichert: ein WebSocket-Ausfall macht die bereits gespeicherte Änderung nicht zur 500
+        SafeBroadcast::send(new UpdateProjectComponentData($value, $project->id));
     }
 }

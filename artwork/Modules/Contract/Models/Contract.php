@@ -41,7 +41,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property float|null $reverse_charge_amount
  * @property string|null $contract_state
  * @property string|null $contract_state_comment
- * @property string|null $deadline_date
+ * @property \Illuminate\Support\Carbon|null $deadline_date
  * @property bool $is_freed
  * @property bool $has_power_of_attorney
  * @property string $created_at
@@ -91,7 +91,8 @@ class Contract extends Model
         'foreign_tax' => 'boolean',
         'foreign_tax_amount' => 'decimal:2',
         'reverse_charge_amount' => 'decimal:2',
-        'deadline_date' => 'date',
+        // Kalenderdatum: als Y-m-d serialisieren, nicht als UTC-Zeitpunkt (Europe/Berlin → Vortag 22:00Z)
+        'deadline_date' => 'date:Y-m-d',
         'is_freed' => 'boolean',
         'has_power_of_attorney' => 'boolean',
     ];

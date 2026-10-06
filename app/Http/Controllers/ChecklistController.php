@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use Artwork\Modules\Change\Services\ChangeService;
 use Artwork\Modules\Checklist\Events\ChecklistUpdated;
 use Artwork\Modules\Checklist\Http\Requests\ChecklistUpdateRequest;
-use Artwork\Modules\Checklist\Http\Resources\ChecklistShowResource;
 use Artwork\Modules\Checklist\Models\Checklist;
 use Artwork\Modules\Checklist\Services\ChecklistService;
 use Artwork\Modules\Checklist\Models\ChecklistTemplate;
@@ -150,20 +149,6 @@ class ChecklistController extends Controller
         }
 
         $checklist->users()->attach($this->authManager->id());
-    }
-
-    public function show(Checklist $checklist): Response|ResponseFactory
-    {
-        return inertia('Checklists/Show', [
-            'checklist' => new ChecklistShowResource($checklist),
-        ]);
-    }
-
-    public function edit(Checklist $checklist): Response|ResponseFactory
-    {
-        return inertia('Checklists/Edit', [
-            'checklist' => new ChecklistShowResource($checklist),
-        ]);
     }
 
     public function update(
